@@ -4,7 +4,7 @@ import logging
 import yaml
 
 from pathlib import Path
-from ctamclib import names
+from ctamclib.util import names
 
 
 def whichTelescopeSize(telescopeType):
@@ -180,7 +180,7 @@ class TelescopeModel:
         configFileName += '_{}'.format(self.label) if self.label is not None else ''
         configFileName += '.cfg'
 
-        configFileDirectory = self.filesLocation.joinpath('SimtelFiles/cfg')
+        configFileDirectory = self.filesLocation.joinpath('CTAMCFiles/cfg')
 
         if not configFileDirectory.exists():
             configFileDirectory.mkdir(parents=True, exist_ok=True)
