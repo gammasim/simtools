@@ -63,3 +63,10 @@ def rayTracingFileName(telescopeType, sourceDistance, zenithAngle, offAxisAngle,
     name += '_{}'.format(label) if label is not None else ''
     name += '.log' if base == 'log' else '.lis'
     return name
+
+
+def rayTracingResultsFileName(telescopeType, sourceDistance, zenithAngle, label):
+    name = 'ray-tracing-{}-d{:.1f}-za{:.1f}'.format(telescopeType, sourceDistance, zenithAngle)
+    name += '_{}'.format(label) if label is not None else ''
+    name += '.cvs'
+    return name

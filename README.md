@@ -4,6 +4,11 @@ requirements
 - yaml
 - pathlib
 - os
+- numpy
+- astropy
+- subprocess
+- math
+- matplotlib
 
 TODO:
     - TelescopeModel: implement fromConfigFile method

@@ -4,7 +4,7 @@ import logging
 from pathlib import Path
 import os
 
-from ctamclib import names
+from ctamclib.util import names
 from ctamclib.telescope_model import TelescopeModel
 from ctamclib.util.general import collectArguments
 
