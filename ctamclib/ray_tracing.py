@@ -3,6 +3,8 @@
 import logging
 from pathlib import Path
 import numpy as np
+import os
+import subprocess
 
 from ctamclib import names
 from ctamclib.telescope_model import TelescopeModel
@@ -23,6 +25,7 @@ class RayTracing:
 
         self._simtelSourcePath = simtelSourcePath
         self._filesLocation = Path.cwd() if filesLocation is None else Path(filesLocation)
+        self._baseDirectory = self._filesLocation.joinpath('CTAMCFiles/RayTracing')
 
         self.hasTelescopeModel = False
         self._telescopeModel = None
@@ -63,7 +66,7 @@ class RayTracing:
             if tel is not None:
                 logging.error('Invalid TelescopeModel')
 
-    def simulate(self, test=False):
+    def simulate(self, test=False, force=False):
         """ Simulating RayTracing"""
         for thisOffAxis in self._offAxisAngle:
             logging.info('Simulating RayTracing for offAxis={}'.format(thisOffAxis))
@@ -76,3 +79,43 @@ class RayTracing:
                 sourceDistance=self._sourceDistance,
                 offAxisAngle=thisOffAxis
             )
+            simtel.run(test=test, force=force)
+
+    def analyze(self, export=True):
+        """ Analyzing RayTracing"""
+
+        self._results = dict()
+        self._results['off_axis'] = list()
+        self._results['d80_cm'] = list()
+        self._results['d80_deg'] = list()
+        self._results['eff_area'] = list()
+        self._results['eff_flen'] = list()
+
+        for thisOffAxis in self._offAxisAngle:
+            logging.info('Analyzing RayTracing for offAxis={}'.format(thisOffAxis))
+            photonsFileName = names.rayTracingFileName(
+                self._telescopeModel.telescopeType,
+                self._sourceDistance,
+                self._zenithAngle,
+                thisOffAxis,
+                self.label,
+                'photons'
+            )
+            file = self._baseDirectory.joinpath(photonsFileName)
+            # os.system('{}/sim_telarray/bin/rx -f 0.8 -v < {}'.format(self._simtelSourcePath, file))
+            rxOutput = subprocess.check_output(
+                '{}/sim_telarray/bin/rx -f 0.8 -v < {}'.format(self._simtelSourcePath, file),
+                shell=True
+            )
+            rxOutput = rxOutput.split()
+            d80 = float(rxOutput[0])
+            self._results['off_axis'].append(thisOffAxis)
+            self._results['d80_cm'].append(d80)
+            self._results['eff_area'].append(float(rxOutput[5]))
+
+            xMean = float(rxOutput[1])
+            yMean = float(rxOutput[2])
+            nPhotons = int(rxOutput[3])
+            effArea = float(rxOutput[5])
+
+            print(d80, xMean, yMean, nPhotons, effArea)
