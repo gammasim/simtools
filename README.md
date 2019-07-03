@@ -9,7 +9,7 @@ TODO:
     - TelescopeModel: implement fromConfigFile method
     - SimtelRunner: files (log, photon, star etc) names
     - SimtelRunner: method to obtain script
-    - make loc a config parameter
+    - SimtelRunner: force flag
 
 STYLE REMARKS:
 
@@ -28,10 +28,11 @@ DESIGN REMARKS:
     The label can be passes forward from more fundamental classes.
     In particular, label from TelescopeModel can be used in higher level classes.
 
+    - Classes are not designed to be re-used, all parameters should be set when
+    initializing and not changed afterwards. New parameters should mean new object.
+
     - filesLocation
 
     - test flags
 
     - force flag
-
-    

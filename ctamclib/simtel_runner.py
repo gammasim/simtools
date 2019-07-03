@@ -50,7 +50,7 @@ class SimtelRunner:
 
         # File location
         self._filesLocation = Path.cwd() if filesLocation is None else Path(filesLocation)
-        self._baseDirectory = self._filesLocation.joinpath('SimtelFiles').joinpath(self.mode)
+        self._baseDirectory = self._filesLocation.joinpath('CTAMCFiles').joinpath(self.mode)
         self._baseDirectory.mkdir(parents=True, exist_ok=True)
 
         collectArguments(
@@ -86,9 +86,13 @@ class SimtelRunner:
             if tel is not None:
                 logging.error('Invalid TelescopeModel')
 
-    def run(self, test=False):
+    def run(self, test=False, force=False):
         logging.info('Running at mode {}'.format(self.mode))
         # write all the important parameters
+
+        if not self.shallRun() and not force:
+            logging.info('Skipping because file exists and force = False')
+            return
 
         self.loadRequiredFiles()
         command = self.makeRunCommand()
@@ -117,6 +121,21 @@ class SimtelRunner:
 
         return self._scriptFileName
 
+    def shallRun(self):
+        if self.mode == 'RayTracing':
+            photonsFileName = names.rayTracingFileName(
+                self._telescopeModel.telescopeType,
+                self._sourceDistance,
+                self._zenithAngle,
+                self._offAxisAngle,
+                self.label,
+                'photons'
+            )
+            file = self._baseDirectory.joinpath(photonsFileName)
+            return not file.exists()
+        else:
+            return False
+
     def loadRequiredFiles(self):
         ''' Which file are nrequired for running depend on the mode.
             Here we define and write some information into these files.
@@ -131,7 +150,7 @@ class SimtelRunner:
             # Files will be named _baseFileName = self.__dict__['_' + base + 'FileName']
             for base in ['stars', 'photons', 'log']:
                 fileName = names.rayTracingFileName(
-                    self.telescopeModel.telescopeType,
+                    self._telescopeModel.telescopeType,
                     self._sourceDistance,
                     self._zenithAngle,
                     self._offAxisAngle,
@@ -144,9 +163,9 @@ class SimtelRunner:
                 self.__dict__['_' + base + 'FileName'] = file
 
             with self._photonsFileName.open('w') as file:
-                file.write('%{}\n'.format(50*'='))
+                file.write('#{}\n'.format(50*'='))
                 file.write('# List of photons for RayTracing simulations\n')
-                file.write('%{}\n'.format(50*'='))
+                file.write('#{}\n'.format(50*'='))
                 file.write('# configFile = {}\n'.format(self._telescopeModel.getConfigFile()))
                 file.write('# zenithAngle [deg] = {}\n'.format(self._zenithAngle))
                 file.write('# offAxisAngle [deg] = {}\n'.format(self._offAxisAngle))

@@ -26,12 +26,12 @@ def isValidName(name, allNames):
 
 
 allTelescopeTypeNames = {
-    'SST-1M': [],
-    'SST-2M-ASTRI': ['sst-astri'],
+    'SST-1M': ['1m'],
+    'SST-2M-ASTRI': ['sst-astri', 'astri'],
     'SST-2M-GCT-S': ['sst-gct', 'gct', 'sst-gct-s'],
-    'MST-FlashCam': ['flashcam'],
-    'MST-NectarCam': ['nectarcam'],
-    'SCT': ['mst-sct'],
+    'MST-FlashCam': ['flashcam', 'mst-fc'],
+    'MST-NectarCam': ['nectarcam', 'mst-nc'],
+    'SCT': ['mst-sct', 'sct'],
     'LST': []
 }
 

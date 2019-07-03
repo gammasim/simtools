@@ -30,13 +30,13 @@ if __name__ == '__main__':
         telescopeModel=tel,
         sourceDistance=10,
         zenithAngle=20,
-        offAxisAngle=[0, 1, 2, 3]
+        offAxisAngle=[0, 1]
     )
 
     print('TEST::', rayTracing)
 
-    rayTracing.configParameters(zenithAngle=35, offAxisAngle=[0, 1, 2, 3], sourceDistance=10)
+    rayTracing.simulate(test=False, force=False)
 
-    rayTracing.simulate(test=True)
+    rayTracing.analyze()
 
     # script = simtel.getRunBashScript()
