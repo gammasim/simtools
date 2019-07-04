@@ -46,8 +46,7 @@ if __name__ == '__main__':
     )
 
     ray.simulate(test=False, force=False)
-
-    # ray_rx = copy(ray)
+    ray_rx = copy(ray)
 
     ray.analyze(force=True)
     ray_rx.analyze(force=True, use_rx=True)
