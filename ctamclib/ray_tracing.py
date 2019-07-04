@@ -352,6 +352,3 @@ class PSFImage:
         ax.add_artist(circle)
 
 # end of PSFImage
-
-# Utilities
-
