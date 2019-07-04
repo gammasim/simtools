@@ -35,8 +35,6 @@ if __name__ == '__main__':
 
     print('TEST:', simtel)
 
-    # simtel.configParameters(zenithAngle=20, offAxisAngle=2, sourceDistance=10)
-
     simtel.run(test=True)
 
     # script = simtel.getRunBashScript()
