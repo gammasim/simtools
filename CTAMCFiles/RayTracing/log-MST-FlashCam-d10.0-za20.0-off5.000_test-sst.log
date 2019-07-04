@@ -1,0 +1,507 @@
+Starting /afs/ifh.de/group/cta/scratch/prado/corsika_simtelarray/corsika6.9_simtelarray_19-03-08/sim_telarray/bin/sim_telarray with the following arguments:  '-c' '/home/prado/Work/Projects/CTA_MC/ctamclib/CTAMCFiles/cfg/CTA-prod4-Paranal-MST-FlashCam_test-sst.cfg' '-I../cfg/CTA' '-C' 'IMAGING_LIST=/home/prado/Work/Projects/CTA_MC/ctamclib/CTAMCFiles/RayTracing/photons-MST-FlashCam-d10.0-za20.0-off5.000_test-sst.lis' '-C' 'stars=/home/prado/Work/Projects/CTA_MC/ctamclib/CTAMCFiles/RayTracing/stars-MST-FlashCam-d10.0-za20.0-off5.000_test-sst.lis' '-C' 'altitude=2150.' '-C' 'telescope_theta=25.0' '-C' 'star_photons=5000' '-C' 'telescope_phi=0' '-C' 'camera_transmission=1.0' '-C' 'nightsky_background=all:0.' '-C' 'trigger_current_limit=1e10' '-C' 'telescope_random_angle=0' '-C' 'telescope_random_error=0' '-C' 'convergent_depth=0' '-C' 'maximum_telescopes=1' '-C' 'show=all' '-C' 'camera_filter=none' '/afs/ifh.de/group/cta/scratch/prado/corsika_simtelarray/corsika6.9_simtelarray_19-03-08/run9991.corsika.gz'
+This is sim_telarray version 2019-03-01 16:08:24 CET (konrad@wizard4), release 2019-03-08 (continuing prod-4 development).
+Compiled with gcc version "4.8.5 20150623 (Red Hat 4.8.5-28)".
+
+Sim_telarray was compiled with the following limits:
+   MAX_ARRAY: 100
+   MAX_TEL: 99
+   MAX_IGNORE: 98
+   MAX_ARRAY_GROUPS: 100
+   MAX_MIRRORS: 1000
+   MAX_PIXELS: 2368
+   MAX_FADC_BINS: 160
+   MAX_TRIG_BINS: 160
+   MAX_PIX_TYPES: 10
+   MAX_TRG_TYPES: 4
+   MAX_INPUTS_IN_TRG: 2368
+   MAX_NEIGHBOURS: 8
+   MAX_BUNCHES: 5000000 (*)
+   MAX_PHOTOELECTRONS: 2500000 (*)
+   MAX_PIXEL_PHOTOELECTRONS: 25000 (*)
+   MAX_FADC_SIGNAL: 65535
+   MAX_PER_CHANNEL: 1
+   and MAXIMUM_SLICES=160
+   Values marked by (*) can be overridden at runtime.
+
+Preprocessor flags defined include:
+   HESS_DEFAULTS CTA_KIND=10 CTA_PROD4 ANALYSE_SHOWER DISC_BITS_4 DISC_BITS_PER_BIN=4 LARGE_TELESCOPE PULSE_ANALYSIS REVISED_NSB_HANDLING SIXTEEN_BIT_ADC WITH_ANALOGSUM_TRG WITH_BYPASS_OPTICS WITH_DIGITALSUM_TRG WITH_LOW_GAIN_CHANNEL WITH_PULSE_ANALYSIS WITH_RPOLATOR
+   CFG_INCLUDE_PATH=".:/afs/ifh.de/group/cta/scratch/prado/corsika_simtelarray/corsika6.9_simtelarray_19-03-08/sim_telarray/cfg/common:/afs/ifh.de/group/cta/scratch/prado/corsika_simtelarray/corsika6.9_simtelarray_19-03-08/sim_telarray/cfg/hess:/afs/ifh.de/group/cta/scratch/prado/corsika_simtelarray/corsika6.9_simtelarray_19-03-08/sim_telarray/cfg/hess2:/afs/ifh.de/group/cta/scratch/prado/corsika_simtelarray/corsika6.9_simtelarray_19-03-08/sim_telarray/cfg/hess3:/afs/ifh.de/group/cta/scratch/prado/corsika_simtelarray/corsika6.9_simtelarray_19-03-08/sim_telarray/cfg/hess5000:/afs/ifh.de/group/cta/scratch/prado/corsika_simtelarray/corsika6.9_simtelarray_19-03-08/sim_telarray/cfg/CTA"
+
+Configuration file is '/home/prado/Work/Projects/CTA_MC/ctamclib/CTAMCFiles/cfg/CTA-prod4-Paranal-MST-FlashCam_test-sst.cfg'.
+Preprocessor is '/afs/ifh.de/group/cta/scratch/prado/corsika_simtelarray/corsika6.9_simtelarray_19-03-08/sim_telarray/bin/pfp -v -I. -DWITH_LOW_GAIN_CHANNEL -DMAX_GAINS=2 -DSIMTEL_VERSION=1551456504 -DSIMTEL_RELEASE=20190308 -I../cfg/CTA -I. -I/afs/ifh.de/group/cta/scratch/prado/corsika_simtelarray/corsika6.9_simtelarray_19-03-08/sim_telarray/cfg/common -I/afs/ifh.de/group/cta/scratch/prado/corsika_simtelarray/corsika6.9_simtelarray_19-03-08/sim_telarray/cfg/hess -I/afs/ifh.de/group/cta/scratch/prado/corsika_simtelarray/corsika6.9_simtelarray_19-03-08/sim_telarray/cfg/hess2 -I/afs/ifh.de/group/cta/scratch/prado/corsika_simtelarray/corsika6.9_simtelarray_19-03-08/sim_telarray/cfg/hess3 -I/afs/ifh.de/group/cta/scratch/prado/corsika_simtelarray/corsika6.9_simtelarray_19-03-08/sim_telarray/cfg/hess5000 -I/afs/ifh.de/group/cta/scratch/prado/corsika_simtelarray/corsika6.9_simtelarray_19-03-08/sim_telarray/cfg/CTA'.
+Default configuration file is /home/prado/Work/Projects/CTA_MC/ctamclib/CTAMCFiles/cfg/CTA-prod4-Paranal-MST-FlashCam_test-sst.cfg
+
+   Element name      Type    Elements  Lower b. Upper b.  Initial  Current
+---------------------------------------------------------------------------
+Section '_internal_':
+    SHOW              FUnc    
+    LOCK              FUnc    
+    UNLOCK            FUnc    
+    LIMITS            FUnc    
+    STATUS            FUnc    
+    LIST              FUnc    
+    GET               FUnc    
+    ECHO              FUnc    
+    WARNING           FUnc    
+    ERROR             FUnc    
+Section 'main':
+    INPUT_FILE        Text     1023                        iact.dat 
+                      Current:   iact.dat
+    PLOT_FILE         Text     1023                        none     
+                      Current:   none
+    HISTOGRAM_FILE    Text     1023                       
+                      Initial:   ctsim.hdata
+                      Current:   ctsim.hdata
+    PHOTOELECTRON_FILE
+                      Text     1023                        none     
+                      Current:   none
+    OUTPUT_FILE       Text     1023                        none     
+                      Current:   none
+    IMAGE_FILE        Text     1023                        none     
+                      Current:   none
+    IMAGING_LIST      Text     1023                        none     
+                      Current:   /home/prado/Work/Projects/CTA_MC/ctamclib/CTAMCFiles/RayTracing/photons-MST-FlashCam-d10.0-za20.0-off5.000_test-sst.lis
+    MOVIE             Int      1        0        1         0        0 
+    POWER_LAW         Double   1                           2.68     2.68 
+    ALTITUDE          Double   1                           1800.    2150 
+    CONVERGENT_POSition
+                      Double   3                          
+                      Initial:   0., 0., 0.
+                      Current:   all: 0 
+    CONVERGENT_Height Double   1                           0.       0 
+    CONVERGENT_Depth  Double   1                           0.       0 
+    SELECT_LIGHt_component
+                      Int      1        -1       3         0        0 
+    STARS             Text     1023                        none     
+                      Current:   /home/prado/Work/Projects/CTA_MC/ctamclib/CTAMCFiles/RayTracing/stars-MST-FlashCam-d10.0-za20.0-off5.000_test-sst.lis
+    STAR_PHOTONS      Long     1                           4000     5000 
+    SKY_IS_VARiable   Int      1                           0        0 
+    ONLY_TRIGGERED_ARRAYS
+                      Int      1                           1        1 
+    ONLY_TRIGGERED_TELESCOPES
+                      Int      1                           1        1 
+    ARRAY_TRIGGERs    Text     1023                        none     
+                      Current:   none
+    ARRAY_WINDOW      Double   1                           100      1000 
+    SAVE_PHOTONS      Int      1        0        3         0        0 
+    CHANNEL_SAVE_RESTORE
+                      Text     1023                        0        
+                      Current:   0
+    IGNORE_NONTRIGgered_showers
+                      Int      1        0        1         0        0 
+    MC_ONLY_TRIGGERED_showers
+                      Int      1        0        1         0        0 
+    IGNORE_MC_DATA    Int      1        0        1         0        0 
+    IOBUF_MAXimum     Int      1        100000            
+                      Initial:   2000000001000000000 
+    IOBUF_OUTPUT_MAXimum
+                      Int      1        100000             20000000 400000000 
+    RANDOM_STATE      Text     1023                        none     
+                      Current:   none
+    ALWAYS_AWEIGHTs   Int      1        -1       1         0        0 
+    ALL_WL_RANDOM     Int      1        0        1         0        0 
+    MAXIMUM_EVENTS    Int      1        0                  0        0 
+    MAXIMUM_TRIGGERED_EVENTS
+                      Int      1        0                  0        0 
+    ARRAY_CONFIG_NAME Text     99                                   
+                      Current:   
+    ARRAY_CONFIG_VERSION
+                      Text     99                                   
+                      Current:   
+    ARRAY_CONFIG_VARIANT
+                      Text     99                                   
+                      Current:   
+Section 'imaging':
+    SOURCE_AZIMUTH    Double   1                           0.       0 
+    SOURCE_ALTITUDE   Double   1                           0.       0 
+    REFERENCE_POSITION
+                      Double   3                          
+                      Initial:   0., 0., 750.
+                      Current:   0 0 750 
+    MAXIMUM_TELESCOPES
+                      Int      1        1        99        16       1 
+    BASE_TELESCOPE_NUMBER
+                      Int      1                           1        1 
+    OPTICS_CONFIG_NAME
+                      Text     99                                   
+                      Current:   MST
+    OPTICS_CONFIG_VERSION
+                      Text     99                                   
+                      Current:   2018-09-20
+    OPTICS_CONFIG_VARIANT
+                      Text     99                                   
+                      Current:   MST86
+    CAMERA_CONFIG_NAME
+                      Text     99                                   
+                      Current:   
+    CAMERA_CONFIG_VERSION
+                      Text     99                                   
+                      Current:   
+    CAMERA_CONFIG_VARIANT
+                      Text     99                                   
+                      Current:   
+    TELESCOPE_PHI     Double   1                           0        0 
+    TELESCOPE_AZIMUTH Double   1                           0        0 
+    TELESCOPE_THETA   Double   1                           0        25 
+    TELESCOPE_ZENITH_ANGLE
+                      Double   1                           0        25 
+    TELESCOPE_ALTITUDE
+                      FUnc    
+    TELESCOPE_RANDOM_ANGLE
+                      Double   1                           0.001    0 
+    TELESCOPE_RANDOM_ERROR
+                      Double   1                           0.001    0 
+    RANDOM_VIEWING_RING
+                      Double   2        0.       10.      *all: 0.  
+                      Current:   all: 0 
+    REVERSE_MODE      Int      1        0        1         0        0 
+    MIRROR_CLASS      Int      1        0        2         0        0 
+    MIRRORS           Int      1        1        1000      1        1 
+    BYPASS_OPTICS     Int      1        0        2         0        0 
+    PARABOLIC_DISH    Int      1        0        1         0        0 
+    FOCAL_Length      Double   1        10       10000     1500     1600 
+    EFFECTIVE_FOCAL_Length
+                      Double   1        0        10000     0        1644.51 
+    DISH_SHAPE_Length Double   1        0        10000     0        1920 
+    MIRROR_FOCAL_Length
+                      Double   1        0        10000     0        1607 
+    GRADING_OF_FOCAL_Length
+                      Double   1                           0.       0 
+    RANDOM_FOCAL_Length
+                      Double   2                           7.4,0.   
+                      Current:   4.7 0 
+    FOCUS_OFFSET      Double   4        0        100      
+                      Initial:   2.8, 28., 0., 0.
+                      Current:   2.55 28 0 0 
+    MIRROR_OFFSET     Double   1                           130.     0 
+    AXES_OFFSETs      Double   2                           0.,0.    
+                      Current:   160 0 
+    MIRROR_F_SCALE    Double   1000     1.0      1.0       all: 1.  
+                      Current:   all: 1 
+    MIRROR_LIST       Text     1023                       
+                      Initial:   hess_mirrors.dat
+                      Current:   mirror_CTA-100_1.20-86-0.04.dat
+    FLIP_MIRRORS      Int      1        0        1         0        0 
+    MIRROR_ALIGN_RANDOM_HORIzontal
+                      Double   4                          
+                      Initial:   0.0035, 28., 0.023, 0.0
+                      Current:   0.0035 28 0.023 0 
+    MIRROR_ALIGN_RANDOM_VERTical
+                      Double   4                          
+                      Initial:   0.0034, 28., 0.010, 0.0
+                      Current:   0.0034 28 0.01 0 
+    MIRROR_ALIGN_RANDOM_DISTance
+                      Double   1                           2.0      2 
+    MIRROR_OPT        Double   3                           0,0,0    
+                      Current:   all: 0 
+    MIRROR_REFLECTION_RANDOM_Angle
+                      Double   3        0.0      2.0      
+                      Initial:   0.0066,0.,0.
+                      Current:   0.0085 0 0 
+    MIRROR_DEGRADED_REFLECTION
+                      Double   1        0.0      1.0       1.0      1 
+    MIRROR_REFLECTIVITY
+                      Text     1023                       
+                      Initial:   hess_reflect.dat
+                      Current:   ref_AlSiO2HfO2.dat
+    MIRROR_SECONDARY_REFLECTIVITY
+                      Text     1023                        same     
+                      Current:   same
+    TELESCOPE_TRANSmission
+                      Double   6                          
+                      Initial:   0.89,0,0,0,0
+                      Current:   0.8928 1 0.0235 4 3.38 0 
+    PRIMARY_DIAMETER  Double   1                           0.       0 
+    PRIMARY_HOLE_DIAMETER
+                      Double   1                           0.       0 
+    PRIMARY_MIRROR_PARAMeters
+                      Double   20                          all: 0.  
+                      Current:   all: 0 
+    PRIMARY_REF_RADIUS
+                      Double   1                           1.0      1 
+    PRIMARY_SEGMENTATION
+                      Text     1023                        none     
+                      Current:   none
+    SECONDARY_DIAMETER
+                      Double   1                           0.       0 
+    SECONDARY_SHADOW_DIAMETER
+                      Double   1                           -1.      -1 
+    SECONDARY_SHADOW_OFFSET
+                      Double   1                           0.       0 
+    SECONDARY_HOLE_DIAMETER
+                      Double   1                           0.       0 
+    SECONDARY_MIRROR_PARAMeters
+                      Double   20                          all: 0.  
+                      Current:   all: 0 
+    SECONDARY_REF_RADIUS
+                      Double   1                           1.0      1 
+    SECONDARY_SEGMENTATION
+                      Text     1023                        none     
+                      Current:   none
+    SECONDARY_BAFFLE  Double   5                           all: 0.  
+                      Current:   all: 0 
+    FOCAL_SURFACE_PARAMeters
+                      Double   20                          all: 0.  
+                      Current:   all: 0 
+    FOCAL_SURFACE_REF_RADIUS
+                      Double   1                           1.0      1 
+    PIXELS_PARALLEL   Int      1        0        2         1        1 
+    CAMERA_TYPE       Int      1        3        3         3        3 
+    CAMERA_PIXELs     Int      1        1        2368      960      960 
+    CAMERA_BODY_SHAPE Int      1        0        3         0        2 
+    CAMERA_BODY_DIAMETER
+                      Double   1        0        1000      160      300 
+    CAMERA_DEPTH      Double   1        0        1000      0        0 
+    CAMERA_SCALE_FACTOR
+                      Double   1        0.1      10        1.0      1 
+    CAMERA_TRANSmission
+                      Double   1        0.01     1.00      1.00     1 
+    CAMERA_FILTER     Text     1023                        none     
+                      Current:   none
+    QUANTUM_EFFiciency
+                      Text     1023                       
+                      Initial:   hess_qe2.dat
+                      Current:   hess_qe2.dat
+    PM_COLLECTION_EFFiciency
+                      Double   1        0.01     1.00      1.00     1 
+    QE_VARIATION      Double   1        0.0                0.04     0.04 
+    PM_AVERAGE_GAIN   Double   1        1e4      3e7       1.72e5   172000 
+    ADJUST_GAIN       Double   1        0.1      10.       1.0      1 
+    PM_GAIN_INDEX     Double   1        0.0      15.0      5.5      5.5 
+    GAIN_VARIATION    Double   1        0.0                0.02     0.02 
+    FLATFIELDING      Int      1        0        1         1        1 
+    PIXEL_CELLS       Int      1        0                  0        0 
+    PM_VOLTAGE_VARIATION
+                      Double   1        0.0                0.03     0.03 
+    PM_TRANSIT_TIME   Double   1        0                  20.      20 
+    TRANSIT_TIME_JITTER
+                      Double   1        0.0                0.75     0.75 
+    TRANSIT_TIME_ERROR
+                      Double   1        -1.0               0.0      0 
+    TRANSIT_TIME_CALIB_ERROR
+                      Double   1        0.0                0.0      0 
+    TRANSIT_TIME_COMPENSATE_STEP
+                      Double   1        0.0                0.0      0 
+    TRANSIT_TIME_COMPENSATE_ERROR
+                      Double   1        0.0                0.0      0 
+    DEAD_PIXELs       Int      10                          all: -1  
+                      Current:   all: -1 
+    PM_PHOTOELECTRON_SPECTRUM
+                      Text     1023                       
+                      Initial:   hess_spe2.dat
+                      Current:   hess_spe2.dat
+    PM_SPE_TABLE_SIZE Int      1        1000     20000     10000    10000 
+    PHOTON_DELAY      Double   1                           0.0      0 
+    AFTERPULSE_ALTERNATE
+                      Int      1        0        0         0        0 
+    SIMPLE_THRESHOLD  Double   1        1        10000     4.0      4 
+    TRIGGER_CURRENT_LIMIT
+                      Double   1                           20.0     1e+10 
+    TRIGGER_PIXELs    Int      1        1                  4        4 
+    MULTIPLICITY_OFFSET
+                      Double   1        -0.5     0.5       -0.5     -0.5 
+    TRIGGER_NEIGHBOURs
+                      Int      1        1                  1        1 
+    TELTRIG_MIN_TIME  Double   1        0.       10.       1.5      1.5 
+    TELTRIG_MIN_SIGSUM
+                      Double   1        0.       1000.     7.8      7.8 
+    TRIGGER_TELESCOPES
+                      Int      1        1                  2        1 
+    IGNORE_TELESCOPEs Int      98                          all: -1  
+                      Current:   all: -1 
+    DEFAULT_TRIGger   Text     31                          Majority 
+                      Current:   Majority
+    ASUM_SHAPING_FILE Text     1023                        none     
+                      Current:   none
+    ASUM_CLIPping     Double   1        0.                 0.       0 
+    ASUM_THRESHold    Double   1        0.                 0.       0 
+    ASUM_OFFSET       Double   1        0.                 0.       0 
+    DSUM_PEDSUB       Int      1        0        1         1        1 
+    DSUM_PRE_CLIPping Int      1        0                  0        0 
+    DSUM_SHAPING_FILE Text     1023                        none     
+                      Current:   none
+    DSUM_SHAPING_RENORMalize
+                      Int      1        0        1         0        0 
+    DSUM_OFFSET       Double   1        0.                 0.       0 
+    DSUM_IGNORE_BELOW Int      1        0                  0        0 
+    DSUM_ZERO_CLIP    Int      1        -1       1         0        0 
+    DSUM_PRESCALE     Int      2                           0,0      
+                      Current:   all: 0 
+    DSUM_CLIPping     Int      1        0                  0        0 
+    DSUM_PRESUM_MAX   Int      1        0                  0        0 
+    DSUM_PRESUM_SHIFT Int      1        0        4         0        0 
+    DSUM_THRESHold    Double   1        0                  0        54 
+    TRIGGER_DELAY_compensation
+                      Double   4                           all: 0.  
+                      Current:   all: 0 
+    NUM_GAINS         Int      1        1        2         2        2 
+    CHANNELS_PER_CHIP Int      1        0                  4        4 
+    DISCRIMINATOR_PULSE_SHAPE
+                      Text     1023                       
+                      Initial:   unspecified_shape.dat
+                      Current:   pulse_FlashCam_7dynode_v2a.dat
+    DISCRIMINATOR_AMPLITUDE
+                      Double   1        0.0                1.0      0 
+    DISCRIMINATOR_THRESHOLD
+                      Double   1        0.0                4.       99999 
+    DISCRIMINATOR_VAR_THRESHOLD
+                      Double   1        0.0                0.2      0.2 
+    DISCRIMINATOR_SCALE_THRESHOLD
+                      Double   1        0.5      2.0       1.0      1 
+    DISCRIMINATOR_GATE_LENGTH
+                      Double   1        -100     100       2.0      2 
+    DISCRIMINATOR_VAR_GATE_LENGTH
+                      Double   1        0.       100       0.1      0.1 
+    DISCRIMINATOR_TIME_OVER_THRESHOLD
+                      Double   1        0.       100       1.5      1.5 
+    DISCRIMINATOR_VAR_TIME_OVER_THRESHOLD
+                      Double   1        0.       100       0.1      0.1 
+    DISCRIMINATOR_SIGSUM_OVER_THRESHOLD
+                      Double   1        0.                 0.0      0 
+    DISCRIMINATOR_VAR_SIGSUM_OVER_THRESHOLD
+                      Double   1        0.                 0.0      0 
+    DISCRIMINATOR_RISE_TIME
+                      Double   1        0.0      100.      1.0      1 
+    DISCRIMINATOR_FALL_TIME
+                      Double   1        0.0      100.      1.0      1 
+    DISCRIMINATOR_HYSTERESIS
+                      Double   1        0.0                0.0      0 
+    DISCRIMINATOR_OUTPUT_AMPlitude
+                      Double   1        0.                 42.0     42 
+    DISCRIMINATOR_OUTPUT_VAR_PERCENT
+                      Double   1        0.       50.       10.      10 
+    DISC_AC_COUPLED   Int      1        0        1         1        1 
+    DISC_BINS         Int      1        1        160       20       20 
+    DISC_START        Int      1                           0        0 
+    PIXELTRG_TIME_STEP
+                      Double   1        0.                 0.       0 
+    FAKE_TRIGGER      Int      1                           0        0 
+    FAKE_DELAY        Double   1                           0.       0 
+    FADC_PULSE_SHAPE  Text     1023                       
+                      Initial:   hess_fadc_shape.dat
+                      Current:   pulse_FlashCam_7dynode_v2a.dat
+    FADC_MHZ          Double   1                           1000     1000 
+    FADC_BINS         Int      1        1        160       20       20 
+    FADC_PER_CHANNEL  Int      1        1        2         1        1 
+    FADC_NOISE        Double   1        0        100       4.0      2.5 
+    FADC_LG_NOISE     Double   1        0        100       1.3      1.3 
+    FADC_AMPlitude    Double   1        0.0                14.0     10.33 
+    FADC_LG_AMPlitude Double   1        0.0                1.0      1 
+    HG_LG_VARiation   Double   1        0.0      0.25      0.0      0 
+    FADC_PEDESTAL     Double   1        0.0                100.0    100 
+    FADC_DEV_PEDESTAL Double   1        0.0                0.0      0 
+    FADC_VAR_PEDESTAL Double   1        0.0                0.75     0.75 
+    FADC_ERR_PEDESTAL Double   1        0.0                0.08     0.08 
+    FADC_SYSVAR_PEDESTAL
+                      Double   1        0.0                0.04     0.04 
+    FADC_LG_PEDESTAL  Double   1        -2                 -1       -1 
+    FADC_LG_DEV_PEDESTAL
+                      Double   1        -2                 -1       -1 
+    FADC_LG_VAR_PEDESTAL
+                      Double   1        -2                 -1       -1 
+    FADC_LG_ERR_PEDESTAL
+                      Double   1        -2                 -1       -1 
+    FADC_LG_SYSVAR_PEDESTAL
+                      Double   1        -2                 -1       -1 
+    FADC_AC_COUPLED   Int      1        0        1         1        1 
+    FADC_SENSITIVITY  Double   1        0.0                1.0      1 
+    FADC_VAR_SENSITIVITY
+                      Double   1        0.0                0.02     0.02 
+    FADC_SUM_BINS     Int      1        0                  0        0 
+    FADC_SUM_OFFSET   Int      1        -160     160       0        0 
+    FADC_MAX_SIGNAL   UInt     1        0        65535     0        65535 
+    FADC_MAX_SUM      UInt     1        0                  0        16777215 
+    FADC_LG_SENSITIVITY
+                      Double   1        -2                 -1       -1 
+    FADC_LG_VAR_SENSITIVITY
+                      Double   1        -2                 -1       -1 
+    FADC_LG_MAX_SIGNAL
+                      Int      1        -2       65535     -1       -1 
+    FADC_LG_MAX_SUM   Int      1        -2                 -1       -1 
+    NIGHTSKY_BACKGROUND
+                      Double   2368     0.0               
+                      Initial:   all: 0.100
+                      Current:   all: 0 
+    NSB_SCALING_FACTOR
+                      Double   1        0.0      1000      1.0      1 
+    NSB_AUTOSCALE_AIRMASS
+                      Double   2        0.0      1.0       0.0,0.15 
+                      Current:   0 0.15 
+    NSB_OFFAXIS       Double   5                           all: 0.0 
+                      Current:   all: 0 
+    NSB_GAIN_DROP_SCALE
+                      Double   1        0.                 0.       0 
+    LASER_PHOTONS     Double   10       0.1                500      
+                      Current:   500 0 0 0 0 0 0 0 0 0 
+    LASER_VAR_PHOTONS Double   10       0        1        
+                      Initial:   all: 0.05
+                      Current:   all: 0.05 
+    LASER_EVENTS      Int      10       0                  all: 0   
+                      Current:   all: 0 
+    LASER_PULSE_OFFSET
+                      Double   1                           0.       0 
+    LASER_PULSE_EXPTime
+                      Double   1        0.                 0.       0 
+    LASER_PULSE_SIGTime
+                      Double   1        0.                 0.       0 
+    LASER_PULSE_TWIDth
+                      Double   1        0.                 0.       0 
+    LASER_EXTERNAL_TRIGger
+                      Int      1        0        1         0        0 
+    LED_PHOTONS       Double   1        0.05               4.0      4 
+    LED_VAR_PHOTONS   Double   1        0        1         0.0      0 
+    LED_EVENTS        Int      1        0                  0        0 
+    LED_PULSE_OFFSET  Double   1                           0.       0 
+    LED_PULSE_SIGTime Double   1        0.                 0.       0 
+    DARK_EVENTS       Int      1        0                  0        0 
+    PEDESTAL_EVENTS   Int      1        0                  0        0 
+    FULL_SIMULATION   Int      1        0        2         2        2 
+    PULSE_ANALYSIS    Int      1                           0        -40 
+    SUM_BEFORE_PEAK   Int      1        -1                 -1       1 
+    SUM_AFTER_PEAK    Int      1        -1                 -1       1 
+    CAMERA_CONFIG_FILE
+                      Text     1023                       
+                      Initial:   hess_camera.dat
+                      Current:   hess_camera.dat
+    IMAGE_PE_RANGE    Double   1        10       1000      30       30 
+    IMAGE_GAMMA_COEFFicient
+                      Double   1        -5.      5.        0.85     0.85 
+    OUTPUT_FORMAT     Int      1                           0        1 
+    SAMPLED_OUTPUT    Int      1                           0        1 
+    ZERO_SUPpression  Int      1        0        255       0        0 
+    DATA_REDuction    Int      1        0        2         0        0 
+    PEAK_SENSING      Int      1        0                  0        0 
+    MIN_PHOTONS       Double   1                           -1.      -1 
+    MIN_PHOTOELECTRONS
+                      Int      1                           -1       -1 
+    STORE_PHOTOELECTRONS
+                      Int      1                           -1       22 
+    TAILCUT_SCALE     Double   1        0.0      10        1.0      1 
+Section 'transmission':
+    ATMOSPHERIC_TRANSMISSION
+                      Text     1023                       
+                      Initial:   hess_atmo_trans.dat
+                      Current:   atm_trRead atmospheric transmission data from file atm_trans_2150_1_10_0_0_2150.dat
+Got 800 wavelength intervals for 41 heights starting at 2.150 km
+Too few valid rows in FADC pulse file 'pulse_FlashCam_7dynode_v2a.dat'.
+ans_2150_1_10_0_0_2150.dat
+#============================
+#
+# MODTRAN options as follows:
+#
+# Atmospheric model: 1 (Tropical atmosphere)
+# Haze: 10 (DESERT extinction, VIS is wind speed dependent)
+# Season: 0
+# Vulcanic dust: 0
+# Zenith angle:  0.00 deg
+# End altitude: 2.150 km
+# Ground altitude: 2.150 km
+#
+#============================
+
+Reading single photoelectron pulse height data from file hess_spe2.dat
+Average pulse height is 0.999171
+Reading FADC pulse shape data from file pulse_FlashCam_7dynode_v2a.dat for 2 gains
+Error reading pulse shape table(s).
+
+Setup not complete.
