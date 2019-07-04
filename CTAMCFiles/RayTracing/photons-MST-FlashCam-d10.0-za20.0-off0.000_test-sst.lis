@@ -1,8 +1,0 @@
-#==================================================
-# List of photons for RayTracing simulations
-#==================================================
-# configFile = /home/prado/Work/Projects/CTA_MC/ctamclib/CTAMCFiles/cfg/CTA-prod4-Paranal-MST-FlashCam_test-sst.cfg
-# zenithAngle [deg] = 20
-# offAxisAngle [deg] = 0
-# sourceDistance [km] = 10
-
