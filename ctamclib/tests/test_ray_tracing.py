@@ -22,16 +22,16 @@ if __name__ == '__main__':
     sourceDistance = 10
     site = 'south'
     version = 'prod4'
-    label = 'test-lst'
+    label = 'test-astri'
     zenithAngle = 20
-    offAxisAngle = [0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5]
+    # offAxisAngle = [0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5]
     # offAxisAngle = [0, 1.0, 2.0, 3.0, 4.0, 5.0]
-    # offAxisAngle = [0, 2.5, 5.0]
+    offAxisAngle = [0, 2.5, 5.0]
 
     # Test with MST
     tel = TelescopeModel(
         yamlDBPath=yamlDBPath,
-        telescopeType='lst',
+        telescopeType='astri',
         site=site,
         version=version,
         label=label
@@ -45,11 +45,11 @@ if __name__ == '__main__':
         offAxisAngle=offAxisAngle
     )
 
-    ray.simulate(test=False, force=False)
-    ray_rx = copy(ray)
+    ray.simulate(test=True, force=False)
+    # ray_rx = copy(ray)
 
     ray.analyze(force=True)
-    ray_rx.analyze(force=True, use_rx=True)
+    # ray_rx.analyze(force=True, useRX=True)
     # Plotting PSF images
 
     for im in ray.images():
@@ -73,7 +73,18 @@ if __name__ == '__main__':
     # ratio = [r / s for (r, s) in zip(ray_rx._results['d80_deg'], ray._results['d80_deg'])]
 
     ray.plot('d80_deg', marker='o', linestyle=':')
-    ray_rx.plot('d80_deg', marker='s', linestyle='--')
+    # ray_rx.plot('d80_deg', marker='s', linestyle='--')
+
+    plt.show()
+
+    # Plotting effArea
+    plt.figure(figsize=(8, 6), tight_layout=True)
+    ax = plt.gca()
+    ax.set_xlabel('off-axis')
+    ax.set_ylabel('eff. area')
+
+    ray.plot('eff_area', marker='o', linestyle=':')
+    # ray_rx.plot('d80_deg', marker='s', linestyle='--')
 
     plt.show()
 

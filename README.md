@@ -28,18 +28,21 @@ TODO:
 GUIDELINES:
 
     - Any (functional) module must have a correspondent test module.
-    These modules should be located at 'tests' and names as test_{module name}.py
+    These modules should be located at 'tests' and named as test_{module name}.py
+    - Names should always be validated. (See util/names.py)
+    - Generic utilities should go to util/
+    - 
 
 STYLE REMARKS:
 
+    - Pep8, please
     - Breaking list of arguments when needed:
     function(
         par1,
         par2,
         par3
     )
-
-    -
+    - 
 
 DESIGN REMARKS:
 
