@@ -3,7 +3,7 @@
 import logging
 
 
-__all__ = ['configParameters']
+__all__ = ['collectArguments']
 
 
 def collectArguments(obj, parameters, **kwargs):
@@ -17,3 +17,18 @@ def collectArguments(obj, parameters, **kwargs):
         else:
             logging.error('Parameter {} has to be given'.format(par))
             # raise
+
+
+def collectKwargs(label, inKwargs):
+    outKwargs = dict()
+    for key, value in inKwargs.items():
+        if label + '_' in key:
+            outKwargs[key.replace(label + '_', '')] = value
+    return outKwargs
+
+
+def setDefaultKwargs(inKwargs, **kwargs):
+    for par, value in kwargs.items():
+        if par not in inKwargs.keys():
+            inKwargs[par] = value
+    return inKwargs

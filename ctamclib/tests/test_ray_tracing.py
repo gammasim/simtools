@@ -59,7 +59,9 @@ if __name__ == '__main__':
         ax.set_xlabel('X')
         ax.set_ylabel('Y')
 
-        im.plot()
+        # psf_* for PSF circle
+        # image_* for histogram
+        im.plot(psf_color='b')
 
         ax.set_aspect('equal', adjustable='datalim')
         plt.show()
