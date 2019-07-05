@@ -14,7 +14,7 @@ from ctamclib.util import names
 from ctamclib.util.model import computeTelescopeTransmission
 from ctamclib.telescope_model import TelescopeModel
 from ctamclib.simtel_runner import SimtelRunner
-from ctamclib.util.general import collectArguments
+from ctamclib.util.general import collectArguments, collectKwargs, setDefaultKwargs
 
 __all__ = ['RayTracing']
 
@@ -356,14 +356,29 @@ class PSFImage:
         return n
 
     def plot(self, **kwargs):
+        ''' kwargs for histogram: image_*
+            kwargs for PSF circle: psf_*
+        '''
         ax = plt.gca()
         fac = 1
         xToPlot = fac * np.array(self.xPos) - fac * self.xPosMean
         yToPlot = fac * np.array(self.yPos) - fac * self.yPosMean
 
-        ax.hist2d(xToPlot, yToPlot, bins=80, cmap=plt.cm.gist_heat_r, **kwargs)
+        kwargs = setDefaultKwargs(
+            kwargs,
+            image_bins=80,
+            image_cmap=plt.cm.gist_heat_r,
+            psf_color='k',
+            psf_fill=False,
+            psf_lw=2,
+            psf_ls='--'
+        )
+        kwargsForImage = collectKwargs('image', kwargs)
+        kwargsForPSF = collectKwargs('psf', kwargs)
 
-        circle = plt.Circle((0, 0), self.d80_cm / 2, color='black', fill=False, lw=2, ls='--')
+        ax.hist2d(xToPlot, yToPlot, **kwargsForImage)
+
+        circle = plt.Circle((0, 0), self.d80_cm / 2, **kwargsForPSF)
         ax.add_artist(circle)
 
 # end of PSFImage
