@@ -2,9 +2,12 @@
 
 import logging
 import yaml
-
 from pathlib import Path
+
 from ctamclib.util import names
+from ctamclib.model_parameters import MODEL_PARS
+
+__all__ = ['TelescopeModel']
 
 
 def whichTelescopeSize(telescopeType):
@@ -24,12 +27,13 @@ def whichTelescopeSize(telescopeType):
 class TelescopeModel:
     def __init__(
         self,
-        yamlDBPath,
         telescopeType,
         site,
+        yamlDBPath=None,
         version='default',
         label=None,
-        filesLocation=None
+        filesLocation=None,
+        readFromDB=True
     ):
         ''' The arguments for this class are ONLY suppose to be given through the constructor
             (where they are safely validated) and they are NOT suppose to be changed afterwards.
@@ -48,7 +52,8 @@ class TelescopeModel:
 
         self.filesLocation = Path.cwd() if filesLocation is None else Path(filesLocation)
 
-        self.loadParametersFromDB()
+        if readFromDB:
+            self.loadParametersFromDB()
 
         self._isFileExported = False
 
@@ -80,7 +85,39 @@ class TelescopeModel:
     @classmethod
     def fromConfigFile(cls, telescopeType, site, label, configFileName):
         ''' Create a TelescopeModel from a sim_telarray config file '''
-        pass
+
+        parameters = dict()
+        tel = cls(telescopeType=telescopeType, site=site, label=label, readFromDB=False)
+
+        def processLine(words):
+            iComment = len(words)
+            for w in words:
+                if '%' in w:
+                    iComment = words.index(w)
+                    break
+            words = words[0:iComment]
+            par = words[0].replace('=', '')
+            value = ''
+            for w in words[1:]:
+                w = w.replace('=', '')
+                w = w.replace(',', ' ')
+                value += w + ' '
+            return par, value
+
+        with open(configFileName, 'r') as file:
+            for line in file:
+                words = line.split()
+                if len(words) == 0:
+                    continue
+                elif '%' in words[0] or 'echo' in words:
+                    continue
+                elif '#' not in line and len(words) > 0:
+                    par, value = processLine(words)
+                    par, value = tel.validateParameter(par, value)
+                    parameters[par] = value
+
+        tel.addParameters(**parameters)
+        return tel
 
     def loadParametersFromDB(self):
         ''' Parameters from DB are stored in the _parameters dict'''
@@ -101,9 +138,13 @@ class TelescopeModel:
         if whichTelescopeSize(self.telescopeType) == 'MST':
             readParsFromOneType(self.yamlDBPath, 'MST-optics', parametersDB)
 
-        for par in parametersDB:
-            if parametersDB[par]['Applicable']:
-                self._parameters[par] = parametersDB[par][self._version]
+        for parNameIn in parametersDB:
+            if parametersDB[parNameIn]['Applicable']:
+                parName, parValue = self.validateParameter(
+                    parNameIn,
+                    parametersDB[parNameIn][self._version]
+                )
+                self._parameters[parName] = parValue
 
         # Site
         # Two site parameters need to be read:
@@ -120,11 +161,20 @@ class TelescopeModel:
                     if parName in par and self.site.lower() in par:
                         return allPars[par][self._version]
 
-        for sitePar in ['atmospheric_transmission', 'altitude']:
-            self._parameters[sitePar] = getSiteParameter(
-                self.yamlDBPath, self.site, sitePar
-            )
+        for siteParName in ['atmospheric_transmission', 'altitude']:
+            siteParValue = getSiteParameter(self.yamlDBPath, self.site, siteParName)
+            parName, parValue = self.validateParameter(siteParName, siteParValue)
+            self._parameters[parName] = parValue
+
     # end loadParametersFromDB
+
+    def validateParameter(self, parNameIn, parValueIn):
+        logging.debug('Validating parameter {}'.format(parNameIn))
+        for parNameModel in MODEL_PARS.keys():
+            if parNameIn == parNameModel or parNameIn in MODEL_PARS[parNameModel]['names']:
+                parType = MODEL_PARS[parNameModel]['type']
+                return parNameModel, parType(parValueIn)
+        return parNameIn, parValueIn
 
     def getParameter(self, parName):
         ''' Return an EXISTING parameter of the model '''
