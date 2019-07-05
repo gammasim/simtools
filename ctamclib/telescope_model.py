@@ -84,8 +84,10 @@ class TelescopeModel:
 
     @classmethod
     def fromConfigFile(cls, telescopeType, site, label, configFileName):
-        ''' Create a TelescopeModel from a sim_telarray config file '''
-
+        ''' Create a TelescopeModel from a sim_telarray config file.
+            TODO: dealing with ifdef/indef etc. By now it just keeps the
+            last version of the parameters in the file.
+        '''
         parameters = dict()
         tel = cls(telescopeType=telescopeType, site=site, label=label, readFromDB=False)
 
