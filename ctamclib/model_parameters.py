@@ -7,6 +7,5 @@ MODEL_PARS = {
     'fadc_mhz': {'type': float, 'names': ['fadc_MHz']},
     'quantum_efficiency': {'type': str, 'names': ['quantum_eff']},
     'telescope_transmission': {'type': str, 'names': ['telescope_trans']},
-    'camera_transmission': {'type': str, 'names': ['camera_trans']},
-    'iobuf_output_blabla': {'type': float, 'names': ['iobuf_output_maximum']}
+    'camera_transmission': {'type': str, 'names': ['camera_trans']}
 }
