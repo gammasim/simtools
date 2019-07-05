@@ -11,6 +11,7 @@ import math
 import matplotlib.pyplot as plt
 
 from ctamclib.util import names
+from ctamclib.util.model import computeTelescopeTransmission
 from ctamclib.telescope_model import TelescopeModel
 from ctamclib.simtel_runner import SimtelRunner
 from ctamclib.util.general import collectArguments
@@ -101,7 +102,7 @@ class RayTracing:
             )
             simtel.run(test=test, force=force)
 
-    def analyze(self, export=True, force=False, use_rx=False):
+    def analyze(self, export=True, force=False, useRX=False, noTelTransmission=False):
         """ Analyzing RayTracing"""
 
         if self._fileResults.exists() and not force:
@@ -110,6 +111,11 @@ class RayTracing:
             return
 
         focalLength = float(self._telescopeModel.getParameter('focal_length'))
+        # FUTURE: telTransmission processing (from str to list of floats)
+        # should be done by TelescopeModel class, not here
+        telTransmissionPars = list()
+        for p in self._telescopeModel.getParameter('telescope_transmission').split():
+            telTransmissionPars.append(float(p))
         cmToDeg = 180. / math.pi / focalLength
 
         self._results = dict()
@@ -131,29 +137,35 @@ class RayTracing:
                 'photons'
             )
             file = self._baseDirectory.joinpath('RayTracing').joinpath(photonsFileName)
-            image = PSFImage()
+            telTransmission = 1 if noTelTransmission else computeTelescopeTransmission(
+                telTransmissionPars,
+                thisOffAxis
+            )
+            image = PSFImage(focalLength)
             image.readSimtelFile(file)
 
-            if use_rx:
-                d80, xPosMean, yPosMean, effArea = self.processRX(file)
-                image.d80 = d80
+            if useRX:
+                d80_cm, xPosMean, yPosMean, effArea = self.processRX(file)
+                image.d80_cm = d80_cm
+                image.d80_deg = d80_cm * cmToDeg
                 image.xPosMean = xPosMean
                 image.yPosMean = yPosMean
-                image.effArea = effArea
+                image.effArea = effArea * telTransmission
             else:
                 image.loadPSF()
-                d80 = image.d80
+                d80_cm = image.d80_cm
+                d80_deg = image.d80_deg
                 xPosMean = image.xPosMean
                 yPosMean = image.yPosMean
-                effArea = image.effArea
+                effArea = image.effArea * telTransmission
 
             self._psfImages[thisOffAxis] = image
             effFlen = (
                 'nan' if thisOffAxis == 0 else xPosMean / math.tan(thisOffAxis * math.pi / 180.)
             )
             self._results['off_axis'].append(thisOffAxis)
-            self._results['d80_cm'].append(d80)
-            self._results['d80_deg'].append(d80 * cmToDeg)
+            self._results['d80_cm'].append(d80_cm)
+            self._results['d80_deg'].append(d80_deg)
             self._results['eff_area'].append(effArea)
             self._results['eff_flen'].append(effFlen)
         # end for offAxis
@@ -171,11 +183,11 @@ class RayTracing:
             shell=True
         )
         rxOutput = rxOutput.split()
-        d80 = 2 * float(rxOutput[0])
+        d80_cm = 2 * float(rxOutput[0])
         xMean = float(rxOutput[1])
         yMean = float(rxOutput[2])
         effArea = float(rxOutput[5])
-        return d80, xMean, yMean, effArea
+        return d80_cm, xMean, yMean, effArea
 
     def exportResults(self):
         logging.info('Exporting results')
@@ -210,7 +222,7 @@ class RayTracing:
 
 
 class PSFImage:
-    def __init__(self):
+    def __init__(self, focalLength):
         """ PSFImage only knows the list of photon position in cm
             No information about the telescope (e.g focal length) should be used in here.
         """
@@ -221,8 +233,10 @@ class PSFImage:
         self.effArea = None
         self.totalPhotons = None
         self.totalArea = None
-        self.d80 = None
+        self.d80_cm = None
+        self.d80_deg = None
         self._storedPSF = dict()
+        self._cmToDeg = 180. / math.pi / focalLength
 
     def __repr__(self):
         return 'PSFImage ({}/{} photons)'.format(self.detectedPhotons, self.totalPhotons)
@@ -244,7 +258,8 @@ class PSFImage:
         self.effArea = self.detectedPhotons * self.totalArea / self.totalPhotons
 
     def loadPSF(self):
-        self.d80 = self.getPSF(0.8)
+        self.d80_cm = self.getPSF(0.8)
+        self.d80_deg = self.d80_cm * self._cmToDeg
 
     def processSimtelLine(self, line):
         words = line.split()
@@ -348,7 +363,7 @@ class PSFImage:
 
         ax.hist2d(xToPlot, yToPlot, bins=80, cmap=plt.cm.gist_heat_r, **kwargs)
 
-        circle = plt.Circle((0, 0), self.d80 / 2, color='black', fill=False, lw=2, ls='--')
+        circle = plt.Circle((0, 0), self.d80_cm / 2, color='black', fill=False, lw=2, ls='--')
         ax.add_artist(circle)
 
 # end of PSFImage
