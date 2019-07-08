@@ -1,2 +1,13 @@
+# Produced files
 CTAMCFiles
 telarray_rand.conf.used
+
+# Compiled files
+*.py[co]
+*.a
+*.o
+*.so
+__pycache__
+
+# Sphinx
+docs/build

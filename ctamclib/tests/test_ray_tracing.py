@@ -64,7 +64,7 @@ if __name__ == '__main__':
         im.plot(psf_color='b')
 
         ax.set_aspect('equal', adjustable='datalim')
-        plt.show()
+        plt.show()  
 
     # Plotting d80
     plt.figure(figsize=(8, 6), tight_layout=True)

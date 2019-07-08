@@ -1,3 +1,3 @@
 #!/usr/bin/bash
 
-export PYTHONPATH=$PYTHONPATH:"./ctamclib/"
+export PYTHONPATH=$PYTHONPATH:"${PWD}"
