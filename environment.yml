@@ -1,0 +1,18 @@
+# A conda environment with all useful package for ctamclib developers
+name: ctamclib-dev
+channels:
+  - default
+dependencies:
+  - logging
+  - yaml
+  - pathlib
+  - os
+  - numpy
+  - astropy
+  - subprocess
+  - math
+  - matplotlib
+  - copy
+  - sphinx
+
+
