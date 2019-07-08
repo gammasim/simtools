@@ -1,5 +1,12 @@
 #!/usr/bin/python3
 
+"""
+ray_tracing.py
+====================================
+Testing docstrings
+"""
+
+
 import logging
 from pathlib import Path
 import numpy as np
@@ -28,7 +35,14 @@ class RayTracing:
         filesLocation=None,
         **kwargs
     ):
-        ''' Comment '''
+        """
+        Blah blah blah.
+
+        Parameters
+        ---------
+        name
+            A string to assign to the `name` instance attribute.
+        """
 
         self._simtelSourcePath = simtelSourcePath
         self._filesLocation = Path.cwd() if filesLocation is None else Path(filesLocation)
@@ -88,7 +102,7 @@ class RayTracing:
                 logging.error('Invalid TelescopeModel')
 
     def simulate(self, test=False, force=False):
-        """ Simulating RayTracing"""
+        """Simulate RayTracing."""
         for thisOffAxis in self._offAxisAngle:
             logging.info('Simulating RayTracing for offAxis={}'.format(thisOffAxis))
             simtel = SimtelRunner(
@@ -103,7 +117,7 @@ class RayTracing:
             simtel.run(test=test, force=force)
 
     def analyze(self, export=True, force=False, useRX=False, noTelTransmission=False):
-        """ Analyzing RayTracing"""
+        """Analyze RayTracing."""
 
         if self._fileResults.exists() and not force:
             logging.info('Skipping analyze because file exists and force = False')
