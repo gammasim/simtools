@@ -27,11 +27,12 @@ TODO:
 
 GUIDELINES:
 
+    - Keep it clean!
     - Any (functional) module must have a correspondent test module.
     These modules should be located at 'tests' and named as test_{module name}.py
     - Names should always be validated. (See util/names.py)
     - Generic utilities should go to util/
-    - 
+    - Sphinx for docs with Google style
 
 STYLE REMARKS:
 
@@ -42,7 +43,6 @@ STYLE REMARKS:
         par2,
         par3
     )
-    - 
 
 DESIGN REMARKS:
 
