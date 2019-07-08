@@ -1,5 +1,11 @@
 #!/usr/bin/python3
 
+""" This module contains the TelescopeModel class
+
+Todo:
+    * fromConfigFile - deal with ifdef's in simtel cfg files
+"""
+
 import logging
 import yaml
 from pathlib import Path
@@ -11,9 +17,16 @@ __all__ = ['TelescopeModel']
 
 
 def whichTelescopeSize(telescopeType):
-    ''' Return the telescope size (SST, MST or LST)
-        for a given telescopeType
-    '''
+    """ Return the telescope size (SST, MST or LST) for a given telescopeType.
+
+    Args:
+        telescopeType (str): ex SST-2M-ASTRI, LST, ...
+
+    Returns:
+        str: 'SST', 'MST' or 'LST'
+
+    """
+
     if 'SST' in telescopeType:
         return 'SST'
     elif 'MST' in telescopeType:
@@ -25,19 +38,42 @@ def whichTelescopeSize(telescopeType):
 
 
 class TelescopeModel:
-    def __init__(
-        self,
-        telescopeType,
-        site,
-        yamlDBPath=None,
-        version='default',
-        label=None,
-        filesLocation=None,
-        readFromDB=True
-    ):
-        ''' The arguments for this class are ONLY suppose to be given through the constructor
-            (where they are safely validated) and they are NOT suppose to be changed afterwards.
-        '''
+    """MC Model handler at the telescope level.
+
+    TelescopeModel is an abstract representation of the MC model
+    at the telescope level. It contains the list of parameters and
+    useful methods to handle it.
+
+    Attributes:
+        yamlDBPath (str): path of the yaml database containing the model parameters.
+        label (str): instance label to avoid conflict between files.
+        version (str): MC model version (ex. prod4).
+        telescopeType (str): telescope type for the base set of parameters (ex. SST-2M-ASTRI,
+            LST, ...)
+        site (str): Paranal(south)/LaPalma(north).
+        filesLocation (str): location for created files (ex. simtel cfg file). If None,
+            pwd will used.
+
+    """
+
+    def __init__(self, telescopeType, site, yamlDBPath=None, version='default', label=None,
+                 filesLocation=None, readFromDB=True):
+        """TelescopeModel __init__.
+
+        Args:
+            telescopeType (str): telescope type for the base set of parameters (ex. SST-2M-ASTRI,
+                LST, ...)
+            site (str): Paranal(south)/LaPalma(north).
+            yamlDBPath (str): path of the yaml database containing the model parameters.
+            version (str): MC model version (ex. prod4).
+            label (str): instance label to avoid conflict between files.
+            filesLocation (str): location for created files (ex. simtel cfg file). If None,
+                pwd will used.
+            readFromDB (bool): if True, parameters will be read from DB at the initizalition.
+                It must be True most of the cases. It must be False specially if classmethod
+                fromConfigFile is used.
+
+        """
         logging.info('Init TelescopeModel')
 
         self.yamlDBPath = yamlDBPath
@@ -57,9 +93,9 @@ class TelescopeModel:
 
         self._isFileExported = False
 
-    # Properties: version, telescopeType and site
     @property
     def version(self):
+        """str: model version after validation."""
         return self._version
 
     @version.setter
@@ -68,6 +104,7 @@ class TelescopeModel:
 
     @property
     def telescopeType(self):
+        """str: telescope type after validation."""
         return self._telescopeType
 
     @telescopeType.setter
@@ -76,6 +113,7 @@ class TelescopeModel:
 
     @property
     def site(self):
+        """str: site after validation."""
         return self._site
 
     @site.setter
@@ -84,10 +122,22 @@ class TelescopeModel:
 
     @classmethod
     def fromConfigFile(cls, telescopeType, site, label, configFileName):
-        ''' Create a TelescopeModel from a sim_telarray config file.
-            TODO: dealing with ifdef/indef etc. By now it just keeps the
-            last version of the parameters in the file.
-        '''
+        """ Create a TelescopeModel from a sim_telarray config file.
+
+            Todo:
+                - dealing with ifdef/indef etc. By now it just keeps the last version of the
+                    parameters in the file.
+
+            Args:
+                telescopeType (str):
+                site (str):
+                label (str):
+                configFileName (str): path to the input config file
+
+            Return:
+                Instance of TelescopeModel class
+
+        """
         parameters = dict()
         tel = cls(telescopeType=telescopeType, site=site, label=label, readFromDB=False)
 
@@ -122,7 +172,9 @@ class TelescopeModel:
         return tel
 
     def loadParametersFromDB(self):
-        ''' Parameters from DB are stored in the _parameters dict'''
+        """ Read parameters from DB and store it in _parameters (dict).
+
+        """
 
         def readParsFromOneType(yamlDBPath, telescopeType, parametersDB):
             ''' Read parameters as a dict and concatenate it to parametersDB

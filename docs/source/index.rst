@@ -11,15 +11,15 @@
 =================================
 
 What is ctamclib?
-================
+=================
 
 
 MC Model
-========
+=========
 
 
 Telescope Model
----------------
+----------------
 
 .. automodule:: telescope_model
    :members: 
@@ -28,7 +28,7 @@ Telescope Model
 .. toctree::
 
 sim_telarray
-============
+=============
 
 .. automodule:: simtel_runner
    :members: 
@@ -39,7 +39,7 @@ sim_telarray
 
 
 Ray Tracing
-===========
+============
 
 .. automodule:: ray_tracing
    :members: 
@@ -49,7 +49,7 @@ Ray Tracing
 
 
 Utilities
-=========
+==========
 
 .. automodule:: util
    :members: 
