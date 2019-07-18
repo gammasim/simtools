@@ -55,7 +55,6 @@ class TelescopeModel:
             pwd will used.
 
     """
-
     def __init__(self, telescopeType, site, yamlDBPath=None, version='default', label=None,
                  filesLocation=None, readFromDB=True):
         """TelescopeModel __init__.
