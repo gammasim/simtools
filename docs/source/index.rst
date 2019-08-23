@@ -37,7 +37,6 @@ sim_telarray
 .. toctree::
 
 
-
 Ray Tracing
 ============
 
