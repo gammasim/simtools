@@ -2,8 +2,8 @@
 
 """ This module contains the TelescopeModel class
 
-Todo:
-    * fromConfigFile - deal with ifdef's in simtel cfg files
+    Todo:
+        * fromConfigFile - deal with ifdef's in simtel cfg files
 """
 
 import logging
@@ -88,13 +88,13 @@ class TelescopeModel:
         self.filesLocation = Path.cwd() if filesLocation is None else Path(filesLocation)
 
         if readFromDB:
-            self.loadParametersFromDB()
+            self._loadParametersFromDB()
 
         self._isFileExported = False
 
     @property
     def version(self):
-        """str: model version after validation."""
+        """ str: model version after validation. """
         return self._version
 
     @version.setter
@@ -103,7 +103,7 @@ class TelescopeModel:
 
     @property
     def telescopeType(self):
-        """str: telescope type after validation."""
+        """str: telescope type after validation. """
         return self._telescopeType
 
     @telescopeType.setter
@@ -112,7 +112,7 @@ class TelescopeModel:
 
     @property
     def site(self):
-        """str: site after validation."""
+        """str: site after validation. """
         return self._site
 
     @site.setter
@@ -164,22 +164,20 @@ class TelescopeModel:
                     continue
                 elif '#' not in line and len(words) > 0:
                     par, value = processLine(words)
-                    par, value = tel.validateParameter(par, value)
+                    par, value = tel._validateParameter(par, value)
                     parameters[par] = value
 
         tel.addParameters(**parameters)
         return tel
 
-    def loadParametersFromDB(self):
-        """ Read parameters from DB and store it in _parameters (dict).
+    def _loadParametersFromDB(self):
+        """ Read parameters from DB and store it in _parameters (dict). """
 
-        """
-
-        def readParsFromOneType(yamlDBPath, telescopeType, parametersDB):
-            ''' Read parameters as a dict and concatenate it to parametersDB
+        def _readParsFromOneType(yamlDBPath, telescopeType, parametersDB):
+            """ Read parameters as a dict and concatenate it to parametersDB
                 Implementation was needed to concatenate the optics parameters
-                to the MST models
-            '''
+                to the MST models.
+            """
             fileNameDB = '{}/parValues-{}.yml'.format(yamlDBPath, telescopeType)
             logging.info('Reading DB file {}'.format(fileNameDB))
             with open(fileNameDB, 'r') as stream:
@@ -187,13 +185,13 @@ class TelescopeModel:
             parametersDB.update(pars)
 
         parametersDB = dict()
-        readParsFromOneType(self.yamlDBPath, self.telescopeType, parametersDB)
+        _readParsFromOneType(self.yamlDBPath, self.telescopeType, parametersDB)
         if whichTelescopeSize(self.telescopeType) == 'MST':
-            readParsFromOneType(self.yamlDBPath, 'MST-optics', parametersDB)
+            _readParsFromOneType(self.yamlDBPath, 'MST-optics', parametersDB)
 
         for parNameIn in parametersDB:
             if parametersDB[parNameIn]['Applicable']:
-                parName, parValue = self.validateParameter(
+                parName, parValue = self._validateParameter(
                     parNameIn,
                     parametersDB[parNameIn][self._version]
                 )
@@ -204,8 +202,8 @@ class TelescopeModel:
         # atmospheric_transmission and altitude
         logging.debug('Reading site parameters from DB')
 
-        def getSiteParameter(yamlDBPath, site, parName):
-            ''' Get the value of parName for a given site '''
+        def _getSiteParameter(yamlDBPath, site, parName):
+            """ Get the value of parName for a given site """
             fileNameDB = '{}/parValues-Sites.yml'.format(yamlDBPath)
             logging.info('Reading DB file {}'.format(fileNameDB))
             with open(fileNameDB, 'r') as stream:
@@ -215,13 +213,23 @@ class TelescopeModel:
                         return allPars[par][self._version]
 
         for siteParName in ['atmospheric_transmission', 'altitude']:
-            siteParValue = getSiteParameter(self.yamlDBPath, self.site, siteParName)
-            parName, parValue = self.validateParameter(siteParName, siteParValue)
+            siteParValue = _getSiteParameter(self.yamlDBPath, self.site, siteParName)
+            parName, parValue = self._validateParameter(siteParName, siteParValue)
             self._parameters[parName] = parValue
 
-    # end loadParametersFromDB
+    # end _loadParametersFromDB
 
-    def validateParameter(self, parNameIn, parValueIn):
+    def _validateParameter(self, parNameIn, parValueIn):
+        """ Validate model parameter based on the dict MODEL_PARS.
+
+            Args:
+                parNameIn (str): name of the parameters
+                parValueIn (str): value of parameter
+
+            Return:
+                parNameIn, parValueIn after validated. parValueIn is converted to the proper
+                type if that information is available in MODEL_PARS
+        """
         logging.debug('Validating parameter {}'.format(parNameIn))
         for parNameModel in MODEL_PARS.keys():
             if parNameIn == parNameModel or parNameIn in MODEL_PARS[parNameModel]['names']:
@@ -230,21 +238,35 @@ class TelescopeModel:
         return parNameIn, parValueIn
 
     def getParameter(self, parName):
-        ''' Return an EXISTING parameter of the model '''
+        """ Get an EXISTING parameter of the model.
+
+            Args:
+                parName (str): name of the parameters
+
+            Return:
+                Value of the parameter
+
+            Raises:
+                ValueError: if parName does not match any parameter in the model.
+        """
+
         if parName in self._parameters:
             return self._parameters[parName]
         else:
-            logging.error('Parameter {} was not found in the model'.format(parName))
-            return ''
+            raise ValueError('Parameter {} was not found in the model'.format(parName))
 
     def addParameters(self, **kwargs):
-        ''' Add a NEW parameters to the model.
-            kwargs are used, parameters should be passed as
-            parameterName=value
-        '''
+        """ Add a NEW parameters to the model.
+
+            Args:
+                kwargs: parameters should be passed as parameterName=value.
+
+            Raises:
+                ValueError: if an existing parameter is tried to be set added.
+        """
         for par in kwargs.keys():
             if par in self._parameters.keys():
-                logging.error(
+                raise ValueError(
                     'Parameter {} already in the model, use changeParameter instead'.format(par)
                 )
             else:
@@ -252,31 +274,42 @@ class TelescopeModel:
                 self._parameters[par] = str(kwargs[par])
 
     def changeParameters(self, **kwargs):
-        ''' Change the value of EXISTING parameters to the model '''
+        """ Change the value of EXISTING parameters to the model.
+
+            Args:
+                kwargs: parameters should be passed as parameterName=value.
+
+            Raises:
+                ValueError: if the parameter to be changed does not exist.
+        """
         for par in kwargs.keys():
             if par not in self._parameters.keys():
-                logging.error(
+                raise ValueError(
                     'Parameter {} not in the model, use addParameters instead'.format(par)
                 )
             else:
                 self._parameters[par] = kwargs[par]
 
     def removeParameters(self, *args):
-        ''' Remove a parameter from the model '''
+        """ Remove a parameter from the model.
+
+            Args:
+                args: each parameter to be removed has to be passed as args.
+
+            Raises:
+                ValueError: if the parameter to be removed is not on the model.
+        """
         for par in args:
             if par in self._parameters.keys():
                 logging.info('Removing parameter {}'.format(par))
                 del self._parameters[par]
             else:
-                logging.error(
+                raise ValueError(
                     'Could not remove parameter {} because it does not exist'.format(par)
                 )
 
     def exportConfigFile(self):
-        ''' Export the config file used by sim_telarray.
-            loc gives the location that the file should be created.
-            If loc is not given, a directory $pwd/SimtelFiles/cfg is created and used
-        '''
+        """ Export the config file used by sim_telarray. """
 
         # Setting file name and the location
         configFileName = 'CTA-{}-{}-{}'.format(self._version, self.site, self.telescopeType)
@@ -311,9 +344,12 @@ class TelescopeModel:
     # end exportConfigFile
 
     def getConfigFile(self):
-        ''' Return config file
-            Export it first if it was not exported yet
-        '''
+        """ Return the full path of the config file for sim_telarray.
+            The config file is produced if the file still does not exist.
+
+            Return:
+                Path of the config file for sim_telarray.
+        """
         if not self._isFileExported:
             self.exportConfigFile()
         return self._configFilePath
