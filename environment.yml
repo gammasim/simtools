@@ -1,11 +1,17 @@
 # A conda environment with all useful package for ctamclib developers
 name: ctamclib-dev
 dependencies:
-  - yaml
+  - pyyaml
   - pathlib
   - numpy
   - astropy
   - matplotlib
   - sphinx
+  - pytest
+  - pytest-cov
 
+# cheatsheet
 
+# create: conda env create -f environment.yml
+# activate: conda activate ctamclib-dev
+# update: conda env update -f environment.yml --prune

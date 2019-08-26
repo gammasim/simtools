@@ -326,14 +326,12 @@ class TelescopeModel:
         # Writing parameters to the file
         logging.info('Writing config file - {}'.format(self._configFilePath))
         with open(self._configFilePath, 'w') as file:
-            header = (
-                '%{}\n'.format(99*'=') +
-                '% Configuration file for:\n' +
-                '% TelescopeType: {}\n'.format(self._telescopeType) +
-                '% Site: {}\n'.format(self.site) +
-                '% Label: {}\n'.format(self.label) +
-                '%{}\n'.format(99*'=')
-            )
+            header = ('%{}\n'.format(99 * '=')
+                      + '% Configuration file for:\n'
+                      + '% TelescopeType: {}\n'.format(self._telescopeType)
+                      + '% Site: {}\n'.format(self.site)
+                      + '% Label: {}\n'.format(self.label)
+                      + '%{}\n'.format(99 * '='))
 
             file.write(header)
             for par in self._parameters:
