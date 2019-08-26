@@ -181,7 +181,7 @@ class TelescopeModel:
             fileNameDB = '{}/parValues-{}.yml'.format(yamlDBPath, telescopeType)
             logging.info('Reading DB file {}'.format(fileNameDB))
             with open(fileNameDB, 'r') as stream:
-                pars = yaml.load(stream)
+                pars = yaml.load(stream, Loader=yaml.FullLoader)
             parametersDB.update(pars)
 
         parametersDB = dict()
@@ -207,7 +207,7 @@ class TelescopeModel:
             fileNameDB = '{}/parValues-Sites.yml'.format(yamlDBPath)
             logging.info('Reading DB file {}'.format(fileNameDB))
             with open(fileNameDB, 'r') as stream:
-                allPars = yaml.load(stream)
+                allPars = yaml.load(stream, Loader=yaml.FullLoader)
                 for par in allPars:
                     if parName in par and self.site.lower() in par:
                         return allPars[par][self._version]
