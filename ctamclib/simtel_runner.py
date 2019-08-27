@@ -20,7 +20,8 @@ class SimtelRunner:
         **kwargs
     ):
         ''' Comment '''
-        logging.info('Creating SimtelRunner')
+        self.log = logging.getLogger(__name__)
+        self.log.info('Creating SimtelRunner')
 
         self.simtelSourcePath = Path(simtelSourcePath)
 
@@ -84,31 +85,31 @@ class SimtelRunner:
             self._telescopeModel = None
             self.hasTelescopeModel = False
             if tel is not None:
-                logging.error('Invalid TelescopeModel')
+                self.log.error('Invalid TelescopeModel')
 
     def run(self, test=False, force=False):
-        logging.info('Running at mode {}'.format(self.mode))
+        self.log.info('Running at mode {}'.format(self.mode))
         # write all the important parameters
 
         if not self.shallRun() and not force:
-            logging.info('Skipping because file exists and force = False')
+            self.log.info('Skipping because file exists and force = False')
             return
 
         self.loadRequiredFiles()
         command = self.makeRunCommand()
 
         if test:
-            logging.info('Running (test) with command:{}'.format(command))
+            self.log.info('Running (test) with command:{}'.format(command))
             os.system(command)
         else:
-            logging.info('Running ({}x) with command:{}'.format(self.RUNS_PER_SET, command))
+            self.log.info('Running ({}x) with command:{}'.format(self.RUNS_PER_SET, command))
             for _ in range(self.RUNS_PER_SET):
                 os.system(command)
 
     def getRunBashScript(self, test=False):
-        logging.info('Creating run bash script')
+        self.log.info('Creating run bash script')
         self._scriptFileName = self._baseDirectory.joinpath('run_script')
-        logging.debug('Run bash script - {}'.format(self._scriptFileName))
+        self.log.debug('Run bash script - {}'.format(self._scriptFileName))
 
         self.loadRequiredFiles()
         command = self.makeRunCommand()

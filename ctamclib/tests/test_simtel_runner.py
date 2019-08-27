@@ -5,24 +5,24 @@ import logging
 from ctamclib.simtel_runner import SimtelRunner
 from ctamclib.telescope_model import TelescopeModel
 
+logger = logging.getLogger(__name__)
 logging.getLogger().setLevel(logging.DEBUG)
 
-if __name__ == '__main__':
+yamlDBPath = (
+    '/home/prado/Work/Projects/CTA_MC/svn/Simulations/MCModelDescription/trunk/configReports'
+)
+simtelPath = (
+    '/afs/ifh.de/group/cta/scratch/prado/corsika_simtelarray/corsika6.9_simtelarray_19-03-08'
+)
 
-    yamlDBPath = (
-        '/home/prado/Work/Projects/CTA_MC/svn/Simulations/MCModelDescription/trunk/configReports'
-    )
 
+def test_ray_tracing_mode():
     tel = TelescopeModel(
         yamlDBPath=yamlDBPath,
         telescopeType='lst',
         site='south',
         version='prod4',
         label='test-simtel'
-    )
-
-    simtelPath = (
-        '/afs/ifh.de/group/cta/scratch/prado/corsika_simtelarray/corsika6.9_simtelarray_19-03-08'
     )
 
     simtel = SimtelRunner(
@@ -33,8 +33,11 @@ if __name__ == '__main__':
         offAxisAngle=2
     )
 
-    print('TEST:', simtel)
+    logger.info(simtel)
 
-    simtel.run(test=True)
+    simtel.run(test=True, force=True)
 
-    # script = simtel.getRunBashScript()
+
+if __name__ == '__main__':
+
+    test_ray_tracing_mode()
