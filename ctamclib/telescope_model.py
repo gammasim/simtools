@@ -73,7 +73,8 @@ class TelescopeModel:
                 fromConfigFile is used.
 
         """
-        logging.info('Init TelescopeModel')
+        self.log = logging.getLogger(__name__)
+        self.log.info('Init TelescopeModel')
 
         self.yamlDBPath = yamlDBPath
         self.label = label
@@ -179,7 +180,7 @@ class TelescopeModel:
                 to the MST models.
             """
             fileNameDB = '{}/parValues-{}.yml'.format(yamlDBPath, telescopeType)
-            logging.info('Reading DB file {}'.format(fileNameDB))
+            self.log.info('Reading DB file {}'.format(fileNameDB))
             with open(fileNameDB, 'r') as stream:
                 pars = yaml.load(stream, Loader=yaml.FullLoader)
             parametersDB.update(pars)
@@ -200,12 +201,12 @@ class TelescopeModel:
         # Site
         # Two site parameters need to be read:
         # atmospheric_transmission and altitude
-        logging.debug('Reading site parameters from DB')
+        self.log.debug('Reading site parameters from DB')
 
         def _getSiteParameter(yamlDBPath, site, parName):
             """ Get the value of parName for a given site """
             fileNameDB = '{}/parValues-Sites.yml'.format(yamlDBPath)
-            logging.info('Reading DB file {}'.format(fileNameDB))
+            self.log.info('Reading DB file {}'.format(fileNameDB))
             with open(fileNameDB, 'r') as stream:
                 allPars = yaml.load(stream, Loader=yaml.FullLoader)
                 for par in allPars:
@@ -230,7 +231,7 @@ class TelescopeModel:
                 parNameIn, parValueIn after validated. parValueIn is converted to the proper
                 type if that information is available in MODEL_PARS
         """
-        logging.debug('Validating parameter {}'.format(parNameIn))
+        self.log.debug('Validating parameter {}'.format(parNameIn))
         for parNameModel in MODEL_PARS.keys():
             if parNameIn == parNameModel or parNameIn in MODEL_PARS[parNameModel]['names']:
                 parType = MODEL_PARS[parNameModel]['type']
@@ -270,7 +271,7 @@ class TelescopeModel:
                     'Parameter {} already in the model, use changeParameter instead'.format(par)
                 )
             else:
-                logging.info('Adding {}={} to the model'.format(par, kwargs[par]))
+                self.log.info('Adding {}={} to the model'.format(par, kwargs[par]))
                 self._parameters[par] = str(kwargs[par])
 
     def changeParameters(self, **kwargs):
@@ -301,7 +302,7 @@ class TelescopeModel:
         """
         for par in args:
             if par in self._parameters.keys():
-                logging.info('Removing parameter {}'.format(par))
+                self.log.info('Removing parameter {}'.format(par))
                 del self._parameters[par]
             else:
                 raise ValueError(
@@ -320,11 +321,11 @@ class TelescopeModel:
 
         if not configFileDirectory.exists():
             configFileDirectory.mkdir(parents=True, exist_ok=True)
-            logging.info('Creating directory {}'.format(configFileDirectory))
+            self.log.info('Creating directory {}'.format(configFileDirectory))
         self._configFilePath = configFileDirectory.joinpath(configFileName)
 
         # Writing parameters to the file
-        logging.info('Writing config file - {}'.format(self._configFilePath))
+        self.log.info('Writing config file - {}'.format(self._configFilePath))
         with open(self._configFilePath, 'w') as file:
             header = ('%{}\n'.format(99 * '=')
                       + '% Configuration file for:\n'

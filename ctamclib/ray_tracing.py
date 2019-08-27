@@ -6,7 +6,6 @@ ray_tracing.py
 Testing docstrings
 """
 
-
 import logging
 from pathlib import Path
 import numpy as np
@@ -43,6 +42,7 @@ class RayTracing:
         name
             A string to assign to the `name` instance attribute.
         """
+        self.log = logging.getLogger(__name__)
 
         self._simtelSourcePath = simtelSourcePath
         self._filesLocation = Path.cwd() if filesLocation is None else Path(filesLocation)
@@ -99,12 +99,12 @@ class RayTracing:
             self._telescopeModel = None
             self.hasTelescopeModel = False
             if tel is not None:
-                logging.error('Invalid TelescopeModel')
+                self.log.error('Invalid TelescopeModel')
 
     def simulate(self, test=False, force=False):
         """Simulate RayTracing."""
         for thisOffAxis in self._offAxisAngle:
-            logging.info('Simulating RayTracing for offAxis={}'.format(thisOffAxis))
+            self.log.info('Simulating RayTracing for offAxis={}'.format(thisOffAxis))
             simtel = SimtelRunner(
                 simtelSourcePath=self._simtelSourcePath,
                 filesLocation=self._filesLocation,
@@ -120,7 +120,7 @@ class RayTracing:
         """Analyze RayTracing."""
 
         if self._fileResults.exists() and not force:
-            logging.info('Skipping analyze because file exists and force = False')
+            self.log.info('Skipping analyze because file exists and force = False')
             self.readResults()
             return
 
@@ -141,7 +141,7 @@ class RayTracing:
         self._psfImages = dict()
 
         for thisOffAxis in self._offAxisAngle:
-            logging.info('Analyzing RayTracing for offAxis={}'.format(thisOffAxis))
+            self.log.info('Analyzing RayTracing for offAxis={}'.format(thisOffAxis))
             photonsFileName = names.rayTracingFileName(
                 self._telescopeModel.telescopeType,
                 self._sourceDistance,
@@ -160,8 +160,9 @@ class RayTracing:
 
             if useRX:
                 d80_cm, xPosMean, yPosMean, effArea = self.processRX(file)
+                d80_deg = d80_cm * cmToDeg
                 image.d80_cm = d80_cm
-                image.d80_deg = d80_cm * cmToDeg
+                image.d80_deg = d80_deg
                 image.xPosMean = xPosMean
                 image.yPosMean = yPosMean
                 image.effArea = effArea * telTransmission
@@ -204,9 +205,9 @@ class RayTracing:
         return d80_cm, xMean, yMean, effArea
 
     def exportResults(self):
-        logging.info('Exporting results')
+        self.log.info('Exporting results')
         if not self._hasResults:
-            logging.error('Cannot export results because it does not exist')
+            self.log.error('Cannot export results because it does not exist')
         else:
             table = Table(self._results)
             ascii.write(table, self._fileResults, format='basic', overwrite=True)
@@ -217,7 +218,7 @@ class RayTracing:
 
     def plot(self, which='d80_cm', **kwargs):
         if which not in ['d80_cm', 'd80_deg', 'eff_area', 'eff_flen']:
-            logging.error('Invalid option for plotting RayTracing')
+            self.log.error('Invalid option for plotting RayTracing')
             return
 
         ax = plt.gca()
@@ -229,7 +230,7 @@ class RayTracing:
             if thisOffAxis in self._psfImages.keys():
                 images.append(self._psfImages[thisOffAxis])
         if len(images) == 0:
-            logging.error('No image found')
+            self.log.error('No image found')
         return images
 
 # end of RayTracing
@@ -240,6 +241,8 @@ class PSFImage:
         """ PSFImage only knows the list of photon position in cm
             No information about the telescope (e.g focal length) should be used in here.
         """
+        self.log = logging.getLogger(__name__)
+
         self.xPos = list()
         self.yPos = list()
         self.xPosMean = None
@@ -256,7 +259,7 @@ class PSFImage:
         return 'PSFImage ({}/{} photons)'.format(self.detectedPhotons, self.totalPhotons)
 
     def readSimtelFile(self, file):
-        logging.info('Reading SimtelFile {}'.format(file))
+        self.log.info('Reading SimtelFile {}'.format(file))
         self.totalPhotons = 0
         self.totalArea = None
         with open(file, 'r') as f:
@@ -264,7 +267,7 @@ class PSFImage:
                 self.processSimtelLine(line)
 
         if len(self.xPos) == 0 or len(self.yPos) == 0 or len(self.xPos) != len(self.yPos):
-            logging.error('Problems reading Simtel file - invalid data')
+            self.log.error('Problems reading Simtel file - invalid data')
 
         self.xPosMean = np.mean(self.xPos)
         self.yPosMean = np.mean(self.yPos)
@@ -283,7 +286,7 @@ class PSFImage:
             if self.totalArea is None:
                 self.totalArea = area
             elif area != self.totalArea:
-                logging.error(
+                self.log.error(
                     'Conflicting value of the total area found'
                     ' {} != {}'.format(self.totalArea, area)
                 )
@@ -302,7 +305,7 @@ class PSFImage:
         self._storedPSF[fraction] = self.findPSF(fraction)
 
     def findPSF(self, fraction):
-        logging.debug('Finding PSF for fraction = {}'.format(fraction))
+        self.log.debug('Finding PSF for fraction = {}'.format(fraction))
 
         xPos2 = [i**2 for i in self.xPos]
         yPos2 = [i**2 for i in self.yPos]
@@ -330,12 +333,12 @@ class PSFImage:
         if foundRadius:
             return 2 * rad
         else:
-            logging.warning('Could not find PSF efficiently')
+            self.log.warning('Could not find PSF efficiently')
             psf = self.findPSFByScanning(numberTarget, rSig)
             return psf
 
     def findPSFByScanning(self, numberTarget, rSig):
-        logging.debug('Finding PSF by scanning')
+        self.log.debug('Finding PSF by scanning')
 
         def scan(dr, radMin, radMax):
             r0, r1 = radMin, radMin + dr
@@ -353,7 +356,7 @@ class PSFImage:
             if foundRadius:
                 return (r0 + r1) / 2, r0, r1
             else:
-                logging.error('Could not find PSF by scanning')
+                self.log.error('Could not find PSF by scanning')
                 return 0, radMin, radMax
 
         # Step 0
