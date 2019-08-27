@@ -6,13 +6,16 @@ import logging
 __all__ = ['validateName', 'isValidName', 'rayTracingFileName']
 
 
+logger = logging.getLogger(__name__)
+
+
 def validateName(name, allNames):
     if not isValidName(name, allNames):
-        logging.error('Invalid name - {}'.format(name))
-        raise ValueError()
+        logger.error('Invalid name {}'.format(name))
+        raise ValueError('Invalid name {}'.format(name))
     for mainName in allNames.keys():
         if name.lower() in allNames[mainName] + [mainName.lower()]:
-            logging.info('Correcting name {} -> {}'.format(name, mainName))
+            logger.debug('Correcting name {} -> {}'.format(name, mainName))
             return mainName
 
 

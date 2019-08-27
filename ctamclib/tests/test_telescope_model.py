@@ -7,33 +7,43 @@ from ctamclib.telescope_model import TelescopeModel
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
+yamlDBPath = (
+    '/home/prado/Work/Projects/CTA_MC/svn/Simulations/MCModelDescription/trunk/configReports'
+)
+
 
 def test_input_validation():
-    yamlDBPath = ('/home/prado/Work/Projects/CTA_MC/svn/Simulations/MCModelDescription/trunk/'
-                  'configReports')
-
     telType = 'lst'
     site = 'south'
     logger.info('Input telType: {}'.format(telType))
     logger.info('Input site: {}'.format(site))
 
-    tel = TelescopeModel(yamlDBPath=yamlDBPath, telescopeType=telType, site=site, version='prod4',
-                         label='test-lst')
+    tel = TelescopeModel(
+        yamlDBPath=yamlDBPath,
+        telescopeType=telType,
+        site=site,
+        version='prod4',
+        label='test-lst'
+    )
 
     logger.info('Validated telType: {}'.format(tel.telescopeType))
     logger.info('Validated site: {}'.format(tel.site))
 
 
 def test_handling_parameters():
+    tel = TelescopeModel(
+        yamlDBPath=yamlDBPath,
+        telescopeType='lst',
+        site='south',
+        version='prod4',
+        label='test-lst'
+    )
 
-    yamlDBPath = ('/home/prado/Work/Projects/CTA_MC/svn/Simulations/MCModelDescription/trunk/'
-                  'configReports')
-
-    tel = TelescopeModel(yamlDBPath=yamlDBPath, telescopeType='lst', site='south', version='prod4',
-                         label='test-lst')
-
-    logger.info('Old mirror_reflection_random_angle:{}'.format(tel.getParameter('mirror_reflection_'
-                                                                                'random_angle')))
+    logger.info(
+        'Old mirror_reflection_random_angle:{}'.format(
+            tel.getParameter('mirror_reflection_random_angle')
+        )
+    )
     logger.info('Changing mirror_reflection_random_angle')
     new_mrra = '0.0080 0 0'
     tel.changeParameters(mirror_reflection_random_angle=new_mrra)
@@ -46,11 +56,13 @@ def test_handling_parameters():
 
 
 def test_flen_type():
-    yamlDBPath = ('/home/prado/Work/Projects/CTA_MC/svn/Simulations/MCModelDescription/trunk/'
-                  'configReports')
-
-    tel = TelescopeModel(yamlDBPath=yamlDBPath, telescopeType='lst', site='south', version='prod4',
-                         label='test-lst')
+    tel = TelescopeModel(
+        yamlDBPath=yamlDBPath,
+        telescopeType='lst',
+        site='south',
+        version='prod4',
+        label='test-lst'
+    )
 
     flen = tel.getParameter('focal_length')
     logger.info('Focal Length = {}, type = {}'.format(flen, type(flen)))
@@ -59,11 +71,13 @@ def test_flen_type():
 
 def test_cfg_file():
     # Exporting
-    yamlDBPath = ('/home/prado/Work/Projects/CTA_MC/svn/Simulations/MCModelDescription/trunk/'
-                  'configReports')
-
-    tel = TelescopeModel(yamlDBPath=yamlDBPath, telescopeType='lst', site='south', version='prod4',
-                         label='test-lst')
+    tel = TelescopeModel(
+        yamlDBPath=yamlDBPath,
+        telescopeType='lst',
+        site='south',
+        version='prod4',
+        label='test-lst'
+    )
     # tel.exportConfigFile(loc='/home/prado/Work/Projects/CTA_MC/MCLib')
     tel.exportConfigFile()
 
@@ -72,8 +86,12 @@ def test_cfg_file():
     # Importing
 
     cfgFile = tel.getConfigFile()
-    tel = TelescopeModel.fromConfigFile(telescopeType='astri', site='south', label='test-astri',
-                                        configFileName=cfgFile)
+    tel = TelescopeModel.fromConfigFile(
+        telescopeType='astri',
+        site='south',
+        label='test-astri',
+        configFileName=cfgFile
+    )
 
     tel.exportConfigFile()
 
