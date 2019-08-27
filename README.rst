@@ -12,7 +12,6 @@ Authors:
 TODO:
 ------
     
-* TelescopeModel: implement fromConfigFile method
 * SimtelRunner: files (log, photon, star etc) names
 * SimtelRunner: method to obtain script
 * SimtelRunner: force flag
@@ -20,16 +19,11 @@ TODO:
 GUIDELINES:
 ------------
 
+* `Style Guide and Code Guidelines from ctapipe <https://cta-observatory.github.io/ctapipe/development/index.html>`_
 * Keep it clean!
-* Any (functional) module must have a correspondent test module.  These modules should be located at 'tests' and named as 'test_{module name}.py'
-* Names should always be validated. (See util/names.py)
-* Generic utilities should go to util/
-* Sphinx for docs with Google style
-
-STYLE REMARKS:
----------------
-
-* Pep8, please
+* Names must be validated. (See util/names.py and its documentation)
+* Sphinx for docs with docstrings in Google style
+* Pep8
 
 DESIGN REMARKS:
 ----------------
@@ -41,3 +35,4 @@ DESIGN REMARKS:
 * A test flag (test=True/False) should exist always as possible. If True, it must provide a faster and simpler implementation.
 * Spectially important for time comsuming simulations. The default must always be test=False.
 * A force flag (force=True/False) should exist in any case in which files are created. If False, the existing files should not be overwritten. The default must always be force=False.
+* A clean method must be available for any class that create files.
