@@ -1,4 +1,4 @@
-CTA MC Lib
+gammasim-tools
 ===========
 
 MC Library for `CTA Observatory <www.cta-observatory.org>`_
