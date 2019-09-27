@@ -1,5 +1,5 @@
 # A conda environment with all useful package for ctamclib developers
-name: ctamclib-dev
+name: gammasim-tools-dev
 dependencies:
   - pyyaml
   - pathlib
