@@ -5,14 +5,15 @@ import matplotlib.pyplot as plt
 import numpy as np
 from copy import copy
 
-from ctamclib.ray_tracing import RayTracing
-from ctamclib.telescope_model import TelescopeModel
+from simtools.ray_tracing import RayTracing
+from simtools.telescope_model import TelescopeModel
 
 logger = logging.getLogger(__name__)
 logging.getLogger().setLevel(logging.DEBUG)
 
 yamlDBPath = (
-    '/home/prado/Work/Projects/CTA_MC/svn/Simulations/MCModelDescription/trunk/configReports'
+    '/home/prado/Work/Projects/CTA_MC/svn/Simulations/SimulationModel/ModelDescription/trunk/'
+    'configReports'
 )
 simtelPath = (
     '/afs/ifh.de/group/cta/scratch/prado/corsika_simtelarray/corsika6.9_simtelarray_19-03-08'

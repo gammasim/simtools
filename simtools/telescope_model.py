@@ -10,8 +10,8 @@ import logging
 import yaml
 from pathlib import Path
 
-from ctamclib.util import names
-from ctamclib.model_parameters import MODEL_PARS
+from simtools.util import names
+from simtools.model_parameters import MODEL_PARS
 
 __all__ = ['TelescopeModel']
 
