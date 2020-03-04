@@ -2,13 +2,13 @@
 
 import logging
 
-from ctamclib.telescope_model import TelescopeModel
+from simtools.telescope_model import TelescopeModel
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
 yamlDBPath = (
-    '/home/prado/Work/Projects/CTA_MC/svn/Simulations/MCModelDescription/trunk/configReports'
+    '/home/prado/Work/Projects/CTA_MC/svn/Simulations/SimulationModel/ModelDescription/trunk/configReports'
 )
 
 

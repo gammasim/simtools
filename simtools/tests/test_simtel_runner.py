@@ -2,14 +2,15 @@
 
 import logging
 
-from ctamclib.simtel_runner import SimtelRunner
-from ctamclib.telescope_model import TelescopeModel
+from simtools.simtel_runner import SimtelRunner
+from simtools.telescope_model import TelescopeModel
 
 logger = logging.getLogger(__name__)
 logging.getLogger().setLevel(logging.DEBUG)
 
 yamlDBPath = (
-    '/home/prado/Work/Projects/CTA_MC/svn/Simulations/MCModelDescription/trunk/configReports'
+    '/home/prado/Work/Projects/CTA_MC/svn/Simulations/SimulationModel/ModelDescription/trunk/'
+    'configReports'
 )
 simtelPath = (
     '/afs/ifh.de/group/cta/scratch/prado/corsika_simtelarray/corsika6.9_simtelarray_19-03-08'

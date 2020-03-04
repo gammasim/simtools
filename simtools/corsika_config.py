@@ -4,7 +4,7 @@ import logging
 import yaml
 
 from pathlib import Path
-from ctamclib.util import names
+from simtools.util import names
 
 
 def whichTelescopeSize(telescopeType):

@@ -16,11 +16,11 @@ from astropy.table import Table
 import math
 import matplotlib.pyplot as plt
 
-from ctamclib.util import names
-from ctamclib.util.model import computeTelescopeTransmission
-from ctamclib.telescope_model import TelescopeModel
-from ctamclib.simtel_runner import SimtelRunner
-from ctamclib.util.general import collectArguments, collectKwargs, setDefaultKwargs
+from simtools.util import names
+from simtools.util.model import computeTelescopeTransmission
+from simtools.telescope_model import TelescopeModel
+from simtools.simtel_runner import SimtelRunner
+from simtools.util.general import collectArguments, collectKwargs, setDefaultKwargs
 
 __all__ = ['RayTracing']
 

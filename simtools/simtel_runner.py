@@ -4,9 +4,9 @@ import logging
 from pathlib import Path
 import os
 
-from ctamclib.util import names
-from ctamclib.telescope_model import TelescopeModel
-from ctamclib.util.general import collectArguments
+from simtools.util import names
+from simtools.telescope_model import TelescopeModel
+from simtools.util.general import collectArguments
 
 
 class SimtelRunner:
