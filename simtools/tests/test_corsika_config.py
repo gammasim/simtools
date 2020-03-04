@@ -2,14 +2,16 @@
 
 import logging
 
-from ctamclib.telescope_model import TelescopeModel
+from simtools.telescope_model import TelescopeModel
 
 logging.getLogger().setLevel(logging.DEBUG)
 
 if __name__ == '__main__':
 
-    yamlDBPath = ('/home/prado/Work/Projects/CTA_MC/svn/Simulations/'
-                  'MCModelDescription/trunk/configReports')
+    yamlDBPath = (
+        '/home/prado/Work/Projects/CTA_MC/svn/Simulations/SimulationModel/'
+        'ModelDescription/trunk/configReports'
+    )
 
     tel = TelescopeModel(yamlDBPath=yamlDBPath,
                          telescopeType='lst',
