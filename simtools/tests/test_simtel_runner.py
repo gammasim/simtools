@@ -2,24 +2,19 @@
 
 import logging
 
+from simtools.util import config as cfg
 from simtools.simtel_runner import SimtelRunner
 from simtools.telescope_model import TelescopeModel
 
 logger = logging.getLogger(__name__)
 logging.getLogger().setLevel(logging.DEBUG)
 
-yamlDBPath = (
-    '/home/prado/Work/Projects/CTA_MC/svn/Simulations/SimulationModel/ModelDescription/trunk/'
-    'configReports'
-)
-simtelPath = (
-    '/afs/ifh.de/group/cta/scratch/prado/corsika_simtelarray/corsika6.9_simtelarray_19-03-08'
-)
+config = cfg.loadConfig()
 
 
 def test_ray_tracing_mode():
     tel = TelescopeModel(
-        yamlDBPath=yamlDBPath,
+        yamlDBPath=config['yamlDBPath'],
         telescopeType='lst',
         site='south',
         version='prod4',
@@ -27,7 +22,7 @@ def test_ray_tracing_mode():
     )
 
     simtel = SimtelRunner(
-        simtelSourcePath=simtelPath,
+        simtelSourcePath=config['simtelPath'],
         mode='ray-tracing',
         telescopeModel=tel,
         zenithAngle=20,

@@ -13,5 +13,5 @@ dependencies:
 # cheatsheet
 
 # create: conda env create -f environment.yml
-# activate: conda activate ctamclib-dev
+# activate: conda activate gammasim-tools-dev
 # update: conda env update -f environment.yml --prune
