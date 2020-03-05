@@ -5,19 +5,14 @@ import matplotlib.pyplot as plt
 import numpy as np
 from copy import copy
 
+from simtools.util import config as cfg
 from simtools.ray_tracing import RayTracing
 from simtools.telescope_model import TelescopeModel
 
 logger = logging.getLogger(__name__)
 logging.getLogger().setLevel(logging.DEBUG)
 
-yamlDBPath = (
-    '/home/prado/Work/Projects/CTA_MC/svn/Simulations/SimulationModel/ModelDescription/trunk/'
-    'configReports'
-)
-simtelPath = (
-    '/afs/ifh.de/group/cta/scratch/prado/corsika_simtelarray/corsika6.9_simtelarray_19-03-08'
-)
+config = cfg.loadConfig()
 
 
 def test_ssts(show=False):
@@ -33,7 +28,7 @@ def test_ssts(show=False):
     rayTracing = list()
     for t in telTypes:
         tel = TelescopeModel(
-            yamlDBPath=yamlDBPath,
+            yamlDBPath=config['yamlDBPath'],
             telescopeType=t,
             site=site,
             version=version,
@@ -42,7 +37,7 @@ def test_ssts(show=False):
         telModels.append(t)
 
         ray = RayTracing(
-            simtelSourcePath=simtelPath,
+            simtelSourcePath=config['simtelPath'],
             telescopeModel=tel,
             sourceDistance=sourceDistance,
             zenithAngle=zenithAngle,
@@ -76,7 +71,7 @@ def test_rx(show=False):
     offAxisAngle = [0, 2.5, 5.0]
 
     tel = TelescopeModel(
-        yamlDBPath=yamlDBPath,
+        yamlDBPath=config['yamlDBPath'],
         telescopeType='astri',
         site=site,
         version=version,
@@ -84,7 +79,7 @@ def test_rx(show=False):
     )
 
     ray = RayTracing(
-        simtelSourcePath=simtelPath,
+        simtelSourcePath=config['simtelPath'],
         telescopeModel=tel,
         sourceDistance=sourceDistance,
         zenithAngle=zenithAngle,
