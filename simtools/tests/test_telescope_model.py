@@ -1,15 +1,15 @@
 #!/usr/bin/python3
 
+import yaml
 import logging
 
+from simtools.util import config as cfg
 from simtools.telescope_model import TelescopeModel
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
-yamlDBPath = (
-    '/home/prado/Work/Projects/CTA_MC/svn/Simulations/SimulationModel/ModelDescription/trunk/configReports'
-)
+config = cfg.loadConfig()
 
 
 def test_input_validation():
@@ -19,7 +19,7 @@ def test_input_validation():
     logger.info('Input site: {}'.format(site))
 
     tel = TelescopeModel(
-        yamlDBPath=yamlDBPath,
+        yamlDBPath=config['yamlDBPath'],
         telescopeType=telType,
         site=site,
         version='prod4',
@@ -32,7 +32,7 @@ def test_input_validation():
 
 def test_handling_parameters():
     tel = TelescopeModel(
-        yamlDBPath=yamlDBPath,
+        yamlDBPath=config['yamlDBPath'],
         telescopeType='lst',
         site='south',
         version='prod4',
@@ -57,7 +57,7 @@ def test_handling_parameters():
 
 def test_flen_type():
     tel = TelescopeModel(
-        yamlDBPath=yamlDBPath,
+        yamlDBPath=config['yamlDBPath'],
         telescopeType='lst',
         site='south',
         version='prod4',
@@ -72,7 +72,7 @@ def test_flen_type():
 def test_cfg_file():
     # Exporting
     tel = TelescopeModel(
-        yamlDBPath=yamlDBPath,
+        yamlDBPath=config['yamlDBPath'],
         telescopeType='lst',
         site='south',
         version='prod4',
@@ -81,7 +81,7 @@ def test_cfg_file():
     # tel.exportConfigFile(loc='/home/prado/Work/Projects/CTA_MC/MCLib')
     tel.exportConfigFile()
 
-    logger.info('Config file: ', tel.getConfigFile())
+    logger.info('Config file: {}'.format(tel.getConfigFile()))
 
     # Importing
 
