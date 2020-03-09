@@ -9,7 +9,7 @@ from simtools.telescope_model import TelescopeModel
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
-config = cfg.loadConfig()
+config = cfg.loadConfig()  # config dict
 
 
 def test_input_validation():
@@ -98,7 +98,7 @@ def test_cfg_file():
 
 if __name__ == '__main__':
 
-    test_handling_parameters()
-    test_input_validation()
-    test_flen_type()
+    # test_handling_parameters()
+    # test_input_validation()
+    # test_flen_type()
     test_cfg_file()
