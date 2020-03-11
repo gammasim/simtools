@@ -7,6 +7,7 @@ import os
 from simtools.util import names
 from simtools.telescope_model import TelescopeModel
 from simtools.util.general import collectArguments
+from simtools import io_handler as io
 
 
 class SimtelRunner:
@@ -51,7 +52,7 @@ class SimtelRunner:
 
         # File location
         self._filesLocation = Path.cwd() if filesLocation is None else Path(filesLocation)
-        self._baseDirectory = self._filesLocation.joinpath('CTAMCFiles').joinpath(self.mode)
+        self._baseDirectory = io.getOutputDirectory(self._filesLocation, self.label, mode)
         self._baseDirectory.mkdir(parents=True, exist_ok=True)
 
         collectArguments(

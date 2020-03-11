@@ -20,6 +20,7 @@ def test_input_validation():
 
     tel = TelescopeModel(
         yamlDBPath=config['yamlDBPath'],
+        filesLocation=config['outputLocation'],
         telescopeType=telType,
         site=site,
         version='prod4',
@@ -33,6 +34,7 @@ def test_input_validation():
 def test_handling_parameters():
     tel = TelescopeModel(
         yamlDBPath=config['yamlDBPath'],
+        filesLocation=config['outputLocation'],
         telescopeType='lst',
         site='south',
         version='prod4',
@@ -73,6 +75,7 @@ def test_cfg_file():
     # Exporting
     tel = TelescopeModel(
         yamlDBPath=config['yamlDBPath'],
+        filesLocation=config['outputLocation'],
         telescopeType='lst',
         site='south',
         version='prod4',
@@ -87,6 +90,7 @@ def test_cfg_file():
 
     cfgFile = tel.getConfigFile()
     tel = TelescopeModel.fromConfigFile(
+        filesLocation=config['outputLocation'],
         telescopeType='astri',
         site='south',
         label='test-astri',
