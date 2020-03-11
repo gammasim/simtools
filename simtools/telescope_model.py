@@ -12,6 +12,7 @@ from pathlib import Path
 
 from simtools.util import names
 from simtools.model_parameters import MODEL_PARS
+from simtools import io_handler as io
 
 __all__ = ['TelescopeModel']
 
@@ -55,8 +56,16 @@ class TelescopeModel:
             pwd will used.
 
     """
-    def __init__(self, telescopeType, site, yamlDBPath=None, version='default', label=None,
-                 filesLocation=None, readFromDB=True):
+    def __init__(
+        self,
+        telescopeType,
+        site,
+        yamlDBPath=None,
+        version='default',
+        label=None,
+        filesLocation=None,
+        readFromDB=True
+    ):
         """TelescopeModel __init__.
 
         Args:
@@ -121,7 +130,7 @@ class TelescopeModel:
         self._site = names.validateName(value, names.allSiteNames)
 
     @classmethod
-    def fromConfigFile(cls, telescopeType, site, label, configFileName):
+    def fromConfigFile(cls, configFileName, telescopeType, site, label=None, filesLocation=None):
         """ Create a TelescopeModel from a sim_telarray config file.
 
             Todo:
@@ -139,7 +148,13 @@ class TelescopeModel:
 
         """
         parameters = dict()
-        tel = cls(telescopeType=telescopeType, site=site, label=label, readFromDB=False)
+        tel = cls(
+            telescopeType=telescopeType,
+            site=site,
+            label=label,
+            filesLocation=filesLocation,
+            readFromDB=False
+        )
 
         def processLine(words):
             iComment = len(words)
@@ -317,7 +332,7 @@ class TelescopeModel:
         configFileName += '_{}'.format(self.label) if self.label is not None else ''
         configFileName += '.cfg'
 
-        configFileDirectory = self.filesLocation.joinpath('CTAMCFiles/cfg')
+        configFileDirectory = io.getModelOutputDirectory(self.filesLocation, self.label)
 
         if not configFileDirectory.exists():
             configFileDirectory.mkdir(parents=True, exist_ok=True)
