@@ -17,11 +17,11 @@ config = cfg.loadConfig()
 
 def test_ssts(show=False):
     # Test with 3 SSTs
-    sourceDistance = 10
+    sourceDistance = 10  # km
     site = 'south'
     version = 'prod4'
     zenithAngle = 20
-    offAxisAngle = [0, 4.0]
+    offAxisAngle = [0, 1.0, 2.0, 3.0, 4.0]
 
     telTypes = ['sst-1m', 'sst-astri', 'sst-gct']
     telModels = list()
@@ -29,6 +29,7 @@ def test_ssts(show=False):
     for t in telTypes:
         tel = TelescopeModel(
             yamlDBPath=config['yamlDBPath'],
+            filesLocation=config['outputLocation'],
             telescopeType=t,
             site=site,
             version=version,
@@ -38,6 +39,7 @@ def test_ssts(show=False):
 
         ray = RayTracing(
             simtelSourcePath=config['simtelPath'],
+            filesLocation=config['outputLocation'],
             telescopeModel=tel,
             sourceDistance=sourceDistance,
             zenithAngle=zenithAngle,
@@ -72,6 +74,7 @@ def test_rx(show=False):
 
     tel = TelescopeModel(
         yamlDBPath=config['yamlDBPath'],
+        filesLocation=config['outputLocation'],
         telescopeType='astri',
         site=site,
         version=version,
@@ -80,6 +83,7 @@ def test_rx(show=False):
 
     ray = RayTracing(
         simtelSourcePath=config['simtelPath'],
+        filesLocation=config['outputLocation'],
         telescopeModel=tel,
         sourceDistance=sourceDistance,
         zenithAngle=zenithAngle,
@@ -136,4 +140,4 @@ def test_rx(show=False):
 if __name__ == '__main__':
 
     test_ssts(True)
-    test_rx(True)
+    # test_rx(True)

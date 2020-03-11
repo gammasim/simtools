@@ -21,6 +21,7 @@ from simtools.util.model import computeTelescopeTransmission
 from simtools.telescope_model import TelescopeModel
 from simtools.simtel_runner import SimtelRunner
 from simtools.util.general import collectArguments, collectKwargs, setDefaultKwargs
+from simtools import io_handler as io
 
 __all__ = ['RayTracing']
 
@@ -46,7 +47,6 @@ class RayTracing:
 
         self._simtelSourcePath = simtelSourcePath
         self._filesLocation = Path.cwd() if filesLocation is None else Path(filesLocation)
-        self._baseDirectory = self._filesLocation.joinpath('CTAMCFiles')
 
         self.hasTelescopeModel = False
         self._telescopeModel = None
@@ -67,6 +67,9 @@ class RayTracing:
             self._hasLabel = False
             self.label = None
 
+        self._baseDirectory = io.getRayTracingOutputDirectory(self._filesLocation, self.label)
+        self._baseDirectory.mkdir(parents=True, exist_ok=True)
+
         collectArguments(self, ['zenithAngle', 'offAxisAngle', 'sourceDistance'], **kwargs)
         self._hasResults = False
 
@@ -77,9 +80,7 @@ class RayTracing:
                 self._zenithAngle,
                 self.label
         )
-        dirResults = self._baseDirectory.joinpath('Results')
-        dirResults.mkdir(parents=True, exist_ok=True)
-        self._fileResults = dirResults.joinpath(fileNameResults)
+        self._fileResults = self._baseDirectory.joinpath(fileNameResults)
 
         # end of init
 
@@ -150,7 +151,7 @@ class RayTracing:
                 self.label,
                 'photons'
             )
-            file = self._baseDirectory.joinpath('RayTracing').joinpath(photonsFileName)
+            file = self._baseDirectory.joinpath(photonsFileName)
             telTransmission = 1 if noTelTransmission else computeTelescopeTransmission(
                 telTransmissionPars,
                 thisOffAxis
