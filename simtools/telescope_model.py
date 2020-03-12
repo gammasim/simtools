@@ -95,7 +95,7 @@ class TelescopeModel:
         self.site = site
         self._parameters = dict()
 
-        self.filesLocation = Path.cwd() if filesLocation is None else Path(filesLocation)
+        self._filesLocation = Path.cwd() if filesLocation is None else Path(filesLocation)
 
         if readFromDB:
             self._loadParametersFromDB()
@@ -332,7 +332,7 @@ class TelescopeModel:
         configFileName += '_{}'.format(self.label) if self.label is not None else ''
         configFileName += '.cfg'
 
-        configFileDirectory = io.getModelOutputDirectory(self.filesLocation, self.label)
+        configFileDirectory = io.getModelOutputDirectory(self._filesLocation, self.label)
 
         if not configFileDirectory.exists():
             configFileDirectory.mkdir(parents=True, exist_ok=True)

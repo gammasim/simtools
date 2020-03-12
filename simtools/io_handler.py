@@ -6,7 +6,7 @@ import logging
 from pathlib import Path
 import datetime
 
-__all__ = ['getModelOutputDirectory', 'getRayTracingOutputDirectory']
+__all__ = ['getModelOutputDirectory', 'getRayTracingOutputDirectory', 'getCorsikaOutputDirectory']
 
 
 def getOutputDirectory(filesLocation, label, mode):
@@ -34,3 +34,7 @@ def getModelOutputDirectory(filesLocation, label):
 
 def getRayTracingOutputDirectory(filesLocation, label):
     return getOutputDirectory(filesLocation, label, 'ray-tracing')
+
+
+def getCorsikaOutputDirectory(filesLocation, label):
+    return getOutputDirectory(filesLocation, label, 'corsika')
