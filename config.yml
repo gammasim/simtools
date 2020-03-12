@@ -2,6 +2,8 @@
 
 yamlDBPath: /home/prado/Work/Projects/CTA_MC/svn/Simulations/SimulationModel/ModelDescription/trunk/configReports
 
+databasePath: /home/prado/Work/Projects/CTA_MC/gammasim-db
+
 outputLocation: .
 
 simtelPath: /afs/ifh.de/group/cta/scratch/prado/corsika_simtelarray/corsika6.9_simtelarray_19-03-08
