@@ -2,7 +2,7 @@
 
 yamlDBPath: /home/prado/Work/Projects/CTA_MC/svn/Simulations/SimulationModel/ModelDescription/trunk/configReports
 
-databasePath: /home/prado/Work/Projects/CTA_MC/gammasim-db
+databaseLocation: /home/prado/Work/Projects/CTA_MC/gammasim-db
 
 outputLocation: .
 
