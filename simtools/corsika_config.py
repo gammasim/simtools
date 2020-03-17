@@ -3,6 +3,7 @@
 import logging
 import yaml
 from pathlib import Path
+import random
 
 from simtools.util import names
 from simtools import io_handler as io
@@ -16,7 +17,12 @@ __all__ = ['CorsikaConfig']
 class RequiredInputNotGiven(Exception):
     pass
 
-def writeTelescopes(file, array):
+
+class ArgumentsNotLoaded(Exception):
+    pass
+
+
+def _writeTelescopes(file, array):
     mToCm = 1e2
     for n, tel in array.items():
         file.write('\nTELESCOPE {} {} {} {} # {}'.format(
@@ -26,18 +32,31 @@ def writeTelescopes(file, array):
             cors_pars.TELESCOPE_SPHERE_RADIUS[tel['size']] * mToCm,
             tel['size']
         ))
-
     file.write('\n')
 
 
-def convertPrimaryInput(value):
+def _writeSeeds(file, seeds):
+    for s in seeds:
+        file.write('SEED {} 0 0\n'.format(s))
+
+
+def _convertPrimaryInput(value):
     for primName, primInfo in cors_pars.PRIMARIES.items():
         if value[0].upper() == primName or value[0].upper() in primInfo['names']:
             return [primInfo['number']]
 
 
 class CorsikaConfig:
-    def __init__(self, site, arrayName, databaseLocation, label=None, filesLocation=None, **kwargs):
+    def __init__(
+        self,
+        site,
+        arrayName,
+        databaseLocation,
+        label=None,
+        filesLocation=None,
+        randomSeeds=False,
+        **kwargs
+    ):
         ''' Docs please '''
         logging.info('Init CorsikaConfig')
 
@@ -48,9 +67,12 @@ class CorsikaConfig:
         self._array = getArray(self._arrayName, databaseLocation)
 
         self._loadArguments(**kwargs)
-
+        self._loadSeeds(randomSeeds)
+        print('Parameters')
         print(self._parameters)
-
+        print('Seeds')
+        print(self._seeds)
+        print('Array')
         print(self._array)
 
     def _loadArguments(self, **kwargs):
@@ -63,7 +85,7 @@ class CorsikaConfig:
             if len(valueArgs) == 1 and parName == 'VIEWCONE':  # fixing single value viewcone
                 valueArgs = [0, valueArgs[0]]
             if parName == 'PRMPAR':
-                valueArgs = convertPrimaryInput(valueArgs)
+                valueArgs = _convertPrimaryInput(valueArgs)
 
             if len(valueArgs) != parInfo['len']:
                 logging.warning('Argument {} has wrong len'.format(keyArgs.upper()))
@@ -111,6 +133,17 @@ class CorsikaConfig:
             )
             raise RequiredInputNotGiven()
 
+    def _loadSeeds(self, randomSeeds):
+        if '_parameters' not in self.__dict__.keys():
+            logging.error('_loadSeeds has be called after _loadArguments')
+            raise ArgumentsNotLoaded()
+        if randomSeeds:
+            s = random.uniform(0, 1000)
+        else:
+            s = self._parameters['PRMPAR'][0] + self._parameters['RUNNR'][0]
+        random.seed(s)
+        self._seeds = [int(random.uniform(0, 1e7)) for i in range(4)]
+
     def exportFile(self):
         fileName = names.corsikaConfigFileName(
             arrayName=self._arrayName,
@@ -126,7 +159,7 @@ class CorsikaConfig:
             logging.info('Creating directory {}'.format(fileDirectory))
         self._filePath = fileDirectory.joinpath(fileName)
 
-        def writeParametersSingleLine(file, pars):
+        def _writeParametersSingleLine(file, pars):
             for par, values in pars.items():
                 line = par + ' '
                 for v in values:
@@ -134,26 +167,28 @@ class CorsikaConfig:
                 line += '\n'
                 file.write(line)
 
-        def writeParametersMultipleLines(file, pars):
+        def _writeParametersMultipleLines(file, pars):
             for par, valueList in pars.items():
                 for value in valueList:
                     newPars = {par: value}
-                    writeParametersSingleLine(file, newPars)
+                    _writeParametersSingleLine(file, newPars)
 
         with open(self._filePath, 'w') as file:
-            writeParametersSingleLine(file, self._parameters)
+            _writeParametersSingleLine(file, self._parameters)
             file.write('\n# SITE PARAMETERS\n')
-            writeParametersSingleLine(file, cors_pars.SITE_PARAMETERS[self._site])
+            _writeParametersSingleLine(file, cors_pars.SITE_PARAMETERS[self._site])
+            file.write('\n# SEEDS\n')
+            _writeSeeds(file, self._seeds)
             file.write('\n# TELESCOPES\n')
-            writeTelescopes(file, self._array)
+            _writeTelescopes(file, self._array)
             file.write('\n# INTERACTION FLAGS\n')
-            writeParametersSingleLine(file, cors_pars.INTERACTION_FLAGS)
+            _writeParametersSingleLine(file, cors_pars.INTERACTION_FLAGS)
             file.write('\n# CHERENKOV EMISSION PARAMETERS\n')
-            writeParametersSingleLine(file, cors_pars.CHERENKOV_EMISSION_PARAMETERS)
+            _writeParametersSingleLine(file, cors_pars.CHERENKOV_EMISSION_PARAMETERS)
             file.write('\n# DEBUGGING OUTPUT PARAMETERS\n')
-            writeParametersSingleLine(file, cors_pars.DEBUGGING_OUTPUT_PARAMETERS)
+            _writeParametersSingleLine(file, cors_pars.DEBUGGING_OUTPUT_PARAMETERS)
             file.write('\n# IACT TUNING PARAMETERS\n')
-            writeParametersMultipleLines(file, cors_pars.IACT_TUNING_PARAMETERS)
+            _writeParametersMultipleLines(file, cors_pars.IACT_TUNING_PARAMETERS)
             file.write('\nEXIT')
 
     def addLine(self):
