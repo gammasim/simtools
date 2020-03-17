@@ -16,6 +16,7 @@ if __name__ == '__main__':
         arrayName='4LST',
         databaseLocation=config['databaseLocation'],
         nshow=100,
+        nrun=10,
         wrong_par=200,
         zenith=20,
         viewcone=5,
@@ -26,9 +27,6 @@ if __name__ == '__main__':
         primary='proton',
         label='test-corsika-config'
     )
-    # Testing default parameters
-    assert cc._parameters['RUNNR'] == [1]
-    assert cc._parameters['EVTNR'] == [1]
     cc.exportFile()
 
     cc2 = CorsikaConfig(
@@ -36,13 +34,14 @@ if __name__ == '__main__':
         arrayName='1SST',
         databaseLocation=config['databaseLocation'],
         nshow=1000,
+        nrun=11,
         zenith=[0, 60],
         viewcone=[0, 10],
         erange=[0.01, 10],
         eslope=2,
         phi=0,
         cscat=[10, 1500e2, 0],
-        primary='gamma',
+        primary='proton',
         label='test-corsika-config'
     )
     cc2.exportFile()
@@ -61,4 +60,7 @@ if __name__ == '__main__':
         primary='electron',
         label='test-corsika-config'
     )
+    # Testing default parameters
+    assert cc3._parameters['RUNNR'] == [1]
+    assert cc3._parameters['EVTNR'] == [1]
     cc3.exportFile()
