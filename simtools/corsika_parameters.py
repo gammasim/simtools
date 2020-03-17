@@ -68,8 +68,7 @@ CHERENKOV_EMISSION_PARAMETERS = {
 DEBUGGING_OUTPUT_PARAMETERS = {
     'DEBUG': ['F', 6, 'F', 1000000],
     'DATBAS': ['yes'],
-    'DIRECT': [r'/dev/null'],
-    'TELFIL': ['XFILEX']
+    'DIRECT': [r'/dev/null']
 }
 
 IACT_TUNING_PARAMETERS = {

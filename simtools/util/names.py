@@ -89,8 +89,19 @@ def corsikaConfigFileName(arrayName, site, zenith, viewCone, label=None):
     def isDifuse(viewCone):
         return viewCone[0] != 0 or viewCone[1] != 0
 
-    name = 'corsika-config-{}-{}-za{:.1f}-{:.1f}'.format(arrayName, site, zenith[0], zenith[1])
-    name += '-cone{:.1f}-{:.1f}'.format(viewCone[0], viewCone[1]) if isDifuse(viewCone) else ''
+    name = 'corsika-config-{}-{}-za{:d}-{:d}'.format(arrayName, site, zenith[0], zenith[1])
+    name += '-cone{:d}-{:d}'.format(viewCone[0], viewCone[1]) if isDifuse(viewCone) else ''
     name += '_{}'.format(label) if label is not None else ''
     name += '.txt'
+    return name
+
+
+def corsikaOutputFileName(arrayName, site, zenith, viewCone, run, label=None):
+    def isDifuse(viewCone):
+        return viewCone[0] != 0 or viewCone[1] != 0
+
+    name = 'corsika-run{}-{}-{}-za{:d}-{:d}'.format(run, arrayName, site, int(zenith[0]), int(zenith[1]))
+    name += '-cone{:d}-{:d}'.format(viewCone[0], viewCone[1]) if isDifuse(viewCone) else ''
+    name += '_{}'.format(label) if label is not None else ''
+    name += '.corsika.zst'
     return name
