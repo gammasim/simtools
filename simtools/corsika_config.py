@@ -145,11 +145,19 @@ class CorsikaConfig:
         self._seeds = [int(random.uniform(0, 1e7)) for i in range(4)]
 
     def exportFile(self):
-        fileName = names.corsikaConfigFileName(
+        configFileName = names.corsikaConfigFileName(
             arrayName=self._arrayName,
             site=self._site,
             zenith=self._parameters['THETAP'],
             viewCone=self._parameters['VIEWCONE'],
+            label=self._label
+        )
+        outputFileName = names.corsikaOutputFileName(
+            arrayName=self._arrayName,
+            site=self._site,
+            zenith=self._parameters['THETAP'],
+            viewCone=self._parameters['VIEWCONE'],
+            run=self._parameters['RUNNR'][0],
             label=self._label
         )
         fileDirectory = io.getCorsikaOutputDirectory(self._filesLocation, self._label)
@@ -157,7 +165,8 @@ class CorsikaConfig:
         if not fileDirectory.exists():
             fileDirectory.mkdir(parents=True, exist_ok=True)
             logging.info('Creating directory {}'.format(fileDirectory))
-        self._filePath = fileDirectory.joinpath(fileName)
+        self._configFilePath = fileDirectory.joinpath(configFileName)
+        self._outputFilePath = fileDirectory.joinpath(outputFileName)
 
         def _writeParametersSingleLine(file, pars):
             for par, values in pars.items():
@@ -173,7 +182,7 @@ class CorsikaConfig:
                     newPars = {par: value}
                     _writeParametersSingleLine(file, newPars)
 
-        with open(self._filePath, 'w') as file:
+        with open(self._configFilePath, 'w') as file:
             _writeParametersSingleLine(file, self._parameters)
             file.write('\n# SITE PARAMETERS\n')
             _writeParametersSingleLine(file, cors_pars.SITE_PARAMETERS[self._site])
@@ -187,6 +196,8 @@ class CorsikaConfig:
             _writeParametersSingleLine(file, cors_pars.CHERENKOV_EMISSION_PARAMETERS)
             file.write('\n# DEBUGGING OUTPUT PARAMETERS\n')
             _writeParametersSingleLine(file, cors_pars.DEBUGGING_OUTPUT_PARAMETERS)
+            file.write('\n# OUTUPUT FILE\n')
+            file.write('TELFIL {}'.format(self._outputFilePath))
             file.write('\n# IACT TUNING PARAMETERS\n')
             _writeParametersMultipleLines(file, cors_pars.IACT_TUNING_PARAMETERS)
             file.write('\nEXIT')
