@@ -19,6 +19,11 @@ if __name__ == '__main__':
         wrong_par=200,
         zenith=20,
         viewcone=5,
+        erange=[0.01, 10],
+        eslope=2,
+        phi=0,
+        cscat=[10, 1500e2, 0],
+        primary='proton',
         label='test-corsika-config'
     )
     # Testing default parameters
@@ -33,6 +38,11 @@ if __name__ == '__main__':
         nshow=1000,
         zenith=[0, 60],
         viewcone=[0, 10],
+        erange=[0.01, 10],
+        eslope=2,
+        phi=0,
+        cscat=[10, 1500e2, 0],
+        primary='gamma',
         label='test-corsika-config'
     )
     cc2.exportFile()
@@ -44,6 +54,11 @@ if __name__ == '__main__':
         nshow=10000,
         zenith=[0, 60],
         viewcone=[0, 0],
+        erange=[0.01, 10],
+        eslope=2,
+        phi=0,
+        cscat=[10, 1500e2, 0],
+        primary='electron',
         label='test-corsika-config'
     )
     cc3.exportFile()

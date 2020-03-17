@@ -13,18 +13,27 @@ from simtools import corsika_parameters as cors_pars
 __all__ = ['CorsikaConfig']
 
 
+class RequiredInputNotGiven(Exception):
+    pass
+
 def writeTelescopes(file, array):
     mToCm = 1e2
     for n, tel in array.items():
-        file.write('\nTELESCOPE {} {} {} {}'.format(
+        file.write('\nTELESCOPE {} {} {} {} # {}'.format(
             tel['xPos'] * mToCm,
             tel['yPos'] * mToCm,
             cors_pars.TELESCOPE_Z[tel['size']] * mToCm,
-            cors_pars.TELESCOPE_SPHERE_RADIUS[tel['size']] * mToCm
+            cors_pars.TELESCOPE_SPHERE_RADIUS[tel['size']] * mToCm,
+            tel['size']
         ))
 
     file.write('\n')
-    pass
+
+
+def convertPrimaryInput(value):
+    for primName, primInfo in cors_pars.PRIMARIES.items():
+        if value[0].upper() == primName or value[0].upper() in primInfo['names']:
+            return [primInfo['number']]
 
 
 class CorsikaConfig:
@@ -53,6 +62,8 @@ class CorsikaConfig:
                 valueArgs = valueArgs * 2
             if len(valueArgs) == 1 and parName == 'VIEWCONE':  # fixing single value viewcone
                 valueArgs = [0, valueArgs[0]]
+            if parName == 'PRMPAR':
+                valueArgs = convertPrimaryInput(valueArgs)
 
             if len(valueArgs) != parInfo['len']:
                 logging.warning('Argument {} has wrong len'.format(keyArgs.upper()))
@@ -82,11 +93,23 @@ class CorsikaConfig:
 
         # Checking for parameters with default option
         # If it is not given. filling it with the default value
+        requiredButNotGiven = list()
         for parName, parInfo in cors_pars.USER_PARAMETERS.items():
-            if 'default' not in parInfo.keys() or parName in self._parameters.keys():
+            if parName in self._parameters.keys():
                 continue
-            parValue = validateAndFixArgs(parName, parInfo['default'])
-            self._parameters[parName] = parValue
+            if 'default' in parInfo.keys():
+                parValue = validateAndFixArgs(parName, parInfo['default'])
+                self._parameters[parName] = parValue
+            else:
+                requiredButNotGiven.append(parName)
+        if len(requiredButNotGiven) > 0:
+            logging.error(
+                'Required parameters not given ({} parameters: {} ...)'.format(
+                    len(requiredButNotGiven),
+                    requiredButNotGiven[0]
+                )
+            )
+            raise RequiredInputNotGiven()
 
     def exportFile(self):
         fileName = names.corsikaConfigFileName(
