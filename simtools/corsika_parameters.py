@@ -26,7 +26,9 @@ USER_PARAMETERS = {
 
 PRIMARIES = {
     'GAMMA': {'number': 1, 'names': ['PHOTON']},
-    'PROTON': {'number': 14, 'names': []}
+    'ELECTRON': {'number': 3, 'names': ['ELECTRONS']},
+    'PROTON': {'number': 14, 'names': ['PROTONS']},
+    'HELIUM': {'number': 402, 'names': []}
 }
 
 SITE_PARAMETERS = {
