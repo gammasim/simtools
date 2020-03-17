@@ -21,6 +21,9 @@ if __name__ == '__main__':
         viewcone=5,
         label='test-corsika-config'
     )
+    # Testing default parameters
+    assert cc._parameters['RUNNR'] == [1]
+    assert cc._parameters['EVTNR'] == [1]
     cc.exportFile()
 
     cc2 = CorsikaConfig(
