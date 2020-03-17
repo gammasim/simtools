@@ -16,6 +16,9 @@ TODO:
 * SimtelRunner: files (log, photon, star etc) names
 * SimtelRunner: method to obtain script
 * SimtelRunner: force flag
+* Clean and organize SimtelRunner
+* Corsika runner in SimtelRunner
+* Docs in CorsikaConfig related code
 
 GUIDELINES:
 ------------
