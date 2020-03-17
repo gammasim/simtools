@@ -11,7 +11,7 @@ __all__ = [
 ]
 
 USER_PARAMETERS = {
-    'RUNNR': {'len': 1, 'names': ['RUNNUMBER'], 'default': 1},
+    'RUNNR': {'len': 1, 'names': ['RUNNUMBER', 'NRUN'], 'default': 1},
     'EVTNR': {'len': 1, 'names': ['EVENTNR', 'EVENTNUMBER'], 'default': 1},
     'NSHOW': {'len': 1, 'names': ['NSHOWERS']},
     'PRMPAR': {'len': 1, 'names': ['PRIMARY']},
