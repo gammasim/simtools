@@ -4,6 +4,7 @@ import logging
 import yaml
 from pathlib import Path
 import random
+from astropy import units
 
 from simtools.util import names
 from simtools import io_handler as io
@@ -19,6 +20,10 @@ class RequiredInputNotGiven(Exception):
 
 
 class ArgumentsNotLoaded(Exception):
+    pass
+
+
+class ArgumentWithWrongUnit(Exception):
     pass
 
 
@@ -78,17 +83,35 @@ class CorsikaConfig:
     def _loadArguments(self, **kwargs):
         self._parameters = dict()
 
-        def validateAndFixArgs(parName, valueArgs):
+        def validateAndFixArgs(parName, parInfo, valueArgs):
             valueArgs = valueArgs if isinstance(valueArgs, list) else [valueArgs]
             if len(valueArgs) == 1 and parName == 'THETAP':  # fixing single value zenith angle
                 valueArgs = valueArgs * 2
             if len(valueArgs) == 1 and parName == 'VIEWCONE':  # fixing single value viewcone
-                valueArgs = [0, valueArgs[0]]
+                valueArgs = [0 * parInfo['unit'][0], valueArgs[0]]
             if parName == 'PRMPAR':
                 valueArgs = _convertPrimaryInput(valueArgs)
 
             if len(valueArgs) != parInfo['len']:
                 logging.warning('Argument {} has wrong len'.format(keyArgs.upper()))
+
+            if 'unit' in parInfo.keys():
+                parUnit = (
+                    [parInfo['unit']] if not isinstance(parInfo['unit'], list) else parInfo['unit']
+                )
+
+                newValueArgs = list()
+                for (v, u) in zip(valueArgs, parUnit):
+                    if u is None:
+                        newValueArgs.append(v)
+                        continue
+
+                    try:
+                        newValueArgs.append(v.to(u).value)
+                    except units.core.UnitConversionError:
+                        logging.error('Argument given with wrong unit: {}'.format(parName))
+                        raise ArgumentWithWrongUnit()
+                valueArgs = newValueArgs
 
             return valueArgs
 
@@ -100,7 +123,7 @@ class CorsikaConfig:
 
                 if keyArgs.upper() == parName or keyArgs.upper() in parInfo['names']:
                     indentifiedArgs.append(keyArgs)
-                    valueArgs = validateAndFixArgs(parName, valueArgs)
+                    valueArgs = validateAndFixArgs(parName, parInfo, valueArgs)
                     self._parameters[parName] = valueArgs
 
         # Checking for unindetified parameters
@@ -120,7 +143,7 @@ class CorsikaConfig:
             if parName in self._parameters.keys():
                 continue
             if 'default' in parInfo.keys():
-                parValue = validateAndFixArgs(parName, parInfo['default'])
+                parValue = validateAndFixArgs(parName, parInfo, parInfo['default'])
                 self._parameters[parName] = parValue
             else:
                 requiredButNotGiven.append(parName)

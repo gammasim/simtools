@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 import logging
+from astropy import units
 
 from simtools.corsika_config import CorsikaConfig
 from simtools.util import config as cfg
@@ -66,6 +67,25 @@ def test_general():
     cc3.exportFile()
 
 
+def test_units():
+    cc = CorsikaConfig(
+        site='Paranal',
+        arrayName='4LST',
+        databaseLocation=config['databaseLocation'],
+        nshow=100,
+        nrun=10,
+        zenith=0.1 * units.rad,
+        viewcone=5 * units.deg,
+        erange=[0.01 * units.TeV, 10 * units.TeV],
+        eslope=2,
+        phi=0 * units.deg,
+        cscat=[10, 1500 * units.m, 0],
+        primary='proton',
+        label='test-corsika-config'
+    )
+    cc.exportFile()
+
 if __name__ == '__main__':
 
-    test_general()
+    # test_general()
+    test_units()
