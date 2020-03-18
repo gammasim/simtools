@@ -9,8 +9,8 @@ logging.getLogger().setLevel(logging.DEBUG)
 
 config = cfg.loadConfig()  # config dict
 
-if __name__ == '__main__':
 
+def test_general():
     cc = CorsikaConfig(
         site='Paranal',
         arrayName='4LST',
@@ -64,3 +64,8 @@ if __name__ == '__main__':
     assert cc3._parameters['RUNNR'] == [1]
     assert cc3._parameters['EVTNR'] == [1]
     cc3.exportFile()
+
+
+if __name__ == '__main__':
+
+    test_general()
