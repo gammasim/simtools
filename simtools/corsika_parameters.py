@@ -1,5 +1,7 @@
 #!/usr/bin/python3
 
+from astropy import units
+
 __all__ = [
     'USER_PARAMETERS',
     'PRIMARIES',
@@ -15,12 +17,12 @@ USER_PARAMETERS = {
     'EVTNR': {'len': 1, 'names': ['EVENTNR', 'EVENTNUMBER'], 'default': 1},
     'NSHOW': {'len': 1, 'names': ['NSHOWERS']},
     'PRMPAR': {'len': 1, 'names': ['PRIMARY']},
-    'ERANGE': {'len': 2, 'names': ['ENRANGE', 'ENERGYRANGE']},
+    'ERANGE': {'len': 2, 'names': ['ENRANGE', 'ENERGYRANGE'], 'unit': [units.TeV] * 2},
     'ESLOPE': {'len': 1, 'names': ['ENSLOPE', 'ENERGYSLOPE']},
-    'THETAP': {'len': 2, 'names': ['THETA', 'ZENITH']},
-    'PHIP': {'len': 1, 'names': ['PHI', 'AZIMUTH']},
-    'VIEWCONE': {'len': 2, 'names': ['CONE']},
-    'CSCAT': {'len': 3, 'names': []}
+    'THETAP': {'len': 2, 'names': ['THETA', 'ZENITH'], 'unit': [units.deg] * 2},
+    'PHIP': {'len': 1, 'names': ['PHI', 'AZIMUTH'], 'unit': units.deg},
+    'VIEWCONE': {'len': 2, 'names': ['CONE'], 'unit': [units.deg] * 2},
+    'CSCAT': {'len': 3, 'names': [], 'unit': [None, units.cm, None]}
 }
 
 
