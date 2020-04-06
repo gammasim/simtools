@@ -15,6 +15,8 @@ from astropy.io import ascii
 from astropy.table import Table
 import math
 import matplotlib.pyplot as plt
+from astropy import units
+
 
 from simtools.util import names
 from simtools.util.model import computeTelescopeTransmission
@@ -33,6 +35,7 @@ class RayTracing:
         telescopeModel,
         label=None,
         filesLocation=None,
+        singleMirrorMode=False,
         **kwargs
     ):
         """
@@ -52,10 +55,20 @@ class RayTracing:
         self._telescopeModel = None
         self.telescopeModel = telescopeModel
 
+        self._singleMirrorMode = singleMirrorMode
+
         # Default parameters
-        self._zenithAngle = 20                          # deg
-        self._offAxisAngle = np.linspace(0.0, 3.0, 7)   # deg
-        self._sourceDistance = 10                       # km
+        if self._singleMirrorMode:
+            self._zenithAngle = 0      # deg
+            self._offAxisAngle = [0]   # deg
+            mirFlen = self.telescopeModel.getParameter('mirror_focal_length')
+            self._sourceDistance = 2 * float(mirFlen) * units.cm.to(units.km)  # km
+            self._numberOfRepetitions = 10
+        else:
+            self._zenithAngle = 20                          # deg
+            self._offAxisAngle = np.linspace(0.0, 3.0, 7)   # deg
+            self._sourceDistance = 10                       # km
+            self._numberOfRepetitions = 1
 
         # Label
         self._hasLabel = True
@@ -70,7 +83,11 @@ class RayTracing:
         self._baseDirectory = io.getRayTracingOutputDirectory(self._filesLocation, self.label)
         self._baseDirectory.mkdir(parents=True, exist_ok=True)
 
-        collectArguments(self, ['zenithAngle', 'offAxisAngle', 'sourceDistance'], **kwargs)
+        collectArguments(
+            self,
+            ['zenithAngle', 'offAxisAngle', 'sourceDistance', 'numberOfRepetitions'],
+            **kwargs
+        )
         self._hasResults = False
 
         # Results file
@@ -105,17 +122,22 @@ class RayTracing:
     def simulate(self, test=False, force=False):
         """Simulate RayTracing."""
         for thisOffAxis in self._offAxisAngle:
-            self.log.info('Simulating RayTracing for offAxis={}'.format(thisOffAxis))
-            simtel = SimtelRunner(
-                simtelSourcePath=self._simtelSourcePath,
-                filesLocation=self._filesLocation,
-                mode='ray-tracing',
-                telescopeModel=self._telescopeModel,
-                zenithAngle=self._zenithAngle,
-                sourceDistance=self._sourceDistance,
-                offAxisAngle=thisOffAxis
-            )
-            simtel.run(test=test, force=force)
+            for thisRep in range(self._numberOfRepetitions):
+                self.log.info('Simulating RayTracing for offAxis={}, repNumber={}'.format(
+                    thisOffAxis,
+                    thisRep
+                ))
+                simtel = SimtelRunner(
+                    simtelSourcePath=self._simtelSourcePath,
+                    filesLocation=self._filesLocation,
+                    mode='ray-tracing' if not self._singleMirrorMode else 'raytracing-singlemirror',
+                    telescopeModel=self._telescopeModel,
+                    zenithAngle=self._zenithAngle,
+                    sourceDistance=self._sourceDistance,
+                    offAxisAngle=thisOffAxis,
+                    repNumber=thisRep
+                )
+                simtel.run(test=test, force=force)
 
     def analyze(self, export=True, force=False, useRX=False, noTelTransmission=False):
         """Analyze RayTracing."""
@@ -142,48 +164,50 @@ class RayTracing:
         self._psfImages = dict()
 
         for thisOffAxis in self._offAxisAngle:
-            self.log.info('Analyzing RayTracing for offAxis={}'.format(thisOffAxis))
-            photonsFileName = names.rayTracingFileName(
-                self._telescopeModel.telescopeType,
-                self._sourceDistance,
-                self._zenithAngle,
-                thisOffAxis,
-                self.label,
-                'photons'
-            )
-            file = self._baseDirectory.joinpath(photonsFileName)
-            telTransmission = 1 if noTelTransmission else computeTelescopeTransmission(
-                telTransmissionPars,
-                thisOffAxis
-            )
-            image = PSFImage(focalLength)
-            image.readSimtelFile(file)
+            for thisRep in range(self._numberOfRepetitions):
+                self.log.info('Analyzing RayTracing for offAxis={}, repNumber={}'.format(thisOffAxis, thisRep))
+                photonsFileName = names.rayTracingFileName(
+                    self._telescopeModel.telescopeType,
+                    self._sourceDistance,
+                    self._zenithAngle,
+                    thisOffAxis,
+                    thisRep,
+                    self.label,
+                    'photons'
+                )
+                file = self._baseDirectory.joinpath(photonsFileName)
+                telTransmission = 1 if noTelTransmission else computeTelescopeTransmission(
+                    telTransmissionPars,
+                    thisOffAxis
+                )
+                image = PSFImage(focalLength)
+                image.readSimtelFile(file)
 
-            if useRX:
-                d80_cm, xPosMean, yPosMean, effArea = self.processRX(file)
-                d80_deg = d80_cm * cmToDeg
-                image.d80_cm = d80_cm
-                image.d80_deg = d80_deg
-                image.xPosMean = xPosMean
-                image.yPosMean = yPosMean
-                image.effArea = effArea * telTransmission
-            else:
-                image.loadPSF()
-                d80_cm = image.d80_cm
-                d80_deg = image.d80_deg
-                xPosMean = image.xPosMean
-                yPosMean = image.yPosMean
-                effArea = image.effArea * telTransmission
+                if useRX:
+                    d80_cm, xPosMean, yPosMean, effArea = self.processRX(file)
+                    d80_deg = d80_cm * cmToDeg
+                    image.d80_cm = d80_cm
+                    image.d80_deg = d80_deg
+                    image.xPosMean = xPosMean
+                    image.yPosMean = yPosMean
+                    image.effArea = effArea * telTransmission
+                else:
+                    image.loadPSF()
+                    d80_cm = image.d80_cm
+                    d80_deg = image.d80_deg
+                    xPosMean = image.xPosMean
+                    yPosMean = image.yPosMean
+                    effArea = image.effArea * telTransmission
 
-            self._psfImages[thisOffAxis] = image
-            effFlen = (
-                'nan' if thisOffAxis == 0 else xPosMean / math.tan(thisOffAxis * math.pi / 180.)
-            )
-            self._results['off_axis'].append(thisOffAxis)
-            self._results['d80_cm'].append(d80_cm)
-            self._results['d80_deg'].append(d80_deg)
-            self._results['eff_area'].append(effArea)
-            self._results['eff_flen'].append(effFlen)
+                self._psfImages[thisOffAxis] = image
+                effFlen = (
+                    'nan' if thisOffAxis == 0 else xPosMean / math.tan(thisOffAxis * math.pi / 180.)
+                )
+                self._results['off_axis'].append(thisOffAxis)
+                self._results['d80_cm'].append(d80_cm)
+                self._results['d80_deg'].append(d80_deg)
+                self._results['eff_area'].append(effArea)
+                self._results['eff_flen'].append(effFlen)
         # end for offAxis
 
         self._hasResults = True
@@ -224,6 +248,14 @@ class RayTracing:
 
         ax = plt.gca()
         ax.plot(self._results['off_axis'], self._results[which], **kwargs)
+
+    def plotHistogram(self, which='d80_cm', **kwargs):
+        if which not in ['d80_cm', 'd80_deg', 'eff_area', 'eff_flen']:
+            self.log.error('Invalid option for plotting histogram RayTracing')
+            return
+
+        ax = plt.gca()
+        ax.hist(self._results[which], **kwargs)
 
     def images(self):
         images = list()
