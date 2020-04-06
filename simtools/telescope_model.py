@@ -85,7 +85,8 @@ class TelescopeModel:
         self.log = logging.getLogger(__name__)
         self.log.info('Init TelescopeModel')
 
-        self.yamlDBPath = yamlDBPath
+        self.yamlDBPath = Path(yamlDBPath)
+        self._dataFilesDir = self.yamlDBPath.parents[0].joinpath('datFiles')
         self.label = label
         self._version = None
         self.version = version
@@ -100,7 +101,8 @@ class TelescopeModel:
         if readFromDB:
             self._loadParametersFromDB()
 
-        self._isFileExported = False
+        self._setConfigFileDirectory()
+        self._isConfigFileExported = False
 
     @property
     def version(self):
@@ -186,32 +188,42 @@ class TelescopeModel:
         tel.addParameters(**parameters)
         return tel
 
+    def _setConfigFileDirectory(self):
+        self._configFileDirectory = io.getModelOutputDirectory(self._filesLocation, self.label)
+        if not self._configFileDirectory.exists():
+            self._configFileDirectory.mkdir(parents=True, exist_ok=True)
+            self.log.info('Creating directory {}'.format(self._configFileDirectory))
+        return
+
     def _loadParametersFromDB(self):
         """ Read parameters from DB and store it in _parameters (dict). """
 
-        def _readParsFromOneType(yamlDBPath, telescopeType, parametersDB):
+        def _readParsFromOneType(telescopeType):
             """ Read parameters as a dict and concatenate it to parametersDB
                 Implementation was needed to concatenate the optics parameters
                 to the MST models.
             """
-            fileNameDB = '{}/parValues-{}.yml'.format(yamlDBPath, telescopeType)
+            fileNameDB = '{}/parValues-{}.yml'.format(self.yamlDBPath, telescopeType)
             self.log.info('Reading DB file {}'.format(fileNameDB))
             with open(fileNameDB, 'r') as stream:
                 pars = yaml.load(stream, Loader=yaml.FullLoader)
-            parametersDB.update(pars)
+            return pars
 
-        parametersDB = dict()
-        _readParsFromOneType(self.yamlDBPath, self.telescopeType, parametersDB)
+        def _collectAplicablePars(pars):
+            for parNameIn in parametersDB:
+                if pars[parNameIn]['Applicable']:
+                    parName, parValue = self._validateParameter(
+                        parNameIn,
+                        pars[parNameIn][self._version]
+                    )
+                    self._parameters[parName] = parValue
+
+        parametersDB = _readParsFromOneType(telescopeType=self.telescopeType)
+        _collectAplicablePars(parametersDB)
+
         if whichTelescopeSize(self.telescopeType) == 'MST':
-            _readParsFromOneType(self.yamlDBPath, 'MST-optics', parametersDB)
-
-        for parNameIn in parametersDB:
-            if parametersDB[parNameIn]['Applicable']:
-                parName, parValue = self._validateParameter(
-                    parNameIn,
-                    parametersDB[parNameIn][self._version]
-                )
-                self._parameters[parName] = parValue
+            parametersDB = _readParsFromOneType(telescopeType='MST-optics')
+            _collectAplicablePars(parametersDB)
 
         # Site
         # Two site parameters need to be read:
@@ -332,12 +344,7 @@ class TelescopeModel:
         configFileName += '_{}'.format(self.label) if self.label is not None else ''
         configFileName += '.cfg'
 
-        configFileDirectory = io.getModelOutputDirectory(self._filesLocation, self.label)
-
-        if not configFileDirectory.exists():
-            configFileDirectory.mkdir(parents=True, exist_ok=True)
-            self.log.info('Creating directory {}'.format(configFileDirectory))
-        self._configFilePath = configFileDirectory.joinpath(configFileName)
+        self._configFilePath = self._configFileDirectory.joinpath(configFileName)
 
         # Writing parameters to the file
         self.log.info('Writing config file - {}'.format(self._configFilePath))
@@ -354,7 +361,7 @@ class TelescopeModel:
                 value = self._parameters[par]
                 file.write('{} = {}\n'.format(par, value))
 
-        self._isFileExported = True
+        self._isConfigFileExported = True
     # end exportConfigFile
 
     def getConfigFile(self):
@@ -364,6 +371,58 @@ class TelescopeModel:
             Return:
                 Path of the config file for sim_telarray.
         """
-        if not self._isFileExported:
+        if not self._isConfigFileExported:
             self.exportConfigFile()
         return self._configFilePath
+
+    def exportSingleMirrorListFile(self):
+        fileName = 'CTA-single-mirror-list-{}-{}-{}'.format(
+            self._version,
+            self.site,
+            self.telescopeType
+        )
+        fileName += '_{}'.format(self.label) if self.label is not None else ''
+        fileName += '.dat'
+        self._singleMirrorListFilePath = self._configFileDirectory.joinpath(fileName)
+
+        self.loadMirrorGeometryParameters()
+
+        with open(self._singleMirrorListFilePath, 'w') as file:
+            file.write('# Column 1: X pos. [cm] (North/Down)\n')
+            file.write('# Column 2: Y pos. [cm] (West/Right from camera)\n')
+            file.write('# Column 3: flat-to-flat diameter [cm]\n')
+            file.write('# Column 4: focal length [cm], typically zero = adapting in sim_telarray.\n')
+            file.write(
+                '# Column 5: shape type: 0=circular, 1=hex. with flat side parallel to y, '
+                '2=square, 3=other hex. (default: 0)\n'
+            )
+            file.write(
+                '# Column 6: Z pos (height above dish backplane) [cm], typ. omitted (or zero)'
+                ' to adapt to dish shape settings.\n'
+            )
+            file.write('#\n')
+            file.write('0. 0. {} {} {} 0.\n'.format(
+                self.mirrorDiameter,
+                self.mirrorFocalLength,
+                self.mirrorShape
+            ))
+
+    def getSingleMirrorListFile(self):
+        self.exportSingleMirrorListFile()
+        return self._singleMirrorListFilePath
+
+    def loadMirrorGeometryParameters(self):
+        mirrorListFileName = self._parameters['mirror_list']
+        mirrorListFile = self._dataFilesDir.joinpath(mirrorListFileName)
+        with open(mirrorListFile, 'r') as file:
+            for line in file:
+                if '#' in line:
+                    continue
+                line = line.split()
+                self.mirrorDiameter = float(line[2])
+                # self.mirrorFocalLength = float(line[3])
+                self.mirrorShape = int(line[4])
+                break
+        if 'mirror_focal_length' in self._parameters:
+            self.mirrorFocalLength = self._parameters['mirror_focal_length']
+        return
