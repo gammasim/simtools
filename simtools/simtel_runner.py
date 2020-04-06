@@ -3,6 +3,7 @@
 import logging
 from pathlib import Path
 import os
+from astropy import units
 
 from simtools.util import names
 from simtools.telescope_model import TelescopeModel
@@ -34,12 +35,10 @@ class SimtelRunner:
         self.telescopeModel = telescopeModel
 
         # RayTracing - default parameters
-        self._zenithAngle = 20     # deg
-        self._offAxisAngle = 0     # deg
-        self._sourceDistance = 10  # km
+        self._repNumber = 0
         self._statNumber = 1
         self.RUNS_PER_SET = 100        # const
-        self.PHOTONS_PER_RUN = 5000    # const
+        self.PHOTONS_PER_RUN = 20000    # const
 
         # Label
         self._hasLabel = True
@@ -51,15 +50,20 @@ class SimtelRunner:
             self._hasLabel = False
 
         # File location
+        modeDir = 'ray-tracing' if 'RayTracing' in self.mode else 'generic'
         self._filesLocation = Path.cwd() if filesLocation is None else Path(filesLocation)
-        self._baseDirectory = io.getOutputDirectory(self._filesLocation, self.label, mode)
+        self._baseDirectory = io.getOutputDirectory(self._filesLocation, self.label, modeDir)
         self._baseDirectory.mkdir(parents=True, exist_ok=True)
 
         collectArguments(
             self,
-            ['zenithAngle', 'offAxisAngle', 'sourceDistance', 'statNumber'],
+            ['zenithAngle', 'offAxisAngle', 'sourceDistance', 'statNumber', 'repNumber'],
             **kwargs
         )
+
+        if self.mode == 'RayTracingSingleMirror':
+            self.telescopeModel.loadMirrorGeometryParameters()
+    # end of _init_
 
     def __repr__(self):
         return 'SimtelRunner(mode={}, label={})\n'.format(self.mode, self.label)
@@ -124,12 +128,13 @@ class SimtelRunner:
         return self._scriptFileName
 
     def shallRun(self):
-        if self.mode == 'RayTracing':
+        if 'RayTracing' in self.mode:
             photonsFileName = names.rayTracingFileName(
                 self._telescopeModel.telescopeType,
                 self._sourceDistance,
                 self._zenithAngle,
                 self._offAxisAngle,
+                self._repNumber,
                 self.label,
                 'photons'
             )
@@ -145,7 +150,7 @@ class SimtelRunner:
         '''
         ############
         # RayTracing
-        if self.mode == 'RayTracing':
+        if 'RayTracing' in self.mode:
             self._corsikaFileName = self.simtelSourcePath.joinpath('run9991.corsika.gz')
 
             # Loop to define and remove existing files
@@ -156,6 +161,7 @@ class SimtelRunner:
                     self._sourceDistance,
                     self._zenithAngle,
                     self._offAxisAngle,
+                    self._repNumber,
                     self.label,
                     base
                 )
@@ -172,6 +178,7 @@ class SimtelRunner:
                 file.write('# zenithAngle [deg] = {}\n'.format(self._zenithAngle))
                 file.write('# offAxisAngle [deg] = {}\n'.format(self._offAxisAngle))
                 file.write('# sourceDistance [km] = {}\n\n'.format(self._sourceDistance))
+                file.write('# repNumber = {}\n\n'.format(self._repNumber))
 
             with self._starsFileName.open('w') as file:
                 file.write('0. {} 1.0 {}'.format(90. - self._zenithAngle, self._sourceDistance))
@@ -208,6 +215,21 @@ class SimtelRunner:
         command += configOption('maximum_telescopes', '1')
         command += configOption('show', 'all')
         command += configOption('camera_filter', 'none')
+        if self.mode == 'RayTracingSingleMirror':
+            command += configOption('focus_offset', 'all:0.')
+            command += configOption('camera_config_file', 'single_pixel_camera.dat')
+            command += configOption('camera_pixels', '1')
+            command += configOption('trigger_pixels', '1')
+            command += configOption('camera_body_diameter', '0')
+            command += configOption('mirror_list', self.telescopeModel.getSingleMirrorListFile())
+            command += configOption('focal_length', self._sourceDistance * units.km.to(units.cm))
+            command += configOption('dish_shape_length', self.telescopeModel.mirrorFocalLength)
+            command += configOption('mirror_focal_length', self.telescopeModel.mirrorFocalLength)
+            command += configOption('parabolic_dish', '0')
+            command += configOption('random_focal_length', '0.')
+            command += configOption('mirror_align_random_distance', '0.')
+            command += configOption('mirror_align_random_horizontal', '0,28.,0.,0.')  # 28 hardcoded ??
+            command += configOption('mirror_align_random_vertical', '0.,28.,0.,0.')
         command += ' ' + str(self._corsikaFileName)
         command += ' 2>&1 > ' + str(self._logFileName) + ' 2>&1'
 

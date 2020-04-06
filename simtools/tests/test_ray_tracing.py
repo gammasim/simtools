@@ -139,5 +139,51 @@ def test_rx(show=False):
 
 if __name__ == '__main__':
 
-    test_ssts(True)
+    # test_ssts(True)
     # test_rx(True)
+
+    # Test MST
+    sourceDistance = 10  # km
+    site = 'south'
+    version = 'prod4'
+    zenithAngle = 20
+    offAxisAngle = [0]
+
+    tel = TelescopeModel(
+        yamlDBPath=config['yamlDBPath'],
+        filesLocation=config['outputLocation'],
+        # telescopeType='sst-astri',
+        telescopeType='mst-flashcam',
+        site=site,
+        version=version,
+        label='test-mst'
+    )
+
+    # tel.changeParameters(fadc_pulse_shape='pulse_FlashCam_raw.dat')
+    # tel.changeParameters(mirror_reflection_random_angle='0.0')
+
+    # tel.getSingleMirrorListFile()
+
+    ray = RayTracing(
+        simtelSourcePath=config['simtelPath'],
+        filesLocation=config['outputLocation'],
+        telescopeModel=tel,
+        # sourceDistance=sourceDistance,
+        # zenithAngle=zenithAngle,
+        # offAxisAngle=[0, 1, 2, 3],
+        singleMirrorMode=True,
+        numberOfRepetitions=100
+    )
+    ray.simulate(test=True, force=True)
+    ray.analyze(force=True)
+
+    # Plotting
+
+    plt.figure(figsize=(8, 6), tight_layout=True)
+    ax = plt.gca()
+    ax.set_xlabel('d80')
+
+    ray.plotHistogram('d80_deg', color='r', bins=15)
+    # ray.plot('d80_deg', color='r', linestyle='none', marker='o')
+
+    plt.show()
