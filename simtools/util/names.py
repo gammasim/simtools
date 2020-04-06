@@ -45,13 +45,19 @@ allSiteNames = {
 }
 
 allModelVersionNames = {
+    'prod3_compatible': ['p3', 'prod3', 'prod3b'],
     'prod4': ['p4'],
     'default': []
 }
 
 allSimtelModeNames = {
     'RayTracing': ['raytracing', 'ray-tracing'],
-    'Trigger': []
+    'RayTracingSingleMirror': [
+        'raytracing-singlemirror',
+        'ray-tracing-singlemirror',
+        'ray-tracing-single-mirror'
+    ],
+    'Trigger': ['trigger']
 }
 
 allArrayNames = {
@@ -64,14 +70,23 @@ allArrayNames = {
 }
 
 
-def rayTracingFileName(telescopeType, sourceDistance, zenithAngle, offAxisAngle, label, base):
+def rayTracingFileName(
+    telescopeType,
+    sourceDistance,
+    zenithAngle,
+    offAxisAngle,
+    repNumber,
+    label,
+    base
+):
     ''' base has to be log, stars or photons'''
-    name = '{}-{}-d{:.1f}-za{:.1f}-off{:.3f}'.format(
+    name = '{}-{}-d{:.1f}-za{:.1f}-off{:.3f}-rep{}'.format(
         base,
         telescopeType,
         sourceDistance,
         zenithAngle,
-        offAxisAngle
+        offAxisAngle,
+        repNumber
     )
     name += '_{}'.format(label) if label is not None else ''
     name += '.log' if base == 'log' else '.lis'
