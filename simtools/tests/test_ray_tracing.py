@@ -160,7 +160,7 @@ if __name__ == '__main__':
     )
 
     # tel.changeParameters(fadc_pulse_shape='pulse_FlashCam_raw.dat')
-    # tel.changeParameters(mirror_reflection_random_angle='0.0')
+    # tel.changeParameters(mirror_reflection_random_angle='0.08')
 
     # tel.getSingleMirrorListFile()
 
@@ -172,7 +172,7 @@ if __name__ == '__main__':
         # zenithAngle=zenithAngle,
         # offAxisAngle=[0, 1, 2, 3],
         singleMirrorMode=True,
-        numberOfRepetitions=100
+        numberOfRepetitions=20
     )
     ray.simulate(test=True, force=True)
     ray.analyze(force=True)
@@ -183,7 +183,7 @@ if __name__ == '__main__':
     ax = plt.gca()
     ax.set_xlabel('d80')
 
-    ray.plotHistogram('d80_deg', color='r', bins=15)
+    ray.plotHistogram('d80_cm', color='r', bins=10)
     # ray.plot('d80_deg', color='r', linestyle='none', marker='o')
 
     plt.show()
