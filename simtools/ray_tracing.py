@@ -22,7 +22,11 @@ from simtools.util import names
 from simtools.util.model import computeTelescopeTransmission
 from simtools.telescope_model import TelescopeModel
 from simtools.simtel_runner import SimtelRunner
-from simtools.util.general import collectArguments, collectKwargs, setDefaultKwargs
+from simtools.util.general import (
+    collectArguments,
+    collectKwargs,
+    setDefaultKwargs
+)
 from simtools import io_handler as io
 
 __all__ = ['RayTracing']
