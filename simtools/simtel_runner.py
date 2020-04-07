@@ -177,7 +177,7 @@ class SimtelRunner:
                 file.write('# configFile = {}\n'.format(self._telescopeModel.getConfigFile()))
                 file.write('# zenithAngle [deg] = {}\n'.format(self._zenithAngle))
                 file.write('# offAxisAngle [deg] = {}\n'.format(self._offAxisAngle))
-                file.write('# sourceDistance [km] = {}\n\n'.format(self._sourceDistance))
+                file.write('# sourceDistance [km] = {}\n'.format(self._sourceDistance))
                 file.write('# repNumber = {}\n\n'.format(self._repNumber))
 
             with self._starsFileName.open('w') as file:
