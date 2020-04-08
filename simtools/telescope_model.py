@@ -102,7 +102,7 @@ class TelescopeModel:
             self._loadParametersFromDB()
 
         self._setConfigFileDirectory()
-        self._isConfigFileExported = False
+        self._isConfigFileUpdated = False
 
     @property
     def version(self):
@@ -300,6 +300,7 @@ class TelescopeModel:
             else:
                 self.log.info('Adding {}={} to the model'.format(par, kwargs[par]))
                 self._parameters[par] = str(kwargs[par])
+        self._isConfigFileUpdated = False
 
     def changeParameters(self, **kwargs):
         """ Change the value of EXISTING parameters to the model.
@@ -317,6 +318,7 @@ class TelescopeModel:
                 )
             else:
                 self._parameters[par] = kwargs[par]
+        self._isConfigFileUpdated = False
 
     def removeParameters(self, *args):
         """ Remove a parameter from the model.
@@ -335,6 +337,7 @@ class TelescopeModel:
                 raise ValueError(
                     'Could not remove parameter {} because it does not exist'.format(par)
                 )
+        self._isConfigFileUpdated = False
 
     def exportConfigFile(self):
         """ Export the config file used by sim_telarray. """
@@ -361,7 +364,7 @@ class TelescopeModel:
                 value = self._parameters[par]
                 file.write('{} = {}\n'.format(par, value))
 
-        self._isConfigFileExported = True
+        self._isConfigFileUpdated = True
     # end exportConfigFile
 
     def getConfigFile(self):
@@ -371,7 +374,7 @@ class TelescopeModel:
             Return:
                 Path of the config file for sim_telarray.
         """
-        if not self._isConfigFileExported:
+        if not self._isConfigFileUpdated:
             self.exportConfigFile()
         return self._configFilePath
 
