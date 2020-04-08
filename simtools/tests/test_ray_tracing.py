@@ -137,17 +137,11 @@ def test_rx(show=False):
         plt.show()
 
 
-if __name__ == '__main__':
+def test_single_mirror(plot=False):
 
-    # test_ssts(True)
-    # test_rx(True)
-
-    # Test MST
-    sourceDistance = 10  # km
+    # Test MST, single mirror PSF simulation
     site = 'south'
     version = 'prod4'
-    zenithAngle = 20
-    offAxisAngle = [0]
 
     tel = TelescopeModel(
         yamlDBPath=config['yamlDBPath'],
@@ -168,17 +162,13 @@ if __name__ == '__main__':
         simtelSourcePath=config['simtelPath'],
         filesLocation=config['outputLocation'],
         telescopeModel=tel,
-        # sourceDistance=sourceDistance,
-        # zenithAngle=zenithAngle,
-        # offAxisAngle=[0, 1, 2, 3],
         singleMirrorMode=True,
-        numberOfRepetitions=20
+        numberOfRepetitions=2
     )
     ray.simulate(test=True, force=True)
     ray.analyze(force=True)
 
     # Plotting
-
     plt.figure(figsize=(8, 6), tight_layout=True)
     ax = plt.gca()
     ax.set_xlabel('d80')
@@ -186,4 +176,12 @@ if __name__ == '__main__':
     ray.plotHistogram('d80_cm', color='r', bins=10)
     # ray.plot('d80_deg', color='r', linestyle='none', marker='o')
 
-    plt.show()
+    if plot:
+        plt.show()
+
+
+if __name__ == '__main__':
+
+    test_ssts(False)
+    test_rx(False)
+    test_single_mirror(False)

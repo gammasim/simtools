@@ -4,6 +4,10 @@ import logging
 import matplotlib.pyplot as plt
 import numpy as np
 from copy import copy
+from pathlib import Path
+from astropy.io import ascii
+from astropy.table import Table
+from math import sqrt
 
 from simtools.util import config as cfg
 from simtools.ray_tracing import RayTracing
@@ -15,175 +19,105 @@ logging.getLogger().setLevel(logging.DEBUG)
 config = cfg.loadConfig()
 
 
-def test_ssts(show=False):
-    # Test with 3 SSTs
-    sourceDistance = 10  # km
+def computeRndaRange(tel, n=10):
+    rndaStd = tel.getParameter('mirror_reflection_random_angle')
+    rndaStd = rndaStd.split()
+    rndaStd = float(rndaStd[0])
+    rndaRange = np.linspace(rndaStd * 0.8, rndaStd * 1.2, n)
+    return np.round(rndaRange, 8)
+
+
+def loadResults(force=False):
+    fileName = 'results.ecsv'
+    if Path(fileName).exists() and not force:
+        return dict(ascii.read(fileName, format='basic'))
+    else:
+        res = dict()
+        res['rnda'] = list()
+        res['mean_d80_cm'] = list()
+        res['sig_d80_cm'] = list()
+        return res
+
+
+def sortResults(res):
+    res['rnda'], res['mean_d80_cm'], res['sig_d80_cm'] = zip(*sorted(zip(
+        res['rnda'],
+        res['mean_d80_cm'],
+        res['sig_d80_cm']
+    )))
+
+
+if __name__ == '__main__':
+
+    measMean = 1.47
+    measSig = 0.24
+
     site = 'south'
     version = 'prod4'
-    zenithAngle = 20
-    offAxisAngle = [0, 1.0, 2.0, 3.0, 4.0]
-
-    telTypes = ['sst-1m', 'sst-astri', 'sst-gct']
-    telModels = list()
-    rayTracing = list()
-    for t in telTypes:
-        tel = TelescopeModel(
-            yamlDBPath=config['yamlDBPath'],
-            filesLocation=config['outputLocation'],
-            telescopeType=t,
-            site=site,
-            version=version,
-            label='test-sst'
-        )
-        telModels.append(t)
-
-        ray = RayTracing(
-            simtelSourcePath=config['simtelPath'],
-            filesLocation=config['outputLocation'],
-            telescopeModel=tel,
-            sourceDistance=sourceDistance,
-            zenithAngle=zenithAngle,
-            offAxisAngle=offAxisAngle
-        )
-        ray.simulate(test=True, force=True)
-        ray.analyze(force=True)
-
-        rayTracing.append(ray)
-
-    # Plotting
-
-    plt.figure(figsize=(8, 6), tight_layout=True)
-    ax = plt.gca()
-    ax.set_xlabel('off-axis')
-    ax.set_ylabel('d80')
-
-    for ray in rayTracing:
-        ray.plot('d80_deg', marker='o', linestyle=':')
-
-    if show:
-        plt.show()
-
-
-def test_rx(show=False):
-    sourceDistance = 10
-    site = 'south'
-    version = 'prod4'
-    label = 'test-astri'
-    zenithAngle = 20
-    offAxisAngle = [0, 2.5, 5.0]
+    label = 'derive_rnda'
+    telescopeType = 'mst-flashcam'
+    force = True
 
     tel = TelescopeModel(
         yamlDBPath=config['yamlDBPath'],
         filesLocation=config['outputLocation'],
-        telescopeType='astri',
+        telescopeType=telescopeType,
         site=site,
         version=version,
         label=label
     )
 
-    ray = RayTracing(
-        simtelSourcePath=config['simtelPath'],
-        filesLocation=config['outputLocation'],
-        telescopeModel=tel,
-        sourceDistance=sourceDistance,
-        zenithAngle=zenithAngle,
-        offAxisAngle=offAxisAngle
-    )
+    rndaRange = computeRndaRange(tel, n=10)
+    results = loadResults(force=force)
 
-    ray.simulate(test=True, force=True)
-    ray_rx = copy(ray)
+    for iRnda, thisRnda in enumerate(rndaRange):
+        if not force and thisRnda in results['rnda']:
+            continue
 
-    ray.analyze(force=True)
-    ray_rx.analyze(force=True, useRX=True)
+        if iRnda < 2:
+            numberOfRepetitions = 1
+        elif iRnda < 4:
+            numberOfRepetitions = 10
+        else:
+            numberOfRepetitions = 30
+        numberOfRepetitions = 1
 
-    # Plotting PSF images
-    for im in ray.images():
-        print(im)
-        plt.figure(figsize=(8, 6), tight_layout=True)
-        ax = plt.gca()
-        ax.set_xlabel('X')
-        ax.set_ylabel('Y')
+        tel.changeParameters(mirror_reflection_random_angle=str(thisRnda))
+        ray = RayTracing(
+            simtelSourcePath=config['simtelPath'],
+            filesLocation=config['outputLocation'],
+            telescopeModel=tel,
+            singleMirrorMode=True,
+            numberOfRepetitions=numberOfRepetitions
+        )
+        ray.simulate(test=True, force=True)
+        ray.analyze(force=True)
 
-        # psf_* for PSF circle
-        # image_* for histogram
-        im.plot(psf_color='b')
+        results['rnda'].append(thisRnda)
+        results['mean_d80_cm'].append(ray.getMean('d80_cm'))
+        results['sig_d80_cm'].append(ray.getStdDev('d80_cm') / sqrt(numberOfRepetitions))
 
-        ax.set_aspect('equal', adjustable='datalim')
-        if show:
-            plt.show()
-
-    # Plotting d80
-    plt.figure(figsize=(8, 6), tight_layout=True)
-    ax = plt.gca()
-    ax.set_xlabel('off-axis')
-    ax.set_ylabel('d80')
-
-    ray.plot('d80_deg', marker='o', linestyle=':')
-    ray_rx.plot('d80_deg', marker='s', linestyle='--')
-
-    if show:
-        plt.show()
-
-    # Plotting effArea
-    plt.figure(figsize=(8, 6), tight_layout=True)
-    ax = plt.gca()
-    ax.set_xlabel('off-axis')
-    ax.set_ylabel('eff. area')
-
-    ray.plot('eff_area', marker='o', linestyle=':')
-    ray_rx.plot('d80_deg', marker='s', linestyle='--')
-
-    if show:
-        plt.show()
-
-
-if __name__ == '__main__':
-
-    # test_ssts(True)
-    # test_rx(True)
-
-    # Test MST
-    sourceDistance = 10  # km
-    site = 'south'
-    version = 'prod4'
-    zenithAngle = 20
-    offAxisAngle = [0]
-
-    tel = TelescopeModel(
-        yamlDBPath=config['yamlDBPath'],
-        filesLocation=config['outputLocation'],
-        # telescopeType='sst-astri',
-        telescopeType='mst-flashcam',
-        site=site,
-        version=version,
-        label='test-mst'
-    )
-
-    # tel.changeParameters(fadc_pulse_shape='pulse_FlashCam_raw.dat')
-    # tel.changeParameters(mirror_reflection_random_angle='0.08')
-
-    # tel.getSingleMirrorListFile()
-
-    ray = RayTracing(
-        simtelSourcePath=config['simtelPath'],
-        filesLocation=config['outputLocation'],
-        telescopeModel=tel,
-        # sourceDistance=sourceDistance,
-        # zenithAngle=zenithAngle,
-        # offAxisAngle=[0, 1, 2, 3],
-        singleMirrorMode=True,
-        numberOfRepetitions=20
-    )
-    ray.simulate(test=True, force=True)
-    ray.analyze(force=True)
-
-    # Plotting
+    sortResults(results)
+    table = Table(results)
+    ascii.write(table, 'results.ecsv', format='basic', overwrite=True)
 
     plt.figure(figsize=(8, 6), tight_layout=True)
     ax = plt.gca()
-    ax.set_xlabel('d80')
+    ax.set_xlabel('mirror_random_reflection_angle')
+    ax.set_ylabel(r'$D_{80}$ [cm]')
 
-    ray.plotHistogram('d80_cm', color='r', bins=10)
-    # ray.plot('d80_deg', color='r', linestyle='none', marker='o')
+    ax.errorbar(
+        results['rnda'],
+        results['mean_d80_cm'],
+        yerr=results['sig_d80_cm'],
+        color='r',
+        marker='o',
+        linestyle='--'
+    )
+
+    xlim = ax.get_xlim()
+    ax.plot(xlim, [measMean, measMean], color='k', linestyle='-')
+    ax.plot(xlim, [measMean + measSig / 2, measMean + measSig / 2], color='k', linestyle=':')
+    ax.plot(xlim, [measMean - measSig / 2, measMean - measSig / 2], color='k', linestyle=':')
 
     plt.show()
