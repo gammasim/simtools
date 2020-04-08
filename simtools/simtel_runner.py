@@ -36,9 +36,8 @@ class SimtelRunner:
 
         # RayTracing - default parameters
         self._repNumber = 0
-        self._statNumber = 1
-        self.RUNS_PER_SET = 100        # const
-        self.PHOTONS_PER_RUN = 20000    # const
+        self.RUNS_PER_SET = 100 if 'SingleMirror' in self._mode else 100  # const
+        self.PHOTONS_PER_RUN = 50000  # const
 
         # Label
         self._hasLabel = True
@@ -57,7 +56,7 @@ class SimtelRunner:
 
         collectArguments(
             self,
-            ['zenithAngle', 'offAxisAngle', 'sourceDistance', 'statNumber', 'repNumber'],
+            ['zenithAngle', 'offAxisAngle', 'sourceDistance', 'repNumber'],
             **kwargs
         )
 
@@ -107,8 +106,9 @@ class SimtelRunner:
             self.log.info('Running (test) with command:{}'.format(command))
             os.system(command)
         else:
-            self.log.info('Running ({}x) with command:{}'.format(self.RUNS_PER_SET, command))
-            for _ in range(self.RUNS_PER_SET):
+            numberRuns = self.RUNS_PER_SET
+            self.log.info('Running ({}x) with command:{}'.format(numberRuns, command))
+            for _ in range(numberRuns):
                 os.system(command)
 
     def getRunBashScript(self, test=False):
@@ -228,7 +228,6 @@ class SimtelRunner:
             command += configOption('parabolic_dish', '0')
             command += configOption('random_focal_length', '0.')
             command += configOption('mirror_align_random_distance', '0.')
-            command += configOption('mirror_align_random_horizontal', '0,28.,0.,0.')  # 28 hardcoded ??
             command += configOption('mirror_align_random_vertical', '0.,28.,0.,0.')
         command += ' ' + str(self._corsikaFileName)
         command += ' 2>&1 > ' + str(self._logFileName) + ' 2>&1'
