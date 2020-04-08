@@ -245,21 +245,31 @@ class RayTracing:
         table = ascii.read(self._fileResults, format='basic')
         self._results = dict(table)
 
-    def plot(self, which='d80_cm', **kwargs):
+    def _validateWhich(self, which):
         if which not in ['d80_cm', 'd80_deg', 'eff_area', 'eff_flen']:
             self.log.error('Invalid option for plotting RayTracing')
             return
+        return
+
+    def plot(self, which='d80_cm', **kwargs):
+        self._validateWhich(which=which)
 
         ax = plt.gca()
         ax.plot(self._results['off_axis'], self._results[which], **kwargs)
 
     def plotHistogram(self, which='d80_cm', **kwargs):
-        if which not in ['d80_cm', 'd80_deg', 'eff_area', 'eff_flen']:
-            self.log.error('Invalid option for plotting histogram RayTracing')
-            return
+        self._validateWhich(which=which)
 
         ax = plt.gca()
         ax.hist(self._results[which], **kwargs)
+
+    def getMean(self, which='d80_cm'):
+        self._validateWhich(which=which)
+        return np.mean(self._results[which])
+
+    def getStdDev(self, which='d80_cm'):
+        self._validateWhich(which=which)
+        return np.std(self._results[which])
 
     def images(self):
         images = list()
