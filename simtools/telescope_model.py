@@ -103,6 +103,7 @@ class TelescopeModel:
 
         self._setConfigFileDirectory()
         self._isConfigFileUpdated = False
+        self._areMirrorParametersLoaded = False
 
     @property
     def version(self):
@@ -130,6 +131,31 @@ class TelescopeModel:
     @site.setter
     def site(self, value):
         self._site = names.validateName(value, names.allSiteNames)
+
+    @property
+    def numberOfMirrors(self):
+        if not self._areMirrorParametersLoaded:
+            self._loadMirrorParameters()
+        return self._numberOfMirrors
+
+    @property
+    def mirrorFocalLength(self):
+        if not self._areMirrorParametersLoaded:
+            self._loadMirrorParameters
+        return self._mirrorFocalLength
+
+    @property
+    def mirrorDiameter(self):
+        if not self._areMirrorParametersLoaded:
+            self._loadMirrorParameters
+        return self._mirrorDiameter
+
+    @property
+    def mirrorShape(self):
+        if not self._areMirrorParametersLoaded:
+            self._loadMirrorParameters
+        return self._mirrorShape
+
 
     @classmethod
     def fromConfigFile(cls, configFileName, telescopeType, site, label=None, filesLocation=None):
@@ -378,19 +404,38 @@ class TelescopeModel:
             self.exportConfigFile()
         return self._configFilePath
 
-    def exportSingleMirrorListFile(self):
-        fileName = 'CTA-single-mirror-list-{}-{}-{}'.format(
+    def exportSingleMirrorListFile(self, mirrorNumber):
+        if mirrorNumber > self.numberOfMirrors:
+            logging.error('mirrorNumber > numberOfMirrors')
+
+        fileName = 'CTA-single-mirror-list-{}-{}-{}-mirror{}'.format(
             self._version,
             self.site,
-            self.telescopeType
+            self.telescopeType,
+            mirrorNumber
         )
         fileName += '_{}'.format(self.label) if self.label is not None else ''
         fileName += '.dat'
-        self._singleMirrorListFilePath = self._configFileDirectory.joinpath(fileName)
+        if '_singleMirrorListFilePath' not in self.__dict__:
+            self._singleMirrorListFilePaths = dict()
+        self._singleMirrorListFilePaths[mirrorNumber] = self._configFileDirectory.joinpath(fileName)
 
-        self.loadMirrorGeometryParameters()
+        mirrorListFileName = self._parameters['mirror_list']
+        mirrorListFile = self._dataFilesDir.joinpath(mirrorListFileName)
+        with open(mirrorListFile, 'r') as file:
+            mirrorCounter = 0
+            for line in file:
+                if '#' in line:
+                    continue
+                mirrorCounter += 1
+                if mirrorCounter == mirrorNumber:
+                    line = line.split()
+                    thisMirrorDiameter = float(line[2])
+                    thisMirrorFocalLength = float(line[3])
+                    thisMirrorShape = int(line[4])
+                    break
 
-        with open(self._singleMirrorListFilePath, 'w') as file:
+        with open(self._singleMirrorListFilePaths[mirrorNumber], 'w') as file:
             file.write('# Column 1: X pos. [cm] (North/Down)\n')
             file.write('# Column 2: Y pos. [cm] (West/Right from camera)\n')
             file.write('# Column 3: flat-to-flat diameter [cm]\n')
@@ -405,27 +450,33 @@ class TelescopeModel:
             )
             file.write('#\n')
             file.write('0. 0. {} {} {} 0.\n'.format(
-                self.mirrorDiameter,
-                self.mirrorFocalLength,
-                self.mirrorShape
+                thisMirrorDiameter,
+                thisMirrorFocalLength,
+                thisMirrorShape
             ))
 
-    def getSingleMirrorListFile(self):
-        self.exportSingleMirrorListFile()
-        return self._singleMirrorListFilePath
+    def getSingleMirrorListFile(self, mirrorNumber):
+        self.exportSingleMirrorListFile(mirrorNumber)
+        return self._singleMirrorListFilePaths[mirrorNumber]
 
-    def loadMirrorGeometryParameters(self):
+    def _loadMirrorParameters(self):
         mirrorListFileName = self._parameters['mirror_list']
         mirrorListFile = self._dataFilesDir.joinpath(mirrorListFileName)
+        collectGeoPars = True
+        mirrorCounter = 0
         with open(mirrorListFile, 'r') as file:
             for line in file:
                 if '#' in line:
                     continue
-                line = line.split()
-                self.mirrorDiameter = float(line[2])
-                # self.mirrorFocalLength = float(line[3])
-                self.mirrorShape = int(line[4])
-                break
+                if collectGeoPars:
+                    line = line.split()
+                    self._mirrorDiameter = float(line[2])
+                    self._mirrorFocalLength = float(line[3])
+                    self._mirrorShape = int(line[4])
+                    collectGeoPars = False
+                mirrorCounter += 1
+        self._numberOfMirrors = mirrorCounter
         if 'mirror_focal_length' in self._parameters:
-            self.mirrorFocalLength = self._parameters['mirror_focal_length']
+            self._mirrorFocalLength = self._parameters['mirror_focal_length']
+        self._areMirrorParametersLoaded = True
         return

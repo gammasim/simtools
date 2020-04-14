@@ -75,19 +75,19 @@ def rayTracingFileName(
     sourceDistance,
     zenithAngle,
     offAxisAngle,
-    repNumber,
+    mirrorNumber,
     label,
     base
 ):
     ''' base has to be log, stars or photons'''
-    name = '{}-{}-d{:.1f}-za{:.1f}-off{:.3f}-rep{}'.format(
+    name = '{}-{}-d{:.1f}-za{:.1f}-off{:.3f}'.format(
         base,
         telescopeType,
         sourceDistance,
         zenithAngle,
-        offAxisAngle,
-        repNumber
+        offAxisAngle
     )
+    name += '_mirror{}'.format(mirrorNumber) if mirrorNumber is not None else ''
     name += '_{}'.format(label) if label is not None else ''
     name += '.log' if base == 'log' else '.lis'
     return name
