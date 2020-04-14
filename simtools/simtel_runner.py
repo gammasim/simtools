@@ -36,8 +36,8 @@ class SimtelRunner:
 
         # RayTracing - default parameters
         self._repNumber = 0
-        self.RUNS_PER_SET = 100 if 'SingleMirror' in self._mode else 100  # const
-        self.PHOTONS_PER_RUN = 50000  # const
+        self.RUNS_PER_SET = 1 if 'SingleMirror' in self._mode else 50  # const
+        self.PHOTONS_PER_RUN = 5000  # const
 
         # Label
         self._hasLabel = True
@@ -56,12 +56,10 @@ class SimtelRunner:
 
         collectArguments(
             self,
-            ['zenithAngle', 'offAxisAngle', 'sourceDistance', 'repNumber'],
+            ['zenithAngle', 'offAxisAngle', 'sourceDistance', 'mirrorNumber'],
             **kwargs
         )
 
-        if self.mode == 'RayTracingSingleMirror':
-            self.telescopeModel.loadMirrorGeometryParameters()
     # end of _init_
 
     def __repr__(self):
@@ -106,9 +104,8 @@ class SimtelRunner:
             self.log.info('Running (test) with command:{}'.format(command))
             os.system(command)
         else:
-            numberRuns = self.RUNS_PER_SET
-            self.log.info('Running ({}x) with command:{}'.format(numberRuns, command))
-            for _ in range(numberRuns):
+            self.log.info('Running ({}x) with command:{}'.format(self.RUNS_PER_SET, command))
+            for _ in range(self.RUNS_PER_SET):
                 os.system(command)
 
     def getRunBashScript(self, test=False):
@@ -161,7 +158,7 @@ class SimtelRunner:
                     self._sourceDistance,
                     self._zenithAngle,
                     self._offAxisAngle,
-                    self._repNumber,
+                    self._mirrorNumber if 'SingleMirror' in self.mode else None,
                     self.label,
                     base
                 )
@@ -178,7 +175,8 @@ class SimtelRunner:
                 file.write('# zenithAngle [deg] = {}\n'.format(self._zenithAngle))
                 file.write('# offAxisAngle [deg] = {}\n'.format(self._offAxisAngle))
                 file.write('# sourceDistance [km] = {}\n'.format(self._sourceDistance))
-                file.write('# repNumber = {}\n\n'.format(self._repNumber))
+                if 'SingleMirror' in self.mode:
+                    file.write('# mirrorNumber = {}\n\n'.format(self._mirrorNumber))
 
             with self._starsFileName.open('w') as file:
                 file.write('0. {} 1.0 {}'.format(90. - self._zenithAngle, self._sourceDistance))
@@ -199,6 +197,7 @@ class SimtelRunner:
         # RayTracing
         command = str(self.simtelSourcePath.joinpath('sim_telarray/bin/sim_telarray'))
         command += ' -c {}'.format(self._telescopeModel.getConfigFile())
+        # command += ' -I../cfg/CTA'
         command += ' -I../cfg/CTA'
         command += configOption('IMAGING_LIST', str(self._photonsFileName))
         command += configOption('stars', str(self._starsFileName))
@@ -221,7 +220,10 @@ class SimtelRunner:
             command += configOption('camera_pixels', '1')
             command += configOption('trigger_pixels', '1')
             command += configOption('camera_body_diameter', '0')
-            command += configOption('mirror_list', self.telescopeModel.getSingleMirrorListFile())
+            command += configOption(
+                'mirror_list',
+                self.telescopeModel.getSingleMirrorListFile(self._mirrorNumber)
+            )
             command += configOption('focal_length', self._sourceDistance * units.km.to(units.cm))
             command += configOption('dish_shape_length', self.telescopeModel.mirrorFocalLength)
             command += configOption('mirror_focal_length', self.telescopeModel.mirrorFocalLength)
