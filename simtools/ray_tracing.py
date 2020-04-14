@@ -67,12 +67,11 @@ class RayTracing:
             self._offAxisAngle = [0]   # deg
             mirFlen = self.telescopeModel.getParameter('mirror_focal_length')
             self._sourceDistance = 2 * float(mirFlen) * units.cm.to(units.km)  # km
-            self._numberOfRepetitions = 10
+            self._mirrorNumbers = [1]
         else:
             self._zenithAngle = 20                          # deg
             self._offAxisAngle = np.linspace(0.0, 3.0, 7)   # deg
             self._sourceDistance = 10                       # km
-            self._numberOfRepetitions = 1
 
         # Label
         self._hasLabel = True
@@ -89,9 +88,15 @@ class RayTracing:
 
         collectArguments(
             self,
-            ['zenithAngle', 'offAxisAngle', 'sourceDistance', 'numberOfRepetitions'],
+            ['zenithAngle', 'offAxisAngle', 'sourceDistance', 'mirrorNumbers'],
             **kwargs
         )
+        if self._singleMirrorMode:
+            if self._mirrorNumbers == 'all':
+                self._mirrorNumbers = list(range(1, self._telescopeModel.numberOfMirrors + 1))
+            if not isinstance(self._mirrorNumbers, list):
+                self._mirrorNumbers = [self._mirrorNumbers]
+
         self._hasResults = False
 
         # Results file
@@ -125,11 +130,12 @@ class RayTracing:
 
     def simulate(self, test=False, force=False):
         """Simulate RayTracing."""
+        allMirrors = self._mirrorNumbers if self._singleMirrorMode else [0]
         for thisOffAxis in self._offAxisAngle:
-            for thisRep in range(self._numberOfRepetitions):
-                self.log.info('Simulating RayTracing for offAxis={}, repNumber={}'.format(
+            for thisMirror in allMirrors:
+                self.log.info('Simulating RayTracing for offAxis={}, mirror={}'.format(
                     thisOffAxis,
-                    thisRep
+                    thisMirror
                 ))
                 simtel = SimtelRunner(
                     simtelSourcePath=self._simtelSourcePath,
@@ -139,7 +145,7 @@ class RayTracing:
                     zenithAngle=self._zenithAngle,
                     sourceDistance=self._sourceDistance,
                     offAxisAngle=thisOffAxis,
-                    repNumber=thisRep
+                    mirrorNumber=thisMirror
                 )
                 simtel.run(test=test, force=force)
 
@@ -165,17 +171,23 @@ class RayTracing:
         self._results['d80_deg'] = list()
         self._results['eff_area'] = list()
         self._results['eff_flen'] = list()
+        if self._singleMirrorMode:
+            self._results['mirror_no'] = list()
         self._psfImages = dict()
 
+        allMirrors = self._mirrorNumbers if self._singleMirrorMode else [0]
         for thisOffAxis in self._offAxisAngle:
-            for thisRep in range(self._numberOfRepetitions):
-                self.log.info('Analyzing RayTracing for offAxis={}, repNumber={}'.format(thisOffAxis, thisRep))
+            for thisMirror in allMirrors:
+                self.log.info('Analyzing RayTracing for offAxis={}'.format(thisOffAxis))
+                if self._singleMirrorMode:
+                    self.log.info('mirrorNumber={}'.format(thisMirror))
+
                 photonsFileName = names.rayTracingFileName(
                     self._telescopeModel.telescopeType,
                     self._sourceDistance,
                     self._zenithAngle,
                     thisOffAxis,
-                    thisRep,
+                    thisMirror if self._singleMirrorMode else None,
                     self.label,
                     'photons'
                 )
@@ -212,6 +224,8 @@ class RayTracing:
                 self._results['d80_deg'].append(d80_deg)
                 self._results['eff_area'].append(effArea)
                 self._results['eff_flen'].append(effFlen)
+                if self._singleMirrorMode:
+                    self._results['mirror_no'].append(thisMirror)
         # end for offAxis
 
         self._hasResults = True

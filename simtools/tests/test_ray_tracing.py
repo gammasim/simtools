@@ -153,17 +153,12 @@ def test_single_mirror(plot=False):
         label='test-mst'
     )
 
-    # tel.changeParameters(fadc_pulse_shape='pulse_FlashCam_raw.dat')
-    # tel.changeParameters(mirror_reflection_random_angle='0.08')
-
-    # tel.getSingleMirrorListFile()
-
     ray = RayTracing(
         simtelSourcePath=config['simtelPath'],
         filesLocation=config['outputLocation'],
         telescopeModel=tel,
         singleMirrorMode=True,
-        numberOfRepetitions=2
+        mirrorNumbers='all'
     )
     ray.simulate(test=True, force=True)
     ray.analyze(force=True)
