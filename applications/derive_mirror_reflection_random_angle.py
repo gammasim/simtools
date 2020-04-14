@@ -14,7 +14,7 @@ from simtools.ray_tracing import RayTracing
 from simtools.telescope_model import TelescopeModel
 
 logger = logging.getLogger(__name__)
-logging.getLogger().setLevel(logging.DEBUG)
+logging.getLogger().setLevel(logging.WARNING)
 
 config = cfg.loadConfig()
 
@@ -40,10 +40,10 @@ def loadResults(force=False):
 
 
 def sortResults(res):
-    res['rnda'], res['mean_d80_cm'], res['sig_d80_cm'] = zip(*sorted(zip(
+    res['mean'], res['rnda'], res['sig'] = zip(*sorted(zip(
+        res['mean'],
         res['rnda'],
-        res['mean_d80_cm'],
-        res['sig_d80_cm']
+        res['sig']
     )))
 
 
@@ -66,40 +66,64 @@ if __name__ == '__main__':
         version=version,
         label=label
     )
+    tel.changeParameters(mirror_list='mirror_CTA-Raul.dat')
 
-    rndaRange = computeRndaRange(tel, n=10)
-    results = loadResults(force=force)
-
-    for iRnda, thisRnda in enumerate(rndaRange):
-        if not force and thisRnda in results['rnda']:
-            continue
-
-        if iRnda < 2:
-            numberOfRepetitions = 1
-        elif iRnda < 4:
-            numberOfRepetitions = 10
-        else:
-            numberOfRepetitions = 30
-        numberOfRepetitions = 1
-
-        tel.changeParameters(mirror_reflection_random_angle=str(thisRnda))
+    def run(rnda, plot=False):
+        tel.changeParameters(mirror_reflection_random_angle=str(rnda))
         ray = RayTracing(
             simtelSourcePath=config['simtelPath'],
             filesLocation=config['outputLocation'],
             telescopeModel=tel,
             singleMirrorMode=True,
-            numberOfRepetitions=numberOfRepetitions
+            mirrorNumbers='all'  # list(range(1, 10))
         )
-        ray.simulate(test=True, force=True)
+        ray.simulate(test=False, force=True)
         ray.analyze(force=True)
 
-        results['rnda'].append(thisRnda)
-        results['mean_d80_cm'].append(ray.getMean('d80_cm'))
-        results['sig_d80_cm'].append(ray.getStdDev('d80_cm') / sqrt(numberOfRepetitions))
+        if plot:
+            # Plotting
+            plt.figure(figsize=(8, 6), tight_layout=True)
+            ax = plt.gca()
+            ax.set_xlabel('d80')
 
+            ray.plotHistogram('d80_cm', color='r', bins=20)
+
+        return ray.getMean('d80_cm'), ray.getStdDev('d80_cm')
+
+    # First - rnda from previous model
+    rndaStart = tel.getParameter('mirror_reflection_random_angle')
+    if isinstance(rndaStart, str):
+        rndaStart = rndaStart.split()
+        rndaStart = float(rndaStart[0])
+
+    results = dict()
+    results['rnda'] = list()
+    results['mean'] = list()
+    results['sig'] = list()
+
+    def collectResults(rnda, mean, sig):
+        results['rnda'].append(rnda)
+        results['mean'].append(mean)
+        results['sig'].append(sig)
+
+    stop = False
+    meanD80, sigD80 = run(rndaStart)
+    rnda = rndaStart
+    signDelta = np.sign(meanD80 - measMean)
+    collectResults(rnda, meanD80, sigD80)
+    while not stop:
+        newRnda = rnda - (0.1 * rndaStart * signDelta)
+        meanD80, sigD80 = run(newRnda)
+        newSignDelta = np.sign(meanD80 - measMean)
+        stop = (newSignDelta != signDelta)
+        signDelta = newSignDelta
+        rnda = newRnda
+        collectResults(rnda, meanD80, sigD80)
+
+    # interpolating
     sortResults(results)
-    table = Table(results)
-    ascii.write(table, 'results.ecsv', format='basic', overwrite=True)
+    rndaOpt = np.interp(x=measMean, xp=results['mean'], fp=results['rnda'])
+    meanD80, sigD80 = run(rndaOpt, plot=True)
 
     plt.figure(figsize=(8, 6), tight_layout=True)
     ax = plt.gca()
@@ -108,16 +132,24 @@ if __name__ == '__main__':
 
     ax.errorbar(
         results['rnda'],
-        results['mean_d80_cm'],
-        yerr=results['sig_d80_cm'],
+        results['mean'],
+        yerr=results['sig'],
+        color='k',
+        marker='o',
+        linestyle='none'
+    )
+    ax.errorbar(
+        [rndaOpt],
+        [meanD80],
+        yerr=[sigD80],
         color='r',
         marker='o',
-        linestyle='--'
+        linestyle='none'
     )
 
     xlim = ax.get_xlim()
     ax.plot(xlim, [measMean, measMean], color='k', linestyle='-')
-    ax.plot(xlim, [measMean + measSig / 2, measMean + measSig / 2], color='k', linestyle=':')
-    ax.plot(xlim, [measMean - measSig / 2, measMean - measSig / 2], color='k', linestyle=':')
+    ax.plot(xlim, [measMean + measSig, measMean + measSig], color='k', linestyle=':')
+    ax.plot(xlim, [measMean - measSig, measMean - measSig], color='k', linestyle=':')
 
     plt.show()
