@@ -175,8 +175,66 @@ def test_single_mirror(plot=False):
         plt.show()
 
 
+def test_integral_curve(plot=False):
+    sourceDistance = 10
+    site = 'south'
+    version = 'prod4'
+    label = 'lst_integral'
+    zenithAngle = 20
+    offAxisAngle = [0, 1.5]
+
+    tel = TelescopeModel(
+        yamlDBPath=config['yamlDBPath'],
+        filesLocation=config['outputLocation'],
+        telescopeType='lst',
+        site=site,
+        version=version,
+        label=label
+    )
+
+    ray = RayTracing(
+        simtelSourcePath=config['simtelPath'],
+        filesLocation=config['outputLocation'],
+        telescopeModel=tel,
+        sourceDistance=sourceDistance,
+        zenithAngle=zenithAngle,
+        offAxisAngle=offAxisAngle
+    )
+
+    ray.simulate(test=True, force=True)
+    ray.analyze(force=True)
+
+    # Plotting PSF images
+    for im in ray.images():
+        print(im)
+        plt.figure(figsize=(8, 6), tight_layout=True)
+        ax = plt.gca()
+        ax.set_xlabel('X')
+        ax.set_ylabel('Y')
+
+        # psf_* for PSF circle
+        # image_* for histogram
+        im.plot(psf_color='b')
+
+        ax.set_aspect('equal', adjustable='datalim')
+        if show:
+            plt.show()
+
+    # Plotting d80
+    plt.figure(figsize=(8, 6), tight_layout=True)
+    ax = plt.gca()
+    ax.set_xlabel('off-axis')
+    ax.set_ylabel('d80')
+
+    ray.plot('d80_deg', marker='o', linestyle=':')
+
+    if show:
+        plt.show()
+
+
 if __name__ == '__main__':
 
     test_ssts(False)
     test_rx(False)
     test_single_mirror(False)
+    test_integral_curve(True)
