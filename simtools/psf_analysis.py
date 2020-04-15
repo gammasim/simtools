@@ -39,8 +39,6 @@ class PSFImage:
         self.effArea = None
         self.totalPhotons = None
         self.totalArea = None
-        self.d80_cm = None
-        self.d80_deg = None
         self._storedPSF = dict()
         self._cmToDeg = 180. / math.pi / focalLength
 
@@ -53,7 +51,7 @@ class PSFImage:
         self.totalArea = None
         with open(file, 'r') as f:
             for line in f:
-                self.processSimtelLine(line)
+                self._processSimtelLine(line)
 
         if len(self.xPos) == 0 or len(self.yPos) == 0 or len(self.xPos) != len(self.yPos):
             self.log.error('Problems reading Simtel file - invalid data')
@@ -63,11 +61,7 @@ class PSFImage:
         self.detectedPhotons = len(self.xPos)
         self.effArea = self.detectedPhotons * self.totalArea / self.totalPhotons
 
-    def loadPSF(self):
-        self.d80_cm = self.getPSF(0.8)
-        self.d80_deg = self.d80_cm * self._cmToDeg
-
-    def processSimtelLine(self, line):
+    def _processSimtelLine(self, line):
         words = line.split()
         if 'falling on an area of' in line:
             self.totalPhotons += int(words[4])
@@ -85,15 +79,16 @@ class PSFImage:
             self.xPos.append(float(words[2]))
             self.yPos.append(float(words[3]))
 
-    def getPSF(self, fraction):
+    def getPSF(self, fraction=0.8, unit='cm'):
         if fraction not in self._storedPSF.keys():
-            self.computePSF(fraction)
-        return self._storedPSF[fraction]
+            self._computePSF(fraction)
+        unitFactor = 1 if unit == 'cm' else self._cmToDeg
+        return self._storedPSF[fraction] * unitFactor
 
-    def computePSF(self, fraction):
-        self._storedPSF[fraction] = self.findPSF(fraction)
+    def _computePSF(self, fraction):
+        self._storedPSF[fraction] = self._findPSF(fraction)
 
-    def findPSF(self, fraction):
+    def _findPSF(self, fraction):
         self.log.debug('Finding PSF for fraction = {}'.format(fraction))
 
         xPos2 = [i**2 for i in self.xPos]
@@ -104,7 +99,7 @@ class PSFImage:
 
         numberTarget = fraction * self.detectedPhotons
         rad = 1.5 * rSig
-        number0 = self.sumPhotonsInRadius(rad)
+        number0 = self._sumPhotonsInRadius(rad)
         A = 0.5 * math.sqrt(rad * rad / number0)
         delta = number0 - numberTarget
         nIter = 0
@@ -115,7 +110,7 @@ class PSFImage:
             while rad + dr < 0:
                 dr *= 0.5
             rad += dr
-            number = self.sumPhotonsInRadius(rad)
+            number = self._sumPhotonsInRadius(rad)
             delta = number - numberTarget
             foundRadius = math.fabs(delta) < self.detectedPhotons / 1000.
 
@@ -123,10 +118,10 @@ class PSFImage:
             return 2 * rad
         else:
             self.log.warning('Could not find PSF efficiently')
-            psf = self.findPSFByScanning(numberTarget, rSig)
+            psf = self._findPSFByScanning(numberTarget, rSig)
             return psf
 
-    def findPSFByScanning(self, numberTarget, rSig):
+    def _findPSFByScanning(self, numberTarget, rSig):
         self.log.debug('Finding PSF by scanning')
 
         def scan(dr, radMin, radMax):
@@ -134,7 +129,7 @@ class PSFImage:
             s0, s1 = 0, 0
             foundRadius = False
             while not foundRadius:
-                s0, s1 = self.sumPhotonsInRadius(r0), self.sumPhotonsInRadius(r1)
+                s0, s1 = self._sumPhotonsInRadius(r0), self._sumPhotonsInRadius(r1)
                 if s0 < numberTarget and s1 > numberTarget:
                     foundRadius = True
                     break
@@ -154,14 +149,14 @@ class PSFImage:
         rad, radMin, radMax = scan(0.005 * rSig, radMin, radMax)
         return rad
 
-    def sumPhotonsInRadius(self, radius):
+    def _sumPhotonsInRadius(self, radius):
         n = 0
         for x, y in zip(self.xPos, self.yPos):
             d2 = (x - self.xPosMean)**2 + (y - self.yPosMean)**2
             n += 1 if d2 < radius**2 else 0
         return n
 
-    def plot(self, **kwargs):
+    def plotImage(self, **kwargs):
         ''' kwargs for histogram: image_*
             kwargs for PSF circle: psf_*
         '''
@@ -184,7 +179,21 @@ class PSFImage:
 
         ax.hist2d(xToPlot, yToPlot, **kwargsForImage)
 
-        circle = plt.Circle((0, 0), self.d80_cm / 2, **kwargsForPSF)
+        circle = plt.Circle((0, 0), self.getPSF(0.8) / 2, **kwargsForPSF)
         ax.add_artist(circle)
+
+    def plotIntegral(self, **kwargs):
+        ''' kwargs for histogram: image_*
+            kwargs for PSF circle: psf_*
+        '''
+        ax = plt.gca()
+        kwargs = setDefaultKwargs(kwargs, color='k', marker='o')
+
+        radiusAll = np.linspace(0, 1.6 * self.getPSF(0.8), 30)
+        intensity = list()
+        for rad in radiusAll:
+            intensity.append(self._sumPhotonsInRadius(rad) / self.detectedPhotons)
+
+        ax.plot(radiusAll, intensity, **kwargs)
 
 # end of PSFImage
