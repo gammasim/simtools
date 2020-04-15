@@ -18,6 +18,10 @@ logging.getLogger().setLevel(logging.INFO)
 
 config = cfg.loadConfig()
 
+plt.rc('font', size=20)
+plt.rc('xtick', labelsize=20)
+plt.rc('ytick', labelsize=20)
+plt.rc('text', usetex=True)
 
 def sortResults(res):
     res['mean'], res['rnda'], res['sig'] = zip(*sorted(zip(
@@ -25,6 +29,12 @@ def sortResults(res):
         res['rnda'],
         res['sig']
     )))
+
+
+def plotMeasuredDistribution(**kwargs):
+    data = np.loadtxt('MST_PSF_data.txt')
+    ax = plt.gca()
+    ax.hist([d * 0.1 for d in data], **kwargs)
 
 
 if __name__ == '__main__':
@@ -55,54 +65,70 @@ if __name__ == '__main__':
             filesLocation=config['outputLocation'],
             telescopeModel=tel,
             singleMirrorMode=True,
-            mirrorNumbers='all'  # list(range(1, 50))
+            mirrorNumbers='all'  # list(range(1, 5))
         )
-        ray.simulate(test=False, force=True)
-        ray.analyze(force=True)
+        ray.simulate(test=False, force=False)
+        ray.analyze(force=False)
 
         if plot:
             # Plotting
             plt.figure(figsize=(8, 6), tight_layout=True)
             ax = plt.gca()
-            ax.set_xlabel('d80')
+            ax.set_xlabel(r'D$_{80}$ [cm]')
 
-            ray.plotHistogram('d80_cm', color='r', bins=20)
+            ray.plotHistogram(
+                'd80_cm',
+                color='r',
+                linestyle='-',
+                alpha=0.5,
+                facecolor='r',
+                edgecolor='r',
+                bins=np.linspace(0.8, 3.5, 27)
+            )
+            plotMeasuredDistribution(
+                color='b',
+                linestyle='-',
+                facecolor='None',
+                edgecolor='b',
+                bins=np.linspace(0.8, 3.5, 27)
+            )
 
         return ray.getMean('d80_cm'), ray.getStdDev('d80_cm')
 
-    # First - rnda from previous model
-    rndaStart = tel.getParameter('mirror_reflection_random_angle')
-    if isinstance(rndaStart, str):
-        rndaStart = rndaStart.split()
-        rndaStart = float(rndaStart[0])
+    # # First - rnda from previous model
+    # rndaStart = tel.getParameter('mirror_reflection_random_angle')
+    # if isinstance(rndaStart, str):
+    #     rndaStart = rndaStart.split()
+    #     rndaStart = float(rndaStart[0])
 
-    results = dict()
-    results['rnda'] = list()
-    results['mean'] = list()
-    results['sig'] = list()
+    # results = dict()
+    # results['rnda'] = list()
+    # results['mean'] = list()
+    # results['sig'] = list()
 
-    def collectResults(rnda, mean, sig):
-        results['rnda'].append(rnda)
-        results['mean'].append(mean)
-        results['sig'].append(sig)
+    # def collectResults(rnda, mean, sig):
+    #     results['rnda'].append(rnda)
+    #     results['mean'].append(mean)
+    #     results['sig'].append(sig)
 
-    stop = False
-    meanD80, sigD80 = run(rndaStart)
-    rnda = rndaStart
-    signDelta = np.sign(meanD80 - measMean)
-    collectResults(rnda, meanD80, sigD80)
-    while not stop:
-        newRnda = rnda - (0.1 * rndaStart * signDelta)
-        meanD80, sigD80 = run(newRnda)
-        newSignDelta = np.sign(meanD80 - measMean)
-        stop = (newSignDelta != signDelta)
-        signDelta = newSignDelta
-        rnda = newRnda
-        collectResults(rnda, meanD80, sigD80)
+    # stop = False
+    # meanD80, sigD80 = run(rndaStart)
+    # rnda = rndaStart
+    # signDelta = np.sign(meanD80 - measMean)
+    # collectResults(rnda, meanD80, sigD80)
+    # while not stop:
+    #     newRnda = rnda - (0.1 * rndaStart * signDelta)
+    #     meanD80, sigD80 = run(newRnda)
+    #     newSignDelta = np.sign(meanD80 - measMean)
+    #     stop = (newSignDelta != signDelta)
+    #     signDelta = newSignDelta
+    #     rnda = newRnda
+    #     collectResults(rnda, meanD80, sigD80)
 
-    # interpolating
-    sortResults(results)
-    rndaOpt = np.interp(x=measMean, xp=results['mean'], fp=results['rnda'])
+    # # interpolating
+    # sortResults(results)
+    # rndaOpt = np.interp(x=measMean, xp=results['mean'], fp=results['rnda'])
+    rndaOpt = 0.006759
     meanD80, sigD80 = run(rndaOpt, plot=True)
 
     print('--- Measured -----')
@@ -110,23 +136,23 @@ if __name__ == '__main__':
     print('--- Simulated -----')
     print('Mean = {:.3f}, StdDev = {:.3f}'.format(meanD80, sigD80))
     print('--- mirror_random_reflection_angle ----')
-    print('Previous value = {:.6f}'.format(rndaStart))
+    # print('Previous value = {:.6f}'.format(rndaStart))
     print('New value = {:.6f}'.format(rndaOpt))
     print('-------')
 
     plt.figure(figsize=(8, 6), tight_layout=True)
     ax = plt.gca()
-    ax.set_xlabel('mirror_random_reflection_angle')
+    ax.set_xlabel(r'mirror$\_$random$\_$reflection$\_$angle')
     ax.set_ylabel(r'$D_{80}$ [cm]')
 
-    ax.errorbar(
-        results['rnda'],
-        results['mean'],
-        yerr=results['sig'],
-        color='k',
-        marker='o',
-        linestyle='none'
-    )
+    # ax.errorbar(
+    #     results['rnda'],
+    #     results['mean'],
+    #     yerr=results['sig'],
+    #     color='k',
+    #     marker='o',
+    #     linestyle='none'
+    # )
     ax.errorbar(
         [rndaOpt],
         [meanD80],

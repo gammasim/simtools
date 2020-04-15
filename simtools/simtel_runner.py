@@ -131,7 +131,7 @@ class SimtelRunner:
                 self._sourceDistance,
                 self._zenithAngle,
                 self._offAxisAngle,
-                self._repNumber,
+                self._mirrorNumber if 'SingleMirror' in self.mode else None,
                 self.label,
                 'photons'
             )

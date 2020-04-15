@@ -6,7 +6,7 @@ import numpy as np
 from copy import copy
 
 from simtools.util import config as cfg
-from simtools.ray_tracing import RayTracing
+from simtools.ray_tracing2 import RayTracing
 from simtools.telescope_model import TelescopeModel
 
 logger = logging.getLogger(__name__)
@@ -106,7 +106,7 @@ def test_rx(show=False):
 
         # psf_* for PSF circle
         # image_* for histogram
-        im.plot(psf_color='b')
+        im.plotImage(psf_color='b')
 
         ax.set_aspect('equal', adjustable='datalim')
         if show:
@@ -181,7 +181,8 @@ def test_integral_curve(plot=False):
     version = 'prod4'
     label = 'lst_integral'
     zenithAngle = 20
-    offAxisAngle = [0, 1.5]
+    offAxisAngle = [0]
+    show = True
 
     tel = TelescopeModel(
         yamlDBPath=config['yamlDBPath'],
@@ -201,7 +202,7 @@ def test_integral_curve(plot=False):
         offAxisAngle=offAxisAngle
     )
 
-    ray.simulate(test=True, force=True)
+    ray.simulate(test=True, force=False)
     ray.analyze(force=True)
 
     # Plotting PSF images
@@ -209,14 +210,13 @@ def test_integral_curve(plot=False):
         print(im)
         plt.figure(figsize=(8, 6), tight_layout=True)
         ax = plt.gca()
-        ax.set_xlabel('X')
-        ax.set_ylabel('Y')
+        ax.set_xlabel('radius [cm]')
+        ax.set_ylabel('')
 
         # psf_* for PSF circle
         # image_* for histogram
-        im.plot(psf_color='b')
+        im.plotIntegral(color='b')
 
-        ax.set_aspect('equal', adjustable='datalim')
         if show:
             plt.show()
 
@@ -226,7 +226,7 @@ def test_integral_curve(plot=False):
     ax.set_xlabel('off-axis')
     ax.set_ylabel('d80')
 
-    ray.plot('d80_deg', marker='o', linestyle=':')
+    ray.plot('d80_cm', marker='o', linestyle=':')
 
     if show:
         plt.show()
@@ -234,7 +234,7 @@ def test_integral_curve(plot=False):
 
 if __name__ == '__main__':
 
-    test_ssts(False)
-    test_rx(False)
-    test_single_mirror(False)
+    # test_ssts(False)
+    # test_rx(False)
+    # test_single_mirror(False)
     test_integral_curve(True)
