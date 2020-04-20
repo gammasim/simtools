@@ -41,6 +41,7 @@ class RayTracing:
         label=None,
         filesLocation=None,
         singleMirrorMode=False,
+        useRandomFocalLength=False,
         **kwargs
     ):
         """
@@ -61,6 +62,7 @@ class RayTracing:
         self.telescopeModel = telescopeModel
 
         self._singleMirrorMode = singleMirrorMode
+        self._useRandomFocalLength = useRandomFocalLength
 
         # Default parameters
         if self._singleMirrorMode:
@@ -146,7 +148,8 @@ class RayTracing:
                     zenithAngle=self._zenithAngle,
                     sourceDistance=self._sourceDistance,
                     offAxisAngle=thisOffAxis,
-                    mirrorNumber=thisMirror
+                    mirrorNumber=thisMirror,
+                    useRandomFocalLength=self._useRandomFocalLength
                 )
                 simtel.run(test=test, force=force)
 

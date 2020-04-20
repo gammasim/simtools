@@ -404,7 +404,7 @@ class TelescopeModel:
             self.exportConfigFile()
         return self._configFilePath
 
-    def exportSingleMirrorListFile(self, mirrorNumber):
+    def exportSingleMirrorListFile(self, mirrorNumber, setFocalLengthToZero):
         if mirrorNumber > self.numberOfMirrors:
             logging.error('mirrorNumber > numberOfMirrors')
 
@@ -451,12 +451,12 @@ class TelescopeModel:
             file.write('#\n')
             file.write('0. 0. {} {} {} 0.\n'.format(
                 thisMirrorDiameter,
-                thisMirrorFocalLength,
+                thisMirrorFocalLength if not setFocalLengthToZero else 0,
                 thisMirrorShape
             ))
 
-    def getSingleMirrorListFile(self, mirrorNumber):
-        self.exportSingleMirrorListFile(mirrorNumber)
+    def getSingleMirrorListFile(self, mirrorNumber, setFocalLengthToZero=False):
+        self.exportSingleMirrorListFile(mirrorNumber, setFocalLengthToZero)
         return self._singleMirrorListFilePaths[mirrorNumber]
 
     def _loadMirrorParameters(self):
