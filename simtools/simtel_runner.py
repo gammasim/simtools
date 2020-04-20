@@ -56,7 +56,13 @@ class SimtelRunner:
 
         collectArguments(
             self,
-            ['zenithAngle', 'offAxisAngle', 'sourceDistance', 'mirrorNumber'],
+            [
+                'zenithAngle',
+                'offAxisAngle',
+                'sourceDistance',
+                'mirrorNumber',
+                'useRandomFocalLength'
+            ],
             **kwargs
         )
 
@@ -222,13 +228,16 @@ class SimtelRunner:
             command += configOption('camera_body_diameter', '0')
             command += configOption(
                 'mirror_list',
-                self.telescopeModel.getSingleMirrorListFile(self._mirrorNumber)
+                self.telescopeModel.getSingleMirrorListFile(
+                    self._mirrorNumber,
+                    self._useRandomFocalLength
+                )
             )
             command += configOption('focal_length', self._sourceDistance * units.km.to(units.cm))
             command += configOption('dish_shape_length', self.telescopeModel.mirrorFocalLength)
             command += configOption('mirror_focal_length', self.telescopeModel.mirrorFocalLength)
             command += configOption('parabolic_dish', '0')
-            command += configOption('random_focal_length', '0.')
+            # command += configOption('random_focal_length', '0.')
             command += configOption('mirror_align_random_distance', '0.')
             command += configOption('mirror_align_random_vertical', '0.,28.,0.,0.')
         command += ' ' + str(self._corsikaFileName)

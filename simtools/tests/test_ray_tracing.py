@@ -6,7 +6,7 @@ import numpy as np
 from copy import copy
 
 from simtools.util import config as cfg
-from simtools.ray_tracing2 import RayTracing
+from simtools.ray_tracing import RayTracing
 from simtools.telescope_model import TelescopeModel
 
 logger = logging.getLogger(__name__)

@@ -9,6 +9,7 @@ dependencies:
   - sphinx
   - pytest
   - pytest-cov
+  - argparse
 
 # cheatsheet
 
