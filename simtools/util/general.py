@@ -1,9 +1,10 @@
 #!/usr/bin/python3
 
 import logging
+import copy
 
 
-__all__ = ['collectArguments']
+__all__ = ['collectArguments', 'collectKwargs', 'setDefaultKwargs', 'sortArrays']
 
 
 def collectArguments(obj, parameters, **kwargs):
@@ -32,3 +33,12 @@ def setDefaultKwargs(inKwargs, **kwargs):
         if par not in inKwargs.keys():
             inKwargs[par] = value
     return inKwargs
+
+
+def sortArrays(*args):
+    orderArray = copy.copy(args[0])
+    newArgs = list()
+    for arg in args:
+        _, a = zip(*sorted(zip(orderArray, arg)))
+        newArgs.append(list(a))
+    return newArgs
