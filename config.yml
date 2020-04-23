@@ -4,6 +4,12 @@ yamlDBPath: /home/prado/Work/Projects/CTA_MC/svn/Simulations/SimulationModel/Mod
 
 databaseLocation: /home/prado/Work/Projects/CTA_MC/gammasim-db
 
+modelFilesLocations: [
+  /home/prado/Work/Projects/CTA_MC/svn/Simulations/SimulationModel/ModelDescription/trunk/configReports,
+  /home/prado/Work/Projects/CTA_MC/svn/Simulations/SimulationModel/ModelDescription/trunk/datFiles,
+  /home/prado/Work/Projects/CTA_MC/svn/Simulations/SimulationModel/Verification/dataFromInstrumentTeams
+]
+
 outputLocation: .
 
 simtelPath: /afs/ifh.de/group/cta/scratch/prado/corsika_simtelarray/corsika6.9_simtelarray_20-04-02_VTS-Hadrons
