@@ -2,8 +2,9 @@
 
 import logging
 import yaml
+from pathlib import Path
 
-__all__ = ['loadConfig', 'get']
+__all__ = ['loadConfig', 'get', 'findFile']
 
 
 logger = logging.getLogger(__name__)
@@ -44,3 +45,38 @@ def get(par, fileName=None):
         raise KeyError()
     else:
         return config[par]
+
+
+def findFile(name, loc=None):
+    if loc is None:
+        loc = get(par='modelFilesLocations')
+    loc = [loc] if not isinstance(loc, list) else loc
+
+    def _searchDirectory(directory, filename, rec=False):
+        logging.debug('Searching directory {}'.format(directory))
+        f = Path(directory).joinpath(filename)
+        if f.exists():
+            logging.debug('File {} found in {}'.format(filename, directory))
+            return f
+        if not rec:  # Not recursively
+            return None
+
+        for subdir in Path(directory).iterdir():
+            if not subdir.is_dir():
+                continue
+            f = _searchDirectory(subdir, filename, True)
+            if f is not None:
+                return f
+        return None
+
+    # Searching file locally
+    ff = _searchDirectory('.', name)
+    if ff is not None:
+        return ff
+    # Searching file in given locations
+    for ll in loc:
+        ff = _searchDirectory(ll, name, True)
+        if ff is not None:
+            return ff
+    logging.warning('File {} could not be found'.format(name))
+    return None

@@ -1,5 +1,11 @@
 #!/usr/bin/python3
 
+'''
+    Example: python applications/derive_mirror_rnda.py --tel_type mst-flashcam --mean_d80 1.4
+        --no_tunning --mirror_list mirror_MST_focal_lengths.dat --d80_list mirror_MST_D80.dat
+'''
+
+
 import logging
 import matplotlib.pyplot as plt
 import numpy as np
@@ -15,8 +21,9 @@ from simtools.ray_tracing import RayTracing
 from simtools.telescope_model import TelescopeModel
 
 logger = logging.getLogger(__name__)
-logging.getLogger().setLevel(logging.INFO)
+logging.getLogger().setLevel(logging.DEBUG)
 
+cfg.setConfigFileName('config.yml')
 config = cfg.loadConfig()
 
 plt.rc('font', family='serif', size=20)
@@ -125,6 +132,7 @@ if __name__ == '__main__':
         label=label
     )
     if args.mirror_list is not None:
+        mirrorListFile = cfg.findFile(name=args.mirror_list)
         tel.changeParameters(mirror_list=args.mirror_list)
     if args.random_flen is not None:
         tel.changeParameters(random_focal_length=str(args.random_flen))
@@ -159,8 +167,9 @@ if __name__ == '__main__':
                 bins=bins
             )
             if args.d80_list is not None:
+                d80ListFile = cfg.findFile(args.d80_list)
                 plotMeasuredDistribution(
-                    args.d80_list,
+                    d80ListFile,
                     color='b',
                     linestyle='-',
                     facecolor='None',
