@@ -6,6 +6,7 @@ import os
 from astropy import units
 
 from simtools.util import names
+from simtools.util import config as cfg
 from simtools.telescope_model import TelescopeModel
 from simtools.util.general import collectArguments
 from simtools import io_handler as io
@@ -14,18 +15,17 @@ from simtools import io_handler as io
 class SimtelRunner:
     def __init__(
         self,
-        simtelSourcePath,
         mode,
+        simtelSourcePath=None,
         telescopeModel=None,
         label=None,
         filesLocation=None,
         **kwargs
     ):
         ''' Comment '''
-        self.log = logging.getLogger(__name__)
-        self.log.info('Creating SimtelRunner')
+        logging.debug('Init SimtelRunner')
 
-        self.simtelSourcePath = Path(simtelSourcePath)
+        self._simtelSourcePath = Path(cfg.collectConfigArg('simtelPath', simtelSourcePath))
 
         self._mode = None
         self.mode = mode
@@ -50,7 +50,7 @@ class SimtelRunner:
 
         # File location
         modeDir = 'ray-tracing' if 'RayTracing' in self.mode else 'generic'
-        self._filesLocation = Path.cwd() if filesLocation is None else Path(filesLocation)
+        self._filesLocation = cfg.collectConfigArg('outputLocation', filesLocation)
         self._baseDirectory = io.getOutputDirectory(self._filesLocation, self.label, modeDir)
         self._baseDirectory.mkdir(parents=True, exist_ok=True)
 
@@ -96,28 +96,28 @@ class SimtelRunner:
                 self.log.error('Invalid TelescopeModel')
 
     def run(self, test=False, force=False):
-        self.log.info('Running at mode {}'.format(self.mode))
+        logging.debug('Running at mode {}'.format(self.mode))
         # write all the important parameters
 
         if not self.shallRun() and not force:
-            self.log.info('Skipping because file exists and force = False')
+            logging.debug('Skipping because file exists and force = False')
             return
 
         self.loadRequiredFiles()
         command = self.makeRunCommand()
 
         if test:
-            self.log.info('Running (test) with command:{}'.format(command))
+            logging.info('Running (test) with command:{}'.format(command))
             os.system(command)
         else:
-            self.log.info('Running ({}x) with command:{}'.format(self.RUNS_PER_SET, command))
+            logging.info('Running ({}x) with command:{}'.format(self.RUNS_PER_SET, command))
             for _ in range(self.RUNS_PER_SET):
                 os.system(command)
 
     def getRunBashScript(self, test=False):
-        self.log.info('Creating run bash script')
+        logging.debug('Creating run bash script')
         self._scriptFileName = self._baseDirectory.joinpath('run_script')
-        self.log.debug('Run bash script - {}'.format(self._scriptFileName))
+        logging.debug('Run bash script - {}'.format(self._scriptFileName))
 
         self.loadRequiredFiles()
         command = self.makeRunCommand()
@@ -154,7 +154,7 @@ class SimtelRunner:
         ############
         # RayTracing
         if 'RayTracing' in self.mode:
-            self._corsikaFileName = self.simtelSourcePath.joinpath('run9991.corsika.gz')
+            self._corsikaFileName = self._simtelSourcePath.joinpath('run9991.corsika.gz')
 
             # Loop to define and remove existing files
             # Files will be named _baseFileName = self.__dict__['_' + base + 'FileName']
@@ -201,7 +201,7 @@ class SimtelRunner:
             return c
 
         # RayTracing
-        command = str(self.simtelSourcePath.joinpath('sim_telarray/bin/sim_telarray'))
+        command = str(self._simtelSourcePath.joinpath('sim_telarray/bin/sim_telarray'))
         command += ' -c {}'.format(self._telescopeModel.getConfigFile())
         # command += ' -I../cfg/CTA'
         command += ' -I../cfg/CTA'

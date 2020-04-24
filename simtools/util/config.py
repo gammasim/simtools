@@ -47,6 +47,10 @@ def get(par, fileName=None):
         return config[par]
 
 
+def collectConfigArg(name, value):
+    return Path(value) if value is not None else get(name)
+
+
 def findFile(name, loc=None):
     if loc is None:
         loc = get(par='modelFilesLocations')
@@ -54,6 +58,11 @@ def findFile(name, loc=None):
 
     def _searchDirectory(directory, filename, rec=False):
         logging.debug('Searching directory {}'.format(directory))
+        if not Path(directory).exists():
+            msg = 'Directory {} does not exist'.format(directory)
+            logging.error(msg)
+            raise FileNotFoundError(msg)
+
         f = Path(directory).joinpath(filename)
         if f.exists():
             logging.debug('File {} found in {}'.format(filename, directory))
@@ -78,5 +87,6 @@ def findFile(name, loc=None):
         ff = _searchDirectory(ll, name, True)
         if ff is not None:
             return ff
-    logging.warning('File {} could not be found'.format(name))
-    return None
+    msg = 'File {} could not be found'.format(name)
+    logging.error(msg)
+    raise FileNotFoundError(msg)

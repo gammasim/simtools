@@ -13,6 +13,7 @@ from pathlib import Path
 from simtools.util import names
 from simtools.model_parameters import MODEL_PARS
 from simtools import io_handler as io
+from simtools.util import config as cfg
 
 __all__ = ['TelescopeModel']
 
@@ -60,7 +61,7 @@ class TelescopeModel:
         self,
         telescopeType,
         site,
-        yamlDBPath=None,
+        modelFilesLocations=None,
         version='default',
         label=None,
         filesLocation=None,
@@ -82,11 +83,10 @@ class TelescopeModel:
                 fromConfigFile is used.
 
         """
-        self.log = logging.getLogger(__name__)
-        self.log.info('Init TelescopeModel')
+        logging.debug('Init TelescopeModel')
 
-        self.yamlDBPath = Path(yamlDBPath)
-        self._dataFilesDir = self.yamlDBPath.parents[0].joinpath('datFiles')
+        self._modelFilesLocations = cfg.collectConfigArg('modelFilesLocations', modelFilesLocations)
+        self._filesLocation = cfg.collectConfigArg('outputLocation', filesLocation)
         self.label = label
         self._version = None
         self.version = version
@@ -95,8 +95,6 @@ class TelescopeModel:
         self._site = None
         self.site = site
         self._parameters = dict()
-
-        self._filesLocation = Path.cwd() if filesLocation is None else Path(filesLocation)
 
         if readFromDB:
             self._loadParametersFromDB()
@@ -218,7 +216,7 @@ class TelescopeModel:
         self._configFileDirectory = io.getModelOutputDirectory(self._filesLocation, self.label)
         if not self._configFileDirectory.exists():
             self._configFileDirectory.mkdir(parents=True, exist_ok=True)
-            self.log.info('Creating directory {}'.format(self._configFileDirectory))
+            logging.info('Creating directory {}'.format(self._configFileDirectory))
         return
 
     def _loadParametersFromDB(self):
@@ -229,9 +227,10 @@ class TelescopeModel:
                 Implementation was needed to concatenate the optics parameters
                 to the MST models.
             """
-            fileNameDB = '{}/parValues-{}.yml'.format(self.yamlDBPath, telescopeType)
-            self.log.info('Reading DB file {}'.format(fileNameDB))
-            with open(fileNameDB, 'r') as stream:
+            fileNameDB = 'parValues-{}.yml'.format(telescopeType)
+            yamlFile = cfg.findFile(fileNameDB, self._modelFilesLocations)
+            logging.debug('Reading DB file {}'.format(yamlFile))
+            with open(yamlFile, 'r') as stream:
                 pars = yaml.load(stream, Loader=yaml.FullLoader)
             return pars
 
@@ -254,20 +253,20 @@ class TelescopeModel:
         # Site
         # Two site parameters need to be read:
         # atmospheric_transmission and altitude
-        self.log.debug('Reading site parameters from DB')
+        logging.debug('Reading site parameters from DB')
 
-        def _getSiteParameter(yamlDBPath, site, parName):
+        def _getSiteParameter(site, parName):
             """ Get the value of parName for a given site """
-            fileNameDB = '{}/parValues-Sites.yml'.format(yamlDBPath)
-            self.log.info('Reading DB file {}'.format(fileNameDB))
-            with open(fileNameDB, 'r') as stream:
+            yamlFile = cfg.findFile('parValues-Sites.yml', self._modelFilesLocations)
+            logging.info('Reading DB file {}'.format(yamlFile))
+            with open(yamlFile, 'r') as stream:
                 allPars = yaml.load(stream, Loader=yaml.FullLoader)
                 for par in allPars:
                     if parName in par and self.site.lower() in par:
                         return allPars[par][self._version]
 
         for siteParName in ['atmospheric_transmission', 'altitude']:
-            siteParValue = _getSiteParameter(self.yamlDBPath, self.site, siteParName)
+            siteParValue = _getSiteParameter(self.site, siteParName)
             parName, parValue = self._validateParameter(siteParName, siteParValue)
             self._parameters[parName] = parValue
 
@@ -284,7 +283,7 @@ class TelescopeModel:
                 parNameIn, parValueIn after validated. parValueIn is converted to the proper
                 type if that information is available in MODEL_PARS
         """
-        self.log.debug('Validating parameter {}'.format(parNameIn))
+        logging.debug('Validating parameter {}'.format(parNameIn))
         for parNameModel in MODEL_PARS.keys():
             if parNameIn == parNameModel or parNameIn in MODEL_PARS[parNameModel]['names']:
                 parType = MODEL_PARS[parNameModel]['type']
@@ -307,6 +306,7 @@ class TelescopeModel:
         if parName in self._parameters:
             return self._parameters[parName]
         else:
+            logging.error('Parameter {} was not found in the model'.format(parName))
             raise ValueError('Parameter {} was not found in the model'.format(parName))
 
     def addParameters(self, **kwargs):
@@ -324,7 +324,7 @@ class TelescopeModel:
                     'Parameter {} already in the model, use changeParameter instead'.format(par)
                 )
             else:
-                self.log.info('Adding {}={} to the model'.format(par, kwargs[par]))
+                logging.info('Adding {}={} to the model'.format(par, kwargs[par]))
                 self._parameters[par] = str(kwargs[par])
         self._isConfigFileUpdated = False
 
@@ -357,7 +357,7 @@ class TelescopeModel:
         """
         for par in args:
             if par in self._parameters.keys():
-                self.log.info('Removing parameter {}'.format(par))
+                logging.info('Removing parameter {}'.format(par))
                 del self._parameters[par]
             else:
                 raise ValueError(
@@ -376,14 +376,16 @@ class TelescopeModel:
         self._configFilePath = self._configFileDirectory.joinpath(configFileName)
 
         # Writing parameters to the file
-        self.log.info('Writing config file - {}'.format(self._configFilePath))
+        logging.info('Writing config file - {}'.format(self._configFilePath))
         with open(self._configFilePath, 'w') as file:
-            header = ('%{}\n'.format(99 * '=')
-                      + '% Configuration file for:\n'
-                      + '% TelescopeType: {}\n'.format(self._telescopeType)
-                      + '% Site: {}\n'.format(self.site)
-                      + '% Label: {}\n'.format(self.label)
-                      + '%{}\n'.format(99 * '='))
+            header = (
+                '%{}\n'.format(99 * '=')
+                + '% Configuration file for:\n'
+                + '% TelescopeType: {}\n'.format(self._telescopeType)
+                + '% Site: {}\n'.format(self.site)
+                + '% Label: {}\n'.format(self.label)
+                + '%{}\n'.format(99 * '=')
+            )
 
             file.write(header)
             for par in self._parameters:
@@ -421,7 +423,7 @@ class TelescopeModel:
         self._singleMirrorListFilePaths[mirrorNumber] = self._configFileDirectory.joinpath(fileName)
 
         mirrorListFileName = self._parameters['mirror_list']
-        mirrorListFile = self._dataFilesDir.joinpath(mirrorListFileName)
+        mirrorListFile = cfg.findFile(mirrorListFileName, self._modelFilesLocations)
         with open(mirrorListFile, 'r') as file:
             mirrorCounter = 0
             for line in file:
@@ -461,7 +463,7 @@ class TelescopeModel:
 
     def _loadMirrorParameters(self):
         mirrorListFileName = self._parameters['mirror_list']
-        mirrorListFile = self._dataFilesDir.joinpath(mirrorListFileName)
+        mirrorListFile = cfg.findFile(mirrorListFileName, self._modelFilesLocations)
         collectGeoPars = True
         mirrorCounter = 0
         with open(mirrorListFile, 'r') as file:

@@ -1,7 +1,5 @@
 # configuration file for simtools
 
-yamlDBPath: /home/prado/Work/Projects/CTA_MC/svn/Simulations/SimulationModel/ModelDescription/trunk/configReports
-
 databaseLocation: /home/prado/Work/Projects/CTA_MC/gammasim-db
 
 modelFilesLocations: [
