@@ -9,10 +9,7 @@ from simtools.util import config as cfg
 from simtools.ray_tracing import RayTracing
 from simtools.telescope_model import TelescopeModel
 
-logger = logging.getLogger(__name__)
 logging.getLogger().setLevel(logging.DEBUG)
-
-config = cfg.loadConfig()
 
 
 def test_ssts(show=False):
@@ -28,8 +25,6 @@ def test_ssts(show=False):
     rayTracing = list()
     for t in telTypes:
         tel = TelescopeModel(
-            yamlDBPath=config['yamlDBPath'],
-            filesLocation=config['outputLocation'],
             telescopeType=t,
             site=site,
             version=version,
@@ -38,8 +33,6 @@ def test_ssts(show=False):
         telModels.append(t)
 
         ray = RayTracing(
-            simtelSourcePath=config['simtelPath'],
-            filesLocation=config['outputLocation'],
             telescopeModel=tel,
             sourceDistance=sourceDistance,
             zenithAngle=zenithAngle,
@@ -73,8 +66,6 @@ def test_rx(show=False):
     offAxisAngle = [0, 2.5, 5.0]
 
     tel = TelescopeModel(
-        yamlDBPath=config['yamlDBPath'],
-        filesLocation=config['outputLocation'],
         telescopeType='astri',
         site=site,
         version=version,
@@ -82,8 +73,6 @@ def test_rx(show=False):
     )
 
     ray = RayTracing(
-        simtelSourcePath=config['simtelPath'],
-        filesLocation=config['outputLocation'],
         telescopeModel=tel,
         sourceDistance=sourceDistance,
         zenithAngle=zenithAngle,
@@ -144,9 +133,6 @@ def test_single_mirror(plot=False):
     version = 'prod4'
 
     tel = TelescopeModel(
-        yamlDBPath=config['yamlDBPath'],
-        filesLocation=config['outputLocation'],
-        # telescopeType='sst-astri',
         telescopeType='mst-flashcam',
         site=site,
         version=version,
@@ -154,11 +140,9 @@ def test_single_mirror(plot=False):
     )
 
     ray = RayTracing(
-        simtelSourcePath=config['simtelPath'],
-        filesLocation=config['outputLocation'],
         telescopeModel=tel,
         singleMirrorMode=True,
-        mirrorNumbers='all'
+        mirrorNumbers=list(range(1, 5))
     )
     ray.simulate(test=True, force=True)
     ray.analyze(force=True)
@@ -185,8 +169,6 @@ def test_integral_curve(plot=False):
     show = True
 
     tel = TelescopeModel(
-        yamlDBPath=config['yamlDBPath'],
-        filesLocation=config['outputLocation'],
         telescopeType='lst',
         site=site,
         version=version,
@@ -194,8 +176,6 @@ def test_integral_curve(plot=False):
     )
 
     ray = RayTracing(
-        simtelSourcePath=config['simtelPath'],
-        filesLocation=config['outputLocation'],
         telescopeModel=tel,
         sourceDistance=sourceDistance,
         zenithAngle=zenithAngle,
@@ -237,4 +217,5 @@ if __name__ == '__main__':
     # test_ssts(False)
     # test_rx(False)
     # test_single_mirror(False)
-    test_integral_curve(True)
+    # test_integral_curve(True)
+    pass

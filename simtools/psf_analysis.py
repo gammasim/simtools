@@ -30,8 +30,6 @@ class PSFImage:
         """ PSFImage only knows the list of photon position in cm
             No information about the telescope (e.g focal length) should be used in here.
         """
-        self.log = logging.getLogger(__name__)
-
         self.xPos = list()
         self.yPos = list()
         self.xPosMean = None
@@ -46,7 +44,7 @@ class PSFImage:
         return 'PSFImage ({}/{} photons)'.format(self.detectedPhotons, self.totalPhotons)
 
     def readSimtelFile(self, file):
-        self.log.info('Reading SimtelFile {}'.format(file))
+        logging.info('Reading SimtelFile {}'.format(file))
         self.totalPhotons = 0
         self.totalArea = None
         with open(file, 'r') as f:
@@ -54,7 +52,7 @@ class PSFImage:
                 self._processSimtelLine(line)
 
         if len(self.xPos) == 0 or len(self.yPos) == 0 or len(self.xPos) != len(self.yPos):
-            self.log.error('Problems reading Simtel file - invalid data')
+            logging.error('Problems reading Simtel file - invalid data')
 
         self.xPosMean = np.mean(self.xPos)
         self.yPosMean = np.mean(self.yPos)
@@ -69,7 +67,7 @@ class PSFImage:
             if self.totalArea is None:
                 self.totalArea = area
             elif area != self.totalArea:
-                self.log.error(
+                logging.error(
                     'Conflicting value of the total area found'
                     ' {} != {}'.format(self.totalArea, area)
                 )
@@ -89,7 +87,7 @@ class PSFImage:
         self._storedPSF[fraction] = self._findPSF(fraction)
 
     def _findPSF(self, fraction):
-        self.log.debug('Finding PSF for fraction = {}'.format(fraction))
+        logging.debug('Finding PSF for fraction = {}'.format(fraction))
 
         xPos2 = [i**2 for i in self.xPos]
         yPos2 = [i**2 for i in self.yPos]
@@ -117,12 +115,12 @@ class PSFImage:
         if foundRadius:
             return 2 * rad
         else:
-            self.log.warning('Could not find PSF efficiently')
+            logging.warning('Could not find PSF efficiently')
             psf = self._findPSFByScanning(numberTarget, rSig)
             return psf
 
     def _findPSFByScanning(self, numberTarget, rSig):
-        self.log.debug('Finding PSF by scanning')
+        logging.debug('Finding PSF by scanning')
 
         def scan(dr, radMin, radMax):
             r0, r1 = radMin, radMin + dr
@@ -140,7 +138,7 @@ class PSFImage:
             if foundRadius:
                 return (r0 + r1) / 2, r0, r1
             else:
-                self.log.error('Could not find PSF by scanning')
+                logging.error('Could not find PSF by scanning')
                 return 0, radMin, radMax
 
         # Step 0
