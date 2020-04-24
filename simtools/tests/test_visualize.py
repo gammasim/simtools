@@ -3,10 +3,11 @@
 import logging
 import os
 import sys
+from pathlib import Path
 import numpy as np
-from astropy import units as u
+from astropy import units
 from astropy.io import ascii
-from .. import visualize
+from simtools import visualize
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -39,12 +40,11 @@ def test_plot_1D():
     plt = visualize.plot1D(data, title=title, palette='autumn')
 
     plotFile = 'tests/testPlots/plot_1D.pdf'
-    if os.path.isfile(plotFile):
+    if Path(plotFile).exists():
         os.remove(plotFile)
     plt.savefig(plotFile)
-    if not os.path.isfile(plotFile):
-        logger.critical('Did not create {}!'.format(plotFile))
-        sys.exit(1)
+    if not Path(plotFile).exists():
+        raise RuntimeError('Did not create {}!'.format(plotFile))
 
     logger.debug('Produced 1D plot ({}).'.format(plotFile))
 
@@ -62,12 +62,11 @@ def test_plot_table():
     plt = visualize.plotTable(table, yTitle='Transmission', title=title, noMarkers=True)
 
     plotFile = 'tests/testPlots/plot_table.pdf'
-    if os.path.isfile(plotFile):
+    if Path(plotFile).exists():
         os.remove(plotFile)
     plt.savefig(plotFile)
-    if not os.path.isfile(plotFile):
-        logger.critical('Did not create {}!'.format(plotFile))
-        sys.exit(1)
+    if not Path(plotFile).exists():
+        raise RuntimeError('Did not create {}!'.format(plotFile))
 
     logger.debug('Produced 1D plot ({}).'.format(plotFile))
 
@@ -76,10 +75,10 @@ def test_plot_table():
 
 def test_add_unit():
 
-    valueWithUnit = [30, 40] << u.nm
-    assert(visualize.addUnit('Wavelength', valueWithUnit) == 'Wavelength [nm]')
+    valueWithUnit = [30, 40] << units.nm
+    assert(visualize._addUnit('Wavelength', valueWithUnit) == 'Wavelength [nm]')
     valueWithoutUnit = [30, 40]
-    assert(visualize.addUnit('Wavelength', valueWithoutUnit) == 'Wavelength')
+    assert(visualize._addUnit('Wavelength', valueWithoutUnit) == 'Wavelength')
 
     return
 
