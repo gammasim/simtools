@@ -8,23 +8,20 @@ from simtools.util import config as cfg
 
 logging.getLogger().setLevel(logging.DEBUG)
 
-config = cfg.loadConfig()  # config dict
-
 
 def test_general():
     cc = CorsikaConfig(
         site='Paranal',
         arrayName='4LST',
-        databaseLocation=config['databaseLocation'],
         nshow=100,
         nrun=10,
         wrong_par=200,
-        zenith=20,
-        viewcone=5,
-        erange=[0.01, 10],
+        zenith=20 * units.deg,
+        viewcone=5 * units.deg,
+        erange=[0.01 * units.GeV, 10 * units.GeV],
         eslope=2,
-        phi=0,
-        cscat=[10, 1500e2, 0],
+        phi=0 * units.deg,
+        cscat=[10, 1500 * units.m, 0],
         primary='proton',
         label='test-corsika-config'
     )
@@ -33,15 +30,14 @@ def test_general():
     cc2 = CorsikaConfig(
         site='LaPalma',
         arrayName='1SST',
-        databaseLocation=config['databaseLocation'],
         nshow=1000,
         nrun=11,
-        zenith=[0, 60],
-        viewcone=[0, 10],
-        erange=[0.01, 10],
+        zenith=[0 * units.deg, 60 * units.deg],
+        viewcone=[0 * units.deg, 10 * units.deg],
+        erange=[0.01 * units.TeV, 10 * units.TeV],
         eslope=2,
-        phi=0,
-        cscat=[10, 1500e2, 0],
+        phi=0 * units.deg,
+        cscat=[10, 1500 * units.m, 0],
         primary='proton',
         label='test-corsika-config'
     )
@@ -50,14 +46,13 @@ def test_general():
     cc3 = CorsikaConfig(
         site='LaPalma',
         arrayName='1MST',
-        databaseLocation=config['databaseLocation'],
         nshow=10000,
-        zenith=[0, 60],
-        viewcone=[0, 0],
-        erange=[0.01, 10],
+        zenith=[0 * units.deg, 60 * units.deg],
+        viewcone=[0 * units.deg, 0 * units.deg],
+        erange=[0.01 * units.TeV, 10 * units.TeV],
         eslope=2,
-        phi=0,
-        cscat=[10, 1500e2, 0],
+        phi=0 * units.deg,
+        cscat=[10, 1500  * units.m, 0],
         primary='electron',
         label='test-corsika-config'
     )
@@ -71,7 +66,6 @@ def test_units():
     cc = CorsikaConfig(
         site='Paranal',
         arrayName='4LST',
-        databaseLocation=config['databaseLocation'],
         nshow=100,
         nrun=10,
         zenith=0.1 * units.rad,
@@ -85,7 +79,9 @@ def test_units():
     )
     cc.exportFile()
 
+
 if __name__ == '__main__':
 
     # test_general()
-    test_units()
+    # test_units()
+    pass

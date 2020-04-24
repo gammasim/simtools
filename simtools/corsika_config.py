@@ -7,6 +7,7 @@ import random
 from astropy import units
 
 from simtools.util import names
+from simtools.util import config as cfg
 from simtools import io_handler as io
 from simtools.array_model import getArray
 from simtools import corsika_parameters as cors_pars
@@ -56,7 +57,7 @@ class CorsikaConfig:
         self,
         site,
         arrayName,
-        databaseLocation,
+        databaseLocation=None,
         label=None,
         filesLocation=None,
         randomSeeds=False,
@@ -66,10 +67,11 @@ class CorsikaConfig:
         logging.info('Init CorsikaConfig')
 
         self._label = label
-        self._filesLocation = Path.cwd() if filesLocation is None else Path(filesLocation)
+        self._filesLocation = cfg.collectConfigArg('outputLocation', filesLocation)
+        self._databaseLocation = cfg.collectConfigArg('databaseLocation', databaseLocation)
         self._site = names.validateName(site, names.allSiteNames)
         self._arrayName = names.validateName(arrayName, names.allArrayNames)
-        self._array = getArray(self._arrayName, databaseLocation)
+        self._array = getArray(self._arrayName, self._databaseLocation)
 
         self._loadArguments(**kwargs)
         self._loadSeeds(randomSeeds)
