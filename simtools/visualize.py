@@ -6,7 +6,7 @@ from matplotlib import pyplot as plt
 import matplotlib.gridspec as gridspec
 from cycler import cycler
 from collections import OrderedDict
-from astropy import units
+from astropy import units as u
 from astropy.table import QTable
 
 __all__ = ['setStyle', 'plot1D', 'plotTable']
@@ -25,7 +25,7 @@ def _addUnit(title, array):
     '''
 
     unit = ''
-    if isinstance(array, units.Quantity):
+    if isinstance(array, u.Quantity):
         unit = str(array[0].unit)
         if len(unit) > 0:
             unit = ' [{}]'.format(unit)
