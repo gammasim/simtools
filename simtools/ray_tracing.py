@@ -20,6 +20,7 @@ from astropy import units
 
 from simtools.psf_analysis import PSFImage
 from simtools.util import names
+from simtools.util import config as cfg
 from simtools.util.model import computeTelescopeTransmission
 from simtools.telescope_model import TelescopeModel
 from simtools.simtel_runner import SimtelRunner
@@ -36,9 +37,9 @@ __all__ = ['RayTracing']
 class RayTracing:
     def __init__(
         self,
-        simtelSourcePath,
         telescopeModel,
         label=None,
+        simtelSourcePath=None,
         filesLocation=None,
         singleMirrorMode=False,
         useRandomFocalLength=False,
@@ -52,10 +53,8 @@ class RayTracing:
         name
             A string to assign to the `name` instance attribute.
         """
-        self.log = logging.getLogger(__name__)
-
-        self._simtelSourcePath = simtelSourcePath
-        self._filesLocation = Path.cwd() if filesLocation is None else Path(filesLocation)
+        self._simtelSourcePath = Path(cfg.collectConfigArg('simtelPath', simtelSourcePath))
+        self._filesLocation = cfg.collectConfigArg('outputLocation', filesLocation)
 
         self.hasTelescopeModel = False
         self._telescopeModel = None
@@ -129,14 +128,14 @@ class RayTracing:
             self._telescopeModel = None
             self.hasTelescopeModel = False
             if tel is not None:
-                self.log.error('Invalid TelescopeModel')
+                logging.error('Invalid TelescopeModel')
 
     def simulate(self, test=False, force=False):
         """Simulate RayTracing."""
         allMirrors = self._mirrorNumbers if self._singleMirrorMode else [0]
         for thisOffAxis in self._offAxisAngle:
             for thisMirror in allMirrors:
-                self.log.info('Simulating RayTracing for offAxis={}, mirror={}'.format(
+                logging.info('Simulating RayTracing for offAxis={}, mirror={}'.format(
                     thisOffAxis,
                     thisMirror
                 ))
@@ -157,7 +156,7 @@ class RayTracing:
         """Analyze RayTracing."""
 
         if self._fileResults.exists() and not force:
-            self.log.info('Skipping analyze because file exists and force = False')
+            logging.info('Skipping analyze because file exists and force = False')
             self.readResults()
             return
 
@@ -182,9 +181,9 @@ class RayTracing:
         allMirrors = self._mirrorNumbers if self._singleMirrorMode else [0]
         for thisOffAxis in self._offAxisAngle:
             for thisMirror in allMirrors:
-                self.log.info('Analyzing RayTracing for offAxis={}'.format(thisOffAxis))
+                logging.info('Analyzing RayTracing for offAxis={}'.format(thisOffAxis))
                 if self._singleMirrorMode:
-                    self.log.info('mirrorNumber={}'.format(thisMirror))
+                    logging.info('mirrorNumber={}'.format(thisMirror))
 
                 photonsFileName = names.rayTracingFileName(
                     self._telescopeModel.telescopeType,
@@ -251,9 +250,9 @@ class RayTracing:
         return d80_cm, xMean, yMean, effArea
 
     def exportResults(self):
-        self.log.info('Exporting results')
+        logging.info('Exporting results')
         if not self._hasResults:
-            self.log.error('Cannot export results because it does not exist')
+            logging.error('Cannot export results because it does not exist')
         else:
             table = Table(self._results)
             ascii.write(table, self._fileResults, format='basic', overwrite=True)
@@ -264,7 +263,7 @@ class RayTracing:
 
     def _validateWhich(self, which):
         if which not in ['d80_cm', 'd80_deg', 'eff_area', 'eff_flen']:
-            self.log.error('Invalid option for plotting RayTracing')
+            logging.error('Invalid option for plotting RayTracing')
             return
         return
 
@@ -294,7 +293,7 @@ class RayTracing:
             if thisOffAxis in self._psfImages.keys():
                 images.append(self._psfImages[thisOffAxis])
         if len(images) == 0:
-            self.log.error('No image found')
+            loggin.error('No image found')
         return images
 
 # end of RayTracing
