@@ -6,7 +6,7 @@ from matplotlib import pyplot as plt
 import matplotlib.gridspec as gridspec
 from cycler import cycler
 from collections import OrderedDict
-from astropy import units as u
+from astropy import units
 from astropy.table import QTable
 
 __all__ = ['setStyle', 'plot1D', 'plotTable']
@@ -25,7 +25,7 @@ def _addUnit(title, array):
     '''
 
     unit = ''
-    if isinstance(array, u.Quantity):
+    if isinstance(array, units.Quantity):
         unit = str(array[0].unit)
         if len(unit) > 0:
             unit = ' [{}]'.format(unit)
@@ -120,6 +120,18 @@ def plot1D(data, **kwargs):
     done using the returned plt instance.
     A growing list of options that have to be applied during plotting (e.g., markers, titles, etc.)
     are included here.
+
+    Optional kwargs:
+        * pallete - choose a colour pallete from
+          "classic", "modified classic", "autumn", "purples" and "greens".
+        * title - provide a plot title.
+        * npLegend - do not print a legend for the plot.
+        * bigPlot - increase marker and font sizes (like in a wide lightcurve).
+        * noMarkers - do not print markers.
+        * emptyMarkers - print empty (hollow) markers
+        * plotRatio - add a ratio plot at the bottom. The first entry in the data dictionary
+          is used as the reference for the ratio. If data dictionary is not an OrderedDict,
+          the reference will be random.
     '''
 
     palette = 'default'
@@ -239,6 +251,7 @@ def plotTable(table, yTitle, **kwargs):
     done using the returned plt instance.
     A growing list of options that have to be applied during plotting (e.g., markers, titles, etc.)
     are included here.
+    For a list of options see the documentation of plot1D.
     '''
     if len(table.keys()) < 2:
         raise ValueError('Table has to have at least two columns')
