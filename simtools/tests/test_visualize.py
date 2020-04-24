@@ -5,7 +5,7 @@ import os
 import sys
 from pathlib import Path
 import numpy as np
-from astropy import units
+from astropy import units as u
 from astropy.io import ascii
 from simtools import visualize
 
@@ -23,7 +23,7 @@ def test_plot_1D():
                    'formats': ('f8', 'f8')}
     title = 'Test 1D plot'
 
-    dataIn = np.loadtxt('tests/testData/ref_200_1100_190211a.dat',
+    dataIn = np.loadtxt('../data/test-data/ref_200_1100_190211a.dat',
                         usecols=(0, 1), dtype=headersType)
 
     # Change y-axis to percent
@@ -39,7 +39,7 @@ def test_plot_1D():
 
     plt = visualize.plot1D(data, title=title, palette='autumn')
 
-    plotFile = 'tests/testPlots/plot_1D.pdf'
+    plotFile = 'tests/test-plots/plot_1D.pdf'
     if Path(plotFile).exists():
         os.remove(plotFile)
     plt.savefig(plotFile)
@@ -57,11 +57,11 @@ def test_plot_table():
 
     title = 'Test plot table'
 
-    table = ascii.read('tests/testData/Transmission_Spectrum_PlexiGlass.dat')
+    table = ascii.read('../data/test-data/Transmission_Spectrum_PlexiGlass.dat')
 
     plt = visualize.plotTable(table, yTitle='Transmission', title=title, noMarkers=True)
 
-    plotFile = 'tests/testPlots/plot_table.pdf'
+    plotFile = 'tests/test-plots/plot_table.pdf'
     if Path(plotFile).exists():
         os.remove(plotFile)
     plt.savefig(plotFile)
@@ -75,7 +75,7 @@ def test_plot_table():
 
 def test_add_unit():
 
-    valueWithUnit = [30, 40] << units.nm
+    valueWithUnit = [30, 40] << u.nm
     assert(visualize._addUnit('Wavelength', valueWithUnit) == 'Wavelength [nm]')
     valueWithoutUnit = [30, 40]
     assert(visualize._addUnit('Wavelength', valueWithoutUnit) == 'Wavelength')
