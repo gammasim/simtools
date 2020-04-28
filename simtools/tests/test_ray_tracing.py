@@ -4,6 +4,7 @@ import logging
 import matplotlib.pyplot as plt
 import numpy as np
 from copy import copy
+from astropy import units as u
 
 from simtools.util import config as cfg
 from simtools.ray_tracing import RayTracing
@@ -14,11 +15,11 @@ logging.getLogger().setLevel(logging.DEBUG)
 
 def test_ssts(show=False):
     # Test with 3 SSTs
-    sourceDistance = 10  # km
+    sourceDistance = 10 * u.km
     site = 'south'
     version = 'prod4'
-    zenithAngle = 20
-    offAxisAngle = [0, 1.0, 2.0, 3.0, 4.0]
+    zenithAngle = 20 * u.deg
+    offAxisAngle = [0, 1.0, 2.0, 3.0, 4.0] * u.deg
 
     telTypes = ['sst-1m', 'sst-astri', 'sst-gct']
     telModels = list()
@@ -38,8 +39,8 @@ def test_ssts(show=False):
             zenithAngle=zenithAngle,
             offAxisAngle=offAxisAngle
         )
-        ray.simulate(test=True, force=True)
-        ray.analyze(force=True)
+        ray.simulate(test=True, force=False)
+        ray.analyze(force=False)
 
         rayTracing.append(ray)
 
@@ -58,12 +59,12 @@ def test_ssts(show=False):
 
 
 def test_rx(show=False):
-    sourceDistance = 10
+    sourceDistance = 10 * u.km
     site = 'south'
     version = 'prod4'
     label = 'test-astri'
-    zenithAngle = 20
-    offAxisAngle = [0, 2.5, 5.0]
+    zenithAngle = 20 * u.deg
+    offAxisAngle = [0, 2.5, 5.0] * u.deg
 
     tel = TelescopeModel(
         telescopeType='astri',
@@ -160,12 +161,12 @@ def test_single_mirror(plot=False):
 
 
 def test_integral_curve(plot=False):
-    sourceDistance = 10
+    sourceDistance = 10 * u.km
     site = 'south'
     version = 'prod4'
     label = 'lst_integral'
-    zenithAngle = 20
-    offAxisAngle = [0]
+    zenithAngle = 20 * u.deg
+    offAxisAngle = [0] * u.deg
     show = True
 
     tel = TelescopeModel(
@@ -214,7 +215,7 @@ def test_integral_curve(plot=False):
 
 if __name__ == '__main__':
 
-    # test_ssts(False)
+    test_ssts(True)
     # test_rx(False)
     # test_single_mirror(False)
     # test_integral_curve(True)
