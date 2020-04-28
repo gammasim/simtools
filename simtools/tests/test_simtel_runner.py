@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 import logging
-from astropy import units
+from astropy import units as u
 
 from simtools.util import config as cfg
 from simtools.simtel_runner import SimtelRunner
@@ -21,9 +21,9 @@ def test_ray_tracing_mode():
     simtel = SimtelRunner(
         mode='ray-tracing',
         telescopeModel=tel,
-        zenithAngle=20 * units.deg,
-        offAxisAngle=2,
-        sourceDistance=10
+        zenithAngle=20 * u.deg,
+        offAxisAngle=2 * u.deg,
+        sourceDistance=12 * u.km
     )
 
     logging.info(simtel)
