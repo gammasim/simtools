@@ -3,7 +3,7 @@
 import logging
 from pathlib import Path
 import os
-from astropy import units
+from astropy import units as u
 
 from simtools.util import names
 from simtools.util import config as cfg
@@ -14,9 +14,9 @@ from simtools import io_handler as io
 
 class SimtelRunner:
     ALL_INPUTS = {
-        'zenithAngle': {'default': 20 * units.deg, 'unit': units.deg},
-        'sourceDistance': {'default': 10 * units.km, 'unit': units.km},
-        'offAxisAngle': {'default': [0 * units.deg, 2 * units.deg], 'unit': units.deg, 'isList': True}
+        'zenithAngle': {'default': 20, 'unit': u.deg},
+        'sourceDistance': {'default': 10, 'unit': u.km},
+        'offAxisAngle': {'default': 0, 'unit': u.deg},
         'mirrorNumber': {'default': 1, 'unit': None},
         'useRandomFocalLength': {'default': False, 'unit': None}
     }
@@ -62,33 +62,20 @@ class SimtelRunner:
         self._baseDirectory = io.getOutputDirectory(self._filesLocation, self.label, modeDir)
         self._baseDirectory.mkdir(parents=True, exist_ok=True)
 
-        # collectArguments(
-        #     self,
-        #     [
-        #         # 'zenithAngle',
-        #         'offAxisAngle',
-        #         'sourceDistance',
-        #         'mirrorNumber',
-        #         'useRandomFocalLength'
-        #     ],
-        #     **kwargs
-        # )
-
-        collectArguments(
-            self,
-            args=[
-                'zenithAngle',
-                'offAxisAngle',
-                'sourceDistance',
-                'mirrorNumber',
-                'useRandomFocalLength'
-            ],
-            all_inputs=self.ALL_INPUTS,
-            **kwargs
-        )
-        print(self._zenithAngle)
-        print(self._sourceDistance)
-
+        if 'RayTracing' in self.mode:
+            collectArguments(
+                self,
+                args=[
+                    'zenithAngle',
+                    'offAxisAngle',
+                    'sourceDistance',
+                    'mirrorNumber',
+                    'useRandomFocalLength'
+                ],
+                allInputs=self.ALL_INPUTS,
+                **kwargs
+            )
+        print(self.__dict__)
     # end of _init_
 
     def __repr__(self):
@@ -256,7 +243,7 @@ class SimtelRunner:
                     self._useRandomFocalLength
                 )
             )
-            command += configOption('focal_length', self._sourceDistance * units.km.to(units.cm))
+            command += configOption('focal_length', self._sourceDistance * u.km.to(u.cm))
             command += configOption('dish_shape_length', self.telescopeModel.mirrorFocalLength)
             command += configOption('mirror_focal_length', self.telescopeModel.mirrorFocalLength)
             command += configOption('parabolic_dish', '0')

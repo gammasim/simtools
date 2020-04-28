@@ -31,7 +31,7 @@ def unitIsValid(quantity, unit):
 
 
 def convertUnit(quantity, unit):
-    return quantity if unit is None else quantity.to(unit)
+    return quantity if unit is None else quantity.to(unit).value
 
 
 def collectArguments(obj, args, allInputs, **kwargs):
@@ -45,7 +45,11 @@ def collectArguments(obj, args, allInputs, **kwargs):
 
     def processListArg(arg, inArgName, argG, argD):
         outArg = list()
-        argG = argG if isinstance(argG, list) else [argG]
+        try:
+            argG = list(argG)
+        except:
+            argG = [argG]
+
         for aa in argG:
             if unitIsValid(aa, argD['unit']):
                 outArg.append(convertUnit(aa, argD['unit']))
