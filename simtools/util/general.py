@@ -2,22 +2,80 @@
 
 import logging
 import copy
-
+from astropy import units as u
 
 __all__ = ['collectArguments', 'collectKwargs', 'setDefaultKwargs', 'sortArrays']
 
 
-def collectArguments(obj, parameters, **kwargs):
-    for par in parameters:
-        inPar = '_' + par
-        if par in kwargs.keys():
-            obj.__dict__[inPar] = kwargs[par]
-            logging.info('Setting {}={}'.format(par, kwargs[par]))
-        elif inPar in obj.__dict__:
-            logging.info('Setting {}={} (default)'.format(par, obj.__dict__[inPar]))
+class ArgumentWithWrongUnit(Exception):
+    pass
+
+
+class ArgumentCannotBeCollected(Exception):
+    pass
+
+
+def unitsAreConvertible(quantity_1, quantity_2):
+    try:
+        quantity_1.to(quantity_2)
+        return True
+    except:
+        return False
+
+
+def unitIsValid(quantity, unit):
+    if unit is None and not isinstance(1 * quantity, u.quantity.Quantity):
+        return True
+    else:
+        return unitsAreConvertible(quantity, unit)
+
+
+def convertUnit(quantity, unit):
+    return quantity if unit is None else quantity.to(unit)
+
+
+def collectArguments(obj, args, allInputs, **kwargs):
+
+    def processSingleArg(arg, inArgName, argG, argD):
+        if unitIsValid(argG, argD['unit']):
+            obj.__dict__[inArgName] = convertUnit(argG, argD['unit'])
         else:
-            logging.error('Parameter {} has to be given'.format(par))
-            # raise
+            logging.error('Argument {} given with wrong unit'.format(arg))
+            raise ArgumentWithWrongUnit()
+
+    def processListArg(arg, inArgName, argG, argD):
+        outArg = list()
+        argG = argG if isinstance(argG, list) else [argG]
+        for aa in argG:
+            if unitIsValid(aa, argD['unit']):
+                outArg.append(convertUnit(aa, argD['unit']))
+            else:
+                logging.error('Argument {} given with wrong unit'.format(arg))
+                raise ArgumentWithWrongUnit()
+        obj.__dict__[inArgName] = outArg
+
+    for arg in args:
+        inArgName = '_' + arg
+        argData = allInputs[arg]
+
+        if arg not in allInputs.keys():
+            msg = 'Arg {} cannot be collected because it is not in allInputs'.format(arg)
+            logging.error(msg)
+            raise ArgumentCannotBeCollected(msg)
+
+        if arg in kwargs.keys():
+            argGiven = kwargs[arg]
+            # List
+            if 'isList' in argData and argData['isList']:
+                processListArg(arg, inArgName, argGiven, argData)
+            else:  # Not a list
+                processSingleArg(arg, inArgName, argGiven, argData)
+
+        elif 'default' in argData:
+            obj.__dict__[inArgName] = argData['default']
+        else:
+            logging.warning('Argument (without default) {} was not given'.format(arg))
+    return
 
 
 def collectKwargs(label, inKwargs):

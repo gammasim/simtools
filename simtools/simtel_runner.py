@@ -13,6 +13,14 @@ from simtools import io_handler as io
 
 
 class SimtelRunner:
+    ALL_INPUTS = {
+        'zenithAngle': {'default': 20 * units.deg, 'unit': units.deg},
+        'sourceDistance': {'default': 10 * units.km, 'unit': units.km},
+        'offAxisAngle': {'default': [0 * units.deg, 2 * units.deg], 'unit': units.deg, 'isList': True}
+        'mirrorNumber': {'default': 1, 'unit': None},
+        'useRandomFocalLength': {'default': False, 'unit': None}
+    }
+
     def __init__(
         self,
         mode,
@@ -54,17 +62,32 @@ class SimtelRunner:
         self._baseDirectory = io.getOutputDirectory(self._filesLocation, self.label, modeDir)
         self._baseDirectory.mkdir(parents=True, exist_ok=True)
 
+        # collectArguments(
+        #     self,
+        #     [
+        #         # 'zenithAngle',
+        #         'offAxisAngle',
+        #         'sourceDistance',
+        #         'mirrorNumber',
+        #         'useRandomFocalLength'
+        #     ],
+        #     **kwargs
+        # )
+
         collectArguments(
             self,
-            [
+            args=[
                 'zenithAngle',
                 'offAxisAngle',
                 'sourceDistance',
                 'mirrorNumber',
                 'useRandomFocalLength'
             ],
+            all_inputs=self.ALL_INPUTS,
             **kwargs
         )
+        print(self._zenithAngle)
+        print(self._sourceDistance)
 
     # end of _init_
 
