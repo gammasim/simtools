@@ -11,11 +11,11 @@ from pathlib import Path
 import numpy as np
 import os
 import subprocess
-from astropy.io import ascii
-from astropy.table import Table
 import math
 import matplotlib.pyplot as plt
-from astropy import units
+from astropy.io import ascii
+from astropy.table import Table
+from astropy import units as u
 
 
 from simtools.psf_analysis import PSFImage
@@ -35,6 +35,17 @@ __all__ = ['RayTracing']
 
 
 class RayTracing:
+    ALL_INPUTS = {
+        'zenithAngle': {'default': 20, 'unit': u.deg},
+        'offAxisAngle': {
+            'default': [0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0],
+            'unit': u.deg,
+            'isList': True
+        },
+        'sourceDistance': {'default': 10, 'unit': u.km},
+        'mirrorNumbers': {'default': [1], 'unit': None, 'isList': True}
+    }
+
     def __init__(
         self,
         telescopeModel,
@@ -65,15 +76,21 @@ class RayTracing:
 
         # Default parameters
         if self._singleMirrorMode:
-            self._zenithAngle = 0      # deg
-            self._offAxisAngle = [0]   # deg
+            collectArguments(
+                self,
+                args=['zenithAngle', 'offAxisAngle', 'mirrorNumbers'],
+                allInputs=self.ALL_INPUTS,
+                **kwargs
+            )
             mirFlen = self.telescopeModel.getParameter('mirror_focal_length')
-            self._sourceDistance = 2 * float(mirFlen) * units.cm.to(units.km)  # km
-            self._mirrorNumbers = [1]
+            self._sourceDistance = 2 * float(mirFlen) * u.cm.to(u.km)  # km
         else:
-            self._zenithAngle = 20                          # deg
-            self._offAxisAngle = np.linspace(0.0, 3.0, 7)   # deg
-            self._sourceDistance = 10                       # km
+            collectArguments(
+                self,
+                args=['zenithAngle', 'offAxisAngle', 'sourceDistance'],
+                allInputs=self.ALL_INPUTS,
+                **kwargs
+            )
 
         # Label
         self._hasLabel = True
@@ -88,11 +105,6 @@ class RayTracing:
         self._baseDirectory = io.getRayTracingOutputDirectory(self._filesLocation, self.label)
         self._baseDirectory.mkdir(parents=True, exist_ok=True)
 
-        collectArguments(
-            self,
-            ['zenithAngle', 'offAxisAngle', 'sourceDistance', 'mirrorNumbers'],
-            **kwargs
-        )
         if self._singleMirrorMode:
             if self._mirrorNumbers == 'all':
                 self._mirrorNumbers = list(range(1, self._telescopeModel.numberOfMirrors + 1))
@@ -144,9 +156,9 @@ class RayTracing:
                     filesLocation=self._filesLocation,
                     mode='ray-tracing' if not self._singleMirrorMode else 'raytracing-singlemirror',
                     telescopeModel=self._telescopeModel,
-                    zenithAngle=self._zenithAngle,
-                    sourceDistance=self._sourceDistance,
-                    offAxisAngle=thisOffAxis,
+                    zenithAngle=self._zenithAngle * u.deg,
+                    sourceDistance=self._sourceDistance * u.km,
+                    offAxisAngle=thisOffAxis * u.deg,
                     mirrorNumber=thisMirror,
                     useRandomFocalLength=self._useRandomFocalLength
                 )
