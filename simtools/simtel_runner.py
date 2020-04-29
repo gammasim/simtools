@@ -75,7 +75,6 @@ class SimtelRunner:
                 allInputs=self.ALL_INPUTS,
                 **kwargs
             )
-        print(self.__dict__)
     # end of _init_
 
     def __repr__(self):
