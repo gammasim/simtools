@@ -87,7 +87,7 @@ def setStyle(palette='default', bigPlot=False):
              (0, (1, 10)),  # loosely dotted
              (0, (3, 10, 1, 10)),  # loosely dashdotted
              ]
-    fontsize = {'default': 15, 'bigPlot': 30}
+    fontsize = {'default': 17, 'bigPlot': 30}
     markersize = {'default': 8, 'bigPlot': 18}
     plotSize = 'default'
     if bigPlot:
@@ -101,9 +101,27 @@ def setStyle(palette='default', bigPlot=False):
            labelpad=5, grid=True, axisbelow=True)
     plt.rc('xtick', labelsize=fontsize[plotSize])
     plt.rc('ytick', labelsize=fontsize[plotSize])
-    plt.rc('legend', loc='best', shadow=False, fontsize='x-large')
+    plt.rc('legend', loc='best', shadow=False, fontsize='large')
+    plt.rc('text', usetex=True)
+    plt.rc('font', family='serif', size=fontsize[plotSize])
 
-    return
+    return colors[palette], markers, lines
+
+
+def getColors(**kwargs):
+    """ 
+    Get the color list of the pallete requested.
+    If no pallete is provided, the default is returned
+    """
+
+    palette = 'default'
+    bigPlot = False
+    if 'palette' in kwargs:
+        palette = kwargs['palette']
+    
+    colors, _markers, _lines = setStyle(palette, bigPlot)
+    
+    return colors
 
 
 def plot1D(data, **kwargs):
