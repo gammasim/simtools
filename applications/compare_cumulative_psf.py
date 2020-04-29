@@ -7,6 +7,7 @@ from copy import copy
 from pathlib import Path
 from astropy.io import ascii
 from astropy.table import Table
+import astropy.units as u
 from math import sqrt
 
 from simtools.util import config as cfg
@@ -14,7 +15,7 @@ from simtools.ray_tracing import RayTracing
 from simtools.telescope_model import TelescopeModel
 
 logger = logging.getLogger(__name__)
-logging.getLogger().setLevel(logging.INFO)
+logger.setLevel(logging.INFO)
 
 config = cfg.loadConfig()
 
@@ -37,16 +38,14 @@ def plotData(**kwargs):
 
 
 if __name__ == '__main__':
-    sourceDistance = 12
+    sourceDistance = 12 * u.km
     site = 'south'
     version = 'prod4'
     label = 'lst_integral'
-    zenithAngle = 20
-    offAxisAngle = [0]
+    zenithAngle = 20 * u.deg
+    offAxisAngle = [0 * u.deg]
 
     tel = TelescopeModel(
-        yamlDBPath=config['yamlDBPath'],
-        filesLocation=config['outputLocation'],
         telescopeType='lst',
         site=site,
         version=version,
@@ -71,16 +70,14 @@ if __name__ == '__main__':
     )
 
     ray = RayTracing(
-        simtelSourcePath=config['simtelPath'],
-        filesLocation=config['outputLocation'],
         telescopeModel=tel,
         sourceDistance=sourceDistance,
         zenithAngle=zenithAngle,
         offAxisAngle=offAxisAngle
     )
 
-    ray.simulate(test=True, force=True)
-    ray.analyze(force=True)
+    ray.simulate(test=True, force=False)
+    ray.analyze(force=False)
 
     # Plotting PSF images
     allImages = ray.images()
