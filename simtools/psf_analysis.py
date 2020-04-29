@@ -194,4 +194,18 @@ class PSFImage:
 
         ax.plot(radiusAll, intensity, **kwargs)
 
+    def getIntegral(self, **kwargs):
+        ''' kwargs for histogram: image_*
+            kwargs for PSF circle: psf_*
+        '''
+
+        radiusAll = np.linspace(0, 1.6 * self.getPSF(0.8), 30)
+        intensity = list()
+        for rad in radiusAll:
+            intensity.append(self._sumPhotonsInRadius(rad) / self.detectedPhotons)
+
+        dType = {'names': ('Radius [cm]', 'Relative intensity'),
+                 'formats': ('f8', 'f8')}
+        return np.core.records.fromarrays(np.c_[radiusAll, intensity].T, dtype=dType)
+
 # end of PSFImage
