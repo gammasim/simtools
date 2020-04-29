@@ -13,6 +13,7 @@ import os
 import subprocess
 import math
 import matplotlib.pyplot as plt
+import copy
 from astropy.io import ascii
 from astropy.table import Table
 from astropy import units as u
@@ -170,7 +171,29 @@ class RayTracing:
         if self._fileResults.exists() and not force:
             logging.info('Skipping analyze because file exists and force = False')
             self.readResults()
+            focalLength = float(self._telescopeModel.getParameter('focal_length'))
+            self._psfImages = dict()
+            allMirrors = self._mirrorNumbers if self._singleMirrorMode else [0]
+            for thisOffAxis in self._offAxisAngle:
+                for thisMirror in allMirrors:
+                    logging.debug('Reading images for offAxis={}'.format(thisOffAxis))
+                    if self._singleMirrorMode:
+                        logging.debug('mirrorNumber={}'.format(thisMirror))
+
+                    photonsFileName = names.rayTracingFileName(
+                        self._telescopeModel.telescopeType,
+                        self._sourceDistance,
+                        self._zenithAngle,
+                        thisOffAxis,
+                        thisMirror if self._singleMirrorMode else None,
+                        self.label,
+                        'photons'
+                    )
+                    image = PSFImage(focalLength)
+                    image.readSimtelFile(self._baseDirectory.joinpath(photonsFileName))
+                    self._psfImages[thisOffAxis] = copy.copy(image)
             return
+            # end for offAxis            return
 
         focalLength = float(self._telescopeModel.getParameter('focal_length'))
         # FUTURE: telTransmission processing (from str to list of floats)
@@ -272,6 +295,7 @@ class RayTracing:
     def readResults(self):
         table = ascii.read(self._fileResults, format='basic')
         self._results = dict(table)
+        self._hasResults = True
 
     def _validateWhich(self, which):
         if which not in ['d80_cm', 'd80_deg', 'eff_area', 'eff_flen']:

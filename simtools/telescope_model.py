@@ -19,7 +19,7 @@ __all__ = ['TelescopeModel']
 
 
 def whichTelescopeSize(telescopeType):
-    """ Return the telescope size (SST, MST or LST) for a given telescopeType.
+    ''' Return the telescope size (SST, MST or LST) for a given telescopeType.
 
     Args:
         telescopeType (str): ex SST-2M-ASTRI, LST, ...
@@ -27,7 +27,7 @@ def whichTelescopeSize(telescopeType):
     Returns:
         str: 'SST', 'MST' or 'LST'
 
-    """
+    '''
 
     if 'SST' in telescopeType:
         return 'SST'
