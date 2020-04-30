@@ -109,7 +109,7 @@ def setStyle(palette='default', bigPlot=False):
 
 
 def getColors(**kwargs):
-    """ 
+    """
     Get the color list of the pallete requested.
     If no pallete is provided, the default is returned
     """
@@ -118,9 +118,9 @@ def getColors(**kwargs):
     bigPlot = False
     if 'palette' in kwargs:
         palette = kwargs['palette']
-    
+
     colors, _markers, _lines = setStyle(palette, bigPlot)
-    
+
     return colors
 
 
