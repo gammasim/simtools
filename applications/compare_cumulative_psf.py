@@ -95,8 +95,9 @@ if __name__ == '__main__':
 
     plt.savefig('LST_CumulativePSF.pdf', format='pdf', bbox_inches='tight')
 
+    plt.clf()
     dataToPlot = im.getImageData()
-    visualize.plotHist2D(dataToPlot, bins=80)
+    # visualize.plotHist2D(dataToPlot, bins=80)
     circle = plt.Circle((0, 0), im.getPSF(0.8) / 2, color='k', fill=False, lw=2, ls='--')
     plt.gca().add_artist(circle)
 
