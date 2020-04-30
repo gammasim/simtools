@@ -71,7 +71,7 @@ if __name__ == '__main__':
     print('d80 in cm = {}'.format(im.getPSF()))
 
     dataToPlot = OrderedDict()
-    dataToPlot[r'sim$\_$telarray (src dist = 12 km)'] = im.getIntegral()
+    dataToPlot[r'sim$\_$telarray (src dist = 12 km)'] = im.getCumulativeData()
     dataToPlot['measured'] = getData()
     plt = visualize.plot1D(dataToPlot)
 
@@ -95,7 +95,7 @@ if __name__ == '__main__':
 
     plt.savefig('LST_CumulativePSF.pdf', format='pdf', bbox_inches='tight')
 
-    dataToPlot = im.getImage()
+    dataToPlot = im.getImageData()
     visualize.plotHist2D(dataToPlot, bins=80)
     circle = plt.Circle((0, 0), im.getPSF(0.8) / 2, color='k', fill=False, lw=2, ls='--')
     plt.gca().add_artist(circle)
