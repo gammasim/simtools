@@ -12,7 +12,7 @@ from math import sqrt, fabs, pi
 import matplotlib.pyplot as plt
 import numpy as np
 
-from simtools.util.general import collectKwargs
+from simtools.util.general import collectKwargs, setDefaultKwargs
 
 
 __all__ = ['PSFImage']
@@ -231,13 +231,13 @@ class PSFImage:
         foundRadius = False
         while not foundRadius and nIter < MAX_ITER:
             nIter += 1
-            dr = -delta * SCALE / sqrt(targetNumber)
+            dr = -deltaNumber * SCALE / sqrt(targetNumber)
             while currentRadius + dr < 0:
                 dr *= 0.5
             currentRadius += dr
             currentNumber = self._sumPhotonsInRadius(currentRadius)
-            delta = currentNumber - numberTarget
-            foundRadius = fabs(delta) < TOLERANCE
+            deltaNumber = currentNumber - targetNumber
+            foundRadius = fabs(deltaNumber) < TOLERANCE
 
         if foundRadius:
             # Diameter = 2 * radius
@@ -280,7 +280,7 @@ class PSFImage:
             foundRadius = False
             while not foundRadius:
                 s0, s1 = self._sumPhotonsInRadius(r0), self._sumPhotonsInRadius(r1)
-                if s0 < numberTarget and s1 > numberTarget:
+                if s0 < targetNumber and s1 > targetNumber:
                     foundRadius = True
                     break
                 if r1 > radMax:
