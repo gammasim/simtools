@@ -145,6 +145,15 @@ class PSFImage:
             self._photonPosY.append(float(words[3]))
 
     def getEffectiveArea(self):
+        '''
+        Return effective area pre calculated
+
+        Returns
+        -------
+        float
+            Pre-calculated effective area. None if it could not be calculated
+            (e.g because the total scattering area was not set).
+        '''
         if '_effectiveArea' in self.__dict__ and self._effectiveArea is not None:
             return self._effectiveArea
         else:
@@ -152,6 +161,22 @@ class PSFImage:
             return None
 
     def getPSF(self, fraction=0.8, unit='cm'):
+        '''
+        Return PSF
+
+        Parameters
+        ----------
+        fraction: float
+            Fraction of photons within the containing radius.
+        unit: str
+            'cm' or 'deg'. 'deg' will not work if focal length was not set.
+
+        Returns
+        -------
+        float:
+            Containing diameter for a certain intensity fraction (PSF).
+
+        '''
         if unit == 'deg' and not self._hasFocalLength:
             logger.error('PSF cannot be computed in deg because focal length is not set')
             return None
@@ -161,45 +186,95 @@ class PSFImage:
         return self._storedPSF[fraction] * unitFactor
 
     def _computePSF(self, fraction):
+        '''
+        Compute and store PSF.
+
+        Parameters
+        ----------
+        fraction: float
+            Fraction of photons within the containing radius
+        '''
         self._storedPSF[fraction] = self._findPSF(fraction)
 
     def _findPSF(self, fraction):
+        '''
+        Try to find PSF by a smart algorithm first. If it fails, _findRadiusByScanning
+        is called and do it by brute force.
+
+        Parameters
+        ----------
+        fraction: float
+            Fraction of photons within the containing radius.
+
+        Returns
+        -------
+        float:
+            Diameter of the circular container with a certain fraction of the photons.
+
+        '''
         logger.debug('Finding PSF for fraction = {}'.format(fraction))
 
-        xPos2 = [i**2 for i in self._photonPosX]
-        yPos2 = [i**2 for i in self._photonPosY]
-        xSig = sqrt(np.mean(xPos2) - self._centroidX**2)
-        ySig = sqrt(np.mean(yPos2) - self._centroidY**2)
-        rSig = sqrt(xSig**2 + ySig**2)
+        xPosSq = [i**2 for i in self._photonPosX]
+        yPosSq = [i**2 for i in self._photonPosY]
+        xPosSig = sqrt(np.mean(xPosSq) - self._centroidX**2)
+        yPosSig = sqrt(np.mean(yPosSq) - self._centroidY**2)
+        radiusSig = sqrt(xPosSig**2 + yPosSig**2)
 
-        numberTarget = fraction * self._numberOfDetectedPhotons
-        rad = 1.5 * rSig
-        number0 = self._sumPhotonsInRadius(rad)
-        A = 0.5 * sqrt(rad * rad / number0)
-        delta = number0 - numberTarget
+        targetNumber = fraction * self._numberOfDetectedPhotons
+        currentRadius = 1.5 * radiusSig
+        startNumber = self._sumPhotonsInRadius(currentRadius)
+        SCALE = 0.5 * sqrt(currentRadius * currentRadius / startNumber)
+        deltaNumber = startNumber - targetNumber
         nIter = 0
+        MAX_ITER = 100
+        TOLERANCE = self._numberOfDetectedPhotons / 1000.
         foundRadius = False
-        while not foundRadius and nIter < 100:
+        while not foundRadius and nIter < MAX_ITER:
             nIter += 1
-            dr = -delta * A / sqrt(numberTarget)
-            while rad + dr < 0:
+            dr = -delta * SCALE / sqrt(targetNumber)
+            while currentRadius + dr < 0:
                 dr *= 0.5
-            rad += dr
-            number = self._sumPhotonsInRadius(rad)
-            delta = number - numberTarget
-            foundRadius = fabs(delta) < self._numberOfDetectedPhotons / 1000.
+            currentRadius += dr
+            currentNumber = self._sumPhotonsInRadius(currentRadius)
+            delta = currentNumber - numberTarget
+            foundRadius = fabs(delta) < TOLERANCE
 
         if foundRadius:
-            return 2 * rad
+            # Diameter = 2 * radius
+            return 2 * currentRadius
         else:
-            logger.warning('Could not find PSF efficiently')
-            psf = self._findPSFByScanning(numberTarget, rSig)
-            return psf
+            logger.warning('Could not find PSF efficiently - trying by scanning')
+            return self._findRadiusByScanning(targetNumber, radiusSig)
 
-    def _findPSFByScanning(self, numberTarget, rSig):
+    def _findRadiusByScanning(self, targetNumber, radiusSig):
+        '''
+        Find radius by scanning, aka brute force.
+
+        Parameters
+        ----------
+        targetNumber: float
+            Number of photons inside the diameter to be found.
+        radiusSig: float
+            Sigma of the radius to be used as scale.
+
+        Returns
+        -------
+        float:
+            Radius of the circle with targetNumber photons inside.
+        '''
         logger.debug('Finding PSF by scanning')
 
         def scan(dr, radMin, radMax):
+            '''
+            Scan the image from radMin to radMax uin steps of dr ntil it finds
+            targetNumber photons inside.
+
+            Returns
+            -------
+            (float, float, float):
+                Average radius, min radius, max radius of the interval where
+                targetNumber photons are inside.
+            '''
             r0, r1 = radMin, radMin + dr
             s0, s1 = 0, 0
             foundRadius = False
@@ -215,21 +290,23 @@ class PSFImage:
             if foundRadius:
                 return (r0 + r1) / 2, r0, r1
             else:
-                logging.error('Could not find PSF by scanning')
-                return 0, radMin, radMax
+                logger.error('Could not find PSF by scanning')
+                raise RuntimeError
 
+        # Run scan few times with smaller dr to optimize search.
         # Step 0
-        rad, radMin, radMax = scan(0.1 * rSig, 0, 4 * rSig)
+        radius, radMin, radMax = scan(0.1*radiusSig, 0, 4*radiusSig)
         # Step 1
-        rad, radMin, radMax = scan(0.005 * rSig, radMin, radMax)
-        return rad
+        radius, radMin, radMax = scan(0.005*radiusSig, radMin, radMax)
+        return radius
 
     def _sumPhotonsInRadius(self, radius):
-        n = 0
-        for x, y in zip(self._photonPosX, self._photonPosY):
-            d2 = (x - self._centroidX)**2 + (y - self._centroidY)**2
-            n += 1 if d2 < radius**2 else 0
-        return n
+        ''' Return the number of photons inside a certain radius. '''
+        nPhotons = 0
+        for xx, yy in zip(self._photonPosX, self._photonPosY):
+            rr2 = (xx - self._centroidX)**2 + (yy - self._centroidY)**2
+            nPhotons += 1 if rr2 < radius**2 else 0
+        return nPhotons
 
     def plotImage(self, **kwargs):
         ''' kwargs for histogram: image_*
