@@ -27,7 +27,6 @@ def getData(**kwargs):
         'formats': ('f8', 'f8')
     }
     testDataFile = io.getTestDataFile('PSFcurve_data_v2.txt')
-    # testDataFile = 'data/test-data/PSFcurve_data_v2.txt'
     data = np.loadtxt(testDataFile, dtype=dType, usecols=(0, 2))
     data['Radius [cm]'] *= 0.1
     data['Relative intensity'] /= np.max(np.abs(data['Relative intensity']))
@@ -96,16 +95,11 @@ if __name__ == '__main__':
 
     plt.savefig('LST_CumulativePSF.pdf', format='pdf', bbox_inches='tight')
 
-    # Plotting image
-    plt.figure(figsize=(8, 6), tight_layout=True)
-    ax = plt.gca()
-    ax.set_xlabel('X')
-    ax.set_ylabel('Y')
+    dataToPlot = im.getImage()
+    visualize.plotHist2D(dataToPlot, bins=80)
+    circle = plt.Circle((0, 0), im.getPSF(0.8) / 2, color='k', fill=False, lw=2, ls='--')
+    plt.gca().add_artist(circle)
 
-    # psf_* for PSF circle
-    # image_* for histogram
-    im.plotImage(psf_color='b')
-
-    ax.set_aspect('equal', adjustable='datalim')
+    plt.savefig('LST_photons.pdf', format='pdf', bbox_inches='tight')
 
     # plt.show()
