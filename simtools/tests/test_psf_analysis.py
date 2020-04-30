@@ -4,7 +4,6 @@ import logging
 
 import yaml
 
-
 from simtools.psf_analysis import PSFImage
 # from simtools.util import config as cfg
 import simtools.io_handler as io
