@@ -334,6 +334,25 @@ class PSFImage:
         circle = plt.Circle((0, 0), self.getPSF(0.8) / 2, **kwargsForPSF)
         ax.add_artist(circle)
 
+    def getImage(self, **kwargs):
+        ''' kwargs for histogram: image_*
+            kwargs for PSF circle: psf_*
+            FIXME (OG): 
+            * This image is "centrelized", should we have that as a user option
+              or is it always going to be centrelized?
+            * Why is fac set to 1 and is not a user option? What is it's purpose anyway?
+            * Don't X and Y have units?
+        '''
+        fac = 1
+        xToPlot = fac * (np.array(self._photonPosX) - self._centroidX)
+        yToPlot = fac * (np.array(self._photonPosY) - self._centroidY)
+
+        dType = {
+            'names': ('X', 'Y'),
+            'formats': ('f8', 'f8')
+        }
+        return np.core.records.fromarrays(np.c_[xToPlot, yToPlot].T, dtype=dType)
+
     def plotIntegral(self, **kwargs):
         ''' kwargs for histogram: image_*
             kwargs for PSF circle: psf_*
@@ -356,10 +375,12 @@ class PSFImage:
         radiusAll = np.linspace(0, 1.6 * self.getPSF(0.8), 30)
         intensity = list()
         for rad in radiusAll:
-            intensity.append(self._sumPhotonsInRadius(rad) / self.detectedPhotons)
+            intensity.append(self._sumPhotonsInRadius(rad) / self._numberOfDetectedPhotons)
 
-        dType = {'names': ('Radius [cm]', 'Relative intensity'),
-                 'formats': ('f8', 'f8')}
+        dType = {
+            'names': ('Radius [cm]', 'Relative intensity'),
+            'formats': ('f8', 'f8')
+        }
         return np.core.records.fromarrays(np.c_[radiusAll, intensity].T, dtype=dType)
 
 # end of PSFImage
