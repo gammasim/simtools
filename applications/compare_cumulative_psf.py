@@ -26,8 +26,8 @@ def getData(**kwargs):
         'names': ('Radius [cm]', 'Relative intensity'),
         'formats': ('f8', 'f8')
     }
-    # testDataFile = io.getTestDataFile('PSFcurve_data_v2.txt')
-    testDataFile = 'data/test-data/PSFcurve_data_v2.txt'
+    testDataFile = io.getTestDataFile('PSFcurve_data_v2.txt')
+    # testDataFile = 'data/test-data/PSFcurve_data_v2.txt'
     data = np.loadtxt(testDataFile, dtype=dType, usecols=(0, 2))
     data['Radius [cm]'] *= 0.1
     data['Relative intensity'] /= np.max(np.abs(data['Relative intensity']))
