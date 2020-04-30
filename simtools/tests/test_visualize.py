@@ -1,13 +1,14 @@
 #!/usr/bin/python3
 
 import logging
-import os
-import sys
 from pathlib import Path
+
 import numpy as np
 from astropy import units as u
 from astropy.io import ascii
+
 from simtools import visualize
+from simtools import io_handler as io
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -19,12 +20,11 @@ def test_plot_1D():
 
     xTitle = 'Wavelength [nm]'
     yTitle = 'Mirror reflectivity [%]'
-    headersType = {'names': (xTitle, yTitle),
-                   'formats': ('f8', 'f8')}
+    headersType = {'names': (xTitle, yTitle), 'formats': ('f8', 'f8')}
     title = 'Test 1D plot'
 
-    dataIn = np.loadtxt('../data/test-data/ref_200_1100_190211a.dat',
-                        usecols=(0, 1), dtype=headersType)
+    testDataFile = io.getTestDataFile('ref_200_1100_190211a.dat')
+    dataIn = np.loadtxt(testDataFile, usecols=(0, 1), dtype=headersType)
 
     # Change y-axis to percent
     if '%' in yTitle:
@@ -39,11 +39,11 @@ def test_plot_1D():
 
     plt = visualize.plot1D(data, title=title, palette='autumn')
 
-    plotFile = 'tests/test-plots/plot_1D.pdf'
-    if Path(plotFile).exists():
-        os.remove(plotFile)
+    plotFile = io.getTestPlotFile('plot_1D.pdf')
+    if plotFile.exists():
+        plotFile.unlink()
     plt.savefig(plotFile)
-    if not Path(plotFile).exists():
+    if not plotFile.exists():
         raise RuntimeError('Did not create {}!'.format(plotFile))
 
     logger.debug('Produced 1D plot ({}).'.format(plotFile))
@@ -57,15 +57,16 @@ def test_plot_table():
 
     title = 'Test plot table'
 
-    table = ascii.read('../data/test-data/Transmission_Spectrum_PlexiGlass.dat')
+    tableFile = io.getTestDataFile('Transmission_Spectrum_PlexiGlass.dat')
+    table = ascii.read(tableFile)
 
     plt = visualize.plotTable(table, yTitle='Transmission', title=title, noMarkers=True)
 
-    plotFile = 'tests/test-plots/plot_table.pdf'
-    if Path(plotFile).exists():
-        os.remove(plotFile)
+    plotFile = io.getTestPlotFile('plot_table.pdf')
+    if plotFile.exists():
+        plotFile.unlink()
     plt.savefig(plotFile)
-    if not Path(plotFile).exists():
+    if not plotFile.exists():
         raise RuntimeError('Did not create {}!'.format(plotFile))
 
     logger.debug('Produced 1D plot ({}).'.format(plotFile))
@@ -86,3 +87,4 @@ def test_add_unit():
 if __name__ == '__main__':
 
     test_plot_1D()
+    test_plot_table()
