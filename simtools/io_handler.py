@@ -43,4 +43,8 @@ def getCorsikaOutputDirectory(filesLocation, label):
 
 
 def getTestDataFile(fileName):
-    return Path(cfg.get('testDataLocation')).joinpath(fileName)
+    return Path(cfg.get('testDataLocation')).joinpath('test-data').joinpath(fileName)
+
+
+def getTestPlotFile(fileName):
+    return Path(cfg.get('testDataLocation')).joinpath('test-plots').joinpath(fileName)
