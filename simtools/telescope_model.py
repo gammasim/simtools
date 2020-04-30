@@ -1,10 +1,8 @@
-#!/usr/bin/python3
+'''
+Module containing TelescopeModel class
 
-""" This module contains the TelescopeModel class
-
-    Todo:
-        * fromConfigFile - deal with ifdef's in simtel cfg files
-"""
+Author: Raul R Prado
+'''
 
 import logging
 import yaml
@@ -16,6 +14,8 @@ from simtools import io_handler as io
 from simtools.util import config as cfg
 
 __all__ = ['TelescopeModel']
+
+logger = logging.getLogger(__name__)
 
 
 def whichTelescopeSize(telescopeType):
