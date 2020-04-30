@@ -10,7 +10,7 @@ modelFilesLocations: [
 
 outputLocation: .
 
-testDataLocation: './data/test-data'
+testDataLocation: './data/'
 
 simtelPath: /afs/ifh.de/group/cta/scratch/prado/corsika_simtelarray/corsika6.9_simtelarray_20-04-02_VTS-Hadrons
 
