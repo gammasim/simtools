@@ -3,8 +3,10 @@
 """ io_handler module """
 
 import logging
-from pathlib import Path
 import datetime
+from pathlib import Path
+
+from simtools.util import config as cfg
 
 __all__ = ['getModelOutputDirectory', 'getRayTracingOutputDirectory', 'getCorsikaOutputDirectory']
 
@@ -38,3 +40,11 @@ def getRayTracingOutputDirectory(filesLocation, label):
 
 def getCorsikaOutputDirectory(filesLocation, label):
     return getOutputDirectory(filesLocation, label, 'corsika')
+
+
+def getTestDataFile(fileName):
+    return Path(cfg.get('testDataLocation')).joinpath('test-data').joinpath(fileName)
+
+
+def getTestPlotFile(fileName):
+    return Path(cfg.get('testDataLocation')).joinpath('test-plots').joinpath(fileName)
