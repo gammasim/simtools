@@ -356,23 +356,6 @@ class PSFImage:
         else:
             xPosData = np.array(self.photonPosX)
             yPosData = np.array(self.photonPosY)
-        return xPosData, yPosData
-
-    def getImageDataForVisualize(self, centralized=True):
-        '''
-        Provide image data (2D photon positions in cm) at the
-        right format for plotting with vizualize.
-
-        Parameters
-        ----------
-        centralized: bool
-            Centroid of the image is set to (0, 0) if True.
-
-        Returns
-        -------
-        image data
-        '''
-        xPosData, yPosData = self.getImageData(centralized)
         dType = {
             'names': ('X', 'Y'),
             'formats': ('f8', 'f8')
@@ -390,7 +373,7 @@ class PSFImage:
         **kwargs:
             image_* for the histogram plot and psf_* for the psf circle.
         '''
-        xPosData, yPosData = self.getImageData(centralized)
+        data = self.getImageData(centralized)
 
         kwargs = setDefaultKwargs(
             kwargs,
@@ -406,7 +389,7 @@ class PSFImage:
 
         ax = plt.gca()
         # Image histogram
-        ax.hist2d(xPosData, yPosData, **kwargsForImage)
+        ax.hist2d(data['X'], data['Y'], **kwargsForImage)
 
         # PSF circle
         center = (0, 0) if centralized else (self.centroidX, self.centroidY)
@@ -425,29 +408,16 @@ class PSFImage:
         intensity = list()
         for rad in radiusAll:
             intensity.append(self._sumPhotonsInRadius(rad) / self._numberOfDetectedPhotons)
-
-        return radiusAll, intensity
-
-    def getCumulativeDataForVisualize(self):
-        '''
-        Provide cumulative data (intensity vs radius) in the
-        right format for plotting with vizualize.
-
-        Returns
-        -------
-        cumulative data
-        '''
-        radiusAll, intensity = self.getCumulativeData()
         dType = {
-            'names': ('Radius [cm]', 'Relative intensity'),
+            'names': ('radius', 'intensity'),
             'formats': ('f8', 'f8')
         }
         return np.core.records.fromarrays(np.c_[radiusAll, intensity].T, dtype=dType)
 
     def plotCumulative(self, **kwargs):
         ''' Plot cumulative data (intensity vs radius). '''
-        radiusAll, intensity = self.getCumulativeData()
-        plt.plot(radiusAll, intensity, **kwargs)
+        data = self.getCumulativeData()
+        plt.plot(data['radius'], data['intensity'], **kwargs)
 
 
 # end of PSFImage
