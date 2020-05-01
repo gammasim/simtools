@@ -2,8 +2,8 @@
 simtools-files
 telarray_rand.conf.used
 
-# Files produced b tests
-data/test-plots/*
+# Files produced tests
+data/test-plots/*pdf
 
 # Compiled files
 *.py[co]
