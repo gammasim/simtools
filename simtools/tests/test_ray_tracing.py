@@ -2,15 +2,18 @@
 
 import logging
 import matplotlib.pyplot as plt
-import numpy as np
 from copy import copy
-from astropy import units as u
 
-from simtools.util import config as cfg
+import astropy.units as u
+import numpy as np
+
+import simtools.util.config as cfg
+import simtools.io_handler as io
 from simtools.ray_tracing import RayTracing
 from simtools.telescope_model import TelescopeModel
 
-logging.getLogger().setLevel(logging.DEBUG)
+logger = logging.getLogger()
+logger.setLevel(logging.DEBUG)
 
 
 def test_ssts(show=False):
@@ -45,7 +48,6 @@ def test_ssts(show=False):
         rayTracing.append(ray)
 
     # Plotting
-
     plt.figure(figsize=(8, 6), tight_layout=True)
     ax = plt.gca()
     ax.set_xlabel('off-axis')
@@ -54,11 +56,11 @@ def test_ssts(show=False):
     for ray in rayTracing:
         ray.plot('d80_deg', marker='o', linestyle=':')
 
-    if show:
-        plt.show()
+    plotFile = io.getTestPlotFile('d80_test_ssts.pdf')
+    plt.savefig(plotFile)
 
 
-def test_rx(show=False):
+def test_rx():
     sourceDistance = 10 * u.km
     site = 'south'
     version = 'prod4'
@@ -86,22 +88,6 @@ def test_rx(show=False):
     ray.analyze(force=True)
     ray_rx.analyze(force=True, useRX=True)
 
-    # Plotting PSF images
-    for im in ray.images():
-        print(im)
-        plt.figure(figsize=(8, 6), tight_layout=True)
-        ax = plt.gca()
-        ax.set_xlabel('X')
-        ax.set_ylabel('Y')
-
-        # psf_* for PSF circle
-        # image_* for histogram
-        im.plotImage(psf_color='b')
-
-        ax.set_aspect('equal', adjustable='datalim')
-        if show:
-            plt.show()
-
     # Plotting d80
     plt.figure(figsize=(8, 6), tight_layout=True)
     ax = plt.gca()
@@ -111,8 +97,8 @@ def test_rx(show=False):
     ray.plot('d80_deg', marker='o', linestyle=':')
     ray_rx.plot('d80_deg', marker='s', linestyle='--')
 
-    if show:
-        plt.show()
+    plotFilePSF = io.getTestPlotFile('d80_test_rx.pdf')
+    plt.savefig(plotFilePSF)
 
     # Plotting effArea
     plt.figure(figsize=(8, 6), tight_layout=True)
@@ -123,8 +109,46 @@ def test_rx(show=False):
     ray.plot('eff_area', marker='o', linestyle=':')
     ray_rx.plot('d80_deg', marker='s', linestyle='--')
 
-    if show:
-        plt.show()
+    plotFileArea = io.getTestPlotFile('effArea_test_rx.pdf')
+    plt.savefig(plotFileArea)
+    return
+
+
+def test_plot_image():
+    sourceDistance = 10 * u.km
+    site = 'south'
+    version = 'prod4'
+    label = 'test-astri'
+    zenithAngle = 20 * u.deg
+    offAxisAngle = [0, 2.5, 5.0] * u.deg
+
+    tel = TelescopeModel(
+        telescopeType='astri',
+        site=site,
+        version=version,
+        label=label
+    )
+
+    ray = RayTracing(
+        telescopeModel=tel,
+        sourceDistance=sourceDistance,
+        zenithAngle=zenithAngle,
+        offAxisAngle=offAxisAngle
+    )
+
+    ray.simulate(test=True, force=True)
+    ray.analyze(force=True)
+
+    # Plotting images
+    for ii, image in enumerate(ray.images()):
+        plt.figure(figsize=(8, 6), tight_layout=True)
+        ax = plt.gca()
+        ax.set_xlabel('X [cm]')
+        ax.set_ylabel('Y [cm]')
+        image.plotImage(psf_color='b')
+        plotFile = io.getTestPlotFile('test_plot_image_{}.pdf'.format(ii))
+        plt.savefig(plotFile)
+    return
 
 
 def test_single_mirror(plot=False):
@@ -148,19 +172,17 @@ def test_single_mirror(plot=False):
     ray.simulate(test=True, force=True)
     ray.analyze(force=True)
 
-    # Plotting
+    # Plotting d80 histogram
     plt.figure(figsize=(8, 6), tight_layout=True)
     ax = plt.gca()
     ax.set_xlabel('d80')
 
     ray.plotHistogram('d80_cm', color='r', bins=10)
-    # ray.plot('d80_deg', color='r', linestyle='none', marker='o')
-
-    if plot:
-        plt.show()
+    plotFile = io.getTestPlotFile('d80_hist_test.pdf')
+    plt.savefig(plotFile)
 
 
-def test_integral_curve(plot=False):
+def test_integral_curve():
     sourceDistance = 10 * u.km
     site = 'south'
     version = 'prod4'
@@ -186,37 +208,22 @@ def test_integral_curve(plot=False):
     ray.simulate(test=True, force=False)
     ray.analyze(force=True)
 
-    # Plotting PSF images
-    for im in ray.images():
-        print(im)
-        plt.figure(figsize=(8, 6), tight_layout=True)
-        ax = plt.gca()
-        ax.set_xlabel('radius [cm]')
-        ax.set_ylabel('')
-
-        # psf_* for PSF circle
-        # image_* for histogram
-        im.plotIntegral(color='b')
-
-        if show:
-            plt.show()
-
-    # Plotting d80
+    # Plotting cumulative curve for each image
     plt.figure(figsize=(8, 6), tight_layout=True)
     ax = plt.gca()
-    ax.set_xlabel('off-axis')
-    ax.set_ylabel('d80')
-
-    ray.plot('d80_cm', marker='o', linestyle=':')
-
-    if show:
-        plt.show()
+    ax.set_xlabel('radius [cm]')
+    ax.set_ylabel('relative intensity')
+    for im in ray.images():
+        im.plotCumulative(color='b')
+    plotFile = io.getTestPlotFile('test_cumulative_psf.pdf')
+    plt.savefig(plotFile)
 
 
 if __name__ == '__main__':
 
-    test_ssts(True)
-    # test_rx(False)
-    # test_single_mirror(False)
-    # test_integral_curve(True)
+    # test_ssts()
+    # test_rx()
+    # test_single_mirror()
+    test_plot_image()
+    # test_integral_curve()
     pass
