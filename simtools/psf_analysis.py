@@ -53,10 +53,10 @@ class PSFImage:
         Plot cumulative intensity as a function containing fraction.
     '''
     def __init__(self, focalLength=None, totalScatteredArea=None):
-        self._photonPosX = list()
-        self._photonPosY = list()
-        self._centroidX = None
-        self._centroidY = None
+        self.photonPosX = list()
+        self.photonPosY = list()
+        self.centroidX = None
+        self.centroidY = None
         self._totalArea = totalScatteredArea
         self._storedPSF = dict()
         if focalLength is not None:
@@ -91,12 +91,10 @@ class PSFImage:
             logger.error(msg)
             raise RuntimeError(msg)
 
-        self._centroidX = np.mean(self._photonPosX)
-        self._centroidY = np.mean(self._photonPosY)
-        self._numberOfDetectedPhotons = len(self._photonPosX)
+        self.centroidX = np.mean(self.photonPosX)
+        self.centroidY = np.mean(self.photonPosY)
+        self._numberOfDetectedPhotons = len(self.photonPosX)
         self._effectiveArea = self._numberOfDetectedPhotons * self._totalArea / self._totalPhotons
-        logger.warning('effArea has to be removed - only added temporarily for compatibilty')
-        self.effArea = self._effectiveArea
 
     def _isPhotonPositionsOK(self):
         '''
@@ -107,9 +105,9 @@ class PSFImage:
         bool
             True if photon positions are ok, False if they are not
         '''
-        cond1 = len(self._photonPosX) != 0
-        cond2 = len(self._photonPosY) != 0
-        cond3 = len(self._photonPosX) == len(self._photonPosY)
+        cond1 = len(self.photonPosX) != 0
+        cond2 = len(self.photonPosY) != 0
+        cond3 = len(self.photonPosX) == len(self.photonPosY)
         return cond1 and cond2 and cond3
 
     def _processSimtelLine(self, line):
@@ -141,8 +139,8 @@ class PSFImage:
             pass
         else:
             # Storing photon position from cols 2 and 3
-            self._photonPosX.append(float(words[2]))
-            self._photonPosY.append(float(words[3]))
+            self.photonPosX.append(float(words[2]))
+            self.photonPosY.append(float(words[3]))
 
     def getEffectiveArea(self):
         '''
@@ -159,6 +157,18 @@ class PSFImage:
         else:
             logger.error('Effective Area could not be calculated')
             return None
+
+    def setEffectiveArea(self, value):
+        '''
+        Set effective area
+
+        Parameters
+        ----------
+        value: float
+            Effective area
+
+        '''
+        self._effectiveArea = value
 
     def getPSF(self, fraction=0.8, unit='cm'):
         '''
@@ -184,6 +194,25 @@ class PSFImage:
             self._computePSF(fraction)
         unitFactor = 1 if unit == 'cm' else self._cmToDeg
         return self._storedPSF[fraction] * unitFactor
+
+    def setPSF(self, value, fraction=0.8, unit='cm'):
+        '''
+        Set PSF calculated from other methods
+
+        Parameters
+        ----------
+        value: float
+            PSF value to be set
+        fraction: float
+            Fraction of photons within the containing radius.
+        unit: str
+            'cm' or 'deg'. 'deg' will not work if focal length was not set.
+        '''
+        if unit == 'deg' and not self._hasFocalLength:
+            logger.error('PSF cannot be set in deg because focal length is not set')
+            return
+        unitFactor = 1 if unit == 'cm' else 1. / self._cmToDeg
+        self._storedPSF[fraction] = value * unitFactor
 
     def _computePSF(self, fraction):
         '''
@@ -214,10 +243,10 @@ class PSFImage:
         '''
         logger.debug('Finding PSF for fraction = {}'.format(fraction))
 
-        xPosSq = [i**2 for i in self._photonPosX]
-        yPosSq = [i**2 for i in self._photonPosY]
-        xPosSig = sqrt(np.mean(xPosSq) - self._centroidX**2)
-        yPosSig = sqrt(np.mean(yPosSq) - self._centroidY**2)
+        xPosSq = [i**2 for i in self.photonPosX]
+        yPosSq = [i**2 for i in self.photonPosY]
+        xPosSig = sqrt(np.mean(xPosSq) - self.centroidX**2)
+        yPosSig = sqrt(np.mean(yPosSq) - self.centroidY**2)
         radiusSig = sqrt(xPosSig**2 + yPosSig**2)
 
         targetNumber = fraction * self._numberOfDetectedPhotons
@@ -303,38 +332,33 @@ class PSFImage:
     def _sumPhotonsInRadius(self, radius):
         ''' Return the number of photons inside a certain radius. '''
         nPhotons = 0
-        for xx, yy in zip(self._photonPosX, self._photonPosY):
-            rr2 = (xx - self._centroidX)**2 + (yy - self._centroidY)**2
+        for xx, yy in zip(self.photonPosX, self.photonPosY):
+            rr2 = (xx - self.centroidX)**2 + (yy - self.centroidY)**2
             nPhotons += 1 if rr2 < radius**2 else 0
         return nPhotons
 
-    # def plotImage(self, **kwargs):
-    #     ''' kwargs for histogram: image_*
-    #         kwargs for PSF circle: psf_*
-    #     '''
-    #     ax = plt.gca()
-    #     fac = 1
-    #     xToPlot = fac*np.array(self._photonPosX) - fac*self._centroidX
-    #     yToPlot = fac*np.array(self._photonPosY) - fac*self._centroidY
-
-    #     kwargs = setDefaultKwargs(
-    #         kwargs,
-    #         image_bins=80,
-    #         image_cmap=plt.cm.gist_heat_r,
-    #         psf_color='k',
-    #         psf_fill=False,
-    #         psf_lw=2,
-    #         psf_ls='--'
-    #     )
-    #     kwargsForImage = collectKwargs('image', kwargs)
-    #     kwargsForPSF = collectKwargs('psf', kwargs)
-
-    #     ax.hist2d(xToPlot, yToPlot, **kwargsForImage)
-
-    #     circle = plt.Circle((0, 0), self.getPSF(0.8) / 2, **kwargsForPSF)
-    #     ax.add_artist(circle)
-
     def getImageData(self, centralized=True):
+        '''
+        Provide image data (2D photon positions in cm) as lists
+
+        Parameters
+        ----------
+        centralized: bool
+            Centroid of the image is set to (0, 0) if True.
+
+        Returns
+        -------
+        (x, y), the photons positions in cm
+        '''
+        if centralized:
+            xPosData = (np.array(self.photonPosX) - self.centroidX)
+            yPosData = (np.array(self.photonPosY) - self.centroidY)
+        else:
+            xPosData = np.array(self.photonPosX)
+            yPosData = np.array(self.photonPosY)
+        return xPosData, yPosData
+
+    def getImageDataForVisualize(self, centralized=True):
         '''
         Provide image data (2D photon positions in cm) at the
         right format for plotting with vizualize.
@@ -342,42 +366,88 @@ class PSFImage:
         Parameters
         ----------
         centralized: bool
-            (0, 0) is set as the centroid of the image if True.
+            Centroid of the image is set to (0, 0) if True.
 
         Returns
         -------
         image data
         '''
-        if centralized:
-            xPosData = (np.array(self._photonPosX) - self._centroidX)
-            yPosData = (np.array(self._photonPosY) - self._centroidY)
-        else:
-            xPosData = np.array(self._photonPosX)
-            yPosData = np.array(self._photonPosY)
-
+        xPosData, yPosData = self.getImageData(centralized)
         dType = {
             'names': ('X', 'Y'),
             'formats': ('f8', 'f8')
         }
         return np.core.records.fromarrays(np.c_[xPosData, yPosData].T, dtype=dType)
 
-    def getCumulativeData(self):
-        ''' Provide cumulative data (intensity vs radius) in the
-            right format for plotting with vizualize.
-
-            Returns
-            -------
-            cumulative data
+    def plotImage(self, centralized=True, **kwargs):
         '''
-        radiusAll = np.linspace(0, 1.6 * self.getPSF(0.8), 30)
+        Plot 2D image as histogram (in cm).
+
+        Parameters
+        ----------
+        centralized: bool
+            Centroid of the image is set to (0, 0) if True.
+        **kwargs:
+            image_* for the histogram plot and psf_* for the psf circle.
+        '''
+        xPosData, yPosData = self.getImageData(centralized)
+
+        kwargs = setDefaultKwargs(
+            kwargs,
+            image_bins=80,
+            image_cmap=plt.cm.gist_heat_r,
+            psf_color='k',
+            psf_fill=False,
+            psf_lw=2,
+            psf_ls='--'
+        )
+        kwargsForImage = collectKwargs('image', kwargs)
+        kwargsForPSF = collectKwargs('psf', kwargs)
+
+        ax = plt.gca()
+        # Image histogram
+        ax.hist2d(xPosData, yPosData, **kwargsForImage)
+
+        # PSF circle
+        center = (0, 0) if centralized else (self.centroidX, self.centroidY)
+        circle = plt.Circle((0, 0), self.getPSF(0.8) / 2, **kwargsForPSF)
+        ax.add_artist(circle)
+
+    def getCumulativeData(self):
+        '''
+        Provide cumulative data (intensity vs radius).
+
+        Returns
+        -------
+        (radius, intensity)
+        '''
+        radiusAll = list(np.linspace(0, 1.6 * self.getPSF(0.8), 30))
         intensity = list()
         for rad in radiusAll:
             intensity.append(self._sumPhotonsInRadius(rad) / self._numberOfDetectedPhotons)
 
+        return radiusAll, intensity
+
+    def getCumulativeDataForVisualize(self):
+        '''
+        Provide cumulative data (intensity vs radius) in the
+        right format for plotting with vizualize.
+
+        Returns
+        -------
+        cumulative data
+        '''
+        radiusAll, intensity = self.getCumulativeData()
         dType = {
             'names': ('Radius [cm]', 'Relative intensity'),
             'formats': ('f8', 'f8')
         }
         return np.core.records.fromarrays(np.c_[radiusAll, intensity].T, dtype=dType)
+
+    def plotCumulative(self, **kwargs):
+        ''' Plot cumulative data (intensity vs radius). '''
+        radiusAll, intensity = self.getCumulativeData()
+        plt.plot(radiusAll, intensity, **kwargs)
+
 
 # end of PSFImage

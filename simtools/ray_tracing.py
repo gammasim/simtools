@@ -240,17 +240,16 @@ class RayTracing:
                 if useRX:
                     d80_cm, xPosMean, yPosMean, effArea = self.processRX(file)
                     d80_deg = d80_cm * cmToDeg
-                    image.d80_cm = d80_cm
-                    image.d80_deg = d80_deg
-                    image.xPosMean = xPosMean
-                    image.yPosMean = yPosMean
-                    image.effArea = effArea * telTransmission
+                    image.setPSF(d80_cm, fraction=0.8, unit='cm')
+                    image.centroidX = xPosMean
+                    image.centroidY = yPosMean
+                    image.setEffectiveArea(effArea * telTransmission)
                 else:
                     d80_cm = image.getPSF(0.8, 'cm')
                     d80_deg = image.getPSF(0.8, 'deg')
-                    xPosMean = image.xPosMean
-                    yPosMean = image.yPosMean
-                    effArea = image.effArea * telTransmission
+                    xPosMean = image.centroidX
+                    yPosMean = image.centroidY
+                    effArea = image.getEffectiveArea() * telTransmission
 
                 self._psfImages[thisOffAxis] = image
                 effFlen = (
