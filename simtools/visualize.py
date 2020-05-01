@@ -87,7 +87,7 @@ def setStyle(palette='default', bigPlot=False):
              (0, (1, 10)),  # loosely dotted
              (0, (3, 10, 1, 10)),  # loosely dashdotted
              ]
-    fontsize = {'default': 15, 'bigPlot': 30}
+    fontsize = {'default': 17, 'bigPlot': 30}
     markersize = {'default': 8, 'bigPlot': 18}
     plotSize = 'default'
     if bigPlot:
@@ -101,9 +101,27 @@ def setStyle(palette='default', bigPlot=False):
            labelpad=5, grid=True, axisbelow=True)
     plt.rc('xtick', labelsize=fontsize[plotSize])
     plt.rc('ytick', labelsize=fontsize[plotSize])
-    plt.rc('legend', loc='best', shadow=False, fontsize='x-large')
+    plt.rc('legend', loc='best', shadow=False, fontsize='large')
+    plt.rc('text', usetex=True)
+    plt.rc('font', family='serif', size=fontsize[plotSize])
 
-    return
+    return colors[palette], markers, lines
+
+
+def getColors(**kwargs):
+    '''
+    Get the color list of the pallete requested.
+    If no pallete is provided, the default is returned
+    '''
+
+    palette = 'default'
+    bigPlot = False
+    if 'palette' in kwargs:
+        palette = kwargs['palette']
+
+    colors, _markers, _lines = setStyle(palette, bigPlot)
+
+    return colors
 
 
 def plot1D(data, **kwargs):
@@ -263,3 +281,64 @@ def plotTable(table, yTitle, **kwargs):
                                   names=[xAxis, yTitle])
 
     return plot1D(dataDict, **kwargs)
+
+
+def plotHist2D(data, **kwargs):
+    '''
+    Produce a 2 dimentional plot of the data in "data", 
+    where "data" is assumed to be a structured array.
+    The structured array has two columns, the first is the x-axis and the second the y-axis.
+    The titles of the columns are the axes titles.
+    The labels of each data set are given in the dictionary keys and will be put in a legend.
+    The kwargs can (and should) contain all options for plotting like 
+    bins, weights, normalization, etc.
+    Those are transfered as is to the usual hist2d of matplotlib.
+    The function returns a pyplot instance in plt.
+    
+    Additional options, such as plot title, plot legend, etc.
+    are given in kwargs (list will be added to doc as function evolves).
+    Any option that can be changed after plotting (e.g., axes limits, log scale, etc.) should be
+    done using the returned plt instance.
+    A growing list of options that have to be applied during plotting (e.g., markers, titles, etc.)
+    are included here.
+
+    Optional kwargs:
+        * cmap - any plt.cmap can be provided, the default is gist_heat_r.
+        * title - provide a plot title.
+    '''
+
+    cmap = plt.cm.gist_heat_r
+    if 'title' in kwargs:
+        title = kwargs['title']
+        kwargs.pop('title', None)
+    else:
+        title = ''
+
+    # Set default style since the usual options do not affect 2D plots (for now).
+    setStyle()
+    
+    gs = gridspec.GridSpec(1, 1)
+    plt.figure(figsize=(8, 6))
+
+    ##########################################################################################
+    # Plot the data
+    ##########################################################################################
+
+    plt.subplot(gs[0])
+    assert len(data.dtype.names) == 2, 'Input array must have two columns with titles.'
+    xTitle, yTitle = data.dtype.names[0], data.dtype.names[1]
+    xTitleUnit = _addUnit(xTitle, data[xTitle])
+    yTitleUnit = _addUnit(yTitle, data[yTitle])
+    plt.hist2d(data[xTitle], data[yTitle], cmap=cmap, **kwargs)
+
+    plt.xlabel(xTitleUnit)
+    plt.ylabel(yTitleUnit)
+
+    plt.axis('equal', adjustable='datalim')
+
+    if len(title) > 0:
+        plt.title(title, y=1.02)
+
+    plt.tight_layout()
+
+    return plt
