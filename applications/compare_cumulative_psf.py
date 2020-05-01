@@ -2,12 +2,12 @@
 
 import logging
 import matplotlib.pyplot as plt
-import numpy as np
 from copy import copy
 from pathlib import Path
 from math import sqrt
 from collections import OrderedDict
 
+import numpy as np
 from astropy.io import ascii
 from astropy.table import Table
 import astropy.units as u
@@ -71,7 +71,7 @@ if __name__ == '__main__':
     print('d80 in cm = {}'.format(im.getPSF()))
 
     dataToPlot = OrderedDict()
-    dataToPlot[r'sim$\_$telarray (src dist = 12 km)'] = im.getCumulativeDataForVisualize()
+    dataToPlot[r'sim$\_$telarray (src dist = 12 km)'] = im.getCumulativeData()
     dataToPlot['measured'] = getData()
     plt = visualize.plot1D(dataToPlot)
 
@@ -96,7 +96,7 @@ if __name__ == '__main__':
     plt.savefig('LST_CumulativePSF.pdf', format='pdf', bbox_inches='tight')
     plt.clf()
 
-    dataToPlot = im.getImageDataForVisualize()
+    dataToPlot = im.getImageData()
     visualize.plotHist2D(dataToPlot, bins=80)
     circle = plt.Circle((0, 0), im.getPSF(0.8) / 2, color='k', fill=False, lw=2, ls='--')
     plt.gca().add_artist(circle)
