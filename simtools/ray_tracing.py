@@ -7,30 +7,26 @@ Testing docstrings
 """
 
 import logging
-from pathlib import Path
-import numpy as np
 import os
 import subprocess
 import math
 import matplotlib.pyplot as plt
-import copy
+from copy import copy
+from pathlib import Path
+
+import numpy as np
 from astropy.io import ascii
 from astropy.table import Table
 from astropy import units as u
 
-
+import simtools.util.config as cfg
+import simtools.io_handler as io
 from simtools.psf_analysis import PSFImage
 from simtools.util import names
-from simtools.util import config as cfg
 from simtools.util.model import computeTelescopeTransmission
 from simtools.telescope_model import TelescopeModel
 from simtools.simtel_runner import SimtelRunner
-from simtools.util.general import (
-    collectArguments,
-    collectKwargs,
-    setDefaultKwargs
-)
-from simtools import io_handler as io
+from simtools.util.general import collectArguments, collectKwargs, setDefaultKwargs
 
 __all__ = ['RayTracing']
 
@@ -191,7 +187,7 @@ class RayTracing:
                     )
                     image = PSFImage(focalLength)
                     image.readSimtelFile(self._baseDirectory.joinpath(photonsFileName))
-                    self._psfImages[thisOffAxis] = copy.copy(image)
+                    self._psfImages[thisOffAxis] = copy(image)
             return
             # end for offAxis            return
 
