@@ -60,8 +60,8 @@ def findFile(name, loc=None):
         logging.debug('Searching directory {}'.format(directory))
         if not Path(directory).exists():
             msg = 'Directory {} does not exist'.format(directory)
-            logging.error(msg)
-            raise FileNotFoundError(msg)
+            logging.warning(msg)
+            return None
 
         f = Path(directory).joinpath(filename)
         if f.exists():
