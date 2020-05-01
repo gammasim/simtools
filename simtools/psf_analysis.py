@@ -308,44 +308,76 @@ class PSFImage:
             nPhotons += 1 if rr2 < radius**2 else 0
         return nPhotons
 
-    def plotImage(self, **kwargs):
-        ''' kwargs for histogram: image_*
-            kwargs for PSF circle: psf_*
+    # def plotImage(self, **kwargs):
+    #     ''' kwargs for histogram: image_*
+    #         kwargs for PSF circle: psf_*
+    #     '''
+    #     ax = plt.gca()
+    #     fac = 1
+    #     xToPlot = fac*np.array(self._photonPosX) - fac*self._centroidX
+    #     yToPlot = fac*np.array(self._photonPosY) - fac*self._centroidY
+
+    #     kwargs = setDefaultKwargs(
+    #         kwargs,
+    #         image_bins=80,
+    #         image_cmap=plt.cm.gist_heat_r,
+    #         psf_color='k',
+    #         psf_fill=False,
+    #         psf_lw=2,
+    #         psf_ls='--'
+    #     )
+    #     kwargsForImage = collectKwargs('image', kwargs)
+    #     kwargsForPSF = collectKwargs('psf', kwargs)
+
+    #     ax.hist2d(xToPlot, yToPlot, **kwargsForImage)
+
+    #     circle = plt.Circle((0, 0), self.getPSF(0.8) / 2, **kwargsForPSF)
+    #     ax.add_artist(circle)
+
+    def getImageData(self, centralized=True):
         '''
-        ax = plt.gca()
-        fac = 1
-        xToPlot = fac*np.array(self._photonPosX) - fac*self._centroidX
-        yToPlot = fac*np.array(self._photonPosY) - fac*self._centroidY
+        Provide image data (2D photon positions in cm) at the
+        right format for plotting with vizualize.
 
-        kwargs = setDefaultKwargs(
-            kwargs,
-            image_bins=80,
-            image_cmap=plt.cm.gist_heat_r,
-            psf_color='k',
-            psf_fill=False,
-            psf_lw=2,
-            psf_ls='--'
-        )
-        kwargsForImage = collectKwargs('image', kwargs)
-        kwargsForPSF = collectKwargs('psf', kwargs)
+        Parameters
+        ----------
+        centralized: bool
+            (0, 0) is set as the centroid of the image if True.
 
-        ax.hist2d(xToPlot, yToPlot, **kwargsForImage)
-
-        circle = plt.Circle((0, 0), self.getPSF(0.8) / 2, **kwargsForPSF)
-        ax.add_artist(circle)
-
-    def plotIntegral(self, **kwargs):
-        ''' kwargs for histogram: image_*
-            kwargs for PSF circle: psf_*
+        Returns
+        -------
+        image data
         '''
-        ax = plt.gca()
-        kwargs = setDefaultKwargs(kwargs, color='k', marker='o')
+        if centralized:
+            xPosData = (np.array(self._photonPosX) - self._centroidX)
+            yPosData = (np.array(self._photonPosY) - self._centroidY)
+        else:
+            xPosData = np.array(self._photonPosX)
+            yPosData = np.array(self._photonPosY)
 
+        dType = {
+            'names': ('X', 'Y'),
+            'formats': ('f8', 'f8')
+        }
+        return np.core.records.fromarrays(np.c_[xPosData, yPosData].T, dtype=dType)
+
+    def getCumulativeData(self):
+        ''' Provide cumulative data (intensity vs radius) in the
+            right format for plotting with vizualize.
+
+            Returns
+            -------
+            cumulative data
+        '''
         radiusAll = np.linspace(0, 1.6 * self.getPSF(0.8), 30)
         intensity = list()
         for rad in radiusAll:
             intensity.append(self._sumPhotonsInRadius(rad) / self._numberOfDetectedPhotons)
 
-        ax.plot(radiusAll, intensity, **kwargs)
+        dType = {
+            'names': ('Radius [cm]', 'Relative intensity'),
+            'formats': ('f8', 'f8')
+        }
+        return np.core.records.fromarrays(np.c_[radiusAll, intensity].T, dtype=dType)
 
 # end of PSFImage
