@@ -12,6 +12,7 @@ from pathlib import Path
 
 from simtools.model_parameters import MODEL_PARS
 from simtools.util import names
+from simtools.util.model import getTelescopeSize
 import simtools.util.config as cfg
 import simtools.io_handler as io
 
@@ -227,7 +228,7 @@ class TelescopeModel:
         parametersDB = _readParsFromOneType(telescopeType=self.telescopeType)
         _collectAplicablePars(parametersDB)
 
-        if whichTelescopeSize(self.telescopeType) == 'MST':
+        if getTelescopeSize(self.telescopeType) == 'MST':
             parametersDB = _readParsFromOneType(telescopeType='MST-optics')
             _collectAplicablePars(parametersDB)
 
