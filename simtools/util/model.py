@@ -6,30 +6,48 @@ import math
 
 __all__ = ['computeTelescopeTransmission', 'getTelescopeSize']
 
+logger = logging.getLogger(__name__)
+
 
 def computeTelescopeTransmission(pars, offAxis):
-    ''' pars: parametric function of telescope transmission
-        offAxis: in deg
     '''
+    Compute tel. transmission (0 < T < 1) for a given set of parameters
+    as defined by the MC model and for a given off-axis angle.
+
+    Parameters
+    ----------
+    pars: list of float
+        Parameters of the telescope transmission. Len(pars) should be 4.
+    offAxis: float
+        Off-axis angle in deg.
+
+    Returns
+    -------
+    float
+        Telescope transmission.
+    '''
+    _degToRad = math.pi / 180.
     if pars[1] == 0:
         return pars[0]
     else:
-        t = math.sin(offAxis * math.pi / 180.)/(pars[3] * math.pi / 180.)
+        t = math.sin(offAxis*_degToRad) / (pars[3]*_degToRad)
         return pars[0] / (1. + pars[2] * t**pars[4])
 
 
 def getTelescopeSize(telescopeType):
     '''
-    Return the telescope size (SST, MST or LST) for a given telescopeType.
+    Provide the telescope size (SST, MST or LST) for a given telescopeType.
 
-    Args:
-        telescopeType (str): ex SST-2M-ASTRI, LST, ...
+    Parameters
+    ----------
+    telescopeType: str
+        Ex. SST-2M-ASTRI, LST, ...
 
-    Returns:
-        str: 'SST', 'MST' or 'LST'
-
+    Returns
+    -------
+    str
+        'SST', 'MST' or 'LST'
     '''
-
     if 'SST' in telescopeType:
         return 'SST'
     elif 'MST' in telescopeType:
@@ -37,5 +55,5 @@ def getTelescopeSize(telescopeType):
     elif 'LST' in telescopeType:
         return 'LST'
     else:
-        logger.error('Invalid telescopeType {}'.format(telescopeType))
+        logger.warning('Invalid telescopeType {}'.format(telescopeType))
         return None

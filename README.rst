@@ -1,7 +1,7 @@
 gammasim-tools
 ===========
 
-MC Library for `CTA Observatory <www.cta-observatory.org>`_
+Low-level tools for the Simulation System of `CTA Observatory <www.cta-observatory.org>`_
 
 Authors:
 ---------
