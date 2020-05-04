@@ -21,24 +21,24 @@ TODO:
 * Corsika runner in SimtelRunner
 * Docs in CorsikaConfig related code
 
-GUIDELINES:
+STYLE GUIDELINES:
 ------------
 
 * Follow `Style Guide and Code Guidelines from ctapipe <https://cta-observatory.github.io/ctapipe/development/index.html>`_
 * Keep it clean!
-* Names must be validated. (See util/names.py and its documentation)
-* Sphinx for docs with docstrings in Google style (Should change to Numpy style, like ctapipe (?))
+* Sphinx for docs with docstrings in `Numpy style <https://numpydoc.readthedocs.io/en/latest/format.html#id4>`_
 * Pep8
-* Use the following namespaces consistently
+* Use the following namespaces consistently:
 .. code-block:: python
 | import simtools.config as cfg
 | import simtools.io_handler as io
 
-* Bla
+* 
 
 DESIGN REMARKS:
 ----------------
 
+* Names must be validated. (See util/names.py and its documentation)
 * Every functional class contains a 'label'. The label can be passed forward from lower level to higher level classes. In particular, label from TelescopeModel can be used in higher level classes.
 * Classes are not designed to be re-used, all parameters should be set when initializing and not changed afterwards. New parameters should mean new instance of the class.
 * filesLocation
