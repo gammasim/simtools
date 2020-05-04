@@ -70,6 +70,21 @@ allArrayNames = {
 }
 
 
+def simtelConfigFileName(version, site, telescopeType, label):
+    name = 'CTA-{}-{}-{}'.format(version, site, telescopeType)
+    name += '_{}'.format(label) if label is not None else ''
+    name += '.cfg'
+    return name
+
+
+def simtelSingleMirrorListFileName(version, site, telescopeType, mirrorNumber, label):
+    name = 'CTA-single-mirror-list-{}-{}-{}'.format(version, site, telescopeType)
+    name += '-mirror{}'.format(mirrorNumber)
+    name += '_{}'.format(label) if label is not None else ''
+    name += '.dat'
+    return name
+
+
 def rayTracingFileName(
     telescopeType,
     sourceDistance,
