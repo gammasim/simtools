@@ -2,12 +2,12 @@
 
 import logging
 import matplotlib.pyplot as plt
-import numpy as np
 from copy import copy
 from pathlib import Path
 from math import sqrt
 from collections import OrderedDict
 
+import numpy as np
 from astropy.io import ascii
 from astropy.table import Table
 import astropy.units as u
@@ -23,13 +23,14 @@ logger.setLevel(logging.INFO)
 
 def getData(**kwargs):
     dType = {
-        'names': ('Radius [cm]', 'Relative intensity'),
+        'title': ('Radius [cm]', 'Relative intensity'),
+        'names': ('radius', 'intensity'),
         'formats': ('f8', 'f8')
     }
     testDataFile = io.getTestDataFile('PSFcurve_data_v2.txt')
     data = np.loadtxt(testDataFile, dtype=dType, usecols=(0, 2))
-    data['Radius [cm]'] *= 0.1
-    data['Relative intensity'] /= np.max(np.abs(data['Relative intensity']))
+    data['radius'] *= 0.1
+    data['intensity'] /= np.max(np.abs(data['intensity']))
     return data
 
 
