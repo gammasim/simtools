@@ -22,15 +22,25 @@ logger = logging.getLogger(__name__)
 
 
 class TelescopeModel:
-    """MC Model handler at the telescope level.
+    '''
+    TelescopeModel is an abstract representation of the MC model at the telescope level. It contains
+    the list of parameters and useful methods to handle it.
 
-    TelescopeModel is an abstract representation of the MC model
-    at the telescope level. It contains the list of parameters and
-    useful methods to handle it.
+    Attributes
+    ----------
+    telescopeType: str
+        Telescope type for the base set of parameters (ex. SST-2M-ASTRI, LST, ...).
+    site: str
+        Paranal or LaPalma.
+    version: str
+        Version of the model (ex. prod4).
+    label: str
+        Instance label.
 
-    Attributes:
+    Methods
+    -------
+
         yamlDBPath (str): path of the yaml database containing the model parameters.
-        label (str): instance label to avoid conflict between files.
         version (str): MC model version (ex. prod4).
         telescopeType (str): telescope type for the base set of parameters (ex. SST-2M-ASTRI,
             LST, ...)
@@ -38,18 +48,22 @@ class TelescopeModel:
         filesLocation (str): location for created files (ex. simtel cfg file). If None,
             pwd will used.
 
-    """
+    '''
     def __init__(
         self,
         telescopeType,
         site,
-        modelFilesLocations=None,
         version='default',
+        modelFilesLocations=None,
         label=None,
         filesLocation=None,
         readFromDB=True
     ):
-        """TelescopeModel __init__.
+        '''
+        TelescopeModel __init__.
+
+        Parameters
+        ----------
 
         Args:
             telescopeType (str): telescope type for the base set of parameters (ex. SST-2M-ASTRI,
@@ -64,18 +78,17 @@ class TelescopeModel:
                 It must be True most of the cases. It must be False specially if classmethod
                 fromConfigFile is used.
 
-        """
-        logging.debug('Init TelescopeModel')
+        '''
+        logger.debug('Init TelescopeModel')
+
+        self.version = names.validateName(version, names.allModelVersionNames)
+        self.telescopeType = names.validateName(telescopeType, names.allTelescopeTypeNames)
+        self.site = names.validateName(site, names.allSiteNames)
+        self.label = label
 
         self._modelFilesLocations = cfg.collectConfigArg('modelFilesLocations', modelFilesLocations)
         self._filesLocation = cfg.collectConfigArg('outputLocation', filesLocation)
-        self.label = label
-        self._version = None
-        self.version = version
-        self._telescopeType = None
-        self.telescopeType = telescopeType
-        self._site = None
-        self.site = site
+
         self._parameters = dict()
 
         if readFromDB:
@@ -84,33 +97,6 @@ class TelescopeModel:
         self._setConfigFileDirectory()
         self._isConfigFileUpdated = False
         self._areMirrorParametersLoaded = False
-
-    @property
-    def version(self):
-        """ str: model version after validation. """
-        return self._version
-
-    @version.setter
-    def version(self, value):
-        self._version = names.validateName(value, names.allModelVersionNames)
-
-    @property
-    def telescopeType(self):
-        """str: telescope type after validation. """
-        return self._telescopeType
-
-    @telescopeType.setter
-    def telescopeType(self, value):
-        self._telescopeType = names.validateName(value, names.allTelescopeTypeNames)
-
-    @property
-    def site(self):
-        """str: site after validation. """
-        return self._site
-
-    @site.setter
-    def site(self, value):
-        self._site = names.validateName(value, names.allSiteNames)
 
     @property
     def numberOfMirrors(self):
@@ -135,7 +121,6 @@ class TelescopeModel:
         if not self._areMirrorParametersLoaded:
             self._loadMirrorParameters
         return self._mirrorShape
-
 
     @classmethod
     def fromConfigFile(cls, configFileName, telescopeType, site, label=None, filesLocation=None):

@@ -3,17 +3,17 @@
 import yaml
 import logging
 
-from simtools.util import config as cfg
 from simtools.telescope_model import TelescopeModel
 
-logging.getLogger().setLevel(logging.DEBUG)
+logger = logging.getLogger()
+logger.setLevel(logging.DEBUG)
 
 
 def test_input_validation():
     telType = 'lst'
     site = 'south'
-    logging.info('Input telType: {}'.format(telType))
-    logging.info('Input site: {}'.format(site))
+    logger.info('Input telType: {}'.format(telType))
+    logger.info('Input site: {}'.format(site))
 
     tel = TelescopeModel(
         telescopeType=telType,
@@ -22,8 +22,8 @@ def test_input_validation():
         label='test-lst'
     )
 
-    logging.info('Validated telType: {}'.format(tel.telescopeType))
-    logging.info('Validated site: {}'.format(tel.site))
+    logger.info('Validated telType: {}'.format(tel.telescopeType))
+    logger.info('Validated site: {}'.format(tel.site))
     return
 
 
@@ -35,12 +35,12 @@ def test_handling_parameters():
         label='test-lst'
     )
 
-    logging.info(
+    logger.info(
         'Old mirror_reflection_random_angle:{}'.format(
             tel.getParameter('mirror_reflection_random_angle')
         )
     )
-    logging.info('Changing mirror_reflection_random_angle')
+    logger.info('Changing mirror_reflection_random_angle')
     new_mrra = '0.0080 0 0'
     tel.changeParameters(mirror_reflection_random_angle=new_mrra)
     assert tel.getParameter('mirror_reflection_random_angle') == new_mrra
@@ -60,7 +60,7 @@ def test_flen_type():
         label='test-lst'
     )
     flen = tel.getParameter('focal_length')
-    logging.info('Focal Length = {}, type = {}'.format(flen, type(flen)))
+    logger.info('Focal Length = {}, type = {}'.format(flen, type(flen)))
     assert type(flen) == float
     return
 
@@ -76,7 +76,7 @@ def test_cfg_file():
     # tel.exportConfigFile(loc='/home/prado/Work/Projects/CTA_MC/MCLib')
     tel.exportConfigFile()
 
-    logging.info('Config file: {}'.format(tel.getConfigFile()))
+    logger.info('Config file: {}'.format(tel.getConfigFile()))
 
     # Importing
     cfgFile = tel.getConfigFile()
@@ -102,9 +102,9 @@ def test_cfg_input():
 
 if __name__ == '__main__':
 
-    # test_handling_parameters()
-    # test_input_validation()
-    # test_flen_type()
-    # test_cfg_file()
-    # test_cfg_input()
+    test_handling_parameters()
+    test_input_validation()
+    test_flen_type()
+    test_cfg_file()
+    test_cfg_input()
     pass
