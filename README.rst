@@ -31,9 +31,9 @@ GUIDELINES:
 * Pep8
 * Use the following namespaces consistently
 .. code-block:: python
-
 import simtools.config as cfg
 
+.. code-block:: python
 import simtools.io_handler as io
 
 * Bla
