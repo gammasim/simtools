@@ -8,14 +8,14 @@ from math import sqrt
 from collections import OrderedDict
 
 import numpy as np
+import astropy.units as u
 from astropy.io import ascii
 from astropy.table import Table
-import astropy.units as u
 
+import simtools.io_handler as io
 from simtools.ray_tracing import RayTracing
-from simtools.telescope_model import TelescopeModel
+from simtools.model.telescope_model import TelescopeModel
 from simtools import visualize
-from simtools import io_handler as io
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)

@@ -2,11 +2,12 @@
 
 import logging
 import numpy as np
-from matplotlib import pyplot as plt
+import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 from cycler import cycler
 from collections import OrderedDict
-from astropy import units as u
+
+import astropy.units as u
 from astropy.table import QTable
 
 __all__ = ['setStyle', 'plot1D', 'plotTable']

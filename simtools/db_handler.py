@@ -3,9 +3,9 @@
 """ io_handler module """
 
 import logging
-from pathlib import Path
 import datetime
 import yaml
+from pathlib import Path
 
 __all__ = ['getArrayDB']
 
