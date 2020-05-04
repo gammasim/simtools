@@ -23,13 +23,14 @@ logger.setLevel(logging.INFO)
 
 def getData(**kwargs):
     dType = {
-        'names': ('Radius [cm]', 'Relative intensity'),
+        'title': ('Radius [cm]', 'Relative intensity'),
+        'names': ('radius', 'intensity'),
         'formats': ('f8', 'f8')
     }
     testDataFile = io.getTestDataFile('PSFcurve_data_v2.txt')
     data = np.loadtxt(testDataFile, dtype=dType, usecols=(0, 2))
-    data['Radius [cm]'] *= 0.1
-    data['Relative intensity'] /= np.max(np.abs(data['Relative intensity']))
+    data['radius'] *= 0.1
+    data['intensity'] /= np.max(np.abs(data['intensity']))
     return data
 
 
