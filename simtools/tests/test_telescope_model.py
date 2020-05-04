@@ -3,7 +3,7 @@
 import yaml
 import logging
 
-from simtools.telescope_model import TelescopeModel
+from simtools.model.telescope_model import TelescopeModel
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)

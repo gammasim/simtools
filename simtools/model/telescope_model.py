@@ -10,10 +10,10 @@ import logging
 import yaml
 from pathlib import Path
 
-from simtools.model_parameters import MODEL_PARS
 from simtools.util import names
 from simtools.util.model import getTelescopeSize
-import simtools.util.config as cfg
+from simtools.model.model_parameters import MODEL_PARS
+import simtools.config as cfg
 import simtools.io_handler as io
 
 __all__ = ['TelescopeModel']
@@ -39,14 +39,14 @@ class TelescopeModel:
 
     Methods
     -------
-
-        yamlDBPath (str): path of the yaml database containing the model parameters.
-        version (str): MC model version (ex. prod4).
-        telescopeType (str): telescope type for the base set of parameters (ex. SST-2M-ASTRI,
-            LST, ...)
-        site (str): Paranal(south)/LaPalma(north).
-        filesLocation (str): location for created files (ex. simtel cfg file). If None,
-            pwd will used.
+    @classmethod
+    fromConfigFile(configFileName, telescopeType, site, label=None, filesLocation=None):
+        Create a TelescopeModel from a sim_telarray cfg file.
+    addParameters()
+    changeParameters()
+    removeParameters()
+    exportConfigFile()
+    getConfigFile()
 
     '''
     def __init__(
@@ -54,30 +54,31 @@ class TelescopeModel:
         telescopeType,
         site,
         version='default',
-        modelFilesLocations=None,
         label=None,
+        modelFilesLocations=None,
         filesLocation=None,
         readFromDB=True
     ):
         '''
-        TelescopeModel __init__.
+        TelescopeModel.
 
         Parameters
         ----------
-
-        Args:
-            telescopeType (str): telescope type for the base set of parameters (ex. SST-2M-ASTRI,
-                LST, ...)
-            site (str): Paranal(south)/LaPalma(north).
-            yamlDBPath (str): path of the yaml database containing the model parameters.
-            version (str): MC model version (ex. prod4).
-            label (str): instance label to avoid conflict between files.
-            filesLocation (str): location for created files (ex. simtel cfg file). If None,
-                pwd will used.
-            readFromDB (bool): if True, parameters will be read from DB at the initizalition.
-                It must be True most of the cases. It must be False specially if classmethod
-                fromConfigFile is used.
-
+        telescopeType: str
+            Telescope type for the base set of parameters (ex. SST-2M-ASTRI, LST, ...).
+        site: str
+            Paranal or LaPalma.
+        version: str, optional
+            Version of the model (ex. prod4) (Default = default).
+        label: str, optional
+            Instance label.
+        modelFilesLocation: str (or Path), optional
+            Location of the MC model files. If not given, it will be taken from the config.yml file.
+        filesLocation: str (or Path), optional
+            Parent location of the output files created by this class. If not given, it will be
+            taken from the config.yml file.
+        readFromDB: bool, optional
+            If True, parameters will be loaded from the DB at the init level. Default = True.
         '''
         logger.debug('Init TelescopeModel')
 
@@ -206,7 +207,7 @@ class TelescopeModel:
                 if pars[parNameIn]['Applicable']:
                     parName, parValue = self._validateParameter(
                         parNameIn,
-                        pars[parNameIn][self._version]
+                        pars[parNameIn][self.version]
                     )
                     self._parameters[parName] = parValue
 
@@ -230,7 +231,7 @@ class TelescopeModel:
                 allPars = yaml.load(stream, Loader=yaml.FullLoader)
                 for par in allPars:
                     if parName in par and self.site.lower() in par:
-                        return allPars[par][self._version]
+                        return allPars[par][self.version]
 
         for siteParName in ['atmospheric_transmission', 'altitude']:
             siteParValue = _getSiteParameter(self.site, siteParName)
@@ -336,7 +337,7 @@ class TelescopeModel:
         """ Export the config file used by sim_telarray. """
 
         # Setting file name and the location
-        configFileName = 'CTA-{}-{}-{}'.format(self._version, self.site, self.telescopeType)
+        configFileName = 'CTA-{}-{}-{}'.format(self.version, self.site, self.telescopeType)
         configFileName += '_{}'.format(self.label) if self.label is not None else ''
         configFileName += '.cfg'
 
@@ -348,7 +349,7 @@ class TelescopeModel:
             header = (
                 '%{}\n'.format(99 * '=')
                 + '% Configuration file for:\n'
-                + '% TelescopeType: {}\n'.format(self._telescopeType)
+                + '% TelescopeType: {}\n'.format(self.telescopeType)
                 + '% Site: {}\n'.format(self.site)
                 + '% Label: {}\n'.format(self.label)
                 + '%{}\n'.format(99 * '=')
@@ -378,7 +379,7 @@ class TelescopeModel:
             logging.error('mirrorNumber > numberOfMirrors')
 
         fileName = 'CTA-single-mirror-list-{}-{}-{}-mirror{}'.format(
-            self._version,
+            self.version,
             self.site,
             self.telescopeType,
             mirrorNumber

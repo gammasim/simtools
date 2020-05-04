@@ -1,9 +1,9 @@
 #!/usr/bin/python3
 
 import logging
-from astropy import units as u
+import astropy.units as u
 
-from simtools.util import config as cfg
+import simtools.config as cfg
 from simtools.util.general import collectArguments
 
 

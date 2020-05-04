@@ -4,11 +4,11 @@ import logging
 from pathlib import Path
 
 import numpy as np
-from astropy import units as u
+import astropy.units as u
 from astropy.io import ascii
 
 from simtools import visualize
-from simtools import io_handler as io
+import simtools.io_handler as io
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)

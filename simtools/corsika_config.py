@@ -2,15 +2,16 @@
 
 import logging
 import yaml
-from pathlib import Path
 import random
-from astropy import units
+from pathlib import Path
+
+import astropy.units as u
 
 from simtools.util import names
-from simtools.util import config as cfg
-from simtools import io_handler as io
-from simtools.array_model import getArray
-from simtools import corsika_parameters as cors_pars
+from simtools.model.array_model import getArray
+import simtools.config as cfg
+import simtools.io_handler as io
+import simtools.corsika_parameters as cors_pars
 
 
 __all__ = ['CorsikaConfig']
@@ -110,7 +111,7 @@ class CorsikaConfig:
 
                     try:
                         newValueArgs.append(v.to(u).value)
-                    except units.core.UnitConversionError:
+                    except u.core.UnitConversionError:
                         logging.error('Argument given with wrong unit: {}'.format(parName))
                         raise ArgumentWithWrongUnit()
                 valueArgs = newValueArgs
