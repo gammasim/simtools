@@ -6,7 +6,8 @@ MC Library for `CTA Observatory <www.cta-observatory.org>`_
 Authors:
 ---------
     
-* Raul R Prado (raul.prado@desy.de) 
+* Raul R Prado (raul.prado@desy.de)
+* Orel Gueta (orel.gueta@desy.de)
 
 
 TODO:
@@ -23,11 +24,17 @@ TODO:
 GUIDELINES:
 ------------
 
-* `Style Guide and Code Guidelines from ctapipe <https://cta-observatory.github.io/ctapipe/development/index.html>`_
+* Follow `Style Guide and Code Guidelines from ctapipe <https://cta-observatory.github.io/ctapipe/development/index.html>`_
 * Keep it clean!
 * Names must be validated. (See util/names.py and its documentation)
 * Sphinx for docs with docstrings in Google style (Should change to Numpy style, like ctapipe (?))
 * Pep8
+* Use the following namespaces consistently
+.. code-block:: python
+import simtools.config as cfg
+import simtools.io_handler as io
+
+
 
 DESIGN REMARKS:
 ----------------
