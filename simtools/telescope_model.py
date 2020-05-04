@@ -1,5 +1,7 @@
 '''
-Module containing TelescopeModel class
+Module containing TelescopeModel class.
+TelescopeModel is an representation of the MC model
+for single telescopes.
 
 Author: Raul R Prado
 '''
@@ -8,35 +10,14 @@ import logging
 import yaml
 from pathlib import Path
 
-from simtools.util import names
 from simtools.model_parameters import MODEL_PARS
-from simtools import io_handler as io
-from simtools.util import config as cfg
+from simtools.util import names
+import simtools.util.config as cfg
+import simtools.io_handler as io
 
 __all__ = ['TelescopeModel']
 
 logger = logging.getLogger(__name__)
-
-
-def whichTelescopeSize(telescopeType):
-    ''' Return the telescope size (SST, MST or LST) for a given telescopeType.
-
-    Args:
-        telescopeType (str): ex SST-2M-ASTRI, LST, ...
-
-    Returns:
-        str: 'SST', 'MST' or 'LST'
-
-    '''
-
-    if 'SST' in telescopeType:
-        return 'SST'
-    elif 'MST' in telescopeType:
-        return 'MST'
-    elif 'LST' in telescopeType:
-        return 'LST'
-    else:
-        logging.error('Invalid telescopeType {}'.format(telescopeType))
 
 
 class TelescopeModel:

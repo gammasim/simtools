@@ -27,6 +27,7 @@ class PSFImage:
 
     Load photon list from sim_telarray file and compute centroids, psf containers,
     effective area, as well as plot the image as a 2D histogram.
+    Internal units: photon positions in cm internally.
 
     Parameters
     ----------
