@@ -1,0 +1,4 @@
+rm telarray_rand.conf.used
+rm -r simtools-files
+rm data/test-plots/*
+rm *pdf
