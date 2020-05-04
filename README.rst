@@ -4,25 +4,13 @@ gammasim-tools
 Base library and tools for the Simulation System of `CTA Observatory <www.cta-observatory.org>`_
 
 Authors:
----------
+--------
     
 * Raul R Prado (raul.prado@desy.de)
 * Orel Gueta (orel.gueta@desy.de)
 
-
-TODO:
-------
-
-* Fix the readthedocs (or set up any other web page). The html is succesfully imported to readthedocs but the automodule options are missing.    
-* SimtelRunner: files (log, photon, star etc) names
-* SimtelRunner: method to obtain script
-* SimtelRunner: force flag
-* Clean and organize SimtelRunner
-* Corsika runner in SimtelRunner
-* Docs in CorsikaConfig related code
-
 STYLE GUIDELINES:
-------------
+-----------------
 
 * Follow `Style Guide and Code Guidelines from ctapipe <https://cta-observatory.github.io/ctapipe/development/index.html>`_
 * Keep it clean!
@@ -33,10 +21,9 @@ STYLE GUIDELINES:
 | import simtools.config as cfg
 | import simtools.io_handler as io
 
-* 
 
-DESIGN REMARKS:
-----------------
+DESIGN GUIDELINES:
+---------------
 
 * Names must be validated. (See util/names.py and its documentation)
 * Every functional class contains a 'label'. The label can be passed forward from lower level to higher level classes. In particular, label from TelescopeModel can be used in higher level classes.
