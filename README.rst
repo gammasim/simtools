@@ -1,7 +1,7 @@
 gammasim-tools
 ===========
 
-Base library and tools for the Simulation System of `CTA Observatory <www.cta-observatory.org>`_
+Core library and tools for the Simulation System of `CTA Observatory <www.cta-observatory.org>`_
 
 Authors:
 --------
