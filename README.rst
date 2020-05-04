@@ -30,10 +30,10 @@ GUIDELINES:
 * Sphinx for docs with docstrings in Google style (Should change to Numpy style, like ctapipe (?))
 * Pep8
 * Use the following namespaces consistently
-.. code-block:: python
-import simtools.config as cfg \n
+::import simtools.config as cfg
 import simtools.io_handler as io
 
+.. code-block:: python
 * Bla
 
 DESIGN REMARKS:
