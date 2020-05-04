@@ -1,11 +1,11 @@
 #!/usr/bin/python3
 
 import logging
-from astropy import units as u
+import astropy.units as u
 
-from simtools.util import config as cfg
+import simtools.config as cfg
 from simtools.simtel_runner import SimtelRunner
-from simtools.telescope_model import TelescopeModel
+from simtools.model.telescope_model import TelescopeModel
 
 logging.getLogger().setLevel(logging.DEBUG)
 

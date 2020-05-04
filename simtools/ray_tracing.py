@@ -15,16 +15,16 @@ from copy import copy
 from pathlib import Path
 
 import numpy as np
+import astropy.units as u
 from astropy.io import ascii
 from astropy.table import Table
-from astropy import units as u
 
-import simtools.util.config as cfg
+import simtools.config as cfg
 import simtools.io_handler as io
 from simtools.psf_analysis import PSFImage
 from simtools.util import names
 from simtools.util.model import computeTelescopeTransmission
-from simtools.telescope_model import TelescopeModel
+from simtools.model.telescope_model import TelescopeModel
 from simtools.simtel_runner import SimtelRunner
 from simtools.util.general import collectArguments, collectKwargs, setDefaultKwargs
 

@@ -11,7 +11,7 @@ import yaml
 from pathlib import Path
 
 from simtools.util import names
-from simtools import db_handler as db
+import simtools.db_handler as db
 
 __all__ = ['getArray', 'ArrayModel']
 

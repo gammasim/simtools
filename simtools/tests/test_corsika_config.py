@@ -1,10 +1,10 @@
 #!/usr/bin/python3
 
 import logging
-from astropy import units
+from astropy import units as u
 
+import simtools.config as cfg
 from simtools.corsika_config import CorsikaConfig
-from simtools.util import config as cfg
 
 logging.getLogger().setLevel(logging.DEBUG)
 
@@ -16,12 +16,12 @@ def test_general():
         nshow=100,
         nrun=10,
         wrong_par=200,
-        zenith=20 * units.deg,
-        viewcone=5 * units.deg,
-        erange=[0.01 * units.GeV, 10 * units.GeV],
+        zenith=20 * u.deg,
+        viewcone=5 * u.deg,
+        erange=[0.01 * u.GeV, 10 * u.GeV],
         eslope=2,
-        phi=0 * units.deg,
-        cscat=[10, 1500 * units.m, 0],
+        phi=0 * u.deg,
+        cscat=[10, 1500 * u.m, 0],
         primary='proton',
         label='test-corsika-config'
     )
@@ -32,12 +32,12 @@ def test_general():
         arrayName='1SST',
         nshow=1000,
         nrun=11,
-        zenith=[0 * units.deg, 60 * units.deg],
-        viewcone=[0 * units.deg, 10 * units.deg],
-        erange=[0.01 * units.TeV, 10 * units.TeV],
+        zenith=[0 * u.deg, 60 * u.deg],
+        viewcone=[0 * u.deg, 10 * u.deg],
+        erange=[0.01 * u.TeV, 10 * u.TeV],
         eslope=2,
-        phi=0 * units.deg,
-        cscat=[10, 1500 * units.m, 0],
+        phi=0 * u.deg,
+        cscat=[10, 1500 * u.m, 0],
         primary='proton',
         label='test-corsika-config'
     )
@@ -47,12 +47,12 @@ def test_general():
         site='LaPalma',
         arrayName='1MST',
         nshow=10000,
-        zenith=[0 * units.deg, 60 * units.deg],
-        viewcone=[0 * units.deg, 0 * units.deg],
-        erange=[0.01 * units.TeV, 10 * units.TeV],
+        zenith=[0 * u.deg, 60 * u.deg],
+        viewcone=[0 * u.deg, 0 * u.deg],
+        erange=[0.01 * u.TeV, 10 * u.TeV],
         eslope=2,
-        phi=0 * units.deg,
-        cscat=[10, 1500  * units.m, 0],
+        phi=0 * u.deg,
+        cscat=[10, 1500  * u.m, 0],
         primary='electron',
         label='test-corsika-config'
     )
@@ -68,12 +68,12 @@ def test_units():
         arrayName='4LST',
         nshow=100,
         nrun=10,
-        zenith=0.1 * units.rad,
-        viewcone=5 * units.deg,
-        erange=[0.01 * units.TeV, 10 * units.TeV],
+        zenith=0.1 * u.rad,
+        viewcone=5 * u.deg,
+        erange=[0.01 * u.TeV, 10 * u.TeV],
         eslope=2,
-        phi=0 * units.deg,
-        cscat=[10, 1500 * units.m, 0],
+        phi=0 * u.deg,
+        cscat=[10, 1500 * u.m, 0],
         primary='proton',
         label='test-corsika-config'
     )

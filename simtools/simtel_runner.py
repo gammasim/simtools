@@ -3,13 +3,14 @@
 import logging
 from pathlib import Path
 import os
-from astropy import units as u
+
+import astropy.units as u
 
 from simtools.util import names
-from simtools.util import config as cfg
-from simtools.telescope_model import TelescopeModel
+from simtools.model.telescope_model import TelescopeModel
 from simtools.util.general import collectArguments
-from simtools import io_handler as io
+import simtools.io_handler as io
+import simtools.config as cfg
 
 
 class SimtelRunner:

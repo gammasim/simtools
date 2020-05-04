@@ -2,7 +2,7 @@
 
 import logging
 
-from simtools.util import config as cfg
+import simtools.config as cfg
 
 logging.getLogger().setLevel(logging.DEBUG)
 
