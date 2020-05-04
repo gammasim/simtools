@@ -2,7 +2,8 @@
 
 import logging
 import copy
-from astropy import units as u
+
+import astropy.units as u
 
 __all__ = ['collectArguments', 'collectKwargs', 'setDefaultKwargs', 'sortArrays']
 

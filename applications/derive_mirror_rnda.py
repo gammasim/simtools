@@ -8,23 +8,24 @@
 
 import logging
 import matplotlib.pyplot as plt
-import numpy as np
+import argparse
 from copy import copy
 from pathlib import Path
+
+import numpy as np
 from astropy.io import ascii
 from astropy.table import Table
-import argparse
 
-from simtools.util import config as cfg
+import simtools.config as cfg
 from simtools.util.general import sortArrays
 from simtools.ray_tracing import RayTracing
-from simtools.telescope_model import TelescopeModel
+from simtools.model.telescope_model import TelescopeModel
 
 logger = logging.getLogger(__name__)
 logging.getLogger().setLevel(logging.DEBUG)
 
-cfg.setConfigFileName('config.yml')
-config = cfg.loadConfig()
+# cfg.setConfigFileName('config.yml')
+# config = cfg.loadConfig()
 
 plt.rc('font', family='serif', size=20)
 plt.rc('xtick', labelsize=20)
@@ -124,8 +125,6 @@ if __name__ == '__main__':
 
     label = 'derive_rnda'
     tel = TelescopeModel(
-        yamlDBPath=config['yamlDBPath'],
-        filesLocation=config['outputLocation'],
         telescopeType=args.tel_type,
         site=args.site,
         version=args.model_version,
@@ -140,8 +139,6 @@ if __name__ == '__main__':
     def run(rnda, plot=False):
         tel.changeParameters(mirror_reflection_random_angle=str(rnda))
         ray = RayTracing(
-            simtelSourcePath=config['simtelPath'],
-            filesLocation=config['outputLocation'],
             telescopeModel=tel,
             singleMirrorMode=True,
             mirrorNumbers=list(range(1, 10)) if args.test else 'all',

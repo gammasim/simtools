@@ -6,7 +6,7 @@ import logging
 import datetime
 from pathlib import Path
 
-from simtools.util import config as cfg
+import simtools.config as cfg
 
 __all__ = ['getModelOutputDirectory', 'getRayTracingOutputDirectory', 'getCorsikaOutputDirectory']
 
