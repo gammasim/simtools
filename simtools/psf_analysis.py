@@ -409,7 +409,7 @@ class PSFImage:
         for rad in radiusAll:
             intensity.append(self._sumPhotonsInRadius(rad) / self._numberOfDetectedPhotons)
         dType = {
-            'names': ('radius', 'intensity'),
+            'names': ('Radius [cm]', 'Relative intensity'),
             'formats': ('f8', 'f8')
         }
         return np.core.records.fromarrays(np.c_[radiusAll, intensity].T, dtype=dType)
@@ -417,7 +417,7 @@ class PSFImage:
     def plotCumulative(self, **kwargs):
         ''' Plot cumulative data (intensity vs radius). '''
         data = self.getCumulativeData()
-        plt.plot(data['radius'], data['intensity'], **kwargs)
+        plt.plot(data['Radius [cm]'], data['Relative intensity'], **kwargs)
 
 
 # end of PSFImage
