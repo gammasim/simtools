@@ -22,7 +22,7 @@ STYLE GUIDELINES:
 | import simtools.io_handler as io
 
 
-DESIGN GUIDELINES:
+DESIGN GUIDELINES (old, to be rewritten):
 ---------------
 
 * Names must be validated. (See util/names.py and its documentation)
