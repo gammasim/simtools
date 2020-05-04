@@ -1,4 +1,6 @@
-rm telarray_rand.conf.used
-rm -r simtools-files
-rm data/test-plots/*
-rm *pdf
+#!/bin/bash
+
+rm telarray_rand.conf.used > /dev/null 2>&1
+rm -r simtools-files  > /dev/null 2>&1
+rm data/test-plots/*  > /dev/null 2>&1
+rm *pdf  > /dev/null 2>&1
