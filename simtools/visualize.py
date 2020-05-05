@@ -286,16 +286,16 @@ def plotTable(table, yTitle, **kwargs):
 
 def plotHist2D(data, **kwargs):
     '''
-    Produce a 2 dimentional plot of the data in "data", 
+    Produce a 2 dimentional plot of the data in "data",
     where "data" is assumed to be a structured array.
     The structured array has two columns, the first is the x-axis and the second the y-axis.
     The titles of the columns are the axes titles.
     The labels of each data set are given in the dictionary keys and will be put in a legend.
-    The kwargs can (and should) contain all options for plotting like 
+    The kwargs can (and should) contain all options for plotting like
     bins, weights, normalization, etc.
     Those are transfered as is to the usual hist2d of matplotlib.
     The function returns a pyplot instance in plt.
-    
+
     Additional options, such as plot title, plot legend, etc.
     are given in kwargs (list will be added to doc as function evolves).
     Any option that can be changed after plotting (e.g., axes limits, log scale, etc.) should be
@@ -317,7 +317,7 @@ def plotHist2D(data, **kwargs):
 
     # Set default style since the usual options do not affect 2D plots (for now).
     setStyle()
-    
+
     gs = gridspec.GridSpec(1, 1)
     plt.figure(figsize=(8, 6))
 
