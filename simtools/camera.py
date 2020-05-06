@@ -10,6 +10,22 @@ logger.setLevel(logging.DEBUG)
 class Camera:
 
     def readPixelList(self, cameraConfigFile):
+        '''
+        Read the pixel layout from the camera config file, assumed to be in a sim_telarray format.
+
+        Parameters
+        ----------
+        cameraConfigFile: string
+            The sim_telarray file name.
+
+        Returns
+        -------
+        A dictionary with the pixel positions, the camera rotation angle,
+        the pixel shape, the pixel diameter, the pixel IDs and their "on" status.
+        The pixel shape can be hexagonal (denoted as 1 or 3) or a square (denoted as 2).
+        The hexagonal shapes differ in their orientation, where those denoted as 3 are rotated
+        clockwise by 30 degrees with respect to those denoted as 1.
+        '''
 
         datFile = open(cameraConfigFile, 'r')
         pixels = dict()
@@ -46,20 +62,53 @@ class Camera:
 
         return pixels
 
-    def plotPixelLayout(self, telescopeType, pixels, cameraInSkyCoor=False):
+    def rotatePixels(self, telescopeType, pixels):
+        '''
+        Rotate the pixels according to the rotation angle given in pixels['rotateAngle'].
+        Additional rotation is added to get to the camera view of an observer facing the camera.
+        The angle for the axes rotation depends on the coordinate system in which the original
+        data was provided.
+        This rotation angle is currently saved in the const dictionary CAMERA_ROTATE_ANGLE.
+        In the case of dual mirror telescopes, the axis is flipped in order to keep the same
+        axis definition as for single mirror telescopes.
+        The list of dual mirror telescopes is given in the const dictionary TWO_MIRROR_TELS.
 
-        fig, ax = plt.subplots()
+        Parameters
+        ----------
+        telescopeType: string
+            As provided by the telescope model method "telescopeModel".
+        pixels: dictionary
+            The dictionary produced by the readPixelList method of this class
+
+        Returns
+        -------
+        The pixels dictionary with rotated pixels.
+        The pixels orientation for plotting is added to the dictionary in "pixels['orientation']".
+        This orientation is determined by the funnel shape (see the readPixelList doc for details).
+        '''
 
         if telescopeType not in TWO_MIRROR_TELS:
-            if not cameraInSkyCoor:
-                pixels['y'] = [(-1)*yVal for yVal in pixels['y']]
+            pixels['y'] = [(-1)*yVal for yVal in pixels['y']]
 
-        originalRotateAngle = rotateAngle = pixels['rotateAngle']
+        rotateAngle = pixels['rotateAngle']  # So not to change the original angle
         rotateAngle += np.deg2rad(CAMERA_ROTATE_ANGLE[telescopeType])
         if rotateAngle != 0:
-            for i_pix, xNow, yNow in enumerate(zip(pixels['x'], pixels['y'])):
-                pixels['x'][i_pix] = xNow*np.cos(rotateAngle) - yNow*np.sin(rotateAngle)
-                pixels['y'][i_pix] = xNow*np.sin(rotateAngle) + yNow*np.cos(rotateAngle)
+            for i_pix, x_pixel, y_pixel in enumerate(zip(pixels['x'], pixels['y'])):
+                pixels['x'][i_pix] = x_pixel*np.cos(rotateAngle) - y_pixel*np.sin(rotateAngle)
+                pixels['y'][i_pix] = x_pixel*np.sin(rotateAngle) + y_pixel*np.cos(rotateAngle)
+
+        pixels['orientation'] = 0
+        if pixels['funnelShape'] == 1 or pixels['funnelShape'] == 3:
+            if pixels['funnelShape'] == 3:
+                pixels['orientation'] = 30
+            if rotateAngle > 0:
+                pixels['orientation'] += np.rad2deg(rotateAngle)
+
+        return pixels
+
+    def plotPixelLayout(self, telescopeType, pixels):
+
+        pixels = self.rotatePixels(telescopeType, pixels)
 
         # Find a list of neighbours for each pixel
         if pixels['funnelShape'] == 1 or pixels['funnelShape'] == 3:
@@ -80,25 +129,19 @@ class Camera:
                 0.2*pixels['diameter']
             )
 
-        # TODO Reached here, before moving on, move the rotation to its own method.
-
         pixels, edgePixels, offPixels = list(), list(), list()
         edgePixelIndices = list()
         plt.gcf().set_size_inches(8, 8)
 
-        pixOrientAngle = 0
-        if pixels['funnelShape'] == 1 or pixels['funnelShape'] == 3:
-            if pixels['funnelShape'] == 3:
-                pixOrientAngle = 30
-            if rotateAngle > 0:
-                pixOrientAngle += np.rad2deg(rotateAngle)
-
-        for i_pix, pixel in enumerate(xyPixPos):
+        for i_pix, x_pixel, y_pixel in enumerate(zip(pixels['x'], pixels['y'])):
             if pixels['funnelShape'] == 1 or pixels['funnelShape'] == 3:
-                hexagon = mpatches.RegularPolygon((pixel[0], pixel[1]), numVertices=6,
-                                                  radius=pixelDiameter/np.sqrt(3),
-                                                  orientation=np.deg2rad(pixOrientAngle))
-                if pixOn[i_pix]:
+                hexagon = mpatches.RegularPolygon(
+                    (x_pixel, y_pixel),
+                    numVertices=6,
+                    radius=pixels['diameter']/np.sqrt(3),
+                    orientation=np.deg2rad(pixels['orientation'])
+                )
+                if pixels['pixOn'][i_pix]:
                     if len(neighbours[i_pix]) < 6:
                         edgePixelIndices.append(i_pix)
                         edgePixels.append(hexagon)
@@ -107,10 +150,12 @@ class Camera:
                 else:
                     offPixels.append(hexagon)
             elif pixels['funnelShape'] == 2:
-                square = mpatches.Rectangle((pixel[0] - pixelDiameter/2.,
-                                             pixel[1] - pixelDiameter/2.),
-                                            width=pixelDiameter, height=pixelDiameter)
-                if pixOn[i_pix]:
+                square = mpatches.Rectangle(
+                    (x_pixel - pixels['diameter']/2., y_pixel - pixels['diameter']/2.),
+                    width=pixels['diameter'],
+                    height=pixels['diameter']
+                )
+                if pixels['pixOn'][i_pix]:
                     if len(neighbours[i_pix]) < 4:
                         edgePixelIndices.append(i_pix)
                         edgePixels.append(square)
@@ -119,16 +164,22 @@ class Camera:
                 else:
                     offPixels.append(square)
 
-            if self.printPixelID and pixID[i_pix] < 51:
+            if pixels['pixID'][i_pix] < 51:
                 fontSize = 4
                 if telNow == 'SCT':
                     fontSize = 2
-                plt.text(pixel[0],
-                         pixel[1],
-                         pixID[i_pix],
-                         horizontalalignment='center',
-                         verticalalignment='center',
-                         fontsize=fontSize)
+                plt.text(
+                    x_pixel,
+                    y_pixel,
+                    pixels['pixID'][i_pix],
+                    horizontalalignment='center',
+                    verticalalignment='center',
+                    fontsize=fontSize
+                )
+
+        # TODO Reached here.
+
+        _, ax = plt.subplots()
 
         ax.add_collection(PatchCollection(pixels, facecolor='none',
                                           edgecolor='black', linewidth=0.2))
@@ -166,7 +217,7 @@ class Camera:
                      fontsize=15, y=1.02)
         plt.tick_params(axis='both', which='major', labelsize=15)
 
-        self.plotAxesDef(telNow, plt, originalRotateAngle)
+        self.plotAxesDef(telNow, plt, pixels['rotateAngle'])
         ax.text(0.02, 0.02, 'For an observer facing the camera',
                 transform=ax.transAxes, color='black', fontsize=12)
 
