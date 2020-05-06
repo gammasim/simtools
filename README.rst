@@ -9,19 +9,18 @@ AUTHORS:
 * Raul R Prado (raul.prado@desy.de)
 * Orel Gueta (orel.gueta@desy.de)
 
+
 INSTALLATION:
 -------------
 
 Create (only once) and activate your conda enviroment:
 
-.. code-block:: shell
-| conda env create -f environment.yml
-| conda activate gammasim-tools-dev
+conda env create -f environment.yml
+conda activate gammasim-tools-dev
 
 While a proper conda installation has not been setup, you can add simtools to your python path by
 
-.. code-block:: shell
-| source set_simtools.sh
+source set_simtools.sh
  
 
 STYLE GUIDELINES:
