@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+''' General utilities '''
 
 import logging
 import copy
@@ -6,6 +6,8 @@ import copy
 import astropy.units as u
 
 __all__ = ['collectArguments', 'collectKwargs', 'setDefaultKwargs', 'sortArrays']
+
+logger = logging.getLogger(__name__)
 
 
 class ArgumentWithWrongUnit(Exception):
@@ -17,6 +19,16 @@ class ArgumentCannotBeCollected(Exception):
 
 
 def unitsAreConvertible(quantity_1, quantity_2):
+    '''
+    Parameters
+    ----------
+    quantity_1: astropy.Quantity
+    quantity_2: astropy.Quantity
+
+    Returns
+    -------
+    Bool
+    '''
     try:
         quantity_1.to(quantity_2)
         return True
@@ -25,6 +37,16 @@ def unitsAreConvertible(quantity_1, quantity_2):
 
 
 def unitIsValid(quantity, unit):
+    '''
+    Parameters
+    ----------
+    quantity: astropy.Quantity
+    unit: astropy.unit
+
+    Returns
+    -------
+    Bool
+    '''
     if unit is None and not isinstance(1 * quantity, u.quantity.Quantity):
         return True
     else:
@@ -32,16 +54,56 @@ def unitIsValid(quantity, unit):
 
 
 def convertUnit(quantity, unit):
+    '''
+    Parameters
+    ----------
+    quantity: astropy.Quantity
+    unit: astropy.unit
+
+    Returns
+    -------
+    astropy.quantity
+    '''
     return quantity if unit is None else quantity.to(unit).value
 
 
 def collectArguments(obj, args, allInputs, **kwargs):
+    '''
+    Collect certain arguments and validate them.
+    To be used during initialization of classes, where kwargs with physical meaning and units are
+    expected.
 
+    Ex: In ray_tracing class,
+        collectArguments(
+            self,
+            args=['zenithAngle', 'offAxisAngle', 'sourceDistance'],
+            allInputs=self.ALL_INPUTS,
+            **kwargs
+        )
+    where,
+        ALL_INPUTS = {
+            'zenithAngle': {'default': 20, 'unit': u.deg},
+            'offAxisAngle': {'default': [0, 1.5, 3.0], 'unit': u.deg, 'isList': True},
+            'sourceDistance': {'default': 10, 'unit': u.km},
+            'mirrorNumbers': {'default': [1], 'unit': None, 'isList': True}
+        }
+
+
+    Parameters
+    ----------
+    obj: class instance (self)
+    args: list of str
+        List of names of the parameters to be collected.
+    allInputs: dict
+        Dict with info about all the expected inputs. See example.
+    **kwargs:
+        kwargs from the input arguments.
+    '''
     def processSingleArg(arg, inArgName, argG, argD):
         if unitIsValid(argG, argD['unit']):
             obj.__dict__[inArgName] = convertUnit(argG, argD['unit'])
         else:
-            logging.error('Argument {} given with wrong unit'.format(arg))
+            logger.error('Argument {} given with wrong unit'.format(arg))
             raise ArgumentWithWrongUnit()
 
     def processListArg(arg, inArgName, argG, argD):
@@ -55,7 +117,7 @@ def collectArguments(obj, args, allInputs, **kwargs):
             if unitIsValid(aa, argD['unit']):
                 outArg.append(convertUnit(aa, argD['unit']))
             else:
-                logging.error('Argument {} given with wrong unit'.format(arg))
+                logger.error('Argument {} given with wrong unit'.format(arg))
                 raise ArgumentWithWrongUnit()
         obj.__dict__[inArgName] = outArg
 
@@ -65,7 +127,7 @@ def collectArguments(obj, args, allInputs, **kwargs):
 
         if arg not in allInputs.keys():
             msg = 'Arg {} cannot be collected because it is not in allInputs'.format(arg)
-            logging.error(msg)
+            logger.error(msg)
             raise ArgumentCannotBeCollected(msg)
 
         if arg in kwargs.keys():
@@ -79,11 +141,23 @@ def collectArguments(obj, args, allInputs, **kwargs):
         elif 'default' in argData:
             obj.__dict__[inArgName] = argData['default']
         else:
-            logging.warning('Argument (without default) {} was not given'.format(arg))
+            logger.warning('Argument (without default) {} was not given'.format(arg))
     return
 
 
 def collectKwargs(label, inKwargs):
+    '''
+    Collect kwargs of the type label_* and return them as a dict.
+
+    Parameters
+    ----------
+    label: str
+    inKwargs: dict
+
+    Returns
+    -------
+    Dict with the collected kwargs.
+    '''
     outKwargs = dict()
     for key, value in inKwargs.items():
         if label + '_' in key:
@@ -92,6 +166,20 @@ def collectKwargs(label, inKwargs):
 
 
 def setDefaultKwargs(inKwargs, **kwargs):
+    '''
+    Fill in a dict with a set of default kwargs and return it.
+
+    Parameters
+    ----------
+    inKwargs: dict
+        Input dict to be filled in with the default kwargs.
+    **kwargs:
+        Default kwargs to be set.
+
+    Returns
+    -------
+    Dict containing the default kwargs.
+    '''
     for par, value in kwargs.items():
         if par not in inKwargs.keys():
             inKwargs[par] = value

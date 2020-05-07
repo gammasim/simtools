@@ -39,14 +39,20 @@ class TelescopeModel:
     Methods
     -------
     @classmethod
-    fromConfigFile(configFileName, telescopeType, site, label=None, filesLocation=None):
+    fromConfigFile(configFileName, telescopeType, site, label=None, filesLocation=None)
         Create a TelescopeModel from a sim_telarray cfg file.
-    addParameters()
-    changeParameters()
-    removeParameters()
+    getParameter(parName):
+        Get an existing parameter of the model.
+    addParameters(**kwargs)
+        Add new parameters to the model.
+    changeParameters(**kwargs)
+        Change the value of existing parameters to the model.
+    removeParameters(**args)
+        Remove parameters from the model.
     exportConfigFile()
+        Export config file for sim_telarray.
     getConfigFile()
-
+        Get the path to the config file for sim_telarray.
     '''
     def __init__(
         self,

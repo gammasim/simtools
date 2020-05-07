@@ -1,26 +1,63 @@
-#!/usr/bin/python3
+''' Utilities to deal with names validation and file names. '''
 
 import logging
 
-
-__all__ = ['validateName', 'isValidName', 'rayTracingFileName']
-
+__all__ = [
+    'validateName',
+    'isValidName',
+    'rayTracingFileName',
+    'simtelConfigFileName',
+    'simtelSingleMirrorListFileName',
+    'corsikaConfigFileName',
+    'corsikaOutputFileName'
+]
 
 logger = logging.getLogger(__name__)
 
 
 def validateName(name, allNames):
+    '''
+    Validate a name given the allNames options. For each key in allNames, a list of options is
+    given. If name is in this list, the key name is returned.
+
+    Raises
+    ------
+    ValueError
+        If name is not valid.
+
+    Parameters
+    ----------
+    name: str
+    allNames: dict
+
+    Returns
+    -------
+    str
+        Validated name.
+    '''
     if not isValidName(name, allNames):
-        logger.error('Invalid name {}'.format(name))
-        raise ValueError('Invalid name {}'.format(name))
-    for mainName in allNames.keys():
-        if name.lower() in allNames[mainName] + [mainName.lower()]:
+        msg = 'Invalid name {}'.format(name)
+        logger.error(msg)
+        raise ValueError(msg)
+    for mainName, listOfNames in allNames.items():
+        if name.lower() in listOfNames + [mainName.lower()]:
             if name != mainName:
                 logger.debug('Correcting name {} -> {}'.format(name, mainName))
             return mainName
+    return None
 
 
 def isValidName(name, allNames):
+    '''
+    Parameters
+    ----------
+    name: str
+    allNames: dict
+
+    Returns
+    -------
+    bool
+    '''
     if not isinstance(name, str):
         return False
     for mainName in allNames.keys():
@@ -71,6 +108,25 @@ allArrayNames = {
 
 
 def simtelConfigFileName(version, site, telescopeType, label):
+    '''
+    sim_telarray config file name.
+
+    Parameters
+    ----------
+    version: str
+        Version of the model.
+    site: str
+        Paranal or LaPalma
+    telescopeType: str
+        LST, MST-FlashCam, ...
+    label: str
+        Instance label.
+
+    Returns
+    -------
+    str
+        File name.
+    '''
     name = 'CTA-{}-{}-{}'.format(version, site, telescopeType)
     name += '_{}'.format(label) if label is not None else ''
     name += '.cfg'
@@ -78,6 +134,27 @@ def simtelConfigFileName(version, site, telescopeType, label):
 
 
 def simtelSingleMirrorListFileName(version, site, telescopeType, mirrorNumber, label):
+    '''
+    sim_telarray mirror list file with a single mirror.
+
+    Parameters
+    ----------
+    version: str
+        Version of the model.
+    site: str
+        Paranal or LaPalma
+    telescopeType: str
+        LST, MST-FlashCam, ...
+    mirrorNumber: int
+        Mirror number.
+    label: str
+        Instance label.
+
+    Returns
+    -------
+    str
+        File name.
+    '''
     name = 'CTA-single-mirror-list-{}-{}-{}'.format(version, site, telescopeType)
     name += '-mirror{}'.format(mirrorNumber)
     name += '_{}'.format(label) if label is not None else ''
@@ -94,7 +171,31 @@ def rayTracingFileName(
     label,
     base
 ):
-    ''' base has to be log, stars or photons'''
+    '''
+    File name for files required at the RayTracing class.
+
+    Parameters
+    ----------
+    telescopeType: str
+        LST, MST-FlashCam, ...
+    sourceDistance: float
+        Source distance (km).
+    zenithAngle: float
+        Zenith angle (deg).
+    offAxisAngle: float
+        Off-axis angle (deg).
+    mirrorNumber: int
+        Mirror number. None if not single mirror case.
+    label: str
+        Instance label.
+    base: str
+        Photons, stars or log.
+
+    Returns
+    -------
+    str
+        File name.
+    '''
     name = '{}-{}-d{:.1f}-za{:.1f}-off{:.3f}'.format(
         base,
         telescopeType,
@@ -109,6 +210,25 @@ def rayTracingFileName(
 
 
 def rayTracingResultsFileName(telescopeType, sourceDistance, zenithAngle, label):
+    '''
+    Ray tracing results file name.
+
+    Parameters
+    ----------
+    telescopeType: str
+        LST, MST-FlashCam, ...
+    sourceDistance: float
+        Source distance (km).
+    zenithAngle: float
+        Zenith angle (deg).
+    label: str
+        Instance label.
+
+    Returns
+    -------
+    str
+        File name.
+    '''
     name = 'ray-tracing-{}-d{:.1f}-za{:.1f}'.format(telescopeType, sourceDistance, zenithAngle)
     name += '_{}'.format(label) if label is not None else ''
     name += '.cvs'
@@ -116,19 +236,66 @@ def rayTracingResultsFileName(telescopeType, sourceDistance, zenithAngle, label)
 
 
 def corsikaConfigFileName(arrayName, site, zenith, viewCone, label=None):
-    def isDifuse(viewCone):
-        return viewCone[0] != 0 or viewCone[1] != 0
+    '''
+    Corsika config file name.
 
-    name = 'corsika-config-{}-{}-za{:d}-{:d}'.format(arrayName, site, int(zenith[0]), int(zenith[1]))
-    name += '-cone{:d}-{:d}'.format(int(viewCone[0]), int(viewCone[1])) if isDifuse(viewCone) else ''
+    Parameters
+    ----------
+    arrayName: str
+        Array name.
+    site: str
+        Paranal or LaPalma.
+    zenith: float
+        Zenith angle (deg).
+    viewCone: list of float
+        View cone limits (len = 2).
+    label: str
+        Instance label.
+
+    Returns
+    -------
+    str
+        File name.
+    '''
+    isDiffuse = (viewCone[0] != 0 or viewCone[1] != 0)
+
+    name = 'corsika-config-{}-{}'.format(arrayName, site)
+    name += '-za{:d}-{:d}'.format(int(zenith[0]), int(zenith[1]))
+    name += '-cone{:d}-{:d}'.format(int(viewCone[0]), int(viewCone[1])) if isDiffuse else ''
     name += '_{}'.format(label) if label is not None else ''
     name += '.txt'
     return name
 
 
 def corsikaOutputFileName(arrayName, site, zenith, viewCone, run, label=None):
-    def isDifuse(viewCone):
-        return viewCone[0] != 0 or viewCone[1] != 0
+    '''
+    Corsika output file name.
+
+    Warning
+    -------
+        zst extension is hardcoded here.
+
+    Parameters
+    ----------
+    arrayName: str
+        Array name.
+    site: str
+        Paranal or LaPalma.
+    zenith: float
+        Zenith angle (deg).
+    viewCone: list of float
+        View cone limits (len = 2).
+    run: int
+        Run number.
+    label: str
+        Instance label.
+
+    Returns
+    -------
+    str
+        File name.
+    '''
+    isDiffuse = (viewCone[0] != 0 or viewCone[1] != 0)
 
     name = 'corsika-run{}-{}-{}-za{:d}-{:d}'.format(
         run,
@@ -137,7 +304,7 @@ def corsikaOutputFileName(arrayName, site, zenith, viewCone, run, label=None):
         int(zenith[0]),
         int(zenith[1])
     )
-    name += '-cone{:d}-{:d}'.format(int(viewCone[0]), int(viewCone[1])) if isDifuse(viewCone) else ''
+    name += '-cone{:d}-{:d}'.format(int(viewCone[0]), int(viewCone[1])) if isDiffuse else ''
     name += '_{}'.format(label) if label is not None else ''
     name += '.corsika.zst'
     return name
