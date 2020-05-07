@@ -192,7 +192,7 @@ def test_integral_curve():
     show = True
 
     tel = TelescopeModel(
-        telescopeType='lst',
+        telescopeType='mst-flashcam',
         site=site,
         version=version,
         label=label
@@ -222,8 +222,8 @@ def test_integral_curve():
 if __name__ == '__main__':
 
     # test_ssts()
-    # test_rx()
+    test_rx()
     # test_single_mirror()
-    test_plot_image()
+    # test_plot_image()
     # test_integral_curve()
     pass
