@@ -7,11 +7,11 @@ from pathlib import Path
 
 import astropy.units as u
 
-from simtools.util import names
-from simtools.model.array_model import getArray
 import simtools.config as cfg
 import simtools.io_handler as io
 import simtools.corsika_parameters as cors_pars
+from simtools.util import names
+from simtools.model.array_model import getArray
 
 
 __all__ = ['CorsikaConfig']
