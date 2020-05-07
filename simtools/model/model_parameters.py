@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+''' Parameters of telescope model. '''
 
 __all__ = ['MODEL_PARS']
 
