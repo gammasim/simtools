@@ -3,11 +3,26 @@ gammasim-tools
 
 Core library and tools for the Simulation System of `CTA Observatory <www.cta-observatory.org>`_
 
-Authors:
+
+AUTHORS:
 --------
     
 * Raul R Prado (raul.prado@desy.de)
 * Orel Gueta (orel.gueta@desy.de)
+
+
+INSTALLATION:
+-------------
+
+Create (only once) and activate your conda enviroment:
+
+conda env create -f environment.yml
+conda activate gammasim-tools-dev
+
+While a proper conda installation has not been setup, you can add simtools to your python path by
+
+source set_simtools.sh
+ 
 
 STYLE GUIDELINES:
 -----------------
