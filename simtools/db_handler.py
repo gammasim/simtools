@@ -1,8 +1,4 @@
-<<<<<<< HEAD
 ''' Module to handle interaction with DB. '''
-=======
-''' Module to handle interactions with DB '''
->>>>>>> master
 
 import logging
 import datetime
@@ -14,11 +10,7 @@ __all__ = ['getArrayDB']
 
 def getArrayDB(databaseLocation):
     '''
-<<<<<<< HEAD
-    Get array db as a dict.
-=======
     Get array db info as a dict.
->>>>>>> master
 
     Parameters
     ----------
