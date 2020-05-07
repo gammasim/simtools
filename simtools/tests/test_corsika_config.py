@@ -52,7 +52,7 @@ def test_general():
         erange=[0.01 * u.TeV, 10 * u.TeV],
         eslope=2,
         phi=0 * u.deg,
-        cscat=[10, 1500  * u.m, 0],
+        cscat=[10, 1500 * u.m, 0],
         primary='electron',
         label='test-corsika-config'
     )
@@ -82,6 +82,6 @@ def test_units():
 
 if __name__ == '__main__':
 
-    # test_general()
-    # test_units()
+    test_general()
+    test_units()
     pass
