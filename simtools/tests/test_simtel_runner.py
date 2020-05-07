@@ -3,11 +3,12 @@
 import logging
 import astropy.units as u
 
-import simtools.config as cfg
 from simtools.simtel_runner import SimtelRunner
 from simtools.model.telescope_model import TelescopeModel
+import simtools.config as cfg
 
-logging.getLogger().setLevel(logging.DEBUG)
+logger = logging.getLogger()
+logger.setLevel(logging.DEBUG)
 
 
 def test_ray_tracing_mode():
@@ -26,7 +27,7 @@ def test_ray_tracing_mode():
         sourceDistance=12 * u.km
     )
 
-    logging.info(simtel)
+    logger.info(simtel)
     # simtel.run(test=True, force=True)
 
 

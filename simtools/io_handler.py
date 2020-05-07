@@ -1,6 +1,4 @@
-#!/usr/bin/python3
-
-""" io_handler module """
+''' Module to handle input and output conventions. '''
 
 import logging
 import datetime
@@ -8,43 +6,116 @@ from pathlib import Path
 
 import simtools.config as cfg
 
-__all__ = ['getModelOutputDirectory', 'getRayTracingOutputDirectory', 'getCorsikaOutputDirectory']
+__all__ = [
+    'getModelOutputDirectory',
+    'getRayTracingOutputDirectory',
+    'getCorsikaOutputDirectory',
+    'getTestDataFile',
+    'getTestPlotFile'
+]
 
 
-def getOutputDirectory(filesLocation, label, mode):
-    """ Return the path of the output directory.
+def _getOutputDirectory(filesLocation, label, mode):
+    '''
+    Get main output directory for a generic mode
 
-    Args:
-        filesLocation (Path)
+    Parameters
+    ----------
+    filesLocation: str, or Path
+        Main location of the output files.
+    label: str
+        Instance label.
 
-        label (str)
-
-    Returns:
-        str: output Path
-
-    """
-
+    Returns
+    -------
+    Path
+    '''
     today = datetime.date.today()
     labelDir = label if label is not None else 'd-' + str(today)
-
     return Path(filesLocation).joinpath('simtools-files').joinpath(labelDir).joinpath(mode)
 
 
 def getModelOutputDirectory(filesLocation, label):
-    return getOutputDirectory(filesLocation, label, 'model')
+    '''
+    Get output directory for model related files.
+
+    Parameters
+    ----------
+    filesLocation: str, or Path
+        Main location of the output files.
+    label: str
+        Instance label.
+
+    Returns
+    -------
+    Path
+    '''
+    return _getOutputDirectory(filesLocation, label, 'model')
 
 
 def getRayTracingOutputDirectory(filesLocation, label):
-    return getOutputDirectory(filesLocation, label, 'ray-tracing')
+    '''
+    Get output directory for ray tracing related files.
+
+    Parameters
+    ----------
+    filesLocation: str, or Path
+        Main location of the output files.
+    label: str
+        Instance label.
+
+    Returns
+    -------
+    Path
+    '''
+    return _getOutputDirectory(filesLocation, label, 'ray-tracing')
 
 
 def getCorsikaOutputDirectory(filesLocation, label):
-    return getOutputDirectory(filesLocation, label, 'corsika')
+    '''
+    Get output directory for corsika related files.
+
+    Parameters
+    ----------
+    filesLocation: str, or Path
+        Main location of the output files.
+    label: str
+        Instance label.
+
+    Returns
+    -------
+    Path
+    '''
+    return _getOutputDirectory(filesLocation, label, 'corsika')
 
 
 def getTestDataFile(fileName):
+    '''
+    Get path of a test file, using the  testDataLocation taken from the config file.
+
+    Parameters
+    ----------
+    filesName: str
+        File name
+
+    Returns
+    -------
+    Path
+    '''
     return Path(cfg.get('testDataLocation')).joinpath('test-data').joinpath(fileName)
 
 
 def getTestPlotFile(fileName):
+    '''
+    Get path of a test plot file, using the  testDataLocation taken from the config file.
+
+    Parameters
+    ----------
+    filesName: str
+        File name
+
+    Returns
+    -------
+    Path
+    '''
     return Path(cfg.get('testDataLocation')).joinpath('test-plots').joinpath(fileName)
