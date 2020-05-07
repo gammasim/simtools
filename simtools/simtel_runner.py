@@ -204,7 +204,7 @@ class SimtelRunner:
 
     def _shallRun(self):
         ''' Tells if simulations should be run again based on the existence of output files. '''
-        if self.isRayTracingMode():
+        if self._isRayTracingMode():
             photonsFileName = names.rayTracingFileName(
                 self._telescopeModel.telescopeType,
                 self._sourceDistance,
@@ -245,7 +245,7 @@ class SimtelRunner:
                 if file.exists():
                     file.unlink()
                 # Defining the file name variable as an class atribute.
-                self.__dict__['_' + base + 'FileName'] = file
+                self.__dict__['_' + baseName + 'FileName'] = file
 
             # Adding header to photon list file.
             with self._photonsFileName.open('w') as file:
@@ -295,7 +295,7 @@ class SimtelRunner:
         command += _configOption('maximum_telescopes', '1')
         command += _configOption('show', 'all')
         command += _configOption('camera_filter', 'none')
-        if self._isSingleMirrorode():
+        if self._isSingleMirrorMode():
             command += _configOption('focus_offset', 'all:0.')
             command += _configOption('camera_config_file', 'single_pixel_camera.dat')
             command += _configOption('camera_pixels', '1')
