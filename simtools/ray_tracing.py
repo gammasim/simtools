@@ -1,12 +1,11 @@
 ''' Ray Tracing simulations and analysis. '''
 
 import logging
-import os
 import subprocess
-import math
 import matplotlib.pyplot as plt
 from copy import copy
 from pathlib import Path
+from math import pi, tan
 
 import numpy as np
 import astropy.units as u
@@ -24,8 +23,18 @@ from simtools.util.general import collectArguments, collectKwargs, setDefaultKwa
 
 __all__ = ['RayTracing']
 
+logger = logging.getLogger(__name__)
+
 
 class RayTracing:
+    '''
+
+    Methods
+    -------
+    simulate()
+    analyse()
+    exportResults()
+    '''
     ALL_INPUTS = {
         'zenithAngle': {'default': 20, 'unit': u.deg},
         'offAxisAngle': {
@@ -47,20 +56,17 @@ class RayTracing:
         useRandomFocalLength=False,
         **kwargs
     ):
-        """
+        '''
         RayTracing init
 
         Parameters
-        ---------
-        name
-            A string to assign to the `name` instance attribute.
-        """
+        ----------
+        telescopeModel: TelescopeModel
+        '''
         self._simtelSourcePath = Path(cfg.collectConfigArg('simtelPath', simtelSourcePath))
         self._filesLocation = cfg.collectConfigArg('outputLocation', filesLocation)
 
-        self.hasTelescopeModel = False
-        self._telescopeModel = None
-        self.telescopeModel = telescopeModel
+        self._telescopeModel = self._validateTelescopeModel(telescopeModel)
 
         self._singleMirrorMode = singleMirrorMode
         self._useRandomFocalLength = useRandomFocalLength
@@ -73,7 +79,7 @@ class RayTracing:
                 allInputs=self.ALL_INPUTS,
                 **kwargs
             )
-            mirFlen = self.telescopeModel.getParameter('mirror_focal_length')
+            mirFlen = self._telescopeModel.getParameter('mirror_focal_length')
             self._sourceDistance = 2 * float(mirFlen) * u.cm.to(u.km)  # km
         else:
             collectArguments(
@@ -84,16 +90,9 @@ class RayTracing:
             )
 
         # Label
-        self._hasLabel = True
-        if label is not None:
-            self.label = label
-        elif self.hasTelescopeModel:
-            self.label = self._telescopeModel.label
-        else:
-            self._hasLabel = False
-            self.label = None
+        self._label = label if label is not None else self._telescopeModel.label
 
-        self._baseDirectory = io.getRayTracingOutputDirectory(self._filesLocation, self.label)
+        self._baseDirectory = io.getRayTracingOutputDirectory(self._filesLocation, self._label)
         self._baseDirectory.mkdir(parents=True, exist_ok=True)
 
         if self._singleMirrorMode:
@@ -109,36 +108,30 @@ class RayTracing:
                 self._telescopeModel.telescopeType,
                 self._sourceDistance,
                 self._zenithAngle,
-                self.label
+                self._label
         )
         self._fileResults = self._baseDirectory.joinpath(fileNameResults)
 
         # end of init
 
     def __repr__(self):
-        return 'RayTracing(label={})\n'.format(self.label)
+        return 'RayTracing(label={})\n'.format(self._label)
 
-    @property
-    def telescopeModel(self):
-        return self._telescopeModel
-
-    @telescopeModel.setter
-    def telescopeModel(self, tel):
+    def _validateTelescopeModel(self, tel):
         if isinstance(tel, TelescopeModel):
-            self._telescopeModel = tel
-            self.hasTelescopeModel = True
+            logger.debug('TelescopeModel OK')
+            return tel
         else:
-            self._telescopeModel = None
-            self.hasTelescopeModel = False
-            if tel is not None:
-                logging.error('Invalid TelescopeModel')
+            msg = 'Invalid TelescopeModel'
+            logger.error(msg)
+            raise ValueError(msg)
 
     def simulate(self, test=False, force=False):
-        """Simulate RayTracing."""
+        ''' Simulate RayTracing.'''
         allMirrors = self._mirrorNumbers if self._singleMirrorMode else [0]
         for thisOffAxis in self._offAxisAngle:
             for thisMirror in allMirrors:
-                logging.info('Simulating RayTracing for offAxis={}, mirror={}'.format(
+                logger.info('Simulating RayTracing for offAxis={}, mirror={}'.format(
                     thisOffAxis,
                     thisMirror
                 ))
@@ -156,19 +149,19 @@ class RayTracing:
                 simtel.run(test=test, force=force)
 
     def analyze(self, export=True, force=False, useRX=False, noTelTransmission=False):
-        """Analyze RayTracing."""
+        '''Analyze RayTracing.'''
 
         if self._fileResults.exists() and not force:
-            logging.info('Skipping analyze because file exists and force = False')
-            self.readResults()
+            logger.info('Skipping analyze because file exists and force = False')
+            self._readResults()
             focalLength = float(self._telescopeModel.getParameter('focal_length'))
             self._psfImages = dict()
             allMirrors = self._mirrorNumbers if self._singleMirrorMode else [0]
             for thisOffAxis in self._offAxisAngle:
                 for thisMirror in allMirrors:
-                    logging.debug('Reading images for offAxis={}'.format(thisOffAxis))
+                    logger.debug('Reading images for offAxis={}'.format(thisOffAxis))
                     if self._singleMirrorMode:
-                        logging.debug('mirrorNumber={}'.format(thisMirror))
+                        logger.debug('mirrorNumber={}'.format(thisMirror))
 
                     photonsFileName = names.rayTracingFileName(
                         self._telescopeModel.telescopeType,
@@ -176,7 +169,7 @@ class RayTracing:
                         self._zenithAngle,
                         thisOffAxis,
                         thisMirror if self._singleMirrorMode else None,
-                        self.label,
+                        self._label,
                         'photons'
                     )
                     image = PSFImage(focalLength)
@@ -191,7 +184,7 @@ class RayTracing:
         telTransmissionPars = list()
         for p in self._telescopeModel.getParameter('telescope_transmission').split():
             telTransmissionPars.append(float(p))
-        cmToDeg = 180. / math.pi / focalLength
+        cmToDeg = 180. / pi / focalLength
 
         self._results = dict()
         self._results['off_axis'] = list()
@@ -206,9 +199,9 @@ class RayTracing:
         allMirrors = self._mirrorNumbers if self._singleMirrorMode else [0]
         for thisOffAxis in self._offAxisAngle:
             for thisMirror in allMirrors:
-                logging.info('Analyzing RayTracing for offAxis={}'.format(thisOffAxis))
+                logger.info('Analyzing RayTracing for offAxis={}'.format(thisOffAxis))
                 if self._singleMirrorMode:
-                    logging.info('mirrorNumber={}'.format(thisMirror))
+                    logger.info('mirrorNumber={}'.format(thisMirror))
 
                 photonsFileName = names.rayTracingFileName(
                     self._telescopeModel.telescopeType,
@@ -216,7 +209,7 @@ class RayTracing:
                     self._zenithAngle,
                     thisOffAxis,
                     thisMirror if self._singleMirrorMode else None,
-                    self.label,
+                    self._label,
                     'photons'
                 )
                 file = self._baseDirectory.joinpath(photonsFileName)
@@ -228,7 +221,7 @@ class RayTracing:
                 image.readSimtelFile(file)
 
                 if useRX:
-                    d80_cm, xPosMean, yPosMean, effArea = self.processRX(file)
+                    d80_cm, xPosMean, yPosMean, effArea = self._processRX(file)
                     d80_deg = d80_cm * cmToDeg
                     image.setPSF(d80_cm, fraction=0.8, unit='cm')
                     image.centroidX = xPosMean
@@ -243,7 +236,7 @@ class RayTracing:
 
                 self._psfImages[thisOffAxis] = image
                 effFlen = (
-                    'nan' if thisOffAxis == 0 else xPosMean / math.tan(thisOffAxis * math.pi / 180.)
+                    'nan' if thisOffAxis == 0 else xPosMean / tan(thisOffAxis * pi / 180.)
                 )
                 self._results['off_axis'].append(thisOffAxis)
                 self._results['d80_cm'].append(d80_cm)
@@ -260,7 +253,7 @@ class RayTracing:
         if export:
             self.exportResults()
 
-    def processRX(self, file):
+    def _processRX(self, file):
         # Use -n to disable the cog optimization
         rxOutput = subprocess.check_output(
             '{}/sim_telarray/bin/rx -f 0.8 -v < {}'.format(self._simtelSourcePath, file),
@@ -274,21 +267,21 @@ class RayTracing:
         return d80_cm, xMean, yMean, effArea
 
     def exportResults(self):
-        logging.info('Exporting results')
+        logger.info('Exporting results')
         if not self._hasResults:
-            logging.error('Cannot export results because it does not exist')
+            logger.error('Cannot export results because it does not exist')
         else:
             table = Table(self._results)
             ascii.write(table, self._fileResults, format='basic', overwrite=True)
 
-    def readResults(self):
+    def _readResults(self):
         table = ascii.read(self._fileResults, format='basic')
         self._results = dict(table)
         self._hasResults = True
 
     def _validateWhich(self, which):
         if which not in ['d80_cm', 'd80_deg', 'eff_area', 'eff_flen']:
-            logging.error('Invalid option for plotting RayTracing')
+            logger.error('Invalid option for plotting RayTracing')
             return
         return
 
