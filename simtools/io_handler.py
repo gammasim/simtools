@@ -15,7 +15,7 @@ __all__ = [
 ]
 
 
-def _getOutputDirectory(filesLocation, label, mode):
+def getOutputDirectory(filesLocation, label, mode):
     '''
     Get main output directory for a generic mode
 
@@ -50,7 +50,7 @@ def getModelOutputDirectory(filesLocation, label):
     -------
     Path
     '''
-    return _getOutputDirectory(filesLocation, label, 'model')
+    return getOutputDirectory(filesLocation, label, 'model')
 
 
 def getRayTracingOutputDirectory(filesLocation, label):
@@ -68,7 +68,7 @@ def getRayTracingOutputDirectory(filesLocation, label):
     -------
     Path
     '''
-    return _getOutputDirectory(filesLocation, label, 'ray-tracing')
+    return getOutputDirectory(filesLocation, label, 'ray-tracing')
 
 
 def getCorsikaOutputDirectory(filesLocation, label):
@@ -86,7 +86,7 @@ def getCorsikaOutputDirectory(filesLocation, label):
     -------
     Path
     '''
-    return _getOutputDirectory(filesLocation, label, 'corsika')
+    return getOutputDirectory(filesLocation, label, 'corsika')
 
 
 def getTestDataFile(fileName):
