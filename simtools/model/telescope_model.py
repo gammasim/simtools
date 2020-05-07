@@ -201,7 +201,7 @@ class TelescopeModel:
                 w = w.replace('=', '')
                 w = w.replace(',', ' ')
                 parValue += w + ' '
-            return par, value
+            return parName, parValue
 
         with open(configFileName, 'r') as file:
             for line in file:
@@ -476,7 +476,8 @@ class TelescopeModel:
             self.version,
             self.site,
             self.telescopeType,
-            mirrorNumber
+            mirrorNumber,
+            self.label
         )
         if '_singleMirrorListFilePath' not in self.__dict__:
             self._singleMirrorListFilePaths = dict()
