@@ -12,6 +12,10 @@ import simtools.io_handler as io
 import simtools.corsika_parameters as cors_pars
 from simtools.util import names
 from simtools.model.array_model import getArray
+<<<<<<< HEAD
+=======
+
+>>>>>>> master
 
 __all__ = ['CorsikaConfig']
 
