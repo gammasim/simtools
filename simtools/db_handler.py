@@ -1,6 +1,4 @@
-#!/usr/bin/python3
-
-""" io_handler module """
+''' Module to handle interaction with DB. '''
 
 import logging
 import datetime
@@ -11,15 +9,17 @@ __all__ = ['getArrayDB']
 
 
 def getArrayDB(databaseLocation):
-    """ Return the dict with the array db info
+    '''
+    Get array db as a dict.
 
-    Args:
-        databaseLocation (Path)
+    Parameters
+    ----------
+    databaseLocation: str or Path
 
-    Returns:
-        dict: output Path
-
-    """
+    Returns
+    -------
+    dict
+    '''
     file = Path(databaseLocation).joinpath('arrays').joinpath('arrays.yml')
     out = dict()
     with open(file, 'r') as stream:
