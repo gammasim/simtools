@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+''' Parameters for corsika_config module. '''
 
 import astropy.units as u
 
