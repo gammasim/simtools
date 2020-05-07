@@ -23,16 +23,27 @@ def _addUnit(title, array):
     If a unit already is present in title (in the same form),
     a warning is printed and no unit is added.
     The function assumes array not to be empty and returns the modified title.
-    '''
 
+    Parameters
+    ----------
+    title: str
+    array: astropy.Quantity
+
+    Returns
+    -------
+    str
+        Title with units.
+    '''
     unit = ''
     if isinstance(array, u.Quantity):
         unit = str(array[0].unit)
         if len(unit) > 0:
             unit = ' [{}]'.format(unit)
         if '[' in title and ']' in title:
-            logger.warn('Tried to add a unit from astropy.unit, '
-                        'but axis already has an explicit unit. Left axis title as is.')
+            logger.warning(
+                'Tried to add a unit from astropy.unit, '
+                'but axis already has an explicit unit. Left axis title as is.'
+            )
             unit = ''
 
     return '{}{}'.format(title, unit)
@@ -114,7 +125,6 @@ def getColors(**kwargs):
     Get the color list of the pallete requested.
     If no pallete is provided, the default is returned
     '''
-
     palette = 'default'
     bigPlot = False
     if 'palette' in kwargs:
@@ -286,16 +296,16 @@ def plotTable(table, yTitle, **kwargs):
 
 def plotHist2D(data, **kwargs):
     '''
-    Produce a 2 dimentional plot of the data in "data", 
+    Produce a 2 dimentional plot of the data in "data",
     where "data" is assumed to be a structured array.
     The structured array has two columns, the first is the x-axis and the second the y-axis.
     The titles of the columns are the axes titles.
     The labels of each data set are given in the dictionary keys and will be put in a legend.
-    The kwargs can (and should) contain all options for plotting like 
+    The kwargs can (and should) contain all options for plotting like
     bins, weights, normalization, etc.
     Those are transfered as is to the usual hist2d of matplotlib.
     The function returns a pyplot instance in plt.
-    
+
     Additional options, such as plot title, plot legend, etc.
     are given in kwargs (list will be added to doc as function evolves).
     Any option that can be changed after plotting (e.g., axes limits, log scale, etc.) should be
@@ -317,7 +327,7 @@ def plotHist2D(data, **kwargs):
 
     # Set default style since the usual options do not affect 2D plots (for now).
     setStyle()
-    
+
     gs = gridspec.GridSpec(1, 1)
     plt.figure(figsize=(8, 6))
 

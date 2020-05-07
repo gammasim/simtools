@@ -1,10 +1,4 @@
-#!/usr/bin/python3
-
-"""
-ray_tracing.py
-====================================
-Testing docstrings
-"""
+''' Ray Tracing simulations and analysis. '''
 
 import logging
 import os
@@ -54,7 +48,7 @@ class RayTracing:
         **kwargs
     ):
         """
-        Blah blah blah.
+        RayTracing init
 
         Parameters
         ---------
@@ -324,7 +318,8 @@ class RayTracing:
             if thisOffAxis in self._psfImages.keys():
                 images.append(self._psfImages[thisOffAxis])
         if len(images) == 0:
-            loggin.error('No image found')
+            loggin.warning('No image found')
+            return None
         return images
 
 # end of RayTracing
