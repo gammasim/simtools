@@ -5,20 +5,25 @@ Author: Raul R Prado
 '''
 
 import logging
-from pathlib import Path
+import subprocess
 import os
+from pathlib import Path
 
 import astropy.units as u
 
+import simtools.io_handler as io
+import simtools.config as cfg
 from simtools.util import names
 from simtools.model.telescope_model import TelescopeModel
 from simtools.util.general import collectArguments
-import simtools.io_handler as io
-import simtools.config as cfg
 
 __all__ = ['SimtelRunner']
 
 logger = logging.getLogger(__name__)
+
+
+class SimtelExecutionError(Exception):
+    pass
 
 
 class SimtelRunner:
@@ -81,26 +86,9 @@ class SimtelRunner:
         logger.debug('Init SimtelRunner')
 
         self._simtelSourcePath = Path(cfg.collectConfigArg('simtelPath', simtelSourcePath))
-
         self.mode = names.validateName(mode, names.allSimtelModeNames)
-
-        self.hasTelescopeModel = False
-        self._telescopeModel = None
-        self.telescopeModel = telescopeModel
-
-        # RayTracing - default parameters
-        self._repNumber = 0
-        self.RUNS_PER_SET = 1 if self._isSingleMirrorMode else 20  # const
-        self.PHOTONS_PER_RUN = 10000  # const
-
-        # Label
-        self._hasLabel = True
-        if label is not None:
-            self.label = label
-        elif self.hasTelescopeModel:
-            self.label = self._telescopeModel.label
-        else:
-            self._hasLabel = False
+        self.telescopeModel = self._validateTelescopeModel(telescopeModel)
+        self.label = label if label is not None else self.telescopeModel.label
 
         # File location
         self._filesLocation = cfg.collectConfigArg('outputLocation', filesLocation)
@@ -110,6 +98,11 @@ class SimtelRunner:
             self._getModeDirectory()
         )
         self._baseDirectory.mkdir(parents=True, exist_ok=True)
+
+        # RayTracing - default parameters
+        self._repNumber = 0
+        self.RUNS_PER_SET = 1 if self._isSingleMirrorMode else 20  # const
+        self.PHOTONS_PER_RUN = 10000  # const
 
         if self._isRayTracingMode():
             collectArguments(
@@ -142,20 +135,15 @@ class SimtelRunner:
         else:
             return 'generic'
 
-    @property
-    def telescopeModel(self):
-        return self._telescopeModel
-
-    @telescopeModel.setter
-    def telescopeModel(self, tel):
+    def _validateTelescopeModel(self, tel):
+        ''' Validate TelescopeModel '''
         if isinstance(tel, TelescopeModel):
-            self._telescopeModel = tel
-            self.hasTelescopeModel = True
+            logger.debug('TelescopeModel OK')
+            return tel
         else:
-            self._telescopeModel = None
-            self.hasTelescopeModel = False
-            if tel is not None:
-                logger.error('Invalid TelescopeModel')
+            msg = 'Invalid TelescopeModel'
+            logger.error(msg)
+            raise ValueError(msg)
 
     def run(self, test=False, force=False):
         '''
@@ -180,11 +168,34 @@ class SimtelRunner:
 
         if test:
             logger.info('Running (test) with command:{}'.format(command))
-            os.system(command)
+            sysOutput = os.system(command)
         else:
             logger.info('Running ({}x) with command:{}'.format(self.RUNS_PER_SET, command))
-            for _ in range(self.RUNS_PER_SET):
+            sysOutput = os.system(command)
+            for _ in range(self.RUNS_PER_SET - 1):
                 os.system(command)
+
+        self._catchSimtelError(sysOutput)
+
+    def _catchSimtelError(self, sysOutput):
+        if sysOutput == '0':
+            logger.debug('Everything seems fine with simtel execution')
+        else:
+            # Collecting final 10 lines of simtel log file.
+            fileInLines = list()
+            with open(self._logFileName, 'r') as logFile:
+                for line in logFile:
+                    fileInLines.append(line)
+            msgInLines = fileInLines[-10:-1]
+            msg = ''
+            for ll in msgInLines:
+                msg += ll
+            logger.error(
+                'Simtel Error - See below the relevant part of the simtel log file.\n'
+                + '===== from simtel log file ======\n' + msg
+                + '================================='
+            )
+            raise SimtelExecutionError()
 
     def _getRunBashScript(self, test=False):
         logger.debug('Creating run bash script')
@@ -206,7 +217,7 @@ class SimtelRunner:
         ''' Tells if simulations should be run again based on the existence of output files. '''
         if self._isRayTracingMode():
             photonsFileName = names.rayTracingFileName(
-                self._telescopeModel.telescopeType,
+                self.telescopeModel.telescopeType,
                 self._sourceDistance,
                 self._zenithAngle,
                 self._offAxisAngle,
@@ -233,7 +244,7 @@ class SimtelRunner:
             # Files will be named _baseFileName = self.__dict__['_' + base + 'FileName']
             for baseName in ['stars', 'photons', 'log']:
                 fileName = names.rayTracingFileName(
-                    self._telescopeModel.telescopeType,
+                    self.telescopeModel.telescopeType,
                     self._sourceDistance,
                     self._zenithAngle,
                     self._offAxisAngle,
@@ -252,7 +263,7 @@ class SimtelRunner:
                 file.write('#{}\n'.format(50*'='))
                 file.write('# List of photons for RayTracing simulations\n')
                 file.write('#{}\n'.format(50*'='))
-                file.write('# configFile = {}\n'.format(self._telescopeModel.getConfigFile()))
+                file.write('# configFile = {}\n'.format(self.telescopeModel.getConfigFile()))
                 file.write('# zenithAngle [deg] = {}\n'.format(self._zenithAngle))
                 file.write('# offAxisAngle [deg] = {}\n'.format(self._offAxisAngle))
                 file.write('# sourceDistance [km] = {}\n'.format(self._sourceDistance))
@@ -278,11 +289,11 @@ class SimtelRunner:
 
         # RayTracing
         command = str(self._simtelSourcePath.joinpath('sim_telarray/bin/sim_telarray'))
-        command += ' -c {}'.format(self._telescopeModel.getConfigFile())
+        command += ' -c {}'.format(self.telescopeModel.getConfigFile())
         command += ' -I../cfg/CTA'
         command += _configOption('IMAGING_LIST', str(self._photonsFileName))
         command += _configOption('stars', str(self._starsFileName))
-        command += _configOption('altitude', self._telescopeModel.getParameter('altitude'))
+        command += _configOption('altitude', self.telescopeModel.getParameter('altitude'))
         command += _configOption('telescope_theta', self._zenithAngle + self._offAxisAngle)
         command += _configOption('star_photons', str(self.PHOTONS_PER_RUN))
         command += _configOption('telescope_phi', '0')
