@@ -214,33 +214,6 @@ class RayTracing:
             If True, the telescope transmission is not applied.
         '''
 
-        # if self._fileResults.exists() and not force:
-        #     logger.info('Skipping analyze because file exists and force = False')
-        #     self._readResults()
-        #     focalLength = float(self._telescopeModel.getParameter('focal_length'))
-        #     self._psfImages = dict()
-        #     allMirrors = self._mirrorNumbers if self._singleMirrorMode else [0]
-        #     for thisOffAxis in self._offAxisAngle:
-        #         for thisMirror in allMirrors:
-        #             logger.debug('Reading images for offAxis={}'.format(thisOffAxis))
-        #             if self._singleMirrorMode:
-        #                 logger.debug('mirrorNumber={}'.format(thisMirror))
-
-        #             photonsFileName = names.rayTracingFileName(
-        #                 self._telescopeModel.telescopeType,
-        #                 self._sourceDistance,
-        #                 self._zenithAngle,
-        #                 thisOffAxis,
-        #                 thisMirror if self._singleMirrorMode else None,
-        #                 self.label,
-        #                 'photons'
-        #             )
-        #             image = PSFImage(focalLength)
-        #             image.readSimtelFile(self._baseDirectory.joinpath(photonsFileName))
-        #             self._psfImages[thisOffAxis] = copy(image)
-        #     return
-        #     # end for offAxis            return
-
         doAnalyze = (not self._fileResults.exists() or force)
 
         focalLength = float(self._telescopeModel.getParameter('focal_length'))
