@@ -1,4 +1,4 @@
-''' Module to handle interactions with DB '''
+''' Module to handle interaction with DB. '''
 
 import logging
 import datetime
