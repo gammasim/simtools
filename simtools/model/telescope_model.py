@@ -458,6 +458,21 @@ class TelescopeModel:
             self.exportConfigFile()
         return self._configFilePath
 
+    def getTelescopeTransmissionParameters(self):
+        '''
+        Get tel. transmission pars as a list of floats.
+        Importante for RayTracing analysis.
+
+        Returns
+        -------
+        list of floats
+            List of 4 parameters that decsribe the tel. transmission vs off-axis.
+        '''
+        pars = list()
+        for p in self.getParameter('telescope_transmission').split():
+            pars.append(float(p))
+        return pars
+
     def exportSingleMirrorListFile(self, mirrorNumber, setFocalLengthToZero):
         '''
         Export a mirror list file with a single mirror in it.

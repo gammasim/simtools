@@ -13,8 +13,9 @@ import simtools.corsika_parameters as cors_pars
 from simtools.util import names
 from simtools.model.array_model import getArray
 
-
 __all__ = ['CorsikaConfig']
+
+logger = logging.getLogger(__name__)
 
 
 class RequiredInputNotGiven(Exception):
@@ -29,7 +30,22 @@ class ArgumentWithWrongUnit(Exception):
     pass
 
 
+class InvalidPrimary(Exception):
+    pass
+
+
 def _writeTelescopes(file, array):
+    '''
+    Write telescope positions in the corsika input file.
+
+    Parameters
+    ----------
+    file: file
+        File where the telescope positions will be written.
+    array: str
+        Array type.
+    '''
+    logger.warning('Function is changing the inputs - Make it return the string instead')
     mToCm = 1e2
     for n, tel in array.items():
         file.write('\nTELESCOPE {} {} {} {} # {}'.format(
@@ -43,29 +59,83 @@ def _writeTelescopes(file, array):
 
 
 def _writeSeeds(file, seeds):
+    '''
+    Write seeds in the corsika input file.
+
+    Parameters
+    ----------
+    file: file
+        File where the telescope positions will be written.
+    seeds: list of int
+        List of seeds to be written.
+    '''
     for s in seeds:
         file.write('SEED {} 0 0\n'.format(s))
 
 
 def _convertPrimaryInput(value):
+    '''
+    Convert a primary name into the right number.
+
+    Parameters
+    ----------
+    value: str
+        Input primary name.
+
+    Raises
+    ------
+    InvalidPrimary
+        If the input name is not found.
+    '''
     for primName, primInfo in cors_pars.PRIMARIES.items():
         if value[0].upper() == primName or value[0].upper() in primInfo['names']:
             return [primInfo['number']]
+    logger.error('Primary not valid')
+    raise InvalidPrimary('Primary not valid')
 
 
 class CorsikaConfig:
+    '''
+    CorsikaConfig class.
+
+    Methods
+    -------
+    setParameters(**kwargs)
+    exportFile()
+    getFile()
+    '''
     def __init__(
         self,
         site,
         arrayName,
-        databaseLocation=None,
         label=None,
+        databaseLocation=None,
         filesLocation=None,
         randomSeeds=False,
         **kwargs
     ):
-        ''' Docs please '''
-        logging.info('Init CorsikaConfig')
+        '''
+        CorsikaConfig init.
+
+        Parameters
+        ----------
+        site: str
+            Paranal or LaPalma
+        arrayName: str
+            Name of the array type. Ex 4LST, baseline ...
+        label: str
+            Instance label.
+        databaseLocation: str
+            Location of the db files.
+        filesLocation: str or Path.
+            Main location of the output file.
+        randomSeeds: bool
+            If True, seeds will be set randomly. If False, seeds will be defined based on the run
+            number.
+        **kwargs
+            Set of parameters for the corsika config.
+        '''
+        logger.debug('Init CorsikaConfig')
 
         self._label = label
         self._filesLocation = cfg.collectConfigArg('outputLocation', filesLocation)
@@ -74,19 +144,21 @@ class CorsikaConfig:
         self._arrayName = names.validateName(arrayName, names.allArrayNames)
         self._array = getArray(self._arrayName, self._databaseLocation)
 
-        self._loadArguments(**kwargs)
+        self.setParameters(**kwargs)
         self._loadSeeds(randomSeeds)
-        print('Parameters')
-        print(self._parameters)
-        print('Seeds')
-        print(self._seeds)
-        print('Array')
-        print(self._array)
+        self._isFileUpdated = False
 
-    def _loadArguments(self, **kwargs):
+    def setParameters(self, **kwargs):
+        '''
+        Set parameters for the corsika config.
+
+        Parameters
+        ----------
+        **kwargs
+        '''
         self._parameters = dict()
 
-        def validateAndFixArgs(parName, parInfo, valueArgs):
+        def _validateAndFixArgs(parName, parInfo, valueArgs):
             valueArgs = valueArgs if isinstance(valueArgs, list) else [valueArgs]
             if len(valueArgs) == 1 and parName == 'THETAP':  # fixing single value zenith angle
                 valueArgs = valueArgs * 2
@@ -96,7 +168,7 @@ class CorsikaConfig:
                 valueArgs = _convertPrimaryInput(valueArgs)
 
             if len(valueArgs) != parInfo['len']:
-                logging.warning('Argument {} has wrong len'.format(keyArgs.upper()))
+                logger.warning('Argument {} has wrong len'.format(keyArgs.upper()))
 
             if 'unit' in parInfo.keys():
                 parUnit = (
@@ -112,7 +184,7 @@ class CorsikaConfig:
                     try:
                         newValueArgs.append(v.to(u).value)
                     except u.core.UnitConversionError:
-                        logging.error('Argument given with wrong unit: {}'.format(parName))
+                        logger.error('Argument given with wrong unit: {}'.format(parName))
                         raise ArgumentWithWrongUnit()
                 valueArgs = newValueArgs
 
@@ -121,18 +193,16 @@ class CorsikaConfig:
         # Collecting all parameters given as arguments
         indentifiedArgs = list()
         for keyArgs, valueArgs in kwargs.items():
-
             for parName, parInfo in cors_pars.USER_PARAMETERS.items():
-
                 if keyArgs.upper() == parName or keyArgs.upper() in parInfo['names']:
                     indentifiedArgs.append(keyArgs)
-                    valueArgs = validateAndFixArgs(parName, parInfo, valueArgs)
+                    valueArgs = _validateAndFixArgs(parName, parInfo, valueArgs)
                     self._parameters[parName] = valueArgs
 
         # Checking for unindetified parameters
         unindentifiedArgs = [p for p in kwargs.keys() if p not in indentifiedArgs]
         if len(unindentifiedArgs) > 0:
-            logging.warning(
+            logger.warning(
                 '{} argument were not properly identified: {} ...'.format(
                     len(unindentifiedArgs),
                     unindentifiedArgs[0]
@@ -146,12 +216,12 @@ class CorsikaConfig:
             if parName in self._parameters.keys():
                 continue
             if 'default' in parInfo.keys():
-                parValue = validateAndFixArgs(parName, parInfo, parInfo['default'])
+                parValue = _validateAndFixArgs(parName, parInfo, parInfo['default'])
                 self._parameters[parName] = parValue
             else:
                 requiredButNotGiven.append(parName)
         if len(requiredButNotGiven) > 0:
-            logging.error(
+            logger.error(
                 'Required parameters not given ({} parameters: {} ...)'.format(
                     len(requiredButNotGiven),
                     requiredButNotGiven[0]
@@ -160,8 +230,9 @@ class CorsikaConfig:
             raise RequiredInputNotGiven()
 
     def _loadSeeds(self, randomSeeds):
+        ''' Load seeds and store it in _seeds. '''
         if '_parameters' not in self.__dict__.keys():
-            logging.error('_loadSeeds has be called after _loadArguments')
+            logger.error('_loadSeeds has be called after _loadArguments')
             raise ArgumentsNotLoaded()
         if randomSeeds:
             s = random.uniform(0, 1000)
@@ -171,6 +242,7 @@ class CorsikaConfig:
         self._seeds = [int(random.uniform(0, 1e7)) for i in range(4)]
 
     def exportFile(self):
+        ''' Create and export corsika input file. '''
         configFileName = names.corsikaConfigFileName(
             arrayName=self._arrayName,
             site=self._site,
@@ -190,7 +262,7 @@ class CorsikaConfig:
 
         if not fileDirectory.exists():
             fileDirectory.mkdir(parents=True, exist_ok=True)
-            logging.info('Creating directory {}'.format(fileDirectory))
+            logger.info('Creating directory {}'.format(fileDirectory))
         self._configFilePath = fileDirectory.joinpath(configFileName)
         self._outputFilePath = fileDirectory.joinpath(outputFileName)
 
@@ -227,6 +299,20 @@ class CorsikaConfig:
             file.write('\n# IACT TUNING PARAMETERS\n')
             _writeParametersMultipleLines(file, cors_pars.IACT_TUNING_PARAMETERS)
             file.write('\nEXIT')
+
+        self._isFileUpdated = True
+
+    def getFile(self):
+        '''
+        Get the full path of the corsika input file.
+
+        Returns
+        -------
+        Path of the input file.
+        '''
+        if not self._isFileUpdated:
+            self.exportFile()
+        return self._configFilePath
 
     def addLine(self):
         pass
