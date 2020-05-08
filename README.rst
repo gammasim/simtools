@@ -10,7 +10,6 @@ AUTHORS:
 * Raul R Prado (raul.prado@desy.de)
 * Orel Gueta (orel.gueta@desy.de)
 
-
 INSTALLATION:
 -------------
 
@@ -23,7 +22,6 @@ While a proper conda installation has not been setup, you can add simtools to yo
 
 source set_simtools.sh
  
-
 STYLE GUIDELINES:
 -----------------
 
@@ -35,7 +33,6 @@ STYLE GUIDELINES:
 .. code-block:: python
 | import simtools.config as cfg
 | import simtools.io_handler as io
-
 
 DESIGN GUIDELINES (old, to be rewritten):
 ---------------

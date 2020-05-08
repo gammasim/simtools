@@ -17,4 +17,5 @@ testDataLocation: './data/'
 
 simtelPath: /afs/ifh.de/group/cta/scratch/prado/sim_telarray/corsika6.9_simtelarray_20-05-07
 
+# Not used yet
 submissionCommand: 'qsub '
