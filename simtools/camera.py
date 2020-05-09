@@ -1,9 +1,11 @@
 import logging
 import numpy as np
 from scipy.spatial import cKDTree as KDTree
+import matplotlib as mlp
 from matplotlib import pyplot as plt
 import matplotlib.patches as mpatches
 from matplotlib.collections import PatchCollection
+from matplotlib import colors as mcolors
 from simtools.util import legendHandlers as legH
 from simtools.model.telescope_model import TelescopeModel
 from simtools.model.model_parameters import TWO_MIRROR_TELS, CAMERA_ROTATE_ANGLE
@@ -109,9 +111,9 @@ class Camera:
         rotateAngle = pixels['rotateAngle']  # So not to change the original angle
         rotateAngle += np.deg2rad(CAMERA_ROTATE_ANGLE[telescopeType])
         if rotateAngle != 0:
-            for i_pix, x_pixel, y_pixel in enumerate(zip(pixels['x'], pixels['y'])):
-                pixels['x'][i_pix] = x_pixel*np.cos(rotateAngle) - y_pixel*np.sin(rotateAngle)
-                pixels['y'][i_pix] = x_pixel*np.sin(rotateAngle) + y_pixel*np.cos(rotateAngle)
+            for i_pix, xyPixPos in enumerate(zip(pixels['x'], pixels['y'])):
+                pixels['x'][i_pix] = xyPixPos[0]*np.cos(rotateAngle) - xyPixPos[1]*np.sin(rotateAngle)
+                pixels['y'][i_pix] = xyPixPos[0]*np.sin(rotateAngle) + xyPixPos[1]*np.cos(rotateAngle)
 
         pixels['orientation'] = 0
         if pixels['funnelShape'] == 1 or pixels['funnelShape'] == 3:
@@ -135,7 +137,7 @@ class Camera:
         edgePixelIndices: list
             List of indices of the edge pixels
         focalLength: float
-            The focal length of the camera (preferably the effective focal length)
+            The focal length of the camera in (preferably the effective focal length)
 
         Returns
         -------
@@ -143,6 +145,10 @@ class Camera:
             The FOV of the camera in the degrees.
         averageEdgeDistance: float
             The average edge distance of the camera
+
+        Notes
+        -----
+        The x,y pixel positions and focal length are assumed to have the same unit (usually cm)
 
         '''
 
@@ -155,7 +161,7 @@ class Camera:
 
         return fov, averageEdgeDistance
 
-    def findNeighbours(self, xPos, yPos, rad):
+    def findNeighbours(self, xPos, yPos, radius):
         '''
         use a KD-Tree to quickly find nearest neighbours
         (e.g., of the pixels in a camera or mirror facets)
@@ -420,16 +426,19 @@ class Camera:
         pixels = self.rotatePixels(telescopeType, pixels)
 
         # Find a list of neighbours for each pixel
-        neighbours = getNeighbourPixels(pixels)
+        neighbours = self.getNeighbourPixels(pixels)
+
+        _, ax = plt.subplots()
+        plt.gcf().set_size_inches(8, 8)
 
         onPixels, edgePixels, offPixels = list(), list(), list()
         # TODO move the "calculation" of edge pixels to its own method (less efficient, but looks better)
         edgePixelIndices = list()
 
-        for i_pix, x_pixel, y_pixel in enumerate(zip(pixels['x'], pixels['y'])):
+        for i_pix, xyPixPos in enumerate(zip(pixels['x'], pixels['y'])):
             if pixels['funnelShape'] == 1 or pixels['funnelShape'] == 3:
                 hexagon = mpatches.RegularPolygon(
-                    (x_pixel, y_pixel),
+                    (xyPixPos[0], xyPixPos[1]),
                     numVertices=6,
                     radius=pixels['diameter']/np.sqrt(3),
                     orientation=np.deg2rad(pixels['orientation'])
@@ -444,7 +453,7 @@ class Camera:
                     offPixels.append(hexagon)
             elif pixels['funnelShape'] == 2:
                 square = mpatches.Rectangle(
-                    (x_pixel - pixels['diameter']/2., y_pixel - pixels['diameter']/2.),
+                    (xyPixPos[0] - pixels['diameter']/2., xyPixPos[1] - pixels['diameter']/2.),
                     width=pixels['diameter'],
                     height=pixels['diameter']
                 )
@@ -462,16 +471,13 @@ class Camera:
                 if telescopeType == 'SCT':
                     fontSize = 2
                 plt.text(
-                    x_pixel,
-                    y_pixel,
+                    xyPixPos[0],
+                    xyPixPos[1],
                     pixels['pixID'][i_pix],
                     horizontalalignment='center',
                     verticalalignment='center',
                     fontsize=fontSize
                 )
-
-        plt.gcf().set_size_inches(8, 8)
-        _, ax = plt.subplots()
 
         ax.add_collection(PatchCollection(
             onPixels, facecolor='none',
@@ -517,7 +523,7 @@ class Camera:
         ax.text(0.02, 0.02, 'For an observer facing the camera',
                 transform=ax.transAxes, color='black', fontsize=12)
 
-        focalLength = telModel.getParameter('effective_focal_length')
+        focalLength = float(telModel.getParameter('effective_focal_length'))
         fov, rEdgeAvg = self.calcFOV(
             pixels['x'],
             pixels['y'],

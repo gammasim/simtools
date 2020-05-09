@@ -26,6 +26,7 @@ if __name__ == '__main__':
     camera = Camera()
 
     pixelLayoutFile = tel.getParameter('camera_config_file')
-    plt = camera.readPixelList(cfg.findFile(pixelLayoutFile))
+    pixels = camera.readPixelList(cfg.findFile(pixelLayoutFile))
+    plt = camera.plotPixelLayout(tel, pixels)
     plt.savefig('pixelLayout-LST.pdf', format='pdf', bbox_inches='tight')
     plt.clf()
