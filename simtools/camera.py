@@ -13,10 +13,13 @@ from simtools.model.model_parameters import TWO_MIRROR_TELS, CAMERA_ROTATE_ANGLE
 __all__ = ['Camera']
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 
 
 class Camera:
+
+    def __init__(self):
+        pass
 
     def readPixelList(self, cameraConfigFile):
         '''
@@ -75,7 +78,7 @@ class Camera:
 
         return pixels
 
-    def rotatePixels(self, telescopeType, pixels):
+    def _rotatePixels(self, telescopeType, pixels):
         '''
         Rotate the pixels according to the rotation angle given in pixels['rotateAngle'].
         Additional rotation is added to get to the camera view of an observer facing the camera.
@@ -110,6 +113,9 @@ class Camera:
 
         rotateAngle = pixels['rotateAngle']  # So not to change the original angle
         rotateAngle += np.deg2rad(CAMERA_ROTATE_ANGLE[telescopeType])
+
+        logger.debug('Rotating pixels by {}'.format(np.rad2deg(rotateAngle)))
+
         if rotateAngle != 0:
             for i_pix, xyPixPos in enumerate(zip(pixels['x'], pixels['y'])):
                 pixels['x'][i_pix] = xyPixPos[0]*np.cos(rotateAngle) - xyPixPos[1]*np.sin(rotateAngle)
@@ -152,6 +158,8 @@ class Camera:
 
         '''
 
+        logger.debug('Calculating the FoV')
+
         averageEdgeDistance = 0
         for i_pix in edgePixelIndices:
             averageEdgeDistance += np.sqrt(xPixel[i_pix] ** 2 + yPixel[i_pix] ** 2)
@@ -161,7 +169,7 @@ class Camera:
 
         return fov, averageEdgeDistance
 
-    def findNeighbours(self, xPos, yPos, radius):
+    def _findNeighbours(self, xPos, yPos, radius):
         '''
         use a KD-Tree to quickly find nearest neighbours
         (e.g., of the pixels in a camera or mirror facets)
@@ -193,7 +201,7 @@ class Camera:
 
         return neighbours
 
-    def findAdjacentNeighbourPixels(self, xPos, yPos, radius, rowColoumnDist):
+    def _findAdjacentNeighbourPixels(self, xPos, yPos, radius, rowColoumnDist):
         '''
         Find adjacent neighbour pixels in cameras with square pixels.
         Only directly adjacent neighbours are allowed, no diagonals.
@@ -221,7 +229,7 @@ class Camera:
 
         # First find the neighbours with the usual method and the original radius
         # which does not allow for diagonal neighbours.
-        neighbours = self.findNeighbours(xPos, yPos, radius)
+        neighbours = self._findNeighbours(xPos, yPos, radius)
         for i_pix, nn in enumerate(neighbours):
             # Find pixels defined as edge pixels now
             if len(nn) < 4:
@@ -261,8 +269,10 @@ class Camera:
 
         '''
 
+        logger.debug('Searching for neighbour pixels')
+
         if pixels['funnelShape'] == 1 or pixels['funnelShape'] == 3:
-            neighbours = self.findNeighbours(
+            neighbours = self._findNeighbours(
                 pixels['x'],
                 pixels['y'],
                 1.1*pixels['diameter']
@@ -272,7 +282,7 @@ class Camera:
             # Pixels in the same row/column can be 20% shifted from one another
             # Inside find_adjacent_neighbour_pixels the distance is increased
             # further for pixels in the same row/column to 1.68*diameter.
-            neighbours = self.findAdjacentNeighbourPixels(
+            neighbours = self._findAdjacentNeighbourPixels(
                 pixels['x'],
                 pixels['y'],
                 1.4*pixels['diameter'],
@@ -281,7 +291,39 @@ class Camera:
 
         return neighbours
 
-    def plotAxesDef(self, telescopeType, plt, rotateAngle):
+    def getEdgePixels(self, pixels, neighbours):
+        '''
+        Find the edge pixels of the camera.
+
+        Parameters
+        ----------
+        pixels: dictionary
+            The dictionary produced by the readPixelList method of this class
+
+        Returns
+        -------
+        edgePixelIndices: array_like
+            Array of edge pixel indices
+
+        '''
+
+        logger.debug('Searching for edge pixels')
+
+        edgePixelIndices = list()
+
+        for i_pix, xyPixPos in enumerate(zip(pixels['x'], pixels['y'])):
+            if pixels['funnelShape'] == 1 or pixels['funnelShape'] == 3:
+                if pixels['pixOn'][i_pix]:
+                    if len(neighbours[i_pix]) < 6:
+                        edgePixelIndices.append(i_pix)
+            elif pixels['funnelShape'] == 2:
+                if pixels['pixOn'][i_pix]:
+                    if len(neighbours[i_pix]) < 4:
+                        edgePixelIndices.append(i_pix)
+
+        return edgePixelIndices
+
+    def _plotAxesDef(self, telescopeType, plt, rotateAngle):
         '''
         Plot three axes definitions on the pyplot.plt instance provided.
         The three axes are Alt/Az, the camera coordinate system and
@@ -315,7 +357,7 @@ class Camera:
         axesPars = {'xTitle': xTitle, 'yTitle': yTitle, 'xPos': xPos, 'yPos': yPos,
                     'rotateAngle': rotateAngle - (1/2.)*np.pi, 'fc': 'black',
                     'ec': 'black', 'invertYaxis': invertYaxis}
-        self.plotOneAxisDef(plt, **axesPars)
+        self._plotOneAxisDef(plt, **axesPars)
 
         xTitle = r'$x_{\!cam}$'
         yTitle = r'$y_{\!cam}$'
@@ -323,7 +365,7 @@ class Camera:
         axesPars = {'xTitle': xTitle, 'yTitle': yTitle, 'xPos': xPos, 'yPos': yPos,
                     'rotateAngle': (3/2.)*np.pi, 'fc': 'blue',
                     'ec': 'blue', 'invertYaxis': invertYaxis}
-        self.plotOneAxisDef(plt, **axesPars)
+        self._plotOneAxisDef(plt, **axesPars)
 
         xTitle = 'Alt'
         yTitle = 'Az'
@@ -331,11 +373,11 @@ class Camera:
         axesPars = {'xTitle': xTitle, 'yTitle': yTitle, 'xPos': xPos, 'yPos': yPos,
                     'rotateAngle': (3/2.)*np.pi, 'fc': 'red',
                     'ec': 'red', 'invertYaxis': invertYaxis}
-        self.plotOneAxisDef(plt, **axesPars)
+        self._plotOneAxisDef(plt, **axesPars)
 
         return
 
-    def plotOneAxisDef(self, plt, **axesPars):
+    def _plotOneAxisDef(self, plt, **axesPars):
         '''
         Plot an axis on the pyplot.plt instance provided.
 
@@ -402,7 +444,7 @@ class Camera:
 
         return
 
-    def plotPixelLayout(self, telModel, pixels):
+    def plotPixelLayout(self, telescopeType, pixels, focalLength):
         '''
         Plot the pixel layout for an observer facing the camera.
         Including in the plot edge pixels, off pixels, pixel ID for the first 50 pixels,
@@ -410,10 +452,12 @@ class Camera:
 
         Parameters
         ----------
-        telModel: an instance of TelescopeModel
-            Assumed to be initialized to the requested telescope model.
+        telescopeType: string
+            As provided by the telescope model method "TelescopeModel".
         pixels: dictionary
             The dictionary produced by the readPixelList method of this class
+        focalLength: float
+            The focal length of the camera in (preferably the effective focal length)
 
         Returns
         -------
@@ -421,19 +465,20 @@ class Camera:
 
         '''
 
-        telescopeType = telModel.telescopeType
+        logger.info('Plotting the {} camera'.format(telescopeType))
 
-        pixels = self.rotatePixels(telescopeType, pixels)
+        pixels = self._rotatePixels(telescopeType, pixels)
 
         # Find a list of neighbours for each pixel
         neighbours = self.getNeighbourPixels(pixels)
+
+        # Find the indices of the edge pixels
+        edgePixelIndices = self.getEdgePixels(pixels, neighbours)
 
         _, ax = plt.subplots()
         plt.gcf().set_size_inches(8, 8)
 
         onPixels, edgePixels, offPixels = list(), list(), list()
-        # TODO move the "calculation" of edge pixels to its own method (less efficient, but looks better)
-        edgePixelIndices = list()
 
         for i_pix, xyPixPos in enumerate(zip(pixels['x'], pixels['y'])):
             if pixels['funnelShape'] == 1 or pixels['funnelShape'] == 3:
@@ -445,7 +490,6 @@ class Camera:
                 )
                 if pixels['pixOn'][i_pix]:
                     if len(neighbours[i_pix]) < 6:
-                        edgePixelIndices.append(i_pix)
                         edgePixels.append(hexagon)
                     else:
                         onPixels.append(hexagon)
@@ -459,7 +503,6 @@ class Camera:
                 )
                 if pixels['pixOn'][i_pix]:
                     if len(neighbours[i_pix]) < 4:
-                        edgePixelIndices.append(i_pix)
                         edgePixels.append(square)
                     else:
                         onPixels.append(square)
@@ -519,17 +562,11 @@ class Camera:
                      fontsize=15, y=1.02)
         plt.tick_params(axis='both', which='major', labelsize=15)
 
-        self.plotAxesDef(telescopeType, plt, pixels['rotateAngle'])
+        self._plotAxesDef(telescopeType, plt, pixels['rotateAngle'])
         ax.text(0.02, 0.02, 'For an observer facing the camera',
                 transform=ax.transAxes, color='black', fontsize=12)
 
-        focalLength = float(telModel.getParameter('effective_focal_length'))
-        fov, rEdgeAvg = self.calcFOV(
-            pixels['x'],
-            pixels['y'],
-            edgePixelIndices,
-            focalLength
-        )
+        fov, rEdgeAvg = self.calcFOV(pixels['x'], pixels['y'], edgePixelIndices, focalLength)
         ax.text(
             0.02, 0.96,
             r'$f_{\mathrm{eff}}$ = ' + '{0:.3f} cm'.format(focalLength),
