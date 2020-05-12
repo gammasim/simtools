@@ -6,6 +6,7 @@ from matplotlib import pyplot as plt
 import matplotlib.patches as mpatches
 from matplotlib.collections import PatchCollection
 from matplotlib import colors as mcolors
+import simtools.config as cfg
 from simtools.util import legendHandlers as legH
 from simtools.model.telescope_model import TelescopeModel
 from simtools.model.model_parameters import TWO_MIRROR_TELS, CAMERA_ROTATE_ANGLE
@@ -18,8 +19,22 @@ logger.setLevel(logging.INFO)
 
 class Camera:
 
-    def __init__(self):
-        pass
+    def __init__(self, telescopeType, cameraConfigFile, focalLength):
+
+        self._telescopeType = telescopeType
+        self._cameraConfigFile = cameraConfigFile
+        self._focalLength = focalLength
+        self._pixels = self.readPixelList(cfg.findFile(cameraConfigFile))
+
+        self._pixels = self._rotatePixels(self._telescopeType, self._pixels)
+
+        # Find a list of neighbours for each pixel
+        self._neighbours = self.getNeighbourPixels(self._pixels)
+
+        # Find the indices of the edge pixels
+        self._edgePixelIndices = self.getEdgePixels(self._pixels, self._neighbours)
+
+        return
 
     def readPixelList(self, cameraConfigFile):
         '''
@@ -130,7 +145,33 @@ class Camera:
 
         return pixels
 
-    def calcFOV(self, xPixel, yPixel, edgePixelIndices, focalLength):
+    def calcFOV(self):
+        '''
+        Calculate the FOV of the camera in degrees, taking into account the focal length.
+
+        Returns
+        -------
+        fov: float
+            The FOV of the camera in the degrees.
+        averageEdgeDistance: float
+            The average edge distance of the camera
+
+        Notes
+        -----
+        The x,y pixel positions and focal length are assumed to have the same unit (usually cm)
+
+        '''
+
+        logger.debug('Calculating the FoV')
+
+        return self._calcFOV(
+            self._pixels['x'],
+            self._pixels['y'],
+            self._edgePixelIndices,
+            self._focalLength
+        )
+
+    def _calcFOV(self, xPixel, yPixel, edgePixelIndices, focalLength):
         '''
         Calculate the FOV of the camera in degrees, taking into account the focal length.
 
@@ -444,20 +485,11 @@ class Camera:
 
         return
 
-    def plotPixelLayout(self, telescopeType, pixels, focalLength):
+    def plotPixelLayout(self):
         '''
         Plot the pixel layout for an observer facing the camera.
         Including in the plot edge pixels, off pixels, pixel ID for the first 50 pixels,
         coordinate systems, FOV, focal length and the average edge radius.
-
-        Parameters
-        ----------
-        telescopeType: string
-            As provided by the telescope model method "TelescopeModel".
-        pixels: dictionary
-            The dictionary produced by the readPixelList method of this class
-        focalLength: float
-            The focal length of the camera in (preferably the effective focal length)
 
         Returns
         -------
@@ -465,58 +497,51 @@ class Camera:
 
         '''
 
-        logger.info('Plotting the {} camera'.format(telescopeType))
-
-        pixels = self._rotatePixels(telescopeType, pixels)
-
-        # Find a list of neighbours for each pixel
-        neighbours = self.getNeighbourPixels(pixels)
-
-        # Find the indices of the edge pixels
-        edgePixelIndices = self.getEdgePixels(pixels, neighbours)
+        logger.info('Plotting the {} camera'.format(self._telescopeType))
 
         _, ax = plt.subplots()
         plt.gcf().set_size_inches(8, 8)
 
         onPixels, edgePixels, offPixels = list(), list(), list()
 
-        for i_pix, xyPixPos in enumerate(zip(pixels['x'], pixels['y'])):
-            if pixels['funnelShape'] == 1 or pixels['funnelShape'] == 3:
+        for i_pix, xyPixPos in enumerate(zip(self._pixels['x'], self._pixels['y'])):
+            if self._pixels['funnelShape'] == 1 or self._pixels['funnelShape'] == 3:
                 hexagon = mpatches.RegularPolygon(
                     (xyPixPos[0], xyPixPos[1]),
                     numVertices=6,
-                    radius=pixels['diameter']/np.sqrt(3),
-                    orientation=np.deg2rad(pixels['orientation'])
+                    radius=self._pixels['diameter']/np.sqrt(3),
+                    orientation=np.deg2rad(self._pixels['orientation'])
                 )
-                if pixels['pixOn'][i_pix]:
-                    if len(neighbours[i_pix]) < 6:
+                if self._pixels['pixOn'][i_pix]:
+                    if len(self._neighbours[i_pix]) < 6:
                         edgePixels.append(hexagon)
                     else:
                         onPixels.append(hexagon)
                 else:
                     offPixels.append(hexagon)
-            elif pixels['funnelShape'] == 2:
+            elif self._pixels['funnelShape'] == 2:
                 square = mpatches.Rectangle(
-                    (xyPixPos[0] - pixels['diameter']/2., xyPixPos[1] - pixels['diameter']/2.),
-                    width=pixels['diameter'],
-                    height=pixels['diameter']
+                    (xyPixPos[0] - self._pixels['diameter']/2.,
+                     xyPixPos[1] - self._pixels['diameter']/2.),
+                    width=self._pixels['diameter'],
+                    height=self._pixels['diameter']
                 )
-                if pixels['pixOn'][i_pix]:
-                    if len(neighbours[i_pix]) < 4:
+                if self._pixels['pixOn'][i_pix]:
+                    if len(self._neighbours[i_pix]) < 4:
                         edgePixels.append(square)
                     else:
                         onPixels.append(square)
                 else:
                     offPixels.append(square)
 
-            if pixels['pixID'][i_pix] < 51:
+            if self._pixels['pixID'][i_pix] < 51:
                 fontSize = 4
-                if telescopeType == 'SCT':
+                if self._telescopeType == 'SCT':
                     fontSize = 2
                 plt.text(
                     xyPixPos[0],
                     xyPixPos[1],
-                    pixels['pixID'][i_pix],
+                    self._pixels['pixID'][i_pix],
                     horizontalalignment='center',
                     verticalalignment='center',
                     fontsize=fontSize
@@ -554,22 +579,22 @@ class Camera:
         plt.axis('equal')
         plt.grid(True)
         ax.set_axisbelow(True)
-        plt.axis([min(pixels['x']), max(pixels['x']),
-                  min(pixels['y'])*1.42, max(pixels['y'])*1.42])
+        plt.axis([min(self._pixels['x']), max(self._pixels['x']),
+                  min(self._pixels['y'])*1.42, max(self._pixels['y'])*1.42])
         plt.xlabel('Horizontal scale [cm]', fontsize=18, labelpad=0)
         plt.ylabel('Vertical scale [cm]', fontsize=18, labelpad=0)
-        ax.set_title('Pixels layout in {0:s} camera'.format(telescopeType),
+        ax.set_title('Pixels layout in {0:s} camera'.format(self._telescopeType),
                      fontsize=15, y=1.02)
         plt.tick_params(axis='both', which='major', labelsize=15)
 
-        self._plotAxesDef(telescopeType, plt, pixels['rotateAngle'])
+        self._plotAxesDef(self._telescopeType, plt, self._pixels['rotateAngle'])
         ax.text(0.02, 0.02, 'For an observer facing the camera',
                 transform=ax.transAxes, color='black', fontsize=12)
 
-        fov, rEdgeAvg = self.calcFOV(pixels['x'], pixels['y'], edgePixelIndices, focalLength)
+        fov, rEdgeAvg = self.calcFOV()
         ax.text(
             0.02, 0.96,
-            r'$f_{\mathrm{eff}}$ = ' + '{0:.3f} cm'.format(focalLength),
+            r'$f_{\mathrm{eff}}$ = ' + '{0:.3f} cm'.format(self._focalLength),
             transform=ax.transAxes,
             color='black',
             fontsize=12
