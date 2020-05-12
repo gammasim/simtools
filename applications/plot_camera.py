@@ -2,8 +2,9 @@
 
 import logging
 import matplotlib.pyplot as plt
-from simtools.model.telescope_model import TelescopeModel
+
 import simtools.config as cfg
+from simtools.model.telescope_model import TelescopeModel
 from simtools.model.camera import Camera
 
 logger = logging.getLogger(__name__)
