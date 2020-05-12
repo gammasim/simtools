@@ -1,13 +1,14 @@
 import logging
 import numpy as np
-from scipy.spatial import cKDTree as KDTree
 import matplotlib as mlp
-from matplotlib import pyplot as plt
+import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
+import matplotlib.colors as mcolors
 from matplotlib.collections import PatchCollection
-from matplotlib import colors as mcolors
+from scipy.spatial import cKDTree as KDTree
+
 import simtools.config as cfg
-from simtools.util import legendHandlers as legH
+import simtools.util.legendHandlers as legH
 from simtools.model.telescope_model import TelescopeModel
 from simtools.model.model_parameters import TWO_MIRROR_TELS, CAMERA_ROTATE_ANGLE
 
