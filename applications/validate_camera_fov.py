@@ -17,6 +17,8 @@ if __name__ == '__main__':
     The application prints out the FoV and plots the camera.
     '''
 
+    print('\nValidating the camera FoV of LST\n')
+
     site = 'south'
     telescope = 'lst'
     version = 'prod4'
@@ -29,10 +31,11 @@ if __name__ == '__main__':
         label=label
     )
 
+    cameraConfigFile = telModel.getParameter('camera_config_file')
     focalLength = float(telModel.getParameter('effective_focal_length'))
     camera = Camera(
         telescopeType=telModel.telescopeType,
-        cameraConfigFile=telModel.getParameter('camera_config_file'),
+        cameraConfigFile=cfg.findFile(cameraConfigFile),
         focalLength=focalLength
     )
 

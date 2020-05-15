@@ -7,8 +7,7 @@ import matplotlib.colors as mcolors
 from matplotlib.collections import PatchCollection
 from scipy.spatial import cKDTree as KDTree
 
-import simtools.config as cfg
-import simtools.util.legendHandlers as legH
+import simtools.util.legend_handlers as legH
 from simtools.model.telescope_model import TelescopeModel
 from simtools.model.model_parameters import TWO_MIRROR_TELS, CAMERA_ROTATE_ANGLE
 
@@ -21,11 +20,52 @@ logger.setLevel(logging.INFO)
 class Camera:
 
     def __init__(self, telescopeType, cameraConfigFile, focalLength):
+        '''
+        Camera class, defining pixel layout including rotation, finding neighbour pixels,
+        calculating FoV and plotting the camera.
+
+        Parameters
+        ----------
+        telescopeType: string
+                    As provided by the telescope model method "TelescopeModel".
+        cameraConfigFile: string
+                    The sim_telarray file name.
+        focalLength: float
+                    The focal length of the camera in (preferably the effective focal length),
+                    assumed to be in the same unit as the pixel positions in the cameraConfigFile.
+
+        Attributes
+        ----------
+        pixels: dict
+            A dictionary with the pixel positions, the camera rotation angle,
+            the pixel shape, the pixel diameter, the pixel IDs and their "on" status.
+        neighbours: array_like
+            Array of neighbour indices in a list for each pixel.
+        edgePixelIndices: array_like
+            Array of edge pixel indice
+
+        Methods
+        -------
+        readPixelList(cameraConfigFile)
+            Read the pixel layout from the camera config file,
+            assumed to be in a sim_telarray format.
+        calcFOV()
+            Calculate the FOV of the camera in degrees, taking into account the focal length.
+        getNeighbourPixels(pixels)
+            Find adjacent neighbour pixels in cameras with hexagonal or square pixels.
+            Only directly adjacent neighbours are searched for, no diagonals.
+        getEdgePixels(pixels, neighbours)
+            Find the edge pixels of the camera.
+        plotPixelLayout()
+            Plot the pixel layout for an observer facing the camera.
+            Including in the plot edge pixels, off pixels, pixel ID for the first 50 pixels,
+            coordinate systems, FOV, focal length and the average edge radius.
+        '''
 
         self._telescopeType = telescopeType
         self._cameraConfigFile = cameraConfigFile
         self._focalLength = focalLength
-        self._pixels = self.readPixelList(cfg.findFile(cameraConfigFile))
+        self._pixels = self.readPixelList(cameraConfigFile)
 
         self._pixels = self._rotatePixels(self._telescopeType, self._pixels)
 
@@ -185,7 +225,8 @@ class Camera:
         edgePixelIndices: list
             List of indices of the edge pixels
         focalLength: float
-            The focal length of the camera in (preferably the effective focal length)
+            The focal length of the camera in (preferably the effective focal length),
+            assumed to be in the same unit as the pixel positions.
 
         Returns
         -------
@@ -306,7 +347,7 @@ class Camera:
 
         Returns
         -------
-        neighbour: array_like
+        neighbours: array_like
             Array of neighbour indices in a list for each pixel
 
         '''
