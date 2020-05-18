@@ -14,64 +14,50 @@ class InvalidMirrorListFile(Exception):
 
 class Mirrors:
     '''
+    Mirrors class, created from a mirror list file.
+
+    Attributes
+    ----------
+    mirrors: dict
+        A dictionary with the mirror positions [cm], diameters, focel length and shape.
+    shape: int
+        Single shape code (0=circular, 1=hex. with flat side parallel to y, 2=square,
+        3=other hex.)
+    diameter: float
+        Single diameter in cm.
+    numberOfMirrors: int
+        Number of mirrors.
+
+    Methods
+    -------
+    readMirrorList(mirrorListFile)
+        Read the mirror list and store the data.
+    plotMirrorLayout()
+        Plot the mirror layout (to be implemented).
     '''
 
     def __init__(self, mirrorListFile):
         '''
-        Camera class, defining pixel layout including rotation, finding neighbour pixels,
-        calculating FoV and plotting the camera.
+        Mirrors.
 
         Parameters
         ----------
         mirrorListFile: string
                     The sim_telarray file name.
-
-        Attributes
-        ----------
-        mirrors: dict
-            A dictionary with the pixel positions, the camera rotation angle,
-            the pixel shape, the pixel diameter, the pixel IDs and their "on" status.
-        shape: int
-            Array of neighbour indices in a list for each pixel.
-        diameter: float
-            Array of edge pixel indice
-        numberOfMirrors: int
-            Array of edge pixel indice
-
-        Methods
-        -------
-        readMirrorList(mirrorListFile)
-            Read the pixel layout from the camera config file,
-            assumed to be in a sim_telarray format.
-        plotMirrorLayout()
-            Plot the pixel layout for an observer facing the camera.
-            Including in the plot edge pixels, off pixels, pixel ID for the first 50 pixels,
-            coordinate systems, FOV, focal length and the average edge radius.
         '''
+        logger.debug('Mirrors Init')
 
         self._mirrorListFile = mirrorListFile
         self._readMirrorList()
 
     def _readMirrorList(self):
         '''
-        Read the pixel layout from the camera config file, assumed to be in a sim_telarray format.
+        Read the mirror list in sim_telarray format and store the data.
 
-        Parameters
-        ----------
-        cameraConfigFile: string
-            The sim_telarray file name.
-
-        Returns
-        -------
-        dict: pixels
-            A dictionary with the pixel positions, the camera rotation angle,
-            the pixel shape, the pixel diameter, the pixel IDs and their "on" status.
-
-        Notes
-        -----
-        The pixel shape can be hexagonal (denoted as 1 or 3) or a square (denoted as 2).
-        The hexagonal shapes differ in their orientation, where those denoted as 3 are rotated
-        clockwise by 30 degrees with respect to those denoted as 1.
+        Raises
+        ------
+        InvalidMirrorListFile
+            If number of mirrors is 0.
         '''
         self._mirrors = dict()
         self._mirrors['number'] = list()
@@ -110,6 +96,16 @@ class Mirrors:
 
     def getSingleMirrorParameters(self, number):
         '''
+        Get parameters for a single mirror given by number.
+
+        Parameters
+        ----------
+        number: int
+            Mirror number of desired parameters.
+
+        Returns
+        -------
+        (posX, posY, diameter, flen, shape)
         '''
         if number > self.numberOfMirrors - 1:
             logger.error('Mirror number is out range')
@@ -124,13 +120,6 @@ class Mirrors:
 
     def plotMirrorLayout(self):
         '''
-        Plot the pixel layout for an observer facing the camera.
-        Including in the plot edge pixels, off pixels, pixel ID for the first 50 pixels,
-        coordinate systems, FOV, focal length and the average edge radius.
-
-        Returns
-        -------
-        plt: pyplot.plt instance with the pixel layout
-
+        Plot the mirror layout.
         '''
         pass
