@@ -320,8 +320,14 @@ class SimtelRunner:
                 )
             )
             command += _configOption('focal_length', self._sourceDistance * u.km.to(u.cm))
-            command += _configOption('dish_shape_length', self.telescopeModel.mirrorFocalLength)
-            command += _configOption('mirror_focal_length', self.telescopeModel.mirrorFocalLength)
+            command += _configOption(
+                'dish_shape_length',
+                self.telescopeModel.getParameter('mirror_focal_length')
+            )
+            command += _configOption(
+                'mirror_focal_length',
+                self.telescopeModel.getParameter('mirror_focal_length')
+            )
             command += _configOption('parabolic_dish', '0')
             # command += _configOption('random_focal_length', '0.')
             command += _configOption('mirror_align_random_distance', '0.')
