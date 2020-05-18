@@ -125,7 +125,7 @@ def findFile(name, loc=None):
         logger.debug('Searching directory {}'.format(directory))
         if not Path(directory).exists():
             msg = 'Directory {} does not exist'.format(directory)
-            logger.warning(msg)
+            logger.debug(msg)
             return None
 
         f = Path(directory).joinpath(filename)
