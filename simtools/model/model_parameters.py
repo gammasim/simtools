@@ -7,5 +7,13 @@ MODEL_PARS = {
     'fadc_mhz': {'type': float, 'names': ['fadc_MHz']},
     'quantum_efficiency': {'type': str, 'names': ['quantum_eff']},
     'telescope_transmission': {'type': str, 'names': ['telescope_trans']},
-    'camera_transmission': {'type': str, 'names': ['camera_trans']}
+    'camera_transmission': {'type': str, 'names': ['camera_trans']},
+    'trigger_telescopes': {'type': int, 'names': []},
+    'iobuf_maximum': {'type': int, 'names': ['iobuf_max']},
+    'iobuf_output_maximum': {'type': int, 'names': ['iobuf_output_max']},
+    'only_triggered_telescopes': {'type': int, 'names': []},
+    'store_photoelectrons': {'type': int, 'names': []},
+    'sum_after_peak': {'type': int, 'names': []},
+    'sum_before_peak': {'type': int, 'names': []},
+    'trigger_pixels': {'type': int, 'names': ['trigger_pixel']}
 }
