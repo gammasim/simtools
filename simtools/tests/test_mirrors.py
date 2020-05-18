@@ -1,6 +1,5 @@
 #!/usr/bin/python3
 
-import yaml
 import logging
 
 import simtools.io_handler as io
