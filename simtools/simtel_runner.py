@@ -13,9 +13,9 @@ import astropy.units as u
 
 import simtools.io_handler as io
 import simtools.config as cfg
+import simtools.util.general as gen
 from simtools.util import names
 from simtools.model.telescope_model import TelescopeModel
-from simtools.util.general import collectArguments
 
 __all__ = ['SimtelRunner']
 
@@ -105,7 +105,7 @@ class SimtelRunner:
         self.PHOTONS_PER_RUN = 10000  # const
 
         if self._isRayTracingMode():
-            collectArguments(
+            gen.collectArguments(
                 self,
                 args=[
                     'zenithAngle',
@@ -175,27 +175,32 @@ class SimtelRunner:
             for _ in range(self.RUNS_PER_SET - 1):
                 os.system(command)
 
-        self._catchSimtelError(sysOutput)
-
-    def _catchSimtelError(self, sysOutput):
-        if sysOutput == '0':
-            logger.debug('Everything seems fine with simtel execution')
+        # Checking run
+        if self._isRayTracingMode:
+            if self._isPhotonListFileOK():
+                logger.debug('Everything looks fine with simtel run')
+            else:
+                self._raiseSimtelError()
+        elif self._simtelFailed():
+            self._raiseSimtelError()
         else:
-            # Collecting final 10 lines of simtel log file.
-            fileInLines = list()
-            with open(self._logFileName, 'r') as logFile:
-                for line in logFile:
-                    fileInLines.append(line)
-            msgInLines = fileInLines[-10:-1]
-            msg = ''
-            for ll in msgInLines:
-                msg += ll
-            logger.error(
-                'Simtel Error - See below the relevant part of the simtel log file.\n'
-                + '===== from simtel log file ======\n' + msg
-                + '================================='
-            )
-            raise SimtelExecutionError()
+            logger.debug('Everything looks fine with simtel run')
+
+    def _simtelFailed(self, sysOutput):
+        return sysOutput != '0'
+
+    def _isPhotonListFileOK(self):
+        nLines = sum(1 for l in open(self._photonsFileName, 'r'))
+        return nLines > 100
+
+    def _raiseSimtelError(self):
+        msg = gen.collectFinalLines(self._logFileName, 10)
+        logger.error(
+            'Simtel Error - See below the relevant part of the simtel log file.\n'
+            + '===== from simtel log file ======\n' + msg
+            + '================================='
+        )
+        raise SimtelExecutionError()
 
     def _getRunBashScript(self, test=False):
         logger.debug('Creating run bash script')
