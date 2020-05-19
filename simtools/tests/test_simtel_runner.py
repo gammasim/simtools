@@ -33,14 +33,18 @@ def test_ray_tracing_mode():
 
 def test_catching_model_error():
     tel = TelescopeModel(
-        telescopeType='mst-flashcam',
+        telescopeType='lst',
         site='south',
         version='prod4',
         label='test-simtel'
     )
 
     # Adding a invalid parameter
-    tel.addParameters(invalid_parameter='invalid_value')
+    # tel.addParameters(invalid_parameter='invalid_value')
+    file_spe = cfg.findFile(name='spe_FlashCam_7dynode_v0a.dat')
+    file_pulse = cfg.findFile(name='pulse_FlashCam_7dynode_v2a.dat')
+
+    tel.changeParameters(pm_photoelectron_spectrum=file_spe, fadc_pulse_shape=file_pulse)
 
     simtel = SimtelRunner(
         mode='ray-tracing',
