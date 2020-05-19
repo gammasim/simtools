@@ -74,7 +74,6 @@ def test_rx():
         version=version,
         label=label
     )
-    # tel.changeParameters(pm_transit_time=1)
 
     ray = RayTracing(
         telescopeModel=tel,
