@@ -63,17 +63,18 @@ def test_ssts(show=False):
 def test_rx():
     sourceDistance = 10 * u.km
     site = 'south'
-    version = 'prod4'
-    label = 'test-astri'
+    version = 'prod3'
+    label = 'test-lst'
     zenithAngle = 20 * u.deg
     offAxisAngle = [0, 2.5, 5.0] * u.deg
 
     tel = TelescopeModel(
-        telescopeType='astri',
+        telescopeType='lst',
         site=site,
         version=version,
         label=label
     )
+    tel.changeParameters(pm_transit_time=20)
 
     ray = RayTracing(
         telescopeModel=tel,
