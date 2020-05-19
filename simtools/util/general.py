@@ -5,7 +5,7 @@ import copy
 
 import astropy.units as u
 
-__all__ = ['collectArguments', 'collectKwargs', 'setDefaultKwargs', 'sortArrays']
+__all__ = ['collectArguments', 'collectKwargs', 'setDefaultKwargs', 'sortArrays', 'collectFinalLines']
 
 logger = logging.getLogger(__name__)
 
@@ -193,3 +193,27 @@ def sortArrays(*args):
         _, a = zip(*sorted(zip(orderArray, arg)))
         newArgs.append(list(a))
     return newArgs
+
+
+def collectFinalLines(file, nLines):
+    '''
+    Parameters
+    ----------
+    file: str or Path
+        File to collect the lines from.
+    nLines: int
+        Number of lines to be collected.
+
+    Returns
+    -------
+    str: lines
+    '''
+    fileInLines = list()
+    with open(file, 'r') as f:
+        for line in f:
+            fileInLines.append(line)
+    collectedLines = fileInLines[-nLines:-1]
+    out = ''
+    for ll in collectedLines:
+        out += ll
+    return out
