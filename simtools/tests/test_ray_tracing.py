@@ -20,7 +20,7 @@ def test_ssts(show=False):
     # Test with 3 SSTs
     sourceDistance = 10 * u.km
     site = 'south'
-    version = 'prod4'
+    version = 'prod3'
     zenithAngle = 20 * u.deg
     offAxisAngle = [0, 1.0, 2.0, 3.0, 4.0] * u.deg
 
@@ -74,7 +74,6 @@ def test_rx():
         version=version,
         label=label
     )
-    tel.changeParameters(pm_transit_time=20)
 
     ray = RayTracing(
         telescopeModel=tel,
@@ -118,7 +117,7 @@ def test_rx():
 def test_plot_image():
     sourceDistance = 10 * u.km
     site = 'south'
-    version = 'prod4'
+    version = 'prod3'
     label = 'test-astri'
     zenithAngle = 20 * u.deg
     offAxisAngle = [0, 2.5, 5.0] * u.deg
@@ -156,7 +155,7 @@ def test_single_mirror(plot=False):
 
     # Test MST, single mirror PSF simulation
     site = 'south'
-    version = 'prod4'
+    version = 'prod3'
 
     tel = TelescopeModel(
         telescopeType='mst-flashcam',
