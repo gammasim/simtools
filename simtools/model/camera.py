@@ -18,6 +18,37 @@ logger.setLevel(logging.INFO)
 
 
 class Camera:
+    '''
+    Camera class, defining pixel layout including rotation, finding neighbour pixels,
+    calculating FoV and plotting the camera.
+
+    Attributes
+    ----------
+    pixels: dict
+        A dictionary with the pixel positions, the camera rotation angle,
+        the pixel shape, the pixel diameter, the pixel IDs and their "on" status.
+    neighbours: array_like
+        Array of neighbour indices in a list for each pixel.
+    edgePixelIndices: array_like
+        Array of edge pixel indice
+
+    Methods
+    -------
+    readPixelList(cameraConfigFile)
+        Read the pixel layout from the camera config file,
+        assumed to be in a sim_telarray format.
+    calcFOV()
+        Calculate the FOV of the camera in degrees, taking into account the focal length.
+    getNeighbourPixels(pixels)
+        Find adjacent neighbour pixels in cameras with hexagonal or square pixels.
+        Only directly adjacent neighbours are searched for, no diagonals.
+    getEdgePixels(pixels, neighbours)
+        Find the edge pixels of the camera.
+    plotPixelLayout()
+        Plot the pixel layout for an observer facing the camera.
+        Including in the plot edge pixels, off pixels, pixel ID for the first 50 pixels,
+        coordinate systems, FOV, focal length and the average edge radius.
+    '''
 
     def __init__(self, telescopeType, cameraConfigFile, focalLength):
         '''
@@ -33,33 +64,6 @@ class Camera:
         focalLength: float
                     The focal length of the camera in (preferably the effective focal length),
                     assumed to be in the same unit as the pixel positions in the cameraConfigFile.
-
-        Attributes
-        ----------
-        pixels: dict
-            A dictionary with the pixel positions, the camera rotation angle,
-            the pixel shape, the pixel diameter, the pixel IDs and their "on" status.
-        neighbours: array_like
-            Array of neighbour indices in a list for each pixel.
-        edgePixelIndices: array_like
-            Array of edge pixel indice
-
-        Methods
-        -------
-        readPixelList(cameraConfigFile)
-            Read the pixel layout from the camera config file,
-            assumed to be in a sim_telarray format.
-        calcFOV()
-            Calculate the FOV of the camera in degrees, taking into account the focal length.
-        getNeighbourPixels(pixels)
-            Find adjacent neighbour pixels in cameras with hexagonal or square pixels.
-            Only directly adjacent neighbours are searched for, no diagonals.
-        getEdgePixels(pixels, neighbours)
-            Find the edge pixels of the camera.
-        plotPixelLayout()
-            Plot the pixel layout for an observer facing the camera.
-            Including in the plot edge pixels, off pixels, pixel ID for the first 50 pixels,
-            coordinate systems, FOV, focal length and the average edge radius.
         '''
 
         self._telescopeType = telescopeType
@@ -128,9 +132,11 @@ class Camera:
                     pixels['pixOn'].append(True)
 
         if pixels['diameter'] == 9999:
-            logger.warn('Could not read the pixel diameter from .dat file, '
-                        'defaulting to 4.9 cm')
-            pixels['diameter'] = 4.9
+            raise ValueError('Could not read the pixel diameter'
+                             ' from {} file'.format(cameraConfigFile))
+        if pixels['funnelShape'] not in [1, 2, 3]:
+            raise ValueError('Funnel shape in {} unrecognized '
+                             '(has to be 1, 2 or 3)'.format(cameraConfigFile))
 
         return pixels
 
@@ -200,7 +206,6 @@ class Camera:
         Notes
         -----
         The x,y pixel positions and focal length are assumed to have the same unit (usually cm)
-
         '''
 
         logger.debug('Calculating the FoV')
@@ -238,7 +243,6 @@ class Camera:
         Notes
         -----
         The x,y pixel positions and focal length are assumed to have the same unit (usually cm)
-
         '''
 
         logger.debug('Calculating the FoV')
@@ -271,7 +275,6 @@ class Camera:
         -------
         neighbours: array_like
             Array of neighbour indices in a list for each e.g., pixel
-
         '''
 
         points = np.array([xPos, yPos]).T
@@ -307,7 +310,6 @@ class Camera:
         -------
         neighbours: array_like
             Array of neighbour indices in a list for each pixel
-
         '''
 
         # First find the neighbours with the usual method and the original radius
@@ -349,7 +351,6 @@ class Camera:
         -------
         neighbours: array_like
             Array of neighbour indices in a list for each pixel
-
         '''
 
         logger.debug('Searching for neighbour pixels')
@@ -387,7 +388,6 @@ class Camera:
         -------
         edgePixelIndices: array_like
             Array of edge pixel indices
-
         '''
 
         logger.debug('Searching for edge pixels')
@@ -420,7 +420,6 @@ class Camera:
             A pyplot.plt instance where to add the axes definitions.
         rotateAngle: float
             The rotation angle applied
-
         '''
 
         invertYaxis = False
@@ -437,30 +436,30 @@ class Camera:
         if np.rad2deg(rotateAngle) > 100:
             yPos -= 0.09
             xPos -= 0.05
-        axesPars = {'xTitle': xTitle, 'yTitle': yTitle, 'xPos': xPos, 'yPos': yPos,
-                    'rotateAngle': rotateAngle - (1/2.)*np.pi, 'fc': 'black',
-                    'ec': 'black', 'invertYaxis': invertYaxis}
-        self._plotOneAxisDef(plt, **axesPars)
+        kwargs = {'xTitle': xTitle, 'yTitle': yTitle, 'xPos': xPos, 'yPos': yPos,
+                  'rotateAngle': rotateAngle - (1/2.)*np.pi, 'fc': 'black',
+                  'ec': 'black', 'invertYaxis': invertYaxis}
+        self._plotOneAxisDef(plt, **kwargs)
 
         xTitle = r'$x_{\!cam}$'
         yTitle = r'$y_{\!cam}$'
         xPos, yPos = (xLeft + 0.15, 0.12)
-        axesPars = {'xTitle': xTitle, 'yTitle': yTitle, 'xPos': xPos, 'yPos': yPos,
-                    'rotateAngle': (3/2.)*np.pi, 'fc': 'blue',
-                    'ec': 'blue', 'invertYaxis': invertYaxis}
-        self._plotOneAxisDef(plt, **axesPars)
+        kwargs = {'xTitle': xTitle, 'yTitle': yTitle, 'xPos': xPos, 'yPos': yPos,
+                  'rotateAngle': (3/2.)*np.pi, 'fc': 'blue',
+                  'ec': 'blue', 'invertYaxis': invertYaxis}
+        self._plotOneAxisDef(plt, **kwargs)
 
         xTitle = 'Alt'
         yTitle = 'Az'
         xPos, yPos = (xLeft + 0.15, 0.25)
-        axesPars = {'xTitle': xTitle, 'yTitle': yTitle, 'xPos': xPos, 'yPos': yPos,
-                    'rotateAngle': (3/2.)*np.pi, 'fc': 'red',
-                    'ec': 'red', 'invertYaxis': invertYaxis}
-        self._plotOneAxisDef(plt, **axesPars)
+        kwargs = {'xTitle': xTitle, 'yTitle': yTitle, 'xPos': xPos, 'yPos': yPos,
+                  'rotateAngle': (3/2.)*np.pi, 'fc': 'red',
+                  'ec': 'red', 'invertYaxis': invertYaxis}
+        self._plotOneAxisDef(plt, **kwargs)
 
         return
 
-    def _plotOneAxisDef(self, plt, **axesPars):
+    def _plotOneAxisDef(self, plt, **kwargs):
         '''
         Plot an axis on the pyplot.plt instance provided.
 
@@ -468,7 +467,7 @@ class Camera:
         ----------
         plt: pyplot.plt instance
             A pyplot.plt instance where to add the axes definitions.
-        **axesPars: dict
+        **kwargs: dict
              xTitle: str
                 x-axis title
              yTitle: str
@@ -485,21 +484,20 @@ class Camera:
                 edge colour of the axis
              invertYaxis: bool
                 Flag to invert the y-axis (for dual mirror telescopes).
-
         '''
 
-        xTitle = axesPars['xTitle']
-        yTitle = axesPars['yTitle']
-        xPos, yPos = (axesPars['xPos'], axesPars['yPos'])
+        xTitle = kwargs['xTitle']
+        yTitle = kwargs['yTitle']
+        xPos, yPos = (kwargs['xPos'], kwargs['yPos'])
 
         r = 0.1  # size of arrow
         sign = 1.
-        if axesPars['invertYaxis']:
+        if kwargs['invertYaxis']:
             sign *= -1.
-        xText1 = xPos + sign*r*np.cos(axesPars['rotateAngle'])
-        yText1 = yPos + r*np.sin(0 + axesPars['rotateAngle'])
-        xText2 = xPos + sign*r*np.cos(np.pi/2. + axesPars['rotateAngle'])
-        yText2 = yPos + r*np.sin(np.pi/2. + axesPars['rotateAngle'])
+        xText1 = xPos + sign*r*np.cos(kwargs['rotateAngle'])
+        yText1 = yPos + r*np.sin(0 + kwargs['rotateAngle'])
+        xText2 = xPos + sign*r*np.cos(np.pi/2. + kwargs['rotateAngle'])
+        yText2 = yPos + r*np.sin(np.pi/2. + kwargs['rotateAngle'])
 
         plt.gca().annotate(
             xTitle,
@@ -510,7 +508,7 @@ class Camera:
             va='center',
             size='xx-large',
             arrowprops=dict(arrowstyle='<|-', shrinkA=0, shrinkB=0,
-                            fc=axesPars['fc'], ec=axesPars['ec'])
+                            fc=kwargs['fc'], ec=kwargs['ec'])
         )
 
         plt.gca().annotate(
@@ -522,7 +520,7 @@ class Camera:
             va='center',
             size='xx-large',
             arrowprops=dict(arrowstyle='<|-', shrinkA=0, shrinkB=0,
-                            fc=axesPars['fc'], ec=axesPars['ec'])
+                            fc=kwargs['fc'], ec=kwargs['ec'])
         )
 
         return
@@ -536,7 +534,6 @@ class Camera:
         Returns
         -------
         plt: pyplot.plt instance with the pixel layout
-
         '''
 
         logger.info('Plotting the {} camera'.format(self._telescopeType))
@@ -614,6 +611,7 @@ class Camera:
             legendHandlerMap = {legH.pixelObject: legH.squarePixelHandler(),
                                 legH.edgePixelObject: legH.squareEdgePixelHandler(),
                                 legH.offPixelObject: legH.squareOffPixelHandler()}
+
         if len(offPixels) > 0:
             legendObjects.append(legH.offPixelObject())
             legendLabels.append('Disabled pixel')

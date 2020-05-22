@@ -194,15 +194,22 @@ def plot1D(data, **kwargs):
           The labels of each dataset set are given in the dictionary keys
           and will be used in the legend.
     **kwargs:
-        * palette: choose a colour palette (see setStyle for additional information).
-        * title: set a plot title.
-        * npLegend: do not print a legend for the plot.
-        * bigPlot: increase marker and font sizes (like in a wide lightcurve).
-        * noMarkers: do not print markers.
-        * emptyMarkers: print empty (hollow) markers
-        * plotRatio: add a ratio plot at the bottom. The first entry in the data dictionary
-                     is used as the reference for the ratio.
-                     If data dictionary is not an OrderedDict, the reference will be random.
+        * palette: string
+          Choose a colour palette (see setStyle for additional information).
+        * title: string
+          Set a plot title.
+        * npLegend: bool
+          Do not print a legend for the plot.
+        * bigPlot: bool
+          Increase marker and font sizes (like in a wide lightcurve).
+        * noMarkers: bool
+          Do not print markers.
+        * emptyMarkers: bool
+          Print empty (hollow) markers
+        * plotRatio: bool
+          Add a ratio plot at the bottom. The first entry in the data dictionary
+          is used as the reference for the ratio.
+          If data dictionary is not an OrderedDict, the reference will be random.
         * Any additional kwargs for plt.plot
 
     Returns
@@ -211,23 +218,26 @@ def plot1D(data, **kwargs):
         a pyplot.plt instance in which the plot was produced
     '''
 
-    palette = 'default'
-    bigPlot = False
-    noLegend = False
-    if 'palette' in kwargs:
-        palette = kwargs['palette']
-        kwargs.pop('palette', None)
-    if 'bigPlot' in kwargs:
-        bigPlot = kwargs['bigPlot']
-        kwargs.pop('bigPlot', None)
-    if 'title' in kwargs:
-        title = kwargs['title']
-        kwargs.pop('title', None)
-    else:
-        title = ''
-    if 'noLegend' in kwargs:
-        noLegend = True
-        kwargs.pop('noLegend', None)
+    palette = kwargs.get('palette', 'default')
+    kwargs.pop('palette', None)
+    bigPlot = kwargs.get('bigPlot', False)
+    kwargs.pop('bigPlot', None)
+    title = kwargs.get('title', '')
+    kwargs.pop('title', None)
+    noLegend = kwargs.get('noLegend', False)
+    kwargs.pop('noLegend', None)
+    noMarkers = kwargs.get('noMarkers', False)
+    kwargs.pop('noMarkers', None)
+    emptyMarkers = kwargs.get('emptyMarkers', False)
+    kwargs.pop('emptyMarkers', None)
+
+    if noMarkers:
+        kwargs['marker'] = 'None'
+        kwargs['linewidth'] = 4
+    if emptyMarkers:
+        kwargs['markerfacecolor'] = 'None'
+        kwargs.pop('emptyMarkers', None)
+
     setStyle(palette, bigPlot)
 
     if not isinstance(data, dict):
@@ -236,24 +246,12 @@ def plot1D(data, **kwargs):
     else:
         dataDict = data
 
-    if 'noMarkers' in kwargs:
-        if kwargs['noMarkers']:
-            kwargs['marker'] = 'None'
-            kwargs['linewidth'] = 4
-            kwargs.pop('noMarkers', None)
-    if 'emptyMarkers' in kwargs:
-        if kwargs['emptyMarkers']:
-            kwargs['markerfacecolor'] = 'None'
-            kwargs.pop('emptyMarkers', None)
+    plotRatio = kwargs.get('plotRatio', False)
+    kwargs.pop('plotRatio', None)
+    if plotRatio:
+        if len(dataDict) < 2:
+            raise ValueError('Asked to plot ratio with just one set of data')
 
-    plotRatio = False
-    if 'plotRatio' in kwargs:
-        if kwargs['plotRatio']:
-            if len(dataDict) < 2:
-                raise ValueError('Asked to plot ratio with just one set of data')
-            else:
-                plotRatio = True
-            kwargs.pop('plotRatio', None)
     if plotRatio:
         gs = gridspec.GridSpec(2, 1, height_ratios=[3, 1])
         plt.figure(figsize=(8, 8))
