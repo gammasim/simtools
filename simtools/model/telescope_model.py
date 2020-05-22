@@ -12,6 +12,7 @@ from pathlib import Path
 from simtools.util import names
 from simtools.util.model import getTelescopeSize
 from simtools.model.model_parameters import MODEL_PARS
+from simtools.model.mirrors import Mirrors
 import simtools.config as cfg
 import simtools.io_handler as io
 
@@ -102,31 +103,12 @@ class TelescopeModel:
 
         self._setConfigFileDirectory()
         self._isConfigFileUpdated = False
-        self._areMirrorParametersLoaded = False
 
     @property
-    def numberOfMirrors(self):
-        if not self._areMirrorParametersLoaded:
-            self._loadMirrorParameters()
-        return self._numberOfMirrors
-
-    @property
-    def mirrorFocalLength(self):
-        if not self._areMirrorParametersLoaded:
-            self._loadMirrorParameters
-        return self._mirrorFocalLength
-
-    @property
-    def mirrorDiameter(self):
-        if not self._areMirrorParametersLoaded:
-            self._loadMirrorParameters
-        return self._mirrorDiameter
-
-    @property
-    def mirrorShape(self):
-        if not self._areMirrorParametersLoaded:
-            self._loadMirrorParameters
-        return self._mirrorShape
+    def mirrors(self):
+        if '_mirrors' not in self.__dict__:
+            self._loadMirrors()
+        return self._mirrors
 
     @classmethod
     def fromConfigFile(
@@ -272,6 +254,8 @@ class TelescopeModel:
             logger.debug('Telescope is MST type - reading optics parameters')
             parametersDB = _readParsFromOneType(telescopeType='MST-optics')
             _collectAplicablePars(parametersDB)
+
+        print(self._parameters)
 
         # Site: Two site parameters need to be read: atmospheric_transmission and altitude
         logger.debug('Reading site parameters from DB')
@@ -484,8 +468,9 @@ class TelescopeModel:
         setFocalLengthToZero: bool
             Set the focal length to zero if True.
         '''
-        if mirrorNumber > self.numberOfMirrors:
+        if mirrorNumber > self.mirrors.numberOfMirrors:
             logging.error('mirrorNumber > numberOfMirrors')
+            return None
 
         fileName = names.simtelSingleMirrorListFileName(
             self.version,
@@ -498,20 +483,7 @@ class TelescopeModel:
             self._singleMirrorListFilePaths = dict()
         self._singleMirrorListFilePaths[mirrorNumber] = self._configFileDirectory.joinpath(fileName)
 
-        mirrorListFileName = self._parameters['mirror_list']
-        mirrorListFile = cfg.findFile(mirrorListFileName, self._modelFilesLocations)
-        with open(mirrorListFile, 'r') as file:
-            mirrorCounter = 0
-            for line in file:
-                if '#' in line:
-                    continue
-                mirrorCounter += 1
-                if mirrorCounter == mirrorNumber:
-                    line = line.split()
-                    thisMirrorDiameter = float(line[2])
-                    thisMirrorFocalLength = float(line[3])
-                    thisMirrorShape = int(line[4])
-                    break
+        __, __, diameter, flen, shape = self.mirrors.getSingleMirrorParameters(mirrorNumber)
 
         with open(self._singleMirrorListFilePaths[mirrorNumber], 'w') as file:
             file.write('# Column 1: X pos. [cm] (North/Down)\n')
@@ -530,9 +502,9 @@ class TelescopeModel:
             )
             file.write('#\n')
             file.write('0. 0. {} {} {} 0.\n'.format(
-                thisMirrorDiameter,
-                thisMirrorFocalLength if not setFocalLengthToZero else 0,
-                thisMirrorShape
+                diameter,
+                flen if not setFocalLengthToZero else 0,
+                shape
             ))
     # END of exportSingleMirrorListFile
 
@@ -541,24 +513,8 @@ class TelescopeModel:
         self.exportSingleMirrorListFile(mirrorNumber, setFocalLengthToZero)
         return self._singleMirrorListFilePaths[mirrorNumber]
 
-    def _loadMirrorParameters(self):
+    def _loadMirrors(self):
         mirrorListFileName = self._parameters['mirror_list']
         mirrorListFile = cfg.findFile(mirrorListFileName, self._modelFilesLocations)
-        collectGeoPars = True
-        mirrorCounter = 0
-        with open(mirrorListFile, 'r') as file:
-            for line in file:
-                if '#' in line:
-                    continue
-                if collectGeoPars:
-                    line = line.split()
-                    self._mirrorDiameter = float(line[2])
-                    self._mirrorFocalLength = float(line[3])
-                    self._mirrorShape = int(line[4])
-                    collectGeoPars = False
-                mirrorCounter += 1
-        self._numberOfMirrors = mirrorCounter
-        if 'mirror_focal_length' in self._parameters:
-            self._mirrorFocalLength = self._parameters['mirror_focal_length']
-        self._areMirrorParametersLoaded = True
+        self._mirrors = Mirrors(mirrorListFile)
         return
