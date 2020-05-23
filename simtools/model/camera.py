@@ -4,8 +4,8 @@ import matplotlib as mlp
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 import matplotlib.colors as mcolors
+import scipy.spatial.cKDTree as KDTree
 from matplotlib.collections import PatchCollection
-from scipy.spatial import cKDTree as KDTree
 
 import simtools.util.legend_handlers as legH
 from simtools.model.telescope_model import TelescopeModel
@@ -132,11 +132,15 @@ class Camera:
                     pixels['pixOn'].append(True)
 
         if pixels['diameter'] == 9999:
-            raise ValueError('Could not read the pixel diameter'
-                             ' from {} file'.format(cameraConfigFile))
+            raise ValueError(
+                'Could not read the pixel diameter'
+                ' from {} file'.format(cameraConfigFile)
+            )
         if pixels['funnelShape'] not in [1, 2, 3]:
-            raise ValueError('Funnel shape in {} unrecognized '
-                             '(has to be 1, 2 or 3)'.format(cameraConfigFile))
+            raise ValueError(
+                'Funnel shape in {} unrecognized '
+                '(has to be 1, 2 or 3)'.format(cameraConfigFile)
+            )
 
         return pixels
 
@@ -324,8 +328,10 @@ class Camera:
                     # No need to look at the pixel itself
                     # nor at any pixels already in the neighbours list
                     if j_pix != i_pix and j_pix not in nn:
-                        dist = np.sqrt((xPos[i_pix] - xPos[j_pix])**2 +
-                                       (yPos[i_pix] - yPos[j_pix])**2)
+                        dist = np.sqrt(
+                            (xPos[i_pix] - xPos[j_pix])**2
+                            + (yPos[i_pix] - yPos[j_pix])**2
+                        )
                         # Check if this pixel is in the same row or column
                         # and allow it to be ~1.68*diameter away (1.4*1.2 = 1.68)
                         # Need to increase the distance because of the curvature
@@ -436,25 +442,46 @@ class Camera:
         if np.rad2deg(rotateAngle) > 100:
             yPos -= 0.09
             xPos -= 0.05
-        kwargs = {'xTitle': xTitle, 'yTitle': yTitle, 'xPos': xPos, 'yPos': yPos,
-                  'rotateAngle': rotateAngle - (1/2.)*np.pi, 'fc': 'black',
-                  'ec': 'black', 'invertYaxis': invertYaxis}
+        kwargs = {
+            'xTitle': xTitle,
+            'yTitle': yTitle,
+            'xPos': xPos,
+            'yPos': yPos,
+            'rotateAngle': rotateAngle - (1/2.)*np.pi,
+            'fc': 'black',
+            'ec': 'black',
+            'invertYaxis': invertYaxis
+        }
         self._plotOneAxisDef(plt, **kwargs)
 
         xTitle = r'$x_{\!cam}$'
         yTitle = r'$y_{\!cam}$'
         xPos, yPos = (xLeft + 0.15, 0.12)
-        kwargs = {'xTitle': xTitle, 'yTitle': yTitle, 'xPos': xPos, 'yPos': yPos,
-                  'rotateAngle': (3/2.)*np.pi, 'fc': 'blue',
-                  'ec': 'blue', 'invertYaxis': invertYaxis}
+        kwargs = {
+            'xTitle': xTitle,
+            'yTitle': yTitle,
+            'xPos': xPos,
+            'yPos': yPos,
+            'rotateAngle': (3/2.)*np.pi,
+            'fc': 'blue',
+            'ec': 'blue',
+            'invertYaxis': invertYaxis
+        }
         self._plotOneAxisDef(plt, **kwargs)
 
         xTitle = 'Alt'
         yTitle = 'Az'
         xPos, yPos = (xLeft + 0.15, 0.25)
-        kwargs = {'xTitle': xTitle, 'yTitle': yTitle, 'xPos': xPos, 'yPos': yPos,
-                  'rotateAngle': (3/2.)*np.pi, 'fc': 'red',
-                  'ec': 'red', 'invertYaxis': invertYaxis}
+        kwargs = {
+            'xTitle': xTitle,
+            'yTitle': yTitle,
+            'xPos': xPos,
+            'yPos': yPos,
+            'rotateAngle': (3/2.)*np.pi,
+            'fc': 'red',
+            'ec': 'red',
+            'invertYaxis': invertYaxis
+        }
         self._plotOneAxisDef(plt, **kwargs)
 
         return
@@ -507,8 +534,13 @@ class Camera:
             ha='center',
             va='center',
             size='xx-large',
-            arrowprops=dict(arrowstyle='<|-', shrinkA=0, shrinkB=0,
-                            fc=kwargs['fc'], ec=kwargs['ec'])
+            arrowprops=dict(
+                arrowstyle='<|-',
+                shrinkA=0,
+                shrinkB=0,
+                fc=kwargs['fc'],
+                ec=kwargs['ec']
+            )
         )
 
         plt.gca().annotate(
@@ -519,8 +551,13 @@ class Camera:
             ha='center',
             va='center',
             size='xx-large',
-            arrowprops=dict(arrowstyle='<|-', shrinkA=0, shrinkB=0,
-                            fc=kwargs['fc'], ec=kwargs['ec'])
+            arrowprops=dict(
+                arrowstyle='<|-',
+                shrinkA=0,
+                shrinkB=0,
+                fc=kwargs['fc'],
+                ec=kwargs['ec']
+            )
         )
 
         return
@@ -604,13 +641,17 @@ class Camera:
         legendObjects = [legH.pixelObject(), legH.edgePixelObject()]
         legendLabels = ['Pixel', 'Edge pixel']
         if (type(onPixels[0]) == mlp.patches.RegularPolygon):
-            legendHandlerMap = {legH.pixelObject: legH.hexPixelHandler(),
-                                legH.edgePixelObject: legH.hexEdgePixelHandler(),
-                                legH.offPixelObject: legH.hexOffPixelHandler()}
+            legendHandlerMap = {
+                legH.pixelObject: legH.hexPixelHandler(),
+                legH.edgePixelObject: legH.hexEdgePixelHandler(),
+                legH.offPixelObject: legH.hexOffPixelHandler()
+            }
         elif (type(onPixels[0]) == mlp.patches.Rectangle):
-            legendHandlerMap = {legH.pixelObject: legH.squarePixelHandler(),
-                                legH.edgePixelObject: legH.squareEdgePixelHandler(),
-                                legH.offPixelObject: legH.squareOffPixelHandler()}
+            legendHandlerMap = {
+                legH.pixelObject: legH.squarePixelHandler(),
+                legH.edgePixelObject: legH.squareEdgePixelHandler(),
+                legH.offPixelObject: legH.squareOffPixelHandler()
+            }
 
         if len(offPixels) > 0:
             legendObjects.append(legH.offPixelObject())
@@ -619,17 +660,30 @@ class Camera:
         plt.axis('equal')
         plt.grid(True)
         ax.set_axisbelow(True)
-        plt.axis([min(self._pixels['x']), max(self._pixels['x']),
-                  min(self._pixels['y'])*1.42, max(self._pixels['y'])*1.42])
+        plt.axis([
+            min(self._pixels['x']),
+            max(self._pixels['x']),
+            min(self._pixels['y'])*1.42,
+            max(self._pixels['y'])*1.42
+        ])
         plt.xlabel('Horizontal scale [cm]', fontsize=18, labelpad=0)
         plt.ylabel('Vertical scale [cm]', fontsize=18, labelpad=0)
-        ax.set_title('Pixels layout in {0:s} camera'.format(self._telescopeType),
-                     fontsize=15, y=1.02)
+        ax.set_title(
+            'Pixels layout in {0:s} camera'.format(self._telescopeType),
+            fontsize=15,
+            y=1.02
+        )
         plt.tick_params(axis='both', which='major', labelsize=15)
 
         self._plotAxesDef(self._telescopeType, plt, self._pixels['rotateAngle'])
-        ax.text(0.02, 0.02, 'For an observer facing the camera',
-                transform=ax.transAxes, color='black', fontsize=12)
+        ax.text(
+            0.02,
+            0.02,
+            'For an observer facing the camera',
+            transform=ax.transAxes,
+            color='black',
+            fontsize=12
+        )
 
         fov, rEdgeAvg = self.calcFOV()
         ax.text(
