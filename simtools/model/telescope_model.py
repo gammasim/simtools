@@ -255,8 +255,6 @@ class TelescopeModel:
             parametersDB = _readParsFromOneType(telescopeType='MST-optics')
             _collectAplicablePars(parametersDB)
 
-        print(self._parameters)
-
         # Site: Two site parameters need to be read: atmospheric_transmission and altitude
         logger.debug('Reading site parameters from DB')
 
