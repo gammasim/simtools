@@ -38,7 +38,8 @@ class Camera:
         Read the pixel layout from the camera config file,
         assumed to be in a sim_telarray format.
     calcFOV()
-        Calculate the FOV of the camera in degrees, taking into account the focal length.
+        Calculate the FOV of the camera in degrees,
+        taking into account the focal length (preferably the effective focal length).
     getNeighbourPixels(pixels)
         Find adjacent neighbour pixels in cameras with hexagonal or square pixels.
         Only directly adjacent neighbours are searched for, no diagonals.
@@ -49,6 +50,11 @@ class Camera:
         Including in the plot edge pixels, off pixels, pixel ID for the first 50 pixels,
         coordinate systems, FOV, focal length and the average edge radius.
     '''
+
+    # Constants for finding neighbour pixels.
+    PMT_NEIGHBOR_RADIUS_FACTOR = 1.1
+    SIPM_NEIGHBOR_RADIUS_FACTOR = 1.4
+    SIPM_ROW_COLUMN_DIST_FACTOR = 0.2
 
     def __init__(self, telescopeType, cameraConfigFile, focalLength):
         '''
@@ -69,6 +75,8 @@ class Camera:
         self._telescopeType = telescopeType
         self._cameraConfigFile = cameraConfigFile
         self._focalLength = focalLength
+        if self._focalLength <= 0:
+            raise ValueError('The focal length must be larger than zero')
         self._pixels = self.readPixelList(cameraConfigFile)
 
         self._pixels = self._rotatePixels(self._telescopeType, self._pixels)
@@ -365,7 +373,7 @@ class Camera:
             neighbours = self._findNeighbours(
                 pixels['x'],
                 pixels['y'],
-                1.1*pixels['diameter']
+                self.PMT_NEIGHBOR_RADIUS_FACTOR*pixels['diameter']
             )
         elif pixels['funnelShape'] == 2:
             # Distance increased by 40% to take into account gaps in the SiPM cameras
@@ -375,8 +383,8 @@ class Camera:
             neighbours = self._findAdjacentNeighbourPixels(
                 pixels['x'],
                 pixels['y'],
-                1.4*pixels['diameter'],
-                0.2*pixels['diameter']
+                self.SIPM_NEIGHBOR_RADIUS_FACTOR*pixels['diameter'],
+                self.SIPM_ROW_COLUMN_DIST_FACTOR*pixels['diameter']
             )
 
         return neighbours
