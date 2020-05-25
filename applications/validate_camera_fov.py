@@ -41,7 +41,7 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    label = '{}-test'.format(args.tel_type.lower())
+    label = 'validate-FoV'
 
     telModel = TelescopeModel(
         telescopeType=args.tel_type,
