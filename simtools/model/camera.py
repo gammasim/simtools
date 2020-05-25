@@ -4,7 +4,7 @@ import matplotlib as mlp
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 import matplotlib.colors as mcolors
-import scipy.spatial.cKDTree as KDTree
+from scipy.spatial import cKDTree as KDTree
 from matplotlib.collections import PatchCollection
 
 import simtools.util.legend_handlers as legH
