@@ -8,6 +8,7 @@ dependencies:
   - sphinx
   - pytest
   - pytest-cov
+  - scipy
 
 # cheatsheet
 
