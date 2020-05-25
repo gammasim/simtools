@@ -2,14 +2,12 @@
 name: gammasim-tools-dev
 dependencies:
   - pyyaml
-  - pathlib
   - numpy
   - astropy
   - matplotlib
   - sphinx
   - pytest
   - pytest-cov
-  - argparse
 
 # cheatsheet
 
