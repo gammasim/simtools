@@ -5,11 +5,12 @@ import matplotlib.pyplot as plt
 import argparse
 
 import simtools.config as cfg
+import simtools.util.general as gen
 from simtools.model.telescope_model import TelescopeModel
 from simtools.model.camera import Camera
 
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+# logger = logging.getLogger(__name__)
+# logger.setLevel(logging.INFO)
 
 
 if __name__ == '__main__':
@@ -38,8 +39,19 @@ if __name__ == '__main__':
         type=str,
         default='south'
     )
+    parser.add_argument(
+        '-v',
+        '--verbosity',
+        dest='logLevel',
+        action='store',
+        default='info',
+        help='Log level to print (default is INFO)'
+    )
 
     args = parser.parse_args()
+
+    logger = logging.getLogger('validate_camera_fov')
+    logger.setLevel(gen.getLogLevelFromUser(args.logLevel))
 
     label = 'validate-FoV'
 
@@ -57,7 +69,8 @@ if __name__ == '__main__':
     camera = Camera(
         telescopeType=telModel.telescopeType,
         cameraConfigFile=cfg.findFile(cameraConfigFile),
-        focalLength=focalLength
+        focalLength=focalLength,
+        logger=logger.name
     )
 
     fov, rEdgeAvg = camera.calcFOV()
