@@ -9,9 +9,6 @@ import simtools.util.general as gen
 from simtools.model.telescope_model import TelescopeModel
 from simtools.model.camera import Camera
 
-# logger = logging.getLogger(__name__)
-# logger.setLevel(logging.INFO)
-
 
 if __name__ == '__main__':
 
