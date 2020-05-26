@@ -19,18 +19,6 @@ class Camera:
     Camera class, defining pixel layout including rotation, finding neighbour pixels,
     calculating FoV and plotting the camera.
 
-    Attributes
-    ----------
-    pixels: dict
-        A dictionary with the pixel positions, the camera rotation angle,
-        the pixel shape, the pixel diameter, the pixel IDs and their "on" status.
-    neighbours: array_like
-        Array of neighbour indices in a list for each pixel.
-    edgePixelIndices: array_like
-        Array of edge pixel indice
-    logger
-        A logger instance
-
     Methods
     -------
     readPixelList(cameraConfigFile)
