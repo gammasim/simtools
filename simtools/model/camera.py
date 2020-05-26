@@ -13,24 +13,11 @@ from simtools.model.model_parameters import TWO_MIRROR_TELS, CAMERA_ROTATE_ANGLE
 
 __all__ = ['Camera']
 
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
-
 
 class Camera:
     '''
     Camera class, defining pixel layout including rotation, finding neighbour pixels,
     calculating FoV and plotting the camera.
-
-    Attributes
-    ----------
-    pixels: dict
-        A dictionary with the pixel positions, the camera rotation angle,
-        the pixel shape, the pixel diameter, the pixel IDs and their "on" status.
-    neighbours: array_like
-        Array of neighbour indices in a list for each pixel.
-    edgePixelIndices: array_like
-        Array of edge pixel indice
 
     Methods
     -------
@@ -56,7 +43,7 @@ class Camera:
     SIPM_NEIGHBOR_RADIUS_FACTOR = 1.4
     SIPM_ROW_COLUMN_DIST_FACTOR = 0.2
 
-    def __init__(self, telescopeType, cameraConfigFile, focalLength):
+    def __init__(self, telescopeType, cameraConfigFile, focalLength, logger=__name__):
         '''
         Camera class, defining pixel layout including rotation, finding neighbour pixels,
         calculating FoV and plotting the camera.
@@ -70,8 +57,11 @@ class Camera:
         focalLength: float
                     The focal length of the camera in (preferably the effective focal length),
                     assumed to be in the same unit as the pixel positions in the cameraConfigFile.
+        logger: str
+            Logger name to use in this instance
         '''
 
+        self._logger = logging.getLogger(logger)
         self._telescopeType = telescopeType
         self._cameraConfigFile = cameraConfigFile
         self._focalLength = focalLength
@@ -188,7 +178,7 @@ class Camera:
         rotateAngle = pixels['rotateAngle']  # So not to change the original angle
         rotateAngle += np.deg2rad(CAMERA_ROTATE_ANGLE[telescopeType])
 
-        logger.debug('Rotating pixels by {}'.format(np.rad2deg(rotateAngle)))
+        self._logger.debug('Rotating pixels by {}'.format(np.rad2deg(rotateAngle)))
 
         if rotateAngle != 0:
             for i_pix, xyPixPos in enumerate(zip(pixels['x'], pixels['y'])):
@@ -220,7 +210,7 @@ class Camera:
         The x,y pixel positions and focal length are assumed to have the same unit (usually cm)
         '''
 
-        logger.debug('Calculating the FoV')
+        self._logger.debug('Calculating the FoV')
 
         return self._calcFOV(
             self._pixels['x'],
@@ -257,7 +247,7 @@ class Camera:
         The x,y pixel positions and focal length are assumed to have the same unit (usually cm)
         '''
 
-        logger.debug('Calculating the FoV')
+        self._logger.debug('Calculating the FoV')
 
         averageEdgeDistance = 0
         for i_pix in edgePixelIndices:
@@ -367,7 +357,7 @@ class Camera:
             Array of neighbour indices in a list for each pixel
         '''
 
-        logger.debug('Searching for neighbour pixels')
+        self._logger.debug('Searching for neighbour pixels')
 
         if pixels['funnelShape'] == 1 or pixels['funnelShape'] == 3:
             neighbours = self._findNeighbours(
@@ -404,7 +394,7 @@ class Camera:
             Array of edge pixel indices
         '''
 
-        logger.debug('Searching for edge pixels')
+        self._logger.debug('Searching for edge pixels')
 
         edgePixelIndices = list()
 
@@ -581,7 +571,7 @@ class Camera:
         plt: pyplot.plt instance with the pixel layout
         '''
 
-        logger.info('Plotting the {} camera'.format(self._telescopeType))
+        self._logger.info('Plotting the {} camera'.format(self._telescopeType))
 
         _, ax = plt.subplots()
         plt.gcf().set_size_inches(8, 8)
