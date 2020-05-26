@@ -234,12 +234,14 @@ def getLogLevelFromUser(logLevel):
         The requested logging level to be used as input to logging.setLevel()
     '''
 
-    possibleLevels = {'info': logging.INFO,
-                      'debug': logging.DEBUG,
-                      'warn': logging.WARNING,
-                      'warning': logging.WARNING,
-                      'error': logging.ERROR,
-                      'critical': logging.CRITICAL}
+    possibleLevels = {
+        'info': logging.INFO,
+        'debug': logging.DEBUG,
+        'warn': logging.WARNING,
+        'warning': logging.WARNING,
+        'error': logging.ERROR,
+        'critical': logging.CRITICAL
+    }
     logLevelLower = logLevel.lower()
     if logLevelLower not in possibleLevels:
         raise ValueError(
