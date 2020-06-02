@@ -3,6 +3,8 @@
 import logging
 import math
 
+from simtools.model.model_parameters import MODEL_PARS
+
 
 __all__ = ['computeTelescopeTransmission', 'getTelescopeSize']
 
@@ -57,3 +59,27 @@ def getTelescopeSize(telescopeType):
     else:
         logger.warning('Invalid telescopeType {}'.format(telescopeType))
         return None
+
+
+def validateModelParameter(parNameIn, parValueIn):
+    '''
+    Validate model parameter based on the dict MODEL_PARS.
+
+    Parameters
+    ----------
+    parNameIn: str
+        Name of the parameter to be validated.
+    parValueIn: str
+        Value of the parameter to be validated.
+
+    Returns
+    -------
+    (parName, parValue) after validated. parValueIn is converted to the proper type if that
+    information is available in MODEL_PARS
+    '''
+    logger.debug('Validating parameter {}'.format(parNameIn))
+    for parNameModel in MODEL_PARS.keys():
+        if parNameIn == parNameModel or parNameIn in MODEL_PARS[parNameModel]['names']:
+            parType = MODEL_PARS[parNameModel]['type']
+            return parNameModel, parType(parValueIn)
+    return parNameIn, parValueIn
