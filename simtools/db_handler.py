@@ -36,11 +36,15 @@ def getArrayDB(databaseLocation):
 
 def getModelParameters(telescopeType, version, onlyApplicable=False):
     '''
-    Read parameters from DB for one specific type (telescopeTYpe, site ...).
+    Get parameters from DB for one specific type (telescopeType, site ...).
 
     Parameters
     ----------
     telescopeType: str
+    version: str
+        Version of the model.
+    onlyApplicable: bool
+        If True, only applicable parameters will be selected.
 
     Returns
     -------
@@ -83,11 +87,14 @@ def getModelParameters(telescopeType, version, onlyApplicable=False):
 
 def collectAllModelParameters(telescopeType, version):
     '''
-    Read parameters from DB for one specific type (telescopeTYpe, site ...).
+    Collect all parameters from DB for one specific type (telescopeTYpe, site ...).
+    No selection is applied.
 
     Parameters
     ----------
     telescopeType: str
+    version: str
+        Version of the model.
 
     Returns
     -------
@@ -101,5 +108,4 @@ def collectAllModelParameters(telescopeType, version):
     logger.debug('Reading DB file {}'.format(_yamlFile))
     with open(_yamlFile, 'r') as stream:
         _allPars = yaml.load(stream, Loader=yaml.FullLoader)
-
     return _allPars
