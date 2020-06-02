@@ -10,11 +10,13 @@ import yaml
 from pathlib import Path
 
 from simtools.util import names
-from simtools.util.model import getTelescopeSize
+from simtools.util.model import getTelescopeSize, validateModelParameter
 from simtools.model.model_parameters import MODEL_PARS
 from simtools.model.mirrors import Mirrors
 import simtools.config as cfg
 import simtools.io_handler as io
+import simtools.db_handler as db
+
 
 __all__ = ['TelescopeModel']
 
@@ -194,7 +196,7 @@ class TelescopeModel:
                     continue
                 elif '#' not in line and len(words) > 0:
                     par, value = _processLine(words)
-                    par, value = tel._validateParameter(par, value)
+                    par, value = validateModelParameter(par, value)
                     parameters[par] = value
 
         tel.addParameters(**parameters)
@@ -211,49 +213,11 @@ class TelescopeModel:
     def _loadParametersFromDB(self):
         ''' Read parameters from DB and store them in _parameters. '''
 
-        def _readParsFromOneType(telescopeType):
-            '''
-            Read parameters from DB for one specific type (telescopeTYpe, site ...).
-
-            Parameters
-            ----------
-            telescopeType: str
-
-            Returns
-            -------
-            dict containing the parameters
-            '''
-            fileNameDB = 'parValues-{}.yml'.format(telescopeType)
-            yamlFile = cfg.findFile(fileNameDB, self._modelFilesLocations)
-            logger.debug('Reading DB file {}'.format(yamlFile))
-            with open(yamlFile, 'r') as stream:
-                pars = yaml.load(stream, Loader=yaml.FullLoader)
-            return pars
-
-        def _collectAplicablePars(pars):
-            '''
-            Collect only Applicable parameters from pars and store them into _parameters
-
-            Parameters
-            ----------
-            pars: dict
-                Dict with the whole list of parameters of a certain telescope type.
-            '''
-            for parNameIn, parInfo in pars.items():
-                if parInfo['Applicable']:
-                    parNameOut, parValueOut = self._validateParameter(
-                        parNameIn,
-                        parInfo[self.version]
-                    )
-                    self._parameters[parNameOut] = parValueOut
-
-        parametersDB = _readParsFromOneType(telescopeType=self.telescopeType)
-        _collectAplicablePars(parametersDB)
-
-        if getTelescopeSize(self.telescopeType) == 'MST':
-            logger.debug('Telescope is MST type - reading optics parameters')
-            parametersDB = _readParsFromOneType(telescopeType='MST-optics')
-            _collectAplicablePars(parametersDB)
+        self._parameters = db.getModelParameters(
+            self.telescopeType,
+            self.version,
+            onlyApplicable=True
+        )
 
         # Site: Two site parameters need to be read: atmospheric_transmission and altitude
         logger.debug('Reading site parameters from DB')
@@ -272,32 +236,9 @@ class TelescopeModel:
 
         for siteParName in ['atmospheric_transmission', 'altitude']:
             siteParValue = _getSiteParameter(self.site, siteParName)
-            parName, parValue = self._validateParameter(siteParName, siteParValue)
+            parName, parValue = validateModelParameter(siteParName, siteParValue)
             self._parameters[parName] = parValue
     # END _loadParametersFromDB
-
-    def _validateParameter(self, parNameIn, parValueIn):
-        '''
-        Validate model parameter based on the dict MODEL_PARS.
-
-        Parameters
-        ----------
-        parNameIn: str
-            Name of the parameter to be validated.
-        parValueIn: str
-            Value of the parameter to be validated.
-
-        Returns
-        -------
-        (parName, parValue) after validated. parValueIn is converted to the proper type if that
-        information is available in MODEL_PARS
-        '''
-        logger.debug('Validating parameter {}'.format(parNameIn))
-        for parNameModel in MODEL_PARS.keys():
-            if parNameIn == parNameModel or parNameIn in MODEL_PARS[parNameModel]['names']:
-                parType = MODEL_PARS[parNameModel]['type']
-                return parNameModel, parType(parValueIn)
-        return parNameIn, parValueIn
 
     def getParameter(self, parName):
         '''
