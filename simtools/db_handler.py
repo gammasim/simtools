@@ -109,3 +109,38 @@ def collectAllModelParameters(telescopeType, version):
     with open(_yamlFile, 'r') as stream:
         _allPars = yaml.load(stream, Loader=yaml.FullLoader)
     return _allPars
+
+
+def writeModelFile(fileName, destDir):
+    '''
+    Find the fileName in the model files location and write a copy
+    at the destDir directory.
+
+    Parameters
+    ----------
+    fileName: str or Path
+        File name to be found and copied.
+    destDir: str or Path
+        Path of the directory where the file will be written.
+    '''
+    destFile = Path(destDir).joinpath(fileName)
+    file = Path(getModelFile(fileName))
+    destFile.write_text(file.read_text())
+
+
+def getModelFile(fileName):
+    '''
+    Find file in model files locations and return its full path.
+
+    Parameters
+    ----------
+    fileName: str
+        File name to be found.
+
+    Returns
+    -------
+    Path
+        Full path of the file.
+    '''
+    file = cfg.findFile(fileName, cfg.collectConfigArg('modelFilesLocations'))
+    return file
