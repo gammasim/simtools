@@ -100,11 +100,25 @@ def test_cfg_input():
     return
 
 
+def test_pars_from_db_handler():
+    telType = 'sst'
+    site = 'south'
+
+    tel = TelescopeModel(
+        telescopeType=telType,
+        site=site,
+        version='prod4',
+        label='test-lst'
+    )
+    return
+
+
 if __name__ == '__main__':
 
     # test_handling_parameters()
-    test_input_validation()
+    # test_input_validation()
     # test_flen_type()
     # test_cfg_file()
     # test_cfg_input()
+    test_pars_from_db_handler()
     pass
