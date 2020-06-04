@@ -36,7 +36,7 @@ def getArrayDB(databaseLocation):
 
 def getModelParameters(telescopeType, version, onlyApplicable=False):
     '''
-    Get parameters from DB for one specific type (telescopeType, site ...).
+    Get parameters from DB for one specific type.
 
     Parameters
     ----------
@@ -69,7 +69,7 @@ def getModelParameters(telescopeType, version, onlyApplicable=False):
 
         # If tel is a struture, only applicable pars will be collected, always.
         # The default ones will be covered by the camera pars.
-        _selectOnlyApplicable = onlyApplicable or _tel in ['MST-optics', 'SST-Structure']
+        _selectOnlyApplicable = onlyApplicable or (_tel in ['MST-optics', 'SST-Structure'])
 
         for parNameIn, parInfo in _allPars.items():
 
@@ -87,7 +87,7 @@ def getModelParameters(telescopeType, version, onlyApplicable=False):
 
 def collectAllModelParameters(telescopeType, version):
     '''
-    Collect all parameters from DB for one specific type (telescopeTYpe, site ...).
+    Collect all parameters from DB for one specific type.
     No selection is applied.
 
     Parameters
@@ -103,7 +103,7 @@ def collectAllModelParameters(telescopeType, version):
     _fileNameDB = 'parValues-{}.yml'.format(telescopeType)
     _yamlFile = cfg.findFile(
         _fileNameDB,
-        cfg.collectConfigArg('modelFilesLocations')
+        cfg.get('modelFilesLocations')
     )
     logger.debug('Reading DB file {}'.format(_yamlFile))
     with open(_yamlFile, 'r') as stream:
@@ -142,5 +142,5 @@ def getModelFile(fileName):
     Path
         Full path of the file.
     '''
-    file = cfg.findFile(fileName, cfg.collectConfigArg('modelFilesLocations'))
+    file = cfg.findFile(fileName, cfg.get('modelFilesLocations'))
     return file
