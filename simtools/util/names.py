@@ -67,6 +67,7 @@ def isValidName(name, allNames):
 
 
 allTelescopeTypeNames = {
+    'SST': ['sst'],
     'SST-1M': ['1m'],
     'SST-2M-ASTRI': ['sst-astri', 'astri'],
     'SST-2M-GCT-S': ['sst-gct', 'gct', 'sst-gct-s'],
