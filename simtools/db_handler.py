@@ -5,7 +5,14 @@ import datetime
 import yaml
 from pathlib import Path
 
+import simtools.config as cfg
+from simtools.util import names
+from simtools.util.model import validateModelParameter, getTelescopeSize
+
 __all__ = ['getArrayDB']
+
+
+logger = logging.getLogger(__name__)
 
 
 def getArrayDB(databaseLocation):
@@ -25,3 +32,115 @@ def getArrayDB(databaseLocation):
     with open(file, 'r') as stream:
         out = yaml.load(stream, Loader=yaml.FullLoader)
     return out
+
+
+def getModelParameters(telescopeType, version, onlyApplicable=False):
+    '''
+    Get parameters from DB for one specific type.
+
+    Parameters
+    ----------
+    telescopeType: str
+    version: str
+        Version of the model.
+    onlyApplicable: bool
+        If True, only applicable parameters will be selected.
+
+    Returns
+    -------
+    dict containing the parameters
+    '''
+    _telTypeValidated = names.validateName(telescopeType, names.allTelescopeTypeNames)
+    _versionValidated = names.validateName(version, names.allModelVersionNames)
+
+    if getTelescopeSize(_telTypeValidated) == 'MST':
+        # MST-FlashCam or MST-NectarCam
+        _whichTelLabels = [_telTypeValidated, 'MST-optics']
+    elif _telTypeValidated == 'SST':
+        # SST = SST-Camera + SST-Structure
+        _whichTelLabels = ['SST-Camera', 'SST-Structure']
+    else:
+        _whichTelLabels = [_telTypeValidated]
+
+    # Selecting version and applicable (if on)
+    _pars = dict()
+    for _tel in _whichTelLabels:
+        _allPars = collectAllModelParameters(_tel, _versionValidated)
+
+        # If tel is a struture, only applicable pars will be collected, always.
+        # The default ones will be covered by the camera pars.
+        _selectOnlyApplicable = onlyApplicable or (_tel in ['MST-optics', 'SST-Structure'])
+
+        for parNameIn, parInfo in _allPars.items():
+
+            if not parInfo['Applicable'] and _selectOnlyApplicable:
+                continue
+
+            parNameOut, parValueOut = validateModelParameter(
+                parNameIn,
+                parInfo[_versionValidated]
+            )
+            _pars[parNameOut] = parValueOut
+
+    return _pars
+
+
+def collectAllModelParameters(telescopeType, version):
+    '''
+    Collect all parameters from DB for one specific type.
+    No selection is applied.
+
+    Parameters
+    ----------
+    telescopeType: str
+    version: str
+        Version of the model.
+
+    Returns
+    -------
+    dict containing the parameters
+    '''
+    _fileNameDB = 'parValues-{}.yml'.format(telescopeType)
+    _yamlFile = cfg.findFile(
+        _fileNameDB,
+        cfg.get('modelFilesLocations')
+    )
+    logger.debug('Reading DB file {}'.format(_yamlFile))
+    with open(_yamlFile, 'r') as stream:
+        _allPars = yaml.load(stream, Loader=yaml.FullLoader)
+    return _allPars
+
+
+def writeModelFile(fileName, destDir):
+    '''
+    Find the fileName in the model files location and write a copy
+    at the destDir directory.
+
+    Parameters
+    ----------
+    fileName: str or Path
+        File name to be found and copied.
+    destDir: str or Path
+        Path of the directory where the file will be written.
+    '''
+    destFile = Path(destDir).joinpath(fileName)
+    file = Path(getModelFile(fileName))
+    destFile.write_text(file.read_text())
+
+
+def getModelFile(fileName):
+    '''
+    Find file in model files locations and return its full path.
+
+    Parameters
+    ----------
+    fileName: str
+        File name to be found.
+
+    Returns
+    -------
+    Path
+        Full path of the file.
+    '''
+    file = cfg.findFile(fileName, cfg.get('modelFilesLocations'))
+    return file
