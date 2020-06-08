@@ -2,41 +2,72 @@
 
 import logging
 import matplotlib.pyplot as plt
+import argparse
 
 import simtools.config as cfg
+import simtools.util.general as gen
 from simtools.model.telescope_model import TelescopeModel
 from simtools.model.camera import Camera
 
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
-
 
 if __name__ == '__main__':
-    '''
-    This is an example application to calculate the FoV of a camera, in this case LST is used.
-    The application prints out the FoV and plots the camera.
-    '''
 
-    print('\nValidating the camera FoV of LST\n')
+    parser = argparse.ArgumentParser(
+        description=(
+            'Calculate the camera FoV of the telescope requested. '
+            'Plot the camera as well, as seen for an observer facing the camera.'
+        )
+    )
+    parser.add_argument(
+        '--tel_type',
+        help='Telescope type (e.g. mst-flashcam, lst)',
+        type=str,
+        required=True
+    )
+    parser.add_argument(
+        '--model_version',
+        help='Model version (default=prod4)',
+        type=str,
+        default='prod4'
+    )
+    parser.add_argument(
+        '--site',
+        help='Site (default=South)',
+        type=str,
+        default='south'
+    )
+    parser.add_argument(
+        '-v',
+        '--verbosity',
+        dest='logLevel',
+        action='store',
+        default='info',
+        help='Log level to print (default is INFO)'
+    )
 
-    site = 'south'
-    telescope = 'lst'
-    version = 'prod4'
-    label = 'lst-test'
+    args = parser.parse_args()
+
+    logger = logging.getLogger('validate_camera_fov')
+    logger.setLevel(gen.getLogLevelFromUser(args.logLevel))
+
+    label = 'validate-FoV'
 
     telModel = TelescopeModel(
-        telescopeType=telescope,
-        site=site,
-        version=version,
+        telescopeType=args.tel_type,
+        site=args.site,
+        version=args.model_version,
         label=label
     )
+
+    print('\nValidating the camera FoV of {}\n'.format(telModel.telescopeType))
 
     cameraConfigFile = telModel.getParameter('camera_config_file')
     focalLength = float(telModel.getParameter('effective_focal_length'))
     camera = Camera(
         telescopeType=telModel.telescopeType,
         cameraConfigFile=cfg.findFile(cameraConfigFile),
-        focalLength=focalLength
+        focalLength=focalLength,
+        logger=logger.name
     )
 
     fov, rEdgeAvg = camera.calcFOV()
@@ -47,5 +78,7 @@ if __name__ == '__main__':
 
     # Now plot the camera as well
     plt = camera.plotPixelLayout()
-    plt.savefig('pixelLayout-LST.pdf', format='pdf', bbox_inches='tight')
+    cameraPlotFile = 'pixelLayout-{}.pdf'.format(telModel.telescopeType)
+    plt.savefig(cameraPlotFile, bbox_inches='tight')
+    print('\nPlotted camera in {}\n'.format(cameraPlotFile))
     plt.clf()

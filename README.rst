@@ -1,8 +1,18 @@
 gammasim-tools
 ===========
 
-Core library and tools for the Simulation System of `CTA Observatory <www.cta-observatory.org>`_
+Prototype implementation of tools for the Simulation System of the `CTA Observatory <www.cta-observatory.org>`_
 
+gammasim-tools provides a framework and tools for:
+
+* simulation model DB interface and management
+* simulation model parameter derivation and validation
+
+gammasim-tools follows these design principles:
+
+* standardized interface and data products independent of the underlying software (e.g., CORSIKA, sim_telarray, GrOPTICS)
+* maximizes the sharing of tools and algorithms with other DPPS subsystems (e.g., `ctapipe <https://github.com/cta-observatory/ctapipe>`_ and calibpipe)
+* I/O and reporting tools for the MC simulation model parameter and production database
 
 AUTHORS:
 --------
