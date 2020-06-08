@@ -217,3 +217,38 @@ def collectFinalLines(file, nLines):
     for ll in collectedLines:
         out += ll
     return out
+
+
+def getLogLevelFromUser(logLevel):
+    '''
+    Map between logging level from the user to logging levels of the logging module.
+
+    Parameters
+    ----------
+    logLevel: str
+        Log level from the user
+
+    Returns
+    -------
+    logging.LEVEL
+        The requested logging level to be used as input to logging.setLevel()
+    '''
+
+    possibleLevels = {
+        'info': logging.INFO,
+        'debug': logging.DEBUG,
+        'warn': logging.WARNING,
+        'warning': logging.WARNING,
+        'error': logging.ERROR,
+        'critical': logging.CRITICAL
+    }
+    logLevelLower = logLevel.lower()
+    if logLevelLower not in possibleLevels:
+        raise ValueError(
+            '"{}" is not a logging level, only possible ones are {}'.format(
+                logLevel,
+                list(possibleLevels.keys())
+            )
+        )
+    else:
+        return possibleLevels[logLevelLower]

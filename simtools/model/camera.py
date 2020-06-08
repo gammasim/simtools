@@ -4,7 +4,7 @@ import matplotlib as mlp
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 import matplotlib.colors as mcolors
-import scipy.spatial.cKDTree as KDTree
+from scipy.spatial import cKDTree as KDTree
 from matplotlib.collections import PatchCollection
 
 import simtools.util.legend_handlers as legH
@@ -13,24 +13,11 @@ from simtools.model.model_parameters import TWO_MIRROR_TELS, CAMERA_ROTATE_ANGLE
 
 __all__ = ['Camera']
 
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
-
 
 class Camera:
     '''
     Camera class, defining pixel layout including rotation, finding neighbour pixels,
     calculating FoV and plotting the camera.
-
-    Attributes
-    ----------
-    pixels: dict
-        A dictionary with the pixel positions, the camera rotation angle,
-        the pixel shape, the pixel diameter, the pixel IDs and their "on" status.
-    neighbours: array_like
-        Array of neighbour indices in a list for each pixel.
-    edgePixelIndices: array_like
-        Array of edge pixel indice
 
     Methods
     -------
@@ -38,7 +25,8 @@ class Camera:
         Read the pixel layout from the camera config file,
         assumed to be in a sim_telarray format.
     calcFOV()
-        Calculate the FOV of the camera in degrees, taking into account the focal length.
+        Calculate the FOV of the camera in degrees,
+        taking into account the focal length (preferably the effective focal length).
     getNeighbourPixels(pixels)
         Find adjacent neighbour pixels in cameras with hexagonal or square pixels.
         Only directly adjacent neighbours are searched for, no diagonals.
@@ -50,7 +38,12 @@ class Camera:
         coordinate systems, FOV, focal length and the average edge radius.
     '''
 
-    def __init__(self, telescopeType, cameraConfigFile, focalLength):
+    # Constants for finding neighbour pixels.
+    PMT_NEIGHBOR_RADIUS_FACTOR = 1.1
+    SIPM_NEIGHBOR_RADIUS_FACTOR = 1.4
+    SIPM_ROW_COLUMN_DIST_FACTOR = 0.2
+
+    def __init__(self, telescopeType, cameraConfigFile, focalLength, logger=__name__):
         '''
         Camera class, defining pixel layout including rotation, finding neighbour pixels,
         calculating FoV and plotting the camera.
@@ -64,11 +57,16 @@ class Camera:
         focalLength: float
                     The focal length of the camera in (preferably the effective focal length),
                     assumed to be in the same unit as the pixel positions in the cameraConfigFile.
+        logger: str
+            Logger name to use in this instance
         '''
 
+        self._logger = logging.getLogger(logger)
         self._telescopeType = telescopeType
         self._cameraConfigFile = cameraConfigFile
         self._focalLength = focalLength
+        if self._focalLength <= 0:
+            raise ValueError('The focal length must be larger than zero')
         self._pixels = self.readPixelList(cameraConfigFile)
 
         self._pixels = self._rotatePixels(self._telescopeType, self._pixels)
@@ -180,7 +178,7 @@ class Camera:
         rotateAngle = pixels['rotateAngle']  # So not to change the original angle
         rotateAngle += np.deg2rad(CAMERA_ROTATE_ANGLE[telescopeType])
 
-        logger.debug('Rotating pixels by {}'.format(np.rad2deg(rotateAngle)))
+        self._logger.debug('Rotating pixels by {}'.format(np.rad2deg(rotateAngle)))
 
         if rotateAngle != 0:
             for i_pix, xyPixPos in enumerate(zip(pixels['x'], pixels['y'])):
@@ -212,7 +210,7 @@ class Camera:
         The x,y pixel positions and focal length are assumed to have the same unit (usually cm)
         '''
 
-        logger.debug('Calculating the FoV')
+        self._logger.debug('Calculating the FoV')
 
         return self._calcFOV(
             self._pixels['x'],
@@ -249,7 +247,7 @@ class Camera:
         The x,y pixel positions and focal length are assumed to have the same unit (usually cm)
         '''
 
-        logger.debug('Calculating the FoV')
+        self._logger.debug('Calculating the FoV')
 
         averageEdgeDistance = 0
         for i_pix in edgePixelIndices:
@@ -359,13 +357,13 @@ class Camera:
             Array of neighbour indices in a list for each pixel
         '''
 
-        logger.debug('Searching for neighbour pixels')
+        self._logger.debug('Searching for neighbour pixels')
 
         if pixels['funnelShape'] == 1 or pixels['funnelShape'] == 3:
             neighbours = self._findNeighbours(
                 pixels['x'],
                 pixels['y'],
-                1.1*pixels['diameter']
+                self.PMT_NEIGHBOR_RADIUS_FACTOR*pixels['diameter']
             )
         elif pixels['funnelShape'] == 2:
             # Distance increased by 40% to take into account gaps in the SiPM cameras
@@ -375,8 +373,8 @@ class Camera:
             neighbours = self._findAdjacentNeighbourPixels(
                 pixels['x'],
                 pixels['y'],
-                1.4*pixels['diameter'],
-                0.2*pixels['diameter']
+                self.SIPM_NEIGHBOR_RADIUS_FACTOR*pixels['diameter'],
+                self.SIPM_ROW_COLUMN_DIST_FACTOR*pixels['diameter']
             )
 
         return neighbours
@@ -396,7 +394,7 @@ class Camera:
             Array of edge pixel indices
         '''
 
-        logger.debug('Searching for edge pixels')
+        self._logger.debug('Searching for edge pixels')
 
         edgePixelIndices = list()
 
@@ -573,7 +571,7 @@ class Camera:
         plt: pyplot.plt instance with the pixel layout
         '''
 
-        logger.info('Plotting the {} camera'.format(self._telescopeType))
+        self._logger.info('Plotting the {} camera'.format(self._telescopeType))
 
         _, ax = plt.subplots()
         plt.gcf().set_size_inches(8, 8)
