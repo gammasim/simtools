@@ -292,6 +292,9 @@ class SimtelRunner:
             c += '={}'.format(value) if value is not None else ''
             return c
 
+        if self._isSingleMirrorMode():
+            _mirrorFocalLength = float(self.telescopeModel.getParameter('mirror_focal_length'))
+
         # RayTracing
         command = str(self._simtelSourcePath.joinpath('sim_telarray/bin/sim_telarray'))
         command += ' -c {}'.format(self.telescopeModel.getConfigFile())
@@ -325,8 +328,8 @@ class SimtelRunner:
                 )
             )
             command += _configOption('focal_length', self._sourceDistance * u.km.to(u.cm))
-            command += _configOption('dish_shape_length', self.telescopeModel.mirrorFocalLength)
-            command += _configOption('mirror_focal_length', self.telescopeModel.mirrorFocalLength)
+            command += _configOption('dish_shape_length', _mirrorFocalLength)
+            command += _configOption('mirror_focal_length', _mirrorFocalLength)
             command += _configOption('parabolic_dish', '0')
             # command += _configOption('random_focal_length', '0.')
             command += _configOption('mirror_align_random_distance', '0.')

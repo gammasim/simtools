@@ -206,7 +206,7 @@ def test_integral_curve():
         offAxisAngle=offAxisAngle
     )
 
-    ray.simulate(test=True, force=False)
+    ray.simulate(test=True, force=True)
     ray.analyze(force=True)
 
     # Plotting cumulative curve for each image
@@ -223,8 +223,8 @@ def test_integral_curve():
 if __name__ == '__main__':
 
     # test_ssts()
-    test_rx()
+    # test_rx()
     # test_single_mirror()
     # test_plot_image()
-    # test_integral_curve()
+    test_integral_curve()
     pass
