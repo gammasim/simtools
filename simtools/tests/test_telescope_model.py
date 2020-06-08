@@ -103,8 +103,9 @@ def test_cfg_input():
 if __name__ == '__main__':
 
     # test_handling_parameters()
-    test_input_validation()
+    # test_input_validation()
     # test_flen_type()
     # test_cfg_file()
     # test_cfg_input()
+    test_pars_from_db_handler()
     pass
