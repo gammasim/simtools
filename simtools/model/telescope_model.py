@@ -235,9 +235,7 @@ class TelescopeModel:
             return None
 
         for siteParName in ['atmospheric_transmission', 'altitude']:
-            siteParValue = _getSiteParameter(self.site, siteParName)
-            parName, parValue = validateModelParameter(siteParName, siteParValue)
-            self._parameters[parName] = parValue
+            self._parameters[siteParName] = _getSiteParameter(self.site, siteParName)
     # END _loadParametersFromDB
 
     def getParameter(self, parName):
@@ -309,6 +307,8 @@ class TelescopeModel:
                 logger.error(msg)
                 raise ValueError(msg)
             else:
+                if type(self._parameters[par]) != type(value):
+                    logger.warning('Value type differs from the current one')
                 self._parameters[par] = value
         self._isConfigFileUpdated = False
 
