@@ -76,11 +76,7 @@ def getModelParameters(telescopeType, version, onlyApplicable=False):
             if not parInfo['Applicable'] and _selectOnlyApplicable:
                 continue
 
-            parNameOut, parValueOut = validateModelParameter(
-                parNameIn,
-                parInfo[_versionValidated]
-            )
-            _pars[parNameOut] = parValueOut
+            _pars[parNameIn] = parInfo[_versionValidated]
 
     return _pars
 
