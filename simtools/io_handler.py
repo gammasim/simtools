@@ -89,6 +89,24 @@ def getCorsikaOutputDirectory(filesLocation, label):
     return getOutputDirectory(filesLocation, label, 'corsika')
 
 
+def getCameraEfficiencyOutputDirectory(filesLocation, label):
+    '''
+    Get output directory for camera efficiency related files.
+
+    Parameters
+    ----------
+    filesLocation: str, or Path
+        Main location of the output files.
+    label: str
+        Instance label.
+
+    Returns
+    -------
+    Path
+    '''
+    return getOutputDirectory(filesLocation, label, 'camera-efficiency')
+
+
 def getTestDataFile(fileName):
     '''
     Get path of a test file, using the  testDataLocation taken from the config file.
