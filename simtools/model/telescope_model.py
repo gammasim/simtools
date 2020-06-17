@@ -9,13 +9,14 @@ import logging
 import yaml
 from pathlib import Path
 
-from simtools.util import names
-from simtools.util.model import getTelescopeSize, validateModelParameter
-from simtools.model.model_parameters import MODEL_PARS
-from simtools.model.mirrors import Mirrors
 import simtools.config as cfg
 import simtools.io_handler as io
 import simtools.db_handler as db
+from simtools.util import names
+from simtools.util.model import getTelescopeSize, validateModelParameter
+from simtools.model.mirrors import Mirrors
+from simtools.model.camera import Camera
+from simtools.model.model_parameters import MODEL_PARS
 
 
 __all__ = ['TelescopeModel']
@@ -111,6 +112,12 @@ class TelescopeModel:
         if '_mirrors' not in self.__dict__:
             self._loadMirrors()
         return self._mirrors
+
+    @property
+    def camera(self):
+        if '_camera' not in self.__dict__:
+            self._loadCamera()
+        return self._camera
 
     @classmethod
     def fromConfigFile(
@@ -237,6 +244,21 @@ class TelescopeModel:
         for siteParName in ['atmospheric_transmission', 'altitude']:
             self._parameters[siteParName] = _getSiteParameter(self.site, siteParName)
     # END _loadParametersFromDB
+
+    def hasParameter(self, parName):
+        '''
+        Verify if the parameter is in the model.
+
+        Parameters
+        ----------
+        parName: str
+            Name of the parameter.
+
+        Returns
+        -------
+        bool
+        '''
+        return parName in self._parameters.keys()
 
     def getParameter(self, parName):
         '''
@@ -456,4 +478,18 @@ class TelescopeModel:
         mirrorListFileName = self._parameters['mirror_list']
         mirrorListFile = cfg.findFile(mirrorListFileName, self._modelFilesLocations)
         self._mirrors = Mirrors(mirrorListFile)
+        return
+
+    def _loadCamera(self):
+        cameraConfigFile = self._parameters['camera_config_file']
+        focalLength = self._parameters['effective_focal_length']
+        if focalLength == 0.:
+            logger.warning('Using focal_length because effective_focal_length is 0.')
+            focalLength = self._parameters['focal_length']
+        self._camera = Camera(
+            telescopeType=self.telescopeType,
+            cameraConfigFile=cfg.findFile(cameraConfigFile),
+            focalLength=focalLength,
+            logger=logger.name
+        )
         return

@@ -8,7 +8,6 @@ from scipy.spatial import cKDTree as KDTree
 from matplotlib.collections import PatchCollection
 
 import simtools.util.legend_handlers as legH
-from simtools.model.telescope_model import TelescopeModel
 from simtools.model.model_parameters import TWO_MIRROR_TELS, CAMERA_ROTATE_ANGLE
 
 __all__ = ['Camera']
@@ -105,19 +104,24 @@ class Camera:
         pixels = dict()
         pixels['diameter'] = 9999
         pixels['funnelShape'] = 9999
+        pixels['funnelEfficiencyFilename'] = 'none'
+        pixels['funnelWavelengthFilename'] = 'none'
         pixels['rotateAngle'] = 0  # The LST and MST-NectarCam cameras need to be rotated
         pixels['x'] = list()
         pixels['y'] = list()
         pixels['pixID'] = list()
         pixels['pixOn'] = list()
         for line in datFile:
+            pixInfo = line.split()
             if line.startswith('PixType'):
-                pixels['funnelShape'] = int(line.split()[5].strip())
-                pixels['diameter'] = float(line.split()[6].strip())
+                pixels['funnelShape'] = int(pixInfo[5].strip())
+                pixels['diameter'] = float(pixInfo[6].strip())
+                pixels['funnelEfficiencyFilename'] = pixInfo[8].strip().replace('"', '')
+                if len(pixInfo) > 9:
+                    pixels['funnelWavelengthFilename'] = pixInfo[9].strip().replace('"', '')
             if line.startswith('Rotate'):
-                pixels['rotateAngle'] = np.deg2rad(float(line.split()[1].strip()))
+                pixels['rotateAngle'] = np.deg2rad(float(pixInfo[1].strip()))
             if line.startswith('Pixel'):
-                pixInfo = line.split()
                 pixels['x'].append(float(pixInfo[3].strip()))
                 pixels['y'].append(float(pixInfo[4].strip()))
                 pixels['pixID'].append(int(pixInfo[1].strip()))
@@ -182,8 +186,12 @@ class Camera:
 
         if rotateAngle != 0:
             for i_pix, xyPixPos in enumerate(zip(pixels['x'], pixels['y'])):
-                pixels['x'][i_pix] = xyPixPos[0]*np.cos(rotateAngle) - xyPixPos[1]*np.sin(rotateAngle)
-                pixels['y'][i_pix] = xyPixPos[0]*np.sin(rotateAngle) + xyPixPos[1]*np.cos(rotateAngle)
+                pixels['x'][i_pix] = (
+                    xyPixPos[0]*np.cos(rotateAngle) - xyPixPos[1]*np.sin(rotateAngle)
+                )
+                pixels['y'][i_pix] = (
+                    xyPixPos[0]*np.sin(rotateAngle) + xyPixPos[1]*np.cos(rotateAngle)
+                )
 
         pixels['orientation'] = 0
         if pixels['funnelShape'] == 1 or pixels['funnelShape'] == 3:
@@ -193,6 +201,46 @@ class Camera:
                 pixels['orientation'] += np.rad2deg(rotateAngle)
 
         return pixels
+
+    def getDiameter(self):
+        '''
+        Get pixel diameter cointaned in _pixels
+
+        Returns
+        -------
+        diameter: float
+        '''
+        return self._pixels['diameter']
+
+    def getFunnelShape(self):
+        '''
+        Get funnel shape contained in _pixels
+
+        Returns
+        -------
+        funnel shape: int (1, 2 or 3)
+        '''
+        return self._pixels['funnelShape']
+
+    def getFunnelEfficiencyFile(self):
+        '''
+        Get funnel efficiency file contained in _pixels
+
+        Returns
+        -------
+        str: name of the funnel efficiency file
+        '''
+        return self._pixels['funnelEfficiencyFilename']
+
+    def getFunnelWavelengthFile(self):
+        '''
+        Get funnel wavelength file contained in _pixels
+
+        Returns
+        -------
+        str: name of the funnel wavelength file
+        '''
+        return self._pixels['funnelWavelengthFilename']
 
     def calcFOV(self):
         '''
