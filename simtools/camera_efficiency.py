@@ -19,6 +19,7 @@ import simtools.config as cfg
 import simtools.io_handler as io
 from simtools.util import names
 from simtools.model.telescope_model import TelescopeModel
+from simtools.model.model_parameters import RADIUS_CURV
 
 __all__ = ['CameraEfficiency']
 
@@ -99,6 +100,12 @@ class CameraEfficiency:
                 self.label
         )
         self._fileResults = self._baseDirectory.joinpath(fileNameResults)
+        # Log file
+        fileNameLog = names.cameraEfficiencyLogFileName(
+                self._telescopeModel.telescopeType,
+                self.label
+        )
+        self._fileLog = self._baseDirectory.joinpath(fileNameLog)
     # END of init
 
     def __repr__(self):
@@ -125,6 +132,57 @@ class CameraEfficiency:
         force: bool
             Force flag will remove existing files and simulate again.
         '''
+
+        # Processing camera pixel features
+        funnelShape = self._telescopeModel.camera.getFunnelShape()
+        pixelShapeCmd = '-hpix' if funnelShape in [1, 3] else '-spix'
+        pixelDiameter = self._telescopeModel.camera.getDiameter()
+
+        # Processing focal length
+        focalLength = self._telescopeModel.getParameter('effective_focal_length')
+        if focalLength == 0.:
+            logger.warning('Using focal_lenght because effective_focal_length is 0')
+            focalLength = self._telescopeModel.getParameter('focal_length')
+
+        # Processing mirror class
+        mirrorClass = 1
+        if self._telescopeModel.hasParameter('mirror_class'):
+            mirrorClass = self._telescopeModel.getParameter('mirror_class')
+
+        # Processing camera transmission
+        cameraTransmission = 1
+        if self._telescopeModel.hasParameter('camera_transmission'):
+            cameraTransmission = self._telescopeModel.getParameter('camera_transmission')
+
+        cmd = str(self._simtelSourcePath.joinpath('bin').joinpath('testeff'))
+        cmd += ' -nm -nsb-extra'
+        cmd += ' -alt {}'.format(self._telescopeModel.getParameter('altitude'))
+        cmd += ' -fatm {}'.format(self._telescopeModel.getParameter('atmospheric_transmission'))
+        cmd += ' -flen {}'.format(focalLength * 0.01)  # focal lenght in meters
+        cmd += ' -fcur {}'.format(RADIUS_CURV[self._telescopeModel.telescopeType])
+        cmd += ' {} {}'.format(pixelShapeCmd, pixelDiameter)
+        cmd += ' -fmir {}'.format(self._telescopeModel.getParameter('mirror_list'))
+        cmd += ' -fref {}'.format(self._telescopeModel.getParameter('mirror_reflectivity'))
+        if mirrorClass == 2:
+            cmd += ' -m2'
+        cmd += ' -teltrans {}'.format(self._telescopeModel.getTelescopeTransmissionParameters()[0])
+        cmd += ' -camtrans {}'.format(cameraTransmission)
+        cmd += ' -fflt {}'.format(self._telescopeModel.getParameter('camera_filter'))
+        cmd += ' -fang {}'.format(self._telescopeModel.camera.getFunnelEfficiencyFile())
+        cmd += ' -fwl {}'.format(self._telescopeModel.camera.getFunnelWavelengthFile())
+        cmd += ' -fqe {}'.format(self._telescopeModel.getParameter('quantum_efficiency'))
+        cmd += ' {} {}'.format(200, 1000)  # lmin and lmax
+        cmd += ' {} 1 20'.format(300)  # Xmax, ioatm, zenith angle
+        cmd += ' 2>{}'.format(self._fileLog)
+        cmd += ' >{}'.format(self._fileResults)
+
+        print(cmd)
+
+        # Moving to sim_telarray directory before running
+        # cmd = 'cd {} && {}'.format(self.simTelArrayPath, cmd)
+
+        # logStdout.info([['b', 'Running sim_telarray with cmd: {}'.format(cmd)]])
+        # os.system(cmd)
 
     # END of simulate
 
