@@ -23,6 +23,14 @@ class Camera:
     readPixelList(cameraConfigFile)
         Read the pixel layout from the camera config file,
         assumed to be in a sim_telarray format.
+    getDiameter()
+        Get pixel diameter.
+    getFunnelShape()
+        Get funnel shape.
+    getFunnelEfficiencyFile()
+        Get funnel efficiency filename
+    getFunnelWavelengthFile()
+        Get funnel wavelength file contained in _pixels
     calcFOV()
         Calculate the FOV of the camera in degrees,
         taking into account the focal length (preferably the effective focal length).
