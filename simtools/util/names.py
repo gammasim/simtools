@@ -236,6 +236,28 @@ def rayTracingResultsFileName(telescopeType, sourceDistance, zenithAngle, label)
     return name
 
 
+def cameraEfficiencyResultsFileName(telescopeType, label):
+    '''
+    Camera efficiency results file name.
+
+    Parameters
+    ----------
+    telescopeType: str
+        LST, MST-FlashCam, ...
+    label: str
+        Instance label.
+
+    Returns
+    -------
+    str
+        File name.
+    '''
+    name = 'camera-efficiency-{}'.format(telescopeType)
+    name += '_{}'.format(label) if label is not None else ''
+    name += '.dat'
+    return name
+
+
 def corsikaConfigFileName(arrayName, site, zenith, viewCone, label=None):
     '''
     Corsika config file name.
