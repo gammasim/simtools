@@ -39,12 +39,18 @@ class TelescopeModel:
         Version of the model (ex. prod4).
     label: str
         Instance label.
+    mirrors: Mirrors
+        Instance of the Mirrors class create with the mirror list of the model.
+    camera: Camera
+        Instance of the Camera class create with the camera config file of the model.
 
     Methods
     -------
     @classmethod
     fromConfigFile(configFileName, telescopeType, site, label=None, filesLocation=None)
         Create a TelescopeModel from a sim_telarray cfg file.
+    hasParameter(parName):
+        Verify if parameter is in the model.
     getParameter(parName):
         Get an existing parameter of the model.
     addParameters(**kwargs)
