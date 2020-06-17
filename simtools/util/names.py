@@ -258,6 +258,28 @@ def cameraEfficiencyResultsFileName(telescopeType, label):
     return name
 
 
+def cameraEfficiencyLogFileName(telescopeType, label):
+    '''
+    Camera efficiency log file name.
+
+    Parameters
+    ----------
+    telescopeType: str
+        LST, MST-FlashCam, ...
+    label: str
+        Instance label.
+
+    Returns
+    -------
+    str
+        File name.
+    '''
+    name = 'camera-efficiency-{}'.format(telescopeType)
+    name += '_{}'.format(label) if label is not None else ''
+    name += '.log'
+    return name
+
+
 def corsikaConfigFileName(arrayName, site, zenith, viewCone, label=None):
     '''
     Corsika config file name.
