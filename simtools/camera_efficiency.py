@@ -6,12 +6,9 @@ Author: Raul R Prado
 
 import logging
 import matplotlib.pyplot as plt
-from copy import copy
+import os
 from pathlib import Path
-from math import pi, tan
 
-import numpy as np
-import astropy.units as u
 from astropy.io import ascii
 from astropy.table import Table
 
@@ -154,7 +151,7 @@ class CameraEfficiency:
         if self._telescopeModel.hasParameter('camera_transmission'):
             cameraTransmission = self._telescopeModel.getParameter('camera_transmission')
 
-        cmd = str(self._simtelSourcePath.joinpath('bin').joinpath('testeff'))
+        cmd = str(self._simtelSourcePath.joinpath('sim_telarray/bin/testeff'))
         cmd += ' -nm -nsb-extra'
         cmd += ' -alt {}'.format(self._telescopeModel.getParameter('altitude'))
         cmd += ' -fatm {}'.format(self._telescopeModel.getParameter('atmospheric_transmission'))
@@ -176,13 +173,11 @@ class CameraEfficiency:
         cmd += ' 2>{}'.format(self._fileLog)
         cmd += ' >{}'.format(self._fileResults)
 
-        print(cmd)
-
         # Moving to sim_telarray directory before running
-        # cmd = 'cd {} && {}'.format(self.simTelArrayPath, cmd)
+        cmd = 'cd {} && {}'.format(self._simtelSourcePath.joinpath('sim_telarray'), cmd)
 
-        # logStdout.info([['b', 'Running sim_telarray with cmd: {}'.format(cmd)]])
-        # os.system(cmd)
+        logger.info('Running sim_telarray with cmd: {}'.format(cmd))
+        os.system(cmd)
 
     # END of simulate
 
