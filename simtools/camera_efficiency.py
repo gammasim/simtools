@@ -317,5 +317,17 @@ class CameraEfficiency:
         self._results = dict(table)
         self._hasResults = True
 
+    def plot(self, which, **kwargs):
+        ''' '''
+
+        ax = plt.gca()
+        firstLetter = 'C' if which == 'cherenkov' else 'N'
+        for par in ['1', '2', '3', '4', '4x']:
+            ax.plot(
+                self._results['wl'],
+                self._results[firstLetter + par],
+                label=firstLetter + par,
+                **kwargs
+            )
 
 # END of CameraEfficiency
