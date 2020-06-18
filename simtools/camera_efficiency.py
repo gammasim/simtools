@@ -52,13 +52,15 @@ class CameraEfficiency:
     images()
         Get list of PSFImages.
     '''
+    ALL_INPUTS = {'zenithAngle': {'default': 20, 'unit': u.deg}}
 
     def __init__(
         self,
         telescopeModel,
         label=None,
         simtelSourcePath=None,
-        filesLocation=None
+        filesLocation=None,
+        **kwargs
     ):
         '''
         RayTracing init.
@@ -91,15 +93,19 @@ class CameraEfficiency:
 
         self._hasResults = False
 
+        collectArguments(self, args=['zenithAngle'], allInputs=self.ALL_INPUTS, **kwargs)
+
         # Results file
         fileNameResults = names.cameraEfficiencyResultsFileName(
                 self._telescopeModel.telescopeType,
+                self._zenithAngle,
                 self.label
         )
         self._fileResults = self._baseDirectory.joinpath(fileNameResults)
         # Log file
         fileNameLog = names.cameraEfficiencyLogFileName(
                 self._telescopeModel.telescopeType,
+                self._zenithAngle,
                 self.label
         )
         self._fileLog = self._baseDirectory.joinpath(fileNameLog)
@@ -169,7 +175,7 @@ class CameraEfficiency:
         cmd += ' -fwl {}'.format(self._telescopeModel.camera.getFunnelWavelengthFile())
         cmd += ' -fqe {}'.format(self._telescopeModel.getParameter('quantum_efficiency'))
         cmd += ' {} {}'.format(200, 1000)  # lmin and lmax
-        cmd += ' {} 1 20'.format(300)  # Xmax, ioatm, zenith angle
+        cmd += ' {} 1 {}'.format(300, self._zenithAngle)  # Xmax, ioatm, zenith angle
         cmd += ' 2>{}'.format(self._fileLog)
         cmd += ' >{}'.format(self._fileResults)
 
