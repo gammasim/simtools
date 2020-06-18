@@ -9,12 +9,14 @@ import matplotlib.pyplot as plt
 import os
 from pathlib import Path
 
+import astropy.units as u
 from astropy.io import ascii
 from astropy.table import Table
 
 import simtools.config as cfg
 import simtools.io_handler as io
 from simtools.util import names
+from simtools.util.general import collectArguments
 from simtools.model.telescope_model import TelescopeModel
 from simtools.model.model_parameters import RADIUS_CURV
 
@@ -95,20 +97,7 @@ class CameraEfficiency:
 
         collectArguments(self, args=['zenithAngle'], allInputs=self.ALL_INPUTS, **kwargs)
 
-        # Results file
-        fileNameResults = names.cameraEfficiencyResultsFileName(
-                self._telescopeModel.telescopeType,
-                self._zenithAngle,
-                self.label
-        )
-        self._fileResults = self._baseDirectory.joinpath(fileNameResults)
-        # Log file
-        fileNameLog = names.cameraEfficiencyLogFileName(
-                self._telescopeModel.telescopeType,
-                self._zenithAngle,
-                self.label
-        )
-        self._fileLog = self._baseDirectory.joinpath(fileNameLog)
+        self._loadFiles()
     # END of init
 
     def __repr__(self):
@@ -124,6 +113,29 @@ class CameraEfficiency:
             logger.error(msg)
             raise ValueError(msg)
 
+    def _loadFiles(self):
+        # Results file
+        fileNameResults = names.cameraEfficiencyResultsFileName(
+                self._telescopeModel.telescopeType,
+                self._zenithAngle,
+                self.label
+        )
+        self._fileResults = self._baseDirectory.joinpath(fileNameResults)
+        # SimtelOutput file
+        fileNameSimtel = names.cameraEfficiencySimtelFileName(
+                self._telescopeModel.telescopeType,
+                self._zenithAngle,
+                self.label
+        )
+        self._fileSimtel = self._baseDirectory.joinpath(fileNameSimtel)
+        # Log file
+        fileNameLog = names.cameraEfficiencyLogFileName(
+                self._telescopeModel.telescopeType,
+                self._zenithAngle,
+                self.label
+        )
+        self._fileLog = self._baseDirectory.joinpath(fileNameLog)
+
     def simulate(self, force=False):
         '''
         Simulate RayTracing using SimtelRunner.
@@ -135,6 +147,10 @@ class CameraEfficiency:
         force: bool
             Force flag will remove existing files and simulate again.
         '''
+
+        if self._fileSimtel.exists() and not force:
+            logger.info('Simtel file exists and force=False - skipping simulation')
+            return
 
         # Processing camera pixel features
         funnelShape = self._telescopeModel.camera.getFunnelShape()
@@ -177,13 +193,14 @@ class CameraEfficiency:
         cmd += ' {} {}'.format(200, 1000)  # lmin and lmax
         cmd += ' {} 1 {}'.format(300, self._zenithAngle)  # Xmax, ioatm, zenith angle
         cmd += ' 2>{}'.format(self._fileLog)
-        cmd += ' >{}'.format(self._fileResults)
+        cmd += ' >{}'.format(self._fileSimtel)
 
         # Moving to sim_telarray directory before running
         cmd = 'cd {} && {}'.format(self._simtelSourcePath.joinpath('sim_telarray'), cmd)
 
         logger.info('Running sim_telarray with cmd: {}'.format(cmd))
         os.system(cmd)
+        return
 
     # END of simulate
 
@@ -205,7 +222,84 @@ class CameraEfficiency:
         noTelTransmission: bool
             If True, the telescope transmission is not applied.
         '''
+        if self._fileResults.exists() and not force:
+            logger.info('Results file exists and force=False - skipping analyze')
+            self._readResults()
+            return
 
+        effPars = [
+            'wl',
+            'eff',
+            'effAtm',
+            'qe',
+            'ref',
+            'masts',
+            'filt',
+            'funnel',
+            'atmTrans',
+            'cher',
+            'nsb',
+            'atmCorr',
+            'nsbSite',
+            'nsbSiteEff',
+            'nsbBe',
+            'nsbBeEff',
+            'C1',
+            'C2',
+            'C3',
+            'C4',
+            'C4x',
+            'N1',
+            'N2',
+            'N3',
+            'N4',
+            'N4x'
+        ]
+
+        self._results = dict()
+        for p in effPars:
+            self._results[p] = list()
+
+        with open(self._fileSimtel, 'r') as file:
+            for line in file:
+                words = line.split()
+                if len(words) == 0 or '#' in words[0]:
+                    continue
+                try:
+                    float(words[0])
+                except:
+                    continue
+
+                if float(words[0]) < 200 or float(words[0]) > 1000:
+                    continue
+                numbers = [float(w) for w in words]
+                for i in range(len(effPars) - 10):
+                    self._results[effPars[i]].append(numbers[i])
+                C1 = numbers[8] * (400 / numbers[0])**2
+                C2 = C1 * numbers[4] * numbers[5]
+                C3 = C2 * numbers[6] * numbers[7]
+                C4 = C3 * numbers[3]
+                C4x = C1 * numbers[3] * numbers[6] * numbers[7]
+                self._results['C1'].append(C1)
+                self._results['C2'].append(C2)
+                self._results['C3'].append(C3)
+                self._results['C4'].append(C4)
+                self._results['C4x'].append(C4x)
+                N1 = numbers[14]
+                N2 = N1 * numbers[4] * numbers[5]
+                N3 = N2 * numbers[6] * numbers[7]
+                N4 = N3 * numbers[3]
+                N4x = N1 * numbers[3] * numbers[6] * numbers[7]
+                self._results['N1'].append(N1)
+                self._results['N2'].append(N2)
+                self._results['N3'].append(N3)
+                self._results['N4'].append(N4)
+                self._results['N4x'].append(N4x)
+
+        self._hasResults = True
+        # Exporting
+        if export:
+            self.exportResults()
     # END of analyze
 
     def exportResults(self):

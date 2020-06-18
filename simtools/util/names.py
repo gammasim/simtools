@@ -256,6 +256,30 @@ def cameraEfficiencyResultsFileName(telescopeType, zenithAngle, label):
     '''
     name = 'camera-efficiency-{}-za{:.1f}'.format(telescopeType, zenithAngle)
     name += '_{}'.format(label) if label is not None else ''
+    name += '.csv'
+    return name
+
+
+def cameraEfficiencySimtelFileName(telescopeType, zenithAngle, label):
+    '''
+    Camera efficiency simtel output file name.
+
+    Parameters
+    ----------
+    telescopeType: str
+        LST, MST-FlashCam, ...
+    zenithAngle: float
+        Zenith angle (deg).
+    label: str
+        Instance label.
+
+    Returns
+    -------
+    str
+        File name.
+    '''
+    name = 'camera-efficiency-{}-za{:.1f}'.format(telescopeType, zenithAngle)
+    name += '_{}'.format(label) if label is not None else ''
     name += '.dat'
     return name
 
