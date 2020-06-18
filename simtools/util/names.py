@@ -236,7 +236,7 @@ def rayTracingResultsFileName(telescopeType, sourceDistance, zenithAngle, label)
     return name
 
 
-def cameraEfficiencyResultsFileName(telescopeType, label):
+def cameraEfficiencyResultsFileName(telescopeType, zenithAngle, label):
     '''
     Camera efficiency results file name.
 
@@ -244,6 +244,8 @@ def cameraEfficiencyResultsFileName(telescopeType, label):
     ----------
     telescopeType: str
         LST, MST-FlashCam, ...
+    zenithAngle: float
+        Zenith angle (deg).
     label: str
         Instance label.
 
@@ -252,13 +254,13 @@ def cameraEfficiencyResultsFileName(telescopeType, label):
     str
         File name.
     '''
-    name = 'camera-efficiency-{}'.format(telescopeType)
+    name = 'camera-efficiency-{}-za{:.1f}'.format(telescopeType, zenithAngle)
     name += '_{}'.format(label) if label is not None else ''
     name += '.dat'
     return name
 
 
-def cameraEfficiencyLogFileName(telescopeType, label):
+def cameraEfficiencyLogFileName(telescopeType, zenithAngle, label):
     '''
     Camera efficiency log file name.
 
@@ -266,6 +268,8 @@ def cameraEfficiencyLogFileName(telescopeType, label):
     ----------
     telescopeType: str
         LST, MST-FlashCam, ...
+    zenithAngle: float
+        Zenith angle (deg).
     label: str
         Instance label.
 
@@ -274,7 +278,7 @@ def cameraEfficiencyLogFileName(telescopeType, label):
     str
         File name.
     '''
-    name = 'camera-efficiency-{}'.format(telescopeType)
+    name = 'camera-efficiency-{}-za{:.1f}'.format(telescopeType, zenithAngle)
     name += '_{}'.format(label) if label is not None else ''
     name += '.log'
     return name
