@@ -9,7 +9,7 @@ logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 
-def test_simulate():
+def test_main():
     tel = TelescopeModel(
         telescopeType='lst',
         site='south',
@@ -17,10 +17,11 @@ def test_simulate():
         label='test_camera_eff'
     )
     ce = CameraEfficiency(telescopeModel=tel)
-    ce.simulate()
+    ce.simulate(force=True)
+    ce.analyze(force=True)
 
 
 if __name__ == '__main__':
 
-    test_simulate()
+    test_main()
     pass
