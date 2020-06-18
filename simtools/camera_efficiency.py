@@ -27,7 +27,7 @@ logger = logging.getLogger(__name__)
 
 class CameraEfficiency:
     '''
-    Class for handling ray tracing simulations and analysis.
+    Class for handling camera efficiency simulations and analysis.
 
     Attributes
     ----------
@@ -36,23 +36,14 @@ class CameraEfficiency:
 
     Methods
     -------
-    simulate(test=False, force=False)
-        Simulate RayTracing using SimtelRunner.
-    analyse(export=True, force=False, useRX=False, noTelTransmission=False)
-        Analyze RayTracing, meaning read simtel files, compute psfs and eff areas and store the
-        results in _results.
+    simulate(force=False)
+        Simulate camera efficiency using testeff from sim_telarray.
+    analyse(export=True, force=False)
+        Analyze output from testeff and store results in _results.
     exportResults()
         Export results to a csv file.
     plot(key, **kwargs)
-        Plot key vs off-axis angle.
-    plotHistogram(key, **kwargs)
-        Plot histogram of key.
-    getMean(key)
-        Get mean value of key.
-    getStdDev(key)
-        Get std dev of key.
-    images()
-        Get list of PSFImages.
+        Plot key vs wavelength, where key may be cherenkov or nsb.
     '''
     ALL_INPUTS = {'zenithAngle': {'default': 20, 'unit': u.deg}}
 
@@ -65,7 +56,7 @@ class CameraEfficiency:
         **kwargs
     ):
         '''
-        RayTracing init.
+        CameraEfficiency init.
 
         Parameters
         ----------
@@ -79,11 +70,8 @@ class CameraEfficiency:
         filesLocation: str (or Path), optional
             Parent location of the output files created by this class. If not given, it will be
             taken from the config.yml file.
-        singleMirrorMode: bool
-        useRandomFocalLength: bool
         **kwargs:
-            Physical parameters with units (if applicable). Options: zenithAngle, offAxisAngle,
-            sourceDistance, mirrorNumbers
+            Physical parameters with units (if applicable). Options: zenithAngle (default 20 deg).
         '''
         self._simtelSourcePath = Path(cfg.collectConfigArg('simtelPath', simtelSourcePath))
         self._filesLocation = cfg.collectConfigArg('outputLocation', filesLocation)
@@ -114,6 +102,7 @@ class CameraEfficiency:
             raise ValueError(msg)
 
     def _loadFiles(self):
+        ''' Define the variables for the file names, including the results, simtel and log file. '''
         # Results file
         fileNameResults = names.cameraEfficiencyResultsFileName(
                 self._telescopeModel.telescopeType,
@@ -138,15 +127,14 @@ class CameraEfficiency:
 
     def simulate(self, force=False):
         '''
-        Simulate RayTracing using SimtelRunner.
+        Simulate camera efficiency using testeff.
 
         Parameters
         ----------
-        test: bool
-            Test flag will make it faster by simulating much fewer photons.
         force: bool
             Force flag will remove existing files and simulate again.
         '''
+        logger.info('Simulating CameraEfficiency')
 
         if self._fileSimtel.exists() and not force:
             logger.info('Simtel file exists and force=False - skipping simulation')
@@ -173,6 +161,7 @@ class CameraEfficiency:
         if self._telescopeModel.hasParameter('camera_transmission'):
             cameraTransmission = self._telescopeModel.getParameter('camera_transmission')
 
+        # cmd -> Command to be run at the shell
         cmd = str(self._simtelSourcePath.joinpath('sim_telarray/bin/testeff'))
         cmd += ' -nm -nsb-extra'
         cmd += ' -alt {}'.format(self._telescopeModel.getParameter('altitude'))
@@ -201,13 +190,11 @@ class CameraEfficiency:
         logger.info('Running sim_telarray with cmd: {}'.format(cmd))
         os.system(cmd)
         return
-
     # END of simulate
 
     def analyze(self, export=True, force=False):
         '''
-        Analyze RayTracing, meaning read simtel files, compute psfs and eff areas and store the
-        results in _results.
+        Analyze camera efficiency output file and store the results in _results.
 
         Parameters
         ----------
@@ -216,17 +203,15 @@ class CameraEfficiency:
             function can be used.
         force: bool
             If True, existing results files will be removed and analysis will be done again.
-        useRX: bool
-            If True, calculations are done using the rx binary provided by sim_telarray. If False,
-            calculations are done internally, by the module psf_analysis.
-        noTelTransmission: bool
-            If True, the telescope transmission is not applied.
         '''
+        logger.info('Analyzing CameraEfficiency')
+
         if self._fileResults.exists() and not force:
             logger.info('Results file exists and force=False - skipping analyze')
             self._readResults()
             return
 
+        # List of parameters to be calculated and stored
         effPars = [
             'wl',
             'eff',
@@ -297,7 +282,6 @@ class CameraEfficiency:
                 self._results['N4x'].append(N4x)
 
         self._hasResults = True
-        # Exporting
         if export:
             self.exportResults()
     # END of analyze
@@ -317,8 +301,26 @@ class CameraEfficiency:
         self._results = dict(table)
         self._hasResults = True
 
-    def plot(self, which, **kwargs):
-        ''' '''
+    def plot(self, key, **kwargs):
+        '''
+        Plot key vs wavelength.
+
+        Parameters
+        ----------
+        key: str
+            cherenkov or nsb
+        **kwargs:
+            kwargs for plt.plot
+
+        Raises
+        ------
+        KeyError
+            If key is not among the valid options.
+        '''
+        if key not in ['cherenkov', 'nsb']:
+            msg = 'Invalid key to plot'
+            logger.error(msg)
+            raise KeyError(msg)
 
         ax = plt.gca()
         firstLetter = 'C' if which == 'cherenkov' else 'N'
