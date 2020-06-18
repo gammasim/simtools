@@ -323,7 +323,7 @@ class CameraEfficiency:
             raise KeyError(msg)
 
         ax = plt.gca()
-        firstLetter = 'C' if which == 'cherenkov' else 'N'
+        firstLetter = 'C' if key == 'cherenkov' else 'N'
         for par in ['1', '2', '3', '4', '4x']:
             ax.plot(
                 self._results['wl'],
