@@ -22,8 +22,6 @@ from simtools.model.model_parameters import RADIUS_CURV
 
 __all__ = ['CameraEfficiency']
 
-logger = logging.getLogger(__name__)
-
 
 class CameraEfficiency:
     '''
@@ -53,6 +51,7 @@ class CameraEfficiency:
         label=None,
         simtelSourcePath=None,
         filesLocation=None,
+        logger=__name__,
         **kwargs
     ):
         '''
@@ -73,6 +72,8 @@ class CameraEfficiency:
         **kwargs:
             Physical parameters with units (if applicable). Options: zenithAngle (default 20 deg).
         '''
+        self._logger = logging.getLogger(logger)
+
         self._simtelSourcePath = Path(cfg.collectConfigArg('simtelPath', simtelSourcePath))
         self._filesLocation = cfg.collectConfigArg('outputLocation', filesLocation)
         self._telescopeModel = self._validateTelescopeModel(telescopeModel)
@@ -94,11 +95,11 @@ class CameraEfficiency:
     def _validateTelescopeModel(self, tel):
         ''' Validate TelescopeModel '''
         if isinstance(tel, TelescopeModel):
-            logger.debug('TelescopeModel OK')
+            self._logger.debug('TelescopeModel OK')
             return tel
         else:
             msg = 'Invalid TelescopeModel'
-            logger.error(msg)
+            self._logger.error(msg)
             raise ValueError(msg)
 
     def _loadFiles(self):
@@ -134,10 +135,10 @@ class CameraEfficiency:
         force: bool
             Force flag will remove existing files and simulate again.
         '''
-        logger.info('Simulating CameraEfficiency')
+        self._logger.info('Simulating CameraEfficiency')
 
         if self._fileSimtel.exists() and not force:
-            logger.info('Simtel file exists and force=False - skipping simulation')
+            self._logger.info('Simtel file exists and force=False - skipping simulation')
             return
 
         # Processing camera pixel features
@@ -148,7 +149,7 @@ class CameraEfficiency:
         # Processing focal length
         focalLength = self._telescopeModel.getParameter('effective_focal_length')
         if focalLength == 0.:
-            logger.warning('Using focal_lenght because effective_focal_length is 0')
+            self._logger.warning('Using focal_lenght because effective_focal_length is 0')
             focalLength = self._telescopeModel.getParameter('focal_length')
 
         # Processing mirror class
@@ -187,7 +188,7 @@ class CameraEfficiency:
         # Moving to sim_telarray directory before running
         cmd = 'cd {} && {}'.format(self._simtelSourcePath.joinpath('sim_telarray'), cmd)
 
-        logger.info('Running sim_telarray with cmd: {}'.format(cmd))
+        self._logger.info('Running sim_telarray with cmd: {}'.format(cmd))
         os.system(cmd)
         return
     # END of simulate
@@ -204,10 +205,10 @@ class CameraEfficiency:
         force: bool
             If True, existing results files will be removed and analysis will be done again.
         '''
-        logger.info('Analyzing CameraEfficiency')
+        self._logger.info('Analyzing CameraEfficiency')
 
         if self._fileResults.exists() and not force:
-            logger.info('Results file exists and force=False - skipping analyze')
+            self._logger.info('Results file exists and force=False - skipping analyze')
             self._readResults()
             return
 
@@ -289,9 +290,9 @@ class CameraEfficiency:
     def exportResults(self):
         ''' Export results to a csv file. '''
         if not self._hasResults:
-            logger.error('Cannot export results because it does not exist')
+            self._logger.error('Cannot export results because it does not exist')
         else:
-            logger.info('Exporting results to {}'.format(self._fileResults))
+            self._logger.info('Exporting results to {}'.format(self._fileResults))
             table = Table(self._results)
             ascii.write(table, self._fileResults, format='basic', overwrite=True)
 
@@ -319,7 +320,7 @@ class CameraEfficiency:
         '''
         if key not in ['cherenkov', 'nsb']:
             msg = 'Invalid key to plot'
-            logger.error(msg)
+            self._logger.error(msg)
             raise KeyError(msg)
 
         ax = plt.gca()
@@ -332,4 +333,47 @@ class CameraEfficiency:
                 **kwargs
             )
 
+    def plotCherenkovEfficiency(self):
+        '''
+        Plot cherenkov efficiency vc wavelength.
+
+        Returns
+        -------
+        plt
+        '''
+        self._logger.info('Plotting cherenkov efficiency vs wavelength')
+        ax = plt.gca()
+
+        ax.set_xlabel('wavelenght [nm]')
+        ax.set_ylabel('cherenkov light efficiency')
+
+        for par in ['C1', 'C2', 'C3', 'C4', 'C4x']:
+            ax.plot(self._results['wl'], self._results[par], label=par)
+
+        ax.legend(frameon=False)
+
+        return plt
+
+    def plotNSBEfficiency(self):
+        '''
+        Plot NSB efficiency vc wavelength.
+
+        Returns
+        -------
+        plt
+        '''
+        self._logger.info('Plotting NSB efficiency vs wavelength')
+        ax = plt.gca()
+        ax.set_yscale('log')
+        ax.set_xlabel('wavelenght [nm]')
+        ax.set_ylabel('nightsky background light efficiency')
+
+        for par in ['N1', 'N2', 'N3', 'N4', 'N4x']:
+            ax.plot(self._results['wl'], self._results[par], label=par)
+
+        ylim = ax.get_ylim()
+        ax.set_ylim(1e-3, ylim[1])
+        ax.legend(frameon=False)
+
+        return plt
 # END of CameraEfficiency
