@@ -142,9 +142,9 @@ class CameraEfficiency:
             return
 
         # Processing camera pixel features
-        funnelShape = self._telescopeModel.camera.getFunnelShape()
-        pixelShapeCmd = '-hpix' if funnelShape in [1, 3] else '-spix'
-        pixelDiameter = self._telescopeModel.camera.getDiameter()
+        pixelShape = self._telescopeModel.camera.getPixelShape()
+        pixelShapeCmd = '-hpix' if pixelShape in [1, 3] else '-spix'
+        pixelDiameter = self._telescopeModel.camera.getPixelDiameter()
 
         # Processing focal length
         focalLength = self._telescopeModel.getParameter('effective_focal_length')
@@ -177,8 +177,12 @@ class CameraEfficiency:
         cmd += ' -teltrans {}'.format(self._telescopeModel.getTelescopeTransmissionParameters()[0])
         cmd += ' -camtrans {}'.format(cameraTransmission)
         cmd += ' -fflt {}'.format(self._telescopeModel.getParameter('camera_filter'))
-        cmd += ' -fang {}'.format(self._telescopeModel.camera.getFunnelEfficiencyFile())
-        cmd += ' -fwl {}'.format(self._telescopeModel.camera.getFunnelWavelengthFile())
+        cmd += ' -fang {}'.format(
+            self._telescopeModel.camera.getLightguideEfficiencyAngleFileName()
+        )
+        cmd += ' -fwl {}'.format(
+            self._telescopeModel.camera.getLightguideEfficiencyWavelengthFileName()
+        )
         cmd += ' -fqe {}'.format(self._telescopeModel.getParameter('quantum_efficiency'))
         cmd += ' {} {}'.format(200, 1000)  # lmin and lmax
         cmd += ' {} 1 {}'.format(300, self._zenithAngle)  # Xmax, ioatm, zenith angle
@@ -221,7 +225,7 @@ class CameraEfficiency:
             'ref',
             'masts',
             'filt',
-            'funnel',
+            'pixel',
             'atmTrans',
             'cher',
             'nsb',
