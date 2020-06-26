@@ -138,8 +138,8 @@ class CorsikaConfig:
         logger.debug('Init CorsikaConfig')
 
         self._label = label
-        self._filesLocation = cfg.collectConfigArg('outputLocation', filesLocation)
-        self._databaseLocation = cfg.collectConfigArg('databaseLocation', databaseLocation)
+        self._filesLocation = cfg.getConfigArg('outputLocation', filesLocation)
+        self._databaseLocation = cfg.getConfigArg('databaseLocation', databaseLocation)
         self._site = names.validateName(site, names.allSiteNames)
         self._arrayName = names.validateName(arrayName, names.allArrayNames)
         self._array = getArray(self._arrayName, self._databaseLocation)
