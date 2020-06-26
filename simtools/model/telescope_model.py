@@ -102,8 +102,8 @@ class TelescopeModel:
         self.site = names.validateName(site, names.allSiteNames)
         self.label = label
 
-        self._modelFilesLocations = cfg.collectConfigArg('modelFilesLocations', modelFilesLocations)
-        self._filesLocation = cfg.collectConfigArg('outputLocation', filesLocation)
+        self._modelFilesLocations = cfg.getConfigArg('modelFilesLocations', modelFilesLocations)
+        self._filesLocation = cfg.getConfigArg('outputLocation', filesLocation)
 
         self._parameters = dict()
 

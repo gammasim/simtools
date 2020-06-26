@@ -18,18 +18,21 @@ if __name__ == '__main__':
         )
     )
     parser.add_argument(
+        '-t',
         '--tel_type',
         help='Telescope type (e.g. mst-flashcam, lst)',
         type=str,
         required=True
     )
     parser.add_argument(
+        '-m',
         '--model_version',
         help='Model version (default=prod4)',
         type=str,
         default='prod4'
     )
     parser.add_argument(
+        '-s',
         '--site',
         help='Site (default=South)',
         type=str,
@@ -61,7 +64,7 @@ if __name__ == '__main__':
     logger.info('Validating the camera efficiency of {}'.format(telModel.telescopeType))
 
     ce = CameraEfficiency(telescopeModel=telModel, logger=logger.name)
-    ce.simulate(force=True)
+    ce.simulate(force=False)
     ce.analyze(force=True)
 
     # Plotting the camera efficiency for Cherenkov light
