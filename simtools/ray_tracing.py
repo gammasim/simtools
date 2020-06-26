@@ -101,8 +101,8 @@ class RayTracing:
             Physical parameters with units (if applicable). Options: zenithAngle, offAxisAngle,
             sourceDistance, mirrorNumbers
         '''
-        self._simtelSourcePath = Path(cfg.collectConfigArg('simtelPath', simtelSourcePath))
-        self._filesLocation = cfg.collectConfigArg('outputLocation', filesLocation)
+        self._simtelSourcePath = Path(cfg.getConfigArg('simtelPath', simtelSourcePath))
+        self._filesLocation = cfg.getConfigArg('outputLocation', filesLocation)
 
         self._telescopeModel = self._validateTelescopeModel(telescopeModel)
 
