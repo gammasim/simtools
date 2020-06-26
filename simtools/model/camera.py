@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 import matplotlib.colors as mcolors
 from scipy.spatial import cKDTree as KDTree
+from scipy.spatial import distance
 from matplotlib.collections import PatchCollection
 
 import simtools.util.legend_handlers as legH
@@ -112,6 +113,7 @@ class Camera:
         pixels = dict()
         pixels['pixel_diameter'] = 9999
         pixels['pixel_shape'] = 9999
+        pixels['pixel_spacing'] = 9999
         pixels['lightguide_efficiency_angle_file'] = 'none'
         pixels['lightguide_efficiency_wavelength_file'] = 'none'
         pixels['rotateAngle'] = 0  # The LST and MST-NectarCam cameras need to be rotated
@@ -253,6 +255,21 @@ class Camera:
         str: file name of the lightguide efficiency as a function of wavelength.
         '''
         return self._pixels['lightguide_efficiency_wavelength_file']
+
+    def getCameraFillFactor(self):
+        '''
+        Calculate the fill factor of the camera, defined as (pixel_diameter/pixel_spacing)**2
+
+        Returns
+        -------
+        float: the camera fill factor
+        '''
+        if self._pixels['pixel_spacing'] == 9999:
+            points = np.array([self._pixels['x'], self._pixels['y']]).T
+            pixelDistances = distance.cdist(points, points, 'euclidean')
+            self._pixels['pixel_spacing'] = np.min(pixelDistances[pixelDistances > 0])
+
+        return (self._pixels['pixel_diameter']/self._pixels['pixel_spacing'])**2
 
     def calcFOV(self):
         '''

@@ -5,9 +5,11 @@ Author: Raul R Prado
 '''
 
 import logging
+import numpy as np
 import matplotlib.pyplot as plt
 import os
 from pathlib import Path
+from collections import defaultdict
 
 import astropy.units as u
 from astropy.io import ascii
@@ -18,6 +20,7 @@ import simtools.io_handler as io
 from simtools.util import names
 from simtools.util.general import collectArguments
 from simtools.model.telescope_model import TelescopeModel
+from simtools import visualize
 from simtools.model.model_parameters import RADIUS_CURV
 
 __all__ = ['CameraEfficiency']
@@ -62,11 +65,11 @@ class CameraEfficiency:
         telescopeModel: TelescopeModel
             Instance of the TelescopeModel class.
         label: str
-            Instance label.
-        simtelSourcePath: str (or Path), optional
+            Instance label, optional.
+        simtelSourcePath: str (or Path), optional.
             Location of sim_telarray installation. If not given, it will be taken from the
             config.yml file.
-        filesLocation: str (or Path), optional
+        filesLocation: str (or Path), optional.
             Parent location of the output files created by this class. If not given, it will be
             taken from the config.yml file.
         **kwargs:
@@ -74,8 +77,8 @@ class CameraEfficiency:
         '''
         self._logger = logging.getLogger(logger)
 
-        self._simtelSourcePath = Path(cfg.collectConfigArg('simtelPath', simtelSourcePath))
-        self._filesLocation = cfg.collectConfigArg('outputLocation', filesLocation)
+        self._simtelSourcePath = Path(cfg.getConfigArg('simtelPath', simtelSourcePath))
+        self._filesLocation = cfg.getConfigArg('outputLocation', filesLocation)
         self._telescopeModel = self._validateTelescopeModel(telescopeModel)
         self.label = label if label is not None else self._telescopeModel.label
 
@@ -93,7 +96,14 @@ class CameraEfficiency:
         return 'CameraEfficiency(label={})\n'.format(self.label)
 
     def _validateTelescopeModel(self, tel):
-        ''' Validate TelescopeModel '''
+        ''' Validate TelescopeModel
+
+        Parameters
+        ----------
+
+        tel: TelescopeModel
+            An assumed instance of the TelescopeModel class.
+        '''
         if isinstance(tel, TelescopeModel):
             self._logger.debug('TelescopeModel OK')
             return tel
@@ -204,7 +214,7 @@ class CameraEfficiency:
         Parameters
         ----------
         export: bool
-            If True, results will be exported to a file automatically. Alternativelly, exportResults
+            If True, results will be exported to a file automatically. Alternatively, exportResults
             function can be used.
         force: bool
             If True, existing results files will be removed and analysis will be done again.
@@ -246,9 +256,7 @@ class CameraEfficiency:
             'N4x'
         ]
 
-        self._results = dict()
-        for p in effPars:
-            self._results[p] = list()
+        _results = defaultdict(list)
 
         with open(self._fileSimtel, 'r') as file:
             for line in file:
@@ -264,29 +272,51 @@ class CameraEfficiency:
                     continue
                 numbers = [float(w) for w in words]
                 for i in range(len(effPars) - 10):
-                    self._results[effPars[i]].append(numbers[i])
+                    _results[effPars[i]].append(numbers[i])
                 C1 = numbers[8] * (400 / numbers[0])**2
                 C2 = C1 * numbers[4] * numbers[5]
                 C3 = C2 * numbers[6] * numbers[7]
                 C4 = C3 * numbers[3]
                 C4x = C1 * numbers[3] * numbers[6] * numbers[7]
-                self._results['C1'].append(C1)
-                self._results['C2'].append(C2)
-                self._results['C3'].append(C3)
-                self._results['C4'].append(C4)
-                self._results['C4x'].append(C4x)
+                _results['C1'].append(C1)
+                _results['C2'].append(C2)
+                _results['C3'].append(C3)
+                _results['C4'].append(C4)
+                _results['C4x'].append(C4x)
                 N1 = numbers[14]
                 N2 = N1 * numbers[4] * numbers[5]
                 N3 = N2 * numbers[6] * numbers[7]
                 N4 = N3 * numbers[3]
                 N4x = N1 * numbers[3] * numbers[6] * numbers[7]
-                self._results['N1'].append(N1)
-                self._results['N2'].append(N2)
-                self._results['N3'].append(N3)
-                self._results['N4'].append(N4)
-                self._results['N4x'].append(N4x)
+                _results['N1'].append(N1)
+                _results['N2'].append(N2)
+                _results['N3'].append(N3)
+                _results['N4'].append(N4)
+                _results['N4x'].append(N4x)
 
+        self._results = Table(_results)
         self._hasResults = True
+
+        print('\33[40;37;1m')
+        self._logger.info('Spectrum weighted reflectivity: {}'.format(self.calcReflectivity()))
+        self._logger.info(
+            'Camera nominal efficiency with gaps (B-TEL-1170): {}'.format(
+                self.calcCameraEfficiency()
+            )
+        )
+        self._logger.info(
+            'Telescope total efficiency with gaps (was A-PERF-2020): {}'.format(
+                self.calcTelEfficiency()
+            )
+        )
+        self._logger.info(
+            'Total telescope Cherenkov light eff./sqrt(NSB total eff.) '
+            '(A-PERF-2025/B-TEL-0090): {}'.format(
+                self.calcTotEfficiency(self.calcTelEfficiency())
+            )
+        )
+        print('\033[0m')
+
         if export:
             self.exportResults()
     # END of analyze
@@ -294,17 +324,99 @@ class CameraEfficiency:
     def exportResults(self):
         ''' Export results to a csv file. '''
         if not self._hasResults:
-            self._logger.error('Cannot export results because it does not exist')
+            self._logger.error('Cannot export results because they do not exist')
         else:
             self._logger.info('Exporting results to {}'.format(self._fileResults))
-            table = Table(self._results)
-            ascii.write(table, self._fileResults, format='basic', overwrite=True)
+            ascii.write(self._results, self._fileResults, format='basic', overwrite=True)
 
     def _readResults(self):
         ''' Read existing results file and store it in _results. '''
         table = ascii.read(self._fileResults, format='basic')
-        self._results = dict(table)
+        self._results = table
         self._hasResults = True
+
+    def calcTelEfficiency(self):
+        '''
+        Calculate the telescope total efficiency including gaps (as defined in A-PERF-2020).
+        '''
+
+        # Sum(C1) from 300 - 550 nm:
+        c1ReducedWL = self._results['C1'][
+            [wlNow > 299 and wlNow < 551 for wlNow in self._results['wl']]
+        ]
+        c1Sum = np.sum(c1ReducedWL)
+        # Sum(C4) from 200 - 999 nm:
+        c4Sum = np.sum(self._results['C4'])
+        mastsFactor = self._results['masts'][0]
+        fillFactor = self._telescopeModel.camera.getCameraFillFactor()
+
+        telEffeciency = fillFactor*(c4Sum/(mastsFactor*c1Sum))
+
+        return telEffeciency
+
+    def calcCameraEfficiency(self):
+        '''
+        Calculate the camera nominal efficiency including gaps (as defined in B-TEL-1170).
+        '''
+
+        # Sum(C1) from 300 - 550 nm:
+        c1ReducedWL = self._results['C1'][
+            [wlNow > 299 and wlNow < 551 for wlNow in self._results['wl']]
+        ]
+        c1Sum = np.sum(c1ReducedWL)
+        # Sum(C4x) from 300 - 550 nm:
+        c4xReducedWL = self._results['C4x'][
+            [wlNow > 299 and wlNow < 551 for wlNow in self._results['wl']]
+        ]
+        c4xSum = np.sum(c4xReducedWL)
+        fillFactor = self._telescopeModel.camera.getCameraFillFactor()
+
+        camEffeciencyNoGaps = c4xSum/c1Sum
+        camEffeciency = camEffeciencyNoGaps*fillFactor
+
+        return camEffeciency
+
+    def calcTotEfficiency(self, telEffeciency):
+        '''
+        Calculate the telescope total efficiency including gaps (as defined in A-PERF-2020).
+
+        Parameters
+        ----------
+        telEffeciency: float
+            The telescope efficiency as calculated by calcTelEfficiency()
+        '''
+
+        # Sum(N1) from 300 - 550 nm:
+        n1ReducedWL = self._results['N1'][
+            [wlNow > 299 and wlNow < 551 for wlNow in self._results['wl']]
+        ]
+        n1Sum = np.sum(n1ReducedWL)
+        # Sum(N4) from 200 - 999 nm:
+        n4Sum = np.sum(self._results['N4'])
+        mastsFactor = self._results['masts'][0]
+        fillFactor = self._telescopeModel.camera.getCameraFillFactor()
+
+        telEffeciencyNSB = fillFactor*(n4Sum/(mastsFactor*n1Sum))
+
+        return telEffeciency/np.sqrt(telEffeciencyNSB)
+
+    def calcReflectivity(self):
+        '''
+        Calculate the Cherenkov spectrum weighted reflectivity in the range 300-550 nm.
+        '''
+
+        # Sum(C1) from 300 - 550 nm:
+        c1ReducedWL = self._results['C1'][
+            [wlNow > 299 and wlNow < 551 for wlNow in self._results['wl']]
+        ]
+        c1Sum = np.sum(c1ReducedWL)
+        # Sum(C2) from 300 - 550 nm:
+        c2ReducedWL = self._results['C2'][
+            [wlNow > 299 and wlNow < 551 for wlNow in self._results['wl']]
+        ]
+        c2Sum = np.sum(c2ReducedWL)
+
+        return c2Sum/c1Sum/self._results['masts'][0]
 
     def plot(self, key, **kwargs):
         '''
@@ -346,15 +458,27 @@ class CameraEfficiency:
         plt
         '''
         self._logger.info('Plotting cherenkov efficiency vs wavelength')
-        ax = plt.gca()
 
-        ax.set_xlabel('wavelenght [nm]')
-        ax.set_ylabel('cherenkov light efficiency')
+        columnTitles = {
+            'wl': 'Wavelength [nm]',
+            'C1': r'C1: Cherenkov light on ground',
+            'C2': r'C2: C1 $\times$ ref. $\times$ masts',
+            'C3': r'C3: C2 $\times$ filter $\times$ lightguide',
+            'C4': r'C4: C3 $\times$ q.e.',
+            'C4x': r'C4x: C1 $\times$ filter $\times$ lightguide $\times$ q.e.'
+        }
 
-        for par in ['C1', 'C2', 'C3', 'C4', 'C4x']:
-            ax.plot(self._results['wl'], self._results[par], label=par)
+        tableToPlot = Table([self._results[colNow] for colNow in columnTitles.keys()])
 
-        ax.legend(frameon=False)
+        for columnNow, columnTitle in columnTitles.items():
+            tableToPlot.rename_column(columnNow, columnTitle)
+
+        plt = visualize.plotTable(
+            tableToPlot,
+            yTitle='Cherenkov light efficiency',
+            title='{} response to Cherenkov light'.format(self._telescopeModel.telescopeType),
+            noMarkers=True
+        )
 
         return plt
 
@@ -367,17 +491,32 @@ class CameraEfficiency:
         plt
         '''
         self._logger.info('Plotting NSB efficiency vs wavelength')
-        ax = plt.gca()
-        ax.set_yscale('log')
-        ax.set_xlabel('wavelenght [nm]')
-        ax.set_ylabel('nightsky background light efficiency')
+        columnTitles = {
+            'wl': 'Wavelength [nm]',
+            'N1': r'N1: NSB light on ground (B\&E)',
+            'N2': r'N2: N1 $\times$ ref. $\times$ masts',
+            'N3': r'N3: N2 $\times$ filter $\times$ lightguide',
+            'N4': r'N4: N3 $\times$ q.e.',
+            'N4x': r'N4x: N1 $\times$ filter $\times$ lightguide $\times$ q.e.'
+        }
 
-        for par in ['N1', 'N2', 'N3', 'N4', 'N4x']:
-            ax.plot(self._results['wl'], self._results[par], label=par)
+        tableToPlot = Table([self._results[colNow] for colNow in columnTitles.keys()])
 
-        ylim = ax.get_ylim()
-        ax.set_ylim(1e-3, ylim[1])
-        ax.legend(frameon=False)
+        for columnNow, columnTitle in columnTitles.items():
+            tableToPlot.rename_column(columnNow, columnTitle)
+
+        plt = visualize.plotTable(
+            tableToPlot,
+            yTitle='Nightsky background light efficiency',
+            title='{} response to nightsky background light'.format(
+                self._telescopeModel.telescopeType
+            ),
+            noMarkers=True
+        )
+
+        plt.gca().set_yscale('log')
+        ylim = plt.gca().get_ylim()
+        plt.gca().set_ylim(1e-3, ylim[1])
 
         return plt
 # END of CameraEfficiency
