@@ -85,13 +85,13 @@ class SimtelRunner:
         '''
         logger.debug('Init SimtelRunner')
 
-        self._simtelSourcePath = Path(cfg.collectConfigArg('simtelPath', simtelSourcePath))
+        self._simtelSourcePath = Path(cfg.getConfigArg('simtelPath', simtelSourcePath))
         self.mode = names.validateName(mode, names.allSimtelModeNames)
         self.telescopeModel = self._validateTelescopeModel(telescopeModel)
         self.label = label if label is not None else self.telescopeModel.label
 
         # File location
-        self._filesLocation = cfg.collectConfigArg('outputLocation', filesLocation)
+        self._filesLocation = cfg.getConfigArg('outputLocation', filesLocation)
         self._baseDirectory = io.getOutputDirectory(
             self._filesLocation,
             self.label,
