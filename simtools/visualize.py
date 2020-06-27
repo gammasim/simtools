@@ -123,7 +123,7 @@ def setStyle(palette='default', bigPlot=False):
            labelpad=5, grid=True, axisbelow=True)
     plt.rc('xtick', labelsize=fontsize[plotSize])
     plt.rc('ytick', labelsize=fontsize[plotSize])
-    plt.rc('legend', loc='best', shadow=False, fontsize='large')
+    plt.rc('legend', loc='best', shadow=False, fontsize='medium')
     plt.rc('text', usetex=True)
     plt.rc('font', family='serif', size=fontsize[plotSize])
 
@@ -341,7 +341,7 @@ def plotTable(table, yTitle, **kwargs):
     **kwargs:
         * palette: choose a colour palette (see setStyle for additional information).
         * title: set a plot title.
-        * npLegend: do not print a legend for the plot.
+        * noLegend: do not print a legend for the plot.
         * bigPlot: increase marker and font sizes (like in a wide lightcurve).
         * noMarkers: do not print markers.
         * emptyMarkers: print empty (hollow) markers
