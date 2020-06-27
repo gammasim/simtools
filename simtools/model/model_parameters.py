@@ -60,3 +60,13 @@ CAMERA_ROTATE_ANGLE = {
   'SST-Structure': 90,
   'SST-Camera': 90
 }
+
+CAMERA_RADIUS_CURV = {
+    'SST-1M': 5.6,
+    'SST-2M-ASTRI': 4.3,
+    'SST-2M-GCT': 4.566,
+    'MST-FlashCam': 19.2,
+    'MST-NectarCam': 19.2,
+    'MST-SCT': 11.16,
+    'LST': 56
+}

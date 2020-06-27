@@ -236,6 +236,78 @@ def rayTracingResultsFileName(telescopeType, sourceDistance, zenithAngle, label)
     return name
 
 
+def cameraEfficiencyResultsFileName(telescopeType, zenithAngle, label):
+    '''
+    Camera efficiency results file name.
+
+    Parameters
+    ----------
+    telescopeType: str
+        LST, MST-FlashCam, ...
+    zenithAngle: float
+        Zenith angle (deg).
+    label: str
+        Instance label.
+
+    Returns
+    -------
+    str
+        File name.
+    '''
+    name = 'camera-efficiency-{}-za{:.1f}'.format(telescopeType, zenithAngle)
+    name += '_{}'.format(label) if label is not None else ''
+    name += '.csv'
+    return name
+
+
+def cameraEfficiencySimtelFileName(telescopeType, zenithAngle, label):
+    '''
+    Camera efficiency simtel output file name.
+
+    Parameters
+    ----------
+    telescopeType: str
+        LST, MST-FlashCam, ...
+    zenithAngle: float
+        Zenith angle (deg).
+    label: str
+        Instance label.
+
+    Returns
+    -------
+    str
+        File name.
+    '''
+    name = 'camera-efficiency-{}-za{:.1f}'.format(telescopeType, zenithAngle)
+    name += '_{}'.format(label) if label is not None else ''
+    name += '.dat'
+    return name
+
+
+def cameraEfficiencyLogFileName(telescopeType, zenithAngle, label):
+    '''
+    Camera efficiency log file name.
+
+    Parameters
+    ----------
+    telescopeType: str
+        LST, MST-FlashCam, ...
+    zenithAngle: float
+        Zenith angle (deg).
+    label: str
+        Instance label.
+
+    Returns
+    -------
+    str
+        File name.
+    '''
+    name = 'camera-efficiency-{}-za{:.1f}'.format(telescopeType, zenithAngle)
+    name += '_{}'.format(label) if label is not None else ''
+    name += '.log'
+    return name
+
+
 def corsikaConfigFileName(arrayName, site, zenith, viewCone, label=None):
     '''
     Corsika config file name.

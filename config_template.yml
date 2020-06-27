@@ -15,7 +15,7 @@ outputLocation: .
 
 testDataLocation: './data/'
 
-simtelPath: /afs/ifh.de/group/cta/scratch/prado/sim_telarray/corsika7.7_simtelarray_20-05-11
+simtelPath: /Users/ogueta/work/cta/gammasim/gammasim-tools/sim_telarray/22_06_20
 
 # Not used yet
 submissionCommand: 'qsub '
