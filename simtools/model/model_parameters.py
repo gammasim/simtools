@@ -61,7 +61,7 @@ CAMERA_ROTATE_ANGLE = {
   'SST-Camera': 90
 }
 
-RADIUS_CURV = {
+CAMERA_RADIUS_CURV = {
     'SST-1M': 5.6,
     'SST-2M-ASTRI': 4.3,
     'SST-2M-GCT': 4.566,

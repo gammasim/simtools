@@ -21,7 +21,7 @@ from simtools.util import names
 from simtools.util.general import collectArguments
 from simtools.model.telescope_model import TelescopeModel
 from simtools import visualize
-from simtools.model.model_parameters import RADIUS_CURV
+from simtools.model.model_parameters import CAMERA_RADIUS_CURV
 
 __all__ = ['CameraEfficiency']
 
@@ -178,7 +178,7 @@ class CameraEfficiency:
         cmd += ' -alt {}'.format(self._telescopeModel.getParameter('altitude'))
         cmd += ' -fatm {}'.format(self._telescopeModel.getParameter('atmospheric_transmission'))
         cmd += ' -flen {}'.format(focalLength * 0.01)  # focal lenght in meters
-        cmd += ' -fcur {}'.format(RADIUS_CURV[self._telescopeModel.telescopeType])
+        cmd += ' -fcur {}'.format(CAMERA_RADIUS_CURV[self._telescopeModel.telescopeType])
         cmd += ' {} {}'.format(pixelShapeCmd, pixelDiameter)
         cmd += ' -fmir {}'.format(self._telescopeModel.getParameter('mirror_list'))
         cmd += ' -fref {}'.format(self._telescopeModel.getParameter('mirror_reflectivity'))
