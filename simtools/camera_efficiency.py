@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 import os
 from pathlib import Path
 from collections import defaultdict
+import re
 
 import astropy.units as u
 from astropy.io import ascii
@@ -258,41 +259,35 @@ class CameraEfficiency:
 
         _results = defaultdict(list)
 
+        # Search for at least 5 consecutive numbers to see that we are in the table
+        re_table = re.compile('{0}{0}{0}{0}{0}'.format(r'[-+]?[0-9]*\.?[0-9]+\s+'))
         with open(self._fileSimtel, 'r') as file:
             for line in file:
-                words = line.split()
-                if len(words) == 0 or '#' in words[0]:
-                    continue
-                try:
-                    float(words[0])
-                except:
-                    continue
-
-                if float(words[0]) < 200 or float(words[0]) > 1000:
-                    continue
-                numbers = [float(w) for w in words]
-                for i in range(len(effPars) - 10):
-                    _results[effPars[i]].append(numbers[i])
-                C1 = numbers[8] * (400 / numbers[0])**2
-                C2 = C1 * numbers[4] * numbers[5]
-                C3 = C2 * numbers[6] * numbers[7]
-                C4 = C3 * numbers[3]
-                C4x = C1 * numbers[3] * numbers[6] * numbers[7]
-                _results['C1'].append(C1)
-                _results['C2'].append(C2)
-                _results['C3'].append(C3)
-                _results['C4'].append(C4)
-                _results['C4x'].append(C4x)
-                N1 = numbers[14]
-                N2 = N1 * numbers[4] * numbers[5]
-                N3 = N2 * numbers[6] * numbers[7]
-                N4 = N3 * numbers[3]
-                N4x = N1 * numbers[3] * numbers[6] * numbers[7]
-                _results['N1'].append(N1)
-                _results['N2'].append(N2)
-                _results['N3'].append(N3)
-                _results['N4'].append(N4)
-                _results['N4x'].append(N4x)
+                if re_table.match(line):
+                    words = line.split()
+                    numbers = [float(w) for w in words]
+                    for i in range(len(effPars) - 10):
+                        _results[effPars[i]].append(numbers[i])
+                    C1 = numbers[8] * (400 / numbers[0])**2
+                    C2 = C1 * numbers[4] * numbers[5]
+                    C3 = C2 * numbers[6] * numbers[7]
+                    C4 = C3 * numbers[3]
+                    C4x = C1 * numbers[3] * numbers[6] * numbers[7]
+                    _results['C1'].append(C1)
+                    _results['C2'].append(C2)
+                    _results['C3'].append(C3)
+                    _results['C4'].append(C4)
+                    _results['C4x'].append(C4x)
+                    N1 = numbers[14]
+                    N2 = N1 * numbers[4] * numbers[5]
+                    N3 = N2 * numbers[6] * numbers[7]
+                    N4 = N3 * numbers[3]
+                    N4x = N1 * numbers[3] * numbers[6] * numbers[7]
+                    _results['N1'].append(N1)
+                    _results['N2'].append(N2)
+                    _results['N3'].append(N3)
+                    _results['N4'].append(N4)
+                    _results['N4x'].append(N4x)
 
         self._results = Table(_results)
         self._hasResults = True
