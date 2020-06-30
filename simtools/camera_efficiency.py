@@ -181,7 +181,8 @@ class CameraEfficiency:
         cmd += ' -flen {}'.format(focalLength * 0.01)  # focal lenght in meters
         cmd += ' -fcur {}'.format(CAMERA_RADIUS_CURV[self._telescopeModel.telescopeType])
         cmd += ' {} {}'.format(pixelShapeCmd, pixelDiameter)
-        cmd += ' -fmir {}'.format(self._telescopeModel.getParameter('mirror_list'))
+        if mirrorClass == 1:
+            cmd += ' -fmir {}'.format(self._telescopeModel.getParameter('mirror_list'))
         cmd += ' -fref {}'.format(self._telescopeModel.getParameter('mirror_reflectivity'))
         if mirrorClass == 2:
             cmd += ' -m2'
