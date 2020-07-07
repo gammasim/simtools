@@ -74,7 +74,13 @@ allTelescopeTypeNames = {
     'MST-FlashCam': ['flashcam', 'mst-fc'],
     'MST-NectarCam': ['nectarcam', 'mst-nc'],
     'SCT': ['mst-sct', 'sct'],
-    'LST': []
+    'LST': [],
+    'North-LST-1': ['north-lst-1'],
+    'North-LST-D234': ['north-lst-d234'],
+    'North-MST-FlashCam-D': ['north-flashcam-d', 'north-mst-fc-d'],
+    'North-MST-NectarCam-D': ['north-nectarcam-d', 'north-mst-nc-d'],
+    'North-SCT-D': ['north-mst-sct-d', 'north-sct-d'],
+    'South-SST-D': ['south-sst-d']
 }
 
 allSiteNames = {
