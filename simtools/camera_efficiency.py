@@ -18,10 +18,10 @@ from astropy.table import Table
 
 import simtools.config as cfg
 import simtools.io_handler as io
+from simtools import visualize
 from simtools.util import names
 from simtools.util.general import collectArguments
 from simtools.model.telescope_model import TelescopeModel
-from simtools import visualize
 from simtools.model.model_parameters import CAMERA_RADIUS_CURV
 
 __all__ = ['CameraEfficiency']
@@ -173,6 +173,17 @@ class CameraEfficiency:
         if self._telescopeModel.hasParameter('camera_transmission'):
             cameraTransmission = self._telescopeModel.getParameter('camera_transmission')
 
+        # Processing camera filter
+        # A spetial case is needed for recent ASTRI models because testeff does not
+        # support 2D camera filters
+        cameraFilterFile = self._telescopeModel.getParameter('camera_filter')
+        if self._telescopeModel.isASTRI() and self._telescopeModel.isCameraFilter2D():
+            self._logger.warning(
+                'Camera filter file is being replaced by transmission_astri_window_average.dat'
+                ' because testeff does not support 2D camera filters.'
+            )
+            cameraFilterFile = 'transmission_astri_window_average.dat'
+
         # cmd -> Command to be run at the shell
         cmd = str(self._simtelSourcePath.joinpath('sim_telarray/bin/testeff'))
         cmd += ' -nm -nsb-extra'
@@ -188,7 +199,7 @@ class CameraEfficiency:
             cmd += ' -m2'
         cmd += ' -teltrans {}'.format(self._telescopeModel.getTelescopeTransmissionParameters()[0])
         cmd += ' -camtrans {}'.format(cameraTransmission)
-        cmd += ' -fflt {}'.format(self._telescopeModel.getParameter('camera_filter'))
+        cmd += ' -fflt {}'.format(cameraFilterFile)
         cmd += ' -fang {}'.format(
             self._telescopeModel.camera.getLightguideEfficiencyAngleFileName()
         )
