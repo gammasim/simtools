@@ -499,3 +499,28 @@ class TelescopeModel:
             logger=logger.name
         )
         return
+
+    def isASTRI(self):
+        '''
+        Check if telescope type is an ASTRI type.
+
+        Returns
+        ----------
+        bool:
+            True if telescope type is a ASTRI, False otherwise.
+        '''
+        return 'ASTRI' in self.telescopeType
+
+    def isCameraFilter2D(self):
+        '''
+        Check if the camera_filter file is 2D map.
+
+        Returns
+        ----------
+        bool:
+            True if the camera_filter file is a 2D map type, False otherwise.
+        '''
+        cameraFilterFile = cfg.findFile(self._parameters['camera_filter'])
+        with open(cameraFilterFile, 'r') as file:
+            is2D = '@RPOL@' in file.read()
+        return is2D
