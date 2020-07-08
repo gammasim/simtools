@@ -174,15 +174,26 @@ class CameraEfficiency:
             cameraTransmission = self._telescopeModel.getParameter('camera_transmission')
 
         # Processing camera filter
-        # A spetial case is needed for recent ASTRI models because testeff does not
+        # A special case is needed for recent ASTRI models because testeff does not
         # support 2D camera filters
         cameraFilterFile = self._telescopeModel.getParameter('camera_filter')
-        if self._telescopeModel.isASTRI() and self._telescopeModel.isCameraFilter2D():
+        if self._telescopeModel.isASTRI() and self._telescopeModel.isFile2D('camera_filter'):
             self._logger.warning(
                 'Camera filter file is being replaced by transmission_astri_window_average.dat'
                 ' because testeff does not support 2D camera filters.'
             )
             cameraFilterFile = 'transmission_astri_window_average.dat'
+
+        # Processing mirror reflectivity
+        # A special case is needed for recent ASTRI models because testeff does not
+        # support 2D mirror reflectivity
+        mirrorReflectivity = self._telescopeModel.getParameter('mirror_reflectivity')
+        if self._telescopeModel.isASTRI() and self._telescopeModel.isFile2D('mirror_reflectivity'):
+            self._logger.warning(
+                'Mirror reflectivity (and secondary) file is being replaced by'
+                ' ref_astri_2017-06_T0.dat because testeff does not support 2D files.'
+            )
+            mirrorReflectivity = 'ref_astri_2017-06_T0.dat'
 
         # cmd -> Command to be run at the shell
         cmd = str(self._simtelSourcePath.joinpath('sim_telarray/bin/testeff'))
@@ -194,7 +205,7 @@ class CameraEfficiency:
         cmd += ' {} {}'.format(pixelShapeCmd, pixelDiameter)
         if mirrorClass == 1:
             cmd += ' -fmir {}'.format(self._telescopeModel.getParameter('mirror_list'))
-        cmd += ' -fref {}'.format(self._telescopeModel.getParameter('mirror_reflectivity'))
+        cmd += ' -fref {}'.format(mirrorReflectivity)
         if mirrorClass == 2:
             cmd += ' -m2'
         cmd += ' -teltrans {}'.format(self._telescopeModel.getTelescopeTransmissionParameters()[0])
