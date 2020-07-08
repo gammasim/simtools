@@ -25,6 +25,13 @@ if __name__ == '__main__':
         required=True
     )
     parser.add_argument(
+        '-l',
+        '--label',
+        help='Label (default=validate-camera-efficiency)',
+        type=str,
+        default='validate-camera-efficiency'
+    )
+    parser.add_argument(
         '-m',
         '--model_version',
         help='Model version (default=prod4)',
@@ -52,13 +59,11 @@ if __name__ == '__main__':
     logger = logging.getLogger('validate_camera_efficiency')
     logger.setLevel(gen.getLogLevelFromUser(args.logLevel))
 
-    label = 'validate-camera-efficiency'
-
     telModel = TelescopeModel(
         telescopeType=args.tel_type,
         site=args.site,
         version=args.model_version,
-        label=label
+        label=args.label
     )
 
     # For debugging purposes
