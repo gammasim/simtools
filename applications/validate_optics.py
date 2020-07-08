@@ -105,19 +105,4 @@ if __name__ == '__main__':
     ray.analyze(force=False)
 
     # Plotting
-    # plt.figure(figsize=(8, 6), tight_layout=True)
-    # ax = plt.gca()
-    # ax.set_xlabel('off-axis [deg]')
-    # ax.set_ylabel('$D_{80}$ [deg]')
-
-    # ray.plot('d80_deg', marker='o', linestyle=':', color='k')
-
-    # d80PlotFile = io.getTestPlotFile('d80_test_ssts.pdf')
-    # plt.savefig(plotFile)
-    
-    # # Now plot the camera as well
-    # plt = camera.plotPixelLayout()
-    # cameraPlotFile = 'pixelLayout-{}.pdf'.format(telModel.telescopeType)
-    # plt.savefig(cameraPlotFile, bbox_inches='tight')
-    # print('\nPlotted camera in {}\n'.format(cameraPlotFile))
-    # plt.clf()
+    ray.plotAndSave('d80_deg', marker='o', linestyle=':', color='k')

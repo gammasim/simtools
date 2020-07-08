@@ -129,8 +129,8 @@ class RayTracing:
 
         self.label = label if label is not None else self._telescopeModel.label
 
-        self._baseDirectory = io.getRayTracingOutputDirectory(self._filesLocation, self.label)
-        self._baseDirectory.mkdir(parents=True, exist_ok=True)
+        self._outputDirectory = io.getRayTracingOutputDirectory(self._filesLocation, self.label)
+        self._outputDirectory.mkdir(parents=True, exist_ok=True)
 
         if self._singleMirrorMode:
             if self._mirrorNumbers == 'all':
@@ -147,7 +147,7 @@ class RayTracing:
                 self._zenithAngle,
                 self.label
         )
-        self._fileResults = self._baseDirectory.joinpath(fileNameResults)
+        self._fileResults = self._outputDirectory.joinpath('results').joinpath(fileNameResults)
     # END of init
 
     def __repr__(self):
@@ -253,7 +253,7 @@ class RayTracing:
                     self.label,
                     'photons'
                 )
-                photonsFile = self._baseDirectory.joinpath(photonsFileName)
+                photonsFile = self._outputDirectory.joinpath(photonsFileName)
                 telTransmission = computeTelescopeTransmission(telTransmissionPars, thisOffAxis)
                 image = PSFImage(focalLength)
                 image.readSimtelFile(photonsFile)
@@ -349,6 +349,53 @@ class RayTracing:
         bool
         '''
         return key in ['d80_cm', 'd80_deg', 'eff_area', 'eff_flen']
+
+    def plotAndSave(self, key, **kwargs):
+        '''
+        Plot key vs off-axis angle.
+
+        Parameters
+        ----------
+        key: str
+            d80_cm, d80_deg, eff_area or eff_flen
+        **kwargs:
+            kwargs for plt.plot
+
+        Raises
+        ------
+        KeyError
+            If key is not among the valid options.
+        '''
+        if not self._isValidKeyToPlot(key):
+            msg = 'Invalid key to plot'
+            logger.error(msg)
+            raise KeyError(msg)
+
+        ylabel = {
+            'd80_deg': r'$D_{80}$ [deg]',
+            'd80_cm': r'$D_{80}$ [cm]',
+            'd80_deg': r'$D_{80}$ [deg]',
+            'eff_area': 'Eff. Area [cm²]',
+            'eff_flen': 'Eff. Focal Length [cm]'
+        }
+
+        plt.figure(figsize=(8, 6), tight_layout=True)
+        ax = plt.gca()
+        ax.set_xlabel('off-axis [deg]')
+        ax.set_ylabel(ylabel[key])
+
+        ray.plot(key, **kwargs)
+
+        plotFileName = names.rayTracingPlotFileName(
+            key,
+            self._telescopeModel.telescopeType,
+            self._sourceDistance,
+            self._zenithAngle,
+            self.label
+        ) 
+        plotFile = self._outputDirectory.joinpath('figures').joinpath(plotFileName)
+        plt.savefig(plotFile)
+        plt.clf()
 
     def plot(self, key, **kwargs):
         '''
