@@ -101,8 +101,8 @@ class SimtelRunner:
 
         # RayTracing - default parameters
         self._repNumber = 0
-        self.RUNS_PER_SET = 1 if self._isSingleMirrorMode else 20  # const
-        self.PHOTONS_PER_RUN = 10000  # const
+        self.RUNS_PER_SET = 1 if self._isSingleMirrorMode else 50  # const
+        self.PHOTONS_PER_RUN = 5000  # const
 
         if self._isRayTracingMode():
             gen.collectArguments(
