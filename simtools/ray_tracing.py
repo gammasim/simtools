@@ -194,7 +194,8 @@ class RayTracing:
                     sourceDistance=self._sourceDistance * u.km,
                     offAxisAngle=thisOffAxis * u.deg,
                     mirrorNumber=thisMirror,
-                    useRandomFocalLength=self._useRandomFocalLength
+                    useRandomFocalLength=self._useRandomFocalLength,
+                    logger=self._logger.name
                 )
                 simtel.run(test=test, force=force)
     # END of simulate
