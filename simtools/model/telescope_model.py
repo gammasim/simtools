@@ -509,7 +509,7 @@ class TelescopeModel:
         bool:
             True if telescope type is a ASTRI, False otherwise.
         '''
-        return 'ASTRI' in self.telescopeType
+        return self.telescopeType in ['SST-2M-ASTRI', 'SST']
 
     def isCameraFilter2D(self):
         '''
