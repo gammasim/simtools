@@ -3,11 +3,14 @@
 import logging
 import matplotlib.pyplot as plt
 import argparse
+import numpy as np
+
+import astropy.units as u
 
 import simtools.config as cfg
 import simtools.util.general as gen
 from simtools.model.telescope_model import TelescopeModel
-from simtools.model.camera import Camera
+from simtools.ray_tracing import RayTracing
 
 
 if __name__ == '__main__':
@@ -19,22 +22,52 @@ if __name__ == '__main__':
         )
     )
     parser.add_argument(
+        '-t',
         '--tel_type',
         help='Telescope type (e.g. mst-flashcam, lst)',
         type=str,
         required=True
     )
     parser.add_argument(
+        '-m',
         '--model_version',
         help='Model version (default=prod4)',
         type=str,
         default='prod4'
     )
     parser.add_argument(
+        '-l',
+        '--label',
+        help='Label (default=validate-optics)',
+        type=str,
+        default='validate-optics'
+    )
+    parser.add_argument(
+        '-s',
         '--site',
         help='Site (default=South)',
         type=str,
-        default='south'
+        default='South'
+    )
+    parser.add_argument(
+        '-d',
+        '--src_distance',
+        help='Source distance in km (default=10)',
+        type=float,
+        default=10
+    )
+    parser.add_argument(
+        '-z',
+        '--zenith',
+        help='Zenith angle in deg (default=20)',
+        type=float,
+        default=20
+    )
+    parser.add_argument(
+        '--max_offset',
+        help='Maximum offset angle in deg (default=4)',
+        type=float,
+        default=4
     )
     parser.add_argument(
         '-v',
@@ -47,38 +80,44 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    logger = logging.getLogger('validate_camera_fov')
+    logger = logging.getLogger('validate_optics')
     logger.setLevel(gen.getLogLevelFromUser(args.logLevel))
-
-    label = 'validate-FoV'
 
     telModel = TelescopeModel(
         telescopeType=args.tel_type,
         site=args.site,
         version=args.model_version,
-        label=label
+        label=args.label
     )
 
-    print('\nValidating the camera FoV of {}\n'.format(telModel.telescopeType))
-
-    cameraConfigFile = telModel.getParameter('camera_config_file')
-    focalLength = float(telModel.getParameter('effective_focal_length'))
-    camera = Camera(
-        telescopeType=telModel.telescopeType,
-        cameraConfigFile=cfg.findFile(cameraConfigFile),
-        focalLength=focalLength,
-        logger=logger.name
+    print(
+        '\nValidating telescope optics with ray tracing simulations'
+        ' {}\n'.format(telModel.telescopeType)
     )
 
-    fov, rEdgeAvg = camera.calcFOV()
+    ray = RayTracing(
+        telescopeModel=telModel,
+        sourceDistance=args.src_distance * u.km,
+        zenithAngle=args.zenith * u.deg,
+        offAxisAngle=np.linspace(0, args.max_offset, int(args.max_offset / 0.2) + 1) * u.deg
+    )
+    ray.simulate(test=False, force=False)
+    ray.analyze(force=False)
 
-    print('\nEffective focal length = ' + '{0:.3f} cm'.format(focalLength))
-    print('{0} FoV = {1:.3f} deg'.format(telModel.telescopeType, fov))
-    print('Avg. edge radius = {0:.3f} cm\n'.format(rEdgeAvg))
+    # Plotting
+    # plt.figure(figsize=(8, 6), tight_layout=True)
+    # ax = plt.gca()
+    # ax.set_xlabel('off-axis [deg]')
+    # ax.set_ylabel('$D_{80}$ [deg]')
 
-    # Now plot the camera as well
-    plt = camera.plotPixelLayout()
-    cameraPlotFile = 'pixelLayout-{}.pdf'.format(telModel.telescopeType)
-    plt.savefig(cameraPlotFile, bbox_inches='tight')
-    print('\nPlotted camera in {}\n'.format(cameraPlotFile))
-    plt.clf()
+    # ray.plot('d80_deg', marker='o', linestyle=':', color='k')
+
+    # d80PlotFile = io.getTestPlotFile('d80_test_ssts.pdf')
+    # plt.savefig(plotFile)
+    
+    # # Now plot the camera as well
+    # plt = camera.plotPixelLayout()
+    # cameraPlotFile = 'pixelLayout-{}.pdf'.format(telModel.telescopeType)
+    # plt.savefig(cameraPlotFile, bbox_inches='tight')
+    # print('\nPlotted camera in {}\n'.format(cameraPlotFile))
+    # plt.clf()
