@@ -511,16 +511,26 @@ class TelescopeModel:
         '''
         return self.telescopeType in ['SST-2M-ASTRI', 'SST']
 
-    def isCameraFilter2D(self):
+    def isFile2D(self, par):
         '''
-        Check if the camera_filter file is 2D map.
+        Check if the file referenced by par is a 2D table.
+
+        Parameters
+        ----------
+        par: str
+            Name of the parameter.
 
         Returns
-        ----------
+        -------
         bool:
-            True if the camera_filter file is a 2D map type, False otherwise.
+            True if the file is a 2D map type, False otherwise.
         '''
-        cameraFilterFile = cfg.findFile(self._parameters['camera_filter'])
-        with open(cameraFilterFile, 'r') as file:
-            is2D = '@RPOL@' in file.read()
+        if not self.hasParameter(par):
+            logging.error('Parameter {} does not exist'.format(par))
+            return False
+
+        fileName = self.getParameter(par)
+        file = cfg.findFile(fileName)
+        with open(file, 'r') as f:
+            is2D = '@RPOL@' in f.read()
         return is2D
