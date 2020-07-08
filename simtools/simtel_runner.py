@@ -85,9 +85,7 @@ class SimtelRunner:
             mirrorNumber, useRandomFocalLength)
         '''
         self._logger = logging.getLogger(logger)
-
         self._logger.debug('Init SimtelRunner')
-
 
         self._simtelSourcePath = Path(cfg.getConfigArg('simtelPath', simtelSourcePath))
         self.mode = names.validateName(mode, names.allSimtelModeNames)
@@ -105,7 +103,7 @@ class SimtelRunner:
 
         # RayTracing - default parameters
         self._repNumber = 0
-        self.RUNS_PER_SET = 1 if self._isSingleMirrorMode else 20  # const
+        self.RUNS_PER_SET = 1 if self._isSingleMirrorMode() else 20  # const
         self.PHOTONS_PER_RUN = 10000  # const
 
         if self._isRayTracingMode():
@@ -173,12 +171,10 @@ class SimtelRunner:
         if test:
             self._logger.info('Running (test) with command:{}'.format(command))
             sysOutput = os.system(command)
-            print('BLEBLBE')
         else:
             self._logger.info('Running ({}x) with command:{}'.format(self.RUNS_PER_SET, command))
             sysOutput = os.system(command)
             for _ in range(self.RUNS_PER_SET - 1):
-                print('BLABLBA')
                 os.system(command)
 
         # Checking run
