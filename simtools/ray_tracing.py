@@ -147,6 +147,7 @@ class RayTracing:
                 self._zenithAngle,
                 self.label
         )
+        self._outputDirectory.joinpath('results').mkdir(parents=True, exist_ok=True)
         self._fileResults = self._outputDirectory.joinpath('results').joinpath(fileNameResults)
     # END of init
 
@@ -392,7 +393,8 @@ class RayTracing:
             self._sourceDistance,
             self._zenithAngle,
             self.label
-        ) 
+        )
+        self._outputDirectory.joinpath('figures').mkdir(exist_ok=True)
         plotFile = self._outputDirectory.joinpath('figures').joinpath(plotFileName)
         plt.savefig(plotFile)
         plt.clf()
