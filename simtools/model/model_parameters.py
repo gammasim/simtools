@@ -42,7 +42,7 @@ MODEL_PARS = {
     'parabolic_dish': {'type': int, 'names': []}
 }
 
-TWO_MIRROR_TELS = ['SCT', 'SST-2M-ASTRI', 'SST-2M-GCT-S', 'SST-Structure', 'SST-Camera']
+TWO_MIRROR_TELS = ['SCT', 'SST-2M-ASTRI', 'SST-2M-GCT-S', 'SST-Structure', 'SST-Camera', 'SST']
 
 # The coordinate system is aligned with Alt (x) and Az(y), so need to rotate the camera.
 # The angle depends on what coordinate system was provided by the instrument team.
@@ -58,13 +58,15 @@ CAMERA_ROTATE_ANGLE = {
   'SST-1M': 270,
   'SST-2M-GCT-S': 90,
   'SST-Structure': 90,
-  'SST-Camera': 90
+  'SST-Camera': 90,
+  'SST': 90
 }
 
 CAMERA_RADIUS_CURV = {
+    'SST': 4.566,
     'SST-1M': 5.6,
     'SST-2M-ASTRI': 4.3,
-    'SST-2M-GCT': 4.566,
+    'SST-2M-GCT-S': 4.566,
     'MST-FlashCam': 19.2,
     'MST-NectarCam': 19.2,
     'MST-SCT': 11.16,
