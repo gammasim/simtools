@@ -235,6 +235,32 @@ def rayTracingResultsFileName(telescopeType, sourceDistance, zenithAngle, label)
     name += '.cvs'
     return name
 
+def rayTracingPlotFileName(key, telescopeType, sourceDistance, zenithAngle, label):
+    '''
+    Ray tracing plot file name.
+
+    Parameters
+    ----------
+    key: str
+        Quantity to be plotted (d80_cm, d80_deg, eff_area or eff_flen)
+    telescopeType: str
+        LST, MST-FlashCam, ...
+    sourceDistance: float
+        Source distance (km).
+    zenithAngle: float
+        Zenith angle (deg).
+    label: str
+        Instance label.
+
+    Returns
+    -------
+    str
+        File name.
+    '''
+    name = 'ray-tracing-{}-{}-d{:.1f}-za{:.1f}'.format(telescopeType, key, sourceDistance, zenithAngle)
+    name += '_{}'.format(label) if label is not None else ''
+    name += '.pdf'
+    return name
 
 def cameraEfficiencyResultsFileName(telescopeType, zenithAngle, label):
     '''
