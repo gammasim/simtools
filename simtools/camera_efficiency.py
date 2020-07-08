@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 import os
 from pathlib import Path
 from collections import defaultdict
+import re
 
 import astropy.units as u
 from astropy.io import ascii
@@ -17,10 +18,10 @@ from astropy.table import Table
 
 import simtools.config as cfg
 import simtools.io_handler as io
+from simtools import visualize
 from simtools.util import names
 from simtools.util.general import collectArguments
 from simtools.model.telescope_model import TelescopeModel
-from simtools import visualize
 from simtools.model.model_parameters import CAMERA_RADIUS_CURV
 
 __all__ = ['CameraEfficiency']
@@ -172,6 +173,28 @@ class CameraEfficiency:
         if self._telescopeModel.hasParameter('camera_transmission'):
             cameraTransmission = self._telescopeModel.getParameter('camera_transmission')
 
+        # Processing camera filter
+        # A special case is needed for recent ASTRI models because testeff does not
+        # support 2D camera filters
+        cameraFilterFile = self._telescopeModel.getParameter('camera_filter')
+        if self._telescopeModel.isASTRI() and self._telescopeModel.isFile2D('camera_filter'):
+            self._logger.warning(
+                'Camera filter file is being replaced by transmission_astri_window_average.dat'
+                ' because testeff does not support 2D camera filters.'
+            )
+            cameraFilterFile = 'transmission_astri_window_average.dat'
+
+        # Processing mirror reflectivity
+        # A special case is needed for recent ASTRI models because testeff does not
+        # support 2D mirror reflectivity
+        mirrorReflectivity = self._telescopeModel.getParameter('mirror_reflectivity')
+        if self._telescopeModel.isASTRI() and self._telescopeModel.isFile2D('mirror_reflectivity'):
+            self._logger.warning(
+                'Mirror reflectivity (and secondary) file is being replaced by'
+                ' ref_astri_2017-06_T0.dat because testeff does not support 2D files.'
+            )
+            mirrorReflectivity = 'ref_astri_2017-06_T0.dat'
+
         # cmd -> Command to be run at the shell
         cmd = str(self._simtelSourcePath.joinpath('sim_telarray/bin/testeff'))
         cmd += ' -nm -nsb-extra'
@@ -180,13 +203,14 @@ class CameraEfficiency:
         cmd += ' -flen {}'.format(focalLength * 0.01)  # focal lenght in meters
         cmd += ' -fcur {}'.format(CAMERA_RADIUS_CURV[self._telescopeModel.telescopeType])
         cmd += ' {} {}'.format(pixelShapeCmd, pixelDiameter)
-        cmd += ' -fmir {}'.format(self._telescopeModel.getParameter('mirror_list'))
-        cmd += ' -fref {}'.format(self._telescopeModel.getParameter('mirror_reflectivity'))
+        if mirrorClass == 1:
+            cmd += ' -fmir {}'.format(self._telescopeModel.getParameter('mirror_list'))
+        cmd += ' -fref {}'.format(mirrorReflectivity)
         if mirrorClass == 2:
             cmd += ' -m2'
         cmd += ' -teltrans {}'.format(self._telescopeModel.getTelescopeTransmissionParameters()[0])
         cmd += ' -camtrans {}'.format(cameraTransmission)
-        cmd += ' -fflt {}'.format(self._telescopeModel.getParameter('camera_filter'))
+        cmd += ' -fflt {}'.format(cameraFilterFile)
         cmd += ' -fang {}'.format(
             self._telescopeModel.camera.getLightguideEfficiencyAngleFileName()
         )
@@ -258,41 +282,35 @@ class CameraEfficiency:
 
         _results = defaultdict(list)
 
+        # Search for at least 5 consecutive numbers to see that we are in the table
+        re_table = re.compile('{0}{0}{0}{0}{0}'.format(r'[-+]?[0-9]*\.?[0-9]+\s+'))
         with open(self._fileSimtel, 'r') as file:
             for line in file:
-                words = line.split()
-                if len(words) == 0 or '#' in words[0]:
-                    continue
-                try:
-                    float(words[0])
-                except:
-                    continue
-
-                if float(words[0]) < 200 or float(words[0]) > 1000:
-                    continue
-                numbers = [float(w) for w in words]
-                for i in range(len(effPars) - 10):
-                    _results[effPars[i]].append(numbers[i])
-                C1 = numbers[8] * (400 / numbers[0])**2
-                C2 = C1 * numbers[4] * numbers[5]
-                C3 = C2 * numbers[6] * numbers[7]
-                C4 = C3 * numbers[3]
-                C4x = C1 * numbers[3] * numbers[6] * numbers[7]
-                _results['C1'].append(C1)
-                _results['C2'].append(C2)
-                _results['C3'].append(C3)
-                _results['C4'].append(C4)
-                _results['C4x'].append(C4x)
-                N1 = numbers[14]
-                N2 = N1 * numbers[4] * numbers[5]
-                N3 = N2 * numbers[6] * numbers[7]
-                N4 = N3 * numbers[3]
-                N4x = N1 * numbers[3] * numbers[6] * numbers[7]
-                _results['N1'].append(N1)
-                _results['N2'].append(N2)
-                _results['N3'].append(N3)
-                _results['N4'].append(N4)
-                _results['N4x'].append(N4x)
+                if re_table.match(line):
+                    words = line.split()
+                    numbers = [float(w) for w in words]
+                    for i in range(len(effPars) - 10):
+                        _results[effPars[i]].append(numbers[i])
+                    C1 = numbers[8] * (400 / numbers[0])**2
+                    C2 = C1 * numbers[4] * numbers[5]
+                    C3 = C2 * numbers[6] * numbers[7]
+                    C4 = C3 * numbers[3]
+                    C4x = C1 * numbers[3] * numbers[6] * numbers[7]
+                    _results['C1'].append(C1)
+                    _results['C2'].append(C2)
+                    _results['C3'].append(C3)
+                    _results['C4'].append(C4)
+                    _results['C4x'].append(C4x)
+                    N1 = numbers[14]
+                    N2 = N1 * numbers[4] * numbers[5]
+                    N3 = N2 * numbers[6] * numbers[7]
+                    N4 = N3 * numbers[3]
+                    N4x = N1 * numbers[3] * numbers[6] * numbers[7]
+                    _results['N1'].append(N1)
+                    _results['N2'].append(N2)
+                    _results['N3'].append(N3)
+                    _results['N4'].append(N4)
+                    _results['N4x'].append(N4x)
 
         self._results = Table(_results)
         self._hasResults = True
