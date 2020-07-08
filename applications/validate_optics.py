@@ -92,17 +92,21 @@ if __name__ == '__main__':
 
     print(
         '\nValidating telescope optics with ray tracing simulations'
-        ' {}\n'.format(telModel.telescopeType)
+        'for {}\n'.format(telModel.telescopeType)
     )
 
     ray = RayTracing(
         telescopeModel=telModel,
         sourceDistance=args.src_distance * u.km,
         zenithAngle=args.zenith * u.deg,
-        offAxisAngle=np.linspace(0, args.max_offset, int(args.max_offset / 0.2) + 1) * u.deg
+        offAxisAngle=np.linspace(0, args.max_offset, int(args.max_offset / 0.2) + 1) * u.deg,
+        logger=logger.name
     )
     ray.simulate(test=False, force=False)
     ray.analyze(force=False)
 
     # Plotting
     ray.plotAndSave('d80_deg', marker='o', linestyle=':', color='k')
+    ray.plotAndSave('d80_cm', marker='o', linestyle=':', color='k')
+    ray.plotAndSave('eff_area', marker='o', linestyle=':', color='k')
+    ray.plotAndSave('eff_flen', marker='o', linestyle=':', color='k')
