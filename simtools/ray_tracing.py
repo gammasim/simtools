@@ -29,6 +29,14 @@ __all__ = ['RayTracing']
 
 
 class RayTracing:
+    YLABEL = {
+        'd80_deg': r'$D_{80}$ [deg]',
+        'd80_cm': r'$D_{80}$ [cm]',
+        'd80_deg': r'$D_{80}$ [deg]',
+        'eff_area': 'Eff. Area [cm²]',
+        'eff_flen': 'Eff. Focal Length [cm]'
+    }
+
     '''
     Class for handling ray tracing simulations and analysis.
 
@@ -353,7 +361,7 @@ class RayTracing:
         -------
         bool
         '''
-        return key in ['d80_cm', 'd80_deg', 'eff_area', 'eff_flen']
+        return key in self.YLABEL.keys()
 
     def plotAndSave(self, key, **kwargs):
         '''
@@ -376,14 +384,6 @@ class RayTracing:
             self._logger.error(msg)
             raise KeyError(msg)
 
-        ylabel = {
-            'd80_deg': r'$D_{80}$ [deg]',
-            'd80_cm': r'$D_{80}$ [cm]',
-            'd80_deg': r'$D_{80}$ [deg]',
-            'eff_area': 'Eff. Area [cm²]',
-            'eff_flen': 'Eff. Focal Length [cm]'
-        }
-
         plotFileName = names.rayTracingPlotFileName(
             key,
             self._telescopeModel.telescopeType,
@@ -398,7 +398,7 @@ class RayTracing:
         plt.figure(figsize=(8, 6), tight_layout=True)
         ax = plt.gca()
         ax.set_xlabel('off-axis [deg]')
-        ax.set_ylabel(ylabel[key])
+        ax.set_ylabel(self.YLABEL[key])
 
         self.plot(key, **kwargs)
 
