@@ -103,7 +103,7 @@ if __name__ == '__main__':
         logger=logger.name
     )
     ray.simulate(test=False, force=False)
-    ray.analyze(force=False)
+    ray.analyze(force=True)
 
     # Plotting
     ray.plotAndSave('d80_deg', marker='o', linestyle=':', color='k')
