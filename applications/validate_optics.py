@@ -17,8 +17,8 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(
         description=(
-            'Calculate the camera FoV of the telescope requested. '
-            'Plot the camera as well, as seen for an observer facing the camera.'
+            'Calculate and plot the PSF and eff. mirror area as a function of off-axis angle '
+            'of the telescope requested'
         )
     )
     parser.add_argument(
