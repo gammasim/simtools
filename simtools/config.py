@@ -76,7 +76,7 @@ def get(par):
 
 def getConfigArg(name, value):
     '''
-    Collect a config parameter if value is None. To be used to receive input arguments in classes.
+    Get a config parameter if value is None. To be used to receive input arguments in classes.
 
     Parameters
     ----------
