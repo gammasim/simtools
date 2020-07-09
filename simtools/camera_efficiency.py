@@ -73,6 +73,8 @@ class CameraEfficiency:
         filesLocation: str (or Path), optional.
             Parent location of the output files created by this class. If not given, it will be
             taken from the config.yml file.
+        logger: str
+            Logger name to use in this instance
         **kwargs:
             Physical parameters with units (if applicable). Options: zenithAngle (default 20 deg).
         '''
