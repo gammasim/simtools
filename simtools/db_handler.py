@@ -165,11 +165,13 @@ def readDetailsDB(dbDetailsFileLocation):
     return dbDetails
 
 
-def getModelParameters(telescopeType, version, onlyApplicable=False):
+def getModelParameters(telescopeType, version, onlyApplicable=False, runPath='./play/datFiles/'):
 
-    # TODO move to config file
-    remoteDB = True
-    if remoteDB:
+    if cfg.get('useMongoDB'):
+        # TODO - This is probably not efficient to open a new connection
+        # every time we want to read the parameters of a single telescope.
+        # Change this to keep the connection open.
+        # Probably would be easier to do if db_handler is a class.
         dbClient, tunnel = openMongoDB()
         _pars = getModelParametersMongoDB(dbClient, telescopeType, version, onlyApplicable)
         atexit.unregister(closeSSHTunnel)
@@ -211,7 +213,7 @@ def getModelParametersYaml(telescopeType, version, onlyApplicable=False):
     # Selecting version and applicable (if on)
     _pars = dict()
     for _tel in _whichTelLabels:
-        _allPars = collectAllModelParameters(_tel, _versionValidated)
+        _allPars = getAllModelParametersYaml(_tel, _versionValidated)
 
         # If tel is a struture, only applicable pars will be collected, always.
         # The default ones will be covered by the camera pars.
@@ -293,7 +295,7 @@ def readMongoDB(
 ):
     '''
     Build and execute query to Read the MongoDB for a specific telescope.
-    Also writes the files listed in the parameter values into TODO (add the final location)
+    Also writes the files listed in the parameter values into the sim_telarray run location
 
     Parameters
     ----------
@@ -303,6 +305,8 @@ def readMongoDB(
         Version of the model.
     onlyApplicable: bool
         If True, only applicable parameters will be read.
+    runLocation: Path or str
+        The sim_telarray run location to write the tabulated data files into.
 
     Returns
     -------
@@ -331,14 +335,14 @@ def readMongoDB(
                 _parameters[parNow]['Value']
             )
 
-            writeFileFromMongoToDisk(dbClient, DB_TABULATED_DATA, './play/datFiles/', file)
+            writeFileFromMongoToDisk(dbClient, DB_TABULATED_DATA, runLocation, file)
 
     return _parameters
 
 
-def collectAllModelParameters(telescopeType, version):
+def getAllModelParametersYaml(telescopeType, version):
     '''
-    Collect all parameters from DB for one specific type.
+    Get all parameters from Yaml DB for one specific type.
     No selection is applied.
 
     Parameters
