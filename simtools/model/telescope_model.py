@@ -499,3 +499,38 @@ class TelescopeModel:
             logger=logger.name
         )
         return
+
+    def isASTRI(self):
+        '''
+        Check if telescope type is an ASTRI type.
+
+        Returns
+        ----------
+        bool:
+            True if telescope type is a ASTRI, False otherwise.
+        '''
+        return self.telescopeType in ['SST-2M-ASTRI', 'SST']
+
+    def isFile2D(self, par):
+        '''
+        Check if the file referenced by par is a 2D table.
+
+        Parameters
+        ----------
+        par: str
+            Name of the parameter.
+
+        Returns
+        -------
+        bool:
+            True if the file is a 2D map type, False otherwise.
+        '''
+        if not self.hasParameter(par):
+            logging.error('Parameter {} does not exist'.format(par))
+            return False
+
+        fileName = self.getParameter(par)
+        file = cfg.findFile(fileName)
+        with open(file, 'r') as f:
+            is2D = '@RPOL@' in f.read()
+        return is2D

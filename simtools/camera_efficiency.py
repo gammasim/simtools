@@ -18,10 +18,10 @@ from astropy.table import Table
 
 import simtools.config as cfg
 import simtools.io_handler as io
+from simtools import visualize
 from simtools.util import names
 from simtools.util.general import collectArguments
 from simtools.model.telescope_model import TelescopeModel
-from simtools import visualize
 from simtools.model.model_parameters import CAMERA_RADIUS_CURV
 
 __all__ = ['CameraEfficiency']
@@ -73,6 +73,8 @@ class CameraEfficiency:
         filesLocation: str (or Path), optional.
             Parent location of the output files created by this class. If not given, it will be
             taken from the config.yml file.
+        logger: str
+            Logger name to use in this instance
         **kwargs:
             Physical parameters with units (if applicable). Options: zenithAngle (default 20 deg).
         '''
@@ -173,6 +175,28 @@ class CameraEfficiency:
         if self._telescopeModel.hasParameter('camera_transmission'):
             cameraTransmission = self._telescopeModel.getParameter('camera_transmission')
 
+        # Processing camera filter
+        # A special case is needed for recent ASTRI models because testeff does not
+        # support 2D camera filters
+        cameraFilterFile = self._telescopeModel.getParameter('camera_filter')
+        if self._telescopeModel.isASTRI() and self._telescopeModel.isFile2D('camera_filter'):
+            self._logger.warning(
+                'Camera filter file is being replaced by transmission_astri_window_average.dat'
+                ' because testeff does not support 2D camera filters.'
+            )
+            cameraFilterFile = 'transmission_astri_window_average.dat'
+
+        # Processing mirror reflectivity
+        # A special case is needed for recent ASTRI models because testeff does not
+        # support 2D mirror reflectivity
+        mirrorReflectivity = self._telescopeModel.getParameter('mirror_reflectivity')
+        if self._telescopeModel.isASTRI() and self._telescopeModel.isFile2D('mirror_reflectivity'):
+            self._logger.warning(
+                'Mirror reflectivity (and secondary) file is being replaced by'
+                ' ref_astri_2017-06_T0.dat because testeff does not support 2D files.'
+            )
+            mirrorReflectivity = 'ref_astri_2017-06_T0.dat'
+
         # cmd -> Command to be run at the shell
         cmd = str(self._simtelSourcePath.joinpath('sim_telarray/bin/testeff'))
         cmd += ' -nm -nsb-extra'
@@ -181,13 +205,14 @@ class CameraEfficiency:
         cmd += ' -flen {}'.format(focalLength * 0.01)  # focal lenght in meters
         cmd += ' -fcur {}'.format(CAMERA_RADIUS_CURV[self._telescopeModel.telescopeType])
         cmd += ' {} {}'.format(pixelShapeCmd, pixelDiameter)
-        cmd += ' -fmir {}'.format(self._telescopeModel.getParameter('mirror_list'))
-        cmd += ' -fref {}'.format(self._telescopeModel.getParameter('mirror_reflectivity'))
+        if mirrorClass == 1:
+            cmd += ' -fmir {}'.format(self._telescopeModel.getParameter('mirror_list'))
+        cmd += ' -fref {}'.format(mirrorReflectivity)
         if mirrorClass == 2:
             cmd += ' -m2'
         cmd += ' -teltrans {}'.format(self._telescopeModel.getTelescopeTransmissionParameters()[0])
         cmd += ' -camtrans {}'.format(cameraTransmission)
-        cmd += ' -fflt {}'.format(self._telescopeModel.getParameter('camera_filter'))
+        cmd += ' -fflt {}'.format(cameraFilterFile)
         cmd += ' -fang {}'.format(
             self._telescopeModel.camera.getLightguideEfficiencyAngleFileName()
         )
