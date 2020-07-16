@@ -27,10 +27,16 @@ from simtools.util.general import collectArguments, collectKwargs, setDefaultKwa
 
 __all__ = ['RayTracing']
 
-logger = logging.getLogger(__name__)
-
 
 class RayTracing:
+    YLABEL = {
+        'd80_deg': r'$D_{80}$ [deg]',
+        'd80_cm': r'$D_{80}$ [cm]',
+        'd80_deg': r'$D_{80}$ [deg]',
+        'eff_area': 'Eff. Area [cm²]',
+        'eff_flen': 'Eff. Focal Length [cm]'
+    }
+
     '''
     Class for handling ray tracing simulations and analysis.
 
@@ -78,6 +84,7 @@ class RayTracing:
         filesLocation=None,
         singleMirrorMode=False,
         useRandomFocalLength=False,
+        logger=__name__,
         **kwargs
     ):
         '''
@@ -97,10 +104,14 @@ class RayTracing:
             taken from the config.yml file.
         singleMirrorMode: bool
         useRandomFocalLength: bool
+        logger: str
+            Logger name to use in this instance
         **kwargs:
             Physical parameters with units (if applicable). Options: zenithAngle, offAxisAngle,
             sourceDistance, mirrorNumbers
         '''
+        self._logger = logging.getLogger(logger)
+
         self._simtelSourcePath = Path(cfg.getConfigArg('simtelPath', simtelSourcePath))
         self._filesLocation = cfg.getConfigArg('outputLocation', filesLocation)
 
@@ -129,8 +140,8 @@ class RayTracing:
 
         self.label = label if label is not None else self._telescopeModel.label
 
-        self._baseDirectory = io.getRayTracingOutputDirectory(self._filesLocation, self.label)
-        self._baseDirectory.mkdir(parents=True, exist_ok=True)
+        self._outputDirectory = io.getRayTracingOutputDirectory(self._filesLocation, self.label)
+        self._outputDirectory.mkdir(parents=True, exist_ok=True)
 
         if self._singleMirrorMode:
             if self._mirrorNumbers == 'all':
@@ -147,7 +158,8 @@ class RayTracing:
                 self._zenithAngle,
                 self.label
         )
-        self._fileResults = self._baseDirectory.joinpath(fileNameResults)
+        self._outputDirectory.joinpath('results').mkdir(parents=True, exist_ok=True)
+        self._fileResults = self._outputDirectory.joinpath('results').joinpath(fileNameResults)
     # END of init
 
     def __repr__(self):
@@ -156,11 +168,11 @@ class RayTracing:
     def _validateTelescopeModel(self, tel):
         ''' Validate TelescopeModel '''
         if isinstance(tel, TelescopeModel):
-            logger.debug('TelescopeModel OK')
+            self._logger.debug('TelescopeModel OK')
             return tel
         else:
             msg = 'Invalid TelescopeModel'
-            logger.error(msg)
+            self._logger.error(msg)
             raise ValueError(msg)
 
     def simulate(self, test=False, force=False):
@@ -177,7 +189,7 @@ class RayTracing:
         allMirrors = self._mirrorNumbers if self._singleMirrorMode else [0]
         for thisOffAxis in self._offAxisAngle:
             for thisMirror in allMirrors:
-                logger.info('Simulating RayTracing for offAxis={}, mirror={}'.format(
+                self._logger.info('Simulating RayTracing for offAxis={}, mirror={}'.format(
                     thisOffAxis,
                     thisMirror
                 ))
@@ -190,7 +202,8 @@ class RayTracing:
                     sourceDistance=self._sourceDistance * u.km,
                     offAxisAngle=thisOffAxis * u.deg,
                     mirrorNumber=thisMirror,
-                    useRandomFocalLength=self._useRandomFocalLength
+                    useRandomFocalLength=self._useRandomFocalLength,
+                    logger=self._logger.name
                 )
                 simtel.run(test=test, force=force)
     # END of simulate
@@ -240,9 +253,9 @@ class RayTracing:
         allMirrors = self._mirrorNumbers if self._singleMirrorMode else [0]
         for thisOffAxis in self._offAxisAngle:
             for thisMirror in allMirrors:
-                logger.debug('Analyzing RayTracing for offAxis={}'.format(thisOffAxis))
+                self._logger.debug('Analyzing RayTracing for offAxis={}'.format(thisOffAxis))
                 if self._singleMirrorMode:
-                    logger.debug('mirrorNumber={}'.format(thisMirror))
+                    self._logger.debug('mirrorNumber={}'.format(thisMirror))
 
                 photonsFileName = names.rayTracingFileName(
                     self._telescopeModel.telescopeType,
@@ -253,7 +266,7 @@ class RayTracing:
                     self.label,
                     'photons'
                 )
-                photonsFile = self._baseDirectory.joinpath(photonsFileName)
+                photonsFile = self._outputDirectory.joinpath(photonsFileName)
                 telTransmission = computeTelescopeTransmission(telTransmissionPars, thisOffAxis)
                 image = PSFImage(focalLength)
                 image.readSimtelFile(photonsFile)
@@ -323,9 +336,9 @@ class RayTracing:
     def exportResults(self):
         ''' Export results to a csv file. '''
         if not self._hasResults:
-            logger.error('Cannot export results because it does not exist')
+            self._logger.error('Cannot export results because it does not exist')
         else:
-            logger.info('Exporting results to {}'.format(self._fileResults))
+            self._logger.info('Exporting results to {}'.format(self._fileResults))
             table = Table(self._results)
             ascii.write(table, self._fileResults, format='basic', overwrite=True)
 
@@ -348,7 +361,49 @@ class RayTracing:
         -------
         bool
         '''
-        return key in ['d80_cm', 'd80_deg', 'eff_area', 'eff_flen']
+        return key in self.YLABEL.keys()
+
+    def plotAndSave(self, key, **kwargs):
+        '''
+        Plot key vs off-axis angle and save the figure in pdf.
+
+        Parameters
+        ----------
+        key: str
+            d80_cm, d80_deg, eff_area or eff_flen
+        **kwargs:
+            kwargs for plt.plot
+
+        Raises
+        ------
+        KeyError
+            If key is not among the valid options.
+        '''
+        if not self._isValidKeyToPlot(key):
+            msg = 'Invalid key to plot'
+            self._logger.error(msg)
+            raise KeyError(msg)
+
+        plotFileName = names.rayTracingPlotFileName(
+            key,
+            self._telescopeModel.telescopeType,
+            self._sourceDistance,
+            self._zenithAngle,
+            self.label
+        )
+        self._outputDirectory.joinpath('figures').mkdir(exist_ok=True)
+        plotFile = self._outputDirectory.joinpath('figures').joinpath(plotFileName)
+        self._logger.info('Plotting {} and saving it in {}'.format(key, plotFile))
+
+        plt.figure(figsize=(8, 6), tight_layout=True)
+        ax = plt.gca()
+        ax.set_xlabel('off-axis [deg]')
+        ax.set_ylabel(self.YLABEL[key])
+
+        self.plot(key, **kwargs)
+
+        plt.savefig(plotFile)
+        plt.clf()
 
     def plot(self, key, **kwargs):
         '''
@@ -368,7 +423,7 @@ class RayTracing:
         '''
         if not self._isValidKeyToPlot(key):
             msg = 'Invalid key to plot'
-            logger.error(msg)
+            self._logger.error(msg)
             raise KeyError(msg)
         ax = plt.gca()
         ax.plot(self._results['off_axis'], self._results[key], **kwargs)
@@ -391,7 +446,7 @@ class RayTracing:
         '''
         if not self._isValidKeyToPlot(key):
             msg = 'Invalid key to plot'
-            logger.error(msg)
+            self._logger.error(msg)
             raise KeyError(msg)
 
         ax = plt.gca()
@@ -418,7 +473,7 @@ class RayTracing:
         '''
         if not self._isValidKeyToPlot(key):
             msg = 'Invalid key to plot'
-            logger.error(msg)
+            self._logger.error(msg)
             raise KeyError(msg)
         return np.mean(self._results[key])
 
@@ -443,7 +498,7 @@ class RayTracing:
         '''
         if not self._isValidKeyToPlot(key):
             msg = 'Invalid key to plot'
-            logger.error(msg)
+            self._logger.error(msg)
             raise KeyError(msg)
         return np.std(self._results[key])
 
@@ -460,7 +515,7 @@ class RayTracing:
             if thisOffAxis in self._psfImages.keys():
                 images.append(self._psfImages[thisOffAxis])
         if len(images) == 0:
-            logger.error('No image found')
+            self._logger.error('No image found')
             return None
         return images
 
