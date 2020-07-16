@@ -25,6 +25,13 @@ if __name__ == '__main__':
         required=True
     )
     parser.add_argument(
+        '-l',
+        '--label',
+        help='Label (default=validate-FoV)',
+        type=str,
+        default='validate-FoV'
+    )
+    parser.add_argument(
         '--model_version',
         help='Model version (default=prod4)',
         type=str,
@@ -50,13 +57,11 @@ if __name__ == '__main__':
     logger = logging.getLogger('validate_camera_fov')
     logger.setLevel(gen.getLogLevelFromUser(args.logLevel))
 
-    label = 'validate-FoV'
-
     telModel = TelescopeModel(
         telescopeType=args.tel_type,
         site=args.site,
         version=args.model_version,
-        label=label
+        label=args.label
     )
 
     print('\nValidating the camera FoV of {}\n'.format(telModel.telescopeType))

@@ -19,8 +19,6 @@ from simtools.model.telescope_model import TelescopeModel
 
 __all__ = ['SimtelRunner']
 
-logger = logging.getLogger(__name__)
-
 
 class SimtelExecutionError(Exception):
     pass
@@ -60,6 +58,7 @@ class SimtelRunner:
         label=None,
         simtelSourcePath=None,
         filesLocation=None,
+        logger=__name__,
         **kwargs
     ):
         '''
@@ -79,11 +78,14 @@ class SimtelRunner:
         filesLocation: str (or Path), optional
             Parent location of the output files created by this class. If not given, it will be
             taken from the config.yml file.
+        logger: str
+            Logger name to use in this instance
         **kwargs:
             Input parameters listed in ALL_INPUTS (zenithAngle, sourceDistance, offAxisAngle,
             mirrorNumber, useRandomFocalLength)
         '''
-        logger.debug('Init SimtelRunner')
+        self._logger = logging.getLogger(logger)
+        self._logger.debug('Init SimtelRunner')
 
         self._simtelSourcePath = Path(cfg.getConfigArg('simtelPath', simtelSourcePath))
         self.mode = names.validateName(mode, names.allSimtelModeNames)
@@ -101,7 +103,7 @@ class SimtelRunner:
 
         # RayTracing - default parameters
         self._repNumber = 0
-        self.RUNS_PER_SET = 1 if self._isSingleMirrorMode else 20  # const
+        self.RUNS_PER_SET = 1 if self._isSingleMirrorMode() else 20  # const
         self.PHOTONS_PER_RUN = 10000  # const
 
         if self._isRayTracingMode():
@@ -138,11 +140,11 @@ class SimtelRunner:
     def _validateTelescopeModel(self, tel):
         ''' Validate TelescopeModel '''
         if isinstance(tel, TelescopeModel):
-            logger.debug('TelescopeModel OK')
+            self._logger.debug('TelescopeModel OK')
             return tel
         else:
             msg = 'Invalid TelescopeModel'
-            logger.error(msg)
+            self._logger.error(msg)
             raise ValueError(msg)
 
     def run(self, test=False, force=False):
@@ -156,21 +158,21 @@ class SimtelRunner:
         force: bool
             If True, remove possible existing output fileas and run again.
         '''
-        logger.debug('Running at mode {}'.format(self.mode))
+        self._logger.debug('Running at mode {}'.format(self.mode))
         # write all the important parameters
 
         if not self._shallRun() and not force:
-            logger.debug('Skipping because file exists and force = False')
+            self._logger.debug('Skipping because file exists and force = False')
             return
 
         self._loadRequiredFiles()
         command = self._makeRunCommand()
 
         if test:
-            logger.info('Running (test) with command:{}'.format(command))
+            self._logger.info('Running (test) with command:{}'.format(command))
             sysOutput = os.system(command)
         else:
-            logger.info('Running ({}x) with command:{}'.format(self.RUNS_PER_SET, command))
+            self._logger.info('Running ({}x) with command:{}'.format(self.RUNS_PER_SET, command))
             sysOutput = os.system(command)
             for _ in range(self.RUNS_PER_SET - 1):
                 os.system(command)
@@ -178,13 +180,13 @@ class SimtelRunner:
         # Checking run
         if self._isRayTracingMode:
             if self._isPhotonListFileOK():
-                logger.debug('Everything looks fine with simtel run')
+                self._logger.debug('Everything looks fine with simtel run')
             else:
                 self._raiseSimtelError()
         elif self._simtelFailed():
             self._raiseSimtelError()
         else:
-            logger.debug('Everything looks fine with simtel run')
+            self._logger.debug('Everything looks fine with simtel run')
 
     def _simtelFailed(self, sysOutput):
         return sysOutput != '0'
@@ -195,7 +197,7 @@ class SimtelRunner:
 
     def _raiseSimtelError(self):
         msg = gen.collectFinalLines(self._logFileName, 10)
-        logger.error(
+        self._logger.error(
             'Simtel Error - See below the relevant part of the simtel log file.\n'
             + '===== from simtel log file ======\n' + msg
             + '================================='
@@ -203,9 +205,9 @@ class SimtelRunner:
         raise SimtelExecutionError()
 
     def _getRunBashScript(self, test=False):
-        logger.debug('Creating run bash script')
+        self._logger.debug('Creating run bash script')
         self._scriptFileName = self._baseDirectory.joinpath('run_script')
-        logger.debug('Run bash script - {}'.format(self._scriptFileName))
+        self._logger.debug('Run bash script - {}'.format(self._scriptFileName))
 
         self._loadRequiredFiles()
         command = self._makeRunCommand()
