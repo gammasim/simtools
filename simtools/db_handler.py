@@ -109,7 +109,7 @@ def openMongoDB():
     )
     atexit.register(closeSSHTunnel, [tunnel])
 
-    userDB = getpass.getuser()
+    userDB = dbDetails['userDB']
     dbServer = 'localhost'
     dbClient = MongoClient(
         dbServer,
@@ -233,6 +233,7 @@ def getModelParametersMongoDB(
     dbClient,
     telescopeType,
     version,
+    runLocation,
     onlyApplicable=False
 ):
     '''
@@ -244,6 +245,8 @@ def getModelParametersMongoDB(
     telescopeType: str
     version: str
         Version of the model.
+    runLocation: Path or str
+        The sim_telarray run location to write the tabulated data files into.
     onlyApplicable: bool
         If True, only applicable parameters will be read.
 
@@ -281,6 +284,7 @@ def getModelParametersMongoDB(
             dbClient,
             _tel,
             _versionValidated,
+            runLocation,
             _selectOnlyApplicable
         ))
 
@@ -291,6 +295,7 @@ def readMongoDB(
     dbClient,
     telescopeType,
     version,
+    runLocation,
     onlyApplicable=False
 ):
     '''
@@ -303,10 +308,10 @@ def readMongoDB(
     telescopeType: str
     version: str
         Version of the model.
-    onlyApplicable: bool
-        If True, only applicable parameters will be read.
     runLocation: Path or str
         The sim_telarray run location to write the tabulated data files into.
+    onlyApplicable: bool
+        If True, only applicable parameters will be read.
 
     Returns
     -------
