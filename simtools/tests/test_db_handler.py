@@ -13,7 +13,7 @@ logger.setLevel(logging.DEBUG)
 def test_readring_db_lst():
 
     logger.info('----LST-----')
-    pars = db.getModelParameters('north-lst-1', 'prod4')
+    pars = db.getModelParameters('north-lst-1', 'prod4', './play/datFiles/')
     assert(pars['parabolic_dish']['Value'] == 1)
     assert(pars['camera_pixels']['Value'] == 1855)
 
@@ -23,7 +23,7 @@ def test_readring_db_lst():
 def test_readring_db_mst_nc():
 
     logger.info('----MST-NectarCam-----')
-    pars = db.getModelParameters('north-mst-nectarcam-d', 'prod4')
+    pars = db.getModelParameters('north-mst-nectarcam-d', 'prod4', './play/datFiles/')
     assert(pars['camera_pixels']['Value'] == 1855)
 
     return
@@ -32,7 +32,7 @@ def test_readring_db_mst_nc():
 def test_readring_db_mst_fc():
 
     logger.info('----MST-FlashCam-----')
-    pars = db.getModelParameters('north-mst-flashcam-d', 'prod4')
+    pars = db.getModelParameters('north-mst-flashcam-d', 'prod4', './play/datFiles/')
     assert(pars['camera_pixels']['Value'] == 1764)
 
     return
@@ -41,7 +41,7 @@ def test_readring_db_mst_fc():
 def test_readring_db_sst():
 
     logger.info('----SST-----')
-    pars = db.getModelParameters('south-sst-d', 'prod4')
+    pars = db.getModelParameters('south-sst-d', 'prod4', './play/datFiles/')
     assert(pars['camera_pixels']['Value'] == 2048)
 
     return
