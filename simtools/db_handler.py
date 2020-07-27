@@ -3,14 +3,14 @@
 import logging
 import datetime
 import yaml
-from pathlib import Path
 import shlex
 import subprocess
 import time
-import gridfs
 import atexit
 import getpass
 from pathlib import Path
+
+import gridfs
 from pymongo import MongoClient
 from pymongo.errors import BulkWriteError
 
