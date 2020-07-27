@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 from cycler import cycler
 from collections import OrderedDict
+import re
 
 import astropy.units as u
 from astropy.table import QTable
@@ -68,6 +69,9 @@ def _addUnit(title, array):
         unit = str(array[0].unit)
         if len(unit) > 0:
             unit = ' [{}]'.format(unit)
+        if re.search(r'\d', unit):
+            unit = re.sub(r'(\d)', r'^\1', unit)
+            unit = unit.replace('[', r'$[').replace(']', r']$')
         if '[' in title and ']' in title:
             logger.warning(
                 'Tried to add a unit from astropy.unit, '
@@ -75,7 +79,27 @@ def _addUnit(title, array):
             )
             unit = ''
 
-    return '{}{}'.format(title, unit)
+    return _makeLatexCompatible('{}{}'.format(title, unit))
+
+
+def _makeLatexCompatible(text):
+    '''
+    A utility function to add an escape before underscores to comply with Latex.
+
+    Parameters
+    ----------
+    text: str
+
+    Returns
+    -------
+    str
+        text compatible with Latex.
+    '''
+
+    if not any(_ in text for _ in ['$', r'\_']):
+        text = text.replace('_', r'\_')
+
+    return text
 
 
 def setStyle(palette='default', bigPlot=False):
@@ -270,7 +294,7 @@ def plot1D(data, **kwargs):
         xTitle, yTitle = dataNow.dtype.names[0], dataNow.dtype.names[1]
         xTitleUnit = _addUnit(xTitle, dataNow[xTitle])
         yTitleUnit = _addUnit(yTitle, dataNow[yTitle])
-        plt.plot(dataNow[xTitle], dataNow[yTitle], label=label, **kwargs)
+        plt.plot(dataNow[xTitle], dataNow[yTitle], label=_makeLatexCompatible(label), **kwargs)
 
     if plotRatio:
         plt.gca().set_xticklabels([])
@@ -280,7 +304,7 @@ def plot1D(data, **kwargs):
     plt.ylabel(yTitleUnit)
 
     if len(title) > 0:
-        plt.title(title, y=1.02)
+        plt.title(_makeLatexCompatible(title), y=1.02)
     if '_default' not in list(dataDict.keys()) and not noLegend:
         plt.legend()
     if not plotRatio:
@@ -308,7 +332,7 @@ def plot1D(data, **kwargs):
                 plt.plot(dataNow[xTitle], dataNow[yTitle]/dataDict[dataRefName][yTitle], **kwargs)
 
         plt.xlabel(xTitleUnit)
-        yTitleRatio = 'Ratio to {}'.format(dataRefName)
+        yTitleRatio = 'Ratio to {}'.format(_makeLatexCompatible(dataRefName))
         if len(yTitleRatio) > 20:
             yTitleRatio = 'Ratio'
         plt.ylabel(yTitleRatio)
