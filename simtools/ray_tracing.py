@@ -260,6 +260,7 @@ class RayTracing:
                     self.label,
                     'photons'
                 )
+
                 photonsFile = self._outputDirectory.joinpath(photonsFileName)
                 telTransmission = computeTelescopeTransmission(telTransmissionPars, thisOffAxis)
                 image = PSFImage(focalLength)
@@ -271,24 +272,28 @@ class RayTracing:
 
                 if useRX:
                     d80_cm, centroidX, centroidY, effArea = self._processRX(photonsFile)
-                    d80_cm *= u.cm
-                    d80_deg = d80_cm * cmToDeg * u.deg
+                    d80_deg = d80_cm * cmToDeg
                     image.setPSF(d80_cm, fraction=0.8, unit='cm')
                     image.centroidX = centroidX
                     image.centroidY = centroidY
                     image.setEffectiveArea(effArea * telTransmission)
                 else:
-                    d80_cm = image.getPSF(0.8, 'cm') * u.cm
-                    d80_deg = image.getPSF(0.8, 'deg') * u.deg
+                    d80_cm = image.getPSF(0.8, 'cm')
+                    d80_deg = image.getPSF(0.8, 'deg')
                     centroidX = image.centroidX
                     centroidY = image.centroidY
-                    effArea = image.getEffectiveArea() * telTransmission * u.m * u.m
+                    effArea = image.getEffectiveArea() * telTransmission
 
                 effFlen = (
                     np.nan if thisOffAxis == 0 else centroidX / tan(thisOffAxis * pi / 180.)
-                ) * u.cm
-                thisOffAxis = thisOffAxis * u.deg
-                _currentResults = (thisOffAxis, d80_cm, d80_deg, effArea, effFlen)
+                )
+                _currentResults = (
+                    thisOffAxis * u.deg,
+                    d80_cm * u.cm,
+                    d80_deg * u.deg,
+                    effArea * u.m * u.m,
+                    effFlen * u.cm
+                )
                 if self._singleMirrorMode:
                     _currentResults += (thisMirror,)
                 _rows.append(_currentResults)
@@ -298,7 +303,7 @@ class RayTracing:
             _columns = ['Offset']
             _columns.extend(list(self.YLABEL.keys()))
             if self._singleMirrorMode:
-                _columns.append('Mirror number')
+                _columns.append('mirror_number')
             self._results = QTable(rows=_rows, names=_columns)
 
         self._hasResults = True
@@ -327,10 +332,10 @@ class RayTracing:
             shell=True
         )
         rxOutput = rxOutput.split()
-        d80_cm = 2 * float(rxOutput[0]) * u.cm
+        d80_cm = 2 * float(rxOutput[0])
         xMean = float(rxOutput[1])
         yMean = float(rxOutput[2])
-        effArea = float(rxOutput[5]) * u.m * u.m
+        effArea = float(rxOutput[5])
         return d80_cm, xMean, yMean, effArea
 
     def exportResults(self):
@@ -339,11 +344,11 @@ class RayTracing:
             self._logger.error('Cannot export results because it does not exist')
         else:
             self._logger.info('Exporting results to {}'.format(self._fileResults))
-            ascii.write(self._results, self._fileResults, format='basic', overwrite=True)
+            ascii.write(self._results, self._fileResults, format='ecsv', overwrite=True)
 
     def _readResults(self):
         ''' Read existing results file and store it in _results. '''
-        self._results = ascii.read(self._fileResults, format='basic')
+        self._results = ascii.read(self._fileResults, format='ecsv')
         self._hasResults = True
 
     def plotAndSave(self, key, **kwargs):
@@ -409,7 +414,11 @@ class RayTracing:
             self._logger.error(msg)
             raise KeyError(msg)
         ax = plt.gca()
-        ax.plot(self._results['Offset'], self._results[key], **kwargs)
+        ax.plot(
+            [o.value for o in self._results['Offset']],
+            [r.value for r in self._results[key]],
+            **kwargs
+        )
 
     def plotHistogram(self, key, **kwargs):
         '''
@@ -433,7 +442,7 @@ class RayTracing:
             raise KeyError(msg)
 
         ax = plt.gca()
-        ax.hist(self._results[key], **kwargs)
+        ax.hist([r.value for r in self._results[key]], **kwargs)
 
     def getMean(self, key):
         '''

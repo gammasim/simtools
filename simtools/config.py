@@ -4,7 +4,7 @@ from pathlib import Path
 import logging
 import yaml
 
-__all__ = ['loadConfig', 'get', 'findFile']
+__all__ = ['loadConfig', 'get', 'findFile', 'change']
 
 logger = logging.getLogger(__name__)
 
@@ -50,6 +50,12 @@ def loadConfig(fileName=None):
 
     with open(thisFileName, 'r') as stream:
         config = yaml.load(stream, Loader=yaml.FullLoader)
+
+    # Running over the parameters set for change
+    if 'CONFIG_CHANGED_PARS' in globals():
+        for par, value in CONFIG_CHANGED_PARS.items():
+            config[par] = value
+
     return config
 
 
@@ -72,6 +78,23 @@ def get(par):
         raise KeyError()
     else:
         return config[par]
+
+
+def change(par, value):
+    '''
+    Set to change a parameter to another value.
+
+    Parameters
+    ----------
+    par: str
+        Name of the parameter to change.
+    value: any
+        Value to be set to the parameter.
+    '''
+    if 'CONFIG_CHANGED_PARS' not in globals():
+        global CONFIG_CHANGED_PARS
+        CONFIG_CHANGED_PARS = dict()
+    CONFIG_CHANGED_PARS[par] = value
 
 
 def getConfigArg(name, value):
