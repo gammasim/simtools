@@ -5,6 +5,7 @@ import subprocess
 from pathlib import Path
 
 import simtools.db_handler as db
+import simtools.config as cfg
 from simtools.model.telescope_model import TelescopeModel
 
 logger = logging.getLogger()
