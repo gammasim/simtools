@@ -69,7 +69,7 @@ class RayTracing:
     ALL_INPUTS = {
         'zenithAngle': {'default': 20, 'unit': u.deg},
         'offAxisAngle': {
-            'default': [0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0],
+            'default': [0.0],
             'unit': u.deg,
             'isList': True
         },
@@ -271,6 +271,7 @@ class RayTracing:
 
                 if useRX:
                     d80_cm, centroidX, centroidY, effArea = self._processRX(photonsFile)
+                    d80_cm *= u.cm
                     d80_deg = d80_cm * cmToDeg * u.deg
                     image.setPSF(d80_cm, fraction=0.8, unit='cm')
                     image.centroidX = centroidX
@@ -289,7 +290,7 @@ class RayTracing:
                 thisOffAxis = thisOffAxis * u.deg
                 _currentResults = (thisOffAxis, d80_cm, d80_deg, effArea, effFlen)
                 if self._singleMirrorMode:
-                    _currentResults.append(thisMirror)
+                    _currentResults += (thisMirror,)
                 _rows.append(_currentResults)
         # END for offAxis, mirrorNumber
 
