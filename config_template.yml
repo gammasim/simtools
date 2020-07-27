@@ -2,10 +2,9 @@
 
 databaseLocation: /home/prado/Work/Projects/CTA_MC/gammasim-db
 
+useMongoDB: True
+
 modelFilesLocations: [
-  /home/prado/Work/Projects/CTA_MC/svn/Simulations/SimulationModel/ModelDescription/trunk/configReports,
-  /home/prado/Work/Projects/CTA_MC/svn/Simulations/SimulationModel/ModelDescription/trunk/datFiles,
-  /home/prado/Work/Projects/CTA_MC/svn/Simulations/SimulationModel/Verification/dataFromInstrumentTeams,
   /Users/ogueta/work/cta/Simulations/SimulationModel/ModelDescription/trunk/configReports,
   /Users/ogueta/work/cta/Simulations/SimulationModel/ModelDescription/trunk/datFiles,
   /Users/ogueta/work/cta/Simulations/SimulationModel/Verification/dataFromInstrumentTeams
