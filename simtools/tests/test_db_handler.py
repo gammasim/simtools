@@ -10,7 +10,7 @@ logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 
-def test_readring_db_lst():
+def test_reading_db_lst():
 
     logger.info('----LST-----')
     pars = db.getModelParameters('north-lst-1', 'prod4', './play/datFiles/')
@@ -20,7 +20,7 @@ def test_readring_db_lst():
     return
 
 
-def test_readring_db_mst_nc():
+def test_reading_db_mst_nc():
 
     logger.info('----MST-NectarCam-----')
     pars = db.getModelParameters('north-mst-nectarcam-d', 'prod4', './play/datFiles/')
@@ -29,7 +29,7 @@ def test_readring_db_mst_nc():
     return
 
 
-def test_readring_db_mst_fc():
+def test_reading_db_mst_fc():
 
     logger.info('----MST-FlashCam-----')
     pars = db.getModelParameters('north-mst-flashcam-d', 'prod4', './play/datFiles/')
@@ -38,7 +38,7 @@ def test_readring_db_mst_fc():
     return
 
 
-def test_readring_db_sst():
+def test_reading_db_sst():
 
     logger.info('----SST-----')
     pars = db.getModelParameters('south-sst-d', 'prod4', './play/datFiles/')
@@ -73,8 +73,8 @@ def test_readring_db_sst():
 if __name__ == '__main__':
 
     # test_get_model_file()
-    test_readring_db_lst()
-    test_readring_db_mst_nc()
-    test_readring_db_mst_fc()
-    test_readring_db_sst()
+    test_reading_db_lst()
+    test_reading_db_mst_nc()
+    test_reading_db_mst_fc()
+    test_reading_db_sst()
     pass
