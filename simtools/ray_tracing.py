@@ -14,7 +14,7 @@ from math import pi, tan
 import numpy as np
 import astropy.units as u
 from astropy.io import ascii
-from astropy.table import Table
+from astropy.table import QTable
 
 import simtools.config as cfg
 import simtools.io_handler as io
@@ -24,17 +24,18 @@ from simtools.util.model import computeTelescopeTransmission
 from simtools.model.telescope_model import TelescopeModel
 from simtools.simtel_runner import SimtelRunner
 from simtools.util.general import collectArguments, collectKwargs, setDefaultKwargs
+from simtools import visualize
 
 __all__ = ['RayTracing']
 
 
 class RayTracing:
+
     YLABEL = {
-        'd80_deg': r'$D_{80}$ [deg]',
-        'd80_cm': r'$D_{80}$ [cm]',
-        'd80_deg': r'$D_{80}$ [deg]',
-        'eff_area': 'Eff. Area [cm²]',
-        'eff_flen': 'Eff. Focal Length [cm]'
+        'd80_cm': r'$D_{80}$',
+        'd80_deg': r'$D_{80}$',
+        'eff_area': 'Eff. mirror area',
+        'eff_flen': 'Eff. focal length'
     }
 
     '''
@@ -68,7 +69,7 @@ class RayTracing:
     ALL_INPUTS = {
         'zenithAngle': {'default': 20, 'unit': u.deg},
         'offAxisAngle': {
-            'default': [0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0],
+            'default': [0.0],
             'unit': u.deg,
             'isList': True
         },
@@ -239,14 +240,7 @@ class RayTracing:
 
         self._psfImages = dict()
         if doAnalyze:
-            self._results = dict()
-            self._results['off_axis'] = list()
-            self._results['d80_cm'] = list()
-            self._results['d80_deg'] = list()
-            self._results['eff_area'] = list()
-            self._results['eff_flen'] = list()
-            if self._singleMirrorMode:
-                self._results['mirror_no'] = list()
+            _rows = list()
         else:
             self._readResults()
 
@@ -266,6 +260,7 @@ class RayTracing:
                     self.label,
                     'photons'
                 )
+
                 photonsFile = self._outputDirectory.joinpath(photonsFileName)
                 telTransmission = computeTelescopeTransmission(telTransmissionPars, thisOffAxis)
                 image = PSFImage(focalLength)
@@ -290,16 +285,26 @@ class RayTracing:
                     effArea = image.getEffectiveArea() * telTransmission
 
                 effFlen = (
-                    'nan' if thisOffAxis == 0 else centroidX / tan(thisOffAxis * pi / 180.)
+                    np.nan if thisOffAxis == 0 else centroidX / tan(thisOffAxis * pi / 180.)
                 )
-                self._results['off_axis'].append(thisOffAxis)
-                self._results['d80_cm'].append(d80_cm)
-                self._results['d80_deg'].append(d80_deg)
-                self._results['eff_area'].append(effArea)
-                self._results['eff_flen'].append(effFlen)
+                _currentResults = (
+                    thisOffAxis * u.deg,
+                    d80_cm * u.cm,
+                    d80_deg * u.deg,
+                    effArea * u.m * u.m,
+                    effFlen * u.cm
+                )
                 if self._singleMirrorMode:
-                    self._results['mirror_no'].append(thisMirror)
+                    _currentResults += (thisMirror,)
+                _rows.append(_currentResults)
         # END for offAxis, mirrorNumber
+
+        if doAnalyze:
+            _columns = ['Offset']
+            _columns.extend(list(self.YLABEL.keys()))
+            if self._singleMirrorMode:
+                _columns.append('mirror_number')
+            self._results = QTable(rows=_rows, names=_columns)
 
         self._hasResults = True
         # Exporting
@@ -339,29 +344,12 @@ class RayTracing:
             self._logger.error('Cannot export results because it does not exist')
         else:
             self._logger.info('Exporting results to {}'.format(self._fileResults))
-            table = Table(self._results)
-            ascii.write(table, self._fileResults, format='basic', overwrite=True)
+            ascii.write(self._results, self._fileResults, format='ecsv', overwrite=True)
 
     def _readResults(self):
         ''' Read existing results file and store it in _results. '''
-        table = ascii.read(self._fileResults, format='basic')
-        self._results = dict(table)
+        self._results = ascii.read(self._fileResults, format='ecsv')
         self._hasResults = True
-
-    def _isValidKeyToPlot(self, key):
-        '''
-        Validate key to be plotted.
-
-        Parameters
-        ----------
-        key: str
-            Key name to be validated.
-
-        Returns
-        -------
-        bool
-        '''
-        return key in self.YLABEL.keys()
 
     def plotAndSave(self, key, **kwargs):
         '''
@@ -379,7 +367,7 @@ class RayTracing:
         KeyError
             If key is not among the valid options.
         '''
-        if not self._isValidKeyToPlot(key):
+        if key not in self.YLABEL.keys():
             msg = 'Invalid key to plot'
             self._logger.error(msg)
             raise KeyError(msg)
@@ -395,12 +383,12 @@ class RayTracing:
         plotFile = self._outputDirectory.joinpath('figures').joinpath(plotFileName)
         self._logger.info('Plotting {} and saving it in {}'.format(key, plotFile))
 
-        plt.figure(figsize=(8, 6), tight_layout=True)
-        ax = plt.gca()
-        ax.set_xlabel('off-axis [deg]')
-        ax.set_ylabel(self.YLABEL[key])
-
-        self.plot(key, **kwargs)
+        plt = visualize.plotTable(
+            self._results['Offset', key],
+            self.YLABEL[key],
+            noLegend=True,
+            **kwargs
+        )
 
         plt.savefig(plotFile)
         plt.clf()
@@ -421,12 +409,16 @@ class RayTracing:
         KeyError
             If key is not among the valid options.
         '''
-        if not self._isValidKeyToPlot(key):
+        if key not in self.YLABEL.keys():
             msg = 'Invalid key to plot'
             self._logger.error(msg)
             raise KeyError(msg)
         ax = plt.gca()
-        ax.plot(self._results['off_axis'], self._results[key], **kwargs)
+        ax.plot(
+            [o.value for o in self._results['Offset']],
+            [r.value for r in self._results[key]],
+            **kwargs
+        )
 
     def plotHistogram(self, key, **kwargs):
         '''
@@ -444,13 +436,13 @@ class RayTracing:
         KeyError
             If key is not among the valid options.
         '''
-        if not self._isValidKeyToPlot(key):
+        if key not in self.YLABEL.keys():
             msg = 'Invalid key to plot'
             self._logger.error(msg)
             raise KeyError(msg)
 
         ax = plt.gca()
-        ax.hist(self._results[key], **kwargs)
+        ax.hist([r.value for r in self._results[key]], **kwargs)
 
     def getMean(self, key):
         '''
@@ -471,7 +463,7 @@ class RayTracing:
         KeyError
             If key is not among the valid options.
         '''
-        if not self._isValidKeyToPlot(key):
+        if key not in self.YLABEL.keys():
             msg = 'Invalid key to plot'
             self._logger.error(msg)
             raise KeyError(msg)
@@ -496,7 +488,7 @@ class RayTracing:
         KeyError
             If key is not among the valid options.
         '''
-        if not self._isValidKeyToPlot(key):
+        if key not in self.YLABEL.keys():
             msg = 'Invalid key to plot'
             self._logger.error(msg)
             raise KeyError(msg)

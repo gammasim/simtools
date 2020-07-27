@@ -9,6 +9,7 @@ dependencies:
   - pytest
   - pytest-cov
   - scipy
+  - pymongo
 
 # cheatsheet
 
