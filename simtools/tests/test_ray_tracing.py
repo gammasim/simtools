@@ -221,8 +221,8 @@ def test_integral_curve():
 
 if __name__ == '__main__':
 
-    # test_ssts()
-    test_rx()
+    test_ssts()
+    # test_rx()
     # test_single_mirror()
     # test_plot_image()
     # test_integral_curve()

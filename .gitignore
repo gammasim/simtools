@@ -17,3 +17,6 @@ __pycache__
 
 # Sphinx
 docs/build
+
+# DB config gfile
+dbDetails.yml
