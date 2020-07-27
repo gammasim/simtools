@@ -95,7 +95,8 @@ def openMongoDB():
     A PyMongo DB client and the tunnel process handle
     '''
 
-    dbDetails = readDetailsDB('./')
+    dbDetailsFile = cfg.get('mongoDBConfigFile')
+    dbDetails = readDetailsDB(dbDetailsFile)
 
     user = getpass.getuser()
 
@@ -145,20 +146,19 @@ def getArrayDB(databaseLocation):
     return out
 
 
-def readDetailsDB(dbDetailsFileLocation):
+def readDetailsDB(dbDetailsFile):
     '''
     Get a dict with db details (name, ports, password).
 
     Parameters
     ----------
-    dbDetailsFileLocation: str or Path
+    dbDetailsFile: str or Path
 
     Returns
     -------
     dict
     '''
 
-    dbDetailsFile = Path(dbDetailsFileLocation).joinpath('dbDetails.yml')
     dbDetails = dict()
     with open(dbDetailsFile, 'r') as stream:
         dbDetails = yaml.load(stream, Loader=yaml.FullLoader)
@@ -178,7 +178,7 @@ def getModelParameters(telescopeType, version, onlyApplicable=False, runPath='./
         closeSSHTunnel([tunnel])
         return _pars
     else:
-        return getModelParametersYaml(telescopeType, version, onlyApplicable)
+        return getModelParametersYaml(telescopeType, version, onlyApplicable)   
 
 
 def getModelParametersYaml(telescopeType, version, onlyApplicable=False):

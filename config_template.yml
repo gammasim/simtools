@@ -3,6 +3,7 @@
 databaseLocation: /home/prado/Work/Projects/CTA_MC/gammasim-db
 
 useMongoDB: True
+mongoDBConfigFile: ./dbDetails.yml
 
 modelFilesLocations: [
   /Users/ogueta/work/cta/Simulations/SimulationModel/ModelDescription/trunk/configReports,
