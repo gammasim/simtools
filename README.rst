@@ -53,6 +53,6 @@ DESIGN GUIDELINES (old, to be rewritten):
 * Classes are not designed to be re-used, all parameters should be set when initializing and not changed afterwards. New parameters should mean new instance of the class.
 * filesLocation
 * A test flag (test=True/False) should exist always when possible. If True, it must provide a faster and simpler implementation.
-* Spectially important for time comsuming simulations. The default must always be test=False.
+* Espectially important for time comsuming simulations. The default must always be test=False.
 * A force flag (force=True/False) should exist in any case in which files are created. If False, the existing files should not be overwritten. The default must always be force=False.
 * A clean method must be available for any class that create files.
