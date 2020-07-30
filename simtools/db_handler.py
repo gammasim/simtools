@@ -166,6 +166,23 @@ def readDetailsDB(dbDetailsFile):
 
 
 def getModelParameters(telescopeType, version, onlyApplicable=False, runPath='./play/datFiles/'):
+    '''
+    Get parameters from either MongoDB or Yaml DB for a specific telescope.
+
+    Parameters
+    ----------
+    telescopeType: str
+    version: str
+        Version of the model.
+    onlyApplicable: bool
+        If True, only applicable parameters will be read.
+    runPath: Path or str
+        The sim_telarray run location to write the tabulated data files into.
+
+    Returns
+    -------
+    dict containing the parameters
+    '''
 
     if cfg.get('useMongoDB'):
         # TODO - This is probably not efficient to open a new connection
@@ -178,7 +195,7 @@ def getModelParameters(telescopeType, version, onlyApplicable=False, runPath='./
         closeSSHTunnel([tunnel])
         return _pars
     else:
-        return getModelParametersYaml(telescopeType, version, onlyApplicable)   
+        return getModelParametersYaml(telescopeType, version, onlyApplicable)
 
 
 def getModelParametersYaml(telescopeType, version, onlyApplicable=False):
@@ -191,7 +208,7 @@ def getModelParametersYaml(telescopeType, version, onlyApplicable=False):
     version: str
         Version of the model.
     onlyApplicable: bool
-        If True, only applicable parameters will be selected.
+        If True, only applicable parameters will be read.
 
     Returns
     -------
@@ -360,6 +377,7 @@ def getAllModelParametersYaml(telescopeType, version):
     -------
     dict containing the parameters
     '''
+
     _fileNameDB = 'parValues-{}.yml'.format(telescopeType)
     _yamlFile = cfg.findFile(
         _fileNameDB,
@@ -424,7 +442,6 @@ def getFileMongoDB(dbClient, dbName, fileName):
     -------
     GridOut
         A file instance returned by GridFS find_one
-
     '''
 
     db = dbClient[dbName]
@@ -450,12 +467,138 @@ def writeFileFromMongoToDisk(dbClient, dbName, path, file):
         The path to write the file to
     file: GridOut
         A file instance returned by GridFS find_one
-
     '''
 
     db = dbClient[dbName]
     fsOutput = gridfs.GridFSBucket(db)
     with open(Path(path).joinpath(file.filename), 'wb') as outputFile:
         fsOutput.download_to_stream_by_name(file.filename, outputFile)
+
+    return
+
+
+def copyTelescope(dbClient, dbName, telToCopy, versionToCopy, newTelName):
+    '''
+    Copy a full telescope configuration to a new telescope name.
+    Only a specific version is copied.
+    (This function should be rarely used, probably only during "construction".)
+
+    Parameters
+    ----------
+    dbClient: a MongoDB client provided by openMongoDB
+    dbName: str
+        the name of the file DB
+    telToCopy: str
+        The telescope to copy
+    versionToCopy: str
+        The version of the configuration to copy
+    newTelName: str
+        The name of the new telescope
+    '''
+
+    logger.info('Copying version {} of {} to the new telescope {} '.format(
+        versionToCopy,
+        telToCopy,
+        newTelName
+    ))
+
+    collection = dbClient[dbName].posts
+    _parameters = dict()
+    dbEntries = list()
+
+    query = {
+        'Telescope': telToCopy,
+        'Version': versionToCopy,
+    }
+    for i_entry, post in enumerate(collection.find(query)):
+        post['Telescope'] = newTelName
+        post.pop('_id', None)
+        dbEntries.append(post)
+
+    logger.info('Creating new telescope {}'.format(newTelName))
+    db = dbClient[dbName]
+    posts = db.posts
+    try:
+        posts.insert_many(dbEntries)
+    except BulkWriteError as exc:
+        raise exc(exc.details)
+
+    return
+
+
+def deleteQuery(dbClient, dbName, query):
+    '''
+    Delete all entries from the DB which correspond to the provided query.
+    (This function should be rarely used, if at all.)
+
+    Parameters
+    ----------
+    dbClient: a MongoDB client provided by openMongoDB
+    dbName: str
+        the name of the file DB
+    query: dict
+        A dictionary listing the fields/values to delete.
+        For example,
+        query = {
+            'Telescope': 'North-LST-1',
+            'Version': 'prod4',
+        }
+        would delete the entire prod4 version from telescope North-LST-1.
+    '''
+
+    collection = dbClient[dbName].posts
+
+    logger.info('Deleting {} entries from {}'.format(
+        collection.count_documents(query),
+        dbName,
+    ))
+
+    collection.delete_many(query)
+
+    return
+
+
+def updateParameter(dbClient, dbName, telescope, version, parameter, newValue):
+    '''
+    Update a parameter value for a specific telescope/version.
+    (This function should be rarely used, since new values should ideally have their own version.)
+
+    Parameters
+    ----------
+    dbClient: a MongoDB client provided by openMongoDB
+    dbName: str
+        the name of the file DB
+    telescope: str
+        Which telescope to update
+    version: str
+        Which version to update
+    parameter: str
+        Which parameter to update
+    newValue: type identical to the original parameter type
+        The new value to set for the parameter
+    '''
+
+    collection = dbClient[dbName].posts
+
+    query = {
+        'Telescope': telescope,
+        'Version': version,
+        'Parameter': parameter,
+    }
+
+    parEntry = collection.find_one(query)
+    oldValue = parEntry['Value']
+
+    logger.info('For telescope {}, version {}\nreplacing {} value from {} to {}'.format(
+        telescope,
+        version,
+        parameter,
+        oldValue,
+        newValue
+    ))
+
+    queryUpdate = {'$set': {'Value': newValue}}
+
+    collection.update_one(query, queryUpdate)
 
     return
