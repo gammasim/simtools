@@ -10,6 +10,9 @@ import atexit
 import getpass
 from pathlib import Path
 
+from astropy.time import Time
+
+import pymongo
 import gridfs
 from pymongo import MongoClient
 from pymongo.errors import BulkWriteError
@@ -600,5 +603,47 @@ def updateParameter(dbClient, dbName, telescope, version, parameter, newValue):
     queryUpdate = {'$set': {'Value': newValue}}
 
     collection.update_one(query, queryUpdate)
+
+    return
+
+
+def addParameter(dbClient, dbName, telescope, parameter, newVersion, newValue):
+    '''
+    Add a parameter value for a specific telescope.
+    A new document will be added to the DB,
+    with all fields taken from the last entry of this parameter to this telescope,
+    except the ones changed.
+
+    Parameters
+    ----------
+    dbClient: a MongoDB client provided by openMongoDB
+    dbName: str
+        the name of the file DB
+    telescope: str
+        Which telescope to update
+    parameter: str
+        Which parameter to add
+    newVersion: str
+        The version of the new parameter value
+    newValue: type identical to the original parameter type
+        The new value to set for the parameter
+    '''
+
+    collection = dbClient[dbName].posts
+
+    query = {
+        'Telescope': telescope,
+        'Parameter': parameter,
+    }
+
+    parEntry = collection.find(query).sort('entryDate', pymongo.DESCENDING)[0]
+    parEntry['Value'] = newValue
+    parEntry['Version'] = newVersion
+    parEntry['entryDate'] = Time.now().iso
+    parEntry.pop('_id', None)
+
+    logger.info('Will add the following entry to DB\n', parEntry)
+
+    collection.insert_one(parEntry)
 
     return
