@@ -26,6 +26,7 @@ __all__ = ['getArrayDB']
 
 logger = logging.getLogger(__name__)
 
+# TODO move into config file?
 DB_TABULATED_DATA = 'CTA-Simulation-Model'
 DB_CTA_SIMULATION_MODEL = 'CTA-Simulation-Model'
 DB_CTA_SIMULATION_MODEL_DESCRIPTIONS = 'CTA-Simulation-Model-Descriptions'
@@ -193,7 +194,13 @@ def getModelParameters(telescopeType, version, onlyApplicable=False, runPath='./
         # Change this to keep the connection open.
         # Probably would be easier to do if db_handler is a class.
         dbClient, tunnel = openMongoDB()
-        _pars = getModelParametersMongoDB(dbClient, telescopeType, version, onlyApplicable)
+        _pars = getModelParametersMongoDB(
+            dbClient,
+            DB_CTA_SIMULATION_MODEL,
+            telescopeType,
+            version,
+            onlyApplicable
+        )
         atexit.unregister(closeSSHTunnel)
         closeSSHTunnel([tunnel])
         return _pars
@@ -251,6 +258,7 @@ def getModelParametersYaml(telescopeType, version, onlyApplicable=False):
 
 def getModelParametersMongoDB(
     dbClient,
+    dbName,
     telescopeType,
     version,
     runLocation,
@@ -262,6 +270,8 @@ def getModelParametersMongoDB(
     Parameters
     ----------
     dbClient: a MongoDB client provided by openMongoDB
+    dbName: str
+        the name of the DB
     telescopeType: str
     version: str
         Version of the model.
@@ -302,6 +312,7 @@ def getModelParametersMongoDB(
 
         _pars.update(readMongoDB(
             dbClient,
+            dbName,
             _tel,
             _versionValidated,
             runLocation,
@@ -313,6 +324,7 @@ def getModelParametersMongoDB(
 
 def readMongoDB(
     dbClient,
+    dbName,
     telescopeType,
     version,
     runLocation,
@@ -325,6 +337,8 @@ def readMongoDB(
     Parameters
     ----------
     dbClient: a MongoDB client provided by openMongoDB
+    dbName: str
+        the name of the DB
     telescopeType: str
     version: str
         Version of the model.
@@ -338,7 +352,7 @@ def readMongoDB(
     dict containing the parameters
     '''
 
-    posts = dbClient[DB_CTA_SIMULATION_MODEL].posts
+    posts = dbClient[dbName].posts
     _parameters = dict()
 
     query = {
@@ -437,7 +451,7 @@ def getFileMongoDB(dbClient, dbName, fileName):
     ----------
     dbClient: a MongoDB client provided by openMongoDB
     dbName: str
-        the name of the file DB
+        the name of the DB with files of tabulated data
     fileName: str
         The name of the file requested
 
@@ -465,7 +479,7 @@ def writeFileFromMongoToDisk(dbClient, dbName, path, file):
     ----------
     dbClient: a MongoDB client provided by openMongoDB
     dbName: str
-        the name of the file DB
+        the name of the DB with files of tabulated data
     path: str or Path
         The path to write the file to
     file: GridOut
@@ -480,7 +494,7 @@ def writeFileFromMongoToDisk(dbClient, dbName, path, file):
     return
 
 
-def copyTelescope(dbClient, dbName, telToCopy, versionToCopy, newTelName):
+def copyTelescope(dbClient, dbName, telToCopy, versionToCopy, newTelName, dbToCopyTo=None):
     '''
     Copy a full telescope configuration to a new telescope name.
     Only a specific version is copied.
@@ -490,19 +504,25 @@ def copyTelescope(dbClient, dbName, telToCopy, versionToCopy, newTelName):
     ----------
     dbClient: a MongoDB client provided by openMongoDB
     dbName: str
-        the name of the file DB
+        the name of the DB to copy from
     telToCopy: str
         The telescope to copy
     versionToCopy: str
         The version of the configuration to copy
     newTelName: str
         The name of the new telescope
+    dbToCopyTo: str
+        The name of the DB to copy to (default is the same as dbName)
     '''
 
-    logger.info('Copying version {} of {} to the new telescope {} '.format(
+    if dbToCopyTo is None:
+        dbToCopyTo = dbName
+
+    logger.info('Copying version {} of {} to the new telescope {} in the {} DB'.format(
         versionToCopy,
         telToCopy,
-        newTelName
+        newTelName,
+        dbToCopyTo
     ))
 
     collection = dbClient[dbName].posts
@@ -519,7 +539,7 @@ def copyTelescope(dbClient, dbName, telToCopy, versionToCopy, newTelName):
         dbEntries.append(post)
 
     logger.info('Creating new telescope {}'.format(newTelName))
-    db = dbClient[dbName]
+    db = dbClient[dbToCopyTo]
     posts = db.posts
     try:
         posts.insert_many(dbEntries)
@@ -538,7 +558,7 @@ def deleteQuery(dbClient, dbName, query):
     ----------
     dbClient: a MongoDB client provided by openMongoDB
     dbName: str
-        the name of the file DB
+        the name of the DB
     query: dict
         A dictionary listing the fields/values to delete.
         For example,
