@@ -80,7 +80,8 @@ allTelescopeTypeNames = {
     'North-MST-FlashCam-D': ['north-flashcam-d', 'north-mst-fc-d'],
     'North-MST-NectarCam-D': ['north-nectarcam-d', 'north-mst-nc-d'],
     'North-SCT-D': ['north-mst-sct-d', 'north-sct-d'],
-    'South-SST-D': ['south-sst-d']
+    'South-SST-D': ['south-sst-d'],
+    'North-LST-Test': ['north-lst-test']
 }
 
 allSiteNames = {
