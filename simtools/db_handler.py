@@ -10,9 +10,11 @@ import atexit
 import getpass
 from pathlib import Path
 
+import pymongo
 import gridfs
 from pymongo import MongoClient
 from pymongo.errors import BulkWriteError
+from astropy.time import Time
 
 import simtools.config as cfg
 from simtools.util import names
@@ -23,6 +25,7 @@ __all__ = ['getArrayDB']
 
 logger = logging.getLogger(__name__)
 
+# TODO move into config file?
 DB_TABULATED_DATA = 'CTA-Simulation-Model'
 DB_CTA_SIMULATION_MODEL = 'CTA-Simulation-Model'
 DB_CTA_SIMULATION_MODEL_DESCRIPTIONS = 'CTA-Simulation-Model-Descriptions'
@@ -166,6 +169,23 @@ def readDetailsDB(dbDetailsFile):
 
 
 def getModelParameters(telescopeType, version, onlyApplicable=False, runPath='./play/datFiles/'):
+    '''
+    Get parameters from either MongoDB or Yaml DB for a specific telescope.
+
+    Parameters
+    ----------
+    telescopeType: str
+    version: str
+        Version of the model.
+    onlyApplicable: bool
+        If True, only applicable parameters will be read.
+    runPath: Path or str
+        The sim_telarray run location to write the tabulated data files into.
+
+    Returns
+    -------
+    dict containing the parameters
+    '''
 
     if cfg.get('useMongoDB'):
         # TODO - This is probably not efficient to open a new connection
@@ -173,12 +193,18 @@ def getModelParameters(telescopeType, version, onlyApplicable=False, runPath='./
         # Change this to keep the connection open.
         # Probably would be easier to do if db_handler is a class.
         dbClient, tunnel = openMongoDB()
-        _pars = getModelParametersMongoDB(dbClient, telescopeType, version, onlyApplicable)
+        _pars = getModelParametersMongoDB(
+            dbClient,
+            DB_CTA_SIMULATION_MODEL,
+            telescopeType,
+            version,
+            onlyApplicable
+        )
         atexit.unregister(closeSSHTunnel)
         closeSSHTunnel([tunnel])
         return _pars
     else:
-        return getModelParametersYaml(telescopeType, version, onlyApplicable)   
+        return getModelParametersYaml(telescopeType, version, onlyApplicable)
 
 
 def getModelParametersYaml(telescopeType, version, onlyApplicable=False):
@@ -191,7 +217,7 @@ def getModelParametersYaml(telescopeType, version, onlyApplicable=False):
     version: str
         Version of the model.
     onlyApplicable: bool
-        If True, only applicable parameters will be selected.
+        If True, only applicable parameters will be read.
 
     Returns
     -------
@@ -231,6 +257,7 @@ def getModelParametersYaml(telescopeType, version, onlyApplicable=False):
 
 def getModelParametersMongoDB(
     dbClient,
+    dbName,
     telescopeType,
     version,
     runLocation,
@@ -242,6 +269,8 @@ def getModelParametersMongoDB(
     Parameters
     ----------
     dbClient: a MongoDB client provided by openMongoDB
+    dbName: str
+        the name of the DB
     telescopeType: str
     version: str
         Version of the model.
@@ -282,6 +311,7 @@ def getModelParametersMongoDB(
 
         _pars.update(readMongoDB(
             dbClient,
+            dbName,
             _tel,
             _versionValidated,
             runLocation,
@@ -293,6 +323,7 @@ def getModelParametersMongoDB(
 
 def readMongoDB(
     dbClient,
+    dbName,
     telescopeType,
     version,
     runLocation,
@@ -305,6 +336,8 @@ def readMongoDB(
     Parameters
     ----------
     dbClient: a MongoDB client provided by openMongoDB
+    dbName: str
+        the name of the DB
     telescopeType: str
     version: str
         Version of the model.
@@ -318,7 +351,7 @@ def readMongoDB(
     dict containing the parameters
     '''
 
-    posts = dbClient[DB_CTA_SIMULATION_MODEL].posts
+    posts = dbClient[dbName].posts
     _parameters = dict()
 
     query = {
@@ -360,6 +393,7 @@ def getAllModelParametersYaml(telescopeType, version):
     -------
     dict containing the parameters
     '''
+
     _fileNameDB = 'parValues-{}.yml'.format(telescopeType)
     _yamlFile = cfg.findFile(
         _fileNameDB,
@@ -416,7 +450,7 @@ def getFileMongoDB(dbClient, dbName, fileName):
     ----------
     dbClient: a MongoDB client provided by openMongoDB
     dbName: str
-        the name of the file DB
+        the name of the DB with files of tabulated data
     fileName: str
         The name of the file requested
 
@@ -424,7 +458,6 @@ def getFileMongoDB(dbClient, dbName, fileName):
     -------
     GridOut
         A file instance returned by GridFS find_one
-
     '''
 
     db = dbClient[dbName]
@@ -445,17 +478,191 @@ def writeFileFromMongoToDisk(dbClient, dbName, path, file):
     ----------
     dbClient: a MongoDB client provided by openMongoDB
     dbName: str
-        the name of the file DB
+        the name of the DB with files of tabulated data
     path: str or Path
         The path to write the file to
     file: GridOut
         A file instance returned by GridFS find_one
-
     '''
 
     db = dbClient[dbName]
     fsOutput = gridfs.GridFSBucket(db)
     with open(Path(path).joinpath(file.filename), 'wb') as outputFile:
         fsOutput.download_to_stream_by_name(file.filename, outputFile)
+
+    return
+
+
+def copyTelescope(dbClient, dbName, telToCopy, versionToCopy, newTelName, dbToCopyTo=None):
+    '''
+    Copy a full telescope configuration to a new telescope name.
+    Only a specific version is copied.
+    (This function should be rarely used, probably only during "construction".)
+
+    Parameters
+    ----------
+    dbClient: a MongoDB client provided by openMongoDB
+    dbName: str
+        the name of the DB to copy from
+    telToCopy: str
+        The telescope to copy
+    versionToCopy: str
+        The version of the configuration to copy
+    newTelName: str
+        The name of the new telescope
+    dbToCopyTo: str
+        The name of the DB to copy to (default is the same as dbName)
+    '''
+
+    if dbToCopyTo is None:
+        dbToCopyTo = dbName
+
+    logger.info('Copying version {} of {} to the new telescope {} in the {} DB'.format(
+        versionToCopy,
+        telToCopy,
+        newTelName,
+        dbToCopyTo
+    ))
+
+    collection = dbClient[dbName].posts
+    _parameters = dict()
+    dbEntries = list()
+
+    query = {
+        'Telescope': telToCopy,
+        'Version': versionToCopy,
+    }
+    for i_entry, post in enumerate(collection.find(query)):
+        post['Telescope'] = newTelName
+        post.pop('_id', None)
+        dbEntries.append(post)
+
+    logger.info('Creating new telescope {}'.format(newTelName))
+    db = dbClient[dbToCopyTo]
+    posts = db.posts
+    try:
+        posts.insert_many(dbEntries)
+    except BulkWriteError as exc:
+        raise exc(exc.details)
+
+    return
+
+
+def deleteQuery(dbClient, dbName, query):
+    '''
+    Delete all entries from the DB which correspond to the provided query.
+    (This function should be rarely used, if at all.)
+
+    Parameters
+    ----------
+    dbClient: a MongoDB client provided by openMongoDB
+    dbName: str
+        the name of the DB
+    query: dict
+        A dictionary listing the fields/values to delete.
+        For example,
+        query = {
+            'Telescope': 'North-LST-1',
+            'Version': 'prod4',
+        }
+        would delete the entire prod4 version from telescope North-LST-1.
+    '''
+
+    collection = dbClient[dbName].posts
+
+    logger.info('Deleting {} entries from {}'.format(
+        collection.count_documents(query),
+        dbName,
+    ))
+
+    collection.delete_many(query)
+
+    return
+
+
+def updateParameter(dbClient, dbName, telescope, version, parameter, newValue):
+    '''
+    Update a parameter value for a specific telescope/version.
+    (This function should be rarely used, since new values should ideally have their own version.)
+
+    Parameters
+    ----------
+    dbClient: a MongoDB client provided by openMongoDB
+    dbName: str
+        the name of the file DB
+    telescope: str
+        Which telescope to update
+    version: str
+        Which version to update
+    parameter: str
+        Which parameter to update
+    newValue: type identical to the original parameter type
+        The new value to set for the parameter
+    '''
+
+    collection = dbClient[dbName].posts
+
+    query = {
+        'Telescope': telescope,
+        'Version': version,
+        'Parameter': parameter,
+    }
+
+    parEntry = collection.find_one(query)
+    oldValue = parEntry['Value']
+
+    logger.info('For telescope {}, version {}\nreplacing {} value from {} to {}'.format(
+        telescope,
+        version,
+        parameter,
+        oldValue,
+        newValue
+    ))
+
+    queryUpdate = {'$set': {'Value': newValue}}
+
+    collection.update_one(query, queryUpdate)
+
+    return
+
+
+def addParameter(dbClient, dbName, telescope, parameter, newVersion, newValue):
+    '''
+    Add a parameter value for a specific telescope.
+    A new document will be added to the DB,
+    with all fields taken from the last entry of this parameter to this telescope,
+    except the ones changed.
+
+    Parameters
+    ----------
+    dbClient: a MongoDB client provided by openMongoDB
+    dbName: str
+        the name of the file DB
+    telescope: str
+        Which telescope to update
+    parameter: str
+        Which parameter to add
+    newVersion: str
+        The version of the new parameter value
+    newValue: type identical to the original parameter type
+        The new value to set for the parameter
+    '''
+
+    collection = dbClient[dbName].posts
+
+    query = {
+        'Telescope': telescope,
+        'Parameter': parameter,
+    }
+
+    parEntry = collection.find(query).sort('entryDate', pymongo.DESCENDING)[0]
+    parEntry['Value'] = newValue
+    parEntry['Version'] = newVersion
+    parEntry['entryDate'] = Time.now().iso
+    parEntry.pop('_id', None)
+
+    logger.info('Will add the following entry to DB\n', parEntry)
+
+    collection.insert_one(parEntry)
 
     return
