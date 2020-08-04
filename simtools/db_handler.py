@@ -10,12 +10,11 @@ import atexit
 import getpass
 from pathlib import Path
 
-from astropy.time import Time
-
 import pymongo
 import gridfs
 from pymongo import MongoClient
 from pymongo.errors import BulkWriteError
+from astropy.time import Time
 
 import simtools.config as cfg
 from simtools.util import names
