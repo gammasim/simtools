@@ -42,8 +42,8 @@ def test_ssts(show=False):
             zenithAngle=zenithAngle,
             offAxisAngle=offAxisAngle
         )
-        ray.simulate(test=True, force=False)
-        ray.analyze(force=False)
+        ray.simulate(test=True, force=True)
+        ray.analyze(force=True)
 
         rayTracing.append(ray)
 
