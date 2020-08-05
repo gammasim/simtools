@@ -140,8 +140,8 @@ class CorsikaConfig:
         self._label = label
         self._filesLocation = cfg.getConfigArg('outputLocation', filesLocation)
         self._databaseLocation = cfg.getConfigArg('databaseLocation', databaseLocation)
-        self._site = names.validateName(site, names.allSiteNames)
-        self._arrayName = names.validateName(arrayName, names.allArrayNames)
+        self._site = names.validateSiteName(site)
+        self._arrayName = names.validateArrayName(arrayName)
         self._array = getArray(self._arrayName, self._databaseLocation)
 
         self.setParameters(**kwargs)
