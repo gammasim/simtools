@@ -36,6 +36,27 @@ def validateModelVersionName(name):
     return validateName(name, allModelVersionNames)
 
 
+def validateSimtelModeName(name):
+    '''
+    Validate a sim_telarray mode name.
+
+    Raises
+    ------
+    ValueError
+        If name is not valid.
+
+    Parameters
+    ----------
+    name: str
+
+    Returns
+    -------
+    str
+        Validated name.
+    '''
+    return validateName(name, allSimtelModeNames)
+
+
 def validateName(name, allNames):
     '''
     Validate a name given the allNames options. For each key in allNames, a list of options is
@@ -88,13 +109,30 @@ def isValidName(name, allNames):
 
 
 def validateTelescopeName(name):
+    '''
+    Validate a telescope name.
+
+    Raises
+    ------
+    ValueError
+        If name is not valid.
+
+    Parameters
+    ----------
+    name: str
+
+    Returns
+    -------
+    str
+        Validated name.
+    '''
     nameParts = name.split('-')
-    site = validateName(nameParts[0], allSiteNames)
+    thisSite = validateName(nameParts[0], allSiteNames)
     telClass = validateName(nameParts[1], allTelescopeClassNames)
     telType = ''
     for ii in range(2, len(nameParts)):
         telType += nameParts[ii] + ('' if ii == len(nameParts) - 1 else '-') 
-    return site + '-' + telClass + '-' + telType
+    return thisSite + '-' + telClass + '-' + telType
 
 
 allTelescopeTypeNames = {
