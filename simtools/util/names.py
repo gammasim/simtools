@@ -57,6 +57,48 @@ def validateSimtelModeName(name):
     return validateName(name, allSimtelModeNames)
 
 
+def validateSiteName(name):
+    '''
+    Validate a site name.
+
+    Raises
+    ------
+    ValueError
+        If name is not valid.
+
+    Parameters
+    ----------
+    name: str
+
+    Returns
+    -------
+    str
+        Validated name.
+    '''
+    return validateName(name, allSiteNames)
+
+
+def validateArrayName(name):
+    '''
+    Validate a array name.
+
+    Raises
+    ------
+    ValueError
+        If name is not valid.
+
+    Parameters
+    ----------
+    name: str
+
+    Returns
+    -------
+    str
+        Validated name.
+    '''
+    return validateName(name, allArrayNames)
+
+
 def validateName(name, allNames):
     '''
     Validate a name given the allNames options. For each key in allNames, a list of options is
@@ -127,7 +169,7 @@ def validateTelescopeName(name):
         Validated name.
     '''
     nameParts = name.split('-')
-    thisSite = validateName(nameParts[0], allSiteNames)
+    thisSite = validateSiteName(nameParts[0])
     telClass = validateName(nameParts[1], allTelescopeClassNames)
     telType = ''
     for ii in range(2, len(nameParts)):
