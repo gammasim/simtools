@@ -88,7 +88,7 @@ class SimtelRunner:
         self._logger.debug('Init SimtelRunner')
 
         self._simtelSourcePath = Path(cfg.getConfigArg('simtelPath', simtelSourcePath))
-        self.mode = names.validateName(mode, names.allSimtelModeNames)
+        self.mode = names.validateSimtelModeName(mode)
         self.telescopeModel = self._validateTelescopeModel(telescopeModel)
         self.label = label if label is not None else self.telescopeModel.label
 
