@@ -15,6 +15,27 @@ __all__ = [
 logger = logging.getLogger(__name__)
 
 
+def validateModelVersionName(name):
+    '''
+    Validate a model version name.
+
+    Raises
+    ------
+    ValueError
+        If name is not valid.
+
+    Parameters
+    ----------
+    name: str
+
+    Returns
+    -------
+    str
+        Validated name.
+    '''
+    return validateName(name, allModelVersionNames)
+
+
 def validateName(name, allNames):
     '''
     Validate a name given the allNames options. For each key in allNames, a list of options is
@@ -68,12 +89,10 @@ def isValidName(name, allNames):
 
 def validateTelescopeName(name):
     nameParts = name.split('-')
-    print(nameParts)
     site = validateName(nameParts[0], allSiteNames)
     telClass = validateName(nameParts[1], allTelescopeClassNames)
     telType = ''
     for ii in range(2, len(nameParts)):
-        print(ii)
         telType += nameParts[ii] + ('' if ii == len(nameParts) - 1 else '-') 
     return site + '-' + telClass + '-' + telType
 

@@ -97,7 +97,7 @@ class TelescopeModel:
         '''
         logger.debug('Init TelescopeModel')
 
-        self.version = names.validateName(version, names.allModelVersionNames)
+        self.version = names.validateModelVersionName(version)
         self.telescopeType = names.validateName(telescopeType, names.allTelescopeTypeNames)
         self.site = names.validateName(site, names.allSiteNames)
         self.label = label

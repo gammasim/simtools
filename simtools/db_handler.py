@@ -225,7 +225,7 @@ def getModelParametersYaml(telescopeType, version, onlyApplicable=False):
     '''
 
     _telTypeValidated = names.validateName(telescopeType, names.allTelescopeTypeNames)
-    _versionValidated = names.validateName(version, names.allModelVersionNames)
+    _versionValidated = names.validateModelVersionName(version)
 
     if getTelescopeSize(_telTypeValidated) == 'MST':
         # MST-FlashCam or MST-NectarCam
@@ -286,7 +286,7 @@ def getModelParametersMongoDB(
 
     # TODO the naming is a mess at the moment, need to fix it everywhere consistently.
     _telTypeValidated = names.validateName(telescopeType, names.allTelescopeTypeNames)
-    _versionValidated = names.validateName(version, names.allModelVersionNames)
+    _versionValidated = names.validateModelVersionName(version)
 
     site = _telTypeValidated.split('-')[0]
     if 'MST' in _telTypeValidated:
