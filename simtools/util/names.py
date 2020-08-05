@@ -66,6 +66,18 @@ def isValidName(name, allNames):
     return False
 
 
+def validateTelescopeName(name):
+    nameParts = name.split('-')
+    print(nameParts)
+    site = validateName(nameParts[0], allSiteNames)
+    telClass = validateName(nameParts[1], allTelescopeClassNames)
+    telType = ''
+    for ii in range(2, len(nameParts)):
+        print(ii)
+        telType += nameParts[ii] + ('' if ii == len(nameParts) - 1 else '-') 
+    return site + '-' + telClass + '-' + telType
+
+
 allTelescopeTypeNames = {
     'SST': ['sst'],
     'SST-1M': ['1m'],
@@ -84,9 +96,17 @@ allTelescopeTypeNames = {
     'North-LST-Test': ['north-lst-test']
 }
 
+allTelescopeClassNames = {
+    'SST': ['sst'],
+    'MST-FlashCam': ['mst'],
+    'SCT': ['sct'],
+    'LST': ['lst']
+}
+
+
 allSiteNames = {
-    'Paranal': ['south'],
-    'LaPalma': ['north']
+    'South': ['paranal', 'south'],
+    'North': ['lapalma', 'north']
 }
 
 allModelVersionNames = {
