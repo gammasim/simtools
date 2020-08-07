@@ -9,8 +9,7 @@ import time
 import atexit
 import getpass
 from pathlib import Path
-
-from astropy.time import Time
+from bson import ObjectId
 
 import pymongo
 import gridfs
@@ -364,9 +363,9 @@ def readMongoDB(
     for i_entry, post in enumerate(posts.find(query)):
         parNow = post['Parameter']
         _parameters[parNow] = post
-        _parameters[parNow].pop('_id', None)
         _parameters[parNow].pop('Parameter', None)
         _parameters[parNow].pop('Telescope', None)
+        _parameters[parNow]['entryDate'] = ObjectId(post['_id']).generation_time
         if _parameters[parNow]['File']:
             file = getFileMongoDB(
                 dbClient,
@@ -656,14 +655,60 @@ def addParameter(dbClient, dbName, telescope, parameter, newVersion, newValue):
         'Parameter': parameter,
     }
 
-    parEntry = collection.find(query).sort('entryDate', pymongo.DESCENDING)[0]
+    parEntry = collection.find(query).sort('_id', pymongo.DESCENDING)[0]
     parEntry['Value'] = newValue
     parEntry['Version'] = newVersion
-    parEntry['entryDate'] = Time.now().iso
     parEntry.pop('_id', None)
 
     logger.info('Will add the following entry to DB\n', parEntry)
 
     collection.insert_one(parEntry)
+
+    return
+
+
+def addNewParameter(dbClient, dbName, telescope, version, parameter, value, **kwargs):
+    '''
+    Add a parameter value for a specific telescope.
+    A new document will be added to the DB,
+    with all fields taken from the last entry of this parameter to this telescope,
+    except the ones changed.
+
+    Parameters
+    ----------
+    dbClient: a MongoDB client provided by openMongoDB
+    dbName: str
+        the name of the file DB
+    telescope: str
+        The name of the telescope to add a parameter to.
+        Assumed to be a valid name!
+    parameter: str
+        Which parameter to add
+    version: str
+        The version of the new parameter value
+    value: can be any type, preferably given in kwargs
+        The value to set for the new parameter
+    kwargs: dict
+        Any additional fields to add to the parameter
+    '''
+
+    collection = dbClient[dbName].posts
+
+    dbEntry = dict()
+    dbEntry['Telescope'] = telescope
+    dbEntry['Version'] = version
+    dbEntry['Parameter'] = parameter
+    dbEntry['Value'] = value
+    dbEntry['Type'] = kwargs['Type'] if 'Type' in kwargs else str(type(value))
+    dbEntry['File'] = False
+    if '.dat' in str(value) or '.txt' in str(value):
+        dbEntry['File'] = True
+
+    kwargs.pop('Type', None)
+    dbEntry.update(kwargs)
+
+    logger.info('Will add the following entry to DB\n', dbEntry)
+
+    collection.insert_one(dbEntry)
 
     return

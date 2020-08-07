@@ -75,7 +75,7 @@ def test_reading_db_sst():
 
 def test_modify_db():
 
-    logger.info('----Testing copying a whole telescope-----')
+    # logger.info('----Testing copying a whole telescope-----')
     dbClient, tunnel = db.openMongoDB()
     db.copyTelescope(
         dbClient,
@@ -111,6 +111,18 @@ def test_modify_db():
     )
     pars = db.readMongoDB(dbClient, 'sandbox', 'North-LST-Test', 'test', testDataDirectory)
     assert(pars['camera_config_version']['Value'] == 999)
+
+    logger.info('----Testing adding a new parameter-----')
+    db.addNewParameter(
+        dbClient,
+        'sandbox',
+        'North-LST-Test',
+        'test',
+        'camera_config_version_test',
+        999
+    )
+    pars = db.readMongoDB(dbClient, 'sandbox', 'North-LST-Test', 'test', testDataDirectory)
+    assert(pars['camera_config_version_test']['Value'] == 999)
 
     logger.info('----Testing deleting a query (a whole telescope in this case)-----')
     query = {'Telescope': 'North-LST-Test'}
