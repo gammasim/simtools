@@ -9,6 +9,7 @@ __all__ = [
     'validateArrayName',
     'validateTelescopeName',
     'validateCameraName',
+    'convertTelescopeNameToYaml'
     'splitTelescopeName',
     'getSiteFromTelescopeName',
     'rayTracingFileName',
@@ -246,23 +247,42 @@ def getSiteFromTelescopeName(name):
     return thisSite
 
 
-# allTelescopeTypeNames = {
-#     'SST': ['sst'],
-#     'SST-1M': ['1m'],
-#     'SST-2M-ASTRI': ['sst-astri', 'astri'],
-#     'SST-2M-GCT-S': ['sst-gct', 'gct', 'sst-gct-s'],
-#     'MST-FlashCam': ['flashcam', 'mst-fc'],
-#     'MST-NectarCam': ['nectarcam', 'mst-nc'],
-#     'SCT': ['mst-sct', 'sct'],
-#     'LST': [],
-#     'North-LST-1': ['north-lst-1'],
-#     'North-LST-D234': ['north-lst-d234'],
-#     'North-MST-FlashCam-D': ['north-flashcam-d', 'north-mst-fc-d'],
-#     'North-MST-NectarCam-D': ['north-nectarcam-d', 'north-mst-nc-d'],
-#     'North-SCT-D': ['north-mst-sct-d', 'north-sct-d'],
-#     'South-SST-D': ['south-sst-d'],
-#     'North-LST-Test': ['north-lst-test']
-# }
+def convertTelescopeNameToYaml(name):
+    '''
+    Get telescope name following the old convention (yaml files) from the current telescope name.
+
+    Parameters
+    ----------
+    name: str
+        Telescope name.
+
+    Returns
+    -------
+    str
+        Telescope name (old convention).
+    '''
+    telSite, telClass, telType = splitTelescopeName(name)
+    newName = telClass + '-' + telType
+    if newName == 'SST-D':
+        return 'SST'
+    elif newName == 'SST-1M':
+        return 'SST-1M'
+    elif newName == 'SST-ASTRI':
+        return 'SST-2M-ASTRI'
+    elif newName == 'SST-GCT':
+        return 'SST-2M-GCT-S'
+    elif newName == 'MST-FlashCam-D':
+        return 'MST-FlashCam'
+    elif newName == 'MST-Nectar-D':
+        return 'MST-NectarCam'
+    elif newName == 'SCT-D':
+        return 'SCT'
+    elif newName in 'LST-D234':
+        return 'LST'
+    else:
+        logger.error('Telescope name {} could not be converted to yml names'.format(name))
+        return None
+
 
 allTelescopeClassNames = {
     'SST': ['sst'],
