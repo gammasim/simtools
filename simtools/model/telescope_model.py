@@ -31,10 +31,8 @@ class TelescopeModel:
 
     Attributes
     ----------
-    telescopeType: str
-        Telescope type for the base set of parameters (ex. SST-2M-ASTRI, LST, ...).
-    site: str
-        Paranal or LaPalma.
+    telescopeName: str
+        Telescope name for the base set of parameters (ex. North-LST-1, ...).
     version: str
         Version of the model (ex. prod4).
     label: str
@@ -47,7 +45,7 @@ class TelescopeModel:
     Methods
     -------
     @classmethod
-    fromConfigFile(configFileName, telescopeType, site, label=None, filesLocation=None)
+    fromConfigFile(configFileName, telescopeName, label=None, filesLocation=None)
         Create a TelescopeModel from a sim_telarray cfg file.
     hasParameter(parName):
         Verify if parameter is in the model.
@@ -66,8 +64,7 @@ class TelescopeModel:
     '''
     def __init__(
         self,
-        telescopeType,
-        site,
+        telescopeName,
         version='default',
         label=None,
         modelFilesLocations=None,
@@ -79,10 +76,8 @@ class TelescopeModel:
 
         Parameters
         ----------
-        telescopeType: str
-            Telescope type for the base set of parameters (ex. SST-2M-ASTRI, LST, ...).
-        site: str
-            Paranal or LaPalma.
+        telescopeName: str
+            Telescope name for the base set of parameters (ex. North-LST-1, ...).
         version: str, optional
             Version of the model (ex. prod4) (Default = default).
         label: str, optional
@@ -98,8 +93,7 @@ class TelescopeModel:
         logger.debug('Init TelescopeModel')
 
         self.version = names.validateModelVersionName(version)
-        self.telescopeType = names.validateName(telescopeType, names.allTelescopeTypeNames)
-        self.site = names.validateName(site, names.allSiteNames)
+        self.telescopeName = names.validateTelescopeName(telescopeName)
         self.label = label
 
         self._modelFilesLocations = cfg.getConfigArg('modelFilesLocations', modelFilesLocations)
@@ -129,8 +123,7 @@ class TelescopeModel:
     def fromConfigFile(
         cls,
         configFileName,
-        telescopeType,
-        site,
+        telescopeName,
         label=None,
         modelFilesLocations=None,
         filesLocation=None
@@ -147,10 +140,8 @@ class TelescopeModel:
         ----------
         configFileName: str or Path
             Path to the input config file.
-        telescopeType: str
-            Telescope type for the base set of parameters (ex. SST-2M-ASTRI, LST, ...).
-        site: str
-            Paranal or LaPalma.
+        telescopeName: str
+            Telescope name for the base set of parameters (ex. North-LST-1, ...).
         label: str, optional
             Instance label. Important for output file naming.
         modelFilesLocation: str (or Path), optional
@@ -165,8 +156,7 @@ class TelescopeModel:
         '''
         parameters = dict()
         tel = cls(
-            telescopeType=telescopeType,
-            site=site,
+            telescopeName=telescopeName,
             label=label,
             modelFilesLocations=modelFilesLocations,
             filesLocation=filesLocation,
@@ -232,23 +222,24 @@ class TelescopeModel:
             onlyApplicable=True
         )
 
-        # Site: Two site parameters need to be read: atmospheric_transmission and altitude
-        logger.debug('Reading site parameters from DB')
+        # CHECK THIS
+        # # Site: Two site parameters need to be read: atmospheric_transmission and altitude
+        # logger.debug('Reading site parameters from DB')
 
-        def _getSiteParameter(site, parName):
-            ''' Get the value of parName for a given site '''
-            yamlFile = cfg.findFile('parValues-Sites.yml', self._modelFilesLocations)
-            logger.info('Reading DB file {}'.format(yamlFile))
-            with open(yamlFile, 'r') as stream:
-                allPars = yaml.load(stream, Loader=yaml.FullLoader)
-                for par in allPars:
-                    if parName in par and self.site.lower() in par:
-                        return allPars[par][self.version]
-            logger.warning('Parameter {} not found for site {}'.format(parName, site))
-            return None
+        # def _getSiteParameter(site, parName):
+        #     ''' Get the value of parName for a given site '''
+        #     yamlFile = cfg.findFile('parValues-Sites.yml', self._modelFilesLocations)
+        #     logger.info('Reading DB file {}'.format(yamlFile))
+        #     with open(yamlFile, 'r') as stream:
+        #         allPars = yaml.load(stream, Loader=yaml.FullLoader)
+        #         for par in allPars:
+        #             if parName in par and self.site.lower() in par:
+        #                 return allPars[par][self.version]
+        #     logger.warning('Parameter {} not found for site {}'.format(parName, site))
+        #     return None
 
-        for siteParName in ['atmospheric_transmission', 'altitude']:
-            self._parameters[siteParName] = _getSiteParameter(self.site, siteParName)
+        # for siteParName in ['atmospheric_transmission', 'altitude']:
+        #     self._parameters[siteParName] = _getSiteParameter(self.site, siteParName)
     # END _loadParametersFromDB
 
     def hasParameter(self, parName):
@@ -370,8 +361,7 @@ class TelescopeModel:
         # Setting file name and the location
         configFileName = names.simtelConfigFileName(
             self.version,
-            self.site,
-            self.telescopeType,
+            self.telescopeName,
             self.label
         )
         self._configFilePath = self._configFileDirectory.joinpath(configFileName)
@@ -382,8 +372,7 @@ class TelescopeModel:
             header = (
                 '%{}\n'.format(99 * '=')
                 + '% Configuration file for:\n'
-                + '% TelescopeType: {}\n'.format(self.telescopeType)
-                + '% Site: {}\n'.format(self.site)
+                + '% TelescopeName: {}\n'.format(self.telescopeName)
                 + '% Label: {}\n'.format(self.label) if self.label is not None else ''
                 + '%{}\n'.format(99 * '=')
             )
@@ -441,8 +430,7 @@ class TelescopeModel:
 
         fileName = names.simtelSingleMirrorListFileName(
             self.version,
-            self.site,
-            self.telescopeType,
+            self.telescopeName,
             mirrorNumber,
             self.label
         )
