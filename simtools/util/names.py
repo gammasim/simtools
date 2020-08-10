@@ -309,7 +309,7 @@ def simtelSingleMirrorListFileName(version, telescopeName, mirrorNumber, label):
 
 
 def rayTracingFileName(
-    telescopeType,
+    telescopeName,
     sourceDistance,
     zenithAngle,
     offAxisAngle,
@@ -322,8 +322,8 @@ def rayTracingFileName(
 
     Parameters
     ----------
-    telescopeType: str
-        LST, MST-FlashCam, ...
+    telescopeName: str
+        North-LST-1, South-MST-FlashCam, ...
     sourceDistance: float
         Source distance (km).
     zenithAngle: float
@@ -344,7 +344,7 @@ def rayTracingFileName(
     '''
     name = '{}-{}-d{:.1f}-za{:.1f}-off{:.3f}'.format(
         base,
-        telescopeType,
+        telescopeName,
         sourceDistance,
         zenithAngle,
         offAxisAngle
@@ -355,14 +355,14 @@ def rayTracingFileName(
     return name
 
 
-def rayTracingResultsFileName(telescopeType, sourceDistance, zenithAngle, label):
+def rayTracingResultsFileName(telescopeName, sourceDistance, zenithAngle, label):
     '''
     Ray tracing results file name.
 
     Parameters
     ----------
-    telescopeType: str
-        LST, MST-FlashCam, ...
+    telescopeName: str
+        North-LST-1, South-MST-FlashCam, ...
     sourceDistance: float
         Source distance (km).
     zenithAngle: float
@@ -375,12 +375,13 @@ def rayTracingResultsFileName(telescopeType, sourceDistance, zenithAngle, label)
     str
         File name.
     '''
-    name = 'ray-tracing-{}-d{:.1f}-za{:.1f}'.format(telescopeType, sourceDistance, zenithAngle)
+    name = 'ray-tracing-{}-d{:.1f}-za{:.1f}'.format(telescopeName, sourceDistance, zenithAngle)
     name += '_{}'.format(label) if label is not None else ''
     name += '.cvs'
     return name
 
-def rayTracingPlotFileName(key, telescopeType, sourceDistance, zenithAngle, label):
+
+def rayTracingPlotFileName(key, telescopeName, sourceDistance, zenithAngle, label):
     '''
     Ray tracing plot file name.
 
@@ -388,8 +389,8 @@ def rayTracingPlotFileName(key, telescopeType, sourceDistance, zenithAngle, labe
     ----------
     key: str
         Quantity to be plotted (d80_cm, d80_deg, eff_area or eff_flen)
-    telescopeType: str
-        LST, MST-FlashCam, ...
+    telescopeName: str
+        South-LST-1, North-MST-FlashCam, ...
     sourceDistance: float
         Source distance (km).
     zenithAngle: float
@@ -402,19 +403,25 @@ def rayTracingPlotFileName(key, telescopeType, sourceDistance, zenithAngle, labe
     str
         File name.
     '''
-    name = 'ray-tracing-{}-{}-d{:.1f}-za{:.1f}'.format(telescopeType, key, sourceDistance, zenithAngle)
+    name = 'ray-tracing-{}-{}-d{:.1f}-za{:.1f}'.format(
+        telescopeName,
+        key,
+        sourceDistance,
+        zenithAngle
+    )
     name += '_{}'.format(label) if label is not None else ''
     name += '.pdf'
     return name
 
-def cameraEfficiencyResultsFileName(telescopeType, zenithAngle, label):
+
+def cameraEfficiencyResultsFileName(telescopeName, zenithAngle, label):
     '''
     Camera efficiency results file name.
 
     Parameters
     ----------
-    telescopeType: str
-        LST, MST-FlashCam, ...
+    telescopeName: str
+        South-LST-1, North-MST-FlashCam, ...
     zenithAngle: float
         Zenith angle (deg).
     label: str
@@ -425,20 +432,20 @@ def cameraEfficiencyResultsFileName(telescopeType, zenithAngle, label):
     str
         File name.
     '''
-    name = 'camera-efficiency-{}-za{:.1f}'.format(telescopeType, zenithAngle)
+    name = 'camera-efficiency-{}-za{:.1f}'.format(telescopeName, zenithAngle)
     name += '_{}'.format(label) if label is not None else ''
     name += '.csv'
     return name
 
 
-def cameraEfficiencySimtelFileName(telescopeType, zenithAngle, label):
+def cameraEfficiencySimtelFileName(telescopeName, zenithAngle, label):
     '''
     Camera efficiency simtel output file name.
 
     Parameters
     ----------
-    telescopeType: str
-        LST, MST-FlashCam, ...
+    telescopeName: str
+        North-LST-1, South-MST-FlashCam, ...
     zenithAngle: float
         Zenith angle (deg).
     label: str
@@ -449,20 +456,20 @@ def cameraEfficiencySimtelFileName(telescopeType, zenithAngle, label):
     str
         File name.
     '''
-    name = 'camera-efficiency-{}-za{:.1f}'.format(telescopeType, zenithAngle)
+    name = 'camera-efficiency-{}-za{:.1f}'.format(telescopeName, zenithAngle)
     name += '_{}'.format(label) if label is not None else ''
     name += '.dat'
     return name
 
 
-def cameraEfficiencyLogFileName(telescopeType, zenithAngle, label):
+def cameraEfficiencyLogFileName(telescopeName, zenithAngle, label):
     '''
     Camera efficiency log file name.
 
     Parameters
     ----------
-    telescopeType: str
-        LST, MST-FlashCam, ...
+    telescopeName: str
+        South-LST-1, North-MST-FlashCam, ...
     zenithAngle: float
         Zenith angle (deg).
     label: str
@@ -473,7 +480,7 @@ def cameraEfficiencyLogFileName(telescopeType, zenithAngle, label):
     str
         File name.
     '''
-    name = 'camera-efficiency-{}-za{:.1f}'.format(telescopeType, zenithAngle)
+    name = 'camera-efficiency-{}-za{:.1f}'.format(telescopeName, zenithAngle)
     name += '_{}'.format(label) if label is not None else ''
     name += '.log'
     return name
