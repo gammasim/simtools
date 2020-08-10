@@ -84,7 +84,7 @@ def test_cfg_file():
 
 def test_cfg_input():
     tel = TelescopeModel(
-        telescopename='south-lst-1',
+        telescopeName='south-lst-1',
         version='prod4',
         label='test-sst-2'
     )

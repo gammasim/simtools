@@ -279,6 +279,8 @@ def convertTelescopeNameToYaml(name):
         return 'SCT'
     elif newName in 'LST-D234':
         return 'LST'
+    elif newName in 'LST-1':
+        return 'LST'
     else:
         logger.error('Telescope name {} could not be converted to yml names'.format(name))
         return None
