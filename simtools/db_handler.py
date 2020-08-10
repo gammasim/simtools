@@ -338,12 +338,7 @@ def getModelParametersMongoDB(
             _selectOnlyApplicable
         ))
 
-    # Removing all info but the value
-    _pars = dict()
-    for key, value in _parsInfo.items():
-        _pars[key] = value['Value']
-
-    return _pars
+    return _parsInfo
 
 
 def readMongoDB(
