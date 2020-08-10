@@ -246,23 +246,23 @@ def getSiteFromTelescopeName(name):
     return thisSite
 
 
-allTelescopeTypeNames = {
-    'SST': ['sst'],
-    'SST-1M': ['1m'],
-    'SST-2M-ASTRI': ['sst-astri', 'astri'],
-    'SST-2M-GCT-S': ['sst-gct', 'gct', 'sst-gct-s'],
-    'MST-FlashCam': ['flashcam', 'mst-fc'],
-    'MST-NectarCam': ['nectarcam', 'mst-nc'],
-    'SCT': ['mst-sct', 'sct'],
-    'LST': [],
-    'North-LST-1': ['north-lst-1'],
-    'North-LST-D234': ['north-lst-d234'],
-    'North-MST-FlashCam-D': ['north-flashcam-d', 'north-mst-fc-d'],
-    'North-MST-NectarCam-D': ['north-nectarcam-d', 'north-mst-nc-d'],
-    'North-SCT-D': ['north-mst-sct-d', 'north-sct-d'],
-    'South-SST-D': ['south-sst-d'],
-    'North-LST-Test': ['north-lst-test']
-}
+# allTelescopeTypeNames = {
+#     'SST': ['sst'],
+#     'SST-1M': ['1m'],
+#     'SST-2M-ASTRI': ['sst-astri', 'astri'],
+#     'SST-2M-GCT-S': ['sst-gct', 'gct', 'sst-gct-s'],
+#     'MST-FlashCam': ['flashcam', 'mst-fc'],
+#     'MST-NectarCam': ['nectarcam', 'mst-nc'],
+#     'SCT': ['mst-sct', 'sct'],
+#     'LST': [],
+#     'North-LST-1': ['north-lst-1'],
+#     'North-LST-D234': ['north-lst-d234'],
+#     'North-MST-FlashCam-D': ['north-flashcam-d', 'north-mst-fc-d'],
+#     'North-MST-NectarCam-D': ['north-nectarcam-d', 'north-mst-nc-d'],
+#     'North-SCT-D': ['north-mst-sct-d', 'north-sct-d'],
+#     'South-SST-D': ['south-sst-d'],
+#     'North-LST-Test': ['north-lst-test']
+# }
 
 allTelescopeClassNames = {
     'SST': ['sst'],
@@ -275,6 +275,7 @@ allCameraNames = {
     'SST': ['sst'],
     'ASTRI': ['astri'],
     'GCT': ['gct', 'gct-s'],
+    '1M': ['1m'],
     'FlashCam': ['flashcam', 'flash-cam'],
     'NectarCam': ['nectarcam', 'nectar-cam'],
     'SCT': ['sct'],
