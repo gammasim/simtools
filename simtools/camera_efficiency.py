@@ -21,6 +21,7 @@ import simtools.io_handler as io
 from simtools import visualize
 from simtools.util import names
 from simtools.util.general import collectArguments
+from simtools.util.model import getCameraName
 from simtools.model.telescope_model import TelescopeModel
 from simtools.model.model_parameters import CAMERA_RADIUS_CURV
 
@@ -197,13 +198,16 @@ class CameraEfficiency:
             )
             mirrorReflectivity = 'ref_astri_2017-06_T0.dat'
 
+        # Camera name
+        cameraName = getCameraName(self._telescopeModel.telescopeName)
+
         # cmd -> Command to be run at the shell
         cmd = str(self._simtelSourcePath.joinpath('sim_telarray/bin/testeff'))
         cmd += ' -nm -nsb-extra'
         cmd += ' -alt {}'.format(self._telescopeModel.getParameter('altitude'))
         cmd += ' -fatm {}'.format(self._telescopeModel.getParameter('atmospheric_transmission'))
         cmd += ' -flen {}'.format(focalLength * 0.01)  # focal lenght in meters
-        cmd += ' -fcur {}'.format(CAMERA_RADIUS_CURV[self._telescopeModel.telescopeName]) # fix it
+        cmd += ' -fcur {}'.format(CAMERA_RADIUS_CURV[cameraName])
         cmd += ' {} {}'.format(pixelShapeCmd, pixelDiameter)
         if mirrorClass == 1:
             cmd += ' -fmir {}'.format(self._telescopeModel.getParameter('mirror_list'))
