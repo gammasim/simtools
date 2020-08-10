@@ -154,7 +154,7 @@ class RayTracing:
 
         # Results file
         fileNameResults = names.rayTracingResultsFileName(
-                self._telescopeModel.telescopeType,
+                self._telescopeModel.telescopeName,
                 self._sourceDistance,
                 self._zenithAngle,
                 self.label
@@ -252,7 +252,7 @@ class RayTracing:
                     self._logger.debug('mirrorNumber={}'.format(thisMirror))
 
                 photonsFileName = names.rayTracingFileName(
-                    self._telescopeModel.telescopeType,
+                    self._telescopeModel.telescopeName,
                     self._sourceDistance,
                     self._zenithAngle,
                     thisOffAxis,
@@ -374,7 +374,7 @@ class RayTracing:
 
         plotFileName = names.rayTracingPlotFileName(
             key,
-            self._telescopeModel.telescopeType,
+            self._telescopeModel.telescopeName,
             self._sourceDistance,
             self._zenithAngle,
             self.label
