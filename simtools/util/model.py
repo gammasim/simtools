@@ -118,10 +118,13 @@ def getCameraName(telescopeName):
             cameraName = 'ASTRI'
         elif 'GCT' in telType:
             cameraName = 'GCT'
+        elif '1M' in telType:
+            cameraName = '1M'
         else:
             cameraName = 'SST'
     else:
         logger.error('Invalid telescope name - please validate it first')
 
     cameraName = names.validateCameraName(cameraName)
+    logger.debug('Camera name - {}'.format(cameraName))
     return cameraName
