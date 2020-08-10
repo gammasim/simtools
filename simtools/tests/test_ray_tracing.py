@@ -28,8 +28,7 @@ def test_ssts(show=False):
     rayTracing = list()
     for t in telTypes:
         tel = TelescopeModel(
-            telescopeName='south-' + t,
-            site=site,
+            telescopeName='north-' + t,
             version=version,
             label='test-sst'
         )
@@ -67,8 +66,7 @@ def test_rx():
     offAxisAngle = [0, 2.5, 5.0] * u.deg
 
     tel = TelescopeModel(
-        telescopeName='south-lst-1',
-        site=site,
+        telescopeName='north-lst-1',
         version=version,
         label=label
     )
@@ -120,8 +118,7 @@ def test_plot_image():
     offAxisAngle = [0, 2.5, 5.0] * u.deg
 
     tel = TelescopeModel(
-        telescopeName='south-sst-D',
-        site=site,
+        telescopeName='north-sst-D',
         version=version,
         label=label
     )
@@ -154,8 +151,7 @@ def test_single_mirror(plot=False):
     version = 'prod3'
 
     tel = TelescopeModel(
-        telescopeName='south-mst-FlashCam-D',
-        site=site,
+        telescopeName='north-mst-FlashCam-D',
         version=version,
         label='test-mst'
     )
@@ -187,8 +183,7 @@ def test_integral_curve():
     show = True
 
     tel = TelescopeModel(
-        telescopeName='south-mst-FlashCam-D',
-        site=site,
+        telescopeName='north-mst-FlashCam-D',
         version=version,
         label=label
     )
@@ -216,8 +211,8 @@ def test_integral_curve():
 
 if __name__ == '__main__':
 
-    test_ssts()
-    # test_rx()
+    # test_ssts()
+    test_rx()
     # test_single_mirror()
     # test_plot_image()
     # test_integral_curve()

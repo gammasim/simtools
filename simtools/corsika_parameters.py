@@ -34,13 +34,13 @@ PRIMARIES = {
 }
 
 SITE_PARAMETERS = {
-    'Paranal': {
+    'South': {
         'OBSLEV': [2150.e2],
         'ATMOSPHERE': [26, 'Y'],
         'MAGNET': [20.925, -9.119],
         'ARRANG':  [-3.433]
     },
-    'LaPalma': {
+    'North': {
         'OBSLEV': [2158.e2],
         'ATMOSPHERE': [36, 'Y'],
         'MAGNET': [30.576, 23.571],
