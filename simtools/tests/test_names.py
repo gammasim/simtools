@@ -8,12 +8,13 @@ logging.getLogger().setLevel(logging.DEBUG)
 
 def test_validate_telescope_names():
     newName = names.validateTelescopeName('north-sst-D')
-    print(newName) 
+    print(newName)
 
 
 def test_validate_other_names():
     modelVersion = names.validateModelVersionName('p4')
-    print(modelVersion) 
+    print(modelVersion)
+
 
 if __name__ == '__main__':
 
