@@ -4,6 +4,7 @@ import logging
 import math
 
 from simtools.model.model_parameters import MODEL_PARS
+from simtools.util import names
 
 
 __all__ = ['computeTelescopeTransmission', 'getTelescopeSize']
@@ -83,3 +84,44 @@ def validateModelParameter(parNameIn, parValueIn):
             parType = MODEL_PARS[parNameModel]['type']
             return parNameModel, parType(parValueIn)
     return parNameIn, parValueIn
+
+
+def getCameraName(telescopeName):
+    '''
+    Get camera name from the telescope name.
+
+    Parameters
+    ----------
+    telescopeName: str
+        Telescope name (ex. South-LST-1)
+
+    Returns
+    -------
+    str
+        Camera name (validated by util.names)
+    '''
+    cameraName = ''
+    telSite, telClass, telType = names.splitTelescopeName(telescopeName)
+    if telClass == 'LST':
+        cameraName = 'LST'
+    elif telClass == 'MST':
+        if 'FlashCam' in telType:
+            cameraName = 'FlashCam'
+        elif 'NectarCam' in telType:
+            cameraName = 'NectarCam'
+        else:
+            logger.error('Camera not found for MST class telescope')
+    elif telClass == 'SCT':
+        cameraName = 'SCT'
+    elif telClass == 'SST':
+        if 'ASTRI' in telType:
+            cameraName = 'ASTRI'
+        elif 'GCT' in telType:
+            cameraName = 'GCT'
+        else:
+            cameraName = 'SST'
+    else:
+        logger.error('Invalid telescope name - please validate it first')
+
+    cameraName = names.validateCameraName(cameraName)
+    return cameraName
