@@ -18,7 +18,7 @@ from astropy.time import Time
 
 import simtools.config as cfg
 from simtools.util import names
-from simtools.util.model import validateModelParameter, getTelescopeSize
+from simtools.util.model import getTelescopeClass
 
 __all__ = ['getArrayDB']
 
@@ -168,13 +168,13 @@ def readDetailsDB(dbDetailsFile):
     return dbDetails
 
 
-def getModelParameters(telescopeType, version, onlyApplicable=False, runPath='./play/datFiles/'):
+def getModelParameters(telescopeName, version, onlyApplicable=False, runPath='./play/datFiles/'):
     '''
     Get parameters from either MongoDB or Yaml DB for a specific telescope.
 
     Parameters
     ----------
-    telescopeType: str
+    telescopeName: str
     version: str
         Version of the model.
     onlyApplicable: bool
@@ -196,7 +196,7 @@ def getModelParameters(telescopeType, version, onlyApplicable=False, runPath='./
         _pars = getModelParametersMongoDB(
             dbClient,
             DB_CTA_SIMULATION_MODEL,
-            telescopeType,
+            telescopeName,
             version,
             onlyApplicable
         )
@@ -204,16 +204,16 @@ def getModelParameters(telescopeType, version, onlyApplicable=False, runPath='./
         closeSSHTunnel([tunnel])
         return _pars
     else:
-        return getModelParametersYaml(telescopeType, version, onlyApplicable)
+        return getModelParametersYaml(telescopeName, version, onlyApplicable)
 
 
-def getModelParametersYaml(telescopeType, version, onlyApplicable=False):
+def getModelParametersYaml(telescopeName, version, onlyApplicable=False):
     '''
     Get parameters from DB for one specific type.
 
     Parameters
     ----------
-    telescopeType: str
+    telescopeName: str
     version: str
         Version of the model.
     onlyApplicable: bool
@@ -224,17 +224,21 @@ def getModelParametersYaml(telescopeType, version, onlyApplicable=False):
     dict containing the parameters
     '''
 
-    _telTypeValidated = names.validateName(telescopeType, names.allTelescopeTypeNames)
+    _telNameValidated = names.validateTelescopeName(telescopeName)
     _versionValidated = names.validateModelVersionName(version)
 
-    if getTelescopeSize(_telTypeValidated) == 'MST':
+    _site = names.getSizeFromTelescopeName(_telNameValidated)
+    _telClass = getTelescopeClass(_telNameValidated)
+    _telNameConverted = names.convertTelescopeNameToYaml(_telNameValidated)
+
+    if _telClass == 'MST':
         # MST-FlashCam or MST-NectarCam
-        _whichTelLabels = [_telTypeValidated, 'MST-optics']
-    elif _telTypeValidated == 'SST':
+        _whichTelLabels = [_telNameConverted, 'MST-optics']
+    elif _telClass == 'SST':
         # SST = SST-Camera + SST-Structure
         _whichTelLabels = ['SST-Camera', 'SST-Structure']
     else:
-        _whichTelLabels = [_telTypeValidated]
+        _whichTelLabels = [_telNameConverted]
 
     # Selecting version and applicable (if on)
     _pars = dict()
@@ -252,13 +256,29 @@ def getModelParametersYaml(telescopeType, version, onlyApplicable=False):
 
             _pars[parNameIn] = parInfo[_versionValidated]
 
+    # Site parameters are in separate yml files
+    def _getSiteParameter(site, parName):
+        ''' Get the value of parName for a given site '''
+        _yamlFile = cfg.findFile('parValues-Sites.yml', self._modelFilesLocations)
+        logger.info('Reading DB file {}'.format(_yamlFile))
+        with open(_yamlFile, 'r') as stream:
+            allPars = yaml.load(stream, Loader=yaml.FullLoader)
+            for par in allPars:
+                if parName in par and site.lower() in par:
+                    return allPars[par][_version]
+        logger.warning('Parameter {} not found for site {}'.format(parName, site))
+        return None
+
+    for siteParName in ['atmospheric_transmission', 'altitude']:
+        _pars[siteParName] = _getSiteParameter(_site, siteParName)
+
     return _pars
 
 
 def getModelParametersMongoDB(
     dbClient,
     dbName,
-    telescopeType,
+    telescopeName,
     version,
     runLocation,
     onlyApplicable=False
@@ -271,7 +291,7 @@ def getModelParametersMongoDB(
     dbClient: a MongoDB client provided by openMongoDB
     dbName: str
         the name of the DB
-    telescopeType: str
+    telescopeName: str
     version: str
         Version of the model.
     runLocation: Path or str
@@ -285,7 +305,7 @@ def getModelParametersMongoDB(
     '''
 
     # TODO the naming is a mess at the moment, need to fix it everywhere consistently.
-    _telTypeValidated = names.validateName(telescopeType, names.allTelescopeTypeNames)
+    _telNameValidated = names.validateTelescopeName(telescopeName)
     _versionValidated = names.validateModelVersionName(version)
 
     site = _telTypeValidated.split('-')[0]
@@ -324,7 +344,7 @@ def getModelParametersMongoDB(
 def readMongoDB(
     dbClient,
     dbName,
-    telescopeType,
+    telescopeName,
     version,
     runLocation,
     onlyApplicable=False
@@ -338,7 +358,7 @@ def readMongoDB(
     dbClient: a MongoDB client provided by openMongoDB
     dbName: str
         the name of the DB
-    telescopeType: str
+    telescopeName: str
     version: str
         Version of the model.
     runLocation: Path or str
@@ -355,7 +375,7 @@ def readMongoDB(
     _parameters = dict()
 
     query = {
-        'Telescope': telescopeType,
+        'Telescope': telescopeName,
         'Version': version,
     }
     if onlyApplicable:
@@ -378,14 +398,14 @@ def readMongoDB(
     return _parameters
 
 
-def getAllModelParametersYaml(telescopeType, version):
+def getAllModelParametersYaml(telescopeName, version):
     '''
     Get all parameters from Yaml DB for one specific type.
     No selection is applied.
 
     Parameters
     ----------
-    telescopeType: str
+    telescopeName: str
     version: str
         Version of the model.
 
@@ -394,7 +414,7 @@ def getAllModelParametersYaml(telescopeType, version):
     dict containing the parameters
     '''
 
-    _fileNameDB = 'parValues-{}.yml'.format(telescopeType)
+    _fileNameDB = 'parValues-{}.yml'.format(telescopeName)
     _yamlFile = cfg.findFile(
         _fileNameDB,
         cfg.get('modelFilesLocations')
