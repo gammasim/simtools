@@ -19,17 +19,16 @@ logger.setLevel(logging.DEBUG)
 def test_ssts(show=False):
     # Test with 3 SSTs
     sourceDistance = 10 * u.km
-    site = 'south'
     version = 'prod3'
     zenithAngle = 20 * u.deg
     offAxisAngle = [0, 1.0, 2.0, 3.0, 4.0] * u.deg
 
-    telTypes = ['sst-1m', 'sst-astri', 'sst-gct']
+    telTypes = ['sst-1M', 'sst-ASTRI', 'sst-GCT']
     telModels = list()
     rayTracing = list()
     for t in telTypes:
         tel = TelescopeModel(
-            telescopeType=t,
+            telescopeName='south-' + t,
             site=site,
             version=version,
             label='test-sst'
@@ -62,14 +61,13 @@ def test_ssts(show=False):
 
 def test_rx():
     sourceDistance = 10 * u.km
-    site = 'south'
     version = 'prod3'
     label = 'test-lst'
     zenithAngle = 20 * u.deg
     offAxisAngle = [0, 2.5, 5.0] * u.deg
 
     tel = TelescopeModel(
-        telescopeType='lst',
+        telescopeName='south-lst-1',
         site=site,
         version=version,
         label=label
@@ -116,14 +114,13 @@ def test_rx():
 
 def test_plot_image():
     sourceDistance = 10 * u.km
-    site = 'south'
     version = 'prod3'
     label = 'test-astri'
     zenithAngle = 20 * u.deg
     offAxisAngle = [0, 2.5, 5.0] * u.deg
 
     tel = TelescopeModel(
-        telescopeType='astri',
+        telescopeName='south-sst-D',
         site=site,
         version=version,
         label=label
@@ -154,11 +151,10 @@ def test_plot_image():
 def test_single_mirror(plot=False):
 
     # Test MST, single mirror PSF simulation
-    site = 'south'
     version = 'prod3'
 
     tel = TelescopeModel(
-        telescopeType='mst-flashcam',
+        telescopeName='south-mst-FlashCam-D',
         site=site,
         version=version,
         label='test-mst'
@@ -184,7 +180,6 @@ def test_single_mirror(plot=False):
 
 def test_integral_curve():
     sourceDistance = 10 * u.km
-    site = 'south'
     version = 'prod4'
     label = 'lst_integral'
     zenithAngle = 20 * u.deg
@@ -192,7 +187,7 @@ def test_integral_curve():
     show = True
 
     tel = TelescopeModel(
-        telescopeType='mst-flashcam',
+        telescopeName='south-mst-FlashCam-D',
         site=site,
         version=version,
         label=label
