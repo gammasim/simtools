@@ -173,7 +173,7 @@ def validateTelescopeName(name):
     telClass = validateName(nameParts[1], allTelescopeClassNames)
     telType = ''
     for ii in range(2, len(nameParts)):
-        telType += nameParts[ii] + ('' if ii == len(nameParts) - 1 else '-') 
+        telType += nameParts[ii] + ('' if ii == len(nameParts) - 1 else '-')
     return thisSite + '-' + telClass + '-' + telType
 
 
@@ -234,7 +234,7 @@ allArrayNames = {
 }
 
 
-def simtelConfigFileName(version, site, telescopeType, label):
+def simtelConfigFileName(version, telescopeName, label):
     '''
     sim_telarray config file name.
 
@@ -242,10 +242,8 @@ def simtelConfigFileName(version, site, telescopeType, label):
     ----------
     version: str
         Version of the model.
-    site: str
-        Paranal or LaPalma
-    telescopeType: str
-        LST, MST-FlashCam, ...
+    telescopeName: str
+        North-LST-1, South-MST-FlashCam, ...
     label: str
         Instance label.
 
@@ -254,13 +252,13 @@ def simtelConfigFileName(version, site, telescopeType, label):
     str
         File name.
     '''
-    name = 'CTA-{}-{}-{}'.format(version, site, telescopeType)
+    name = 'CTA-{}-{}'.format(version, telescopeName)
     name += '_{}'.format(label) if label is not None else ''
     name += '.cfg'
     return name
 
 
-def simtelSingleMirrorListFileName(version, site, telescopeType, mirrorNumber, label):
+def simtelSingleMirrorListFileName(version, telescopeName, mirrorNumber, label):
     '''
     sim_telarray mirror list file with a single mirror.
 
