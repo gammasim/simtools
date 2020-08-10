@@ -9,8 +9,8 @@ from scipy.spatial import distance
 from matplotlib.collections import PatchCollection
 
 import simtools.util.legend_handlers as legH
-from simtools.model.model_parameters import TWO_MIRROR_TELS, CAMERA_ROTATE_ANGLE
-from simtools.util.model import getCameraName
+from simtools.model.model_parameters import CAMERA_ROTATE_ANGLE
+from simtools.util.model import getCameraName, isTwoMirrorTelescope
 
 __all__ = ['Camera']
 
@@ -185,10 +185,10 @@ class Camera:
         is saved in the const dictionary CAMERA_ROTATE_ANGLE.
         In the case of dual mirror telescopes, the axis is flipped in order to keep the same
         axis definition as for single mirror telescopes.
-        The list of dual mirror telescopes is given in the const dictionary TWO_MIRROR_TELS.
+        One can check if the telescope is a two mirror one with isTwoMirrorTelescope.    
         '''
 
-        if self._telescopeName not in TWO_MIRROR_TELS:
+        if isTwoMirrorTelescope(self._telescopeName):
             pixels['y'] = [(-1)*yVal for yVal in pixels['y']]
 
         rotateAngle = pixels['rotateAngle']  # So not to change the original angle
@@ -555,7 +555,7 @@ class Camera:
 
         invertYaxis = False
         xLeft = 0.7  # Position of the left most axis
-        if self._telescopeName not in TWO_MIRROR_TELS:
+        if not isTwoMirrorTelescope(self._telescopeName):
             invertYaxis = True
             xLeft = 0.8
 

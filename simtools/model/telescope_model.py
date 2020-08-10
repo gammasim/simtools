@@ -13,7 +13,7 @@ import simtools.config as cfg
 import simtools.io_handler as io
 import simtools.db_handler as db
 from simtools.util import names
-from simtools.util.model import getTelescopeSize, validateModelParameter
+from simtools.util.model import validateModelParameter
 from simtools.model.mirrors import Mirrors
 from simtools.model.camera import Camera
 from simtools.model.model_parameters import MODEL_PARS
