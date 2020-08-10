@@ -10,7 +10,7 @@ from matplotlib.collections import PatchCollection
 
 import simtools.util.legend_handlers as legH
 from simtools.model.model_parameters import CAMERA_ROTATE_ANGLE
-from simtools.util.model import getCameraName, isTwoMirrorTelescope
+from simtools.util.model import getCameraName, isTwoMirrorTelescope, getTelescopeClass
 
 __all__ = ['Camera']
 
@@ -185,7 +185,7 @@ class Camera:
         is saved in the const dictionary CAMERA_ROTATE_ANGLE.
         In the case of dual mirror telescopes, the axis is flipped in order to keep the same
         axis definition as for single mirror telescopes.
-        One can check if the telescope is a two mirror one with isTwoMirrorTelescope.    
+        One can check if the telescope is a two mirror one with isTwoMirrorTelescope.
         '''
 
         if isTwoMirrorTelescope(self._telescopeName):
@@ -737,7 +737,7 @@ class Camera:
 
             if self._pixels['pixID'][i_pix] < 51:
                 fontSize = 4
-                if self._telescopeName == 'SCT':  # fix it
+                if getTelescopeClass(self._telescopeName) == 'SCT':
                     fontSize = 2
                 plt.text(
                     xyPixPos[0],

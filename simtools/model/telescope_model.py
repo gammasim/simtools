@@ -7,6 +7,7 @@ Author: Raul R Prado
 
 import logging
 import yaml
+import copy
 from pathlib import Path
 
 import simtools.config as cfg
@@ -224,26 +225,34 @@ class TelescopeModel:
             onlyApplicable=True
         )
 
-        print(self._parameters)
+        # Removing all info but the value
+        logger.warning('HACK - THIS SHOULD BE DONE BY db_handler')
+        if cfg.get('useMongoDB'):
+            _pars = dict()
+            for key, value in self._parameters.items():
+                _pars[key] = value['Value']
+            self._parameters = copy.copy(_pars)
 
-        # CHECK THIS
-        # # Site: Two site parameters need to be read: atmospheric_transmission and altitude
-        # logger.debug('Reading site parameters from DB')
+        logger.warning('HACK - THIS SHOULD BE DONE BY db_handler')
+        # Site: Two site parameters need to be read: atmospheric_transmission and altitude
+        logger.debug('Reading site parameters from DB')
 
-        # def _getSiteParameter(site, parName):
-        #     ''' Get the value of parName for a given site '''
-        #     yamlFile = cfg.findFile('parValues-Sites.yml', self._modelFilesLocations)
-        #     logger.info('Reading DB file {}'.format(yamlFile))
-        #     with open(yamlFile, 'r') as stream:
-        #         allPars = yaml.load(stream, Loader=yaml.FullLoader)
-        #         for par in allPars:
-        #             if parName in par and self.site.lower() in par:
-        #                 return allPars[par][self.version]
-        #     logger.warning('Parameter {} not found for site {}'.format(parName, site))
-        #     return None
+        site = names.getSiteFromTelescopeName(self.telescopeName)
 
-        # for siteParName in ['atmospheric_transmission', 'altitude']:
-        #     self._parameters[siteParName] = _getSiteParameter(self.site, siteParName)
+        def _getSiteParameter(parName):
+            ''' Get the value of parName for a given site '''
+            yamlFile = cfg.findFile('parValues-Sites.yml', self._modelFilesLocations)
+            logger.info('Reading DB file {}'.format(yamlFile))
+            with open(yamlFile, 'r') as stream:
+                allPars = yaml.load(stream, Loader=yaml.FullLoader)
+                for par in allPars:
+                    if parName in par and site.lower() in par:
+                        return allPars[par][self.version]
+            logger.warning('Parameter {} not found for site {}'.format(parName, site))
+            return None
+
+        for siteParName in ['atmospheric_transmission', 'altitude']:
+            self._parameters[siteParName] = _getSiteParameter(siteParName)
     # END _loadParametersFromDB
 
     def hasParameter(self, parName):
