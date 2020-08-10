@@ -8,7 +8,9 @@ __all__ = [
     'validateSiteName',
     'validateArrayName',
     'validateTelescopeName',
-    'getSiteFromTelescopeName'
+    'validateCameraName',
+    'splitTelescopeName',
+    'getSiteFromTelescopeName',
     'rayTracingFileName',
     'simtelConfigFileName',
     'simtelSingleMirrorListFileName',
@@ -17,6 +19,27 @@ __all__ = [
 ]
 
 logger = logging.getLogger(__name__)
+
+
+def validateCameraName(name):
+    '''
+    Validate a camera name.
+
+    Raises
+    ------
+    ValueError
+        If name is not valid.
+
+    Parameters
+    ----------
+    name: str
+
+    Returns
+    -------
+    str
+        Validated name.
+    '''
+    return validateName(name, allCameraNames)
 
 
 def validateModelVersionName(name):
@@ -243,7 +266,17 @@ allTelescopeTypeNames = {
 
 allTelescopeClassNames = {
     'SST': ['sst'],
-    'MST-FlashCam': ['mst'],
+    'MST': ['mst'],
+    'SCT': ['sct'],
+    'LST': ['lst']
+}
+
+allCameraNames = {
+    'SST': ['sst'],
+    'ASTRI': ['astri'],
+    'GCT': ['gct', 'gct-s'],
+    'FlashCam': ['flashcam', 'flash-cam'],
+    'NectarCam': ['nectarcam', 'nectar-cam'],
     'SCT': ['sct'],
     'LST': ['lst']
 }
