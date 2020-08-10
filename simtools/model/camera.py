@@ -10,6 +10,7 @@ from matplotlib.collections import PatchCollection
 
 import simtools.util.legend_handlers as legH
 from simtools.model.model_parameters import TWO_MIRROR_TELS, CAMERA_ROTATE_ANGLE
+from simtools.util.model import getCameraName
 
 __all__ = ['Camera']
 
@@ -70,14 +71,15 @@ class Camera:
         '''
 
         self._logger = logging.getLogger(logger)
-        self._telescopeType = telescopeType
+        self._telescopeName = telescopeName
+        self._cameraName = getCameraName(self._telescopeName)
         self._cameraConfigFile = cameraConfigFile
         self._focalLength = focalLength
         if self._focalLength <= 0:
             raise ValueError('The focal length must be larger than zero')
         self._pixels = self.readPixelList(cameraConfigFile)
 
-        self._pixels = self._rotatePixels(self._telescopeType, self._pixels)
+        self._pixels = self._rotatePixels(self._telescopeName, self._pixels)
 
         # Initialize an empty list of neighbours, to be calculated only when necessary.
         self._neighbours = None
@@ -158,7 +160,7 @@ class Camera:
 
         return pixels
 
-    def _rotatePixels(self, telescopeType, pixels):
+    def _rotatePixels(self, pixels):
         '''
         Rotate the pixels according to the rotation angle given in pixels['rotateAngle'].
         Additional rotation is added to get to the camera view of an observer facing the camera.
@@ -167,8 +169,6 @@ class Camera:
 
         Parameters
         ----------
-        telescopeType: string
-            As provided by the telescope model method "TelescopeModel".
         pixels: dictionary
             The dictionary produced by the readPixelList method of this class
 
@@ -188,11 +188,11 @@ class Camera:
         The list of dual mirror telescopes is given in the const dictionary TWO_MIRROR_TELS.
         '''
 
-        if telescopeType not in TWO_MIRROR_TELS:
+        if self._telescopeName not in TWO_MIRROR_TELS:
             pixels['y'] = [(-1)*yVal for yVal in pixels['y']]
 
         rotateAngle = pixels['rotateAngle']  # So not to change the original angle
-        rotateAngle += np.deg2rad(CAMERA_ROTATE_ANGLE[telescopeType])
+        rotateAngle += np.deg2rad(CAMERA_ROTATE_ANGLE[self._cameraName])
 
         self._logger.debug('Rotating pixels by {}'.format(np.rad2deg(rotateAngle)))
 
@@ -539,7 +539,7 @@ class Camera:
         else:
             return self._edgePixelIndices
 
-    def _plotAxesDef(self, telescopeType, plt, rotateAngle):
+    def _plotAxesDef(self, plt, rotateAngle):
         '''
         Plot three axes definitions on the pyplot.plt instance provided.
         The three axes are Alt/Az, the camera coordinate system and
@@ -547,8 +547,6 @@ class Camera:
 
         Parameters
         ----------
-        telescopeType: string
-            As provided by the telescope model method "TelescopeModel".
         plt: pyplot.plt instance
             A pyplot.plt instance where to add the axes definitions.
         rotateAngle: float
@@ -557,7 +555,7 @@ class Camera:
 
         invertYaxis = False
         xLeft = 0.7  # Position of the left most axis
-        if telescopeType not in TWO_MIRROR_TELS:
+        if self._telescopeName not in TWO_MIRROR_TELS:
             invertYaxis = True
             xLeft = 0.8
 
@@ -700,7 +698,7 @@ class Camera:
         plt: pyplot.plt instance with the pixel layout
         '''
 
-        self._logger.info('Plotting the {} camera'.format(self._telescopeType))
+        self._logger.info('Plotting the {} camera'.format(self._telescopeName))
 
         _, ax = plt.subplots()
         plt.gcf().set_size_inches(8, 8)
@@ -739,7 +737,7 @@ class Camera:
 
             if self._pixels['pixID'][i_pix] < 51:
                 fontSize = 4
-                if self._telescopeType == 'SCT':
+                if self._telescopeName == 'SCT':  # fix it
                     fontSize = 2
                 plt.text(
                     xyPixPos[0],
@@ -796,13 +794,13 @@ class Camera:
         plt.xlabel('Horizontal scale [cm]', fontsize=18, labelpad=0)
         plt.ylabel('Vertical scale [cm]', fontsize=18, labelpad=0)
         ax.set_title(
-            'Pixels layout in {0:s} camera'.format(self._telescopeType),
+            'Pixels layout in {0:s} camera'.format(self._telescopeName),
             fontsize=15,
             y=1.02
         )
         plt.tick_params(axis='both', which='major', labelsize=15)
 
-        self._plotAxesDef(self._telescopeType, plt, self._pixels['rotateAngle'])
+        self._plotAxesDef(self._telescopeName, plt, self._pixels['rotateAngle'])
         ax.text(
             0.02,
             0.02,
