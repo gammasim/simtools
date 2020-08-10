@@ -3,8 +3,12 @@
 import logging
 
 __all__ = [
-    'validateName',
-    'isValidName',
+    'validateModelVersionName',
+    'validateSimtelModeName',
+    'validateSiteName',
+    'validateArrayName',
+    'validateTelescopeName',
+    'getSiteFromTelescopeName'
     'rayTracingFileName',
     'simtelConfigFileName',
     'simtelSingleMirrorListFileName',
@@ -177,6 +181,25 @@ def validateTelescopeName(name):
     return thisSite + '-' + telClass + '-' + telType
 
 
+def getSiteFromTelescopeName(name):
+    '''
+    Get site name (South or North) from the (validated) telescope name.
+
+    Parameters
+    ----------
+    name: str
+        Telescope name.
+
+    Returns
+    -------
+    str
+        Site name (South or North).
+    '''
+    nameParts = name.split('-')
+    thisSite = validateSiteName(nameParts[0])
+    return thisSite
+
+
 allTelescopeTypeNames = {
     'SST': ['sst'],
     'SST-1M': ['1m'],
@@ -266,10 +289,8 @@ def simtelSingleMirrorListFileName(version, telescopeName, mirrorNumber, label):
     ----------
     version: str
         Version of the model.
-    site: str
-        Paranal or LaPalma
-    telescopeType: str
-        LST, MST-FlashCam, ...
+    telescopeName: str
+        North-LST-1, South-MST-FlashCam, ...
     mirrorNumber: int
         Mirror number.
     label: str
@@ -280,7 +301,7 @@ def simtelSingleMirrorListFileName(version, telescopeName, mirrorNumber, label):
     str
         File name.
     '''
-    name = 'CTA-single-mirror-list-{}-{}-{}'.format(version, site, telescopeType)
+    name = 'CTA-single-mirror-list-{}-{}'.format(version, telescopeName)
     name += '-mirror{}'.format(mirrorNumber)
     name += '_{}'.format(label) if label is not None else ''
     name += '.dat'
