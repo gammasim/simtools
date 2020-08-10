@@ -217,7 +217,7 @@ class TelescopeModel:
         ''' Read parameters from DB and store them in _parameters. '''
 
         self._parameters = db.getModelParameters(
-            self.telescopeType,
+            self.telescopeName,
             self.version,
             onlyApplicable=True
         )
@@ -481,7 +481,7 @@ class TelescopeModel:
             logger.warning('Using focal_length because effective_focal_length is 0.')
             focalLength = self._parameters['focal_length']
         self._camera = Camera(
-            telescopeType=self.telescopeType,
+            telescopeName=self.telescopeName,
             cameraConfigFile=cfg.findFile(cameraConfigFile),
             focalLength=focalLength,
             logger=logger.name
@@ -490,14 +490,14 @@ class TelescopeModel:
 
     def isASTRI(self):
         '''
-        Check if telescope type is an ASTRI type.
+        Check if telescope is an ASTRI type.
 
         Returns
         ----------
         bool:
-            True if telescope type is a ASTRI, False otherwise.
+            True if telescope  is a ASTRI, False otherwise.
         '''
-        return self.telescopeType in ['SST-2M-ASTRI', 'SST']
+        return self.telescopeName in ['SST-2M-ASTRI', 'SST']
 
     def isFile2D(self, par):
         '''
