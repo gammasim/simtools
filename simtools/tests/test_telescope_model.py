@@ -10,27 +10,22 @@ logger.setLevel(logging.DEBUG)
 
 
 def test_input_validation():
-    telType = 'lst'
-    site = 'south'
-    logger.info('Input telType: {}'.format(telType))
-    logger.info('Input site: {}'.format(site))
+    telName = 'south-lst-1'
+    logger.info('Input telName: {}'.format(telName))
 
     tel = TelescopeModel(
-        telescopeType=telType,
-        site=site,
+        telescopeName=telName,
         version='prod4',
         label='test-lst'
     )
 
-    logger.info('Validated telType: {}'.format(tel.telescopeType))
-    logger.info('Validated site: {}'.format(tel.site))
+    logger.info('Validated telName: {}'.format(tel.telescopeName))
     return
 
 
 def test_handling_parameters():
     tel = TelescopeModel(
-        telescopeType='lst',
-        site='south',
+        telescopeName='south-lst-1',
         version='prod4',
         label='test-lst'
     )
@@ -54,8 +49,7 @@ def test_handling_parameters():
 
 def test_flen_type():
     tel = TelescopeModel(
-        telescopeType='lst',
-        site='south',
+        telescopeName='south-lst-1',
         version='prod4',
         label='test-lst'
     )
@@ -68,10 +62,9 @@ def test_flen_type():
 def test_cfg_file():
     # Exporting
     tel = TelescopeModel(
-        telescopeType='lst',
-        site='south',
+        telescopeName='south-sst-d',
         version='prod4',
-        label='test-lst'
+        label='test-sst'
     )
     # tel.exportConfigFile(loc='/home/prado/Work/Projects/CTA_MC/MCLib')
     tel.exportConfigFile()
@@ -81,9 +74,8 @@ def test_cfg_file():
     # Importing
     cfgFile = tel.getConfigFile()
     tel = TelescopeModel.fromConfigFile(
-        telescopeType='astri',
-        site='south',
-        label='test-astri',
+        telescopeName='south-sst-d',
+        label='test-sst',
         configFileName=cfgFile
     )
     tel.exportConfigFile()
@@ -92,10 +84,9 @@ def test_cfg_file():
 
 def test_cfg_input():
     tel = TelescopeModel(
-        telescopeType='lst',
-        site='south',
+        telescopename='south-lst-1',
         version='prod4',
-        label='test-input'
+        label='test-sst-2'
     )
     return
 
