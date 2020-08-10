@@ -4,7 +4,7 @@ import logging
 import subprocess
 from pathlib import Path
 
-import simtools.db_handler as db
+from simtools import db_handler
 import simtools.config as cfg
 from simtools.model.telescope_model import TelescopeModel
 
@@ -18,6 +18,7 @@ DB_CTA_SIMULATION_MODEL = 'CTA-Simulation-Model'
 def test_reading_db_lst():
 
     logger.info('----Testing reading LST-----')
+    db = db_handler.DatabaseHandler(logger.name)
     pars = db.getModelParameters('north-lst-1', 'prod4', testDataDirectory)
     assert(pars['parabolic_dish']['Value'] == 1)
     assert(pars['camera_pixels']['Value'] == 1855)
@@ -31,6 +32,7 @@ def test_reading_db_lst():
 def test_reading_db_mst_nc():
 
     logger.info('----Testing reading MST-NectarCam-----')
+    db = db_handler.DatabaseHandler(logger.name)
     pars = db.getModelParameters('north-mst-nectarcam-d', 'prod4', testDataDirectory)
     assert(pars['camera_pixels']['Value'] == 1855)
 
@@ -46,6 +48,7 @@ def test_reading_db_mst_nc():
 def test_reading_db_mst_fc():
 
     logger.info('----Testing reading MST-FlashCam-----')
+    db = db_handler.DatabaseHandler(logger.name)
     pars = db.getModelParameters('north-mst-flashcam-d', 'prod4', testDataDirectory)
     assert(pars['camera_pixels']['Value'] == 1764)
 
@@ -61,6 +64,7 @@ def test_reading_db_mst_fc():
 def test_reading_db_sst():
 
     logger.info('----Testing reading SST-----')
+    db = db_handler.DatabaseHandler(logger.name)
     pars = db.getModelParameters('south-sst-d', 'prod4', testDataDirectory)
     assert(pars['camera_pixels']['Value'] == 2048)
 
@@ -75,59 +79,54 @@ def test_reading_db_sst():
 
 def test_modify_db():
 
-    # logger.info('----Testing copying a whole telescope-----')
-    dbClient, tunnel = db.openMongoDB()
+    logger.info('----Testing copying a whole telescope-----')
+    db = db_handler.DatabaseHandler(logger.name)
     db.copyTelescope(
-        dbClient,
         DB_CTA_SIMULATION_MODEL,
         'North-LST-1',
         'prod4',
         'North-LST-Test',
         'sandbox'
     )
-    pars = db.readMongoDB(dbClient, 'sandbox', 'North-LST-Test', 'prod4', testDataDirectory)
+    pars = db.readMongoDB('sandbox', 'North-LST-Test', 'prod4', testDataDirectory, False)
     assert(pars['camera_pixels']['Value'] == 1855)
 
     logger.info('----Testing adding a parameter-----')
     db.addParameter(
-        dbClient,
         'sandbox',
         'North-LST-Test',
         'camera_config_version',
         'test',
         42
     )
-    pars = db.readMongoDB(dbClient, 'sandbox', 'North-LST-Test', 'test', testDataDirectory)
+    pars = db.readMongoDB('sandbox', 'North-LST-Test', 'test', testDataDirectory, False)
     assert(pars['camera_config_version']['Value'] == 42)
 
     logger.info('----Testing updating a parameter-----')
     db.updateParameter(
-        dbClient,
         'sandbox',
         'North-LST-Test',
         'test',
         'camera_config_version',
         999
     )
-    pars = db.readMongoDB(dbClient, 'sandbox', 'North-LST-Test', 'test', testDataDirectory)
+    pars = db.readMongoDB('sandbox', 'North-LST-Test', 'test', testDataDirectory, False)
     assert(pars['camera_config_version']['Value'] == 999)
 
     logger.info('----Testing adding a new parameter-----')
     db.addNewParameter(
-        dbClient,
         'sandbox',
         'North-LST-Test',
         'test',
         'camera_config_version_test',
         999
     )
-    pars = db.readMongoDB(dbClient, 'sandbox', 'North-LST-Test', 'test', testDataDirectory)
+    pars = db.readMongoDB('sandbox', 'North-LST-Test', 'test', testDataDirectory, False)
     assert(pars['camera_config_version_test']['Value'] == 999)
 
     logger.info('----Testing deleting a query (a whole telescope in this case)-----')
     query = {'Telescope': 'North-LST-Test'}
-    db.deleteQuery(dbClient, 'sandbox', query)
-    db.closeSSHTunnel([tunnel])
+    db.deleteQuery('sandbox', query)
 
     return
 
