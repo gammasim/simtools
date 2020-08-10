@@ -51,15 +51,15 @@ class Camera:
     SIPM_NEIGHBOR_RADIUS_FACTOR = 1.4
     SIPM_ROW_COLUMN_DIST_FACTOR = 0.2
 
-    def __init__(self, telescopeType, cameraConfigFile, focalLength, logger=__name__):
+    def __init__(self, telescopeName, cameraConfigFile, focalLength, logger=__name__):
         '''
         Camera class, defining pixel layout including rotation, finding neighbour pixels,
         calculating FoV and plotting the camera.
 
         Parameters
         ----------
-        telescopeType: string
-                    As provided by the telescope model method "TelescopeModel".
+        telescopeName: string
+                    As provided by the telescope model method TelescopeModel (ex South-LST-1).
         cameraConfigFile: string
                     The sim_telarray file name.
         focalLength: float
