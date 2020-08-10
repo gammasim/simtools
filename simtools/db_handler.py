@@ -168,7 +168,7 @@ def readDetailsDB(dbDetailsFile):
     return dbDetails
 
 
-def getModelParameters(telescopeName, version, onlyApplicable=False, runPath='./play/datFiles/'):
+def getModelParameters(telescopeName, version, runLocation, onlyApplicable=False):
     '''
     Get parameters from either MongoDB or Yaml DB for a specific telescope.
 
@@ -179,7 +179,7 @@ def getModelParameters(telescopeName, version, onlyApplicable=False, runPath='./
         Version of the model.
     onlyApplicable: bool
         If True, only applicable parameters will be read.
-    runPath: Path or str
+    runLocation: Path or str
         The sim_telarray run location to write the tabulated data files into.
 
     Returns
@@ -198,6 +198,7 @@ def getModelParameters(telescopeName, version, onlyApplicable=False, runPath='./
             DB_CTA_SIMULATION_MODEL,
             telescopeName,
             version,
+            runLocation,
             onlyApplicable
         )
         atexit.unregister(closeSSHTunnel)
@@ -227,7 +228,7 @@ def getModelParametersYaml(telescopeName, version, onlyApplicable=False):
     _telNameValidated = names.validateTelescopeName(telescopeName)
     _versionValidated = names.validateModelVersionName(version)
 
-    _site = names.getSizeFromTelescopeName(_telNameValidated)
+    _site = names.getSiteFromTelescopeName(_telNameValidated)
     _telClass = getTelescopeClass(_telNameValidated)
     _telNameConverted = names.convertTelescopeNameToYaml(_telNameValidated)
 
@@ -304,32 +305,31 @@ def getModelParametersMongoDB(
     dict containing the parameters
     '''
 
-    # TODO the naming is a mess at the moment, need to fix it everywhere consistently.
     _telNameValidated = names.validateTelescopeName(telescopeName)
+    _telClass = getTelescopeClass(_telNameValidated)
+    _site = names.getSiteFromTelescopeName(_telNameValidated)
     _versionValidated = names.validateModelVersionName(version)
 
-    site = _telTypeValidated.split('-')[0]
-    if 'MST' in _telTypeValidated:
+    if _telClass == 'MST':
         # MST-FlashCam or MST-NectarCam
-        _whichTelLabels = [_telTypeValidated, '{}-MST-Structure-D'.format(site)]
-    elif 'SST' in _telTypeValidated:
+        _whichTelLabels = [_telNameValidated, '{}-MST-Structure-D'.format(_site)]
+    elif _telClass == 'SST':
         # SST = SST-Camera + SST-Structure
-        _whichTelLabels = ['{}-SST-Camera-D'.format(site), '{}-SST-Structure'.format(site)]
+        _whichTelLabels = ['{}-SST-Camera-D'.format(_site), '{}-SST-Structure'.format(_site)]
     else:
-        _whichTelLabels = [_telTypeValidated]
+        _whichTelLabels = [_telNameValidated]
 
     # Selecting version and applicable (if on)
-    _pars = dict()
+    _parsInfo = dict()
     for _tel in _whichTelLabels:
-
         # If tel is a struture, only applicable pars will be collected, always.
         # The default ones will be covered by the camera pars.
         _selectOnlyApplicable = onlyApplicable or (_tel in [
-            '{}-MST-Structure-D'.format(site),
-            '{}-SST-Structure-D'.format(site)
+            '{}-MST-Structure-D'.format(_site),
+            '{}-SST-Structure-D'.format(_site)
         ])
 
-        _pars.update(readMongoDB(
+        _parsInfo.update(readMongoDB(
             dbClient,
             dbName,
             _tel,
@@ -337,6 +337,11 @@ def getModelParametersMongoDB(
             runLocation,
             _selectOnlyApplicable
         ))
+
+    # Removing all info but the value
+    _pars = dict()
+    for key, value in _parsInfo.items():
+        _pars[key] = value['Value']
 
     return _pars
 
@@ -392,7 +397,6 @@ def readMongoDB(
                 DB_TABULATED_DATA,
                 _parameters[parNow]['Value']
             )
-
             writeFileFromMongoToDisk(dbClient, DB_TABULATED_DATA, runLocation, file)
 
     return _parameters
