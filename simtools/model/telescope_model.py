@@ -216,11 +216,15 @@ class TelescopeModel:
     def _loadParametersFromDB(self):
         ''' Read parameters from DB and store them in _parameters. '''
 
+        self._setConfigFileDirectory()
         self._parameters = db.getModelParameters(
             self.telescopeName,
             self.version,
+            self._configFileDirectory,
             onlyApplicable=True
         )
+
+        print(self._parameters)
 
         # CHECK THIS
         # # Site: Two site parameters need to be read: atmospheric_transmission and altitude
@@ -470,7 +474,7 @@ class TelescopeModel:
 
     def _loadMirrors(self):
         mirrorListFileName = self._parameters['mirror_list']
-        mirrorListFile = cfg.findFile(mirrorListFileName, self._modelFilesLocations)
+        mirrorListFile = cfg.findFile(mirrorListFileName, self._configFileDirectory)
         self._mirrors = Mirrors(mirrorListFile)
         return
 
@@ -482,7 +486,7 @@ class TelescopeModel:
             focalLength = self._parameters['focal_length']
         self._camera = Camera(
             telescopeName=self.telescopeName,
-            cameraConfigFile=cfg.findFile(cameraConfigFile),
+            cameraConfigFile=cfg.findFile(cameraConfigFile, self._configFileDirectory),
             focalLength=focalLength,
             logger=logger.name
         )

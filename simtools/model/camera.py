@@ -79,7 +79,7 @@ class Camera:
             raise ValueError('The focal length must be larger than zero')
         self._pixels = self.readPixelList(cameraConfigFile)
 
-        self._pixels = self._rotatePixels(self._telescopeName, self._pixels)
+        self._pixels = self._rotatePixels(self._pixels)
 
         # Initialize an empty list of neighbours, to be calculated only when necessary.
         self._neighbours = None
