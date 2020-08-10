@@ -257,22 +257,6 @@ def getModelParametersYaml(telescopeName, version, onlyApplicable=False):
 
             _pars[parNameIn] = parInfo[_versionValidated]
 
-    # Site parameters are in separate yml files
-    def _getSiteParameter(site, parName):
-        ''' Get the value of parName for a given site '''
-        _yamlFile = cfg.findFile('parValues-Sites.yml', self._modelFilesLocations)
-        logger.info('Reading DB file {}'.format(_yamlFile))
-        with open(_yamlFile, 'r') as stream:
-            allPars = yaml.load(stream, Loader=yaml.FullLoader)
-            for par in allPars:
-                if parName in par and site.lower() in par:
-                    return allPars[par][_version]
-        logger.warning('Parameter {} not found for site {}'.format(parName, site))
-        return None
-
-    for siteParName in ['atmospheric_transmission', 'altitude']:
-        _pars[siteParName] = _getSiteParameter(_site, siteParName)
-
     return _pars
 
 
@@ -320,8 +304,9 @@ def getModelParametersMongoDB(
         _whichTelLabels = [_telNameValidated]
 
     # Selecting version and applicable (if on)
-    _parsInfo = dict()
+    _pars = dict()
     for _tel in _whichTelLabels:
+        print(_tel)
         # If tel is a struture, only applicable pars will be collected, always.
         # The default ones will be covered by the camera pars.
         _selectOnlyApplicable = onlyApplicable or (_tel in [
@@ -329,7 +314,7 @@ def getModelParametersMongoDB(
             '{}-SST-Structure-D'.format(_site)
         ])
 
-        _parsInfo.update(readMongoDB(
+        _pars.update(readMongoDB(
             dbClient,
             dbName,
             _tel,
@@ -338,7 +323,7 @@ def getModelParametersMongoDB(
             _selectOnlyApplicable
         ))
 
-    return _parsInfo
+    return _pars
 
 
 def readMongoDB(

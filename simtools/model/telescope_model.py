@@ -238,6 +238,7 @@ class TelescopeModel:
         logger.debug('Reading site parameters from DB')
 
         site = names.getSiteFromTelescopeName(self.telescopeName)
+        site = 'Paranal' if site == 'South' else 'LaPalma'
 
         def _getSiteParameter(parName):
             ''' Get the value of parName for a given site '''
@@ -483,7 +484,10 @@ class TelescopeModel:
 
     def _loadMirrors(self):
         mirrorListFileName = self._parameters['mirror_list']
-        mirrorListFile = cfg.findFile(mirrorListFileName, self._configFileDirectory)
+        try:
+            mirrorListFile = cfg.findFile(mirrorListFileName, self._configFileDirectory)
+        except:
+            mirrorListFile = cfg.findFile(mirrorListFileName, self._modelFilesLocations)
         self._mirrors = Mirrors(mirrorListFile)
         return
 
@@ -493,9 +497,14 @@ class TelescopeModel:
         if focalLength == 0.:
             logger.warning('Using focal_length because effective_focal_length is 0.')
             focalLength = self._parameters['focal_length']
+        try:
+            cameraConfigFilePath = cfg.findFile(cameraConfigFile, self._configFileDirectory)
+        except:
+            cameraConfigFilePath = cfg.findFile(cameraConfigFile, self._modelFilesLocations)
+
         self._camera = Camera(
             telescopeName=self.telescopeName,
-            cameraConfigFile=cfg.findFile(cameraConfigFile, self._configFileDirectory),
+            cameraConfigFile=cameraConfigFilePath,
             focalLength=focalLength,
             logger=logger.name
         )
