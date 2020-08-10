@@ -1,6 +1,6 @@
 ''' Parameters of telescope model. '''
 
-__all__ = ['MODEL_PARS', 'TWO_MIRROR_TELS', 'CAMERA_ROTATE_ANGLE']
+__all__ = ['MODEL_PARS', 'CAMERA_ROTATE_ANGLE']
 
 MODEL_PARS = {
     'focal_length': {'type': float, 'names': []},
@@ -41,8 +41,6 @@ MODEL_PARS = {
     'min_photoelectrons': {'type': int, 'names': []},
     'parabolic_dish': {'type': int, 'names': []}
 }
-
-TWO_MIRROR_TELS = ['SCT', 'SST-2M-ASTRI', 'SST-2M-GCT-S', 'SST-Structure', 'SST-Camera', 'SST']
 
 # The coordinate system is aligned with Alt (x) and Az(y), so need to rotate the camera.
 # The angle depends on what coordinate system was provided by the instrument team.

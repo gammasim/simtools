@@ -7,7 +7,12 @@ from simtools.model.model_parameters import MODEL_PARS
 from simtools.util import names
 
 
-__all__ = ['computeTelescopeTransmission', 'getTelescopeSize']
+__all__ = [
+    'computeTelescopeTransmission',
+    'getTelescopeClass',
+    'getCameraName',
+    'isTwoMirrorTelescope'
+]
 
 logger = logging.getLogger(__name__)
 
@@ -35,31 +40,6 @@ def computeTelescopeTransmission(pars, offAxis):
     else:
         t = math.sin(offAxis*_degToRad) / (pars[3]*_degToRad)
         return pars[0] / (1. + pars[2] * t**pars[4])
-
-
-def getTelescopeSize(telescopeType):
-    '''
-    Provide the telescope size (SST, MST or LST) for a given telescopeType.
-
-    Parameters
-    ----------
-    telescopeType: str
-        Ex. SST-2M-ASTRI, LST, ...
-
-    Returns
-    -------
-    str
-        'SST', 'MST' or 'LST'
-    '''
-    if 'SST' in telescopeType:
-        return 'SST'
-    elif 'MST' in telescopeType:
-        return 'MST'
-    elif 'LST' in telescopeType:
-        return 'LST'
-    else:
-        logger.warning('Invalid telescopeType {}'.format(telescopeType))
-        return None
 
 
 def validateModelParameter(parNameIn, parValueIn):
@@ -128,3 +108,44 @@ def getCameraName(telescopeName):
     cameraName = names.validateCameraName(cameraName)
     logger.debug('Camera name - {}'.format(cameraName))
     return cameraName
+
+
+def getTelescopeClass(telescopeName):
+    '''
+    Get telescope class from telescope name.
+
+    Parameters
+    ----------
+    telescopeName: str
+        Telescope name (ex. South-LST-1)
+
+    Returns
+    -------
+    str
+        Telescope class (SST, MST, ...)
+    '''
+    telSite, telClass, telType = names.splitTelescopeName(telescopeName)
+    return telClass
+
+
+def isTwoMirrorTelescope(telescopeName):
+    '''
+    Check if the telescope is a two mirror design.
+
+    Parameters
+    ----------
+    telescopeName: str
+        Telescope name (ex. South-LST-1)
+
+    Returns
+    -------
+    bool
+        True if the telescope is a two mirror one.
+    '''
+    telSite, telClass, telType = names.splitTelescopeName(telescopeName)
+    if telClass == 'SST':
+        return False if '1M' in telType else True
+    elif telClass == 'SCT':
+        return True
+    else:
+        return False
