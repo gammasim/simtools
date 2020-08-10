@@ -13,8 +13,7 @@ logger.setLevel(logging.DEBUG)
 
 def test_ray_tracing_mode():
     tel = TelescopeModel(
-        telescopeType='lst',
-        site='south',
+        telescopeName='south-lst-1',
         version='prod4',
         label='test-simtel'
     )
@@ -33,7 +32,7 @@ def test_ray_tracing_mode():
 
 def test_catching_model_error():
     tel = TelescopeModel(
-        telescopeType='lst',
+        telescopeName='south-lst-1',
         site='south',
         version='prod4',
         label='test-simtel'
