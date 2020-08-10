@@ -172,13 +172,36 @@ def validateTelescopeName(name):
     str
         Validated name.
     '''
+    telSite, telClass, telType = splitTelescopeName(name)
+    return telSite + '-' + telClass + '-' + telType
+
+
+def splitTelescopeName(name):
+    '''
+    Split a telescope name into site, class and type.
+
+    Raises
+    ------
+    ValueError
+        If name is not valid.
+
+    Parameters
+    ----------
+    name: str
+        Telescope name.
+
+    Returns
+    -------
+    str, str, str
+        Site (South or North), class (LST, MST, SST ...) and type (any complement).
+    '''
     nameParts = name.split('-')
     thisSite = validateSiteName(nameParts[0])
     telClass = validateName(nameParts[1], allTelescopeClassNames)
     telType = ''
     for ii in range(2, len(nameParts)):
         telType += nameParts[ii] + ('' if ii == len(nameParts) - 1 else '-')
-    return thisSite + '-' + telClass + '-' + telType
+    return thisSite, telClass, telType
 
 
 def getSiteFromTelescopeName(name):
