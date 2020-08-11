@@ -261,27 +261,23 @@ def convertTelescopeNameToYaml(name):
     '''
     telSite, telClass, telType = splitTelescopeName(name)
     newName = telClass + '-' + telType
-    if newName == 'SST-D':
-        return 'SST'
-    elif newName == 'SST-1M':
-        return 'SST-1M'
-    elif newName == 'SST-ASTRI':
-        return 'SST-2M-ASTRI'
-    elif newName == 'SST-GCT':
-        return 'SST-2M-GCT-S'
-    elif newName == 'MST-FlashCam-D':
-        return 'MST-FlashCam'
-    elif newName == 'MST-Nectar-D':
-        return 'MST-NectarCam'
-    elif newName == 'SCT-D':
-        return 'SCT'
-    elif newName in 'LST-D234':
-        return 'LST'
-    elif newName in 'LST-1':
-        return 'LST'
-    else:
+    oldNames = {
+        'SST-D': 'SST',
+        'SST-1M': 'SST-1M',
+        'SST-ASTRI': 'SST-2M-ASTRI',
+        'SST-GCT': 'SST-2M-GCT-S',
+        'MST-FlashCam-D': 'MST-FlashCam',
+        'MST-Nectar-D': 'MST-NectarCam',
+        'SCT-D': 'SCT',
+        'LST-D234': 'LST',
+        'LST-1': 'LST'
+    }
+
+    if newName not in oldNames.keys():
         logger.error('Telescope name {} could not be converted to yml names'.format(name))
         return None
+    else:
+        return oldNames[newNames]
 
 
 allTelescopeClassNames = {
