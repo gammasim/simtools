@@ -18,7 +18,7 @@ from astropy.time import Time
 
 import simtools.config as cfg
 from simtools.util import names
-from simtools.util.model import validateModelParameter, getTelescopeSize
+from simtools.util.model import getTelescopeClass
 
 __all__ = ['getArrayDB']
 
@@ -168,18 +168,18 @@ def readDetailsDB(dbDetailsFile):
     return dbDetails
 
 
-def getModelParameters(telescopeType, version, onlyApplicable=False, runPath='./play/datFiles/'):
+def getModelParameters(telescopeName, version, runLocation, onlyApplicable=False):
     '''
     Get parameters from either MongoDB or Yaml DB for a specific telescope.
 
     Parameters
     ----------
-    telescopeType: str
+    telescopeName: str
     version: str
         Version of the model.
     onlyApplicable: bool
         If True, only applicable parameters will be read.
-    runPath: Path or str
+    runLocation: Path or str
         The sim_telarray run location to write the tabulated data files into.
 
     Returns
@@ -196,24 +196,25 @@ def getModelParameters(telescopeType, version, onlyApplicable=False, runPath='./
         _pars = getModelParametersMongoDB(
             dbClient,
             DB_CTA_SIMULATION_MODEL,
-            telescopeType,
+            telescopeName,
             version,
+            runLocation,
             onlyApplicable
         )
         atexit.unregister(closeSSHTunnel)
         closeSSHTunnel([tunnel])
         return _pars
     else:
-        return getModelParametersYaml(telescopeType, version, onlyApplicable)
+        return getModelParametersYaml(telescopeName, version, onlyApplicable)
 
 
-def getModelParametersYaml(telescopeType, version, onlyApplicable=False):
+def getModelParametersYaml(telescopeName, version, onlyApplicable=False):
     '''
     Get parameters from DB for one specific type.
 
     Parameters
     ----------
-    telescopeType: str
+    telescopeName: str
     version: str
         Version of the model.
     onlyApplicable: bool
@@ -224,17 +225,21 @@ def getModelParametersYaml(telescopeType, version, onlyApplicable=False):
     dict containing the parameters
     '''
 
-    _telTypeValidated = names.validateName(telescopeType, names.allTelescopeTypeNames)
-    _versionValidated = names.validateName(version, names.allModelVersionNames)
+    _telNameValidated = names.validateTelescopeName(telescopeName)
+    _versionValidated = names.validateModelVersionName(version)
 
-    if getTelescopeSize(_telTypeValidated) == 'MST':
+    _site = names.getSiteFromTelescopeName(_telNameValidated)
+    _telClass = getTelescopeClass(_telNameValidated)
+    _telNameConverted = names.convertTelescopeNameToYaml(_telNameValidated)
+
+    if _telClass == 'MST':
         # MST-FlashCam or MST-NectarCam
-        _whichTelLabels = [_telTypeValidated, 'MST-optics']
-    elif _telTypeValidated == 'SST':
+        _whichTelLabels = [_telNameConverted, 'MST-optics']
+    elif _telClass == 'SST':
         # SST = SST-Camera + SST-Structure
         _whichTelLabels = ['SST-Camera', 'SST-Structure']
     else:
-        _whichTelLabels = [_telTypeValidated]
+        _whichTelLabels = [_telNameConverted]
 
     # Selecting version and applicable (if on)
     _pars = dict()
@@ -258,7 +263,7 @@ def getModelParametersYaml(telescopeType, version, onlyApplicable=False):
 def getModelParametersMongoDB(
     dbClient,
     dbName,
-    telescopeType,
+    telescopeName,
     version,
     runLocation,
     onlyApplicable=False
@@ -271,7 +276,7 @@ def getModelParametersMongoDB(
     dbClient: a MongoDB client provided by openMongoDB
     dbName: str
         the name of the DB
-    telescopeType: str
+    telescopeName: str
     version: str
         Version of the model.
     runLocation: Path or str
@@ -284,29 +289,29 @@ def getModelParametersMongoDB(
     dict containing the parameters
     '''
 
-    # TODO the naming is a mess at the moment, need to fix it everywhere consistently.
-    _telTypeValidated = names.validateName(telescopeType, names.allTelescopeTypeNames)
-    _versionValidated = names.validateName(version, names.allModelVersionNames)
+    _telNameValidated = names.validateTelescopeName(telescopeName)
+    _telClass = getTelescopeClass(_telNameValidated)
+    _site = names.getSiteFromTelescopeName(_telNameValidated)
+    _versionValidated = names.validateModelVersionName(version)
 
-    site = _telTypeValidated.split('-')[0]
-    if 'MST' in _telTypeValidated:
+    if _telClass == 'MST':
         # MST-FlashCam or MST-NectarCam
-        _whichTelLabels = [_telTypeValidated, '{}-MST-Structure-D'.format(site)]
-    elif 'SST' in _telTypeValidated:
+        _whichTelLabels = [_telNameValidated, '{}-MST-Structure-D'.format(_site)]
+    elif _telClass == 'SST':
         # SST = SST-Camera + SST-Structure
-        _whichTelLabels = ['{}-SST-Camera-D'.format(site), '{}-SST-Structure'.format(site)]
+        _whichTelLabels = ['{}-SST-Camera-D'.format(_site), '{}-SST-Structure'.format(_site)]
     else:
-        _whichTelLabels = [_telTypeValidated]
+        _whichTelLabels = [_telNameValidated]
 
     # Selecting version and applicable (if on)
     _pars = dict()
     for _tel in _whichTelLabels:
-
+        print(_tel)
         # If tel is a struture, only applicable pars will be collected, always.
         # The default ones will be covered by the camera pars.
         _selectOnlyApplicable = onlyApplicable or (_tel in [
-            '{}-MST-Structure-D'.format(site),
-            '{}-SST-Structure-D'.format(site)
+            '{}-MST-Structure-D'.format(_site),
+            '{}-SST-Structure-D'.format(_site)
         ])
 
         _pars.update(readMongoDB(
@@ -324,7 +329,7 @@ def getModelParametersMongoDB(
 def readMongoDB(
     dbClient,
     dbName,
-    telescopeType,
+    telescopeName,
     version,
     runLocation,
     onlyApplicable=False
@@ -338,7 +343,7 @@ def readMongoDB(
     dbClient: a MongoDB client provided by openMongoDB
     dbName: str
         the name of the DB
-    telescopeType: str
+    telescopeName: str
     version: str
         Version of the model.
     runLocation: Path or str
@@ -355,7 +360,7 @@ def readMongoDB(
     _parameters = dict()
 
     query = {
-        'Telescope': telescopeType,
+        'Telescope': telescopeName,
         'Version': version,
     }
     if onlyApplicable:
@@ -372,20 +377,19 @@ def readMongoDB(
                 DB_TABULATED_DATA,
                 _parameters[parNow]['Value']
             )
-
             writeFileFromMongoToDisk(dbClient, DB_TABULATED_DATA, runLocation, file)
 
     return _parameters
 
 
-def getAllModelParametersYaml(telescopeType, version):
+def getAllModelParametersYaml(telescopeName, version):
     '''
     Get all parameters from Yaml DB for one specific type.
     No selection is applied.
 
     Parameters
     ----------
-    telescopeType: str
+    telescopeName: str
     version: str
         Version of the model.
 
@@ -394,7 +398,7 @@ def getAllModelParametersYaml(telescopeType, version):
     dict containing the parameters
     '''
 
-    _fileNameDB = 'parValues-{}.yml'.format(telescopeType)
+    _fileNameDB = 'parValues-{}.yml'.format(telescopeName)
     _yamlFile = cfg.findFile(
         _fileNameDB,
         cfg.get('modelFilesLocations')
