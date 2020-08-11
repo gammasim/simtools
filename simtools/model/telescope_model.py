@@ -12,7 +12,7 @@ from pathlib import Path
 
 import simtools.config as cfg
 import simtools.io_handler as io
-import simtools.db_handler as db
+from simtools import db_handler
 from simtools.util import names
 from simtools.util.model import validateModelParameter
 from simtools.model.mirrors import Mirrors
@@ -218,6 +218,7 @@ class TelescopeModel:
         ''' Read parameters from DB and store them in _parameters. '''
 
         self._setConfigFileDirectory()
+        db = db_handler.DatabaseHandler(logger.name)
         self._parameters = db.getModelParameters(
             self.telescopeName,
             self.version,
