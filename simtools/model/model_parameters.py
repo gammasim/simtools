@@ -1,6 +1,6 @@
 ''' Parameters of telescope model. '''
 
-__all__ = ['MODEL_PARS', 'TWO_MIRROR_TELS', 'CAMERA_ROTATE_ANGLE']
+__all__ = ['MODEL_PARS', 'CAMERA_ROTATE_ANGLE']
 
 MODEL_PARS = {
     'focal_length': {'type': float, 'names': []},
@@ -42,8 +42,6 @@ MODEL_PARS = {
     'parabolic_dish': {'type': int, 'names': []}
 }
 
-TWO_MIRROR_TELS = ['SCT', 'SST-2M-ASTRI', 'SST-2M-GCT-S', 'SST-Structure', 'SST-Camera', 'SST']
-
 # The coordinate system is aligned with Alt (x) and Az(y), so need to rotate the camera.
 # The angle depends on what coordinate system was provided by the instrument team.
 # Specifically the case of LST and NectarCam is a bit weird at 270 - 2*10.893,
@@ -51,24 +49,22 @@ TWO_MIRROR_TELS = ['SCT', 'SST-2M-ASTRI', 'SST-2M-GCT-S', 'SST-Structure', 'SST-
 # and then actually rotate in the right direction.
 CAMERA_ROTATE_ANGLE = {
   'LST': 248.214,
-  'MST-FlashCam': 270,
-  'MST-NectarCam': 248.214,
+  'FlashCam': 270,
+  'NectarCam': 248.214,
   'SCT': 90,
-  'SST-2M-ASTRI': 90,
-  'SST-1M': 270,
-  'SST-2M-GCT-S': 90,
-  'SST-Structure': 90,
-  'SST-Camera': 90,
-  'SST': 90
+  'ASTRI': 90,
+  '1M': 270,
+  'GCT': 90,
+  'SST': 90,
 }
 
 CAMERA_RADIUS_CURV = {
     'SST': 4.566,
-    'SST-1M': 5.6,
-    'SST-2M-ASTRI': 4.3,
-    'SST-2M-GCT-S': 4.566,
-    'MST-FlashCam': 19.2,
-    'MST-NectarCam': 19.2,
-    'MST-SCT': 11.16,
+    '1M': 5.6,
+    'ASTRI': 4.3,
+    'GCT': 4.566,
+    'FlashCam': 19.2,
+    'NectarCam': 19.2,
+    'SCT': 11.16,
     'LST': 56
 }
