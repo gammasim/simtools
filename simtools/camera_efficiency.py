@@ -21,6 +21,7 @@ import simtools.io_handler as io
 from simtools import visualize
 from simtools.util import names
 from simtools.util.general import collectArguments
+from simtools.util.model import getCameraName
 from simtools.model.telescope_model import TelescopeModel
 from simtools.model.model_parameters import CAMERA_RADIUS_CURV
 
@@ -119,21 +120,21 @@ class CameraEfficiency:
         ''' Define the variables for the file names, including the results, simtel and log file. '''
         # Results file
         fileNameResults = names.cameraEfficiencyResultsFileName(
-                self._telescopeModel.telescopeType,
+                self._telescopeModel.telescopeName,
                 self._zenithAngle,
                 self.label
         )
         self._fileResults = self._baseDirectory.joinpath(fileNameResults)
         # SimtelOutput file
         fileNameSimtel = names.cameraEfficiencySimtelFileName(
-                self._telescopeModel.telescopeType,
+                self._telescopeModel.telescopeName,
                 self._zenithAngle,
                 self.label
         )
         self._fileSimtel = self._baseDirectory.joinpath(fileNameSimtel)
         # Log file
         fileNameLog = names.cameraEfficiencyLogFileName(
-                self._telescopeModel.telescopeType,
+                self._telescopeModel.telescopeName,
                 self._zenithAngle,
                 self.label
         )
@@ -197,13 +198,16 @@ class CameraEfficiency:
             )
             mirrorReflectivity = 'ref_astri_2017-06_T0.dat'
 
+        # Camera name
+        cameraName = getCameraName(self._telescopeModel.telescopeName)
+
         # cmd -> Command to be run at the shell
         cmd = str(self._simtelSourcePath.joinpath('sim_telarray/bin/testeff'))
         cmd += ' -nm -nsb-extra'
         cmd += ' -alt {}'.format(self._telescopeModel.getParameter('altitude'))
         cmd += ' -fatm {}'.format(self._telescopeModel.getParameter('atmospheric_transmission'))
         cmd += ' -flen {}'.format(focalLength * 0.01)  # focal lenght in meters
-        cmd += ' -fcur {}'.format(CAMERA_RADIUS_CURV[self._telescopeModel.telescopeType])
+        cmd += ' -fcur {}'.format(CAMERA_RADIUS_CURV[cameraName])
         cmd += ' {} {}'.format(pixelShapeCmd, pixelDiameter)
         if mirrorClass == 1:
             cmd += ' -fmir {}'.format(self._telescopeModel.getParameter('mirror_list'))
@@ -496,7 +500,7 @@ class CameraEfficiency:
         plt = visualize.plotTable(
             tableToPlot,
             yTitle='Cherenkov light efficiency',
-            title='{} response to Cherenkov light'.format(self._telescopeModel.telescopeType),
+            title='{} response to Cherenkov light'.format(self._telescopeModel.telescopeName),
             noMarkers=True
         )
 
@@ -529,7 +533,7 @@ class CameraEfficiency:
             tableToPlot,
             yTitle='Nightsky background light efficiency',
             title='{} response to nightsky background light'.format(
-                self._telescopeModel.telescopeType
+                self._telescopeModel.telescopeName
             ),
             noMarkers=True
         )
