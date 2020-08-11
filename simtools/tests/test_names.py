@@ -7,8 +7,14 @@ logging.getLogger().setLevel(logging.DEBUG)
 
 
 def test_validate_telescope_names():
-    newName = names.validateTelescopeName('north-sst-D')
-    print(newName)
+
+    def validate(name):
+        print('Validating {}'.format(name))
+        newName = names.validateTelescopeName(name)
+        print('New name {}'.format(newName))
+
+    for n in ['north-sst-d', 'south-mst-flashcam-d', 'north-sct-d']:
+        validate(n)
 
 
 def test_validate_other_names():
