@@ -11,7 +11,7 @@ import yaml
 from pathlib import Path
 
 from simtools.util import names
-import simtools.db_handler as db
+from simtools import db_handler
 
 __all__ = ['getArray', 'ArrayModel']
 
@@ -30,6 +30,7 @@ def getArray(arrayName, databaseLocation):
     """
 
     arrayName = names.validateArrayName(arrayName)
+    db = db_handler.DatabaseHandler(logger.name)
     allArrays = db.getArrayDB(databaseLocation)
     return allArrays[arrayName]
 
