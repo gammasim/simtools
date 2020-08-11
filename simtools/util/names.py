@@ -222,9 +222,7 @@ def splitTelescopeName(name):
     nameParts = name.split('-')
     thisSite = validateSiteName(nameParts[0])
     telClass = validateName(nameParts[1], allTelescopeClassNames)
-    telType = ''
-    for ii in range(2, len(nameParts)):
-        telType += nameParts[ii] + ('' if ii == len(nameParts) - 1 else '-')
+    telType = '-'.join(nameParts[2:])
     return thisSite, telClass, telType
 
 
