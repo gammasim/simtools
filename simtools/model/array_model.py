@@ -29,7 +29,7 @@ def getArray(arrayName, databaseLocation):
 
     """
 
-    arrayName = names.validateName(arrayName, names.allArrayNames)
+    arrayName = names.validateArrayName(arrayName)
     allArrays = db.getArrayDB(databaseLocation)
     return allArrays[arrayName]
 

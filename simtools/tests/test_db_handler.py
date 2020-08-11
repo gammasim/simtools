@@ -33,7 +33,7 @@ def test_reading_db_mst_nc():
 
     logger.info('----Testing reading MST-NectarCam-----')
     db = db_handler.DatabaseHandler(logger.name)
-    pars = db.getModelParameters('north-mst-nectarcam-d', 'prod4', testDataDirectory)
+    pars = db.getModelParameters('north-mst-NectarCam-D', 'prod4', testDataDirectory)
     assert(pars['camera_pixels']['Value'] == 1855)
 
     logger.info('Listing files written in {}'.format(testDataDirectory))
@@ -49,7 +49,7 @@ def test_reading_db_mst_fc():
 
     logger.info('----Testing reading MST-FlashCam-----')
     db = db_handler.DatabaseHandler(logger.name)
-    pars = db.getModelParameters('north-mst-flashcam-d', 'prod4', testDataDirectory)
+    pars = db.getModelParameters('north-mst-FlashCam-D', 'prod4', testDataDirectory)
     assert(pars['camera_pixels']['Value'] == 1764)
 
     logger.info('Listing files written in {}'.format(testDataDirectory))
@@ -65,7 +65,7 @@ def test_reading_db_sst():
 
     logger.info('----Testing reading SST-----')
     db = db_handler.DatabaseHandler(logger.name)
-    pars = db.getModelParameters('south-sst-d', 'prod4', testDataDirectory)
+    pars = db.getModelParameters('south-sst-D', 'prod4', testDataDirectory)
     assert(pars['camera_pixels']['Value'] == 2048)
 
     logger.info('Listing files written in {}'.format(testDataDirectory))
@@ -129,29 +129,6 @@ def test_modify_db():
     db.deleteQuery('sandbox', query)
 
     return
-
-
-# def test_get_model_file():
-
-#     tel = TelescopeModel(
-#         telescopeType='lst',
-#         site='south',
-#         version='prod4',
-#         label='test-lst'
-#     )
-
-#     fileName = tel.getParameter('camera_config_file')
-
-#     logger.info('FileName = {}'.format(fileName))
-
-#     file = db.getModelFile(fileName)
-
-#     logger.info('FilePath = {}'.format(file))
-
-#     destDir = Path.cwd()
-#     db.writeModelFile(fileName, destDir)
-
-#     return
 
 
 if __name__ == '__main__':
