@@ -343,7 +343,7 @@ class DatabaseHandler:
             _whichTelLabels = [_telTypeValidated, '{}-MST-Structure-D'.format(site)]
         elif 'SST' in _telTypeValidated:
             # SST = SST-Camera + SST-Structure
-            _whichTelLabels = ['{}-SST-Camera-D'.format(site), '{}-SST-Structure'.format(site)]
+            _whichTelLabels = ['{}-SST-Camera-D'.format(site), '{}-SST-Structure-D'.format(site)]
         else:
             _whichTelLabels = [_telTypeValidated]
 
@@ -401,7 +401,7 @@ class DatabaseHandler:
         dict containing the parameters
         '''
 
-        posts = DatabaseHandler.dbClient[dbName].posts
+        collection = DatabaseHandler.dbClient[dbName].telescopes
         _parameters = dict()
 
         query = {
@@ -410,7 +410,12 @@ class DatabaseHandler:
         }
         if onlyApplicable:
             query['Applicable'] = onlyApplicable
-        for post in posts.find(query):
+        if collection.count_documents(query) < 1:
+            raise ValueError(
+                'The following query returned zero results! Check the input data and rerun.\n',
+                query
+            )
+        for post in collection.find(query):
             parNow = post['Parameter']
             _parameters[parNow] = post
             _parameters[parNow].pop('Parameter', None)
@@ -564,7 +569,7 @@ class DatabaseHandler:
             dbToCopyTo
         ))
 
-        collection = DatabaseHandler.dbClient[dbName].posts
+        collection = DatabaseHandler.dbClient[dbName].telescopes
         _parameters = dict()
         dbEntries = list()
 
@@ -579,9 +584,9 @@ class DatabaseHandler:
 
         self._logger.info('Creating new telescope {}'.format(newTelName))
         db = DatabaseHandler.dbClient[dbToCopyTo]
-        posts = db.posts
+        collection = db.telescopes
         try:
-            posts.insert_many(dbEntries)
+            collection.insert_many(dbEntries)
         except BulkWriteError as exc:
             raise exc(exc.details)
 
@@ -606,7 +611,7 @@ class DatabaseHandler:
             would delete the entire prod4 version from telescope North-LST-1.
         '''
 
-        collection = DatabaseHandler.dbClient[dbName].posts
+        collection = DatabaseHandler.dbClient[dbName].telescopes
 
         self._logger.info('Deleting {} entries from {}'.format(
             collection.count_documents(query),
@@ -637,7 +642,7 @@ class DatabaseHandler:
             The new value to set for the parameter
         '''
 
-        collection = DatabaseHandler.dbClient[dbName].posts
+        collection = DatabaseHandler.dbClient[dbName].telescopes
 
         query = {
             'Telescope': telescope,
@@ -683,7 +688,7 @@ class DatabaseHandler:
             The new value to set for the parameter
         '''
 
-        collection = DatabaseHandler.dbClient[dbName].posts
+        collection = DatabaseHandler.dbClient[dbName].telescopes
 
         query = {
             'Telescope': telescope,
@@ -724,7 +729,7 @@ class DatabaseHandler:
             Any additional fields to add to the parameter
         '''
 
-        collection = DatabaseHandler.dbClient[dbName].posts
+        collection = DatabaseHandler.dbClient[dbName].telescopes
 
         dbEntry = dict()
         dbEntry['Telescope'] = telescope
