@@ -144,8 +144,11 @@ def isTwoMirrorTelescope(telescopeName):
     '''
     telSite, telClass, telType = names.splitTelescopeName(telescopeName)
     if telClass == 'SST':
+        # Only 1M is False
         return False if '1M' in telType else True
     elif telClass == 'SCT':
+        # SCT always two mirrors
         return True
     else:
+        # All MSTs and LSTs
         return False
