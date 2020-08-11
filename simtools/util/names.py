@@ -197,6 +197,21 @@ def validateTelescopeName(name):
         Validated name.
     '''
     telSite, telClass, telType = splitTelescopeName(name)
+    telSite = validateSiteName(telSite)
+    telClass = validateName(telClass, allTelescopeClassNames)
+    if 'flashcam' in telType:
+        telType = telType.replace('flashcam', 'FlashCam')
+    if 'nectarcam' in telType:
+        telType = telType.replace('nectarcam', 'NectarCam')
+    if '1m' in telType:
+        telType = telType.replace('1m', '1M')
+    if 'gct' in telType:
+        telType = telType.replace('gct', 'GCT')
+    if 'astri' in telType:
+        telType = telType.replace('astri', 'ASTRI')
+    if '-d' in '-' + telType:
+        telType = telType.replace('d', 'D')
+
     return telSite + '-' + telClass + '-' + telType
 
 
@@ -220,8 +235,8 @@ def splitTelescopeName(name):
         Site (South or North), class (LST, MST, SST ...) and type (any complement).
     '''
     nameParts = name.split('-')
-    thisSite = validateSiteName(nameParts[0])
-    telClass = validateName(nameParts[1], allTelescopeClassNames)
+    thisSite = nameParts[0]
+    telClass = nameParts[1]
     telType = '-'.join(nameParts[2:])
     return thisSite, telClass, telType
 
