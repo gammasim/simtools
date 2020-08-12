@@ -51,6 +51,8 @@ class DatabaseHandler:
     -------
     getModelParameters()
         Get the model parameters of a specific telescope with a specific version.
+    getSiteParameters()
+        Get the site parameters of a specific version of a site.
     copyTelescope()
         Copy a full telescope configuration of a specific version to a new telescope name.
     deleteQuery()
