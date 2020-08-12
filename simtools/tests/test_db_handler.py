@@ -20,8 +20,12 @@ def test_reading_db_lst():
     logger.info('----Testing reading LST-----')
     db = db_handler.DatabaseHandler(logger.name)
     pars = db.getModelParameters('north-lst-1', 'prod4', testDataDirectory)
-    assert(pars['parabolic_dish']['Value'] == 1)
-    assert(pars['camera_pixels']['Value'] == 1855)
+    if cfg.get('useMongoDB'):
+        assert(pars['parabolic_dish']['Value'] == 1)
+        assert(pars['camera_pixels']['Value'] == 1855)
+    else:
+        assert(pars['parabolic_dish'] == 1)
+        assert(pars['camera_pixels'] == 1855)
 
     logger.info('Listing files written in {}'.format(testDataDirectory))
     subprocess.call(['ls -lh {}'.format(testDataDirectory)], shell=True)
@@ -34,7 +38,10 @@ def test_reading_db_mst_nc():
     logger.info('----Testing reading MST-NectarCam-----')
     db = db_handler.DatabaseHandler(logger.name)
     pars = db.getModelParameters('north-mst-NectarCam-D', 'prod4', testDataDirectory)
-    assert(pars['camera_pixels']['Value'] == 1855)
+    if cfg.get('useMongoDB'):
+        assert(pars['camera_pixels']['Value'] == 1855)
+    else:
+        assert(pars['camera_pixels'] == 1855)
 
     logger.info('Listing files written in {}'.format(testDataDirectory))
     subprocess.call(['ls -lh {}'.format(testDataDirectory)], shell=True)
@@ -50,7 +57,10 @@ def test_reading_db_mst_fc():
     logger.info('----Testing reading MST-FlashCam-----')
     db = db_handler.DatabaseHandler(logger.name)
     pars = db.getModelParameters('north-mst-FlashCam-D', 'prod4', testDataDirectory)
-    assert(pars['camera_pixels']['Value'] == 1764)
+    if cfg.get('useMongoDB'):
+        assert(pars['camera_pixels']['Value'] == 1764)
+    else:
+        assert(pars['camera_pixels'] == 1764)
 
     logger.info('Listing files written in {}'.format(testDataDirectory))
     subprocess.call(['ls -lh {}'.format(testDataDirectory)], shell=True)
@@ -66,7 +76,10 @@ def test_reading_db_sst():
     logger.info('----Testing reading SST-----')
     db = db_handler.DatabaseHandler(logger.name)
     pars = db.getModelParameters('south-sst-D', 'prod4', testDataDirectory)
-    assert(pars['camera_pixels']['Value'] == 2048)
+    if cfg.get('useMongoDB'):
+        assert(pars['camera_pixels']['Value'] == 2048)
+    else:
+        assert(pars['camera_pixels'] == 2048)
 
     logger.info('Listing files written in {}'.format(testDataDirectory))
     subprocess.call(['ls -lh {}'.format(testDataDirectory)], shell=True)
@@ -78,6 +91,10 @@ def test_reading_db_sst():
 
 
 def test_modify_db():
+
+    # This test is only relevant for the MongoDB
+    if not cfg.get('useMongoDB'):
+        return
 
     logger.info('----Testing copying a whole telescope-----')
     db = db_handler.DatabaseHandler(logger.name)
@@ -131,6 +148,38 @@ def test_modify_db():
     return
 
 
+def test_reading_db_sites():
+
+    db = db_handler.DatabaseHandler(logger.name)
+    logger.info('----Testing reading La Palma parameters-----')
+    pars = db.getSiteParameters('North', 'prod4', testDataDirectory)
+    if cfg.get('useMongoDB'):
+        assert(pars['altitude']['Value'] == 2147)
+    else:
+        assert(pars['altitude'] == 2147)
+
+    logger.info('Listing files written in {}'.format(testDataDirectory))
+    subprocess.call(['ls -lh {}'.format(testDataDirectory)], shell=True)
+
+    logger.info('Removing the files written in {}'.format(testDataDirectory))
+    subprocess.call(['rm -f {}/*'.format(testDataDirectory)], shell=True)
+
+    logger.info('----Testing reading Paranal parameters-----')
+    pars = db.getSiteParameters('South', 'prod4', testDataDirectory)
+    if cfg.get('useMongoDB'):
+        assert(pars['altitude']['Value'] == 2150)
+    else:
+        assert(pars['altitude'] == 2150)
+
+    logger.info('Listing files written in {}'.format(testDataDirectory))
+    subprocess.call(['ls -lh {}'.format(testDataDirectory)], shell=True)
+
+    logger.info('Removing the files written in {}'.format(testDataDirectory))
+    subprocess.call(['rm -f {}/*'.format(testDataDirectory)], shell=True)
+
+    return
+
+
 if __name__ == '__main__':
 
     # test_get_model_file()
@@ -139,4 +188,5 @@ if __name__ == '__main__':
     test_reading_db_mst_fc()
     test_reading_db_sst()
     test_modify_db()
+    test_reading_db_sites()
     pass

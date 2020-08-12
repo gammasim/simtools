@@ -217,6 +217,8 @@ class TelescopeModel:
     def _loadParametersFromDB(self):
         ''' Read parameters from DB and store them in _parameters. '''
 
+        logger.debug('Reading telescope parameters from DB')
+
         self._setConfigFileDirectory()
         db = db_handler.DatabaseHandler(logger.name)
         self._parameters = db.getModelParameters(
@@ -226,35 +228,24 @@ class TelescopeModel:
             onlyApplicable=True
         )
 
+        logger.debug('Reading site parameters from DB')
+
+        site = names.getSiteFromTelescopeName(self.telescopeName)
+        _parameters.update(db.getSiteParameters(
+            site,
+            self.version,
+            self._configFileDirectory,
+            onlyApplicable=True
+        ))
+
         # Removing all info but the value
-        logger.warning('HACK - THIS SHOULD BE DONE BY db_handler')
+        # TODO - change to use the full dict instead.
         if cfg.get('useMongoDB'):
             _pars = dict()
             for key, value in self._parameters.items():
                 _pars[key] = value['Value']
             self._parameters = copy.copy(_pars)
 
-        logger.warning('HACK - THIS SHOULD BE DONE BY db_handler')
-        # Site: Two site parameters need to be read: atmospheric_transmission and altitude
-        logger.debug('Reading site parameters from DB')
-
-        site = names.getSiteFromTelescopeName(self.telescopeName)
-        site = 'Paranal' if site == 'South' else 'LaPalma'
-
-        def _getSiteParameter(parName):
-            ''' Get the value of parName for a given site '''
-            yamlFile = cfg.findFile('parValues-Sites.yml', self._modelFilesLocations)
-            logger.info('Reading DB file {}'.format(yamlFile))
-            with open(yamlFile, 'r') as stream:
-                allPars = yaml.load(stream, Loader=yaml.FullLoader)
-                for par in allPars:
-                    if parName in par and site.lower() in par:
-                        return allPars[par][self.version]
-            logger.warning('Parameter {} not found for site {}'.format(parName, site))
-            return None
-
-        for siteParName in ['atmospheric_transmission', 'altitude']:
-            self._parameters[siteParName] = _getSiteParameter(siteParName)
     # END _loadParametersFromDB
 
     def hasParameter(self, parName):
