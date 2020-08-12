@@ -167,12 +167,14 @@ class DatabaseHandler:
         Tunnel process handle.
         '''
 
-        tunnelCmd = 'ssh -N -L {localport}:{mongodbServer}:{remoteport} {user}@{tunnelServer}'.format(
-            localport=localport,
-            remoteport=remoteport,
-            user=user,
-            mongodbServer=mongodbServer,
-            tunnelServer=tunnelServer
+        tunnelCmd = (
+            'ssh -N -L {localport}:{mongodbServer}:{remoteport} {user}@{tunnelServer}'.format(
+                localport=localport,
+                remoteport=remoteport,
+                user=user,
+                mongodbServer=mongodbServer,
+                tunnelServer=tunnelServer
+            )
         )
 
         args = shlex.split(tunnelCmd)
@@ -297,13 +299,16 @@ class DatabaseHandler:
         for _tel in _whichTelLabels:
             _allPars = self._getAllModelParametersYaml(_tel, _versionValidated)
 
-            # If tel is a struture, only applicable pars will be collected, always.
-            # The default ones will be covered by the camera pars.
+            # If _tel is a structure, only the applicable parameters will be collected, always.
+            # The default ones will be covered by the camera parameters.
             _selectOnlyApplicable = onlyApplicable or (_tel in ['MST-optics', 'SST-Structure'])
 
             for parNameIn, parInfo in _allPars.items():
 
                 if not parInfo['Applicable'] and _selectOnlyApplicable:
+                    continue
+
+                if _versionValidated not in parInfo:
                     continue
 
                 _pars[parNameIn] = parInfo[_versionValidated]
@@ -406,7 +411,7 @@ class DatabaseHandler:
         dict containing the parameters
         '''
 
-        collection = DatabaseHandler.dbClient[dbName].telescopes
+        collection = DatabaseHandler.dbClient[dbName]['telescopes']
         _parameters = dict()
 
         query = {
@@ -461,6 +466,143 @@ class DatabaseHandler:
         with open(_yamlFile, 'r') as stream:
             _allPars = yaml.load(stream, Loader=yaml.FullLoader)
         return _allPars
+
+    def getSiteParameters(
+        self,
+        site,
+        version,
+        runLocation,
+        onlyApplicable=False,
+    ):
+        '''
+        Get parameters from either MongoDB or Yaml DB for a specific site.
+
+        Parameters
+        ----------
+        site: str
+        version: str
+            Version of the model.
+        runLocation: Path or str
+            The sim_telarray run location to write the tabulated data files into.
+        onlyApplicable: bool
+            If True, only applicable parameters will be read.
+
+        Returns
+        -------
+        dict containing the parameters
+        '''
+
+        if cfg.get('useMongoDB'):
+            _pars = self._getSiteParametersMongoDB(
+                DatabaseHandler.DB_CTA_SIMULATION_MODEL,
+                site,
+                version,
+                runLocation,
+                onlyApplicable
+            )
+            return _pars
+        else:
+            return self._getSiteParametersYaml(site, version, onlyApplicable)
+
+    def _getSiteParametersYaml(self, site, version, onlyApplicable=False):
+        '''
+        Get parameters from DB for a specific type.
+
+        Parameters
+        ----------
+        site: str
+            Must be "North" or "South" (not case sensitive)
+        version: str
+            Version of the model.
+        onlyApplicable: bool
+            If True, only applicable parameters will be read.
+
+        Returns
+        -------
+        dict containing the parameters
+        '''
+
+        if site.lower() not in ['north', 'south']:
+            raise ValueError('Site must be "North" or "South" (not case sensitive)')
+        site = 'lapalma' if 'north' in site.lower() else 'paranal'
+
+        yamlFile = cfg.findFile('parValues-Sites.yml', cfg.get('modelFilesLocations'))
+        self._logger.info('Reading DB file {}'.format(yamlFile))
+        with open(yamlFile, 'r') as stream:
+            _allParsVersions = yaml.load(stream, Loader=yaml.FullLoader)
+
+        _pars = dict()
+        for parName, parInfo in _allParsVersions.items():
+
+            if not parInfo['Applicable'] and onlyApplicable:
+                continue
+            if site in parName:
+                parNameIn = '_'.join(parName.split('_')[1:])
+
+                _pars[parNameIn] = parInfo[version]
+
+        return _pars
+
+    def _getSiteParametersMongoDB(
+        self,
+        dbName,
+        site,
+        version,
+        runLocation,
+        onlyApplicable=False
+    ):
+        '''
+        Get parameters from MongoDB for a specific telescope.
+
+        Parameters
+        ----------
+        dbName: str
+            the name of the DB
+        site: str
+        version: str
+            Version of the model.
+        runLocation: Path or str
+            The sim_telarray run location to write the tabulated data files into.
+        onlyApplicable: bool
+            If True, only applicable parameters will be read.
+
+        Returns
+        -------
+        dict containing the parameters
+        '''
+
+        if site not in ['North', 'South']:
+            raise ValueError('Site must be "North" or "South" (case sensitive!)')
+
+        collection = DatabaseHandler.dbClient[dbName].sites
+        _parameters = dict()
+
+        query = {
+            'Site': site,
+            'Version': version,
+        }
+        if onlyApplicable:
+            query['Applicable'] = onlyApplicable
+        if collection.count_documents(query) < 1:
+            raise ValueError(
+                'The following query returned zero results! Check the input data and rerun.\n',
+                query
+            )
+        for post in collection.find(query):
+            parNow = post['Parameter']
+            _parameters[parNow] = post
+            _parameters[parNow].pop('Parameter', None)
+            _parameters[parNow].pop('Site', None)
+            _parameters[parNow]['entryDate'] = ObjectId(post['_id']).generation_time
+            if _parameters[parNow]['File']:
+                file = self.getFileMongoDB(
+                    dbName,
+                    _parameters[parNow]['Value']
+                )
+
+                self.writeFileFromMongoToDisk(dbName, runLocation, file)
+
+        return _parameters
 
     def writeModelFile(self, fileName, destDir):
         '''
