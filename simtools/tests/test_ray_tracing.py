@@ -28,7 +28,7 @@ def test_ssts(show=False):
     rayTracing = list()
     for t in telTypes:
         tel = TelescopeModel(
-            telescopeName='north-' + t,
+            telescopeName='south-' + t,
             version=version,
             label='test-sst'
         )
@@ -118,7 +118,7 @@ def test_plot_image():
     offAxisAngle = [0, 2.5, 5.0] * u.deg
 
     tel = TelescopeModel(
-        telescopeName='north-sst-D',
+        telescopeName='south-sst-D',
         version=version,
         label=label
     )

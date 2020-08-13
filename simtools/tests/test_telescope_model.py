@@ -10,7 +10,7 @@ logger.setLevel(logging.DEBUG)
 
 
 def test_input_validation():
-    telName = 'south-lst-1'
+    telName = 'north-lst-1'
     logger.info('Input telName: {}'.format(telName))
 
     tel = TelescopeModel(
@@ -25,7 +25,7 @@ def test_input_validation():
 
 def test_handling_parameters():
     tel = TelescopeModel(
-        telescopeName='south-lst-1',
+        telescopeName='north-lst-1',
         version='prod4',
         label='test-lst'
     )
@@ -49,7 +49,7 @@ def test_handling_parameters():
 
 def test_flen_type():
     tel = TelescopeModel(
-        telescopeName='south-lst-1',
+        telescopeName='north-lst-1',
         version='prod4',
         label='test-lst'
     )
@@ -84,7 +84,7 @@ def test_cfg_file():
 
 def test_cfg_input():
     tel = TelescopeModel(
-        telescopeName='south-lst-1',
+        telescopeName='north-lst-1',
         version='prod4',
         label='test-sst-2'
     )

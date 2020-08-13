@@ -30,7 +30,7 @@ def getArray(arrayName, databaseLocation):
     """
 
     arrayName = names.validateArrayName(arrayName)
-    db = db_handler.DatabaseHandler(logger.name)
+    db = db_handler.DatabaseHandler()
     allArrays = db.getArrayDB(databaseLocation)
     return allArrays[arrayName]
 
