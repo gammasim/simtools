@@ -231,12 +231,19 @@ class TelescopeModel:
         logger.debug('Reading site parameters from DB')
 
         site = names.getSiteFromTelescopeName(self.telescopeName)
-        _parameters.update(db.getSiteParameters(
+        _sitePars = db.getSiteParameters(
             site,
             self.version,
             self._configFileDirectory,
             onlyApplicable=True
-        ))
+        )
+        # Only the following are read by sim_telarray, the others produce an error.
+        # TODO - Should we find a better solution for this?
+        for _parNow in _sitePars.copy():
+            if _parNow not in ['atmospheric_transmission', 'altitude']:
+                _sitePars.pop(_parNow, None)
+
+        self._parameters.update(_sitePars)
 
         # Removing all info but the value
         # TODO - change to use the full dict instead.
@@ -245,6 +252,18 @@ class TelescopeModel:
             for key, value in self._parameters.items():
                 _pars[key] = value['Value']
             self._parameters = copy.copy(_pars)
+
+        # The following cannot be read by sim_telarray
+        # TODO - Should we find a better solution for this?
+        parsToRemove = [
+            'pixel_shape',
+            'pixel_diameter',
+            'lightguide_efficiency_angle_file',
+            'lightguide_efficiency_wavelength_file'
+        ]
+        for _parNow in parsToRemove:
+            if _parNow in self._parameters:
+                self._parameters.pop(_parNow, None)
 
     # END _loadParametersFromDB
 
