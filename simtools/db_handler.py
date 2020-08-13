@@ -9,7 +9,7 @@ import time
 import atexit
 import getpass
 from pathlib import Path
-from bson import ObjectId
+from bson.objectid import ObjectId
 from threading import Lock
 
 import pymongo
