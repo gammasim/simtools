@@ -150,6 +150,10 @@ def test_modify_db():
 
 def test_reading_db_sites():
 
+    # This test is only relevant for the MongoDB
+    if not cfg.get('useMongoDB'):
+        return
+
     db = db_handler.DatabaseHandler(logger.name)
     logger.info('----Testing reading La Palma parameters-----')
     pars = db.getSiteParameters('North', 'prod4', testDataDirectory)
