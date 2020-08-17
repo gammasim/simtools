@@ -121,14 +121,27 @@ if __name__ == '__main__':
         help='Test option will be faster by simulating only few mirrors',
         action='store_true'
     )
+    parser.add_argument(
+        '-v',
+        '--verbosity',
+        dest='logLevel',
+        action='store',
+        default='info',
+        help='Log level to print (default is INFO)'
+    )
+
     args = parser.parse_args()
+
+    logger = logging.getLogger('derive_mirror_rnda')
+    logger.setLevel(gen.getLogLevelFromUser(args.logLevel))
 
     label = 'derive_rnda'
     tel = TelescopeModel(
         telescopeType=args.tel_type,
         site=args.site,
         version=args.model_version,
-        label=label
+        label=label,
+        logger=logger.name
     )
     if args.mirror_list is not None:
         mirrorListFile = cfg.findFile(name=args.mirror_list)
@@ -142,7 +155,8 @@ if __name__ == '__main__':
             telescopeModel=tel,
             singleMirrorMode=True,
             mirrorNumbers=list(range(1, 10)) if args.test else 'all',
-            useRandomFocalLength=args.use_random_flen
+            useRandomFocalLength=args.use_random_flen,
+            logger=logger.name
         )
         ray.simulate(test=False, force=True)
         ray.analyze(force=True)
