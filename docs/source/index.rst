@@ -3,17 +3,31 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-.. _ctamclib:
+.. _gammasimtools:
 
 
 =================================
- CTA MC Library (:mod:`ctamclib`)
+ gammasim-tools
 =================================
 
-What is ctamclib?
+What is gammasim-tools?
 =================
 
 Bla Bla Bla
+
+
+Framework
+=========
+
+Configuration
+-------------
+
+.. automodule:: config
+   :members: 
+
+
+.. toctree::
+
 
 MC Model
 =========
@@ -22,7 +36,7 @@ MC Model
 Telescope Model
 ----------------
 
-.. automodule:: telescope_model
+.. automodule:: model.telescope_model
    :members: 
 
 
@@ -32,6 +46,16 @@ sim_telarray
 =============
 
 .. automodule:: simtel_runner
+   :members: 
+
+
+.. toctree::
+
+
+CORSIKA
+=============
+
+.. automodule:: corsika_config
    :members: 
 
 
@@ -51,7 +75,13 @@ Ray Tracing
 Utilities
 ==========
 
-.. automodule:: util
+.. automodule:: util.general
+   :members: 
+
+.. automodule:: util.names
+   :members: 
+
+.. automodule:: util.model
    :members: 
 
 

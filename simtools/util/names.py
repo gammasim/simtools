@@ -1,5 +1,3 @@
-''' Utilities to deal with names validation and file names. '''
-
 import logging
 
 __all__ = [
