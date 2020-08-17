@@ -23,7 +23,6 @@ from simtools.util import names
 from simtools.util.model import getTelescopeClass
 
 __all__ = [
-    'getArrayDB',
     'getModelParameters',
     'readMongoDB',
     'writeModelFile',
@@ -206,25 +205,6 @@ class DatabaseHandler:
             _tunnel.kill()
 
         return
-
-    def getArrayDB(self, databaseLocation):
-        '''
-        Get array db info as a dict.
-
-        Parameters
-        ----------
-        databaseLocation: str or Path
-
-        Returns
-        -------
-        dict
-        '''
-
-        file = Path(databaseLocation).joinpath('arrays').joinpath('arrays.yml')
-        out = dict()
-        with open(file, 'r') as stream:
-            out = yaml.load(stream, Loader=yaml.FullLoader)
-        return out
 
     def getModelParameters(
         self,
