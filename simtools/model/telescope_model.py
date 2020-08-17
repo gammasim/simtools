@@ -1,10 +1,3 @@
-'''
-Module containing TelescopeModel class.
-TelescopeModel is an representation of the MC model for single telescopes.
-
-Author: Raul R Prado
-'''
-
 import logging
 import yaml
 import copy

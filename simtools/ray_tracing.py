@@ -1,9 +1,3 @@
-'''
-Ray Tracing simulations and analysis.
-
-Author: Raul R Prado
-'''
-
 import logging
 import subprocess
 import matplotlib.pyplot as plt
