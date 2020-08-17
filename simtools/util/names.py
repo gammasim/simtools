@@ -282,17 +282,16 @@ def convertTelescopeNameToYaml(name):
         'SST-ASTRI': 'SST-2M-ASTRI',
         'SST-GCT': 'SST-2M-GCT-S',
         'MST-FlashCam-D': 'MST-FlashCam',
-        'MST-Nectar-D': 'MST-NectarCam',
+        'MST-NectarCam-D': 'MST-NectarCam',
         'SCT-D': 'SCT',
         'LST-D234': 'LST',
         'LST-1': 'LST'
     }
 
     if newName not in oldNames.keys():
-        logger.error('Telescope name {} could not be converted to yml names'.format(name))
-        return None
+        raise ValueError('Telescope name {} could not be converted to yml names'.format(name))
     else:
-        return oldNames[newNames]
+        return oldNames[newName]
 
 
 allTelescopeClassNames = {
