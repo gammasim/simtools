@@ -1,5 +1,3 @@
-#!/usr/bin/python3
-
 import logging
 
 from simtools.util import names

@@ -1,9 +1,3 @@
-'''
-Module containing SimtelRunner class.
-
-Author: Raul R Prado
-'''
-
 import logging
 import subprocess
 import os
