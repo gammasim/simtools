@@ -4,9 +4,6 @@ import simtools.io_handler as io
 
 __all__ = ['Mirrors']
 
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
-
 
 class InvalidMirrorListFile(Exception):
     pass
@@ -36,7 +33,7 @@ class Mirrors:
         Plot the mirror layout (to be implemented).
     '''
 
-    def __init__(self, mirrorListFile):
+    def __init__(self, mirrorListFile, logger=__name__):
         '''
         Mirrors.
 
@@ -44,8 +41,12 @@ class Mirrors:
         ----------
         mirrorListFile: string
                     The sim_telarray file name.
+        logger: str
+            Logger name to use in this instance
         '''
-        logger.debug('Mirrors Init')
+
+        self._logger = logging.getLogger(logger)
+        self._logger.debug('Mirrors Init')
 
         self._mirrorListFile = mirrorListFile
         self._readMirrorList()
@@ -78,8 +79,8 @@ class Mirrors:
                     self.diameter = float(line[2])
                     self.shape = int(line[4])
                     collectGeoPars = False
-                    logger.debug('Shape = {}'.format(self.shape))
-                    logger.debug('Diameter = {}'.format(self.diameter))
+                    self._logger.debug('Shape = {}'.format(self.shape))
+                    self._logger.debug('Diameter = {}'.format(self.diameter))
 
                 self._mirrors['number'].append(mirrorCounter)
                 self._mirrors['posX'].append(float(line[0]))
@@ -91,7 +92,7 @@ class Mirrors:
         self.numberOfMirrors = mirrorCounter
         if self.numberOfMirrors == 0:
             msg = 'Problem reading mirror list file'
-            logger.error(msg)
+            self._logger.error(msg)
             raise InvalidMirrorListFile()
 
     def getSingleMirrorParameters(self, number):
@@ -108,7 +109,7 @@ class Mirrors:
         (posX, posY, diameter, flen, shape)
         '''
         if number > self.numberOfMirrors - 1:
-            logger.error('Mirror number is out range')
+            self._logger.error('Mirror number is out range')
             return None
         return (
             self._mirrors['posX'][number],
