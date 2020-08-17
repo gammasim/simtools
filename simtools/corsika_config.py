@@ -11,7 +11,7 @@ import simtools.config as cfg
 import simtools.io_handler as io
 import simtools.corsika_parameters as cors_pars
 from simtools.util import names
-from simtools.model.array_model import getArray
+from simtools.util.arrays import getArrayInfo
 
 __all__ = ['CorsikaConfig']
 
@@ -109,7 +109,6 @@ class CorsikaConfig:
         site,
         arrayName,
         label=None,
-        databaseLocation=None,
         filesLocation=None,
         randomSeeds=False,
         **kwargs
@@ -125,8 +124,6 @@ class CorsikaConfig:
             Name of the array type. Ex 4LST, baseline ...
         label: str
             Instance label.
-        databaseLocation: str
-            Location of the db files.
         filesLocation: str or Path.
             Main location of the output file.
         randomSeeds: bool
@@ -139,10 +136,9 @@ class CorsikaConfig:
 
         self._label = label
         self._filesLocation = cfg.getConfigArg('outputLocation', filesLocation)
-        self._databaseLocation = cfg.getConfigArg('databaseLocation', databaseLocation)
         self._site = names.validateSiteName(site)
         self._arrayName = names.validateArrayName(arrayName)
-        self._array = getArray(self._arrayName, self._databaseLocation)
+        self._array = getArrayInfo(self._arrayName)
 
         self.setParameters(**kwargs)
         self._loadSeeds(randomSeeds)

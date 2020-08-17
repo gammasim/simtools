@@ -3,7 +3,6 @@
 import logging
 import astropy.units as u
 
-import simtools.config as cfg
 from simtools.util.general import collectArguments
 
 

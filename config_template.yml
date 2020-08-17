@@ -18,6 +18,3 @@ simtelPath: /Users/ogueta/work/cta/gammasim/gammasim-tools/sim_telarray/22_06_20
 # Not used yet
 submissionCommand: 'qsub '
 
-# To be removed soon
-databaseLocation: /home/prado/Work/Projects/CTA_MC/gammasim-db
-
