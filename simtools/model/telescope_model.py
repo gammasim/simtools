@@ -12,7 +12,7 @@ from pathlib import Path
 
 import simtools.config as cfg
 import simtools.io_handler as io
-import simtools.db_handler as db
+from simtools import db_handler
 from simtools.util import names
 from simtools.util.model import validateModelParameter
 from simtools.model.mirrors import Mirrors
@@ -217,7 +217,10 @@ class TelescopeModel:
     def _loadParametersFromDB(self):
         ''' Read parameters from DB and store them in _parameters. '''
 
+        logger.debug('Reading telescope parameters from DB')
+
         self._setConfigFileDirectory()
+        db = db_handler.DatabaseHandler(logger.name)
         self._parameters = db.getModelParameters(
             self.telescopeName,
             self.version,
@@ -225,35 +228,43 @@ class TelescopeModel:
             onlyApplicable=True
         )
 
+        logger.debug('Reading site parameters from DB')
+
+        site = names.getSiteFromTelescopeName(self.telescopeName)
+        _sitePars = db.getSiteParameters(
+            site,
+            self.version,
+            self._configFileDirectory,
+            onlyApplicable=True
+        )
+        # Only the following are read by sim_telarray, the others produce an error.
+        # TODO - Should we find a better solution for this?
+        for _parNow in _sitePars.copy():
+            if _parNow not in ['atmospheric_transmission', 'altitude']:
+                _sitePars.pop(_parNow, None)
+
+        self._parameters.update(_sitePars)
+
         # Removing all info but the value
-        logger.warning('HACK - THIS SHOULD BE DONE BY db_handler')
+        # TODO - change to use the full dict instead.
         if cfg.get('useMongoDB'):
             _pars = dict()
             for key, value in self._parameters.items():
                 _pars[key] = value['Value']
             self._parameters = copy.copy(_pars)
 
-        logger.warning('HACK - THIS SHOULD BE DONE BY db_handler')
-        # Site: Two site parameters need to be read: atmospheric_transmission and altitude
-        logger.debug('Reading site parameters from DB')
+        # The following cannot be read by sim_telarray
+        # TODO - Should we find a better solution for this?
+        parsToRemove = [
+            'pixel_shape',
+            'pixel_diameter',
+            'lightguide_efficiency_angle_file',
+            'lightguide_efficiency_wavelength_file'
+        ]
+        for _parNow in parsToRemove:
+            if _parNow in self._parameters:
+                self._parameters.pop(_parNow, None)
 
-        site = names.getSiteFromTelescopeName(self.telescopeName)
-        site = 'Paranal' if site == 'South' else 'LaPalma'
-
-        def _getSiteParameter(parName):
-            ''' Get the value of parName for a given site '''
-            yamlFile = cfg.findFile('parValues-Sites.yml', self._modelFilesLocations)
-            logger.info('Reading DB file {}'.format(yamlFile))
-            with open(yamlFile, 'r') as stream:
-                allPars = yaml.load(stream, Loader=yaml.FullLoader)
-                for par in allPars:
-                    if parName in par and site.lower() in par:
-                        return allPars[par][self.version]
-            logger.warning('Parameter {} not found for site {}'.format(parName, site))
-            return None
-
-        for siteParName in ['atmospheric_transmission', 'altitude']:
-            self._parameters[siteParName] = _getSiteParameter(siteParName)
     # END _loadParametersFromDB
 
     def hasParameter(self, parName):
