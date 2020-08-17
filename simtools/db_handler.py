@@ -22,20 +22,7 @@ import simtools.config as cfg
 from simtools.util import names
 from simtools.util.model import getTelescopeClass
 
-__all__ = [
-    'getArrayDB',
-    'getModelParameters',
-    'readMongoDB',
-    'writeModelFile',
-    'getModelFile',
-    'getFileMongoDB',
-    'writeFileFromMongoToDisk',
-    'copyTelescope',
-    'deleteQuery',
-    'updateParameter',
-    'addParameter',
-    'addNewParameter'
-]
+__all__ = ['DatabaseHandler']
 
 
 class DatabaseHandler:
