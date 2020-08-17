@@ -17,9 +17,6 @@ from simtools.util.general import collectKwargs, setDefaultKwargs
 
 __all__ = ['PSFImage']
 
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
-
 
 class PSFImage:
     '''
@@ -53,7 +50,7 @@ class PSFImage:
     plotIntegral(**kwargs)
         Plot cumulative intensity as a function containing fraction.
     '''
-    def __init__(self, focalLength=None, totalScatteredArea=None):
+    def __init__(self, focalLength=None, totalScatteredArea=None, logger=__name__):
         '''
         Parameters
         ----------
@@ -61,7 +58,11 @@ class PSFImage:
             Focal length of the system in cm. If not given, PSF can only be computed in cm.
         totalScatteredArea: float, optional
             Scatter area of all photons in cm^2. If not given, effective area cannot be computed.
+        logger: str
+            Logger name to use in this instance
         '''
+
+        self._logger = logging.getLogger(logger)
         self.photonPosX = list()
         self.photonPosY = list()
         self.centroidX = None
@@ -89,7 +90,7 @@ class PSFImage:
             If photon positions X and Y are not compatible or are empty.
 
         '''
-        logger.info('Reading SimtelFile {}'.format(file))
+        self._logger.info('Reading SimtelFile {}'.format(file))
         self._totalPhotons = 0
         with open(file, 'r') as f:
             for line in f:
@@ -97,7 +98,7 @@ class PSFImage:
 
         if not self._isPhotonPositionsOK():
             msg = 'Problems reading Simtel file - invalid data'
-            logger.error(msg)
+            self._logger.error(msg)
             raise RuntimeError(msg)
 
         self.centroidX = np.mean(self.photonPosX)
@@ -135,7 +136,7 @@ class PSFImage:
             if self._totalArea is None:
                 self._totalArea = totalAreaInFile
             elif totalAreaInFile != self._totalArea:
-                logger.warning(
+                self._logger.warning(
                     'Conflicting value of the total area found'
                     ' {} != {}'.format(self._totalArea, totalAreaInFile) +
                     ' - Keeping the original value'
@@ -164,7 +165,7 @@ class PSFImage:
         if '_effectiveArea' in self.__dict__ and self._effectiveArea is not None:
             return self._effectiveArea
         else:
-            logger.error('Effective Area could not be calculated')
+            self._logger.error('Effective Area could not be calculated')
             return None
 
     def setEffectiveArea(self, value):
@@ -197,7 +198,7 @@ class PSFImage:
 
         '''
         if unit == 'deg' and not self._hasFocalLength:
-            logger.error('PSF cannot be computed in deg because focal length is not set')
+            self._logger.error('PSF cannot be computed in deg because focal length is not set')
             return None
         if fraction not in self._storedPSF.keys():
             self._computePSF(fraction)
@@ -218,7 +219,7 @@ class PSFImage:
             'cm' or 'deg'. 'deg' will not work if focal length was not set.
         '''
         if unit == 'deg' and not self._hasFocalLength:
-            logger.error('PSF cannot be set in deg because focal length is not set')
+            self._logger.error('PSF cannot be set in deg because focal length is not set')
             return
         unitFactor = 1 if unit == 'cm' else 1. / self._cmToDeg
         self._storedPSF[fraction] = value * unitFactor
@@ -250,7 +251,7 @@ class PSFImage:
             Diameter of the circular container with a certain fraction of the photons.
 
         '''
-        logger.debug('Finding PSF for fraction = {}'.format(fraction))
+        self._logger.debug('Finding PSF for fraction = {}'.format(fraction))
 
         xPosSq = [i**2 for i in self.photonPosX]
         yPosSq = [i**2 for i in self.photonPosY]
@@ -281,7 +282,7 @@ class PSFImage:
             # Diameter = 2 * radius
             return 2 * currentRadius
         else:
-            logger.warning('Could not find PSF efficiently - trying by scanning')
+            self._logger.warning('Could not find PSF efficiently - trying by scanning')
             return self._findRadiusByScanning(targetNumber, radiusSig)
 
     def _findRadiusByScanning(self, targetNumber, radiusSig):
@@ -300,7 +301,7 @@ class PSFImage:
         float:
             Radius of the circle with targetNumber photons inside.
         '''
-        logger.debug('Finding PSF by scanning')
+        self._logger.debug('Finding PSF by scanning')
 
         def scan(dr, radMin, radMax):
             '''
@@ -328,7 +329,7 @@ class PSFImage:
             if foundRadius:
                 return (r0 + r1) / 2, r0, r1
             else:
-                logger.error('Could not find PSF by scanning')
+                self._logger.error('Could not find PSF by scanning')
                 raise RuntimeError
 
         # Run scan few times with smaller dr to optimize search.

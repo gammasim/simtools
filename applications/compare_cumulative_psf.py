@@ -42,10 +42,10 @@ if __name__ == '__main__':
     offAxisAngle = [0 * u.deg]
 
     tel = TelescopeModel(
-        telescopeType='lst',
-        site=site,
+        telescopeName='north-lst-1',
         version=version,
-        label=label
+        label=label,
+        logger=logger.name
     )
 
     # New parameters defined by Konrad
@@ -59,7 +59,8 @@ if __name__ == '__main__':
         telescopeModel=tel,
         sourceDistance=sourceDistance,
         zenithAngle=zenithAngle,
-        offAxisAngle=offAxisAngle
+        offAxisAngle=offAxisAngle,
+        logger=logger.name
     )
 
     ray.simulate(test=True, force=False)
