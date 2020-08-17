@@ -14,14 +14,14 @@
 #
 import os
 import sys
-sys.path.insert(0, os.path.abspath('../../ctamclib'))
+sys.path.insert(0, os.path.abspath('../../simtools'))
 
 
 # -- Project information -----------------------------------------------------
 
-project = 'ctamclib'
-copyright = '2019, Raul R Prado'
-author = 'Raul R Prado'
+project = 'gammasim-tools'
+copyright = '2019, Cherenkov Telescope Array Observatory Consortium'
+author = 'Raul R Prado and Orel Gueta'
 
 # The short X.Y version
 version = ''
@@ -108,7 +108,7 @@ html_static_path = ['_static']
 # -- Options for HTMLHelp output ---------------------------------------------
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'ctamclibdoc'
+htmlhelp_basename = 'gammasimdoc'
 
 
 # -- Options for LaTeX output ------------------------------------------------
@@ -135,8 +135,8 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'ctamclib.tex', 'ctamclib Documentation',
-     'Raul R Prado', 'manual'),
+    (master_doc, 'gammasim-tools.tex', 'gammasim-tools Documentation',
+     author, 'manual'),
 ]
 
 
@@ -145,7 +145,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'ctamclib', 'ctamclib Documentation',
+    (master_doc, 'gammasim-tools', 'gammasim-tools Documentation',
      [author], 1)
 ]
 
@@ -156,8 +156,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'ctamclib', 'ctamclib Documentation',
-     author, 'ctamclib', 'One line description of project.',
+    (master_doc, 'gammasim-tools', 'gammasim-tools Documentation',
+     author, 'gammasim-tools', 'One line description of project.',
      'Miscellaneous'),
 ]
 
