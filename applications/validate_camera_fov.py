@@ -61,7 +61,8 @@ if __name__ == '__main__':
         telescopeType=args.tel_type,
         site=args.site,
         version=args.model_version,
-        label=args.label
+        label=args.label,
+        logger=logger.name
     )
 
     print('\nValidating the camera FoV of {}\n'.format(telModel.telescopeType))
