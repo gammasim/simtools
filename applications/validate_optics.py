@@ -87,7 +87,11 @@ if __name__ == '__main__':
         telescopeType=args.tel_type,
         site=args.site,
         version=args.model_version,
-        label=args.label
+        label=args.label,
+        modelFilesLocations=None,
+        filesLocation=None,
+        readFromDB=True,
+        logger=logger.name
     )
 
     print(
