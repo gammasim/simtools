@@ -310,6 +310,7 @@ class TelescopeModel:
     def addParameters(self, **kwargs):
         '''
         Add a NEW parameters to the model.
+        This function does not modify the DB, it affects only the current instance.
 
         Parameters
         ----------
@@ -334,6 +335,7 @@ class TelescopeModel:
     def changeParameters(self, **kwargs):
         '''
         Change the value of EXISTING parameters to the model.
+        This function does not modify the DB, it affects only the current instance.
 
         Parameters
         ----------
