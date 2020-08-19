@@ -263,7 +263,7 @@ class RayTracing:
 
                 photonsFile = self._outputDirectory.joinpath(photonsFileName)
                 telTransmission = computeTelescopeTransmission(telTransmissionPars, thisOffAxis)
-                image = PSFImage(focalLength)
+                image = PSFImage(focalLength, None, self._logger.name)
                 image.readSimtelFile(photonsFile)
                 self._psfImages[thisOffAxis] = copy(image)
 
