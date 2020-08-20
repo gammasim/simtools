@@ -198,7 +198,7 @@ class DatabaseHandler:
         self,
         telescopeName,
         version,
-        runLocation,
+        runLocation=None,
         onlyApplicable=False,
     ):
         '''
@@ -290,7 +290,7 @@ class DatabaseHandler:
         dbName,
         telescopeName,
         version,
-        runLocation,
+        runLocation=None,
         onlyApplicable=False
     ):
         '''
@@ -343,7 +343,7 @@ class DatabaseHandler:
                 _tel,
                 _versionValidated,
                 runLocation,
-                True,
+                (runLocation is not None),
                 _selectOnlyApplicable
             ))
 
