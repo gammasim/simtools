@@ -157,7 +157,7 @@ class DatabaseHandler:
         '''
 
         tunnelCmd = (
-            'ssh -N -L {localport}:{mongodbServer}:{remoteport} {user}@{tunnelServer}'.format(
+            'ssh -4 -N -L {localport}:{mongodbServer}:{remoteport} {user}@{tunnelServer}'.format(
                 localport=localport,
                 remoteport=remoteport,
                 user=user,
