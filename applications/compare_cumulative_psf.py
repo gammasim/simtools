@@ -35,14 +35,13 @@ def getData(**kwargs):
 
 if __name__ == '__main__':
     sourceDistance = 12 * u.km
-    site = 'south'
     version = 'prod4'
     label = 'lst_integral'
     zenithAngle = 20 * u.deg
     offAxisAngle = [0 * u.deg]
 
     tel = TelescopeModel(
-        telescopeName='north-lst-1',
+        telescopeType='north-lst-1',
         version=version,
         label=label,
         logger=logger.name
