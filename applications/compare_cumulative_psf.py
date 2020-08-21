@@ -41,7 +41,7 @@ if __name__ == '__main__':
     offAxisAngle = [0 * u.deg]
 
     tel = TelescopeModel(
-        telescopeType='north-lst-1',
+        telescopeName='north-lst-1',
         version=version,
         label=label,
         logger=logger.name
