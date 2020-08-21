@@ -11,9 +11,19 @@
 =================================
 
 What is gammasim-tools?
-=================
+=======================
 
 Bla Bla Bla
+
+
+Applications
+============
+
+.. automodule:: validate_optics
+   :members: 
+
+
+.. toctree::
 
 
 Framework
@@ -30,7 +40,7 @@ Configuration
 
 
 MC Model
-=========
+========
 
 
 Telescope Model
