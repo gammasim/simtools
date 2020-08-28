@@ -6,9 +6,10 @@
 .. _gammasimtools:
 
 
-=================================
- gammasim-tools
-=================================
+==============
+gammasim-tools
+==============
+
 
 What is gammasim-tools?
 =======================
@@ -16,83 +17,13 @@ What is gammasim-tools?
 Bla Bla Bla
 
 
-Applications
-============
-
-.. automodule:: validate_optics
-   :members: 
-
+General documentation
+=====================
 
 .. toctree::
+  :maxdepth: 1
+  :glob:
 
-
-Framework
-=========
-
-Configuration
--------------
-
-.. automodule:: config
-   :members: 
-
-
-.. toctree::
-
-
-MC Model
-========
-
-
-Telescope Model
-----------------
-
-.. automodule:: model.telescope_model
-   :members: 
-
-
-.. toctree::
-
-sim_telarray
-=============
-
-.. automodule:: simtel_runner
-   :members: 
-
-
-.. toctree::
-
-
-CORSIKA
-=============
-
-.. automodule:: corsika_config
-   :members: 
-
-
-.. toctree::
-
-
-Ray Tracing
-============
-
-.. automodule:: ray_tracing
-   :members: 
-
-
-.. toctree::
-
-
-Utilities
-==========
-
-.. automodule:: util.general
-   :members: 
-
-.. automodule:: util.names
-   :members: 
-
-.. automodule:: util.model
-   :members: 
-
-
-.. toctree::
+  getting_started
+  applications
+  library
