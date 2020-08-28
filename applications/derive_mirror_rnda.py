@@ -1,7 +1,47 @@
 #!/usr/bin/python3
 
 '''
-    Example: python applications/derive_mirror_rnda.py --tel_type mst-flashcam --mean_d80 1.4
+    Summary
+    -------
+    This application derives the parameter mirror_reflection_random_angle (mirror roughness) \
+    for a given set of measured D80 of individual mirrors.
+    .. _deriva_rnda_plot:
+    .. figure::  images/
+      :align:   center
+
+
+
+    Command line arguments
+    ----------------------
+    tel_name (str, required)
+        Telescope name (e.g. North-LST-1, South-SST-D, ...)
+    model_version (str, optional)
+        Model version (default=prod4)
+    mean_d80 (float, required)
+        Mean of measured D80 [cm]
+    sig_d80 (float, optional)
+        Std dev of measured D80 [cm]
+    rnda (float, optional)
+        Start value of mirror_reflection_random_angle. If not given, the value from the default \
+        model will be used.
+    d80_list (file, optional)
+        File with single column list of measured D80 [cm]. It is used only for plotting the D80 \
+        distributions. If given, the measured distribution will be plotted on the top of the \
+        simulated one.
+    mirror_list (file, optional)
+        Mirror list file (in sim_telarray format) to replace the default one. It should be used \
+        if measured mirror focal lengths need to be taken into account.
+    use_random_flen (activation mode, optional)
+        Use random focal lengths, instead of the measured ones. The argument random_flen can be \
+        used to replace the default random_focal_length from the model.
+    random_flen (float, optional)
+        Value to replace the default random_focal_length. Only used if use_random_flen is activated.
+    test (activation mode, optional)
+        If activated, application will be faster by simulating only few mirrors.
+
+    Examples
+    --------
+        $ python applications/derive_mirror_rnda.py --tel_name north-mst-flashcam --mean_d80 1.4 \
         --no_tunning --mirror_list mirror_MST_focal_lengths.dat --d80_list mirror_MST_D80.dat
 '''
 
@@ -43,8 +83,8 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        '--tel_type',
-        help='Telescope type (e.g. mst-flashcam, lst)',
+        '--tel_name',
+        help='Telescope name (e.g. North-LST-1, South-SST-D, ...)',
         type=str,
         required=True
     )
@@ -53,12 +93,6 @@ if __name__ == '__main__':
         help='Model version (default=prod4)',
         type=str,
         default='prod4'
-    )
-    parser.add_argument(
-        '--site',
-        help='Site (default=South)',
-        type=str,
-        default='south'
     )
     parser.add_argument(
         '--mean_d80',
@@ -125,8 +159,7 @@ if __name__ == '__main__':
 
     label = 'derive_rnda'
     tel = TelescopeModel(
-        telescopeType=args.tel_type,
-        site=args.site,
+        telescopeName=args.tel_name,
         version=args.model_version,
         label=label
     )
@@ -232,6 +265,9 @@ if __name__ == '__main__':
     ax = plt.gca()
     ax.set_xlabel(r'mirror$\_$random$\_$reflection$\_$angle')
     ax.set_ylabel(r'$D_{80}$ [cm]')
+
+    print(rndaOpt)
+    print(meanD80)
 
     if not args.no_tunning:
         ax.errorbar(
