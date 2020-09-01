@@ -17,13 +17,14 @@ What is gammasim-tools?
 Bla Bla Bla
 
 
-General documentation
+General Documentation
 =====================
 
 .. toctree::
-  :maxdepth: 1
+  :maxdepth: 2
   :glob:
 
   getting_started
   applications
+  framework
   library
