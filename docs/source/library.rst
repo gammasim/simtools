@@ -1,6 +1,6 @@
 .. _library:
 
-simtools library
+simtools Library
 ****************
 
 .. toctree::

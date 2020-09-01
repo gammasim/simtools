@@ -5,6 +5,7 @@
     -------
     This application derives the parameter mirror_reflection_random_angle (mirror roughness) \
     for a given set of measured D80 of individual mirrors.
+
     .. _deriva_rnda_plot:
     .. figure::  images/
       :align:   center
@@ -38,9 +39,12 @@
         Value to replace the default random_focal_length. Only used if use_random_flen is activated.
     test (activation mode, optional)
         If activated, application will be faster by simulating only few mirrors.
+    verbosity (str, optional)
+        Log level to print (default=INFO).
 
     Examples
     --------
+        MST - Prod5 (07.2020)
         $ python applications/derive_mirror_rnda.py --tel_name north-mst-flashcam --mean_d80 1.4 \
         --no_tunning --mirror_list mirror_MST_focal_lengths.dat --d80_list mirror_MST_D80.dat
 '''
@@ -58,12 +62,10 @@ from astropy.io import ascii
 from astropy.table import Table
 
 import simtools.config as cfg
+import simtools.util.general as gen
 from simtools.util.general import sortArrays
 from simtools.ray_tracing import RayTracing
 from simtools.model.telescope_model import TelescopeModel
-
-logger = logging.getLogger(__name__)
-logging.getLogger().setLevel(logging.DEBUG)
 
 plt.rc('font', family='serif', size=20)
 plt.rc('xtick', labelsize=20)
@@ -107,29 +109,28 @@ if __name__ == '__main__':
     parser.add_argument(
         '--d80_list',
         help=(
-            'File with single column list of measured D80 [cm].'
-            ' If given, the measured distribution will be plotted'
-            ' on the top of the simulated one.'
+            'File with single column list of measured D80 [cm]. If given, the measured distribution'
+            ' will be plotted on the top of the simulated one.'
         ),
         type=str,
         required=False
     )
     parser.add_argument(
         '--rnda',
-        help='Start value of mirror_reflection_random_angle',
+        help='Starting value of mirror_reflection_random_angle',
         type=float,
         default=0.
     )
     parser.add_argument(
         '--no_tunning',
-        help='Turn off the tunning - A single case will be simulated and plotted',
+        help='Turn off the tunning - A single case will be simulated and plotted.',
         action='store_true'
     )
     parser.add_argument(
         '--mirror_list',
         help=(
-                'Mirror list file to replace the default one.'
-                ' It should be used if measured mirror focal lengths need to be accounted'
+            'Mirror list file to replace the default one. It should be used if measured mirror'
+            ' focal lengths need to be accounted'
         ),
         type=str,
         required=False
@@ -137,25 +138,37 @@ if __name__ == '__main__':
     parser.add_argument(
         '--use_random_flen',
         help=(
-            'Use random focal lengths. The argument random_flen'
-            ' can be used to replace the default random_focal_length'
+            'Use random focal lengths. The argument random_flen can be used to replace the default'
+            ' random_focal_length parameter.'
         ),
         action='store_true'
     )
     parser.add_argument(
         '--random_flen',
-        help='Value to replace the default random_focal_length',
+        help='Value to replace the default random_focal_length.',
         type=float,
         required=False
     )
     parser.add_argument(
         '--test',
-        help='Test option will be faster by simulating only few mirrors',
+        help='Test option will be faster by simulating only 10 mirrors.',
         action='store_true'
     )
-    args = parser.parse_args()
+    parser.add_argument(
+        '-v',
+        '--verbosity',
+        dest='logLevel',
+        action='store',
+        default='info',
+        help='Log level to print (default is INFO).'
+    )
 
+    args = parser.parse_args()
     label = 'derive_mirror_rnda'
+
+    logger = logging.getLogger(label)
+    logger.setLevel(gen.getLogLevelFromUser(args.logLevel))
+
     tel = TelescopeModel(
         telescopeName=args.tel_name,
         version=args.model_version,
@@ -173,7 +186,8 @@ if __name__ == '__main__':
             telescopeModel=tel,
             singleMirrorMode=True,
             mirrorNumbers=list(range(1, 10)) if args.test else 'all',
-            useRandomFocalLength=args.use_random_flen
+            useRandomFocalLength=args.use_random_flen,
+            logger=logger.name
         )
         ray.simulate(test=False, force=True)
         ray.analyze(force=True)
