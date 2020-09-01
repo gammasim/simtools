@@ -15,8 +15,6 @@ from simtools.model.model_parameters import MODEL_PARS
 
 __all__ = ['TelescopeModel']
 
-logger = logging.getLogger(__name__)
-
 
 class TelescopeModel:
     '''
@@ -63,7 +61,8 @@ class TelescopeModel:
         label=None,
         modelFilesLocations=None,
         filesLocation=None,
-        readFromDB=True
+        readFromDB=True,
+        logger=__name__
     ):
         '''
         TelescopeModel.
@@ -84,7 +83,9 @@ class TelescopeModel:
         readFromDB: bool, optional
             If True, parameters will be loaded from the DB at the init level. Default = True.
         '''
-        logger.debug('Init TelescopeModel')
+        self._logger = logging.getLogger(logger)
+        self._logger.debug('Init TelescopeModel')
+
 
         self.version = names.validateModelVersionName(version)
         self.telescopeName = names.validateTelescopeName(telescopeName)
@@ -204,16 +205,16 @@ class TelescopeModel:
         self._configFileDirectory = io.getModelOutputDirectory(self._filesLocation, self.label)
         if not self._configFileDirectory.exists():
             self._configFileDirectory.mkdir(parents=True, exist_ok=True)
-            logger.info('Creating directory {}'.format(self._configFileDirectory))
+            self._logger.info('Creating directory {}'.format(self._configFileDirectory))
         return
 
     def _loadParametersFromDB(self):
         ''' Read parameters from DB and store them in _parameters. '''
 
-        logger.debug('Reading telescope parameters from DB')
+        self._logger.debug('Reading telescope parameters from DB')
 
         self._setConfigFileDirectory()
-        db = db_handler.DatabaseHandler(logger.name)
+        db = db_handler.DatabaseHandler(self._logger.name)
         self._parameters = db.getModelParameters(
             self.telescopeName,
             self.version,
@@ -221,7 +222,7 @@ class TelescopeModel:
             onlyApplicable=True
         )
 
-        logger.debug('Reading site parameters from DB')
+        self._logger.debug('Reading site parameters from DB')
 
         site = names.getSiteFromTelescopeName(self.telescopeName)
         _sitePars = db.getSiteParameters(
@@ -297,7 +298,7 @@ class TelescopeModel:
             return self._parameters[parName]
         else:
             msg = 'Parameter {} was not found in the model'.format(parName)
-            logger.error(msg)
+            self._logger.error(msg)
             raise ValueError(msg)
 
     def addParameters(self, **kwargs):
@@ -317,10 +318,10 @@ class TelescopeModel:
         for par, value in kwargs.items():
             if par in self._parameters.keys():
                 msg = 'Parameter {} already in the model, use changeParameter instead'.format(par)
-                logger.error(msg)
+                self._logger.error(msg)
                 raise ValueError(msg)
             else:
-                logger.info('Adding {}={} to the model'.format(par, value))
+                self._logger.info('Adding {}={} to the model'.format(par, value))
                 self._parameters[par] = str(value)
         self._isConfigFileUpdated = False
 
@@ -341,11 +342,11 @@ class TelescopeModel:
         for par, value in kwargs.items():
             if par not in self._parameters.keys():
                 msg = 'Parameter {} not in the model, use addParameters instead'.format(par)
-                logger.error(msg)
+                self._logger.error(msg)
                 raise ValueError(msg)
             else:
                 if type(self._parameters[par]) != type(value):
-                    logger.warning('Value type differs from the current one')
+                    self._logger.warning('Value type differs from the current one')
                 self._parameters[par] = value
         self._isConfigFileUpdated = False
 
@@ -365,11 +366,11 @@ class TelescopeModel:
         '''
         for par in args:
             if par in self._parameters.keys():
-                logger.info('Removing parameter {}'.format(par))
+                self._logger.info('Removing parameter {}'.format(par))
                 del self._parameters[par]
             else:
                 msg = 'Could not remove parameter {} because it does not exist'.format(par)
-                logger.error(msg)
+                self._logger.error(msg)
                 raise ValueError(msg)
         self._isConfigFileUpdated = False
 
@@ -385,7 +386,7 @@ class TelescopeModel:
         self._configFilePath = self._configFileDirectory.joinpath(configFileName)
 
         # Writing parameters to the file
-        logger.info('Writing config file - {}'.format(self._configFilePath))
+        self._logger.info('Writing config file - {}'.format(self._configFilePath))
         with open(self._configFilePath, 'w') as file:
             header = (
                 '%{}\n'.format(99 * '=')
@@ -492,14 +493,14 @@ class TelescopeModel:
             mirrorListFile = cfg.findFile(mirrorListFileName, self._configFileDirectory)
         except:
             mirrorListFile = cfg.findFile(mirrorListFileName, self._modelFilesLocations)
-        self._mirrors = Mirrors(mirrorListFile)
+        self._mirrors = Mirrors(mirrorListFile, logger=self._logger.name)
         return
 
     def _loadCamera(self):
         cameraConfigFile = self._parameters['camera_config_file']
         focalLength = self._parameters['effective_focal_length']
         if focalLength == 0.:
-            logger.warning('Using focal_length because effective_focal_length is 0.')
+            self._logger.warning('Using focal_length because effective_focal_length is 0.')
             focalLength = self._parameters['focal_length']
         try:
             cameraConfigFilePath = cfg.findFile(cameraConfigFile, self._configFileDirectory)
@@ -510,7 +511,7 @@ class TelescopeModel:
             telescopeName=self.telescopeName,
             cameraConfigFile=cameraConfigFilePath,
             focalLength=focalLength,
-            logger=logger.name
+            logger=self._logger.name
         )
         return
 
