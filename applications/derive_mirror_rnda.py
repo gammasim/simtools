@@ -70,6 +70,7 @@ from astropy.table import Table
 
 import simtools.config as cfg
 import simtools.util.general as gen
+import simtools.io_handler as io
 from simtools.util.general import sortArrays
 from simtools.ray_tracing import RayTracing
 from simtools.model.telescope_model import TelescopeModel
@@ -194,7 +195,7 @@ if __name__ == '__main__':
             useRandomFocalLength=args.use_random_flen,
             logger=logger.name
         )
-        ray.simulate(test=False, force=True)
+        ray.simulate(test=False, force=False)
         ray.analyze(force=True)
 
         if plot:
@@ -224,7 +225,7 @@ if __name__ == '__main__':
                     bins=bins
                 )
 
-        return ray.getMean('d80_cm'), ray.getStdDev('d80_cm')
+        return ray.getMean('d80_cm').to(u.cm).value, ray.getStdDev('d80_cm').to(u.cm).value
 
     # First - rnda from previous model
     if args.rnda != 0:
@@ -273,7 +274,7 @@ if __name__ == '__main__':
     else:
         print('Mean = {:.3f} cm'.format(args.mean_d80))
     print('\nSimulated D80:')
-    print('Mean = {:.3f}, StdDev = {:.3f}'.format(meanD80, sigD80))
+    print('Mean = {:.3f} cm, StdDev = {:.3f} cm'.format(meanD80, sigD80))
     print('\nmirror_random_reflection_angle')
     print('Previous value = {:.6f}'.format(rndaStart))
     print('New value = {:.6f}\n'.format(rndaOpt))
@@ -295,16 +296,12 @@ if __name__ == '__main__':
         )
     ax.errorbar(
         [rndaOpt],
-        [meanD80.to(u.cm).value],
-        # yerr=[sigD80],
+        [meanD80],
+        yerr=[sigD80],
         color='r',
         marker='o',
         linestyle='none',
-        label='rnda = {:.6f} (mean = {:.3f}, sig = {:.3f})'.format(
-            rndaOpt,
-            meanD80.to(u.cm).value,
-            sigD80
-        )
+        label='rnda = {:.6f} (mean = {:.3f}, sig = {:.3f})'.format(rndaOpt, meanD80, sigD80)
     )
 
     xlim = ax.get_xlim()
@@ -324,4 +321,10 @@ if __name__ == '__main__':
         )
 
     ax.legend(frameon=False, loc='upper left')
-    plt.show()
+
+    outputDir = io.getApplicationOutputDirectory(cfg.get('outputLocation'), label)
+
+    plotFileName = label + '_' + tel.telescopeName
+    plotFile = outputDir.joinpath(plotFileName)
+    plt.savefig(str(plotFile) + '.pdf', format='pdf', bbox_inches='tight')
+    plt.savefig(str(plotFile) + '.png', format='png', bbox_inches='tight')
