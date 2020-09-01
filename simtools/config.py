@@ -1,8 +1,9 @@
 ''' Module to deal with the interface with the global config information.'''
 
-from pathlib import Path
 import logging
 import yaml
+import copy
+from pathlib import Path
 
 __all__ = ['loadConfig', 'get', 'findFile', 'change']
 
@@ -137,8 +138,10 @@ def findFile(name, loc=None):
         If the desired file is not found.
     '''
     if loc is None:
-        loc = get(par='modelFilesLocations')
-    loc = [loc] if not isinstance(loc, list) else loc
+        allLocations = get(par='modelFilesLocations')
+    else:
+        allLocations = copy.copy(loc)
+    allLocations = [allLocations] if not isinstance(allLocations, list) else allLocations
 
     def _searchDirectory(directory, filename, rec=False):
         logger.debug('Searching directory {}'.format(directory))
@@ -167,10 +170,10 @@ def findFile(name, loc=None):
     if ff is not None:
         return ff
     # Searching file in given locations
-    for ll in loc:
+    for ll in allLocations:
         ff = _searchDirectory(ll, name, True)
         if ff is not None:
             return ff
-    msg = 'File {} could not be found'.format(name)
+    msg = 'File {} could not be found in '.format(name, loc)
     logger.error(msg)
     raise FileNotFoundError(msg)
