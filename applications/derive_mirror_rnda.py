@@ -53,6 +53,7 @@ from copy import copy
 from pathlib import Path
 
 import numpy as np
+import astropy.units as u
 from astropy.io import ascii
 from astropy.table import Table
 
@@ -63,9 +64,6 @@ from simtools.model.telescope_model import TelescopeModel
 
 logger = logging.getLogger(__name__)
 logging.getLogger().setLevel(logging.DEBUG)
-
-# cfg.setConfigFileName('config.yml')
-# config = cfg.loadConfig()
 
 plt.rc('font', family='serif', size=20)
 plt.rc('xtick', labelsize=20)
@@ -157,7 +155,7 @@ if __name__ == '__main__':
     )
     args = parser.parse_args()
 
-    label = 'derive_rnda'
+    label = 'derive_mirror_rnda'
     tel = TelescopeModel(
         telescopeName=args.tel_name,
         version=args.model_version,
@@ -266,9 +264,6 @@ if __name__ == '__main__':
     ax.set_xlabel(r'mirror$\_$random$\_$reflection$\_$angle')
     ax.set_ylabel(r'$D_{80}$ [cm]')
 
-    print(rndaOpt)
-    print(meanD80)
-
     if not args.no_tunning:
         ax.errorbar(
             resultsRnda,
@@ -280,29 +275,33 @@ if __name__ == '__main__':
         )
     ax.errorbar(
         [rndaOpt],
-        [meanD80],
-        yerr=[sigD80],
+        [meanD80.to(u.cm).value],
+        # yerr=[sigD80],
         color='r',
         marker='o',
         linestyle='none',
-        label='rnda = {:.6f} (mean = {:.3f}, sig = {:.3f})'.format(rndaOpt, meanD80, sigD80)
+        label='rnda = {:.6f} (mean = {:.3f}, sig = {:.3f})'.format(
+            rndaOpt,
+            meanD80.to(u.cm).value,
+            sigD80
+        )
     )
 
-    xlim = ax.get_xlim()
-    ax.plot(xlim, [args.mean_d80, args.mean_d80], color='k', linestyle='-')
-    if args.sig_d80 is not None:
-        ax.plot(
-            xlim,
-            [args.mean_d80 + args.sig_d80, args.mean_d80 + args.sig_d80],
-            color='k',
-            linestyle=':'
-        )
-        ax.plot(
-            xlim,
-            [args.mean_d80 - args.sig_d80, args.mean_d80 - args.sig_d80],
-            color='k',
-            linestyle=':'
-        )
+    # xlim = ax.get_xlim()
+    # ax.plot(xlim, [args.mean_d80, args.mean_d80], color='k', linestyle='-')
+    # if args.sig_d80 is not None:
+    #     ax.plot(
+    #         xlim,
+    #         [args.mean_d80 + args.sig_d80, args.mean_d80 + args.sig_d80],
+    #         color='k',
+    #         linestyle=':'
+    #     )
+    #     ax.plot(
+    #         xlim,
+    #         [args.mean_d80 - args.sig_d80, args.mean_d80 - args.sig_d80],
+    #         color='k',
+    #         linestyle=':'
+    #     )
 
     ax.legend(frameon=False, loc='upper left')
     plt.show()
