@@ -1,8 +1,8 @@
 #!/usr/bin/python3
 
 '''
-    Summary
-    -------
+    Summary:
+    --------
     This application derives the parameter mirror_reflection_random_angle (mirror roughness) \
     for a given set of measured D80 of individual mirrors.
 
@@ -10,10 +10,15 @@
     .. figure::  images/
       :align:   center
 
+    Todo:
+    -----
+
+        * Export figures with a proper name
+        * Comment code
 
 
-    Command line arguments
-    ----------------------
+    Command line arguments:
+    -----------------------
     tel_name (str, required)
         Telescope name (e.g. North-LST-1, South-SST-D, ...)
     model_version (str, optional)
@@ -23,7 +28,7 @@
     sig_d80 (float, optional)
         Std dev of measured D80 [cm]
     rnda (float, optional)
-        Start value of mirror_reflection_random_angle. If not given, the value from the default \
+        Starting value of mirror_reflection_random_angle. If not given, the value from the default \
         model will be used.
     d80_list (file, optional)
         File with single column list of measured D80 [cm]. It is used only for plotting the D80 \
@@ -42,11 +47,13 @@
     verbosity (str, optional)
         Log level to print (default=INFO).
 
-    Examples
-    --------
-        MST - Prod5 (07.2020)
-        $ python applications/derive_mirror_rnda.py --tel_name north-mst-flashcam --mean_d80 1.4 \
-        --no_tunning --mirror_list mirror_MST_focal_lengths.dat --d80_list mirror_MST_D80.dat
+    Examples:
+    ---------
+    MST - Prod5 (07.2020)
+
+    .. code-block:: console
+
+        python applications/derive_mirror_rnda.py --tel_name north-mst-flashcam --mean_d80 1.4 --no_tunning --mirror_list mirror_MST_focal_lengths.dat --d80_list mirror_MST_D80.dat
 '''
 
 
@@ -66,11 +73,9 @@ import simtools.util.general as gen
 from simtools.util.general import sortArrays
 from simtools.ray_tracing import RayTracing
 from simtools.model.telescope_model import TelescopeModel
+from simtools.visualize import setStyle
 
-plt.rc('font', family='serif', size=20)
-plt.rc('xtick', labelsize=20)
-plt.rc('ytick', labelsize=20)
-plt.rc('text', usetex=True)
+setStyle()
 
 
 def plotMeasuredDistribution(file, **kwargs):
@@ -261,18 +266,19 @@ if __name__ == '__main__':
         rndaOpt = rndaStart
     meanD80, sigD80 = run(rndaOpt, plot=True)
 
-    print('--- Measured -----')
+    # Printing results to stdout
+    print('\nMeasured D80:')
     if args.sig_d80 is not None:
-        print('Mean = {:.3f}, StdDev = {:.3f}'.format(args.mean_d80, args.sig_d80))
+        print('Mean = {:.3f} cm, StdDev = {:.3f} cm'.format(args.mean_d80, args.sig_d80))
     else:
-        print('Mean = {:.3f}'.format(args.mean_d80))
-    print('--- Simulated -----')
+        print('Mean = {:.3f} cm'.format(args.mean_d80))
+    print('\nSimulated D80:')
     print('Mean = {:.3f}, StdDev = {:.3f}'.format(meanD80, sigD80))
-    print('--- mirror_random_reflection_angle ----')
+    print('\nmirror_random_reflection_angle')
     print('Previous value = {:.6f}'.format(rndaStart))
-    print('New value = {:.6f}'.format(rndaOpt))
-    print('-------')
+    print('New value = {:.6f}\n'.format(rndaOpt))
 
+    # Plotting
     plt.figure(figsize=(8, 6), tight_layout=True)
     ax = plt.gca()
     ax.set_xlabel(r'mirror$\_$random$\_$reflection$\_$angle')
@@ -301,21 +307,21 @@ if __name__ == '__main__':
         )
     )
 
-    # xlim = ax.get_xlim()
-    # ax.plot(xlim, [args.mean_d80, args.mean_d80], color='k', linestyle='-')
-    # if args.sig_d80 is not None:
-    #     ax.plot(
-    #         xlim,
-    #         [args.mean_d80 + args.sig_d80, args.mean_d80 + args.sig_d80],
-    #         color='k',
-    #         linestyle=':'
-    #     )
-    #     ax.plot(
-    #         xlim,
-    #         [args.mean_d80 - args.sig_d80, args.mean_d80 - args.sig_d80],
-    #         color='k',
-    #         linestyle=':'
-    #     )
+    xlim = ax.get_xlim()
+    ax.plot(xlim, [args.mean_d80, args.mean_d80], color='k', linestyle='-')
+    if args.sig_d80 is not None:
+        ax.plot(
+            xlim,
+            [args.mean_d80 + args.sig_d80, args.mean_d80 + args.sig_d80],
+            color='k',
+            linestyle=':'
+        )
+        ax.plot(
+            xlim,
+            [args.mean_d80 - args.sig_d80, args.mean_d80 - args.sig_d80],
+            color='k',
+            linestyle=':'
+        )
 
     ax.legend(frameon=False, loc='upper left')
     plt.show()
