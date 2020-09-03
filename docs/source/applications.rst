@@ -16,6 +16,12 @@ Introduction
 List of Applications
 ====================
 
+* `derive_mirror_rnda`_
+* `validate_optics`_
+* `compare_cumulative_psf`_
+* `validate_camera_efficiency`_
+* `validate_camera_fov`_
+
 
 derive_mirror_rnda
 ------------------
