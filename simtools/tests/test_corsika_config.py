@@ -6,8 +6,8 @@ from astropy import units as u
 import simtools.config as cfg
 from simtools.corsika_config import CorsikaConfig
 
-logging.getLogger().setLevel(logging.DEBUG)
-
+logger = logging.getLogger()
+logger.setLevel(logging.DEBUG)
 
 def test_general():
     cc = CorsikaConfig(
@@ -23,7 +23,8 @@ def test_general():
         phi=0 * u.deg,
         cscat=[10, 1500 * u.m, 0],
         primary='proton',
-        label='test-corsika-config'
+        label='test-corsika-config',
+        logger=logger.name
     )
     cc.exportFile()
 
@@ -39,7 +40,8 @@ def test_general():
         phi=0 * u.deg,
         cscat=[10, 1500 * u.m, 0],
         primary='proton',
-        label='test-corsika-config'
+        label='test-corsika-config',
+        logger=logger.name
     )
     cc2.exportFile()
 
@@ -54,7 +56,8 @@ def test_general():
         phi=0 * u.deg,
         cscat=[10, 1500 * u.m, 0],
         primary='electron',
-        label='test-corsika-config'
+        label='test-corsika-config',
+        logger=logger.name
     )
     # Testing default parameters
     assert cc3._parameters['RUNNR'] == [1]
@@ -75,7 +78,8 @@ def test_units():
         phi=0 * u.deg,
         cscat=[10, 1500 * u.m, 0],
         primary='proton',
-        label='test-corsika-config'
+        label='test-corsika-config',
+        logger=logger.name
     )
     cc.exportFile()
 
