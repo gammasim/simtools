@@ -44,7 +44,6 @@ class Mirrors:
         logger: str
             Logger name to use in this instance
         '''
-
         self._logger = logging.getLogger(logger)
         self._logger.debug('Mirrors Init')
 
@@ -73,7 +72,7 @@ class Mirrors:
         with open(self._mirrorListFile, 'r') as file:
             for line in file:
                 line = line.split()
-                if '#' in line[0]:
+                if '#' in line[0] or '$' in line[0]:
                     continue
                 if collectGeoPars:
                     self.diameter = float(line[2])

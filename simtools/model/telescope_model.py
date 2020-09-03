@@ -1,10 +1,3 @@
-'''
-Module containing TelescopeModel class.
-TelescopeModel is an representation of the MC model for single telescopes.
-
-Author: Raul R Prado
-'''
-
 import logging
 import yaml
 import copy
@@ -92,7 +85,6 @@ class TelescopeModel:
         logger: str
             Logger name to use in this instance
         '''
-
         self._logger = logging.getLogger(logger)
         self._logger.debug('Init TelescopeModel')
 
@@ -474,6 +466,7 @@ class TelescopeModel:
 
         __, __, diameter, flen, shape = self.mirrors.getSingleMirrorParameters(mirrorNumber)
 
+        print(self._singleMirrorListFilePaths[mirrorNumber])
         with open(self._singleMirrorListFilePaths[mirrorNumber], 'w') as file:
             file.write('# Column 1: X pos. [cm] (North/Down)\n')
             file.write('# Column 2: Y pos. [cm] (West/Right from camera)\n')
@@ -508,7 +501,7 @@ class TelescopeModel:
             mirrorListFile = cfg.findFile(mirrorListFileName, self._configFileDirectory)
         except:
             mirrorListFile = cfg.findFile(mirrorListFileName, self._modelFilesLocations)
-        self._mirrors = Mirrors(mirrorListFile, self._logger.name)
+        self._mirrors = Mirrors(mirrorListFile, logger=self._logger.name)
         return
 
     def _loadCamera(self):

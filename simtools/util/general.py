@@ -1,5 +1,3 @@
-''' General utilities '''
-
 import logging
 import copy
 
