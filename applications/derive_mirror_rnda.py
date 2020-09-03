@@ -78,9 +78,6 @@
 
     .. todo::
 
-        * Export figures with a proper name
-        * Comment code
-        * Add run time estimates
         * Change default model to default (after this feature is implemented in db_handler)
 '''
 
@@ -202,6 +199,7 @@ if __name__ == '__main__':
     logger = logging.getLogger(label)
     logger.setLevel(gen.getLogLevelFromUser(args.logLevel))
 
+    # Output directory to save files related directly to this app
     outputDir = io.getApplicationOutputDirectory(cfg.get('outputLocation'), label)
 
     tel = TelescopeModel(
@@ -216,6 +214,7 @@ if __name__ == '__main__':
         tel.changeParameters(random_focal_length=str(args.random_flen))
 
     def run(rnda, plot=False):
+        ''' Runs the simulations for one given value of rnda '''
         tel.changeParameters(mirror_reflection_random_angle=str(rnda))
         ray = RayTracing(
             telescopeModel=tel,
@@ -224,11 +223,11 @@ if __name__ == '__main__':
             useRandomFocalLength=args.use_random_flen,
             logger=logger.name
         )
-        ray.simulate(test=False, force=True)
+        ray.simulate(test=False, force=True)  # force has to be True, always
         ray.analyze(force=True)
 
+        # Plotting D80 histograms
         if plot:
-            # Plotting
             plt.figure(figsize=(8, 6), tight_layout=True)
             ax = plt.gca()
             ax.set_xlabel(r'D$_{80}$ [cm]')
@@ -244,6 +243,7 @@ if __name__ == '__main__':
                 bins=bins,
                 label='simulated'
             )
+            # Only plot measured D80 if the data is given
             if args.d80_list is not None:
                 d80ListFile = cfg.findFile(args.d80_list)
                 plotMeasuredDistribution(
@@ -257,7 +257,6 @@ if __name__ == '__main__':
                 )
 
             ax.legend(frameon=False)
-
             plotFileName = label + '_' + tel.telescopeName + '_' + 'D80-distributions'
             plotFile = outputDir.joinpath(plotFileName)
             plt.savefig(str(plotFile) + '.pdf', format='pdf', bbox_inches='tight')
@@ -298,11 +297,13 @@ if __name__ == '__main__':
             rnda = newRnda
             collectResults(rnda, meanD80, sigD80)
 
-        # interpolating
+        # Linear interpolation using two last rnda values
         resultsRnda, resultsMean, resultsSig = gen.sortArrays(resultsRnda, resultsMean, resultsSig)
         rndaOpt = np.interp(x=args.mean_d80, xp=resultsMean, fp=resultsRnda)
     else:
         rndaOpt = rndaStart
+
+    # Running the final simulation for rndaOpt
     meanD80, sigD80 = run(rndaOpt, plot=True)
 
     # Printing results to stdout
@@ -317,7 +318,7 @@ if __name__ == '__main__':
     print('Previous value = {:.6f}'.format(rndaStart))
     print('New value = {:.6f}\n'.format(rndaOpt))
 
-    # Plotting
+    # Plotting D80 vs rnda
     plt.figure(figsize=(8, 6), tight_layout=True)
     ax = plt.gca()
     ax.set_xlabel(r'mirror$\_$random$\_$reflection$\_$angle')
