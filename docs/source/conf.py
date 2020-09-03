@@ -14,14 +14,15 @@
 #
 import os
 import sys
-sys.path.insert(0, os.path.abspath('../../ctamclib'))
+sys.path.insert(0, os.path.abspath('../../simtools'))
+sys.path.insert(0, os.path.abspath('../../applications'))
 
 
 # -- Project information -----------------------------------------------------
 
-project = 'ctamclib'
-copyright = '2019, Raul R Prado'
-author = 'Raul R Prado'
+project = 'gammasim-tools'
+copyright = '2019, Cherenkov Telescope Array Observatory Consortium'
+author = 'Raul R Prado and Orel Gueta'
 
 # The short X.Y version
 version = ''
@@ -45,8 +46,14 @@ extensions = [
     'sphinx.ext.viewcode',
     'sphinx.ext.githubpages',
     'sphinx.ext.napoleon',  # make sphinx understand google docstring format
-    'sphinx.ext.todo'       # enabling todo's
+    'sphinx.ext.todo',       # enabling todo's
+    'sphinx.ext.autosectionlabel'  # allows refs to section by its name
 ]
+
+autosectionlabel_prefix_document = True
+
+# Display todos by setting to True
+todo_include_todos = True
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -81,7 +88,7 @@ pygments_style = 'sphinx'
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = 'alabaster'
+html_theme = 'sphinx_rtd_theme'
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
@@ -108,7 +115,7 @@ html_static_path = ['_static']
 # -- Options for HTMLHelp output ---------------------------------------------
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'ctamclibdoc'
+htmlhelp_basename = 'gammasimdoc'
 
 
 # -- Options for LaTeX output ------------------------------------------------
@@ -135,8 +142,8 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'ctamclib.tex', 'ctamclib Documentation',
-     'Raul R Prado', 'manual'),
+    (master_doc, 'gammasim-tools.tex', 'gammasim-tools Documentation',
+     author, 'manual'),
 ]
 
 
@@ -145,7 +152,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'ctamclib', 'ctamclib Documentation',
+    (master_doc, 'gammasim-tools', 'gammasim-tools Documentation',
      [author], 1)
 ]
 
@@ -156,8 +163,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'ctamclib', 'ctamclib Documentation',
-     author, 'ctamclib', 'One line description of project.',
+    (master_doc, 'gammasim-tools', 'gammasim-tools Documentation',
+     author, 'gammasim-tools', 'One line description of project.',
      'Miscellaneous'),
 ]
 

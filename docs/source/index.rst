@@ -3,56 +3,45 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-.. _ctamclib:
+.. _gammasimtools:
+
+==============
+gammasim-tools
+==============
 
 
-=================================
- CTA MC Library (:mod:`ctamclib`)
-=================================
+What is gammasim-tools?
+=======================
 
-What is ctamclib?
-=================
+Prototype implementation of tools for the Simulation System of the `CTA Observatory <www.cta-observatory.org>`_
 
-Bla Bla Bla
+gammasim-tools provides a framework and tools for:
 
-MC Model
-=========
+* simulation model DB interface and management
+* simulation model parameter derivation and validation
 
+gammasim-tools follows these design principles:
 
-Telescope Model
-----------------
+* standardized interface and data products independent of the underlying software (e.g., CORSIKA, sim_telarray, GrOPTICS)
+* maximizes the sharing of tools and algorithms with other DPPS subsystems (e.g., `ctapipe <https://github.com/cta-observatory/ctapipe>`_ and calibpipe)
+* I/O and reporting tools for the MC simulation model parameter and production database
 
-.. automodule:: telescope_model
-   :members: 
-
-
-.. toctree::
-
-sim_telarray
-=============
-
-.. automodule:: simtel_runner
-   :members: 
+Contact
+=======
+    
+* Raul R Prado (raul.prado@desy.de)
+* Orel Gueta (orel.gueta@desy.de)
 
 
-.. toctree::
-
-
-Ray Tracing
-============
-
-.. automodule:: ray_tracing
-   :members: 
-
+General Documentation
+=====================
 
 .. toctree::
+  :maxdepth: 2
+  :glob:
 
-
-Utilities
-==========
-
-.. automodule:: util
-   :members: 
-
-
-.. toctree::
+  getting_started
+  applications
+  framework
+  library
+  databases
