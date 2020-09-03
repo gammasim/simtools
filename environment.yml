@@ -10,7 +10,6 @@ dependencies:
   - pytest-cov
   - scipy
   - pymongo
-  - bson
 
 # cheatsheet
 
