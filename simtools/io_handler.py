@@ -33,6 +33,7 @@ def getOutputDirectory(filesLocation, label, mode):
     today = datetime.date.today()
     labelDir = label if label is not None else 'd-' + str(today)
     path = Path(filesLocation).joinpath('simtools-files').joinpath(labelDir).joinpath(mode)
+    path.mkdir(parents=True, exist_ok=True)
     return path.absolute()
 
 
@@ -106,6 +107,24 @@ def getCameraEfficiencyOutputDirectory(filesLocation, label):
     Path
     '''
     return getOutputDirectory(filesLocation, label, 'camera-efficiency')
+
+
+def getApplicationOutputDirectory(filesLocation, label):
+    '''
+    Get output directory for applications related files.
+
+    Parameters
+    ----------
+    filesLocation: str, or Path
+        Main location of the output files.
+    label: str
+        Instance label.
+
+    Returns
+    -------
+    Path
+    '''
+    return getOutputDirectory(filesLocation, label, 'application')
 
 
 def getTestDataFile(fileName):
