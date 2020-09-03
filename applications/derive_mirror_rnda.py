@@ -205,7 +205,8 @@ if __name__ == '__main__':
     tel = TelescopeModel(
         telescopeName=args.tel_name,
         version=args.model_version,
-        label=label
+        label=label,
+        logger=logger.name
     )
     if args.mirror_list is not None:
         mirrorListFile = cfg.findFile(name=args.mirror_list)

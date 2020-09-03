@@ -82,6 +82,8 @@ class TelescopeModel:
             taken from the config.yml file.
         readFromDB: bool, optional
             If True, parameters will be loaded from the DB at the init level. Default = True.
+        logger: str
+            Logger name to use in this instance
         '''
         self._logger = logging.getLogger(logger)
         self._logger.debug('Init TelescopeModel')
@@ -120,7 +122,8 @@ class TelescopeModel:
         telescopeName,
         label=None,
         modelFilesLocations=None,
-        filesLocation=None
+        filesLocation=None,
+        logger=__name__
     ):
         '''
         Create a TelescopeModel from a sim_telarray config file.
@@ -143,6 +146,8 @@ class TelescopeModel:
         filesLocation: str (or Path), optional
             Parent location of the output files created by this class. If not given, it will be
             taken from the config.yml file.
+        logger: str
+            Logger name to use in this instance
 
         Returns
         -------
@@ -154,7 +159,8 @@ class TelescopeModel:
             label=label,
             modelFilesLocations=modelFilesLocations,
             filesLocation=filesLocation,
-            readFromDB=False
+            readFromDB=False,
+            logger=logger
         )
 
         def _processLine(words):
@@ -303,6 +309,7 @@ class TelescopeModel:
     def addParameters(self, **kwargs):
         '''
         Add a NEW parameters to the model.
+        This function does not modify the DB, it affects only the current instance.
 
         Parameters
         ----------
@@ -327,6 +334,7 @@ class TelescopeModel:
     def changeParameters(self, **kwargs):
         '''
         Change the value of EXISTING parameters to the model.
+        This function does not modify the DB, it affects only the current instance.
 
         Parameters
         ----------

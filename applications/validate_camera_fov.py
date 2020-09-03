@@ -20,7 +20,7 @@ if __name__ == '__main__':
     )
     parser.add_argument(
         '--tel_type',
-        help='Telescope type (e.g. mst-flashcam, lst)',
+        help='Telescope type (e.g. north-lst-1, south-sst-d)',
         type=str,
         required=True
     )
@@ -59,9 +59,9 @@ if __name__ == '__main__':
 
     telModel = TelescopeModel(
         telescopeType=args.tel_type,
-        site=args.site,
         version=args.model_version,
-        label=args.label
+        label=args.label,
+        logger=logger.name
     )
 
     print('\nValidating the camera FoV of {}\n'.format(telModel.telescopeType))
