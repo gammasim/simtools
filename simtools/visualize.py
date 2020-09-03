@@ -140,11 +140,19 @@ def setStyle(palette='default', bigPlot=False):
         plotSize = 'bigPlot'
 
     plt.rc('lines', linewidth=2, markersize=markersize[plotSize])
-    plt.rc('axes', prop_cycle=(cycler(color=COLORS[palette]) +
-                               cycler(linestyle=LINES) +
-                               cycler(marker=MARKERS)))
-    plt.rc('axes', titlesize=fontsize[plotSize], labelsize=fontsize[plotSize],
-           labelpad=5, grid=True, axisbelow=True)
+    plt.rc('axes', prop_cycle=(
+        cycler(color=COLORS[palette])
+        + cycler(linestyle=LINES)
+        + cycler(marker=MARKERS))
+    )
+    plt.rc(
+        'axes',
+        titlesize=fontsize[plotSize],
+        labelsize=fontsize[plotSize],
+        labelpad=5,
+        grid=True,
+        axisbelow=True
+    )
     plt.rc('xtick', labelsize=fontsize[plotSize])
     plt.rc('ytick', labelsize=fontsize[plotSize])
     plt.rc('legend', loc='best', shadow=False, fontsize='medium')
