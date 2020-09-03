@@ -205,8 +205,7 @@ if __name__ == '__main__':
     tel = TelescopeModel(
         telescopeName=args.tel_name,
         version=args.model_version,
-        label=label,
-        logger=logger.name
+        label=label
     )
     if args.mirror_list is not None:
         mirrorListFile = cfg.findFile(name=args.mirror_list)
@@ -341,7 +340,7 @@ if __name__ == '__main__':
         color='r',
         marker='o',
         linestyle='none',
-        label='rnda = {:.6f} (D80 = {:.3f} ± {:.3f} cm)'.format(rndaOpt, meanD80, sigD80)
+        label='rnda = {:.6f} (D80 = {:.3f} +/- {:.3f} cm)'.format(rndaOpt, meanD80, sigD80)
     )
 
     xlim = ax.get_xlim()
