@@ -41,6 +41,8 @@ class Mirrors:
         ----------
         mirrorListFile: string
                     The sim_telarray file name.
+        logger: str
+            Logger name to use in this instance
         '''
         self._logger = logging.getLogger(logger)
         self._logger.debug('Mirrors Init')
