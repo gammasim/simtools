@@ -86,7 +86,6 @@ class TelescopeModel:
         self._logger = logging.getLogger(logger)
         self._logger.debug('Init TelescopeModel')
 
-
         self.version = names.validateModelVersionName(version)
         self.telescopeName = names.validateTelescopeName(telescopeName)
         self.label = label
@@ -459,6 +458,7 @@ class TelescopeModel:
 
         __, __, diameter, flen, shape = self.mirrors.getSingleMirrorParameters(mirrorNumber)
 
+        print(self._singleMirrorListFilePaths[mirrorNumber])
         with open(self._singleMirrorListFilePaths[mirrorNumber], 'w') as file:
             file.write('# Column 1: X pos. [cm] (North/Down)\n')
             file.write('# Column 2: Y pos. [cm] (West/Right from camera)\n')

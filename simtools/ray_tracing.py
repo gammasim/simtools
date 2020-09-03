@@ -67,8 +67,7 @@ class RayTracing:
             'unit': u.deg,
             'isList': True
         },
-        'sourceDistance': {'default': 10, 'unit': u.km},
-        'mirrorNumbers': {'default': [1], 'unit': None, 'isList': True}
+        'sourceDistance': {'default': 10, 'unit': u.km}
     }
 
     def __init__(
@@ -79,6 +78,7 @@ class RayTracing:
         filesLocation=None,
         singleMirrorMode=False,
         useRandomFocalLength=False,
+        mirrorNumbers='all',
         logger=__name__,
         **kwargs
     ):
@@ -119,12 +119,13 @@ class RayTracing:
         if self._singleMirrorMode:
             collectArguments(
                 self,
-                args=['zenithAngle', 'offAxisAngle', 'mirrorNumbers'],
+                args=['zenithAngle', 'offAxisAngle'],
                 allInputs=self.ALL_INPUTS,
                 **kwargs
             )
             mirFlen = self._telescopeModel.getParameter('mirror_focal_length')
             self._sourceDistance = 2 * float(mirFlen) * u.cm.to(u.km)  # km
+            self._mirrorNumbers = mirrorNumbers
         else:
             collectArguments(
                 self,
@@ -140,7 +141,7 @@ class RayTracing:
 
         if self._singleMirrorMode:
             if self._mirrorNumbers == 'all':
-                self._mirrorNumbers = list(range(1, self._telescopeModel.numberOfMirrors + 1))
+                self._mirrorNumbers = list(range(0, self._telescopeModel.mirrors.numberOfMirrors))
             if not isinstance(self._mirrorNumbers, list):
                 self._mirrorNumbers = [self._mirrorNumbers]
 

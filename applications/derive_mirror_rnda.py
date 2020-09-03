@@ -1,24 +1,43 @@
 #!/usr/bin/python3
 
 '''
-    Summary:
-    --------
-    This application derives the parameter mirror_reflection_random_angle (mirror roughness) \
-    for a given set of measured D80 of individual mirrors.
+    Summary
+    -------
+    This application derives the parameter mirror_reflection_random_angle \
+    (mirror roughness, also called rnda here) \
+    for a given set of measured D80 of individual mirrors. The mean value of the measured D80 \
+    in cm is required and its sigma can be given optionally but will only be used for plotting. \
+
+    The individual mirror focal length can be taken into account if a mirror list which contains \
+    this information is used from the :ref:`ModelParametersDB` or if a new mirror list is given \
+    through the argument mirror_list. Random focal lengths can be used by turning on the argument \
+    use_random_focal length and a new value for it can be given through the argument random_flen.
+
+    The algorithm works as follow: A starting value of rnda is first defined as the one taken from \
+    the :ref:`modelparametersdb` \
+    (or alternativelly one may want to set it using the argument rnda).\
+    Secondly, ray tracing simulations are performed for single mirror configurations for each \
+    mirror given in the mirror_list. The mean simulated D80 for all the mirrors is compared with \
+    the mean measured D80. A new value of rnda is then defined based on the sign of the difference \
+    between measured and simulated D80 and a new set of simulations is performed. This process \
+    repeat until the sign of the difference changes, meaning that the two final values of rnda \
+    brackets the optimal. These two values are used to find the optimal one by a linear \
+    interpolation. Finally, simulations are performed by using the the interpolated value \
+    of rnda, which is defined as the desired optimal.
+
+    A option no_tunning can be used if one only wants to simulate one value of rnda and compare \
+    the results with the measured ones.
+
+    The results of the tunning are plotted (see examples of the plots below).
 
     .. _deriva_rnda_plot:
-    .. figure::  images/
-      :align:   center
+    .. image::  images/derive_mirror_rnda_North-MST-FlashCam-D.png
+      :width: 49 %
+    .. image::  images/derive_mirror_rnda_North-MST-FlashCam-D_D80-distributions.png
+      :width: 49 %
 
-    Todo:
-    -----
-
-        * Export figures with a proper name
-        * Comment code
-
-
-    Command line arguments:
-    -----------------------
+    Command line arguments
+    ----------------------
     tel_name (str, required)
         Telescope name (e.g. North-LST-1, South-SST-D, ...)
     model_version (str, optional)
@@ -47,13 +66,22 @@
     verbosity (str, optional)
         Log level to print (default=INFO).
 
-    Examples:
-    ---------
+    Example
+    -------
     MST - Prod5 (07.2020)
+
+    Runtime about 90 min.
 
     .. code-block:: console
 
-        python applications/derive_mirror_rnda.py --tel_name north-mst-flashcam --mean_d80 1.4 --no_tunning --mirror_list mirror_MST_focal_lengths.dat --d80_list mirror_MST_D80.dat
+        python applications/derive_mirror_rnda.py --tel_name North-MST-FlashCam-D --mean_d80 1.4 --sig_d80 0.16 --mirror_list mirror_MST_focal_lengths.dat --d80_list mirror_MST_D80.dat --rnda 0.0075
+
+    .. todo::
+
+        * Export figures with a proper name
+        * Comment code
+        * Add run time estimates
+        * Change default model to default (after this feature is implemented in db_handler)
 '''
 
 
@@ -71,7 +99,6 @@ from astropy.table import Table
 import simtools.config as cfg
 import simtools.util.general as gen
 import simtools.io_handler as io
-from simtools.util.general import sortArrays
 from simtools.ray_tracing import RayTracing
 from simtools.model.telescope_model import TelescopeModel
 from simtools.visualize import setStyle
@@ -175,6 +202,8 @@ if __name__ == '__main__':
     logger = logging.getLogger(label)
     logger.setLevel(gen.getLogLevelFromUser(args.logLevel))
 
+    outputDir = io.getApplicationOutputDirectory(cfg.get('outputLocation'), label)
+
     tel = TelescopeModel(
         telescopeName=args.tel_name,
         version=args.model_version,
@@ -195,7 +224,7 @@ if __name__ == '__main__':
             useRandomFocalLength=args.use_random_flen,
             logger=logger.name
         )
-        ray.simulate(test=False, force=False)
+        ray.simulate(test=False, force=True)
         ray.analyze(force=True)
 
         if plot:
@@ -212,7 +241,8 @@ if __name__ == '__main__':
                 alpha=0.5,
                 facecolor='r',
                 edgecolor='r',
-                bins=bins
+                bins=bins,
+                label='simulated'
             )
             if args.d80_list is not None:
                 d80ListFile = cfg.findFile(args.d80_list)
@@ -222,8 +252,16 @@ if __name__ == '__main__':
                     linestyle='-',
                     facecolor='None',
                     edgecolor='b',
-                    bins=bins
+                    bins=bins,
+                    label='measured'
                 )
+
+            ax.legend(frameon=False)
+
+            plotFileName = label + '_' + tel.telescopeName + '_' + 'D80-distributions'
+            plotFile = outputDir.joinpath(plotFileName)
+            plt.savefig(str(plotFile) + '.pdf', format='pdf', bbox_inches='tight')
+            plt.savefig(str(plotFile) + '.png', format='png', bbox_inches='tight')
 
         return ray.getMean('d80_cm').to(u.cm).value, ray.getStdDev('d80_cm').to(u.cm).value
 
@@ -261,7 +299,7 @@ if __name__ == '__main__':
             collectResults(rnda, meanD80, sigD80)
 
         # interpolating
-        resultsRnda, resultsMean, resultsSig = sortArrays(resultsRnda, resultsMean, resultsSig)
+        resultsRnda, resultsMean, resultsSig = gen.sortArrays(resultsRnda, resultsMean, resultsSig)
         rndaOpt = np.interp(x=args.mean_d80, xp=resultsMean, fp=resultsRnda)
     else:
         rndaOpt = rndaStart
@@ -301,7 +339,7 @@ if __name__ == '__main__':
         color='r',
         marker='o',
         linestyle='none',
-        label='rnda = {:.6f} (mean = {:.3f}, sig = {:.3f})'.format(rndaOpt, meanD80, sigD80)
+        label='rnda = {:.6f} (D80 = {:.3f} ± {:.3f} cm)'.format(rndaOpt, meanD80, sigD80)
     )
 
     xlim = ax.get_xlim()
@@ -311,18 +349,18 @@ if __name__ == '__main__':
             xlim,
             [args.mean_d80 + args.sig_d80, args.mean_d80 + args.sig_d80],
             color='k',
-            linestyle=':'
+            linestyle=':',
+            marker='none'
         )
         ax.plot(
             xlim,
             [args.mean_d80 - args.sig_d80, args.mean_d80 - args.sig_d80],
             color='k',
-            linestyle=':'
+            linestyle=':',
+            marker='none'
         )
 
     ax.legend(frameon=False, loc='upper left')
-
-    outputDir = io.getApplicationOutputDirectory(cfg.get('outputLocation'), label)
 
     plotFileName = label + '_' + tel.telescopeName
     plotFile = outputDir.joinpath(plotFileName)
