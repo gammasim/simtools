@@ -351,14 +351,14 @@ if __name__ == '__main__':
             [args.mean_d80 + args.sig_d80, args.mean_d80 + args.sig_d80],
             color='k',
             linestyle=':',
-            marker='none'
+            marker=','
         )
         ax.plot(
             xlim,
             [args.mean_d80 - args.sig_d80, args.mean_d80 - args.sig_d80],
             color='k',
             linestyle=':',
-            marker='none'
+            marker=','
         )
 
     ax.legend(frameon=False, loc='upper left')
