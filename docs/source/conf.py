@@ -46,8 +46,14 @@ extensions = [
     'sphinx.ext.viewcode',
     'sphinx.ext.githubpages',
     'sphinx.ext.napoleon',  # make sphinx understand google docstring format
-    'sphinx.ext.todo'       # enabling todo's
+    'sphinx.ext.todo',       # enabling todo's
+    'sphinx.ext.autosectionlabel'  # allows refs to section by its name
 ]
+
+autosectionlabel_prefix_document = True
+
+# Display todos by setting to True
+todo_include_todos = True
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
