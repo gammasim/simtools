@@ -30,7 +30,8 @@ def test_ssts(show=False):
         tel = TelescopeModel(
             telescopeName='south-' + t,
             version=version,
-            label='test-sst'
+            label='test-sst',
+            logger=logger.name
         )
         telModels.append(t)
 
@@ -68,7 +69,8 @@ def test_rx():
     tel = TelescopeModel(
         telescopeName='north-lst-1',
         version=version,
-        label=label
+        label=label,
+        logger=logger.name
     )
 
     ray = RayTracing(
@@ -120,7 +122,8 @@ def test_plot_image():
     tel = TelescopeModel(
         telescopeName='south-sst-D',
         version=version,
-        label=label
+        label=label,
+        logger=logger.name
     )
 
     ray = RayTracing(
@@ -153,7 +156,8 @@ def test_single_mirror(plot=False):
     tel = TelescopeModel(
         telescopeName='north-mst-FlashCam-D',
         version=version,
-        label='test-mst'
+        label='test-mst',
+        logger=logger.name
     )
 
     ray = RayTracing(
@@ -185,7 +189,8 @@ def test_integral_curve():
     tel = TelescopeModel(
         telescopeName='north-mst-FlashCam-D',
         version=version,
-        label=label
+        label=label,
+        logger=logger.name
     )
 
     ray = RayTracing(
