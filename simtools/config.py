@@ -174,6 +174,6 @@ def findFile(name, loc=None):
         ff = _searchDirectory(ll, name, True)
         if ff is not None:
             return ff
-    msg = 'File {} could not be found in '.format(name, loc)
+    msg = 'File {} could not be found in {}'.format(name, loc)
     logger.error(msg)
     raise FileNotFoundError(msg)
