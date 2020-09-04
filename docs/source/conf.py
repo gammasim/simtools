@@ -64,7 +64,8 @@ autodoc_mock_imports = [
     'bson',
     'pymongo',
     'gridfs',
-    'scipy'
+    'scipy',    
+    'cycler'
 ]
 
 # Add any paths that contain templates here, relative to this directory.
