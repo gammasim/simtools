@@ -56,7 +56,16 @@ autosectionlabel_prefix_document = True
 # Display todos by setting to True
 todo_include_todos = True
 
-autodoc_mock_imports = ['matplotlib', 'yaml', 'numpy', 'astropy', 'bson', 'pymongo', 'gridfs']
+autodoc_mock_imports = [
+    'matplotlib',
+    'yaml',
+    'numpy',
+    'astropy',
+    'bson',
+    'pymongo',
+    'gridfs',
+    'scypy'
+]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
