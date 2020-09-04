@@ -1,4 +1,4 @@
-.. _mc_model:
+.. _mcmodel:
 
 MC Model
 ========
