@@ -98,9 +98,9 @@ import simtools.util.general as gen
 import simtools.io_handler as io
 from simtools.ray_tracing import RayTracing
 from simtools.model.telescope_model import TelescopeModel
-from simtools.visualize import setStyle
+# from simtools.visualize import setStyle
 
-setStyle()
+# setStyle()
 
 
 def plotMeasuredDistribution(file, **kwargs):
