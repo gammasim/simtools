@@ -7,11 +7,22 @@ Applications
 Introduction
 ============
 
-* main idea - command line
-* how we find files
-* use of the config file
-* possible outputs
+Applications are python scripts built on the :ref:`library` that execute a simple, well defined task.
+These applications will be used as building blocks for the Simulation System Workflows.
 
+The application scripts can be found in gammasim-tools/applications.
+
+The applications expect a config file named config.yml in your running directory. Please,
+follow the instructions in :ref:`Configuration` to setup your config file.
+
+Some applications require one or multiple file names as input in the command line. The system will
+first search on your local directory for these files, and in case it is not found, it will search
+into the directories given by the config parameter *modelFilesLocation*.
+
+The output files from the applications will be written to $outputLocation/$label, where *outputLocation*
+is a config parameter and *label* is the name of the application.  
+
+Below you find the list of the currently available applications and their respective documentation.
 
 List of Applications
 ====================

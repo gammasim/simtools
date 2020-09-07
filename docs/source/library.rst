@@ -1,4 +1,4 @@
-.. _library:
+.. _Library:
 
 simtools Library
 ****************
@@ -8,4 +8,7 @@ simtools Library
   :glob:
 
   mc_model
+  ray_tracing
+  camera_efficiency
+  simtel_runner
   util
