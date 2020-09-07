@@ -3,7 +3,17 @@
 Utilities
 =========
 
-.. toctree::
+* `General`_
+* `MC Model`_
+* `Names`_
+* `Legend Handlers`_
+
+General
+-------
+
+.. automodule:: util.general
+   :members:
+
 
 MC Model
 --------
@@ -15,4 +25,10 @@ Names
 -----
 
 .. automodule:: util.names
+   :members:
+
+Legend Handlers
+---------------
+
+.. automodule:: util.legend_handlers
    :members:

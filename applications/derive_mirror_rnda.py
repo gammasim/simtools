@@ -9,12 +9,12 @@
     in cm is required and its sigma can be given optionally but will only be used for plotting. \
 
     The individual mirror focal length can be taken into account if a mirror list which contains \
-    this information is used from the :ref:`ModelParametersDB` or if a new mirror list is given \
+    this information is used from the :ref:`Model Parameters DB` or if a new mirror list is given \
     through the argument mirror_list. Random focal lengths can be used by turning on the argument \
     use_random_focal length and a new value for it can be given through the argument random_flen.
 
     The algorithm works as follow: A starting value of rnda is first defined as the one taken from \
-    the :ref:`modelparametersdb` \
+    the :ref:`Model Parameters DB` \
     (or alternativelly one may want to set it using the argument rnda).\
     Secondly, ray tracing simulations are performed for single mirror configurations for each \
     mirror given in the mirror_list. The mean simulated D80 for all the mirrors is compared with \
@@ -28,7 +28,8 @@
     A option no_tunning can be used if one only wants to simulate one value of rnda and compare \
     the results with the measured ones.
 
-    The results of the tunning are plotted (see examples of the plots below).
+    The results of the tunning are plotted. See examples of the D80 vs rnda plot, on the left, \
+    and the D80 distributions, on the right.
 
     .. _deriva_rnda_plot:
     .. image::  images/derive_mirror_rnda_North-MST-FlashCam-D.png

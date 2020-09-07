@@ -1,7 +1,9 @@
-.. _framework:
+.. _Framework:
 
 Framework
 *********
+
+.. _Configuration:
 
 Configuration
 =============
