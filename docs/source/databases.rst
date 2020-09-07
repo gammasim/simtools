@@ -1,9 +1,10 @@
-.. _databases:
+.. _Databases:
 
 Databases
 *********
 
-.. _modelparametersdb:
+.. _Model Parameters DB:
 
-`Model Parameters DB`
-=====================
+Model Parameters DB
+===================
+
