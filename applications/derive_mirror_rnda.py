@@ -80,6 +80,7 @@
     .. todo::
 
         * Change default model to default (after this feature is implemented in db_handler)
+        * Fix the setStyle. For some reason, sphinx cannot built docs with it on.
 '''
 
 
@@ -114,12 +115,14 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
     parser.add_argument(
+        '-t',
         '--tel_name',
         help='Telescope name (e.g. North-LST-1, South-SST-D, ...)',
         type=str,
         required=True
     )
     parser.add_argument(
+        '-m',
         '--model_version',
         help='Model version (default=prod4)',
         type=str,
