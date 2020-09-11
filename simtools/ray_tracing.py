@@ -24,14 +24,6 @@ __all__ = ['RayTracing']
 
 
 class RayTracing:
-
-    YLABEL = {
-        'd80_cm': r'$D_{80}$',
-        'd80_deg': r'$D_{80}$',
-        'eff_area': 'Eff. mirror area',
-        'eff_flen': 'Eff. focal length'
-    }
-
     '''
     Class for handling ray tracing simulations and analysis.
 
@@ -52,11 +44,11 @@ class RayTracing:
     plot(key, **kwargs)
         Plot key vs off-axis angle.
     plotHistogram(key, **kwargs)
-        Plot histogram of key.
+        Plot histogram of key (d80_cm, d80_deg, eff_area, eff_flen).
     getMean(key)
-        Get mean value of key.
+        Get mean value of key(d80_cm, d80_deg, eff_area, eff_flen).
     getStdDev(key)
-        Get std dev of key.
+        Get std dev of key(d80_cm, d80_deg, eff_area, eff_flen).
     images()
         Get list of PSFImages.
     '''
@@ -68,6 +60,14 @@ class RayTracing:
             'isList': True
         },
         'sourceDistance': {'default': 10, 'unit': u.km}
+    }
+
+
+    YLABEL = {
+        'd80_cm': r'$D_{80}$',
+        'd80_deg': r'$D_{80}$',
+        'eff_area': 'Eff. mirror area',
+        'eff_flen': 'Eff. focal length'
     }
 
     def __init__(
