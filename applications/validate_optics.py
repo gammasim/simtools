@@ -69,9 +69,9 @@ import simtools.util.general as gen
 import simtools.io_handler as io
 from simtools.model.telescope_model import TelescopeModel
 from simtools.ray_tracing import RayTracing
-from simtools.visualize import setStyle
+# from simtools.visualize import setStyle
 
-setStyle()
+# setStyle()
 
 
 if __name__ == '__main__':
@@ -171,8 +171,3 @@ if __name__ == '__main__':
         plt.savefig(str(plotFile) + '.pdf', format='pdf', bbox_inches='tight')
         plt.savefig(str(plotFile) + '.png', format='png', bbox_inches='tight')
         plt.clf()
-
-    # ray.plotAndSave('d80_deg', marker='o', linestyle=':', color='k')
-    # ray.plotAndSave('d80_cm', marker='o', linestyle=':', color='k')
-    # ray.plotAndSave('eff_area', marker='o', linestyle=':', color='k')
-    # ray.plotAndSave('eff_flen', marker='o', linestyle=':', color='k')
