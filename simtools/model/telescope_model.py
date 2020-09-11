@@ -30,9 +30,9 @@ class TelescopeModel:
     label: str
         Instance label.
     mirrors: Mirrors
-        Instance of the Mirrors class create with the mirror list of the model.
+        Instance of the Mirrors class created with the mirror list of the model.
     camera: Camera
-        Instance of the Camera class create with the camera config file of the model.
+        Instance of the Camera class created with the camera config file of the model.
 
     Methods
     -------
