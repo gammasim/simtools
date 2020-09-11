@@ -6,7 +6,7 @@ MC Model
 In this section you find reference documentation for the modules
 related to the MC Model. 
 
-The simtools description of the MC Model has the :ref:`Telescope Model`
+The simtools description of the MC Model has the :ref:`telescope_model`
 module (and its main class TelescopeModel) as its central element.
 The TelescopeModel class provides a representation of a telescope in terms
 of the MC Model. A TelescopeModel is basically defined by its telescope name
@@ -16,38 +16,38 @@ files.
 
 For the sake of modularity, lower level modules are defined to describe
 sub-elements of the TelescopeModel. At the moment, these modules are
-:ref:`Mirrors` and :ref:`Camera`.
+:ref:`mirrors` and :ref:`camera`.
 
 Array of telescopes is described by the Array Model module (not implemented yet),
 which contains a collection of TelescopeModel's and the array layout. 
 
 
-* `Telescope Model`_
-* `Mirrors`_
-* `Camera`_
+* `telescope_model`_
+* `mirrors`_
+* `camera`_
 
 
-.. _Telescope Model:
+.. _telescope_model:
 
-Telescope Model
+telescope_model
 ---------------
 
 .. automodule:: model.telescope_model
    :members:
 
 
-.. _Mirrors:
+.. _mirrors:
 
-Mirrors
+mirrors
 -------
 
 .. automodule:: model.mirrors
    :members:
 
-.. _Camera:
+.. _camera:
 
 
-Camera
+camera
 ------
 
 .. automodule:: model.camera
