@@ -7,7 +7,7 @@ Applications
 Introduction
 ============
 
-Applications are python scripts built on the :ref:`library` that execute a simple, well defined task.
+Applications are python scripts built on the :ref:`Library` that execute a simple, well defined task.
 These applications will be used as building blocks for the Simulation System Workflows.
 
 The application scripts can be found in gammasim-tools/applications.
