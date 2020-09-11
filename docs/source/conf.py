@@ -46,9 +46,10 @@ extensions = [
     'sphinx.ext.ifconfig',
     'sphinx.ext.viewcode',
     'sphinx.ext.githubpages',
-    'sphinx.ext.napoleon',  # make sphinx understand google docstring format
+    # 'sphinx.ext.napoleon',  # make sphinx understand google docstring format
     'sphinx.ext.todo',       # enabling todo's
-    'sphinx.ext.autosectionlabel'  # allows refs to section by its name
+    'sphinx.ext.autosectionlabel',  # allows refs to section by its name
+    'numpydoc'
 ]
 
 autosectionlabel_prefix_document = True
@@ -67,6 +68,11 @@ autodoc_mock_imports = [
     'scipy',    
     'cycler'
 ]
+
+# Change the look of autodoc classes
+# napoleon_use_ivar = True
+
+numpydoc_show_class_members = True
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
