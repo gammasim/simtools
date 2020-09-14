@@ -1,33 +1,45 @@
-.. _utilities:
+.. _Utilities:
 
 Utilities
 =========
 
-* `General`_
-* `MC Model`_
-* `Names`_
-* `Legend Handlers`_
+In this section you find the reference documentation of the modules contained in
+the util module.
 
-General
+
+* `general <utilgeneral>`_
+* `model <utilmodel>`_
+* `names <utilnames>`_
+* `legend_handlers <utillegendhandlers>`_
+
+.. _utilgeneral:
+
+general
 -------
 
 .. automodule:: util.general
    :members:
 
 
-MC Model
---------
+.. _utilmodel:
+
+model
+-----
 
 .. automodule:: util.model
    :members:
 
-Names
+.. _utilnames:
+
+names
 -----
 
 .. automodule:: util.names
    :members:
 
-Legend Handlers
+.. _utillegendhandlers:
+
+legend_handlers
 ---------------
 
 .. automodule:: util.legend_handlers
