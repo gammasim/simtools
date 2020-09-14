@@ -3,7 +3,13 @@ import copy
 
 import astropy.units as u
 
-__all__ = ['collectArguments', 'collectKwargs', 'setDefaultKwargs', 'sortArrays', 'collectFinalLines']
+__all__ = [
+    'collectArguments',
+    'collectKwargs',
+    'setDefaultKwargs',
+    'sortArrays',
+    'collectFinalLines'
+]
 
 logger = logging.getLogger(__name__)
 
@@ -16,7 +22,7 @@ class ArgumentCannotBeCollected(Exception):
     pass
 
 
-def unitsAreConvertible(quantity_1, quantity_2):
+def _unitsAreConvertible(quantity_1, quantity_2):
     '''
     Parameters
     ----------
@@ -34,7 +40,7 @@ def unitsAreConvertible(quantity_1, quantity_2):
         return False
 
 
-def unitIsValid(quantity, unit):
+def _unitIsValid(quantity, unit):
     '''
     Parameters
     ----------
@@ -51,7 +57,7 @@ def unitIsValid(quantity, unit):
         return unitsAreConvertible(quantity, unit)
 
 
-def convertUnit(quantity, unit):
+def _convertUnit(quantity, unit):
     '''
     Parameters
     ----------
@@ -71,14 +77,24 @@ def collectArguments(obj, args, allInputs, **kwargs):
     To be used during initialization of classes, where kwargs with physical meaning and units are
     expected.
 
-    Ex: In ray_tracing class,
+    Note
+    ----
+
+    In ray_tracing class,
+
+    .. code-block:: python
+
         collectArguments(
             self,
             args=['zenithAngle', 'offAxisAngle', 'sourceDistance'],
             allInputs=self.ALL_INPUTS,
             **kwargs
         )
+
     where,
+
+    .. code-block:: python
+
         ALL_INPUTS = {
             'zenithAngle': {'default': 20, 'unit': u.deg},
             'offAxisAngle': {'default': [0, 1.5, 3.0], 'unit': u.deg, 'isList': True},
@@ -98,8 +114,8 @@ def collectArguments(obj, args, allInputs, **kwargs):
         kwargs from the input arguments.
     '''
     def processSingleArg(arg, inArgName, argG, argD):
-        if unitIsValid(argG, argD['unit']):
-            obj.__dict__[inArgName] = convertUnit(argG, argD['unit'])
+        if _unitIsValid(argG, argD['unit']):
+            obj.__dict__[inArgName] = _convertUnit(argG, argD['unit'])
         else:
             logger.error('Argument {} given with wrong unit'.format(arg))
             raise ArgumentWithWrongUnit()
@@ -112,7 +128,7 @@ def collectArguments(obj, args, allInputs, **kwargs):
             argG = [argG]
 
         for aa in argG:
-            if unitIsValid(aa, argD['unit']):
+            if _unitIsValid(aa, argD['unit']):
                 outArg.append(convertUnit(aa, argD['unit']))
             else:
                 logger.error('Argument {} given with wrong unit'.format(arg))
