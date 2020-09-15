@@ -1,3 +1,6 @@
+# Travis-CI setup follow:
+# https://slashgear.github.io/how-to-deploy-on-github-pages-with-travis-ci/
+# https://www.freecodecamp.org/news/learn-how-to-automate-deployment-on-github-pages-with-travis-ci/
 language: generic
 
 python:
@@ -6,6 +9,7 @@ python:
   - "3.6"
 
 install:
+  # Following suggestion from https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/use-conda-with-travis-ci.html
   - wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
   - bash miniconda.sh -b -p $HOME/miniconda
   - source "$HOME/miniconda/etc/profile.d/conda.sh"
@@ -17,29 +21,19 @@ install:
 
   - conda env create -f environment.yml
   - conda activate gammasim-tools-dev
-  # - python setup.py install
-  # - conda install -r requirements.txt
 
 script:
   - make -C docs/ html
   - touch docs/build/html/.nojekyll
 
-# after_success:
-# - coverage run --source=httpsuite -m pytest tests/
-# - coveralls
 
+# See - https://docs.travis-ci.com/user/deployment/pages/
 deploy:
   provider: pages
   verbose: true
   token: $GITHUB_TOKEN
-#     edge: true
   local_dir: ./docs/build/html/
-#     keep_history: false
   skip_cleanup: true
   target_branch: gh-pages
   on:
-#       tags: true
     branch: master
-
-
-# 1e1ae8f03df93789a8c39558518aa1c72708f5b5
