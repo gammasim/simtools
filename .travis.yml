@@ -29,13 +29,13 @@ script:
 # - coveralls
 
 deploy:
-  provider: pages:git
-#     verbose: true
+  provider: pages
+  verbose: true
   token: $GITHUB_TOKEN
 #     edge: true
   local_dir: ./docs/build/html/
 #     keep_history: false
-#     skip_cleanup: true
+  skip_cleanup: true
   target_branch: gh-pages
   on:
 #       tags: true
