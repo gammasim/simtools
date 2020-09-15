@@ -1,9 +1,27 @@
 language: generic
 
-# install:
-#   - pip install -r dev-requirements.txt
+python:
+  # We don't actually use the Travis Python, but this keeps it organized.
+  - "3.5"
+  - "3.6"
+
+install:
+  - wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
+  - bash miniconda.sh -b -p $HOME/miniconda
+  - source "$HOME/miniconda/etc/profile.d/conda.sh"
+  - hash -r
+  - conda config --set always_yes yes --set changeps1 no
+  - conda update -q conda
+  # Useful for debugging any issues with conda
+  - conda info -a
+
+  - conda env create -f environment.yml
+  - conda activate gammasim-tools-dev
+  # - python setup.py install
+  # - conda install -r requirements.txt
 
 script:
+  - echo "Testing RAUL"
   - make -C docs/ html
   - touch docs/build/html/.nojekyll
 
@@ -11,17 +29,18 @@ script:
 # - coverage run --source=httpsuite -m pytest tests/
 # - coveralls
 
-deploy:
-  provider: pages:git
-    verbose: true
-    token: $GITHUB_TOKEN
-    edge: true
-    local_dir: ./docs/build/html/
-    keep_history: false
-    skip_cleanup: true
-    on:
-      tags: true
-      branch: docs
+# deploy:
+#   provider: pages:git
+#     verbose: true
+#     token: $GITHUB_TOKEN
+#     edge: true
+#     local_dir: ./docs/build/html/
+#     keep_history: false
+#     skip_cleanup: true
+#     target_branch: gh-pages
+#     on:
+#       tags: true
+#       branch: master
 
 
 # 1e1ae8f03df93789a8c39558518aa1c72708f5b5
