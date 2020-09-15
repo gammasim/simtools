@@ -1,22 +1,31 @@
-.. _getting_started:
+.. _Getting_Started:
 
 Getting Started
 ***************
 
-This is a getting started section!
+A conda (or pip) installation is still not posssible. Meanwhile,
+you need to clone (or fork) the repository.
+
+.. code-block:: console
+
+    $ git clone https://github.com/gammasim/gammasim-tools.git
 
 
-Installation
-============
+Within the repository, you will find a conda environment file.
+You can create and activate the environment by:
 
-Create (only once) and activate your conda enviroment:
+.. code-block:: console
 
-conda env create -f environment.yml
+    $ conda env create -f environment.yml
 
-conda activate gammasim-tools-dev
+    $ conda activate gammasim-tools-dev
 
-While a proper conda installation has not been setup, you can add simtools to your python path by
 
-source set_simtools.sh
- 
+You will also find in the repository a bash script to add the simtools library
+to your python path. 
 
+.. code-block:: console
+
+    $ source set_simtools.sh
+
+You are all set now =)

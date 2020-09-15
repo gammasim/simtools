@@ -39,8 +39,8 @@ class Mirrors:
 
         Parameters
         ----------
-        mirrorListFile: string
-                    The sim_telarray file name.
+        mirrorListFile: str
+            The sim_telarray file name.
         logger: str
             Logger name to use in this instance
         '''
