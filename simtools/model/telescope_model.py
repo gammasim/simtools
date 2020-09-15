@@ -30,13 +30,12 @@ class TelescopeModel:
     label: str
         Instance label.
     mirrors: Mirrors
-        Instance of the Mirrors class create with the mirror list of the model.
+        Instance of the Mirrors class created with the mirror list of the model.
     camera: Camera
-        Instance of the Camera class create with the camera config file of the model.
+        Instance of the Camera class created with the camera config file of the model.
 
     Methods
     -------
-    @classmethod
     fromConfigFile(configFileName, telescopeName, label=None, filesLocation=None)
         Create a TelescopeModel from a sim_telarray cfg file.
     hasParameter(parName):
@@ -128,9 +127,9 @@ class TelescopeModel:
         '''
         Create a TelescopeModel from a sim_telarray config file.
 
-        Notes
-        -----
-        TODO: dealing with ifdef/indef etc. By now it just keeps the last version of the parameters
+        Note
+        ----
+        Todo: Dealing with ifdef/indef etc. By now it just keeps the last version of the parameters
         in the file.
 
         Parameters

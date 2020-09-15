@@ -1,9 +1,3 @@
-'''
-Camera Efficiency simulations and analysis.
-
-Author: Raul R Prado
-'''
-
 import logging
 import numpy as np
 import matplotlib.pyplot as plt

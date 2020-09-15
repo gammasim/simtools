@@ -24,14 +24,6 @@ __all__ = ['RayTracing']
 
 
 class RayTracing:
-
-    YLABEL = {
-        'd80_cm': r'$D_{80}$',
-        'd80_deg': r'$D_{80}$',
-        'eff_area': 'Eff. mirror area',
-        'eff_flen': 'Eff. focal length'
-    }
-
     '''
     Class for handling ray tracing simulations and analysis.
 
@@ -52,11 +44,11 @@ class RayTracing:
     plot(key, **kwargs)
         Plot key vs off-axis angle.
     plotHistogram(key, **kwargs)
-        Plot histogram of key.
+        Plot histogram of key (d80_cm, d80_deg, eff_area, eff_flen).
     getMean(key)
-        Get mean value of key.
+        Get mean value of key(d80_cm, d80_deg, eff_area, eff_flen).
     getStdDev(key)
-        Get std dev of key.
+        Get std dev of key(d80_cm, d80_deg, eff_area, eff_flen).
     images()
         Get list of PSFImages.
     '''
@@ -68,6 +60,14 @@ class RayTracing:
             'isList': True
         },
         'sourceDistance': {'default': 10, 'unit': u.km}
+    }
+
+
+    YLABEL = {
+        'd80_cm': r'$D_{80}$',
+        'd80_deg': r'$D_{80}$',
+        'eff_area': 'Eff. mirror area',
+        'eff_flen': 'Eff. focal length'
     }
 
     def __init__(
@@ -346,7 +346,7 @@ class RayTracing:
         self._results = ascii.read(self._fileResults, format='ecsv')
         self._hasResults = True
 
-    def plotAndSave(self, key, **kwargs):
+    def plot(self, key, save=False, **kwargs):
         '''
         Plot key vs off-axis angle and save the figure in pdf.
 
@@ -354,6 +354,8 @@ class RayTracing:
         ----------
         key: str
             d80_cm, d80_deg, eff_area or eff_flen
+        save: bool
+            If True, figure will be saved.
         **kwargs:
             kwargs for plt.plot
 
@@ -367,16 +369,7 @@ class RayTracing:
             self._logger.error(msg)
             raise KeyError(msg)
 
-        plotFileName = names.rayTracingPlotFileName(
-            key,
-            self._telescopeModel.telescopeName,
-            self._sourceDistance,
-            self._zenithAngle,
-            self.label
-        )
-        self._outputDirectory.joinpath('figures').mkdir(exist_ok=True)
-        plotFile = self._outputDirectory.joinpath('figures').joinpath(plotFileName)
-        self._logger.info('Plotting {} and saving it in {}'.format(key, plotFile))
+        self._logger.info('Plotting {} vs off-axis angle'.format(key))
 
         plt = visualize.plotTable(
             self._results['Offset', key],
@@ -385,35 +378,18 @@ class RayTracing:
             **kwargs
         )
 
-        plt.savefig(plotFile)
-        plt.clf()
-
-    def plot(self, key, **kwargs):
-        '''
-        Plot key vs off-axis angle.
-
-        Parameters
-        ----------
-        key: str
-            d80_cm, d80_deg, eff_area or eff_flen
-        **kwargs:
-            kwargs for plt.plot
-
-        Raises
-        ------
-        KeyError
-            If key is not among the valid options.
-        '''
-        if key not in self.YLABEL.keys():
-            msg = 'Invalid key to plot'
-            self._logger.error(msg)
-            raise KeyError(msg)
-        ax = plt.gca()
-        ax.plot(
-            [o.value for o in self._results['Offset']],
-            [r.value for r in self._results[key]],
-            **kwargs
-        )
+        if save:
+            plotFileName = names.rayTracingPlotFileName(
+                key,
+                self._telescopeModel.telescopeName,
+                self._sourceDistance,
+                self._zenithAngle,
+                self.label
+            )
+            self._outputDirectory.joinpath('figures').mkdir(exist_ok=True)
+            plotFile = self._outputDirectory.joinpath('figures').joinpath(plotFileName)
+            self._logger.info('Ssaving fig in {}'.format(plotFile))
+            plt.savefig(plotFile)
 
     def plotHistogram(self, key, **kwargs):
         '''

@@ -9,12 +9,12 @@
     in cm is required and its sigma can be given optionally but will only be used for plotting. \
 
     The individual mirror focal length can be taken into account if a mirror list which contains \
-    this information is used from the :ref:`ModelParametersDB` or if a new mirror list is given \
+    this information is used from the :ref:`Model Parameters DB` or if a new mirror list is given \
     through the argument mirror_list. Random focal lengths can be used by turning on the argument \
     use_random_focal length and a new value for it can be given through the argument random_flen.
 
     The algorithm works as follow: A starting value of rnda is first defined as the one taken from \
-    the :ref:`modelparametersdb` \
+    the :ref:`Model Parameters DB` \
     (or alternativelly one may want to set it using the argument rnda).\
     Secondly, ray tracing simulations are performed for single mirror configurations for each \
     mirror given in the mirror_list. The mean simulated D80 for all the mirrors is compared with \
@@ -28,7 +28,8 @@
     A option no_tunning can be used if one only wants to simulate one value of rnda and compare \
     the results with the measured ones.
 
-    The results of the tunning are plotted (see examples of the plots below).
+    The results of the tunning are plotted. See examples of the D80 vs rnda plot, on the left, \
+    and the D80 distributions, on the right.
 
     .. _deriva_rnda_plot:
     .. image::  images/derive_mirror_rnda_North-MST-FlashCam-D.png
@@ -79,6 +80,7 @@
     .. todo::
 
         * Change default model to default (after this feature is implemented in db_handler)
+        * Fix the setStyle. For some reason, sphinx cannot built docs with it on.
 '''
 
 
@@ -98,9 +100,9 @@ import simtools.util.general as gen
 import simtools.io_handler as io
 from simtools.ray_tracing import RayTracing
 from simtools.model.telescope_model import TelescopeModel
-from simtools.visualize import setStyle
+# from simtools.visualize import setStyle
 
-setStyle()
+# setStyle()
 
 
 def plotMeasuredDistribution(file, **kwargs):
@@ -113,12 +115,14 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
     parser.add_argument(
+        '-t',
         '--tel_name',
         help='Telescope name (e.g. North-LST-1, South-SST-D, ...)',
         type=str,
         required=True
     )
     parser.add_argument(
+        '-m',
         '--model_version',
         help='Model version (default=prod4)',
         type=str,
@@ -205,8 +209,7 @@ if __name__ == '__main__':
     tel = TelescopeModel(
         telescopeName=args.tel_name,
         version=args.model_version,
-        label=label,
-        logger=logger.name
+        label=label
     )
     if args.mirror_list is not None:
         mirrorListFile = cfg.findFile(name=args.mirror_list)
@@ -341,7 +344,7 @@ if __name__ == '__main__':
         color='r',
         marker='o',
         linestyle='none',
-        label='rnda = {:.6f} (D80 = {:.3f} ± {:.3f} cm)'.format(rndaOpt, meanD80, sigD80)
+        label='rnda = {:.6f} (D80 = {:.3f} +/- {:.3f} cm)'.format(rndaOpt, meanD80, sigD80)
     )
 
     xlim = ax.get_xlim()
@@ -352,14 +355,14 @@ if __name__ == '__main__':
             [args.mean_d80 + args.sig_d80, args.mean_d80 + args.sig_d80],
             color='k',
             linestyle=':',
-            marker='none'
+            marker=','
         )
         ax.plot(
             xlim,
             [args.mean_d80 - args.sig_d80, args.mean_d80 - args.sig_d80],
             color='k',
             linestyle=':',
-            marker='none'
+            marker=','
         )
 
     ax.legend(frameon=False, loc='upper left')
