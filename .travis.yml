@@ -1,0 +1,27 @@
+language: generic
+
+# install:
+#   - pip install -r dev-requirements.txt
+
+script:
+  - make -C docs/ html
+  - touch docs/build/html/.nojekyll
+
+# after_success:
+# - coverage run --source=httpsuite -m pytest tests/
+# - coveralls
+
+deploy:
+  provider: pages:git
+    verbose: true
+    token: $GITHUB_TOKEN
+    edge: true
+    local_dir: ./docs/build/html/
+    keep_history: true
+    skip_cleanup: true
+    on:
+      tags: true
+      branch: docs
+
+
+# 1e1ae8f03df93789a8c39558518aa1c72708f5b5
