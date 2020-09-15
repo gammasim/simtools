@@ -17,7 +17,7 @@ deploy:
     token: $GITHUB_TOKEN
     edge: true
     local_dir: ./docs/build/html/
-    keep_history: true
+    keep_history: false
     skip_cleanup: true
     on:
       tags: true
