@@ -19,6 +19,7 @@ deploy:
     local_dir: ./docs/build/html/
     keep_history: false
     skip_cleanup: true
+    target_branch: gh-pages
     on:
       tags: true
       branch: master
