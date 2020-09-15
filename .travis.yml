@@ -17,7 +17,7 @@ install:
 
   - conda env create -f environment.yml
   - conda activate gammasim-tools-dev
-  - python setup.py install
+  # - python setup.py install
   # - conda install -r requirements.txt
 
 script:
