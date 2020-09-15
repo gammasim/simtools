@@ -7,7 +7,7 @@ __all__ = [
     'validateArrayName',
     'validateTelescopeName',
     'validateCameraName',
-    'convertTelescopeNameToYaml'
+    'convertTelescopeNameToYaml',
     'splitTelescopeName',
     'getSiteFromTelescopeName',
     'rayTracingFileName',

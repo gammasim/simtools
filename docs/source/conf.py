@@ -16,6 +16,7 @@ import os
 import sys
 sys.path.insert(0, os.path.abspath('../../simtools'))
 sys.path.insert(0, os.path.abspath('../../applications'))
+sys.path.insert(0, os.path.abspath('../..'))
 
 
 # -- Project information -----------------------------------------------------
@@ -45,9 +46,10 @@ extensions = [
     'sphinx.ext.ifconfig',
     'sphinx.ext.viewcode',
     'sphinx.ext.githubpages',
-    'sphinx.ext.napoleon',  # make sphinx understand google docstring format
+    # 'sphinx.ext.napoleon',  # make sphinx understand google docstring format
     'sphinx.ext.todo',       # enabling todo's
-    'sphinx.ext.autosectionlabel'  # allows refs to section by its name
+    'sphinx.ext.autosectionlabel',  # allows refs to section by its name
+    'numpydoc'
 ]
 
 autosectionlabel_prefix_document = True
@@ -55,7 +57,22 @@ autosectionlabel_prefix_document = True
 # Display todos by setting to True
 todo_include_todos = True
 
-autodoc_mock_imports = ['matplotlib', 'yaml']
+autodoc_mock_imports = [
+    'matplotlib',
+    'yaml',
+    'numpy',
+    'astropy',
+    'bson',
+    'pymongo',
+    'gridfs',
+    'scipy',    
+    'cycler'
+]
+
+# Change the look of autodoc classes
+# napoleon_use_ivar = True
+
+numpydoc_show_class_members = True
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -101,7 +118,7 @@ html_theme = 'sphinx_rtd_theme'
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['_static']
+html_static_path = []
 
 # Custom sidebar templates, must be a dictionary that maps document names
 # to template names.
