@@ -5,8 +5,8 @@ language: generic
 
 script:
   - echo "Testing RAUL"
-  # - make -C docs/ html
-  # - touch docs/build/html/.nojekyll
+  - make -C docs/ html
+  - touch docs/build/html/.nojekyll
 
 # after_success:
 # - coverage run --source=httpsuite -m pytest tests/
