@@ -321,7 +321,18 @@ allSiteNames = {
 allModelVersionNames = {
     'prod3_compatible': ['p3', 'prod3', 'prod3b'],
     'prod4': ['p4'],
-    'default': []
+    'post_prod3_updates': [''],
+    '2018-11-07': [''],
+    '2019-02-22': [''],
+    '2019-05-13': [''],
+    '2019-11-20': [''],
+    '2019-12-30': [''],
+    '2020-02-26': [''],
+    '2020-06-28': ['prod5'],
+    'prod4-prototype': [''],
+    'default': [],
+    'Current': [],
+    'Latest': []
 }
 
 allSimtelModeNames = {
