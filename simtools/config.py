@@ -5,7 +5,7 @@ import yaml
 import copy
 from pathlib import Path
 
-__all__ = ['loadConfig', 'get', 'findFile', 'change']
+__all__ = ['setConfigFileName', 'loadConfig', 'get', 'findFile', 'change']
 
 logger = logging.getLogger(__name__)
 
