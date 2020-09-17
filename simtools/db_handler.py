@@ -219,11 +219,15 @@ class DatabaseHandler:
         dict containing the parameters
         '''
 
+        _version = version
+        if version in ['Current', 'Latest']:
+            _version = self._getTaggedVersion(DatabaseHandler.DB_CTA_SIMULATION_MODEL, version)
+
         if cfg.get('useMongoDB'):
             _pars = self._getModelParametersMongoDB(
                 DatabaseHandler.DB_CTA_SIMULATION_MODEL,
                 telescopeName,
-                version,
+                _version,
                 runLocation,
                 onlyApplicable
             )
@@ -384,9 +388,13 @@ class DatabaseHandler:
         collection = DatabaseHandler.dbClient[dbName]['telescopes']
         _parameters = dict()
 
+        _version = version
+        if version in ['Current', 'Latest']:
+            _version = self._getTaggedVersion(dbName, version)
+
         query = {
             'Telescope': telescopeName,
-            'Version': version,
+            'Version': _version,
         }
         if onlyApplicable:
             query['Applicable'] = onlyApplicable
@@ -547,9 +555,13 @@ class DatabaseHandler:
         collection = DatabaseHandler.dbClient[dbName].sites
         _parameters = dict()
 
+        _version = version
+        if version in ['Current', 'Latest']:
+            _version = self._getTaggedVersion(dbName, version)
+
         query = {
             'Site': site,
-            'Version': version,
+            'Version': _version,
         }
         if onlyApplicable:
             query['Applicable'] = onlyApplicable
@@ -687,12 +699,15 @@ class DatabaseHandler:
         ))
 
         collection = DatabaseHandler.dbClient[dbName].telescopes
-        _parameters = dict()
         dbEntries = list()
+
+        _versionToCopy = versionToCopy
+        if versionToCopy in ['Current', 'Latest']:
+            _versionToCopy = self._getTaggedVersion(dbName, versionToCopy)
 
         query = {
             'Telescope': telToCopy,
-            'Version': versionToCopy,
+            'Version': _versionToCopy,
         }
         for post in collection.find(query):
             post['Telescope'] = newTelName
@@ -700,8 +715,7 @@ class DatabaseHandler:
             dbEntries.append(post)
 
         self._logger.info('Creating new telescope {}'.format(newTelName))
-        db = DatabaseHandler.dbClient[dbToCopyTo]
-        collection = db.telescopes
+        collection = DatabaseHandler.dbClient[dbToCopyTo].telescopes
         try:
             collection.insert_many(dbEntries)
         except BulkWriteError as exc:
@@ -709,7 +723,49 @@ class DatabaseHandler:
 
         return
 
-    def deleteQuery(self, dbName, query):
+    def copyDocuments(self, dbName, collection, query, dbToCopyTo):
+        '''
+        Copy the documents matching to "query" to the DB "dbToCopyTo".
+        The documents are copied to the same collection as in "dbName".
+        (This function should be rarely used, probably only during "construction".)
+
+        Parameters
+        ----------
+        dbName: str
+            the name of the DB to copy from
+        collection: str
+            the name of the collection to copy from
+        query: dict
+            A dictionary with a query to search for documents to copy.
+            For example,
+            query = {
+                'Telescope': 'North-LST-1',
+                'Version': 'prod4',
+            }
+            would copy all entries of prod4 version from telescope North-LST-1 to "dbToCopyTo".
+        dbToCopyTo: str
+            The name of the DB to copy to.
+        '''
+
+        _collection = DatabaseHandler.dbClient[dbName][collection]
+        dbEntries = list()
+
+        for post in _collection.find(query):
+            post.pop('_id', None)
+            dbEntries.append(post)
+
+        self._logger.info(
+            'Copying documents matching the following query {}\nto {}'.format(query, dbToCopyTo)
+        )
+        _collection = DatabaseHandler.dbClient[dbToCopyTo][collection]
+        try:
+            _collection.insert_many(dbEntries)
+        except BulkWriteError as exc:
+            raise exc(exc.details)
+
+        return
+
+    def deleteQuery(self, dbName, collection, query):
         '''
         Delete all entries from the DB which correspond to the provided query.
         (This function should be rarely used, if at all.)
@@ -728,14 +784,18 @@ class DatabaseHandler:
             would delete the entire prod4 version from telescope North-LST-1.
         '''
 
-        collection = DatabaseHandler.dbClient[dbName].telescopes
+        _collection = DatabaseHandler.dbClient[dbName][collection]
+
+        if 'Version' in query:
+            if query['Version'] in ['Current', 'Latest']:
+                query['Version'] = self._getTaggedVersion(dbName, query['Version'])
 
         self._logger.info('Deleting {} entries from {}'.format(
-            collection.count_documents(query),
+            _collection.count_documents(query),
             dbName,
         ))
 
-        collection.delete_many(query)
+        _collection.delete_many(query)
 
         return
 
@@ -748,7 +808,7 @@ class DatabaseHandler:
         Parameters
         ----------
         dbName: str
-            the name of the file DB
+            the name of the DB
         telescope: str
             Which telescope to update
         version: str
@@ -761,9 +821,13 @@ class DatabaseHandler:
 
         collection = DatabaseHandler.dbClient[dbName].telescopes
 
+        _version = version
+        if version in ['Current', 'Latest']:
+            _version = self._getTaggedVersion(dbName, version)
+
         query = {
             'Telescope': telescope,
-            'Version': version,
+            'Version': _version,
             'Parameter': parameter,
         }
 
@@ -772,7 +836,7 @@ class DatabaseHandler:
 
         self._logger.info('For telescope {}, version {}\nreplacing {} value from {} to {}'.format(
             telescope,
-            version,
+            _version,
             parameter,
             oldValue,
             newValue
@@ -794,7 +858,7 @@ class DatabaseHandler:
         Parameters
         ----------
         dbName: str
-            the name of the file DB
+            the name of the DB
         telescope: str
             Which telescope to update
         parameter: str
@@ -807,6 +871,10 @@ class DatabaseHandler:
 
         collection = DatabaseHandler.dbClient[dbName].telescopes
 
+        _newVersion = newVersion
+        if newVersion in ['Current', 'Latest']:
+            _newVersion = self._getTaggedVersion(dbName, newVersion)
+
         query = {
             'Telescope': telescope,
             'Parameter': parameter,
@@ -814,7 +882,7 @@ class DatabaseHandler:
 
         parEntry = collection.find(query).sort('_id', pymongo.DESCENDING)[0]
         parEntry['Value'] = newValue
-        parEntry['Version'] = newVersion
+        parEntry['Version'] = _newVersion
         parEntry.pop('_id', None)
 
         self._logger.info('Will add the following entry to DB\n', parEntry)
@@ -832,7 +900,7 @@ class DatabaseHandler:
         Parameters
         ----------
         dbName: str
-            the name of the file DB
+            the name of the DB
         telescope: str
             The name of the telescope to add a parameter to.
             Assumed to be a valid name!
@@ -866,3 +934,32 @@ class DatabaseHandler:
         collection.insert_one(dbEntry)
 
         return
+
+    def _getTaggedVersion(self, dbName, version='Current'):
+        '''
+        Get the tag of the "Current" or "Latest" version of the MC Model.
+        The "Current" is the latest stable MC Model, 
+        the latest is the latest tag (not necessarily stable, but can be equivalent to "Current").
+
+        Parameters
+        ----------
+        dbName: str
+            the name of the DB
+        version: str
+            Can be "Current" or "Latest" (default: "Current").
+
+        Returns
+        -------
+        str
+            The version name in the Simulation DB of the requested tag
+        '''
+
+        if version not in ['Current', 'Latest']:
+            raise ValueError('The only default versions are "Current" or "Latest"')
+
+        collection = DatabaseHandler.dbClient[dbName].metadata
+        query = {'Entry': 'Simulation-Model-Tags'}
+
+        tags = collection.find(query).sort('_id', pymongo.DESCENDING)[0]
+
+        return tags['Tags'][version]['Value']
