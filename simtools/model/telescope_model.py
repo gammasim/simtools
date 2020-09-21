@@ -56,7 +56,7 @@ class TelescopeModel:
     def __init__(
         self,
         telescopeName,
-        version='default',
+        version='Current',
         label=None,
         modelFilesLocations=None,
         filesLocation=None,
@@ -71,7 +71,7 @@ class TelescopeModel:
         telescopeName: str
             Telescope name for the base set of parameters (ex. North-LST-1, ...).
         version: str, optional
-            Version of the model (ex. prod4) (Default = default).
+            Version of the model (ex. prod4) (default: "Current").
         label: str, optional
             Instance label. Important for output file naming.
         modelFilesLocation: str (or Path), optional
