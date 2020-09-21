@@ -15,7 +15,7 @@ def test_input_validation():
 
     tel = TelescopeModel(
         telescopeName=telName,
-        version='prod4',
+        version='current',
         label='test-lst',
         logger=logger.name
     )
@@ -27,7 +27,7 @@ def test_input_validation():
 def test_handling_parameters():
     tel = TelescopeModel(
         telescopeName='north-lst-1',
-        version='prod4',
+        version='current',
         label='test-lst',
         logger=logger.name
     )
@@ -52,7 +52,7 @@ def test_handling_parameters():
 def test_flen_type():
     tel = TelescopeModel(
         telescopeName='north-lst-1',
-        version='prod4',
+        version='current',
         label='test-lst',
         logger=logger.name
     )
@@ -66,7 +66,7 @@ def test_cfg_file():
     # Exporting
     tel = TelescopeModel(
         telescopeName='south-sst-d',
-        version='prod4',
+        version='current',
         label='test-sst',
         logger=logger.name
     )
@@ -90,7 +90,7 @@ def test_cfg_file():
 def test_cfg_input():
     tel = TelescopeModel(
         telescopeName='north-lst-1',
-        version='prod4',
+        version='current',
         label='test-sst-2',
         logger=logger.name
     )
