@@ -3,14 +3,15 @@
 '''
     Summary
     -------
-    This application calculate the camera FoV of the telescope requested and plot the camera as seen for an observer facing the camera.
-
+    This application calculate the camera FoV of the telescope requested and plot the camera \
+    as seen for an observer facing the camera.
 
     An example of the camera plot can be found below.
 
     .. _camera_fov_plot:
-    .. image::  images/derive_mirror_rnda_North-MST-FlashCam-D.png
+    .. image::  images/validate_camera_fov_North-LST-1_pixelLayout.png
       :width: 49 %
+
 
     Command line arguments
     ----------------------
@@ -25,11 +26,11 @@
     -------
     LST - Prod4
 
-    Runtime about 90 min.
+    Runtime 2-3 min
 
     .. code-block:: console
 
-        python applications/derive_mirror_rnda.py --tel_name North-MST-FlashCam-D --mean_d80 1.4 --sig_d80 0.16 --mirror_list mirror_MST_focal_lengths.dat --d80_list mirror_MST_D80.dat --rnda 0.0075
+        python applications/validate_camera_fov.py --tel_name North-LST-1 --model_version prod4
 
     .. todo::
 
@@ -112,7 +113,7 @@ if __name__ == '__main__':
 
     # Now plot the camera as well
     plt = camera.plotPixelLayout()
-    plotFileName = label + '_' + tel.telescopeName + '_pixelLayout'
+    plotFileName = label + '_' + telModel.telescopeName + '_pixelLayout'
     plotFile = outputDir.joinpath(plotFileName)
     plt.savefig(str(plotFile) + '.pdf', format='pdf', bbox_inches='tight')
     plt.savefig(str(plotFile) + '.png', format='pdf', bbox_inches='tight')
