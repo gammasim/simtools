@@ -1,10 +1,48 @@
 #!/usr/bin/python3
 
+'''
+    Summary
+    -------
+    This application calculate the camera FoV of the telescope requested and plot the camera as seen for an observer facing the camera.
+
+
+    An example of the camera plot can be found below.
+
+    .. _camera_fov_plot:
+    .. image::  images/derive_mirror_rnda_North-MST-FlashCam-D.png
+      :width: 49 %
+
+    Command line arguments
+    ----------------------
+    tel_name (str, required)
+        Telescope name (e.g. North-LST-1, South-SST-D, ...)
+    model_version (str, optional)
+        Model version (default=prod4)
+    verbosity (str, optional)
+        Log level to print (default=INFO).
+
+    Example
+    -------
+    LST - Prod4
+
+    Runtime about 90 min.
+
+    .. code-block:: console
+
+        python applications/derive_mirror_rnda.py --tel_name North-MST-FlashCam-D --mean_d80 1.4 --sig_d80 0.16 --mirror_list mirror_MST_focal_lengths.dat --d80_list mirror_MST_D80.dat --rnda 0.0075
+
+    .. todo::
+
+        * Change default model to default (after this feature is implemented in db_handler)
+        * Fix the setStyle. For some reason, sphinx cannot built docs with it on.
+'''
+
 import logging
 import matplotlib.pyplot as plt
 import argparse
 
 import simtools.config as cfg
+import simtools.io_handler as io
 import simtools.util.general as gen
 from simtools.model.telescope_model import TelescopeModel
 from simtools.model.camera import Camera
@@ -19,29 +57,16 @@ if __name__ == '__main__':
         )
     )
     parser.add_argument(
-        '--tel_type',
-        help='Telescope type (e.g. north-lst-1, south-sst-d)',
+        '--tel_name',
+        help='Telescope name (e.g. North-LST-1, South-SST-D)',
         type=str,
         required=True
-    )
-    parser.add_argument(
-        '-l',
-        '--label',
-        help='Label (default=validate-FoV)',
-        type=str,
-        default='validate-FoV'
     )
     parser.add_argument(
         '--model_version',
         help='Model version (default=prod4)',
         type=str,
         default='prod4'
-    )
-    parser.add_argument(
-        '--site',
-        help='Site (default=South)',
-        type=str,
-        default='south'
     )
     parser.add_argument(
         '-v',
@@ -53,23 +78,27 @@ if __name__ == '__main__':
     )
 
     args = parser.parse_args()
+    label = 'validate_camera_fov'
 
-    logger = logging.getLogger('validate_camera_fov')
+    logger = logging.getLogger(label)
     logger.setLevel(gen.getLogLevelFromUser(args.logLevel))
 
+    # Output directory to save files related directly to this app
+    outputDir = io.getApplicationOutputDirectory(cfg.get('outputLocation'), label)
+
     telModel = TelescopeModel(
-        telescopeType=args.tel_type,
+        telescopeName=args.tel_name,
         version=args.model_version,
-        label=args.label,
+        label=label,
         logger=logger.name
     )
 
-    print('\nValidating the camera FoV of {}\n'.format(telModel.telescopeType))
+    print('\nValidating the camera FoV of {}\n'.format(telModel.telescopeName))
 
     cameraConfigFile = telModel.getParameter('camera_config_file')
     focalLength = float(telModel.getParameter('effective_focal_length'))
     camera = Camera(
-        telescopeType=telModel.telescopeType,
+        telescopeName=telModel.telescopeName,
         cameraConfigFile=cfg.findFile(cameraConfigFile),
         focalLength=focalLength,
         logger=logger.name
@@ -78,12 +107,14 @@ if __name__ == '__main__':
     fov, rEdgeAvg = camera.calcFOV()
 
     print('\nEffective focal length = ' + '{0:.3f} cm'.format(focalLength))
-    print('{0} FoV = {1:.3f} deg'.format(telModel.telescopeType, fov))
+    print('{0} FoV = {1:.3f} deg'.format(telModel.telescopeName, fov))
     print('Avg. edge radius = {0:.3f} cm\n'.format(rEdgeAvg))
 
     # Now plot the camera as well
     plt = camera.plotPixelLayout()
-    cameraPlotFile = 'pixelLayout-{}.pdf'.format(telModel.telescopeType)
-    plt.savefig(cameraPlotFile, bbox_inches='tight')
-    print('\nPlotted camera in {}\n'.format(cameraPlotFile))
+    plotFileName = label + '_' + tel.telescopeName + '_pixelLayout'
+    plotFile = outputDir.joinpath(plotFileName)
+    plt.savefig(str(plotFile) + '.pdf', format='pdf', bbox_inches='tight')
+    plt.savefig(str(plotFile) + '.png', format='pdf', bbox_inches='tight')
+    print('\nPlotted camera in {}\n'.format(plotFile))
     plt.clf()
