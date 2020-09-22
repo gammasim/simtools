@@ -157,6 +157,7 @@ def test_reading_db_sites():
     db = db_handler.DatabaseHandler(logger.name)
     logger.info('----Testing reading La Palma parameters-----')
     pars = db.getSiteParameters('North', 'prod4', testDataDirectory)
+    print(pars.keys())
     if cfg.get('useMongoDB'):
         assert(pars['altitude']['Value'] == 2147)
     else:
@@ -187,10 +188,10 @@ def test_reading_db_sites():
 if __name__ == '__main__':
 
     # test_get_model_file()
-    test_reading_db_lst()
-    test_reading_db_mst_nc()
-    test_reading_db_mst_fc()
-    test_reading_db_sst()
-    test_modify_db()
+    # test_reading_db_lst()
+    # test_reading_db_mst_nc()
+    # test_reading_db_mst_fc()
+    # test_reading_db_sst()
+    # test_modify_db()
     test_reading_db_sites()
     pass
