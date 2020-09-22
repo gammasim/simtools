@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-'''
+''' 
     Summary
     -------
     This application calculate the camera FoV of the telescope requested and plot the camera \
@@ -9,8 +9,8 @@
     An example of the camera plot can be found below.
 
     .. _camera_fov_plot:
-    .. image::  images/validate_camera_fov_North-LST-1_pixelLayout.png
-      :width: 49 %
+    .. image:: images/validate_camera_fov_North-LST-1_pixelLayout.png
+      :width: 50 %
 
 
     Command line arguments
@@ -115,7 +115,7 @@ if __name__ == '__main__':
     plt = camera.plotPixelLayout()
     plotFileName = label + '_' + telModel.telescopeName + '_pixelLayout'
     plotFile = outputDir.joinpath(plotFileName)
-    plt.savefig(str(plotFile) + '.pdf', format='pdf', bbox_inches='tight')
-    plt.savefig(str(plotFile) + '.png', format='pdf', bbox_inches='tight')
+    for f in ['pdf', 'png']:
+        plt.savefig(str(plotFile) + '.' + f, format=f, bbox_inches='tight')
     print('\nPlotted camera in {}\n'.format(plotFile))
     plt.clf()
