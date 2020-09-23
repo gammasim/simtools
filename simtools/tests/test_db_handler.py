@@ -195,10 +195,10 @@ def test_reading_db_sites():
 if __name__ == '__main__':
 
     # test_get_model_file()
-    test_reading_db_lst()
-    test_reading_db_mst_nc()
-    test_reading_db_mst_fc()
-    test_reading_db_sst()
-    test_modify_db()
+    # test_reading_db_lst()
+    # test_reading_db_mst_nc()
+    # test_reading_db_mst_fc()
+    # test_reading_db_sst()
+    # test_modify_db()
     test_reading_db_sites()
     pass

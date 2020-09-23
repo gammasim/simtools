@@ -54,7 +54,7 @@ def _unitIsValid(quantity, unit):
     if unit is None and not isinstance(1 * quantity, u.quantity.Quantity):
         return True
     else:
-        return unitsAreConvertible(quantity, unit)
+        return _unitsAreConvertible(quantity, unit)
 
 
 def _convertUnit(quantity, unit):
@@ -129,7 +129,7 @@ def collectArguments(obj, args, allInputs, **kwargs):
 
         for aa in argG:
             if _unitIsValid(aa, argD['unit']):
-                outArg.append(convertUnit(aa, argD['unit']))
+                outArg.append(_convertUnit(aa, argD['unit']))
             else:
                 logger.error('Argument {} given with wrong unit'.format(arg))
                 raise ArgumentWithWrongUnit()

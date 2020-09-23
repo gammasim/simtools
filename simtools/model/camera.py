@@ -800,7 +800,7 @@ class Camera:
         )
         plt.tick_params(axis='both', which='major', labelsize=15)
 
-        self._plotAxesDef(self._telescopeName, plt, self._pixels['rotateAngle'])
+        self._plotAxesDef(plt, self._pixels['rotateAngle'])
         ax.text(
             0.02,
             0.02,
