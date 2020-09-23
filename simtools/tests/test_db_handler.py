@@ -19,7 +19,7 @@ def test_reading_db_lst():
 
     logger.info('----Testing reading LST-----')
     db = db_handler.DatabaseHandler(logger.name)
-    pars = db.getModelParameters('north-lst-1', 'prod4', testDataDirectory)
+    pars = db.getModelParameters('north-lst-1', 'Current', testDataDirectory)
     if cfg.get('useMongoDB'):
         assert(pars['parabolic_dish']['Value'] == 1)
         assert(pars['camera_pixels']['Value'] == 1855)
@@ -37,7 +37,7 @@ def test_reading_db_mst_nc():
 
     logger.info('----Testing reading MST-NectarCam-----')
     db = db_handler.DatabaseHandler(logger.name)
-    pars = db.getModelParameters('north-mst-NectarCam-D', 'prod4', testDataDirectory)
+    pars = db.getModelParameters('north-mst-NectarCam-D', 'Current', testDataDirectory)
     if cfg.get('useMongoDB'):
         assert(pars['camera_pixels']['Value'] == 1855)
     else:
@@ -56,7 +56,7 @@ def test_reading_db_mst_fc():
 
     logger.info('----Testing reading MST-FlashCam-----')
     db = db_handler.DatabaseHandler(logger.name)
-    pars = db.getModelParameters('north-mst-FlashCam-D', 'prod4', testDataDirectory)
+    pars = db.getModelParameters('north-mst-FlashCam-D', 'Current', testDataDirectory)
     if cfg.get('useMongoDB'):
         assert(pars['camera_pixels']['Value'] == 1764)
     else:
@@ -75,7 +75,7 @@ def test_reading_db_sst():
 
     logger.info('----Testing reading SST-----')
     db = db_handler.DatabaseHandler(logger.name)
-    pars = db.getModelParameters('south-sst-D', 'prod4', testDataDirectory)
+    pars = db.getModelParameters('south-sst-D', 'Current', testDataDirectory)
     if cfg.get('useMongoDB'):
         assert(pars['camera_pixels']['Value'] == 2048)
     else:
@@ -101,11 +101,17 @@ def test_modify_db():
     db.copyTelescope(
         DB_CTA_SIMULATION_MODEL,
         'North-LST-1',
-        'prod4',
+        'Current',
         'North-LST-Test',
         'sandbox'
     )
-    pars = db.readMongoDB('sandbox', 'North-LST-Test', 'prod4', testDataDirectory, False)
+    db.copyDocuments(
+        DB_CTA_SIMULATION_MODEL,
+        'metadata', 
+        {'Entry': 'Simulation-Model-Tags'},
+        'sandbox'
+    )
+    pars = db.readMongoDB('sandbox', 'North-LST-Test', 'Current', testDataDirectory, False)
     assert(pars['camera_pixels']['Value'] == 1855)
 
     logger.info('----Testing adding a parameter-----')
@@ -141,9 +147,11 @@ def test_modify_db():
     pars = db.readMongoDB('sandbox', 'North-LST-Test', 'test', testDataDirectory, False)
     assert(pars['camera_config_version_test']['Value'] == 999)
 
-    logger.info('----Testing deleting a query (a whole telescope in this case)-----')
+    logger.info('----Testing deleting a query (a whole telescope in this case and metadata)-----')
     query = {'Telescope': 'North-LST-Test'}
-    db.deleteQuery('sandbox', query)
+    db.deleteQuery('sandbox', 'telescopes', query)
+    query = {'Entry': 'Simulation-Model-Tags'}
+    db.deleteQuery('sandbox', 'metadata', query)
 
     return
 
@@ -156,12 +164,11 @@ def test_reading_db_sites():
 
     db = db_handler.DatabaseHandler(logger.name)
     logger.info('----Testing reading La Palma parameters-----')
-    pars = db.getSiteParameters('South', 'prod4', testDataDirectory)
-    print(pars.keys())
+    pars = db.getSiteParameters('North', 'Current', testDataDirectory)
     if cfg.get('useMongoDB'):
-        assert(pars['altitude']['Value'] == 2147)
+        assert(pars['altitude']['Value'] == 2158)
     else:
-        assert(pars['altitude'] == 2147)
+        assert(pars['altitude'] == 2158)
 
     logger.info('Listing files written in {}'.format(testDataDirectory))
     subprocess.call(['ls -lh {}'.format(testDataDirectory)], shell=True)
@@ -170,12 +177,11 @@ def test_reading_db_sites():
     subprocess.call(['rm -f {}/*'.format(testDataDirectory)], shell=True)
 
     logger.info('----Testing reading Paranal parameters-----')
-    pars = db.getSiteParameters('South', 'prod4', testDataDirectory)
-    print(pars.keys())
+    pars = db.getSiteParameters('South', 'Current', testDataDirectory)
     if cfg.get('useMongoDB'):
-        assert(pars['altitude']['Value'] == 2150)
+        assert(pars['altitude']['Value'] == 2147)
     else:
-        assert(pars['altitude'] == 2150)
+        assert(pars['altitude'] == 2147)
 
     logger.info('Listing files written in {}'.format(testDataDirectory))
     subprocess.call(['ls -lh {}'.format(testDataDirectory)], shell=True)
