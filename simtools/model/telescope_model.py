@@ -235,6 +235,7 @@ class TelescopeModel:
             self._configFileDirectory,
             onlyApplicable=True
         )
+
         # Only the following are read by sim_telarray, the others produce an error.
         # TODO - Should we find a better solution for this?
         for _parNow in _sitePars.copy():

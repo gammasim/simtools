@@ -32,9 +32,9 @@
     and the D80 distributions, on the right.
 
     .. _deriva_rnda_plot:
-    .. image::  images/derive_mirror_rnda_North-MST-FlashCam-D.png
+    .. image:: images/derive_mirror_rnda_North-MST-FlashCam-D.png
       :width: 49 %
-    .. image::  images/derive_mirror_rnda_North-MST-FlashCam-D_D80-distributions.png
+    .. image:: images/derive_mirror_rnda_North-MST-FlashCam-D_D80-distributions.png
       :width: 49 %
 
     Command line arguments
