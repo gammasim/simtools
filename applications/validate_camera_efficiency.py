@@ -6,12 +6,13 @@
     This application validate the camera efficiency by simulating it using \
     the testeff program provided by sim_telarray.
 
-    The results of camera efficiency for Cherenkov and NSB light as a function\
+    The results of camera efficiency for Cherenkov (left) and NSB (right) light as a function\
     of wavelength are plotted. See examples below.
+
     .. _validate_camera_eff_plot:
-    .. image:: images/derive_mirror_rnda_North-MST-FlashCam-D.png
+    .. image:: images/validate_camera_efficiency_North-MST-NectarCam-D_cherenkov.png
       :width: 49 %
-    .. image:: images/derive_mirror_rnda_North-MST-FlashCam-D_D80-distributions.png
+    .. image:: images/validate_camera_efficiency_North-MST-NectarCam-D_nsb.png
       :width: 49 %
 
     Command line arguments
@@ -27,11 +28,12 @@
     -------
     MST-NectarCam - Prod4
 
-    Runtime about 90 min.
+    Runtime < 1 min.
 
     .. code-block:: console
 
-        python applications/derive_mirror_rnda.py --tel_name North-MST-FlashCam-D --mean_d80 1.4 --sig_d80 0.16 --mirror_list mirror_MST_focal_lengths.dat --d80_list mirror_MST_D80.dat --rnda 0.0075
+        python applications/validate_camera_efficiency.py --tel_name North-MST-NectarCam-D \
+        --model_version prod4
 
     .. todo::
 
