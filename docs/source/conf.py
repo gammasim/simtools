@@ -22,7 +22,7 @@ sys.path.insert(0, os.path.abspath('../..'))
 # -- Project information -----------------------------------------------------
 
 project = 'gammasim-tools'
-copyright = '2019, Cherenkov Telescope Array Observatory Consortium'
+copyright = '2020, gammasim-tools developers'
 author = 'Raul R Prado and Orel Gueta'
 
 # The short X.Y version
@@ -65,7 +65,7 @@ autodoc_mock_imports = [
     'bson',
     'pymongo',
     'gridfs',
-    'scipy',    
+    'scipy',
     'cycler'
 ]
 
@@ -183,7 +183,8 @@ man_pages = [
 #  dir menu entry, description, category)
 texinfo_documents = [
     (master_doc, 'gammasim-tools', 'gammasim-tools Documentation',
-     author, 'gammasim-tools', 'One line description of project.',
+     author, 'gammasim-tools',
+     'Prototype of a software package for the Simulation System of CTA Observatory'
      'Miscellaneous'),
 ]
 
