@@ -156,7 +156,7 @@ def test_reading_db_sites():
 
     db = db_handler.DatabaseHandler(logger.name)
     logger.info('----Testing reading La Palma parameters-----')
-    pars = db.getSiteParameters('North', 'prod4', testDataDirectory)
+    pars = db.getSiteParameters('South', 'prod4', testDataDirectory)
     print(pars.keys())
     if cfg.get('useMongoDB'):
         assert(pars['altitude']['Value'] == 2147)
@@ -171,6 +171,7 @@ def test_reading_db_sites():
 
     logger.info('----Testing reading Paranal parameters-----')
     pars = db.getSiteParameters('South', 'prod4', testDataDirectory)
+    print(pars.keys())
     if cfg.get('useMongoDB'):
         assert(pars['altitude']['Value'] == 2150)
     else:
