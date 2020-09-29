@@ -40,7 +40,7 @@ def loadConfig(fileName=None):
     Returns
     -------
     dict
-        A dictionaty containing all the info from the global configuration setting.
+        A dictionary containing all the info from the global configuration setting.
     '''
     if fileName is not None:
         thisFileName = fileName
