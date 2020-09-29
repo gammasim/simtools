@@ -28,7 +28,7 @@ useMongoDB: bool
     Flag to turn on MongoDB. If False, the older yaml files will be used to access the Model Parameters.
 
 mongoDBConfigFile: str
-    Path to the MongoDB config file (see :ref:`Model Parameters DB`), which will be ignired if useMongoDB is False.
+    Path to the MongoDB config file (see :ref:`Model Parameters DB`), which will be ignored if useMongoDB is False.
 
 modelFilesLocations: list of str
     List with the locations of the model files.
