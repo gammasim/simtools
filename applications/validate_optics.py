@@ -50,7 +50,7 @@
 
     .. code-block:: console
 
-        python applications/validate_optics.py --tel_name North-LST-1 -max_offset 5.0
+        python applications/validate_optics.py --tel_name North-LST-1 --max_offset 5.0
 
     .. todo::
 
