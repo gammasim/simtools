@@ -42,6 +42,21 @@ testDataLocation: str
 simtelPath: str
     Path to the root sim_telarray directory, containing the sim_telarray software unpacked and compiled.
 
+
+Environmental variables can be used to set the paths/locations. Example:
+
+
+.. code-block:: console
+
+    simtelPath: $SIMTELPATH
+
+or
+
+.. code-block:: console
+
+    simtelPath: ${SIMTELPATH}
+
+
 .. _configmodule:
 
 config
