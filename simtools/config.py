@@ -3,6 +3,7 @@
 import logging
 import yaml
 import copy
+import os
 from pathlib import Path
 
 __all__ = ['setConfigFileName', 'loadConfig', 'get', 'findFile', 'change']
@@ -78,7 +79,12 @@ def get(par):
         logger.error('Config does not contain {}'.format(par))
         raise KeyError()
     else:
-        return config[par]
+        if config[par][0] == '$':
+            envName = config[par][1:].replace('{', '')
+            envName = envName.replace('}', '')
+            return os.environ.get(envName)
+        else:
+            return config[par]
 
 
 def change(par, value):
