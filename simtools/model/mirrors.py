@@ -16,7 +16,7 @@ class Mirrors:
     Attributes
     ----------
     mirrors: dict
-        A dictionary with the mirror positions [cm], diameters, focel length and shape.
+        A dictionary with the mirror positions [cm], diameters, focal length and shape.
     shape: int
         Single shape code (0=circular, 1=hex. with flat side parallel to y, 2=square,
         3=other hex.)
