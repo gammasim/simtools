@@ -150,7 +150,7 @@ class SimtelRunner:
         test: bool
             If True, make simulations faster.
         force: bool
-            If True, remove possible existing output fileas and run again.
+            If True, remove possible existing output files and run again.
         '''
         self._logger.debug('Running at mode {}'.format(self.mode))
         # write all the important parameters
