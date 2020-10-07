@@ -11,6 +11,10 @@ __all__ = ['setConfigFileName', 'loadConfig', 'get', 'findFile', 'change']
 logger = logging.getLogger(__name__)
 
 
+class ConfigEnvironmentalVariableNotSet(Exception):
+    pass
+
+
 def setConfigFileName(fileName):
     '''
     Redefines the config file name by resetting the a global variable.
@@ -82,7 +86,15 @@ def get(par):
         if config[par][0] == '$':
             envName = config[par][1:].replace('{', '')
             envName = envName.replace('}', '')
-            return os.environ.get(envName)
+            envPath = os.environ.get(envName)
+            if envPath is None:
+                msg = (
+                    'Config entry {} is interpreted as environmental variables '.format(par)
+                    + 'that is not set.'
+                )
+                logger.error(msg)
+                raise ConfigEnvironmentalVariableNotSet(msg)
+            return envPath
         else:
             return config[par]
 
