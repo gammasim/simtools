@@ -32,7 +32,7 @@ def getOutputDirectory(filesLocation, label, mode):
     '''
     today = datetime.date.today()
     labelDir = label if label is not None else 'd-' + str(today)
-    path = Path(filesLocation).joinpath('simtools-files').joinpath(labelDir).joinpath(mode)
+    path = Path(filesLocation).joinpath('simtools-output').joinpath(labelDir).joinpath(mode)
     path.mkdir(parents=True, exist_ok=True)
     return path.absolute()
 
