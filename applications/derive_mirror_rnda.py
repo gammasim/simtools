@@ -77,6 +77,22 @@
 
         python applications/derive_mirror_rnda.py --tel_name North-MST-FlashCam-D --mean_d80 1.4 --sig_d80 0.16 --mirror_list mirror_MST_focal_lengths.dat --d80_list mirror_MST_D80.dat --rnda 0.0075
 
+
+    Expected output:
+
+    .. code-block:: console
+
+        Measured D80:
+        Mean = 1.400 cm, StdDev = 0.160 cm
+
+        Simulated D80:
+        Mean = 1.401 cm, StdDev = 0.200 cm
+
+        mirror_random_reflection_angle
+        Previous value = 0.007500
+        New value = 0.006378
+
+
     .. todo::
 
         * Change default model to default (after this feature is implemented in db_handler)
