@@ -62,7 +62,6 @@ class RayTracing:
         'sourceDistance': {'default': 10, 'unit': u.km}
     }
 
-
     YLABEL = {
         'd80_cm': r'$D_{80}$',
         'd80_deg': r'$D_{80}$',
@@ -295,7 +294,7 @@ class RayTracing:
         # END for offAxis, mirrorNumber
 
         if doAnalyze:
-            _columns = ['Offset']
+            _columns = ['Off-axis angle']
             _columns.extend(list(self.YLABEL.keys()))
             if self._singleMirrorMode:
                 _columns.append('mirror_number')
