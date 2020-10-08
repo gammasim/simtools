@@ -83,7 +83,7 @@ def get(par):
         logger.error('Config does not contain {}'.format(par))
         raise KeyError()
     else:
-        if config[par][0] == '$':
+        if isinstance(config[par], str) and config[par][0] == '$':
             envName = config[par][1:].replace('{', '')
             envName = envName.replace('}', '')
             envPath = os.environ.get(envName)
