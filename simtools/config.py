@@ -3,11 +3,16 @@
 import logging
 import yaml
 import copy
+import os
 from pathlib import Path
 
 __all__ = ['setConfigFileName', 'loadConfig', 'get', 'findFile', 'change']
 
 logger = logging.getLogger(__name__)
+
+
+class ConfigEnvironmentalVariableNotSet(Exception):
+    pass
 
 
 def setConfigFileName(fileName):
@@ -78,7 +83,20 @@ def get(par):
         logger.error('Config does not contain {}'.format(par))
         raise KeyError()
     else:
-        return config[par]
+        if isinstance(config[par], str) and config[par][0] == '$':
+            envName = config[par][1:].replace('{', '')
+            envName = envName.replace('}', '')
+            envPath = os.environ.get(envName)
+            if envPath is None:
+                msg = (
+                    'Config entry {} is interpreted as environmental variables '.format(par)
+                    + 'that is not set.'
+                )
+                logger.error(msg)
+                raise ConfigEnvironmentalVariableNotSet(msg)
+            return envPath
+        else:
+            return config[par]
 
 
 def change(par, value):
