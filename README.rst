@@ -19,6 +19,7 @@ AUTHORS:
     
 * Raul R Prado (raul.prado@desy.de)
 * Orel Gueta (orel.gueta@desy.de)
+* Gernot Maier (gernot.maier@desy.de)
 
 INSTALLATION:
 -------------
