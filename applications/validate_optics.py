@@ -50,7 +50,7 @@
 
     .. code-block:: console
 
-        python applications/validate_optics.py --tel_name North-LST-1 -max_offset 5.0
+        python applications/validate_optics.py --tel_name North-LST-1 --max_offset 5.0
 
     .. todo::
 
@@ -147,7 +147,7 @@ if __name__ == '__main__':
 
     print(
         '\nValidating telescope optics with ray tracing simulations'
-        'for {}\n'.format(telModel.telescopeName)
+        ' for {}\n'.format(telModel.telescopeName)
     )
 
     ray = RayTracing(

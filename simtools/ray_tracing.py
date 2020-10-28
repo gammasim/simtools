@@ -371,7 +371,7 @@ class RayTracing:
         self._logger.info('Plotting {} vs off-axis angle'.format(key))
 
         plt = visualize.plotTable(
-            self._results['Offset', key],
+            self._results['Off-axis angle', key],
             self.YLABEL[key],
             noLegend=True,
             **kwargs
