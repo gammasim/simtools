@@ -532,7 +532,7 @@ class TelescopeModel:
         bool:
             True if telescope  is a ASTRI, False otherwise.
         '''
-        return self.telescopeName in ['SST-2M-ASTRI', 'SST']
+        return self.telescopeName in ['SST-2M-ASTRI', 'SST', 'South-SST-D']
 
     def isFile2D(self, par):
         '''
