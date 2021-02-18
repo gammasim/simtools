@@ -1,7 +1,6 @@
 gammasim-tools
 ===========
 
-
 Prototype implementation of tools for the Simulation System of the `CTA Observatory <www.cta-observatory.org>`_
 
 gammasim-tools provides a framework and tools for:
