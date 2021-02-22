@@ -71,7 +71,7 @@
     -------
     MST - Prod5 (07.2020)
 
-    Runtime about 90 min.
+    Runtime about 3 min.
 
     .. code-block:: console
 
