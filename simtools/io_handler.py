@@ -124,7 +124,7 @@ def getApplicationOutputDirectory(filesLocation, label):
     -------
     Path
     '''
-    return getOutputDirectory(filesLocation, label, 'application')
+    return getOutputDirectory(filesLocation, label, 'application-plots')
 
 
 def getTestDataFile(fileName):
