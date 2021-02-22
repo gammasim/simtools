@@ -46,7 +46,7 @@
     -------
     LST-1 Prod5
 
-    Runtime about 3 min.
+    Runtime < 1 min.
 
     First, create an yml file named lst_pars.yml with the following content:
 

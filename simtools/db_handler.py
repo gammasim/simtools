@@ -115,7 +115,7 @@ class DatabaseHandler:
         _tunnel = self._createTunnel(
             localport=self.dbDetails['localport'],
             remoteport=self.dbDetails['remoteport'],
-            user=user,
+            user=self.dbDetails['userDB'],
             mongodbServer=self.dbDetails['mongodbServer'],
             tunnelServer=self.dbDetails['tunnelServer']
         )
