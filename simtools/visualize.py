@@ -448,7 +448,7 @@ def plotHist2D(data, **kwargs):
     plt.xlabel(xTitleUnit)
     plt.ylabel(yTitleUnit)
 
-    plt.axis('equal', adjustable='datalim')
+    plt.gca().set_aspect('equal', adjustable='datalim')
 
     if len(title) > 0:
         plt.title(title, y=1.02)
