@@ -26,7 +26,7 @@
     -------
     LST - Prod4
 
-    Runtime 2-3 min
+    Runtime 1 min
 
     .. code-block:: console
 
