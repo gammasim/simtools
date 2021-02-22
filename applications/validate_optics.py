@@ -46,7 +46,7 @@
     -------
     LST-1 Prod5
 
-    Runtime about 50 min.
+    Runtime about 1-2 min.
 
     .. code-block:: console
 
@@ -113,7 +113,7 @@ if __name__ == '__main__':
         help='Maximum offset angle in deg (default=4)',
         type=float,
         default=4
-    )
+    ) 
     parser.add_argument(
         '--test',
         help='Test option will be faster by simulating fewer photons.',
