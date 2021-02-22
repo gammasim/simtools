@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 '''
+
     Summary
     -------
     This application validates the optical model parameters through ray tracing simulations \
