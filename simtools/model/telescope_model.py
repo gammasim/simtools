@@ -10,7 +10,6 @@ from simtools.util import names
 from simtools.util.model import validateModelParameter
 from simtools.model.mirrors import Mirrors
 from simtools.model.camera import Camera
-from simtools.model.model_parameters import MODEL_PARS
 
 
 __all__ = ['TelescopeModel']
@@ -18,8 +17,8 @@ __all__ = ['TelescopeModel']
 
 class TelescopeModel:
     '''
-    TelescopeModel is an abstract representation of the MC model at the telescope level. It contains
-    the list of parameters and useful methods to handle it.
+    TelescopeModel is an abstract representation of the MC model at the telescope level.
+    It contains the list of parameters and useful methods to handle it.
 
     Attributes
     ----------
@@ -53,6 +52,7 @@ class TelescopeModel:
     getConfigFile()
         Get the path to the config file for sim_telarray.
     '''
+
     def __init__(
         self,
         telescopeName,
@@ -75,7 +75,8 @@ class TelescopeModel:
         label: str, optional
             Instance label. Important for output file naming.
         modelFilesLocation: str (or Path), optional
-            Location of the MC model files. If not given, it will be taken from the config.yml file.
+            Location of the MC model files. If not given, it will be taken from the
+            config.yml file.
         filesLocation: str (or Path), optional
             Parent location of the output files created by this class. If not given, it will be
             taken from the config.yml file.
@@ -141,7 +142,8 @@ class TelescopeModel:
         label: str, optional
             Instance label. Important for output file naming.
         modelFilesLocation: str (or Path), optional
-            Location of the MC model files. If not given, it will be taken from the config.yml file.
+            Location of the MC model files. If not given, it will be taken from the config.yml
+            file.
         filesLocation: str (or Path), optional
             Parent location of the output files created by this class. If not given, it will be
             taken from the config.yml file.
@@ -499,7 +501,7 @@ class TelescopeModel:
         mirrorListFileName = self._parameters['mirror_list']
         try:
             mirrorListFile = cfg.findFile(mirrorListFileName, self._configFileDirectory)
-        except:
+        except FileNotFoundError():
             mirrorListFile = cfg.findFile(mirrorListFileName, self._modelFilesLocations)
         self._mirrors = Mirrors(mirrorListFile, logger=self._logger.name)
         return
@@ -512,7 +514,7 @@ class TelescopeModel:
             focalLength = self._parameters['focal_length']
         try:
             cameraConfigFilePath = cfg.findFile(cameraConfigFile, self._configFileDirectory)
-        except:
+        except FileNotFoundError():
             cameraConfigFilePath = cfg.findFile(cameraConfigFile, self._modelFilesLocations)
 
         self._camera = Camera(
