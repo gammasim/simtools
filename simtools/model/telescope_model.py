@@ -1,6 +1,6 @@
 import logging
-import yaml
 import copy
+import shutil
 from pathlib import Path
 
 import simtools.config as cfg
@@ -383,6 +383,18 @@ class TelescopeModel:
                 raise ValueError(msg)
         self._isConfigFileUpdated = False
 
+    def addParameterFile(self, filePath):
+        '''
+        Add a file given by a model parameter to the config file directory.
+
+        Parameters
+        ----------
+        filePath: str
+            Path of the file to be added to the config file directory.
+        '''
+        shutil.copy(filePath, self._configFileDirectory)
+        return
+
     def exportConfigFile(self):
         ''' Export the config file used by sim_telarray. '''
 
@@ -501,8 +513,12 @@ class TelescopeModel:
         mirrorListFileName = self._parameters['mirror_list']
         try:
             mirrorListFile = cfg.findFile(mirrorListFileName, self._configFileDirectory)
-        except FileNotFoundError():
+        except FileNotFoundError:
             mirrorListFile = cfg.findFile(mirrorListFileName, self._modelFilesLocations)
+            self._logger.warning(
+                'MirrorListFile was not found in the config directory - '
+                'Using the one found in the modelFilesLocations'
+            )
         self._mirrors = Mirrors(mirrorListFile, logger=self._logger.name)
         return
 
@@ -514,7 +530,11 @@ class TelescopeModel:
             focalLength = self._parameters['focal_length']
         try:
             cameraConfigFilePath = cfg.findFile(cameraConfigFile, self._configFileDirectory)
-        except FileNotFoundError():
+        except FileNotFoundError:
+            self._logger.warning(
+                'CameraConfigFile was not found in the config directory - '
+                'Using the one found in the modelFilesLocations'
+            )
             cameraConfigFilePath = cfg.findFile(cameraConfigFile, self._modelFilesLocations)
 
         self._camera = Camera(
