@@ -230,6 +230,7 @@ if __name__ == '__main__':
     if args.mirror_list is not None:
         mirrorListFile = cfg.findFile(name=args.mirror_list)
         tel.changeParameters(mirror_list=args.mirror_list)
+        tel.addParameterFile(mirrorListFile)  # Copying the mirror list to the model dir
     if args.random_flen is not None:
         tel.changeParameters(random_focal_length=str(args.random_flen))
 
