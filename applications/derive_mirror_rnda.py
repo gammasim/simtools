@@ -325,7 +325,7 @@ if __name__ == '__main__':
         rndaOpt = rndaStart
 
     # Running the final simulation for rndaOpt
-    meanD80, sigD80 = run(rndaOpt, plot=False)
+    meanD80, sigD80 = run(rndaOpt, plot=True)
 
     # Printing results to stdout
     print('\nMeasured D80:')
