@@ -189,7 +189,7 @@ class Camera:
         '''
 
         if isTwoMirrorTelescope(self._telescopeName):
-            pixels['y'] = [(-1)*yVal for yVal in pixels['y']]
+            pixels['y'] = [(-1) * yVal for yVal in pixels['y']]
 
         rotateAngle = pixels['rotateAngle']  # So not to change the original angle
         rotateAngle += np.deg2rad(CAMERA_ROTATE_ANGLE[self._cameraName])
@@ -199,10 +199,10 @@ class Camera:
         if rotateAngle != 0:
             for i_pix, xyPixPos in enumerate(zip(pixels['x'], pixels['y'])):
                 pixels['x'][i_pix] = (
-                    xyPixPos[0]*np.cos(rotateAngle) - xyPixPos[1]*np.sin(rotateAngle)
+                    xyPixPos[0] * np.cos(rotateAngle) - xyPixPos[1] * np.sin(rotateAngle)
                 )
                 pixels['y'][i_pix] = (
-                    xyPixPos[0]*np.sin(rotateAngle) + xyPixPos[1]*np.cos(rotateAngle)
+                    xyPixPos[0] * np.sin(rotateAngle) + xyPixPos[1] * np.cos(rotateAngle)
                 )
 
         pixels['orientation'] = 0
@@ -269,7 +269,7 @@ class Camera:
             pixelDistances = distance.cdist(points, points, 'euclidean')
             self._pixels['pixel_spacing'] = np.min(pixelDistances[pixelDistances > 0])
 
-        return (self._pixels['pixel_diameter']/self._pixels['pixel_spacing'])**2
+        return (self._pixels['pixel_diameter'] / self._pixels['pixel_spacing'])**2
 
     def calcFOV(self):
         '''
@@ -331,7 +331,7 @@ class Camera:
             averageEdgeDistance += np.sqrt(xPixel[i_pix] ** 2 + yPixel[i_pix] ** 2)
         averageEdgeDistance /= len(edgePixelIndices)
 
-        fov = 2*np.rad2deg(np.arctan(averageEdgeDistance/focalLength))
+        fov = 2 * np.rad2deg(np.arctan(averageEdgeDistance / focalLength))
 
         return fov, averageEdgeDistance
 
@@ -411,9 +411,13 @@ class Camera:
                         # and allow it to be ~1.68*diameter away (1.4*1.2 = 1.68)
                         # Need to increase the distance because of the curvature
                         # of the CHEC camera
-                        if ((abs(xPos[i_pix] - xPos[j_pix]) < rowColoumnDist or
-                            abs(yPos[i_pix] - yPos[j_pix]) < rowColoumnDist)
-                                and dist < 1.2*radius):
+                        if (
+                            (
+                                abs(xPos[i_pix] - xPos[j_pix]) < rowColoumnDist
+                                or abs(yPos[i_pix] - yPos[j_pix]) < rowColoumnDist
+                            )
+                            and dist < 1.2 * radius
+                        ):
                             nn.append(j_pix)
 
         return neighbours
@@ -440,7 +444,7 @@ class Camera:
             neighbours = self._findNeighbours(
                 pixels['x'],
                 pixels['y'],
-                self.PMT_NEIGHBOR_RADIUS_FACTOR*pixels['pixel_diameter']
+                self.PMT_NEIGHBOR_RADIUS_FACTOR * pixels['pixel_diameter']
             )
         elif pixels['pixel_shape'] == 2:
             # Distance increased by 40% to take into account gaps in the SiPM cameras
@@ -450,8 +454,8 @@ class Camera:
             neighbours = self._findAdjacentNeighbourPixels(
                 pixels['x'],
                 pixels['y'],
-                self.SIPM_NEIGHBOR_RADIUS_FACTOR*pixels['pixel_diameter'],
-                self.SIPM_ROW_COLUMN_DIST_FACTOR*pixels['pixel_diameter']
+                self.SIPM_NEIGHBOR_RADIUS_FACTOR * pixels['pixel_diameter'],
+                self.SIPM_ROW_COLUMN_DIST_FACTOR * pixels['pixel_diameter']
             )
 
         return neighbours
@@ -572,7 +576,7 @@ class Camera:
             'yTitle': yTitle,
             'xPos': xPos,
             'yPos': yPos,
-            'rotateAngle': rotateAngle - (1/2.)*np.pi,
+            'rotateAngle': rotateAngle - (1 / 2.) * np.pi,
             'fc': 'black',
             'ec': 'black',
             'invertYaxis': invertYaxis
@@ -587,7 +591,7 @@ class Camera:
             'yTitle': yTitle,
             'xPos': xPos,
             'yPos': yPos,
-            'rotateAngle': (3/2.)*np.pi,
+            'rotateAngle': (3 / 2.) * np.pi,
             'fc': 'blue',
             'ec': 'blue',
             'invertYaxis': invertYaxis
@@ -602,7 +606,7 @@ class Camera:
             'yTitle': yTitle,
             'xPos': xPos,
             'yPos': yPos,
-            'rotateAngle': (3/2.)*np.pi,
+            'rotateAngle': (3 / 2.) * np.pi,
             'fc': 'red',
             'ec': 'red',
             'invertYaxis': invertYaxis
@@ -646,10 +650,10 @@ class Camera:
         sign = 1.
         if kwargs['invertYaxis']:
             sign *= -1.
-        xText1 = xPos + sign*r*np.cos(kwargs['rotateAngle'])
-        yText1 = yPos + r*np.sin(0 + kwargs['rotateAngle'])
-        xText2 = xPos + sign*r*np.cos(np.pi/2. + kwargs['rotateAngle'])
-        yText2 = yPos + r*np.sin(np.pi/2. + kwargs['rotateAngle'])
+        xText1 = xPos + sign * r * np.cos(kwargs['rotateAngle'])
+        yText1 = yPos + r * np.sin(0 + kwargs['rotateAngle'])
+        xText2 = xPos + sign * r * np.cos(np.pi / 2. + kwargs['rotateAngle'])
+        yText2 = yPos + r * np.sin(np.pi / 2. + kwargs['rotateAngle'])
 
         plt.gca().annotate(
             xTitle,
@@ -710,7 +714,7 @@ class Camera:
                 hexagon = mpatches.RegularPolygon(
                     (xyPixPos[0], xyPixPos[1]),
                     numVertices=6,
-                    radius=self._pixels['pixel_diameter']/np.sqrt(3),
+                    radius=self._pixels['pixel_diameter'] / np.sqrt(3),
                     orientation=np.deg2rad(self._pixels['orientation'])
                 )
                 if self._pixels['pixOn'][i_pix]:
@@ -722,8 +726,8 @@ class Camera:
                     offPixels.append(hexagon)
             elif self._pixels['pixel_shape'] == 2:
                 square = mpatches.Rectangle(
-                    (xyPixPos[0] - self._pixels['pixel_diameter']/2.,
-                     xyPixPos[1] - self._pixels['pixel_diameter']/2.),
+                    (xyPixPos[0] - self._pixels['pixel_diameter'] / 2.,
+                     xyPixPos[1] - self._pixels['pixel_diameter'] / 2.),
                     width=self._pixels['pixel_diameter'],
                     height=self._pixels['pixel_diameter']
                 )
@@ -788,8 +792,8 @@ class Camera:
         plt.axis([
             min(self._pixels['x']),
             max(self._pixels['x']),
-            min(self._pixels['y'])*1.42,
-            max(self._pixels['y'])*1.42
+            min(self._pixels['y']) * 1.42,
+            max(self._pixels['y']) * 1.42
         ])
         plt.xlabel('Horizontal scale [cm]', fontsize=18, labelpad=0)
         plt.ylabel('Vertical scale [cm]', fontsize=18, labelpad=0)
