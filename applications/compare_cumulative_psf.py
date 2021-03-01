@@ -198,7 +198,6 @@ if __name__ == '__main__':
     dataToPlot[r'sim$\_$telarray'] = im.getCumulativeData()
     if args.data is not None:
         dataFile = cfg.findFile(args.data)
-        print('DataFile ---> ', dataFile)
         dataToPlot['measured'] = loadData(dataFile)
     plt = visualize.plot1D(dataToPlot)
     plt.gca().set_ylim(0, 1.05)
