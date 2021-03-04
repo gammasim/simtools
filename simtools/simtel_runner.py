@@ -1,5 +1,4 @@
 import logging
-import subprocess
 import os
 from pathlib import Path
 
@@ -186,7 +185,7 @@ class SimtelRunner:
         return sysOutput != '0'
 
     def _isPhotonListFileOK(self):
-        nLines = sum(1 for l in open(self._photonsFileName, 'r'))
+        nLines = sum(1 for ll in open(self._photonsFileName, 'r'))
         return nLines > 100
 
     def _raiseSimtelError(self):
@@ -261,9 +260,9 @@ class SimtelRunner:
 
             # Adding header to photon list file.
             with self._photonsFileName.open('w') as file:
-                file.write('#{}\n'.format(50*'='))
+                file.write('#{}\n'.format(50 * '='))
                 file.write('# List of photons for RayTracing simulations\n')
-                file.write('#{}\n'.format(50*'='))
+                file.write('#{}\n'.format(50 * '='))
                 file.write('# configFile = {}\n'.format(self.telescopeModel.getConfigFile()))
                 file.write('# zenithAngle [deg] = {}\n'.format(self._zenithAngle))
                 file.write('# offAxisAngle [deg] = {}\n'.format(self._offAxisAngle))

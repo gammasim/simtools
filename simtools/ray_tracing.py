@@ -17,7 +17,7 @@ from simtools.util import names
 from simtools.util.model import computeTelescopeTransmission
 from simtools.model.telescope_model import TelescopeModel
 from simtools.simtel_runner import SimtelRunner
-from simtools.util.general import collectArguments, collectKwargs, setDefaultKwargs
+from simtools.util.general import collectArguments
 from simtools import visualize
 
 __all__ = ['RayTracing']
@@ -148,10 +148,10 @@ class RayTracing:
 
         # Results file
         fileNameResults = names.rayTracingResultsFileName(
-                self._telescopeModel.telescopeName,
-                self._sourceDistance,
-                self._zenithAngle,
-                self.label
+            self._telescopeModel.telescopeName,
+            self._sourceDistance,
+            self._zenithAngle,
+            self.label
         )
         self._outputDirectory.joinpath('results').mkdir(parents=True, exist_ok=True)
         self._fileResults = self._outputDirectory.joinpath('results').joinpath(fileNameResults)
@@ -211,8 +211,8 @@ class RayTracing:
         Parameters
         ----------
         export: bool
-            If True, results will be exported to a file automatically. Alternativelly, exportResults
-            function can be used.
+            If True, results will be exported to a file automatically. Alternativelly,
+            exportResults function can be used.
         force: bool
             If True, existing results files will be removed and analysis will be done again.
         useRX: bool
