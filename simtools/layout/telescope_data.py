@@ -15,44 +15,63 @@ class TelescopeData:
     positions
     """
 
-    def __init__(self):
+    def __init__(
+        self,
+        name=None,
+        pos=[math.nan * u.meter, math.nan * u.meter, math.nan * u.meter],
+        longitude=None,
+        latitude=None,
+        utmEast=None,
+        utmNorth=None,
+        altitute=None,
+        prodId=dict(),
+        logger=__name__
+    ):
+        self._logger = logging.getLogger(logger)
+        self._logger.debug('Init TelescopeData')
         """Inits TelescopeData with blah."""
-        self.name = None
-        self.x = math.nan * u.meter
-        self.y = math.nan * u.meter
-        self.z = math.nan * u.meter
-        self.lon = math.nan * u.deg
-        self.lat = math.nan * u.deg
-        self.utm_east = math.nan * u.meter
-        self.utm_north = math.nan * u.meter
-        self.alt = math.nan * u.meter
-        self.prod_id = {}
+        self.name = name
+        self.posX = pos[0]
+        self.posY = pos[1]
+        self.posZ = pos[2]
+        self.longitude = longitude
+        self.latitude = latitude
+        self.utmEast = utmEast
+        self.utmNorth = utmNorth
+        self.altitute = altitute
+        self.prodId = {}
 
     def print_telescope(self):
         """
         print telescope name and positions
         """
         print('%s' % self.name)
-        if not math.isnan(self.x.value) \
-                and not math.isnan(self.y.value):
-            print('\t CORSIKA x(->North): {0:0.2f} y(->West): {1:0.2f} z: {2:0.2f}'
-                  .format(self.x, self.y, self.z))
-        if not math.isnan(self.utm_east.value) \
-                and not math.isnan(self.utm_north.value):
-            print('\t UTM East: {0:0.2f} UTM North: {1:0.2f} Alt: {2:0.2f}'
-                  .format(self.utm_east, self.utm_north, self.alt))
-        if not math.isnan(self.lon.value) \
-                and not math.isnan(self.lat.value):
-            print('\t Longitude: {0:0.5f} Latitude: {1:0.5f} Alt: {2:0.2f}'
-                  .format(self.lon, self.lat, self.alt))
-        if len(self.prod_id) > 0:
-            print('\t', self.prod_id)
+        if self.posX.value is not None and self.posY.value is not None:
+            print('\t CORSIKA x(->North): {0:0.2f} y(->West): {1:0.2f} z: {2:0.2f}'.format(
+                self.posX,
+                self.posY,
+                self.posZ
+            ))
+        if self.utmEast.value is not None and self.utmNorth.value is not None:
+            print('\t UTM East: {0:0.2f} UTM North: {1:0.2f} Alt: {2:0.2f}'.format(
+                self.utmEast,
+                self.utmNorth,
+                self.altitute)
+            )
+        if self.longitude.value is not None and self.latitude.value is not None:
+            print('\t Longitude: {0:0.5f} Latitude: {1:0.5f} Alt: {2:0.2f}'.format(
+                self.longitude,
+                self.latitude,
+                self.altitute
+            ))
+        if len(self.prodId) > 0:
+            print('\t', self.prodId)
 
     def print_short_telescope_list(self):
         """
         print short list
         """
-        print("{0} {1:10.2f} {2:10.2f}".format(self.name, self.x.value, self.y.value))
+        print("{0} {1:10.2f} {2:10.2f}".format(self.name, self.posX.value, self.posY.value))
 
     def convert_local_to_mercator(self, crs_local, wgs84):
         """
@@ -69,7 +88,6 @@ class TelescopeData:
 
         # calculate lon/lat of a telescope
         if math.isnan(self.lon.value) or math.isnan(self.lat.value):
-            
             self.lat, self.lon = u.deg * pyproj.transform(crs_local, wgs84,
                                                           self.x.value,
                                                           self.y.value)
