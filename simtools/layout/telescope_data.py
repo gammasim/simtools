@@ -39,9 +39,7 @@ class TelescopeData:
         self._logger.debug('Init TelescopeData')
         """Inits TelescopeData with blah."""
         self.name = name
-        self.prodId = {}
-
-        print(*self.ALL_INPUTS)
+        self._prodId = prodId
 
         # Collecting arguments
         collectArguments(
@@ -51,31 +49,31 @@ class TelescopeData:
             **kwargs
         )
 
-    def print_telescope(self):
+    def printTelescope(self):
         """
         print telescope name and positions
         """
         print('%s' % self.name)
-        if self.posX.value is not None and self.posY.value is not None:
+        if self._posX is not None and self._posY is not None:
             print('\t CORSIKA x(->North): {0:0.2f} y(->West): {1:0.2f} z: {2:0.2f}'.format(
-                self.posX,
-                self.posY,
-                self.posZ
+                self._posX,
+                self._posY,
+                self._posZ
             ))
-        if self.utmEast.value is not None and self.utmNorth.value is not None:
+        if self._utmEast is not None and self._utmNorth is not None:
             print('\t UTM East: {0:0.2f} UTM North: {1:0.2f} Alt: {2:0.2f}'.format(
-                self.utmEast,
-                self.utmNorth,
-                self.altitute)
+                self._utmEast,
+                self._utmNorth,
+                self._altitude)
             )
-        if self.longitude.value is not None and self.latitude.value is not None:
+        if self._longitude is not None and self._latitude is not None:
             print('\t Longitude: {0:0.5f} Latitude: {1:0.5f} Alt: {2:0.2f}'.format(
-                self.longitude,
-                self.latitude,
-                self.altitute
+                self._longitude,
+                self._latitude,
+                self._altitude
             ))
-        if len(self.prodId) > 0:
-            print('\t', self.prodId)
+        if len(self._prodId) > 0:
+            print('\t', self._prodId)
 
     def print_short_telescope_list(self):
         """
