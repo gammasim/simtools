@@ -114,23 +114,23 @@ class CameraEfficiency:
         ''' Define the variables for the file names, including the results, simtel and log file. '''
         # Results file
         fileNameResults = names.cameraEfficiencyResultsFileName(
-                self._telescopeModel.telescopeName,
-                self._zenithAngle,
-                self.label
+            self._telescopeModel.telescopeName,
+            self._zenithAngle,
+            self.label
         )
         self._fileResults = self._baseDirectory.joinpath(fileNameResults)
         # SimtelOutput file
         fileNameSimtel = names.cameraEfficiencySimtelFileName(
-                self._telescopeModel.telescopeName,
-                self._zenithAngle,
-                self.label
+            self._telescopeModel.telescopeName,
+            self._zenithAngle,
+            self.label
         )
         self._fileSimtel = self._baseDirectory.joinpath(fileNameSimtel)
         # Log file
         fileNameLog = names.cameraEfficiencyLogFileName(
-                self._telescopeModel.telescopeName,
-                self._zenithAngle,
-                self.label
+            self._telescopeModel.telescopeName,
+            self._zenithAngle,
+            self.label
         )
         self._fileLog = self._baseDirectory.joinpath(fileNameLog)
 
@@ -368,7 +368,7 @@ class CameraEfficiency:
         mastsFactor = self._results['masts'][0]
         fillFactor = self._telescopeModel.camera.getCameraFillFactor()
 
-        telEffeciency = fillFactor*(c4Sum/(mastsFactor*c1Sum))
+        telEffeciency = fillFactor * (c4Sum / (mastsFactor * c1Sum))
 
         return telEffeciency
 
@@ -389,8 +389,8 @@ class CameraEfficiency:
         c4xSum = np.sum(c4xReducedWL)
         fillFactor = self._telescopeModel.camera.getCameraFillFactor()
 
-        camEffeciencyNoGaps = c4xSum/c1Sum
-        camEffeciency = camEffeciencyNoGaps*fillFactor
+        camEffeciencyNoGaps = c4xSum / c1Sum
+        camEffeciency = camEffeciencyNoGaps * fillFactor
 
         return camEffeciency
 
@@ -414,9 +414,9 @@ class CameraEfficiency:
         mastsFactor = self._results['masts'][0]
         fillFactor = self._telescopeModel.camera.getCameraFillFactor()
 
-        telEffeciencyNSB = fillFactor*(n4Sum/(mastsFactor*n1Sum))
+        telEffeciencyNSB = fillFactor * (n4Sum / (mastsFactor * n1Sum))
 
-        return telEffeciency/np.sqrt(telEffeciencyNSB)
+        return telEffeciency / np.sqrt(telEffeciencyNSB)
 
     def calcReflectivity(self):
         '''
@@ -434,7 +434,7 @@ class CameraEfficiency:
         ]
         c2Sum = np.sum(c2ReducedWL)
 
-        return c2Sum/c1Sum/self._results['masts'][0]
+        return c2Sum / c1Sum / self._results['masts'][0]
 
     def plot(self, key, **kwargs):
         '''
