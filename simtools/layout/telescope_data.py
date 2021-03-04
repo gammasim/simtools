@@ -5,10 +5,12 @@ Telescope data class
 """
 import math
 import logging
+import astropy.units as u
+
 import pyproj
-from astropy import units as u
 
 from simtools.util.general import collectArguments
+
 
 class TelescopeData:
     """
@@ -48,7 +50,6 @@ class TelescopeData:
             allInputs=self.ALL_INPUTS,
             **kwargs
         )
-
 
     def print_telescope(self):
         """
