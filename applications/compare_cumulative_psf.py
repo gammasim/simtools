@@ -60,7 +60,8 @@
 
     .. code-block:: console
 
-        python applications/compare_cumulative_psf.py --tel_name North-LST-1 --model_version prod4 --pars lst_pars.yml --data PSFcurve_data_v2.txt
+        python applications/compare_cumulative_psf.py --tel_name North-LST-1 \
+        --model_version prod4 --pars lst_pars.yml --data PSFcurve_data_v2.txt
 
     .. todo::
 
@@ -71,15 +72,10 @@ import logging
 import matplotlib.pyplot as plt
 import argparse
 import yaml
-from copy import copy
-from pathlib import Path
-from math import sqrt
 from collections import OrderedDict
 
 import numpy as np
 import astropy.units as u
-from astropy.io import ascii
-from astropy.table import Table
 
 import simtools.io_handler as io
 import simtools.util.general as gen
