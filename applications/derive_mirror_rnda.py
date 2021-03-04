@@ -13,15 +13,16 @@
     through the argument mirror_list. Random focal lengths can be used by turning on the argument \
     use_random_focal length and a new value for it can be given through the argument random_flen.
 
-    The algorithm works as follow: A starting value of rnda is first defined as the one taken from \
-    the :ref:`Model Parameters DB` \
+    The algorithm works as follow: A starting value of rnda is first defined as the one taken \
+    from the :ref:`Model Parameters DB` \
     (or alternativelly one may want to set it using the argument rnda).\
     Secondly, ray tracing simulations are performed for single mirror configurations for each \
     mirror given in the mirror_list. The mean simulated D80 for all the mirrors is compared with \
-    the mean measured D80. A new value of rnda is then defined based on the sign of the difference \
-    between measured and simulated D80 and a new set of simulations is performed. This process \
-    repeat until the sign of the difference changes, meaning that the two final values of rnda \
-    brackets the optimal. These two values are used to find the optimal one by a linear \
+    the mean measured D80. A new value of rnda is then defined based on the sign of \
+    the difference between measured and simulated D80 and a new set of simulations \
+    is performed. This process repeat until the sign of the difference changes, \
+    meaning that the two final values of rnda brackets the optimal. These \
+    two values are used to find the optimal one by a linear \
     interpolation. Finally, simulations are performed by using the the interpolated value \
     of rnda, which is defined as the desired optimal.
 
@@ -48,8 +49,8 @@
     sig_d80 (float, optional)
         Std dev of measured D80 [cm]
     rnda (float, optional)
-        Starting value of mirror_reflection_random_angle. If not given, the value from the default \
-        model will be used.
+        Starting value of mirror_reflection_random_angle. If not given, the value from the \
+        default model will be used.
     d80_list (file, optional)
         File with single column list of measured D80 [cm]. It is used only for plotting the D80 \
         distributions. If given, the measured distribution will be plotted on the top of the \
@@ -61,7 +62,8 @@
         Use random focal lengths, instead of the measured ones. The argument random_flen can be \
         used to replace the default random_focal_length from the model.
     random_flen (float, optional)
-        Value to replace the default random_focal_length. Only used if use_random_flen is activated.
+        Value to replace the default random_focal_length. Only used if use_random_flen \
+        is activated.
     test (activation mode, optional)
         If activated, application will be faster by simulating only few mirrors.
     verbosity (str, optional)
@@ -75,7 +77,9 @@
 
     .. code-block:: console
 
-        python applications/derive_mirror_rnda.py --tel_name North-MST-FlashCam-D --mean_d80 1.4 --sig_d80 0.16 --mirror_list mirror_MST_focal_lengths.dat --d80_list mirror_MST_D80.dat --rnda 0.0075
+        python applications/derive_mirror_rnda.py --tel_name North-MST-FlashCam-D --mean_d80 1.4 \
+        --sig_d80 0.16 --mirror_list mirror_MST_focal_lengths.dat --d80_list mirror_MST_D80.dat \
+        --rnda 0.0075
 
 
     Expected output:
@@ -103,13 +107,9 @@
 import logging
 import matplotlib.pyplot as plt
 import argparse
-from copy import copy
-from pathlib import Path
 
 import numpy as np
 import astropy.units as u
-from astropy.io import ascii
-from astropy.table import Table
 
 import simtools.config as cfg
 import simtools.util.general as gen
@@ -159,8 +159,8 @@ if __name__ == '__main__':
     parser.add_argument(
         '--d80_list',
         help=(
-            'File with single column list of measured D80 [cm]. If given, the measured distribution'
-            ' will be plotted on the top of the simulated one.'
+            'File with single column list of measured D80 [cm]. If given, the measured '
+            'distribution will be plotted on the top of the simulated one.'
         ),
         type=str,
         required=False
@@ -230,6 +230,7 @@ if __name__ == '__main__':
     if args.mirror_list is not None:
         mirrorListFile = cfg.findFile(name=args.mirror_list)
         tel.changeParameters(mirror_list=args.mirror_list)
+        tel.addParameterFile(mirrorListFile)  # Copying the mirror list to the model dir
     if args.random_flen is not None:
         tel.changeParameters(random_focal_length=str(args.random_flen))
 

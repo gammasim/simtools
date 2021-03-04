@@ -1,7 +1,5 @@
 import logging
 
-import simtools.io_handler as io
-
 __all__ = ['Mirrors']
 
 
