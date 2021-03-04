@@ -1,9 +1,3 @@
-"""
-Telescope data class
-- storage of telescope coordinates
-- conversion between the different coordinate systems
-"""
-import math
 import logging
 import astropy.units as u
 
@@ -12,20 +6,28 @@ import pyproj
 from simtools.util.general import collectArguments
 
 
+class InvalidCoordSystem(Exception):
+    pass
+
+
+class MissingInputForConvertion(Exception):
+    pass
+
+
 class TelescopeData:
-    """
-    data class for telescope IDs and
-    positions
-    """
+    '''
+    Store and do coordenate transformations with single telescope positions
+    '''
+
     ALL_INPUTS = {
-        'posX': {'unit': u.m},
-        'posY': {'unit': u.m},
-        'posZ': {'unit': u.m},
-        'longitude': {'unit': u.deg},
-        'latitude': {'unit': u.deg},
-        'utmEast': {'unit': u.m},
-        'utmNorth': {'unit': u.m},
-        'altitude': {'unit': u.m}
+        'posX': {'default': None, 'unit': u.m},
+        'posY': {'default': None, 'unit': u.m},
+        'posZ': {'default': None, 'unit': u.m},
+        'longitude': {'default': None, 'unit': u.deg},
+        'latitude': {'default': None, 'unit': u.deg},
+        'utmEast': {'default': None, 'unit': u.m},
+        'utmNorth': {'default': None, 'unit': u.m},
+        'altitude': {'default': None, 'unit': u.m}
     }
 
     def __init__(
@@ -35,9 +37,12 @@ class TelescopeData:
         logger=__name__,
         **kwargs
     ):
+        '''
+        '''
+
         self._logger = logging.getLogger(logger)
         self._logger.debug('Init TelescopeData')
-        """Inits TelescopeData with blah."""
+
         self.name = name
         self._prodId = prodId
 
@@ -48,6 +53,27 @@ class TelescopeData:
             allInputs=self.ALL_INPUTS,
             **kwargs
         )
+
+    def getLocalCoordinates(self):
+        return self._posX * u.m, self._posY * u.m
+
+    def getMercatorCoordinates(self):
+        return self._latitude * u.deg, self._longitude * u.deg
+
+    def getUtmCoordinates(self):
+        return self._utmNorth * u.deg, self._utmEast * u.deg
+
+    def getTelescopeType(self, name):
+        """
+        guestimate telescope type from telescope name
+        """
+        if name[0:1] is 'L':
+            return 'LST'
+        elif name[0:1] is 'M':
+            return 'MST'
+        elif name[0:1] is 'S':
+            return 'SST'
+        return None
 
     def printTelescope(self):
         """
@@ -75,104 +101,154 @@ class TelescopeData:
         if len(self._prodId) > 0:
             print('\t', self._prodId)
 
-    def print_short_telescope_list(self):
+    def printShortTelescopeList(self):
         """
         print short list
         """
-        print("{0} {1:10.2f} {2:10.2f}".format(self.name, self.posX.value, self.posY.value))
+        print("{0} {1:10.2f} {2:10.2f}".format(self.name, self._posX, self._posY))
 
-    # def convert_local_to_mercator(self, crs_local, wgs84):
-    #     """
-    #     convert telescope position from local to mercator
-    #     """
+    def convertLocalToMercator(self, crs_local, wgs84):
+        """
+        convert telescope position from local to mercator
+        """
 
-    #     # require valid coordinate systems
-    #     if not crs_local or not wgs84:
-    #         return
+        if self._altitude is not None and self._longitude is not None:
+            self._logger.warning(
+                'altitude and longitude are already set'
+                ' - aborting convertion from local to mercator'
+            )
+            return
 
-    #     # require valid position in local coordinates
-    #     if math.isnan(self.x.value) or math.isnan(self.y.value):
-    #         return
+        if self._posX is None or self._posY is None:
+            msg = 'posX and/or posY are not set - impossible to convert from local to mercator'
+            self._logger.error(msg)
+            raise MissingInputForConvertion(msg)
 
-    #     # calculate lon/lat of a telescope
-    #     if math.isnan(self.lon.value) or math.isnan(self.lat.value):
-    #         self.lat, self.lon = u.deg * pyproj.transform(crs_local, wgs84,
-    #                                                       self.x.value,
-    #                                                       self.y.value)
+        # require valid coordinate systems
+        if (
+            not isinstance(crs_local, pyproj.crs.crs.CRS)
+            or not isinstance(wgs84, pyproj.crs.crs.CRS)
+        ):
+            msg = 'crs_local and/or wgs84 is not a valid coord system'
+            self._logger.error(msg)
+            raise InvalidCoordSystem(msg)
 
-    # def convert_local_to_utm(self, crs_local, crs_utm):
-    #     """
-    #     convert telescope position from local to utm
-    #     """
+        # calculate lon/lat of a telescope
+        self._latitude, self._longitude = pyproj.transform(
+            crs_local,
+            wgs84,
+            self._posX,
+            self._posY
+        )
+        return
 
-    #     # require valid coordinate systems
-    #     if not crs_local or not crs_utm:
-    #         return
+    def convertLocalToUtm(self, crs_local, crs_utm):
+        """
+        convert telescope position from local to utm
+        """
+        if self._utmEast is not None and self._utmNorth is not None:
+            self._logger.warning(
+                'utm east and utm north are already set'
+                ' - aborting convertion from local to UTM'
+            )
+            return
 
-    #     # require valid position in local coordinates
-    #     if math.isnan(self.x.value) or math.isnan(self.y.value):
-    #         return
+        # require valid coordinate systems
+        if (
+            not isinstance(crs_local, pyproj.crs.crs.CRS)
+            or not isinstance(crs_utm, pyproj.crs.crs.CRS)
+        ):
+            msg = 'crs_local and/or crs_utm is not a valid coord system'
+            self._logger.error(msg)
+            raise InvalidCoordSystem(msg)
 
-    #     # calculate utms of a telescope
-    #     if math.isnan(self.utm_east.value) or math.isnan(self.utm_north.value):
-    #         self.utm_east, self.utm_north = \
-    #             u.meter * \
-    #             pyproj.transform(crs_local, crs_utm,
-    #                              self.x.value, self.y.value)
+        if self._posX is None or self._posY is None:
+            msg = 'posX and/or posY are not set - impossible to convert from local to mercator'
+            self._logger.error(msg)
+            raise MissingInputForConvertion(msg)
 
-    # def convert_utm_to_mercator(self, crs_utm, wgs84):
-    #     """
-    #     convert telescope position from utm to mercator
-    #     """
+        # calculate utms of a telescope
+        self._utmEast, self._utmNorth = pyproj.transform(
+            crs_local,
+            crs_utm,
+            self._posX,
+            self._posY
+        )
+        return
 
-    #     # require valid coordinate systems
-    #     if not crs_utm or not wgs84:
-    #         return
+    def convertUtmToMercator(self, crs_utm, wgs84):
+        """
+        convert telescope position from utm to mercator
+        """
 
-    #     # require valid position in UTM
-    #     if math.isnan(self.utm_east.value) \
-    #             or math.isnan(self.utm_north.value):
-    #         return
+        if self._latitude is not None and self._longitude is not None:
+            self._logger.warning(
+                'altitude and longitude are already set'
+                ' - aborting convertion from utm to mercator'
+            )
+            return
 
-    #     # calculate lon/lat of a telescope
-    #     if math.isnan(self.lon.value) \
-    #             or math.isnan(self.lat.value):
-    #         self.lat, self.lon = u.deg * \
-    #             pyproj.transform(crs_utm, wgs84,
-    #                              self.utm_east.value,
-    #                              self.utm_north.value)
+        if self._utmEast is None or self._utmNorth is None:
+            msg = (
+                'utm east and/or utm north are not set - '
+                'impossible to convert from utm to mercator'
+            )
+            self._logger.error(msg)
+            raise MissingInputForConvertion(msg)
 
-    # def convert_utm_to_local(self, crs_utm, crs_local):
-    #     """
-    #     convert telescope position from utm to local
-    #     """
+        # require valid coordinate systems
+        if (
+            not isinstance(crs_utm, pyproj.crs.crs.CRS)
+            or not isinstance(wgs84, pyproj.crs.crs.CRS)
+        ):
+            msg = 'crs_utm and/or wgs84 is not a valid coord system'
+            self._logger.error(msg)
+            raise InvalidCoordSystem(msg)
 
-    #     # require valid coordinate systems
-    #     if not crs_utm or not crs_local:
-    #         return
+        self._latitude, self._longitude = pyproj.transform(
+            crs_utm,
+            wgs84,
+            self._utmEast,
+            self._utmNorth
+        )
+        return
 
-    #     # require valid position in UTM
-    #     if math.isnan(self.utm_east.value) \
-    #             or math.isnan(self.utm_north.value):
-    #         return
+    def convertUtmToLocal(self, crs_utm, crs_local):
+        """
+        convert telescope position from utm to mercator
+        """
 
-    #     if math.isnan(self.x.value) or math.isnan(self.y.value):
-    #         self.x, self.y = u.meter * \
-    #             pyproj.transform(crs_utm, crs_local,
-    #                              self.utm_east.value,
-    #                              self.utm_north.value)
+        if self._posX is not None and self._posY is not None:
+            self._logger.warning(
+                'latitude and longitude are already set'
+                ' - aborting convertion from utm to local'
+            )
+            return
 
-    # def get_telescope_type(self, name):
-    #     """
-    #     guestimate telescope type from telescope name
-    #     """
-    #     if name[0:1] is 'L':
-    #         return 'LST'
-    #     elif name[0:1] is 'M':
-    #         return 'MST'
-    #     elif name[0:1] is 'S':
-    #         return 'SST'
-    #     return None
+        if self._utmEast is None or self._utmNorth is None:
+            msg = (
+                'utm east and/or utm north are not set - '
+                'impossible to convert from utm to local'
+            )
+            self._logger.error(msg)
+            raise MissingInputForConvertion(msg)
+
+        # require valid coordinate systems
+        if (
+            not isinstance(crs_utm, pyproj.crs.crs.CRS)
+            or not isinstance(crs_local, pyproj.crs.crs.CRS)
+        ):
+            msg = 'crs_utm and/or crs_local is not a valid coord system'
+            self._logger.error(msg)
+            raise InvalidCoordSystem(msg)
+
+        self._posX, self._posY = pyproj.transform(
+            crs_utm,
+            crs_local,
+            self._utmEast,
+            self._utmNorth
+        )
+        return
 
     # def convert_asl_to_corsika(self, corsika_obslevel, corsika_sphere_center):
     #     """
@@ -204,8 +280,7 @@ class TelescopeData:
     #         logging.error('Failed finding corsika sphere center for {} (to asl)'.format(
     #             self.get_telescope_type(self.name)))
 
-
-    # def convert(self, crs_local, wgs84, crs_utm, 
+    # def convert(self, crs_local, wgs84, crs_utm,
     #     center_altitude,
     #     corsika_obslevel, corsika_sphere_center):
     #     """
