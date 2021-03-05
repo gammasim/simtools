@@ -17,6 +17,34 @@ class MissingInputForConvertion(Exception):
 class TelescopeData:
     '''
     Store and do coordenate transformations with single telescope positions
+
+    Attributes
+    ----------
+    name: str
+        Name of the telescope (e.g L-01, S-05, ...).
+
+    Methods
+    -------
+    getLocalCoordinates()
+        Get the X and Y coordinates.
+    getMercatorCoordinates()
+        Get the latitude and longitude.
+    getUtmCoordinates()
+        Get utm north and east.
+    convertLocalToMercator(crsLocal, wgs84)
+        Convert telescope position from local to mercator.
+    convertLocalToUtm(crsLocal, crsUtm)
+        Convert telescope position from local to UTM.
+    convertUtmToMercator(crsUtm, wgs84)
+        Convert telescope position from UTM to mercator.
+    convertUtmToLocal(crsUtm, crsLocal)
+        Convert telescope position from UTM to local.
+    convertAslToCorsika(corsikaObsLevel, corsikaSphereCenter)
+        Convert telescope altitude to corsika (posZ).
+    convertCorsikaToAsl(corsikaObsLevel, corsikaSphereCenter):
+        Convert corsika (posZ) to altitude.
+    convertAll(crsLocal, wgs84, crsUtm, corsikaObsLevel, corsikaSphereCenter)
+        Perform all the necessary convertions in order to fill all the coordinate variables.
     '''
 
     ALL_INPUTS = {
@@ -38,6 +66,19 @@ class TelescopeData:
         **kwargs
     ):
         '''
+        TelescopeData init.
+
+        Parameters
+        ----------
+        name: str
+            Name of the telescope (e.g L-01, S-05, ...)
+        prodId: dict
+            ...
+        logger: str
+            Logger name to use in this instance
+        **kwargs:
+            Physical parameters with units (if applicable). Options: posX, posY, posZ,
+            longitude, latitude, utmsEast, utmNorth, altitude
         '''
 
         self._logger = logging.getLogger(logger)
@@ -55,62 +96,99 @@ class TelescopeData:
         )
 
     def getLocalCoordinates(self):
+        '''
+        Get the X and Y coordinates.
+
+        Returns
+        -------
+        (posX [u.m], posY [u.m])
+        '''
         return self._posX * u.m, self._posY * u.m
 
     def getMercatorCoordinates(self):
+        '''
+        Get the latitude and longitude.
+
+        Returns
+        -------
+        (latitude [u.deg], longitude [u.deg])
+        '''
         return self._latitude * u.deg, self._longitude * u.deg
 
     def getUtmCoordinates(self):
+        '''
+        Get utm north and east.
+
+        Returns
+        -------
+        (utmNorth [u.deg], utmEast [u.deg])
+        '''
         return self._utmNorth * u.deg, self._utmEast * u.deg
 
-    def getTelescopeType(self, name):
-        """
-        guestimate telescope type from telescope name
-        """
-        if name[0] == 'L':
+    def _getTelescopeType(self):
+        '''
+        Get the telescope type (LST, MST or SST) based on the telescope name.
+
+        Returns
+        -------
+        str
+            LST, MST or SST
+        '''
+        if self.name[0] == 'L':
             return 'LST'
-        elif name[0] == 'M':
+        elif self.name[0] == 'M':
             return 'MST'
-        elif name[0] == 'S':
+        elif self.name[0] == 'S':
             return 'SST'
+        self._logger.warning('Telescope type could not be defined from the name')
         return None
 
-    def printTelescope(self):
-        """
-        print telescope name and positions
-        """
-        print('%s' % self.name)
+    def __repr__(self):
+        telstr = self.name + '\n'
         if self._posX is not None and self._posY is not None:
-            print('\t CORSIKA x(->North): {0:0.2f} y(->West): {1:0.2f} z: {2:0.2f}'.format(
+            telstr += '\t CORSIKA x(->North): {0:0.2f} y(->West): {1:0.2f} z: {2:0.2f}'.format(
                 self._posX,
                 self._posY,
                 self._posZ
-            ))
+            )
         if self._utmEast is not None and self._utmNorth is not None:
-            print('\t UTM East: {0:0.2f} UTM North: {1:0.2f} Alt: {2:0.2f}'.format(
+            telstr += '\t UTM East: {0:0.2f} UTM North: {1:0.2f} Alt: {2:0.2f}'.format(
                 self._utmEast,
                 self._utmNorth,
-                self._altitude)
+                self._altitude
             )
         if self._longitude is not None and self._latitude is not None:
-            print('\t Longitude: {0:0.5f} Latitude: {1:0.5f} Alt: {2:0.2f}'.format(
+            telstr += '\t Longitude: {0:0.5f} Latitude: {1:0.5f} Alt: {2:0.2f}'.format(
                 self._longitude,
                 self._latitude,
                 self._altitude
-            ))
+            )
         if len(self._prodId) > 0:
-            print('\t', self._prodId)
+            telstr += '\t', self._prodId
+        return telstr
 
-    def printShortTelescopeList(self):
-        """
-        print short list
-        """
-        print("{0} {1:10.2f} {2:10.2f}".format(self.name, self._posX, self._posY))
+    # def printShortTelescopeList(self):
+    #     """
+    #     print short list
+    #     """
+    #     print("{0} {1:10.2f} {2:10.2f}".format(self.name, self._posX, self._posY))
 
     def convertLocalToMercator(self, crsLocal, wgs84):
-        """
-        convert telescope position from local to mercator
-        """
+        '''
+        Convert telescope position from local to mercator.
+
+        Parameters
+        ----------
+        crsLocal: pyproj.crs.crs.CRS
+            Pyproj CRS of the local coordinate system
+        wgs84: pyproj.crs.crs.CRS
+            Pyproj CRS of the mercator coordinate system
+
+        Raises
+        ------
+        InvalidCoordSystem
+            If crsLocal or wgs84 is not an instance of pyproj.crs.crs.CRS
+        '''
 
         if self._altitude is not None and self._longitude is not None:
             self._logger.debug(
@@ -124,7 +202,7 @@ class TelescopeData:
             self._logger.error(msg)
             raise MissingInputForConvertion(msg)
 
-        # require valid coordinate systems
+        # Require valid coordinate systems
         if (
             not isinstance(crsLocal, pyproj.crs.crs.CRS)
             or not isinstance(wgs84, pyproj.crs.crs.CRS)
@@ -133,7 +211,7 @@ class TelescopeData:
             self._logger.error(msg)
             raise InvalidCoordSystem(msg)
 
-        # calculate lon/lat of a telescope
+        # Calculate lon/lat of a telescope
         self._latitude, self._longitude = pyproj.transform(
             crsLocal,
             wgs84,
@@ -143,9 +221,22 @@ class TelescopeData:
         return
 
     def convertLocalToUtm(self, crsLocal, crsUtm):
-        """
-        convert telescope position from local to utm
-        """
+        '''
+        Convert telescope position from local to UTM.
+
+        Parameters
+        ----------
+        crsLocal: pyproj.crs.crs.CRS
+            Pyproj CRS of the local coordinate system
+        crsUtm: pyproj.crs.crs.CRS
+            Pyproj CRS of the utm coordinate system
+
+        Raises
+        ------
+        InvalidCoordSystem
+            If crsLocal or crsUtm is not an instance of pyproj.crs.crs.CRS
+
+        '''
         if self._utmEast is not None and self._utmNorth is not None:
             self._logger.debug(
                 'utm east and utm north are already set'
@@ -153,7 +244,7 @@ class TelescopeData:
             )
             return
 
-        # require valid coordinate systems
+        # Require valid coordinate systems
         if (
             not isinstance(crsLocal, pyproj.crs.crs.CRS)
             or not isinstance(crsUtm, pyproj.crs.crs.CRS)
@@ -167,7 +258,7 @@ class TelescopeData:
             self._logger.error(msg)
             raise MissingInputForConvertion(msg)
 
-        # calculate utms of a telescope
+        # Calculate utms of a telescope
         self._utmEast, self._utmNorth = pyproj.transform(
             crsLocal,
             crsUtm,
@@ -177,9 +268,22 @@ class TelescopeData:
         return
 
     def convertUtmToMercator(self, crsUtm, wgs84):
-        """
-        convert telescope position from utm to mercator
-        """
+        '''
+        Convert telescope position from UTM to mercator.
+
+        Parameters
+        ----------
+        crsUtm: pyproj.crs.crs.CRS
+            Pyproj CRS of the utm coordinate system
+        wgs84: pyproj.crs.crs.CRS
+            Pyproj CRS of the mercator coordinate system
+
+        Raises
+        ------
+        InvalidCoordSystem
+            If wgs84 or crsUtm is not an instance of pyproj.crs.crs.CRS
+
+        '''
 
         if self._latitude is not None and self._longitude is not None:
             self._logger.debug(
@@ -196,7 +300,7 @@ class TelescopeData:
             self._logger.error(msg)
             raise MissingInputForConvertion(msg)
 
-        # require valid coordinate systems
+        # Require valid coordinate systems
         if (
             not isinstance(crsUtm, pyproj.crs.crs.CRS)
             or not isinstance(wgs84, pyproj.crs.crs.CRS)
@@ -205,6 +309,7 @@ class TelescopeData:
             self._logger.error(msg)
             raise InvalidCoordSystem(msg)
 
+        # Calculate latitude and longitude
         self._latitude, self._longitude = pyproj.transform(
             crsUtm,
             wgs84,
@@ -214,10 +319,22 @@ class TelescopeData:
         return
 
     def convertUtmToLocal(self, crsUtm, crsLocal):
-        """
-        convert telescope position from utm to mercator
-        """
+        '''
+        Convert telescope position from UTM to local.
 
+        Parameters
+        ----------
+        crsUtm: pyproj.crs.crs.CRS
+            Pyproj CRS of the utm coordinate system
+        crsLocal: pyproj.crs.crs.CRS
+            Pyproj CRS of the local coordinate system
+
+        Raises
+        ------
+        InvalidCoordSystem
+            If crsLocal or crsUtm is not an instance of pyproj.crs.crs.CRS
+
+        '''
         if self._posX is not None and self._posY is not None:
             self._logger.debug(
                 'latitude and longitude are already set'
@@ -233,7 +350,7 @@ class TelescopeData:
             self._logger.error(msg)
             raise MissingInputForConvertion(msg)
 
-        # require valid coordinate systems
+        # Require valid coordinate systems
         if (
             not isinstance(crsUtm, pyproj.crs.crs.CRS)
             or not isinstance(crsLocal, pyproj.crs.crs.CRS)
@@ -242,6 +359,7 @@ class TelescopeData:
             self._logger.error(msg)
             raise InvalidCoordSystem(msg)
 
+        # Calculate posX and posY
         self._posX, self._posY = pyproj.transform(
             crsUtm,
             crsLocal,
@@ -252,15 +370,22 @@ class TelescopeData:
 
     @u.quantity_input(corsikaObsLevel=u.m)
     def convertAslToCorsika(self, corsikaObsLevel, corsikaSphereCenter):
-        """
-        convert telescope altitude to corsika
-        """
+        '''
+        Convert telescope altitude to corsika (posZ).
 
-        # require valid center altitude values
+        Parameters
+        ----------
+        corsikaObLevel: astropy.Quantity
+            CORSIKA observation level in equivalent units of meter.
+        corsikaSphereCenter: dict
+            Dict with the corsika sphere centers for all telescope types \
+            (e.g {LST: 16 m, MST: 9 m, SST: 3.25 m}).
+
+        '''
 
         if self._posZ is None and self._altitude is not None:
             self._posZ = self._altitude - corsikaObsLevel.to(u.m).value
-            self._posZ += corsikaSphereCenter[self.getTelescopeType(self.name)].to(u.m).value
+            self._posZ += corsikaSphereCenter[self._getTelescopeType()].to(u.m).value
             return
         else:
             self._logger.debug(
@@ -271,13 +396,22 @@ class TelescopeData:
 
     @u.quantity_input(corsikaObsLevel=u.m)
     def convertCorsikaToAsl(self, corsikaObsLevel, corsikaSphereCenter):
-        """
-        convert corsika z to altitude
-        """
+        '''
+        Convert corsika (posZ) to altitude.
+
+        Parameters
+        ----------
+        corsikaObLevel: astropy.Quantity
+            CORSIKA observation level in equivalent units of meter.
+        corsikaSphereCenter: dict
+            Dict with the corsika sphere centers for all telescope types \
+            (e.g {LST: 16 m, MST: 9 m, SST: 3.25 m}).
+
+        '''
 
         if self._posZ is not None and self._altitude is None:
             self._altitude = corsikaObsLevel.to(u.m).value + self._posZ
-            self._altitude -= corsikaSphereCenter[self.getTelescopeType(self.name)].to(u.m).value
+            self._altitude -= corsikaSphereCenter[self._getTelescopeType()].to(u.m).value
             return
         else:
             self._logger.warning(
@@ -295,11 +429,26 @@ class TelescopeData:
         corsikaObsLevel,
         corsikaSphereCenter
     ):
-        """
-        calculate telescope positions in missing coordinate
-        systems
-        """
+        '''
+        Perform all the necessary convertions in order to fill all the coordinate variables.
 
+        Parameters
+        ----------
+        crsUtm: pyproj.crs.crs.CRS
+            Pyproj CRS of the utm coordinate system
+        crsLocal: pyproj.crs.crs.CRS
+            Pyproj CRS of the local coordinate system
+        wgs84: pyproj.crs.crs.CRS
+            Pyproj CRS of the mercator coordinate system
+        corsikaObLevel: astropy.Quantity
+            CORSIKA observation level in equivalent units of meter.
+        corsikaSphereCenter: dict
+            Dict with the corsika sphere centers for all telescope types \
+            (e.g {LST: 16 m, MST: 9 m, SST: 3.25 m})
+
+        '''
+
+        # Starting by local <-> UTM <-> Mercator
         hasLocal = self._posX is not None and self._posY is not None
         hasUtm = self._utmEast is not None and self._utmNorth is not None
         hasMercator = self._latitude is not None and self._longitude is not None
@@ -313,6 +462,7 @@ class TelescopeData:
         if hasUtm and not hasMercator:
             self.convertUtmToMercator(crsUtm, wgs84)
 
+        # Dealing with altitude <-> posZ
         hasCorsika = self._posZ is not None
         hasAsl = self._altitude is not None
 
@@ -323,3 +473,4 @@ class TelescopeData:
         else:
             # Nothing to be converted
             pass
+    # End of convertAll
