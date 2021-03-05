@@ -1,4 +1,3 @@
-import math
 import astropy.units as u
 import logging
 from astropy.table import Table
@@ -74,9 +73,9 @@ class LayoutArray:
 
         for prod in prodList:
             tel.prodId[prod] = row[prod]
-        return tel
+        self._telescopeList.append(tel)
 
-    def read_telescope_list(self, telescopeFile):
+    def readTelescopeList(self, telescopeFile):
         """
         read list of telescopes from a ecsv file
         """
@@ -90,92 +89,92 @@ class LayoutArray:
             self._logger.error(msg)
             raise InvalidTelescopeListFile(msg)
 
-        # Here
-        # reference coordinate system
+        # Reference coordinate system
         if 'EPSG' in table.meta:
-            self.epsg = table.meta['EPSG']
-        if 'center_northing' in table.meta and \
-                'center_easting' in table.meta:
-            self.center_northing = u.Quantity(table.meta['center_northing'])
-            self.center_easting = u.Quantity(table.meta['center_easting'])
-        if 'center_lon' in table.meta and \
-                'center_lat' in table.meta:
-            self.center_lon = u.Quantity(table.meta['center_lon'])
-            self.center_lat = u.Quantity(table.meta['center_lat'])
+            self._epsg = table.meta['EPSG']
+        if 'center_northing' in table.meta and 'center_easting' in table.meta:
+            self._centerNorthing = u.Quantity(table.meta['center_northing']).to(u.deg).value
+            self._centerEasting = u.Quantity(table.meta['center_easting']).to(u.deg).value
+        if 'center_lon' in table.meta and 'center_lat' in table.meta:
+            self._centerLongitude = u.Quantity(table.meta['center_lon']).to(u.deg).value
+            self._centerLatitude = u.Quantity(table.meta['center_lat']).to(u.deg).value
         if 'center_alt' in table.meta:
-            self.center_altitude = u.Quantity(table.meta['center_alt'])
+            self._centerAltitude = u.Quantity(table.meta['center_alt']).to(u.m).value
+
         # CORSIKA parameters
         if 'corsika_obs_level' in table.meta:
-            self.corsika_obslevel = u.Quantity(table.meta['corsika_obs_level'])
+            self._corsikaObsLevel = u.Quantity(table.meta['corsika_obs_level'])
         if 'corsika_sphere_center' in table.meta:
+            self._corsikaSphereCenter = list()
             for key, value in table.meta['corsika_sphere_center'].items():
-                self.corsika_sphere_center[key] = u.Quantity(value)
+                self._corsikaSphereCenter.append(u.Quantity(value.to(u.m).value))
         if 'corsika_sphere_radius' in table.meta:
+            self._corsikaSphereRadius = list()
             for key, value in table.meta['corsika_sphere_radius'].items():
-                self.corsika_sphere_radius[key] = u.Quantity(value)
+                self._corsikaSphereRadius.append(u.Quantity(value).to(u.m).value)
 
-        
-        # initialise telescope lists from productions
+        # Initialise telescope lists from productions
         # (require column names include 'prod' string)
-        prod_list = [row_name for row_name in table.colnames if row_name.find('prod') >= 0]
+        prodList = [row_name for row_name in table.colnames if row_name.find('prod') >= 0]
 
-        self.telescope_list = [self._append_telescope(row, table, prod_list) for row in table]
+        for row in table:
+            self._appendTelescope(row, table, prodList)
 
         return True
 
-    def read_layout(self, layout_list, layout_name):
-        """
-        read a layout from a layout yaml file
-        """
+    # def read_layout(self, layout_list, layout_name):
+    #     """
+    #     read a layout from a layout yaml file
+    #     """
 
-        print(layout_name, layout_list)
+    #     print(layout_name, layout_list)
 
-        return None
+    #     return None
 
-    def print_telescope_list(self, short_printout):
-        """
-        print list of telescopes in current layout
+    # def print_telescope_list(self, short_printout):
+    #     """
+    #     print list of telescopes in current layout
 
-        Available formats (examples, column names in ecsv file):
-        - telescope_name - default telescope names
-        - prod3b_mst_N - North layout (with MST-NectarCam)
-        """
-        for tel in self.telescope_list:
-            if short_printout:
-                tel.print_short_telescope_list()
-            else:
-                tel.print_telescope()
+    #     Available formats (examples, column names in ecsv file):
+    #     - telescope_name - default telescope names
+    #     - prod3b_mst_N - North layout (with MST-NectarCam)
+    #     """
+    #     for tel in self.telescope_list:
+    #         if short_printout:
+    #             tel.print_short_telescope_list()
+    #         else:
+    #             tel.print_telescope()
 
-        return None
+    #     return None
 
-    def print_array_center(self):
-        """
-        print coordinates of array center used
-        for coordinate transformations
-        """
-        print('Array center coordinates:')
-        if not math.isnan(self.center_lon.value) and \
-                not math.isnan(self.center_lat.value):
-            print('\t Longitude {0:0.2f}'.format(self.center_lon))
-            print('\t Latitude {0:0.2f}'.format(self.center_lat))
-        if not math.isnan(self.center_northing.value) and \
-                not math.isnan(self.center_easting.value):
-            print('\t Northing {0:0.2f}'.format(self.center_northing))
-            print('\t Easting {0:0.2f}'.format(self.center_easting))
-        print('\t Altitude {0:0.2f}'.format(self.center_altitude))
-        print('\t EGSP %s' % (self.epsg))
+    # def print_array_center(self):
+    #     """
+    #     print coordinates of array center used
+    #     for coordinate transformations
+    #     """
+    #     print('Array center coordinates:')
+    #     if not math.isnan(self.center_lon.value) and \
+    #             not math.isnan(self.center_lat.value):
+    #         print('\t Longitude {0:0.2f}'.format(self.center_lon))
+    #         print('\t Latitude {0:0.2f}'.format(self.center_lat))
+    #     if not math.isnan(self.center_northing.value) and \
+    #             not math.isnan(self.center_easting.value):
+    #         print('\t Northing {0:0.2f}'.format(self.center_northing))
+    #         print('\t Easting {0:0.2f}'.format(self.center_easting))
+    #     print('\t Altitude {0:0.2f}'.format(self.center_altitude))
+    #     print('\t EGSP %s' % (self.epsg))
 
-    def print_corsika_parameters(self):
-        """
-        print CORSIKA parameters defined in header of
-        ecsv file
-        """
-        print('CORSIKA parameters')
-        print('\t observation level {0:0.2f}'.format(self.corsika_obslevel))
-        print('\t sphere center ', self.corsika_sphere_center)
-        print('\t sphere radius ', self.corsika_sphere_radius)
+    # def print_corsika_parameters(self):
+    #     """
+    #     print CORSIKA parameters defined in header of
+    #     ecsv file
+    #     """
+    #     print('CORSIKA parameters')
+    #     print('\t observation level {0:0.2f}'.format(self.corsika_obslevel))
+    #     print('\t sphere center ', self.corsika_sphere_center)
+    #     print('\t sphere radius ', self.corsika_sphere_radius)
 
-    def convert_coordinates(self):
+    def convertCoordinates(self):
         """
         conversion depends what is given in the orginal
         telescope list
@@ -187,124 +186,125 @@ class LayoutArray:
         - UTM coordinate system
         """
 
-        logging.info('Converting telescope coordinates')
+        self._logger.info('Converting telescope coordinates')
 
         # 1: setup reference coordinate systems
 
         # Mercator WGS84
         wgs84 = pyproj.CRS('EPSG:4326')
-        
-        # local transverse Mercator projection
+
+        # Local transverse Mercator projection
         crs_local = None
-        if self.center_lon is not None \
-                and self.center_lat is not None:
-            proj4_string = '+proj=tmerc +ellps=WGS84 +datum=WGS84'
-            proj4_string = '%s +lon_0=%s +lat_0=%s' % \
-                (proj4_string,
-                 self.center_lon.value,
-                 self.center_lat.value)
-            proj4_string = '%s +axis=nwu +units=m +k_0=1.0' % \
-                (proj4_string)
+        if self._centerLongitude is not None and self._centerLatitude is not None:
+            proj4_string = (
+                '+proj=tmerc +ellps=WGS84 +datum=WGS84'
+                + ' +lon_0={} +lat_0={}'.format(self._centerLongitude, self._centerLatitude)
+                + ' +axis=nwu +units=m +k_0=1.0'
+            )
             crs_local = pyproj.CRS.from_proj4(proj4_string)
-            logging.info('\t Local Mercator projection: {}'.format(crs_local))
+            self._logger.info('Local Mercator projection: {}'.format(crs_local))
+
         # UTM system
         crs_utm = None
-        if not math.isnan(self.epsg):
-            crs_utm = pyproj.CRS.from_user_input(self.epsg)
-            logging.info('\t UTM system: {}'.format(crs_utm))
+        if self._epsg is not None:
+            crs_utm = pyproj.CRS.from_user_input(self._epsg)
+            self._logger.info('UTM system: {}'.format(crs_utm))
+
         # 2. convert coordinates
         for tel in self.telescope_list:
-            tel.convert(crs_local, 
-                        wgs84, 
-                        crs_utm, 
-                        self.center_altitude,
-                        self.corsika_obslevel, 
-                        self.corsika_sphere_center)
+            tel.convertAll(
+                crs_local,
+                wgs84,
+                crs_utm,
+                self._centerAltitude,
+                self._corsikaObsLevel,
+                self._corsikaSphereCenter
+            )
 
-    def compare_array_center(self, layout2):
-        """
-        compare array center coordinates of this array
-        with another one
-        """
-        print('comparing array center coordinates')
-        print('')
-        print('{0:12s} | {1:>16s} | {2:>16s} | {3:>16s} | '.format(
-            '', 'layout_1', 'layout_2', 'difference'))
-        print('{0:12s} | {1:>16s} | {2:>16s} | {3:>16s} | '.format(
-            '-----', '-----', '-----', '-----'))
-        print('{0:12s} | {1:12.2f} | {2:12.2f} | {3:12.2f} |'.format(
-            'Longitude',
-            self.center_lon, layout2.center_lon,
-            self.center_lon-layout2.center_lon))
-        print('{0:12s} | {1:12.2f} | {2:12.2f} | {3:12.2f} |'.format(
-            'Latitude',
-            self.center_lat, layout2.center_lat,
-            self.center_lat-layout2.center_lat))
-        print('{0:12s} | {1:14.2f} | {2:14.2f} | {3:14.2f} |'.format(
-            'Northing',
-            self.center_northing, layout2.center_northing,
-            self.center_northing-layout2.center_northing))
-        print('{0:12s} | {1:14.2f} | {2:14.2f} | {3:14.2f} |'.format(
-            'Easting',
-            self.center_easting, layout2.center_easting,
-            self.center_easting-layout2.center_easting))
-        print('{0:12s} | {1:14.2f} | {2:14.2f} | {3:14.2f} |'.format(
-            'Altitude',
-            self.center_altitude, layout2.center_altitude,
-            self.center_altitude-layout2.center_altitude))
+    # def compareArrayCenter(self, layout2):
+    #     """
+    #     compare array center coordinates of this array
+    #     with another one
+    #     """
+    #     print('comparing array center coordinates')
+    #     print('')
+    #     print('{0:12s} | {1:>16s} | {2:>16s} | {3:>16s} | '.format(
+    #         '', 'layout_1', 'layout_2', 'difference'))
+    #     print('{0:12s} | {1:>16s} | {2:>16s} | {3:>16s} | '.format(
+    #         '-----', '-----', '-----', '-----'))
+    #     print('{0:12s} | {1:12.2f} | {2:12.2f} | {3:12.2f} |'.format(
+    #         'Longitude',
+    #         self.center_lon, layout2.center_lon,
+    #         self.center_lon-layout2.center_lon))
+    #     print('{0:12s} | {1:12.2f} | {2:12.2f} | {3:12.2f} |'.format(
+    #         'Latitude',
+    #         self.center_lat, layout2.center_lat,
+    #         self.center_lat-layout2.center_lat))
+    #     print('{0:12s} | {1:14.2f} | {2:14.2f} | {3:14.2f} |'.format(
+    #         'Northing',
+    #         self.center_northing, layout2.center_northing,
+    #         self.center_northing-layout2.center_northing))
+    #     print('{0:12s} | {1:14.2f} | {2:14.2f} | {3:14.2f} |'.format(
+    #         'Easting',
+    #         self.center_easting, layout2.center_easting,
+    #         self.center_easting-layout2.center_easting))
+    #     print('{0:12s} | {1:14.2f} | {2:14.2f} | {3:14.2f} |'.format(
+    #         'Altitude',
+    #         self.center_altitude, layout2.center_altitude,
+    #         self.center_altitude-layout2.center_altitude))
 
      
 
-    def print_differences(self, layout2, tolerance_geod=0, tolerance_alt=0):
-        """
-        print differences between telescope positions
-        """
+    # def print_differences(self, layout2, tolerance_geod=0, tolerance_alt=0):
+    #     """
+    #     print differences between telescope positions
+    #     """
 
-        geod = pyproj.Geod(ellps="WGS84")
+    #     geod = pyproj.Geod(ellps="WGS84")
 
-        print('{0:6s} | {1:>14s} | {2:>14s} | {3:>14s} | {4:>14s} | {5:>14s} | {6:>14s} | {7:>12s} | {8:>12s}'.format(
-            'tel', 'E(layout_1)', 'N(layout_1)', 'alt(layout_1)', \
-            'E(layout_2)', 'N(layout_2)', 'alt(layout_2)', \
-            'dist', 'delta_alt'))
-        print('{0:6s} | {1:>14s} | {2:>14s} | {3:>14s} | {4:>14s} | {5:>14s} | {6:>14s} | {7:>12s} | {8:>10s} |'.format(
-            '-----', '-----', '-----', '-----', '-----', '-----', \
-            '-----', '-----', '-----'))
-        for tel_1 in self.telescope_list:
-            for tel_2 in layout2.telescope_list:
-                if tel_1.name != tel_2.name:
-                    continue
-                _, _, diff = geod.inv(
-                    tel_1.lon.value, tel_1.lat.value, 
-                    tel_2.lon.value, tel_2.lat.value)
-                if diff <= tolerance_geod and \
-                        abs(tel_1.alt.value-tel_2.alt.value) <= tolerance_alt:
-                    continue
+    #     print('{0:6s} | {1:>14s} | {2:>14s} | {3:>14s} | {4:>14s} | {5:>14s} | {6:>14s} | {7:>12s} | {8:>12s}'.format(
+    #         'tel', 'E(layout_1)', 'N(layout_1)', 'alt(layout_1)', \
+    #         'E(layout_2)', 'N(layout_2)', 'alt(layout_2)', \
+    #         'dist', 'delta_alt'))
+    #     print('{0:6s} | {1:>14s} | {2:>14s} | {3:>14s} | {4:>14s} | {5:>14s} | {6:>14s} | {7:>12s} | {8:>10s} |'.format(
+    #         '-----', '-----', '-----', '-----', '-----', '-----', \
+    #         '-----', '-----', '-----'))
+    #     for tel_1 in self.telescope_list:
+    #         for tel_2 in layout2.telescope_list:
+    #             if tel_1.name != tel_2.name:
+    #                 continue
+    #             _, _, diff = geod.inv(
+    #                 tel_1.lon.value, tel_1.lat.value, 
+    #                 tel_2.lon.value, tel_2.lat.value)
+    #             if diff <= tolerance_geod and \
+    #                     abs(tel_1.alt.value-tel_2.alt.value) <= tolerance_alt:
+    #                 continue
 
-                print('{0:6s} | {1:12.2f} | {2:12.2f} | {3:12.2f} | {4:12.2f} | {5:12.2f} | {6:12.2f} | {7:10.2f} | {8:10.2f}'.format(
-                    tel_1.name,
-                    tel_1.utm_east, tel_1.utm_north, tel_1.alt,
-                    tel_2.utm_east, tel_2.utm_north, tel_2.alt,
-                    diff*u.meter, abs(tel_1.alt.value-tel_2.alt.value)*u.meter))
+    #             print('{0:6s} | {1:12.2f} | {2:12.2f} | {3:12.2f} | {4:12.2f} | {5:12.2f} | {6:12.2f} | {7:10.2f} | {8:10.2f}'.format(
+    #                 tel_1.name,
+    #                 tel_1.utm_east, tel_1.utm_north, tel_1.alt,
+    #                 tel_2.utm_east, tel_2.utm_north, tel_2.alt,
+    #                 diff*u.meter, abs(tel_1.alt.value-tel_2.alt.value)*u.meter))
 
-    def compare_telescope_positions(self, layout2, tolerance_geod=0, tolerance_alt=0):
-        """
-        compare telescope positions of two telescope lists
-        """
-        print('')
-        print('comparing telescope positions')
-        print('  tolerance (pos) {0:f} m)'.format(tolerance_geod))
-        print('  tolerance (alt) {0:f} m)'.format(tolerance_alt))
-        print('')
-        # Step 1: make sure that lists are compatible
-        for tel_1 in self.telescope_list:
-            telescope_found = False
-            for tel_2 in layout2.telescope_list:
-                if tel_1.name == tel_2.name:
-                    telescope_found = True
+    # def compare_telescope_positions(self, layout2, tolerance_geod=0, tolerance_alt=0):
+    #     """
+    #     compare telescope positions of two telescope lists
+    #     """
+    #     print('')
+    #     print('comparing telescope positions')
+    #     print('  tolerance (pos) {0:f} m)'.format(tolerance_geod))
+    #     print('  tolerance (alt) {0:f} m)'.format(tolerance_alt))
+    #     print('')
+    #     # Step 1: make sure that lists are compatible
+    #     for tel_1 in self.telescope_list:
+    #         telescope_found = False
+    #         for tel_2 in layout2.telescope_list:
+    #             if tel_1.name == tel_2.name:
+    #                 telescope_found = True
 
-            if not telescope_found:
-                print('Telescope {0:s} from list 1 not found in list 2'.format(
-                    tel_1.name))
+    #         if not telescope_found:
+    #             print('Telescope {0:s} from list 1 not found in list 2'.format(
+    #                 tel_1.name))
 
-        # Step 2: compare coordinate values
-        self.print_differences(layout2, tolerance_geod, tolerance_alt)
+    #     # Step 2: compare coordinate values
+    #     self.print_differences(layout2, tolerance_geod, tolerance_alt)
