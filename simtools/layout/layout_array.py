@@ -1,40 +1,48 @@
-"""
-arrayData class descripe an array of telescopes
-"""
-
 import math
-from astropy.table import Table
-from astropy import units as u
+import astropy.units as u
 import logging
+from astropy.table import Table
+
 import pyproj
 
-import layout_telescope
+from simtools.util.general import collectArguments
+from simtools.layout.telescope_data import TelescopeData
 
 
-class ArrayData:
+class LayoutArray:
     """
     layout class for
     - storage of telescope position
     - conversion of coordinate systems of positions
     """
 
-    def __init__(self):
-        """Inits ArrayData with blah."""
-        logging.debug('Init ArrayData')
+    ALL_INPUTS = {
+        'epsg': {'default': None},
+        'centerLongitude': {'default': None, 'unit': u.deg},
+        'centerLatitude': {'default': None, 'unit': u.deg},
+        'centerNorthing': {'default': None, 'unit': u.deg},
+        'centerEasting': {'default': None, 'unit': u.deg},
+        'centerAltitude': {'default': None, 'unit': u.m},
+        'corsikaObsLevel': {'default': None, 'unit': u.m},
+        'corsikaSphereCenter': {'default': None, 'isList': True, 'unit': u.m},
+        'corsikaSphereRadius': {'default': None, 'isList': True, 'unit': u.m}
+    }
 
-        self.name = None
-        self.telescope_list = []
-        # centre of the array
-        self.epsg = math.nan
-        self.center_northing = math.nan*u.meter
-        self.center_easting = math.nan*u.meter
-        self.center_lon = None
-        self.center_lat = None
-        self.center_altitude = math.nan*u.meter
-        # CORSIKA parameters
-        self.corsika_obslevel = math.nan*u.meter
-        self.corsika_sphere_radius = {}
-        self.corsika_sphere_center = {}
+    def __init__(self, name=None, logger=__name__):
+        """Inits ArrayData with blah."""
+        self._logger = logging.getLogger(logger)
+        self._logger.debug('Init LayoutArray')
+
+        self.name = name
+        self._telescopeList = []
+
+        # Collecting arguments
+        collectArguments(
+            self,
+            args=[*self.ALL_INPUTS],
+            allInputs=self.ALL_INPUTS,
+            **kwargs
+        )
 
     def _append_telescope(self, row, table, prod_list):
         """Append a new telescope from table row
