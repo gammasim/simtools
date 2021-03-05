@@ -55,7 +55,9 @@ class TelescopeData:
         'latitude': {'default': None, 'unit': u.deg},
         'utmEast': {'default': None, 'unit': u.m},
         'utmNorth': {'default': None, 'unit': u.m},
-        'altitude': {'default': None, 'unit': u.m}
+        'altitude': {'default': None, 'unit': u.m},
+        'corsikaSphereCenter': {'default': None, 'unit': u.m},
+        'corsikaSphereRadius': {'default': None, 'unit': u.m}
     }
 
     def __init__(
@@ -78,7 +80,8 @@ class TelescopeData:
             Logger name to use in this instance
         **kwargs:
             Physical parameters with units (if applicable). Options: posX, posY, posZ,
-            longitude, latitude, utmsEast, utmNorth, altitude
+            longitude, latitude, utmsEast, utmNorth, altitude, corsikaSphereRadius,
+            corsikaSphereCenter
         '''
 
         self._logger = logging.getLogger(logger)
@@ -124,24 +127,6 @@ class TelescopeData:
         (utmNorth [u.deg], utmEast [u.deg])
         '''
         return self._utmNorth * u.deg, self._utmEast * u.deg
-
-    def _getTelescopeType(self):
-        '''
-        Get the telescope type (LST, MST or SST) based on the telescope name.
-
-        Returns
-        -------
-        str
-            LST, MST or SST
-        '''
-        if self.name[0] == 'L':
-            return 'LST'
-        elif self.name[0] == 'M':
-            return 'MST'
-        elif self.name[0] == 'S':
-            return 'SST'
-        self._logger.warning('Telescope type could not be defined from the name')
-        return None
 
     def __repr__(self):
         telstr = self.name + '\n'
@@ -235,7 +220,6 @@ class TelescopeData:
         ------
         InvalidCoordSystem
             If crsLocal or crsUtm is not an instance of pyproj.crs.crs.CRS
-
         '''
         if self._utmEast is not None and self._utmNorth is not None:
             self._logger.debug(
@@ -282,7 +266,6 @@ class TelescopeData:
         ------
         InvalidCoordSystem
             If wgs84 or crsUtm is not an instance of pyproj.crs.crs.CRS
-
         '''
 
         if self._latitude is not None and self._longitude is not None:
@@ -333,7 +316,6 @@ class TelescopeData:
         ------
         InvalidCoordSystem
             If crsLocal or crsUtm is not an instance of pyproj.crs.crs.CRS
-
         '''
         if self._posX is not None and self._posY is not None:
             self._logger.debug(
@@ -368,24 +350,40 @@ class TelescopeData:
         )
         return
 
-    @u.quantity_input(corsikaObsLevel=u.m)
-    def convertAslToCorsika(self, corsikaObsLevel, corsikaSphereCenter):
+    @u.quantity_input(corsikaObsLevel=u.m, corsikaSphereCenter=u.m)
+    def convertAslToCorsika(self, corsikaObsLevel=-1 * u.m, corsikaSphereCenter=-1 * u.m):
         '''
         Convert telescope altitude to corsika (posZ).
+        corsikaObsLevel and/or corsikaSphereCenter can be given as arguments
+        in case it has not been set at the initialization.
+        If they are given, the internal one will be overwritten.
 
         Parameters
         ----------
         corsikaObLevel: astropy.Quantity
             CORSIKA observation level in equivalent units of meter.
-        corsikaSphereCenter: dict
-            Dict with the corsika sphere centers for all telescope types \
-            (e.g {LST: 16 m, MST: 9 m, SST: 3.25 m}).
-
+        corsikaSphereCenter: astropy.Quantity
+            CORSIKA sphere center in equivalent units of meter.
         '''
 
+        hasPars = self._corsikaObsLevel is not None and self._corsikaSphereCenter is not None
+        givenPars = corsikaObsLevel.value > 0 and corsikaSphereCenter.value > 0
+
+        if not hasPars and not givenPars:
+            msg = 'Cannot convert to corsika because obs level and/or sphere center were not given'
+            self._logger.error(msg)
+            raise MissingInputForConvertion(msg)
+
         if self._posZ is None and self._altitude is not None:
-            self._posZ = self._altitude - corsikaObsLevel.to(u.m).value
-            self._posZ += corsikaSphereCenter[self._getTelescopeType()].to(u.m).value
+
+            if givenPars:
+                self._posZ = (
+                    self._altitude - corsikaObsLevel.to(u.m).value
+                    + corsikaSphereCenter.to(u.m).value
+                )
+            else:  # hasPars
+                self._posZ = (self._altitude - self._corsikaObsLevel + self._corsikaSphereCenter)
+
             return
         else:
             self._logger.debug(
@@ -394,24 +392,40 @@ class TelescopeData:
             )
             return
 
-    @u.quantity_input(corsikaObsLevel=u.m)
-    def convertCorsikaToAsl(self, corsikaObsLevel, corsikaSphereCenter):
+    @u.quantity_input(corsikaObsLevel=u.m, corsikaSphereCenter=u.m)
+    def convertCorsikaToAsl(self, corsikaObsLevel=-1 * u.m, corsikaSphereCenter=-1 * u.m):
         '''
         Convert corsika (posZ) to altitude.
+        corsikaObsLevel and/or corsikaSphereCenter can be given as arguments
+        in case it has not been set at the initialization.
+        If they are given, the internal one will be overwritten.
 
         Parameters
         ----------
         corsikaObLevel: astropy.Quantity
             CORSIKA observation level in equivalent units of meter.
-        corsikaSphereCenter: dict
-            Dict with the corsika sphere centers for all telescope types \
-            (e.g {LST: 16 m, MST: 9 m, SST: 3.25 m}).
-
+        corsikaSphereCenter: astropy.Quantity
+            CORSIKA sphere center in equivalent units of meter.
         '''
 
+        hasPars = self._corsikaObsLevel is not None and self._corsikaSphereCenter is not None
+        givenPars = corsikaObsLevel.value > 0 and corsikaSphereCenter.value > 0
+
+        if not hasPars and not givenPars:
+            msg = 'Cannot convert to corsika because obs level and/or sphere center were not given'
+            self._logger.error(msg)
+            raise MissingInputForConvertion(msg)
+
         if self._posZ is not None and self._altitude is None:
-            self._altitude = corsikaObsLevel.to(u.m).value + self._posZ
-            self._altitude -= corsikaSphereCenter[self._getTelescopeType()].to(u.m).value
+
+            if givenPars:
+                self._altitude = (
+                    corsikaObsLevel.to(u.m).value + self._posZ - corsikaSphereCenter.to(u.m).value
+                )
+            else:  # hasPars
+                self._altitude = (
+                    self._corsikaObsLevel + self._posZ - self._corsikaSphereCenter
+                )
             return
         else:
             self._logger.warning(
@@ -426,8 +440,8 @@ class TelescopeData:
         crsLocal,
         wgs84,
         crsUtm,
-        corsikaObsLevel,
-        corsikaSphereCenter
+        corsikaObsLevel=-1 * u.m,
+        corsikaSphereCenter=-1 * u.m
     ):
         '''
         Perform all the necessary convertions in order to fill all the coordinate variables.
@@ -443,9 +457,7 @@ class TelescopeData:
         corsikaObLevel: astropy.Quantity
             CORSIKA observation level in equivalent units of meter.
         corsikaSphereCenter: dict
-            Dict with the corsika sphere centers for all telescope types \
-            (e.g {LST: 16 m, MST: 9 m, SST: 3.25 m})
-
+            CORSIKA sphere center in equivalent units of meter.
         '''
 
         # Starting by local <-> UTM <-> Mercator
