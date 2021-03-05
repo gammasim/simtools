@@ -434,7 +434,7 @@ class TelescopeData:
             )
             return
 
-    @u.quantity_input(corsikaObsLevel=u.m)
+    @u.quantity_input(corsikaObsLevel=u.m, corsikaSphereCenter=u.m)
     def convertAll(
         self,
         crsLocal,

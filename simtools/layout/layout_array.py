@@ -31,6 +31,8 @@ class LayoutArray:
         'corsikaSphereRadius': {'default': None, 'isList': True, 'unit': u.m}
     }
 
+    TEL_SIZE = {'L': 0, 'M': 1, 'S': 2}
+
     def __init__(self, name=None, logger=__name__, **kwargs):
         """Inits ArrayData with blah."""
         self._logger = logging.getLogger(logger)
@@ -93,8 +95,8 @@ class LayoutArray:
         if 'EPSG' in table.meta:
             self._epsg = table.meta['EPSG']
         if 'center_northing' in table.meta and 'center_easting' in table.meta:
-            self._centerNorthing = u.Quantity(table.meta['center_northing']).to(u.deg).value
-            self._centerEasting = u.Quantity(table.meta['center_easting']).to(u.deg).value
+            self._centerNorthing = u.Quantity(table.meta['center_northing']).to(u.m).value
+            self._centerEasting = u.Quantity(table.meta['center_easting']).to(u.m).value
         if 'center_lon' in table.meta and 'center_lat' in table.meta:
             self._centerLongitude = u.Quantity(table.meta['center_lon']).to(u.deg).value
             self._centerLatitude = u.Quantity(table.meta['center_lat']).to(u.deg).value
@@ -103,11 +105,11 @@ class LayoutArray:
 
         # CORSIKA parameters
         if 'corsika_obs_level' in table.meta:
-            self._corsikaObsLevel = u.Quantity(table.meta['corsika_obs_level'])
+            self._corsikaObsLevel = u.Quantity(table.meta['corsika_obs_level']).value
         if 'corsika_sphere_center' in table.meta:
             self._corsikaSphereCenter = list()
             for key, value in table.meta['corsika_sphere_center'].items():
-                self._corsikaSphereCenter.append(u.Quantity(value.to(u.m).value))
+                self._corsikaSphereCenter.append(u.Quantity(value).to(u.m).value)
         if 'corsika_sphere_radius' in table.meta:
             self._corsikaSphereRadius = list()
             for key, value in table.meta['corsika_sphere_radius'].items():
@@ -211,14 +213,14 @@ class LayoutArray:
             self._logger.info('UTM system: {}'.format(crs_utm))
 
         # 2. convert coordinates
-        for tel in self.telescope_list:
+        for tel in self._telescopeList:
+            telSizeIndex = self.TEL_SIZE[tel.name[0]]
             tel.convertAll(
-                crs_local,
-                wgs84,
-                crs_utm,
-                self._centerAltitude,
-                self._corsikaObsLevel,
-                self._corsikaSphereCenter
+                crsLocal=crs_local,
+                wgs84=wgs84,
+                crsUtm=crs_utm,
+                corsikaObsLevel=self._corsikaObsLevel * u.m,
+                corsikaSphereCenter=self._corsikaSphereCenter[telSizeIndex] * u.m
             )
 
     # def compareArrayCenter(self, layout2):
