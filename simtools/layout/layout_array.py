@@ -9,6 +9,10 @@ from simtools.util.general import collectArguments
 from simtools.layout.telescope_data import TelescopeData
 
 
+class InvalidTelescopeListFile(Exception):
+    pass
+
+
 class LayoutArray:
     """
     layout class for
@@ -28,7 +32,7 @@ class LayoutArray:
         'corsikaSphereRadius': {'default': None, 'isList': True, 'unit': u.m}
     }
 
-    def __init__(self, name=None, logger=__name__):
+    def __init__(self, name=None, logger=__name__, **kwargs):
         """Inits ArrayData with blah."""
         self._logger = logging.getLogger(logger)
         self._logger.debug('Init LayoutArray')
@@ -44,55 +48,49 @@ class LayoutArray:
             **kwargs
         )
 
-    def _append_telescope(self, row, table, prod_list):
+    def _appendTelescope(self, row, table, prodList):
         """Append a new telescope from table row
         to list of telescopes
         """
 
-        tel = layout_telescope.TelescopeData()
+        tel = TelescopeData()
         tel.name = row['telescope_name']
         if 'pos_x' in table.colnames:
-            tel.x = row['pos_x']*table['pos_x'].unit
+            tel.x = row['pos_x'] * table['pos_x'].unit
         if 'pos_y' in table.colnames:
-            tel.y = row['pos_y']*table['pos_y'].unit
+            tel.y = row['pos_y'] * table['pos_y'].unit
         if 'pos_z' in table.colnames:
-            tel.z = row['pos_z']*table['pos_z'].unit
+            tel.z = row['pos_z'] * table['pos_z'].unit
         if 'utm_east' in table.colnames:
-            tel.utm_east = row['utm_east']*table['utm_east'].unit
+            tel.utm_east = row['utm_east'] * table['utm_east'].unit
         if 'utm_north' in table.colnames:
-            tel.utm_north = row['utm_north']*table['utm_north'].unit
+            tel.utm_north = row['utm_north'] * table['utm_north'].unit
         if 'alt' in table.colnames:
-            tel.alt = row['alt']*table['alt'].unit
+            tel.alt = row['alt'] * table['alt'].unit
         if 'lon' in table.colnames:
-            tel.lon = row['lon']*table['lon'].unit
+            tel.lon = row['lon'] * table['lon'].unit
         if 'lat' in table.colnames:
-            tel.lat = row['lat']*table['lat'].unit
+            tel.lat = row['lat'] * table['lat'].unit
 
-        for prod in prod_list:
-            tel.prod_id[prod] = row[prod]
+        for prod in prodList:
+            tel.prodId[prod] = row[prod]
         return tel
 
-
-    def read_telescope_list(self, telescope_file):
+    def read_telescope_list(self, telescopeFile):
         """
         read list of telescopes from a ecsv file
         """
-        try:
-            table = Table.read(telescope_file, format='ascii.ecsv')
-        except Exception as ex:
-            logging.error('Error reading telescope list from {}'.format(telescope_file))
-            logging.error(ex.args)
-            return False
-        logging.info('reading telescope list from {}'.format(telescope_file))
-        
-        # require telescope_name in telescope lists
-        if 'telescope_name' not in table.colnames:
-            logging.error('Error reading telescope names from {}'
-                .format(telescope_file))
-            logging.error('   required column telescope_name missing')
-            logging.error(table.meta)
-            return False
+        table = Table.read(telescopeFile, format='ascii.ecsv')
 
+        self._logger.info('Reading telescope list from {}'.format(telescopeFile))
+
+        # Require telescope_name in telescope lists
+        if 'telescope_name' not in table.colnames:
+            msg = 'Error reading telescope names from {}'.format(telescopeFile)
+            self._logger.error(msg)
+            raise InvalidTelescopeListFile(msg)
+
+        # Here
         # reference coordinate system
         if 'EPSG' in table.meta:
             self.epsg = table.meta['EPSG']
@@ -113,7 +111,7 @@ class LayoutArray:
             for key, value in table.meta['corsika_sphere_center'].items():
                 self.corsika_sphere_center[key] = u.Quantity(value)
         if 'corsika_sphere_radius' in table.meta:
-            for key, value in table.meta['corsika_sphere_radius'].items(): 
+            for key, value in table.meta['corsika_sphere_radius'].items():
                 self.corsika_sphere_radius[key] = u.Quantity(value)
 
         
