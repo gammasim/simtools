@@ -82,7 +82,7 @@ def test_corsika_transformations():
     # ASL -> CORSIKA
     tel.convertAslToCorsika(
         corsikaObsLevel=2158 * u.m,
-        corsikaSphereCenter={'LST': 16 * u.m, 'MST': 9 * u.m, 'SST': 3.25 * u.m}
+        corsikaSphereCenter=16 * u.m
     )
     assert math.isclose(tel._posZ, 35.0, abs_tol=0.1)
 
@@ -92,7 +92,7 @@ def test_corsika_transformations():
 
     tel.convertCorsikaToAsl(
         corsikaObsLevel=2158 * u.m,
-        corsikaSphereCenter={'LST': 16 * u.m, 'MST': 9 * u.m, 'SST': 3.25 * u.m}
+        corsikaSphereCenter=16 * u.m
     )
     assert math.isclose(tel._altitude, 2177, abs_tol=0.1)
 
@@ -122,7 +122,7 @@ def test_convert_all():
         crsLocal=crsLocal,
         crsUtm=crsUtm,
         corsikaObsLevel=2158 * u.m,
-        corsikaSphereCenter={'LST': 16 * u.m, 'MST': 9 * u.m, 'SST': 3.25 * u.m}
+        corsikaSphereCenter=16 * u.m
     )
 
 
