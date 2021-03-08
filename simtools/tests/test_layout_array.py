@@ -2,6 +2,8 @@
 
 import logging
 
+import astropy.units as u
+
 import simtools.io_handler as io
 from simtools.layout.layout_array import LayoutArray
 
@@ -16,7 +18,19 @@ def test_read_tel_list():
     layout.convertCoordinates()
 
 
+def test_dict_input():
+    layout = LayoutArray(
+        name='testLayout',
+        corsikaSphereRadius={'LST': 1 * u.m, 'MST': 1 * u.m, 'SST': 1 * u.m}
+    )
+    print(layout.__dict__)
+    # telFile = io.getTestDataFile('telescope_positions_prod5_north.ecsv')
+    # layout.readTelescopeList(telFile)
+    # layout.convertCoordinates()
+
+
 if __name__ == '__main__':
 
-    test_read_tel_list()
+    # test_read_tel_list()
+    test_dict_input()
     pass
