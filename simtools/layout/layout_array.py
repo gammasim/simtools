@@ -27,8 +27,8 @@ class LayoutArray:
         'centerEasting': {'default': None, 'unit': u.deg},
         'centerAltitude': {'default': None, 'unit': u.m},
         'corsikaObsLevel': {'default': None, 'unit': u.m},
-        'corsikaSphereCenter': {'default': None, 'isList': True, 'unit': u.m},
-        'corsikaSphereRadius': {'default': None, 'isList': True, 'unit': u.m}
+        'corsikaSphereCenter': {'default': None, 'isDict': True, 'unit': u.m},
+        'corsikaSphereRadius': {'default': None, 'isDict': True, 'unit': u.m}
     }
 
     TEL_SIZE = {'L': 0, 'M': 1, 'S': 2}
@@ -109,11 +109,11 @@ class LayoutArray:
         if 'corsika_sphere_center' in table.meta:
             self._corsikaSphereCenter = list()
             for key, value in table.meta['corsika_sphere_center'].items():
-                self._corsikaSphereCenter.append(u.Quantity(value).to(u.m).value)
+                self._corsikaSphereCenter[key] = u.Quantity(value).to(u.m).value
         if 'corsika_sphere_radius' in table.meta:
             self._corsikaSphereRadius = list()
             for key, value in table.meta['corsika_sphere_radius'].items():
-                self._corsikaSphereRadius.append(u.Quantity(value).to(u.m).value)
+                self._corsikaSphereRadius[key] = u.Quantity(value).to(u.m).value
 
         # Initialise telescope lists from productions
         # (require column names include 'prod' string)
