@@ -36,7 +36,7 @@ def _unitsAreConvertible(quantity_1, quantity_2):
     try:
         quantity_1.to(quantity_2)
         return True
-    except:
+    except Exception:
         return False
 
 
@@ -124,12 +124,28 @@ def collectArguments(obj, args, allInputs, **kwargs):
         outArg = list()
         try:
             argG = list(argG)
-        except:
+        except Exception:
             argG = [argG]
 
         for aa in argG:
             if _unitIsValid(aa, argD['unit']):
                 outArg.append(_convertUnit(aa, argD['unit']))
+            else:
+                logger.error('Argument {} given with wrong unit'.format(arg))
+                raise ArgumentWithWrongUnit()
+        obj.__dict__[inArgName] = outArg
+
+    def processDictArg(arg, inArgName, argG, argD):
+        outArg = dict()
+
+        if not isinstance(argG, dict):
+            msg = 'Argument is not a dict - aborting'
+            logger.error(msg)
+            raise ArgumentCannotBeCollected(msg)
+
+        for key, value in argG.items():
+            if _unitIsValid(value, argD['unit']):
+                outArg[key] = _convertUnit(value, argD['unit'])
             else:
                 logger.error('Argument {} given with wrong unit'.format(arg))
                 raise ArgumentWithWrongUnit()
@@ -146,10 +162,11 @@ def collectArguments(obj, args, allInputs, **kwargs):
 
         if arg in kwargs.keys():
             argGiven = kwargs[arg]
-            # List
-            if 'isList' in argData and argData['isList']:
+            if 'isDict' in argData and argData['isDict']:  # Dict
+                processDictArg(arg, inArgName, argGiven, argData)
+            elif 'isList' in argData and argData['isList']:  # List
                 processListArg(arg, inArgName, argGiven, argData)
-            else:  # Not a list
+            else:  # Not a list or dict
                 processSingleArg(arg, inArgName, argGiven, argData)
 
         elif 'default' in argData:
