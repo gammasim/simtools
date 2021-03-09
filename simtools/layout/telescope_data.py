@@ -166,7 +166,7 @@ class TelescopeData:
         self._utmNorth = utmNorth.value
 
     def __repr__(self):
-        telstr = self.name + '\n'
+        telstr = self.name
         if self._posX is not None and self._posY is not None:
             telstr += '\t CORSIKA x(->North): {0:0.2f} y(->West): {1:0.2f} z: {2:0.2f}'.format(
                 self._posX,
