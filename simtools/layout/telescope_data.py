@@ -56,6 +56,7 @@ class TelescopeData:
         'utmEast': {'default': None, 'unit': u.m},
         'utmNorth': {'default': None, 'unit': u.m},
         'altitude': {'default': None, 'unit': u.m},
+        'corsikaObsLevel': {'default': None, 'unit': u.m},
         'corsikaSphereCenter': {'default': None, 'unit': u.m},
         'corsikaSphereRadius': {'default': None, 'unit': u.m}
     }
@@ -173,17 +174,18 @@ class TelescopeData:
                 self._posZ
             )
         if self._utmEast is not None and self._utmNorth is not None:
-            telstr += '\t UTM East: {0:0.2f} UTM North: {1:0.2f} Alt: {2:0.2f}'.format(
+            telstr += '\t UTM East: {0:0.2f} UTM North: {1:0.2f}'.format(
                 self._utmEast,
-                self._utmNorth,
-                self._altitude
+                self._utmNorth
             )
         if self._longitude is not None and self._latitude is not None:
-            telstr += '\t Longitude: {0:0.5f} Latitude: {1:0.5f} Alt: {2:0.2f}'.format(
+            telstr += '\t Longitude: {0:0.5f} Latitude: {1:0.5f}'.format(
                 self._longitude,
-                self._latitude,
-                self._altitude
+                self._latitude
             )
+        if self._altitude is not None:
+            telstr += '\t Alt: {2:0.2f}'.format(self._altitude)
+
         if len(self._prodId) > 0:
             telstr += '\t', self._prodId
         return telstr
@@ -387,7 +389,7 @@ class TelescopeData:
         return
 
     @u.quantity_input(corsikaObsLevel=u.m, corsikaSphereCenter=u.m)
-    def convertAslToCorsika(self, corsikaObsLevel=-1 * u.m, corsikaSphereCenter=-1 * u.m):
+    def convertAslToCorsika(self, corsikaObsLevel=None, corsikaSphereCenter=None):
         '''
         Convert telescope altitude to corsika (posZ).
         corsikaObsLevel and/or corsikaSphereCenter can be given as arguments
@@ -403,7 +405,7 @@ class TelescopeData:
         '''
 
         hasPars = self._corsikaObsLevel is not None and self._corsikaSphereCenter is not None
-        givenPars = corsikaObsLevel.value > 0 and corsikaSphereCenter.value > 0
+        givenPars = corsikaObsLevel is not None and corsikaSphereCenter is not None
 
         if not hasPars and not givenPars:
             msg = 'Cannot convert to corsika because obs level and/or sphere center were not given'
@@ -429,7 +431,7 @@ class TelescopeData:
             return
 
     @u.quantity_input(corsikaObsLevel=u.m, corsikaSphereCenter=u.m)
-    def convertCorsikaToAsl(self, corsikaObsLevel=-1 * u.m, corsikaSphereCenter=-1 * u.m):
+    def convertCorsikaToAsl(self, corsikaObsLevel=None, corsikaSphereCenter=None):
         '''
         Convert corsika (posZ) to altitude.
         corsikaObsLevel and/or corsikaSphereCenter can be given as arguments
@@ -445,7 +447,7 @@ class TelescopeData:
         '''
 
         hasPars = self._corsikaObsLevel is not None and self._corsikaSphereCenter is not None
-        givenPars = corsikaObsLevel.value > 0 and corsikaSphereCenter.value > 0
+        givenPars = corsikaObsLevel is not None and corsikaSphereCenter is not None
 
         if not hasPars and not givenPars:
             msg = 'Cannot convert to corsika because obs level and/or sphere center were not given'
@@ -473,11 +475,11 @@ class TelescopeData:
     @u.quantity_input(corsikaObsLevel=u.m, corsikaSphereCenter=u.m)
     def convertAll(
         self,
-        crsLocal,
-        wgs84,
-        crsUtm,
-        corsikaObsLevel=-1 * u.m,
-        corsikaSphereCenter=-1 * u.m
+        crsLocal=None,
+        wgs84=None,
+        crsUtm=None,
+        corsikaObsLevel=None,
+        corsikaSphereCenter=None
     ):
         '''
         Perform all the necessary convertions in order to fill all the coordinate variables.
@@ -496,25 +498,36 @@ class TelescopeData:
             CORSIKA sphere center in equivalent units of meter.
         '''
 
+        if crsLocal is None:
+            self._logger.warning('crsLocal is None - convertions will be impacted')
+        if crsUtm is None:
+            self._logger.warning('crsUtm is None - convertions will be impacted')
+        if wgs84 is None:
+            self._logger.warning('wgs84 is None - convertions will be impacted')
+
         # Starting by local <-> UTM <-> Mercator
         hasLocal = self._posX is not None and self._posY is not None
         hasUtm = self._utmEast is not None and self._utmNorth is not None
         hasMercator = self._latitude is not None and self._longitude is not None
 
-        if hasLocal and not hasMercator:
+        if hasLocal and not hasMercator and crsLocal is not None:
             self.convertLocalToMercator(crsLocal, wgs84)
-        if hasLocal and not hasUtm:
+        if hasLocal and not hasUtm and crsLocal is not None:
             self.convertLocalToUtm(crsLocal, crsUtm)
-        if hasUtm and not hasLocal:
+        if hasUtm and not hasLocal and crsUtm is not None:
             self.convertUtmToLocal(crsUtm, crsLocal)
-        if hasUtm and not hasMercator:
+        if hasUtm and not hasMercator and crsUtm is not None:
             self.convertUtmToMercator(crsUtm, wgs84)
 
         # Dealing with altitude <-> posZ
         hasCorsika = self._posZ is not None
         hasAsl = self._altitude is not None
 
-        if hasCorsika and not hasAsl:
+        if corsikaObsLevel is None or corsikaSphereCenter is None:
+            self._logger.warning(
+                'CORSIKA convertions cannot be done - missing obs level and/or sphere center'
+            )
+        elif hasCorsika and not hasAsl:
             self.convertCorsikaToAsl(corsikaObsLevel, corsikaSphereCenter)
         elif hasAsl and not hasCorsika:
             self.convertAslToCorsika(corsikaObsLevel, corsikaSphereCenter)

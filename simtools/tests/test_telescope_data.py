@@ -128,8 +128,8 @@ def test_convert_all():
 
 if __name__ == '__main__':
 
-    # test_input()
+    test_input()
     # test_coordinate_transformations()
     # test_corsika_transformations()
-    test_convert_all()
+    # test_convert_all()
     pass
