@@ -43,11 +43,16 @@ def test_add_tel():
 
 def test_build_layout():
     layout = LayoutArray(
+        label='test_layout',
         name='LST4',
         centerLongitude=-17.8920302 * u.deg,
         centerLatitude=28.7621661 * u.deg,
         epsg=32628,
-        centerAltitude=2177 * u.m
+        centerAltitude=2177 * u.m,
+        centerNorthing=3185066.0 * u.deg,
+        centerEasting=217611.0 * u.deg,
+        corsikaSphereRadius={'LST': 12.5 * u.m, 'MST': 9.6 * u.m, 'SST': 3 * u.m},
+        corsikaSphereCenter={'LST': 16 * u.m, 'MST': 9 * u.m, 'SST': 3.25 * u.m}
     )
     layout.addTelescope(telescopeName='L-01', posX=57.5 * u.m, posY=57.5 * u.m, posZ=0 * u.m)
     layout.addTelescope(telescopeName='L-02', posX=-57.5 * u.m, posY=57.5 * u.m, posZ=0 * u.m)
