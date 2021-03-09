@@ -170,9 +170,8 @@ class LayoutArray:
         utmNorth=None,
         altitude=None
     ):
-        """            
         """
-        # if not telescopes 
+        """
 
         tel = TelescopeData(
             name=telescopeName,
@@ -186,6 +185,9 @@ class LayoutArray:
             altitude=altitude
         )
         self._telescopeList.append(tel)
+
+    def exportTelescopeList(self):
+        pass
 
     # def read_layout(self, layout_list, layout_name):
     #     """
