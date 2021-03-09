@@ -1,7 +1,6 @@
 import astropy.units as u
 import logging
 from astropy.table import Table
-from astropy.table.row import Row
 
 import pyproj
 
@@ -21,7 +20,7 @@ class LayoutArray:
     """
 
     ALL_INPUTS = {
-        'epsg': {'default': None},
+        'epsg': {'default': None, 'unit': None},
         'centerLongitude': {'default': None, 'unit': u.deg},
         'centerLatitude': {'default': None, 'unit': u.deg},
         'centerNorthing': {'default': None, 'unit': u.deg},
@@ -41,6 +40,15 @@ class LayoutArray:
 
         self.name = name
         self._telescopeList = []
+
+        if name[0] == 'L':
+            self._telSize = 'LST'
+        elif name[0] == 'M':
+            self._telSize = 'MST'
+        elif name[0] == 'S':
+            self._telSize = 'SST'
+        else:
+            self._logger.warning('Telescope size could not be guessed from the name')
 
         # Collecting arguments
         collectArguments(
@@ -143,6 +151,7 @@ class LayoutArray:
     @u.quantity_input(
         posX=u.m,
         posY=u.m,
+        posZ=u.m,
         longitude=u.deg,
         latitude=u.deg,
         utmEast=u.deg,
@@ -151,21 +160,32 @@ class LayoutArray:
     )
     def addTelescope(
         self,
-        telescopeName=None,
+        telescopeName,
         posX=None,
         posY=None,
+        posZ=None,
         longitude=None,
         latitude=None,
         utmEast=None,
         utmNorth=None,
         altitude=None
     ):
-        """
-            
+        """            
         """
         # if not telescopes 
 
-
+        tel = TelescopeData(
+            name=telescopeName,
+            posX=posX,
+            posY=posY,
+            posZ=posZ,
+            longitude=longitude,
+            latitude=latitude,
+            utmEast=utmEast,
+            utmNorth=utmNorth,
+            altitude=altitude
+        )
+        self._telescopeList.append(tel)
 
     # def read_layout(self, layout_list, layout_name):
     #     """
@@ -245,22 +265,35 @@ class LayoutArray:
             )
             crs_local = pyproj.CRS.from_proj4(proj4_string)
             self._logger.info('Local Mercator projection: {}'.format(crs_local))
+        else:
+            self._logger.warning('crs_local cannot be built because center lon and lat are missing')
 
         # UTM system
         crs_utm = None
         if self._epsg is not None:
             crs_utm = pyproj.CRS.from_user_input(self._epsg)
             self._logger.info('UTM system: {}'.format(crs_utm))
+        else:
+            self._logger.warning('crs_utm cannot be built because center lon and lat are missing')
 
         # 2. convert coordinates
         for tel in self._telescopeList:
-            telSizeIndex = self.TEL_SIZE[tel.name[0]]
+            if self._corsikaObsLevel is not None:
+                corsikaObsLevel = self._corsikaObsLevel * u.m
+            else:
+                corsikaObsLevel = None
+
+            if self._corsikaSphereCenter is not None:
+                corsikaSphereCenter = self._corsikaSphereCenter[self._telSize] * u.m
+            else:
+                corsikaSphereCenter = None
+
             tel.convertAll(
                 crsLocal=crs_local,
                 wgs84=wgs84,
                 crsUtm=crs_utm,
-                corsikaObsLevel=self._corsikaObsLevel * u.m,
-                corsikaSphereCenter=self._corsikaSphereCenter[telSizeIndex] * u.m
+                corsikaObsLevel=corsikaObsLevel,
+                corsikaSphereCenter=corsikaSphereCenter
             )
 
     # def compareArrayCenter(self, layout2):

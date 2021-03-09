@@ -117,8 +117,9 @@ def collectArguments(obj, args, allInputs, **kwargs):
         if _unitIsValid(argG, argD['unit']):
             obj.__dict__[inArgName] = _convertUnit(argG, argD['unit'])
         else:
-            logger.error('Argument {} given with wrong unit'.format(arg))
-            raise ArgumentWithWrongUnit()
+            msg = 'Argument {} given with wrong unit'.format(arg)
+            logger.error(msg)
+            raise ArgumentWithWrongUnit(msg)
 
     def processListArg(arg, inArgName, argG, argD):
         outArg = list()
@@ -131,8 +132,9 @@ def collectArguments(obj, args, allInputs, **kwargs):
             if _unitIsValid(aa, argD['unit']):
                 outArg.append(_convertUnit(aa, argD['unit']))
             else:
-                logger.error('Argument {} given with wrong unit'.format(arg))
-                raise ArgumentWithWrongUnit()
+                msg = 'Argument {} given with wrong unit'.format(arg)
+                logger.error(msg)
+                raise ArgumentWithWrongUnit(msg)
         obj.__dict__[inArgName] = outArg
 
     def processDictArg(arg, inArgName, argG, argD):
@@ -147,8 +149,9 @@ def collectArguments(obj, args, allInputs, **kwargs):
             if _unitIsValid(value, argD['unit']):
                 outArg[key] = _convertUnit(value, argD['unit'])
             else:
-                logger.error('Argument {} given with wrong unit'.format(arg))
-                raise ArgumentWithWrongUnit()
+                msg = 'Argument {} given with wrong unit'.format(arg)
+                logger.error(msg)
+                raise ArgumentWithWrongUnit(msg)
         obj.__dict__[inArgName] = outArg
 
     for arg in args:
@@ -162,7 +165,9 @@ def collectArguments(obj, args, allInputs, **kwargs):
 
         if arg in kwargs.keys():
             argGiven = kwargs[arg]
-            if 'isDict' in argData and argData['isDict']:  # Dict
+            if argGiven is None:
+                obj.__dict__[inArgName] = None
+            elif 'isDict' in argData and argData['isDict']:  # Dict
                 processDictArg(arg, inArgName, argGiven, argData)
             elif 'isList' in argData and argData['isList']:  # List
                 processListArg(arg, inArgName, argGiven, argData)
