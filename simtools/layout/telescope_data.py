@@ -118,6 +118,14 @@ class TelescopeData:
         self._posY = posY.value
         self._posZ = posZ.value
 
+    @u.quantity_input(altitude=u.m)
+    def setAltitude(self, altitude):
+        ''' Set altitude. '''
+        if None not in [self._altitude]:
+            self._logger.warning('Altitude is already set and will be overwritten')
+
+        self._altitude = altitude.value
+
     def getMercatorCoordinates(self):
         '''
         Get the latitude and longitude.

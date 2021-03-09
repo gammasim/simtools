@@ -57,22 +57,32 @@ class LayoutArray:
 
         tel = TelescopeData()
         tel.name = row['telescope_name']
-        if 'pos_x' in table.colnames:
-            tel.x = row['pos_x'] * table['pos_x'].unit
-        if 'pos_y' in table.colnames:
-            tel.y = row['pos_y'] * table['pos_y'].unit
-        if 'pos_z' in table.colnames:
-            tel.z = row['pos_z'] * table['pos_z'].unit
-        if 'utm_east' in table.colnames:
-            tel.utm_east = row['utm_east'] * table['utm_east'].unit
-        if 'utm_north' in table.colnames:
-            tel.utm_north = row['utm_north'] * table['utm_north'].unit
+
+        if (
+            'pos_x' in table.colnames
+            and 'pos_y' in table.colnames
+            and 'pos_z' in table.colnames
+        ):
+            tel.setLocalCoordinates(
+                posX=row['pos_x'] * table['pos_x'].unit,
+                posY=row['pos_y'] * table['pos_y'].unit,
+                posZ=row['pos_z'] * table['pos_z'].unit
+            )
+
+        if 'utm_east' in table.colnames and 'utm_north' in table.colnames:
+            tel.setUtmCoordinates(
+                utmEast=row['utm_east'] * table['utm_east'].unit,
+                utmNorth=row['utm_north'] * table['utm_north'].unit
+            )
+
+        if 'lat' in table.colnames and 'lon' in table.colnames:
+            tel.setMercadorCoordinates(
+                latitude=row['lat'] * table['lat'].unit,
+                longitude=row['lon'] * table['lon'].unit
+            )
+
         if 'alt' in table.colnames:
-            tel.alt = row['alt'] * table['alt'].unit
-        if 'lon' in table.colnames:
-            tel.lon = row['lon'] * table['lon'].unit
-        if 'lat' in table.colnames:
-            tel.lat = row['lat'] * table['lat'].unit
+            tel.setAltitude(altitude=row['alt'] * table['alt'].unit)
 
         for prod in prodList:
             tel.prodId[prod] = row[prod]
