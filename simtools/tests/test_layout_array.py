@@ -33,7 +33,7 @@ def test_add_tel():
     layout = LayoutArray(name='testLayout')
     telFile = io.getTestDataFile('telescope_positions_prod5_north.ecsv')
     layout.readTelescopeListFile(telFile)
-    # layout.addTelescope(telescopeName='bla')
+    layout.addTelescope(telescopeName='bla')
 
     layout.printTelescopeList()
 
