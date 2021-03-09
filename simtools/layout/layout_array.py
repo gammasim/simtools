@@ -31,12 +31,12 @@ class LayoutArray:
         'corsikaSphereRadius': {'default': None, 'isDict': True, 'unit': u.m}
     }
 
-    TEL_SIZE = {'L': 0, 'M': 1, 'S': 2}
-
-    def __init__(self, name=None, logger=__name__, **kwargs):
+    def __init__(self, label=None, name=None, logger=__name__, **kwargs):
         """Inits ArrayData with blah."""
         self._logger = logging.getLogger(logger)
         self._logger.debug('Init LayoutArray')
+
+        self.label = label
 
         self.name = name
         self._telescopeList = []
