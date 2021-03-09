@@ -100,13 +100,23 @@ class TelescopeData:
 
     def getLocalCoordinates(self):
         '''
-        Get the X and Y coordinates.
+        Get the X, Y and Z coordinates.
 
         Returns
         -------
-        (posX [u.m], posY [u.m])
+        (posX [u.m], posY [u.m], posZ [u.m])
         '''
-        return self._posX * u.m, self._posY * u.m
+        return self._posX * u.m, self._posY * u.m, self._posZ * u.m
+
+    @u.quantity_input(posX=u.m, posY=u.m, posZ=u.m)
+    def setLocalCoordinates(self, posX, posY, posZ=None):
+        ''' Set the X, Y and Z coordinates. '''
+        if None not in [self._posX, self._posY, self._posZ]:
+            self._logger.warning('Local coordinates are already set and will be overwritten')
+
+        self._posX = posX.value
+        self._posY = posY.value
+        self._posZ = posZ.value
 
     def getMercatorCoordinates(self):
         '''
@@ -118,6 +128,15 @@ class TelescopeData:
         '''
         return self._latitude * u.deg, self._longitude * u.deg
 
+    @u.quantity_input(latitude=u.deg, longitude=u.deg)
+    def setMercadorCoordinates(self, latitude, longitude):
+        ''' Set the latitude and longitude coordinates. '''
+        if None not in [self._latitude, self._longitude]:
+            self._logger.warning('Mercador coordinates are already set and will be overwritten')
+
+        self._latitude = latitude.value
+        self._longitude = longitude.value
+
     def getUtmCoordinates(self):
         '''
         Get utm north and east.
@@ -127,6 +146,15 @@ class TelescopeData:
         (utmNorth [u.deg], utmEast [u.deg])
         '''
         return self._utmNorth * u.deg, self._utmEast * u.deg
+
+    @u.quantity_input(utmEast=u.deg, utmNorth=u.deg)
+    def setUtmCoordinates(self, utmEast, utmNorth):
+        ''' Set the UTM coordinates. '''
+        if None not in [self._utmEast, self._utmNorth]:
+            self._logger.warning('UTM coordinates are already set and will be overwritten')
+
+        self._utmEast = utmEast.value
+        self._utmNorth = utmNorth.value
 
     def __repr__(self):
         telstr = self.name + '\n'
