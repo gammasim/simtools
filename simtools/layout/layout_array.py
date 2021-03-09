@@ -1,6 +1,7 @@
 import astropy.units as u
 import logging
 from astropy.table import Table
+from astropy.table.row import Row
 
 import pyproj
 
@@ -77,7 +78,7 @@ class LayoutArray:
             tel.prodId[prod] = row[prod]
         self._telescopeList.append(tel)
 
-    def readTelescopeList(self, telescopeFile):
+    def readTelescopeListFile(self, telescopeFile):
         """
         read list of telescopes from a ecsv file
         """
@@ -107,11 +108,11 @@ class LayoutArray:
         if 'corsika_obs_level' in table.meta:
             self._corsikaObsLevel = u.Quantity(table.meta['corsika_obs_level']).value
         if 'corsika_sphere_center' in table.meta:
-            self._corsikaSphereCenter = list()
+            self._corsikaSphereCenter = dict()
             for key, value in table.meta['corsika_sphere_center'].items():
                 self._corsikaSphereCenter[key] = u.Quantity(value).to(u.m).value
         if 'corsika_sphere_radius' in table.meta:
-            self._corsikaSphereRadius = list()
+            self._corsikaSphereRadius = dict()
             for key, value in table.meta['corsika_sphere_radius'].items():
                 self._corsikaSphereRadius[key] = u.Quantity(value).to(u.m).value
 
@@ -124,6 +125,38 @@ class LayoutArray:
 
         return True
 
+    # def addListOfTelescopes(self, telescopes):
+    #     """
+    #     """
+    #     if not telescopes
+
+    @u.quantity_input(
+        posX=u.m,
+        posY=u.m,
+        longitude=u.deg,
+        latitude=u.deg,
+        utmEast=u.deg,
+        utmNorth=u.deg,
+        altitude=u.m
+    )
+    def addTelescope(
+        self,
+        telescopeName=None,
+        posX=None,
+        posY=None,
+        longitude=None,
+        latitude=None,
+        utmEast=None,
+        utmNorth=None,
+        altitude=None
+    ):
+        """
+            
+        """
+        # if not telescopes 
+
+
+
     # def read_layout(self, layout_list, layout_name):
     #     """
     #     read a layout from a layout yaml file
@@ -133,21 +166,18 @@ class LayoutArray:
 
     #     return None
 
-    # def print_telescope_list(self, short_printout):
-    #     """
-    #     print list of telescopes in current layout
+    def printTelescopeList(self, short=False):
+        """
+        print list of telescopes in current layout
 
-    #     Available formats (examples, column names in ecsv file):
-    #     - telescope_name - default telescope names
-    #     - prod3b_mst_N - North layout (with MST-NectarCam)
-    #     """
-    #     for tel in self.telescope_list:
-    #         if short_printout:
-    #             tel.print_short_telescope_list()
-    #         else:
-    #             tel.print_telescope()
+        Available formats (examples, column names in ecsv file):
+        - telescope_name - default telescope names
+        - prod3b_mst_N - North layout (with MST-NectarCam)
+        """
+        for tel in self._telescopeList:
+            print(tel)
 
-    #     return None
+        return None
 
     # def print_array_center(self):
     #     """
