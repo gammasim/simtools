@@ -404,6 +404,28 @@ def simtelSingleMirrorListFileName(version, telescopeName, mirrorNumber, label):
     return name
 
 
+def layoutTelescopeListFileName(name, label):
+    '''
+    File name for files required at the RayTracing class.
+
+    Parameters
+    ----------
+    name: str
+        Name of the array.
+    label: str
+        Instance label.
+
+    Returns
+    -------
+    str
+        File name.
+    '''
+    fileName = 'telescope_positions-{}'.format(name)
+    fileName += '_{}'.format(label) if label is not None else ''
+    fileName += '.ecsv'
+    return fileName
+
+
 def rayTracingFileName(
     telescopeName,
     sourceDistance,
