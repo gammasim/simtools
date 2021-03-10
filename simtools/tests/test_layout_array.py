@@ -3,7 +3,6 @@
 import logging
 
 import astropy.units as u
-import pyproj
 
 import simtools.io_handler as io
 from simtools.layout.layout_array import LayoutArray
