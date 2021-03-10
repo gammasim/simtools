@@ -129,6 +129,16 @@ class TelescopeData:
         '''
         return self._posX is not None and self._posY is not None and self._posZ is not None
 
+    def getAltitude(self):
+        '''
+        Get altitude.
+
+        Returns
+        -------
+        altitude [u.m]
+        '''
+        return self._altitude * u.m
+
     @u.quantity_input(altitude=u.m)
     def setAltitude(self, altitude):
         ''' Set altitude. '''
@@ -224,7 +234,7 @@ class TelescopeData:
                 self._latitude
             )
         if self.hasAltitude():
-            telstr += '\t Alt: {2:0.2f}'.format(self._altitude)
+            telstr += '\t Alt: {:0.2f}'.format(self._altitude)
 
         if len(self._prodId) > 0:
             telstr += '\t', self._prodId
