@@ -1,6 +1,5 @@
 ''' Module to handle input and output conventions. '''
 
-import logging
 import datetime
 from pathlib import Path
 
@@ -53,6 +52,24 @@ def getModelOutputDirectory(filesLocation, label):
     Path
     '''
     return getOutputDirectory(filesLocation, label, 'model')
+
+
+def getLayoutOutputDirectory(filesLocation, label):
+    '''
+    Get output directory for layout related files.
+
+    Parameters
+    ----------
+    filesLocation: str, or Path
+        Main location of the output files.
+    label: str
+        Instance label.
+
+    Returns
+    -------
+    Path
+    '''
+    return getOutputDirectory(filesLocation, label, 'layout')
 
 
 def getRayTracingOutputDirectory(filesLocation, label):
