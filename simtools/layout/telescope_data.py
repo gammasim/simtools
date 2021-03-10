@@ -25,12 +25,30 @@ class TelescopeData:
 
     Methods
     -------
-    getLocalCoordinates()
+    getLocalCoordinates(self)
         Get the X and Y coordinates.
-    getMercatorCoordinates()
+    setLocalCoordinates(self, posX, posY, posZ):
+        Set the X, Y and Z coordinates.
+    hasLocalCoordinates(self):
+        Return True if tel has local coordinates.
+    getAltitude(self)
+        Get altitude.
+    setAltitude(self, altitude)
+        Set altitude.
+    hasAltitude(self):
+        Return True if tel has altitude.
+    getMercatorCoordinates(self)
         Get the latitude and longitude.
-    getUtmCoordinates()
+    setMercatorCoordinates(self, latitude, longitude)
+        Set the latitude and longitude coordinates.
+    hasMercatorCoordinates(self):
+        Return True if tel has Mercator coordinates.
+    getUtmCoordinates(self)
         Get utm north and east.
+    setUtmCoordinates(self, utmEast, utmNorth)
+        Set the UTM coordinates.
+    hasUtmCoordinates(self):
+        Return True if tel has UTM coordinates.
     convertLocalToMercator(crsLocal, wgs84)
         Convert telescope position from local to mercator.
     convertLocalToUtm(crsLocal, crsUtm)
@@ -100,6 +118,31 @@ class TelescopeData:
         )
         # End of __init__
 
+    def __repr__(self):
+        telstr = self.name
+        if self.hasLocalCoordinates():
+            telstr += '\t CORSIKA x(->North): {0:0.2f} y(->West): {1:0.2f} z: {2:0.2f}'.format(
+                self._posX,
+                self._posY,
+                self._posZ
+            )
+        if self.hasUtmCoordinates():
+            telstr += '\t UTM East: {0:0.2f} UTM North: {1:0.2f}'.format(
+                self._utmEast,
+                self._utmNorth
+            )
+        if self.hasMercatorCoordinates():
+            telstr += '\t Longitude: {0:0.5f} Latitude: {1:0.5f}'.format(
+                self._longitude,
+                self._latitude
+            )
+        if self.hasAltitude():
+            telstr += '\t Alt: {:0.2f}'.format(self._altitude)
+
+        if len(self._prodId) > 0:
+            telstr += '\t', self._prodId
+        return telstr
+
     def getTelescopeSize(self):
         # Guessing the tel size from the name
         if self.name[0] == 'L':
@@ -123,7 +166,7 @@ class TelescopeData:
         return self._posX * u.m, self._posY * u.m, self._posZ * u.m
 
     @u.quantity_input(posX=u.m, posY=u.m, posZ=u.m)
-    def setLocalCoordinates(self, posX, posY, posZ=None):
+    def setLocalCoordinates(self, posX, posY, posZ):
         ''' Set the X, Y and Z coordinates. '''
         if None not in [self._posX, self._posY, self._posZ]:
             self._logger.warning('Local coordinates are already set and will be overwritten')
@@ -227,37 +270,6 @@ class TelescopeData:
         bool
         '''
         return self._utmEast is not None and self._utmNorth is not None
-
-    def __repr__(self):
-        telstr = self.name
-        if self.hasLocalCoordinates():
-            telstr += '\t CORSIKA x(->North): {0:0.2f} y(->West): {1:0.2f} z: {2:0.2f}'.format(
-                self._posX,
-                self._posY,
-                self._posZ
-            )
-        if self.hasUtmCoordinates():
-            telstr += '\t UTM East: {0:0.2f} UTM North: {1:0.2f}'.format(
-                self._utmEast,
-                self._utmNorth
-            )
-        if self.hasMercatorCoordinates():
-            telstr += '\t Longitude: {0:0.5f} Latitude: {1:0.5f}'.format(
-                self._longitude,
-                self._latitude
-            )
-        if self.hasAltitude():
-            telstr += '\t Alt: {:0.2f}'.format(self._altitude)
-
-        if len(self._prodId) > 0:
-            telstr += '\t', self._prodId
-        return telstr
-
-    # def printShortTelescopeList(self):
-    #     """
-    #     print short list
-    #     """
-    #     print("{0} {1:10.2f} {2:10.2f}".format(self.name, self._posX, self._posY))
 
     def convertLocalToMercator(self, crsLocal, wgs84):
         '''
