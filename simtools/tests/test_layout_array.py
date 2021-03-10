@@ -72,11 +72,13 @@ def test_build_layout():
 
     assert layout.getNumberOfTelescopes() == layout_copy.getNumberOfTelescopes()
 
-# def test_export_tel_list_file():
-#     layout = LayoutArray(name='testLayout')
-#     telFile = io.getTestDataFile('telescope_positions_prod5_north.ecsv')
-#     layout.readTelescopeListFile(telFile)
-#     layout.convertCoordinates()
+
+def test_corsika_input():
+    layout = LayoutArray(name='testLayout')
+    telFile = io.getTestDataFile('telescope_positions_prod5_north.ecsv')
+    layout.readTelescopeListFile(telFile)
+    layout.convertCoordinates()
+    print(layout.getCorsikaInputList())
 
 
 if __name__ == '__main__':
@@ -84,5 +86,5 @@ if __name__ == '__main__':
     # test_read_tel_list()
     # test_add_tel()
     # test_dict_input()
-    test_build_layout()
-    pass
+    # test_build_layout()
+    test_corsika_input()
