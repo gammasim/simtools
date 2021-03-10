@@ -200,7 +200,18 @@ class LayoutArray:
 
         self._logger.debug('Exporting telescope list to ECSV file {}'.format(fileName))
 
-        pass
+        table = Table(meta={'EPSG': 32628})
+
+        pos_x, pos_y, pos_z = list(), list(), list()
+        for tel in self._telescopeList:
+            x, y, z = tel.getLocalCoordinates()
+            pos_x.append(x)
+            pos_y.append(y)
+            pos_z.append(z)
+
+        table['pos_x'] = pos_x * u.m
+
+        table.write(fileName, format='ascii.ecsv', overwrite=True)
 
     # def read_layout(self, layout_list, layout_name):
     #     """
@@ -210,6 +221,9 @@ class LayoutArray:
     #     print(layout_name, layout_list)
 
     #     return None
+
+    def getCorsikaInputList(self):
+        pass
 
     def printTelescopeList(self, short=False):
         """
