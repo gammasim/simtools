@@ -110,12 +110,14 @@ class DatabaseHandler:
         '''
 
         user = getpass.getuser()
+        if 'userDESY' in self.dbDetails:
+            user = self.dbDetails['userDESY']
 
         # Start tunnel
         _tunnel = self._createTunnel(
             localport=self.dbDetails['localport'],
             remoteport=self.dbDetails['remoteport'],
-            user=self.dbDetails['userDB'],
+            user=user,
             mongodbServer=self.dbDetails['mongodbServer'],
             tunnelServer=self.dbDetails['tunnelServer']
         )
