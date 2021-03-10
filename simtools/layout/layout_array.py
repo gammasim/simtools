@@ -26,8 +26,8 @@ class LayoutArray:
         'epsg': {'default': None, 'unit': None},
         'centerLongitude': {'default': None, 'unit': u.deg},
         'centerLatitude': {'default': None, 'unit': u.deg},
-        'centerNorthing': {'default': None, 'unit': u.deg},
-        'centerEasting': {'default': None, 'unit': u.deg},
+        'centerNorthing': {'default': None, 'unit': u.m},
+        'centerEasting': {'default': None, 'unit': u.m},
         'centerAltitude': {'default': None, 'unit': u.m},
         'corsikaObsLevel': {'default': None, 'unit': u.m},
         'corsikaSphereCenter': {'default': None, 'isDict': True, 'unit': u.m},
@@ -92,7 +92,7 @@ class LayoutArray:
             )
 
         if 'lat' in table.colnames and 'lon' in table.colnames:
-            tel.setMercadorCoordinates(
+            tel.setMercatorCoordinates(
                 latitude=row['lat'] * table['lat'].unit,
                 longitude=row['lon'] * table['lon'].unit
             )
@@ -197,16 +197,38 @@ class LayoutArray:
     def exportTelescopeList(self):
 
         fileName = names.layoutTelescopeListFileName(self.name, self.label)
+        self.telescopeListFile = self._outputDirectory.joinpath(fileName)
 
-        self._logger.debug('Exporting telescope list to ECSV file {}'.format(fileName))
+        self._logger.debug('Exporting telescope list to ECSV file {}'.format(
+            self.telescopeListFile)
+        )
 
-        table = Table(meta={'EPSG': 32628})
+        metaData = {
+            'center_lon': self._centerLongitude * u.deg,
+            'center_lat': self._centerLatitude * u.deg,
+            'center_alt': self._centerAltitude * u.m,
+            'center_northing': self._centerNorthing * u.m,
+            'center_easting': self._centerEasting * u.m,
+            'corsika_obs_level': self._corsikaObsLevel * u.m,
+            'corsika_sphere_center': {
+                key: value * u.m for (key, value) in self._corsikaSphereCenter.items()
+            },
+            'corsika_sphere_radius': {
+                key: value * u.m for (key, value) in self._corsikaSphereRadius.items()
+            },
+            'EPSG': self._epsg
+        }
 
+        table = Table(meta=metaData)
+
+        tel_names = list()
         pos_x, pos_y, pos_z = list(), list(), list()
         utm_east, utm_north = list(), list()
         longitude, latitude = list(), list()
         altitude = list()
         for tel in self._telescopeList:
+            tel_names.append(tel.name)
+
             if tel.hasLocalCoordinates():
                 x, y, z = tel.getLocalCoordinates()
                 pos_x.append(x)
@@ -218,16 +240,34 @@ class LayoutArray:
                 latitude.append(lat)
                 longitude.append(lon)
 
+            if tel.hasUtmCoordinates():
+                un, ue = tel.getUtmCoordinates()
+                utm_east.append(ue)
+                utm_north.append(un)
+
+            if tel.hasAltitude():
+                alt = tel.getAltitude()
+                altitude.append(alt)
+
+        table['telescope_name'] = tel_names
+
         if len(pos_x) > 0:
             table['pos_x'] = pos_x * u.m
             table['pos_y'] = pos_x * u.m
             table['pos_z'] = pos_x * u.m
 
         if len(latitude) > 0:
-            table['latitude'] = latitude * u.deg
-            table['longitude'] = longitude * u.deg
+            table['lat'] = latitude * u.deg
+            table['lon'] = longitude * u.deg
 
-        table.write(fileName, format='ascii.ecsv', overwrite=True)
+        if len(utm_east) > 0:
+            table['utm_east'] = utm_east * u.deg
+            table['utm_north'] = utm_north * u.deg
+
+        if len(altitude) > 0:
+            table['alt'] = altitude * u.m
+
+        table.write(self.telescopeListFile, format='ascii.ecsv', overwrite=True)
 
     # def read_layout(self, layout_list, layout_name):
     #     """
@@ -237,6 +277,9 @@ class LayoutArray:
     #     print(layout_name, layout_list)
 
     #     return None
+
+    def getNumberOfTelescopes(self):
+        return len(self._telescopeList)
 
     def getCorsikaInputList(self):
         pass
