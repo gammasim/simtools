@@ -203,13 +203,29 @@ class LayoutArray:
         table = Table(meta={'EPSG': 32628})
 
         pos_x, pos_y, pos_z = list(), list(), list()
+        utm_east, utm_north = list(), list()
+        longitude, latitude = list(), list()
+        altitude = list()
         for tel in self._telescopeList:
-            x, y, z = tel.getLocalCoordinates()
-            pos_x.append(x)
-            pos_y.append(y)
-            pos_z.append(z)
+            if tel.hasLocalCoordinates():
+                x, y, z = tel.getLocalCoordinates()
+                pos_x.append(x)
+                pos_y.append(y)
+                pos_z.append(z)
 
-        table['pos_x'] = pos_x * u.m
+            if tel.hasMercatorCoordinates():
+                lat, lon = tel.getMercatorCoordinates()
+                latitude.append(lat)
+                longitude.append(lon)
+
+        if len(pos_x) > 0:
+            table['pos_x'] = pos_x * u.m
+            table['pos_y'] = pos_x * u.m
+            table['pos_z'] = pos_x * u.m
+
+        if len(latitude) > 0:
+            table['latitude'] = latitude * u.deg
+            table['longitude'] = longitude * u.deg
 
         table.write(fileName, format='ascii.ecsv', overwrite=True)
 

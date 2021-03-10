@@ -158,17 +158,17 @@ class TelescopeData:
         return self._latitude * u.deg, self._longitude * u.deg
 
     @u.quantity_input(latitude=u.deg, longitude=u.deg)
-    def setMercadorCoordinates(self, latitude, longitude):
+    def setMercatorCoordinates(self, latitude, longitude):
         ''' Set the latitude and longitude coordinates. '''
         if None not in [self._latitude, self._longitude]:
-            self._logger.warning('Mercador coordinates are already set and will be overwritten')
+            self._logger.warning('Mercator coordinates are already set and will be overwritten')
 
         self._latitude = latitude.value
         self._longitude = longitude.value
 
-    def hasMercadorCoordinates(self):
+    def hasMercatorCoordinates(self):
         '''
-        Return True if tel has mercador coordinates.
+        Return True if tel has Mercator coordinates.
 
         Returns
         -------
@@ -218,7 +218,7 @@ class TelescopeData:
                 self._utmEast,
                 self._utmNorth
             )
-        if self.hasMercadorCoordinates():
+        if self.hasMercatorCoordinates():
             telstr += '\t Longitude: {0:0.5f} Latitude: {1:0.5f}'.format(
                 self._longitude,
                 self._latitude
@@ -253,7 +253,7 @@ class TelescopeData:
             If crsLocal or wgs84 is not an instance of pyproj.crs.crs.CRS
         '''
 
-        if self.hasMercadorCoordinates():
+        if self.hasMercatorCoordinates():
             self._logger.debug(
                 'altitude and longitude are already set'
                 ' - aborting convertion from local to mercator'
@@ -346,7 +346,7 @@ class TelescopeData:
             If wgs84 or crsUtm is not an instance of pyproj.crs.crs.CRS
         '''
 
-        if self.hasMercadorCoordinates():
+        if self.hasMercatorCoordinates():
             self._logger.debug(
                 'altitude and longitude are already set'
                 ' - aborting convertion from utm to mercator'
