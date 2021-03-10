@@ -4,6 +4,8 @@ from astropy.table import Table
 
 import pyproj
 
+import simtools.config as cfg
+import simtools.io_handler as io
 from simtools.util.general import collectArguments
 from simtools.layout.telescope_data import TelescopeData
 
@@ -31,7 +33,7 @@ class LayoutArray:
         'corsikaSphereRadius': {'default': None, 'isDict': True, 'unit': u.m}
     }
 
-    def __init__(self, label=None, name=None, logger=__name__, **kwargs):
+    def __init__(self, label=None, name=None, filesLocation=None, logger=__name__, **kwargs):
         """Inits ArrayData with blah."""
         self._logger = logging.getLogger(logger)
         self._logger.debug('Init LayoutArray')
@@ -57,6 +59,11 @@ class LayoutArray:
             allInputs=self.ALL_INPUTS,
             **kwargs
         )
+
+        # Output directory
+        self._filesLocation = cfg.getConfigArg('outputLocation', filesLocation)
+        self._outputDirectory = io.getLayoutOutputDirectory(self._filesLocation, self.label)
+        self._outputDirectory.mkdir(parents=True, exist_ok=True)
 
     def _appendTelescope(self, row, table, prodList):
         """Append a new telescope from table row
