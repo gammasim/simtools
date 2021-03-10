@@ -6,6 +6,7 @@ import pyproj
 
 import simtools.config as cfg
 import simtools.io_handler as io
+from simtools.util import names
 from simtools.util.general import collectArguments
 from simtools.layout.telescope_data import TelescopeData
 
@@ -194,6 +195,11 @@ class LayoutArray:
         self._telescopeList.append(tel)
 
     def exportTelescopeList(self):
+
+        fileName = names.layoutTelescopeListFileName(self.name, self.label)
+
+        self._logger.debug('Exporting telescope list to ECSV file {}'.format(fileName))
+
         pass
 
     # def read_layout(self, layout_list, layout_name):
