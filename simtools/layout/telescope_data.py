@@ -119,6 +119,16 @@ class TelescopeData:
         self._posY = posY.value
         self._posZ = posZ.value
 
+    def hasLocalCoordinates(self):
+        '''
+        Return True if tel has local coordinates.
+
+        Returns
+        -------
+        bool
+        '''
+        return self._posX is not None and self._posY is not None and self._posZ is not None
+
     @u.quantity_input(altitude=u.m)
     def setAltitude(self, altitude):
         ''' Set altitude. '''
@@ -126,6 +136,16 @@ class TelescopeData:
             self._logger.warning('Altitude is already set and will be overwritten')
 
         self._altitude = altitude.value
+
+    def hasAltitude(self):
+        '''
+        Return True if tel has altitude.
+
+        Returns
+        -------
+        bool
+        '''
+        return self._altitude is not None
 
     def getMercatorCoordinates(self):
         '''
@@ -146,6 +166,16 @@ class TelescopeData:
         self._latitude = latitude.value
         self._longitude = longitude.value
 
+    def hasMercadorCoordinates(self):
+        '''
+        Return True if tel has mercador coordinates.
+
+        Returns
+        -------
+        bool
+        '''
+        return self._latitude is not None and self._longitude is not None
+
     def getUtmCoordinates(self):
         '''
         Get utm north and east.
@@ -165,25 +195,35 @@ class TelescopeData:
         self._utmEast = utmEast.value
         self._utmNorth = utmNorth.value
 
+    def hasUtmCoordinates(self):
+        '''
+        Return True if tel has UTM coordinates.
+
+        Returns
+        -------
+        bool
+        '''
+        return self._utmEast is not None and self._utmNorth is not None
+
     def __repr__(self):
         telstr = self.name
-        if self._posX is not None and self._posY is not None:
+        if self.hasLocalCoordinates():
             telstr += '\t CORSIKA x(->North): {0:0.2f} y(->West): {1:0.2f} z: {2:0.2f}'.format(
                 self._posX,
                 self._posY,
                 self._posZ
             )
-        if self._utmEast is not None and self._utmNorth is not None:
+        if self.hasUtmCoordinates():
             telstr += '\t UTM East: {0:0.2f} UTM North: {1:0.2f}'.format(
                 self._utmEast,
                 self._utmNorth
             )
-        if self._longitude is not None and self._latitude is not None:
+        if self.hasMercadorCoordinates():
             telstr += '\t Longitude: {0:0.5f} Latitude: {1:0.5f}'.format(
                 self._longitude,
                 self._latitude
             )
-        if self._altitude is not None:
+        if self.hasAltitude():
             telstr += '\t Alt: {2:0.2f}'.format(self._altitude)
 
         if len(self._prodId) > 0:
@@ -213,14 +253,14 @@ class TelescopeData:
             If crsLocal or wgs84 is not an instance of pyproj.crs.crs.CRS
         '''
 
-        if self._altitude is not None and self._longitude is not None:
+        if self.hasMercadorCoordinates():
             self._logger.debug(
                 'altitude and longitude are already set'
                 ' - aborting convertion from local to mercator'
             )
             return
 
-        if self._posX is None or self._posY is None:
+        if not self.hasLocalCoordinates():
             msg = 'posX and/or posY are not set - impossible to convert from local to mercator'
             self._logger.error(msg)
             raise MissingInputForConvertion(msg)
@@ -259,7 +299,7 @@ class TelescopeData:
         InvalidCoordSystem
             If crsLocal or crsUtm is not an instance of pyproj.crs.crs.CRS
         '''
-        if self._utmEast is not None and self._utmNorth is not None:
+        if self.hasUtmCoordinates():
             self._logger.debug(
                 'utm east and utm north are already set'
                 ' - aborting convertion from local to UTM'
@@ -275,7 +315,7 @@ class TelescopeData:
             self._logger.error(msg)
             raise InvalidCoordSystem(msg)
 
-        if self._posX is None or self._posY is None:
+        if not self.hasLocalCoordinates():
             msg = 'posX and/or posY are not set - impossible to convert from local to mercator'
             self._logger.error(msg)
             raise MissingInputForConvertion(msg)
@@ -306,14 +346,14 @@ class TelescopeData:
             If wgs84 or crsUtm is not an instance of pyproj.crs.crs.CRS
         '''
 
-        if self._latitude is not None and self._longitude is not None:
+        if self.hasMercadorCoordinates():
             self._logger.debug(
                 'altitude and longitude are already set'
                 ' - aborting convertion from utm to mercator'
             )
             return
 
-        if self._utmEast is None or self._utmNorth is None:
+        if not self.hasUtmCoordinates():
             msg = (
                 'utm east and/or utm north are not set - '
                 'impossible to convert from utm to mercator'
@@ -355,14 +395,14 @@ class TelescopeData:
         InvalidCoordSystem
             If crsLocal or crsUtm is not an instance of pyproj.crs.crs.CRS
         '''
-        if self._posX is not None and self._posY is not None:
+        if self.hasLocalCoordinates():
             self._logger.debug(
                 'latitude and longitude are already set'
                 ' - aborting convertion from utm to local'
             )
             return
 
-        if self._utmEast is None or self._utmNorth is None:
+        if not self.hasUtmCoordinates():
             msg = (
                 'utm east and/or utm north are not set - '
                 'impossible to convert from utm to local'
@@ -412,7 +452,7 @@ class TelescopeData:
             self._logger.error(msg)
             raise MissingInputForConvertion(msg)
 
-        if self._posZ is None and self._altitude is not None:
+        if not self.hasLocalCoordinates() and self.hasAltitude():
 
             if givenPars:
                 self._posZ = (
@@ -420,7 +460,7 @@ class TelescopeData:
                     + corsikaSphereCenter.to(u.m).value
                 )
             else:  # hasPars
-                self._posZ = (self._altitude - self._corsikaObsLevel + self._corsikaSphereCenter)
+                self._posZ = self._altitude - self._corsikaObsLevel + self._corsikaSphereCenter
 
             return
         else:
@@ -454,7 +494,7 @@ class TelescopeData:
             self._logger.error(msg)
             raise MissingInputForConvertion(msg)
 
-        if self._posZ is not None and self._altitude is None:
+        if self.hasLocalCoordinates() and not self.hasAltitude():
 
             if givenPars:
                 self._altitude = (
@@ -506,30 +546,31 @@ class TelescopeData:
             self._logger.warning('wgs84 is None - convertions will be impacted')
 
         # Starting by local <-> UTM <-> Mercator
-        hasLocal = self._posX is not None and self._posY is not None
-        hasUtm = self._utmEast is not None and self._utmNorth is not None
-        hasMercator = self._latitude is not None and self._longitude is not None
 
-        if hasLocal and not hasMercator and crsLocal is not None:
+        if (
+            self.hasLocalCoordinates()
+            and not self.hasMercatorCoordinates()
+            and crsLocal is not None
+        ):
             self.convertLocalToMercator(crsLocal, wgs84)
-        if hasLocal and not hasUtm and crsLocal is not None:
+
+        if self.hasLocalCoordinates() and not self.hasUtmCoordinates() and crsLocal is not None:
             self.convertLocalToUtm(crsLocal, crsUtm)
-        if hasUtm and not hasLocal and crsUtm is not None:
+
+        if self.hasUtmCoordinates() and not self.hasLocalCoordinates() and crsUtm is not None:
             self.convertUtmToLocal(crsUtm, crsLocal)
-        if hasUtm and not hasMercator and crsUtm is not None:
+
+        if self.hasUtmCoordinates() and not self.hasMercatorCoordinates() and crsUtm is not None:
             self.convertUtmToMercator(crsUtm, wgs84)
 
         # Dealing with altitude <-> posZ
-        hasCorsika = self._posZ is not None
-        hasAsl = self._altitude is not None
-
         if corsikaObsLevel is None or corsikaSphereCenter is None:
             self._logger.warning(
                 'CORSIKA convertions cannot be done - missing obs level and/or sphere center'
             )
-        elif hasCorsika and not hasAsl:
+        elif self.hasLocalCoordinates() and not self.hasAltitude():
             self.convertCorsikaToAsl(corsikaObsLevel, corsikaSphereCenter)
-        elif hasAsl and not hasCorsika:
+        elif self.hasAltitude() and not self.hasLocalCoordinates():
             self.convertAslToCorsika(corsikaObsLevel, corsikaSphereCenter)
         else:
             # Nothing to be converted
