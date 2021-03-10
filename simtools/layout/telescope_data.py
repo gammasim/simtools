@@ -98,6 +98,19 @@ class TelescopeData:
             allInputs=self.ALL_INPUTS,
             **kwargs
         )
+        # End of __init__
+
+    def getTelescopeSize(self):
+        # Guessing the tel size from the name
+        if self.name[0] == 'L':
+            return 'LST'
+        elif self.name[0] == 'M':
+            return 'MST'
+        elif self.name[0] == 'S':
+            return 'SST'
+        else:
+            self._logger.warning('Telescope size could not be guessed from the name')
+            return None
 
     def getLocalCoordinates(self):
         '''
