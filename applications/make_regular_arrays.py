@@ -56,21 +56,13 @@
 
 import logging
 import argparse
-# import yaml
-from collections import OrderedDict
 
-from astropy.io.misc import yaml
-
-import numpy as np
 import astropy.units as u
+from astropy.io.misc import yaml
 
 import simtools.io_handler as io
 import simtools.util.general as gen
-import simtools.config as cfg
 from simtools.layout.layout_array import LayoutArray
-from simtools.model.telescope_model import TelescopeModel
-from simtools import visualize
-
 
 
 if __name__ == '__main__':
@@ -81,13 +73,14 @@ if __name__ == '__main__':
             'of the telescope requested.'
         )
     )
-    # parser.add_argument(
-    #     '-n',
-    #     '--name',
-    #     help='Telescope name (e.g. North-MST-FlashCam-D, North-LST-1)',
-    #     type=str,
-    #     required=True
-    # )
+    parser.add_argument(
+        '--site_pars',
+        type=str,
+        help=(
+            'Site parameters file in yaml format. If not given, the '
+            'default one from data/layout will be used.'
+        )
+    )
     parser.add_argument(
         '-v',
         '--verbosity',
@@ -103,102 +96,68 @@ if __name__ == '__main__':
     logger = logging.getLogger(label)
     logger.setLevel(gen.getLogLevelFromUser(args.logLevel))
 
-    # Output directory to save files related directly to this app
-    outputDir = io.getApplicationOutputDirectory(cfg.get('outputLocation'), label)
+    # Getting site pars file
+    if args.site_pars is not None:
+        siteParsFile = args.site_pars
+        logger.debug('Reading site parameters from {}'.format(siteParsFile))
+    else:
+        siteParsFile = io.getDataFile('layout', 'site_parameters.yml')
+        logger.debug('Reading default site parameters from {}'.format(siteParsFile))
 
-    siteParsFile = io.getDataFile('layout', 'site_parameters.yml')
+    try:
+        with open(siteParsFile, 'r') as f:
+            sitePars = yaml.load(f)
+    except FileNotFoundError:
+        msg = 'Site parameter file ({}) couldnot be opened/read'.format(siteParsFile)
+        logger.error(msg)
+        raise FileNotFoundError(msg)
 
-    with open(siteParsFile, 'r') as f:
-        sitePars = yaml.load(f)
+    # Telescope distances for 4 tel square arrays
+    # !HARDCODED
+    telescopeDistance = {'LST': 57.5 * u.m, 'MST': 70 * u.m, 'SST': 80 * u.m}
 
-    layout = LayoutArray(label=label, name='LST4', **sitePars['South'])
+    for site in ['South', 'North']:
+        for arrayName in ['1SST', '4SST', '1MST', '4MST', '1LST', '4LST']:
+            layout = LayoutArray(label=label, name=arrayName, **sitePars[site])
 
-    print(layout.__dict__)
+            telNameRoot = arrayName[1]
+            telSize = arrayName[1:4]
 
-    # sitePars = {
-    #     'South': {
-    #         'centerLongitude': -70.316345 * u.deg,
-    #         'centerLatitude': -24.683429 * u.deg,
-    #         'centerAltitude': 2162.35 * u.m,
-    #         'centerNorthing': 7269466.0 * u.m,
-    #         'centerEasting': 366822.0 * u.m,
-    #         'corsikaObsLevel': 2147 * u.m,
-    #         'corsikaSphereRadius': {'LST': 12.5 * u.m, 'MST': 9.6 * u.m, 'SST': 3 * u.m},
-    #         'corsikaSphereCenter': {'LST': 16 * u.m, 'MST': 9 * u.m, 'SST': 3.25 * u.m},
-    #         'epsg': 32719
-    #     },
-    #     'North': {
-    #         'centerLongitude': -17.8920302 * u.deg,
-    #         'centerLatitude': 28.7621661 * u.deg,
-    #         'centerAltitude': 2177 * u.m,
-    #         'centerNorthing': 3185066.0 * u.m,
-    #         'centerEasting': 217611.0 * u.m,
-    #         'corsikaObsLevel': 2158 * u.m,
-    #         'corsikaSphereRadius': {'LST': 12.5 * u.m, 'MST': 9.6 * u.m, 'SST': 3 * u.m},
-    #         'corsikaSphereCenter': {'LST': 16 * u.m, 'MST': 9 * u.m, 'SST': 3.25 * u.m},
-    #         'epsg': 32628
-    #     }
-    # }
+            # Single telescope at the center
+            if arrayName[0] == '1':
+                layout.addTelescope(
+                    telescopeName=telNameRoot + '-01',
+                    posX=0 * u.m,
+                    posY=0 * u.m,
+                    posZ=0 * u.m
+                )
+            # 4 telescopes in a regular square grid
+            else:
+                layout.addTelescope(
+                    telescopeName=telNameRoot + '-01',
+                    posX=telescopeDistance[telSize],
+                    posY=telescopeDistance[telSize],
+                    posZ=0 * u.m
+                )
+                layout.addTelescope(
+                    telescopeName=telNameRoot + '-02',
+                    posX=-telescopeDistance[telSize],
+                    posY=telescopeDistance[telSize],
+                    posZ=0 * u.m
+                )
+                layout.addTelescope(
+                    telescopeName=telNameRoot + '-03',
+                    posX=telescopeDistance[telSize],
+                    posY=-telescopeDistance[telSize],
+                    posZ=0 * u.m
+                )
+                layout.addTelescope(
+                    telescopeName=telNameRoot + '-04',
+                    posX=-telescopeDistance[telSize],
+                    posY=-telescopeDistance[telSize],
+                    posZ=0 * u.m
+                )
 
-    # for site in ['South', 'North']
-    #     for arrayName in ['1SST', '4SST', '1MST', '4MST', '1LST', '4LST']
-
-
-    exit()
-
-
-    telModel = TelescopeModel(
-        telescopeName=args.tel_name,
-        version=args.model_version,
-        label=label,
-        logger=logger.name
-    )
-
-    # New parameters
-    if args.pars is not None:
-        with open(args.pars) as file:
-            newPars = yaml.load(file, Loader=yaml.FullLoader)
-        telModel.changeParameters(**newPars)
-
-    ray = RayTracing(
-        telescopeModel=telModel,
-        sourceDistance=args.src_distance * u.km,
-        zenithAngle=args.zenith * u.deg,
-        offAxisAngle=[0. * u.deg],
-        logger=logger.name
-    )
-
-    ray.simulate(test=args.test, force=False)
-    ray.analyze(force=False)
-
-    # Plotting cumulative PSF
-    im = ray.images()[0]
-
-    print('d80 in cm = {}'.format(im.getPSF()))
-
-    # Plotting cumulative PSF
-    dataToPlot = OrderedDict()
-    dataToPlot[r'sim$\_$telarray'] = im.getCumulativeData()
-    if args.data is not None:
-        dataFile = cfg.findFile(args.data)
-        dataToPlot['measured'] = loadData(dataFile)
-    plt = visualize.plot1D(dataToPlot)
-    plt.gca().set_ylim(0, 1.05)
-
-    plotFileName = label + '_' + telModel.telescopeName + '_cumulativePSF'
-    plotFile = outputDir.joinpath(plotFileName)
-    for f in ['pdf', 'png']:
-        plt.savefig(str(plotFile) + '.' + f, format=f, bbox_inches='tight')
-    plt.clf()
-
-    # Plotting image
-    dataToPlot = im.getImageData()
-    visualize.plotHist2D(dataToPlot, bins=80)
-    circle = plt.Circle((0, 0), im.getPSF(0.8) / 2, color='k', fill=False, lw=2, ls='--')
-    plt.gca().add_artist(circle)
-
-    plotFileName = label + '_' + telModel.telescopeName + '_image'
-    plotFile = outputDir.joinpath(plotFileName)
-    for f in ['pdf', 'png']:
-        plt.savefig(str(plotFile) + '.' + f, format=f, bbox_inches='tight')
-    plt.clf()
+            layout.convertCoordinates()
+            layout.printTelescopeList()
+            layout.exportTelescopeList()

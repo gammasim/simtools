@@ -383,6 +383,7 @@ class LayoutArray:
 
     def printTelescopeList(self):
         ''' Print list of telescopes in current layout for inspection. '''
+        print('LayoutArray: {}'.format(self.name))
         for tel in self._telescopeList:
             print(tel)
 

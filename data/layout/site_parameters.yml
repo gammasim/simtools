@@ -15,10 +15,10 @@ South:
     centerEasting: !astropy.units.Quantity
         value: 366822.0
         unit: !astropy.units.Unit {unit: m}
-    centerObsLevel: !astropy.units.Quantity
+    corsikaObsLevel: !astropy.units.Quantity
         value: 2147
         unit: !astropy.units.Unit {unit: m}
-    centerSphereRadius:
+    corsikaSphereRadius:
         LST: !astropy.units.Quantity
             value: 12.5
             unit: !astropy.units.Unit {unit: m}
@@ -28,7 +28,7 @@ South:
         SST: !astropy.units.Quantity
             value: 3.0
             unit: !astropy.units.Unit {unit: m}
-    centerSphereCenter:
+    corsikaSphereCenter:
         LST: !astropy.units.Quantity
             value: 16
             unit: !astropy.units.Unit {unit: m}
@@ -56,10 +56,10 @@ North:
     centerEasting: !astropy.units.Quantity
         value: 217611.0
         unit: !astropy.units.Unit {unit: m}
-    centerObsLevel: !astropy.units.Quantity
+    corsikaObsLevel: !astropy.units.Quantity
         value: 2158
         unit: !astropy.units.Unit {unit: m}
-    centerSphereRadius:
+    corsikaSphereRadius:
         LST: !astropy.units.Quantity
             value: 12.5
             unit: !astropy.units.Unit {unit: m}
@@ -69,7 +69,7 @@ North:
         SST: !astropy.units.Quantity
             value: 3.0
             unit: !astropy.units.Unit {unit: m}
-    centerSphereCenter:
+    corsikaSphereCenter:
         LST: !astropy.units.Quantity
             value: 16
             unit: !astropy.units.Unit {unit: m}
