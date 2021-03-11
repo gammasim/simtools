@@ -1,0 +1,81 @@
+South:
+    epsg: 32719
+    centerLongitude: !astropy.units.Quantity
+        value: -70.316345
+        unit: !astropy.units.Unit {unit: deg}
+    centerLatitude: !astropy.units.Quantity
+        value: -24.683429
+        unit: !astropy.units.Unit {unit: deg}
+    centerAltitude: !astropy.units.Quantity
+        value: 2162.35
+        unit: !astropy.units.Unit {unit: m}
+    centerNorthing: !astropy.units.Quantity
+        value: 7269466.0
+        unit: !astropy.units.Unit {unit: m}
+    centerEasting: !astropy.units.Quantity
+        value: 366822.0
+        unit: !astropy.units.Unit {unit: m}
+    centerObsLevel: !astropy.units.Quantity
+        value: 2147
+        unit: !astropy.units.Unit {unit: m}
+    centerSphereRadius:
+        LST: !astropy.units.Quantity
+            value: 12.5
+            unit: !astropy.units.Unit {unit: m}
+        MST: !astropy.units.Quantity
+            value: 9.6
+            unit: !astropy.units.Unit {unit: m}
+        SST: !astropy.units.Quantity
+            value: 3.0
+            unit: !astropy.units.Unit {unit: m}
+    centerSphereCenter:
+        LST: !astropy.units.Quantity
+            value: 16
+            unit: !astropy.units.Unit {unit: m}
+        MST: !astropy.units.Quantity
+            value: 9
+            unit: !astropy.units.Unit {unit: m}
+        SST: !astropy.units.Quantity
+            value: 3.25
+            unit: !astropy.units.Unit {unit: m}
+
+North:
+    epsg: 32628
+    centerLongitude: !astropy.units.Quantity
+        value: -17.8920302
+        unit: !astropy.units.Unit {unit: deg}
+    centerLatitude: !astropy.units.Quantity
+        value: 28.7621661
+        unit: !astropy.units.Unit {unit: deg}
+    centerAltitude: !astropy.units.Quantity
+        value: 2177
+        unit: !astropy.units.Unit {unit: m}
+    centerNorthing: !astropy.units.Quantity
+        value: 3185066.0
+        unit: !astropy.units.Unit {unit: m}
+    centerEasting: !astropy.units.Quantity
+        value: 217611.0
+        unit: !astropy.units.Unit {unit: m}
+    centerObsLevel: !astropy.units.Quantity
+        value: 2158
+        unit: !astropy.units.Unit {unit: m}
+    centerSphereRadius:
+        LST: !astropy.units.Quantity
+            value: 12.5
+            unit: !astropy.units.Unit {unit: m}
+        MST: !astropy.units.Quantity
+            value: 9.6
+            unit: !astropy.units.Unit {unit: m}
+        SST: !astropy.units.Quantity
+            value: 3.0
+            unit: !astropy.units.Unit {unit: m}
+    centerSphereCenter:
+        LST: !astropy.units.Quantity
+            value: 16
+            unit: !astropy.units.Unit {unit: m}
+        MST: !astropy.units.Quantity
+            value: 9
+            unit: !astropy.units.Unit {unit: m}
+        SST: !astropy.units.Quantity
+            value: 3.25
+            unit: !astropy.units.Unit {unit: m}
