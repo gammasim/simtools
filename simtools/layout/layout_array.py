@@ -28,6 +28,8 @@ class LayoutArray:
 
     Methods
     -------
+    fromLayoutArrayName(layoutArrayName, label=None, filesLocation=None, logger=__name__)
+        Create a LayoutArray from a layout name (e.g. South-4LST, North-Prod5, ...)
     readTelescopeListFile(telescopeListFile)
         Read list of telescopes from a ecsv file.
     addTelescope(
@@ -125,24 +127,14 @@ class LayoutArray:
         logger=__name__
     ):
         '''
-        Create a TelescopeModel from a sim_telarray config file.
-
-        Note
-        ----
-        Todo: Dealing with ifdef/indef etc. By now it just keeps the last version of the parameters
-        in the file.
+        Create a LayoutArray from a layout name (e.g. South-4LST, North-Prod5, ...)
 
         Parameters
         ----------
-        configFileName: str or Path
-            Path to the input config file.
-        telescopeName: str
-            Telescope name for the base set of parameters (ex. North-LST-1, ...).
+        layoutArrayName: str
+            e.g. South-4LST, North-Prod5 ...
         label: str, optional
             Instance label. Important for output file naming.
-        modelFilesLocation: str (or Path), optional
-            Location of the MC model files. If not given, it will be taken from the config.yml
-            file.
         filesLocation: str (or Path), optional
             Parent location of the output files created by this class. If not given, it will be
             taken from the config.yml file.
@@ -151,7 +143,7 @@ class LayoutArray:
 
         Returns
         -------
-        Instance of the TelescopeModel class.
+        Instance of the LayoutArray class.
         '''
         spl = layoutArrayName.split('-')
         siteName = names.validateSiteName(spl[0])
