@@ -117,9 +117,9 @@ class LayoutArray:
         self._outputDirectory.mkdir(parents=True, exist_ok=True)
 
     @classmethod
-    def fromArrayLayoutName(
+    def fromLayoutArrayName(
         cls,
-        arrayLayoutName,
+        layoutArrayName,
         label=None,
         filesLocation=None,
         logger=__name__
@@ -153,25 +153,26 @@ class LayoutArray:
         -------
         Instance of the TelescopeModel class.
         '''
+        spl = layoutArrayName.split('-')
+        siteName = names.validateSiteName(spl[0])
+        arrayName = names.validateArrayName(spl[1])
+        validLayoutArrayName = siteName + '-' + arrayName
+
         layout = cls(
-            name=arrayLayoutName,
+            name=validLayoutArrayName,
             label=label,
             filesLocation=filesLocation,
             logger=logger
         )
 
-        spl = arrayLayoutName.split('-')
-        siteName = names.validateSiteName(spl[0])
-        arrayName = names.validateArrayName(spl[1])
-        arrayLayoutName = siteName + '-' + arrayName
-
         telescopeListFile = io.getDataFile(
             'layout',
-            'telescope_positions-{}.ecsv'.format(arrayLayoutName)
+            'telescope_positions-{}.ecsv'.format(validLayoutArrayName)
         )
         layout.readTelescopeListFile(telescopeListFile)
 
         return layout
+        # End of fromLayoutArrayName
 
     def _appendTelescope(self, row, table, prodList):
         ''' Append a new telescope from table row to list of telescopes. '''

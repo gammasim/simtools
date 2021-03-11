@@ -81,10 +81,16 @@ def test_corsika_input():
     print(layout.getCorsikaInputList())
 
 
+def test_classmethod():
+    layout = LayoutArray.fromLayoutArrayName('south-Prod5')
+    layout.printTelescopeList()
+
+
 if __name__ == '__main__':
 
     # test_read_tel_list()
     # test_add_tel()
     # test_dict_input()
     # test_build_layout()
-    test_corsika_input()
+    # test_corsika_input()
+    test_classmethod()
