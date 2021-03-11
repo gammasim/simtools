@@ -1,8 +1,8 @@
-import astropy.units as u
 import logging
-from astropy.table import Table
 
 import pyproj
+import astropy.units as u
+from astropy.table import Table
 
 import simtools.config as cfg
 import simtools.io_handler as io
@@ -16,11 +16,44 @@ class InvalidTelescopeListFile(Exception):
 
 
 class LayoutArray:
-    """
-    layout class for
-    - storage of telescope position
-    - conversion of coordinate systems of positions
-    """
+    '''
+    Manage telescope positions at the array layout level.
+
+    Attributes
+    ----------
+    name: str
+        Name of the telescope (e.g L-01, S-05, ...).
+    label: str
+        Instance label.
+
+    Methods
+    -------
+    readTelescopeListFile(telescopeListFile)
+        Read list of telescopes from a ecsv file.
+    addTelescope(
+        telescopeName,
+        posX=None,
+        posY=None,
+        posZ=None,
+        longitude=None,
+        latitude=None,
+        utmEast=None,
+        utmNorth=None,
+        altitude=None
+    )
+        Add an individual telescope to the telescope list.
+    exportTelescopeList()
+        Export a ECSV file with the telescope positions.
+    getNumberOfTelescopes()
+        Return the number of telescopes in the list.
+    getCorsikaInputList()
+        Get a string with the piece of text to be added to
+        the CORSIKA input file.
+    printTelescopeList()
+        Print list of telescopes in current layout for inspection.
+    convertCoordinates()
+        Perform all the possible conversions the coordinates of the tel positions.
+    '''
 
     ALL_INPUTS = {
         'epsg': {'default': None, 'unit': None},
@@ -35,7 +68,33 @@ class LayoutArray:
     }
 
     def __init__(self, label=None, name=None, filesLocation=None, logger=__name__, **kwargs):
-        """Inits ArrayData with blah."""
+        '''
+        LayoutArray init.
+
+        Parameters
+        ----------
+        name: str
+            Name of the telescope (e.g L-01, S-05, ...)
+        label: str
+            Instance label.
+        filesLocation: str (or Path), optional
+            Parent location of the output files created by this class. If not given, it will be
+            taken from the config.yml file.
+        logger: str
+            Logger name to use in this instance
+        **kwargs:
+            Physical parameters with units (if applicable).
+            Options:
+                epsg
+                centerLongitude (u.deg)
+                centerLatitude (u.deg)
+                centerNorthing (u.m)
+                cernterEasting (u.m)
+                centerAltitude (u.m)
+                corsikaObsLevel (u.m)
+                corsikaSphereCenter {(u.m)}
+                corsikaSphereRadius {(u.m)}
+        '''
         self._logger = logging.getLogger(logger)
         self._logger.debug('Init LayoutArray')
 
@@ -58,9 +117,7 @@ class LayoutArray:
         self._outputDirectory.mkdir(parents=True, exist_ok=True)
 
     def _appendTelescope(self, row, table, prodList):
-        """Append a new telescope from table row
-        to list of telescopes
-        """
+        ''' Append a new telescope from table row to list of telescopes. '''
 
         tel = TelescopeData()
         tel.name = row['telescope_name']
@@ -95,17 +152,29 @@ class LayoutArray:
             tel.prodId[prod] = row[prod]
         self._telescopeList.append(tel)
 
-    def readTelescopeListFile(self, telescopeFile):
-        """
-        read list of telescopes from a ecsv file
-        """
-        table = Table.read(telescopeFile, format='ascii.ecsv')
+    def readTelescopeListFile(self, telescopeListFile):
+        '''
+        Read list of telescopes from a ecsv file.
 
-        self._logger.info('Reading telescope list from {}'.format(telescopeFile))
+        Parameters
+        ----------
+        telescopeListFile: str (or Path)
+            Path to the telescope list file.
+
+        Raises
+        ------
+        InvalidTelescopeListFile
+            If cannot read telescope list file or the table does not contain
+            telescope_name key.
+
+        '''
+        table = Table.read(telescopeListFile, format='ascii.ecsv')
+
+        self._logger.info('Reading telescope list from {}'.format(telescopeListFile))
 
         # Require telescope_name in telescope lists
         if 'telescope_name' not in table.colnames:
-            msg = 'Error reading telescope names from {}'.format(telescopeFile)
+            msg = 'Error reading telescope names from {}'.format(telescopeListFile)
             self._logger.error(msg)
             raise InvalidTelescopeListFile(msg)
 
@@ -140,13 +209,6 @@ class LayoutArray:
         for row in table:
             self._appendTelescope(row, table, prodList)
 
-        return True
-
-    # def addListOfTelescopes(self, telescopes):
-    #     """
-    #     """
-    #     if not telescopes
-
     @u.quantity_input(
         posX=u.m,
         posY=u.m,
@@ -169,8 +231,30 @@ class LayoutArray:
         utmNorth=None,
         altitude=None
     ):
-        """
-        """
+        '''
+        Add an individual telescope to the telescope list.
+
+        Parameters
+        ----------
+        telescopeName: str
+            Name of the telescope starting with L, M or S (e.g. L-01, M-06 ...)
+        posX: astropy.units.quantity.Quantity
+            X coordinate in equivalent units of u.m.
+        posY: astropy.units.quantity.Quantity
+            Y coordinate in equivalent units of u.m.
+        posZ: astropy.units.quantity.Quantity
+            Z coordinate in equivalent units of u.m.
+        longitude: astropy.units.quantity.Quantity
+            Longitude coordinate in equivalent units of u.deg.
+        latitude: astropy.units.quantity.Quantity
+            Latitude coordinate in equivalent units of u.deg.
+        utmEast: astropy.units.quantity.Quantity
+            UTM east coordinate in equivalent units of u.deg.
+        utmNorth: astropy.units.quantity.Quantity
+            UTM north coordinate in equivalent units of u.deg.
+        altitude: astropy.units.quantity.Quantity
+            Altitude coordinate in equivalent units of u.m.
+        '''
 
         tel = TelescopeData(
             name=telescopeName,
@@ -186,8 +270,9 @@ class LayoutArray:
         self._telescopeList.append(tel)
 
     def exportTelescopeList(self):
+        ''' Export a ECSV file with the telescope positions. '''
 
-        fileName = names.layoutTelescopeListFileName(self.name, self.label)
+        fileName = names.layoutTelescopeListFileName(self.name, None)
         self.telescopeListFile = self._outputDirectory.joinpath(fileName)
 
         self._logger.debug('Exporting telescope list to ECSV file {}'.format(
@@ -259,12 +344,28 @@ class LayoutArray:
             table['alt'] = altitude * u.m
 
         table.write(self.telescopeListFile, format='ascii.ecsv', overwrite=True)
+        # End of exportTelescopeList
 
     def getNumberOfTelescopes(self):
+        '''
+        Return the number of telescopes in the list.
+
+        Returns
+        -------
+        int
+            Number of telescopes.
+        '''
         return len(self._telescopeList)
 
     def getCorsikaInputList(self):
         '''
+        Get a string with the piece of text to be added to
+        the CORSIKA input file.
+
+        Returns
+        -------
+        str
+            Piece of text to be added to the CORSIKA input file.
         '''
         corsikaList = ''
         for tel in self._telescopeList:
@@ -280,30 +381,13 @@ class LayoutArray:
 
         return corsikaList
 
-    def printTelescopeList(self, short=False):
-        """
-        print list of telescopes in current layout
-
-        Available formats (examples, column names in ecsv file):
-        - telescope_name - default telescope names
-        - prod3b_mst_N - North layout (with MST-NectarCam)
-        """
+    def printTelescopeList(self):
+        ''' Print list of telescopes in current layout for inspection. '''
         for tel in self._telescopeList:
             print(tel)
 
-        return None
-
     def convertCoordinates(self):
-        """
-        conversion depends what is given in the orginal
-        telescope list
-
-        after conversion, following coordinates should
-        be filled:
-        - local transverse Mercator projection
-        - Mercator (WGS84) projection
-        - UTM coordinate system
-        """
+        ''' Perform all the possible conversions the coordinates of the tel positions. '''
 
         self._logger.info('Converting telescope coordinates')
 
