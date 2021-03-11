@@ -349,7 +349,8 @@ allArrayNames = {
     '4MST': ['4-mst', '4mst'],
     '1MST': ['1-mst', 'mst'],
     '4SST': ['4-sst', '4sst'],
-    '1SST': ['1-sst', 'sst']
+    '1SST': ['1-sst', 'sst'],
+    'Prod5': ['prod5', 'p5']
 }
 
 
