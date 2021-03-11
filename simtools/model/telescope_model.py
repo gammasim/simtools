@@ -1,7 +1,6 @@
 import logging
 import copy
 import shutil
-from pathlib import Path
 
 import simtools.config as cfg
 import simtools.io_handler as io

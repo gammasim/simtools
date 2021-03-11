@@ -116,6 +116,57 @@ class LayoutArray:
         self._outputDirectory = io.getLayoutOutputDirectory(self._filesLocation, self.label)
         self._outputDirectory.mkdir(parents=True, exist_ok=True)
 
+    @classmethod
+    def fromArrayName(
+        cls,
+        arrayName,
+        label=None,
+        filesLocation=None,
+        logger=__name__
+    ):
+        '''
+        Create a TelescopeModel from a sim_telarray config file.
+
+        Note
+        ----
+        Todo: Dealing with ifdef/indef etc. By now it just keeps the last version of the parameters
+        in the file.
+
+        Parameters
+        ----------
+        configFileName: str or Path
+            Path to the input config file.
+        telescopeName: str
+            Telescope name for the base set of parameters (ex. North-LST-1, ...).
+        label: str, optional
+            Instance label. Important for output file naming.
+        modelFilesLocation: str (or Path), optional
+            Location of the MC model files. If not given, it will be taken from the config.yml
+            file.
+        filesLocation: str (or Path), optional
+            Parent location of the output files created by this class. If not given, it will be
+            taken from the config.yml file.
+        logger: str
+            Logger name to use in this instance
+
+        Returns
+        -------
+        Instance of the TelescopeModel class.
+        '''
+        layout = cls(
+            name=arrayName,
+            label=label,
+            filesLocation=filesLocation,
+            logger=logger
+        )
+        telescopeListFile = io.getDataFile(
+            'layout',
+            'telescope_positions-{}.ecsv'.format(arrayName)
+        )
+        layout.readTelescopeListFile(telescopeListFile)
+
+        return layout
+
     def _appendTelescope(self, row, table, prodList):
         ''' Append a new telescope from table row to list of telescopes. '''
 
