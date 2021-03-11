@@ -79,7 +79,7 @@ if __name__ == '__main__':
         with open(siteParsFile, 'r') as f:
             sitePars = yaml.load(f)
     except FileNotFoundError:
-        msg = 'Site parameter file ({}) couldnot be opened/read'.format(siteParsFile)
+        msg = 'Site parameter file ({}) could not be opened/read'.format(siteParsFile)
         logger.error(msg)
         raise FileNotFoundError(msg)
 
@@ -90,7 +90,12 @@ if __name__ == '__main__':
     for site in ['South', 'North']:
         for arrayName in ['1SST', '4SST', '1MST', '4MST', '1LST', '4LST']:
             logger.info('Processing array {}'.format(arrayName))
-            layout = LayoutArray(label=label, name=arrayName, logger=logger.name, **sitePars[site])
+            layout = LayoutArray(
+                label=label,
+                name=site + '-' + arrayName,
+                logger=logger.name,
+                **sitePars[site]
+            )
 
             telNameRoot = arrayName[1]
             telSize = arrayName[1:4]
