@@ -117,9 +117,9 @@ class LayoutArray:
         self._outputDirectory.mkdir(parents=True, exist_ok=True)
 
     @classmethod
-    def fromArrayName(
+    def fromArrayLayoutName(
         cls,
-        arrayName,
+        arrayLayoutName,
         label=None,
         filesLocation=None,
         logger=__name__
@@ -154,14 +154,20 @@ class LayoutArray:
         Instance of the TelescopeModel class.
         '''
         layout = cls(
-            name=arrayName,
+            name=arrayLayoutName,
             label=label,
             filesLocation=filesLocation,
             logger=logger
         )
+
+        spl = arrayLayoutName.split('-')
+        siteName = names.validateSiteName(spl[0])
+        arrayName = names.validateArrayName(spl[1])
+        arrayLayoutName = siteName + '-' + arrayName
+
         telescopeListFile = io.getDataFile(
             'layout',
-            'telescope_positions-{}.ecsv'.format(arrayName)
+            'telescope_positions-{}.ecsv'.format(arrayLayoutName)
         )
         layout.readTelescopeListFile(telescopeListFile)
 
