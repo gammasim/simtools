@@ -107,41 +107,57 @@ if __name__ == '__main__':
     outputDir = io.getApplicationOutputDirectory(cfg.get('outputLocation'), label)
 
     siteParsFile = io.getDataFile('layout', 'site_parameters.yml')
-
     with open(siteParsFile, 'r') as f:
         sitePars = yaml.load(f)
 
     layout = LayoutArray(label=label, name='LST4', **sitePars['South'])
 
-    print(layout.__dict__)
+    # Defining the distance between telescopes
+    telescopeDistance = {'LST': 57.5 * u.m, 'MST': 70 * u.m, 'SST': 80 * u.m}
 
-    # sitePars = {
-    #     'South': {
-    #         'centerLongitude': -70.316345 * u.deg,
-    #         'centerLatitude': -24.683429 * u.deg,
-    #         'centerAltitude': 2162.35 * u.m,
-    #         'centerNorthing': 7269466.0 * u.m,
-    #         'centerEasting': 366822.0 * u.m,
-    #         'corsikaObsLevel': 2147 * u.m,
-    #         'corsikaSphereRadius': {'LST': 12.5 * u.m, 'MST': 9.6 * u.m, 'SST': 3 * u.m},
-    #         'corsikaSphereCenter': {'LST': 16 * u.m, 'MST': 9 * u.m, 'SST': 3.25 * u.m},
-    #         'epsg': 32719
-    #     },
-    #     'North': {
-    #         'centerLongitude': -17.8920302 * u.deg,
-    #         'centerLatitude': 28.7621661 * u.deg,
-    #         'centerAltitude': 2177 * u.m,
-    #         'centerNorthing': 3185066.0 * u.m,
-    #         'centerEasting': 217611.0 * u.m,
-    #         'corsikaObsLevel': 2158 * u.m,
-    #         'corsikaSphereRadius': {'LST': 12.5 * u.m, 'MST': 9.6 * u.m, 'SST': 3 * u.m},
-    #         'corsikaSphereCenter': {'LST': 16 * u.m, 'MST': 9 * u.m, 'SST': 3.25 * u.m},
-    #         'epsg': 32628
-    #     }
-    # }
+    for site in ['South', 'North']:
+        for arrayName in ['1SST', '4SST', '1MST', '4MST', '1LST', '4LST']:
+            layout = LayoutArray(label=label, name=arrayName, **sitePars[site])
 
-    # for site in ['South', 'North']
-    #     for arrayName in ['1SST', '4SST', '1MST', '4MST', '1LST', '4LST']
+            telNameRoot = arrayName[1]
+            telSize = arrayName[1:4]
+            # Single telescope at the center of the array
+            if arrayName[0] == '1':
+                layout.addTelescope(
+                    telescopeName=telNameRoot + '-01',
+                    posX=0 * u.m,
+                    posY=0 * u.m,
+                    posZ=0 * u.m
+                )
+            # 4 telescope on a square grid
+            else:  # arrayName[0] == '4'
+                layout.addTelescope(
+                    telescopeName=telNameRoot + '-01',
+                    posX=telescopeDistance[telSize],
+                    posY=telescopeDistance[telSize],
+                    posZ=0 * u.m
+                )
+                layout.addTelescope(
+                    telescopeName=telNameRoot + '-02',
+                    posX=telescopeDistance[telSize],
+                    posY=-telescopeDistance[telSize],
+                    posZ=0 * u.m
+                )
+                layout.addTelescope(
+                    telescopeName=telNameRoot + '-03',
+                    posX=-telescopeDistance[telSize],
+                    posY=telescopeDistance[telSize],
+                    posZ=0 * u.m
+                )
+                layout.addTelescope(
+                    telescopeName=telNameRoot + '-04',
+                    posX=-telescopeDistance[telSize],
+                    posY=-telescopeDistance[telSize],
+                    posZ=0 * u.m
+                )
+
+            layout.convertCoordinates()
+            layout.printTelescopeList()
 
 
     exit()
