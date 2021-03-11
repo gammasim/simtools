@@ -89,7 +89,8 @@ if __name__ == '__main__':
 
     for site in ['South', 'North']:
         for arrayName in ['1SST', '4SST', '1MST', '4MST', '1LST', '4LST']:
-            layout = LayoutArray(label=label, name=arrayName, **sitePars[site])
+            logger.info('Processing array {}'.format(arrayName))
+            layout = LayoutArray(label=label, name=arrayName, logger=logger.name, **sitePars[site])
 
             telNameRoot = arrayName[1]
             telSize = arrayName[1:4]
