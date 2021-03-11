@@ -144,6 +144,24 @@ def getApplicationOutputDirectory(filesLocation, label):
     return getOutputDirectory(filesLocation, label, 'application-plots')
 
 
+def getDataFile(parentDir, fileName):
+    '''
+    Get path of a data file, using the  dataLocation taken from the config file.
+
+    Parameters
+    ----------
+    parentDir: str
+        Parent directory of the file.
+    filesName: str
+        File name.
+
+    Returns
+    -------
+    Path
+    '''
+    return Path(cfg.get('dataLocation')).joinpath(parentDir).joinpath(fileName)
+
+
 def getTestDataFile(fileName):
     '''
     Get path of a test file, using the  testDataLocation taken from the config file.
@@ -157,7 +175,7 @@ def getTestDataFile(fileName):
     -------
     Path
     '''
-    return Path(cfg.get('testDataLocation')).joinpath('test-data').joinpath(fileName)
+    return Path(cfg.get('dataLocation')).joinpath('test-data').joinpath(fileName)
 
 
 def getTestPlotFile(fileName):
@@ -173,4 +191,4 @@ def getTestPlotFile(fileName):
     -------
     Path
     '''
-    return Path(cfg.get('testDataLocation')).joinpath('test-plots').joinpath(fileName)
+    return Path(cfg.get('dataLocation')).joinpath('test-plots').joinpath(fileName)
