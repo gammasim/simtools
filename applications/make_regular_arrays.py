@@ -3,55 +3,26 @@
 '''
     Summary
     -------
-    .. _compare_cumulative_psf_plot:
-    .. image::  images/compare_cumulative_psf_North-LST-1_cumulativePSF.png
-      :width: 49 %
-    .. image::  images/compare_cumulative_psf_North-LST-1_image.png
-      :width: 49 %
+
+    This application creates the layout array files (ECSV) of regular arrays
+    with one telescope at the center of the array and with 4 telescopes
+    in a square grid. These arrays are used for trigger rate simulations.
+
+    The array layout files created should be available at the data/layout directory.
 
     Command line arguments
     ----------------------
-    tel_name (str, required)
-        Telescope name (e.g. North-LST-1, South-SST-D, ...).
-    model_version (str, optional)
-        Model version (default=prod4).
-    src_distance (float, optional)
-        Source distance in km (default=10).
-    zenith (float, optional)
-        Zenith angle in deg (default=20).
-    data (str, optional)
-        Name of the data file with the measured cumulative PSF.
-    pars (str, optional)
-        Yaml file with the new model parameters to replace the default ones.
-    test (activation mode, optional)
-        If activated, application will be faster by simulating fewer photons.
+    site_pars (str, optional)
+        Site parameters file in yaml format. If not given, the default one
+        from data/layout will be used.
     verbosity (str, optional)
         Log level to print (default=INFO).
 
     Example
     -------
-    LST-1 Prod5
-
     Runtime < 1 min.
 
-    First, create an yml file named lst_pars.yml with the following content:
-
-    .. code-block:: yaml
-
-        mirror_reflection_random_angle: '0.0075,0.15,0.035'
-        mirror_align_random_horizontal: '0.0040,28.,0.0,0.0'
-        mirror_align_random_vertical: '0.0040,28.,0.0,0.0'
-
-    And the run:
-
-    .. code-block:: console
-
-        python applications/compare_cumulative_psf.py --tel_name North-LST-1 \
-        --model_version prod4 --pars lst_pars.yml --data PSFcurve_data_v2.txt
-
-    .. todo::
-
-        * Change default model to default (after this feature is implemented in db_handler)
+    python applications/make_regular_arrays.py
 '''
 
 import logging
