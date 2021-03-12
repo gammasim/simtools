@@ -248,11 +248,11 @@ class TelescopeData:
 
         Returns
         -------
-        (utmNorth [u.deg], utmEast [u.deg])
+        (utmNorth [u.m], utmEast [u.m])
         '''
-        return self._utmNorth * u.deg, self._utmEast * u.deg
+        return self._utmNorth * u.m, self._utmEast * u.m
 
-    @u.quantity_input(utmEast=u.deg, utmNorth=u.deg)
+    @u.quantity_input(utmEast=u.m, utmNorth=u.m)
     def setUtmCoordinates(self, utmEast, utmNorth):
         ''' Set the UTM coordinates. '''
         if None not in [self._utmEast, self._utmNorth]:
