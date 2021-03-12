@@ -12,9 +12,6 @@
 
     Command line arguments
     ----------------------
-    site_pars (str, optional)
-        Site parameters file in yaml format. If not given, the default one
-        from data/layout will be used.
     verbosity (str, optional)
         Log level to print (default=INFO).
 
