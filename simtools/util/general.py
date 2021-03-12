@@ -22,6 +22,10 @@ class ArgumentCannotBeCollected(Exception):
     pass
 
 
+class MissingRequiredArgument(Exception):
+    pass
+
+
 def _unitsAreConvertible(quantity_1, quantity_2):
     '''
     Parameters
@@ -177,7 +181,10 @@ def collectArguments(obj, args, allInputs, **kwargs):
         elif 'default' in argData:
             obj.__dict__[inArgName] = argData['default']
         else:
-            logger.warning('Argument (without default) {} was not given'.format(arg))
+            msg = 'Required argument (without default) {} was not given'.format(arg)
+            logger.warning(msg)
+            raise MissingRequiredArgument(msg)
+
     return
 
 

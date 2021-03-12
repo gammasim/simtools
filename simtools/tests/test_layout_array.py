@@ -86,6 +86,21 @@ def test_classmethod():
     layout.printTelescopeList()
 
 
+def test_converting_center_coordinates():
+    parameters = {
+        'centerLongitude': -17.8920302 * u.deg,
+        'centerLatitude': 28.7621661 * u.deg,
+        'epsg': 32628,
+        'centerAltitude': 2177 * u.m,
+        'corsikaSphereRadius': {'LST': 12.5 * u.m, 'MST': 9.6 * u.m, 'SST': 3 * u.m},
+        'corsikaSphereCenter': {'LST': 16 * u.m, 'MST': 9 * u.m, 'SST': 3.25 * u.m},
+        'corsikaObsLevel': 2158 * u.m
+    }
+
+    layout = LayoutArray(label='test_layout', name='LST4', **parameters)
+    layout.printTelescopeList()
+
+
 if __name__ == '__main__':
 
     # test_read_tel_list()
@@ -93,4 +108,5 @@ if __name__ == '__main__':
     # test_dict_input()
     # test_build_layout()
     # test_corsika_input()
-    test_classmethod()
+    # test_classmethod()
+    test_converting_center_coordinates()
