@@ -59,6 +59,7 @@ if __name__ == '__main__':
     logger.setLevel(gen.getLogLevelFromUser(args.logLevel))
 
     # Hardcoded parameters - should go to DB
+    logger.warning('These hardcoded parameters should go into the DB')
     hardcodedPars = {
         'North': {
             'epsg': 32628,
