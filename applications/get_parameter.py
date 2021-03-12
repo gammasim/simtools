@@ -35,7 +35,10 @@ if __name__ == '__main__':
     parser.add_argument(
         '-v',
         '--version',
-        help='Parameter version. If no version is provided, the entries of the last 5 versions are printed.',
+        help=(
+            'Parameter version. If no version is provided, '
+            'the entries of the last 5 versions are printed.'
+        ),
         type=str,
         default='all'
     )
@@ -66,8 +69,3 @@ if __name__ == '__main__':
     print()
     pprint(pars[args.parameter])
     print()
-
-
-
-
-    

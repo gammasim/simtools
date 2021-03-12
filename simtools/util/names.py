@@ -349,7 +349,8 @@ allArrayNames = {
     '4MST': ['4-mst', '4mst'],
     '1MST': ['1-mst', 'mst'],
     '4SST': ['4-sst', '4sst'],
-    '1SST': ['1-sst', 'sst']
+    '1SST': ['1-sst', 'sst'],
+    'Prod5': ['prod5', 'p5']
 }
 
 
@@ -402,6 +403,28 @@ def simtelSingleMirrorListFileName(version, telescopeName, mirrorNumber, label):
     name += '_{}'.format(label) if label is not None else ''
     name += '.dat'
     return name
+
+
+def layoutTelescopeListFileName(name, label):
+    '''
+    File name for files required at the RayTracing class.
+
+    Parameters
+    ----------
+    name: str
+        Name of the array.
+    label: str
+        Instance label.
+
+    Returns
+    -------
+    str
+        File name.
+    '''
+    fileName = 'telescope_positions-{}'.format(name)
+    fileName += '_{}'.format(label) if label is not None else ''
+    fileName += '.ecsv'
+    return fileName
 
 
 def rayTracingFileName(
