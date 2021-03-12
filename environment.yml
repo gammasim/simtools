@@ -12,6 +12,7 @@ dependencies:
   - pymongo
   - numpydoc
   - sphinx_rtd_theme
+  - pyproj
 # cheatsheet
 
 # create: conda env create -f environment.yml

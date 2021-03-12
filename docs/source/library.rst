@@ -11,4 +11,5 @@ simtools Library
   ray_tracing
   camera_efficiency
   simtel_runner
+  layout
   util
