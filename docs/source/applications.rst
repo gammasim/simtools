@@ -36,6 +36,7 @@ List of Applications
 * `compare_cumulative_psf`_
 * `validate_camera_efficiency`_
 * `validate_camera_fov`_
+* `make_regular_array`_
 
 
 derive_mirror_rnda
@@ -74,3 +75,9 @@ validate_camera_fov
 .. automodule:: validate_camera_fov
    :members:
 
+
+make_regular_array
+------------------
+
+.. automodule:: make_regular_array
+   :members:
