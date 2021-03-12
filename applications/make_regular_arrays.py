@@ -29,10 +29,9 @@ import logging
 import argparse
 
 import astropy.units as u
-from astropy.io.misc import yaml
 
-import simtools.io_handler as io
 import simtools.util.general as gen
+from simtools import db_handler
 from simtools.layout.layout_array import LayoutArray
 
 
@@ -42,14 +41,6 @@ if __name__ == '__main__':
         description=(
             'Calculate and plot the PSF and eff. mirror area as a function of off-axis angle '
             'of the telescope requested.'
-        )
-    )
-    parser.add_argument(
-        '--site_pars',
-        type=str,
-        help=(
-            'Site parameters file in yaml format. If not given, the '
-            'default one from data/layout will be used.'
         )
     )
     parser.add_argument(
@@ -67,21 +58,55 @@ if __name__ == '__main__':
     logger = logging.getLogger(label)
     logger.setLevel(gen.getLogLevelFromUser(args.logLevel))
 
-    # Getting site pars file
-    if args.site_pars is not None:
-        siteParsFile = args.site_pars
-        logger.debug('Reading site parameters from {}'.format(siteParsFile))
-    else:
-        siteParsFile = io.getDataFile('layout', 'site_parameters.yml')
-        logger.debug('Reading default site parameters from {}'.format(siteParsFile))
+    # Hardcoded parameters - should go to DB
+    hardcodedPars = {
+        'North': {
+            'epsg': 32628,
+            'corsikaObsLevel': 2158 * u.m,
+            'corsikaSphereRadius': {
+                'LST': 12.5 * u.m,
+                'MST': 9.6 * u.m,
+                'SST': 3.0 * u.m
+            },
+            'corsikaSphereCenter': {
+                'LST': 16 * u.m,
+                'MST': 9 * u.m,
+                'SST': 3.25 * u.m
+            }
+        },
+        'South': {
+            'epsg': 32719,
+            'corsikaObsLevel': 2147 * u.m,
+            'corsikaSphereRadius': {
+                'LST': 12.5 * u.m,
+                'MST': 9.6 * u.m,
+                'SST': 3.0 * u.m
+            },
+            'corsikaSphereCenter': {
+                'LST': 16 * u.m,
+                'MST': 9 * u.m,
+                'SST': 3.25 * u.m
+            }
+        }
+    }  # hadcodedPars
 
-    try:
-        with open(siteParsFile, 'r') as f:
-            sitePars = yaml.load(f)
-    except FileNotFoundError:
-        msg = 'Site parameter file ({}) could not be opened/read'.format(siteParsFile)
-        logger.error(msg)
-        raise FileNotFoundError(msg)
+    # Reading site parameters from DB
+    db = db_handler.DatabaseHandler(logger.name)
+
+    siteParsDB = dict()
+    sitePars = dict()
+    for site in ['North', 'South']:
+        siteParsDB[site] = db.getSiteParameters(site=site, version='prod3_compatible')
+
+        sitePars[site] = dict()
+        sitePars[site]['centerLatitude'] = float(siteParsDB[site]['ref_lat']['Value']) * u.deg
+        sitePars[site]['centerLongitude'] = float(siteParsDB[site]['ref_long']['Value']) * u.deg
+        sitePars[site]['centerAltitude'] = float(siteParsDB[site]['altitude']['Value']) * u.m
+
+        sitePars[site]['epsg'] = hardcodedPars[site]['epsg']
+        sitePars[site]['corsikaObsLevel'] = hardcodedPars[site]['corsikaObsLevel']
+        sitePars[site]['corsikaSphereCenter'] = hardcodedPars[site]['corsikaSphereCenter']
+        sitePars[site]['corsikaSphereRadius'] = hardcodedPars[site]['corsikaSphereRadius']
 
     # Telescope distances for 4 tel square arrays
     # !HARDCODED
