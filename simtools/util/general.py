@@ -22,6 +22,10 @@ class ArgumentCannotBeCollected(Exception):
     pass
 
 
+class MissingRequiredArgument(Exception):
+    pass
+
+
 def _unitsAreConvertible(quantity_1, quantity_2):
     '''
     Parameters
@@ -36,7 +40,7 @@ def _unitsAreConvertible(quantity_1, quantity_2):
     try:
         quantity_1.to(quantity_2)
         return True
-    except:
+    except Exception:
         return False
 
 
@@ -117,22 +121,41 @@ def collectArguments(obj, args, allInputs, **kwargs):
         if _unitIsValid(argG, argD['unit']):
             obj.__dict__[inArgName] = _convertUnit(argG, argD['unit'])
         else:
-            logger.error('Argument {} given with wrong unit'.format(arg))
-            raise ArgumentWithWrongUnit()
+            msg = 'Argument {} given with wrong unit'.format(arg)
+            logger.error(msg)
+            raise ArgumentWithWrongUnit(msg)
 
     def processListArg(arg, inArgName, argG, argD):
         outArg = list()
         try:
             argG = list(argG)
-        except:
+        except Exception:
             argG = [argG]
 
         for aa in argG:
             if _unitIsValid(aa, argD['unit']):
                 outArg.append(_convertUnit(aa, argD['unit']))
             else:
-                logger.error('Argument {} given with wrong unit'.format(arg))
-                raise ArgumentWithWrongUnit()
+                msg = 'Argument {} given with wrong unit'.format(arg)
+                logger.error(msg)
+                raise ArgumentWithWrongUnit(msg)
+        obj.__dict__[inArgName] = outArg
+
+    def processDictArg(arg, inArgName, argG, argD):
+        outArg = dict()
+
+        if not isinstance(argG, dict):
+            msg = 'Argument is not a dict - aborting'
+            logger.error(msg)
+            raise ArgumentCannotBeCollected(msg)
+
+        for key, value in argG.items():
+            if _unitIsValid(value, argD['unit']):
+                outArg[key] = _convertUnit(value, argD['unit'])
+            else:
+                msg = 'Argument {} given with wrong unit'.format(arg)
+                logger.error(msg)
+                raise ArgumentWithWrongUnit(msg)
         obj.__dict__[inArgName] = outArg
 
     for arg in args:
@@ -146,16 +169,22 @@ def collectArguments(obj, args, allInputs, **kwargs):
 
         if arg in kwargs.keys():
             argGiven = kwargs[arg]
-            # List
-            if 'isList' in argData and argData['isList']:
+            if argGiven is None:
+                obj.__dict__[inArgName] = None
+            elif 'isDict' in argData and argData['isDict']:  # Dict
+                processDictArg(arg, inArgName, argGiven, argData)
+            elif 'isList' in argData and argData['isList']:  # List
                 processListArg(arg, inArgName, argGiven, argData)
-            else:  # Not a list
+            else:  # Not a list or dict
                 processSingleArg(arg, inArgName, argGiven, argData)
 
         elif 'default' in argData:
             obj.__dict__[inArgName] = argData['default']
         else:
-            logger.warning('Argument (without default) {} was not given'.format(arg))
+            msg = 'Required argument (without default) {} was not given'.format(arg)
+            logger.warning(msg)
+            raise MissingRequiredArgument(msg)
+
     return
 
 
