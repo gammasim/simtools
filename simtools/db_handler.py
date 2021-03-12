@@ -1,7 +1,6 @@
 ''' Module to handle interaction with DB. '''
 
 import logging
-import datetime
 import yaml
 import shlex
 import subprocess
@@ -16,7 +15,6 @@ import pymongo
 import gridfs
 from pymongo import MongoClient
 from pymongo.errors import BulkWriteError
-from astropy.time import Time
 
 import simtools.config as cfg
 from simtools.util import names
@@ -449,7 +447,7 @@ class DatabaseHandler:
         self,
         site,
         version,
-        runLocation,
+        runLocation=None,
         onlyApplicable=False,
     ):
         '''
@@ -526,7 +524,7 @@ class DatabaseHandler:
         dbName,
         site,
         version,
-        runLocation,
+        runLocation=None,
         onlyApplicable=False
     ):
         '''
@@ -582,7 +580,8 @@ class DatabaseHandler:
                     _parameters[parNow]['Value']
                 )
 
-                self.writeFileFromMongoToDisk(dbName, runLocation, file)
+                if runLocation is not None:
+                    self.writeFileFromMongoToDisk(dbName, runLocation, file)
 
         return _parameters
 
