@@ -427,8 +427,8 @@ class LayoutArray:
             table['lon'] = longitude * u.deg
 
         if len(utm_east) > 0:
-            table['utm_east'] = utm_east * u.deg
-            table['utm_north'] = utm_north * u.deg
+            table['utm_east'] = utm_east * u.m
+            table['utm_north'] = utm_north * u.m
 
         if len(altitude) > 0:
             table['alt'] = altitude * u.m
