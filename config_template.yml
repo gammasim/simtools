@@ -26,8 +26,8 @@ modelFilesLocations: [
 # Path to the root directory where the output directory will be created.
 outputLocation: .
 
-# Path to the directory containing the data used to perform automatic tests. These data is provided at gammasim-tools/data/.
-testDataLocation: './data/'
+# Path to the directory containing the data. These data is provided at gammasim-tools/data/.
+dataLocation: './data/'
 
 # Path to the root sim_telarray directory, containing the sim_telarray software unpacked and compiled.
 simtelPath: None
