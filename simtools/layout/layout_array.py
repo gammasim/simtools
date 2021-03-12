@@ -113,6 +113,8 @@ class LayoutArray:
             **kwargs
         )
 
+        self._loadArrayCenter()
+
         # Output directory
         self._filesLocation = cfg.getConfigArg('outputLocation', filesLocation)
         self._outputDirectory = io.getLayoutOutputDirectory(self._filesLocation, self.label)
@@ -165,6 +167,44 @@ class LayoutArray:
 
         return layout
         # End of fromLayoutArrayName
+
+    def _loadArrayCenter(self):
+        ''' Load the array center and make convertions if needed. '''
+
+        self._arrayCenter = TelescopeData()
+        self._arrayCenter.name = 'array_center'
+
+        self._arrayCenter.setLocalCoordinates(0 * u.m, 0 * u.m, 0 * u.m)
+        if self._centerLatitude is not None and self._centerLongitude is not None:
+            self._arrayCenter.setMercatorCoordinates(
+                self._centerLatitude * u.deg,
+                self._centerLongitude * u.deg
+            )
+        if self._centerEasting is not None and self._centerNorthing is not None:
+            self._arrayCenter.setUtmCoordinates(
+                self._centerEasting * u.m,
+                self._centerNorthing * u.m
+            )
+        if self._centerAltitude is not None:
+            self._arrayCenter.setAltitude(self._centerAltitude * u.m)
+
+        # Converting
+        wgs84 = self._getWgs84()
+        crs_local = self._getCrsLocal()
+        crs_utm = self._getCrsUtm()
+        self._arrayCenter.convertAll(
+            crsLocal=crs_local,
+            wgs84=wgs84,
+            crsUtm=crs_utm
+        )
+
+        # Filling in center UTM coordinates if needed
+        if (
+            (self._centerNorthing is None or self._centerEasting is None)
+            and self._arrayCenter.hasUtmCoordinates()
+        ):
+            self._centerNorthing, self._centerEasting = self._arrayCenter.getUtmCoordinates()
+    # End of _loadArrayCenter
 
     def _appendTelescope(self, row, table, prodList):
         ''' Append a new telescope from table row to list of telescopes. '''
@@ -434,6 +474,9 @@ class LayoutArray:
     def printTelescopeList(self):
         ''' Print list of telescopes in current layout for inspection. '''
         print('LayoutArray: {}'.format(self.name))
+        print('ArrayCenter')
+        print(self._arrayCenter)
+        print('Telescopes')
         for tel in self._telescopeList:
             print(tel)
 
@@ -445,28 +488,13 @@ class LayoutArray:
         # 1: setup reference coordinate systems
 
         # Mercator WGS84
-        wgs84 = pyproj.CRS('EPSG:4326')
+        wgs84 = self._getWgs84()
 
         # Local transverse Mercator projection
-        crs_local = None
-        if self._centerLongitude is not None and self._centerLatitude is not None:
-            proj4_string = (
-                '+proj=tmerc +ellps=WGS84 +datum=WGS84'
-                + ' +lon_0={} +lat_0={}'.format(self._centerLongitude, self._centerLatitude)
-                + ' +axis=nwu +units=m +k_0=1.0'
-            )
-            crs_local = pyproj.CRS.from_proj4(proj4_string)
-            self._logger.info('Local Mercator projection: {}'.format(crs_local))
-        else:
-            self._logger.warning('crs_local cannot be built because center lon and lat are missing')
+        crs_local = self._getCrsLocal()
 
         # UTM system
-        crs_utm = None
-        if self._epsg is not None:
-            crs_utm = pyproj.CRS.from_user_input(self._epsg)
-            self._logger.info('UTM system: {}'.format(crs_utm))
-        else:
-            self._logger.warning('crs_utm cannot be built because center lon and lat are missing')
+        crs_utm = self._getCrsUtm()
 
         # 2. convert coordinates
         for tel in self._telescopeList:
@@ -489,3 +517,32 @@ class LayoutArray:
                 corsikaSphereCenter=corsikaSphereCenter
             )
     # End of convertCoordinates
+
+    def _getCrsLocal(self):
+        ''' Get the crs_local '''
+        if self._centerLongitude is not None and self._centerLatitude is not None:
+            proj4_string = (
+                '+proj=tmerc +ellps=WGS84 +datum=WGS84'
+                + ' +lon_0={} +lat_0={}'.format(self._centerLongitude, self._centerLatitude)
+                + ' +axis=nwu +units=m +k_0=1.0'
+            )
+            crs_local = pyproj.CRS.from_proj4(proj4_string)
+            self._logger.info('Local Mercator projection: {}'.format(crs_local))
+            return crs_local
+        else:
+            self._logger.warning('crs_local cannot be built because center lon and lat are missing')
+            return None
+
+    def _getCrsUtm(self):
+        ''' Get crs_utm '''
+        if self._epsg is not None:
+            crs_utm = pyproj.CRS.from_user_input(self._epsg)
+            self._logger.info('UTM system: {}'.format(crs_utm))
+            return crs_utm
+        else:
+            self._logger.warning('crs_utm cannot be built because center lon and lat are missing')
+            return None
+
+    def _getWgs84(self):
+        ''' Get wgs84 '''
+        return pyproj.CRS('EPSG:4326')
