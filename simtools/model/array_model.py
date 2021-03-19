@@ -6,14 +6,19 @@
 
 """
 
-import logging
-import yaml
-from pathlib import Path
-
-from simtools.util import names
 
 __all__ = ['ArrayModel']
 
 
 class ArrayModel:
-    pass
+    def __init__(self, label, layoutName):
+
+        self.layout = None
+
+        pass
+
+    def exportCorsikaInputFile():
+        pass
+
+    def exportSimtelConfigFiles():
+        pass
