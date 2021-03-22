@@ -64,7 +64,7 @@ class ArrayModel:
         # End of _validateArrayData
 
     def _buildArrayModel(self):
-
+        print('Building model')
         for tel in self.layout:
             print(tel)
 
