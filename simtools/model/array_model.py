@@ -1,5 +1,7 @@
 import logging
+from copy import copy
 
+import simtools.config as cfg
 from simtools.model.telescope_model import TelescopeModel
 from simtools.layout.layout_array import LayoutArray
 from simtools.util import names
@@ -18,6 +20,8 @@ class ArrayModel:
         label=None,
         arrayConfigFile=None,
         arrayConfigData=None,
+        modelFilesLocations=None,
+        filesLocation=None,
         logger=__name__
     ):
         self._logger = logging.getLogger(logger)
@@ -25,10 +29,14 @@ class ArrayModel:
 
         self.label = label
 
+        self._modelFilesLocations = cfg.getConfigArg('modelFilesLocations', modelFilesLocations)
+        self._filesLocation = cfg.getConfigArg('outputLocation', filesLocation)
+
         arrayConfigData = collectDataFromYamlOrDict(arrayConfigFile, arrayConfigData)
         self._loadArrayData(arrayConfigData)
 
         self._buildArrayModel()
+
         # End of init
 
     def _loadArrayData(self, arrayConfigData):
@@ -79,31 +87,50 @@ class ArrayModel:
     def _buildArrayModel(self):
 
         self._telescopeModel = list()
+        self._allTelescopeModelNames = list()
         for tel in self.layout:
             telSize = tel.getTelescopeSize()
-            print(telSize)
             if tel.name in self._arrayConfigData.keys():
                 telModelName = self.site + '-' + telSize + '-' + self._arrayConfigData[tel.name]
             else:
                 telModelName = (
                     self.site + '-' + telSize + '-' + self._arrayConfigData['default'][telSize]
                 )
-            print(tel.name + ', ' + telModelName)
 
-            telModel = TelescopeModel(
-                telescopeName=telModelName,
-                version=self.modelVersion,
-                label=self.label,
-                logger=self._logger.name
-            )
+            if telModelName not in self._allTelescopeModelNames:
+                self._allTelescopeModelNames.append(telModelName)
+                telModel = TelescopeModel(
+                    telescopeName=telModelName,
+                    version=self.modelVersion,
+                    label=self.label,
+                    modelFilesLocations=self._modelFilesLocations,
+                    filesLocation=self._filesLocation,
+                    logger=self._logger.name
+                )
+            else:
+                for tel in self._telescopeModel:
+                    if tel.telescopeName != telModelName:
+                        continue
+                    self._logger.debug(
+                        'Copying tel model {} already loaded from DB'.format(tel.telescopeName)
+                    )
+                    telModel = copy(tel)
+
             self._telescopeModel.append(telModel)
 
-        assert len(self._telescopeModel) == len(self.layout)
+        if len(self._telescopeModel) != len(self.layout):
+            self._logger.warning(
+                'Size of telModel does not match size of layout - something it wrong!'
+            )
+
+    def printTelescopeList(self):
+        for telData, telModel in zip(self.layout, self._telescopeModel):
+            print('Name: {}\t Model: {}'.format(telData.name, telModel.telescopeName))
 
     def exportCorsikaInputFile():
         pass
 
-    def exportSimtelConfigFiles():
+    def exportSimtelTelescopeConfigFiles():
         pass
 
     def exportArrayConfigFile():
