@@ -1,5 +1,7 @@
 import logging
 
+from simtools.layout.layout_array import LayoutArray
+from simtools.util import names
 from simtools.util.general import collectDataFromYamlOrDict
 
 __all__ = ['ArrayModel']
@@ -20,10 +22,13 @@ class ArrayModel:
         self._logger = logging.getLogger(logger)
         self._logger.debug('Init ArrayModel')
 
-        self.layout = None
-
         arrayConfigData = collectDataFromYamlOrDict(arrayConfigFile, arrayConfigData)
         self._loadArrayData(arrayConfigData)
+
+        self.layout.printTelescopeList()
+
+        self._buildArrayModel()
+        # End of init
 
     def _loadArrayData(self, arrayConfigData):
         ''' Loading parameters from arrayData '''
@@ -33,6 +38,20 @@ class ArrayModel:
         # Site
         self.site = names.validateSiteName(arrayConfigData['site'])
 
+        # Layout name
+        self.layoutName = names.validateArrayName(arrayConfigData['arrayName'])
+        self.layout = LayoutArray.fromLayoutArrayName(self.site + '-' + self.layoutName)
+
+        # Telescopes
+        self.defaultTel = dict()
+        for tt in ['LST', 'MST', 'SST']:
+            self.defaultTel[tt] = arrayConfigData['default'][tt]
+
+        # Reading remaining telescopes
+        self.listTel = dict()
+        for tt, vv in arrayConfigData.items():
+            if tt not in ['site', 'arrayName', 'default']:
+                self.listTel[tt] = vv
 
     def _validateArrayData(self, arrayConfigData):
         ''' Validate arrayData by checking the existence of the relevant keys.'''
@@ -49,9 +68,12 @@ class ArrayModel:
                     self._logger.error(msg)
                     raise InvalidArrayConfigData(msg)
 
-        runOverPars(['site', 'layoutName', 'default'], arrayConfigData)
+        runOverPars(['site', 'arrayName', 'default'], arrayConfigData)
         runOverPars(['LST', 'MST', 'SST'], arrayConfigData, parent='default')
         # End of _validateArrayData
+
+    def _buildArrayModel():
+        pass
 
     def exportCorsikaInputFile():
         pass
