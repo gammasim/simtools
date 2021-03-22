@@ -42,16 +42,7 @@ class ArrayModel:
         self.layoutName = names.validateArrayName(arrayConfigData['arrayName'])
         self.layout = LayoutArray.fromLayoutArrayName(self.site + '-' + self.layoutName)
 
-        # Telescopes
-        self.defaultTel = dict()
-        for tt in ['LST', 'MST', 'SST']:
-            self.defaultTel[tt] = arrayConfigData['default'][tt]
-
-        # Reading remaining telescopes
-        self.listTel = dict()
-        for tt, vv in arrayConfigData.items():
-            if tt not in ['site', 'arrayName', 'default']:
-                self.listTel[tt] = vv
+        self._arrayConfigData = arrayConfigData
 
     def _validateArrayData(self, arrayConfigData):
         ''' Validate arrayData by checking the existence of the relevant keys.'''
@@ -72,7 +63,12 @@ class ArrayModel:
         runOverPars(['LST', 'MST', 'SST'], arrayConfigData, parent='default')
         # End of _validateArrayData
 
-    def _buildArrayModel():
+    def _buildArrayModel(self):
+
+        for tel in self.layout:
+            print(tel)
+
+
         pass
 
     def exportCorsikaInputFile():
