@@ -120,6 +120,12 @@ class LayoutArray:
         self._outputDirectory = io.getLayoutOutputDirectory(self._filesLocation, self.label)
         self._outputDirectory.mkdir(parents=True, exist_ok=True)
 
+    def __getitem__(self, i):
+        return self._telescopeList[i]
+
+    def __len__(self):
+        return len(self._telescopeList)
+
     @classmethod
     def fromLayoutArrayName(
         cls,
