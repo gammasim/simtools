@@ -11,14 +11,14 @@ logger.setLevel(logging.DEBUG)
 def test_input_validation():
 
     arrayConfigData = {
-        'site': 'South',
+        'site': 'North',
         'arrayName': 'Prod5',
+        'modelVersion': 'Prod5',
         'default': {
-            'LST': 'D',
-            'MST': 'FlashCam-D',
-            'SST': 'D'
+            'LST': '1',
+            'MST': 'FlashCam-D'
         },
-        'L-01': '1'
+        'M-05': 'NectarCam-D'
     }
     am = ArrayModel(arrayConfigData=arrayConfigData)
 
