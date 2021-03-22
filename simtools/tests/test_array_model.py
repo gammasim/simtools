@@ -12,7 +12,7 @@ def test_input_validation():
 
     arrayConfigData = {
         'site': 'South',
-        'layoutName': 'Prod5',
+        'arrayName': 'Prod5',
         'default': {
             'LST': 'D',
             'MST': 'FlashCam-D',
