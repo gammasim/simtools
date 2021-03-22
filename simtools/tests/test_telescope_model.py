@@ -1,6 +1,5 @@
 #!/usr/bin/python3
 
-import yaml
 import logging
 
 from simtools.model.telescope_model import TelescopeModel

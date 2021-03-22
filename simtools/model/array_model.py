@@ -1,5 +1,6 @@
 import logging
 
+from simtools.model.telescope_model import TelescopeModel
 from simtools.layout.layout_array import LayoutArray
 from simtools.util import names
 from simtools.util.general import collectDataFromYamlOrDict
@@ -22,10 +23,10 @@ class ArrayModel:
         self._logger = logging.getLogger(logger)
         self._logger.debug('Init ArrayModel')
 
+        self.label = label
+
         arrayConfigData = collectDataFromYamlOrDict(arrayConfigFile, arrayConfigData)
         self._loadArrayData(arrayConfigData)
-
-        self.layout.printTelescopeList()
 
         self._buildArrayModel()
         # End of init
@@ -42,7 +43,17 @@ class ArrayModel:
         self.layoutName = names.validateArrayName(arrayConfigData['arrayName'])
         self.layout = LayoutArray.fromLayoutArrayName(self.site + '-' + self.layoutName)
 
-        self._arrayConfigData = arrayConfigData
+        # Model version
+        if 'modelVersion' not in arrayConfigData.keys() or arrayConfigData['modelVersion'] is None:
+            self._logger.warning('modelVersion not given in arrayConfigData - using current')
+            self.modelVersion = 'current'
+        else:
+            self.modelVersion = arrayConfigData['modelVersion']
+
+        self._arrayConfigData = {
+            k: v for (k, v) in arrayConfigData.items()
+            if k not in ['site', 'arrayName', 'modelVersion']
+        }
 
     def _validateArrayData(self, arrayConfigData):
         ''' Validate arrayData by checking the existence of the relevant keys.'''
@@ -60,16 +71,34 @@ class ArrayModel:
                     raise InvalidArrayConfigData(msg)
 
         runOverPars(['site', 'arrayName', 'default'], arrayConfigData)
-        runOverPars(['LST', 'MST', 'SST'], arrayConfigData, parent='default')
+        runOverPars(['LST', 'MST'], arrayConfigData, parent='default')
+        if names.validateSiteName(arrayConfigData['site']) == 'South':
+            runOverPars(['SST'], arrayConfigData, parent='default')
         # End of _validateArrayData
 
     def _buildArrayModel(self):
-        print('Building model')
+
+        self._telescopeModel = list()
         for tel in self.layout:
-            print(tel)
+            telSize = tel.getTelescopeSize()
+            print(telSize)
+            if tel.name in self._arrayConfigData.keys():
+                telModelName = self.site + '-' + telSize + '-' + self._arrayConfigData[tel.name]
+            else:
+                telModelName = (
+                    self.site + '-' + telSize + '-' + self._arrayConfigData['default'][telSize]
+                )
+            print(tel.name + ', ' + telModelName)
 
+            telModel = TelescopeModel(
+                telescopeName=telModelName,
+                version=self.modelVersion,
+                label=self.label,
+                logger=self._logger.name
+            )
+            self._telescopeModel.append(telModel)
 
-        pass
+        assert len(self._telescopeModel) == len(self.layout)
 
     def exportCorsikaInputFile():
         pass
