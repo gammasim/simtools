@@ -22,6 +22,8 @@ def test_input_validation():
     }
     am = ArrayModel(arrayConfigData=arrayConfigData)
 
+    am.printTelescopeList()
+
 
 if __name__ == '__main__':
     test_input_validation()
