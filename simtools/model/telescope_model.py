@@ -412,6 +412,7 @@ class TelescopeModel:
                 '%{}\n'.format(99 * '=')
                 + '% Configuration file for:\n'
                 + '% TelescopeName: {}\n'.format(self.telescopeName)
+                + '% ModelVersion: {}\n'.format(self.version)
                 + '% Label: {}\n'.format(self.label) if self.label is not None else ''
                 + '%{}\n'.format(99 * '=')
             )
