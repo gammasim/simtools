@@ -1,43 +1,53 @@
-#!/usr/bin/python3
+import logging
 
-""" This module contains the ArrayModel class
-
-    Todo: everything
-
-"""
-
+from simtools.util.general import collectDataFromYamlOrDict
 
 __all__ = ['ArrayModel']
+
+
+class InvalidArrayConfigData(Exception):
+    pass
 
 
 class ArrayModel:
     def __init__(
         self,
-        label,
+        label=None,
         arrayConfigFile=None,
         arrayConfigData=None,
         logger=__name__
     ):
+        self._logger = logging.getLogger(logger)
+        self._logger.debug('Init ArrayModel')
 
         self.layout = None
 
-        if arrayConfigData is not None and arrayConfigFile is not None:
-            self._logger.warning(
-                'Both arrayConfigData and arrayConfigFile were given '
-                '- arrayConfigData will be used'
-            )
-            # read file and load config
-            pass
-        elif arrayConfigFile is not None:
-            # read file and load config
-            pass
-        elif arrayConfigData is not None:
-            self._loadArrayData(arrayConfigData)
-        else:
-            self._logger.error('No arrayConfigData was given - aborting')
+        arrayConfigData = collectDataFromYamlOrDict(arrayConfigFile, arrayConfigData)
+        self._loadArrayData(arrayConfigData)
 
-    def _loadArrayData(arrayConfigData):
-        pass
+    def _loadArrayData(self, arrayConfigData):
+        ''' Loading parameters from arrayData '''
+        # Validating arrayConfigData
+        self._validateArrayData(arrayConfigData)
+
+    def _validateArrayData(self, arrayConfigData):
+        ''' Validate arrayData by checking the existence of the relevant keys.'''
+
+        def runOverPars(pars, data, parent=None):
+            allKeys = data.keys() if parent is None else data[parent].keys()
+            for pp in pars:
+                if pp not in allKeys:
+                    key = pp if parent is None else parent + '.' + pp
+                    msg = (
+                        'Key {} was not found in arrayConfigData '.format(key)
+                        + '- impossible to build array model'
+                    )
+                    self._logger.error(msg)
+                    raise InvalidArrayConfigData(msg)
+
+        runOverPars(['site', 'layoutName', 'default'], arrayConfigData)
+        runOverPars(['LST', 'MST', 'SST'], arrayConfigData, parent='default')
+        # End of _validateArrayData
 
     def exportCorsikaInputFile():
         pass
