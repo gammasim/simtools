@@ -1,14 +1,17 @@
 import logging
 import copy
+import yaml
 
 import astropy.units as u
 
 __all__ = [
     'collectArguments',
+    'collectDataFromYamlOrDict',
     'collectKwargs',
     'setDefaultKwargs',
     'sortArrays',
-    'collectFinalLines'
+    'collectFinalLines',
+    'getLogLevelFromUser'
 ]
 
 logger = logging.getLogger(__name__)
@@ -78,8 +81,8 @@ def _convertUnit(quantity, unit):
 def collectArguments(obj, args, allInputs, **kwargs):
     '''
     Collect certain arguments and validate them.
-    To be used during initialization of classes, where kwargs with physical meaning and units are
-    expected.
+    To be used during initialization of classes, where kwargs with
+    physical meaning and units are expected.
 
     Note
     ----
@@ -186,6 +189,36 @@ def collectArguments(obj, args, allInputs, **kwargs):
             raise MissingRequiredArgument(msg)
 
     return
+
+
+def collectDataFromYamlOrDict(inYaml, inDict):
+    '''
+    Collect input data that can be given either as a dict
+    or as a yaml file.
+
+    Parameters
+    ----------
+    inYaml: str
+        Name of the Yaml file.
+    inDict: dict
+        Data as dict.
+
+    Returns
+    -------
+    data: dict
+        Data as dict.
+    '''
+    if inYaml is not None:
+        if inDict is not None:
+            logger.warning('Both inDict inYaml were given - inYaml will be used')
+        with open(inYaml) as file:
+            data = yaml.load(file, Loader=yaml.FullLoader)
+        return data
+    elif inDict is not None:
+        return dict(inDict)
+    else:
+        logger.error('No data was given - aborting')
+        return None
 
 
 def collectKwargs(label, inKwargs):

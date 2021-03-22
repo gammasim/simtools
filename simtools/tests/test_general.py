@@ -3,7 +3,8 @@
 import logging
 import astropy.units as u
 
-from simtools.util.general import collectArguments
+import simtools.io_handler as io
+from simtools.util.general import collectArguments, collectDataFromYamlOrDict
 
 
 logging.getLogger().setLevel(logging.DEBUG)
@@ -33,7 +34,27 @@ def test_collect_args():
     print(d)
 
 
+def test_collect_dict_data():
+    inDict = {
+        'k1': 2,
+        'k2': 'bla'
+    }
+    inYaml = io.getTestDataFile('test_collect_dict_data.yml')
+
+    d1 = collectDataFromYamlOrDict(None, inDict)
+    assert 'k2' in d1.keys()
+    assert d1['k1'] == 2
+
+    d2 = collectDataFromYamlOrDict(inYaml, None)
+    assert 'k3' in d2.keys()
+    assert d2['k4'] == ['bla', 2]
+
+    d3 = collectDataFromYamlOrDict(inYaml, inDict)
+    assert d3 == d2
+
+
 if __name__ == '__main__':
 
-    test_collect_args()
+    test_collect_dict_data()
+    # test_collect_args()
     pass
