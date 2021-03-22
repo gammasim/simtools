@@ -30,6 +30,10 @@ class ArrayModel:
         # Validating arrayConfigData
         self._validateArrayData(arrayConfigData)
 
+        # Site
+        self.site = names.validateSiteName(arrayConfigData['site'])
+
+
     def _validateArrayData(self, arrayConfigData):
         ''' Validate arrayData by checking the existence of the relevant keys.'''
 
