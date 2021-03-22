@@ -2,7 +2,7 @@
 
 import logging
 
-from simtools.model.telescope_model import ArrayModel
+from simtools.model.array_model import ArrayModel
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
@@ -10,7 +10,6 @@ logger.setLevel(logging.DEBUG)
 
 def test_input_validation():
 
-    # Dict with the array config data
     arrayConfigData = {
         'site': 'South',
         'layoutName': 'Prod5',
@@ -21,12 +20,8 @@ def test_input_validation():
         },
         'L-01': '1'
     }
-
-    am = ArrayModel(label='test', arrayConfigData=arrayConfigData)
-
-    return
+    am = ArrayModel(arrayConfigData=arrayConfigData)
 
 
 if __name__ == '__main__':
-
-    pass
+    test_input_validation()
