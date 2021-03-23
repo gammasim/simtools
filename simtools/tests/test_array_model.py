@@ -9,7 +9,6 @@ logger.setLevel(logging.DEBUG)
 
 
 def test_input_validation():
-
     arrayConfigData = {
         'site': 'North',
         'arrayName': 'Prod5',
