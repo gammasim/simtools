@@ -48,8 +48,11 @@ class ArrayModel:
         self.site = names.validateSiteName(arrayConfigData['site'])
 
         # Layout name
-        self.layoutName = names.validateArrayName(arrayConfigData['arrayName'])
-        self.layout = LayoutArray.fromLayoutArrayName(self.site + '-' + self.layoutName)
+        self.layoutName = names.validateLayoutArrayName(arrayConfigData['arrayName'])
+        self.layout = LayoutArray.fromLayoutArrayName(
+            self.site + '-' + self.layoutName,
+            label=self.label
+        )
 
         # Model version
         if 'modelVersion' not in arrayConfigData.keys() or arrayConfigData['modelVersion'] is None:
@@ -127,11 +130,21 @@ class ArrayModel:
         for telData, telModel in zip(self.layout, self._telescopeModel):
             print('Name: {}\t Model: {}'.format(telData.name, telModel.telescopeName))
 
-    def exportCorsikaInputFile():
-        pass
+    # def exportCorsikaInputFile():
+    #     pass
 
-    def exportSimtelTelescopeConfigFiles():
-        pass
+    def exportSimtelTelescopeConfigFiles(self):
+        '''
+        '''
+        exportedModels = list()
+        for telModel in self._telescopeModel:
+            name = telModel.telescopeName
+            if name not in exportedModels:
+                self._logger.debug('Exporting config file for tel {}'.format(name))
+                telModel.exportConfigFile()
+                exportedModels.append(name)
+            else:
+                self._logger.debug('Config file for tel {} already exists - skipping'.format(name))
 
     def exportArrayConfigFile():
         pass
