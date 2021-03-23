@@ -4,7 +4,7 @@ __all__ = [
     'validateModelVersionName',
     'validateSimtelModeName',
     'validateSiteName',
-    'validateArrayName',
+    'validateLayoutArrayName',
     'validateTelescopeName',
     'validateCameraName',
     'convertTelescopeNameToYaml',
@@ -104,9 +104,9 @@ def validateSiteName(name):
     return validateName(name, allSiteNames)
 
 
-def validateArrayName(name):
+def validateLayoutArrayName(name):
     '''
-    Validate a array name.
+    Validate a layout array name.
 
     Raises
     ------
@@ -122,7 +122,7 @@ def validateArrayName(name):
     str
         Validated name.
     '''
-    return validateName(name, allArrayNames)
+    return validateName(name, allLayoutArrayNames)
 
 
 def validateName(name, allNames):
@@ -343,7 +343,7 @@ allSimtelModeNames = {
     'Trigger': ['trigger']
 }
 
-allArrayNames = {
+allLayoutArrayNames = {
     '4LST': ['4-lst', '4lst'],
     '1LST': ['1-lst', '1lst'],
     '4MST': ['4-mst', '4mst'],
