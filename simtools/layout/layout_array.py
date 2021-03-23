@@ -155,7 +155,7 @@ class LayoutArray:
         '''
         spl = layoutArrayName.split('-')
         siteName = names.validateSiteName(spl[0])
-        arrayName = names.validateArrayName(spl[1])
+        arrayName = names.validateLayoutArrayName(spl[1])
         validLayoutArrayName = siteName + '-' + arrayName
 
         layout = cls(
