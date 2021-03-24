@@ -931,7 +931,7 @@ class DatabaseHandler:
     def _getTaggedVersion(self, dbName, version='Current'):
         '''
         Get the tag of the "Current" or "Latest" version of the MC Model.
-        The "Current" is the latest stable MC Model, 
+        The "Current" is the latest stable MC Model,
         the latest is the latest tag (not necessarily stable, but can be equivalent to "Current").
 
         Parameters
