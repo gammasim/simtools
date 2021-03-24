@@ -83,7 +83,6 @@ class TelescopeData:
         self,
         name=None,
         prodId=dict(),
-        logger=__name__,
         **kwargs
     ):
         '''
@@ -95,15 +94,13 @@ class TelescopeData:
             Name of the telescope (e.g L-01, S-05, ...)
         prodId: dict
             ...
-        logger: str
-            Logger name to use in this instance
         **kwargs:
             Physical parameters with units (if applicable). Options: posX, posY, posZ,
             longitude, latitude, utmsEast, utmNorth, altitude, corsikaSphereRadius,
             corsikaSphereCenter
         '''
 
-        self._logger = logging.getLogger(logger)
+        self._logger = logging.getLogger(__name__)
         self._logger.debug('Init TelescopeData')
 
         self.name = name
