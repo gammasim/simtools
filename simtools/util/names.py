@@ -379,16 +379,18 @@ def simtelTelescopeConfigFileName(version, telescopeName, label):
     return name
 
 
-def simtelArrayConfigFileName(version, arrayName, label):
+def simtelArrayConfigFileName(arrayName, site, version, label):
     '''
     sim_telarray config file name for an array.
 
     Parameters
     ----------
+    arrayName: str
+        Prod5, ...
+    site: str
+        South or North.
     version: str
         Version of the model.
-    arrayName: str
-        South-Prod5, ...
     label: str
         Instance label.
 
@@ -397,7 +399,7 @@ def simtelArrayConfigFileName(version, arrayName, label):
     str
         File name.
     '''
-    name = 'CTA-{}-{}'.format(version, arrayName)
+    name = 'CTA-{}-{}-{}'.format(arrayName, site, version)
     name += '_{}'.format(label) if label is not None else ''
     name += '.cfg'
     return name
