@@ -211,6 +211,14 @@ class TelescopeModel:
         if not self._configFileDirectory.exists():
             self._configFileDirectory.mkdir(parents=True, exist_ok=True)
             self._logger.info('Creating directory {}'.format(self._configFileDirectory))
+
+        # Setting file name and the location
+        configFileName = names.simtelTelescopeConfigFileName(
+            self.version,
+            self.telescopeName,
+            self.label
+        )
+        self._configFilePath = self._configFileDirectory.joinpath(configFileName)
         return
 
     def _loadParametersFromDB(self):
@@ -264,7 +272,7 @@ class TelescopeModel:
         for _parNow in parsToRemove:
             if _parNow in self._parameters:
                 self._parameters.pop(_parNow, None)
-
+        return
     # END _loadParametersFromDB
 
     def hasParameter(self, parName):
@@ -397,24 +405,16 @@ class TelescopeModel:
     def exportConfigFile(self):
         ''' Export the config file used by sim_telarray. '''
 
-        # Setting file name and the location
-        configFileName = names.simtelTelescopeConfigFileName(
-            self.version,
-            self.telescopeName,
-            self.label
-        )
-        self._configFilePath = self._configFileDirectory.joinpath(configFileName)
-
         # Writing parameters to the file
         self._logger.info('Writing config file - {}'.format(self._configFilePath))
         with open(self._configFilePath, 'w') as file:
             header = (
-                '%{}\n'.format(99 * '=')
+                '%{}\n'.format(50 * '=')
                 + '% Configuration file for:\n'
                 + '% TelescopeName: {}\n'.format(self.telescopeName)
                 + '% ModelVersion: {}\n'.format(self.version)
-                + '% Label: {}\n'.format(self.label) if self.label is not None else ''
-                + '%{}\n'.format(99 * '=')
+                + ('% Label: {}\n'.format(self.label) if self.label is not None else '')
+                + '%{}\n'.format(50 * '=')
             )
 
             file.write(header)
@@ -425,7 +425,7 @@ class TelescopeModel:
         self._isConfigFileUpdated = True
     # END exportConfigFile
 
-    def getConfigFile(self):
+    def getConfigFile(self, noExport=False):
         '''
         Get the path of the config file for sim_telarray.
         The config file is produced if the file is not updated.
@@ -434,7 +434,7 @@ class TelescopeModel:
         -------
         Path of the exported config file for sim_telarray.
         '''
-        if not self._isConfigFileUpdated:
+        if not self._isConfigFileUpdated and not noExport:
             self.exportConfigFile()
         return self._configFilePath
 
