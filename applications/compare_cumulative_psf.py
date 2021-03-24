@@ -158,7 +158,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
     label = 'compare_cumulative_psf'
 
-    logger = logging.getLogger(label)
+    logger = logging.getLogger()
     logger.setLevel(gen.getLogLevelFromUser(args.logLevel))
 
     # Output directory to save files related directly to this app
@@ -167,8 +167,7 @@ if __name__ == '__main__':
     telModel = TelescopeModel(
         telescopeName=args.tel_name,
         version=args.model_version,
-        label=label,
-        logger=logger.name
+        label=label
     )
 
     # New parameters
@@ -181,8 +180,7 @@ if __name__ == '__main__':
         telescopeModel=telModel,
         sourceDistance=args.src_distance * u.km,
         zenithAngle=args.zenith * u.deg,
-        offAxisAngle=[0. * u.deg],
-        logger=logger.name
+        offAxisAngle=[0. * u.deg]
     )
 
     ray.simulate(test=args.test, force=False)

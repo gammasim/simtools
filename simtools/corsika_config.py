@@ -1,11 +1,7 @@
 #!/usr/bin/python3
 
 import logging
-import yaml
 import random
-from pathlib import Path
-
-import astropy.units as u
 
 import simtools.config as cfg
 import simtools.io_handler as io
@@ -42,6 +38,7 @@ class CorsikaConfig:
     exportFile()
     getFile()
     '''
+
     def __init__(
         self,
         site,
@@ -49,7 +46,6 @@ class CorsikaConfig:
         label=None,
         filesLocation=None,
         randomSeeds=False,
-        logger=__name__,
         **kwargs
     ):
         '''
@@ -68,13 +64,11 @@ class CorsikaConfig:
         randomSeeds: bool
             If True, seeds will be set randomly. If False, seeds will be defined based on the run
             number.
-        logger: str
-            Logger name to use in this instance
         **kwargs
             Set of parameters for the corsika config.
         '''
 
-        self._logger = logging.getLogger(logger)
+        self._logger = logging.getLogger(__name__)
         self._logger.debug('Init CorsikaConfig')
 
         self._label = label
@@ -191,7 +185,6 @@ class CorsikaConfig:
             ))
         file.write('\n')
 
-
     def _writeSeeds(self, file, seeds):
         '''
         Write seeds in the corsika input file.
@@ -205,7 +198,6 @@ class CorsikaConfig:
         '''
         for s in seeds:
             file.write('SEED {} 0 0\n'.format(s))
-
 
     def _convertPrimaryInput(self, value):
         '''
