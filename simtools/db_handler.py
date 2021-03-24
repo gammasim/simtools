@@ -58,19 +58,11 @@ class DatabaseHandler:
     dbClient = None
     tunnel = None
 
-    def __init__(
-        self,
-        logger=__name__
-    ):
+    def __init__(self):
         '''
         Initialize the DatabaseHandler class.
-
-        Parameters
-        ----------
-        logger: str
-            Logger name to use in this instance
         '''
-        self._logger = logging.getLogger(logger)
+        self._logger = logging.getLogger(__name__)
         self._logger.debug('Initialize DatabaseHandler')
 
         if cfg.get('useMongoDB'):

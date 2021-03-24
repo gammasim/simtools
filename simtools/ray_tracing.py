@@ -78,7 +78,6 @@ class RayTracing:
         singleMirrorMode=False,
         useRandomFocalLength=False,
         mirrorNumbers='all',
-        logger=__name__,
         **kwargs
     ):
         '''
@@ -98,13 +97,11 @@ class RayTracing:
             taken from the config.yml file.
         singleMirrorMode: bool
         useRandomFocalLength: bool
-        logger: str
-            Logger name to use in this instance
         **kwargs:
             Physical parameters with units (if applicable). Options: zenithAngle, offAxisAngle,
             sourceDistance, mirrorNumbers
         '''
-        self._logger = logging.getLogger(logger)
+        self._logger = logging.getLogger(__name__)
 
         self._simtelSourcePath = Path(cfg.getConfigArg('simtelPath', simtelSourcePath))
         self._filesLocation = cfg.getConfigArg('outputLocation', filesLocation)
