@@ -194,8 +194,7 @@ class RayTracing:
                     sourceDistance=self._sourceDistance * u.km,
                     offAxisAngle=thisOffAxis * u.deg,
                     mirrorNumber=thisMirror,
-                    useRandomFocalLength=self._useRandomFocalLength,
-                    logger=self._logger.name
+                    useRandomFocalLength=self._useRandomFocalLength
                 )
                 simtel.run(test=test, force=force)
     # END of simulate
@@ -254,7 +253,7 @@ class RayTracing:
 
                 photonsFile = self._outputDirectory.joinpath(photonsFileName)
                 telTransmission = computeTelescopeTransmission(telTransmissionPars, thisOffAxis)
-                image = PSFImage(focalLength, None, self._logger.name)
+                image = PSFImage(focalLength, None)
                 image.readSimtelFile(photonsFile)
                 self._psfImages[thisOffAxis] = copy(image)
 
