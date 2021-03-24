@@ -185,7 +185,6 @@ class CorsikaConfig:
             ))
         file.write('\n')
 
-
     def _writeSeeds(self, file, seeds):
         '''
         Write seeds in the corsika input file.
@@ -199,7 +198,6 @@ class CorsikaConfig:
         '''
         for s in seeds:
             file.write('SEED {} 0 0\n'.format(s))
-
 
     def _convertPrimaryInput(self, value):
         '''

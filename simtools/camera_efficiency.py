@@ -111,23 +111,23 @@ class CameraEfficiency:
         ''' Define the variables for the file names, including the results, simtel and log file. '''
         # Results file
         fileNameResults = names.cameraEfficiencyResultsFileName(
-                self._telescopeModel.telescopeName,
-                self._zenithAngle,
-                self.label
+            self._telescopeModel.telescopeName,
+            self._zenithAngle,
+            self.label
         )
         self._fileResults = self._baseDirectory.joinpath(fileNameResults)
         # SimtelOutput file
         fileNameSimtel = names.cameraEfficiencySimtelFileName(
-                self._telescopeModel.telescopeName,
-                self._zenithAngle,
-                self.label
+            self._telescopeModel.telescopeName,
+            self._zenithAngle,
+            self.label
         )
         self._fileSimtel = self._baseDirectory.joinpath(fileNameSimtel)
         # Log file
         fileNameLog = names.cameraEfficiencyLogFileName(
-                self._telescopeModel.telescopeName,
-                self._zenithAngle,
-                self.label
+            self._telescopeModel.telescopeName,
+            self._zenithAngle,
+            self.label
         )
         self._fileLog = self._baseDirectory.joinpath(fileNameLog)
 
