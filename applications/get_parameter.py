@@ -53,13 +53,13 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    logger = logging.getLogger('get_parameter')
+    logger = logging.getLogger()
     logger.setLevel(gen.getLogLevelFromUser(args.logLevel))
 
     if not cfg.get('useMongoDB'):
         raise ValueError('This application works only with MongoDB and you asked not to use it')
 
-    db = db_handler.DatabaseHandler(logger.name)
+    db = db_handler.DatabaseHandler()
 
     if args.version == 'all':
         raise NotImplemented('Printing last 5 versions is not implemented yet.')

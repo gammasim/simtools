@@ -31,7 +31,7 @@ class Mirrors:
         Plot the mirror layout (to be implemented).
     '''
 
-    def __init__(self, mirrorListFile, logger=__name__):
+    def __init__(self, mirrorListFile):
         '''
         Mirrors.
 
@@ -39,10 +39,8 @@ class Mirrors:
         ----------
         mirrorListFile: str
             The sim_telarray file name.
-        logger: str
-            Logger name to use in this instance
         '''
-        self._logger = logging.getLogger(logger)
+        self._logger = logging.getLogger(__name__)
         self._logger.debug('Mirrors Init')
 
         self._mirrorListFile = mirrorListFile

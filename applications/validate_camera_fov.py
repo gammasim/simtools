@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-''' 
+'''
     Summary
     -------
     This application calculate the camera FoV of the telescope requested and plot the camera \
@@ -81,7 +81,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
     label = 'validate_camera_fov'
 
-    logger = logging.getLogger(label)
+    logger = logging.getLogger()
     logger.setLevel(gen.getLogLevelFromUser(args.logLevel))
 
     # Output directory to save files related directly to this app
@@ -90,8 +90,7 @@ if __name__ == '__main__':
     telModel = TelescopeModel(
         telescopeName=args.tel_name,
         version=args.model_version,
-        label=label,
-        logger=logger.name
+        label=label
     )
 
     print('\nValidating the camera FoV of {}\n'.format(telModel.telescopeName))
@@ -101,8 +100,7 @@ if __name__ == '__main__':
     camera = Camera(
         telescopeName=telModel.telescopeName,
         cameraConfigFile=cfg.findFile(cameraConfigFile),
-        focalLength=focalLength,
-        logger=logger.name
+        focalLength=focalLength
     )
 
     fov, rEdgeAvg = camera.calcFOV()

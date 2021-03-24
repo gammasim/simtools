@@ -58,19 +58,11 @@ class DatabaseHandler:
     dbClient = None
     tunnel = None
 
-    def __init__(
-        self,
-        logger=__name__
-    ):
+    def __init__(self):
         '''
         Initialize the DatabaseHandler class.
-
-        Parameters
-        ----------
-        logger: str
-            Logger name to use in this instance
         '''
-        self._logger = logging.getLogger(logger)
+        self._logger = logging.getLogger(__name__)
         self._logger.debug('Initialize DatabaseHandler')
 
         if cfg.get('useMongoDB'):
@@ -939,7 +931,7 @@ class DatabaseHandler:
     def _getTaggedVersion(self, dbName, version='Current'):
         '''
         Get the tag of the "Current" or "Latest" version of the MC Model.
-        The "Current" is the latest stable MC Model, 
+        The "Current" is the latest stable MC Model,
         the latest is the latest tag (not necessarily stable, but can be equivalent to "Current").
 
         Parameters
