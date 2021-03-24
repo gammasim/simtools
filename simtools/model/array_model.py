@@ -2,6 +2,7 @@ import logging
 from copy import copy
 
 import simtools.config as cfg
+import simtools.io_handler as io
 from simtools.model.telescope_model import TelescopeModel
 from simtools.layout.layout_array import LayoutArray
 from simtools.util import names
@@ -21,10 +22,9 @@ class ArrayModel:
         arrayConfigFile=None,
         arrayConfigData=None,
         modelFilesLocations=None,
-        filesLocation=None,
-        logger=__name__
+        filesLocation=None
     ):
-        self._logger = logging.getLogger(logger)
+        self._logger = logging.getLogger(__name__)
         self._logger.debug('Init ArrayModel')
 
         self.label = label
@@ -126,6 +126,14 @@ class ArrayModel:
                 'Size of telModel does not match size of layout - something it wrong!'
             )
 
+    def _setConfigFileDirectory(self):
+        ''' Define the variable _configFileDirectory and create directories, if needed '''
+        self._configFileDirectory = io.getModelOutputDirectory(self._filesLocation, self.label)
+        if not self._configFileDirectory.exists():
+            self._configFileDirectory.mkdir(parents=True, exist_ok=True)
+            self._logger.info('Creating directory {}'.format(self._configFileDirectory))
+        return
+
     def printTelescopeList(self):
         for telData, telModel in zip(self.layout, self._telescopeModel):
             print('Name: {}\t Model: {}'.format(telData.name, telModel.telescopeName))
@@ -146,5 +154,14 @@ class ArrayModel:
             else:
                 self._logger.debug('Config file for tel {} already exists - skipping'.format(name))
 
-    def exportArrayConfigFile():
-        pass
+    def exportSimtelArrayConfigFile(self):
+        '''
+        '''
+        # Setting file name and the location
+        self._setConfigFileDirectory()
+        configFileName = names.simtelArrayConfigFileName(
+            self.modelVersion,
+            self.layoutName,
+            self.label
+        )
+        self._configFilePath = self._configFileDirectory.joinpath(configFileName)

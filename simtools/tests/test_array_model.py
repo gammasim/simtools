@@ -38,6 +38,7 @@ def test_exporting_config_files():
     am = ArrayModel(label='test', arrayConfigData=arrayConfigData)
 
     am.exportSimtelTelescopeConfigFiles()
+    am.exportSimtelArrayConfigFile()
 
 
 if __name__ == '__main__':
