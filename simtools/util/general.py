@@ -11,8 +11,6 @@ __all__ = [
     'collectFinalLines'
 ]
 
-logger = logging.getLogger(__name__)
-
 
 class ArgumentWithWrongUnit(Exception):
     pass
@@ -117,12 +115,14 @@ def collectArguments(obj, args, allInputs, **kwargs):
     **kwargs:
         kwargs from the input arguments.
     '''
+    _logger = logging.getLogger(__name__)
+
     def processSingleArg(arg, inArgName, argG, argD):
         if _unitIsValid(argG, argD['unit']):
             obj.__dict__[inArgName] = _convertUnit(argG, argD['unit'])
         else:
             msg = 'Argument {} given with wrong unit'.format(arg)
-            logger.error(msg)
+            _logger.error(msg)
             raise ArgumentWithWrongUnit(msg)
 
     def processListArg(arg, inArgName, argG, argD):
@@ -137,7 +137,7 @@ def collectArguments(obj, args, allInputs, **kwargs):
                 outArg.append(_convertUnit(aa, argD['unit']))
             else:
                 msg = 'Argument {} given with wrong unit'.format(arg)
-                logger.error(msg)
+                _logger.error(msg)
                 raise ArgumentWithWrongUnit(msg)
         obj.__dict__[inArgName] = outArg
 
@@ -146,7 +146,7 @@ def collectArguments(obj, args, allInputs, **kwargs):
 
         if not isinstance(argG, dict):
             msg = 'Argument is not a dict - aborting'
-            logger.error(msg)
+            _logger.error(msg)
             raise ArgumentCannotBeCollected(msg)
 
         for key, value in argG.items():
@@ -154,7 +154,7 @@ def collectArguments(obj, args, allInputs, **kwargs):
                 outArg[key] = _convertUnit(value, argD['unit'])
             else:
                 msg = 'Argument {} given with wrong unit'.format(arg)
-                logger.error(msg)
+                _logger.error(msg)
                 raise ArgumentWithWrongUnit(msg)
         obj.__dict__[inArgName] = outArg
 
@@ -164,7 +164,7 @@ def collectArguments(obj, args, allInputs, **kwargs):
 
         if arg not in allInputs.keys():
             msg = 'Arg {} cannot be collected because it is not in allInputs'.format(arg)
-            logger.error(msg)
+            _logger.error(msg)
             raise ArgumentCannotBeCollected(msg)
 
         if arg in kwargs.keys():
@@ -182,7 +182,7 @@ def collectArguments(obj, args, allInputs, **kwargs):
             obj.__dict__[inArgName] = argData['default']
         else:
             msg = 'Required argument (without default) {} was not given'.format(arg)
-            logger.warning(msg)
+            _logger.warning(msg)
             raise MissingRequiredArgument(msg)
 
     return

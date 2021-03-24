@@ -59,8 +59,7 @@ class TelescopeModel:
         label=None,
         modelFilesLocations=None,
         filesLocation=None,
-        readFromDB=True,
-        logger=__name__
+        readFromDB=True
     ):
         '''
         TelescopeModel.
@@ -81,10 +80,8 @@ class TelescopeModel:
             taken from the config.yml file.
         readFromDB: bool, optional
             If True, parameters will be loaded from the DB at the init level. Default = True.
-        logger: str
-            Logger name to use in this instance
         '''
-        self._logger = logging.getLogger(logger)
+        self._logger = logging.getLogger(__name__)
         self._logger.debug('Init TelescopeModel')
 
         self.version = names.validateModelVersionName(version)
@@ -121,8 +118,7 @@ class TelescopeModel:
         telescopeName,
         label=None,
         modelFilesLocations=None,
-        filesLocation=None,
-        logger=__name__
+        filesLocation=None
     ):
         '''
         Create a TelescopeModel from a sim_telarray config file.
@@ -146,8 +142,6 @@ class TelescopeModel:
         filesLocation: str (or Path), optional
             Parent location of the output files created by this class. If not given, it will be
             taken from the config.yml file.
-        logger: str
-            Logger name to use in this instance
 
         Returns
         -------
@@ -159,8 +153,7 @@ class TelescopeModel:
             label=label,
             modelFilesLocations=modelFilesLocations,
             filesLocation=filesLocation,
-            readFromDB=False,
-            logger=logger
+            readFromDB=False
         )
 
         def _processLine(words):
@@ -219,7 +212,7 @@ class TelescopeModel:
         self._logger.debug('Reading telescope parameters from DB')
 
         self._setConfigFileDirectory()
-        db = db_handler.DatabaseHandler(self._logger.name)
+        db = db_handler.DatabaseHandler()
         self._parameters = db.getModelParameters(
             self.telescopeName,
             self.version,
@@ -518,7 +511,7 @@ class TelescopeModel:
                 'MirrorListFile was not found in the config directory - '
                 'Using the one found in the modelFilesLocations'
             )
-        self._mirrors = Mirrors(mirrorListFile, logger=self._logger.name)
+        self._mirrors = Mirrors(mirrorListFile)
         return
 
     def _loadCamera(self):
@@ -539,8 +532,7 @@ class TelescopeModel:
         self._camera = Camera(
             telescopeName=self.telescopeName,
             cameraConfigFile=cameraConfigFilePath,
-            focalLength=focalLength,
-            logger=self._logger.name
+            focalLength=focalLength
         )
         return
 
