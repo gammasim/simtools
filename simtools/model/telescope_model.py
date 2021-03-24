@@ -398,7 +398,7 @@ class TelescopeModel:
         ''' Export the config file used by sim_telarray. '''
 
         # Setting file name and the location
-        configFileName = names.simtelConfigFileName(
+        configFileName = names.simtelTelescopeConfigFileName(
             self.version,
             self.telescopeName,
             self.label
