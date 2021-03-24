@@ -59,7 +59,7 @@ class ArrayModel:
             self._logger.warning('modelVersion not given in arrayConfigData - using current')
             self.modelVersion = 'current'
         else:
-            self.modelVersion = arrayConfigData['modelVersion']
+            self.modelVersion = names.validateModelVersionName(arrayConfigData['modelVersion'])
 
         self._arrayConfigData = {
             k: v for (k, v) in arrayConfigData.items()
@@ -160,8 +160,31 @@ class ArrayModel:
         # Setting file name and the location
         self._setConfigFileDirectory()
         configFileName = names.simtelArrayConfigFileName(
-            self.modelVersion,
             self.layoutName,
+            self.site,
+            self.modelVersion,
             self.label
         )
         self._configFilePath = self._configFileDirectory.joinpath(configFileName)
+
+        # Writing parameters to the file
+        self._logger.info('Writing array config file - {}'.format(self._configFilePath))
+        with open(self._configFilePath, 'w') as file:
+            header = (
+                '%{}\n'.format(50 * '=')
+                + '% Configuration file for:\n'
+                + '% ArrayName: {}\n'.format(self.layoutName)
+                + '% ModelVersion: {}\n'.format(self.modelVersion)
+                + ('% Label: {}\n'.format(self.label) if self.label is not None else '')
+                + '%{}\n\n'.format(50 * '=')
+            )
+            file.write(header)
+            # Looping over telescopes
+            for count, telModel in enumerate(self._telescopeModel):
+                telConfigFile = telModel.getConfigFile(noExport=True).name
+                if count == 0:
+                    file.write('# if TELESCOPE == {} % {}\n'.format(count, self.layout[count].name))
+                else:
+                    file.write('# elif TELESCOPE == {}\n'.format(count))
+                file.write('#  include <{}>\n\n'.format(telConfigFile))
+    # END exportSimtelArrayConfigFile
