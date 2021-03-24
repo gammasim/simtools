@@ -50,7 +50,6 @@ class CameraEfficiency:
         label=None,
         simtelSourcePath=None,
         filesLocation=None,
-        logger=__name__,
         **kwargs
     ):
         '''
@@ -68,12 +67,10 @@ class CameraEfficiency:
         filesLocation: str (or Path), optional.
             Parent location of the output files created by this class. If not given, it will be
             taken from the config.yml file.
-        logger: str
-            Logger name to use in this instance
         **kwargs:
             Physical parameters with units (if applicable). Options: zenithAngle (default 20 deg).
         '''
-        self._logger = logging.getLogger(logger)
+        self._logger = logging.getLogger(__name__)
 
         self._simtelSourcePath = Path(cfg.getConfigArg('simtelPath', simtelSourcePath))
         self._filesLocation = cfg.getConfigArg('outputLocation', filesLocation)

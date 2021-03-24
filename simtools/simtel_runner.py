@@ -51,7 +51,6 @@ class SimtelRunner:
         label=None,
         simtelSourcePath=None,
         filesLocation=None,
-        logger=__name__,
         **kwargs
     ):
         '''
@@ -71,13 +70,11 @@ class SimtelRunner:
         filesLocation: str (or Path), optional
             Parent location of the output files created by this class. If not given, it will be
             taken from the config.yml file.
-        logger: str
-            Logger name to use in this instance
         **kwargs:
             Input parameters listed in ALL_INPUTS (zenithAngle, sourceDistance, offAxisAngle,
             mirrorNumber, useRandomFocalLength)
         '''
-        self._logger = logging.getLogger(logger)
+        self._logger = logging.getLogger(__name__)
         self._logger.debug('Init SimtelRunner')
 
         self._simtelSourcePath = Path(cfg.getConfigArg('simtelPath', simtelSourcePath))
