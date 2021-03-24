@@ -11,7 +11,8 @@ __all__ = [
     'splitTelescopeName',
     'getSiteFromTelescopeName',
     'rayTracingFileName',
-    'simtelConfigFileName',
+    'simtelTelescopeConfigFileName',
+    'simtelArrayConfigFileName',
     'simtelSingleMirrorListFileName',
     'corsikaConfigFileName',
     'corsikaOutputFileName'
@@ -354,9 +355,9 @@ allLayoutArrayNames = {
 }
 
 
-def simtelConfigFileName(version, telescopeName, label):
+def simtelTelescopeConfigFileName(version, telescopeName, label):
     '''
-    sim_telarray config file name.
+    sim_telarray config file name for a telescope.
 
     Parameters
     ----------
@@ -373,6 +374,30 @@ def simtelConfigFileName(version, telescopeName, label):
         File name.
     '''
     name = 'CTA-{}-{}'.format(version, telescopeName)
+    name += '_{}'.format(label) if label is not None else ''
+    name += '.cfg'
+    return name
+
+
+def simtelArrayConfigFileName(version, arrayName, label):
+    '''
+    sim_telarray config file name for an array.
+
+    Parameters
+    ----------
+    version: str
+        Version of the model.
+    arrayName: str
+        South-Prod5, ...
+    label: str
+        Instance label.
+
+    Returns
+    -------
+    str
+        File name.
+    '''
+    name = 'CTA-{}-{}'.format(version, arrayName)
     name += '_{}'.format(label) if label is not None else ''
     name += '.cfg'
     return name
