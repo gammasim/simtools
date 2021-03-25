@@ -172,19 +172,30 @@ class ArrayModel:
         with open(self._configFilePath, 'w') as file:
             header = (
                 '%{}\n'.format(50 * '=')
-                + '% Configuration file for:\n'
+                + '% ARRAY CONFIGURATION FILE\n'
+                + '% Site: {}\n'.format(self.site)
                 + '% ArrayName: {}\n'.format(self.layoutName)
                 + '% ModelVersion: {}\n'.format(self.modelVersion)
                 + ('% Label: {}\n'.format(self.label) if self.label is not None else '')
                 + '%{}\n\n'.format(50 * '=')
             )
             file.write(header)
-            # Looping over telescopes
+            # TELESCOPE 0 - global parameters
+            file.write('# if TELESCOPE == 0\n')
+            file.write('    echo *****************************\n')
+            file.write('    echo Site: {}\n'.format(self.site))
+            file.write('    echo ArrayName: {}\n'.format(self.layoutName))
+            file.write('    echo ModelVersion: {}\n'.format(self.modelVersion))
+            file.write('    echo *****************************\n\n')
+
+            # Looping over telescopes - from 1 to ...
             for count, telModel in enumerate(self._telescopeModel):
                 telConfigFile = telModel.getConfigFile(noExport=True).name
-                if count == 0:
-                    file.write('# if TELESCOPE == {} % {}\n'.format(count, self.layout[count].name))
-                else:
-                    file.write('# elif TELESCOPE == {}\n'.format(count))
+                file.write('# elif TELESCOPE == {} % {}\n\n'.format(
+                    count + 1,
+                    self.layout[count].name
+                ))
                 file.write('#  include <{}>\n\n'.format(telConfigFile))
+            file.write('# endif \n\n')
+
     # END exportSimtelArrayConfigFile
