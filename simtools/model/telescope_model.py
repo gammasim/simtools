@@ -410,11 +410,11 @@ class TelescopeModel:
         with open(self._configFilePath, 'w') as file:
             header = (
                 '%{}\n'.format(50 * '=')
-                + '% Configuration file for:\n'
+                + '% TELESCOPE CONFIGURATION FILE\n'
                 + '% TelescopeName: {}\n'.format(self.telescopeName)
                 + '% ModelVersion: {}\n'.format(self.version)
                 + ('% Label: {}\n'.format(self.label) if self.label is not None else '')
-                + '%{}\n'.format(50 * '=')
+                + '%{}\n\n'.format(50 * '=')
             )
 
             file.write(header)
