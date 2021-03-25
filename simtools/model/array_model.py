@@ -3,6 +3,7 @@ from copy import copy
 
 import simtools.config as cfg
 import simtools.io_handler as io
+from simtools import db_handler
 from simtools.model.telescope_model import TelescopeModel
 from simtools.layout.layout_array import LayoutArray
 from simtools.util import names
@@ -34,6 +35,8 @@ class ArrayModel:
 
         arrayConfigData = collectDataFromYamlOrDict(arrayConfigFile, arrayConfigData)
         self._loadArrayData(arrayConfigData)
+
+        self._setConfigFileDirectory()
 
         self._buildArrayModel()
 
@@ -89,6 +92,16 @@ class ArrayModel:
 
     def _buildArrayModel(self):
 
+        # Getting site parameters from DB
+        db = db_handler.DatabaseHandler(self._logger.name)
+        self._siteParameters = db.getSiteParameters(
+            self.site,
+            self.modelVersion,
+            self._configFileDirectory,
+            onlyApplicable=True
+        )
+
+        # Building telescopes
         self._telescopeModel = list()
         self._allTelescopeModelNames = list()
         for tel in self.layout:
@@ -158,7 +171,6 @@ class ArrayModel:
         '''
         '''
         # Setting file name and the location
-        self._setConfigFileDirectory()
         configFileName = names.simtelArrayConfigFileName(
             self.layoutName,
             self.site,
@@ -180,6 +192,7 @@ class ArrayModel:
                 + '%{}\n\n'.format(50 * '=')
             )
             file.write(header)
+
             # TELESCOPE 0 - global parameters
             file.write('# if TELESCOPE == 0\n')
             file.write('    echo *****************************\n')
@@ -187,6 +200,9 @@ class ArrayModel:
             file.write('    echo ArrayName: {}\n'.format(self.layoutName))
             file.write('    echo ModelVersion: {}\n'.format(self.modelVersion))
             file.write('    echo *****************************\n\n')
+
+            # Writing site parameters
+            # HERE
 
             # Looping over telescopes - from 1 to ...
             for count, telModel in enumerate(self._telescopeModel):
