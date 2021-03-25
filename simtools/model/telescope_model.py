@@ -407,6 +407,7 @@ class TelescopeModel:
 
         # Writing parameters to the file
         self._logger.info('Writing config file - {}'.format(self._configFilePath))
+        print(self._parameters)
         with open(self._configFilePath, 'w') as file:
             header = (
                 '%{}\n'.format(50 * '=')
@@ -418,8 +419,7 @@ class TelescopeModel:
             )
 
             file.write(header)
-            for par in self._parameters:
-                value = self._parameters[par]
+            for par, value in self._parameters.items():
                 file.write('{} = {}\n'.format(par, value))
 
         self._isConfigFileUpdated = True
@@ -480,7 +480,6 @@ class TelescopeModel:
 
         __, __, diameter, flen, shape = self.mirrors.getSingleMirrorParameters(mirrorNumber)
 
-        print(self._singleMirrorListFilePaths[mirrorNumber])
         with open(self._singleMirrorListFilePaths[mirrorNumber], 'w') as file:
             file.write('# Column 1: X pos. [cm] (North/Down)\n')
             file.write('# Column 2: Y pos. [cm] (West/Right from camera)\n')
