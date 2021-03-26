@@ -224,6 +224,11 @@ class ArrayModel:
             self._writeCommonParameters(file)
             file.write('\n')
 
+            telConfigFile = (
+                self._telescopeModel[0].getConfigFile(noExport=True).name
+            )
+            file.write(tab + '# include <{}>\n\n'.format(telConfigFile))
+
             # Looping over telescopes - from 1 to ...
             for count, telModel in enumerate(self._telescopeModel):
                 telConfigFile = telModel.getConfigFile(noExport=True).name
