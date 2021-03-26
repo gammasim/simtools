@@ -407,7 +407,6 @@ class TelescopeModel:
 
         # Writing parameters to the file
         self._logger.info('Writing config file - {}'.format(self._configFilePath))
-        print(self._parameters)
         with open(self._configFilePath, 'w') as file:
             header = (
                 '%{}\n'.format(50 * '=')
