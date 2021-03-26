@@ -197,6 +197,11 @@ class ArrayModel:
             file.write(header)
 
             tab = '   '
+
+            file.write('#ifndef TELESCOPE\n')
+            file.write('# define TELESCOPE 0\n')
+            file.write('#endif\n\n')
+
             # TELESCOPE 0 - global parameters
             file.write('#if TELESCOPE == 0\n')
             file.write(tab + 'echo *****************************\n')
@@ -222,7 +227,7 @@ class ArrayModel:
             # Looping over telescopes - from 1 to ...
             for count, telModel in enumerate(self._telescopeModel):
                 telConfigFile = telModel.getConfigFile(noExport=True).name
-                file.write(tab + '%{}\n'.format(self.layout[count].name))
+                file.write('%{}\n'.format(self.layout[count].name))
                 file.write('#elif TELESCOPE == {}\n\n'.format(count + 1))
                 file.write('# include <{}>\n\n'.format(telConfigFile))
             file.write('#endif \n\n')
