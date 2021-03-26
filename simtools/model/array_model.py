@@ -17,6 +17,9 @@ class InvalidArrayConfigData(Exception):
 
 
 class ArrayModel:
+
+    SITE_PARS_TO_WRITE = ['altitude', 'atmospheric_transmission']
+
     def __init__(
         self,
         label=None,
@@ -195,14 +198,19 @@ class ArrayModel:
 
             # TELESCOPE 0 - global parameters
             file.write('# if TELESCOPE == 0\n')
-            file.write('    echo *****************************\n')
-            file.write('    echo Site: {}\n'.format(self.site))
-            file.write('    echo ArrayName: {}\n'.format(self.layoutName))
-            file.write('    echo ModelVersion: {}\n'.format(self.modelVersion))
-            file.write('    echo *****************************\n\n')
+            file.write('\techo *****************************\n')
+            file.write('\techo Site: {}\n'.format(self.site))
+            file.write('\techo ArrayName: {}\n'.format(self.layoutName))
+            file.write('\techo ModelVersion: {}\n'.format(self.modelVersion))
+            file.write('\techo *****************************\n\n')
 
             # Writing site parameters
-            # HERE
+            for par in self._siteParameters:
+                if par not in self.SITE_PARS_TO_WRITE:
+                    continue
+                value = self._siteParameters[par]['Value']
+                file.write('\t{} = {}\n'.format(par, value))
+            file.write('\n')
 
             # Looping over telescopes - from 1 to ...
             for count, telModel in enumerate(self._telescopeModel):
