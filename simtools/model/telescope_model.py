@@ -416,8 +416,15 @@ class TelescopeModel:
                 + ('% Label: {}\n'.format(self.label) if self.label is not None else '')
                 + '%{}\n\n'.format(50 * '=')
             )
-
             file.write(header)
+
+            file.write('#ifdef TELESCOPE\n')
+            file.write(
+                '   echo Configuration for {}'.format(self.telescopeName)
+                + ' - TELESCOPE $(TELESCOPE)\n'
+            )
+            file.write('#endif\n\n')
+
             for par, value in self._parameters.items():
                 file.write('{} = {}\n'.format(par, value))
 
