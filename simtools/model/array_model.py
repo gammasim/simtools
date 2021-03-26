@@ -196,30 +196,77 @@ class ArrayModel:
             )
             file.write(header)
 
+            tab = '   '
             # TELESCOPE 0 - global parameters
-            file.write('# if TELESCOPE == 0\n')
-            file.write('\techo *****************************\n')
-            file.write('\techo Site: {}\n'.format(self.site))
-            file.write('\techo ArrayName: {}\n'.format(self.layoutName))
-            file.write('\techo ModelVersion: {}\n'.format(self.modelVersion))
-            file.write('\techo *****************************\n\n')
+            file.write('#if TELESCOPE == 0\n')
+            file.write(tab + 'echo *****************************\n')
+            file.write(tab + 'echo Site: {}\n'.format(self.site))
+            file.write(tab + 'echo ArrayName: {}\n'.format(self.layoutName))
+            file.write(tab + 'echo ModelVersion: {}\n'.format(self.modelVersion))
+            file.write(tab + 'echo *****************************\n\n')
 
             # Writing site parameters
+            file.write(tab + '% Site parameters\n')
             for par in self._siteParameters:
                 if par not in self.SITE_PARS_TO_WRITE:
                     continue
                 value = self._siteParameters[par]['Value']
-                file.write('\t{} = {}\n'.format(par, value))
+                file.write(tab + '{} = {}\n'.format(par, value))
+            file.write('\n')
+
+            # Writing common parameters
+            file.write(tab + '% Common parameters\n')
+            self._writeCommonParameters(file)
             file.write('\n')
 
             # Looping over telescopes - from 1 to ...
             for count, telModel in enumerate(self._telescopeModel):
                 telConfigFile = telModel.getConfigFile(noExport=True).name
-                file.write('# elif TELESCOPE == {} % {}\n\n'.format(
-                    count + 1,
-                    self.layout[count].name
-                ))
-                file.write('#  include <{}>\n\n'.format(telConfigFile))
-            file.write('# endif \n\n')
+                file.write(tab + '%{}\n'.format(self.layout[count].name))
+                file.write('#elif TELESCOPE == {}\n\n'.format(count + 1))
+                file.write('# include <{}>\n\n'.format(telConfigFile))
+            file.write('#endif \n\n')
 
     # END exportSimtelArrayConfigFile
+
+    def _writeCommonParameters(self, file):
+
+        # Common parameters taken from CTA-PROD4-common.cfg
+        # TODO: Store these somewhere else
+        self._logger.warning('Common parameters are hardcoded!')
+        COMMON_PARS = {
+            'trigger_telescopes': 1,
+            'array_trigger': 'none',
+            'trigger_telescopes': 2,
+            'only_triggered_telescopes': 1,
+            'array_window': 1000,
+            'output_format': 1,
+            'mirror_list': 'none',
+            'telescope_random_angle': 0.,
+            'telescope_random_error': 0.,
+            'convergent_depth': 0,
+            'iobuf_maximum': 1000000000,
+            'iobuf_output_maximum': 400000000,
+            'multiplicity_offset': -0.5,
+            'discriminator_pulse_shape': 'none',
+            'discriminator_amplitude': 0.,
+            'discriminator_threshold': 99999.,
+            'fadc_noise': 0.,
+            'asum_threshold': 0.,
+            'asum_shaping_file': 'none',
+            'asum_offset': 0.0,
+            'dsum_threshold': 0,
+            'fadc_pulse_shape': 'none',
+            'fadc_amplitude': 0.,
+            'fadc_pedestal': 100.,
+            'fadc_max_signal': 4095,
+            'fadc_max_sum': 16777215,
+            'store_photoelectrons': 30,
+            'pulse_analysis': -30,
+            'sum_before_peak': 3,
+            'sum_after_peak': 4
+        }
+
+        for par, value in COMMON_PARS.items():
+            file.write('   {} = {}\n'.format(par, value))
+    # End of writeCommonParameters
