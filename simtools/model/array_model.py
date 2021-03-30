@@ -42,7 +42,6 @@ class ArrayModel:
         self._setConfigFileDirectory()
 
         self._buildArrayModel()
-
         # End of init
 
     @property
@@ -261,7 +260,8 @@ class ArrayModel:
             )
             file.write(header)
 
-            tab = '   '
+            # Be carefull with the formating - simtel is sensitive
+            tab = ' ' * 3
 
             file.write('#ifndef TELESCOPE\n')
             file.write('# define TELESCOPE 0\n')
