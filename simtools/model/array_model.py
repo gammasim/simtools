@@ -45,6 +45,10 @@ class ArrayModel:
 
         # End of init
 
+    @property
+    def numberOfTelescopes(self):
+        return self.layout.getNumberOfTelescopes()
+
     def _loadArrayData(self, arrayConfigData):
         ''' Loading parameters from arrayData '''
         # Validating arrayConfigData
@@ -224,10 +228,14 @@ class ArrayModel:
             self._writeCommonParameters(file)
             file.write('\n')
 
+            # Maximum telescopes
+            file.write(tab + 'maximum_telescopes = {}\n\n'.format(self.numberOfTelescopes))
+
+            # Default telescope - 0th tel in telescope list
             telConfigFile = (
                 self._telescopeModel[0].getConfigFile(noExport=True).name
             )
-            file.write(tab + '# include <{}>\n\n'.format(telConfigFile))
+            file.write('# include <{}>\n\n'.format(telConfigFile))
 
             # Looping over telescopes - from 1 to ...
             for count, telModel in enumerate(self._telescopeModel):
