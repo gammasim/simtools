@@ -109,8 +109,8 @@ class ArrayModel:
                 telName = self.site + '-' + telSize + '-' + data['name']
                 parsToChange = {k: v for (k, v) in data.items() if k != 'name'}
                 self._logger.debug(
-                    'Grabing tel data as dict:\n'
-                    + 'name - {}\n'.format(telName)
+                    'Grabing tel data as dict - '
+                    + 'name: {}, '.format(telName)
                     + '{} pars to change'.format(len(parsToChange))
                 )
                 return telName, parsToChange
