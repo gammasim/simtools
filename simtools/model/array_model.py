@@ -97,6 +97,40 @@ class ArrayModel:
             runOverPars(['SST'], arrayConfigData, parent='default')
         # End of _validateArrayData
 
+    def _getSingleTelescopeInfoFromArrayConfig(self, telName, telSize):
+
+        def _proccessData(data):
+            if isinstance(data, dict):
+                # Case 0: data is dict
+                if 'name' not in data.keys():
+                    msg = 'ArrayConfig has no name for a telescope'
+                    self._logger.error(msg)
+                    raise InvalidArrayConfigData(msg)
+                telName = self.site + '-' + telSize + '-' + data['name']
+                parsToChange = {k: v for (k, v) in data.items() if k != 'name'}
+                self._logger.debug(
+                    'Grabing tel data as dict:\n'
+                    + 'name - {}\n'.format(telName)
+                    + '{} pars to change'.format(len(parsToChange))
+                )
+                return telName, parsToChange
+            elif isinstance(data, str):
+                # Case 1: data is string (only name)
+                telName = self.site + '-' + telSize + '-' + data
+                return telName, dict()
+            else:
+                # Case 2: data has a wrong type
+                msg = 'ArrayConfig has wrong input for a telescope'
+                self._logger.error(msg)
+                raise InvalidArrayConfigData(msg)
+
+        if telName in self._arrayConfigData.keys():
+            # Specific info for this telescope
+            return _proccessData(self._arrayConfigData[telName])
+        else:
+            # Grabing the default option
+            return _proccessData(self._arrayConfigData['default'][telSize])
+
     def _buildArrayModel(self):
 
         # Getting site parameters from DB
@@ -111,16 +145,23 @@ class ArrayModel:
         # Building telescopes
         self._telescopeModel = list()
         self._allTelescopeModelNames = list()
+        self._parsToChange = dict()
         for tel in self.layout:
             telSize = tel.getTelescopeSize()
-            if tel.name in self._arrayConfigData.keys():
-                telModelName = self.site + '-' + telSize + '-' + self._arrayConfigData[tel.name]
-            else:
-                telModelName = (
-                    self.site + '-' + telSize + '-' + self._arrayConfigData['default'][telSize]
-                )
 
+            # Collecting telescope name and pars to change from arrayConfigData
+            telModelName, parsToChange = self._getSingleTelescopeInfoFromArrayConfig(
+                tel.name,
+                telSize
+            )
+            if len(parsToChange) > 0:
+                self._parsToChange[tel.name] = parsToChange
+
+            self._logger.debug('TelModelName: {}'.format(telModelName))
+
+            # Building the basic models - no pars to change yet
             if telModelName not in self._allTelescopeModelNames:
+                # First time a telescope name is built
                 self._allTelescopeModelNames.append(telModelName)
                 telModel = TelescopeModel(
                     telescopeName=telModelName,
@@ -131,6 +172,8 @@ class ArrayModel:
                     logger=self._logger.name
                 )
             else:
+                # Telescope name already exists.
+                # Finding the TelescopeModel and copying it.
                 for tel in self._telescopeModel:
                     if tel.telescopeName != telModelName:
                         continue
@@ -138,13 +181,29 @@ class ArrayModel:
                         'Copying tel model {} already loaded from DB'.format(tel.telescopeName)
                     )
                     telModel = copy(tel)
+                    break
 
             self._telescopeModel.append(telModel)
 
+        # Checking whether the size of the telescope list and the layout match
         if len(self._telescopeModel) != len(self.layout):
             self._logger.warning(
                 'Size of telModel does not match size of layout - something it wrong!'
             )
+
+        # Changing parameters, if there are any
+        if len(self._parsToChange) > 0:
+            for telData, telModel in zip(self.layout, self._telescopeModel):
+                if telData.name not in self._parsToChange.keys():
+                    continue
+                self._logger.debug('Changing {} pars of a {}: {}, ...'.format(
+                    len(self._parsToChange[telData.name]),
+                    telData.name,
+                    *self._parsToChange[telData.name]
+                ))
+                telModel.changeParameters(**self._parsToChange[telData.name])
+        return
+    # End of _buildArrayModel
 
     def _setConfigFileDirectory(self):
         ''' Define the variable _configFileDirectory and create directories, if needed '''

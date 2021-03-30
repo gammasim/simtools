@@ -364,6 +364,7 @@ class TelescopeModel:
                 if type(self._parameters[par]) != type(value):
                     self._logger.warning('Value type differs from the current one')
                 self._parameters[par] = value
+                self._logger.debug('Changing parameter {}'.format(par))
         self._isConfigFileUpdated = False
 
     def removeParameters(self, *args):

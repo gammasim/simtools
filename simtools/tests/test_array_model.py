@@ -33,12 +33,13 @@ def test_exporting_config_files():
             'LST': '1',
             'MST': 'FlashCam-D'
         },
-        'M-05': 'NectarCam-D'
+        'M-05': {
+            'name': 'NectarCam-D',
+            'fadc_pulse_shape': 'Pulse_template_nectarCam_17042020-noshift.dat',
+            'discriminator_pulse_shape': 'Pulse_template_nectarCam_17042020-noshift.dat'
+        }
     }
     am = ArrayModel(label='test', arrayConfigData=arrayConfigData)
-
-
-    "Pulse template nectarCam 17042020-noshift.dat"
 
     am.exportSimtelTelescopeConfigFiles()
     am.exportSimtelArrayConfigFile()
