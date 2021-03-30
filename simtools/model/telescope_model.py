@@ -90,6 +90,7 @@ class TelescopeModel:
         self.version = names.validateModelVersionName(version)
         self.telescopeName = names.validateTelescopeName(telescopeName)
         self.label = label
+        self.extraLabel = None
 
         self._modelFilesLocations = cfg.getConfigArg('modelFilesLocations', modelFilesLocations)
         self._filesLocation = cfg.getConfigArg('outputLocation', filesLocation)
@@ -99,7 +100,7 @@ class TelescopeModel:
         if readFromDB:
             self._loadParametersFromDB()
 
-        self._setConfigFileDirectory()
+        self._setConfigFileDirectoryAndName()
         self._isConfigFileUpdated = False
 
     @property
@@ -204,8 +205,27 @@ class TelescopeModel:
 
         tel.addParameters(**parameters)
         return tel
+    # End of fromConfigFile
 
-    def _setConfigFileDirectory(self):
+    def setExtraLabel(self, extraLabel):
+        '''
+        Set an extra label for the name of the config file.
+
+        Notes
+        -----
+        The config file directory name is not affected by the extra label.
+        Only the file name is changed. This is important for the ArrayModel
+        class to export multiple config files in the same directory.
+
+        Parameters
+        ----------
+        extraLabel: str
+            Extra label to be appended to the original label.
+        '''
+        self.extraLabel = extraLabel
+        self._setConfigFileDirectoryAndName()
+
+    def _setConfigFileDirectoryAndName(self):
         ''' Define the variable _configFileDirectory and create directories, if needed '''
         self._configFileDirectory = io.getModelOutputDirectory(self._filesLocation, self.label)
         if not self._configFileDirectory.exists():
@@ -216,7 +236,7 @@ class TelescopeModel:
         configFileName = names.simtelTelescopeConfigFileName(
             self.version,
             self.telescopeName,
-            self.label
+            self.label + ('_' + self.extraLabel if self.extraLabel is not None else '')
         )
         self._configFilePath = self._configFileDirectory.joinpath(configFileName)
         return
@@ -226,7 +246,7 @@ class TelescopeModel:
 
         self._logger.debug('Reading telescope parameters from DB')
 
-        self._setConfigFileDirectory()
+        self._setConfigFileDirectoryAndName()
         db = db_handler.DatabaseHandler(self._logger.name)
         self._parameters = db.getModelParameters(
             self.telescopeName,
