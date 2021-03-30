@@ -37,6 +37,9 @@ def test_exporting_config_files():
     }
     am = ArrayModel(label='test', arrayConfigData=arrayConfigData)
 
+
+    "Pulse template nectarCam 17042020-noshift.dat"
+
     am.exportSimtelTelescopeConfigFiles()
     am.exportSimtelArrayConfigFile()
 
