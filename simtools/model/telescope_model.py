@@ -36,6 +36,8 @@ class TelescopeModel:
     -------
     fromConfigFile(configFileName, telescopeName, label=None, filesLocation=None)
         Create a TelescopeModel from a sim_telarray cfg file.
+    setExtraLabel(extraLabel)
+        Set an extra label for the name of the config file.
     hasParameter(parName):
         Verify if parameter is in the model.
     getParameter(parName):
