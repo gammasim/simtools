@@ -202,6 +202,8 @@ class ArrayModel:
                     *self._parsToChange[telData.name]
                 ))
                 telModel.changeParameters(**self._parsToChange[telData.name])
+                telModel.setExtraLabel(telData.name)
+
         return
     # End of _buildArrayModel
 
