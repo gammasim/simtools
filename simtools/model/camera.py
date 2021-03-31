@@ -52,7 +52,7 @@ class Camera:
     SIPM_NEIGHBOR_RADIUS_FACTOR = 1.4
     SIPM_ROW_COLUMN_DIST_FACTOR = 0.2
 
-    def __init__(self, telescopeName, cameraConfigFile, focalLength, logger=__name__):
+    def __init__(self, telescopeName, cameraConfigFile, focalLength):
         '''
         Camera class, defining pixel layout including rotation, finding neighbour pixels,
         calculating FoV and plotting the camera.
@@ -66,11 +66,10 @@ class Camera:
         focalLength: float
                     The focal length of the camera in (preferably the effective focal length),
                     assumed to be in the same unit as the pixel positions in the cameraConfigFile.
-        logger: str
-            Logger name to use in this instance
         '''
 
-        self._logger = logging.getLogger(logger)
+        self._logger = logging.getLogger(__name__)
+
         self._telescopeName = telescopeName
         self._cameraName = getCameraName(self._telescopeName)
         self._cameraConfigFile = cameraConfigFile

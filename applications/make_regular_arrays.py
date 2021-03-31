@@ -52,7 +52,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
     label = 'make_regular_arrays'
 
-    logger = logging.getLogger(label)
+    logger = logging.getLogger()
     logger.setLevel(gen.getLogLevelFromUser(args.logLevel))
 
     # Hardcoded parameters - should go to DB
@@ -89,7 +89,7 @@ if __name__ == '__main__':
     }  # hadcodedPars
 
     # Reading site parameters from DB
-    db = db_handler.DatabaseHandler(logger.name)
+    db = db_handler.DatabaseHandler()
 
     siteParsDB = dict()
     sitePars = dict()
@@ -116,7 +116,6 @@ if __name__ == '__main__':
             layout = LayoutArray(
                 label=label,
                 name=site + '-' + arrayName,
-                logger=logger.name,
                 **sitePars[site]
             )
 
