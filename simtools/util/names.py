@@ -18,8 +18,6 @@ __all__ = [
     'corsikaOutputFileName'
 ]
 
-logger = logging.getLogger(__name__)
-
 
 def validateCameraName(name):
     '''
@@ -146,14 +144,16 @@ def validateName(name, allNames):
     str
         Validated name.
     '''
+    _logger = logging.getLogger(__name__)
+
     if not isValidName(name, allNames):
         msg = 'Invalid name {}'.format(name)
-        logger.error(msg)
+        _logger.error(msg)
         raise ValueError(msg)
     for mainName, listOfNames in allNames.items():
         if name.lower() in listOfNames + [mainName.lower()]:
             if name != mainName:
-                logger.debug('Correcting name {} -> {}'.format(name, mainName))
+                _logger.debug('Correcting name {} -> {}'.format(name, mainName))
             return mainName
     return None
 

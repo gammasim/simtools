@@ -216,7 +216,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
     label = 'derive_mirror_rnda'
 
-    logger = logging.getLogger(label)
+    logger = logging.getLogger()
     logger.setLevel(gen.getLogLevelFromUser(args.logLevel))
 
     # Output directory to save files related directly to this app
@@ -241,8 +241,7 @@ if __name__ == '__main__':
             telescopeModel=tel,
             singleMirrorMode=True,
             mirrorNumbers=list(range(1, 10)) if args.test else 'all',
-            useRandomFocalLength=args.use_random_flen,
-            logger=logger.name
+            useRandomFocalLength=args.use_random_flen
         )
         ray.simulate(test=False, force=True)  # force has to be True, always
         ray.analyze(force=True)

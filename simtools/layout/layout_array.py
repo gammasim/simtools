@@ -28,7 +28,7 @@ class LayoutArray:
 
     Methods
     -------
-    fromLayoutArrayName(layoutArrayName, label=None, filesLocation=None, logger=__name__)
+    fromLayoutArrayName(layoutArrayName, label=None, filesLocation=None)
         Create a LayoutArray from a layout name (e.g. South-4LST, North-Prod5, ...)
     readTelescopeListFile(telescopeListFile)
         Read list of telescopes from a ecsv file.
@@ -69,7 +69,7 @@ class LayoutArray:
         'corsikaSphereRadius': {'default': None, 'isDict': True, 'unit': u.m}
     }
 
-    def __init__(self, label=None, name=None, filesLocation=None, logger=__name__, **kwargs):
+    def __init__(self, label=None, name=None, filesLocation=None, **kwargs):
         '''
         LayoutArray init.
 
@@ -82,8 +82,6 @@ class LayoutArray:
         filesLocation: str (or Path), optional
             Parent location of the output files created by this class. If not given, it will be
             taken from the config.yml file.
-        logger: str
-            Logger name to use in this instance
         **kwargs:
             Physical parameters with units (if applicable).
             Options:
@@ -97,7 +95,7 @@ class LayoutArray:
                 corsikaSphereCenter {(u.m)}
                 corsikaSphereRadius {(u.m)}
         '''
-        self._logger = logging.getLogger(logger)
+        self._logger = logging.getLogger(__name__)
         self._logger.debug('Init LayoutArray')
 
         self.label = label
@@ -131,8 +129,7 @@ class LayoutArray:
         cls,
         layoutArrayName,
         label=None,
-        filesLocation=None,
-        logger=__name__
+        filesLocation=None
     ):
         '''
         Create a LayoutArray from a layout name (e.g. South-4LST, North-Prod5, ...)
@@ -146,8 +143,6 @@ class LayoutArray:
         filesLocation: str (or Path), optional
             Parent location of the output files created by this class. If not given, it will be
             taken from the config.yml file.
-        logger: str
-            Logger name to use in this instance
 
         Returns
         -------
@@ -161,8 +156,7 @@ class LayoutArray:
         layout = cls(
             name=validLayoutArrayName,
             label=label,
-            filesLocation=filesLocation,
-            logger=logger
+            filesLocation=filesLocation
         )
 
         telescopeListFile = io.getDataFile(

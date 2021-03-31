@@ -50,7 +50,8 @@ class PSFImage:
     plotIntegral(**kwargs)
         Plot cumulative intensity as a function containing fraction.
     '''
-    def __init__(self, focalLength=None, totalScatteredArea=None, logger=__name__):
+
+    def __init__(self, focalLength=None, totalScatteredArea=None):
         '''
         Parameters
         ----------
@@ -58,11 +59,10 @@ class PSFImage:
             Focal length of the system in cm. If not given, PSF can only be computed in cm.
         totalScatteredArea: float, optional
             Scatter area of all photons in cm^2. If not given, effective area cannot be computed.
-        logger: str
-            Logger name to use in this instance
         '''
 
-        self._logger = logging.getLogger(logger)
+        self._logger = logging.getLogger(__name__)
+
         self.photonPosX = list()
         self.photonPosY = list()
         self.centroidX = None
@@ -138,8 +138,8 @@ class PSFImage:
             elif totalAreaInFile != self._totalArea:
                 self._logger.warning(
                     'Conflicting value of the total area found'
-                    ' {} != {}'.format(self._totalArea, totalAreaInFile) +
-                    ' - Keeping the original value'
+                    + ' {} != {}'.format(self._totalArea, totalAreaInFile)
+                    + ' - Keeping the original value'
                 )
             else:
                 # Do nothing - Keep the original value of _totalArea
@@ -334,9 +334,9 @@ class PSFImage:
 
         # Run scan few times with smaller dr to optimize search.
         # Step 0
-        radius, radMin, radMax = scan(0.1*radiusSig, 0, 4*radiusSig)
+        radius, radMin, radMax = scan(0.1 * radiusSig, 0, 4 * radiusSig)
         # Step 1
-        radius, radMin, radMax = scan(0.005*radiusSig, radMin, radMax)
+        radius, radMin, radMax = scan(0.005 * radiusSig, radMin, radMax)
         return radius
 
     def _sumPhotonsInRadius(self, radius):

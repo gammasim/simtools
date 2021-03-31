@@ -86,7 +86,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
     label = 'validate_camera_efficiency'
 
-    logger = logging.getLogger(label)
+    logger = logging.getLogger()
     logger.setLevel(gen.getLogLevelFromUser(args.logLevel))
 
     # Output directory to save files related directly to this app
@@ -95,8 +95,7 @@ if __name__ == '__main__':
     telModel = TelescopeModel(
         telescopeName=args.tel_name,
         version=args.model_version,
-        label=label,
-        logger=logger.name
+        label=label
     )
 
     # For debugging purposes
