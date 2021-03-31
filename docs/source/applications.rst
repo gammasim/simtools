@@ -37,6 +37,7 @@ List of Applications
 * `validate_camera_efficiency`_
 * `validate_camera_fov`_
 * `make_regular_array`_
+* `produce_array_config`_
 
 
 derive_mirror_rnda
@@ -80,4 +81,11 @@ make_regular_array
 ------------------
 
 .. automodule:: make_regular_array
+   :members:
+
+
+produce_array_config
+--------------------
+
+.. automodule:: produce_array_config
    :members:
