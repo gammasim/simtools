@@ -458,7 +458,7 @@ class ArrayModel:
         into the output model directory.
         '''
         self.exportSimtelTelescopeConfigFiles()
-        self.exportSimtelArrayConfigFiles()
+        self.exportSimtelArrayConfigFile()
 
     def getConfigFile(self):
         '''
