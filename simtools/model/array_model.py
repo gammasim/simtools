@@ -115,7 +115,7 @@ class ArrayModel:
         arrayConfigData: dict
         '''
         # Validating arrayConfigData
-        # Keys 'site', 'arrayName' and 'default' are mandatory.
+        # Keys 'site', 'layoutName' and 'default' are mandatory.
         # 'default' must have 'LST', 'MST' and 'SST' (for South site) keys.
         self._validateArrayData(arrayConfigData)
 
@@ -123,7 +123,7 @@ class ArrayModel:
         self.site = names.validateSiteName(arrayConfigData['site'])
 
         # Grabing layout name and building LayoutArray
-        self.layoutName = names.validateLayoutArrayName(arrayConfigData['arrayName'])
+        self.layoutName = names.validateLayoutArrayName(arrayConfigData['layoutName'])
         self.layout = LayoutArray.fromLayoutArrayName(
             self.site + '-' + self.layoutName,
             label=self.label
@@ -139,7 +139,7 @@ class ArrayModel:
         # Removing keys that were stored in attributes and keepig the remaining as a dict
         self._arrayConfigData = {
             k: v for (k, v) in arrayConfigData.items()
-            if k not in ['site', 'arrayName', 'modelVersion']
+            if k not in ['site', 'layoutName', 'modelVersion']
         }
     # End of _loadArrayData
 
@@ -164,7 +164,7 @@ class ArrayModel:
                     self._logger.error(msg)
                     raise InvalidArrayConfigData(msg)
 
-        runOverPars(['site', 'arrayName', 'default'], arrayConfigData)
+        runOverPars(['site', 'layoutName', 'default'], arrayConfigData)
         runOverPars(['LST', 'MST'], arrayConfigData, parent='default')
         if names.validateSiteName(arrayConfigData['site']) == 'South':
             runOverPars(['SST'], arrayConfigData, parent='default')
@@ -357,7 +357,7 @@ class ArrayModel:
                 '%{}\n'.format(50 * '=')
                 + '% ARRAY CONFIGURATION FILE\n'
                 + '% Site: {}\n'.format(self.site)
-                + '% ArrayName: {}\n'.format(self.layoutName)
+                + '% LayoutName: {}\n'.format(self.layoutName)
                 + '% ModelVersion: {}\n'.format(self.modelVersion)
                 + ('% Label: {}\n'.format(self.label) if self.label is not None else '')
                 + '%{}\n\n'.format(50 * '=')
@@ -375,7 +375,7 @@ class ArrayModel:
             file.write('#if TELESCOPE == 0\n')
             file.write(tab + 'echo *****************************\n')
             file.write(tab + 'echo Site: {}\n'.format(self.site))
-            file.write(tab + 'echo ArrayName: {}\n'.format(self.layoutName))
+            file.write(tab + 'echo LayoutName: {}\n'.format(self.layoutName))
             file.write(tab + 'echo ModelVersion: {}\n'.format(self.modelVersion))
             file.write(tab + 'echo *****************************\n\n')
 
