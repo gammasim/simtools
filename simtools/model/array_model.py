@@ -17,8 +17,43 @@ class InvalidArrayConfigData(Exception):
 
 
 class ArrayModel:
+    '''
+    ArrayModel is an abstract representation of the MC model at the array level.
+    It contains the list of TelescopeModel's and an LayoutArray.
 
-    SITE_PARS_TO_WRITE = ['altitude', 'atmospheric_transmission']
+    Attributes
+    ----------
+    site: str
+        North or South.
+    layoutName: str
+        Name of the layout.
+    layout: LayoutArray
+        Instance of LayoutArray.
+    modelVersion: str
+        Version of the model (ex. prod4).
+    label: str
+        Instance label.
+    numberOfTelescopes: int
+        Number of telescopes in the ArrayModel.
+
+    Methods
+    -------
+    printTelescopeList()
+        Print out the list of telescopes for quick inspection.
+    exportSimtelTelescopeConfigFiles()
+        Export sim_telarray config files for all the telescopes
+        into the output model directory.
+    exportSimtelArrayConfigFile()
+        Export sim_telarray config file for the array into the output model
+        directory.
+    exportAllSimtelConfigFiles()
+        Export sim_telarray config file for the array and for each individual telescope
+        into the output model directory.
+    getArrayConfigFile()
+        Get the path to the config file for sim_telarray.
+    '''
+
+    SITE_PARS_TO_WRITE_IN_CONFIG = ['altitude', 'atmospheric_transmission']
 
     def __init__(
         self,
@@ -28,10 +63,34 @@ class ArrayModel:
         modelFilesLocations=None,
         filesLocation=None
     ):
+        '''
+        ArrayModel.
+
+        Parameters
+        ----------
+        arrayConfigFile: str
+            Path to a yaml file with the array config data.
+        arrayConfigData: dict
+            Dict with the array config data.
+        version: str, optional
+            Version of the model (ex. prod4) (default: "Current").
+        label: str, optional
+            Instance label. Important for output file naming.
+        modelFilesLocation: str (or Path), optional
+            Location of the MC model files. If not given, it will be taken from the
+            config.yml file.
+        filesLocation: str (or Path), optional
+            Parent location of the output files created by this class. If not given, it will be
+            taken from the config.yml file.
+        '''
         self._logger = logging.getLogger(__name__)
         self._logger.debug('Init ArrayModel')
 
         self.label = label
+        self.site = None
+        self.layout = None
+        self.layoutName = None
+        self.modelVersion = None
 
         self._modelFilesLocations = cfg.getConfigArg('modelFilesLocations', modelFilesLocations)
         self._filesLocation = cfg.getConfigArg('outputLocation', filesLocation)
@@ -49,14 +108,21 @@ class ArrayModel:
         return self.layout.getNumberOfTelescopes()
 
     def _loadArrayData(self, arrayConfigData):
-        ''' Loading parameters from arrayData '''
+        ''' Load parameters from arrayData.
+
+        Parameters
+        ----------
+        arrayConfigData: dict
+        '''
         # Validating arrayConfigData
+        # Keys 'site', 'arrayName' and 'default' are mandatory.
+        # 'default' must have 'LST', 'MST' and 'SST' (for South site) keys.
         self._validateArrayData(arrayConfigData)
 
         # Site
         self.site = names.validateSiteName(arrayConfigData['site'])
 
-        # Layout name
+        # Grabing layout name and building LayoutArray
         self.layoutName = names.validateLayoutArrayName(arrayConfigData['arrayName'])
         self.layout = LayoutArray.fromLayoutArrayName(
             self.site + '-' + self.layoutName,
@@ -70,15 +136,23 @@ class ArrayModel:
         else:
             self.modelVersion = names.validateModelVersionName(arrayConfigData['modelVersion'])
 
+        # Removing keys that were stored in attributes and keepig the remaining as a dict
         self._arrayConfigData = {
             k: v for (k, v) in arrayConfigData.items()
             if k not in ['site', 'arrayName', 'modelVersion']
         }
+    # End of _loadArrayData
 
     def _validateArrayData(self, arrayConfigData):
-        ''' Validate arrayData by checking the existence of the relevant keys.'''
+        '''
+        Validate arrayData by checking the existence of the relevant keys.
+        Searcing for the keys: 'site', 'array' and 'default'
+        And the sub-keys in 'default': 'LST', 'MST' and 'SST', in case of
+        South array.
+        '''
 
         def runOverPars(pars, data, parent=None):
+            '''Run over pars and validate it. '''
             allKeys = data.keys() if parent is None else data[parent].keys()
             for pp in pars:
                 if pp not in allKeys:
@@ -96,9 +170,115 @@ class ArrayModel:
             runOverPars(['SST'], arrayConfigData, parent='default')
         # End of _validateArrayData
 
-    def _getSingleTelescopeInfoFromArrayConfig(self, telName, telSize):
+    def _setConfigFileDirectory(self):
+        ''' Define the variable _configFileDirectory and create directories, if needed '''
+        self._configFileDirectory = io.getModelOutputDirectory(self._filesLocation, self.label)
+        if not self._configFileDirectory.exists():
+            self._configFileDirectory.mkdir(parents=True, exist_ok=True)
+            self._logger.info('Creating directory {}'.format(self._configFileDirectory))
+        return
 
-        def _proccessData(data):
+    def _buildArrayModel(self):
+        '''
+        Build the site parameters and the list of telescope models,
+        including reading the parameters from the DB.
+        '''
+
+        # Getting site parameters from DB
+        db = db_handler.DatabaseHandler(self._logger.name)
+        self._siteParameters = db.getSiteParameters(
+            self.site,
+            self.modelVersion,
+            self._configFileDirectory,
+            onlyApplicable=True
+        )
+
+        # Building telescope models
+        self._telescopeModel = list()  # List of telescope models
+        _allTelescopeModelNames = list()  # List of telescope names without repetition
+        _allParsToChange = dict()
+        for tel in self.layout:
+            telSize = tel.getTelescopeSize()
+
+            # Collecting telescope name and pars to change from arrayConfigData
+            telModelName, parsToChange = self._getSingleTelescopeInfoFromArrayConfig(
+                tel.name,
+                telSize
+            )
+            if len(parsToChange) > 0:
+                _allParsToChange[tel.name] = parsToChange
+
+            self._logger.debug('TelModelName: {}'.format(telModelName))
+
+            # Building the basic models - no pars to change yet
+            if telModelName not in _allTelescopeModelNames:
+                # First time a telescope name is built
+                _allTelescopeModelNames.append(telModelName)
+                telModel = TelescopeModel(
+                    telescopeName=telModelName,
+                    version=self.modelVersion,
+                    label=self.label,
+                    modelFilesLocations=self._modelFilesLocations,
+                    filesLocation=self._filesLocation
+                )
+            else:
+                # Telescope name already exists.
+                # Finding the TelescopeModel and copying it.
+                for tel in self._telescopeModel:
+                    if tel.telescopeName != telModelName:
+                        continue
+                    self._logger.debug(
+                        'Copying tel model {} already loaded from DB'.format(tel.telescopeName)
+                    )
+                    telModel = copy(tel)
+                    break
+
+            self._telescopeModel.append(telModel)
+
+        # Checking whether the size of the telescope list and the layout match
+        if len(self._telescopeModel) != len(self.layout):
+            self._logger.warning(
+                'Size of telModel does not match size of layout - something is wrong!'
+            )
+
+        # Changing parameters, if there are any in allParsToChange
+        if len(_allParsToChange) > 0:
+            for telData, telModel in zip(self.layout, self._telescopeModel):
+                if telData.name not in _allParsToChange.keys():
+                    continue
+                self._logger.debug('Changing {} pars of a {}: {}, ...'.format(
+                    len(_allParsToChange[telData.name]),
+                    telData.name,
+                    *_allParsToChange[telData.name]
+                ))
+                telModel.changeParameters(**_allParsToChange[telData.name])
+                telModel.setExtraLabel(telData.name)
+    # End of _buildArrayModel
+
+    def _getSingleTelescopeInfoFromArrayConfig(self, telName, telSize):
+        '''
+        arrayConfigData contains the default telescope models for each
+        telescope size and the list of specific telescopes.
+        For each case, the data can be given only as a name or
+        as a dict with 'name' and parameters to change.
+        This function has to identify these two cases and collect
+        the telescope name and the dict with the parameters to change.
+
+        Parameters
+        ----------
+        telName: str
+            Name of the telescope at the layout level (L-01, M-05, ...).
+        telSize: str
+            LST, MST or SST.
+        '''
+
+        def _proccessSingleTelescope(data):
+            '''
+            Parameters
+            ----------
+            data: dict or str
+                Piece of the arrayConfigData for one specific telescope.
+            '''
             if isinstance(data, dict):
                 # Case 0: data is dict
                 if 'name' not in data.keys():
@@ -122,111 +302,32 @@ class ArrayModel:
                 msg = 'ArrayConfig has wrong input for a telescope'
                 self._logger.error(msg)
                 raise InvalidArrayConfigData(msg)
+        # End of _proccessData
 
         if telName in self._arrayConfigData.keys():
             # Specific info for this telescope
-            return _proccessData(self._arrayConfigData[telName])
+            return _proccessSingleTelescope(self._arrayConfigData[telName])
         else:
             # Grabing the default option
-            return _proccessData(self._arrayConfigData['default'][telSize])
-
-    def _buildArrayModel(self):
-
-        # Getting site parameters from DB
-        db = db_handler.DatabaseHandler(self._logger.name)
-        self._siteParameters = db.getSiteParameters(
-            self.site,
-            self.modelVersion,
-            self._configFileDirectory,
-            onlyApplicable=True
-        )
-
-        # Building telescopes
-        self._telescopeModel = list()
-        self._allTelescopeModelNames = list()
-        self._parsToChange = dict()
-        for tel in self.layout:
-            telSize = tel.getTelescopeSize()
-
-            # Collecting telescope name and pars to change from arrayConfigData
-            telModelName, parsToChange = self._getSingleTelescopeInfoFromArrayConfig(
-                tel.name,
-                telSize
-            )
-            if len(parsToChange) > 0:
-                self._parsToChange[tel.name] = parsToChange
-
-            self._logger.debug('TelModelName: {}'.format(telModelName))
-
-            # Building the basic models - no pars to change yet
-            if telModelName not in self._allTelescopeModelNames:
-                # First time a telescope name is built
-                self._allTelescopeModelNames.append(telModelName)
-                telModel = TelescopeModel(
-                    telescopeName=telModelName,
-                    version=self.modelVersion,
-                    label=self.label,
-                    modelFilesLocations=self._modelFilesLocations,
-                    filesLocation=self._filesLocation,
-                    logger=self._logger.name
-                )
-            else:
-                # Telescope name already exists.
-                # Finding the TelescopeModel and copying it.
-                for tel in self._telescopeModel:
-                    if tel.telescopeName != telModelName:
-                        continue
-                    self._logger.debug(
-                        'Copying tel model {} already loaded from DB'.format(tel.telescopeName)
-                    )
-                    telModel = copy(tel)
-                    break
-
-            self._telescopeModel.append(telModel)
-
-        # Checking whether the size of the telescope list and the layout match
-        if len(self._telescopeModel) != len(self.layout):
-            self._logger.warning(
-                'Size of telModel does not match size of layout - something it wrong!'
-            )
-
-        # Changing parameters, if there are any
-        if len(self._parsToChange) > 0:
-            for telData, telModel in zip(self.layout, self._telescopeModel):
-                if telData.name not in self._parsToChange.keys():
-                    continue
-                self._logger.debug('Changing {} pars of a {}: {}, ...'.format(
-                    len(self._parsToChange[telData.name]),
-                    telData.name,
-                    *self._parsToChange[telData.name]
-                ))
-                telModel.changeParameters(**self._parsToChange[telData.name])
-                telModel.setExtraLabel(telData.name)
-
-        return
-    # End of _buildArrayModel
-
-    def _setConfigFileDirectory(self):
-        ''' Define the variable _configFileDirectory and create directories, if needed '''
-        self._configFileDirectory = io.getModelOutputDirectory(self._filesLocation, self.label)
-        if not self._configFileDirectory.exists():
-            self._configFileDirectory.mkdir(parents=True, exist_ok=True)
-            self._logger.info('Creating directory {}'.format(self._configFileDirectory))
-        return
+            return _proccessSingleTelescope(self._arrayConfigData['default'][telSize])
+    # End of _getSingleTelescopeInfoFromArrayConfig
 
     def printTelescopeList(self):
+        ''' Print out the list of telescopes for quick inspection. '''
         for telData, telModel in zip(self.layout, self._telescopeModel):
             print('Name: {}\t Model: {}'.format(telData.name, telModel.telescopeName))
 
-    # def exportCorsikaInputFile():
-    #     pass
-
     def exportSimtelTelescopeConfigFiles(self):
         '''
+        Export sim_telarray config files for all the telescopes
+        into the output model directory.
         '''
         exportedModels = list()
         for telModel in self._telescopeModel:
-            name = telModel.telescopeName
+            name = (
+                telModel.telescopeName
+                + ('_' + telModel.extraLabel if telModel.extraLabel != '' else '')
+            )
             if name not in exportedModels:
                 self._logger.debug('Exporting config file for tel {}'.format(name))
                 telModel.exportConfigFile()
@@ -236,7 +337,10 @@ class ArrayModel:
 
     def exportSimtelArrayConfigFile(self):
         '''
+        Export sim_telarray config file for the array into the output model
+        directory.
         '''
+
         # Setting file name and the location
         configFileName = names.simtelArrayConfigFileName(
             self.layoutName,
@@ -278,7 +382,7 @@ class ArrayModel:
             # Writing site parameters
             file.write(tab + '% Site parameters\n')
             for par in self._siteParameters:
-                if par not in self.SITE_PARS_TO_WRITE:
+                if par not in self.SITE_PARS_TO_WRITE_IN_CONFIG:
                     continue
                 value = self._siteParameters[par]['Value']
                 file.write(tab + '{} = {}\n'.format(par, value))
@@ -305,11 +409,9 @@ class ArrayModel:
                 file.write('#elif TELESCOPE == {}\n\n'.format(count + 1))
                 file.write('# include <{}>\n\n'.format(telConfigFile))
             file.write('#endif \n\n')
-
     # END exportSimtelArrayConfigFile
 
     def _writeCommonParameters(self, file):
-
         # Common parameters taken from CTA-PROD4-common.cfg
         # TODO: Store these somewhere else
         self._logger.warning('Common parameters are hardcoded!')
@@ -349,3 +451,23 @@ class ArrayModel:
         for par, value in COMMON_PARS.items():
             file.write('   {} = {}\n'.format(par, value))
     # End of writeCommonParameters
+
+    def exportAllSimtelConfigFiles(self):
+        '''
+        Export sim_telarray config file for the array and for each individual telescope
+        into the output model directory.
+        '''
+        self.exportSimtelTelescopeConfigFiles()
+        self.exportSimtelArrayConfigFiles()
+
+    def getConfigFile(self):
+        '''
+        Get the path of the array config file for sim_telarray.
+        The config file is produced if the file is not updated.
+
+        Returns
+        -------
+        Path of the exported config file for sim_telarray.
+        '''
+        self.exportAllSimtelConfigFiles()
+        return self._configFilePath
