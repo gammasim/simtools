@@ -1,7 +1,6 @@
 #!/usr/bin/python3
 
 import logging
-import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 from cycler import cycler
@@ -12,8 +11,6 @@ import astropy.units as u
 from astropy.table import QTable
 
 __all__ = ['setStyle', 'plot1D', 'plotTable']
-
-logger = logging.getLogger(__name__)
 
 COLORS = dict()
 COLORS['classic'] = ['#ba2c54', '#5B90DC', '#FFAB44', '#0C9FB3', '#57271B', '#3B507D',
@@ -64,6 +61,8 @@ def _addUnit(title, array):
     str
         Title with units.
     '''
+    _logger = logging.getLogger(__name__)
+
     unit = ''
     if isinstance(array, u.Quantity):
         unit = str(array[0].unit)
@@ -73,7 +72,7 @@ def _addUnit(title, array):
             unit = re.sub(r'(\d)', r'^\1', unit)
             unit = unit.replace('[', r'$[').replace(']', r']$')
         if '[' in title and ']' in title:
-            logger.warning(
+            _logger.warning(
                 'Tried to add a unit from astropy.unit, '
                 'but axis already has an explicit unit. Left axis title as is.'
             )
@@ -337,7 +336,7 @@ def plot1D(data, **kwargs):
             else:
                 xTitle, yTitle = dataNow.dtype.names[0], dataNow.dtype.names[1]
                 xTitleUnit = _addUnit(xTitle, dataNow[xTitle])
-                plt.plot(dataNow[xTitle], dataNow[yTitle]/dataDict[dataRefName][yTitle], **kwargs)
+                plt.plot(dataNow[xTitle], dataNow[yTitle] / dataDict[dataRefName][yTitle], **kwargs)
 
         plt.xlabel(xTitleUnit)
         yTitleRatio = 'Ratio to {}'.format(_makeLatexCompatible(dataRefName))

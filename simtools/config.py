@@ -8,8 +8,6 @@ from pathlib import Path
 
 __all__ = ['setConfigFileName', 'loadConfig', 'get', 'findFile', 'change']
 
-logger = logging.getLogger(__name__)
-
 
 class ConfigEnvironmentalVariableNotSet(Exception):
     pass
@@ -24,7 +22,8 @@ def setConfigFileName(fileName):
     fileName: str
         Config file name.
     '''
-    logger.debug('Setting the config file name to {}'.format(fileName))
+    _logger = logging.getLogger(__name__)
+    _logger.debug('Setting the config file name to {}'.format(fileName))
     global CONFIG_FILE_NAME
     CONFIG_FILE_NAME = fileName
 
@@ -78,9 +77,11 @@ def get(par):
     -------
     Value of the entry from the config settings.
     '''
+    _logger = logging.getLogger(__name__)
+
     config = loadConfig()
     if par not in config.keys():
-        logger.error('Config does not contain {}'.format(par))
+        _logger.error('Config does not contain {}'.format(par))
         raise KeyError()
     else:
         if isinstance(config[par], str) and config[par][0] == '$':
@@ -92,7 +93,7 @@ def get(par):
                     'Config entry {} is interpreted as environmental variables '.format(par)
                     + 'that is not set.'
                 )
-                logger.error(msg)
+                _logger.error(msg)
                 raise ConfigEnvironmentalVariableNotSet(msg)
             return envPath
         else:
@@ -155,6 +156,8 @@ def findFile(name, loc=None):
     FileNotFoundError
         If the desired file is not found.
     '''
+    _logger = logging.getLogger(__name__)
+
     if loc is None:
         allLocations = get(par='modelFilesLocations')
     else:
@@ -162,15 +165,15 @@ def findFile(name, loc=None):
     allLocations = [allLocations] if not isinstance(allLocations, list) else allLocations
 
     def _searchDirectory(directory, filename, rec=False):
-        logger.debug('Searching directory {}'.format(directory))
+        _logger.debug('Searching directory {}'.format(directory))
         if not Path(directory).exists():
             msg = 'Directory {} does not exist'.format(directory)
-            logger.debug(msg)
+            _logger.debug(msg)
             return None
 
         f = Path(directory).joinpath(filename)
         if f.exists():
-            logger.debug('File {} found in {}'.format(filename, directory))
+            _logger.debug('File {} found in {}'.format(filename, directory))
             return f
         if not rec:  # Not recursively
             return None
@@ -193,5 +196,5 @@ def findFile(name, loc=None):
         if ff is not None:
             return ff
     msg = 'File {} could not be found in {}'.format(name, loc)
-    logger.error(msg)
+    _logger.error(msg)
     raise FileNotFoundError(msg)
