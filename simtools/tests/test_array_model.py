@@ -11,7 +11,7 @@ logger.setLevel(logging.DEBUG)
 def test_input_validation():
     arrayConfigData = {
         'site': 'North',
-        'arrayName': 'Prod5',
+        'layoutName': 'Prod5',
         'modelVersion': 'Prod5',
         'default': {
             'LST': '1',
@@ -27,7 +27,7 @@ def test_input_validation():
 def test_exporting_config_files():
     arrayConfigData = {
         'site': 'North',
-        'arrayName': 'Prod5',
+        'layoutName': 'Prod5',
         'modelVersion': 'Prod5',
         'default': {
             'LST': '1',
