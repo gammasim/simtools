@@ -3,6 +3,7 @@ remoteport: 27017  # remote port on the tunnel
 dbPort: 27018 # Port on the MongoDB server
 tunnelServer: 'warp.zeuthen.desy.de' # Server to tunnel through
 mongodbServer: 'tyche-vm4.zeuthen.desy.de' # MongoDB server
+userDESY: 'DESY_user' # username at DESY. Only necessary if the username at DESY is different to the local username.
 userDB: 'user' # username for MongoDB
 passDB: 'pass' # Password for MongoDB
 authenticationDatabase: 'admin'

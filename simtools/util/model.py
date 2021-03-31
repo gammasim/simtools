@@ -14,8 +14,6 @@ __all__ = [
     'isTwoMirrorTelescope'
 ]
 
-logger = logging.getLogger(__name__)
-
 
 def computeTelescopeTransmission(pars, offAxis):
     '''
@@ -38,7 +36,7 @@ def computeTelescopeTransmission(pars, offAxis):
     if pars[1] == 0:
         return pars[0]
     else:
-        t = math.sin(offAxis*_degToRad) / (pars[3]*_degToRad)
+        t = math.sin(offAxis *_degToRad) / (pars[3] *_degToRad)
         return pars[0] / (1. + pars[2] * t**pars[4])
 
 
@@ -58,7 +56,8 @@ def validateModelParameter(parNameIn, parValueIn):
     (parName, parValue) after validated. parValueIn is converted to the proper type if that
     information is available in MODEL_PARS
     '''
-    logger.debug('Validating parameter {}'.format(parNameIn))
+    _logger = logging.getLogger(__name__)
+    _logger.debug('Validating parameter {}'.format(parNameIn))
     for parNameModel in MODEL_PARS.keys():
         if parNameIn == parNameModel or parNameIn in MODEL_PARS[parNameModel]['names']:
             parType = MODEL_PARS[parNameModel]['type']
@@ -80,6 +79,7 @@ def getCameraName(telescopeName):
     str
         Camera name (validated by util.names)
     '''
+    _logger = logging.getLogger(__name__)
     cameraName = ''
     telSite, telClass, telType = names.splitTelescopeName(telescopeName)
     if telClass == 'LST':
@@ -90,7 +90,7 @@ def getCameraName(telescopeName):
         elif 'NectarCam' in telType:
             cameraName = 'NectarCam'
         else:
-            logger.error('Camera not found for MST class telescope')
+            _logger.error('Camera not found for MST class telescope')
     elif telClass == 'SCT':
         cameraName = 'SCT'
     elif telClass == 'SST':
@@ -103,10 +103,10 @@ def getCameraName(telescopeName):
         else:
             cameraName = 'SST'
     else:
-        logger.error('Invalid telescope name - please validate it first')
+        _logger.error('Invalid telescope name - please validate it first')
 
     cameraName = names.validateCameraName(cameraName)
-    logger.debug('Camera name - {}'.format(cameraName))
+    _logger.debug('Camera name - {}'.format(cameraName))
     return cameraName
 
 
