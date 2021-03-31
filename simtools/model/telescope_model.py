@@ -31,6 +31,8 @@ class TelescopeModel:
         Instance of the Mirrors class created with the mirror list of the model.
     camera: Camera
         Instance of the Camera class created with the camera config file of the model.
+    extraLabel: str
+        Extra label to be used in case of multiple telescope configurations.
 
     Methods
     -------
@@ -92,7 +94,7 @@ class TelescopeModel:
         self.version = names.validateModelVersionName(version)
         self.telescopeName = names.validateTelescopeName(telescopeName)
         self.label = label
-        self.extraLabel = None
+        self._extraLabel = None
 
         self._modelFilesLocations = cfg.getConfigArg('modelFilesLocations', modelFilesLocations)
         self._filesLocation = cfg.getConfigArg('outputLocation', filesLocation)
@@ -116,6 +118,10 @@ class TelescopeModel:
         if '_camera' not in self.__dict__:
             self._loadCamera()
         return self._camera
+
+    @property
+    def extraLabel(self):
+        return self._extraLabel if self._extraLabel is not None else ''
 
     @classmethod
     def fromConfigFile(
@@ -224,7 +230,7 @@ class TelescopeModel:
         extraLabel: str
             Extra label to be appended to the original label.
         '''
-        self.extraLabel = extraLabel
+        self._extraLabel = extraLabel
         self._setConfigFileDirectoryAndName()
 
     def _setConfigFileDirectoryAndName(self):
@@ -238,7 +244,7 @@ class TelescopeModel:
         configFileName = names.simtelTelescopeConfigFileName(
             self.version,
             self.telescopeName,
-            self.label + ('_' + self.extraLabel if self.extraLabel is not None else '')
+            self.label + ('_' + self._extraLabel if self._extraLabel is not None else '')
         )
         self._configFilePath = self._configFileDirectory.joinpath(configFileName)
         return
@@ -458,6 +464,11 @@ class TelescopeModel:
         '''
         Get the path of the config file for sim_telarray.
         The config file is produced if the file is not updated.
+
+        Parameters
+        ----------
+        noExport: bool
+            Turn it on if you do not want the file to be exported.
 
         Returns
         -------
