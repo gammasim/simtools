@@ -238,7 +238,8 @@ class ArrayModel:
         # Checking whether the size of the telescope list and the layout match
         if len(self._telescopeModel) != len(self.layout):
             self._logger.warning(
-                'Size of telModel does not match size of layout - something is wrong!'
+                'Number of telescopes in the list of telescope models does '
+                'not match the number of telescopes in the LayoutArray - something is wrong!'
             )
 
         # Changing parameters, if there are any in allParsToChange
