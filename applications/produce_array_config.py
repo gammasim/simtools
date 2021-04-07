@@ -3,7 +3,7 @@
 '''
     Summary
     -------
-    This application is a simple example of how to produce sim_telarray config \
+    This application is an example of how to produce sim_telarray config \
     files for a given array.
 
     All the input required has to be given as a yaml file by the command \
