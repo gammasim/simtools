@@ -27,7 +27,7 @@
     Each telescope model can be set in two ways.
 
     a) A single str with the name of telescope model.
-    Ex. 'M-05': 'NectarCan-D'
+    Ex. 'M-05': 'NectarCam-D'
 
     b) A dict containing a 'name' key with the name of the telescope model and further keys \
     with model parameters to be changed from the original model.
