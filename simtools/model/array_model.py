@@ -165,9 +165,6 @@ class ArrayModel:
                     raise InvalidArrayConfigData(msg)
 
         runOverPars(['site', 'layoutName', 'default'], arrayConfigData)
-        runOverPars(['LST', 'MST'], arrayConfigData, parent='default')
-        if names.validateSiteName(arrayConfigData['site']) == 'South':
-            runOverPars(['SST'], arrayConfigData, parent='default')
         # End of _validateArrayData
 
     def _setConfigFileDirectory(self):
@@ -185,7 +182,7 @@ class ArrayModel:
         '''
 
         # Getting site parameters from DB
-        db = db_handler.DatabaseHandler(self._logger.name)
+        db = db_handler.DatabaseHandler()
         self._siteParameters = db.getSiteParameters(
             self.site,
             self.modelVersion,
@@ -309,6 +306,20 @@ class ArrayModel:
             # Specific info for this telescope
             return _proccessSingleTelescope(self._arrayConfigData[telName])
         else:
+            # Checking if default option exists in arrayConfigData
+            notContainsDefaultKey = (
+                'default' not in self._arrayConfigData.keys()
+                or telSize not in self._arrayConfigData['default'].keys()
+            )
+
+            if notContainsDefaultKey:
+                msg = (
+                    'default option was not given in arrayConfigData '
+                    + 'for the telescope {}'.format(telName)
+                )
+                self._logger.error(msg)
+                raise InvalidArrayConfigData(msg)
+
             # Grabing the default option
             return _proccessSingleTelescope(self._arrayConfigData['default'][telSize])
     # End of _getSingleTelescopeInfoFromArrayConfig
