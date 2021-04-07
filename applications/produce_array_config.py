@@ -88,8 +88,7 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(
         description=(
-            'Calculate and plot the PSF and eff. mirror area as a function of off-axis angle '
-            'of the telescope requested.'
+            'Example of how to produce sim_telarray config files for a given array.'
         )
     )
     parser.add_argument(
