@@ -2,11 +2,9 @@
 
 import logging
 import subprocess
-from pathlib import Path
 
 from simtools import db_handler
 import simtools.config as cfg
-from simtools.model.telescope_model import TelescopeModel
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
@@ -18,7 +16,7 @@ DB_CTA_SIMULATION_MODEL = 'CTA-Simulation-Model'
 def test_reading_db_lst():
 
     logger.info('----Testing reading LST-----')
-    db = db_handler.DatabaseHandler(logger.name)
+    db = db_handler.DatabaseHandler()
     pars = db.getModelParameters('north-lst-1', 'Current', testDataDirectory)
     if cfg.get('useMongoDB'):
         assert(pars['parabolic_dish']['Value'] == 1)
@@ -36,7 +34,7 @@ def test_reading_db_lst():
 def test_reading_db_mst_nc():
 
     logger.info('----Testing reading MST-NectarCam-----')
-    db = db_handler.DatabaseHandler(logger.name)
+    db = db_handler.DatabaseHandler()
     pars = db.getModelParameters('north-mst-NectarCam-D', 'Current', testDataDirectory)
     if cfg.get('useMongoDB'):
         assert(pars['camera_pixels']['Value'] == 1855)
@@ -55,7 +53,7 @@ def test_reading_db_mst_nc():
 def test_reading_db_mst_fc():
 
     logger.info('----Testing reading MST-FlashCam-----')
-    db = db_handler.DatabaseHandler(logger.name)
+    db = db_handler.DatabaseHandler()
     pars = db.getModelParameters('north-mst-FlashCam-D', 'Current', testDataDirectory)
     if cfg.get('useMongoDB'):
         assert(pars['camera_pixels']['Value'] == 1764)
@@ -74,7 +72,7 @@ def test_reading_db_mst_fc():
 def test_reading_db_sst():
 
     logger.info('----Testing reading SST-----')
-    db = db_handler.DatabaseHandler(logger.name)
+    db = db_handler.DatabaseHandler()
     pars = db.getModelParameters('south-sst-D', 'Current', testDataDirectory)
     if cfg.get('useMongoDB'):
         assert(pars['camera_pixels']['Value'] == 2048)
@@ -97,7 +95,7 @@ def test_modify_db():
         return
 
     logger.info('----Testing copying a whole telescope-----')
-    db = db_handler.DatabaseHandler(logger.name)
+    db = db_handler.DatabaseHandler()
     db.copyTelescope(
         DB_CTA_SIMULATION_MODEL,
         'North-LST-1',
@@ -107,7 +105,7 @@ def test_modify_db():
     )
     db.copyDocuments(
         DB_CTA_SIMULATION_MODEL,
-        'metadata', 
+        'metadata',
         {'Entry': 'Simulation-Model-Tags'},
         'sandbox'
     )
@@ -162,7 +160,7 @@ def test_reading_db_sites():
     if not cfg.get('useMongoDB'):
         return
 
-    db = db_handler.DatabaseHandler(logger.name)
+    db = db_handler.DatabaseHandler()
     logger.info('----Testing reading La Palma parameters-----')
     pars = db.getSiteParameters('North', 'Current', testDataDirectory)
     if cfg.get('useMongoDB'):
