@@ -15,8 +15,7 @@ def test_ray_tracing_mode():
     tel = TelescopeModel(
         telescopeName='north-lst-1',
         version='Current',
-        label='test-simtel',
-        logger=logger.name
+        label='test-simtel'
     )
 
     simtel = SimtelRunner(
@@ -35,8 +34,7 @@ def test_catching_model_error():
     tel = TelescopeModel(
         telescopeName='north-lst-1',
         version='Current',
-        label='test-simtel',
-        logger=logger.name
+        label='test-simtel'
     )
 
     # Adding a invalid parameter

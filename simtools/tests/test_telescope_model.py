@@ -16,8 +16,7 @@ def test_input_validation():
     tel = TelescopeModel(
         telescopeName=telName,
         version='Current',
-        label='test-lst',
-        logger=logger.name
+        label='test-lst'
     )
 
     logger.info('Validated telName: {}'.format(tel.telescopeName))
@@ -28,8 +27,7 @@ def test_handling_parameters():
     tel = TelescopeModel(
         telescopeName='north-lst-1',
         version='Current',
-        label='test-lst',
-        logger=logger.name
+        label='test-lst'
     )
 
     logger.info(
@@ -54,7 +52,6 @@ def test_flen_type():
         telescopeName='north-lst-1',
         version='Current',
         label='test-lst',
-        logger=logger.name
     )
     flen = tel.getParameter('focal_length')
     logger.info('Focal Length = {}, type = {}'.format(flen, type(flen)))
@@ -67,8 +64,7 @@ def test_cfg_file():
     tel = TelescopeModel(
         telescopeName='south-sst-d',
         version='Current',
-        label='test-sst',
-        logger=logger.name
+        label='test-sst'
     )
     # tel.exportConfigFile(loc='/home/prado/Work/Projects/CTA_MC/MCLib')
     tel.exportConfigFile()
@@ -80,8 +76,7 @@ def test_cfg_file():
     tel = TelescopeModel.fromConfigFile(
         telescopeName='south-sst-d',
         label='test-sst',
-        configFileName=cfgFile,
-        logger=logger.name
+        configFileName=cfgFile
     )
     tel.exportConfigFile()
     return
@@ -91,8 +86,7 @@ def test_cfg_input():
     tel = TelescopeModel(
         telescopeName='north-lst-1',
         version='Current',
-        label='test-sst-2',
-        logger=logger.name
+        label='test-sst-2'
     )
     return
 
