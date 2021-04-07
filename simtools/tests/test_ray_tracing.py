@@ -5,9 +5,7 @@ import matplotlib.pyplot as plt
 from copy import copy
 
 import astropy.units as u
-import numpy as np
 
-import simtools.config as cfg
 import simtools.io_handler as io
 from simtools.ray_tracing import RayTracing
 from simtools.model.telescope_model import TelescopeModel
@@ -30,8 +28,7 @@ def test_ssts(show=False):
         tel = TelescopeModel(
             telescopeName='south-' + t,
             version=version,
-            label='test-sst',
-            logger=logger.name
+            label='test-sst'
         )
         telModels.append(t)
 
@@ -69,8 +66,7 @@ def test_rx():
     tel = TelescopeModel(
         telescopeName='north-lst-1',
         version=version,
-        label=label,
-        logger=logger.name
+        label=label
     )
 
     ray = RayTracing(
@@ -122,8 +118,7 @@ def test_plot_image():
     tel = TelescopeModel(
         telescopeName='south-sst-D',
         version=version,
-        label=label,
-        logger=logger.name
+        label=label
     )
 
     ray = RayTracing(
@@ -156,8 +151,7 @@ def test_single_mirror(plot=False):
     tel = TelescopeModel(
         telescopeName='north-mst-FlashCam-D',
         version=version,
-        label='test-mst',
-        logger=logger.name
+        label='test-mst'
     )
 
     ray = RayTracing(
@@ -189,8 +183,7 @@ def test_integral_curve():
     tel = TelescopeModel(
         telescopeName='north-mst-FlashCam-D',
         version=version,
-        label=label,
-        logger=logger.name
+        label=label
     )
 
     ray = RayTracing(

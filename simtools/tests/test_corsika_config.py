@@ -65,7 +65,6 @@ logger.setLevel(logging.DEBUG)
 #     assert cc3._parameters['EVTNR'] == [1]
 #     cc3.exportFile()
 
-
 # def test_units():
 #     cc = CorsikaConfig(
 #         site='Paranal',
@@ -84,9 +83,8 @@ logger.setLevel(logging.DEBUG)
 #     )
 #     cc.exportFile()
 
-
 if __name__ == '__main__':
 
-    test_general()
-    test_units()
+#    test_general()
+#    test_units()
     pass
