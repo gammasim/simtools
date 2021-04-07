@@ -247,7 +247,7 @@ class TelescopeModel:
 
         self._logger.debug('Reading telescope parameters from DB')
 
-        self._setConfigFileDirectory()
+        self._setConfigFileDirectoryAndName()
         db = db_handler.DatabaseHandler()
         self._parameters = db.getModelParameters(
             self.telescopeName,
