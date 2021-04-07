@@ -73,7 +73,7 @@
         python applications/produce_array_config.py --label test --array_config \
         data/test-data/arrayConfigTest.yml -v DEBUG
 
-    All the model files can be found in simtools-output/test/model/
+    All the produced model files can be found in simtools-output/test/model/
 
 '''
 
