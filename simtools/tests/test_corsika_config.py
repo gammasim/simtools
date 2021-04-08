@@ -13,7 +13,7 @@ logger.setLevel(logging.DEBUG)
 def test_general():
     cc = CorsikaConfig(
         site='Paranal',
-        layoutName='Prod5',
+        layoutName='4LST',
         nshow=100,
         nrun=10,
         wrong_par=200,
