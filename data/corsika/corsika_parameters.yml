@@ -34,7 +34,7 @@ USER_PARAMETERS:
     unit: [!astropy.units.Unit {unit: deg}, !astropy.units.Unit {unit: deg}]
   CSCAT:
     len: 3
-    names: []
+    names: ['SCAT']
     unit: [null, !astropy.units.Unit {unit: cm}, null]
 
 PRIMARIES:
