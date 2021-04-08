@@ -4,6 +4,8 @@ import logging
 import random
 from copy import copy
 
+from astropy.io.misc import yaml
+
 import simtools.config as cfg
 import simtools.io_handler as io
 import simtools.corsika.corsika_parameters as cors_pars
@@ -89,6 +91,13 @@ class CorsikaConfig:
         self.setParameters(**kwargs)
         self._loadSeeds(randomSeeds)
         # self._isFileUpdated = False
+
+        # Load parameters
+        file = 'data/corsika/corsika_parameters.yml'
+        with open(file, 'r') as f:
+            pars = yaml.load(f)
+        print('pars-------')
+        print(pars)
 
     def setParameters(self, **kwargs):
         '''
