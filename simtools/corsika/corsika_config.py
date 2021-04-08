@@ -8,7 +8,6 @@ from astropy.io.misc import yaml
 
 import simtools.config as cfg
 import simtools.io_handler as io
-import simtools.corsika.corsika_parameters as cors_pars
 from simtools.util import names
 from simtools.layout.layout_array import LayoutArray
 
@@ -49,6 +48,7 @@ class CorsikaConfig:
         label=None,
         filesLocation=None,
         randomSeeds=False,
+        corsikaParametersFile=None,
         **kwargs
     ):
         '''
@@ -88,18 +88,25 @@ class CorsikaConfig:
             label=self.label
         )
 
-        self.setParameters(**kwargs)
-        self._loadSeeds(randomSeeds)
-        # self._isFileUpdated = False
-
         # Load parameters
-        file = 'data/corsika/corsika_parameters.yml'
-        with open(file, 'r') as f:
-            pars = yaml.load(f)
-        print('pars-------')
-        print(pars)
+        self._loadCorsikaParametersFile(corsikaParametersFile)
 
-    def setParameters(self, **kwargs):
+        self.setUserParameters(**kwargs)
+        self._loadSeeds(randomSeeds)
+        self._isFileUpdated = False
+
+    def _loadCorsikaParametersFile(self, filename):
+        if filename is not None:
+            self._corsikaParametersFile = filename
+        else:
+            self._corsikaParametersFile = io.getDataFile('corsika', 'corsika_parameters.yml')
+        self._logger.debug(
+            'Loading CORSIKA parameters from file {}'.format(self._corsikaParametersFile)
+        )
+        with open(self._corsikaParametersFile, 'r') as f:
+            self._corsikaParameters = yaml.load(f)
+
+    def setUserParameters(self, **kwargs):
         '''
         Set parameters for the corsika config.
 
@@ -107,19 +114,21 @@ class CorsikaConfig:
         ----------
         **kwargs
         '''
-        self._parameters = dict()
+        self._userParameters = dict()
+
+        userPars = self._corsikaParameters['USER_PARAMETERS']
 
         # Collecting all parameters given as arguments
         indentifiedArgs = list()
         for keyArgs, valueArgs in kwargs.items():
             # Looping over USER_PARAMETERS and searching for a match
-            for parName, parInfo in cors_pars.USER_PARAMETERS.items():
+            for parName, parInfo in userPars.items():
                 if keyArgs.upper() != parName and keyArgs.upper() not in parInfo['names']:
                     continue
                 # Matched parameter
                 indentifiedArgs.append(keyArgs)
                 validatedValueArgs = self._validateArgument(parName, parInfo, valueArgs)
-                self._parameters[parName] = validatedValueArgs
+                self._userParameters[parName] = validatedValueArgs
 
         # Checking for unindetified parameters
         unindentifiedArgs = [p for p in kwargs.keys() if p not in indentifiedArgs]
@@ -132,12 +141,12 @@ class CorsikaConfig:
         # Checking for parameters with default option
         # If it is not given, filling it with the default value
         requiredButNotGiven = list()
-        for parName, parInfo in cors_pars.USER_PARAMETERS.items():
-            if parName in self._parameters.keys():
+        for parName, parInfo in userPars.items():
+            if parName in self._userParameters.keys():
                 continue
             elif 'default' in parInfo.keys():
                 validatedValue = self._validateArgument(parName, parInfo, parInfo['default'])
-                self._parameters[parName] = validatedValue
+                self._userParameters[parName] = validatedValue
             else:
                 requiredButNotGiven.append(parName)
 
@@ -191,7 +200,7 @@ class CorsikaConfig:
     # End of _validateArgument
 
     def printParameters(self):
-        for par, value in self._parameters.items():
+        for par, value in self._userParameters.items():
             print('{} = {}'.format(par, value))
 
     def _convertPrimaryInput(self, value):
@@ -208,7 +217,7 @@ class CorsikaConfig:
         InvalidPrimary
             If the input name is not found.
         '''
-        for primName, primInfo in cors_pars.PRIMARIES.items():
+        for primName, primInfo in self._corsikaParameters['PRIMARIES'].items():
             if value[0].upper() == primName or value[0].upper() in primInfo['names']:
                 return [primInfo['number']]
         self._logger.error('Primary not valid')
@@ -216,13 +225,13 @@ class CorsikaConfig:
 
     def _loadSeeds(self, randomSeeds):
         ''' Load seeds and store it in _seeds. '''
-        if '_parameters' not in self.__dict__.keys():
+        if '_userParameters' not in self.__dict__.keys():
             self._logger.error('_loadSeeds has be called after _loadArguments')
             raise ArgumentsNotLoaded()
         if randomSeeds:
             s = random.uniform(0, 1000)
         else:
-            s = self._parameters['PRMPAR'][0] + self._parameters['RUNNR'][0]
+            s = self._userParameters['PRMPAR'][0] + self._userParameters['RUNNR'][0]
         random.seed(s)
         self._seeds = [int(random.uniform(0, 1e7)) for i in range(4)]
 
@@ -251,11 +260,13 @@ class CorsikaConfig:
             return text
 
         with open(self._configFilePath, 'w') as file:
-            textParameters = _getTextSingleLine(self._parameters)
+            textParameters = _getTextSingleLine(self._userParameters)
             file.write(textParameters)
 
             file.write('\n# SITE PARAMETERS\n')
-            textSiteParameters = _getTextSingleLine(cors_pars.SITE_PARAMETERS[self.site])
+            textSiteParameters = _getTextSingleLine(
+                self._corsikaParameters['SITE_PARAMETERS'][self.site]
+            )
             file.write(textSiteParameters)
 
             file.write('\n# SEEDS\n')
@@ -266,22 +277,26 @@ class CorsikaConfig:
             file.write(telescopeListText)
 
             file.write('\n# INTERACTION FLAGS\n')
-            textInteractionFlags = _getTextSingleLine(cors_pars.INTERACTION_FLAGS)
+            textInteractionFlags = _getTextSingleLine(self._corsikaParameters['INTERACTION_FLAGS'])
             file.write(textInteractionFlags)
 
             file.write('\n# CHERENKOV EMISSION PARAMETERS\n')
-            textCherenkov = _getTextSingleLine(cors_pars.CHERENKOV_EMISSION_PARAMETERS)
+            textCherenkov = _getTextSingleLine(
+                self._corsikaParameters['CHERENKOV_EMISSION_PARAMETERS']
+            )
             file.write(textCherenkov)
 
             file.write('\n# DEBUGGING OUTPUT PARAMETERS\n')
-            textDebugging = _getTextSingleLine(cors_pars.DEBUGGING_OUTPUT_PARAMETERS)
+            textDebugging = _getTextSingleLine(
+                self._corsikaParameters['DEBUGGING_OUTPUT_PARAMETERS']
+            )
             file.write(textDebugging)
 
             file.write('\n# OUTUPUT FILE\n')
-            file.write('TELFIL {}'.format(self._outputFilePath))
+            file.write('TELFIL {}\n'.format(self._outputFilePath))
 
             file.write('\n# IACT TUNING PARAMETERS\n')
-            textIact = _getTextMultipleLines(cors_pars.IACT_TUNING_PARAMETERS)
+            textIact = _getTextMultipleLines(self._corsikaParameters['IACT_TUNING_PARAMETERS'])
             file.write(textIact)
 
             file.write('\nEXIT')
@@ -293,16 +308,16 @@ class CorsikaConfig:
         configFileName = names.corsikaConfigFileName(
             arrayName=self.layoutName,
             site=self.site,
-            zenith=self._parameters['THETAP'],
-            viewCone=self._parameters['VIEWCONE'],
+            zenith=self._userParameters['THETAP'],
+            viewCone=self._userParameters['VIEWCONE'],
             label=self.label
         )
         outputFileName = names.corsikaOutputFileName(
             arrayName=self.layoutName,
             site=self.site,
-            zenith=self._parameters['THETAP'],
-            viewCone=self._parameters['VIEWCONE'],
-            run=self._parameters['RUNNR'][0],
+            zenith=self._userParameters['THETAP'],
+            viewCone=self._userParameters['VIEWCONE'],
+            run=self._userParameters['RUNNR'][0],
             label=self.label
         )
         fileDirectory = io.getCorsikaOutputDirectory(self._filesLocation, self.label)
