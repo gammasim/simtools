@@ -26,7 +26,8 @@ def test_general():
         primary='proton',
         label='test-corsika-config'
     )
-    # cc.exportFile()
+    cc.printParameters()
+    cc.exportInputFile()
 
 #     cc2 = CorsikaConfig(
 #         site='LaPalma',
