@@ -118,6 +118,12 @@ class LayoutArray:
         self._outputDirectory = io.getLayoutOutputDirectory(self._filesLocation, self.label)
         self._outputDirectory.mkdir(parents=True, exist_ok=True)
 
+    def __len__(self):
+        return len(self._telescopeList)
+
+    def __getitem__(self, i):
+        return self._telescopeList[i]
+
     @classmethod
     def fromLayoutArrayName(
         cls,
@@ -144,7 +150,7 @@ class LayoutArray:
         '''
         spl = layoutArrayName.split('-')
         siteName = names.validateSiteName(spl[0])
-        arrayName = names.validateArrayName(spl[1])
+        arrayName = names.validateLayoutArrayName(spl[1])
         validLayoutArrayName = siteName + '-' + arrayName
 
         layout = cls(

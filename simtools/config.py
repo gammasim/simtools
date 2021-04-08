@@ -133,7 +133,7 @@ def getConfigArg(name, value):
     Path
         Path of the desired parameter.
     '''
-    return Path(value) if value is not None else get(name)
+    return value if value is not None else get(name)
 
 
 def findFile(name, loc=None):
