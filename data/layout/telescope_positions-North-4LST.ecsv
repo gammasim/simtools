@@ -7,52 +7,52 @@
 # - {name: pos_z, unit: m, datatype: float64}
 # - {name: lat, unit: deg, datatype: float64}
 # - {name: lon, unit: deg, datatype: float64}
-# - {name: utm_east, unit: deg, datatype: float64}
-# - {name: utm_north, unit: deg, datatype: float64}
+# - {name: utm_east, unit: m, datatype: float64}
+# - {name: utm_north, unit: m, datatype: float64}
 # - {name: alt, unit: m, datatype: float64}
 # meta:
 #   EPSG: 32628
 #   center_alt: !astropy.units.Quantity
-#     unit: &id001 !astropy.units.Unit {unit: m}
-#     value: 2177.0
+#     unit: &id002 !astropy.units.Unit {unit: m}
+#     value: 2150.0
 #   center_easting: !astropy.units.Quantity
-#     unit: *id001
-#     value: 217611.0
+#     unit: !astropy.units.Unit {unit: m2}
+#     value: 217654.06411838497
 #   center_lat: !astropy.units.Quantity
-#     unit: &id002 !astropy.units.Unit {unit: deg}
-#     value: 28.7621661
+#     unit: &id001 !astropy.units.Unit {unit: deg}
+#     value: 28.762158
 #   center_lon: !astropy.units.Quantity
-#     unit: *id002
-#     value: -17.8920302
+#     unit: *id001
+#     value: -17.891571
 #   center_northing: !astropy.units.Quantity
-#     unit: *id001
-#     value: 3185066.0
+#     unit: !astropy.units.Unit {unit: m2}
+#     value: 3185065.2899643113
 #   corsika_obs_level: !astropy.units.Quantity
-#     unit: *id001
+#     unit: *id002
 #     value: 2158.0
 #   corsika_sphere_center:
 #     LST: !astropy.units.Quantity
-#       unit: *id001
+#       unit: *id002
 #       value: 16.0
 #     MST: !astropy.units.Quantity
-#       unit: *id001
+#       unit: *id002
 #       value: 9.0
 #     SST: !astropy.units.Quantity
-#       unit: *id001
+#       unit: *id002
 #       value: 3.25
 #   corsika_sphere_radius:
 #     LST: !astropy.units.Quantity
-#       unit: *id001
+#       unit: *id002
 #       value: 12.5
 #     MST: !astropy.units.Quantity
-#       unit: *id001
+#       unit: *id002
 #       value: 9.6
 #     SST: !astropy.units.Quantity
-#       unit: *id001
+#       unit: *id002
 #       value: 3.0
 # schema: astropy-2.0
 telescope_name pos_x pos_y pos_z lat lon utm_east utm_north alt
-L-01 57.5 57.5 57.5 28.76268490262916 -17.892618973558886 217553.1085503212 3185126.1930871014 2142.0
-L-02 -57.5 -57.5 -57.5 28.761647294765744 -17.892618967736478 217550.31227315625 3185011.159835978 2142.0
-L-03 57.5 57.5 57.5 28.76268490262916 -17.89144142644112 217668.14175311883 3185123.396766117 2142.0
-L-04 -57.5 -57.5 -57.5 28.761647294765744 -17.891441432263523 217665.34548046027 3185008.363607139 2142.0
+L-01 57.5 57.5 57.5 28.762676802629773 -17.89215977351343 217597.94544395315 3185124.2044917224 2142.0
+L-02 -57.5 -57.5 -57.5 28.761639194765124 -17.892159767691023 217595.1496128795 3185009.1712657204 2142.0
+L-03 57.5 57.5 57.5 28.762676802629773 -17.89098222648657 217712.9786216382 3185121.4086168357 2142.0
+L-04 -57.5 -57.5 -57.5 28.761639194765124 -17.890982232308975 217710.1827950689 3185006.3754829657 2142.0
