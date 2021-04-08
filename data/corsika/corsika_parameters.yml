@@ -16,7 +16,7 @@ USER_PARAMETERS:
   ERANGE:
     len: 2
     names: ['ENRANGE', 'ENERGYRANGE']
-    unit: [!astropy.units.Unit {unit: TeV}] * 2
+    unit: [!astropy.units.Unit {unit: TeV}, !astropy.units.Unit {unit: TeV}]
   ESLOPE:
     len: 1
     names: ['ENSLOPE', 'ENERGYSLOPE']
@@ -35,7 +35,7 @@ USER_PARAMETERS:
   CSCAT:
     len: 3
     names: []
-    unit: [None, !astropy.units.Unit {unit: cm}, None]
+    unit: ['none', !astropy.units.Unit {unit: cm}, 'none']
 
 PRIMARIES:
   GAMMA:
