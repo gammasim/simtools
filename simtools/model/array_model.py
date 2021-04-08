@@ -122,7 +122,7 @@ class ArrayModel:
         # Site
         self.site = names.validateSiteName(arrayConfigData['site'])
 
-        # Grabing layout name and building LayoutArray
+        # Grabbing layout name and building LayoutArray
         self.layoutName = names.validateLayoutArrayName(arrayConfigData['layoutName'])
         self.layout = LayoutArray.fromLayoutArrayName(
             self.site + '-' + self.layoutName,
@@ -286,7 +286,7 @@ class ArrayModel:
                 telName = self.site + '-' + telSize + '-' + data['name']
                 parsToChange = {k: v for (k, v) in data.items() if k != 'name'}
                 self._logger.debug(
-                    'Grabing tel data as dict - '
+                    'Grabbing tel data as dict - '
                     + 'name: {}, '.format(telName)
                     + '{} pars to change'.format(len(parsToChange))
                 )
@@ -320,7 +320,7 @@ class ArrayModel:
                 self._logger.error(msg)
                 raise InvalidArrayConfigData(msg)
 
-            # Grabing the default option
+            # Grabbing the default option
             return _proccessSingleTelescope(self._arrayConfigData['default'][telSize])
     # End of _getSingleTelescopeInfoFromArrayConfig
 
