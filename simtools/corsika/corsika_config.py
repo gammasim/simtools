@@ -7,7 +7,7 @@ import simtools.config as cfg
 import simtools.io_handler as io
 import simtools.corsika_parameters as cors_pars
 from simtools.util import names
-from simtools.util.arrays import getArrayInfo
+from simtools.layout.layout_array import LayoutArray
 
 __all__ = ['CorsikaConfig']
 
