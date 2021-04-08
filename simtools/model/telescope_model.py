@@ -31,11 +31,15 @@ class TelescopeModel:
         Instance of the Mirrors class created with the mirror list of the model.
     camera: Camera
         Instance of the Camera class created with the camera config file of the model.
+    extraLabel: str
+        Extra label to be used in case of multiple telescope configurations.
 
     Methods
     -------
     fromConfigFile(configFileName, telescopeName, label=None, filesLocation=None)
         Create a TelescopeModel from a sim_telarray cfg file.
+    setExtraLabel(extraLabel)
+        Set an extra label for the name of the config file.
     hasParameter(parName):
         Verify if parameter is in the model.
     getParameter(parName):
@@ -87,6 +91,7 @@ class TelescopeModel:
         self.version = names.validateModelVersionName(version)
         self.telescopeName = names.validateTelescopeName(telescopeName)
         self.label = label
+        self._extraLabel = None
 
         self._modelFilesLocations = cfg.getConfigArg('modelFilesLocations', modelFilesLocations)
         self._filesLocation = cfg.getConfigArg('outputLocation', filesLocation)
@@ -96,7 +101,7 @@ class TelescopeModel:
         if readFromDB:
             self._loadParametersFromDB()
 
-        self._setConfigFileDirectory()
+        self._setConfigFileDirectoryAndName()
         self._isConfigFileUpdated = False
 
     @property
@@ -110,6 +115,10 @@ class TelescopeModel:
         if '_camera' not in self.__dict__:
             self._loadCamera()
         return self._camera
+
+    @property
+    def extraLabel(self):
+        return self._extraLabel if self._extraLabel is not None else ''
 
     @classmethod
     def fromConfigFile(
@@ -197,13 +206,40 @@ class TelescopeModel:
 
         tel.addParameters(**parameters)
         return tel
+    # End of fromConfigFile
 
-    def _setConfigFileDirectory(self):
+    def setExtraLabel(self, extraLabel):
+        '''
+        Set an extra label for the name of the config file.
+
+        Notes
+        -----
+        The config file directory name is not affected by the extra label.
+        Only the file name is changed. This is important for the ArrayModel
+        class to export multiple config files in the same directory.
+
+        Parameters
+        ----------
+        extraLabel: str
+            Extra label to be appended to the original label.
+        '''
+        self._extraLabel = extraLabel
+        self._setConfigFileDirectoryAndName()
+
+    def _setConfigFileDirectoryAndName(self):
         ''' Define the variable _configFileDirectory and create directories, if needed '''
         self._configFileDirectory = io.getModelOutputDirectory(self._filesLocation, self.label)
         if not self._configFileDirectory.exists():
             self._configFileDirectory.mkdir(parents=True, exist_ok=True)
             self._logger.info('Creating directory {}'.format(self._configFileDirectory))
+
+        # Setting file name and the location
+        configFileName = names.simtelTelescopeConfigFileName(
+            self.version,
+            self.telescopeName,
+            self.label + ('_' + self._extraLabel if self._extraLabel is not None else '')
+        )
+        self._configFilePath = self._configFileDirectory.joinpath(configFileName)
         return
 
     def _loadParametersFromDB(self):
@@ -211,7 +247,7 @@ class TelescopeModel:
 
         self._logger.debug('Reading telescope parameters from DB')
 
-        self._setConfigFileDirectory()
+        self._setConfigFileDirectoryAndName()
         db = db_handler.DatabaseHandler()
         self._parameters = db.getModelParameters(
             self.telescopeName,
@@ -257,7 +293,7 @@ class TelescopeModel:
         for _parNow in parsToRemove:
             if _parNow in self._parameters:
                 self._parameters.pop(_parNow, None)
-
+        return
     # END _loadParametersFromDB
 
     def hasParameter(self, parName):
@@ -349,6 +385,7 @@ class TelescopeModel:
                 if type(self._parameters[par]) != type(value):
                     self._logger.warning('Value type differs from the current one')
                 self._parameters[par] = value
+                self._logger.debug('Changing parameter {}'.format(par))
         self._isConfigFileUpdated = False
 
     def removeParameters(self, *args):
@@ -390,43 +427,47 @@ class TelescopeModel:
     def exportConfigFile(self):
         ''' Export the config file used by sim_telarray. '''
 
-        # Setting file name and the location
-        configFileName = names.simtelConfigFileName(
-            self.version,
-            self.telescopeName,
-            self.label
-        )
-        self._configFilePath = self._configFileDirectory.joinpath(configFileName)
-
         # Writing parameters to the file
         self._logger.info('Writing config file - {}'.format(self._configFilePath))
         with open(self._configFilePath, 'w') as file:
             header = (
-                '%{}\n'.format(99 * '=')
-                + '% Configuration file for:\n'
+                '%{}\n'.format(50 * '=')
+                + '% TELESCOPE CONFIGURATION FILE\n'
                 + '% TelescopeName: {}\n'.format(self.telescopeName)
-                + '% Label: {}\n'.format(self.label) if self.label is not None else ''
-                + '%{}\n'.format(99 * '=')
+                + '% ModelVersion: {}\n'.format(self.version)
+                + ('% Label: {}\n'.format(self.label) if self.label is not None else '')
+                + '%{}\n\n'.format(50 * '=')
             )
-
             file.write(header)
-            for par in self._parameters:
-                value = self._parameters[par]
+
+            file.write('#ifdef TELESCOPE\n')
+            file.write(
+                '   echo Configuration for {}'.format(self.telescopeName)
+                + ' - TELESCOPE $(TELESCOPE)\n'
+            )
+            file.write('#endif\n\n')
+
+            for par, value in self._parameters.items():
                 file.write('{} = {}\n'.format(par, value))
 
         self._isConfigFileUpdated = True
     # END exportConfigFile
 
-    def getConfigFile(self):
+    def getConfigFile(self, noExport=False):
         '''
         Get the path of the config file for sim_telarray.
         The config file is produced if the file is not updated.
+
+        Parameters
+        ----------
+        noExport: bool
+            Turn it on if you do not want the file to be exported.
 
         Returns
         -------
         Path of the exported config file for sim_telarray.
         '''
-        if not self._isConfigFileUpdated:
+        if not self._isConfigFileUpdated and not noExport:
             self.exportConfigFile()
         return self._configFilePath
 
@@ -472,7 +513,6 @@ class TelescopeModel:
 
         __, __, diameter, flen, shape = self.mirrors.getSingleMirrorParameters(mirrorNumber)
 
-        print(self._singleMirrorListFilePaths[mirrorNumber])
         with open(self._singleMirrorListFilePaths[mirrorNumber], 'w') as file:
             file.write('# Column 1: X pos. [cm] (North/Down)\n')
             file.write('# Column 2: Y pos. [cm] (West/Right from camera)\n')
