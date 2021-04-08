@@ -16,7 +16,7 @@ class MissingInputForConvertion(Exception):
 
 class TelescopeData:
     '''
-    Store and do coordenate transformations with single telescope positions
+    Store and do coordinate transformations with single telescope positions
 
     Attributes
     ----------
