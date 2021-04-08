@@ -146,7 +146,7 @@ class ArrayModel:
     def _validateArrayData(self, arrayConfigData):
         '''
         Validate arrayData by checking the existence of the relevant keys.
-        Searcing for the keys: 'site', 'array' and 'default'
+        Searching for the keys: 'site', 'array' and 'default'
         And the sub-keys in 'default': 'LST', 'MST' and 'SST', in case of
         South array.
         '''
