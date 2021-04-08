@@ -4,7 +4,7 @@ import logging
 from astropy import units as u
 
 import simtools.config as cfg
-from simtools.corsika_config import CorsikaConfig
+from simtools.corsika.corsika_config import CorsikaConfig
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
@@ -13,7 +13,7 @@ logger.setLevel(logging.DEBUG)
 def test_general():
     cc = CorsikaConfig(
         site='Paranal',
-        arrayName='4LST',
+        layoutName='Prod5',
         nshow=100,
         nrun=10,
         wrong_par=200,
@@ -24,10 +24,9 @@ def test_general():
         phi=0 * u.deg,
         cscat=[10, 1500 * u.m, 0],
         primary='proton',
-        label='test-corsika-config',
-        logger=logger.name
+        label='test-corsika-config'
     )
-    cc.exportFile()
+    # cc.exportFile()
 
 #     cc2 = CorsikaConfig(
 #         site='LaPalma',
