@@ -23,7 +23,7 @@ USER_PARAMETERS:
   THETAP:
     len: 2
     names: ['THETA', 'ZENITH']
-    unit: [!astropy.units.Unit {unit: deg}] * 2
+    unit: [!astropy.units.Unit {unit: deg}, !astropy.units.Unit {unit: deg}]
   PHIP:
     len: 1
     names: ['PHI', 'AZIMUTH']
@@ -31,11 +31,11 @@ USER_PARAMETERS:
   VIEWCONE:
     len: 2
     names: ['CONE']
-    unit: [!astropy.units.Unit {unit: deg}] * 2
+    unit: [!astropy.units.Unit {unit: deg}, !astropy.units.Unit {unit: deg}]
   CSCAT:
     len: 3
     names: []
-    unit: ['none', !astropy.units.Unit {unit: cm}, 'none']
+    unit: [null, !astropy.units.Unit {unit: cm}, null]
 
 PRIMARIES:
   GAMMA:
