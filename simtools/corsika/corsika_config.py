@@ -5,7 +5,7 @@ import random
 
 import simtools.config as cfg
 import simtools.io_handler as io
-import simtools.corsika_parameters as cors_pars
+import simtools.corsika.corsika_parameters as cors_pars
 from simtools.util import names
 from simtools.layout.layout_array import LayoutArray
 
@@ -42,7 +42,7 @@ class CorsikaConfig:
     def __init__(
         self,
         site,
-        arrayName,
+        layoutName,
         label=None,
         filesLocation=None,
         randomSeeds=False,
@@ -55,8 +55,10 @@ class CorsikaConfig:
         ----------
         site: str
             Paranal or LaPalma
-        arrayName: str
-            Name of the array type. Ex 4LST, baseline ...
+        layoutName: str
+            Name of the layout.
+        layout: LayoutArray
+            Instance of LayoutArray.
         label: str
             Instance label.
         filesLocation: str or Path.
@@ -71,15 +73,21 @@ class CorsikaConfig:
         self._logger = logging.getLogger(__name__)
         self._logger.debug('Init CorsikaConfig')
 
-        self._label = label
-        self._filesLocation = cfg.getConfigArg('outputLocation', filesLocation)
-        self._site = names.validateSiteName(site)
-        self._arrayName = names.validateArrayName(arrayName)
-        self._array = getArrayInfo(self._arrayName)
+        self.label = label
+        self.site = names.validateSiteName(site)
 
-        self.setParameters(**kwargs)
-        self._loadSeeds(randomSeeds)
-        self._isFileUpdated = False
+        self._filesLocation = cfg.getConfigArg('outputLocation', filesLocation)
+
+        # Grabbing layout name and building LayoutArray
+        self.layoutName = names.validateLayoutArrayName(layoutName)
+        self.layout = LayoutArray.fromLayoutArrayName(
+            self.site + '-' + self.layoutName,
+            label=self.label
+        )
+
+        # self.setParameters(**kwargs)
+        # self._loadSeeds(randomSeeds)
+        # self._isFileUpdated = False
 
     def setParameters(self, **kwargs):
         '''
