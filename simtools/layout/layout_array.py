@@ -203,7 +203,9 @@ class LayoutArray:
             (self._centerNorthing is None or self._centerEasting is None)
             and self._arrayCenter.hasUtmCoordinates()
         ):
-            self._centerNorthing, self._centerEasting = self._arrayCenter.getUtmCoordinates()
+            centerNorthingWithUnit, centerEastingWithUnit = self._arrayCenter.getUtmCoordinates()
+            self._centerNorthing = centerNorthingWithUnit.to(u.m).value
+            self._centerEasting = centerEastingWithUnit.to(u.m).value
     # End of _loadArrayCenter
 
     def _appendTelescope(self, row, table, prodList):
