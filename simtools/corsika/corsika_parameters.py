@@ -38,7 +38,7 @@ SITE_PARAMETERS = {
         'OBSLEV': [2150.e2],
         'ATMOSPHERE': [26, 'Y'],
         'MAGNET': [20.925, -9.119],
-        'ARRANG':  [-3.433]
+        'ARRANG': [-3.433]
     },
     'North': {
         'OBSLEV': [2158.e2],
