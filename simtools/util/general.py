@@ -208,16 +208,18 @@ def collectDataFromYamlOrDict(inYaml, inDict):
     data: dict
         Data as dict.
     '''
+    _logger = logging.getLogger(__name__)
+
     if inYaml is not None:
         if inDict is not None:
-            logger.warning('Both inDict inYaml were given - inYaml will be used')
+            _logger.warning('Both inDict inYaml were given - inYaml will be used')
         with open(inYaml) as file:
             data = yaml.load(file, Loader=yaml.FullLoader)
         return data
     elif inDict is not None:
         return dict(inDict)
     else:
-        logger.error('No data was given - aborting')
+        _logger.error('No data was given - aborting')
         return None
 
 
