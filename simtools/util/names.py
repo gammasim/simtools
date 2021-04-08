@@ -4,14 +4,15 @@ __all__ = [
     'validateModelVersionName',
     'validateSimtelModeName',
     'validateSiteName',
-    'validateArrayName',
+    'validateLayoutArrayName',
     'validateTelescopeName',
     'validateCameraName',
     'convertTelescopeNameToYaml',
     'splitTelescopeName',
     'getSiteFromTelescopeName',
     'rayTracingFileName',
-    'simtelConfigFileName',
+    'simtelTelescopeConfigFileName',
+    'simtelArrayConfigFileName',
     'simtelSingleMirrorListFileName',
     'corsikaConfigFileName',
     'corsikaOutputFileName'
@@ -102,9 +103,9 @@ def validateSiteName(name):
     return validateName(name, allSiteNames)
 
 
-def validateArrayName(name):
+def validateLayoutArrayName(name):
     '''
-    Validate a array name.
+    Validate a layout array name.
 
     Raises
     ------
@@ -120,7 +121,7 @@ def validateArrayName(name):
     str
         Validated name.
     '''
-    return validateName(name, allArrayNames)
+    return validateName(name, allLayoutArrayNames)
 
 
 def validateName(name, allNames):
@@ -343,7 +344,7 @@ allSimtelModeNames = {
     'Trigger': ['trigger']
 }
 
-allArrayNames = {
+allLayoutArrayNames = {
     '4LST': ['4-lst', '4lst'],
     '1LST': ['1-lst', '1lst'],
     '4MST': ['4-mst', '4mst'],
@@ -354,9 +355,9 @@ allArrayNames = {
 }
 
 
-def simtelConfigFileName(version, telescopeName, label):
+def simtelTelescopeConfigFileName(version, telescopeName, label):
     '''
-    sim_telarray config file name.
+    sim_telarray config file name for a telescope.
 
     Parameters
     ----------
@@ -373,6 +374,32 @@ def simtelConfigFileName(version, telescopeName, label):
         File name.
     '''
     name = 'CTA-{}-{}'.format(version, telescopeName)
+    name += '_{}'.format(label) if label is not None else ''
+    name += '.cfg'
+    return name
+
+
+def simtelArrayConfigFileName(arrayName, site, version, label):
+    '''
+    sim_telarray config file name for an array.
+
+    Parameters
+    ----------
+    arrayName: str
+        Prod5, ...
+    site: str
+        South or North.
+    version: str
+        Version of the model.
+    label: str
+        Instance label.
+
+    Returns
+    -------
+    str
+        File name.
+    '''
+    name = 'CTA-{}-{}-{}'.format(arrayName, site, version)
     name += '_{}'.format(label) if label is not None else ''
     name += '.cfg'
     return name
