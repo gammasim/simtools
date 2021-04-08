@@ -305,8 +305,8 @@ class LayoutArray:
         posZ=u.m,
         longitude=u.deg,
         latitude=u.deg,
-        utmEast=u.deg,
-        utmNorth=u.deg,
+        utmEast=u.m,
+        utmNorth=u.m,
         altitude=u.m
     )
     def addTelescope(
