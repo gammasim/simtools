@@ -4,30 +4,30 @@ import logging
 from astropy import units as u
 
 import simtools.config as cfg
-# from simtools.corsika_config import CorsikaConfig
+from simtools.corsika_config import CorsikaConfig
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 
-# def test_general():
-#     cc = CorsikaConfig(
-#         site='Paranal',
-#         arrayName='4LST',
-#         nshow=100,
-#         nrun=10,
-#         wrong_par=200,
-#         zenith=20 * u.deg,
-#         viewcone=5 * u.deg,
-#         erange=[0.01 * u.GeV, 10 * u.GeV],
-#         eslope=2,
-#         phi=0 * u.deg,
-#         cscat=[10, 1500 * u.m, 0],
-#         primary='proton',
-#         label='test-corsika-config',
-#         logger=logger.name
-#     )
-#     cc.exportFile()
+def test_general():
+    cc = CorsikaConfig(
+        site='Paranal',
+        arrayName='4LST',
+        nshow=100,
+        nrun=10,
+        wrong_par=200,
+        zenith=20 * u.deg,
+        viewcone=5 * u.deg,
+        erange=[0.01 * u.GeV, 10 * u.GeV],
+        eslope=2,
+        phi=0 * u.deg,
+        cscat=[10, 1500 * u.m, 0],
+        primary='proton',
+        label='test-corsika-config',
+        logger=logger.name
+    )
+    cc.exportFile()
 
 #     cc2 = CorsikaConfig(
 #         site='LaPalma',
@@ -85,6 +85,6 @@ logger.setLevel(logging.DEBUG)
 
 if __name__ == '__main__':
 
-#    test_general()
+    test_general()
 #    test_units()
     pass
