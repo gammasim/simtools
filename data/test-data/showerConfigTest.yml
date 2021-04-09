@@ -1,0 +1,12 @@
+site: North
+layoutName: Prod5
+
+runs: [1, 10]
+
+primary: gamma
+erange: []
+eslope: -2
+zenith: 20
+azimuth: 0
+viewcone: 0
+cscat: [10, 1500 * u.m, 0]
