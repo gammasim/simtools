@@ -19,7 +19,7 @@ def test_general():
         zenith=20 * u.deg,
         viewcone=5 * u.deg,
         erange=[0.01 * u.GeV, 10 * u.GeV],
-        eslope=2,
+        eslope=-2,
         phi=0 * u.deg,
         cscat=[10, 1500 * u.m, 0],
         primary='proton',
@@ -36,7 +36,7 @@ def test_general():
         zenith=[0 * u.deg, 60 * u.deg],
         viewcone=[0 * u.deg, 10 * u.deg],
         erange=[0.01 * u.TeV, 10 * u.TeV],
-        eslope=2,
+        eslope=-2,
         phi=0 * u.deg,
         cscat=[10, 1500 * u.m, 0],
         primary='proton',
@@ -51,7 +51,7 @@ def test_general():
         zenith=[0 * u.deg, 60 * u.deg],
         viewcone=[0 * u.deg, 0 * u.deg],
         erange=[0.01 * u.TeV, 10 * u.TeV],
-        eslope=2,
+        eslope=-2,
         phi=0 * u.deg,
         cscat=[10, 1500 * u.m, 0],
         primary='electron',
@@ -83,16 +83,16 @@ def test_units():
 
 def test_running_corsika_externally():
     cc = CorsikaConfig(
-        site='Paranal',
+        site='South',
         layoutName='4LST',
         nshow=10,
         nrun=10,
         zenith=20 * u.deg,
         viewcone=0 * u.deg,
         erange=[0.01 * u.TeV, 10 * u.TeV],
-        eslope=2,
+        eslope=-2,
         phi=0 * u.deg,
-        cscat=[1, 1500 * u.m, 0],
+        cscat=[1, 400 * u.m, 0],
         primary='gamma',
         label='test-corsika-config'
     )
