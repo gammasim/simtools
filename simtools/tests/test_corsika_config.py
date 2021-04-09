@@ -40,8 +40,7 @@ def test_general():
         phi=0 * u.deg,
         cscat=[10, 1500 * u.m, 0],
         primary='proton',
-        label='test-corsika-config',
-        logger=logger.name
+        label='test-corsika-config'
     )
     cc2.exportInputFile()
 
@@ -56,8 +55,7 @@ def test_general():
         phi=0 * u.deg,
         cscat=[10, 1500 * u.m, 0],
         primary='electron',
-        label='test-corsika-config',
-        logger=logger.name
+        label='test-corsika-config'
     )
     # Testing default parameters
     assert cc3._userParameters['RUNNR'] == [1]
@@ -78,14 +76,32 @@ def test_units():
         phi=0 * u.deg,
         cscat=[10, 1500 * u.m, 0],
         primary='proton',
-        label='test-corsika-config',
-        logger=logger.name
+        label='test-corsika-config'
+    )
+    cc.exportInputFile()
+
+
+def test_running_corsika_externally():
+    cc = CorsikaConfig(
+        site='Paranal',
+        layoutName='4LST',
+        nshow=10,
+        nrun=10,
+        zenith=20 * u.deg,
+        viewcone=0 * u.deg,
+        erange=[0.01 * u.TeV, 10 * u.TeV],
+        eslope=2,
+        phi=0 * u.deg,
+        cscat=[1, 1500 * u.m, 0],
+        primary='gamma',
+        label='test-corsika-config'
     )
     cc.exportInputFile()
 
 
 if __name__ == '__main__':
 
-    test_general()
-    test_units()
+    # test_general()
+    # test_units()
+    test_running_corsika_externally()
     pass
