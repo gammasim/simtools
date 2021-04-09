@@ -89,7 +89,7 @@ def test_running_corsika_externally():
         nrun=10,
         zenith=20 * u.deg,
         viewcone=0 * u.deg,
-        erange=[0.01 * u.TeV, 10 * u.TeV],
+        erange=[0.05 * u.TeV, 10 * u.TeV],
         eslope=-2,
         phi=0 * u.deg,
         cscat=[1, 400 * u.m, 0],

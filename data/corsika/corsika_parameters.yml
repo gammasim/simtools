@@ -16,7 +16,7 @@ USER_PARAMETERS:
   ERANGE:
     len: 2
     names: ['ENRANGE', 'ENERGYRANGE']
-    unit: [!astropy.units.Unit {unit: TeV}, !astropy.units.Unit {unit: TeV}]
+    unit: [!astropy.units.Unit {unit: GeV}, !astropy.units.Unit {unit: GeV}]
   ESLOPE:
     len: 1
     names: ['ENSLOPE', 'ENERGYSLOPE']
@@ -73,11 +73,11 @@ INTERACTION_FLAGS:
   LONGI: ['T', 20., 'F', 'F']
   MAXPRT: [0]
   ECTMAP: [1.e6]
-  STEPFC: [1.0]
+#  STEPFC: [1.0]
 
 CHERENKOV_EMISSION_PARAMETERS:
   CERSIZ: [5.]
-  CERFIL: ['F']
+  CERFIL: [0]
   CWAVLG: [240., 700.]
 
 DEBUGGING_OUTPUT_PARAMETERS:
