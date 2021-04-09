@@ -26,6 +26,10 @@ class ArgumentWithWrongUnit(Exception):
     pass
 
 
+class InvalidCorsikaParameterInfo(Exception):
+    pass
+
+
 class InvalidPrimary(Exception):
     pass
 
@@ -163,9 +167,9 @@ class CorsikaConfig:
         # Turning valueArgs into a list, if it is not.
         valueArgs = copy(valueArgsIn) if isinstance(valueArgsIn, list) else [valueArgsIn]
 
-        if len(valueArgs) == 1 and parName == 'THETAP':
-            # Fixing single value zenith angle.
-            # THETAP should be written as a 2 values range in the CORSIKA input file
+        if len(valueArgs) == 1 and parName in ['THETAP', 'PHIP']:
+            # Fixing single value zenith or azimuth angle.
+            # THETAP and PHIP should be written as a 2 values range in the CORSIKA input file
             valueArgs = valueArgs * 2
         elif len(valueArgs) == 1 and parName == 'VIEWCONE':
             # Fixing single value viewcone.
@@ -183,6 +187,16 @@ class CorsikaConfig:
                 copy(parInfo['unit']) if isinstance(parInfo['unit'], list) else [parInfo['unit']]
             )
 
+            # Catching units with wrong len in the corsika_parameters file.
+            if len(parUnit) != len(valueArgs):
+                msg = (
+                    'Parameter {} has units with wrong len: '.format(parName)
+                    + '{} instead of {}'.format(len(parUnit), len(valueArgs))
+                    + ' - please check your corsika_parameters file.'
+                )
+                self._logger.error(msg)
+                raise InvalidCorsikaParameterInfo(msg)
+
             valueArgsWithUnits = list()
             for (v, u) in zip(valueArgs, parUnit):
                 if u is None:
@@ -192,8 +206,9 @@ class CorsikaConfig:
                 try:
                     valueArgsWithUnits.append(v.to(u).value)
                 except u.core.UnitConversionError:
-                    self._logger.error('Argument given with wrong unit: {}'.format(parName))
-                    raise ArgumentWithWrongUnit()
+                    msg = 'Argument given with wrong unit: {}'.format(parName)
+                    self._logger.error(msg)
+                    raise ArgumentWithWrongUnit(msg)
             valueArgs = valueArgsWithUnits
 
         return valueArgs
@@ -263,39 +278,39 @@ class CorsikaConfig:
             textParameters = _getTextSingleLine(self._userParameters)
             file.write(textParameters)
 
-            file.write('\n# SITE PARAMETERS\n')
+            file.write('\n* SITE PARAMETERS\n')
             textSiteParameters = _getTextSingleLine(
                 self._corsikaParameters['SITE_PARAMETERS'][self.site]
             )
             file.write(textSiteParameters)
 
-            file.write('\n# SEEDS\n')
+            file.write('\n* SEEDS\n')
             self._writeSeeds(file, self._seeds)
 
-            file.write('\n# TELESCOPES\n')
+            file.write('\n* TELESCOPES\n')
             telescopeListText = self.layout.getCorsikaInputList()
             file.write(telescopeListText)
 
-            file.write('\n# INTERACTION FLAGS\n')
+            file.write('\n* INTERACTION FLAGS\n')
             textInteractionFlags = _getTextSingleLine(self._corsikaParameters['INTERACTION_FLAGS'])
             file.write(textInteractionFlags)
 
-            file.write('\n# CHERENKOV EMISSION PARAMETERS\n')
+            file.write('\n* CHERENKOV EMISSION PARAMETERS\n')
             textCherenkov = _getTextSingleLine(
                 self._corsikaParameters['CHERENKOV_EMISSION_PARAMETERS']
             )
             file.write(textCherenkov)
 
-            file.write('\n# DEBUGGING OUTPUT PARAMETERS\n')
+            file.write('\n* DEBUGGING OUTPUT PARAMETERS\n')
             textDebugging = _getTextSingleLine(
                 self._corsikaParameters['DEBUGGING_OUTPUT_PARAMETERS']
             )
             file.write(textDebugging)
 
-            file.write('\n# OUTUPUT FILE\n')
+            file.write('\n* OUTUPUT FILE\n')
             file.write('TELFIL {}\n'.format(self._outputFilePath))
 
-            file.write('\n# IACT TUNING PARAMETERS\n')
+            file.write('\n* IACT TUNING PARAMETERS\n')
             textIact = _getTextMultipleLines(self._corsikaParameters['IACT_TUNING_PARAMETERS'])
             file.write(textIact)
 

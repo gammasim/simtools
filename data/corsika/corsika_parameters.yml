@@ -25,9 +25,9 @@ USER_PARAMETERS:
     names: ['THETA', 'ZENITH']
     unit: [!astropy.units.Unit {unit: deg}, !astropy.units.Unit {unit: deg}]
   PHIP:
-    len: 1
+    len: 2
     names: ['PHI', 'AZIMUTH']
-    unit: !astropy.units.Unit {unit: deg}
+    unit: [!astropy.units.Unit {unit: deg}, !astropy.units.Unit {unit: deg}]
   VIEWCONE:
     len: 2
     names: ['CONE']
@@ -47,16 +47,16 @@ PRIMARIES:
   PROTON:
     number: 14
     names: ['PROTONS']
-  HELIUM':
+  HELIUM:
     number: 402
-    names': []
+    names: []
 
 SITE_PARAMETERS:
   South:
     OBSLEV: [2150.e2]
     ATMOSPHERE: [26, 'Y']
     MAGNET: [20.925, -9.119]
-    ARRANG': [-3.433]
+    ARRANG: [-3.433]
   North:
     OBSLEV: [2158.e2]
     ATMOSPHERE: [36, 'Y']
@@ -83,7 +83,7 @@ CHERENKOV_EMISSION_PARAMETERS:
 DEBUGGING_OUTPUT_PARAMETERS:
   DEBUG: ['F', 6, 'F', 1000000]
   DATBAS: ['yes']
-  DIRECT: [r'/dev/null']
+  DIRECT: ['/dev/null']
 
 IACT_TUNING_PARAMETERS:
   IACT: [
