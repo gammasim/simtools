@@ -308,7 +308,7 @@ class CorsikaConfig:
             file.write(textDebugging)
 
             file.write('\n* OUTUPUT FILE\n')
-            file.write('TELFIL {}\n'.format(self._outputFilePath))
+            file.write('TELFIL {}\n'.format(self._outputFilePath.name))
 
             file.write('\n* IACT TUNING PARAMETERS\n')
             textIact = _getTextMultipleLines(self._corsikaParameters['IACT_TUNING_PARAMETERS'])

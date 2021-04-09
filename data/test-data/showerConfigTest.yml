@@ -4,9 +4,13 @@ layoutName: Prod5
 runs: [1, 10]
 
 primary: gamma
-erange: []
+erange: [0.1, 10]
 eslope: -2
-zenith: 20
+zenith: !astropy.units.Unit {unit: m}
 azimuth: 0
 viewcone: 0
-cscat: [10, 1500 * u.m, 0]
+cscat: [10, 1500, 0]
+randomSeeds: False
+
+corsikaDataDirectory: .
+corsikaParametersFile: null
