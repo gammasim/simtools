@@ -10,6 +10,7 @@ import simtools.config as cfg
 import simtools.io_handler as io
 from simtools.util import names
 from simtools.layout.layout_array import LayoutArray
+from simtools.util.general import collectDataFromYamlOrDict
 
 __all__ = ['CorsikaConfig']
 
@@ -52,6 +53,8 @@ class CorsikaConfig:
         label=None,
         filesLocation=None,
         randomSeeds=False,
+        corsikaConfigData=None,
+        corsikaConfigFile=None,
         corsikaParametersFile=None,
         **kwargs
     ):
@@ -95,7 +98,8 @@ class CorsikaConfig:
         # Load parameters
         self._loadCorsikaParametersFile(corsikaParametersFile)
 
-        self.setUserParameters(**kwargs)
+        corsikaConfigData = collectDataFromYamlOrDict(corsikaConfigFile, corsikaConfigData)
+        self.setUserParameters(corsikaConfigData)
         self._loadSeeds(randomSeeds)
         self._isFileUpdated = False
 
@@ -110,7 +114,7 @@ class CorsikaConfig:
         with open(self._corsikaParametersFile, 'r') as f:
             self._corsikaParameters = yaml.load(f)
 
-    def setUserParameters(self, **kwargs):
+    def setUserParameters(self, corsikaConfigData):
         '''
         Set parameters for the corsika config.
 
@@ -118,13 +122,14 @@ class CorsikaConfig:
         ----------
         **kwargs
         '''
+        self._logger.debug('Setting user parameters from corsikaConfigData')
         self._userParameters = dict()
 
         userPars = self._corsikaParameters['USER_PARAMETERS']
 
         # Collecting all parameters given as arguments
         indentifiedArgs = list()
-        for keyArgs, valueArgs in kwargs.items():
+        for keyArgs, valueArgs in corsikaConfigData.items():
             # Looping over USER_PARAMETERS and searching for a match
             for parName, parInfo in userPars.items():
                 if keyArgs.upper() != parName and keyArgs.upper() not in parInfo['names']:
@@ -135,7 +140,7 @@ class CorsikaConfig:
                 self._userParameters[parName] = validatedValueArgs
 
         # Checking for unindetified parameters
-        unindentifiedArgs = [p for p in kwargs.keys() if p not in indentifiedArgs]
+        unindentifiedArgs = [p for p in corsikaConfigData.keys() if p not in indentifiedArgs]
         if len(unindentifiedArgs) > 0:
             self._logger.warning(
                 '{} arguments were not properly '.format(len(unindentifiedArgs))
