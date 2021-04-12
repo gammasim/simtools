@@ -699,7 +699,7 @@ def corsikaConfigTmpFileName(arrayName, site, zenith, viewCone, run, label=None)
     return name
 
 
-def corsikaOutputFileName(arrayName, site, zenith, viewCone, run, label=None):
+def corsikaOutputFileName(run, primary, arrayName, site, zenith, azimuth, label=None):
     '''
     Corsika output file name.
 
@@ -727,16 +727,22 @@ def corsikaOutputFileName(arrayName, site, zenith, viewCone, run, label=None):
     str
         File name.
     '''
-    isDiffuse = (viewCone[0] != 0 or viewCone[1] != 0)
-
-    name = 'corsika-run{}-{}-{}-za{:d}-{:d}'.format(
+    name = 'run{}_{}_za{:d}deg_azm{:d}deg-{}-{}'.format(
         run,
-        arrayName,
+        primary,
+        int(zenith),
+        int(azimuth),
         site,
-        int(zenith[0]),
-        int(zenith[1])
+        arrayName
     )
-    name += '-cone{:d}-{:d}'.format(int(viewCone[0]), int(viewCone[1])) if isDiffuse else ''
+    name += '_{}'.format(label) if label is not None else ''
+    name += '.corsika.zst'
+    return name
+
+
+def corsikaOutputGenericFileName(arrayName, site, label=None):
+    name = 'run${RUNNR}_${PRMNAME}_za${ZA}deg_azm${AZM}deg'
+    name += '-{}-{}'.format(site, arrayName)
     name += '_{}'.format(label) if label is not None else ''
     name += '.corsika.zst'
     return name
