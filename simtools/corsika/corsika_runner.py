@@ -121,12 +121,22 @@ class CorsikaRunner:
         # Exporting corsika input file
         self.corsikaInput = self.corsikaConfig.getInputFile()
 
-        pfpCommand = self._getPfpCommand(runNumber)
+        corsikaInputTmpName = self.corsikaConfig.getInputTmpFileName(runNumber)
+        corsikaInputTmpFile = self._corsikaInputDir.joinpath(corsikaInputTmpName)
+
+        pfpCommand = self._getPfpCommand(runNumber, corsikaInputTmpFile)
+        autoinputsCommand = self._getAutoinputsCommand(runNumber, corsikaInputTmpFile)
 
         with open(scriptFilePath, 'w') as file:
             file.write('export CORSIKA_DATA={}\n'.format(self._corsikaDataDir))
+            file.write('# Creating CORSIKA_DATA\n')
+            file.write('mkdir -p {}\n'.format(self._corsikaDataDir))
             file.write('\n')
+            file.write('# Running pfp\n')
             file.write(pfpCommand)
+            file.write('\n')
+            file.write('# Running corsika_autoinputs\n')
+            file.write(autoinputsCommand)
 
         return scriptFilePath
 
@@ -142,12 +152,18 @@ class CorsikaRunner:
         self._corsikaInputDir = corsikaBaseDir.joinpath('input')
         self._corsikaLogDir = corsikaBaseDir.joinpath('log')
 
-    def _getPfpCommand(self, runNumber):
-
-        corsikaInputTmpName = self.corsikaConfig.getInputTmpFileName(runNumber)
-        corsikaInputTmpFile = self._corsikaInputDir.joinpath(corsikaInputTmpName)
-
+    def _getPfpCommand(self, runNumber, inputTmpFile):
         cmd = self._simtelSourcePath.joinpath('sim_telarray/bin/pfp')
         cmd = str(cmd) + ' -V -DWITHOUT_MULTIPIPE - < {}'.format(self.corsikaInput)
-        cmd += ' > {}\n'.format(corsikaInputTmpFile)
+        cmd += ' > {}\n'.format(inputTmpFile)
+        return cmd
+
+    def _getAutoinputsCommand(self, runNumber, inputTmpFile):
+        corsikaBinPath = self._simtelSourcePath.joinpath('corsika-run/corsika')
+
+        cmd = self._simtelSourcePath.joinpath('sim_telarray/bin/corsika_autoinputs')
+        cmd = str(cmd) + ' --run {}'.format(corsikaBinPath)
+        cmd += ' -R {}'.format(runNumber)
+        cmd += ' -p {}'.format(self._corsikaDataDir)
+        cmd += ' {} || exit 3\n'.format(inputTmpFile)
         return cmd
