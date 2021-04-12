@@ -15,7 +15,7 @@ from simtools.util.general import collectDataFromYamlOrDict
 __all__ = ['CorsikaConfig']
 
 
-class RequiredInputNotGiven(Exception):
+class MissingRequiredInputInCorsikaConfigData(Exception):
     pass
 
 
@@ -23,7 +23,7 @@ class ArgumentsNotLoaded(Exception):
     pass
 
 
-class ArgumentWithWrongUnit(Exception):
+class InputWithWrongUnit(Exception):
     pass
 
 
@@ -165,7 +165,7 @@ class CorsikaConfig:
                 + ' {} ...)'.format(requiredButNotGiven[0])
             )
             self._logger.error(msg)
-            raise RequiredInputNotGiven(msg)
+            raise MissingRequiredInputInCorsikaConfigData(msg)
     # End of setParameters
 
     def _validateArgument(self, parName, parInfo, valueArgsIn):
@@ -213,7 +213,7 @@ class CorsikaConfig:
                 except u.core.UnitConversionError:
                     msg = 'Argument given with wrong unit: {}'.format(parName)
                     self._logger.error(msg)
-                    raise ArgumentWithWrongUnit(msg)
+                    raise InputWithWrongUnit(msg)
             valueArgs = valueArgsWithUnits
 
         return valueArgs
