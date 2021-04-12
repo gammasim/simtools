@@ -177,10 +177,23 @@ class CorsikaRunner:
         return cmd
 
     def getRunLogFile(self, runNumber):
-        logFileName = names.getCorsikaRunLogFileName(
+        logFileName = names.corsikaRunLogFileName(
             site=self.site,
             run=runNumber,
             arrayName=self.layoutName,
             label=self.label
         )
         return self._corsikaLogDir.joinpath(logFileName)
+
+    def getCorsikaLogFile(self, runNumber):
+        runDir = self._getRunDirectory(runNumber)
+        return self._corsikaDataDir.joinpath(runDir).joinpath('run{}.log'.format(runNumber))
+
+    def getCorsikaOutputFile(self, runNumber):
+        corsikaFileName = self.corsikaConfig.getOutputFileName(runNumber)
+        runDir = self._getRunDirectory(runNumber)
+        return self._corsikaDataDir.joinpath(runDir).joinpath(corsikaFileName)
+
+    def _getRunDirectory(self, runNumber):
+        nn = str(runNumber)
+        return 'run' + nn.zfill(6)

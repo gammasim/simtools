@@ -261,11 +261,16 @@ class CorsikaConfig:
         for par, value in self._userParameters.items():
             print('{} = {}'.format(par, value))
 
-    @property
-    def outputFileName(self):
-        if '_outputFilePath' not in self.__dict__:
-            self._setOutputFileAndDirectory()
-        return self._outputFilePath.name
+    def getOutputFileName(self, runNumber):
+        return names.corsikaOutputFileName(
+            runNumber,
+            self.primary,
+            self.layoutName,
+            self.site,
+            self._userParameters['THETAP'][0],
+            self._userParameters['PHIP'][0],
+            self.label
+        )
 
     def exportInputFile(self):
         ''' Create and export corsika input file. '''
@@ -301,6 +306,12 @@ class CorsikaConfig:
             )
             file.write(textSiteParameters)
 
+            # Defining the IACT variables for the output file name
+            file.write('\n')
+            file.write('IACT setenv PRMNAME {}\n'.format(self.primary))
+            file.write('IACT setenv ZA {}\n'.format(int(self._userParameters['THETAP'][0])))
+            file.write('IACT setenv AZM {}\n'.format(int(self._userParameters['PHIP'][0])))
+
             file.write('\n* SEEDS\n')
             self._writeSeeds(file, self._seeds)
 
@@ -325,7 +336,7 @@ class CorsikaConfig:
             file.write(textDebugging)
 
             file.write('\n* OUTUPUT FILE\n')
-            file.write('TELFIL {}\n'.format(self._outputFilePath.name))
+            file.write('TELFIL {}\n'.format(self._outputGenericFileName))
 
             file.write('\n* IACT TUNING PARAMETERS\n')
             textIact = _getTextMultipleLines(self._corsikaParameters['IACT_TUNING_PARAMETERS'])
@@ -344,20 +355,16 @@ class CorsikaConfig:
             viewCone=self._userParameters['VIEWCONE'],
             label=self.label
         )
-        outputFileName = names.corsikaOutputFileName(
-            arrayName=self.layoutName,
-            site=self.site,
-            zenith=self._userParameters['THETAP'],
-            viewCone=self._userParameters['VIEWCONE'],
-            run=self._userParameters['RUNNR'][0],
-            label=self.label
-        )
         fileDirectory = io.getCorsikaOutputDirectory(self._filesLocation, self.label)
-
         fileDirectory.mkdir(parents=True, exist_ok=True)
         self._logger.info('Creating directory {}, if needed.'.format(fileDirectory))
         self._configFilePath = fileDirectory.joinpath(configFileName)
-        self._outputFilePath = fileDirectory.joinpath(outputFileName)
+
+        self._outputGenericFileName = names.corsikaOutputGenericFileName(
+            arrayName=self.layoutName,
+            site=self.site,
+            label=self.label
+        )
     # End of setOutputFileAndDirectory
 
     def _writeSeeds(self, file, seeds):
