@@ -106,12 +106,12 @@ class CorsikaRunner:
             raise
     # End of _loadShowerConfigData
 
-    def getRunScriptFile(self, run):
+    def getRunScriptFile(self, runNumber):
         # Setting script file name
         scriptFileName = names.corsikaRunScriptFileName(
             arrayName=self.layoutName,
             site=self.site,
-            run=run,
+            run=runNumber,
             label=self.label
         )
         scriptFilePath = self._outputDirectory.joinpath(scriptFileName)
@@ -119,10 +119,14 @@ class CorsikaRunner:
         self._loadCorsikaDataDirectories()
 
         # Exporting corsika input file
-        self.corsikaConfig.exportInputFile()
+        self.corsikaInput = self.corsikaConfig.getInputFile()
+
+        pfpCommand = self._getPfpCommand(runNumber)
 
         with open(scriptFilePath, 'w') as file:
-            file.write('export CORSIKA_DATA={}'.format(self._corsikaDataDir))
+            file.write('export CORSIKA_DATA={}\n'.format(self._corsikaDataDir))
+            file.write('\n')
+            file.write(pfpCommand)
 
         return scriptFilePath
 
@@ -137,3 +141,13 @@ class CorsikaRunner:
         self._corsikaDataDir = corsikaBaseDir.joinpath('data')
         self._corsikaInputDir = corsikaBaseDir.joinpath('input')
         self._corsikaLogDir = corsikaBaseDir.joinpath('log')
+
+    def _getPfpCommand(self, runNumber):
+
+        corsikaInputTmpName = self.corsikaConfig.getInputTmpFileName(runNumber)
+        corsikaInputTmpFile = self._corsikaInputDir.joinpath(corsikaInputTmpName)
+
+        cmd = self._simtelSourcePath.joinpath('sim_telarray/bin/pfp')
+        cmd = str(cmd) + ' -V -DWITHOUT_MULTIPIPE - < {}'.format(self.corsikaInput)
+        cmd += ' > {}\n'.format(corsikaInputTmpFile)
+        return cmd

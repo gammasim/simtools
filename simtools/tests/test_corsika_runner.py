@@ -30,7 +30,7 @@ def test_arguments_and_script():
         showerConfigData=showerConfigData
     )
 
-    script = cr.getRunScriptFile(run=1)
+    script = cr.getRunScriptFile(runNumber=1)
     print(script)
 
 
