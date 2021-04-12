@@ -4,6 +4,7 @@ import logging
 import random
 from copy import copy
 
+import astropy.units as u
 from astropy.io.misc import yaml
 
 import simtools.config as cfg
@@ -23,15 +24,11 @@ class ArgumentsNotLoaded(Exception):
     pass
 
 
-class InputWithWrongUnit(Exception):
-    pass
-
-
 class InvalidCorsikaParameterInfo(Exception):
     pass
 
 
-class InvalidPrimary(Exception):
+class InvalidCorsikaInput(Exception):
     pass
 
 
@@ -184,7 +181,9 @@ class CorsikaConfig:
             valueArgs = self._convertPrimaryInput(valueArgs)
 
         if len(valueArgs) != parInfo['len']:
-            self._logger.warning('Argument {} has wrong len'.format(parName))
+            msg = 'CORSIKA input entry with wrong len: {}'.format(parName)
+            self._logger.error(msg)
+            raise InvalidCorsikaInput(msg)
 
         if 'unit' in parInfo.keys():
             # Turning parInfo['unit'] into a list, if it is not.
@@ -202,18 +201,23 @@ class CorsikaConfig:
                 self._logger.error(msg)
                 raise InvalidCorsikaParameterInfo(msg)
 
+            # Checking units and converting them, if needed.
             valueArgsWithUnits = list()
-            for (v, u) in zip(valueArgs, parUnit):
-                if u is None:
-                    valueArgsWithUnits.append(v)
+            for (arg, unit) in zip(valueArgs, parUnit):
+                if unit is None:
+                    valueArgsWithUnits.append(arg)
                     continue
 
-                try:
-                    valueArgsWithUnits.append(v.to(u).value)
-                except u.core.UnitConversionError:
-                    msg = 'Argument given with wrong unit: {}'.format(parName)
+                if not isinstance(arg, u.quantity.Quantity):
+                    msg = 'CORSIKA input given without unit: {}'.format(parName)
                     self._logger.error(msg)
-                    raise InputWithWrongUnit(msg)
+                    raise InvalidCorsikaInput(msg)
+                elif not arg.unit.is_equivalent(unit):
+                    msg = 'CORSIKA input given with wrong unit: {}'.format(parName)
+                    self._logger.error(msg)
+                    raise InvalidCorsikaInput(msg)
+                else:
+                    valueArgsWithUnits.append(arg.to(unit).value)
             valueArgs = valueArgsWithUnits
 
         return valueArgs
@@ -240,8 +244,9 @@ class CorsikaConfig:
         for primName, primInfo in self._corsikaParameters['PRIMARIES'].items():
             if value[0].upper() == primName or value[0].upper() in primInfo['names']:
                 return [primInfo['number']]
-        self._logger.error('Primary not valid')
-        raise InvalidPrimary('Primary not valid')
+        msg = 'Primary not valid: {}'.format(value)
+        self._logger.error(msg)
+        raise InvalidCorsikaInput(msg)
 
     def _loadSeeds(self, randomSeeds):
         ''' Load seeds and store it in _seeds. '''
