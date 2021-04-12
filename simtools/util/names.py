@@ -664,6 +664,41 @@ def corsikaConfigFileName(arrayName, site, zenith, viewCone, label=None):
     return name
 
 
+def corsikaConfigTmpFileName(arrayName, site, zenith, viewCone, run, label=None):
+    '''
+    Corsika config file name.
+
+    Parameters
+    ----------
+    arrayName: str
+        Array name.
+    site: str
+        South or North.
+    zenith: float
+        Zenith angle (deg).
+    viewCone: list of float
+        View cone limits (len = 2).
+    run: int
+        Run number.
+    label: str
+        Instance label.
+
+    Returns
+    -------
+    str
+        File name.
+    '''
+    isDiffuse = (viewCone[0] != 0 or viewCone[1] != 0)
+
+    name = 'corsika-config-run{}'.format(run)
+    name += '-{}-{}'.format(arrayName, site)
+    name += '-za{:d}-{:d}'.format(int(zenith[0]), int(zenith[1]))
+    name += '-cone{:d}-{:d}'.format(int(viewCone[0]), int(viewCone[1])) if isDiffuse else ''
+    name += '_{}'.format(label) if label is not None else ''
+    name += '.txt'
+    return name
+
+
 def corsikaOutputFileName(arrayName, site, zenith, viewCone, run, label=None):
     '''
     Corsika output file name.
