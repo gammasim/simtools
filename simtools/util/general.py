@@ -1,8 +1,8 @@
 import logging
 import copy
-import yaml
 
 import astropy.units as u
+from astropy.io.misc import yaml
 
 __all__ = [
     'collectArguments',
@@ -214,7 +214,7 @@ def collectDataFromYamlOrDict(inYaml, inDict):
         if inDict is not None:
             _logger.warning('Both inDict inYaml were given - inYaml will be used')
         with open(inYaml) as file:
-            data = yaml.load(file, Loader=yaml.FullLoader)
+            data = yaml.load(file)
         return data
     elif inDict is not None:
         return dict(inDict)
