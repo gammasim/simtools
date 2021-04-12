@@ -131,11 +131,10 @@ def test_running_corsika_externally():
     )
     cc.exportInputFile()
 
-
 if __name__ == '__main__':
 
-    test_general()
-    test_config_data_from_yaml_file()
-    test_units()
+    # test_general()
+    # test_config_data_from_yaml_file()
+    # test_units()
     test_running_corsika_externally()
     pass
