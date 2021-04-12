@@ -30,7 +30,8 @@ def test_arguments_and_script():
         showerConfigData=showerConfigData
     )
 
-    cr.getRunScript(run=1)
+    script = cr.getRunScriptFile(run=1)
+    print(script)
 
 
 if __name__ == '__main__':

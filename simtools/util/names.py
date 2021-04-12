@@ -705,3 +705,29 @@ def corsikaOutputFileName(arrayName, site, zenith, viewCone, run, label=None):
     name += '_{}'.format(label) if label is not None else ''
     name += '.corsika.zst'
     return name
+
+
+def corsikaRunScriptFileName(arrayName, site, run, label=None):
+    '''
+    Corsika script file path.
+
+    Parameters
+    ----------
+    arrayName: str
+        Array name.
+    site: str
+        Paranal or LaPalma.
+    run: int
+        RUn number.
+    label: str
+        Instance label.
+
+    Returns
+    -------
+    str
+        File path.
+    '''
+    name = 'run-corsika-run{}-{}-{}'.format(run, arrayName, site)
+    name += '_{}'.format(label) if label is not None else ''
+    name += '.sh'
+    return name

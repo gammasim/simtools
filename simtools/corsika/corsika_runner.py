@@ -73,6 +73,10 @@ class CorsikaRunner:
 
         self._simtelSourcePath = Path(cfg.getConfigArg('simtelPath', simtelSourcePath))
         self._filesLocation = cfg.getConfigArg('outputLocation', filesLocation)
+        self._outputDirectory = io.getCorsikaOutputDirectory(self._filesLocation, self.label)
+        if not self._outputDirectory.exists():
+            self._outputDirectory.mkdir(parents=True, exist_ok=True)
+            self._logger.debug('Creating directory {}'.format(self._outputDirectory))
 
         showerConfigData = collectDataFromYamlOrDict(showerConfigFile, showerConfigData)
         self._loadShowerConfigData(showerConfigData)
@@ -85,20 +89,34 @@ class CorsikaRunner:
             raise MissingRequiredEntryInShowerConfig(msg)
         else:
             self._corsikaDataDirectory = showerConfigData['corsikaDataDirectory']
-            showerConfigData.pop('corsikaDataDirectory')
+            self._showerConfigData = copy(showerConfigData)
+            self._showerConfigData.pop('corsikaDataDirectory')
 
-        # Validating showerConfigData by using it to create a CorsikaConfig  
+        # Validating showerConfigData by using it to create a CorsikaConfig
         try:
-            corsikaConfigValidation = CorsikaConfig(
+            self.corsikaConfig = CorsikaConfig(
                 site=self.site,
                 label=self.label,
                 layoutName=self.layoutName,
-                corsikaConfigData=showerConfigData
+                corsikaConfigData=self._showerConfigData
             )
         except MissingRequiredInputInCorsikaConfigData:
             msg = 'showerConfigData is missing required entries.'
             self._logger.error(msg)
             raise
+    # End of _loadShowerConfigData
 
-    def getRunScript(self, run):
-        pass
+    def getRunScriptFile(self, run):
+        # Setting script file name
+        scriptFileName = names.corsikaRunScriptFileName(
+            arrayName=self.layoutName,
+            site=self.site,
+            run=run,
+            label=self.label
+        )
+        scriptFilePath = self._outputDirectory.joinpath(scriptFileName)
+
+        # Exporting corsika input file
+        self.corsikaConfig.exportInputFile()
+
+        return scriptFilePath
