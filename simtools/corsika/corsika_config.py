@@ -178,7 +178,7 @@ class CorsikaConfig:
             # VIEWCONE should be written as a 2 values range in the CORSIKA input file
             valueArgs = [0 * parInfo['unit'][0], valueArgs[0]]
         elif parName == 'PRMPAR':
-            valueArgs = self._convertPrimaryInput(valueArgs)
+            valueArgs = self._convertPrimaryInputAndStorePrimaryName(valueArgs)
 
         if len(valueArgs) != parInfo['len']:
             msg = 'CORSIKA input entry with wrong len: {}'.format(parName)
@@ -227,7 +227,7 @@ class CorsikaConfig:
         for par, value in self._userParameters.items():
             print('{} = {}'.format(par, value))
 
-    def _convertPrimaryInput(self, value):
+    def _convertPrimaryInputAndStorePrimaryName(self, value):
         '''
         Convert a primary name into the right number.
 
@@ -243,6 +243,7 @@ class CorsikaConfig:
         '''
         for primName, primInfo in self._corsikaParameters['PRIMARIES'].items():
             if value[0].upper() == primName or value[0].upper() in primInfo['names']:
+                self.primary = primName.lower()
                 return [primInfo['number']]
         msg = 'Primary not valid: {}'.format(value)
         self._logger.error(msg)

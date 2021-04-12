@@ -12,7 +12,7 @@ logger.setLevel(logging.DEBUG)
 
 def test_arguments_and_script():
     showerConfigData = {
-        'corsikaDataDirectory': 'corsika-data',
+        'corsikaDataDirectory': './corsika-data',
         'nshow': 100,
         'primary': 'gamma',
         'erange': [100 * u.GeV, 10 * u.TeV],
