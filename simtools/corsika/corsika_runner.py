@@ -88,7 +88,7 @@ class CorsikaRunner:
             self._logger.error(msg)
             raise MissingRequiredEntryInShowerConfig(msg)
         else:
-            self._corsikaDataDirectory = showerConfigData['corsikaDataDirectory']
+            self._corsikaDataDirectory = Path(showerConfigData['corsikaDataDirectory'])
             self._showerConfigData = copy(showerConfigData)
             self._showerConfigData.pop('corsikaDataDirectory')
 
@@ -116,7 +116,24 @@ class CorsikaRunner:
         )
         scriptFilePath = self._outputDirectory.joinpath(scriptFileName)
 
+        self._loadCorsikaDataDirectories()
+
         # Exporting corsika input file
         self.corsikaConfig.exportInputFile()
 
+        with open(scriptFilePath, 'w') as file:
+            file.write('export CORSIKA_DATA={}'.format(self._corsikaDataDir))
+
         return scriptFilePath
+
+    def _loadCorsikaDataDirectories(self):
+        if '_corsikaDataDir' in self.__dict__:
+            return
+
+        corsikaBaseDir = self._corsikaDataDirectory.joinpath(self.site)
+        corsikaBaseDir = corsikaBaseDir.joinpath(self.corsikaConfig.primary)
+        corsikaBaseDir = corsikaBaseDir.absolute()
+
+        self._corsikaDataDir = corsikaBaseDir.joinpath('data')
+        self._corsikaInputDir = corsikaBaseDir.joinpath('input')
+        self._corsikaLogDir = corsikaBaseDir.joinpath('log')
