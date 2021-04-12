@@ -223,10 +223,6 @@ class CorsikaConfig:
         return valueArgs
     # End of _validateArgument
 
-    def printParameters(self):
-        for par, value in self._userParameters.items():
-            print('{} = {}'.format(par, value))
-
     def _convertPrimaryInputAndStorePrimaryName(self, value):
         '''
         Convert a primary name into the right number.
@@ -260,6 +256,16 @@ class CorsikaConfig:
             s = self._userParameters['PRMPAR'][0] + self._userParameters['RUNNR'][0]
         random.seed(s)
         self._seeds = [int(random.uniform(0, 1e7)) for i in range(4)]
+
+    def printParameters(self):
+        for par, value in self._userParameters.items():
+            print('{} = {}'.format(par, value))
+
+    @property
+    def outputFileName(self):
+        if '_outputFilePath' not in self.__dict__:
+            self._setOutputFileAndDirectory()
+        return self._outputFilePath.name
 
     def exportInputFile(self):
         ''' Create and export corsika input file. '''
@@ -348,9 +354,8 @@ class CorsikaConfig:
         )
         fileDirectory = io.getCorsikaOutputDirectory(self._filesLocation, self.label)
 
-        if not fileDirectory.exists():
-            fileDirectory.mkdir(parents=True, exist_ok=True)
-            self._logger.info('Creating directory {}'.format(fileDirectory))
+        fileDirectory.mkdir(parents=True, exist_ok=True)
+        self._logger.info('Creating directory {}, if needed.'.format(fileDirectory))
         self._configFilePath = fileDirectory.joinpath(configFileName)
         self._outputFilePath = fileDirectory.joinpath(outputFileName)
     # End of setOutputFileAndDirectory
