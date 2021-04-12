@@ -369,7 +369,7 @@ class CorsikaConfig:
         for s in seeds:
             file.write('SEED {} 0 0\n'.format(s))
 
-    def getFile(self):
+    def getInputFile(self):
         '''
         Get the full path of the corsika input file.
 
@@ -378,8 +378,18 @@ class CorsikaConfig:
         Path of the input file.
         '''
         if not self._isFileUpdated:
-            self.exportFile()
+            self.exportInputFile()
         return self._configFilePath
+
+    def getInputTmpFileName(self, runNumber):
+        return names.corsikaConfigTmpFileName(
+            arrayName=self.layoutName,
+            site=self.site,
+            zenith=self._userParameters['THETAP'],
+            viewCone=self._userParameters['VIEWCONE'],
+            run=runNumber,
+            label=self.label
+        )
 
     def addLine(self):
         pass
