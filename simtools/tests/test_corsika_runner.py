@@ -2,6 +2,8 @@
 
 import logging
 
+import astropy.units as u
+
 from simtools.corsika.corsika_runner import CorsikaRunner
 
 logger = logging.getLogger()
@@ -13,7 +15,12 @@ def test_arguments_and_script():
         'corsikaDataDirectory': 'corsika-data',
         'nshow': 100,
         'primary': 'gamma',
-        'erange': 10
+        'erange': [100 * u.GeV, 10 * u.TeV],
+        'eslope': -2,
+        'zenith': 20 * u.deg,
+        'azimuth': 0 * u.deg,
+        'viewcone': 0 * u.deg,
+        'cscat': [10, 1000 * u.m, 0]
     }
 
     cr = CorsikaRunner(
