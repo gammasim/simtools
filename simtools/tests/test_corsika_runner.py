@@ -30,16 +30,13 @@ def test_arguments_and_script():
         showerConfigData=showerConfigData
     )
 
-    script = cr.getRunScriptFile(runNumber=3)
-    print(script)
-    print('Run log file')
-    print(cr.getRunLogFile(3))
+    runNumber = 3
+    script = cr.getRunScriptFile(runNumber=runNumber)
+    logger.debug('Script file written in {}'.format(script))
 
-    print('Corsika log file')
-    print(cr.getCorsikaLogFile(3))
-
-    print('Corsika output file')
-    print(cr.getCorsikaOutputFile(3))
+    logger.debug('Run log file in {}'.format(cr.getRunLogFile(runNumber)))
+    logger.debug('CORSIKA log file in {}'.format(cr.getCorsikaLogFile(runNumber)))
+    logger.debug('CORSIKA output file in {}'.format(cr.getCorsikaOutputFile(runNumber)))
 
 
 if __name__ == '__main__':
