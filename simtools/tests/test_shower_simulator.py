@@ -31,7 +31,7 @@ def test_general():
         showerConfigData=showerConfigData
     )
 
-    ss.run()
+    ss.submit()
 
     # runNumber = 3
     # script = cr.getRunScriptFile(runNumber=runNumber)
