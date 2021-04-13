@@ -172,6 +172,7 @@ class CorsikaRunner:
         cmd = str(cmd) + ' --run {}'.format(corsikaBinPath)
         cmd += ' -R {}'.format(runNumber)
         cmd += ' -p {}'.format(self._corsikaDataDir)
+        cmd += ' --keep-seeds'
         cmd += ' {} > {} 2>&1'.format(inputTmpFile, logFile)
         cmd + ' || exit 3\n'
         return cmd
