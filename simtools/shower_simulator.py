@@ -1,5 +1,28 @@
 
+import logging
+import os
+from pathlib import Path
+from copy import copy
+
+import simtools.config as cfg
+import simtools.io_handler as io
+from simtools.corsika.corsika_runner import CorsikaRunner
+from simtools.util import names
+from simtools.util.general import collectDataFromYamlOrDict
+
 __all__ = ['ShowerSimulator']
+
+
+class MissingRequiredEntryInShowerConfig(Exception):
+    pass
+
+
+class InvalidEntryInShowerConfig(Exception):
+    pass
+
+
+class InvalidRunsToSimulate(Exception):
+    pass
 
 
 class ShowerSimulator:
@@ -35,8 +58,10 @@ class ShowerSimulator:
     def __init__(
         self,
         label=None,
+        filesLocation=None,
         simtelSourcePath=None,
-        filesLocation=None
+        showerConfigData=None,
+        showerConfigFile=None
     ):
         '''
         RayTracing init.
@@ -60,10 +85,108 @@ class ShowerSimulator:
             sourceDistance, mirrorNumbers
         '''
         self._logger = logging.getLogger(__name__)
+        self._logger.debug('Init CorsikaRunner')
+
+        self.label = label
 
         self._simtelSourcePath = Path(cfg.getConfigArg('simtelPath', simtelSourcePath))
         self._filesLocation = cfg.getConfigArg('outputLocation', filesLocation)
+        self._outputDirectory = io.getCorsikaOutputDirectory(self._filesLocation, self.label)
+        self._outputDirectory.mkdir(parents=True, exist_ok=True)
+        self._logger.debug(
+            'Output directory {} - creating it, if needed.'.format(self._outputDirectory)
+        )
+
+        showerConfigData = collectDataFromYamlOrDict(showerConfigFile, showerConfigData)
+        self._loadShowerConfigData(showerConfigData)
+        self._setCorsikaRunner()
 
     # End of init
+
+    def _loadShowerConfigData(self, showerConfigData):
+
+        # Validating existence of site and layoutName entries.
+        for par in ['site', 'layoutName']:
+            if par not in showerConfigData:
+                msg = '{} was not given in showerConfig'.format(par)
+                self._logger.error(msg)
+                raise MissingRequiredEntryInShowerConfig(msg)
+
+        # Copying showerConfigData to corsikaConfigData
+        self._corsikaConfigData = copy(showerConfigData)
+
+        self.site = names.validateSiteName(showerConfigData['site'])
+        self.layoutName = names.validateLayoutArrayName(showerConfigData['layoutName'])
+
+        self._corsikaConfigData.pop('site')
+        self._corsikaConfigData.pop('layoutName')
+
+        # Grabbing runs (and turn it into a list)
+        self.runs = None if 'runs' not in showerConfigData.keys() else showerConfigData['runs']
+        if not isinstance(self.runs, list):
+            self._logger.debug('Turning runs into a list')
+            self.runs = list(self.runs)
+
+        # Validating runs - must be ints
+        if not all(isinstance(r, int) for r in self.runs):
+            msg = 'runs given in showerConfig must be all integers.'
+            self._logger.error(msg)
+            raise InvalidEntryInShowerConfig(msg)
+
+        # Removing runs key from corsikaConfigData
+        if 'runs' in self._corsikaConfigData.keys():
+            self._corsikaConfigData.pop('runs')
+
+        # Searching for corsikaParametersFile in showerConfig
+        if 'corsikaParametersFile' in showerConfigData.keys():
+            self._corsikaParametersFile = showerConfigData['corsikaParametersFile']
+            self._corsikaConfigData.pop('corsikaParametersFile')
+        else:
+            # corsikaParametersFile not given - CorsikaConfig will use the default one
+            self._corsikaParametersFile = None
+
+    def _setCorsikaRunner(self):
+        self._corsikaRunner = CorsikaRunner(
+            site=self.site,
+            layoutName=self.layoutName,
+            label=self.label,
+            filesLocation=self._filesLocation,
+            simtelSourcePath=self._simtelSourcePath,
+            corsikaParametersFile=self._corsikaParametersFile,
+            corsikaConfigData=self._corsikaConfigData
+        )
+
+    def run(self, runs=None):
+
+        runsToSimulate = self._validateRunsToSimulate(runs)
+
+        self._logger.info('Start running scripts')
+        for run in runsToSimulate:
+            runScript = self._corsikaRunner.getRunScriptFile(runNumber=run)
+
+            self._logger.info('Run {} - Running script {}'.format(run, runScript))
+            os.system(runScript)
+
+    def submit(self, runs=None):
+        pass
+
+    def _validateRunsToSimulate(self, runs):
+
+        if runs is not None:
+            runsToSimulate = list(runs)
+            if not all(isinstance(r, int) for r in self.runsToSimulate):
+                msg = 'runs to simulate must be all integers - aborting simulation.'
+                self._logger.error(msg)
+                raise InvalidRunsToSimulate(msg)
+        elif self.runs is not None:
+            runsToSimulate = self.runs
+        else:
+            msg = (
+                'runs to simulate were not given as arguments neither in showerConfigData'
+                + ' - aborting simulation'
+            )
+            self._logger.error(msg)
+            raise InvalidRunsToSimulate(msg)
+        return runsToSimulate
 
 # End of ShowerSimulator

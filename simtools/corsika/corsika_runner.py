@@ -77,11 +77,11 @@ class CorsikaRunner:
             self._logger.debug('Creating directory {}'.format(self._outputDirectory))
 
         corsikaConfigData = collectDataFromYamlOrDict(corsikaConfigFile, corsikaConfigData)
-        self._loadcorsikaConfigData(corsikaConfigData)
+        self._loadCorsikaConfigData(corsikaConfigData)
 
         self._loadCorsikaDataDirectories()
 
-    def _loadcorsikaConfigData(self, corsikaConfigData):
+    def _loadCorsikaConfigData(self, corsikaConfigData):
 
         if 'corsikaDataDirectory' not in corsikaConfigData.keys():
             msg = 'corsikaDataDirectory not given in corsikaConfig'
