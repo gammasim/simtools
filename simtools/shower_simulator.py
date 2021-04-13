@@ -167,8 +167,20 @@ class ShowerSimulator:
             self._logger.info('Run {} - Running script {}'.format(run, runScript))
             os.system(runScript)
 
-    def submit(self, runs=None):
-        pass
+    def submit(self, runs=None, submitCommand=None):
+
+        subCmd = submitCommand if submitCommand is not None else cfg.get('submissionCommand')
+        self._logger.info('Submission command: {}'.format(subCmd))
+
+        runsToSimulate = self._validateRunsToSimulate(runs)
+
+        for run in runsToSimulate:
+            runScript = self._corsikaRunner.getRunScriptFile(runNumber=run)
+            self._logger.info('Run {} - Submitting script {}'.format(run, runScript))
+
+            shellCommand = subCmd + ' ' + str(runScript)
+            self._logger.debug(shellCommand)
+            os.system(shellCommand)
 
     def _validateRunsToSimulate(self, runs):
 
@@ -188,5 +200,9 @@ class ShowerSimulator:
             self._logger.error(msg)
             raise InvalidRunsToSimulate(msg)
         return runsToSimulate
+
+    def getListOfOutputFiles(self, runs=None):
+        runsToList = self._validateRunsToSimulate(runs)
+
 
 # End of ShowerSimulator
