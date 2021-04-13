@@ -251,10 +251,10 @@ class CorsikaConfig:
             self._logger.error('_loadSeeds has be called after _loadArguments')
             raise ArgumentsNotLoaded()
         if randomSeeds:
-            s = random.uniform(0, 1000)
+            seed = random.uniform(0, 1000)
         else:
-            s = self._userParameters['PRMPAR'][0] + self._userParameters['RUNNR'][0]
-        random.seed(s)
+            seed = self._userParameters['PRMPAR'][0] + self._userParameters['RUNNR'][0]
+        random.seed(seed)
         self._seeds = [int(random.uniform(0, 1e7)) for i in range(4)]
 
     def printParameters(self):
