@@ -14,7 +14,7 @@ from simtools.util.general import collectDataFromYamlOrDict
 __all__ = ['CorsikaRunner']
 
 
-class MissingRequiredEntryInShowerConfig(Exception):
+class MissingRequiredEntryInCorsikaConfig(Exception):
     pass
 
 
@@ -37,8 +37,8 @@ class CorsikaRunner:
         filesLocation=None,
         simtelSourcePath=None,
         corsikaParametersFile=None,
-        showerConfigData=None,
-        showerConfigFile=None
+        corsikaConfigData=None,
+        corsikaConfigFile=None
     ):
         '''
         CorsikaRunner init.
@@ -76,37 +76,37 @@ class CorsikaRunner:
             self._outputDirectory.mkdir(parents=True, exist_ok=True)
             self._logger.debug('Creating directory {}'.format(self._outputDirectory))
 
-        showerConfigData = collectDataFromYamlOrDict(showerConfigFile, showerConfigData)
-        self._loadShowerConfigData(showerConfigData)
+        corsikaConfigData = collectDataFromYamlOrDict(corsikaConfigFile, corsikaConfigData)
+        self._loadcorsikaConfigData(corsikaConfigData)
 
         self._loadCorsikaDataDirectories()
 
-    def _loadShowerConfigData(self, showerConfigData):
+    def _loadcorsikaConfigData(self, corsikaConfigData):
 
-        if 'corsikaDataDirectory' not in showerConfigData.keys():
-            msg = 'corsikaDataDirectory not given in showerConfig'
+        if 'corsikaDataDirectory' not in corsikaConfigData.keys():
+            msg = 'corsikaDataDirectory not given in corsikaConfig'
             self._logger.error(msg)
-            raise MissingRequiredEntryInShowerConfig(msg)
+            raise MissingRequiredEntryInCorsikaConfig(msg)
         else:
-            self._corsikaDataDirectory = Path(showerConfigData['corsikaDataDirectory'])
-            self._showerConfigData = copy(showerConfigData)
-            self._showerConfigData.pop('corsikaDataDirectory')
+            self._corsikaDataDirectory = Path(corsikaConfigData['corsikaDataDirectory'])
+            self._corsikaConfigData = copy(corsikaConfigData)
+            self._corsikaConfigData.pop('corsikaDataDirectory')
 
-        # Validating showerConfigData by using it to create a CorsikaConfig
+        # Validating corsikaConfigData by using it to create a CorsikaConfig
         try:
             self.corsikaConfig = CorsikaConfig(
                 site=self.site,
                 label=self.label,
                 layoutName=self.layoutName,
-                corsikaConfigData=self._showerConfigData
+                corsikaConfigData=self._corsikaConfigData
             )
             # CORSIKA input file used as template for all runs
             self.corsikaInput = self.corsikaConfig.getInputFile()
         except MissingRequiredInputInCorsikaConfigData:
-            msg = 'showerConfigData is missing required entries.'
+            msg = 'corsikaConfigData is missing required entries.'
             self._logger.error(msg)
             raise
-    # End of _loadShowerConfigData
+    # End of _loadcorsikaConfigData
 
     def _loadCorsikaDataDirectories(self):
         corsikaBaseDir = self._corsikaDataDirectory.joinpath(self.site)
