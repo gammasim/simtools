@@ -31,7 +31,9 @@ def test_general():
         showerConfigData=showerConfigData
     )
 
-    ss.submit()
+    # ss.submit()
+
+    ss.printListOfOutputFiles(runs=[2, 10, 35])
 
     # runNumber = 3
     # script = cr.getRunScriptFile(runNumber=runNumber)

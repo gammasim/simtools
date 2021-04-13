@@ -186,7 +186,7 @@ class ShowerSimulator:
 
         if runs is not None:
             runsToSimulate = list(runs)
-            if not all(isinstance(r, int) for r in self.runsToSimulate):
+            if not all(isinstance(r, int) for r in runsToSimulate):
                 msg = 'runs to simulate must be all integers - aborting simulation.'
                 self._logger.error(msg)
                 raise InvalidRunsToSimulate(msg)
@@ -202,7 +202,40 @@ class ShowerSimulator:
         return runsToSimulate
 
     def getListOfOutputFiles(self, runs=None):
+        self._logger.info('Getting list of output files')
+        return self._getListOfFiles(runs=runs, which='output')
+
+    def printListOfOutputFiles(self, runs=None):
+        self._logger.info('Printing list of output files')
+        self._printListOfFiles(runs=runs, which='output')
+
+    def getListOfLogFiles(self, runs=None):
+        self._logger.info('Getting list of log files')
+        return self._getListOfFiles(runs=runs, which='log')
+
+    def printListOfLogFiles(self, runs=None):
+        self._logger.info('Printing list of log files')
+        self._printListOfFiles(runs=runs, which='log')
+
+    def _getListOfFiles(self, which, runs=None):
         runsToList = self._validateRunsToSimulate(runs)
 
+        outputFiles = list()
+        for run in runsToList:
+            if which == 'output':
+                file = self._corsikaRunner.getCorsikaOutputFile(runNumber=run)
+            elif which == 'log':
+                file = self._corsikaRunner.getCorsikaLogFile(runNumber=run)
+            else:
+                self._logger.error('Invalid type of files - log or output')
+                return None
+            outputFiles.append(file)
+
+        return outputFiles
+
+    def _printListOfFiles(self, which, runs=None):
+        files = self._getListOfFiles(runs=runs, which=which)
+        for f in files:
+            print(f)
 
 # End of ShowerSimulator
