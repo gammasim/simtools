@@ -302,17 +302,22 @@ class CorsikaConfig:
 
     def _convertPrimaryInputAndStorePrimaryName(self, value):
         '''
-        Convert a primary name into the right number.
+        Convert a primary name into the right numberand store its name in self.primary attribute.
 
         Parameters
         ----------
         value: str
-            Input primary name.
+            Input primary name (e.g gamma, proton ...)
 
         Raises
         ------
         InvalidPrimary
             If the input name is not found.
+
+        Returns
+        -------
+        int
+            Respective number of the given primary.
         '''
         for primName, primInfo in self._corsikaParameters['PRIMARIES'].items():
             if value[0].upper() == primName or value[0].upper() in primInfo['names']:
