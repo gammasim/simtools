@@ -16,16 +16,11 @@ from simtools.util.general import collectDataFromYamlOrDict
 __all__ = [
     'CorsikaConfig',
     'MissingRequiredInputInCorsikaConfigData',
-    'ArgumentsNotLoaded',
     'InvalidCorsikaInput'
 ]
 
 
 class MissingRequiredInputInCorsikaConfigData(Exception):
-    pass
-
-
-class ArgumentsNotLoaded(Exception):
     pass
 
 
@@ -94,7 +89,6 @@ class CorsikaConfig:
         layoutName,
         label=None,
         filesLocation=None,
-        randomSeeds=False,
         corsikaConfigData=None,
         corsikaConfigFile=None,
         corsikaParametersFile=None
@@ -114,9 +108,6 @@ class CorsikaConfig:
             Instance label.
         filesLocation: str or Path.
             Main location of the output files.
-        randomSeeds: bool
-            True for setting seeds randomly and False for setting seeds based on \
-            the run number and primary.
         corsikaConfigData: dict
             Dict with CORSIKA config data.
         corsikaConfigFile: str or Path
@@ -145,7 +136,6 @@ class CorsikaConfig:
 
         corsikaConfigData = collectDataFromYamlOrDict(corsikaConfigFile, corsikaConfigData)
         self.setUserParameters(corsikaConfigData)
-        self._loadSeeds(randomSeeds)
         self._isFileUpdated = False
 
     def __repr__(self):
@@ -327,18 +317,6 @@ class CorsikaConfig:
         self._logger.error(msg)
         raise InvalidCorsikaInput(msg)
 
-    def _loadSeeds(self, randomSeeds):
-        ''' Load seeds and store it in _seeds. '''
-        if not hasattr(self, '_userParameters'):
-            self._logger.error('_loadSeeds has be called after _loadArguments')
-            raise ArgumentsNotLoaded()
-        if randomSeeds:
-            seed = random.uniform(0, 1000)
-        else:
-            seed = self._userParameters['PRMPAR'][0] + self._userParameters['RUNNR'][0]
-        random.seed(seed)
-        self._seeds = [int(random.uniform(0, 1e7)) for i in range(4)]
-
     def getUserParameter(self, parName):
         if parName.upper() not in self._userParameters.keys():
             self._logger.warning('Parameter {} is not a user parameter'.format(parName))
@@ -402,7 +380,7 @@ class CorsikaConfig:
             file.write('IACT setenv AZM {}\n'.format(int(self._userParameters['PHIP'][0])))
 
             file.write('\n* SEEDS\n')
-            self._writeSeeds(file, self._seeds)
+            self._writeSeeds(file)
 
             file.write('\n* TELESCOPES\n')
             telescopeListText = self.layout.getCorsikaInputList()
@@ -456,18 +434,20 @@ class CorsikaConfig:
         )
     # End of setOutputFileAndDirectory
 
-    def _writeSeeds(self, file, seeds):
+    def _writeSeeds(self, file):
         '''
         Write seeds in the corsika input file.
 
         Parameters
         ----------
-        file: file
+        file: stream
             File where the telescope positions will be written.
-        seeds: list of int
-            List of seeds to be written.
         '''
-        for s in seeds:
+        randomSeed = self._userParameters['PRMPAR'][0] + self._userParameters['RUNNR'][0]
+        random.seed(randomSeed)
+        corsikaSeeds = [int(random.uniform(0, 1e7)) for i in range(4)]
+
+        for s in corsikaSeeds:
             file.write('SEED {} 0 0\n'.format(s))
 
     def getInputFile(self):
