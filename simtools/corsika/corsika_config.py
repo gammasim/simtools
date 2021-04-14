@@ -17,7 +17,6 @@ __all__ = [
     'CorsikaConfig',
     'MissingRequiredInputInCorsikaConfigData',
     'ArgumentsNotLoaded',
-    'InvalidCorsikaParameterInfo',
     'InvalidCorsikaInput'
 ]
 
@@ -27,10 +26,6 @@ class MissingRequiredInputInCorsikaConfigData(Exception):
 
 
 class ArgumentsNotLoaded(Exception):
-    pass
-
-
-class InvalidCorsikaParameterInfo(Exception):
     pass
 
 
@@ -279,16 +274,6 @@ class CorsikaConfig:
         else:
             # Turning parInfo['unit'] into a list, if it is not.
             parUnit = self._copyAsList(parInfo['unit'])
-
-            # Catching units with wrong len in the corsika_parameters file.
-            if len(parUnit) != len(valueArgs):
-                msg = (
-                    'Parameter {} has units with wrong len: '.format(parName)
-                    + '{} instead of {}'.format(len(parUnit), len(valueArgs))
-                    + ' - please check your corsika_parameters file.'
-                )
-                self._logger.error(msg)
-                raise InvalidCorsikaParameterInfo(msg)
 
             # Checking units and converting them, if needed.
             valueArgsWithUnits = list()
