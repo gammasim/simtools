@@ -68,19 +68,21 @@ class CorsikaConfig:
 
     Methods
     -------
-    printTelescopeList()
-        Print out the list of telescopes for quick inspection.
-    exportSimtelTelescopeConfigFiles()
-        Export sim_telarray config files for all the telescopes
-        into the output model directory.
-    exportSimtelArrayConfigFile()
-        Export sim_telarray config file for the array into the output model
-        directory.
-    exportAllSimtelConfigFiles()
-        Export sim_telarray config file for the array and for each individual telescope
-        into the output model directory.
-    getArrayConfigFile()
-        Get the path to the config file for sim_telarray.
+    setUserParameters(corsikaConfigData)
+        Set user parameters from a dict.
+    getUserParameter(parName)
+        Get the value of a user parameter.
+    printUserParameters()
+        Print user parameters for inspection.
+    getOutputFileName(runNumber)
+        Get the name of the CORSIKA output file for a certain run.
+    exportInputFile()
+        Create and export CORSIKA input file.
+    getInputFile()
+        Get the full path of the CORSIKA input file.
+    getInputFileNameForRun(runNumber)
+        Get the CORSIKA input file for one specific run.
+        This is the input file after being pre-processed by sim_telarray (pfp).
     '''
 
     def __init__(
