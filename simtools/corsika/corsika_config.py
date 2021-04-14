@@ -147,6 +147,15 @@ class CorsikaConfig:
         self._loadSeeds(randomSeeds)
         self._isFileUpdated = False
 
+    def __repr__(self):
+        text = '<class {}> (site={}, layout={}, label={})'.format(
+            self.__class__.__name__,
+            self.site,
+            self.layoutName,
+            self.label
+        )
+        return text
+
     def _loadCorsikaParametersFile(self, filename):
         if filename is not None:
             self._corsikaParametersFile = filename
