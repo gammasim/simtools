@@ -24,7 +24,6 @@ class TestCorsikaConfig(unittest.TestCase):
         self.corsikaConfigData = {
             'nshow': 100,
             'nrun': 10,
-            'wrong_par': 200,
             'zenith': 20 * u.deg,
             'viewcone': 5 * u.deg,
             'erange': [10 * u.GeV, 10 * u.TeV],
@@ -56,6 +55,19 @@ class TestCorsikaConfig(unittest.TestCase):
         self.corsikaConfig.exportInputFile()
         inputFile = self.corsikaConfig.getInputFile()
         self.assertTrue(inputFile.exists())
+
+    def test_wrong_par_in_config_data(self):
+        logger.info('test_wrong_primary_name')
+        newConfigData = copy(self.corsikaConfigData)
+        newConfigData['wrong_par'] = 20 * u.m
+        with self.assertRaises(InvalidCorsikaInput):
+            corsikaConfig = CorsikaConfig(
+                site='LaPalma',
+                layoutName='1LST',
+                label='test-corsika-config',
+                corsikaConfigData=newConfigData
+            )
+            corsikaConfig.printUserParameters()
 
     def test_units_of_config_data(self):
         logger.info('test_units_of_config_data')
@@ -109,6 +121,14 @@ class TestCorsikaConfig(unittest.TestCase):
             )
             corsikaConfig.printUserParameters()
 
+    def test_set_user_parameters(self):
+        logger.info('test_set_user_parameters')
+        newConfigData = copy(self.corsikaConfigData)
+        newConfigData['zenith'] = 0 * u.deg
+        newCorsikaConfig = copy(self.corsikaConfig)
+        newCorsikaConfig.setUserParameters(newConfigData)
+        self.assertEqual(newCorsikaConfig.getUserParameter('thetap'), [0, 0])
+
     def test_config_data_from_yaml_file(self):
         logger.info('test_config_data_from_yaml_file')
         corsikaConfigFile = io.getTestDataFile('corsikaConfigTest.yml')
@@ -123,3 +143,7 @@ class TestCorsikaConfig(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+    # tt = TestCorsikaConfig()
+    # tt.setUp()
+    # tt.test_set_user_parameters()
