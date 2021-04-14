@@ -349,10 +349,24 @@ class CorsikaConfig:
         return parValue if len(parValue) > 1 else parValue[0]
 
     def printUserParameters(self):
+        ''' Print user parameters for inspection. '''
         for par, value in self._userParameters.items():
             print('{} = {}'.format(par, value))
 
     def getOutputFileName(self, runNumber):
+        '''
+        Get the name of the CORSIKA output file for a certain run.
+
+        Parameters
+        ----------
+        runNumber: int
+            Run number.
+
+        Returns
+        -------
+        str:
+            Name of the output CORSIKA file.
+        '''
         return names.corsikaOutputFileName(
             runNumber,
             self.primary,
@@ -364,9 +378,8 @@ class CorsikaConfig:
         )
 
     def exportInputFile(self):
-        ''' Create and export corsika input file. '''
+        ''' Create and export CORSIKA input file. '''
         self._setOutputFileAndDirectory()
-
         self._logger.debug('Exporting CORSIKA input file to {}'.format(self._configFilePath))
 
         def _getTextSingleLine(pars):
@@ -388,10 +401,11 @@ class CorsikaConfig:
             return text
 
         with open(self._configFilePath, 'w') as file:
+            file.write('\n* [ RUN PARAMETERS ]\n')
             textParameters = _getTextSingleLine(self._userParameters)
             file.write(textParameters)
 
-            file.write('\n* SITE PARAMETERS\n')
+            file.write('\n* [ SITE PARAMETERS ]\n')
             textSiteParameters = _getTextSingleLine(
                 self._corsikaParameters['SITE_PARAMETERS'][self.site]
             )
@@ -403,33 +417,33 @@ class CorsikaConfig:
             file.write('IACT setenv ZA {}\n'.format(int(self._userParameters['THETAP'][0])))
             file.write('IACT setenv AZM {}\n'.format(int(self._userParameters['PHIP'][0])))
 
-            file.write('\n* SEEDS\n')
+            file.write('\n* [ SEEDS ]\n')
             self._writeSeeds(file)
 
-            file.write('\n* TELESCOPES\n')
+            file.write('\n* [ TELESCOPES ]\n')
             telescopeListText = self.layout.getCorsikaInputList()
             file.write(telescopeListText)
 
-            file.write('\n* INTERACTION FLAGS\n')
+            file.write('\n* [ INTERACTION FLAGS ]\n')
             textInteractionFlags = _getTextSingleLine(self._corsikaParameters['INTERACTION_FLAGS'])
             file.write(textInteractionFlags)
 
-            file.write('\n* CHERENKOV EMISSION PARAMETERS\n')
+            file.write('\n* [ CHERENKOV EMISSION PARAMETERS ]\n')
             textCherenkov = _getTextSingleLine(
                 self._corsikaParameters['CHERENKOV_EMISSION_PARAMETERS']
             )
             file.write(textCherenkov)
 
-            file.write('\n* DEBUGGING OUTPUT PARAMETERS\n')
+            file.write('\n* [ DEBUGGING OUTPUT PARAMETERS ]\n')
             textDebugging = _getTextSingleLine(
                 self._corsikaParameters['DEBUGGING_OUTPUT_PARAMETERS']
             )
             file.write(textDebugging)
 
-            file.write('\n* OUTUPUT FILE\n')
+            file.write('\n* [ OUTUPUT FILE ]\n')
             file.write('TELFIL {}\n'.format(self._outputGenericFileName))
 
-            file.write('\n* IACT TUNING PARAMETERS\n')
+            file.write('\n* [ IACT TUNING PARAMETERS ]\n')
             textIact = _getTextMultipleLines(self._corsikaParameters['IACT_TUNING_PARAMETERS'])
             file.write(textIact)
 
@@ -460,7 +474,7 @@ class CorsikaConfig:
 
     def _writeSeeds(self, file):
         '''
-        Write seeds in the corsika input file.
+        Generate and write seeds in the CORSIKA input file.
 
         Parameters
         ----------
@@ -476,17 +490,32 @@ class CorsikaConfig:
 
     def getInputFile(self):
         '''
-        Get the full path of the corsika input file.
+        Get the full path of the CORSIKA input file.
 
         Returns
         -------
-        Path of the input file.
+        Path:
+            Full path of the CORSIKA input file.
         '''
         if not self._isFileUpdated:
             self.exportInputFile()
         return self._configFilePath
 
-    def getInputTmpFileName(self, runNumber):
+    def getInputFileNameForRun(self, runNumber):
+        '''
+        Get the CORSIKA input file for one specific run.
+        This is the input file after being pre-processed by sim_telarray (pfp).
+
+        Parameters
+        ----------
+        runNumber: int
+            Run number.
+
+        Returns
+        -------
+        str:
+            Name of the input file.
+        '''
         return names.corsikaConfigTmpFileName(
             arrayName=self.layoutName,
             site=self.site,
