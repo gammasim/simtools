@@ -239,7 +239,10 @@ class CorsikaConfig:
     # End of setUserParameters
 
     def _validateAndConvertArgument(self, parName, parInfo, valueArgsIn):
-        ''' Validate input user parameter and convert it to the right units, if needed. '''
+        '''
+        Validate input user parameter and convert it to the right units, if needed.
+        Returns the validated arguments in a list.
+        '''
 
         # Turning valueArgs into a list, if it is not.
         valueArgs = self._copyAsList(valueArgsIn)
@@ -319,10 +322,30 @@ class CorsikaConfig:
         raise InvalidCorsikaInput(msg)
 
     def getUserParameter(self, parName):
-        if parName.upper() not in self._userParameters.keys():
+        '''
+        Get the value of a user parameter.
+
+        Parameters
+        ----------
+        parName: str
+            Name of the parameter as used in the CORSIKA input file (e.g. PRMPAR, THETAP ...)
+
+        Raises
+        ------
+        KeyError
+            When parName is not a valid parameter name.
+
+        Returns
+        -------
+        list
+            Value(s) of the parameter.
+        '''
+        try:
+            parValue = self._userParameters[parName.upper()]
+        except KeyError:
             self._logger.warning('Parameter {} is not a user parameter'.format(parName))
-            return None
-        parValue = self._userParameters[parName.upper()]
+            raise
+
         return parValue if len(parValue) > 1 else parValue[0]
 
     def printUserParameters(self):
