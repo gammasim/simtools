@@ -219,15 +219,20 @@ class CorsikaConfig:
         # Collecting all parameters given as arguments
         for keyArgs, valueArgs in corsikaConfigData.items():
             # Looping over USER_PARAMETERS and searching for a match
+            isIdentified = False
             for parName, parInfo in userPars.items():
-                # Raising error for an unidentified input.
                 if keyArgs.upper() != parName and keyArgs.upper() not in parInfo['names']:
-                    msg = 'Argument {} cannot be identified.'.format(keyArgs)
-                    self._logger.error(msg)
-                    raise InvalidCorsikaInput(msg)
+                    continue
                 # Matched parameter
                 validatedValueArgs = self._validateAndConvertArgument(parName, parInfo, valueArgs)
                 self._userParameters[parName] = validatedValueArgs
+                isIdentified = True
+
+            # Raising error for an unidentified input.
+            if not isIdentified:
+                msg = 'Argument {} cannot be identified.'.format(keyArgs)
+                self._logger.error(msg)
+                raise InvalidCorsikaInput(msg)
 
         # Checking for parameters with default option
         # If it is not given, filling it with the default value
