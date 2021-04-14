@@ -34,13 +34,57 @@ class InvalidCorsikaInput(Exception):
 
 class CorsikaConfig:
     '''
-    CorsikaConfig class.
+    CorsikaConfig deals with configuration for running CORSIKA. \
+    User parameters must be given by the corsikaConfigData or \
+    corsikaConfigFile arguments. An example of corsikaConfigData follows \
+    below.
+
+    .. code-block:: python
+
+    corsikaConfigData = {
+        'primary': 'proton',
+        'nshow': 10000,
+        'nrun': 1,
+        'zenith': 20 * u.deg,
+        'viewcone': 5 * u.deg,
+        'erange': [10 * u.GeV, 100 * u.TeV],
+        'eslope': -2,
+        'phi': 0 * u.deg,
+        'cscat': [10, 1500 * u.m, 0]
+    }
+
+    Further parameters can be set as a yaml file, using the argument \
+    corsikaParametersFile. When not given, corsikaParameters will be loaded \
+    from data/corsika/corsika_parameters.yml.
+
+    Attributes
+    ----------
+    site: str
+        North or South.
+    layoutName: str
+        Name of the layout.
+    layout: LayoutArray
+        Instance of LayoutArray.
+    label: str
+        Instance label.
+    primary: str
+        Name of the primary particle (e.g gamma, proton ...).
 
     Methods
     -------
-    setParameters(**kwargs)
-    exportFile()
-    getFile()
+    printTelescopeList()
+        Print out the list of telescopes for quick inspection.
+    exportSimtelTelescopeConfigFiles()
+        Export sim_telarray config files for all the telescopes
+        into the output model directory.
+    exportSimtelArrayConfigFile()
+        Export sim_telarray config file for the array into the output model
+        directory.
+    exportAllSimtelConfigFiles()
+        Export sim_telarray config file for the array and for each individual telescope
+        into the output model directory.
+    getArrayConfigFile()
+        Get the path to the config file for sim_telarray.
     '''
 
     def __init__(
@@ -52,8 +96,7 @@ class CorsikaConfig:
         randomSeeds=False,
         corsikaConfigData=None,
         corsikaConfigFile=None,
-        corsikaParametersFile=None,
-        **kwargs
+        corsikaParametersFile=None
     ):
         '''
         CorsikaConfig init.
@@ -61,7 +104,7 @@ class CorsikaConfig:
         Parameters
         ----------
         site: str
-            Paranal or LaPalma
+            South or North.
         layoutName: str
             Name of the layout.
         layout: LayoutArray
@@ -69,12 +112,16 @@ class CorsikaConfig:
         label: str
             Instance label.
         filesLocation: str or Path.
-            Main location of the output file.
+            Main location of the output files.
         randomSeeds: bool
-            If True, seeds will be set randomly. If False, seeds will be defined based on the run
-            number.
-        **kwargs
-            Set of parameters for the corsika config.
+            True for setting seeds randomly and False for setting seeds based on \
+            the run number and primary.
+        corsikaConfigData: dict
+            Dict with CORSIKA config data.
+        corsikaConfigFile: str or Path
+            Path to yaml file containing CORSIKA config data.
+        corsikaParametersFile: str or Path
+            Path to yaml file containing CORSIKA parameters.
         '''
 
         self._logger = logging.getLogger(__name__)
