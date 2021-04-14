@@ -2,6 +2,7 @@
 
 import logging
 import os
+import numpy as np
 from pathlib import Path
 from copy import copy
 
@@ -122,6 +123,9 @@ class CorsikaRunner:
 
     def getRunScriptFile(self, runNumber):
         # Setting script file name
+
+        runNumber = self._validateRunNumber(runNumber)
+
         scriptFileName = names.corsikaRunScriptFileName(
             arrayName=self.layoutName,
             site=self.site,
@@ -133,7 +137,7 @@ class CorsikaRunner:
         scriptFilePath = scriptFileDir.joinpath(scriptFileName)
 
         # CORSIKA input file for a specific run, created by the preprocessor pfp
-        corsikaInputTmpName = self.corsikaConfig.getInputTmpFileName(runNumber)
+        corsikaInputTmpName = self.corsikaConfig.getInputFileNameForRun(runNumber)
         corsikaInputTmpFile = self._corsikaInputDir.joinpath(corsikaInputTmpName)
 
         pfpCommand = self._getPfpCommand(runNumber, corsikaInputTmpFile)
@@ -198,3 +202,11 @@ class CorsikaRunner:
     def _getRunDirectory(self, runNumber):
         nn = str(runNumber)
         return 'run' + nn.zfill(6)
+
+    def _validateRunNumber(self, runNumber):
+        if not isinstance(runNumber, int) or runNumber < 1:
+            msg = 'Invalid type of run number ({}) - it must be an uint.'.format(runNumber)
+            self._logger.error(msg)
+            raise ValueError(msg)
+        else:
+            return runNumber
