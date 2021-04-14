@@ -46,6 +46,21 @@ class TestCorsikaConfig(unittest.TestCase):
         self.assertEqual(self.corsikaConfig.getUserParameter('thetap'), [20, 20])
         self.assertEqual(self.corsikaConfig.getUserParameter('erange'), [10., 10000.])
 
+    def test_export_input_file(self):
+        logger.info('test_export_input_file')
+        self.corsikaConfig.exportInputFile()
+        inputFile = self.corsikaConfig.getInputFile()
+        self.assertTrue(inputFile.exists())
+
+    def test_config_data_from_yaml_file():
+        corsikaConfigFile = io.getTestDataFile('corsikaConfigTest.yml')
+        cc = CorsikaConfig(
+            site='Paranal',
+            layoutName='4LST',
+            label='test-corsika-config',
+            corsikaConfigFile=corsikaConfigFile
+        )
+        cc.printParameters()
 
 
 # def test_general():
@@ -170,11 +185,11 @@ class TestCorsikaConfig(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    unittest.main()
+    # unittest.main()
 
-    # tt = TestCorsikaConfig()
-    # tt.setUp()
-    # tt.test_print()
+    tt = TestCorsikaConfig()
+    tt.setUp()
+    tt.test_export_input_file()
 
     # test_general()
     # test_config_data_from_yaml_file()
