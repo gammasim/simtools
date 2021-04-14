@@ -158,8 +158,10 @@ class CorsikaConfig:
 
     def _loadCorsikaParametersFile(self, filename):
         if filename is not None:
+            # User provided file.
             self._corsikaParametersFile = filename
         else:
+            # Default file from data directory.
             self._corsikaParametersFile = io.getDataFile('corsika', 'corsika_parameters.yml')
         self._logger.debug(
             'Loading CORSIKA parameters from file {}'.format(self._corsikaParametersFile)

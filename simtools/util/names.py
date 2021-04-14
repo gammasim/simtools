@@ -656,11 +656,11 @@ def corsikaConfigFileName(arrayName, site, zenith, viewCone, label=None):
     '''
     isDiffuse = (viewCone[0] != 0 or viewCone[1] != 0)
 
-    name = 'corsika-config-{}-{}'.format(arrayName, site)
-    name += '-za{:d}-{:d}'.format(int(zenith[0]), int(zenith[1]))
-    name += '-cone{:d}-{:d}'.format(int(viewCone[0]), int(viewCone[1])) if isDiffuse else ''
+    name = 'corsika-config_{}_{}'.format(site, arrayName)
+    name += '_za{:d}-{:d}'.format(int(zenith[0]), int(zenith[1]))
+    name += '_cone{:d}-{:d}'.format(int(viewCone[0]), int(viewCone[1])) if isDiffuse else ''
     name += '_{}'.format(label) if label is not None else ''
-    name += '.txt'
+    name += '.input'
     return name
 
 
