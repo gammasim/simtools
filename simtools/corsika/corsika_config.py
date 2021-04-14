@@ -217,30 +217,20 @@ class CorsikaConfig:
         userPars = self._corsikaParameters['USER_PARAMETERS']
 
         # Collecting all parameters given as arguments
-        indentifiedArgs = list()
         for keyArgs, valueArgs in corsikaConfigData.items():
             # Looping over USER_PARAMETERS and searching for a match
             for parName, parInfo in userPars.items():
+                # Raising error for an unidentified input.
                 if keyArgs.upper() != parName and keyArgs.upper() not in parInfo['names']:
-                    continue
+                    msg = 'Argument {} cannot be identified '.format(keyArgs)
+                    self._logger.error(msg)
+                    raise InvalidCorsikaInput(msg)
                 # Matched parameter
-                indentifiedArgs.append(keyArgs)
                 validatedValueArgs = self._validateArgument(parName, parInfo, valueArgs)
                 self._userParameters[parName] = validatedValueArgs
 
-        # Checking for unindetified parameters
-        unindentifiedArgs = [p for p in corsikaConfigData.keys() if p not in indentifiedArgs]
-        if len(unindentifiedArgs) > 0:
-            msg = (
-                '{} arguments were not properly '.format(len(unindentifiedArgs))
-                + 'identified: {} ...'.format(unindentifiedArgs[0])
-            )
-            self._logger.error(msg)
-            raise InvalidCorsikaInput(msg)
-
         # Checking for parameters with default option
         # If it is not given, filling it with the default value
-        requiredButNotGiven = list()
         for parName, parInfo in userPars.items():
             if parName in self._userParameters.keys():
                 continue
@@ -248,15 +238,9 @@ class CorsikaConfig:
                 validatedValue = self._validateArgument(parName, parInfo, parInfo['default'])
                 self._userParameters[parName] = validatedValue
             else:
-                requiredButNotGiven.append(parName)
-
-        if len(requiredButNotGiven) > 0:
-            msg = (
-                'Required parameters were not given ({} pars:'.format(len(requiredButNotGiven))
-                + ' {} ...)'.format(requiredButNotGiven[0])
-            )
-            self._logger.error(msg)
-            raise MissingRequiredInputInCorsikaConfigData(msg)
+                msg = 'Required parameters {} was not given (there may be more)'.format(parName)
+                self._logger.error(msg)
+                raise MissingRequiredInputInCorsikaConfigData(msg)
     # End of setParameters
 
     def _validateArgument(self, parName, parInfo, valueArgsIn):
