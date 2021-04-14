@@ -34,6 +34,11 @@ class TestCorsikaRunner(unittest.TestCase):
         )
 
     def test_get_run_script(self):
+        # No run number is given
+        script = self.corsikaRunner.getRunScriptFile()
+        self.assertTrue(script.exists())
+
+        # Run number is given
         runNumber = 3
         script = self.corsikaRunner.getRunScriptFile(runNumber)
         self.assertTrue(script.exists())
