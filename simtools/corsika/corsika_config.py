@@ -163,6 +163,11 @@ class CorsikaConfig:
         return text
 
     def _loadCorsikaParametersFile(self, filename):
+        '''
+        Load CORSIKA parameters from a file, if given (filename not None),
+        or from the default parameter file provided in the
+        data directory (filename is given).
+        '''
         if filename is not None:
             # User provided file.
             self._corsikaParametersFile = filename
@@ -177,11 +182,34 @@ class CorsikaConfig:
 
     def setUserParameters(self, corsikaConfigData):
         '''
-        Set parameters for the corsika config.
+        Set user parameters from a dict.
 
         Parameters
         ----------
-        **kwargs
+        corsikaConfigData: dict
+            Contains the user parameters. Ex.
+
+            .. code-block:: python
+
+                corsikaConfigData = {
+                    'primary': 'proton',
+                    'nshow': 10000,
+                    'nrun': 1,
+                    'zenith': 20 * u.deg,
+                    'viewcone': 5 * u.deg,
+                    'erange': [10 * u.GeV, 100 * u.TeV],
+                    'eslope': -2,
+                    'phi': 0 * u.deg,
+                    'cscat': [10, 1500 * u.m, 0]
+                }
+
+        Raises
+        ------
+        InvalidCorsikaInput
+            If any parameter given as input has wrong len, unit or
+            an invalid name.
+        MissingRequiredInputInCorsikaConfigData
+            If any required user parameter is missing.
         '''
         self._logger.debug('Setting user parameters from corsikaConfigData')
         self._userParameters = dict()
@@ -203,10 +231,12 @@ class CorsikaConfig:
         # Checking for unindetified parameters
         unindentifiedArgs = [p for p in corsikaConfigData.keys() if p not in indentifiedArgs]
         if len(unindentifiedArgs) > 0:
-            self._logger.warning(
+            msg = (
                 '{} arguments were not properly '.format(len(unindentifiedArgs))
                 + 'identified: {} ...'.format(unindentifiedArgs[0])
             )
+            self._logger.error(msg)
+            raise InvalidCorsikaInput(msg)
 
         # Checking for parameters with default option
         # If it is not given, filling it with the default value
