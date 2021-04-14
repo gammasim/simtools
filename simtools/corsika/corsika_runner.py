@@ -196,6 +196,19 @@ class CorsikaRunner:
         return cmd
 
     def getRunLogFile(self, runNumber=None):
+        '''
+        Get the full path of the run log file.
+
+        Parameters
+        ----------
+        runNumber: int
+            Run number.
+
+        Returns
+        -------
+        Path:
+            Full path of the run log file.
+        '''
         runNumber = self._validateRunNumber(runNumber)
         logFileName = names.corsikaRunLogFileName(
             site=self.site,
@@ -206,17 +219,44 @@ class CorsikaRunner:
         return self._corsikaLogDir.joinpath(logFileName)
 
     def getCorsikaLogFile(self, runNumber=None):
+        '''
+        Get the full path of the CORSIKA log file.
+
+        Parameters
+        ----------
+        runNumber: int
+            Run number.
+
+        Returns
+        -------
+        Path:
+            Full path of the CORSIKA log file.
+        '''
         runNumber = self._validateRunNumber(runNumber)
         runDir = self._getRunDirectory(runNumber)
         return self._corsikaDataDir.joinpath(runDir).joinpath('run{}.log'.format(runNumber))
 
     def getCorsikaOutputFile(self, runNumber=None):
+        '''
+        Get the full path of the CORSIKA output file.
+
+        Parameters
+        ----------
+        runNumber: int
+            Run number.
+
+        Returns
+        -------
+        Path:
+            Full path of the CORSIKA output file.
+        '''
         runNumber = self._validateRunNumber(runNumber)
         corsikaFileName = self.corsikaConfig.getOutputFileName(runNumber)
         runDir = self._getRunDirectory(runNumber)
         return self._corsikaDataDir.joinpath(runDir).joinpath(corsikaFileName)
 
     def _getRunDirectory(self, runNumber):
+        ''' Get run directory created by sim_telaray (ex. run000014). '''
         nn = str(runNumber)
         return 'run' + nn.zfill(6)
 
