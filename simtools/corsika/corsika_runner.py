@@ -24,15 +24,13 @@ class CorsikaRunner:
 
     Methods
     -------
-    setParameters(**kwargs)
-    exportFile()
-    getFile()
     '''
 
     def __init__(
         self,
         site,
         layoutName,
+        keepSeeds=False,
         label=None,
         filesLocation=None,
         simtelSourcePath=None,
@@ -68,6 +66,8 @@ class CorsikaRunner:
         self.label = label
         self.site = names.validateSiteName(site)
         self.layoutName = names.validateLayoutArrayName(layoutName)
+
+        self._keepSeeds = keepSeeds
 
         self._simtelSourcePath = Path(cfg.getConfigArg('simtelPath', simtelSourcePath))
         self._filesLocation = cfg.getConfigArg('outputLocation', filesLocation)
@@ -120,11 +120,23 @@ class CorsikaRunner:
         self._corsikaLogDir = corsikaBaseDir.joinpath('log')
         self._corsikaLogDir.mkdir(parents=True, exist_ok=True)
 
-    def getRunScriptFile(self, runNumber):
-        # Setting script file name
+    def getRunScriptFile(self, runNumber=None):
+        '''
+        Get the full path of the run script file for a given run number.
 
+        Parameters
+        ----------
+        runNumber: int
+            Run number.
+
+        Returns
+        -------
+        Path:
+            Full path of the run script file.
+        '''
         runNumber = self._validateRunNumber(runNumber)
 
+        # Setting script file name
         scriptFileName = names.corsikaRunScriptFileName(
             arrayName=self.layoutName,
             site=self.site,
@@ -161,12 +173,14 @@ class CorsikaRunner:
         return scriptFilePath
 
     def _getPfpCommand(self, runNumber, inputTmpFile):
+        ''' Get pfp pre-processor command. '''
         cmd = self._simtelSourcePath.joinpath('sim_telarray/bin/pfp')
         cmd = str(cmd) + ' -V -DWITHOUT_MULTIPIPE - < {}'.format(self.corsikaInput)
         cmd += ' > {}\n'.format(inputTmpFile)
         return cmd
 
     def _getAutoinputsCommand(self, runNumber, inputTmpFile):
+        ''' Get autoinputs command. '''
         corsikaBinPath = self._simtelSourcePath.joinpath('corsika-run/corsika')
 
         logFile = self.getRunLogFile(runNumber)
@@ -175,12 +189,14 @@ class CorsikaRunner:
         cmd = str(cmd) + ' --run {}'.format(corsikaBinPath)
         cmd += ' -R {}'.format(runNumber)
         cmd += ' -p {}'.format(self._corsikaDataDir)
-        cmd += ' --keep-seeds'
+        if self._keepSeeds:
+            cmd += ' --keep-seeds'
         cmd += ' {} > {} 2>&1'.format(inputTmpFile, logFile)
         cmd + ' || exit 3\n'
         return cmd
 
-    def getRunLogFile(self, runNumber):
+    def getRunLogFile(self, runNumber=None):
+        runNumber = self._validateRunNumber(runNumber)
         logFileName = names.corsikaRunLogFileName(
             site=self.site,
             run=runNumber,
@@ -189,11 +205,13 @@ class CorsikaRunner:
         )
         return self._corsikaLogDir.joinpath(logFileName)
 
-    def getCorsikaLogFile(self, runNumber):
+    def getCorsikaLogFile(self, runNumber=None):
+        runNumber = self._validateRunNumber(runNumber)
         runDir = self._getRunDirectory(runNumber)
         return self._corsikaDataDir.joinpath(runDir).joinpath('run{}.log'.format(runNumber))
 
-    def getCorsikaOutputFile(self, runNumber):
+    def getCorsikaOutputFile(self, runNumber=None):
+        runNumber = self._validateRunNumber(runNumber)
         corsikaFileName = self.corsikaConfig.getOutputFileName(runNumber)
         runDir = self._getRunDirectory(runNumber)
         return self._corsikaDataDir.joinpath(runDir).joinpath(corsikaFileName)
@@ -203,7 +221,9 @@ class CorsikaRunner:
         return 'run' + nn.zfill(6)
 
     def _validateRunNumber(self, runNumber):
-        if not isinstance(runNumber, int) or runNumber < 1:
+        if runNumber is None:
+            return self.corsikaConfig.getUserParameter('RUNNR')
+        elif not isinstance(runNumber, int) or runNumber < 1:
             msg = 'Invalid type of run number ({}) - it must be an uint.'.format(runNumber)
             self._logger.error(msg)
             raise ValueError(msg)
