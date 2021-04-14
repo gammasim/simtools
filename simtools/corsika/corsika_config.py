@@ -222,11 +222,11 @@ class CorsikaConfig:
             for parName, parInfo in userPars.items():
                 # Raising error for an unidentified input.
                 if keyArgs.upper() != parName and keyArgs.upper() not in parInfo['names']:
-                    msg = 'Argument {} cannot be identified '.format(keyArgs)
+                    msg = 'Argument {} cannot be identified.'.format(keyArgs)
                     self._logger.error(msg)
                     raise InvalidCorsikaInput(msg)
                 # Matched parameter
-                validatedValueArgs = self._validateArgument(parName, parInfo, valueArgs)
+                validatedValueArgs = self._validateAndConvertArgument(parName, parInfo, valueArgs)
                 self._userParameters[parName] = validatedValueArgs
 
         # Checking for parameters with default option
@@ -235,17 +235,23 @@ class CorsikaConfig:
             if parName in self._userParameters.keys():
                 continue
             elif 'default' in parInfo.keys():
-                validatedValue = self._validateArgument(parName, parInfo, parInfo['default'])
+                validatedValue = self._validateAndConvertArgument(
+                    parName,
+                    parInfo,
+                    parInfo['default']
+                )
                 self._userParameters[parName] = validatedValue
             else:
-                msg = 'Required parameters {} was not given (there may be more)'.format(parName)
+                msg = 'Required parameters {} was not given (there may be more).'.format(parName)
                 self._logger.error(msg)
                 raise MissingRequiredInputInCorsikaConfigData(msg)
-    # End of setParameters
+    # End of setUserParameters
 
-    def _validateArgument(self, parName, parInfo, valueArgsIn):
+    def _validateAndConvertArgument(self, parName, parInfo, valueArgsIn):
+        ''' Validate input user parameter and convert it to the right units, if needed. '''
+
         # Turning valueArgs into a list, if it is not.
-        valueArgs = copy(valueArgsIn) if isinstance(valueArgsIn, list) else [valueArgsIn]
+        valueArgs = self._copyAsList(valueArgsIn)
 
         if len(valueArgs) == 1 and parName in ['THETAP', 'PHIP']:
             # Fixing single value zenith or azimuth angle.
@@ -263,11 +269,11 @@ class CorsikaConfig:
             self._logger.error(msg)
             raise InvalidCorsikaInput(msg)
 
-        if 'unit' in parInfo.keys():
+        if 'unit' not in parInfo.keys():
+            return valueArgs
+        else:
             # Turning parInfo['unit'] into a list, if it is not.
-            parUnit = (
-                copy(parInfo['unit']) if isinstance(parInfo['unit'], list) else [parInfo['unit']]
-            )
+            parUnit = self._copyAsList(parInfo['unit'])
 
             # Catching units with wrong len in the corsika_parameters file.
             if len(parUnit) != len(valueArgs):
@@ -281,7 +287,7 @@ class CorsikaConfig:
 
             # Checking units and converting them, if needed.
             valueArgsWithUnits = list()
-            for (arg, unit) in zip(valueArgs, parUnit):
+            for arg, unit in zip(valueArgs, parUnit):
                 if unit is None:
                     valueArgsWithUnits.append(arg)
                     continue
@@ -296,10 +302,13 @@ class CorsikaConfig:
                     raise InvalidCorsikaInput(msg)
                 else:
                     valueArgsWithUnits.append(arg.to(unit).value)
-            valueArgs = valueArgsWithUnits
 
-        return valueArgs
-    # End of _validateArgument
+            return valueArgsWithUnits
+    # End of _validateAndConvertArgument
+
+    def _copyAsList(self, value):
+        ''' Copy value and, if it is not a list, turn it into a list with a single entry. '''
+        return copy(value) if isinstance(value, list) else [value]
 
     def _convertPrimaryInputAndStorePrimaryName(self, value):
         '''
