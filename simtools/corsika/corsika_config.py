@@ -303,7 +303,7 @@ class CorsikaConfig:
 
     def _loadSeeds(self, randomSeeds):
         ''' Load seeds and store it in _seeds. '''
-        if '_userParameters' not in self.__dict__.keys():
+        if not hasattr(self, '_userParameters'):
             self._logger.error('_loadSeeds has be called after _loadArguments')
             raise ArgumentsNotLoaded()
         if randomSeeds:
