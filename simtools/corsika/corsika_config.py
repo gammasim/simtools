@@ -235,6 +235,7 @@ class CorsikaConfig:
                 msg = 'Required parameters {} was not given (there may be more).'.format(parName)
                 self._logger.error(msg)
                 raise MissingRequiredInputInCorsikaConfigData(msg)
+        self._isFileUpdated = False
     # End of setUserParameters
 
     def _validateAndConvertArgument(self, parName, parInfo, valueArgsIn):
@@ -471,6 +472,3 @@ class CorsikaConfig:
             run=runNumber,
             label=self.label
         )
-
-    def addLine(self):
-        pass
