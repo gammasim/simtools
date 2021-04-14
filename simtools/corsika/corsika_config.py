@@ -313,7 +313,14 @@ class CorsikaConfig:
         random.seed(seed)
         self._seeds = [int(random.uniform(0, 1e7)) for i in range(4)]
 
-    def printParameters(self):
+    def getUserParameter(self, parName):
+        if parName.upper() not in self._userParameters.keys():
+            self._logger.warning('Parameter {} is not a user parameter'.format(parName))
+            return None
+        parValue = self._userParameters[parName.upper()]
+        return parValue if len(parValue) > 1 else parValue[0]
+
+    def printUserParameters(self):
         for par, value in self._userParameters.items():
             print('{} = {}'.format(par, value))
 
