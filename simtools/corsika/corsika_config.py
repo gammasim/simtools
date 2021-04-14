@@ -13,7 +13,13 @@ from simtools.util import names
 from simtools.layout.layout_array import LayoutArray
 from simtools.util.general import collectDataFromYamlOrDict
 
-__all__ = ['CorsikaConfig']
+__all__ = [
+    'CorsikaConfig',
+    'MissingRequiredInputInCorsikaConfigData',
+    'ArgumentsNotLoaded',
+    'InvalidCorsikaParameterInfo',
+    'InvalidCorsikaInput'
+]
 
 
 class MissingRequiredInputInCorsikaConfigData(Exception):

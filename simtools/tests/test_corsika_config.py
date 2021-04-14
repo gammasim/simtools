@@ -2,11 +2,16 @@
 
 import logging
 import unittest
+from copy import copy
 
 from astropy import units as u
 
 import simtools.io_handler as io
-from simtools.corsika.corsika_config import CorsikaConfig
+from simtools.corsika.corsika_config import (
+    CorsikaConfig,
+    InvalidCorsikaInput,
+    MissingRequiredInputInCorsikaConfigData
+)
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
@@ -16,7 +21,7 @@ class TestCorsikaConfig(unittest.TestCase):
 
     def setUp(self):
         logger.info('setUp')
-        corsikaConfigData = {
+        self.corsikaConfigData = {
             'nshow': 100,
             'nrun': 10,
             'wrong_par': 200,
@@ -32,7 +37,7 @@ class TestCorsikaConfig(unittest.TestCase):
             site='Paranal',
             layoutName='4LST',
             label='test-corsika-config',
-            corsikaConfigData=corsikaConfigData
+            corsikaConfigData=self.corsikaConfigData
         )
 
     def test_repr(self):
@@ -52,7 +57,60 @@ class TestCorsikaConfig(unittest.TestCase):
         inputFile = self.corsikaConfig.getInputFile()
         self.assertTrue(inputFile.exists())
 
-    def test_config_data_from_yaml_file():
+    def test_units_of_config_data(self):
+        logger.info('test_units_of_config_data')
+        newConfigData = copy(self.corsikaConfigData)
+        newConfigData['zenith'] = 20 * u.m
+        with self.assertRaises(InvalidCorsikaInput):
+            corsikaConfig = CorsikaConfig(
+                site='LaPalma',
+                layoutName='1LST',
+                label='test-corsika-config',
+                corsikaConfigData=newConfigData
+            )
+            corsikaConfig.printUserParameters()
+
+    def test_len_of_config_data(self):
+        logger.info('test_len_of_config_data')
+        newConfigData = copy(self.corsikaConfigData)
+        newConfigData['erange'] = [20 * u.TeV]
+        with self.assertRaises(InvalidCorsikaInput):
+            corsikaConfig = CorsikaConfig(
+                site='LaPalma',
+                layoutName='1LST',
+                label='test-corsika-config',
+                corsikaConfigData=newConfigData
+            )
+            corsikaConfig.printUserParameters()
+
+    def test_wrong_primary_name(self):
+        logger.info('test_wrong_primary_name')
+        newConfigData = copy(self.corsikaConfigData)
+        newConfigData['primary'] = 'rock'
+        with self.assertRaises(InvalidCorsikaInput):
+            corsikaConfig = CorsikaConfig(
+                site='LaPalma',
+                layoutName='1LST',
+                label='test-corsika-config',
+                corsikaConfigData=newConfigData
+            )
+            corsikaConfig.printUserParameters()
+
+    def test_missing_input(self):
+        logger.info('test_missing_input')
+        newConfigData = copy(self.corsikaConfigData)
+        newConfigData.pop('primary')
+        with self.assertRaises(MissingRequiredInputInCorsikaConfigData):
+            corsikaConfig = CorsikaConfig(
+                site='LaPalma',
+                layoutName='1LST',
+                label='test-corsika-config',
+                corsikaConfigData=newConfigData
+            )
+            corsikaConfig.printUserParameters()
+
+    def test_config_data_from_yaml_file(self):
+        logger.info('test_config_data_from_yaml_file')
         corsikaConfigFile = io.getTestDataFile('corsikaConfigTest.yml')
         cc = CorsikaConfig(
             site='Paranal',
@@ -60,139 +118,8 @@ class TestCorsikaConfig(unittest.TestCase):
             label='test-corsika-config',
             corsikaConfigFile=corsikaConfigFile
         )
-        cc.printParameters()
-
-
-# def test_general():
-
-#     corsikaConfigData = {
-#         'nshow': 100,
-#         'nrun': 10,
-#         'wrong_par': 200,
-#         'zenith': 20 * u.deg,
-#         'viewcone': 5 * u.deg,
-#         'erange': [0.01 * u.GeV, 10 * u.GeV],
-#         'eslope': -2,
-#         'phi': 0 * u.deg,
-#         'cscat': [10, 1500 * u.m, 0],
-#         'primary': 'proton'
-#     }
-
-#     cc = CorsikaConfig(
-#         site='Paranal',
-#         layoutName='4LST',
-#         label='test-corsika-config',
-#         corsikaConfigData=corsikaConfigData
-#     )
-#     cc.printParameters()
-#     cc.exportInputFile()
-
-#     corsikaConfigData2 = {
-#         'nshow': 1000,
-#         'nrun': 11,
-#         'zenith': [0 * u.deg, 60 * u.deg],
-#         'viewcone': [0 * u.deg, 10 * u.deg],
-#         'erange': [0.01 * u.TeV, 10 * u.TeV],
-#         'eslope': -2,
-#         'phi': 0 * u.deg,
-#         'cscat': [10, 1500 * u.m, 0],
-#         'primary': 'proton'
-#     }
-#     cc2 = CorsikaConfig(
-#         site='LaPalma',
-#         layoutName='1SST',
-#         label='test-corsika-config',
-#         corsikaConfigData=corsikaConfigData2
-#     )
-#     cc2.exportInputFile()
-
-#     corsikaConfigData3 = {
-#         'nshow': 1000,
-#         'nrun': 11,
-#         'zenith': [0 * u.deg, 60 * u.deg],
-#         'viewcone': [0 * u.deg, 10 * u.deg],
-#         'erange': [0.01 * u.TeV, 10 * u.TeV],
-#         'eslope': -2,
-#         'phi': 0 * u.deg,
-#         'cscat': [10, 1500 * u.m, 0],
-#         'primary': 'electron'
-#     }
-
-#     cc3 = CorsikaConfig(
-#         site='LaPalma',
-#         layoutName='1MST',
-#         label='test-corsika-config',
-#         corsikaConfigData=corsikaConfigData3
-#     )
-#     # Testing default parameters
-#     assert cc3._userParameters['RUNNR'] == [11]
-#     assert cc3._userParameters['EVTNR'] == [1]
-#     cc3.exportInputFile()
-
-
-# def test_config_data_from_yaml_file():
-#     corsikaConfigFile = io.getTestDataFile('corsikaConfigTest.yml')
-#     cc = CorsikaConfig(
-#         site='Paranal',
-#         layoutName='4LST',
-#         label='test-corsika-config',
-#         corsikaConfigFile=corsikaConfigFile
-#     )
-#     cc.printParameters()
-
-
-# def test_units():
-#     corsikaConfigData = {
-#         'nshow': 100,
-#         'nrun': 10,
-#         'zenith': 0.1 * u.rad,
-#         'viewcone': 5 * u.deg,
-#         'erange': [0.01 * u.TeV, 10 * u.TeV],
-#         'eslope': -2,
-#         'phi': 0 * u.deg,
-#         'cscat': [10, 1500 * u.m, 0],
-#         'primary': 'proton'
-#     }
-#     cc = CorsikaConfig(
-#         site='Paranal',
-#         layoutName='4LST',
-#         label='test-corsika-config',
-#         corsikaConfigData=corsikaConfigData
-#     )
-#     cc.exportInputFile()
-
-
-# def test_running_corsika_externally():
-
-#     corsikaConfigData = {
-#         'nshow': 10,
-#         'nrun': 10,
-#         'zenith': 20 * u.deg,
-#         'viewcone': 0 * u.deg,
-#         'erange': [0.05 * u.TeV, 10 * u.TeV],
-#         'eslope': -2,
-#         'phi': 0 * u.deg,
-#         'cscat': [1, 400 * u.m, 0],
-#         'primary': 'gamma'
-#     }
-#     cc = CorsikaConfig(
-#         site='South',
-#         layoutName='4LST',
-#         label='test-corsika-config',
-#         corsikaConfigData=corsikaConfigData
-#     )
-#     cc.exportInputFile()
+        cc.printUserParameters()
 
 
 if __name__ == '__main__':
-    # unittest.main()
-
-    tt = TestCorsikaConfig()
-    tt.setUp()
-    tt.test_export_input_file()
-
-    # test_general()
-    # test_config_data_from_yaml_file()
-    # test_units()
-    # test_running_corsika_externally()
-    # pass
+    unittest.main()
