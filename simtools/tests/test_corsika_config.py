@@ -22,7 +22,7 @@ class TestCorsikaConfig(unittest.TestCase):
             'wrong_par': 200,
             'zenith': 20 * u.deg,
             'viewcone': 5 * u.deg,
-            'erange': [0.01 * u.GeV, 10 * u.GeV],
+            'erange': [10 * u.GeV, 10 * u.TeV],
             'eslope': -2,
             'phi': 0 * u.deg,
             'cscat': [10, 1500 * u.m, 0],
@@ -40,8 +40,13 @@ class TestCorsikaConfig(unittest.TestCase):
         text = repr(self.corsikaConfig)
         self.assertTrue('site' in text)
 
-    def test_print(self):
-        print('TESTTESTTEST')
+    def test_user_parameters(self):
+        logger.info('test_user_parameters')
+        self.assertEqual(self.corsikaConfig.getUserParameter('nshow'), 100)
+        self.assertEqual(self.corsikaConfig.getUserParameter('thetap'), [20, 20])
+        self.assertEqual(self.corsikaConfig.getUserParameter('erange'), [10., 10000.])
+
+
 
 # def test_general():
 
