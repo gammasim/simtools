@@ -49,6 +49,8 @@ class TestCorsikaConfig(unittest.TestCase):
         self.assertEqual(self.corsikaConfig.getUserParameter('nshow'), 100)
         self.assertEqual(self.corsikaConfig.getUserParameter('thetap'), [20, 20])
         self.assertEqual(self.corsikaConfig.getUserParameter('erange'), [10., 10000.])
+        with self.assertRaises(KeyError):
+            self.corsikaConfig.getUserParameter('inexistent_par')
 
     def test_export_input_file(self):
         logger.info('test_export_input_file')
