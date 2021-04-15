@@ -1,5 +1,3 @@
-#!/usr/bin/python3
-
 import logging
 import random
 from copy import copy
@@ -49,7 +47,7 @@ class CorsikaConfig:
         'cscat': [10, 1500 * u.m, 0]
     }
 
-    Further parameters can be set as a yaml file, using the argument \
+    The remaining CORSIKA parameters can be set as a yaml file, using the argument \
     corsikaParametersFile. When not given, corsikaParameters will be loaded \
     from data/corsika/corsika_parameters.yml.
 
