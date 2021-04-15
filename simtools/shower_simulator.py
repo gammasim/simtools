@@ -263,18 +263,88 @@ class ShowerSimulator:
         return list(validatedRunsUnique)
 
     def getListOfOutputFiles(self, runList=None, runRange=None):
+        '''
+        Get list of output files.
+
+        Parameters
+        ----------
+        runList: list
+            List of run numbers.
+        runRange: list
+            List of len 2 with the limits ofthe range of the run numbers.
+
+        Raises
+        ------
+        InvalidRunsToSimulate
+            If runs in runList or runRange are invalid.
+
+        Returns
+        -------
+        list
+            List with the full path of all the output files.
+        '''
         self._logger.info('Getting list of output files')
         return self._getListOfFiles(runList=runList, runRange=runRange, which='output')
 
     def printListOfOutputFiles(self, runList=None, runRange=None):
+        '''
+        Get list of output files.
+
+        Parameters
+        ----------
+        runList: list
+            List of run numbers.
+        runRange: list
+            List of len 2 with the limits of the range of the run numbers.
+
+        Raises
+        ------
+        InvalidRunsToSimulate
+            If runs in runList or runRange are invalid.
+        '''
         self._logger.info('Printing list of output files')
         self._printListOfFiles(runList=runList, runRange=runRange, which='output')
 
     def getListOfLogFiles(self, runList=None, runRange=None):
+        '''
+        Get list of log files.
+
+        Parameters
+        ----------
+        runList: list
+            List of run numbers.
+        runRange: list
+            List of len 2 with the limits of the range of the run numbers.
+
+        Raises
+        ------
+        InvalidRunsToSimulate
+            If runs in runList or runRange are invalid.
+
+        Returns
+        -------
+        list
+            List with the full path of all the log files.
+        '''
         self._logger.info('Getting list of log files')
         return self._getListOfFiles(runList=runList, runRange=runRange, which='log')
 
     def printListOfLogFiles(self, runList=None, runRange=None):
+        '''
+        Print list of log files.
+
+        Parameters
+        ----------
+        runList: list
+            List of run numbers.
+        runRange: list
+            List of len 2 with the limits of the range of the run numbers.
+
+        Raises
+        ------
+        InvalidRunsToSimulate
+            If runs in runList or runRange are invalid.
+        '''
         self._logger.info('Printing list of log files')
         self._printListOfFiles(runList=runList, runRange=runRange, which='log')
 
