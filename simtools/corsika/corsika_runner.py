@@ -69,6 +69,14 @@ class CorsikaRunner:
 
     Methods
     -------
+    getRunScriptFile(runNumber)
+        Get the full path of the run script file for a given run number.
+    getRunLogFile(runNumber)
+        Get the full path of the run log file.
+    getCorsikaLogFile(runNumber)
+        Get the full path of the CORSIKA log file.
+    getCorsikaOutputFile(runNumber)
+        Get the full path of the CORSIKA output file.
     '''
 
     def __init__(

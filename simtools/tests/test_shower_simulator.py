@@ -6,7 +6,11 @@ from copy import copy
 
 import astropy.units as u
 
-from simtools.shower_simulator import ShowerSimulator, InvalidRunsToSimulate
+from simtools.shower_simulator import (
+    ShowerSimulator,
+    InvalidRunsToSimulate,
+    MissingRequiredEntryInShowerConfig
+)
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
@@ -33,6 +37,16 @@ class TestShowerSimulator(unittest.TestCase):
             label='test-shower-simulator',
             showerConfigData=self.showerConfigData
         )
+
+    def test_invalid_shower_data(self):
+        newShowerConfigData = copy(self.showerConfigData)
+        newShowerConfigData.pop('site')
+        with self.assertRaises(MissingRequiredEntryInShowerConfig):
+            newShowerSimulator = ShowerSimulator(
+                label='test-shower-simulator',
+                showerConfigData=newShowerConfigData
+            )
+            newShowerSimulator.runs
 
     def test_runs_invalid_input(self):
         newShowerConfigData = copy(self.showerConfigData)
