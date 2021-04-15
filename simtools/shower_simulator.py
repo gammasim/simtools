@@ -216,7 +216,7 @@ class ShowerSimulator:
             os.system(shellCommand)
 
     def _getRunsToSimulate(self, runList, runRange):
-
+        ''' Process runList and runRange and return the validated list of runs. '''
         if runList is None and runRange is None:
             if self.runs is None:
                 msg = (
@@ -231,7 +231,10 @@ class ShowerSimulator:
             return self._validateRunListAndRange(runList, runRange)
 
     def _validateRunListAndRange(self, runList, runRange):
-
+        '''
+        Validate runList and runRange and return the list of runs. \
+        If both arguments are given, they will be merged into a single list.
+        '''
         if runList is None and runRange is None:
             self._logger.debug('Nothing to validate - runList and runRange not given.')
             return None
