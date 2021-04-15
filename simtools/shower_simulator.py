@@ -18,42 +18,56 @@ class MissingRequiredEntryInShowerConfig(Exception):
     pass
 
 
-class InvalidEntryInShowerConfig(Exception):
-    pass
-
-
 class InvalidRunsToSimulate(Exception):
     pass
 
 
 class ShowerSimulator:
     '''
-    Class for handling ray tracing simulations and analysis.
+    ShowerSimulator is responsible for managing simulation of showers. \
+    It interfaces with simulation software-specific packages, like CORSIKA.
+
+    The configuration is set as a dict showerConfigData or a yaml \
+    file showerConfigFile. An example of showerConfigData can be found \
+    below.
+
+    .. code-block:: python
+
+    self.showerConfigData = {
+        'corsikaDataDirectory': './corsika-data',
+        'site': 'South',
+        'layoutName': 'Prod5',
+        'runRange': [1, 100],
+        'nshow': 10,
+        'primary': 'gamma',
+        'erange': [100 * u.GeV, 1 * u.TeV],
+        'eslope': -2,
+        'zenith': 20 * u.deg,
+        'azimuth': 0 * u.deg,
+        'viewcone': 0 * u.deg,
+        'cscat': [10, 1500 * u.m, 0]
+    }
+
 
     Attributes
     ----------
+    site: str
+        North or South.
+    layoutName: str
+        Name of the layout.
     label: str
         Instance label.
 
     Methods
     -------
-    simulate(test=False, force=False)
-        Simulate RayTracing using SimtelRunner.
-    analyse(export=True, force=False, useRX=False, noTelTransmission=False)
-        Analyze RayTracing, meaning read simtel files, compute psfs and eff areas and store the
-        results in _results.
-    exportResults()
-        Export results to a csv file.
-    plot(key, **kwargs)
-        Plot key vs off-axis angle.
-    plotHistogram(key, **kwargs)
-        Plot histogram of key (d80_cm, d80_deg, eff_area, eff_flen).
-    getMean(key)
-        Get mean value of key(d80_cm, d80_deg, eff_area, eff_flen).
-    getStdDev(key)
-        Get std dev of key(d80_cm, d80_deg, eff_area, eff_flen).
-    images()
-        Get list of PSFImages.
+    getRunScriptFile(runNumber)
+        Get the full path of the run script file for a given run number.
+    getRunLogFile(runNumber)
+        Get the full path of the run log file.
+    getCorsikaLogFile(runNumber)
+        Get the full path of the CORSIKA log file.
+    getCorsikaOutputFile(runNumber)
+        Get the full path of the CORSIKA output file.
     '''
 
     def __init__(
@@ -65,25 +79,21 @@ class ShowerSimulator:
         showerConfigFile=None
     ):
         '''
-        RayTracing init.
+        ShowerSimulator init.
 
         Parameters
         ----------
-        telescopeModel: TelescopeModel
-            Instance of the TelescopeModel class.
         label: str
             Instance label.
-        simtelSourcePath: str (or Path), optional
-            Location of sim_telarray installation. If not given, it will be taken from the
-            config.yml file.
-        filesLocation: str (or Path), optional
-            Parent location of the output files created by this class. If not given, it will be
-            taken from the config.yml file.
-        singleMirrorMode: bool
-        useRandomFocalLength: bool
-        **kwargs:
-            Physical parameters with units (if applicable). Options: zenithAngle, offAxisAngle,
-            sourceDistance, mirrorNumbers
+        filesLocation: str or Path.
+            Location of the output files. If not given, it will be set from \
+            the config.yml file.
+        simtelSourcePath: str or Path
+            Location of source of the sim_telarray/CORSIKA package.
+        showerConfigData: dict
+            Dict with shower config data.
+        showerConfigFile: str or Path
+            Path to yaml file containing shower config data.
         '''
         self._logger = logging.getLogger(__name__)
         self._logger.debug('Init CorsikaRunner')
@@ -101,26 +111,25 @@ class ShowerSimulator:
         showerConfigData = collectDataFromYamlOrDict(showerConfigFile, showerConfigData)
         self._loadShowerConfigData(showerConfigData)
         self._setCorsikaRunner()
-
     # End of init
 
     def _loadShowerConfigData(self, showerConfigData):
-
-        # Validating existence of site and layoutName entries.
-        for par in ['site', 'layoutName']:
-            if par not in showerConfigData:
-                msg = '{} was not given in showerConfig'.format(par)
-                self._logger.error(msg)
-                raise MissingRequiredEntryInShowerConfig(msg)
+        ''' Validate showerConfigData and store the relevant data in variables.'''
 
         # Copying showerConfigData to corsikaConfigData
+        # Few keys will be removed before passing it to CorsikaRunner
         self._corsikaConfigData = copy(showerConfigData)
 
-        self.site = names.validateSiteName(showerConfigData['site'])
-        self.layoutName = names.validateLayoutArrayName(showerConfigData['layoutName'])
-
-        self._corsikaConfigData.pop('site')
-        self._corsikaConfigData.pop('layoutName')
+        # Storing site and layoutName entries in attributes.
+        try:
+            self.site = names.validateSiteName(showerConfigData['site'])
+            self.layoutName = names.validateLayoutArrayName(showerConfigData['layoutName'])
+            self._corsikaConfigData.pop('site')
+            self._corsikaConfigData.pop('layoutName')
+        except KeyError:
+            msg = 'site and/or layoutName were not given in showerConfig'
+            self._logger.error(msg)
+            raise MissingRequiredEntryInShowerConfig(msg)
 
         # Grabbing runList and runRange
         runList = showerConfigData.get('runList', None)
@@ -137,6 +146,7 @@ class ShowerSimulator:
         self._corsikaConfigData.pop('corsikaParametersFile', None)
 
     def _setCorsikaRunner(self):
+        '''Creating a CorsikaRunner and setting it to self._corsikaRunner. '''
         self._corsikaRunner = CorsikaRunner(
             site=self.site,
             layoutName=self.layoutName,
@@ -148,18 +158,47 @@ class ShowerSimulator:
         )
 
     def run(self, runList=None, runRange=None):
+        '''
+        Run simulation.
 
+        Parameters
+        ----------
+        runList: list
+            List of run numbers to be simulated.
+        runRange: list
+            List of len 2 with the limits ofthe range for runs to be simulated.
+
+        Raises
+        ------
+        InvalidRunsToSimulate
+            If runs in runList or runRange are invalid.
+        '''
         runsToSimulate = self._getRunsToSimulate(runList, runRange)
         self._logger.info('Running scripts for {} runs'.format(len(runsToSimulate)))
 
         self._logger.info('Starting running scripts')
         for run in runsToSimulate:
             runScript = self._corsikaRunner.getRunScriptFile(runNumber=run)
-
             self._logger.info('Run {} - Running script {}'.format(run, runScript))
             os.system(runScript)
 
     def submit(self, runList=None, runRange=None, submitCommand=None):
+        '''
+        Submit a run script as a job. The submit command can be given by \
+        submitCommand or it will be taken from the config.yml file.
+
+        Parameters
+        ----------
+        runList: list
+            List of run numbers to be simulated.
+        runRange: list
+            List of len 2 with the limits ofthe range for runs to be simulated.
+
+        Raises
+        ------
+        InvalidRunsToSimulate
+            If runs in runList or runRange are invalid.
+        '''
 
         subCmd = submitCommand if submitCommand is not None else cfg.get('submissionCommand')
         self._logger.info('Submission command: {}'.format(subCmd))
