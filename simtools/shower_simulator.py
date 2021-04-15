@@ -1,6 +1,7 @@
 
 import logging
 import os
+import numpy as np
 from pathlib import Path
 from copy import copy
 
@@ -121,29 +122,19 @@ class ShowerSimulator:
         self._corsikaConfigData.pop('site')
         self._corsikaConfigData.pop('layoutName')
 
-        # Grabbing runs (and turn it into a list)
-        self.runs = None if 'runs' not in showerConfigData.keys() else showerConfigData['runs']
-        if not isinstance(self.runs, list):
-            self._logger.debug('Turning runs into a list')
-            self.runs = list(self.runs)
-
-        # Validating runs - must be ints
-        if not all(isinstance(r, int) for r in self.runs):
-            msg = 'runs given in showerConfig must be all integers.'
-            self._logger.error(msg)
-            raise InvalidEntryInShowerConfig(msg)
+        # Grabbing runList and runRange
+        runList = showerConfigData.get('runList', None)
+        runRange = showerConfigData.get('runRange', None)
+        # Validating and merging runList and runRange, if needed.
+        self.runs = self._validateRunListAndRange(runList, runRange)
 
         # Removing runs key from corsikaConfigData
-        if 'runs' in self._corsikaConfigData.keys():
-            self._corsikaConfigData.pop('runs')
+        self._corsikaConfigData.pop('runList', None)
+        self._corsikaConfigData.pop('runRange', None)
 
         # Searching for corsikaParametersFile in showerConfig
-        if 'corsikaParametersFile' in showerConfigData.keys():
-            self._corsikaParametersFile = showerConfigData['corsikaParametersFile']
-            self._corsikaConfigData.pop('corsikaParametersFile')
-        else:
-            # corsikaParametersFile not given - CorsikaConfig will use the default one
-            self._corsikaParametersFile = None
+        self._corsikaParametersFile = showerConfigData.get('corsikaParametersFile', None)
+        self._corsikaConfigData.pop('corsikaParametersFile', None)
 
     def _setCorsikaRunner(self):
         self._corsikaRunner = CorsikaRunner(
@@ -156,24 +147,27 @@ class ShowerSimulator:
             corsikaConfigData=self._corsikaConfigData
         )
 
-    def run(self, runs=None):
+    def run(self, runList=None, runRange=None):
 
-        runsToSimulate = self._validateRunsToSimulate(runs)
+        runsToSimulate = self._getRunsToSimulate(runList, runRange)
+        self._logger.info('Running scripts for {} runs'.format(len(runsToSimulate)))
 
-        self._logger.info('Start running scripts')
+        self._logger.info('Starting running scripts')
         for run in runsToSimulate:
             runScript = self._corsikaRunner.getRunScriptFile(runNumber=run)
 
             self._logger.info('Run {} - Running script {}'.format(run, runScript))
             os.system(runScript)
 
-    def submit(self, runs=None, submitCommand=None):
+    def submit(self, runList=None, runRange=None, submitCommand=None):
 
         subCmd = submitCommand if submitCommand is not None else cfg.get('submissionCommand')
         self._logger.info('Submission command: {}'.format(subCmd))
 
-        runsToSimulate = self._validateRunsToSimulate(runs)
+        runsToSimulate = self._getRunsToSimulate(runList, runRange)
+        self._logger.info('Submitting run scripts for {} runs'.format(len(runsToSimulate)))
 
+        self._logger.info('Starting submission')
         for run in runsToSimulate:
             runScript = self._corsikaRunner.getRunScriptFile(runNumber=run)
             self._logger.info('Run {} - Submitting script {}'.format(run, runScript))
@@ -182,43 +176,68 @@ class ShowerSimulator:
             self._logger.debug(shellCommand)
             os.system(shellCommand)
 
-    def _validateRunsToSimulate(self, runs):
+    def _getRunsToSimulate(self, runList, runRange):
 
-        if runs is not None:
-            runsToSimulate = list(runs)
-            if not all(isinstance(r, int) for r in runsToSimulate):
-                msg = 'runs to simulate must be all integers - aborting simulation.'
+        if runList is None and runRange is None:
+            if self.runs is None:
+                msg = (
+                    'Runs to simulate were not given as arguments nor '
+                    + 'in showerConfigData - aborting'
+                )
                 self._logger.error(msg)
                 raise InvalidRunsToSimulate(msg)
-        elif self.runs is not None:
-            runsToSimulate = self.runs
+            else:
+                return self.runs
         else:
-            msg = (
-                'runs to simulate were not given as arguments neither in showerConfigData'
-                + ' - aborting simulation'
-            )
-            self._logger.error(msg)
-            raise InvalidRunsToSimulate(msg)
-        return runsToSimulate
+            return self._validateRunListAndRange(runList, runRange)
 
-    def getListOfOutputFiles(self, runs=None):
+    def _validateRunListAndRange(self, runList, runRange):
+
+        if runList is None and runRange is None:
+            self._logger.debug('Nothing to validate - runList and runRange not given.')
+            return None
+
+        validatedRuns = list()
+        if runList is not None:
+            if not all(isinstance(r, int) for r in runList):
+                msg = 'runList must contain only integers.'
+                self._logger.error(msg)
+                raise InvalidRunsToSimulate(msg)
+            else:
+                self._logger.debug('runList: {}'.format(runList))
+                validatedRuns = list(runList)
+
+        if runRange is not None:
+            if not all(isinstance(r, int) for r in runRange) or len(runRange) != 2:
+                msg = 'runRange must contain two integers only.'
+                self._logger.error(msg)
+                raise InvalidRunsToSimulate(msg)
+            else:
+                runRange = np.arange(runRange[0], runRange[1])
+                self._logger.debug('runRange: {}'.format(runRange))
+                validatedRuns.extend(list(runRange))
+
+        validatedRunsUnique = set(validatedRuns)
+        return list(validatedRunsUnique)
+
+    def getListOfOutputFiles(self, runList=None, runRange=None):
         self._logger.info('Getting list of output files')
-        return self._getListOfFiles(runs=runs, which='output')
+        return self._getListOfFiles(runList=runList, runRange=runRange, which='output')
 
-    def printListOfOutputFiles(self, runs=None):
+    def printListOfOutputFiles(self, runList=None, runRange=None):
         self._logger.info('Printing list of output files')
-        self._printListOfFiles(runs=runs, which='output')
+        self._printListOfFiles(runList=runList, runRange=runRange, which='output')
 
-    def getListOfLogFiles(self, runs=None):
+    def getListOfLogFiles(self, runList=None, runRange=None):
         self._logger.info('Getting list of log files')
-        return self._getListOfFiles(runs=runs, which='log')
+        return self._getListOfFiles(runList=runList, runRange=runRange, which='log')
 
-    def printListOfLogFiles(self, runs=None):
+    def printListOfLogFiles(self, runList=None, runRange=None):
         self._logger.info('Printing list of log files')
-        self._printListOfFiles(runs=runs, which='log')
+        self._printListOfFiles(runList=runList, runRange=runRange, which='log')
 
-    def _getListOfFiles(self, which, runs=None):
-        runsToList = self._validateRunsToSimulate(runs)
+    def _getListOfFiles(self, which, runList, runRange):
+        runsToList = self._getRunsToSimulate(runList=runList, runRange=runRange)
 
         outputFiles = list()
         for run in runsToList:
@@ -229,12 +248,12 @@ class ShowerSimulator:
             else:
                 self._logger.error('Invalid type of files - log or output')
                 return None
-            outputFiles.append(file)
+            outputFiles.append(str(file))
 
         return outputFiles
 
-    def _printListOfFiles(self, which, runs=None):
-        files = self._getListOfFiles(runs=runs, which=which)
+    def _printListOfFiles(self, which, runList, runRange):
+        files = self._getListOfFiles(runList=runList, runRange=runRange, which=which)
         for f in files:
             print(f)
 

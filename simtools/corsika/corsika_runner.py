@@ -338,7 +338,7 @@ class CorsikaRunner:
         '''
         if runNumber is None:
             return self.corsikaConfig.getUserParameter('RUNNR')
-        elif not isinstance(runNumber, int) or runNumber < 1:
+        elif not float(runNumber).is_integer() or runNumber < 1:
             msg = 'Invalid type of run number ({}) - it must be an uint.'.format(runNumber)
             self._logger.error(msg)
             raise ValueError(msg)
