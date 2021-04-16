@@ -102,15 +102,20 @@ if __name__ == '__main__':
         required=True
     )
     parser.add_argument(
-        '-m',
-        '--model_version',
-        help='Model version (default=prod4)',
+        '--primary',
+        help='Name of the primary particle (e.g. proton, helium ...)',
         type=str,
-        default='prod4'
+        required=True
     )
     parser.add_argument(
         '--nruns',
         help='Number of runs (default=100)',
+        type=int,
+        default=100
+    )
+    parser.add_argument(
+        '--nevents',
+        help='Number of events/run (default=100)',
         type=int,
         default=100
     )
@@ -125,18 +130,6 @@ if __name__ == '__main__':
         help='Azimuth angle in deg (default=0)',
         type=float,
         default=0
-    )
-    parser.add_argument(
-        '--nevents',
-        help='Number of events/run (default=100)',
-        type=int,
-        default=100
-    )
-    parser.add_argument(
-        '--primary',
-        help='Name of the primary particle (e.g. proton, helium ...)',
-        type=str,
-        required=True
     )
     parser.add_argument(
         '--output',
@@ -171,7 +164,7 @@ if __name__ == '__main__':
         'corsikaDataDirectory': args.output,
         'site': args.site,
         'layoutName': args.array,
-        'runRange': [1, args.nruns],
+        'runRange': [1, args.nruns + 1],
         'nshow': args.nevents,
         'primary': args.primary,
         'erange': [100 * u.GeV, 300 * u.TeV],
@@ -187,12 +180,16 @@ if __name__ == '__main__':
         showerConfigData=showerConfigData
     )
 
-    showerSimulator.submit(submitCommand='more ')
+    if not args.test:
+        showerSimulator.submit()
+    else:
+        logger.info('Test flag is on - it will not submit any job.')
+        logger.info('This is an example of the run script:')
+        showerSimulator.submit(submitCommand='more ')
 
     # Exporting the list of output/log/input files into the application folder
     outputFileList = outputDir.joinpath('outputFiles_{}.list'.format(args.primary))
     logFileList = outputDir.joinpath('logFiles_{}.list'.format(args.primary))
-    inputFileList = outputDir.joinpath('inputFiles_{}.list'.format(args.primary))
 
     def printListIntoFile(listOfFiles, fileName):
         with open(fileName, 'w') as f:
@@ -200,8 +197,6 @@ if __name__ == '__main__':
                 f.write(line + '\n')
 
     logger.info('List of output files exported to {}'.format(outputFileList))
-    printListIntoFile(showerSimulator.getListOfOuputFiles(), outputFileList)
+    printListIntoFile(showerSimulator.getListOfOutputFiles(), outputFileList)
     logger.info('List of log files exported to {}'.format(logFileList))
     printListIntoFile(showerSimulator.getListOfLogFiles(), logFileList)
-    logger.info('List of input files exported to {}'.format(inputFileList))
-    printListIntoFile(showerSimulator.getListOfInputFiles(), inputFileList)
