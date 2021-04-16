@@ -5,6 +5,7 @@ from copy import copy
 
 import simtools.config as cfg
 import simtools.io_handler as io
+import simtools.util.general as gen
 from simtools.corsika.corsika_config import CorsikaConfig, MissingRequiredInputInCorsikaConfigData
 from simtools.util import names
 from simtools.util.general import collectDataFromYamlOrDict
@@ -190,7 +191,7 @@ class CorsikaRunner:
         self._corsikaLogDir = corsikaBaseDir.joinpath('log')
         self._corsikaLogDir.mkdir(parents=True, exist_ok=True)
 
-    def getRunScriptFile(self, runNumber=None):
+    def getRunScriptFile(self, runNumber=None, extraCommands=None):
         '''
         Get the full path of the run script file for a given run number.
 
@@ -224,7 +225,16 @@ class CorsikaRunner:
         pfpCommand = self._getPfpCommand(runNumber, corsikaInputTmpFile)
         autoinputsCommand = self._getAutoinputsCommand(runNumber, corsikaInputTmpFile)
 
+        extraCommands = self._getExtraCommands(extraCommands)
+        self._logger.debug('Extra commands to be added to the run script {}'.format(extraCommands))
+
         with open(scriptFilePath, 'w') as file:
+            if extraCommands is not None:
+                file.write('# Writing extras\n')
+                for line in extraCommands:
+                    file.write('{}\n'.format(line))
+                file.write('# End of extras\n\n')
+
             file.write('export CORSIKA_DATA={}\n'.format(self._corsikaDataDir))
             file.write('# Creating CORSIKA_DATA\n')
             file.write('mkdir -p {}\n'.format(self._corsikaDataDir))
@@ -265,6 +275,19 @@ class CorsikaRunner:
         cmd += ' {} > {} 2>&1'.format(inputTmpFile, logFile)
         cmd + ' || exit 3\n'
         return cmd
+
+    def _getExtraCommands(self, extra):
+        '''
+        Get extra commands by combining the one given as argument and 
+        what is given in config.yml
+        '''
+        extra = gen.copyAsList(extra) if extra is not None else list()
+
+        extraFromConfig = cfg.get('extraCommands')
+        extraFromConfig = gen.copyAsList(extraFromConfig) if extraFromConfig is not None else list()
+
+        extra.extend(extraFromConfig)
+        return extra
 
     def getRunLogFile(self, runNumber=None):
         '''
