@@ -38,6 +38,7 @@ List of Applications
 * `validate_camera_fov`_
 * `make_regular_array`_
 * `produce_array_config`_
+* `sim_showers_for_trigger_rates`_
 
 
 derive_mirror_rnda
@@ -88,4 +89,10 @@ produce_array_config
 --------------------
 
 .. automodule:: produce_array_config
+   :members:
+
+sim_showers_for_trigger_rates
+-----------------------------
+
+.. automodule:: sim_showers_for_trigger_rates
    :members:
