@@ -131,9 +131,8 @@ class CorsikaRunner:
         self._simtelSourcePath = Path(cfg.getConfigArg('simtelPath', simtelSourcePath))
         self._filesLocation = cfg.getConfigArg('outputLocation', filesLocation)
         self._outputDirectory = io.getCorsikaOutputDirectory(self._filesLocation, self.label)
-        if not self._outputDirectory.exists():
-            self._outputDirectory.mkdir(parents=True, exist_ok=True)
-            self._logger.debug('Creating directory {}'.format(self._outputDirectory))
+        self._outputDirectory.mkdir(parents=True, exist_ok=True)
+        self._logger.debug('Creating output dir {}, if needed,'.format(self._outputDirectory))
 
         corsikaConfigData = collectDataFromYamlOrDict(corsikaConfigFile, corsikaConfigData)
         self._loadCorsikaConfigData(corsikaConfigData)
@@ -143,14 +142,23 @@ class CorsikaRunner:
     def _loadCorsikaConfigData(self, corsikaConfigData):
         ''' Reads corsikaConfigData, creates corsikaConfig and corsikaInputFile. '''
 
-        if 'corsikaDataDirectory' not in corsikaConfigData.keys():
-            msg = 'corsikaDataDirectory not given in corsikaConfig'
-            self._logger.error(msg)
-            raise MissingRequiredEntryInCorsikaConfig(msg)
+        corsikaDataDirectoryFromConfig = corsikaConfigData.get('corsikaDataDirectory', None)
+        if corsikaDataDirectoryFromConfig is None:
+            # corsikaDataDirectory not given (or None).
+            msg = (
+                'corsikaDataDirectory not given in corsikaConfig '
+                '- default output directory will be set.'
+            )
+            self._logger.warning(msg)
+            self._corsikaDataDirectory = self._outputDirectory
         else:
-            self._corsikaDataDirectory = Path(corsikaConfigData['corsikaDataDirectory'])
-            self._corsikaConfigData = copy(corsikaConfigData)
-            self._corsikaConfigData.pop('corsikaDataDirectory')
+            # corsikaDataDirectory given and not None.
+            self._corsikaDataDirectory = Path(corsikaDataDirectoryFromConfig)
+
+        # Copying corsikaConfigData and removing corsikaDataDirectory
+        # (it does not go to CorsikaConfig)
+        self._corsikaConfigData = copy(corsikaConfigData)
+        self._corsikaConfigData.pop('corsikaDataDirectory', None)
 
         # Creating corsikaConfig - this will also validate the input given
         # in corsikaConfigData
