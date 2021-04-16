@@ -330,3 +330,19 @@ def getLogLevelFromUser(logLevel):
         )
     else:
         return possibleLevels[logLevelLower]
+
+def copyAsList(value):
+    '''
+    Copy value and, if it is not a list, turn it into a list with a single entry.
+
+    Parameters
+    ----------
+    value: single variable of any type, or list
+
+    Returns
+    -------
+    value: list
+        Copy of value if it is a list of [value] otherwise.
+    '''
+    return copy.copy(value) if isinstance(value, list) else [value]
+

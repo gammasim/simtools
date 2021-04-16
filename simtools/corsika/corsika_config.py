@@ -1,12 +1,12 @@
 import logging
 import random
-from copy import copy
 
 import astropy.units as u
 from astropy.io.misc import yaml
 
 import simtools.config as cfg
 import simtools.io_handler as io
+import simtools.util.general as gen
 from simtools.util import names
 from simtools.layout.layout_array import LayoutArray
 from simtools.util.general import collectDataFromYamlOrDict
@@ -245,7 +245,7 @@ class CorsikaConfig:
         '''
 
         # Turning valueArgs into a list, if it is not.
-        valueArgs = self._copyAsList(valueArgsIn)
+        valueArgs = gen.copyAsList(valueArgsIn)
 
         if len(valueArgs) == 1 and parName in ['THETAP', 'PHIP']:
             # Fixing single value zenith or azimuth angle.
@@ -267,7 +267,7 @@ class CorsikaConfig:
             return valueArgs
         else:
             # Turning parInfo['unit'] into a list, if it is not.
-            parUnit = self._copyAsList(parInfo['unit'])
+            parUnit = gen.copyAsList(parInfo['unit'])
 
             # Checking units and converting them, if needed.
             valueArgsWithUnits = list()
@@ -289,10 +289,6 @@ class CorsikaConfig:
 
             return valueArgsWithUnits
     # End of _validateAndConvertArgument
-
-    def _copyAsList(self, value):
-        ''' Copy value and, if it is not a list, turn it into a list with a single entry. '''
-        return copy(value) if isinstance(value, list) else [value]
 
     def _convertPrimaryInputAndStorePrimaryName(self, value):
         '''

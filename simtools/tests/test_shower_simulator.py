@@ -89,11 +89,11 @@ class TestShowerSimulator(unittest.TestCase):
         files = newShowerSimulator.getListOfOutputFiles(runList=[3])
         self.assertTrue('/' + self.label + '/' in files[0])
 
-    # def test_submitting(self):
-    #     self.showerSimulator.submit(runList=[2], submitCommand='more ')
+    def test_submitting(self):
+        self.showerSimulator.submit(runList=[2], submitCommand='more ')
 
-    # def test_runs_range(self):
-    #     self.showerSimulator.submit(runRange=[4, 8], submitCommand='more ')
+    def test_runs_range(self):
+        self.showerSimulator.submit(runRange=[4, 8], submitCommand='more ')
 
     def test_get_list_of_files(self):
         files = self.showerSimulator.getListOfOutputFiles()
@@ -106,7 +106,3 @@ class TestShowerSimulator(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
-
-    tt = TestShowerSimulator()
-    tt.setUp()
-    tt.test_no_corsika_data()
