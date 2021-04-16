@@ -18,6 +18,7 @@ logger.setLevel(logging.DEBUG)
 class TestShowerSimulator(unittest.TestCase):
 
     def setUp(self):
+        self.label = 'test-shower-simulator'
         self.showerConfigData = {
             'corsikaDataDirectory': './corsika-data',
             'site': 'South',
@@ -34,7 +35,7 @@ class TestShowerSimulator(unittest.TestCase):
             'cscat': [10, 1500 * u.m, 0]
         }
         self.showerSimulator = ShowerSimulator(
-            label='test-shower-simulator',
+            label=self.label,
             showerConfigData=self.showerConfigData
         )
 
@@ -43,7 +44,7 @@ class TestShowerSimulator(unittest.TestCase):
         newShowerConfigData.pop('site')
         with self.assertRaises(MissingRequiredEntryInShowerConfig):
             newShowerSimulator = ShowerSimulator(
-                label='test-shower-simulator',
+                label=self.label,
                 showerConfigData=newShowerConfigData
             )
             newShowerSimulator.runs
@@ -53,7 +54,7 @@ class TestShowerSimulator(unittest.TestCase):
         newShowerConfigData['runList'] = [1, 2.5, 'bla']  # Invalid run list
         with self.assertRaises(InvalidRunsToSimulate):
             newShowerSimulator = ShowerSimulator(
-                label='test-shower-simulator',
+                label=self.label,
                 showerConfigData=newShowerConfigData
             )
             newShowerSimulator.runs
@@ -63,7 +64,7 @@ class TestShowerSimulator(unittest.TestCase):
         newShowerConfigData['runList'] = [1, 2, 4]
         newShowerConfigData['runRange'] = [5, 8]
         newShowerSimulator = ShowerSimulator(
-            label='test-shower-simulator',
+            label=self.label,
             showerConfigData=newShowerConfigData
         )
         self.assertEqual(newShowerSimulator.runs, [1, 2, 4, 5, 6, 7])
@@ -72,7 +73,7 @@ class TestShowerSimulator(unittest.TestCase):
         newShowerConfigData['runList'] = [1, 3, 4]
         newShowerConfigData['runRange'] = [3, 7]
         newShowerSimulator = ShowerSimulator(
-            label='test-shower-simulator',
+            label=self.label,
             showerConfigData=newShowerConfigData
         )
         self.assertEqual(newShowerSimulator.runs, [1, 3, 4, 5, 6])
@@ -81,12 +82,12 @@ class TestShowerSimulator(unittest.TestCase):
         newShowerConfigData = copy(self.showerConfigData)
         newShowerConfigData.pop('corsikaDataDirectory')
         newShowerSimulator = ShowerSimulator(
-            label='test-shower-simulator',
+            label=self.label,
             showerConfigData=newShowerConfigData
         )
         newShowerSimulator.runs
         files = newShowerSimulator.getListOfOutputFiles(runList=[3])
-        print(files)
+        self.assertTrue('/' + self.label + '/' in files[0])
 
     def test_submitting(self):
         self.showerSimulator.submit(runList=[2], submitCommand='more ')
