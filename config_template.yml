@@ -32,7 +32,10 @@ dataLocation: './data/'
 # Path to the root sim_telarray directory, containing the sim_telarray software unpacked and compiled.
 simtelPath: None
 
+# Command used to submit jobs to a batch system.
 submissionCommand: 'qsub '
+# List of xtra commands to be added in the run scripts for submmission.
+# Ex. extraCommands = ['export PATH=/afs/ifh.de/group/cta/cta/software/zstd/:${PATH}']
 extraCommands: []
 
 
