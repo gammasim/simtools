@@ -182,7 +182,7 @@ class ShowerSimulator:
             self._logger.info('Run {} - Running script {}'.format(run, runScript))
             os.system(runScript)
 
-    def submit(self, runList=None, runRange=None, submitCommand=None, extra=None):
+    def submit(self, runList=None, runRange=None, submitCommand=None, extraCommands=None):
         '''
         Submit a run script as a job. The submit command can be given by \
         submitCommand or it will be taken from the config.yml file.
@@ -208,7 +208,10 @@ class ShowerSimulator:
 
         self._logger.info('Starting submission')
         for run in runsToSimulate:
-            runScript = self._corsikaRunner.getRunScriptFile(runNumber=run, extra=extra)
+            runScript = self._corsikaRunner.getRunScriptFile(
+                runNumber=run,
+                extraCommands=extraCommands
+            )
             self._logger.info('Run {} - Submitting script {}'.format(run, runScript))
 
             shellCommand = subCmd + ' ' + str(runScript)

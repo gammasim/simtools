@@ -32,6 +32,7 @@ dataLocation: './data/'
 # Path to the root sim_telarray directory, containing the sim_telarray software unpacked and compiled.
 simtelPath: None
 
-# Not used yet
 submissionCommand: 'qsub '
+extraCommands: []
+
 
