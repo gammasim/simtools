@@ -77,6 +77,17 @@ class TestShowerSimulator(unittest.TestCase):
         )
         self.assertEqual(newShowerSimulator.runs, [1, 3, 4, 5, 6])
 
+    def test_no_corsika_data(self):
+        newShowerConfigData = copy(self.showerConfigData)
+        newShowerConfigData.pop('corsikaDataDirectory')
+        newShowerSimulator = ShowerSimulator(
+            label='test-shower-simulator',
+            showerConfigData=newShowerConfigData
+        )
+        newShowerSimulator.runs
+        outFile = newShowerSimulator.getOutputFile(runList=[3])
+        print(outFile)
+
     def test_submitting(self):
         self.showerSimulator.submit(runList=[2], submitCommand='more ')
 
@@ -93,4 +104,8 @@ class TestShowerSimulator(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    unittest.main()
+    # unittest.main()
+
+    tt = TestShowerSimulator()
+    tt.setUp()
+    tt.test_no_corsika_data()
