@@ -69,20 +69,12 @@
 '''
 
 import logging
-import matplotlib.pyplot as plt
 import argparse
-import yaml
-from collections import OrderedDict
 
-import numpy as np
 import astropy.units as u
 
-import simtools.io_handler as io
 import simtools.util.general as gen
-import simtools.config as cfg
-from simtools.ray_tracing import RayTracing
-from simtools.model.telescope_model import TelescopeModel
-from simtools import visualize
+from simtools.shower_simulator import ShowerSimulator
 
 
 if __name__ == '__main__':
@@ -94,9 +86,16 @@ if __name__ == '__main__':
         )
     )
     parser.add_argument(
-        '-t',
-        '--tel_name',
-        help='Telescope name (e.g. North-MST-FlashCam-D, North-LST-1)',
+        '-a',
+        '--array',
+        help='Name of the array (e.g. 1MST, 4 LST ...)',
+        type=str,
+        required=True
+    )
+    parser.add_argument(
+        '-s',
+        '--site',
+        help='Site name (North or South)',
         type=str,
         required=True
     )
@@ -108,10 +107,10 @@ if __name__ == '__main__':
         default='prod4'
     )
     parser.add_argument(
-        '--src_distance',
-        help='Source distance in km (default=10)',
-        type=float,
-        default=10
+        '--nruns',
+        help='Number of runs (default=100)',
+        type=int,
+        default=100
     )
     parser.add_argument(
         '--zenith',
@@ -120,18 +119,32 @@ if __name__ == '__main__':
         default=20
     )
     parser.add_argument(
-        '--data',
-        help='Data file name with the measured PSF vs radius [cm]',
-        type=str
+        '--azimuth',
+        help='Azimuth angle in deg (default=0)',
+        type=float,
+        default=0
     )
     parser.add_argument(
-        '--pars',
-        help='Yaml file with the model parameters to be replaced',
-        type=str
+        '--nevents',
+        help='Number of events/run (default=100)',
+        type=int,
+        default=100
+    )
+    parser.add_argument(
+        '--primary',
+        help='Name of the primary particle (e.g. proton, helium ...)',
+        type=str,
+        required=True
+    )
+    parser.add_argument(
+        '--output',
+        help='Path of the output directory where the simulations will be saved.',
+        type=str,
+        default=None
     )
     parser.add_argument(
         '--test',
-        help='Test option will be faster by simulating fewer photons.',
+        help='Test option will not submit any job.',
         action='store_true'
     )
     parser.add_argument(
@@ -144,64 +157,29 @@ if __name__ == '__main__':
     )
 
     args = parser.parse_args()
-    label = 'compare_cumulative_psf'
+    label = 'trigger_rates'
 
     logger = logging.getLogger()
     logger.setLevel(gen.getLogLevelFromUser(args.logLevel))
 
-    # Output directory to save files related directly to this app
-    outputDir = io.getApplicationOutputDirectory(cfg.get('outputLocation'), label)
+    showerConfigData = {
+        'corsikaDataDirectory': args.output,
+        'site': args.site,
+        'layoutName': args.array,
+        'runRange': [1, args.nruns],
+        'nshow': args.nevents,
+        'primary': args.primary,
+        'erange': [100 * u.GeV, 300 * u.TeV],
+        'eslope': -2,
+        'zenith': args.zenith * u.deg,
+        'azimuth': args.azimuth * u.deg,
+        'viewcone': 10 * u.deg,
+        'cscat': [20, 1500 * u.m, 0]
+    }
 
-    telModel = TelescopeModel(
-        telescopeName=args.tel_name,
-        version=args.model_version,
-        label=label
+    showerSimulator = ShowerSimulator(
+        label=label,
+        showerConfigData=showerConfigData
     )
 
-    # New parameters
-    if args.pars is not None:
-        with open(args.pars) as file:
-            newPars = yaml.load(file, Loader=yaml.FullLoader)
-        telModel.changeParameters(**newPars)
-
-    ray = RayTracing(
-        telescopeModel=telModel,
-        sourceDistance=args.src_distance * u.km,
-        zenithAngle=args.zenith * u.deg,
-        offAxisAngle=[0. * u.deg]
-    )
-
-    ray.simulate(test=args.test, force=False)
-    ray.analyze(force=False)
-
-    # Plotting cumulative PSF
-    im = ray.images()[0]
-
-    print('d80 in cm = {}'.format(im.getPSF()))
-
-    # Plotting cumulative PSF
-    dataToPlot = OrderedDict()
-    dataToPlot[r'sim$\_$telarray'] = im.getCumulativeData()
-    if args.data is not None:
-        dataFile = cfg.findFile(args.data)
-        dataToPlot['measured'] = loadData(dataFile)
-    plt = visualize.plot1D(dataToPlot)
-    plt.gca().set_ylim(0, 1.05)
-
-    plotFileName = label + '_' + telModel.telescopeName + '_cumulativePSF'
-    plotFile = outputDir.joinpath(plotFileName)
-    for f in ['pdf', 'png']:
-        plt.savefig(str(plotFile) + '.' + f, format=f, bbox_inches='tight')
-    plt.clf()
-
-    # Plotting image
-    dataToPlot = im.getImageData()
-    visualize.plotHist2D(dataToPlot, bins=80)
-    circle = plt.Circle((0, 0), im.getPSF(0.8) / 2, color='k', fill=False, lw=2, ls='--')
-    plt.gca().add_artist(circle)
-
-    plotFileName = label + '_' + telModel.telescopeName + '_image'
-    plotFile = outputDir.joinpath(plotFileName)
-    for f in ['pdf', 'png']:
-        plt.savefig(str(plotFile) + '.' + f, format=f, bbox_inches='tight')
-    plt.clf()
+    showerSimulator.submit(submitCommand='more ')
