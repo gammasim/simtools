@@ -48,6 +48,19 @@ class TestCorsikaRunner(unittest.TestCase):
             with self.assertRaises(ValueError):
                 _ = self.corsikaRunner.getRunScriptFile(run)
 
+    def test_run_script_with_extra(self):
+        extra = ['testing', 'testing-extra-2']
+        script = self.corsikaRunner.getRunScriptFile(runNumber=3, extraCommands=extra)
+
+        def wordInFile(word, file):
+            with open(file, 'r') as ff:
+                for ll in ff:
+                    if word in ll:
+                        return True
+                return False
+
+        self.assertTrue(wordInFile('testing-extra-2', script))
+
 
 if __name__ == '__main__':
     unittest.main()
