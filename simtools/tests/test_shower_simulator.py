@@ -85,8 +85,8 @@ class TestShowerSimulator(unittest.TestCase):
             showerConfigData=newShowerConfigData
         )
         newShowerSimulator.runs
-        outFile = newShowerSimulator.getOutputFile(runList=[3])
-        print(outFile)
+        files = newShowerSimulator.getListOfOutputFiles(runList=[3])
+        print(files)
 
     def test_submitting(self):
         self.showerSimulator.submit(runList=[2], submitCommand='more ')
