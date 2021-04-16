@@ -117,7 +117,7 @@ if __name__ == '__main__':
         '--nevents',
         help='Number of events/run (default=100)',
         type=int,
-        default=100
+        default=100000
     )
     parser.add_argument(
         '--zenith',
