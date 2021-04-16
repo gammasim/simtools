@@ -73,6 +73,8 @@ import argparse
 
 import astropy.units as u
 
+import simtools.io_handler as io
+import simtools.config as cfg
 import simtools.util.general as gen
 from simtools.shower_simulator import ShowerSimulator
 
@@ -162,6 +164,9 @@ if __name__ == '__main__':
     logger = logging.getLogger()
     logger.setLevel(gen.getLogLevelFromUser(args.logLevel))
 
+    # Output directory to save files related directly to this app
+    outputDir = io.getApplicationOutputDirectory(cfg.get('outputLocation'), label)
+
     showerConfigData = {
         'corsikaDataDirectory': args.output,
         'site': args.site,
@@ -183,3 +188,20 @@ if __name__ == '__main__':
     )
 
     showerSimulator.submit(submitCommand='more ')
+
+    # Exporting the list of output/log/input files into the application folder
+    outputFileList = outputDir.joinpath('outputFiles_{}.list'.format(args.primary))
+    logFileList = outputDir.joinpath('logFiles_{}.list'.format(args.primary))
+    inputFileList = outputDir.joinpath('inputFiles_{}.list'.format(args.primary))
+
+    def printListIntoFile(listOfFiles, fileName):
+        with open(fileName, 'w') as f:
+            for line in listOfFiles:
+                f.write(line + '\n')
+
+    logger.info('List of output files exported to {}'.format(outputFileList))
+    printListIntoFile(showerSimulator.getListOfOuputFiles(), outputFileList)
+    logger.info('List of log files exported to {}'.format(logFileList))
+    printListIntoFile(showerSimulator.getListOfLogFiles(), logFileList)
+    logger.info('List of input files exported to {}'.format(inputFileList))
+    printListIntoFile(showerSimulator.getListOfInputFiles(), inputFileList)
