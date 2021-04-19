@@ -246,7 +246,7 @@ class ArrayModel:
                     telData.name,
                     *_allParsToChange[telData.name]
                 ))
-                telModel.changeParameters(**_allParsToChange[telData.name])
+                telModel.changeMultipleParameters(**_allParsToChange[telData.name])
                 telModel.setExtraLabel(telData.name)
     # End of _buildArrayModel
 

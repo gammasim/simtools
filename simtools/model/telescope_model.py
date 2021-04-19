@@ -47,11 +47,13 @@ class TelescopeModel:
         Verify if parameter is in the model.
     getParameter(parName):
         Get an existing parameter of the model.
-    addParameters(**kwargs)
+    addParameter(parName, value)
         Add new parameters to the model.
-    changeParameters(**kwargs)
+    changeParameter(parName, value)
         Change the value of existing parameters to the model.
-    removeParameters(**args)
+    changeMultipleParameters(parName, value)
+        Change the value of existing parameters to the model.
+    removeParameters(*args)
         Remove parameters from the model.
     exportConfigFile()
         Export config file for sim_telarray.
@@ -407,6 +409,25 @@ class TelescopeModel:
                 self._logger.warning('Value type differs from the current one')
             self._parameters[parName]['Value'] = value
             self._logger.debug('Changing parameter {}'.format(parName))
+        self._isConfigFileUpdated = False
+
+    def changeMultipleParameters(self, **kwargs):
+        '''
+        Change the value of EXISTING parameters to the model.
+        This function does not modify the DB, it affects only the current instance.
+
+        Parameters
+        ----------
+        **kwargs
+            Parameters should be passed as parameterName=value.
+
+        Raises
+        ------
+        ValueError
+            If the parameter to be changed does not exist.
+        '''
+        for par, value in kwargs.items():
+            self.changeParameter(par, value)
         self._isConfigFileUpdated = False
 
     def removeParameters(self, *args):
