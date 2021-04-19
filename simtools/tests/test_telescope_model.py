@@ -22,26 +22,32 @@ class TestTelescopeModel(unittest.TestCase):
     def test_handling_parameters(self):
         logger.info(
             'Old mirror_reflection_random_angle:{}'.format(
-                self.telModel.getParameter('mirror_reflection_random_angle')
+                self.telModel.getParameterValue('mirror_reflection_random_angle')
             )
         )
         logger.info('Changing mirror_reflection_random_angle')
         new_mrra = '0.0080 0 0'
-        self.telModel.changeParameters(mirror_reflection_random_angle=new_mrra)
+        self.telModel.changeParameter('mirror_reflection_random_angle', new_mrra)
         self.assertEqual(
-            self.telModel.getParameter('mirror_reflection_random_angle'),
+            self.telModel.getParameterValue('mirror_reflection_random_angle'),
             new_mrra
         )
 
         logging.info('Adding new_parameter')
         new_par = '23'
-        self.telModel.addParameters(new_parameter=new_par)
-        self.assertEqual(self.telModel.getParameter('new_parameter'), new_par)
+        self.telModel.addParameter('new_parameter', new_par)
+        self.assertEqual(self.telModel.getParameterValue('new_parameter'), new_par)
+
+        with self.assertRaises(KeyError):
+            self.telModel.getParameter('bla_bla')
 
     def test_flen_type(self):
-        flen = self.telModel.getParameter('focal_length')
-        logger.info('Focal Length = {}, type = {}'.format(flen, type(flen)))
-        self.assertIsInstance(flen, float)
+        flenInfo = self.telModel.getParameter('focal_length')
+        logger.info('Focal Length = {}, type = {}'.format(
+            flenInfo['Value'],
+            flenInfo['Type'])
+        )
+        self.assertIsInstance(flenInfo['Value'], float)
 
     def test_cfg_file(self):
         # Exporting
@@ -61,3 +67,7 @@ class TestTelescopeModel(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+    # tt = TestTelescopeModel()
+    # tt.setUp()
+    # tt.test_handling_parameters()
