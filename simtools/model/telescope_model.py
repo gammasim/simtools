@@ -489,7 +489,7 @@ class TelescopeModel:
             List of 4 parameters that decsribe the tel. transmission vs off-axis.
         '''
         pars = list()
-        for p in self.getParameter('telescope_transmission').split():
+        for p in self.getParameterValue('telescope_transmission').split():
             pars.append(float(p))
         return pars
 
@@ -612,7 +612,7 @@ class TelescopeModel:
             logging.error('Parameter {} does not exist'.format(par))
             return False
 
-        fileName = self.getParameter(par)
+        fileName = self.getParameterValue(par)
         file = cfg.findFile(fileName)
         with open(file, 'r') as f:
             is2D = '@RPOL@' in f.read()
