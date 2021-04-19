@@ -6,6 +6,7 @@ import simtools.io_handler as io
 from simtools import db_handler
 from simtools.model.telescope_model import TelescopeModel
 from simtools.layout.layout_array import LayoutArray
+from simtools.simtel.simtel_config_writer import SimtelConfigWriter
 from simtools.util import names
 from simtools.util.general import collectDataFromYamlOrDict
 
@@ -362,63 +363,20 @@ class ArrayModel:
 
         # Writing parameters to the file
         self._logger.info('Writing array config file - {}'.format(self._configFilePath))
-        with open(self._configFilePath, 'w') as file:
-            header = (
-                '%{}\n'.format(50 * '=')
-                + '% ARRAY CONFIGURATION FILE\n'
-                + '% Site: {}\n'.format(self.site)
-                + '% LayoutName: {}\n'.format(self.layoutName)
-                + '% ModelVersion: {}\n'.format(self.modelVersion)
-                + ('% Label: {}\n'.format(self.label) if self.label is not None else '')
-                + '%{}\n\n'.format(50 * '=')
-            )
-            file.write(header)
 
-            # Be carefull with the formating - simtel is sensitive
-            tab = ' ' * 3
+        simtelWriter = SimtelConfigWriter(
+            site=self.site,
+            layoutName=self.layoutName,
+            modelVersion=self.modelVersion,
+            label=self.label
+        )
+        simtelWriter.writeSimtelArrayConfigFile(
+            configFilePath=self._configFilePath,
+            layout=self.layout,
+            telescopeModel=self._telescopeModel,
+            siteParameters=self._siteParameters
+        )
 
-            file.write('#ifndef TELESCOPE\n')
-            file.write('# define TELESCOPE 0\n')
-            file.write('#endif\n\n')
-
-            # TELESCOPE 0 - global parameters
-            file.write('#if TELESCOPE == 0\n')
-            file.write(tab + 'echo *****************************\n')
-            file.write(tab + 'echo Site: {}\n'.format(self.site))
-            file.write(tab + 'echo LayoutName: {}\n'.format(self.layoutName))
-            file.write(tab + 'echo ModelVersion: {}\n'.format(self.modelVersion))
-            file.write(tab + 'echo *****************************\n\n')
-
-            # Writing site parameters
-            file.write(tab + '% Site parameters\n')
-            for par in self._siteParameters:
-                if par not in self.SITE_PARS_TO_WRITE_IN_CONFIG:
-                    continue
-                value = self._siteParameters[par]['Value']
-                file.write(tab + '{} = {}\n'.format(par, value))
-            file.write('\n')
-
-            # Writing common parameters
-            file.write(tab + '% Common parameters\n')
-            self._writeCommonParameters(file)
-            file.write('\n')
-
-            # Maximum telescopes
-            file.write(tab + 'maximum_telescopes = {}\n\n'.format(self.numberOfTelescopes))
-
-            # Default telescope - 0th tel in telescope list
-            telConfigFile = (
-                self._telescopeModel[0].getConfigFile(noExport=True).name
-            )
-            file.write('# include <{}>\n\n'.format(telConfigFile))
-
-            # Looping over telescopes - from 1 to ...
-            for count, telModel in enumerate(self._telescopeModel):
-                telConfigFile = telModel.getConfigFile(noExport=True).name
-                file.write('%{}\n'.format(self.layout[count].name))
-                file.write('#elif TELESCOPE == {}\n\n'.format(count + 1))
-                file.write('# include <{}>\n\n'.format(telConfigFile))
-            file.write('#endif \n\n')
     # END exportSimtelArrayConfigFile
 
     def _writeCommonParameters(self, file):
