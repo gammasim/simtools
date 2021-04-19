@@ -54,8 +54,6 @@ class ArrayModel:
         Get the path to the config file for sim_telarray.
     '''
 
-    SITE_PARS_TO_WRITE_IN_CONFIG = ['altitude', 'atmospheric_transmission']
-
     def __init__(
         self,
         label=None,
@@ -362,8 +360,7 @@ class ArrayModel:
         self._configFilePath = self._configFileDirectory.joinpath(configFileName)
 
         # Writing parameters to the file
-        self._logger.info('Writing array config file - {}'.format(self._configFilePath))
-
+        self._logger.info('Writing array config file into {}'.format(self._configFilePath))
         simtelWriter = SimtelConfigWriter(
             site=self.site,
             layoutName=self.layoutName,
@@ -378,47 +375,6 @@ class ArrayModel:
         )
 
     # END exportSimtelArrayConfigFile
-
-    def _writeCommonParameters(self, file):
-        # Common parameters taken from CTA-PROD4-common.cfg
-        # TODO: Store these somewhere else
-        self._logger.warning('Common parameters are hardcoded!')
-        COMMON_PARS = {
-            'trigger_telescopes': 1,
-            'array_trigger': 'none',
-            'trigger_telescopes': 2,
-            'only_triggered_telescopes': 1,
-            'array_window': 1000,
-            'output_format': 1,
-            'mirror_list': 'none',
-            'telescope_random_angle': 0.,
-            'telescope_random_error': 0.,
-            'convergent_depth': 0,
-            'iobuf_maximum': 1000000000,
-            'iobuf_output_maximum': 400000000,
-            'multiplicity_offset': -0.5,
-            'discriminator_pulse_shape': 'none',
-            'discriminator_amplitude': 0.,
-            'discriminator_threshold': 99999.,
-            'fadc_noise': 0.,
-            'asum_threshold': 0.,
-            'asum_shaping_file': 'none',
-            'asum_offset': 0.0,
-            'dsum_threshold': 0,
-            'fadc_pulse_shape': 'none',
-            'fadc_amplitude': 0.,
-            'fadc_pedestal': 100.,
-            'fadc_max_signal': 4095,
-            'fadc_max_sum': 16777215,
-            'store_photoelectrons': 30,
-            'pulse_analysis': -30,
-            'sum_before_peak': 3,
-            'sum_after_peak': 4
-        }
-
-        for par, value in COMMON_PARS.items():
-            file.write('   {} = {}\n'.format(par, value))
-    # End of writeCommonParameters
 
     def exportAllSimtelConfigFiles(self):
         '''
