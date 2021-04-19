@@ -44,7 +44,7 @@ class SimtelConfigWriter:
         'sum_after_peak': 4
     }
 
-    def __init__(self, site, modelVersion, layoutName=None, label=None):
+    def __init__(self, site, modelVersion, layoutName=None, telescopeName=None, label=None):
         '''
         '''
 
@@ -55,6 +55,24 @@ class SimtelConfigWriter:
         self._modelVersion = modelVersion
         self._label = label
         self._layoutName = layoutName
+        self._telescopeName = telescopeName
+
+    def writeSimtelTelescopeConfigFile(self, configFilePath, parameters):
+        '''
+        '''
+        with open(configFilePath, 'w') as file:
+            self._writeHeader(file, 'TELESCOPE CONFIGURATION FILE')
+
+            file.write('#ifdef TELESCOPE\n')
+            file.write(
+                '   echo Configuration for {}'.format(self._telescopeName)
+                + ' - TELESCOPE $(TELESCOPE)\n'
+            )
+            file.write('#endif\n\n')
+
+            for par in parameters.keys():
+                value = parameters[par]['Value']
+                file.write('{} = {}\n'.format(par, value))
 
     def writeSimtelArrayConfigFile(
         self,
@@ -65,7 +83,6 @@ class SimtelConfigWriter:
     ):
         '''
         '''
-        self._logger.debug('Writing sim_telarray config file to {}'.format(configFilePath))
         with open(configFilePath, 'w') as file:
             self._writeHeader(file, 'ARRAY CONFIGURATION FILE')
 
@@ -109,6 +126,10 @@ class SimtelConfigWriter:
         header += '% {}\n'.format(title)
         header += '% Site: {}\n'.format(self._site)
         header += '% ModelVersion: {}\n'.format(self._modelVersion)
+        header += (
+            '% TelescopeName: {}\n'.format(self._telescopeName)
+            if self._telescopeName is not None else ''
+        )
         header += (
             '% LayoutName: {}\n'.format(self._layoutName) if self._layoutName is not None else ''
         )
