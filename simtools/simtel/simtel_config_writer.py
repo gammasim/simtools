@@ -60,12 +60,12 @@ class SimtelConfigWriter:
         self,
         configFilePath,
         layout,
-        telescopeModels,
+        telescopeModel,
         siteParameters
     ):
         '''
         '''
-
+        self._logger.debug('Writing sim_telarray config file to {}'.format(configFilePath))
         with open(configFilePath, 'w') as file:
             self._writeHeader(file, 'ARRAY CONFIGURATION FILE')
 
@@ -89,18 +89,16 @@ class SimtelConfigWriter:
             self._writeCommonParameters(file)
 
             # Maximum telescopes
-            file.write(self.TAB + 'maximum_telescopes = {}\n\n'.format(len(telescopeModels)))
+            file.write(self.TAB + 'maximum_telescopes = {}\n\n'.format(len(telescopeModel)))
 
             # Default telescope - 0th tel in telescope list
-            telConfigFile = (
-                self._telescopeModel[0].getConfigFile(noExport=True).name
-            )
+            telConfigFile = (telescopeModel[0].getConfigFile(noExport=True).name)
             file.write('# include <{}>\n\n'.format(telConfigFile))
 
             # Looping over telescopes - from 1 to ...
-            for count, telModel in enumerate(self._telescopeModel):
+            for count, telModel in enumerate(telescopeModel):
                 telConfigFile = telModel.getConfigFile(noExport=True).name
-                file.write('%{}\n'.format(self.layout[count].name))
+                file.write('%{}\n'.format(layout[count].name))
                 file.write('#elif TELESCOPE == {}\n\n'.format(count + 1))
                 file.write('# include <{}>\n\n'.format(telConfigFile))
             file.write('#endif \n\n')
