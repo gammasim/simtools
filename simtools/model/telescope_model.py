@@ -208,7 +208,8 @@ class TelescopeModel:
                     par, value = validateModelParameter(par, value)
                     parameters[par] = value
 
-        tel.addParameters(**parameters)
+        for par, value in parameters.items():
+            tel.addParameter(par, value)
         return tel
     # End of fromConfigFile
 
@@ -289,7 +290,6 @@ class TelescopeModel:
             if _parNow in self._parameters:
                 self._parameters.pop(_parNow, None)
 
-        print(self._parameters)
         return
     # END _loadParametersFromDB
 
@@ -326,14 +326,35 @@ class TelescopeModel:
         ValueError
             If parName does not match any parameter in _parameters.
         '''
-        if parName in self._parameters:
+        try:
             return self._parameters[parName]
-        else:
+        except KeyError:
             msg = 'Parameter {} was not found in the model'.format(parName)
             self._logger.error(msg)
-            raise ValueError(msg)
+            raise
 
-    def addParameters(self, **kwargs):
+    def getParameterValue(self, parName):
+        '''
+        Get an EXISTING parameter of the model.
+
+        Parameters
+        ----------
+        parName: str
+            Name of the parameter.
+
+        Returns
+        -------
+        Value of the parameter
+
+        Raises
+        ------
+        ValueError
+            If parName does not match any parameter in _parameters.
+        '''
+        parInfo = self.getParameter(parName)
+        return parInfo['Value']
+
+    def addParameter(self, parName, value, isFile=False, isAplicable=True):
         '''
         Add a NEW parameters to the model.
         This function does not modify the DB, it affects only the current instance.
@@ -348,17 +369,21 @@ class TelescopeModel:
         ValueError
             If an existing parameter is tried to be set added.
         '''
-        for par, value in kwargs.items():
-            if par in self._parameters.keys():
-                msg = 'Parameter {} already in the model, use changeParameter instead'.format(par)
-                self._logger.error(msg)
-                raise ValueError(msg)
-            else:
-                self._logger.info('Adding {}={} to the model'.format(par, value))
-                self._parameters[par] = str(value)
+        if parName in self._parameters.keys():
+            msg = 'Parameter {} already in the model, use changeParameter instead'.format(parName)
+            self._logger.error(msg)
+            raise ValueError(msg)
+        else:
+            self._logger.info('Adding {}={} to the model'.format(parName, value))
+            self._parameters[parName] = dict()
+            self._parameters[parName]['Value'] = value
+            self._parameters[parName]['Type'] = type(value)
+            self._parameters[parName]['Applicable'] = isAplicable
+            self._parameters[parName]['File'] = isFile
+
         self._isConfigFileUpdated = False
 
-    def changeParameters(self, **kwargs):
+    def changeParameter(self, parName, value):
         '''
         Change the value of EXISTING parameters to the model.
         This function does not modify the DB, it affects only the current instance.
@@ -373,16 +398,15 @@ class TelescopeModel:
         ValueError
             If the parameter to be changed does not exist.
         '''
-        for par, value in kwargs.items():
-            if par not in self._parameters.keys():
-                msg = 'Parameter {} not in the model, use addParameters instead'.format(par)
-                self._logger.error(msg)
-                raise ValueError(msg)
-            else:
-                if type(self._parameters[par]) != type(value):
-                    self._logger.warning('Value type differs from the current one')
-                self._parameters[par] = value
-                self._logger.debug('Changing parameter {}'.format(par))
+        if parName not in self._parameters.keys():
+            msg = 'Parameter {} not in the model, use addParameters instead'.format(parName)
+            self._logger.error(msg)
+            raise ValueError(msg)
+        else:
+            if not isinstance(value, type(self._parameters[parName]['Value'])):
+                self._logger.warning('Value type differs from the current one')
+            self._parameters[parName]['Value'] = value
+            self._logger.debug('Changing parameter {}'.format(parName))
         self._isConfigFileUpdated = False
 
     def removeParameters(self, *args):
@@ -525,7 +549,7 @@ class TelescopeModel:
         return self._singleMirrorListFilePaths[mirrorNumber]
 
     def _loadMirrors(self):
-        mirrorListFileName = self._parameters['mirror_list']
+        mirrorListFileName = self._parameters['mirror_list']['Value']
         try:
             mirrorListFile = cfg.findFile(mirrorListFileName, self._configFileDirectory)
         except FileNotFoundError:
@@ -538,11 +562,11 @@ class TelescopeModel:
         return
 
     def _loadCamera(self):
-        cameraConfigFile = self._parameters['camera_config_file']
-        focalLength = self._parameters['effective_focal_length']
+        cameraConfigFile = self.getParameterValue('camera_config_file')
+        focalLength = self.getParameterValue('effective_focal_length')
         if focalLength == 0.:
             self._logger.warning('Using focal_length because effective_focal_length is 0.')
-            focalLength = self._parameters['focal_length']
+            focalLength = self.getParameterValue('focal_length')
         try:
             cameraConfigFilePath = cfg.findFile(cameraConfigFile, self._configFileDirectory)
         except FileNotFoundError:
