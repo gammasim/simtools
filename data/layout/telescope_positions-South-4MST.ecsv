@@ -7,26 +7,26 @@
 # - {name: pos_z, unit: m, datatype: float64}
 # - {name: lat, unit: deg, datatype: float64}
 # - {name: lon, unit: deg, datatype: float64}
-# - {name: utm_east, unit: deg, datatype: float64}
-# - {name: utm_north, unit: deg, datatype: float64}
+# - {name: utm_east, unit: m, datatype: float64}
+# - {name: utm_north, unit: m, datatype: float64}
 # - {name: alt, unit: m, datatype: float64}
 # meta:
 #   EPSG: 32719
 #   center_alt: !astropy.units.Quantity
 #     unit: &id001 !astropy.units.Unit {unit: m}
-#     value: 2162.35
+#     value: 2147.0
 #   center_easting: !astropy.units.Quantity
 #     unit: *id001
-#     value: 366822.0
+#     value: 366822.0000008711
 #   center_lat: !astropy.units.Quantity
 #     unit: &id002 !astropy.units.Unit {unit: deg}
-#     value: -24.683429
+#     value: -24.68342915473787
 #   center_lon: !astropy.units.Quantity
 #     unit: *id002
-#     value: -70.316345
+#     value: -70.31634499364885
 #   center_northing: !astropy.units.Quantity
 #     unit: *id001
-#     value: 7269466.0
+#     value: 7269465.999807887
 #   corsika_obs_level: !astropy.units.Quantity
 #     unit: *id001
 #     value: 2147.0
@@ -52,7 +52,7 @@
 #       value: 3.0
 # schema: astropy-2.0
 telescope_name pos_x pos_y pos_z lat lon utm_east utm_north alt
-M-01 70.0 70.0 70.0 -24.68279704802456 -70.31703664682992 366751.34351578413 7269535.329498802 2138.0
-M-02 -70.0 -70.0 -70.0 -24.684060948736505 -70.31703665380333 366752.68664928933 7269395.361244049 2138.0
-M-03 70.0 70.0 70.0 -24.68279704802456 -70.31565335317009 366891.3117389338 7269536.672599459 2138.0
-M-04 -70.0 -70.0 -70.0 -24.684060948736505 -70.31565334619667 366892.65487119544 7269396.70440916 2138.0
+M-01 70.0 70.0 70.0 -24.682797202762476 -70.31703664047966 366751.3443228542 7269535.312368821 2138.0
+M-02 -70.0 -70.0 -70.0 -24.6840611034744 -70.31703664745308 366752.6874563608 7269395.344114067 2138.0
+M-03 70.0 70.0 70.0 -24.682797202762476 -70.31565334681812 366891.31254600314 7269536.655469479 2138.0
+M-04 -70.0 -70.0 -70.0 -24.6840611034744 -70.31565333984472 366892.65567826625 7269396.687279179 2138.0
