@@ -9,6 +9,7 @@ from simtools.util import names
 from simtools.util.model import validateModelParameter
 from simtools.model.mirrors import Mirrors
 from simtools.model.camera import Camera
+from simtools.simtel.simtel_config_writer import SimtelConfigWriter
 
 
 __all__ = ['TelescopeModel']
@@ -21,6 +22,8 @@ class TelescopeModel:
 
     Attributes
     ----------
+    site: str
+        North or South.
     telescopeName: str
         Telescope name for the base set of parameters (ex. North-LST-1, ...).
     version: str
@@ -92,6 +95,7 @@ class TelescopeModel:
         self.telescopeName = names.validateTelescopeName(telescopeName)
         self.label = label
         self._extraLabel = None
+        self.site = names.getSiteFromTelescopeName(self.telescopeName)
 
         self._modelFilesLocations = cfg.getConfigArg('modelFilesLocations', modelFilesLocations)
         self._filesLocation = cfg.getConfigArg('outputLocation', filesLocation)
@@ -258,9 +262,8 @@ class TelescopeModel:
 
         self._logger.debug('Reading site parameters from DB')
 
-        site = names.getSiteFromTelescopeName(self.telescopeName)
         _sitePars = db.getSiteParameters(
-            site,
+            self.site,
             self.version,
             self._configFileDirectory,
             onlyApplicable=True
@@ -274,14 +277,6 @@ class TelescopeModel:
 
         self._parameters.update(_sitePars)
 
-        # Removing all info but the value
-        # TODO - change to use the full dict instead.
-        if cfg.get('useMongoDB'):
-            _pars = dict()
-            for key, value in self._parameters.items():
-                _pars[key] = value['Value']
-            self._parameters = copy.copy(_pars)
-
         # The following cannot be read by sim_telarray
         # TODO - Should we find a better solution for this?
         parsToRemove = [
@@ -293,6 +288,8 @@ class TelescopeModel:
         for _parNow in parsToRemove:
             if _parNow in self._parameters:
                 self._parameters.pop(_parNow, None)
+
+        print(self._parameters)
         return
     # END _loadParametersFromDB
 
@@ -428,30 +425,16 @@ class TelescopeModel:
         ''' Export the config file used by sim_telarray. '''
 
         # Writing parameters to the file
-        self._logger.info('Writing config file - {}'.format(self._configFilePath))
-        with open(self._configFilePath, 'w') as file:
-            header = (
-                '%{}\n'.format(50 * '=')
-                + '% TELESCOPE CONFIGURATION FILE\n'
-                + '% TelescopeName: {}\n'.format(self.telescopeName)
-                + '% ModelVersion: {}\n'.format(self.version)
-                + ('% Label: {}\n'.format(self.label) if self.label is not None else '')
-                + '%{}\n\n'.format(50 * '=')
-            )
-            file.write(header)
-
-            file.write('#ifdef TELESCOPE\n')
-            file.write(
-                '   echo Configuration for {}'.format(self.telescopeName)
-                + ' - TELESCOPE $(TELESCOPE)\n'
-            )
-            file.write('#endif\n\n')
-
-            for par, value in self._parameters.items():
-                file.write('{} = {}\n'.format(par, value))
-
-        self._isConfigFileUpdated = True
-    # END exportConfigFile
+        simtelWriter = SimtelConfigWriter(
+            site=self.site,
+            telescopeName=self.telescopeName,
+            modelVersion=self.version,
+            label=self.label
+        )
+        simtelWriter.writeSimtelTelescopeConfigFile(
+            configFilePath=self._configFilePath,
+            parameters=self._parameters
+        )
 
     def getConfigFile(self, noExport=False):
         '''
