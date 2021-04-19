@@ -15,7 +15,7 @@ class TestSimtelConfigWriter(unittest.TestCase):
     def setUp(self):
         arrayConfigData = {
             'site': 'North',
-            'layoutName': '4LST',
+            'layoutName': '1LST',
             'modelVersion': 'Prod5',
             'default': {
                 'LST': '1'
@@ -26,7 +26,7 @@ class TestSimtelConfigWriter(unittest.TestCase):
             arrayConfigData=arrayConfigData
         )
 
-    def test_write_array_config_file():
+    def test_write_array_config_file(self):
         self.ArrayModel.exportSimtelArrayConfigFile()
 
 
