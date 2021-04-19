@@ -3,7 +3,7 @@
 import logging
 import astropy.units as u
 
-from simtools.simtel_runner import SimtelRunner, SimtelExecutionError
+from simtools.simtel.simtel_runner import SimtelRunner, SimtelExecutionError
 from simtools.model.telescope_model import TelescopeModel
 import simtools.config as cfg
 

@@ -16,7 +16,7 @@ from simtools.psf_analysis import PSFImage
 from simtools.util import names
 from simtools.util.model import computeTelescopeTransmission
 from simtools.model.telescope_model import TelescopeModel
-from simtools.simtel_runner import SimtelRunner
+from simtools.simtel.simtel_runner import SimtelRunner
 from simtools.util.general import collectArguments
 from simtools import visualize
 
@@ -119,7 +119,7 @@ class RayTracing:
                 allInputs=self.ALL_INPUTS,
                 **kwargs
             )
-            mirFlen = self._telescopeModel.getParameter('mirror_focal_length')
+            mirFlen = self._telescopeModel.getParameterValue('mirror_focal_length')
             self._sourceDistance = 2 * float(mirFlen) * u.cm.to(u.km)  # km
             self._mirrorNumbers = mirrorNumbers
         else:
@@ -220,7 +220,7 @@ class RayTracing:
 
         doAnalyze = (not self._fileResults.exists() or force)
 
-        focalLength = float(self._telescopeModel.getParameter('focal_length'))
+        focalLength = float(self._telescopeModel.getParameterValue('focal_length'))
         telTransmissionPars = (
             self._telescopeModel.getTelescopeTransmissionParameters()
             if not noTelTransmission else [1, 0, 0, 0]
