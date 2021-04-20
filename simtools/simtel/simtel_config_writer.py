@@ -10,12 +10,25 @@ class SimtelConfigWriter:
     '''
     '''
     TAB = ' ' * 3
-    SITE_PARS_TO_WRITE_IN_CONFIG = ['altitude', 'atmospheric_transmission']
+    SITE_PARS = [
+        'altitude',
+        'atmospheric_transmission',
+        'ref_lat',
+        'ref_long',
+        'array_coordinates',
+        'atmospheric_profile',
+        'magnetic_field'
+    ]
     PARS_NOT_TO_WRITE = [
         'pixel_shape',
         'pixel_diameter',
         'lightguide_efficiency_angle_file',
-        'lightguide_efficiency_wavelength_file'
+        'lightguide_efficiency_wavelength_file',
+        'ref_lat',
+        'ref_long',
+        'array_coordinates',
+        'atmospheric_profile',
+        'magnetic_field'
     ]
     COMMON_PARS = {
         'trigger_telescopes': 1,
@@ -140,7 +153,7 @@ class SimtelConfigWriter:
         __, __, diameter, flen, shape = mirrors.getSingleMirrorParameters(mirrorNumber)
 
         with open(singleMirrorListFile, 'w') as file:
-            self._writeHeader(file, 'MIRROR LIST FILE')
+            self._writeHeader(file, 'MIRROR LIST FILE', '#')
 
             file.write('# Column 1: X pos. [cm] (North/Down)\n')
             file.write('# Column 2: Y pos. [cm] (West/Right from camera)\n')
@@ -164,26 +177,31 @@ class SimtelConfigWriter:
             ))
     # End of writeSingleMirrorListFile
 
-    def _writeHeader(self, file, title):
-        header = '%{}\n'.format(50 * '=')
-        header += '% {}\n'.format(title)
-        header += '% Site: {}\n'.format(self._site)
-        header += '% ModelVersion: {}\n'.format(self._modelVersion)
+    def _writeHeader(self, file, title, commentChar='%'):
+        header = '{}{}\n'.format(commentChar, 50 * '=')
+        header += '{} {}\n'.format(commentChar, title)
+        header += '{} Site: {}\n'.format(commentChar, self._site)
+        header += '{} ModelVersion: {}\n'.format(commentChar, self._modelVersion)
         header += (
-            '% TelescopeName: {}\n'.format(self._telescopeName)
+            '{} TelescopeName: {}\n'.format(commentChar, self._telescopeName)
             if self._telescopeName is not None else ''
         )
         header += (
-            '% LayoutName: {}\n'.format(self._layoutName) if self._layoutName is not None else ''
+            '{} LayoutName: {}\n'.format(commentChar, self._layoutName)
+            if self._layoutName is not None else ''
         )
-        header += ('% Label: {}\n'.format(self._label) if self._label is not None else '')
-        header += '%{}\n\n'.format(50 * '=')
+        header += (
+            '{} Label: {}\n'.format(commentChar, self._label)
+            if self._label is not None else ''
+        )
+        header += '{}{}\n'.format(commentChar, 50 * '=')
+        header += '{}\n'.format(commentChar)
         file.write(header)
 
     def _writeSiteParameters(self, file, siteParameters):
         file.write(self.TAB + '% Site parameters\n')
         for par in siteParameters:
-            if par not in self.SITE_PARS_TO_WRITE_IN_CONFIG:
+            if par in self.PARS_NOT_TO_WRITE:
                 continue
             value = siteParameters[par]['Value']
             file.write(self.TAB + '{} = {}\n'.format(par, value))
