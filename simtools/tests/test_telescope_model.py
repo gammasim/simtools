@@ -67,7 +67,3 @@ class TestTelescopeModel(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
-
-    # tt = TestTelescopeModel()
-    # tt.setUp()
-    # tt.test_handling_parameters()
