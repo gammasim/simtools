@@ -20,8 +20,10 @@ class InvalidParameter(Exception):
 
 class TelescopeModel:
     '''
-    TelescopeModel is an abstract representation of the MC model at the telescope level.
-    It contains the list of parameters and useful methods to handle it.
+    TelescopeModel represents the MC model of an individual telescope. \
+    It contains the list of parameters that can be read from the DB. \
+    A set of methods are available to manipulate parameters (changing, adding, removing etc). \
+
 
     Attributes
     ----------
@@ -29,16 +31,16 @@ class TelescopeModel:
         North or South.
     telescopeName: str
         Telescope name for the base set of parameters (ex. North-LST-1, ...).
-    version: str
+    modelVersion: str
         Version of the model (ex. prod4).
     label: str
         Instance label.
     mirrors: Mirrors
-        Instance of the Mirrors class created with the mirror list of the model.
+        Mirrors object created from the mirror list of the model.
     camera: Camera
-        Instance of the Camera class created with the camera config file of the model.
+        Camera object created from the camera config file of the model.
     extraLabel: str
-        Extra label to be used in case of multiple telescope configurations.
+        Extra label to be used in case of multiple telescope configurations (e.g. by ArrayModel).
 
     Methods
     -------
@@ -67,7 +69,7 @@ class TelescopeModel:
     def __init__(
         self,
         telescopeName,
-        version='Current',
+        modelVersion='Current',
         label=None,
         modelFilesLocations=None,
         filesLocation=None,
@@ -80,7 +82,7 @@ class TelescopeModel:
         ----------
         telescopeName: str
             Telescope name for the base set of parameters (ex. North-LST-1, ...).
-        version: str, optional
+        modelVersion: str, optional
             Version of the model (ex. prod4) (default: "Current").
         label: str, optional
             Instance label. Important for output file naming.
@@ -96,7 +98,7 @@ class TelescopeModel:
         self._logger = logging.getLogger(__name__)
         self._logger.debug('Init TelescopeModel')
 
-        self.version = names.validateModelVersionName(version)
+        self.modelVersion = names.validateModelVersionName(modelVersion)
         self.telescopeName = names.validateTelescopeName(telescopeName)
         self.label = label
         self._extraLabel = None
@@ -245,7 +247,7 @@ class TelescopeModel:
 
         # Setting file name and the location
         configFileName = names.simtelTelescopeConfigFileName(
-            self.version,
+            self.modelVersion,
             self.telescopeName,
             self.label + ('_' + self._extraLabel if self._extraLabel is not None else '')
         )
@@ -261,7 +263,7 @@ class TelescopeModel:
         db = db_handler.DatabaseHandler()
         self._parameters = db.getModelParameters(
             self.telescopeName,
-            self.version,
+            self.modelVersion,
             self._configFileDirectory,
             onlyApplicable=True
         )
@@ -270,7 +272,7 @@ class TelescopeModel:
 
         _sitePars = db.getSiteParameters(
             self.site,
-            self.version,
+            self.modelVersion,
             self._configFileDirectory,
             onlyApplicable=True
         )
@@ -377,7 +379,7 @@ class TelescopeModel:
         if parName in self._parameters.keys():
             msg = 'Parameter {} already in the model, use changeParameter instead'.format(parName)
             self._logger.error(msg)
-            raise ValueError(msg)
+            raise InvalidParameter(msg)
         else:
             self._logger.info('Adding {}={} to the model'.format(parName, value))
             self._parameters[parName] = dict()
@@ -406,7 +408,7 @@ class TelescopeModel:
         if parName not in self._parameters.keys():
             msg = 'Parameter {} not in the model, use addParameters instead'.format(parName)
             self._logger.error(msg)
-            raise ValueError(msg)
+            raise InvalidParameter(msg)
         else:
             if not isinstance(value, type(self._parameters[parName]['Value'])):
                 self._logger.warning('Value type differs from the current one')
@@ -454,7 +456,7 @@ class TelescopeModel:
             else:
                 msg = 'Could not remove parameter {} because it does not exist'.format(par)
                 self._logger.error(msg)
-                raise ValueError(msg)
+                raise InvalidParameter(msg)
         self._isConfigFileUpdated = False
 
     def addParameterFile(self, filePath):
@@ -476,7 +478,7 @@ class TelescopeModel:
         simtelWriter = SimtelConfigWriter(
             site=self.site,
             telescopeName=self.telescopeName,
-            modelVersion=self.version,
+            modelVersion=self.modelVersion,
             label=self.label
         )
         simtelWriter.writeSimtelTelescopeConfigFile(
@@ -533,7 +535,7 @@ class TelescopeModel:
             return None
 
         fileName = names.simtelSingleMirrorListFileName(
-            self.version,
+            self.modelVersion,
             self.telescopeName,
             mirrorNumber,
             self.label
