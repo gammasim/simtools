@@ -3,43 +3,56 @@
 import logging
 import unittest
 
+import simtools.io_handler as io
 from simtools.simtel.simtel_config_writer import SimtelConfigWriter
-from simtools.model.array_model import ArrayModel
 from simtools.model.telescope_model import TelescopeModel
+from simtools.layout.layout_array import LayoutArray
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 
+def file_has_text(file, text):
+    with open(file, 'r') as ff:
+        for ll in ff:
+            if text in ll:
+                return True
+    return False
+
 class TestSimtelConfigWriter(unittest.TestCase):
 
-    def test_write_array_config_file(self):
-        arrayConfigData = {
-            'site': 'North',
-            'layoutName': '1LST',
-            'modelVersion': 'Prod5',
-            'default': {
-                'LST': '1'
-            }
-        }
-        arrayModel = ArrayModel(
-            label='test',
-            arrayConfigData=arrayConfigData
+    def setUp(self):
+        self.simtelConfigWriter = SimtelConfigWriter(
+            site='North',
+            modelVersion='Current',
+            label='test-simtel-config-writer',
+            telescopeName='TestTelecope'
         )
-        arrayModel.exportSimtelArrayConfigFile()
-
-    def test_write_tel_config_file(self):
-        telescopeModel = TelescopeModel(
+        self.telescopeModel = TelescopeModel(
             telescopeName='North-LST-1',
             modelVersion='Current',
-            label='test-lst'
+            label='test-telescope-model'
         )
-        telescopeModel.exportConfigFile()
+        self.layout = LayoutArray.fromLayoutArrayName('South-4LST')
+
+    def test_write_array_config_file(self):
+        file = io.getTestOutputFile('simtel-config-writer_array.txt')
+        self.simtelConfigWriter.writeArrayConfigFile(
+            configFilePath=file,
+            layout=self.layout,
+            telescopeModel=[self.telescopeModel] * 4,
+            siteParameters={}
+        )
+        self.assertTrue(file_has_text(file, 'TELESCOPE == 1'))
+
+    def test_write_tel_config_file(self):
+        file = io.getTestOutputFile('simtel-config-writer_telescope.txt')
+        self.simtelConfigWriter.writeTelescopeConfigFile(
+            configFilePath=file,
+            parameters={'par': {'Value': 1}}
+        )
+        self.assertTrue(file_has_text(file, 'par = 1'))
 
 
 if __name__ == '__main__':
     unittest.main()
-
-    # tt = TestSimtelConfigWriter()
-    # tt.setUp()
-    # tt.test_write_array_config_file()
