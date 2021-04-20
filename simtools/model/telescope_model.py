@@ -481,13 +481,8 @@ class TelescopeModel:
         ''' Export the config file used by sim_telarray. '''
 
         # Using SimtelConfigWriter to write the config file.
-        simtelWriter = SimtelConfigWriter(
-            site=self.site,
-            telescopeName=self.telescopeName,
-            modelVersion=self.modelVersion,
-            label=self.label
-        )
-        simtelWriter.writeSimtelTelescopeConfigFile(
+        self._loadSimtelConfigWriter()
+        self.simtelConfigWriter.writeTelescopeConfigFile(
             configFilePath=self._configFilePath,
             parameters=self._parameters
         )
@@ -542,33 +537,18 @@ class TelescopeModel:
             mirrorNumber,
             self.label
         )
-        if '_singleMirrorListFilePath' not in self.__dict__:
+        if not hasattr(self, '_singleMirrorListFilePath'):
             self._singleMirrorListFilePaths = dict()
         self._singleMirrorListFilePaths[mirrorNumber] = self._configFileDirectory.joinpath(fileName)
 
-        __, __, diameter, flen, shape = self.mirrors.getSingleMirrorParameters(mirrorNumber)
-
-        with open(self._singleMirrorListFilePaths[mirrorNumber], 'w') as file:
-            file.write('# Column 1: X pos. [cm] (North/Down)\n')
-            file.write('# Column 2: Y pos. [cm] (West/Right from camera)\n')
-            file.write('# Column 3: flat-to-flat diameter [cm]\n')
-            file.write(
-                '# Column 4: focal length [cm], typically zero = adapting in sim_telarray.\n'
-            )
-            file.write(
-                '# Column 5: shape type: 0=circular, 1=hex. with flat side parallel to y, '
-                '2=square, 3=other hex. (default: 0)\n'
-            )
-            file.write(
-                '# Column 6: Z pos (height above dish backplane) [cm], typ. omitted (or zero)'
-                ' to adapt to dish shape settings.\n'
-            )
-            file.write('#\n')
-            file.write('0. 0. {} {} {} 0.\n'.format(
-                diameter,
-                flen if not setFocalLengthToZero else 0,
-                shape
-            ))
+        # Using SimtelConfigWriter
+        self._loadSimtelConfigWriter()
+        self.simtelConfigWriter.writeSingleMirrorListFile(
+            mirrorNumber,
+            self.mirrors,
+            self._singleMirrorListFilePaths[mirrorNumber],
+            setFocalLengthToZero
+        )
     # END of exportSingleMirrorListFile
 
     def getSingleMirrorListFile(self, mirrorNumber, setFocalLengthToZero=False):
@@ -624,6 +604,15 @@ class TelescopeModel:
             cameraConfigFile=cameraConfigFilePath,
             focalLength=focalLength
         )
+
+    def _loadSimtelConfigWriter(self):
+        if not hasattr(self, 'simtelConfigWriter'):
+            self.simtelConfigWriter = SimtelConfigWriter(
+                site=self.site,
+                telescopeName=self.telescopeName,
+                modelVersion=self.modelVersion,
+                label=self.label
+            )
 
     def isASTRI(self):
         '''

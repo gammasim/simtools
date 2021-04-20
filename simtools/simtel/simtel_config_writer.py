@@ -57,7 +57,7 @@ class SimtelConfigWriter:
         self._layoutName = layoutName
         self._telescopeName = telescopeName
 
-    def writeSimtelTelescopeConfigFile(self, configFilePath, parameters):
+    def writeTelescopeConfigFile(self, configFilePath, parameters):
         '''
         '''
         with open(configFilePath, 'w') as file:
@@ -74,7 +74,7 @@ class SimtelConfigWriter:
                 value = parameters[par]['Value']
                 file.write('{} = {}\n'.format(par, value))
 
-    def writeSimtelArrayConfigFile(
+    def writeArrayConfigFile(
         self,
         configFilePath,
         layout,
@@ -120,6 +120,41 @@ class SimtelConfigWriter:
                 file.write('# include <{}>\n\n'.format(telConfigFile))
             file.write('#endif \n\n')
     # END writeSimtelArrayConfigFile
+
+    def writeSingleMirrorListFile(
+        self,
+        mirrorNumber,
+        mirrors,
+        singleMirrorListFile,
+        setFocalLengthToZero=False
+    ):
+        ''' '''
+        __, __, diameter, flen, shape = mirrors.getSingleMirrorParameters(mirrorNumber)
+
+        with open(singleMirrorListFile, 'w') as file:
+            self._writeHeader(file, 'MIRROR LIST FILE')
+
+            file.write('# Column 1: X pos. [cm] (North/Down)\n')
+            file.write('# Column 2: Y pos. [cm] (West/Right from camera)\n')
+            file.write('# Column 3: flat-to-flat diameter [cm]\n')
+            file.write(
+                '# Column 4: focal length [cm], typically zero = adapting in sim_telarray.\n'
+            )
+            file.write(
+                '# Column 5: shape type: 0=circular, 1=hex. with flat side parallel to y, '
+                '2=square, 3=other hex. (default: 0)\n'
+            )
+            file.write(
+                '# Column 6: Z pos (height above dish backplane) [cm], typ. omitted (or zero)'
+                ' to adapt to dish shape settings.\n'
+            )
+            file.write('#\n')
+            file.write('0. 0. {} {} {} 0.\n'.format(
+                diameter,
+                flen if not setFocalLengthToZero else 0,
+                shape
+            ))
+    # End of writeSingleMirrorListFile
 
     def _writeHeader(self, file, title):
         header = '%{}\n'.format(50 * '=')

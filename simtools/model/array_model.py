@@ -365,7 +365,7 @@ class ArrayModel:
             modelVersion=self.modelVersion,
             label=self.label
         )
-        simtelWriter.writeSimtelArrayConfigFile(
+        simtelWriter.writeArrayConfigFile(
             configFilePath=self._configFilePath,
             layout=self.layout,
             telescopeModel=self._telescopeModel,
