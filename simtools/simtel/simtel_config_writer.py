@@ -8,6 +8,22 @@ __all__ = ['SimtelConfigWriter']
 
 class SimtelConfigWriter:
     '''
+    SimtelConfigWriter writes sim_telarray configuration files. \
+    It is designed to be used by model classes (TelescopeModel and ArrayModel) only.
+
+    Methods
+    -------
+    writeTelescopeConfigFile(configFilePath, parameters)
+        Writes the sim_telarray config file for a single telescope.
+    writeArrayConfigFile(configFilePath, layout, telescopeModel, siteParameters)
+        Writes the sim_telarray config file for an array of telescopes.
+    writeSingleMirrorListFile(
+        mirrorNumber,
+        mirrors,
+        singleMirrorListFile,
+        setFocalLengthToZero=False
+    )
+        Writes the sim_telarray mirror list file for a single mirror.
     '''
     TAB = ' ' * 3
     SITE_PARS = [
@@ -65,8 +81,21 @@ class SimtelConfigWriter:
 
     def __init__(self, site, modelVersion, layoutName=None, telescopeName=None, label=None):
         '''
-        '''
+        SimtelConfigWriter.
 
+        Parameters
+        ----------
+        site: str
+            South or North.
+        modelVersion: str, required.
+            Version of the model (ex. prod4).
+        telescopeName: str, optional.
+            Telescope name.
+        layoutName: str, optional.
+            Layout name.
+        label: str, optional
+            Instance label. Important for output file naming.
+        '''
         self._logger = logging.getLogger(__name__)
         self._logger.debug('Init SimtelConfigWriter')
 
@@ -78,6 +107,14 @@ class SimtelConfigWriter:
 
     def writeTelescopeConfigFile(self, configFilePath, parameters):
         '''
+        Writes the sim_telarray config file for a single telescope.
+
+        Parameters
+        ----------
+        configFilePath: str or Path
+            Path of the file to write on.
+        parameters: dict
+            Model parameters in the same structure as used by the TelescopeModel class.
         '''
         with open(configFilePath, 'w') as file:
             self._writeHeader(file, 'TELESCOPE CONFIGURATION FILE')
@@ -103,6 +140,18 @@ class SimtelConfigWriter:
         siteParameters
     ):
         '''
+        Writes the sim_telarray config file for an array of telescopes.
+
+        Parameters
+        ----------
+        configFilePath: str or Path
+            Path of the file to write on.
+        layout: LayoutArray
+            LayoutArray object referent to the array model.
+        telescopeModel: list of TelescopeModel
+            List of TelescopeModel's as used by the ArrayModel.
+        siteParameters: dict
+            Site parameters.
         '''
         with open(configFilePath, 'w') as file:
             self._writeHeader(file, 'ARRAY CONFIGURATION FILE')
@@ -149,7 +198,20 @@ class SimtelConfigWriter:
         singleMirrorListFile,
         setFocalLengthToZero=False
     ):
-        ''' '''
+        '''
+        Writes the sim_telarray mirror list file for a single mirror.
+
+        Parameters
+        ----------
+        mirrorNumber: int
+            Mirror number.
+        mirrors: Mirrors
+            Mirrors object.
+        singleMirrorListFile: str or Path
+            Path of the file to write on.
+        setFocalLengthToZero: bool
+            Flag to set the focal length to zero.
+        '''
         __, __, diameter, flen, shape = mirrors.getSingleMirrorParameters(mirrorNumber)
 
         with open(singleMirrorListFile, 'w') as file:
@@ -178,6 +240,10 @@ class SimtelConfigWriter:
     # End of writeSingleMirrorListFile
 
     def _writeHeader(self, file, title, commentChar='%'):
+        '''
+        Writes a generic header. commenChar is the character to be used for comments, \
+        which is differs among ctypes of config files.
+        '''
         header = '{}{}\n'.format(commentChar, 50 * '=')
         header += '{} {}\n'.format(commentChar, title)
         header += '{} Site: {}\n'.format(commentChar, self._site)
@@ -199,6 +265,7 @@ class SimtelConfigWriter:
         file.write(header)
 
     def _writeSiteParameters(self, file, siteParameters):
+        ''' Writes site parameters. '''
         file.write(self.TAB + '% Site parameters\n')
         for par in siteParameters:
             if par in self.PARS_NOT_TO_WRITE:
@@ -211,7 +278,6 @@ class SimtelConfigWriter:
         # Common parameters taken from CTA-PROD4-common.cfg
         # TODO: Store these somewhere else
         self._logger.warning('Common parameters are hardcoded!')
-
         for par, value in self.COMMON_PARS.items():
             file.write('   {} = {}\n'.format(par, value))
     # End of writeCommonParameters
