@@ -27,7 +27,7 @@ def test_ssts(show=False):
     for t in telTypes:
         tel = TelescopeModel(
             telescopeName='south-' + t,
-            version=version,
+            modelVersion=version,
             label='test-sst'
         )
         telModels.append(t)
@@ -65,7 +65,7 @@ def test_rx():
 
     tel = TelescopeModel(
         telescopeName='north-lst-1',
-        version=version,
+        modelVersion=version,
         label=label
     )
 
@@ -117,7 +117,7 @@ def test_plot_image():
 
     tel = TelescopeModel(
         telescopeName='south-sst-D',
-        version=version,
+        modelVersion=version,
         label=label
     )
 
@@ -150,7 +150,7 @@ def test_single_mirror(plot=False):
 
     tel = TelescopeModel(
         telescopeName='north-mst-FlashCam-D',
-        version=version,
+        modelVersion=version,
         label='test-mst'
     )
 
@@ -182,7 +182,7 @@ def test_integral_curve():
 
     tel = TelescopeModel(
         telescopeName='north-mst-FlashCam-D',
-        version=version,
+        modelVersion=version,
         label=label
     )
 
