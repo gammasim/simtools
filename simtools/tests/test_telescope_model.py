@@ -3,7 +3,7 @@
 import logging
 import unittest
 
-from simtools.model.telescope_model import TelescopeModel
+from simtools.model.telescope_model import TelescopeModel, InvalidParameter
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
@@ -15,7 +15,7 @@ class TestTelescopeModel(unittest.TestCase):
         self.label = 'test-telescope-model'
         self.telModel = TelescopeModel(
             telescopeName='North-LST-1',
-            version='Current',
+            modelVersion='Current',
             label='test-telescope-model'
         )
 
@@ -38,7 +38,7 @@ class TestTelescopeModel(unittest.TestCase):
         self.telModel.addParameter('new_parameter', new_par)
         self.assertEqual(self.telModel.getParameterValue('new_parameter'), new_par)
 
-        with self.assertRaises(KeyError):
+        with self.assertRaises(InvalidParameter):
             self.telModel.getParameter('bla_bla')
 
     def test_flen_type(self):

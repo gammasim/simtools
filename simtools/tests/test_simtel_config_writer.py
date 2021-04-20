@@ -31,7 +31,7 @@ class TestSimtelConfigWriter(unittest.TestCase):
     def test_write_tel_config_file(self):
         telescopeModel = TelescopeModel(
             telescopeName='North-LST-1',
-            version='Current',
+            modelVersion='Current',
             label='test-lst'
         )
         telescopeModel.exportConfigFile()
