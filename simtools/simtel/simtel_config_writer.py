@@ -11,6 +11,12 @@ class SimtelConfigWriter:
     '''
     TAB = ' ' * 3
     SITE_PARS_TO_WRITE_IN_CONFIG = ['altitude', 'atmospheric_transmission']
+    PARS_NOT_TO_WRITE = [
+        'pixel_shape',
+        'pixel_diameter',
+        'lightguide_efficiency_angle_file',
+        'lightguide_efficiency_wavelength_file'
+    ]
     COMMON_PARS = {
         'trigger_telescopes': 1,
         'array_trigger': 'none',
@@ -71,6 +77,8 @@ class SimtelConfigWriter:
             file.write('#endif\n\n')
 
             for par in parameters.keys():
+                if par in self.PARS_NOT_TO_WRITE:
+                    continue
                 value = parameters[par]['Value']
                 file.write('{} = {}\n'.format(par, value))
 
