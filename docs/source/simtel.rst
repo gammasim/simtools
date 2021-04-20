@@ -1,11 +1,10 @@
-.. _simtel_runner:
+.. _simtel:
 
 sim_telarray Runner
 ===================
 
 In this section you find the reference documentation of the sim_telarray runner module.
 This module provides the main interface with the sim_telarray program provided by sim_telarray software.
-
 
 
 The Ray Tracing module (and its main class RayTracing) handles ray tracing simulations, analysis and I/O. It receives as input
@@ -18,4 +17,11 @@ and also the PSF image plotting.
 
 
 .. automodule:: simtel_runner
+   :members:
+
+
+sim_telarray Config Writer
+==========================
+
+.. automodule:: simtel_config_writer
    :members:
