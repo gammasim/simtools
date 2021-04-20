@@ -497,7 +497,7 @@ class TelescopeModel:
         list of floats
             List of 4 parameters that decsribe the tel. transmission vs off-axis.
         '''
-        return self.getParameterValue('telescope_transmission').split()
+        return [float(v) for v in self.getParameterValue('telescope_transmission').split()]
 
     def exportSingleMirrorListFile(self, mirrorNumber, setFocalLengthToZero):
         '''
