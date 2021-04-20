@@ -275,26 +275,9 @@ class TelescopeModel:
             self._configFileDirectory,
             onlyApplicable=True
         )
-
-        # Only the following are read by sim_telarray, the others produce an error.
-        # TODO - Should we find a better solution for this?
-        for _parNow in _sitePars.copy():
-            if _parNow not in ['atmospheric_transmission', 'altitude']:
-                _sitePars.pop(_parNow, None)
-
+        # UPDATE: SimtelConfigWriter delas with which parameters should be written or not.
+        # _parameters here can contain all the parameters from the DB.
         self._parameters.update(_sitePars)
-
-        # The following cannot be read by sim_telarray
-        # TODO - Should we find a better solution for this?
-        parsToRemove = [
-            'pixel_shape',
-            'pixel_diameter',
-            'lightguide_efficiency_angle_file',
-            'lightguide_efficiency_wavelength_file'
-        ]
-        for _parNow in parsToRemove:
-            if _parNow in self._parameters:
-                self._parameters.pop(_parNow, None)
     # END _loadParametersFromDB
 
     def hasParameter(self, parName):
