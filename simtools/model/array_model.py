@@ -71,8 +71,6 @@ class ArrayModel:
             Path to a yaml file with the array config data.
         arrayConfigData: dict
             Dict with the array config data.
-        version: str, optional
-            Version of the model (ex. prod4) (default: "Current").
         label: str, optional
             Instance label. Important for output file naming.
         modelFilesLocation: str (or Path), optional
@@ -210,7 +208,7 @@ class ArrayModel:
                 _allTelescopeModelNames.append(telModelName)
                 telModel = TelescopeModel(
                     telescopeName=telModelName,
-                    version=self.modelVersion,
+                    modelVersion=self.modelVersion,
                     label=self.label,
                     modelFilesLocations=self._modelFilesLocations,
                     filesLocation=self._filesLocation
