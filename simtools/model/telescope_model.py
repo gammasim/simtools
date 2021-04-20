@@ -56,7 +56,7 @@ class TelescopeModel:
         Add new parameters to the model.
     changeParameter(parName, value)
         Change the value of existing parameters to the model.
-    changeMultipleParameters(parName, value)
+    changeMultipleParameters(**pars)
         Change the value of existing parameters to the model.
     removeParameters(*args)
         Remove parameters from the model.
@@ -81,19 +81,19 @@ class TelescopeModel:
         Parameters
         ----------
         telescopeName: str
-            Telescope name for the base set of parameters (ex. North-LST-1, ...).
+            Telescope name (ex. North-LST-1, ...).
         modelVersion: str, optional
-            Version of the model (ex. prod4) (default: "Current").
+            Version of the model (ex. prod4) (default='Current').
         label: str, optional
             Instance label. Important for output file naming.
         modelFilesLocation: str (or Path), optional
-            Location of the MC model files. If not given, it will be taken from the
+            Location of the MC model files. If not given, it will be taken from the \
             config.yml file.
         filesLocation: str (or Path), optional
-            Parent location of the output files created by this class. If not given, it will be
+            Parent location of the output files created by this class. If not given, it will be \
             taken from the config.yml file.
         readFromDB: bool, optional
-            If True, parameters will be loaded from the DB at the init level. Default = True.
+            If True, parameters will be loaded from the DB at the init level. (default=True).
         '''
         self._logger = logging.getLogger(__name__)
         self._logger.debug('Init TelescopeModel')
@@ -117,13 +117,13 @@ class TelescopeModel:
 
     @property
     def mirrors(self):
-        if '_mirrors' not in self.__dict__:
+        if not hasattr(self, '_mirrors'):
             self._loadMirrors()
         return self._mirrors
 
     @property
     def camera(self):
-        if '_camera' not in self.__dict__:
+        if not hasattr(self, '_camera'):
             self._loadCamera()
         return self._camera
 
@@ -226,8 +226,8 @@ class TelescopeModel:
 
         Notes
         -----
-        The config file directory name is not affected by the extra label.
-        Only the file name is changed. This is important for the ArrayModel
+        The config file directory name is not affected by the extra label. \
+        Only the file name is changed. This is important for the ArrayModel \
         class to export multiple config files in the same directory.
 
         Parameters
@@ -243,16 +243,16 @@ class TelescopeModel:
         self._configFileDirectory = io.getModelOutputDirectory(self._filesLocation, self.label)
         if not self._configFileDirectory.exists():
             self._configFileDirectory.mkdir(parents=True, exist_ok=True)
-            self._logger.info('Creating directory {}'.format(self._configFileDirectory))
+            self._logger.debug('Creating directory {}'.format(self._configFileDirectory))
 
         # Setting file name and the location
         configFileName = names.simtelTelescopeConfigFileName(
             self.modelVersion,
             self.telescopeName,
-            self.label + ('_' + self._extraLabel if self._extraLabel is not None else '')
+            self.label,
+            self._extraLabel
         )
         self._configFilePath = self._configFileDirectory.joinpath(configFileName)
-        return
 
     def _loadParametersFromDB(self):
         ''' Read parameters from DB and store them in _parameters. '''
@@ -269,7 +269,6 @@ class TelescopeModel:
         )
 
         self._logger.debug('Reading site parameters from DB')
-
         _sitePars = db.getSiteParameters(
             self.site,
             self.modelVersion,
@@ -296,8 +295,6 @@ class TelescopeModel:
         for _parNow in parsToRemove:
             if _parNow in self._parameters:
                 self._parameters.pop(_parNow, None)
-
-        return
     # END _loadParametersFromDB
 
     def hasParameter(self, parName):
@@ -317,21 +314,21 @@ class TelescopeModel:
 
     def getParameter(self, parName):
         '''
-        Get an EXISTING parameter of the model.
+        Get an existing parameter of the model.
 
         Parameters
         ----------
         parName: str
             Name of the parameter.
 
+        Raises
+        ------
+        InvalidParameter
+            If parName does not match any parameter in this model.
+
         Returns
         -------
         Value of the parameter
-
-        Raises
-        ------
-        ValueError
-            If parName does not match any parameter in _parameters.
         '''
         try:
             return self._parameters[parName]
@@ -342,39 +339,45 @@ class TelescopeModel:
 
     def getParameterValue(self, parName):
         '''
-        Get an EXISTING parameter of the model.
+        Get the value of an existing parameter of the model.
 
         Parameters
         ----------
         parName: str
             Name of the parameter.
 
+        Raises
+        ------
+        InvalidParameter
+            If parName does not match any parameter in this model.
+
         Returns
         -------
         Value of the parameter
-
-        Raises
-        ------
-        ValueError
-            If parName does not match any parameter in _parameters.
         '''
         parInfo = self.getParameter(parName)
         return parInfo['Value']
 
     def addParameter(self, parName, value, isFile=False, isAplicable=True):
         '''
-        Add a NEW parameters to the model.
-        This function does not modify the DB, it affects only the current instance.
+        Add a new parameters to the model. \
+        This function does not modify the DB, it affects only the current instance. \
 
         Parameters
         ----------
-        **kwargs:
-            Parameters should be passed as parameterName=value.
+        parName: str
+            Name of the parameter.
+        value:
+            Value of the parameter.
+        isFile: bool
+            Indicates whether the new parameter is a file or not.
+        isAplicable: bool
+            Indicates whether the new parameter is aplicable or not.
 
         Raises
         ------
-        ValueError
-            If an existing parameter is tried to be set added.
+        InvalidParameter
+            If an existing parameter is tried to be added.
         '''
         if parName in self._parameters.keys():
             msg = 'Parameter {} already in the model, use changeParameter instead'.format(parName)
@@ -392,24 +395,27 @@ class TelescopeModel:
 
     def changeParameter(self, parName, value):
         '''
-        Change the value of EXISTING parameters to the model.
+        Change the value of an existing parameter to the model. \
         This function does not modify the DB, it affects only the current instance.
 
         Parameters
         ----------
-        **kwargs
-            Parameters should be passed as parameterName=value.
+        parName: str
+            Name of the parameter.
+        value:
+            Value of the parameter.
 
         Raises
         ------
-        ValueError
-            If the parameter to be changed does not exist.
+        InvalidParameter
+            If the parameter to be changed does not exist in this model.
         '''
         if parName not in self._parameters.keys():
             msg = 'Parameter {} not in the model, use addParameters instead'.format(parName)
             self._logger.error(msg)
             raise InvalidParameter(msg)
         else:
+            # TODO: fix this in order to use the type from the DB directly.
             if not isinstance(value, type(self._parameters[parName]['Value'])):
                 self._logger.warning('Value type differs from the current one')
             self._parameters[parName]['Value'] = value
@@ -418,7 +424,7 @@ class TelescopeModel:
 
     def changeMultipleParameters(self, **kwargs):
         '''
-        Change the value of EXISTING parameters to the model.
+        Change the value of multiple existing parameters in the model. \
         This function does not modify the DB, it affects only the current instance.
 
         Parameters
@@ -428,8 +434,8 @@ class TelescopeModel:
 
         Raises
         ------
-        ValueError
-            If the parameter to be changed does not exist.
+        InvalidParameter
+            If at least one of the parameters to be changed does not exist in this model.
         '''
         for par, value in kwargs.items():
             self.changeParameter(par, value)
@@ -437,7 +443,7 @@ class TelescopeModel:
 
     def removeParameters(self, *args):
         '''
-        Remove a parameter from the model.
+        Remove a set of parameters from the model.
 
         Parameters
         ----------
@@ -446,8 +452,8 @@ class TelescopeModel:
 
         Raises
         ------
-        ValueError
-            If the parameter to be removed is not on the model.
+        InvalidParameter
+            If at least one of the parameter to be removed is not in this model.
         '''
         for par in args:
             if par in self._parameters.keys():
@@ -461,7 +467,7 @@ class TelescopeModel:
 
     def addParameterFile(self, filePath):
         '''
-        Add a file given by a model parameter to the config file directory.
+        Add a file to the config file directory.
 
         Parameters
         ----------
@@ -474,7 +480,7 @@ class TelescopeModel:
     def exportConfigFile(self):
         ''' Export the config file used by sim_telarray. '''
 
-        # Writing parameters to the file
+        # Using SimtelConfigWriter to write the config file.
         simtelWriter = SimtelConfigWriter(
             site=self.site,
             telescopeName=self.telescopeName,
@@ -488,7 +494,7 @@ class TelescopeModel:
 
     def getConfigFile(self, noExport=False):
         '''
-        Get the path of the config file for sim_telarray.
+        Get the path of the config file for sim_telarray. \
         The config file is produced if the file is not updated.
 
         Parameters
@@ -507,17 +513,13 @@ class TelescopeModel:
     def getTelescopeTransmissionParameters(self):
         '''
         Get tel. transmission pars as a list of floats.
-        Importante for RayTracing analysis.
 
         Returns
         -------
         list of floats
             List of 4 parameters that decsribe the tel. transmission vs off-axis.
         '''
-        pars = list()
-        for p in self.getParameterValue('telescope_transmission').split():
-            pars.append(float(p))
-        return pars
+        return self.getParameterValue('telescope_transmission').split()
 
     def exportSingleMirrorListFile(self, mirrorNumber, setFocalLengthToZero):
         '''
@@ -570,11 +572,26 @@ class TelescopeModel:
     # END of exportSingleMirrorListFile
 
     def getSingleMirrorListFile(self, mirrorNumber, setFocalLengthToZero=False):
-        ''' Get the path to the single mirror list file.'''
+        '''
+        Get the path to the single mirror list file.
+
+        Parameters
+        ----------
+        mirrorNumber: int
+            Mirror number.
+        setFocalLengthToZero: bool
+            Flag to set the focal length to zero.
+
+        Returns
+        -------
+        Path
+            Path of the single mirror list file.
+        '''
         self.exportSingleMirrorListFile(mirrorNumber, setFocalLengthToZero)
         return self._singleMirrorListFilePaths[mirrorNumber]
 
     def _loadMirrors(self):
+        ''' Load the attribute mirrors by creating a Mirrors object iwth the mirror list file. '''
         mirrorListFileName = self._parameters['mirror_list']['Value']
         try:
             mirrorListFile = cfg.findFile(mirrorListFileName, self._configFileDirectory)
@@ -585,9 +602,9 @@ class TelescopeModel:
                 'Using the one found in the modelFilesLocations'
             )
         self._mirrors = Mirrors(mirrorListFile)
-        return
 
     def _loadCamera(self):
+        ''' Loading camera attribute by creating a Camera object with the camera config file. '''
         cameraConfigFile = self.getParameterValue('camera_config_file')
         focalLength = self.getParameterValue('effective_focal_length')
         if focalLength == 0.:
@@ -607,7 +624,6 @@ class TelescopeModel:
             cameraConfigFile=cameraConfigFilePath,
             focalLength=focalLength
         )
-        return
 
     def isASTRI(self):
         '''
