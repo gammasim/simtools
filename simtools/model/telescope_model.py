@@ -1,5 +1,4 @@
 import logging
-import copy
 import shutil
 
 import simtools.config as cfg
@@ -13,6 +12,10 @@ from simtools.simtel.simtel_config_writer import SimtelConfigWriter
 
 
 __all__ = ['TelescopeModel']
+
+
+class InvalidParameter(Exception):
+    pass
 
 
 class TelescopeModel:
@@ -333,7 +336,7 @@ class TelescopeModel:
         except KeyError:
             msg = 'Parameter {} was not found in the model'.format(parName)
             self._logger.error(msg)
-            raise
+            raise InvalidParameter(msg)
 
     def getParameterValue(self, parName):
         '''
