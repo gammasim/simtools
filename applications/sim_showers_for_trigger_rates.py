@@ -150,7 +150,7 @@ if __name__ == '__main__':
         'runRange': [1, args.nruns + 1],
         'nshow': args.nevents,
         'primary': args.primary,
-        'erange': [100 * u.GeV, 300 * u.TeV],
+        'erange': [10 * u.GeV, 300 * u.TeV],
         'eslope': -2,
         'zenith': args.zenith * u.deg,
         'azimuth': args.azimuth * u.deg,
