@@ -5,7 +5,7 @@
     -------
     This application simulates showers to be used in trigger rate calculations.
     Arrays with one (1MST) or four telescopes (4LST) can be used, in case of \
-    mono or stereo trigger configurations, respectively. 
+    mono or stereo trigger configurations, respectively.
 
     Simulations are managed by the shower_simulator module.
     Each run is simulated in a job. Each job is submitted by using the submission \
@@ -35,7 +35,7 @@
         Azimuth angle in deg (default=0).
     output (str, optional)
         Path of the directory to store the output simulations. By default, \
-        the standard output directory will be used.
+        the standard output directory set by config will be used.
     test (activation mode, optional)
         If activated, no job will be submitted. Instead, an example of the \
         run script willbe printed.
