@@ -292,7 +292,7 @@ class CorsikaConfig:
 
     def _convertPrimaryInputAndStorePrimaryName(self, value):
         '''
-        Convert a primary name into the right numberand store its name in self.primary attribute.
+        Convert a primary name into the right number and store its name in self.primary attribute.
 
         Parameters
         ----------
