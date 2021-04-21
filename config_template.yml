@@ -16,7 +16,7 @@ mongoDBConfigFile: ./dbDetails.yml
 # config files are required in case useMongoDB is set to False. They can be found 
 # https://gitlab.cta-observatory.org/cta-consortium/aswg/simulations/simulation-model/simulation-model-description/-/tree/master/configReports
 # and https://gitlab.cta-observatory.org/cta-consortium/aswg/simulations/simulation-model/simulation-model-description/-/tree/master/datFiles.
-# The files will always be serached recursively within all the subdirectories inside the directory given by the location.
+# The files will always be searched recursively within all the subdirectories inside the directory given by the location.
 modelFilesLocations: [
   (...)/configReports,
   (...)/datFiles,
