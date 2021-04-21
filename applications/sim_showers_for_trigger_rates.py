@@ -67,8 +67,7 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(
         description=(
-            'Calculate and plot the PSF and eff. mirror area as a function of off-axis angle '
-            'of the telescope requested.'
+            'Simulate showers to be used for trigger rate calculations'
         )
     )
     parser.add_argument(
