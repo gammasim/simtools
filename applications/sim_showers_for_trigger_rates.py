@@ -73,7 +73,7 @@ if __name__ == '__main__':
     parser.add_argument(
         '-a',
         '--array',
-        help='Name of the array (e.g. 1MST, 4 LST ...)',
+        help='Name of the array (e.g. 1MST, 4LST ...)',
         type=str,
         required=True
     )
