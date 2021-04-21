@@ -49,7 +49,16 @@ PRIMARIES:
     names: ['PROTONS']
   HELIUM:
     number: 402
-    names: []
+    names: ['HE']
+  NITROGEN:
+    number: 1407
+    names: ['N']
+  SILICON:
+    number: 2500
+    names: ['SI']
+  IRON:
+    number: 5626
+    names: ['FE']
 
 SITE_PARAMETERS:
   South:
