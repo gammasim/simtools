@@ -35,7 +35,7 @@
         Azimuth angle in deg (default=0).
     output (str, optional)
         Path of the directory to store the output simulations. By default, \
-        the standard output directory set by config will be used.
+        the standard output directory defined by config will be used.
     test (activation mode, optional)
         If activated, no job will be submitted. Instead, an example of the \
         run script willbe printed.
