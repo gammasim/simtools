@@ -13,7 +13,7 @@
     The config entry extraCommands can be used to extra commands to be ran in each job,
     before the actual simulation.
 
-    At the moment, the shower simulations are performaed by CORSIKA, which requires \
+    At the moment, the shower simulations are performed by CORSIKA, which requires \
     the zstd package. Please, make sure that the command to set your zstd path is \
     properly set by the extraCommands in config.yml.
 
