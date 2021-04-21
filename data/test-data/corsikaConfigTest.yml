@@ -16,7 +16,7 @@ erange:
   unit: !astropy.units.Unit {unit: GeV}
   value: 10.0
 
-# Energy slope
+# Slope of energy spectrum
 eslope: -2
 
 # Zenith angle - single value or list of len 2 for range with min and max zenith
