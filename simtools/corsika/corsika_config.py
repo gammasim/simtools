@@ -58,7 +58,7 @@ class CorsikaConfig:
     layoutName: str
         Name of the layout.
     layout: LayoutArray
-        Instance of LayoutArray.
+        LayoutArray object containing the telescope positions.
     label: str
         Instance label.
     primary: str
@@ -149,9 +149,9 @@ class CorsikaConfig:
 
     def _loadCorsikaParametersFile(self, filename):
         '''
-        Load CORSIKA parameters from a file, if given (filename not None),
+        Load CORSIKA parameters from a given file (filename not None),
         or from the default parameter file provided in the
-        data directory (filename is given).
+        data directory (filename is None).
         '''
         if filename is not None:
             # User provided file.
