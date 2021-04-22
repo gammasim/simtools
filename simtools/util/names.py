@@ -659,7 +659,42 @@ def corsikaConfigFileName(arrayName, site, zenith, viewCone, label=None):
     '''
     isDiffuse = (viewCone[0] != 0 or viewCone[1] != 0)
 
-    name = 'corsika-config-{}-{}'.format(arrayName, site)
+    name = 'corsika-config_{}_{}'.format(site, arrayName)
+    name += '_za{:d}-{:d}'.format(int(zenith[0]), int(zenith[1]))
+    name += '_cone{:d}-{:d}'.format(int(viewCone[0]), int(viewCone[1])) if isDiffuse else ''
+    name += '_{}'.format(label) if label is not None else ''
+    name += '.input'
+    return name
+
+
+def corsikaConfigTmpFileName(arrayName, site, zenith, viewCone, run, label=None):
+    '''
+    Corsika config file name.
+
+    Parameters
+    ----------
+    arrayName: str
+        Array name.
+    site: str
+        South or North.
+    zenith: float
+        Zenith angle (deg).
+    viewCone: list of float
+        View cone limits (len = 2).
+    run: int
+        Run number.
+    label: str
+        Instance label.
+
+    Returns
+    -------
+    str
+        File name.
+    '''
+    isDiffuse = (viewCone[0] != 0 or viewCone[1] != 0)
+
+    name = 'corsika-config-run{}'.format(run)
+    name += '-{}-{}'.format(arrayName, site)
     name += '-za{:d}-{:d}'.format(int(zenith[0]), int(zenith[1]))
     name += '-cone{:d}-{:d}'.format(int(viewCone[0]), int(viewCone[1])) if isDiffuse else ''
     name += '_{}'.format(label) if label is not None else ''
@@ -667,7 +702,7 @@ def corsikaConfigFileName(arrayName, site, zenith, viewCone, label=None):
     return name
 
 
-def corsikaOutputFileName(arrayName, site, zenith, viewCone, run, label=None):
+def corsikaOutputFileName(run, primary, arrayName, site, zenith, azimuth, label=None):
     '''
     Corsika output file name.
 
@@ -695,16 +730,74 @@ def corsikaOutputFileName(arrayName, site, zenith, viewCone, run, label=None):
     str
         File name.
     '''
-    isDiffuse = (viewCone[0] != 0 or viewCone[1] != 0)
-
-    name = 'corsika-run{}-{}-{}-za{:d}-{:d}'.format(
+    name = 'run{}_{}_za{:d}deg_azm{:d}deg-{}-{}'.format(
         run,
-        arrayName,
+        primary,
+        int(zenith),
+        int(azimuth),
         site,
-        int(zenith[0]),
-        int(zenith[1])
+        arrayName
     )
-    name += '-cone{:d}-{:d}'.format(int(viewCone[0]), int(viewCone[1])) if isDiffuse else ''
     name += '_{}'.format(label) if label is not None else ''
     name += '.corsika.zst'
+    return name
+
+
+def corsikaOutputGenericFileName(arrayName, site, label=None):
+    name = 'run${RUNNR}_${PRMNAME}_za${ZA}deg_azm${AZM}deg'
+    name += '-{}-{}'.format(site, arrayName)
+    name += '_{}'.format(label) if label is not None else ''
+    name += '.corsika.zst'
+    return name
+
+
+def corsikaRunScriptFileName(arrayName, site, run, label=None):
+    '''
+    Corsika script file path.
+
+    Parameters
+    ----------
+    arrayName: str
+        Array name.
+    site: str
+        Paranal or LaPalma.
+    run: int
+        RUn number.
+    label: str
+        Instance label.
+
+    Returns
+    -------
+    str
+        File path.
+    '''
+    name = 'run-corsika-run{}-{}-{}'.format(run, arrayName, site)
+    name += '_{}'.format(label) if label is not None else ''
+    name += '.sh'
+    return name
+
+
+def corsikaRunLogFileName(arrayName, site, run, label=None):
+    '''
+    Corsika script file path.
+
+    Parameters
+    ----------
+    arrayName: str
+        Array name.
+    site: str
+        Paranal or LaPalma.
+    run: int
+        RUn number.
+    label: str
+        Instance label.
+
+    Returns
+    -------
+    str
+        File path.
+    '''
+    name = 'log-corsika-run{}-{}-{}'.format(run, arrayName, site)
+    name += '_{}'.format(label) if label is not None else ''
+    name += '.log'
     return name
