@@ -1,8 +1,8 @@
 import logging
 import copy
-import yaml
 
 import astropy.units as u
+from astropy.io.misc import yaml
 
 __all__ = [
     'collectArguments',
@@ -236,7 +236,7 @@ def collectDataFromYamlOrDict(inYaml, inDict):
         if inDict is not None:
             _logger.warning('Both inDict inYaml were given - inYaml will be used')
         with open(inYaml) as file:
-            data = yaml.load(file, Loader=yaml.FullLoader)
+            data = yaml.load(file)
         return data
     elif inDict is not None:
         return dict(inDict)
@@ -352,3 +352,19 @@ def getLogLevelFromUser(logLevel):
         )
     else:
         return possibleLevels[logLevelLower]
+
+def copyAsList(value):
+    '''
+    Copy value and, if it is not a list, turn it into a list with a single entry.
+
+    Parameters
+    ----------
+    value: single variable of any type, or list
+
+    Returns
+    -------
+    value: list
+        Copy of value if it is a list of [value] otherwise.
+    '''
+    return copy.copy(value) if isinstance(value, list) else [value]
+
