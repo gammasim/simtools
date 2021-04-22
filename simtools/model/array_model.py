@@ -6,6 +6,7 @@ import simtools.io_handler as io
 from simtools import db_handler
 from simtools.model.telescope_model import TelescopeModel
 from simtools.layout.layout_array import LayoutArray
+from simtools.simtel.simtel_config_writer import SimtelConfigWriter
 from simtools.util import names
 from simtools.util.general import collectDataFromYamlOrDict
 
@@ -53,8 +54,6 @@ class ArrayModel:
         Get the path to the config file for sim_telarray.
     '''
 
-    SITE_PARS_TO_WRITE_IN_CONFIG = ['altitude', 'atmospheric_transmission']
-
     def __init__(
         self,
         label=None,
@@ -72,8 +71,6 @@ class ArrayModel:
             Path to a yaml file with the array config data.
         arrayConfigData: dict
             Dict with the array config data.
-        version: str, optional
-            Version of the model (ex. prod4) (default: "Current").
         label: str, optional
             Instance label. Important for output file naming.
         modelFilesLocation: str (or Path), optional
@@ -211,7 +208,7 @@ class ArrayModel:
                 _allTelescopeModelNames.append(telModelName)
                 telModel = TelescopeModel(
                     telescopeName=telModelName,
-                    version=self.modelVersion,
+                    modelVersion=self.modelVersion,
                     label=self.label,
                     modelFilesLocations=self._modelFilesLocations,
                     filesLocation=self._filesLocation
@@ -247,7 +244,7 @@ class ArrayModel:
                     telData.name,
                     *_allParsToChange[telData.name]
                 ))
-                telModel.changeParameters(**_allParsToChange[telData.name])
+                telModel.changeMultipleParameters(**_allParsToChange[telData.name])
                 telModel.setExtraLabel(telData.name)
     # End of _buildArrayModel
 
@@ -361,106 +358,21 @@ class ArrayModel:
         self._configFilePath = self._configFileDirectory.joinpath(configFileName)
 
         # Writing parameters to the file
-        self._logger.info('Writing array config file - {}'.format(self._configFilePath))
-        with open(self._configFilePath, 'w') as file:
-            header = (
-                '%{}\n'.format(50 * '=')
-                + '% ARRAY CONFIGURATION FILE\n'
-                + '% Site: {}\n'.format(self.site)
-                + '% LayoutName: {}\n'.format(self.layoutName)
-                + '% ModelVersion: {}\n'.format(self.modelVersion)
-                + ('% Label: {}\n'.format(self.label) if self.label is not None else '')
-                + '%{}\n\n'.format(50 * '=')
-            )
-            file.write(header)
+        self._logger.info('Writing array config file into {}'.format(self._configFilePath))
+        simtelWriter = SimtelConfigWriter(
+            site=self.site,
+            layoutName=self.layoutName,
+            modelVersion=self.modelVersion,
+            label=self.label
+        )
+        simtelWriter.writeArrayConfigFile(
+            configFilePath=self._configFilePath,
+            layout=self.layout,
+            telescopeModel=self._telescopeModel,
+            siteParameters=self._siteParameters
+        )
 
-            # Be carefull with the formating - simtel is sensitive
-            tab = ' ' * 3
-
-            file.write('#ifndef TELESCOPE\n')
-            file.write('# define TELESCOPE 0\n')
-            file.write('#endif\n\n')
-
-            # TELESCOPE 0 - global parameters
-            file.write('#if TELESCOPE == 0\n')
-            file.write(tab + 'echo *****************************\n')
-            file.write(tab + 'echo Site: {}\n'.format(self.site))
-            file.write(tab + 'echo LayoutName: {}\n'.format(self.layoutName))
-            file.write(tab + 'echo ModelVersion: {}\n'.format(self.modelVersion))
-            file.write(tab + 'echo *****************************\n\n')
-
-            # Writing site parameters
-            file.write(tab + '% Site parameters\n')
-            for par in self._siteParameters:
-                if par not in self.SITE_PARS_TO_WRITE_IN_CONFIG:
-                    continue
-                value = self._siteParameters[par]['Value']
-                file.write(tab + '{} = {}\n'.format(par, value))
-            file.write('\n')
-
-            # Writing common parameters
-            file.write(tab + '% Common parameters\n')
-            self._writeCommonParameters(file)
-            file.write('\n')
-
-            # Maximum telescopes
-            file.write(tab + 'maximum_telescopes = {}\n\n'.format(self.numberOfTelescopes))
-
-            # Default telescope - 0th tel in telescope list
-            telConfigFile = (
-                self._telescopeModel[0].getConfigFile(noExport=True).name
-            )
-            file.write('# include <{}>\n\n'.format(telConfigFile))
-
-            # Looping over telescopes - from 1 to ...
-            for count, telModel in enumerate(self._telescopeModel):
-                telConfigFile = telModel.getConfigFile(noExport=True).name
-                file.write('%{}\n'.format(self.layout[count].name))
-                file.write('#elif TELESCOPE == {}\n\n'.format(count + 1))
-                file.write('# include <{}>\n\n'.format(telConfigFile))
-            file.write('#endif \n\n')
     # END exportSimtelArrayConfigFile
-
-    def _writeCommonParameters(self, file):
-        # Common parameters taken from CTA-PROD4-common.cfg
-        # TODO: Store these somewhere else
-        self._logger.warning('Common parameters are hardcoded!')
-        COMMON_PARS = {
-            'trigger_telescopes': 1,
-            'array_trigger': 'none',
-            'trigger_telescopes': 2,
-            'only_triggered_telescopes': 1,
-            'array_window': 1000,
-            'output_format': 1,
-            'mirror_list': 'none',
-            'telescope_random_angle': 0.,
-            'telescope_random_error': 0.,
-            'convergent_depth': 0,
-            'iobuf_maximum': 1000000000,
-            'iobuf_output_maximum': 400000000,
-            'multiplicity_offset': -0.5,
-            'discriminator_pulse_shape': 'none',
-            'discriminator_amplitude': 0.,
-            'discriminator_threshold': 99999.,
-            'fadc_noise': 0.,
-            'asum_threshold': 0.,
-            'asum_shaping_file': 'none',
-            'asum_offset': 0.0,
-            'dsum_threshold': 0,
-            'fadc_pulse_shape': 'none',
-            'fadc_amplitude': 0.,
-            'fadc_pedestal': 100.,
-            'fadc_max_signal': 4095,
-            'fadc_max_sum': 16777215,
-            'store_photoelectrons': 30,
-            'pulse_analysis': -30,
-            'sum_before_peak': 3,
-            'sum_after_peak': 4
-        }
-
-        for par, value in COMMON_PARS.items():
-            file.write('   {} = {}\n'.format(par, value))
-    # End of writeCommonParameters
 
     def exportAllSimtelConfigFiles(self):
         '''
