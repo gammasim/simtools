@@ -10,6 +10,6 @@ simtools Library
   mc_model
   ray_tracing
   camera_efficiency
-  simtel_runner
+  simtel
   layout
   util

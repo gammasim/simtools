@@ -7,26 +7,26 @@
 # - {name: pos_z, unit: m, datatype: float64}
 # - {name: lat, unit: deg, datatype: float64}
 # - {name: lon, unit: deg, datatype: float64}
-# - {name: utm_east, unit: deg, datatype: float64}
-# - {name: utm_north, unit: deg, datatype: float64}
+# - {name: utm_east, unit: m, datatype: float64}
+# - {name: utm_north, unit: m, datatype: float64}
 # - {name: alt, unit: m, datatype: float64}
 # meta:
 #   EPSG: 32628
 #   center_alt: !astropy.units.Quantity
 #     unit: &id001 !astropy.units.Unit {unit: m}
-#     value: 2177.0
+#     value: 2150.0
 #   center_easting: !astropy.units.Quantity
 #     unit: *id001
-#     value: 217611.0
+#     value: 217654.06411838497
 #   center_lat: !astropy.units.Quantity
 #     unit: &id002 !astropy.units.Unit {unit: deg}
-#     value: 28.7621661
+#     value: 28.762158
 #   center_lon: !astropy.units.Quantity
 #     unit: *id002
-#     value: -17.8920302
+#     value: -17.891571
 #   center_northing: !astropy.units.Quantity
 #     unit: *id001
-#     value: 3185066.0
+#     value: 3185065.2899643113
 #   corsika_obs_level: !astropy.units.Quantity
 #     unit: *id001
 #     value: 2158.0
@@ -52,4 +52,4 @@
 #       value: 3.0
 # schema: astropy-2.0
 telescope_name pos_x pos_y pos_z lat lon utm_east utm_north alt
-M-01 0.0 0.0 0.0 28.762166100000005 -17.8920302 217609.2270142641 3185067.278324084 2149.0
+M-01 0.0 0.0 0.0 28.762158000000007 -17.891571 217654.06411838497 3185065.2899643113 2149.0

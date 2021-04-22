@@ -285,7 +285,7 @@ class SimtelRunner:
             return c
 
         if self._isSingleMirrorMode():
-            _mirrorFocalLength = float(self.telescopeModel.getParameter('mirror_focal_length'))
+            _mirrorFocalLength = float(self.telescopeModel.getParameterValue('mirror_focal_length'))
 
         # RayTracing
         command = str(self._simtelSourcePath.joinpath('sim_telarray/bin/sim_telarray'))
@@ -293,7 +293,7 @@ class SimtelRunner:
         command += ' -I../cfg/CTA'
         command += _configOption('IMAGING_LIST', str(self._photonsFileName))
         command += _configOption('stars', str(self._starsFileName))
-        command += _configOption('altitude', self.telescopeModel.getParameter('altitude'))
+        command += _configOption('altitude', self.telescopeModel.getParameterValue('altitude'))
         command += _configOption('telescope_theta', self._zenithAngle + self._offAxisAngle)
         command += _configOption('star_photons', str(self.PHOTONS_PER_RUN))
         command += _configOption('telescope_phi', '0')
