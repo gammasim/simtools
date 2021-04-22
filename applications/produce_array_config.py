@@ -33,25 +33,29 @@
     with model parameters to be changed from the original model.
     Ex.:
 
-    'M-05': {
-            'name': 'NectarCam-D',
-            'fadc_pulse_shape': 'Pulse_template_nectarCam_17042020-noshift.dat',
-            'discriminator_pulse_shape': 'Pulse_template_nectarCam_17042020-noshift.dat'
-        }
+    .. code-block:: python
+
+        'M-05': {
+                'name': 'NectarCam-D',
+                'fadc_pulse_shape': 'Pulse_template_nectarCam_17042020-noshift.dat',
+                'discriminator_pulse_shape': 'Pulse_template_nectarCam_17042020-noshift.dat'
+            }
 
     This is an example of the content of an array_config file.
 
-    site: North,
-    layoutName: Prod5
-    modelVersion: Prod5
-    default:
-        LST: 'D234'  # Design model for the LSTs
-        MST: FlashCam-D  # Design model for the MST-FlashCam
-    L-01: '1'  # Model of L-01 in the LaPalma site.
-    M-05:
-        name: NectarCam-D
-        fadc_pulse_shape: Pulse_template_nectarCam_17042020-noshift.dat  # Parameters to be changed
-        discriminator_pulse_shape: Pulse_template_nectarCam_17042020-noshift.dat
+    .. code-block:: python
+
+        site: North,
+        layoutName: Prod5
+        modelVersion: Prod5
+        default:
+            LST: 'D234'  # Design model for the LSTs
+            MST: FlashCam-D  # Design model for the MST-FlashCam
+        L-01: '1'  # Model of L-01 in the LaPalma site.
+        M-05:
+            name: NectarCam-D
+            fadc_pulse_shape: Pulse_template_nectarCam_17042020-noshift.dat  # Parameters to be changed
+            discriminator_pulse_shape: Pulse_template_nectarCam_17042020-noshift.dat
 
     Command line arguments
     ----------------------
@@ -70,8 +74,7 @@
 
     .. code-block:: console
 
-        python applications/produce_array_config.py --label test --array_config \
-        data/test-data/arrayConfigTest.yml -v DEBUG
+        python applications/produce_array_config.py --label test --array_config data/test-data/arrayConfigTest.yml -v DEBUG
 
     All the produced model files can be found in simtools-output/test/model/
 
