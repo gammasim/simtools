@@ -4,6 +4,7 @@ import logging
 import unittest
 
 import simtools.io_handler as io
+from simtools.util.general import fileHasText
 from simtools.simtel.simtel_config_writer import SimtelConfigWriter
 from simtools.model.telescope_model import TelescopeModel
 from simtools.layout.layout_array import LayoutArray
@@ -11,13 +12,6 @@ from simtools.layout.layout_array import LayoutArray
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
-
-def file_has_text(file, text):
-    with open(file, 'r') as ff:
-        for ll in ff:
-            if text in ll:
-                return True
-    return False
 
 class TestSimtelConfigWriter(unittest.TestCase):
 
@@ -43,7 +37,7 @@ class TestSimtelConfigWriter(unittest.TestCase):
             telescopeModel=[self.telescopeModel] * 4,
             siteParameters={}
         )
-        self.assertTrue(file_has_text(file, 'TELESCOPE == 1'))
+        self.assertTrue(fileHasText(file, 'TELESCOPE == 1'))
 
     def test_write_tel_config_file(self):
         file = io.getTestOutputFile('simtel-config-writer_telescope.txt')
@@ -51,7 +45,7 @@ class TestSimtelConfigWriter(unittest.TestCase):
             configFilePath=file,
             parameters={'par': {'Value': 1}}
         )
-        self.assertTrue(file_has_text(file, 'par = 1'))
+        self.assertTrue(fileHasText(file, 'par = 1'))
 
 
 if __name__ == '__main__':
