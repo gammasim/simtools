@@ -3,7 +3,7 @@
 import logging
 import astropy.units as u
 
-from simtools.simtel_runner import SimtelRunner, SimtelExecutionError
+from simtools.simtel.simtel_runner import SimtelRunner, SimtelExecutionError
 from simtools.model.telescope_model import TelescopeModel
 import simtools.config as cfg
 
@@ -14,7 +14,7 @@ logger.setLevel(logging.DEBUG)
 def test_ray_tracing_mode():
     tel = TelescopeModel(
         telescopeName='north-lst-1',
-        version='Current',
+        modelVersion='Current',
         label='test-simtel'
     )
 
@@ -33,7 +33,7 @@ def test_ray_tracing_mode():
 def test_catching_model_error():
     tel = TelescopeModel(
         telescopeName='north-lst-1',
-        version='Current',
+        modelVersion='Current',
         label='test-simtel'
     )
 
@@ -42,7 +42,7 @@ def test_catching_model_error():
     file_spe = cfg.findFile(name='spe_FlashCam_7dynode_v0a.dat')
     file_pulse = cfg.findFile(name='pulse_FlashCam_7dynode_v2a.dat')
 
-    tel.changeParameters(pm_photoelectron_spectrum=file_spe, fadc_pulse_shape=file_pulse)
+    tel.changeMultipleParameters(pm_photoelectron_spectrum=file_spe, fadc_pulse_shape=file_pulse)
 
     simtel = SimtelRunner(
         mode='ray-tracing',

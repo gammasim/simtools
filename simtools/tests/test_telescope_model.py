@@ -1,101 +1,69 @@
 #!/usr/bin/python3
 
 import logging
+import unittest
 
-from simtools.model.telescope_model import TelescopeModel
+from simtools.model.telescope_model import TelescopeModel, InvalidParameter
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 
-def test_input_validation():
-    telName = 'north-lst-1'
-    logger.info('Input telName: {}'.format(telName))
+class TestTelescopeModel(unittest.TestCase):
 
-    tel = TelescopeModel(
-        telescopeName=telName,
-        version='Current',
-        label='test-lst'
-    )
-
-    logger.info('Validated telName: {}'.format(tel.telescopeName))
-    return
-
-
-def test_handling_parameters():
-    tel = TelescopeModel(
-        telescopeName='north-lst-1',
-        version='Current',
-        label='test-lst'
-    )
-
-    logger.info(
-        'Old mirror_reflection_random_angle:{}'.format(
-            tel.getParameter('mirror_reflection_random_angle')
+    def setUp(self):
+        self.label = 'test-telescope-model'
+        self.telModel = TelescopeModel(
+            telescopeName='North-LST-1',
+            modelVersion='Current',
+            label='test-telescope-model'
         )
-    )
-    logger.info('Changing mirror_reflection_random_angle')
-    new_mrra = '0.0080 0 0'
-    tel.changeParameters(mirror_reflection_random_angle=new_mrra)
-    assert tel.getParameter('mirror_reflection_random_angle') == new_mrra
 
-    logging.info('Adding new_parameter')
-    new_par = '23'
-    tel.addParameters(new_parameter=new_par)
-    assert tel.getParameter('new_parameter') == new_par
-    return
+    def test_handling_parameters(self):
+        logger.info(
+            'Old mirror_reflection_random_angle:{}'.format(
+                self.telModel.getParameterValue('mirror_reflection_random_angle')
+            )
+        )
+        logger.info('Changing mirror_reflection_random_angle')
+        new_mrra = '0.0080 0 0'
+        self.telModel.changeParameter('mirror_reflection_random_angle', new_mrra)
+        self.assertEqual(
+            self.telModel.getParameterValue('mirror_reflection_random_angle'),
+            new_mrra
+        )
 
+        logging.info('Adding new_parameter')
+        new_par = '23'
+        self.telModel.addParameter('new_parameter', new_par)
+        self.assertEqual(self.telModel.getParameterValue('new_parameter'), new_par)
 
-def test_flen_type():
-    tel = TelescopeModel(
-        telescopeName='north-lst-1',
-        version='Current',
-        label='test-lst',
-    )
-    flen = tel.getParameter('focal_length')
-    logger.info('Focal Length = {}, type = {}'.format(flen, type(flen)))
-    assert type(flen) == float
-    return
+        with self.assertRaises(InvalidParameter):
+            self.telModel.getParameter('bla_bla')
 
+    def test_flen_type(self):
+        flenInfo = self.telModel.getParameter('focal_length')
+        logger.info('Focal Length = {}, type = {}'.format(
+            flenInfo['Value'],
+            flenInfo['Type'])
+        )
+        self.assertIsInstance(flenInfo['Value'], float)
 
-def test_cfg_file():
-    # Exporting
-    tel = TelescopeModel(
-        telescopeName='south-sst-d',
-        version='Current',
-        label='test-sst'
-    )
-    # tel.exportConfigFile(loc='/home/prado/Work/Projects/CTA_MC/MCLib')
-    tel.exportConfigFile()
+    def test_cfg_file(self):
+        # Exporting
+        self.telModel.exportConfigFile()
 
-    logger.info('Config file: {}'.format(tel.getConfigFile()))
+        logger.info('Config file: {}'.format(self.telModel.getConfigFile()))
 
-    # Importing
-    cfgFile = tel.getConfigFile()
-    tel = TelescopeModel.fromConfigFile(
-        telescopeName='south-sst-d',
-        label='test-sst',
-        configFileName=cfgFile
-    )
-    tel.exportConfigFile()
-    return
-
-
-def test_cfg_input():
-    tel = TelescopeModel(
-        telescopeName='north-lst-1',
-        version='Current',
-        label='test-sst-2'
-    )
-    return
+        # Importing
+        cfgFile = self.telModel.getConfigFile()
+        tel = TelescopeModel.fromConfigFile(
+            telescopeName='south-sst-d',
+            label='test-sst',
+            configFileName=cfgFile
+        )
+        tel.exportConfigFile()
 
 
 if __name__ == '__main__':
-
-    # test_handling_parameters()
-    # test_input_validation()
-    # test_flen_type()
-    # test_cfg_file()
-    # test_cfg_input()
-    test_pars_from_db_handler()
-    pass
+    unittest.main()

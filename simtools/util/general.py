@@ -27,6 +27,28 @@ class MissingRequiredArgument(Exception):
     pass
 
 
+def fileHasText(file, text):
+    '''
+    Check whether a file contain a certain piece of text.
+
+    Parameters
+    ----------
+    file: str
+        Path of the file.
+    text: str
+        Piece of text to be searched for.
+
+    Returns
+    -------
+    bool
+    '''
+    with open(file, 'r') as ff:
+        for ll in ff:
+            if text in ll:
+                return True
+    return False
+
+
 def _unitsAreConvertible(quantity_1, quantity_2):
     '''
     Parameters
