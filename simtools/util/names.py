@@ -355,7 +355,7 @@ allLayoutArrayNames = {
 }
 
 
-def simtelTelescopeConfigFileName(version, telescopeName, label):
+def simtelTelescopeConfigFileName(version, telescopeName, label, extraLabel):
     '''
     sim_telarray config file name for a telescope.
 
@@ -367,6 +367,8 @@ def simtelTelescopeConfigFileName(version, telescopeName, label):
         North-LST-1, South-MST-FlashCam, ...
     label: str
         Instance label.
+    extraLabel: str
+        Extra label in case of multiple telescope config files.
 
     Returns
     -------
@@ -375,6 +377,7 @@ def simtelTelescopeConfigFileName(version, telescopeName, label):
     '''
     name = 'CTA-{}-{}'.format(version, telescopeName)
     name += '_{}'.format(label) if label is not None else ''
+    name += '_{}'.format(extraLabel) if extraLabel is not None else ''
     name += '.cfg'
     return name
 
