@@ -62,8 +62,7 @@
 
     .. code-block:: console
 
-        python applications/compare_cumulative_psf.py --tel_name North-LST-1 \
-        --model_version prod4 --pars lst_pars.yml --data PSFcurve_data_v2.txt
+        python applications/compare_cumulative_psf.py --site North --telescope LST-1 --model_version prod4 --pars lst_pars.yml --data PSFcurve_data_v2.txt
 
     .. todo::
 

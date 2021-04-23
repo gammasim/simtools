@@ -77,9 +77,7 @@
 
     .. code-block:: console
 
-        python applications/derive_mirror_rnda.py --tel_name North-MST-FlashCam-D --mean_d80 1.4 \
-        --sig_d80 0.16 --mirror_list mirror_MST_focal_lengths.dat --d80_list mirror_MST_D80.dat \
-        --rnda 0.0075
+        python applications/derive_mirror_rnda.py --site North --telescope MST-FlashCam-D --mean_d80 1.4 --sig_d80 0.16 --mirror_list mirror_MST_focal_lengths.dat --d80_list mirror_MST_D80.dat --rnda 0.0075
 
 
     Expected output:
@@ -131,9 +129,16 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
     parser.add_argument(
+        '-s',
+        '--site',
+        help='North or South',
+        type=str,
+        required=True
+    )
+    parser.add_argument(
         '-t',
-        '--tel_name',
-        help='Telescope name (e.g. North-LST-1, South-SST-D, ...)',
+        '--telescope',
+        help='Telescope model name (e.g. LST-1, SST-D, ...)',
         type=str,
         required=True
     )
@@ -223,7 +228,8 @@ if __name__ == '__main__':
     outputDir = io.getApplicationOutputDirectory(cfg.get('outputLocation'), label)
 
     tel = TelescopeModel(
-        telescopeName=args.tel_name,
+        site=args.site,
+        telescopeModelName=args.telescope,
         version=args.model_version,
         label=label
     )
