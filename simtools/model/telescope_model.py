@@ -44,7 +44,7 @@ class TelescopeModel:
 
     Methods
     -------
-    fromConfigFile(configFileName, telescopeName, label=None, filesLocation=None)
+    fromConfigFile(configFileName, telescopeModelName, label=None, filesLocation=None)
         Create a TelescopeModel from a sim_telarray cfg file.
     setExtraLabel(extraLabel)
         Set an extra label for the name of the config file.
@@ -102,7 +102,7 @@ class TelescopeModel:
         self._logger.debug('Init TelescopeModel')
 
         self.site = names.validateSiteName(site)
-        self.name = names.validateTelescopeName(telescopeModelName)
+        self.name = names.validateTelescopeModelName(telescopeModelName)
         self.modelVersion = names.validateModelVersionName(modelVersion)
         self.label = label
         self._extraLabel = None
@@ -593,7 +593,7 @@ class TelescopeModel:
             cameraConfigFilePath = cfg.findFile(cameraConfigFile, self._modelFilesLocations)
 
         self._camera = Camera(
-            telescopeName=self.telescopeName,
+            telescopeModelName=self.name,
             cameraConfigFile=cameraConfigFilePath,
             focalLength=focalLength
         )
