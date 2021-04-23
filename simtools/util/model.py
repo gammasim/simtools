@@ -65,14 +65,14 @@ def validateModelParameter(parNameIn, parValueIn):
     return parNameIn, parValueIn
 
 
-def getCameraName(telescopeName):
+def getCameraName(telescopeModelName):
     '''
     Get camera name from the telescope name.
 
     Parameters
     ----------
-    telescopeName: str
-        Telescope name (ex. South-LST-1)
+    telescopeModelName: str
+        Telescope model name (ex. LST-1)
 
     Returns
     -------
@@ -81,7 +81,7 @@ def getCameraName(telescopeName):
     '''
     _logger = logging.getLogger(__name__)
     cameraName = ''
-    telSite, telClass, telType = names.splitTelescopeName(telescopeName)
+    telClass, telType = names.splitTelescopeModelName(telescopeModelName)
     if telClass == 'LST':
         cameraName = 'LST'
     elif telClass == 'MST':
@@ -110,39 +110,39 @@ def getCameraName(telescopeName):
     return cameraName
 
 
-def getTelescopeClass(telescopeName):
+def getTelescopeClass(telescopeModelName):
     '''
     Get telescope class from telescope name.
 
     Parameters
     ----------
-    telescopeName: str
-        Telescope name (ex. South-LST-1)
+    telescopeModelName: str
+        Telescope model name (ex. LST-1)
 
     Returns
     -------
     str
         Telescope class (SST, MST, ...)
     '''
-    telSite, telClass, telType = names.splitTelescopeName(telescopeName)
+    telClass, _ = names.splitTelescopeModelName(telescopeModelName)
     return telClass
 
 
-def isTwoMirrorTelescope(telescopeName):
+def isTwoMirrorTelescope(telescopeModelName):
     '''
     Check if the telescope is a two mirror design.
 
     Parameters
     ----------
-    telescopeName: str
-        Telescope name (ex. South-LST-1)
+    telescopeModelName: str
+        Telescope model name (ex. LST-1)
 
     Returns
     -------
     bool
         True if the telescope is a two mirror one.
     '''
-    telSite, telClass, telType = names.splitTelescopeName(telescopeName)
+    telClass, telType = names.splitTelescopeName(telescopeModelName)
     if telClass == 'SST':
         # Only 1M is False
         return False if '1M' in telType else True
