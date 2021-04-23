@@ -79,7 +79,7 @@ class SimtelConfigWriter:
         'sum_after_peak': 4
     }
 
-    def __init__(self, site, modelVersion, layoutName=None, telescopeName=None, label=None):
+    def __init__(self, site, modelVersion, layoutName=None, telescopeModelName=None, label=None):
         '''
         SimtelConfigWriter.
 
@@ -89,8 +89,8 @@ class SimtelConfigWriter:
             South or North.
         modelVersion: str, required.
             Version of the model (ex. prod4).
-        telescopeName: str, optional.
-            Telescope name.
+        telescopeModelName: str, optional.
+            Telescope model name.
         layoutName: str, optional.
             Layout name.
         label: str, optional
@@ -103,7 +103,7 @@ class SimtelConfigWriter:
         self._modelVersion = modelVersion
         self._label = label
         self._layoutName = layoutName
-        self._telescopeName = telescopeName
+        self._telescopeModelName = telescopeModelName
 
     def writeTelescopeConfigFile(self, configFilePath, parameters):
         '''
@@ -121,7 +121,7 @@ class SimtelConfigWriter:
 
             file.write('#ifdef TELESCOPE\n')
             file.write(
-                '   echo Configuration for {}'.format(self._telescopeName)
+                '   echo Configuration for {}'.format(self._telescopeModelName)
                 + ' - TELESCOPE $(TELESCOPE)\n'
             )
             file.write('#endif\n\n')
@@ -249,8 +249,8 @@ class SimtelConfigWriter:
         header += '{} Site: {}\n'.format(commentChar, self._site)
         header += '{} ModelVersion: {}\n'.format(commentChar, self._modelVersion)
         header += (
-            '{} TelescopeName: {}\n'.format(commentChar, self._telescopeName)
-            if self._telescopeName is not None else ''
+            '{} TelescopeModelName: {}\n'.format(commentChar, self._telescopeModelName)
+            if self._telescopeModelName is not None else ''
         )
         header += (
             '{} LayoutName: {}\n'.format(commentChar, self._layoutName)

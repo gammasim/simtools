@@ -410,16 +410,18 @@ def simtelArrayConfigFileName(arrayName, site, version, label):
     return name
 
 
-def simtelSingleMirrorListFileName(version, telescopeName, mirrorNumber, label):
+def simtelSingleMirrorListFileName(site, telescopeModelName, modelVersion, mirrorNumber, label):
     '''
     sim_telarray mirror list file with a single mirror.
 
     Parameters
     ----------
-    version: str
-        Version of the model.
-    telescopeName: str
+    site: str
+        South or North.
+    telescopeModelName: str
         North-LST-1, South-MST-FlashCam, ...
+    modelVersion: str
+        Version of the model.
     mirrorNumber: int
         Mirror number.
     label: str
@@ -430,7 +432,7 @@ def simtelSingleMirrorListFileName(version, telescopeName, mirrorNumber, label):
     str
         File name.
     '''
-    name = 'CTA-single-mirror-list-{}-{}'.format(version, telescopeName)
+    name = 'CTA-single-mirror-list-{}-{}-{}'.format(site, telescopeModelName, modelVersion)
     name += '-mirror{}'.format(mirrorNumber)
     name += '_{}'.format(label) if label is not None else ''
     name += '.dat'
