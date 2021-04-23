@@ -243,6 +243,7 @@ class RayTracing:
                     self._logger.debug('mirrorNumber={}'.format(thisMirror))
 
                 photonsFileName = names.rayTracingFileName(
+                    self._telescopeModel.site,
                     self._telescopeModel.name,
                     self._sourceDistance,
                     self._zenithAngle,
