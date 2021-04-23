@@ -230,7 +230,7 @@ if __name__ == '__main__':
     tel = TelescopeModel(
         site=args.site,
         telescopeModelName=args.telescope,
-        version=args.model_version,
+        modelVersion=args.model_version,
         label=label
     )
     if args.mirror_list is not None:
