@@ -17,7 +17,7 @@ def test_reading_db_lst():
 
     logger.info('----Testing reading LST-----')
     db = db_handler.DatabaseHandler()
-    pars = db.getModelParameters('north-lst-1', 'Current', testDataDirectory)
+    pars = db.getModelParameters('north', 'lst-1', 'Current', testDataDirectory)
     if cfg.get('useMongoDB'):
         assert(pars['parabolic_dish']['Value'] == 1)
         assert(pars['camera_pixels']['Value'] == 1855)
@@ -35,7 +35,7 @@ def test_reading_db_mst_nc():
 
     logger.info('----Testing reading MST-NectarCam-----')
     db = db_handler.DatabaseHandler()
-    pars = db.getModelParameters('north-mst-NectarCam-D', 'Current', testDataDirectory)
+    pars = db.getModelParameters('north', 'mst-NectarCam-D', 'Current', testDataDirectory)
     if cfg.get('useMongoDB'):
         assert(pars['camera_pixels']['Value'] == 1855)
     else:
@@ -54,7 +54,7 @@ def test_reading_db_mst_fc():
 
     logger.info('----Testing reading MST-FlashCam-----')
     db = db_handler.DatabaseHandler()
-    pars = db.getModelParameters('north-mst-FlashCam-D', 'Current', testDataDirectory)
+    pars = db.getModelParameters('north', 'mst-FlashCam-D', 'Current', testDataDirectory)
     if cfg.get('useMongoDB'):
         assert(pars['camera_pixels']['Value'] == 1764)
     else:
@@ -73,7 +73,7 @@ def test_reading_db_sst():
 
     logger.info('----Testing reading SST-----')
     db = db_handler.DatabaseHandler()
-    pars = db.getModelParameters('south-sst-D', 'Current', testDataDirectory)
+    pars = db.getModelParameters('south', 'sst-D', 'Current', testDataDirectory)
     if cfg.get('useMongoDB'):
         assert(pars['camera_pixels']['Value'] == 2048)
     else:
@@ -193,10 +193,10 @@ def test_reading_db_sites():
 if __name__ == '__main__':
 
     # test_get_model_file()
-    # test_reading_db_lst()
+    test_reading_db_lst()
     # test_reading_db_mst_nc()
     # test_reading_db_mst_fc()
     # test_reading_db_sst()
     # test_modify_db()
-    test_reading_db_sites()
+    # test_reading_db_sites()
     pass
