@@ -19,9 +19,16 @@ if __name__ == '__main__':
         )
     )
     parser.add_argument(
+        '-s',
+        '--site',
+        help='Site (North or South)',
+        type=str,
+        required=True
+    )
+    parser.add_argument(
         '-t',
         '--tel_type',
-        help='Telescope type (e.g. north-lst-1, south-sst-d)',
+        help='Telescope type (e.g. LST-1, SST-D)',
         type=str,
         required=True
     )
@@ -65,7 +72,7 @@ if __name__ == '__main__':
         raise NotImplemented('Printing last 5 versions is not implemented yet.')
     else:
         version = args.version
-    pars = db.getModelParameters(args.tel_type, version)
+    pars = db.getModelParameters(args.site, args.tel_type, version)
     print()
     pprint(pars[args.parameter])
     print()
