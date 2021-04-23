@@ -156,7 +156,7 @@ if __name__ == '__main__':
 
     print(
         '\nValidating telescope optics with ray tracing simulations'
-        ' for {}\n'.format(telModel.telescopeName)
+        ' for {}\n'.format(telModel.name)
     )
 
     ray = RayTracing(
