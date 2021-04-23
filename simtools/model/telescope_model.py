@@ -29,8 +29,8 @@ class TelescopeModel:
     ----------
     site: str
         North or South.
-    telescopeName: str
-        Telescope name for the base set of parameters (ex. North-LST-1, ...).
+    name: str
+        Telescope name for the base set of parameters (ex. LST-1, ...).
     modelVersion: str
         Version of the model (ex. prod4).
     label: str
@@ -68,7 +68,8 @@ class TelescopeModel:
 
     def __init__(
         self,
-        telescopeName,
+        site,
+        telescopeModelName,
         modelVersion='Current',
         label=None,
         modelFilesLocations=None,
@@ -80,8 +81,10 @@ class TelescopeModel:
 
         Parameters
         ----------
-        telescopeName: str
-            Telescope name (ex. North-LST-1, ...).
+        site: str
+            South or North.
+        telescopeModelName: str
+            Telescope name (ex. LST-1, ...).
         modelVersion: str, optional
             Version of the model (ex. prod4) (default='Current').
         label: str, optional
@@ -98,11 +101,11 @@ class TelescopeModel:
         self._logger = logging.getLogger(__name__)
         self._logger.debug('Init TelescopeModel')
 
+        self.site = names.validateSiteName(site)
+        self.name = names.validateTelescopeName(telescopeModelName)
         self.modelVersion = names.validateModelVersionName(modelVersion)
-        self.telescopeName = names.validateTelescopeName(telescopeName)
         self.label = label
         self._extraLabel = None
-        self.site = names.getSiteFromTelescopeName(self.telescopeName)
 
         self._modelFilesLocations = cfg.getConfigArg('modelFilesLocations', modelFilesLocations)
         self._filesLocation = cfg.getConfigArg('outputLocation', filesLocation)
@@ -135,7 +138,8 @@ class TelescopeModel:
     def fromConfigFile(
         cls,
         configFileName,
-        telescopeName,
+        site,
+        telescopeModelName,
         label=None,
         modelFilesLocations=None,
         filesLocation=None
@@ -152,8 +156,10 @@ class TelescopeModel:
         ----------
         configFileName: str or Path
             Path to the input config file.
-        telescopeName: str
-            Telescope name for the base set of parameters (ex. North-LST-1, ...).
+        site: str
+            South or North.
+        telescopeModelName: str
+            Telescope model name for the base set of parameters (ex. LST-1, ...).
         label: str, optional
             Instance label. Important for output file naming.
         modelFilesLocation: str (or Path), optional
@@ -169,7 +175,8 @@ class TelescopeModel:
         '''
         parameters = dict()
         tel = cls(
-            telescopeName=telescopeName,
+            site=site,
+            telescopeModelName=telescopeModelName,
             label=label,
             modelFilesLocations=modelFilesLocations,
             filesLocation=filesLocation,
@@ -247,8 +254,9 @@ class TelescopeModel:
 
         # Setting file name and the location
         configFileName = names.simtelTelescopeConfigFileName(
+            self.site,
+            self.name,
             self.modelVersion,
-            self.telescopeName,
             self.label,
             self._extraLabel
         )
@@ -262,7 +270,8 @@ class TelescopeModel:
         self._setConfigFileDirectoryAndName()
         db = db_handler.DatabaseHandler()
         self._parameters = db.getModelParameters(
-            self.telescopeName,
+            self.site,
+            self.name,
             self.modelVersion,
             self._configFileDirectory,
             onlyApplicable=True
