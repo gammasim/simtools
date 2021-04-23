@@ -69,23 +69,23 @@ def test_reading_db_mst_fc():
     return
 
 
-# def test_reading_db_sst():
+def test_reading_db_sst():
 
-#     logger.info('----Testing reading SST-----')
-#     db = db_handler.DatabaseHandler()
-#     pars = db.getModelParameters('south', 'sst-D', 'Current', testDataDirectory)
-#     if cfg.get('useMongoDB'):
-#         assert(pars['camera_pixels']['Value'] == 2048)
-#     else:
-#         assert(pars['camera_pixels'] == 2048)
+    logger.info('----Testing reading SST-----')
+    db = db_handler.DatabaseHandler()
+    pars = db.getModelParameters('south', 'sst-D', 'Current', testDataDirectory)
+    if cfg.get('useMongoDB'):
+        assert(pars['camera_pixels']['Value'] == 2048)
+    else:
+        assert(pars['camera_pixels'] == 2048)
 
-#     logger.info('Listing files written in {}'.format(testDataDirectory))
-#     subprocess.call(['ls -lh {}'.format(testDataDirectory)], shell=True)
+    logger.info('Listing files written in {}'.format(testDataDirectory))
+    subprocess.call(['ls -lh {}'.format(testDataDirectory)], shell=True)
 
-#     logger.info('Removing the files written in {}'.format(testDataDirectory))
-#     subprocess.call(['rm -f {}/*'.format(testDataDirectory)], shell=True)
+    logger.info('Removing the files written in {}'.format(testDataDirectory))
+    subprocess.call(['rm -f {}/*'.format(testDataDirectory)], shell=True)
 
-#     return
+    return
 
 
 def test_modify_db():
