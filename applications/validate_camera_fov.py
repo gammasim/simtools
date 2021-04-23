@@ -109,7 +109,7 @@ if __name__ == '__main__':
     cameraConfigFile = telModel.getParameter('camera_config_file')
     focalLength = float(telModel.getParameter('effective_focal_length'))
     camera = Camera(
-        telescopeName=telModel.name,
+        telescopeModelName=telModel.name,
         cameraConfigFile=cfg.findFile(cameraConfigFile),
         focalLength=focalLength
     )
