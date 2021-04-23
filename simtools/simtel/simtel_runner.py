@@ -214,6 +214,7 @@ class SimtelRunner:
         ''' Tells if simulations should be run again based on the existence of output files. '''
         if self._isRayTracingMode():
             photonsFileName = names.rayTracingFileName(
+                self.telescopeModel.site,
                 self.telescopeModel.name,
                 self._sourceDistance,
                 self._zenithAngle,
@@ -241,6 +242,7 @@ class SimtelRunner:
             # Files will be named _baseFileName = self.__dict__['_' + base + 'FileName']
             for baseName in ['stars', 'photons', 'log']:
                 fileName = names.rayTracingFileName(
+                    self.telescopeModel.site,
                     self.telescopeModel.name,
                     self._sourceDistance,
                     self._zenithAngle,
