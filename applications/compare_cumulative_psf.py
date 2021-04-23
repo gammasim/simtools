@@ -209,7 +209,7 @@ if __name__ == '__main__':
     plt = visualize.plot1D(dataToPlot)
     plt.gca().set_ylim(0, 1.05)
 
-    plotFileName = label + '_' + telModel.telescopeName + '_cumulativePSF'
+    plotFileName = label + '_' + telModel.name + '_cumulativePSF'
     plotFile = outputDir.joinpath(plotFileName)
     for f in ['pdf', 'png']:
         plt.savefig(str(plotFile) + '.' + f, format=f, bbox_inches='tight')
@@ -221,7 +221,7 @@ if __name__ == '__main__':
     circle = plt.Circle((0, 0), im.getPSF(0.8) / 2, color='k', fill=False, lw=2, ls='--')
     plt.gca().add_artist(circle)
 
-    plotFileName = label + '_' + telModel.telescopeName + '_image'
+    plotFileName = label + '_' + telModel.name + '_image'
     plotFile = outputDir.joinpath(plotFileName)
     for f in ['pdf', 'png']:
         plt.savefig(str(plotFile) + '.' + f, format=f, bbox_inches='tight')
