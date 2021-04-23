@@ -532,7 +532,7 @@ def rayTracingResultsFileName(site, telescopeModelName, sourceDistance, zenithAn
     str
         File name.
     '''
-    name = 'ray-tracing-{}-d{:.1f}-za{:.1f}'.format(
+    name = 'ray-tracing-{}-{}-d{:.1f}-za{:.1f}'.format(
         site,
         telescopeModelName,
         sourceDistance,

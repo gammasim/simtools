@@ -145,6 +145,7 @@ class RayTracing:
 
         # Results file
         fileNameResults = names.rayTracingResultsFileName(
+            self._telescopeModel.site,
             self._telescopeModel.name,
             self._sourceDistance,
             self._zenithAngle,
