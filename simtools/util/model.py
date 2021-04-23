@@ -142,7 +142,7 @@ def isTwoMirrorTelescope(telescopeModelName):
     bool
         True if the telescope is a two mirror one.
     '''
-    telClass, telType = names.splitTelescopeName(telescopeModelName)
+    telClass, telType = names.splitTelescopeModelName(telescopeModelName)
     if telClass == 'SST':
         # Only 1M is False
         return False if '1M' in telType else True
