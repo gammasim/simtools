@@ -20,10 +20,11 @@ class TestSimtelConfigWriter(unittest.TestCase):
             site='North',
             modelVersion='Current',
             label='test-simtel-config-writer',
-            telescopeName='TestTelecope'
+            telescopeModelName='TestTelecope'
         )
         self.telescopeModel = TelescopeModel(
-            telescopeName='North-LST-1',
+            site='North',
+            telescopeModelName='LST-1',
             modelVersion='Current',
             label='test-telescope-model'
         )
