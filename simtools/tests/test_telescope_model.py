@@ -14,7 +14,8 @@ class TestTelescopeModel(unittest.TestCase):
     def setUp(self):
         self.label = 'test-telescope-model'
         self.telModel = TelescopeModel(
-            telescopeName='North-LST-1',
+            site='North',
+            telescopeModelName='LST-1',
             modelVersion='Current',
             label='test-telescope-model'
         )
@@ -58,7 +59,8 @@ class TestTelescopeModel(unittest.TestCase):
         # Importing
         cfgFile = self.telModel.getConfigFile()
         tel = TelescopeModel.fromConfigFile(
-            telescopeName='south-sst-d',
+            site='south',
+            telescopeModelName='sst-d',
             label='test-sst',
             configFileName=cfgFile
         )
