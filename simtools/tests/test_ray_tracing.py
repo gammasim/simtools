@@ -59,13 +59,13 @@ def test_ssts(show=False):
 
 def test_rx():
     sourceDistance = 10 * u.km
-    version = 'prod3'
+    version = 'current'
     label = 'test-lst'
     zenithAngle = 20 * u.deg
     offAxisAngle = [0, 2.5, 5.0] * u.deg
 
     tel = TelescopeModel(
-        site='south',
+        site='north',
         telescopeModelName='lst-1',
         modelVersion=version,
         label=label

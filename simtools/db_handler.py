@@ -333,7 +333,10 @@ class DatabaseHandler:
         '''
 
         _telNameDB = self._getTelescopeModelNameForDB(site, telescopeModelName)
-        _telClass = getTelescopeClass(_telNameDB)
+        _telClass = getTelescopeClass(telescopeModelName)
+
+        self._logger.debug('TelNameDB: {}'.format(_telNameDB))
+        self._logger.debug('TelClass: {}'.format(_telClass))
 
         if _telClass == 'MST':
             # MST-FlashCam or MST-NectarCam
