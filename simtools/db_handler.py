@@ -267,10 +267,8 @@ class DatabaseHandler:
         dict containing the parameters
         '''
 
-        _telNameDB = self._getTelescopeModelNameForDB(site, telescopeModelName)
-
-        _telClass = getTelescopeClass(_telNameDB)
-        _telNameConverted = names.convertTelescopeNameToYaml(_telNameDB)
+        _telClass = getTelescopeClass(telescopeModelName)
+        _telNameConverted = names.convertTelescopeModelNameToYaml(telescopeModelName)
 
         if _telClass == 'MST':
             # MST-FlashCam or MST-NectarCam
