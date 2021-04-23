@@ -17,8 +17,10 @@
 
     Command line arguments
     ----------------------
-    tel_name (str, required)
-        Telescope name (e.g. North-LST-1, South-SST-D, ...)
+    site (str, required)
+        North or South.
+    telescope (str, required)
+        Telescope model name (e.g. LST-1, SST-D, ...)
     model_version (str, optional)
         Model version (default=prod4)
     verbosity (str, optional)
@@ -32,8 +34,7 @@
 
     .. code-block:: console
 
-        python applications/validate_camera_efficiency.py --tel_name North-MST-NectarCam-D \
-        --model_version prod4
+        python applications/validate_camera_efficiency.py --site North --telescope MST-NectarCam-D --model_version prod4
 
     .. todo::
 
@@ -61,9 +62,16 @@ if __name__ == '__main__':
         )
     )
     parser.add_argument(
+        '-s',
+        '--site',
+        help='North or South',
+        type=str,
+        required=True
+    )
+    parser.add_argument(
         '-t',
-        '--tel_name',
-        help='Telescope name (e.g. North-LST-1, South-SST-D)',
+        '--telescope',
+        help='Telescope model name (e.g. LST-1, SST-D)',
         type=str,
         required=True
     )
@@ -93,7 +101,8 @@ if __name__ == '__main__':
     outputDir = io.getApplicationOutputDirectory(cfg.get('outputLocation'), label)
 
     telModel = TelescopeModel(
-        telescopeName=args.tel_name,
+        site=args.site,
+        telescopeModelName=args.telescope,
         version=args.model_version,
         label=label
     )
@@ -101,15 +110,15 @@ if __name__ == '__main__':
     # For debugging purposes
     telModel.exportConfigFile()
 
-    logger.info('Validating the camera efficiency of {}'.format(telModel.telescopeName))
+    logger.info('Validating the camera efficiency of {}'.format(telModel.name))
 
-    ce = CameraEfficiency(telescopeModel=telModel, logger=logger.name)
+    ce = CameraEfficiency(telescopeModel=telModel)
     ce.simulate(force=False)
     ce.analyze(force=True)
 
     # Plotting the camera efficiency for Cherenkov light
     plt = ce.plotCherenkovEfficiency()
-    cherenkovPlotFileName = label + '_' + telModel.telescopeName + '_cherenkov'
+    cherenkovPlotFileName = label + '_' + telModel.name + '_cherenkov'
     cherenkovPlotFile = outputDir.joinpath(cherenkovPlotFileName)
     for f in ['pdf', 'png']:
         plt.savefig(str(cherenkovPlotFile) + '.' + f, format=f, bbox_inches='tight')
@@ -118,7 +127,7 @@ if __name__ == '__main__':
 
     # Plotting the camera efficiency for NSB light
     plt = ce.plotNSBEfficiency()
-    nsbPlotFileName = label + '_' + telModel.telescopeName + '_nsb'
+    nsbPlotFileName = label + '_' + telModel.name + '_nsb'
     nsbPlotFile = outputDir.joinpath(nsbPlotFileName)
     for f in ['pdf', 'png']:
         plt.savefig(str(nsbPlotFile) + '.' + f, format=f, bbox_inches='tight')
