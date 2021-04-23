@@ -207,6 +207,7 @@ class ArrayModel:
                 # First time a telescope name is built
                 _allTelescopeModelNames.append(telModelName)
                 telModel = TelescopeModel(
+                    site=self.site,
                     telescopeModelName=telModelName,
                     modelVersion=self.modelVersion,
                     label=self.label,
@@ -278,7 +279,7 @@ class ArrayModel:
                     msg = 'ArrayConfig has no name for a telescope'
                     self._logger.error(msg)
                     raise InvalidArrayConfigData(msg)
-                telName = self.site + '-' + telSize + '-' + data['name']
+                telName = telSize + '-' + data['name']
                 parsToChange = {k: v for (k, v) in data.items() if k != 'name'}
                 self._logger.debug(
                     'Grabbing tel data as dict - '
@@ -288,7 +289,7 @@ class ArrayModel:
                 return telName, parsToChange
             elif isinstance(data, str):
                 # Case 1: data is string (only name)
-                telName = self.site + '-' + telSize + '-' + data
+                telName = telSize + '-' + data
                 return telName, dict()
             else:
                 # Case 2: data has a wrong type
