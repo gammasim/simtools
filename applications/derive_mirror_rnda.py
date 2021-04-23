@@ -283,7 +283,7 @@ if __name__ == '__main__':
                 )
 
             ax.legend(frameon=False)
-            plotFileName = label + '_' + tel.telescopeName + '_' + 'D80-distributions'
+            plotFileName = label + '_' + tel.name + '_' + 'D80-distributions'
             plotFile = outputDir.joinpath(plotFileName)
             plt.savefig(str(plotFile) + '.pdf', format='pdf', bbox_inches='tight')
             plt.savefig(str(plotFile) + '.png', format='png', bbox_inches='tight')
@@ -389,7 +389,7 @@ if __name__ == '__main__':
 
     ax.legend(frameon=False, loc='upper left')
 
-    plotFileName = label + '_' + tel.telescopeName
+    plotFileName = label + '_' + tel.name
     plotFile = outputDir.joinpath(plotFileName)
     plt.savefig(str(plotFile) + '.pdf', format='pdf', bbox_inches='tight')
     plt.savefig(str(plotFile) + '.png', format='png', bbox_inches='tight')
