@@ -186,7 +186,7 @@ class DatabaseHandler:
 
         return
 
-    def _getTelescopeModelNameForDB(site, telescopeModelName):
+    def _getTelescopeModelNameForDB(self, site, telescopeModelName):
         ''' Make telescope name as the DB needs from site and telescopeModelName. '''
         return site + '-' + telescopeModelName
 
@@ -369,8 +369,7 @@ class DatabaseHandler:
     def readMongoDB(
         self,
         dbName,
-        site,
-        telescopeModelName,
+        telescopeModelNameDB,
         modelVersion,
         runLocation,
         writeFiles=True,
@@ -386,7 +385,7 @@ class DatabaseHandler:
             the name of the DB
         site: str
             South or North.
-        telescopeModelName: str
+        telescopeModelNameDB: str
             Name of the telescope model (e.g. MST-FlashCam-D ...)
         modelVersion: str
             Version of the model.
@@ -405,11 +404,10 @@ class DatabaseHandler:
         collection = DatabaseHandler.dbClient[dbName]['telescopes']
         _parameters = dict()
 
-        _modelVersion = self._convertTaggedVersion(modelVersion, dbName)
-        _telNameDB = self._getTelescopeModelNameForDB(site, telescopeModelName)
+        _modelVersion = self._convertVersionToTagged(modelVersion, dbName)
 
         query = {
-            'Telescope': _telNameDB,
+            'Telescope': telescopeModelNameDB,
             'Version': _modelVersion,
         }
         if onlyApplicable:
