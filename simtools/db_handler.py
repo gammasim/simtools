@@ -388,7 +388,7 @@ class DatabaseHandler:
             the name of the DB
         site: str
             South or North.
-        telescopeName: str
+        telescopeModelName: str
             Name of the telescope model (e.g. MST-FlashCam-D ...)
         modelVersion: str
             Version of the model.
