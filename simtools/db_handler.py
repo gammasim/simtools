@@ -227,7 +227,7 @@ class DatabaseHandler:
 
         _siteValidated = names.validateSiteName(site)
         _versionValidated = names.validateModelVersionName(_version)
-        _telModelNameValidated = names.validateTelescopeName(telescopeModelName)
+        _telModelNameValidated = names.validateTelescopeModelName(telescopeModelName)
 
         if cfg.get('useMongoDB'):
             _pars = self._getModelParametersMongoDB(
