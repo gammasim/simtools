@@ -25,8 +25,10 @@
 
     Command line arguments
     ----------------------
-    tel_name (str, required)
-        Telescope name (e.g. North-LST-1, South-SST-D, ...).
+    site (str, required)
+        North or South.
+    telescope (str, required)
+        Telescope model name (e.g. LST-1, SST-D, ...).
     model_version (str, optional)
         Model version (default=prod4).
     src_distance (float, optional)
@@ -106,9 +108,16 @@ if __name__ == '__main__':
         )
     )
     parser.add_argument(
+        '-s',
+        '--site',
+        help='North or South',
+        type=str,
+        required=True
+    )
+    parser.add_argument(
         '-t',
-        '--tel_name',
-        help='Telescope name (e.g. North-MST-FlashCam-D, North-LST-1)',
+        '--telescope',
+        help='Telescope model name (e.g. MST-FlashCam-D, LST-1)',
         type=str,
         required=True
     )
@@ -165,7 +174,8 @@ if __name__ == '__main__':
     outputDir = io.getApplicationOutputDirectory(cfg.get('outputLocation'), label)
 
     telModel = TelescopeModel(
-        telescopeName=args.tel_name,
+        site=args.site,
+        telescopeModelName=args.telescope,
         version=args.model_version,
         label=label
     )
