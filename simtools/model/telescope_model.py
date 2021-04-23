@@ -524,8 +524,9 @@ class TelescopeModel:
             return None
 
         fileName = names.simtelSingleMirrorListFileName(
+            self.site,
+            self.name,
             self.modelVersion,
-            self.telescopeName,
             mirrorNumber,
             self.label
         )
@@ -601,7 +602,7 @@ class TelescopeModel:
         if not hasattr(self, 'simtelConfigWriter'):
             self.simtelConfigWriter = SimtelConfigWriter(
                 site=self.site,
-                telescopeName=self.telescopeName,
+                telescopeModelName=self.name,
                 modelVersion=self.modelVersion,
                 label=self.label
             )
@@ -615,7 +616,7 @@ class TelescopeModel:
         bool:
             True if telescope  is a ASTRI, False otherwise.
         '''
-        return self.telescopeName in ['SST-2M-ASTRI', 'SST', 'South-SST-D']
+        return self.name in ['SST-2M-ASTRI', 'SST', 'SST-D']
 
     def isFile2D(self, par):
         '''
