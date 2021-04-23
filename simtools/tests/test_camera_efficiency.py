@@ -13,7 +13,8 @@ logger.setLevel(logging.DEBUG)
 
 def test_main():
     tel = TelescopeModel(
-        telescopeName='north-lst-1',
+        site='north',
+        telescopeModelName='lst-1',
         modelVersion='p3',
         label='test_camera_eff'
     )
