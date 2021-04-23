@@ -410,6 +410,8 @@ class DatabaseHandler:
             'Telescope': telescopeModelNameDB,
             'Version': _modelVersion,
         }
+
+        self._logger.debug('Trying the following query: {}'.format(query))
         if onlyApplicable:
             query['Applicable'] = onlyApplicable
         if collection.count_documents(query) < 1:

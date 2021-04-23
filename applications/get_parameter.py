@@ -66,6 +66,8 @@ if __name__ == '__main__':
     if not cfg.get('useMongoDB'):
         raise ValueError('This application works only with MongoDB and you asked not to use it')
 
+    logger.info('TEST')
+
     db = db_handler.DatabaseHandler()
 
     if args.version == 'all':
