@@ -521,6 +521,8 @@ class DatabaseHandler:
         dict containing the parameters
         '''
 
+        siteYaml = 'lapalma' if site is 'North' else 'paranal'
+
         yamlFile = cfg.findFile('parValues-Sites.yml', cfg.get('modelFilesLocations'))
         self._logger.info('Reading DB file {}'.format(yamlFile))
         with open(yamlFile, 'r') as stream:
@@ -531,7 +533,7 @@ class DatabaseHandler:
 
             if not parInfo['Applicable'] and onlyApplicable:
                 continue
-            if site in parName:
+            if siteYaml in parName:
                 parNameIn = '_'.join(parName.split('_')[1:])
 
                 _pars[parNameIn] = parInfo[modelVersion]
