@@ -207,7 +207,8 @@ class ArrayModel:
                 # First time a telescope name is built
                 _allTelescopeModelNames.append(telModelName)
                 telModel = TelescopeModel(
-                    telescopeName=telModelName,
+                    site=self.site,
+                    telescopeModelName=telModelName,
                     modelVersion=self.modelVersion,
                     label=self.label,
                     modelFilesLocations=self._modelFilesLocations,
@@ -217,10 +218,10 @@ class ArrayModel:
                 # Telescope name already exists.
                 # Finding the TelescopeModel and copying it.
                 for tel in self._telescopeModel:
-                    if tel.telescopeName != telModelName:
+                    if tel.name != telModelName:
                         continue
                     self._logger.debug(
-                        'Copying tel model {} already loaded from DB'.format(tel.telescopeName)
+                        'Copying tel model {} already loaded from DB'.format(tel.name)
                     )
                     telModel = copy(tel)
                     break
@@ -278,7 +279,7 @@ class ArrayModel:
                     msg = 'ArrayConfig has no name for a telescope'
                     self._logger.error(msg)
                     raise InvalidArrayConfigData(msg)
-                telName = self.site + '-' + telSize + '-' + data['name']
+                telName = telSize + '-' + data['name']
                 parsToChange = {k: v for (k, v) in data.items() if k != 'name'}
                 self._logger.debug(
                     'Grabbing tel data as dict - '
@@ -288,7 +289,7 @@ class ArrayModel:
                 return telName, parsToChange
             elif isinstance(data, str):
                 # Case 1: data is string (only name)
-                telName = self.site + '-' + telSize + '-' + data
+                telName = telSize + '-' + data
                 return telName, dict()
             else:
                 # Case 2: data has a wrong type
@@ -322,7 +323,7 @@ class ArrayModel:
     def printTelescopeList(self):
         ''' Print out the list of telescopes for quick inspection. '''
         for telData, telModel in zip(self.layout, self._telescopeModel):
-            print('Name: {}\t Model: {}'.format(telData.name, telModel.telescopeName))
+            print('Name: {}\t Model: {}'.format(telData.name, telModel.name))
 
     def exportSimtelTelescopeConfigFiles(self):
         '''
@@ -332,7 +333,7 @@ class ArrayModel:
         exportedModels = list()
         for telModel in self._telescopeModel:
             name = (
-                telModel.telescopeName
+                telModel.name
                 + ('_' + telModel.extraLabel if telModel.extraLabel != '' else '')
             )
             if name not in exportedModels:
