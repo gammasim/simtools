@@ -13,8 +13,16 @@ APP_LIST = {
     'compare_cumulative_psf': [
         ['-s', 'North', '-t', 'LST-1', '--model_version', 'prod4', '--data', 'PSFcurve_data_v2.txt',
          '--zenith', '20', '--test']
+    ],
+    'derive_mirror_rnda': [
+        ['-s', 'North', '-t', 'MST-FlashCam-D', '--model_version', 'prod4', '--mean_d80', '1.4',
+         '--sig_d80', '0.16', '--mirror_list', 'mirror_MST_focal_lengths.dat', '--d80_list',
+         'mirror_MST_D80.dat', '--rnda', '0.0075', ' --test']
+    ],
+    'validate_optics': [
+        ['-s', 'North', '-t', 'LST-1', '--max_offset', '1.0', '--src_distance', '11', '--zenith',
+         '20', '--test']
     ]
-
 
     # 'validate_camera_efficiency': [
     #     ['-s', 'North', '-t', 'MST-NectarCam-D']
