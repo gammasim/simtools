@@ -175,7 +175,7 @@ if __name__ == '__main__':
     telModel = TelescopeModel(
         site=args.site,
         telescopeModelName=args.telescope,
-        version=args.model_version,
+        modelVersion=args.model_version,
         label=label
     )
 
