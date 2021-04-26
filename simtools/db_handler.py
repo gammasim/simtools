@@ -240,7 +240,7 @@ class DatabaseHandler:
             return _pars
         else:
             return self._getModelParametersYaml(
-                site,
+                _siteValidated,
                 _telModelNameValidated,
                 _versionValidated,
                 onlyApplicable
