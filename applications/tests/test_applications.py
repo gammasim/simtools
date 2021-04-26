@@ -7,6 +7,11 @@ import pytest
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
+''' This module perform tests on the application by running them with a set
+of arguments. Each applications to be tested correspond to an key in
+APP_LIST, that contains a list of list of arguments to be tested, so that
+the same application can be tested with a number of different set of arguments.
+'''
 
 APP_LIST = {
     # Optics
@@ -66,9 +71,3 @@ def test_applications(application):
         out = os.system(cmd)
         isOutputValid = (out == 0)
         assert isOutputValid
-
-
-if __name__ == '__main__':
-    # unittest.main()
-
-    test_applications('test')
