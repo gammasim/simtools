@@ -67,7 +67,7 @@ if __name__ == '__main__':
         required=True
     )
     parser.add_argument(
-        't',
+        '-t',
         '--telescope',
         help='Telescope model name (e.g. LST-1, SST-D)',
         type=str,
@@ -106,8 +106,8 @@ if __name__ == '__main__':
 
     print('\nValidating the camera FoV of {}\n'.format(telModel.name))
 
-    cameraConfigFile = telModel.getParameter('camera_config_file')
-    focalLength = float(telModel.getParameter('effective_focal_length'))
+    cameraConfigFile = telModel.getParameterValue('camera_config_file')
+    focalLength = float(telModel.getParameterValue('effective_focal_length'))
     camera = Camera(
         telescopeModelName=telModel.name,
         cameraConfigFile=cfg.findFile(cameraConfigFile),
