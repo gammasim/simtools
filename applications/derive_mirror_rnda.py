@@ -40,7 +40,7 @@
 
     Command line arguments
     ----------------------
-    tel_name (str, required)
+    telescope (str, required)
         Telescope name (e.g. North-LST-1, South-SST-D, ...)
     model_version (str, optional)
         Model version (default=prod4)
@@ -235,14 +235,14 @@ if __name__ == '__main__':
     )
     if args.mirror_list is not None:
         mirrorListFile = cfg.findFile(name=args.mirror_list)
-        tel.changeParameters(mirror_list=args.mirror_list)
+        tel.changeParameter('mirror_list', args.mirror_list)
         tel.addParameterFile(mirrorListFile)  # Copying the mirror list to the model dir
     if args.random_flen is not None:
-        tel.changeParameters(random_focal_length=str(args.random_flen))
+        tel.changeParameter('random_focal_length', str(args.random_flen))
 
     def run(rnda, plot=False):
         ''' Runs the simulations for one given value of rnda '''
-        tel.changeParameters(mirror_reflection_random_angle=str(rnda))
+        tel.changeParameter('mirror_reflection_random_angle', str(rnda))
         ray = RayTracing(
             telescopeModel=tel,
             singleMirrorMode=True,
