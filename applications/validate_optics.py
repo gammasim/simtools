@@ -27,8 +27,10 @@
 
     Command line arguments
     ----------------------
-    tel_name (str, required)
-        Telescope name (e.g. North-LST-1, South-SST-D, ...).
+    site (str, required)
+        North or South.
+    telescope (str, required)
+        Telescope model name (e.g. LST-1, SST-D, ...).
     model_version (str, optional)
         Model version (default=prod4).
     src_distance (float, optional)
@@ -50,7 +52,7 @@
 
     .. code-block:: console
 
-        python applications/validate_optics.py --tel_name North-LST-1 --max_offset 5.0
+        python applications/validate_optics.py --site North --telescope LST-1 --max_offset 5.0
 
     .. todo::
 
@@ -83,9 +85,16 @@ if __name__ == '__main__':
         )
     )
     parser.add_argument(
+        '-s',
+        '--site',
+        help='North or South',
+        type=str,
+        required=True
+    )
+    parser.add_argument(
         '-t',
-        '--tel_name',
-        help='Telescope name (e.g. North-MST-FlashCam-D, North-LST-1)',
+        '--telescope',
+        help='Telescope model name (e.g. MST-FlashCam-D, LST-1)',
         type=str,
         required=True
     )
@@ -138,15 +147,16 @@ if __name__ == '__main__':
     outputDir = io.getApplicationOutputDirectory(cfg.get('outputLocation'), label)
 
     telModel = TelescopeModel(
-        telescopeName=args.tel_name,
-        version=args.model_version,
+        site=args.site,
+        telescopeModelName=args.telescope,
+        modelVersion=args.model_version,
         label=label,
         readFromDB=True
     )
 
     print(
         '\nValidating telescope optics with ray tracing simulations'
-        ' for {}\n'.format(telModel.telescopeName)
+        ' for {}\n'.format(telModel.name)
     )
 
     ray = RayTracing(
@@ -164,7 +174,7 @@ if __name__ == '__main__':
 
         ray.plot(key, marker='o', linestyle=':', color='k')
 
-        plotFileName = label + '_' + telModel.telescopeName + '_' + key
+        plotFileName = label + '_' + telModel.name + '_' + key
         plotFile = outputDir.joinpath(plotFileName)
         plt.savefig(str(plotFile) + '.pdf', format='pdf', bbox_inches='tight')
         plt.savefig(str(plotFile) + '.png', format='png', bbox_inches='tight')

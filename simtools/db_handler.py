@@ -186,10 +186,15 @@ class DatabaseHandler:
 
         return
 
+    def _getTelescopeModelNameForDB(self, site, telescopeModelName):
+        ''' Make telescope name as the DB needs from site and telescopeModelName. '''
+        return site + '-' + telescopeModelName
+
     def getModelParameters(
         self,
-        telescopeName,
-        version,
+        site,
+        telescopeModelName,
+        modelVersion,
         runLocation=None,
         onlyApplicable=False,
     ):
@@ -198,8 +203,11 @@ class DatabaseHandler:
 
         Parameters
         ----------
-        telescopeName: str
-        version: str
+        site: str
+            South or North.
+        telescopeModelName: str
+            Name of the telescope model (e.g. LST-1, MST-FlashCam-D)
+        modelVersion: str
             Version of the model.
         runLocation: Path or str
             The sim_telarray run location to write the tabulated data files into.
@@ -211,30 +219,44 @@ class DatabaseHandler:
         dict containing the parameters
         '''
 
-        _version = version
-        if version in ['Current', 'Latest']:
-            _version = self._getTaggedVersion(DatabaseHandler.DB_CTA_SIMULATION_MODEL, version)
+        _modelVersion = self._convertVersionToTagged(
+            modelVersion,
+            DatabaseHandler.DB_CTA_SIMULATION_MODEL
+        )
+
+        _siteValidated = names.validateSiteName(site)
+        _versionValidated = names.validateModelVersionName(_modelVersion)
+        _telModelNameValidated = names.validateTelescopeModelName(telescopeModelName)
 
         if cfg.get('useMongoDB'):
             _pars = self._getModelParametersMongoDB(
                 DatabaseHandler.DB_CTA_SIMULATION_MODEL,
-                telescopeName,
-                _version,
+                _siteValidated,
+                _telModelNameValidated,
+                _versionValidated,
                 runLocation,
                 onlyApplicable
             )
             return _pars
         else:
-            return self._getModelParametersYaml(telescopeName, version, onlyApplicable)
+            return self._getModelParametersYaml(
+                _siteValidated,
+                _telModelNameValidated,
+                _versionValidated,
+                onlyApplicable
+            )
 
-    def _getModelParametersYaml(self, telescopeName, version, onlyApplicable=False):
+    def _getModelParametersYaml(self, site, telescopeModelName, modelVersion, onlyApplicable=False):
         '''
         Get parameters from DB for one specific type.
 
         Parameters
         ----------
-        telescopeName: str
-        version: str
+        site: str
+            North or South.
+        telescopeModelName: str
+            Telescope model name (e.g MST-FlashCam-D ...).
+        modelVersion: str
             Version of the model.
         onlyApplicable: bool
             If True, only applicable parameters will be read.
@@ -244,12 +266,8 @@ class DatabaseHandler:
         dict containing the parameters
         '''
 
-        _telNameValidated = names.validateTelescopeName(telescopeName)
-        _versionValidated = names.validateModelVersionName(version)
-
-        _site = names.getSiteFromTelescopeName(_telNameValidated)
-        _telClass = getTelescopeClass(_telNameValidated)
-        _telNameConverted = names.convertTelescopeNameToYaml(_telNameValidated)
+        _telClass = getTelescopeClass(telescopeModelName)
+        _telNameConverted = names.convertTelescopeModelNameToYaml(telescopeModelName)
 
         if _telClass == 'MST':
             # MST-FlashCam or MST-NectarCam
@@ -263,7 +281,7 @@ class DatabaseHandler:
         # Selecting version and applicable (if on)
         _pars = dict()
         for _tel in _whichTelLabels:
-            _allPars = self._getAllModelParametersYaml(_tel, _versionValidated)
+            _allPars = self._getAllModelParametersYaml(_tel, modelVersion)
 
             # If _tel is a structure, only the applicable parameters will be collected, always.
             # The default ones will be covered by the camera parameters.
@@ -274,18 +292,19 @@ class DatabaseHandler:
                 if not parInfo['Applicable'] and _selectOnlyApplicable:
                     continue
 
-                if _versionValidated not in parInfo:
+                if modelVersion not in parInfo:
                     continue
 
-                _pars[parNameIn] = parInfo[_versionValidated]
+                _pars[parNameIn] = parInfo[modelVersion]
 
         return _pars
 
     def _getModelParametersMongoDB(
         self,
         dbName,
-        telescopeName,
-        version,
+        site,
+        telescopeModelName,
+        modelVersion,
         runLocation=None,
         onlyApplicable=False
     ):
@@ -296,8 +315,11 @@ class DatabaseHandler:
         ----------
         dbName: str
             the name of the DB
-        telescopeName: str
-        version: str
+        site: str
+            South or North.
+        telescopeModelName: str
+            Name of the telescope model (e.g. MST-FlashCam-D ...)
+        modelVersion: str
             Version of the model.
         runLocation: Path or str
             The sim_telarray run location to write the tabulated data files into.
@@ -309,19 +331,20 @@ class DatabaseHandler:
         dict containing the parameters
         '''
 
-        _telNameValidated = names.validateTelescopeName(telescopeName)
-        _telClass = getTelescopeClass(_telNameValidated)
-        _site = names.getSiteFromTelescopeName(_telNameValidated)
-        _versionValidated = names.validateModelVersionName(version)
+        _telNameDB = self._getTelescopeModelNameForDB(site, telescopeModelName)
+        _telClass = getTelescopeClass(telescopeModelName)
+
+        self._logger.debug('TelNameDB: {}'.format(_telNameDB))
+        self._logger.debug('TelClass: {}'.format(_telClass))
 
         if _telClass == 'MST':
             # MST-FlashCam or MST-NectarCam
-            _whichTelLabels = [_telNameValidated, '{}-MST-Structure-D'.format(_site)]
+            _whichTelLabels = [_telNameDB, '{}-MST-Structure-D'.format(site)]
         elif _telClass == 'SST':
             # SST = SST-Camera + SST-Structure
-            _whichTelLabels = ['{}-SST-Camera-D'.format(_site), '{}-SST-Structure-D'.format(_site)]
+            _whichTelLabels = ['{}-SST-Camera-D'.format(site), '{}-SST-Structure-D'.format(site)]
         else:
-            _whichTelLabels = [_telNameValidated]
+            _whichTelLabels = [_telNameDB]
 
         # Selecting version and applicable (if on)
         _pars = dict()
@@ -330,14 +353,14 @@ class DatabaseHandler:
             # If tel is a struture, only applicable pars will be collected, always.
             # The default ones will be covered by the camera pars.
             _selectOnlyApplicable = onlyApplicable or (_tel in [
-                '{}-MST-Structure-D'.format(_site),
-                '{}-SST-Structure-D'.format(_site)
+                '{}-MST-Structure-D'.format(site),
+                '{}-SST-Structure-D'.format(site)
             ])
 
             _pars.update(self.readMongoDB(
                 dbName,
                 _tel,
-                _versionValidated,
+                modelVersion,
                 runLocation,
                 (runLocation is not None),
                 _selectOnlyApplicable
@@ -348,8 +371,8 @@ class DatabaseHandler:
     def readMongoDB(
         self,
         dbName,
-        telescopeName,
-        version,
+        telescopeModelNameDB,
+        modelVersion,
         runLocation,
         writeFiles=True,
         onlyApplicable=False
@@ -362,8 +385,11 @@ class DatabaseHandler:
         ----------
         dbName: str
             the name of the DB
-        telescopeName: str
-        version: str
+        site: str
+            South or North.
+        telescopeModelNameDB: str
+            Name of the telescope model (e.g. MST-FlashCam-D ...)
+        modelVersion: str
             Version of the model.
         runLocation: Path or str
             The sim_telarray run location to write the tabulated data files into.
@@ -380,14 +406,14 @@ class DatabaseHandler:
         collection = DatabaseHandler.dbClient[dbName]['telescopes']
         _parameters = dict()
 
-        _version = version
-        if version in ['Current', 'Latest']:
-            _version = self._getTaggedVersion(dbName, version)
+        _modelVersion = self._convertVersionToTagged(modelVersion, dbName)
 
         query = {
-            'Telescope': telescopeName,
-            'Version': _version,
+            'Telescope': telescopeModelNameDB,
+            'Version': _modelVersion,
         }
+
+        self._logger.debug('Trying the following query: {}'.format(query))
         if onlyApplicable:
             query['Applicable'] = onlyApplicable
         if collection.count_documents(query) < 1:
@@ -411,23 +437,22 @@ class DatabaseHandler:
 
         return _parameters
 
-    def _getAllModelParametersYaml(self, telescopeName, version):
+    def _getAllModelParametersYaml(self, telescopeNameYaml):
         '''
         Get all parameters from Yaml DB for one specific type.
         No selection is applied.
 
         Parameters
         ----------
-        telescopeName: str
-        version: str
-            Version of the model.
+        telescopeNameYaml: str
+            Telescope name as required by the yaml files.
 
         Returns
         -------
         dict containing the parameters
         '''
 
-        _fileNameDB = 'parValues-{}.yml'.format(telescopeName)
+        _fileNameDB = 'parValues-{}.yml'.format(telescopeNameYaml)
         _yamlFile = cfg.findFile(
             _fileNameDB,
             cfg.get('modelFilesLocations')
@@ -440,7 +465,7 @@ class DatabaseHandler:
     def getSiteParameters(
         self,
         site,
-        version,
+        modelVersion,
         runLocation=None,
         onlyApplicable=False,
     ):
@@ -450,7 +475,8 @@ class DatabaseHandler:
         Parameters
         ----------
         site: str
-        version: str
+            South or North.
+        modelVersion: str
             Version of the model.
         runLocation: Path or str
             The sim_telarray run location to write the tabulated data files into.
@@ -461,28 +487,30 @@ class DatabaseHandler:
         -------
         dict containing the parameters
         '''
+        _site = names.validateSiteName(site)
+        _modelVersion = names.validateModelVersionName(modelVersion)
 
         if cfg.get('useMongoDB'):
             _pars = self._getSiteParametersMongoDB(
                 DatabaseHandler.DB_CTA_SIMULATION_MODEL,
-                site,
-                version,
+                _site,
+                _modelVersion,
                 runLocation,
                 onlyApplicable
             )
             return _pars
         else:
-            return self._getSiteParametersYaml(site, version, onlyApplicable)
+            return self._getSiteParametersYaml(_site, _modelVersion, onlyApplicable)
 
-    def _getSiteParametersYaml(self, site, version, onlyApplicable=False):
+    def _getSiteParametersYaml(self, site, modelVersion, onlyApplicable=False):
         '''
         Get parameters from DB for a specific type.
 
         Parameters
         ----------
         site: str
-            Must be "North" or "South" (not case sensitive)
-        version: str
+            North or South.
+        modelVersion: str
             Version of the model.
         onlyApplicable: bool
             If True, only applicable parameters will be read.
@@ -492,9 +520,7 @@ class DatabaseHandler:
         dict containing the parameters
         '''
 
-        if site.lower() not in ['north', 'south']:
-            raise ValueError('Site must be "North" or "South" (not case sensitive)')
-        site = 'lapalma' if 'north' in site.lower() else 'paranal'
+        siteYaml = 'lapalma' if site is 'North' else 'paranal'
 
         yamlFile = cfg.findFile('parValues-Sites.yml', cfg.get('modelFilesLocations'))
         self._logger.info('Reading DB file {}'.format(yamlFile))
@@ -506,10 +532,10 @@ class DatabaseHandler:
 
             if not parInfo['Applicable'] and onlyApplicable:
                 continue
-            if site in parName:
+            if siteYaml in parName:
                 parNameIn = '_'.join(parName.split('_')[1:])
 
-                _pars[parNameIn] = parInfo[version]
+                _pars[parNameIn] = parInfo[modelVersion]
 
         return _pars
 
@@ -517,7 +543,7 @@ class DatabaseHandler:
         self,
         dbName,
         site,
-        version,
+        modelVersion,
         runLocation=None,
         onlyApplicable=False
     ):
@@ -527,9 +553,10 @@ class DatabaseHandler:
         Parameters
         ----------
         dbName: str
-            the name of the DB
+            The name of the DB.
         site: str
-        version: str
+            South or North.
+        modelVersion: str
             Version of the model.
         runLocation: Path or str
             The sim_telarray run location to write the tabulated data files into.
@@ -541,19 +568,14 @@ class DatabaseHandler:
         dict containing the parameters
         '''
 
-        if site not in ['North', 'South']:
-            raise ValueError('Site must be "North" or "South" (case sensitive!)')
-
         collection = DatabaseHandler.dbClient[dbName].sites
         _parameters = dict()
 
-        _version = version
-        if version in ['Current', 'Latest']:
-            _version = self._getTaggedVersion(dbName, version)
+        _modelVersion = self._convertVersionToTagged(modelVersion, dbName)
 
         query = {
             'Site': site,
-            'Version': _version,
+            'Version': _modelVersion,
         }
         if onlyApplicable:
             query['Applicable'] = onlyApplicable
@@ -694,9 +716,7 @@ class DatabaseHandler:
         collection = DatabaseHandler.dbClient[dbName].telescopes
         dbEntries = list()
 
-        _versionToCopy = versionToCopy
-        if versionToCopy in ['Current', 'Latest']:
-            _versionToCopy = self._getTaggedVersion(dbName, versionToCopy)
+        _versionToCopy = self._convertVersionToTagged(versionToCopy, dbName)
 
         query = {
             'Telescope': telToCopy,
@@ -780,8 +800,7 @@ class DatabaseHandler:
         _collection = DatabaseHandler.dbClient[dbName][collection]
 
         if 'Version' in query:
-            if query['Version'] in ['Current', 'Latest']:
-                query['Version'] = self._getTaggedVersion(dbName, query['Version'])
+            query['Version'] = self._convertVersionToTagged(query['Version'], dbName)
 
         self._logger.info('Deleting {} entries from {}'.format(
             _collection.count_documents(query),
@@ -814,13 +833,11 @@ class DatabaseHandler:
 
         collection = DatabaseHandler.dbClient[dbName].telescopes
 
-        _version = version
-        if version in ['Current', 'Latest']:
-            _version = self._getTaggedVersion(dbName, version)
+        _modelVersion = self._convertVersionToTagged(version, dbName)
 
         query = {
             'Telescope': telescope,
-            'Version': _version,
+            'Version': _modelVersion,
             'Parameter': parameter,
         }
 
@@ -829,7 +846,7 @@ class DatabaseHandler:
 
         self._logger.info('For telescope {}, version {}\nreplacing {} value from {} to {}'.format(
             telescope,
-            _version,
+            _modelVersion,
             parameter,
             oldValue,
             newValue
@@ -864,9 +881,7 @@ class DatabaseHandler:
 
         collection = DatabaseHandler.dbClient[dbName].telescopes
 
-        _newVersion = newVersion
-        if newVersion in ['Current', 'Latest']:
-            _newVersion = self._getTaggedVersion(dbName, newVersion)
+        _newVersion = self._convertVersionToTagged(newVersion, dbName)
 
         query = {
             'Telescope': telescope,
@@ -927,6 +942,13 @@ class DatabaseHandler:
         collection.insert_one(dbEntry)
 
         return
+
+    def _convertVersionToTagged(self, modelVersion, dbName):
+        ''' Convert to tagged version, if needed. '''
+        if modelVersion in ['Current', 'Latest']:
+            return self._getTaggedVersion(dbName, modelVersion)
+        else:
+            return modelVersion
 
     def _getTaggedVersion(self, dbName, version='Current'):
         '''
