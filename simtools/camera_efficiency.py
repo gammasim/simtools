@@ -111,21 +111,24 @@ class CameraEfficiency:
         ''' Define the variables for the file names, including the results, simtel and log file. '''
         # Results file
         fileNameResults = names.cameraEfficiencyResultsFileName(
-            self._telescopeModel.telescopeName,
+            self._telescopeModel.site,
+            self._telescopeModel.name,
             self._zenithAngle,
             self.label
         )
         self._fileResults = self._baseDirectory.joinpath(fileNameResults)
         # SimtelOutput file
         fileNameSimtel = names.cameraEfficiencySimtelFileName(
-            self._telescopeModel.telescopeName,
+            self._telescopeModel.site,
+            self._telescopeModel.name,
             self._zenithAngle,
             self.label
         )
         self._fileSimtel = self._baseDirectory.joinpath(fileNameSimtel)
         # Log file
         fileNameLog = names.cameraEfficiencyLogFileName(
-            self._telescopeModel.telescopeName,
+            self._telescopeModel.site,
+            self._telescopeModel.name,
             self._zenithAngle,
             self.label
         )
@@ -190,7 +193,7 @@ class CameraEfficiency:
             mirrorReflectivity = 'ref_astri_2017-06_T0.dat'
 
         # Camera name
-        cameraName = getCameraName(self._telescopeModel.telescopeName)
+        cameraName = getCameraName(self._telescopeModel.name)
 
         # cmd -> Command to be run at the shell
         cmd = str(self._simtelSourcePath.joinpath('sim_telarray/bin/testeff'))
@@ -493,7 +496,7 @@ class CameraEfficiency:
         plt = visualize.plotTable(
             tableToPlot,
             yTitle='Cherenkov light efficiency',
-            title='{} response to Cherenkov light'.format(self._telescopeModel.telescopeName),
+            title='{} response to Cherenkov light'.format(self._telescopeModel.name),
             noMarkers=True
         )
 
@@ -526,7 +529,7 @@ class CameraEfficiency:
             tableToPlot,
             yTitle='Nightsky background light efficiency',
             title='{} response to nightsky background light'.format(
-                self._telescopeModel.telescopeName
+                self._telescopeModel.name
             ),
             noMarkers=True
         )

@@ -94,7 +94,7 @@ if __name__ == '__main__':
     siteParsDB = dict()
     sitePars = dict()
     for site in ['North', 'South']:
-        siteParsDB[site] = db.getSiteParameters(site=site, version='prod3_compatible')
+        siteParsDB[site] = db.getSiteParameters(site=site, modelVersion='prod3_compatible')
 
         sitePars[site] = dict()
         sitePars[site]['centerLatitude'] = float(siteParsDB[site]['ref_lat']['Value']) * u.deg
