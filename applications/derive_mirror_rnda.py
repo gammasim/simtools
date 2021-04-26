@@ -77,9 +77,7 @@
 
     .. code-block:: console
 
-        python applications/derive_mirror_rnda.py --tel_name North-MST-FlashCam-D --mean_d80 1.4 \
-        --sig_d80 0.16 --mirror_list mirror_MST_focal_lengths.dat --d80_list mirror_MST_D80.dat \
-        --rnda 0.0075
+        python applications/derive_mirror_rnda.py --site North --telescope MST-FlashCam-D --mean_d80 1.4 --sig_d80 0.16 --mirror_list mirror_MST_focal_lengths.dat --d80_list mirror_MST_D80.dat --rnda 0.0075
 
 
     Expected output:
@@ -131,9 +129,16 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
     parser.add_argument(
+        '-s',
+        '--site',
+        help='North or South',
+        type=str,
+        required=True
+    )
+    parser.add_argument(
         '-t',
-        '--tel_name',
-        help='Telescope name (e.g. North-LST-1, South-SST-D, ...)',
+        '--telescope',
+        help='Telescope model name (e.g. LST-1, SST-D, ...)',
         type=str,
         required=True
     )
@@ -223,8 +228,9 @@ if __name__ == '__main__':
     outputDir = io.getApplicationOutputDirectory(cfg.get('outputLocation'), label)
 
     tel = TelescopeModel(
-        telescopeName=args.tel_name,
-        version=args.model_version,
+        site=args.site,
+        telescopeModelName=args.telescope,
+        modelVersion=args.model_version,
         label=label
     )
     if args.mirror_list is not None:
@@ -277,7 +283,7 @@ if __name__ == '__main__':
                 )
 
             ax.legend(frameon=False)
-            plotFileName = label + '_' + tel.telescopeName + '_' + 'D80-distributions'
+            plotFileName = label + '_' + tel.name + '_' + 'D80-distributions'
             plotFile = outputDir.joinpath(plotFileName)
             plt.savefig(str(plotFile) + '.pdf', format='pdf', bbox_inches='tight')
             plt.savefig(str(plotFile) + '.png', format='png', bbox_inches='tight')
@@ -383,7 +389,7 @@ if __name__ == '__main__':
 
     ax.legend(frameon=False, loc='upper left')
 
-    plotFileName = label + '_' + tel.telescopeName
+    plotFileName = label + '_' + tel.name
     plotFile = outputDir.joinpath(plotFileName)
     plt.savefig(str(plotFile) + '.pdf', format='pdf', bbox_inches='tight')
     plt.savefig(str(plotFile) + '.png', format='png', bbox_inches='tight')
