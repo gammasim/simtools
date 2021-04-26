@@ -27,7 +27,7 @@ if __name__ == '__main__':
     )
     parser.add_argument(
         '-t',
-        '--tel_type',
+        '--telescope',
         help='Telescope type (e.g. LST-1, SST-D)',
         type=str,
         required=True
@@ -41,7 +41,7 @@ if __name__ == '__main__':
     )
     parser.add_argument(
         '-v',
-        '--version',
+        '--model_version',
         help=(
             'Parameter version. If no version is provided, '
             'the entries of the last 5 versions are printed.'
@@ -70,11 +70,11 @@ if __name__ == '__main__':
 
     db = db_handler.DatabaseHandler()
 
-    if args.version == 'all':
+    if args.model_version == 'all':
         raise NotImplemented('Printing last 5 versions is not implemented yet.')
     else:
-        version = args.version
-    pars = db.getModelParameters(args.site, args.tel_type, version)
+        version = args.model_version
+    pars = db.getModelParameters(args.site, args.telescope, version)
     print()
     pprint(pars[args.parameter])
     print()
