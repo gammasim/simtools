@@ -219,14 +219,13 @@ class DatabaseHandler:
         dict containing the parameters
         '''
 
-        _version = modelVersion
-        if modelVersion in ['Current', 'Latest']:
-            _version = self._getTaggedVersion(DatabaseHandler.DB_CTA_SIMULATION_MODEL, modelVersion)
-
-        # _telNameDB = self._getTelescopeModelNameForDB(site, telescopeModelName)
+        _modelVersion = self._convertVersionToTagged(
+            modelVersion,
+            DatabaseHandler.DB_CTA_SIMULATION_MODEL
+        )
 
         _siteValidated = names.validateSiteName(site)
-        _versionValidated = names.validateModelVersionName(_version)
+        _versionValidated = names.validateModelVersionName(_modelVersion)
         _telModelNameValidated = names.validateTelescopeModelName(telescopeModelName)
 
         if cfg.get('useMongoDB'):
@@ -489,19 +488,19 @@ class DatabaseHandler:
         dict containing the parameters
         '''
         _site = names.validateSiteName(site)
-        _version = names.validateModelVersionName(modelVersion)
+        _modelVersion = names.validateModelVersionName(modelVersion)
 
         if cfg.get('useMongoDB'):
             _pars = self._getSiteParametersMongoDB(
                 DatabaseHandler.DB_CTA_SIMULATION_MODEL,
                 _site,
-                _version,
+                _modelVersion,
                 runLocation,
                 onlyApplicable
             )
             return _pars
         else:
-            return self._getSiteParametersYaml(_site, _version, onlyApplicable)
+            return self._getSiteParametersYaml(_site, _modelVersion, onlyApplicable)
 
     def _getSiteParametersYaml(self, site, modelVersion, onlyApplicable=False):
         '''
@@ -572,11 +571,11 @@ class DatabaseHandler:
         collection = DatabaseHandler.dbClient[dbName].sites
         _parameters = dict()
 
-        _version = self._convertVersionToTagged(modelVersion, dbName)
+        _modelVersion = self._convertVersionToTagged(modelVersion, dbName)
 
         query = {
             'Site': site,
-            'Version': _version,
+            'Version': _modelVersion,
         }
         if onlyApplicable:
             query['Applicable'] = onlyApplicable
@@ -717,9 +716,7 @@ class DatabaseHandler:
         collection = DatabaseHandler.dbClient[dbName].telescopes
         dbEntries = list()
 
-        _versionToCopy = versionToCopy
-        if versionToCopy in ['Current', 'Latest']:
-            _versionToCopy = self._getTaggedVersion(dbName, versionToCopy)
+        _versionToCopy = self._convertVersionToTagged(versionToCopy, dbName)
 
         query = {
             'Telescope': telToCopy,
@@ -803,8 +800,7 @@ class DatabaseHandler:
         _collection = DatabaseHandler.dbClient[dbName][collection]
 
         if 'Version' in query:
-            if query['Version'] in ['Current', 'Latest']:
-                query['Version'] = self._getTaggedVersion(dbName, query['Version'])
+            query['Version'] = self._convertVersionToTagged(query['Version'], dbName)
 
         self._logger.info('Deleting {} entries from {}'.format(
             _collection.count_documents(query),
@@ -837,13 +833,11 @@ class DatabaseHandler:
 
         collection = DatabaseHandler.dbClient[dbName].telescopes
 
-        _version = version
-        if version in ['Current', 'Latest']:
-            _version = self._getTaggedVersion(dbName, version)
+        _modelVersion = self._convertVersionToTagged(version, dbName)
 
         query = {
             'Telescope': telescope,
-            'Version': _version,
+            'Version': _modelVersion,
             'Parameter': parameter,
         }
 
@@ -852,7 +846,7 @@ class DatabaseHandler:
 
         self._logger.info('For telescope {}, version {}\nreplacing {} value from {} to {}'.format(
             telescope,
-            _version,
+            _modelVersion,
             parameter,
             oldValue,
             newValue
@@ -887,9 +881,7 @@ class DatabaseHandler:
 
         collection = DatabaseHandler.dbClient[dbName].telescopes
 
-        _newVersion = newVersion
-        if newVersion in ['Current', 'Latest']:
-            _newVersion = self._getTaggedVersion(dbName, newVersion)
+        _newVersion = self._convertVersionToTagged(newVersion, dbName)
 
         query = {
             'Telescope': telescope,
