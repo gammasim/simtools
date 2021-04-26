@@ -22,12 +22,14 @@ APP_LIST = {
     'validate_optics': [
         ['-s', 'North', '-t', 'LST-1', '--max_offset', '1.0', '--src_distance', '11', '--zenith',
          '20', '--test']
+    ],
+    # Camera
+    'validate_camera_efficiency': [
+        ['-s', 'North', '-t', 'MST-NectarCam-D', '--model_version', 'prod4']
+    ],
+    'validate_camera_fov': [
+        ['-s', 'North', '-t', 'MST-NectarCam-D', '--model_version', 'prod4']
     ]
-
-    # 'validate_camera_efficiency': [
-    #     ['-s', 'North', '-t', 'MST-NectarCam-D']
-    # ],
-    # 'validate_camera_fov': ['--bla']
 
 }
 
@@ -46,7 +48,8 @@ def test_applications(application):
         logger.info('Running with args: {}'.format(args))
         cmd = makeCommand(application, args)
         out = os.system(cmd)
-        assert out == 0
+        isOutputValid = (out == 0)
+        assert isOutputValid
 
 
 if __name__ == '__main__':
