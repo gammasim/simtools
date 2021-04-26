@@ -42,6 +42,10 @@ APP_LIST = {
     'sim_showers_for_trigger_rates': [
         ['-a', '4LST', '-s', 'North', '--primary', 'proton', '--nruns', '2', '--nevents', '10000',
          '--test']
+    ],
+    # Database
+    'get_parameter': [
+        ['-s', 'North', '-t', 'LST-1', '-p', 'mirror_list', '--model_version', 'prod4']
     ]
 }
 
