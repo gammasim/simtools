@@ -520,7 +520,7 @@ class DatabaseHandler:
         dict containing the parameters
         '''
 
-        siteYaml = 'lapalma' if site is 'North' else 'paranal'
+        siteYaml = 'lapalma' if site == 'North' else 'paranal'
 
         yamlFile = cfg.findFile('parValues-Sites.yml', cfg.get('modelFilesLocations'))
         self._logger.info('Reading DB file {}'.format(yamlFile))
