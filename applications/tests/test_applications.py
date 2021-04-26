@@ -29,6 +29,10 @@ APP_LIST = {
     ],
     'validate_camera_fov': [
         ['-s', 'North', '-t', 'MST-NectarCam-D', '--model_version', 'prod4']
+    ],
+    # Layout
+    'make_regular_arrays': [
+        []
     ]
 
 }
