@@ -33,8 +33,16 @@ APP_LIST = {
     # Layout
     'make_regular_arrays': [
         []
+    ],
+    # Production
+    'produce_array_config': [
+        ['--array_config', 'data/test-data/arrayConfigTest.yml']
+    ],
+    # Trigger
+    'sim_showers_for_trigger_rates': [
+        ['-a', '4LST', '-s', 'North', '--primary', 'proton', '--nruns', '2', '--nevents', '10000',
+         '--test']
     ]
-
 }
 
 
