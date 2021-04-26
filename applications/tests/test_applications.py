@@ -9,10 +9,17 @@ logger.setLevel(logging.DEBUG)
 
 
 APP_LIST = {
-    'validate_camera_efficiency': [
-        ['-s', 'North', '-t', 'MST-NectarCam-D']
-    ],
-    'validate_camera_fov': ['--bla']
+    # Optics
+    'compare_cumulative_psf': [
+        ['-s', 'North', '-t', 'LST-1', '--model_version', 'prod4', '--data', 'PSFcurve_data_v2.txt',
+         '--zenith', '20', '--test']
+    ]
+
+
+    # 'validate_camera_efficiency': [
+    #     ['-s', 'North', '-t', 'MST-NectarCam-D']
+    # ],
+    # 'validate_camera_fov': ['--bla']
 
 }
 
