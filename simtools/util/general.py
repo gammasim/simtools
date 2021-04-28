@@ -169,10 +169,11 @@ def validateAndConvertValue(parName, parInfo, value):
     # Turning valueArgs into a list, if it is not.
     value = copyAsList(value)
 
+    valueLength = len(value)
     undefinedLength = False
     if parInfo['len'] is None:
         undefinedLength = True
-    elif len(value) != parInfo['len']:
+    elif valueLength != parInfo['len']:
         msg = 'Config entry with wrong len: {}'.format(parName)
         logger.error(msg)
         raise InvalidConfigEntry(msg)
@@ -188,8 +189,7 @@ def validateAndConvertValue(parName, parInfo, value):
             logger.error(msg)
             raise InvalidConfigEntry(msg)
         elif len(parUnit) == 1:
-            parUnit *= len(value)
-            print(parUnit)
+            parUnit *= valueLength
 
         # Checking units and converting them, if needed.
         valueWithUnits = list()
