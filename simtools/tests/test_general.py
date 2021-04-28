@@ -55,30 +55,26 @@ def test_collect_dict_data():
 def test_validate_config_data():
 
     parameterFile = io.getTestDataFile('test_parameters.yml')
-
     parameters = gen.collectDataFromYamlOrDict(parameterFile, None)
 
     configData = {
         'zenith': 0 * u.deg,
-        'offaxis': [0 * u.deg, 0.2 * u.rad],
+        'offaxis': [0 * u.deg, 0.2 * u.rad, 3 * u.deg],
         'cscat': [0, 10 * u.m, 3 * u.km],
+        'sourceDistance': 20000 * u.m,
         'testName': 10
     }
 
     validatedData = gen.validateConfigData(configData=configData, parameters=parameters)
 
+    # Testing undefined len
+    assert len(validatedData['offAxisAngle']) == 3
+
+    # Testing name validation
     assert 'validatedName' in validatedData.keys()
 
-    print(validatedData)
-
-    # configData1 = {
-    #     'zenith': 0 * u.deg,
-    #     'offaxis': [0, 20] * u.deg
-    # }
-
-    # validatedData1 = gen.validateConfigData(configData=configData1, parameters=parameters)
-
-    # print(validatedData1)
+    # Testing unit convertion
+    assert validatedData['sourceDistance'][0] == 20
 
 
 if __name__ == '__main__':
