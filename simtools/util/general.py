@@ -123,7 +123,7 @@ def validateConfigData(configData, parameters):
         isIdentified = False
         for parName, parInfo in parameters.items():
             names = parInfo.get('names', [])
-            if keyData != parName and keyData.lower() not in names:
+            if keyData != parName and keyData.lower() not in [n.lower() for n in names]:
                 continue
             # Matched parameter
             validatedValue = validateAndConvertValue(parName, parInfo, valueData)
