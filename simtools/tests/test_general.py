@@ -54,29 +54,31 @@ def test_collect_dict_data():
 
 def test_validate_config_data():
 
-    parameterFile = io.getDataFile('ray-tracing', 'ray-tracing_parameters.yml')
+    parameterFile = io.getTestDataFile('test_parameters.yml')
 
     parameters = gen.collectDataFromYamlOrDict(parameterFile, None)
 
-    print(parameters)
-
-    configData0 = {
+    configData = {
         'zenith': 0 * u.deg,
-        'offaxis': [0 * u.deg, 0.2 * u.rad]
+        'offaxis': [0 * u.deg, 0.2 * u.rad],
+        'cscat': [0, 10 * u.m, 3 * u.km],
+        'testName': 10
     }
 
-    validatedData0 = gen.validateConfigData(configData=configData0, parameters=parameters)
+    validatedData = gen.validateConfigData(configData=configData, parameters=parameters)
 
-    print(validatedData0)
+    assert 'validatedName' in validatedData.keys()
 
-    configData1 = {
-        'zenith': 0 * u.deg,
-        'offaxis': [0, 20] * u.deg
-    }
+    print(validatedData)
 
-    validatedData1 = gen.validateConfigData(configData=configData1, parameters=parameters)
+    # configData1 = {
+    #     'zenith': 0 * u.deg,
+    #     'offaxis': [0, 20] * u.deg
+    # }
 
-    print(validatedData1)
+    # validatedData1 = gen.validateConfigData(configData=configData1, parameters=parameters)
+
+    # print(validatedData1)
 
 
 if __name__ == '__main__':
