@@ -1,0 +1,30 @@
+
+
+zenithAngle: 
+  len: 1
+  unit: !astropy.units.Unit {unit: deg}
+  default: 20
+  names: ['zenith', 'theta']
+# Parameters with undefined length must contain len: null
+# A single unit must be given in this case
+offAxisAngle: 
+  len: null
+  unit: !astropy.units.Unit {unit: deg}
+  names: ['offaxis', 'offset']
+
+sourceDistance:
+  len: 1
+  unit: !astropy.units.Unit {unit: km}
+  default: 10
+
+# Unit must be given as a list when len > 1
+cscat:
+  len: 3
+  unit: [null, !astropy.units.Unit {unit: m}, !astropy.units.Unit {unit: m}]
+  names: ['scat']
+
+# Names are case insensitive
+validatedName:
+  len: 1
+  unit: null
+  names: ['testname']
