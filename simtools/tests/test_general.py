@@ -4,7 +4,7 @@ import logging
 import astropy.units as u
 
 import simtools.io_handler as io
-from simtools.util.general import collectArguments, collectDataFromYamlOrDict
+import simtools.util.general as gen
 
 
 logging.getLogger().setLevel(logging.DEBUG)
@@ -21,7 +21,7 @@ def test_collect_args():
         }
 
         def __init__(self, **kwargs):
-            collectArguments(
+            gen.collectArguments(
                 self,
                 args=['zenithAngle', 'offAxisAngle', 'testDict'],
                 allInputs=self.ALL_INPUTS,
@@ -41,20 +41,46 @@ def test_collect_dict_data():
     }
     inYaml = io.getTestDataFile('test_collect_dict_data.yml')
 
-    d1 = collectDataFromYamlOrDict(None, inDict)
+    d1 = gen.collectDataFromYamlOrDict(None, inDict)
     assert 'k2' in d1.keys()
     assert d1['k1'] == 2
 
-    d2 = collectDataFromYamlOrDict(inYaml, None)
+    d2 = gen.collectDataFromYamlOrDict(inYaml, None)
     assert 'k3' in d2.keys()
     assert d2['k4'] == ['bla', 2]
 
-    d3 = collectDataFromYamlOrDict(inYaml, inDict)
+    d3 = gen.collectDataFromYamlOrDict(inYaml, inDict)
     assert d3 == d2
+
+def test_validate_config_data():
+
+    parameterFile = io.getDataFile('ray-tracing', 'ray-tracing_parameters.yml')
+
+    parameters = gen.collectDataFromYamlOrDict(parameterFile, None)
+
+    print(parameters)
+
+    configData0 = {
+        'zenith': 0 * u.deg,
+        'offaxis': [0 * u.deg, 0.2 * u.rad]
+    }
+
+    validatedData0 = gen.validateConfigData(configData=configData0, parameters=parameters)
+
+    print(validatedData0)
+
+    configData1 = {
+        'zenith': 0 * u.deg,
+        'offaxis': [0, 20] * u.deg
+    }
+
+    validatedData1 = gen.validateConfigData(configData=configData1, parameters=parameters)
+
+    print(validatedData1)
 
 
 if __name__ == '__main__':
 
-    test_collect_dict_data()
+    # test_collect_dict_data()
     # test_collect_args()
-    pass
+    test_validate_config_data()
