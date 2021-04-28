@@ -218,4 +218,3 @@ if __name__ == '__main__':
     # test_single_mirror()
     # test_plot_image()
     # test_integral_curve()
-    pass
