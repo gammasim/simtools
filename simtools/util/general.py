@@ -201,6 +201,7 @@ def _validateAndConvertValue(parName, parInfo, value):
 
     # Checking the entry length
     valueLength = len(value)
+    logger.debug('Value len of {}: {}'.format(parName, valueLength))
     undefinedLength = False
     if parInfo['len'] is None:
         undefinedLength = True
@@ -211,7 +212,7 @@ def _validateAndConvertValue(parName, parInfo, value):
 
     # Checking unit
     if 'unit' not in parInfo.keys():
-        return value
+        return value if len(value) > 1 else value[0]
     else:
         # Turning parInfo['unit'] into a list, if it is not.
         parUnit = copyAsList(parInfo['unit'])
@@ -241,7 +242,7 @@ def _validateAndConvertValue(parName, parInfo, value):
             else:
                 valueWithUnits.append(arg.to(unit).value)
 
-        return valueWithUnits
+        return valueWithUnits if len(valueWithUnits) > 1 else valueWithUnits[0]
 
 
 def collectArguments(obj, args, allInputs, **kwargs):
@@ -513,7 +514,10 @@ def copyAsList(value):
     value: list
         Copy of value if it is a list of [value] otherwise.
     '''
-    try:
-        return list(value)
-    except Exception:
+    if isinstance(value, str):
         return [value]
+    else:
+        try:
+            return list(value)
+        except Exception:
+            return [value]
