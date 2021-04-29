@@ -111,22 +111,52 @@ def _convertUnit(quantity, unit):
 
 
 def validateConfigData(configData, parameters):
+    '''
+    Validate a generic configData dict by using the info
+    given by the parameters dict. The entries will be validated
+    in terms of length, units and names.
+
+    See data/test-data/test_parameters.yml for an example of the structure
+    of the parameters dict.
+
+    Parameters
+    ----------
+    configData: dict
+        Input config data.
+    parameters: dict
+        Parameter information necessary for validation.
+
+    Raises
+    ------
+    UnableToIdentifyConfigEntry
+        When an entry in configData cannot be identified among the parameters.
+    MissingRequiredConfigEntry
+        When a parameter without default value is not given in configData.
+    InvalidConfigEntry
+        When an entry in configData is invalid (wrong len, wrong unit, ...).
+
+    Returns
+    -------
+    dict:
+        Dict containing the validated config data entries.
+    '''
 
     logger = logging.getLogger(__name__)
 
     # Dict to be filled and returned
     outData = dict()
 
-    # Collecting all parameters given as arguments
+    # Collecting all entries given as in configData.
     for keyData, valueData in configData.items():
 
         isIdentified = False
+        # Searching for the key in the parameters.
         for parName, parInfo in parameters.items():
             names = parInfo.get('names', [])
             if keyData != parName and keyData.lower() not in [n.lower() for n in names]:
                 continue
             # Matched parameter
-            validatedValue = validateAndConvertValue(parName, parInfo, valueData)
+            validatedValue = _validateAndConvertValue(parName, parInfo, valueData)
             outData[parName] = validatedValue
             isIdentified = True
 
@@ -136,13 +166,13 @@ def validateConfigData(configData, parameters):
             logger.error(msg)
             raise UnableToIdentifyConfigEntry(msg)
 
-    # Checking for parameters with default option
-    # If it is not given, filling it with the default value
+    # Checking for parameters with default option.
+    # If it is not given, filling it with the default value.
     for parName, parInfo in parameters.items():
         if parName in outData.keys():
             continue
         elif 'default' in parInfo.keys():
-            validatedValue = validateAndConvertValue(
+            validatedValue = _validateAndConvertValue(
                 parName,
                 parInfo,
                 parInfo['default']
@@ -158,7 +188,7 @@ def validateConfigData(configData, parameters):
     return outData
 
 
-def validateAndConvertValue(parName, parInfo, value):
+def _validateAndConvertValue(parName, parInfo, value):
     '''
     Validate input user parameter and convert it to the right units, if needed.
     Returns the validated arguments in a list.
@@ -166,9 +196,10 @@ def validateAndConvertValue(parName, parInfo, value):
 
     logger = logging.getLogger(__name__)
 
-    # Turning valueArgs into a list, if it is not.
+    # Turning value into a list, if it is not.
     value = copyAsList(value)
 
+    # Checking the entry length
     valueLength = len(value)
     undefinedLength = False
     if parInfo['len'] is None:
@@ -178,6 +209,7 @@ def validateAndConvertValue(parName, parInfo, value):
         logger.error(msg)
         raise InvalidConfigEntry(msg)
 
+    # Checking unit
     if 'unit' not in parInfo.keys():
         return value
     else:
