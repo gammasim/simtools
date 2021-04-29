@@ -96,46 +96,17 @@ class RayTracing:
 
         self._telescopeModel = self._validateTelescopeModel(telescopeModel)
 
+        # Loading configData
         _configDataIn = gen.collectDataFromYamlOrDict(configFile, configData)
         _parameterFile = io.getDataFile('parameters', 'ray-tracing_parameters.yml')
         _parameters = gen.collectDataFromYamlOrDict(_parameterFile, None)
-
         self._configData = gen.validateConfigData(_configDataIn, _parameters)
-
-        print(self._configData)
-
-        # self._singleMirrorMode = singleMirrorMode
-        # self._useRandomFocalLength = useRandomFocalLength
-
-        # # Default parameters
-        # if self._singleMirrorMode:
-        #     collectArguments(
-        #         self,
-        #         args=['zenithAngle', 'offAxisAngle'],
-        #         allInputs=self.ALL_INPUTS,
-        #         **kwargs
-        #     )
-        #     mirFlen = self._telescopeModel.getParameterValue('mirror_focal_length')
-        #     self._sourceDistance = 2 * float(mirFlen) * u.cm.to(u.km)  # km
-        #     self._mirrorNumbers = mirrorNumbers
-        # else:
-        #     collectArguments(
-        #         self,
-        #         args=['zenithAngle', 'offAxisAngle', 'sourceDistance'],
-        #         allInputs=self.ALL_INPUTS,
-        #         **kwargs
-        #     )
+        self._logger.debug(self._configData)
 
         self.label = label if label is not None else self._telescopeModel.label
 
         self._outputDirectory = io.getRayTracingOutputDirectory(self._filesLocation, self.label)
         self._outputDirectory.mkdir(parents=True, exist_ok=True)
-
-        if self._singleMirrorMode:
-            if self._mirrorNumbers == 'all':
-                self._mirrorNumbers = list(range(0, self._telescopeModel.mirrors.numberOfMirrors))
-            if not isinstance(self._mirrorNumbers, list):
-                self._mirrorNumbers = [self._mirrorNumbers]
 
         self._hasResults = False
 
@@ -143,12 +114,29 @@ class RayTracing:
         fileNameResults = names.rayTracingResultsFileName(
             self._telescopeModel.site,
             self._telescopeModel.name,
-            self._sourceDistance,
-            self._zenithAngle,
+            self._configData['sourceDistance'],
+            self._configData['zenithAngle'],
             self.label
         )
         self._outputDirectory.joinpath('results').mkdir(parents=True, exist_ok=True)
         self._fileResults = self._outputDirectory.joinpath('results').joinpath(fileNameResults)
+
+        # Loading relevant attributes in case of single mirror mode.
+        self._singleMirrorMode = self._configData['singleMirrorMode']
+        if self._singleMirrorMode:
+            # Recalculating source distance.
+            self._logger.debug(
+                'Single mirror mode is activate - source distance is being recalculated to 2 * flen'
+            )
+            mirFlen = self._telescopeModel.getParameterValue('mirror_focal_length')
+            self._configData['sourceDistance'] = 2 * float(mirFlen) * u.cm.to(u.km)  # km
+
+            # Setting mirror numbers.
+            if self._configData['mirrorNumbers'] == 'all':
+                self._mirrorNumbers = list(range(0, self._telescopeModel.mirrors.numberOfMirrors))
+            else:
+                self._mirrorNumbers = self._configData['mirrorNumbers']
+
     # END of init
 
     def __repr__(self):
@@ -157,7 +145,7 @@ class RayTracing:
     def _validateTelescopeModel(self, tel):
         ''' Validate TelescopeModel '''
         if isinstance(tel, TelescopeModel):
-            self._logger.debug('TelescopeModel OK')
+            self._logger.debug('RayTracing contains a valid TelescopeModel')
             return tel
         else:
             msg = 'Invalid TelescopeModel'
@@ -176,7 +164,7 @@ class RayTracing:
             Force flag will remove existing files and simulate again.
         '''
         allMirrors = self._mirrorNumbers if self._singleMirrorMode else [0]
-        for thisOffAxis in self._offAxisAngle:
+        for thisOffAxis in self._configData['offAxisAngle']:
             for thisMirror in allMirrors:
                 self._logger.info('Simulating RayTracing for offAxis={}, mirror={}'.format(
                     thisOffAxis,
@@ -187,11 +175,11 @@ class RayTracing:
                     filesLocation=self._filesLocation,
                     mode='ray-tracing' if not self._singleMirrorMode else 'raytracing-singlemirror',
                     telescopeModel=self._telescopeModel,
-                    zenithAngle=self._zenithAngle * u.deg,
-                    sourceDistance=self._sourceDistance * u.km,
+                    zenithAngle=self._configData['zenithAngle'] * u.deg,
+                    sourceDistance=self._config['sourceDistance'] * u.km,
                     offAxisAngle=thisOffAxis * u.deg,
                     mirrorNumber=thisMirror,
-                    useRandomFocalLength=self._useRandomFocalLength
+                    useRandomFocalLength=self._configData['useRandomFocalLength']
                 )
                 simtel.run(test=test, force=force)
     # END of simulate
@@ -241,8 +229,8 @@ class RayTracing:
                 photonsFileName = names.rayTracingFileName(
                     self._telescopeModel.site,
                     self._telescopeModel.name,
-                    self._sourceDistance,
-                    self._zenithAngle,
+                    self._configData['sourceDistance'],
+                    self._configData['zenithAngle'],
                     thisOffAxis,
                     thisMirror if self._singleMirrorMode else None,
                     self.label,
@@ -375,8 +363,8 @@ class RayTracing:
             plotFileName = names.rayTracingPlotFileName(
                 key,
                 self._telescopeModel.name,
-                self._sourceDistance,
-                self._zenithAngle,
+                self._configData['sourceDistance'],
+                self._configData['zenithAngle'],
                 self.label
             )
             self._outputDirectory.joinpath('figures').mkdir(exist_ok=True)
@@ -467,7 +455,7 @@ class RayTracing:
         List of PSFImage's
         '''
         images = list()
-        for thisOffAxis in self._offAxisAngle:
+        for thisOffAxis in self._configData['offAxisAngle']:
             if thisOffAxis in self._psfImages.keys():
                 images.append(self._psfImages[thisOffAxis])
         if len(images) == 0:
