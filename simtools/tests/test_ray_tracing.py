@@ -16,11 +16,12 @@ logger.setLevel(logging.DEBUG)
 
 def test_ssts(show=False):
     # Test with 3 SSTs
-    sourceDistance = 10 * u.km
     version = 'prod3'
-    zenithAngle = 20 * u.deg
-    offAxisAngle = [0, 1.0, 2.0, 3.0, 4.0] * u.deg
-
+    configData = {
+        'sourceDistance': 10 * u.km,
+        'zenithAngle': 20 * u.deg,
+        'offAxisAngle': [0, 1.0, 2.0, 3.0, 4.0] * u.deg
+    }
     telTypes = ['sst-1M', 'sst-ASTRI', 'sst-GCT']
     telModels = list()
     rayTracing = list()
@@ -218,7 +219,7 @@ def test_config_data():
 
     configData = {
         'sourceDistance': 10 * u.km,
-        'zenithAngle': 20 * u.deg,
+        'zenithAngle': 30 * u.deg,
         'offAxisAngle': [0, 2] * u.deg
     }
 
@@ -233,6 +234,9 @@ def test_config_data():
         telescopeModel=tel,
         configData=configData
     )
+
+    assert ray._configData['zenithAngle'] == 30
+    assert len(ray._configData['offAxisAngle']) == 2
 
 
 if __name__ == '__main__':
