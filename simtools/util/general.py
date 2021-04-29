@@ -171,13 +171,15 @@ def validateConfigData(configData, parameters):
     for parName, parInfo in parameters.items():
         if parName in outData.keys():
             continue
-        elif 'default' in parInfo.keys():
+        elif 'default' in parInfo.keys() and parInfo['default'] is not None:
             validatedValue = _validateAndConvertValue(
                 parName,
                 parInfo,
                 parInfo['default']
             )
             outData[parName] = validatedValue
+        elif 'default' in parInfo.keys() and parInfo['default'] is None:
+            outData[parName] = None
         else:
             msg = (
                 'Required entry in configData {} '.format(parName)
