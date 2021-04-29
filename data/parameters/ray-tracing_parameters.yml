@@ -6,8 +6,19 @@ zenithAngle:
 offAxisAngle: 
   len: null
   unit: !astropy.units.Unit {unit: deg}
+  default: 0
   names: ['offaxis', 'offset']
 sourceDistance:
   len: 1
-  unit': !astropy.units.Unit {unit: km}
+  unit: !astropy.units.Unit {unit: km}
   default: 10
+  names: ['sourcedist', 'srcdist']
+singleMirrorMode:
+  len: 1
+  default: False
+useRandomFocalLength:
+  len: 1
+  default: False
+mirrorNumbers:
+  len: 1
+  default: 'all'
