@@ -40,11 +40,14 @@ def test_ssts(telescopeModelName):
 
 
 def test_rx():
-    sourceDistance = 10 * u.km
     version = 'current'
     label = 'test-lst'
-    zenithAngle = 20 * u.deg
-    offAxisAngle = [0, 2.5, 5.0] * u.deg
+
+    configData = {
+        'sourceDistance': 10 * u.km,
+        'zenithAngle': 20 * u.deg,
+        'offAxisAngle': [0, 2.5, 5.0] * u.deg
+    }
 
     tel = TelescopeModel(
         site='north',
@@ -55,9 +58,7 @@ def test_rx():
 
     ray = RayTracing(
         telescopeModel=tel,
-        sourceDistance=sourceDistance,
-        zenithAngle=zenithAngle,
-        offAxisAngle=offAxisAngle
+        configData=configData
     )
 
     ray.simulate(test=True, force=True)
@@ -89,15 +90,16 @@ def test_rx():
 
     plotFileArea = io.getTestPlotFile('effArea_test_rx.pdf')
     plt.savefig(plotFileArea)
-    return
 
 
 def test_plot_image():
-    sourceDistance = 10 * u.km
     version = 'prod3'
     label = 'test-astri'
-    zenithAngle = 20 * u.deg
-    offAxisAngle = [0, 2.5, 5.0] * u.deg
+    configData = {
+        'sourceDistance': 10 * u.km,
+        'zenithAngle': 20 * u.deg,
+        'offAxisAngle': [0, 2.5, 5.0] * u.deg
+    }
 
     tel = TelescopeModel(
         site='south',
@@ -108,9 +110,7 @@ def test_plot_image():
 
     ray = RayTracing(
         telescopeModel=tel,
-        sourceDistance=sourceDistance,
-        zenithAngle=zenithAngle,
-        offAxisAngle=offAxisAngle
+        configData=configData
     )
 
     ray.simulate(test=True, force=True)
@@ -125,13 +125,16 @@ def test_plot_image():
         image.plotImage(psf_color='b')
         plotFile = io.getTestPlotFile('test_plot_image_{}.pdf'.format(ii))
         plt.savefig(plotFile)
-    return
 
 
 def test_single_mirror(plot=False):
 
     # Test MST, single mirror PSF simulation
     version = 'prod3'
+    configData = {
+        'mirrorNumbers': list(range(1, 5)),
+        'singleMirrorMode': True
+    }
 
     tel = TelescopeModel(
         site='north',
@@ -142,8 +145,7 @@ def test_single_mirror(plot=False):
 
     ray = RayTracing(
         telescopeModel=tel,
-        singleMirrorMode=True,
-        mirrorNumbers=list(range(1, 5))
+        configData=configData
     )
     ray.simulate(test=True, force=True)
     ray.analyze(force=True)
@@ -159,11 +161,14 @@ def test_single_mirror(plot=False):
 
 
 def test_integral_curve():
-    sourceDistance = 10 * u.km
     version = 'prod4'
     label = 'lst_integral'
-    zenithAngle = 20 * u.deg
-    offAxisAngle = [0] * u.deg
+
+    configData = {
+        'sourceDistance': 10 * u.km,
+        'zenithAngle': 20 * u.deg,
+        'offAxisAngle': [0] * u.deg
+    }
 
     tel = TelescopeModel(
         site='north',
@@ -174,9 +179,7 @@ def test_integral_curve():
 
     ray = RayTracing(
         telescopeModel=tel,
-        sourceDistance=sourceDistance,
-        zenithAngle=zenithAngle,
-        offAxisAngle=offAxisAngle
+        configData=configData
     )
 
     ray.simulate(test=True, force=True)

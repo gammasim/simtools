@@ -212,7 +212,7 @@ def _validateAndConvertValue(parName, parInfo, value):
 
     # Checking unit
     if 'unit' not in parInfo.keys():
-        return value if len(value) > 1 else value[0]
+        return value if len(value) > 1 or undefinedLength else value[0]
     else:
         # Turning parInfo['unit'] into a list, if it is not.
         parUnit = copyAsList(parInfo['unit'])
@@ -242,7 +242,7 @@ def _validateAndConvertValue(parName, parInfo, value):
             else:
                 valueWithUnits.append(arg.to(unit).value)
 
-        return valueWithUnits if len(valueWithUnits) > 1 else valueWithUnits[0]
+        return valueWithUnits if len(valueWithUnits) > 1 or undefinedLength else valueWithUnits[0]
 
 
 def collectArguments(obj, args, allInputs, **kwargs):
