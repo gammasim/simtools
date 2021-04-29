@@ -3,7 +3,8 @@ import astropy.units as u
 
 import pyproj
 
-from simtools.util.general import collectArguments
+import simtools.util.general as gen
+import simtools.io_handler as io
 
 
 class InvalidCoordSystem(Exception):
@@ -83,7 +84,8 @@ class TelescopeData:
         self,
         name=None,
         prodId=dict(),
-        **kwargs
+        configData=None,
+        configFile=None
     ):
         '''
         TelescopeData init.
@@ -106,14 +108,15 @@ class TelescopeData:
         self.name = name
         self._prodId = prodId
 
-        # Collecting arguments
-        collectArguments(
-            self,
-            args=[*self.ALL_INPUTS],
-            allInputs=self.ALL_INPUTS,
-            **kwargs
-        )
-        # End of __init__
+        # Loading configData
+        _configDataIn = gen.collectDataFromYamlOrDict(configFile, configData)
+        _parameterFile = io.getDataFile('parameters', 'telescope-data_parameters.yml')
+        _parameters = gen.collectDataFromYamlOrDict(_parameterFile, None)
+        self._configData = gen.validateConfigData(_configDataIn, _parameters)
+
+        # Making configData entries into attributes
+        for par, value in self._configData.items():
+            self.__dict__['_' + par] = value
 
     def __repr__(self):
         telstr = self.name
