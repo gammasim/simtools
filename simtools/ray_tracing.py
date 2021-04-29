@@ -220,7 +220,7 @@ class RayTracing:
             self._readResults()
 
         allMirrors = self._mirrorNumbers if self._singleMirrorMode else [0]
-        for thisOffAxis in self._offAxisAngle:
+        for thisOffAxis in self._configData['offAxisAngle']:
             for thisMirror in allMirrors:
                 self._logger.debug('Analyzing RayTracing for offAxis={}'.format(thisOffAxis))
                 if self._singleMirrorMode:
