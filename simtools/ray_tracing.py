@@ -176,7 +176,7 @@ class RayTracing:
                     mode='ray-tracing' if not self._singleMirrorMode else 'raytracing-singlemirror',
                     telescopeModel=self._telescopeModel,
                     zenithAngle=self._configData['zenithAngle'] * u.deg,
-                    sourceDistance=self._config['sourceDistance'] * u.km,
+                    sourceDistance=self._configData['sourceDistance'] * u.km,
                     offAxisAngle=thisOffAxis * u.deg,
                     mirrorNumber=thisMirror,
                     useRandomFocalLength=self._configData['useRandomFocalLength']
