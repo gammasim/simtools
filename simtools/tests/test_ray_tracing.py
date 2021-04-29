@@ -211,10 +211,35 @@ def test_integral_curve():
     plt.savefig(plotFile)
 
 
+def test_config_data():
+
+    label = 'test-config-data'
+    version = 'prod4'
+
+    configData = {
+        'sourceDistance': 10 * u.km,
+        'zenithAngle': 20 * u.deg,
+        'offAxisAngle': [0, 2] * u.deg
+    }
+
+    tel = TelescopeModel(
+        site='north',
+        telescopeModelName='mst-FlashCam-D',
+        modelVersion=version,
+        label=label
+    )
+
+    ray = RayTracing(
+        telescopeModel=tel,
+        configData=configData
+    )
+
+
 if __name__ == '__main__':
 
     # test_ssts()
-    test_rx()
+    # test_rx()
     # test_single_mirror()
     # test_plot_image()
     # test_integral_curve()
+    test_config_data()

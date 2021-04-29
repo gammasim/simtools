@@ -12,12 +12,12 @@ from astropy.table import QTable
 
 import simtools.config as cfg
 import simtools.io_handler as io
+import simtools.util.general as gen
 from simtools.psf_analysis import PSFImage
 from simtools.util import names
 from simtools.util.model import computeTelescopeTransmission
 from simtools.model.telescope_model import TelescopeModel
 from simtools.simtel.simtel_runner import SimtelRunner
-from simtools.util.general import collectArguments
 from simtools import visualize
 
 __all__ = ['RayTracing']
@@ -52,16 +52,6 @@ class RayTracing:
     images()
         Get list of PSFImages.
     '''
-    ALL_INPUTS = {
-        'zenithAngle': {'default': 20, 'unit': u.deg},
-        'offAxisAngle': {
-            'default': [0.0],
-            'unit': u.deg,
-            'isList': True
-        },
-        'sourceDistance': {'default': 10, 'unit': u.km}
-    }
-
     YLABEL = {
         'd80_cm': r'$D_{80}$',
         'd80_deg': r'$D_{80}$',
@@ -75,10 +65,8 @@ class RayTracing:
         label=None,
         simtelSourcePath=None,
         filesLocation=None,
-        singleMirrorMode=False,
-        useRandomFocalLength=False,
-        mirrorNumbers='all',
-        **kwargs
+        configData=None,
+        configFile=None
     ):
         '''
         RayTracing init.
@@ -108,27 +96,35 @@ class RayTracing:
 
         self._telescopeModel = self._validateTelescopeModel(telescopeModel)
 
-        self._singleMirrorMode = singleMirrorMode
-        self._useRandomFocalLength = useRandomFocalLength
+        _configDataIn = gen.collectDataFromYamlOrDict(configFile, configData)
+        _parameterFile = io.getDataFile('parameters', 'ray-tracing_parameters.yml')
+        _parameters = gen.collectDataFromYamlOrDict(_parameterFile, None)
 
-        # Default parameters
-        if self._singleMirrorMode:
-            collectArguments(
-                self,
-                args=['zenithAngle', 'offAxisAngle'],
-                allInputs=self.ALL_INPUTS,
-                **kwargs
-            )
-            mirFlen = self._telescopeModel.getParameterValue('mirror_focal_length')
-            self._sourceDistance = 2 * float(mirFlen) * u.cm.to(u.km)  # km
-            self._mirrorNumbers = mirrorNumbers
-        else:
-            collectArguments(
-                self,
-                args=['zenithAngle', 'offAxisAngle', 'sourceDistance'],
-                allInputs=self.ALL_INPUTS,
-                **kwargs
-            )
+        self._configData = gen.validateConfigData(_configDataIn, _parameters)
+
+        print(self._configData)
+
+        # self._singleMirrorMode = singleMirrorMode
+        # self._useRandomFocalLength = useRandomFocalLength
+
+        # # Default parameters
+        # if self._singleMirrorMode:
+        #     collectArguments(
+        #         self,
+        #         args=['zenithAngle', 'offAxisAngle'],
+        #         allInputs=self.ALL_INPUTS,
+        #         **kwargs
+        #     )
+        #     mirFlen = self._telescopeModel.getParameterValue('mirror_focal_length')
+        #     self._sourceDistance = 2 * float(mirFlen) * u.cm.to(u.km)  # km
+        #     self._mirrorNumbers = mirrorNumbers
+        # else:
+        #     collectArguments(
+        #         self,
+        #         args=['zenithAngle', 'offAxisAngle', 'sourceDistance'],
+        #         allInputs=self.ALL_INPUTS,
+        #         **kwargs
+        #     )
 
         self.label = label if label is not None else self._telescopeModel.label
 
