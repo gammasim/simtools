@@ -2,6 +2,7 @@
 
 import logging
 import matplotlib.pyplot as plt
+import pytest
 from copy import copy
 
 import astropy.units as u
@@ -14,7 +15,8 @@ logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 
-def test_ssts(show=False):
+@pytest.mark.parametrize('telescopeModelName', ['sst-1M', 'sst-ASTRI', 'sst-GCT'])
+def test_ssts(telescopeModelName):
     # Test with 3 SSTs
     version = 'prod3'
     configData = {
@@ -22,40 +24,19 @@ def test_ssts(show=False):
         'zenithAngle': 20 * u.deg,
         'offAxisAngle': [0, 1.0, 2.0, 3.0, 4.0] * u.deg
     }
-    telTypes = ['sst-1M', 'sst-ASTRI', 'sst-GCT']
-    telModels = list()
-    rayTracing = list()
-    for t in telTypes:
-        tel = TelescopeModel(
-            site='south',
-            telescopeModelName=t,
-            modelVersion=version,
-            label='test-sst'
-        )
-        telModels.append(t)
+    tel = TelescopeModel(
+        site='south',
+        telescopeModelName=telescopeModelName,
+        modelVersion=version,
+        label='test-sst'
+    )
 
-        ray = RayTracing(
-            telescopeModel=tel,
-            sourceDistance=sourceDistance,
-            zenithAngle=zenithAngle,
-            offAxisAngle=offAxisAngle
-        )
-        ray.simulate(test=True, force=True)
-        ray.analyze(force=True)
-
-        rayTracing.append(ray)
-
-    # Plotting
-    plt.figure(figsize=(8, 6), tight_layout=True)
-    ax = plt.gca()
-    ax.set_xlabel('off-axis')
-    ax.set_ylabel('d80')
-
-    for ray in rayTracing:
-        ray.plot('d80_deg', marker='o', linestyle=':')
-
-    plotFile = io.getTestPlotFile('d80_test_ssts.pdf')
-    plt.savefig(plotFile)
+    ray = RayTracing(
+        telescopeModel=tel,
+        configData=configData
+    )
+    ray.simulate(test=True, force=True)
+    ray.analyze(force=True)
 
 
 def test_rx():
