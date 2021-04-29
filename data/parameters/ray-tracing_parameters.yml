@@ -20,5 +20,5 @@ useRandomFocalLength:
   len: 1
   default: False
 mirrorNumbers:
-  len: 1
+  len: null
   default: 'all'
