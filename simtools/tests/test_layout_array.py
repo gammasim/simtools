@@ -20,7 +20,7 @@ def test_read_tel_list():
 
 def test_dict_input():
     configData = {
-        'corsikaSphereRadius': [1 * u.m, 1 * u.m, 1 * u.m]
+        'corsikaSphereRadius': {'LST': 1 * u.m, 'MST': 1 * u.m, 'SST': 1 * u.m}
     }
     layout = LayoutArray(name='testLayout', configData=configData)
     layout.printTelescopeList()

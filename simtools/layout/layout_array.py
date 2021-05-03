@@ -92,7 +92,7 @@ class LayoutArray:
         self._telescopeList = []
 
         # Loading configData
-        _configDataIn = gen.collectDataFromYamlOrDict(configFile, configData)
+        _configDataIn = gen.collectDataFromYamlOrDict(configFile, configData, allowEmpty=True)
         _parameterFile = io.getDataFile('parameters', 'layout-array_parameters.yml')
         _parameters = gen.collectDataFromYamlOrDict(_parameterFile, None)
         self._configData = gen.validateConfigData(_configDataIn, _parameters)
@@ -100,23 +100,6 @@ class LayoutArray:
         # Making configData entries into attributes
         for par, value in self._configData.items():
             self.__dict__['_' + par] = value
-
-        print('Center')
-        print(self._corsikaSphereCenter)
-        print('Radius')
-        print(self._corsikaSphereRadius)
-
-        # Making corsikaSphere parameters into dict
-        # self._corsikaSphereCenter = {
-        #     'LST': self._corsikaSphereCenter[0],
-        #     'MST': self._corsikaSphereCenter[1],
-        #     'SST': self._corsikaSphereCenter[2],
-        # }
-        # self._corsikaSphereRadius = {
-        #     'LST': self._corsikaSphereRadius[0],
-        #     'MST': self._corsikaSphereRadius[1],
-        #     'SST': self._corsikaSphereRadius[2],
-        # }
 
         self._loadArrayCenter()
 
@@ -355,16 +338,20 @@ class LayoutArray:
             Altitude coordinate in equivalent units of u.m.
         '''
 
+        configData = {
+            'posX': posX,
+            'posY': posY,
+            'posZ': posZ,
+            'longitude': longitude,
+            'latitude': latitude,
+            'utmEast': utmEast,
+            'utmNorth': utmNorth,
+            'altitude': altitude
+        }
+
         tel = TelescopeData(
             name=telescopeName,
-            posX=posX,
-            posY=posY,
-            posZ=posZ,
-            longitude=longitude,
-            latitude=latitude,
-            utmEast=utmEast,
-            utmNorth=utmNorth,
-            altitude=altitude
+            configData=configData
         )
         self._telescopeList.append(tel)
 
