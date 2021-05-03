@@ -387,7 +387,7 @@ def collectArguments(obj, args, allInputs, **kwargs):
     return
 
 
-def collectDataFromYamlOrDict(inYaml, inDict):
+def collectDataFromYamlOrDict(inYaml, inDict, allowEmpty=False):
     '''
     Collect input data that can be given either as a dict
     or as a yaml file.
@@ -398,6 +398,8 @@ def collectDataFromYamlOrDict(inYaml, inDict):
         Name of the Yaml file.
     inDict: dict
         Data as dict.
+    allowEmpty: bool
+        If True, an error won't be raised in case both yaml and dict are None.
 
     Returns
     -------
@@ -416,8 +418,12 @@ def collectDataFromYamlOrDict(inYaml, inDict):
         return dict(inDict)
     else:
         msg = 'configData has not been provided (by yaml file neither by dict)'
-        _logger.error(msg)
-        raise InvalidConfigData(msg)
+        if allowEmpty:
+            _logger.warning(msg)
+            return None
+        else:
+            _logger.error(msg)
+            raise InvalidConfigData(msg)
 
 
 def collectKwargs(label, inKwargs):
