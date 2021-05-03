@@ -150,6 +150,9 @@ def validateConfigData(configData, parameters):
     # Dict to be filled and returned
     outData = dict()
 
+    if configData is None:
+        configData = dict()
+
     # Collecting all entries given as in configData.
     for keyData, valueData in configData.items():
 
@@ -226,7 +229,7 @@ def _validateAndConvertValue(parName, parInfo, valueIn):
     if 'unit' not in parInfo.keys():
 
         # Checking if values have unit and raising error, if so.
-        if any([u.Quanity(v).unit != u.dimensionless_unscaled for v in value]):
+        if any([u.Quantity(v).unit != u.dimensionless_unscaled for v in value]):
             msg = 'Config entry {} shoul not have units'.format(parName)
             logger.error(msg)
             raise InvalidConfigEntry(msg)
@@ -249,7 +252,8 @@ def _validateAndConvertValue(parName, parInfo, valueIn):
         # Checking units and converting them, if needed.
         valueWithUnits = list()
         for arg, unit in zip(value, parUnit):
-            if unit is None:
+            # In case a entry is None, None should be returned.
+            if unit is None or arg is None:
                 valueWithUnits.append(arg)
                 continue
 
