@@ -101,7 +101,6 @@ class RayTracing:
         _parameterFile = io.getDataFile('parameters', 'ray-tracing_parameters.yml')
         _parameters = gen.collectDataFromYamlOrDict(_parameterFile, None)
         self._configData = gen.validateConfigData(_configDataIn, _parameters)
-        self._logger.debug(self._configData)
 
         self.label = label if label is not None else self._telescopeModel.label
 
