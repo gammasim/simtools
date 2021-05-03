@@ -339,10 +339,10 @@ class DatabaseHandler:
 
         if _telClass == 'MST':
             # MST-FlashCam or MST-NectarCam
-            _whichTelLabels = [_telNameDB, '{}-MST-Structure-D'.format(site)]
+            _whichTelLabels = ['{}-MST-Structure-D'.format(site), _telNameDB]
         elif _telClass == 'SST':
             # SST = SST-Camera + SST-Structure
-            _whichTelLabels = ['{}-SST-Camera-D'.format(site), '{}-SST-Structure-D'.format(site)]
+            _whichTelLabels = ['{}-SST-Structure-D'.format(site), '{}-SST-Camera-D'.format(site)]
         else:
             _whichTelLabels = [_telNameDB]
 
