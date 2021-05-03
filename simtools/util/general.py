@@ -194,7 +194,7 @@ def validateConfigData(configData, parameters):
     return outData
 
 
-def _validateAndConvertValue(parName, parInfo, value):
+def _validateAndConvertValue(parName, parInfo, valueIn):
     '''
     Validate input user parameter and convert it to the right units, if needed.
     Returns the validated arguments in a list.
@@ -203,7 +203,13 @@ def _validateAndConvertValue(parName, parInfo, value):
     logger = logging.getLogger(__name__)
 
     # Turning value into a list, if it is not.
-    value = copyAsList(value)
+    if isinstance(valueIn, dict):
+        valueIsDict = True
+        value = [d for (k, d) in valueIn.items()]
+        valueKeys = [k for (k, d) in valueIn.items()]
+    else:
+        valueIsDict = False
+        value = copyAsList(valueIn)
 
     # Checking the entry length
     valueLength = len(value)
@@ -218,7 +224,17 @@ def _validateAndConvertValue(parName, parInfo, value):
 
     # Checking unit
     if 'unit' not in parInfo.keys():
-        return value if len(value) > 1 or undefinedLength else value[0]
+
+        # Checking if values have unit and raising error, if so.
+        if any([u.Quanity(v).unit != u.dimensionless_unscaled for v in value]):
+            msg = 'Config entry {} shoul not have units'.format(parName)
+            logger.error(msg)
+            raise InvalidConfigEntry(msg)
+        else:
+            if valueIsDict:
+                return {k: v for (k, v) in zip(valueKeys, value)}
+            else:
+                return value if len(value) > 1 or undefinedLength else value[0]
     else:
         # Turning parInfo['unit'] into a list, if it is not.
         parUnit = copyAsList(parInfo['unit'])
@@ -248,7 +264,12 @@ def _validateAndConvertValue(parName, parInfo, value):
             else:
                 valueWithUnits.append(arg.to(unit).value)
 
-        return valueWithUnits if len(valueWithUnits) > 1 or undefinedLength else valueWithUnits[0]
+        if valueIsDict:
+            return {k: v for (k, v) in zip(valueKeys, valueWithUnits)}
+        else:
+            return (
+                valueWithUnits if len(valueWithUnits) > 1 or undefinedLength else valueWithUnits[0]
+            )
 
 
 def collectArguments(obj, args, allInputs, **kwargs):

@@ -62,7 +62,8 @@ def test_validate_config_data():
         'offaxis': [0 * u.deg, 0.2 * u.rad, 3 * u.deg],
         'cscat': [0, 10 * u.m, 3 * u.km],
         'sourceDistance': 20000 * u.m,
-        'testName': 10
+        'testName': 10,
+        'dictPar': {'blah': 10, 'bleh': 5 * u.m}
     }
 
     validatedData = gen.validateConfigData(configData=configData, parameters=parameters)
@@ -74,7 +75,10 @@ def test_validate_config_data():
     assert 'validatedName' in validatedData.keys()
 
     # Testing unit convertion
-    assert validatedData['sourceDistance'][0] == 20
+    assert validatedData['sourceDistance'] == 20
+
+    # Testing dict par
+    assert validatedData['dictPar']['bleh'] == 500
 
 
 if __name__ == '__main__':

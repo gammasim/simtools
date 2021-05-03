@@ -101,6 +101,23 @@ class LayoutArray:
         for par, value in self._configData.items():
             self.__dict__['_' + par] = value
 
+        print('Center')
+        print(self._corsikaSphereCenter)
+        print('Radius')
+        print(self._corsikaSphereRadius)
+
+        # Making corsikaSphere parameters into dict
+        # self._corsikaSphereCenter = {
+        #     'LST': self._corsikaSphereCenter[0],
+        #     'MST': self._corsikaSphereCenter[1],
+        #     'SST': self._corsikaSphereCenter[2],
+        # }
+        # self._corsikaSphereRadius = {
+        #     'LST': self._corsikaSphereRadius[0],
+        #     'MST': self._corsikaSphereRadius[1],
+        #     'SST': self._corsikaSphereRadius[2],
+        # }
+
         self._loadArrayCenter()
 
         # Output directory
