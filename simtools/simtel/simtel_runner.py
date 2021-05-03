@@ -36,13 +36,6 @@ class SimtelRunner:
         Run sim_telarray. test=True will make it faster and force=True will remove existing files
         and run again.
     '''
-    ALL_INPUTS = {
-        'zenithAngle': {'default': 20, 'unit': u.deg},
-        'sourceDistance': {'default': 10, 'unit': u.km},
-        'offAxisAngle': {'default': 0, 'unit': u.deg},
-        'mirrorNumber': {'default': 1, 'unit': None},
-        'useRandomFocalLength': {'default': False, 'unit': None}
-    }
 
     def __init__(
         self,
@@ -51,7 +44,8 @@ class SimtelRunner:
         label=None,
         simtelSourcePath=None,
         filesLocation=None,
-        **kwargs
+        configData=None,
+        configFile=None
     ):
         '''
         SimtelRunner.
@@ -96,19 +90,16 @@ class SimtelRunner:
         self.RUNS_PER_SET = 1 if self._isSingleMirrorMode() else 20  # const
         self.PHOTONS_PER_RUN = 10000  # const
 
+        # Loading configData
+        _configDataIn = gen.collectDataFromYamlOrDict(configFile, configData)
+        _parameterFile = io.getDataFile('parameters', 'simtel-runner_parameters.yml')
+        _parameters = gen.collectDataFromYamlOrDict(_parameterFile, None)
+
         if self._isRayTracingMode():
-            gen.collectArguments(
-                self,
-                args=[
-                    'zenithAngle',
-                    'offAxisAngle',
-                    'sourceDistance',
-                    'mirrorNumber',
-                    'useRandomFocalLength'
-                ],
-                allInputs=self.ALL_INPUTS,
-                **kwargs
-            )
+            self._configData = gen.validateConfigData(_configDataIn, _parameters)
+            for par, value in self._configData.items():
+                self.__dict__['_' + par] = value
+
     # END of _init_
 
     def __repr__(self):
