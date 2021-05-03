@@ -349,6 +349,7 @@ class DatabaseHandler:
         # Selecting version and applicable (if on)
         _pars = dict()
         for _tel in _whichTelLabels:
+            self._logger.debug('Getting {} parameters from MongoDB'.format(_tel))
 
             # If tel is a struture, only applicable pars will be collected, always.
             # The default ones will be covered by the camera pars.
