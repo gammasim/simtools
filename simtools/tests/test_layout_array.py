@@ -19,10 +19,10 @@ def test_read_tel_list():
 
 
 def test_dict_input():
-    layout = LayoutArray(
-        name='testLayout',
-        corsikaSphereRadius={'LST': 1 * u.m, 'MST': 1 * u.m, 'SST': 1 * u.m}
-    )
+    configData = {
+        'corsikaSphereRadius': {'LST': 1 * u.m, 'MST': 1 * u.m, 'SST': 1 * u.m}
+    }
+    layout = LayoutArray(name='testLayout', configData=configData)
     layout.printTelescopeList()
 
 
@@ -105,8 +105,8 @@ if __name__ == '__main__':
 
     # test_read_tel_list()
     # test_add_tel()
-    # test_dict_input()
-    test_build_layout()
+    test_dict_input()
+    # test_build_layout()
     # test_corsika_input()
     # test_classmethod()
     # test_converting_center_coordinates()
