@@ -105,7 +105,7 @@ class LayoutArray:
 
         # Loading configData
         _configDataIn = gen.collectDataFromYamlOrDict(configFile, configData)
-        _parameterFile = io.getDataFile('parameters', 'telescope-data_parameters.yml')
+        _parameterFile = io.getDataFile('parameters', 'layout-array_parameters.yml')
         _parameters = gen.collectDataFromYamlOrDict(_parameterFile, None)
         self._configData = gen.validateConfigData(_configDataIn, _parameters)
 

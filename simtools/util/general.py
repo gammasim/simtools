@@ -39,6 +39,10 @@ class InvalidConfigEntry(Exception):
     pass
 
 
+class InvalidConfigData(Exception):
+    pass
+
+
 def fileHasText(file, text):
     '''
     Check whether a file contain a certain piece of text.
@@ -390,8 +394,9 @@ def collectDataFromYamlOrDict(inYaml, inDict):
     elif inDict is not None:
         return dict(inDict)
     else:
-        _logger.error('No data was given - aborting')
-        return None
+        msg = 'configData has not been provided (by yaml file neither by dict)'
+        _logger.error(msg)
+        raise InvalidConfigData(msg)
 
 
 def collectKwargs(label, inKwargs):
