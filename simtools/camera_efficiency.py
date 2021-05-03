@@ -12,9 +12,9 @@ from astropy.table import Table
 
 import simtools.config as cfg
 import simtools.io_handler as io
+import simtools.util.general as gen
 from simtools import visualize
 from simtools.util import names
-from simtools.util.general import collectArguments
 from simtools.util.model import getCameraName
 from simtools.model.telescope_model import TelescopeModel
 from simtools.model.model_parameters import CAMERA_RADIUS_CURV
@@ -42,7 +42,6 @@ class CameraEfficiency:
     plot(key, **kwargs)
         Plot key vs wavelength, where key may be cherenkov or nsb.
     '''
-    ALL_INPUTS = {'zenithAngle': {'default': 20, 'unit': u.deg}}
 
     def __init__(
         self,
@@ -50,7 +49,8 @@ class CameraEfficiency:
         label=None,
         simtelSourcePath=None,
         filesLocation=None,
-        **kwargs
+        configData=None,
+        configFile=None
     ):
         '''
         CameraEfficiency init.
@@ -82,7 +82,12 @@ class CameraEfficiency:
 
         self._hasResults = False
 
-        collectArguments(self, args=['zenithAngle'], allInputs=self.ALL_INPUTS, **kwargs)
+        _configDataIn = gen.collectDataFromYamlOrDict(configFile, configData, allowEmpty=True)
+        _parameterFile = io.getDataFile('parameters', 'camera-efficiency_parameters.yml')
+        _parameters = gen.collectDataFromYamlOrDict(_parameterFile, None)
+        _configData = gen.validateConfigData(_configDataIn, _parameters)
+        for par, value in _configData.items():
+            self.__dict__['_' + par] = value
 
         self._loadFiles()
     # END of init
