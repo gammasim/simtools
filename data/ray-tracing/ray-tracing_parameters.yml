@@ -1,0 +1,13 @@
+zenithAngle: 
+  len: 1
+  unit: !astropy.units.Unit {unit: deg}
+  default: 20
+  names: ['zenith', 'theta']
+offAxisAngle: 
+  len: null
+  unit: !astropy.units.Unit {unit: deg}
+  names: ['offaxis', 'offset']
+sourceDistance:
+  len: 1
+  unit': !astropy.units.Unit {unit: km}
+  default: 10

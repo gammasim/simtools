@@ -27,6 +27,18 @@ class MissingRequiredArgument(Exception):
     pass
 
 
+class UnableToIdentifyConfigEntry(Exception):
+    pass
+
+
+class MissingRequiredConfigEntry(Exception):
+    pass
+
+
+class InvalidConfigEntry(Exception):
+    pass
+
+
 def fileHasText(file, text):
     '''
     Check whether a file contain a certain piece of text.
@@ -96,6 +108,140 @@ def _convertUnit(quantity, unit):
     astropy.quantity
     '''
     return quantity if unit is None else quantity.to(unit).value
+
+
+def validateConfigData(configData, parameters):
+    '''
+    Validate a generic configData dict by using the info
+    given by the parameters dict. The entries will be validated
+    in terms of length, units and names.
+
+    See data/test-data/test_parameters.yml for an example of the structure
+    of the parameters dict.
+
+    Parameters
+    ----------
+    configData: dict
+        Input config data.
+    parameters: dict
+        Parameter information necessary for validation.
+
+    Raises
+    ------
+    UnableToIdentifyConfigEntry
+        When an entry in configData cannot be identified among the parameters.
+    MissingRequiredConfigEntry
+        When a parameter without default value is not given in configData.
+    InvalidConfigEntry
+        When an entry in configData is invalid (wrong len, wrong unit, ...).
+
+    Returns
+    -------
+    dict:
+        Dict containing the validated config data entries.
+    '''
+
+    logger = logging.getLogger(__name__)
+
+    # Dict to be filled and returned
+    outData = dict()
+
+    # Collecting all entries given as in configData.
+    for keyData, valueData in configData.items():
+
+        isIdentified = False
+        # Searching for the key in the parameters.
+        for parName, parInfo in parameters.items():
+            names = parInfo.get('names', [])
+            if keyData != parName and keyData.lower() not in [n.lower() for n in names]:
+                continue
+            # Matched parameter
+            validatedValue = _validateAndConvertValue(parName, parInfo, valueData)
+            outData[parName] = validatedValue
+            isIdentified = True
+
+        # Raising error for an unidentified input.
+        if not isIdentified:
+            msg = 'Entry {} in configData cannot be identified.'.format(keyData)
+            logger.error(msg)
+            raise UnableToIdentifyConfigEntry(msg)
+
+    # Checking for parameters with default option.
+    # If it is not given, filling it with the default value.
+    for parName, parInfo in parameters.items():
+        if parName in outData.keys():
+            continue
+        elif 'default' in parInfo.keys():
+            validatedValue = _validateAndConvertValue(
+                parName,
+                parInfo,
+                parInfo['default']
+            )
+            outData[parName] = validatedValue
+        else:
+            msg = (
+                'Required entry in configData {} '.format(parName)
+                + 'was not given (there may be more).'
+            )
+            logger.error(msg)
+            raise MissingRequiredConfigEntry(msg)
+    return outData
+
+
+def _validateAndConvertValue(parName, parInfo, value):
+    '''
+    Validate input user parameter and convert it to the right units, if needed.
+    Returns the validated arguments in a list.
+    '''
+
+    logger = logging.getLogger(__name__)
+
+    # Turning value into a list, if it is not.
+    value = copyAsList(value)
+
+    # Checking the entry length
+    valueLength = len(value)
+    undefinedLength = False
+    if parInfo['len'] is None:
+        undefinedLength = True
+    elif valueLength != parInfo['len']:
+        msg = 'Config entry with wrong len: {}'.format(parName)
+        logger.error(msg)
+        raise InvalidConfigEntry(msg)
+
+    # Checking unit
+    if 'unit' not in parInfo.keys():
+        return value
+    else:
+        # Turning parInfo['unit'] into a list, if it is not.
+        parUnit = copyAsList(parInfo['unit'])
+
+        if undefinedLength and len(parUnit) != 1:
+            msg = 'Config entry with undefined length should have a single unit: {}'.format(parName)
+            logger.error(msg)
+            raise InvalidConfigEntry(msg)
+        elif len(parUnit) == 1:
+            parUnit *= valueLength
+
+        # Checking units and converting them, if needed.
+        valueWithUnits = list()
+        for arg, unit in zip(value, parUnit):
+            if unit is None:
+                valueWithUnits.append(arg)
+                continue
+
+            if not isinstance(arg, u.quantity.Quantity):
+                msg = 'Config entry given without unit: {}'.format(parName)
+                logger.error(msg)
+                raise InvalidConfigEntry(msg)
+            elif not arg.unit.is_equivalent(unit):
+                msg = 'Config entry given with wrong unit: {}'.format(parName)
+                logger.error(msg)
+                raise InvalidConfigEntry(msg)
+            else:
+                valueWithUnits.append(arg.to(unit).value)
+
+        return valueWithUnits
 
 
 def collectArguments(obj, args, allInputs, **kwargs):
@@ -353,6 +499,7 @@ def getLogLevelFromUser(logLevel):
     else:
         return possibleLevels[logLevelLower]
 
+
 def copyAsList(value):
     '''
     Copy value and, if it is not a list, turn it into a list with a single entry.
@@ -366,5 +513,7 @@ def copyAsList(value):
     value: list
         Copy of value if it is a list of [value] otherwise.
     '''
-    return copy.copy(value) if isinstance(value, list) else [value]
-
+    try:
+        return list(value)
+    except Exception:
+        return [value]
