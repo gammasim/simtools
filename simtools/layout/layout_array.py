@@ -57,18 +57,6 @@ class LayoutArray:
         Perform all the possible conversions the coordinates of the tel positions.
     '''
 
-    ALL_INPUTS = {
-        'epsg': {'default': None, 'unit': None},
-        'centerLongitude': {'default': None, 'unit': u.deg},
-        'centerLatitude': {'default': None, 'unit': u.deg},
-        'centerNorthing': {'default': None, 'unit': u.m},
-        'centerEasting': {'default': None, 'unit': u.m},
-        'centerAltitude': {'default': None, 'unit': u.m},
-        'corsikaObsLevel': {'default': None, 'unit': u.m},
-        'corsikaSphereCenter': {'default': None, 'isDict': True, 'unit': u.m},
-        'corsikaSphereRadius': {'default': None, 'isDict': True, 'unit': u.m}
-    }
-
     def __init__(self, label=None, name=None, filesLocation=None, configData=None, configFile=None):
         '''
         LayoutArray init.
