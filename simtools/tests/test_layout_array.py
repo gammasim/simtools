@@ -30,13 +30,18 @@ def test_add_tel():
     layout = LayoutArray(name='testLayout')
     telFile = io.getTestDataFile('telescope_positions_prod5_north.ecsv')
     layout.readTelescopeListFile(telFile)
-    layout.addTelescope(telescopeName='L-05', posX=100 * u.m, posY=100 * u.m, posZ=100 * u.m)
+    layout.addTelescope(
+        telescopeName='L-05',
+        posX=100 * u.m,
+        posY=100 * u.m,
+        posZ=100 * u.m
+    )
 
     layout.printTelescopeList()
 
 
 def test_build_layout():
-    parameters = {
+    configData = {
         'centerLongitude': -17.8920302 * u.deg,
         'centerLatitude': 28.7621661 * u.deg,
         'epsg': 32628,
@@ -48,7 +53,7 @@ def test_build_layout():
         'corsikaObsLevel': 2158 * u.m
     }
 
-    layout = LayoutArray(label='test_layout', name='LST4', **parameters)
+    layout = LayoutArray(label='test_layout', name='LST4', configData=configData)
 
     # Adding 4 LST on a regular grid
     layout.addTelescope(telescopeName='L-01', posX=57.5 * u.m, posY=57.5 * u.m, posZ=0 * u.m)
@@ -87,7 +92,7 @@ def test_classmethod():
 
 
 def test_converting_center_coordinates():
-    parameters = {
+    configData = {
         'centerLongitude': -17.8920302 * u.deg,
         'centerLatitude': 28.7621661 * u.deg,
         'epsg': 32628,
@@ -97,15 +102,15 @@ def test_converting_center_coordinates():
         'corsikaObsLevel': 2158 * u.m
     }
 
-    layout = LayoutArray(label='test_layout', name='LST4', **parameters)
+    layout = LayoutArray(label='test_layout', name='LST4', configData=configData)
     layout.printTelescopeList()
 
 
 if __name__ == '__main__':
 
     # test_read_tel_list()
-    # test_add_tel()
-    test_dict_input()
+    test_add_tel()
+    # test_dict_input()
     # test_build_layout()
     # test_corsika_input()
     # test_classmethod()
