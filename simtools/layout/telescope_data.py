@@ -66,20 +66,6 @@ class TelescopeData:
         Perform all the necessary convertions in order to fill all the coordinate variables.
     '''
 
-    ALL_INPUTS = {
-        'posX': {'default': None, 'unit': u.m},
-        'posY': {'default': None, 'unit': u.m},
-        'posZ': {'default': None, 'unit': u.m},
-        'longitude': {'default': None, 'unit': u.deg},
-        'latitude': {'default': None, 'unit': u.deg},
-        'utmEast': {'default': None, 'unit': u.m},
-        'utmNorth': {'default': None, 'unit': u.m},
-        'altitude': {'default': None, 'unit': u.m},
-        'corsikaObsLevel': {'default': None, 'unit': u.m},
-        'corsikaSphereCenter': {'default': None, 'unit': u.m},
-        'corsikaSphereRadius': {'default': None, 'unit': u.m}
-    }
-
     def __init__(
         self,
         name=None,
@@ -109,7 +95,7 @@ class TelescopeData:
         self._prodId = prodId
 
         # Loading configData
-        _configDataIn = gen.collectDataFromYamlOrDict(configFile, configData)
+        _configDataIn = gen.collectDataFromYamlOrDict(configFile, configData, allowEmpty=True)
         _parameterFile = io.getDataFile('parameters', 'telescope-data_parameters.yml')
         _parameters = gen.collectDataFromYamlOrDict(_parameterFile, None)
         self._configData = gen.validateConfigData(_configDataIn, _parameters)
