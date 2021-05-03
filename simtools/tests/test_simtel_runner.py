@@ -22,9 +22,11 @@ def test_ray_tracing_mode():
     simtel = SimtelRunner(
         mode='ray-tracing',
         telescopeModel=tel,
-        zenithAngle=20 * u.deg,
-        offAxisAngle=2 * u.deg,
-        sourceDistance=12 * u.km
+        configData={
+            'zenithAngle': 20 * u.deg,
+            'offAxisAngle': 2 * u.deg,
+            'sourceDistance': 12 * u.km
+        }
     )
 
     logger.info(simtel)
@@ -49,9 +51,11 @@ def test_catching_model_error():
     simtel = SimtelRunner(
         mode='ray-tracing',
         telescopeModel=tel,
-        zenithAngle=20 * u.deg,
-        offAxisAngle=0 * u.deg,
-        sourceDistance=12 * u.km
+        configData={
+            'zenithAngle': 20 * u.deg,
+            'offAxisAngle': 0 * u.deg,
+            'sourceDistance': 12 * u.km
+        }
     )
 
     logger.info(simtel)
