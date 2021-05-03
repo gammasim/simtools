@@ -6,8 +6,8 @@ from astropy.table import Table
 
 import simtools.config as cfg
 import simtools.io_handler as io
+import simtools.util.general as gen
 from simtools.util import names
-from simtools.util.general import collectArguments
 from simtools.layout.telescope_data import TelescopeData
 
 
@@ -69,7 +69,7 @@ class LayoutArray:
         'corsikaSphereRadius': {'default': None, 'isDict': True, 'unit': u.m}
     }
 
-    def __init__(self, label=None, name=None, filesLocation=None, **kwargs):
+    def __init__(self, label=None, name=None, filesLocation=None, configData=None, configFile=None):
         '''
         LayoutArray init.
 
@@ -103,13 +103,15 @@ class LayoutArray:
         self.name = name
         self._telescopeList = []
 
-        # Collecting arguments
-        collectArguments(
-            self,
-            args=[*self.ALL_INPUTS],
-            allInputs=self.ALL_INPUTS,
-            **kwargs
-        )
+        # Loading configData
+        _configDataIn = gen.collectDataFromYamlOrDict(configFile, configData)
+        _parameterFile = io.getDataFile('parameters', 'telescope-data_parameters.yml')
+        _parameters = gen.collectDataFromYamlOrDict(_parameterFile, None)
+        self._configData = gen.validateConfigData(_configDataIn, _parameters)
+
+        # Making configData entries into attributes
+        for par, value in self._configData.items():
+            self.__dict__['_' + par] = value
 
         self._loadArrayCenter()
 
