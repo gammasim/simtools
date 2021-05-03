@@ -6,12 +6,12 @@ posX:
 posY: 
   len: 1
   unit: !astropy.units.Unit {unit: m}
-  names: ['x']
+  names: ['y']
   default: null
 posZ: 
   len: 1
   unit: !astropy.units.Unit {unit: m}
-  names: ['x']
+  names: ['z']
   default: null
 longitude:
   len: 1
