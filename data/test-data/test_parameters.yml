@@ -19,7 +19,9 @@
 #
 # A default value can be given by the key 'default'.
 # Parameters without default key will raise error when missing. 
-
+#
+# Dict can be given similarly to lists, with the proper len.
+#
 zenithAngle: 
   len: 1
   unit: !astropy.units.Unit {unit: deg}
@@ -41,3 +43,11 @@ validatedName:
   len: 1
   unit: null
   names: ['testname']
+dictPar:
+  len: 2
+  unit: [null, !astropy.units.Unit {unit: cm}]
+  default:
+    blah: 1
+    bleh: !astropy.units.Quantity
+      unit: !astropy.units.Unit {unit: cm}
+      value: 2
