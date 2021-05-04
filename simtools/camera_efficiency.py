@@ -2,11 +2,10 @@ import logging
 import numpy as np
 import matplotlib.pyplot as plt
 import os
+import re
 from pathlib import Path
 from collections import defaultdict
-import re
 
-import astropy.units as u
 from astropy.io import ascii
 from astropy.table import Table
 
@@ -26,10 +25,15 @@ class CameraEfficiency:
     '''
     Class for handling camera efficiency simulations and analysis.
 
+    Configurable parameters:
+        zenithAngle: {len: 1, unit: deg, default: 20 deg, names: ['zenith', 'theta']}
+
     Attributes
     ----------
     label: str
         Instance label.
+    config: namedtuple
+        Contains the configurable parameters (zenithAngle).
 
     Methods
     -------
@@ -67,8 +71,10 @@ class CameraEfficiency:
         filesLocation: str (or Path), optional.
             Parent location of the output files created by this class. If not given, it will be
             taken from the config.yml file.
-        **kwargs:
-            Physical parameters with units (if applicable). Options: zenithAngle (default 20 deg).
+        configData: dict.
+            Dict containing the configurable parameters.
+        configFIle: str or Path
+            Path of the yaml file containing the configurable parameters.
         '''
         self._logger = logging.getLogger(__name__)
 
@@ -85,9 +91,7 @@ class CameraEfficiency:
         _configDataIn = gen.collectDataFromYamlOrDict(configFile, configData, allowEmpty=True)
         _parameterFile = io.getDataFile('parameters', 'camera-efficiency_parameters.yml')
         _parameters = gen.collectDataFromYamlOrDict(_parameterFile, None)
-        _configData = gen.validateConfigData(_configDataIn, _parameters)
-        for par, value in _configData.items():
-            self.__dict__['_' + par] = value
+        self.config = gen.validateConfigData(_configDataIn, _parameters)
 
         self._loadFiles()
     # END of init
@@ -118,7 +122,7 @@ class CameraEfficiency:
         fileNameResults = names.cameraEfficiencyResultsFileName(
             self._telescopeModel.site,
             self._telescopeModel.name,
-            self._zenithAngle,
+            self.config.zenithAngle,
             self.label
         )
         self._fileResults = self._baseDirectory.joinpath(fileNameResults)
@@ -126,7 +130,7 @@ class CameraEfficiency:
         fileNameSimtel = names.cameraEfficiencySimtelFileName(
             self._telescopeModel.site,
             self._telescopeModel.name,
-            self._zenithAngle,
+            self.config.zenithAngle,
             self.label
         )
         self._fileSimtel = self._baseDirectory.joinpath(fileNameSimtel)
@@ -134,7 +138,7 @@ class CameraEfficiency:
         fileNameLog = names.cameraEfficiencyLogFileName(
             self._telescopeModel.site,
             self._telescopeModel.name,
-            self._zenithAngle,
+            self.config.zenithAngle,
             self.label
         )
         self._fileLog = self._baseDirectory.joinpath(fileNameLog)
@@ -226,7 +230,7 @@ class CameraEfficiency:
         )
         cmd += ' -fqe {}'.format(self._telescopeModel.getParameterValue('quantum_efficiency'))
         cmd += ' {} {}'.format(200, 1000)  # lmin and lmax
-        cmd += ' {} 1 {}'.format(300, self._zenithAngle)  # Xmax, ioatm, zenith angle
+        cmd += ' {} 1 {}'.format(300, self.config.zenithAngle)  # Xmax, ioatm, zenith angle
         cmd += ' 2>{}'.format(self._fileLog)
         cmd += ' >{}'.format(self._fileSimtel)
 
