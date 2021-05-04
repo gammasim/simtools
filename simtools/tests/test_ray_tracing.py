@@ -219,8 +219,8 @@ def test_config_data():
         configData=configData
     )
 
-    assert ray._configData['zenithAngle'] == 30
-    assert len(ray._configData['offAxisAngle']) == 2
+    assert ray.config.zenithAngle == 30
+    assert len(ray.config.offAxisAngle) == 2
 
 
 if __name__ == '__main__':
