@@ -73,7 +73,7 @@ class CameraEfficiency:
             taken from the config.yml file.
         configData: dict.
             Dict containing the configurable parameters.
-        configFIle: str or Path
+        configFile: str or Path
             Path of the yaml file containing the configurable parameters.
         '''
         self._logger = logging.getLogger(__name__)
