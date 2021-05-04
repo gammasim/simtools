@@ -119,6 +119,10 @@ class LayoutArray:
         _parameters = gen.collectDataFromYamlOrDict(_parameterFile, None)
         self.config = gen.validateConfigData(_configDataIn, _parameters)
 
+        # Making config entries into attributes
+        for par, value in zip(self.config._fields, self.config):
+            self.__dict__['_' + par] = value
+
         self._loadArrayCenter()
 
         # Output directory
@@ -147,13 +151,6 @@ class LayoutArray:
             **kwargs
         )
         return cls(**args, configData=configData)
-
-
-    def __len__(self):
-        return len(self._telescopeList)
-
-    def __getitem__(self, i):
-        return self._telescopeList[i]
 
     @classmethod
     def fromLayoutArrayName(
@@ -199,6 +196,12 @@ class LayoutArray:
         return layout
         # End of fromLayoutArrayName
 
+    def __len__(self):
+        return len(self._telescopeList)
+
+    def __getitem__(self, i):
+        return self._telescopeList[i]
+
     def _loadArrayCenter(self):
         ''' Load the array center and make convertions if needed. '''
 
@@ -206,18 +209,18 @@ class LayoutArray:
         self._arrayCenter.name = 'array_center'
 
         self._arrayCenter.setLocalCoordinates(0 * u.m, 0 * u.m, 0 * u.m)
-        if self.config.centerLatitude is not None and self.config.centerLongitude is not None:
+        if self._centerLatitude is not None and self._centerLongitude is not None:
             self._arrayCenter.setMercatorCoordinates(
-                self.config.centerLatitude * u.deg,
-                self.config.centerLongitude * u.deg
+                self._centerLatitude * u.deg,
+                self._centerLongitude * u.deg
             )
-        if self.config.centerEasting is not None and self.config.centerNorthing is not None:
+        if self._centerEasting is not None and self._centerNorthing is not None:
             self._arrayCenter.setUtmCoordinates(
-                self.config.centerEasting * u.m,
-                self.config.centerNorthing * u.m
+                self._centerEasting * u.m,
+                self._centerNorthing * u.m
             )
-        if self.config.centerAltitude is not None:
-            self._arrayCenter.setAltitude(self.config.centerAltitude * u.m)
+        if self._centerAltitude is not None:
+            self._arrayCenter.setAltitude(self._centerAltitude * u.m)
 
         # Converting
         wgs84 = self._getWgs84()
@@ -231,12 +234,12 @@ class LayoutArray:
 
         # Filling in center UTM coordinates if needed
         if (
-            (self.config.centerNorthing is None or self.config.centerEasting is None)
+            (self._centerNorthing is None or self._centerEasting is None)
             and self._arrayCenter.hasUtmCoordinates()
         ):
             centerNorthingWithUnit, centerEastingWithUnit = self._arrayCenter.getUtmCoordinates()
-            self.config.centerNorthing = centerNorthingWithUnit.to(u.m).value
-            self.config.centerEasting = centerEastingWithUnit.to(u.m).value
+            self._centerNorthing = centerNorthingWithUnit.to(u.m).value
+            self._centerEasting = centerEastingWithUnit.to(u.m).value
     # End of _loadArrayCenter
 
     def _appendTelescope(self, row, table, prodList):
@@ -303,27 +306,27 @@ class LayoutArray:
 
         # Reference coordinate system
         if 'EPSG' in table.meta:
-            self.config.epsg = table.meta['EPSG']
+            self._epsg = table.meta['EPSG']
         if 'center_northing' in table.meta and 'center_easting' in table.meta:
-            self.config.centerNorthing = u.Quantity(table.meta['center_northing']).to(u.m).value
-            self.config.centerEasting = u.Quantity(table.meta['center_easting']).to(u.m).value
+            self._centerNorthing = u.Quantity(table.meta['center_northing']).to(u.m).value
+            self._centerEasting = u.Quantity(table.meta['center_easting']).to(u.m).value
         if 'center_lon' in table.meta and 'center_lat' in table.meta:
-            self.config.centerLongitude = u.Quantity(table.meta['center_lon']).to(u.deg).value
-            self.config.centerLatitude = u.Quantity(table.meta['center_lat']).to(u.deg).value
+            self._centerLongitude = u.Quantity(table.meta['center_lon']).to(u.deg).value
+            self._centerLatitude = u.Quantity(table.meta['center_lat']).to(u.deg).value
         if 'center_alt' in table.meta:
-            self.config.centerAltitude = u.Quantity(table.meta['center_alt']).to(u.m).value
+            self._centerAltitude = u.Quantity(table.meta['center_alt']).to(u.m).value
 
         # CORSIKA parameters
         if 'corsika_obs_level' in table.meta:
-            self.config.corsikaObsLevel = u.Quantity(table.meta['corsika_obs_level']).value
+            self._corsikaObsLevel = u.Quantity(table.meta['corsika_obs_level']).value
         if 'corsika_sphere_center' in table.meta:
-            self.config.corsikaSphereCenter = dict()
+            self._corsikaSphereCenter = dict()
             for key, value in table.meta['corsika_sphere_center'].items():
-                self.config.corsikaSphereCenter[key] = u.Quantity(value).to(u.m).value
+                self._corsikaSphereCenter[key] = u.Quantity(value).to(u.m).value
         if 'corsika_sphere_radius' in table.meta:
-            self.config.corsikaSphereRadius = dict()
+            self._corsikaSphereRadius = dict()
             for key, value in table.meta['corsika_sphere_radius'].items():
-                self.config.corsikaSphereRadius[key] = u.Quantity(value).to(u.m).value
+                self._corsikaSphereRadius[key] = u.Quantity(value).to(u.m).value
 
         # Initialise telescope lists from productions
         # (require column names include 'prod' string)
@@ -407,19 +410,19 @@ class LayoutArray:
         )
 
         metaData = {
-            'center_lon': self.config.centerLongitude * u.deg,
-            'center_lat': self.config.centerLatitude * u.deg,
-            'center_alt': self.config.centerAltitude * u.m,
-            'center_northing': self.config.centerNorthing * u.m,
-            'center_easting': self.config.centerEasting * u.m,
-            'corsika_obs_level': self.config.corsikaObsLevel * u.m,
+            'center_lon': self._centerLongitude * u.deg,
+            'center_lat': self._centerLatitude * u.deg,
+            'center_alt': self._centerAltitude * u.m,
+            'center_northing': self._centerNorthing * u.m,
+            'center_easting': self._centerEasting * u.m,
+            'corsika_obs_level': self._corsikaObsLevel * u.m,
             'corsika_sphere_center': {
-                key: value * u.m for (key, value) in self.config.corsikaSphereCenter.items()
+                key: value * u.m for (key, value) in self._corsikaSphereCenter.items()
             },
             'corsika_sphere_radius': {
-                key: value * u.m for (key, value) in self.config.corsikaSphereRadius.items()
+                key: value * u.m for (key, value) in self._corsikaSphereRadius.items()
             },
-            'EPSG': self.config.epsg
+            'EPSG': self._epsg
         }
 
         table = Table(meta=metaData)
@@ -497,7 +500,7 @@ class LayoutArray:
         corsikaList = ''
         for tel in self._telescopeList:
             posX, posY, posZ = tel.getLocalCoordinates()
-            sphereRadius = self.config.corsikaSphereRadius[tel.getTelescopeSize()]
+            sphereRadius = self._corsikaSphereRadius[tel.getTelescopeSize()]
 
             corsikaList += 'TELESCOPE'
             corsikaList += '\t {:.3f}E2'.format(posX.value)
@@ -536,13 +539,13 @@ class LayoutArray:
         # 2. convert coordinates
         for tel in self._telescopeList:
 
-            if self.config.corsikaObsLevel is not None:
-                corsikaObsLevel = self.config.corsikaObsLevel * u.m
+            if self._corsikaObsLevel is not None:
+                corsikaObsLevel = self._corsikaObsLevel * u.m
             else:
                 corsikaObsLevel = None
 
-            if self.config.corsikaSphereCenter is not None:
-                corsikaSphereCenter = self.config.corsikaSphereCenter[tel.getTelescopeSize()] * u.m
+            if self._corsikaSphereCenter is not None:
+                corsikaSphereCenter = self._corsikaSphereCenter[tel.getTelescopeSize()] * u.m
             else:
                 corsikaSphereCenter = None
 
@@ -557,10 +560,10 @@ class LayoutArray:
 
     def _getCrsLocal(self):
         ''' Get the crs_local '''
-        if self.config.centerLongitude is not None and self.config.centerLatitude is not None:
+        if self._centerLongitude is not None and self._centerLatitude is not None:
             proj4_string = (
                 '+proj=tmerc +ellps=WGS84 +datum=WGS84'
-                + ' +lon_0={} +lat_0={}'.format(self.config.centerLongitude, self.config.centerLatitude)
+                + ' +lon_0={} +lat_0={}'.format(self._centerLongitude, self._centerLatitude)
                 + ' +axis=nwu +units=m +k_0=1.0'
             )
             crs_local = pyproj.CRS.from_proj4(proj4_string)
@@ -572,8 +575,8 @@ class LayoutArray:
 
     def _getCrsUtm(self):
         ''' Get crs_utm '''
-        if self.config.epsg is not None:
-            crs_utm = pyproj.CRS.from_user_input(self.config.epsg)
+        if self._epsg is not None:
+            crs_utm = pyproj.CRS.from_user_input(self._epsg)
             self._logger.info('UTM system: {}'.format(crs_utm))
             return crs_utm
         else:
