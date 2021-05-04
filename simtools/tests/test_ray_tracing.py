@@ -223,6 +223,33 @@ def test_config_data():
     assert len(ray.config.offAxisAngle) == 2
 
 
+def test_from_kwargs():
+
+    label = 'test-from-kwargs'
+    version = 'prod4'
+
+    sourceDistance = 10 * u.km
+    zenithAngle = 30 * u.deg
+    offAxisAngle = [0, 2] * u.deg
+
+    tel = TelescopeModel(
+        site='north',
+        telescopeModelName='mst-FlashCam-D',
+        modelVersion=version,
+        label=label
+    )
+
+    ray = RayTracing.fromKwargs(
+        telescopeModel=tel,
+        sourceDistance=sourceDistance,
+        zenithAngle=zenithAngle,
+        offAxisAngle=offAxisAngle
+    )
+
+    assert ray.config.zenithAngle == 30
+    assert len(ray.config.offAxisAngle) == 2
+
+
 if __name__ == '__main__':
 
     # test_ssts()
@@ -230,4 +257,5 @@ if __name__ == '__main__':
     # test_single_mirror()
     # test_plot_image()
     # test_integral_curve()
-    test_config_data()
+    # test_config_data()
+    test_from_kwargs()
