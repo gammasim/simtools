@@ -81,8 +81,8 @@ def validateConfigData(configData, parameters):
 
     Returns
     -------
-    dict:
-        Dict containing the validated config data entries.
+    namedtuple:
+        Containing the validated config data entries.
     '''
 
     logger = logging.getLogger(__name__)
