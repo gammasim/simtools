@@ -131,19 +131,6 @@ class RayTracing:
         self._outputDirectory = io.getRayTracingOutputDirectory(self._filesLocation, self.label)
         self._outputDirectory.mkdir(parents=True, exist_ok=True)
 
-        self._hasResults = False
-
-        # Results file
-        fileNameResults = names.rayTracingResultsFileName(
-            self._telescopeModel.site,
-            self._telescopeModel.name,
-            self.config.sourceDistance,
-            self.config.zenithAngle,
-            self.label
-        )
-        self._outputDirectory.joinpath('results').mkdir(parents=True, exist_ok=True)
-        self._fileResults = self._outputDirectory.joinpath('results').joinpath(fileNameResults)
-
         # Loading relevant attributes in case of single mirror mode.
         if self.config.singleMirrorMode:
             # Recalculating source distance.
@@ -161,6 +148,18 @@ class RayTracing:
         else:
             self._sourceDistance = self.config.sourceDistance
 
+        self._hasResults = False
+
+        # Results file
+        fileNameResults = names.rayTracingResultsFileName(
+            self._telescopeModel.site,
+            self._telescopeModel.name,
+            self._sourceDistance,
+            self.config.zenithAngle,
+            self.label
+        )
+        self._outputDirectory.joinpath('results').mkdir(parents=True, exist_ok=True)
+        self._fileResults = self._outputDirectory.joinpath('results').joinpath(fileNameResults)
     # END of init
 
     @classmethod
@@ -226,9 +225,9 @@ class RayTracing:
                     telescopeModel=self._telescopeModel,
                     configData={
                         'zenithAngle': self.config.zenithAngle * u.deg,
-                        'sourceDistance': self.config.sourceDistance * u.km,
+                        'sourceDistance': self._sourceDistance * u.km,
                         'offAxisAngle': thisOffAxis * u.deg,
-                        'mirrorNumbers': thisMirror,
+                        'mirrorNumber': thisMirror,
                         'useRandomFocalLength': self.config.useRandomFocalLength
                     }
                 )
