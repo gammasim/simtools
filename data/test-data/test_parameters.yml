@@ -1,6 +1,6 @@
 # This is an example of the parameter file to be used
 # to validate config data.
-# 
+#
 # Each parameter is listed by its main name as parent key.
 # A list of alternative names can be listed using the key 'names'.
 # If a config entry with one of the names listed are found (case insensitive),
@@ -8,12 +8,12 @@
 #
 # The length of the entry must be given by the key 'len'.
 # Lists with undefined length can be set by len: null.
-# 
+#
 # The 'unit' has to be a list of the same len as the entry.
 # No units can be set by null or by not adding the 'unit' key.
 #
 # Config entries will be checked whether they are given
-# with equivalents units or not. If so, the entry will 
+# with equivalents units or not. If so, the entry will
 # be converted to the proper unit and only its value
 # will be returned.
 #
@@ -22,7 +22,7 @@
 #
 # Dict can be given similarly to lists, with the proper len.
 #
-zenithAngle: 
+zenithAngle:
   len: 1
   unit: !astropy.units.Unit {unit: deg}
   default: 20
@@ -35,7 +35,7 @@ sourceDistance:
   len: 1
   unit: !astropy.units.Unit {unit: km}
   default: 10
-cscat: # Parameter with len > 1 and multiple units. 
+cscat: # Parameter with len > 1 and multiple units.
   len: 3
   unit: [null, !astropy.units.Unit {unit: m}, !astropy.units.Unit {unit: m}]
   names: ['scat']
