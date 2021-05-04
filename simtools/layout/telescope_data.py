@@ -17,12 +17,49 @@ class MissingInputForConvertion(Exception):
 
 class TelescopeData:
     '''
-    Store and do coordinate transformations with single telescope positions
+    Store and perform coordinate transformations with single telescope positions.
+
+    Configurable parameters:
+        posX: 
+            len: 1
+            unit: m
+        posY: 
+            len: 1
+            unit: m
+        posZ: 
+            len: 1
+            unit: m
+        longitude:
+            len: 1
+            unit: m
+        latitude:
+            len: 1
+            unit: m
+        utmEast:
+            len: 1
+            unit: m
+        utmNorth:
+            len: 1
+            unit: m
+        altitude:
+            len: 1
+            unit: m
+        corsikaObsLevel:
+            len: 1
+            unit: m
+        corsikaSphereCenter:
+            len: 1
+            unit: m
+        corsikaSphereRadius:
+            len: 1
+            unit: m
 
     Attributes
     ----------
     name: str
         Name of the telescope (e.g L-01, S-05, ...).
+    config: namedtuple
+        Contains the configurable parameters (zenithAngle).
 
     Methods
     -------
@@ -82,10 +119,10 @@ class TelescopeData:
             Name of the telescope (e.g L-01, S-05, ...)
         prodId: dict
             ...
-        **kwargs:
-            Physical parameters with units (if applicable). Options: posX, posY, posZ,
-            longitude, latitude, utmsEast, utmNorth, altitude, corsikaSphereRadius,
-            corsikaSphereCenter
+        configData: dict.
+            Dict containing the configurable parameters.
+        configFile: str or Path
+            Path of the yaml file containing the configurable parameters.
         '''
 
         self._logger = logging.getLogger(__name__)
