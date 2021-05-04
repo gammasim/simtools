@@ -37,7 +37,7 @@ class SimtelRunner:
         useRandomFocalLength:
             len: 1
             default: False
-        mirrorNumbers:
+        mirrorNumber:
             len: 1
             default: 1
 
