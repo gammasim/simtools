@@ -20,13 +20,13 @@ class TelescopeData:
     Store and perform coordinate transformations with single telescope positions.
 
     Configurable parameters:
-        posX: 
+        posX:
             len: 1
             unit: m
-        posY: 
+        posY:
             len: 1
             unit: m
-        posZ: 
+        posZ:
             len: 1
             unit: m
         longitude:
@@ -137,7 +137,7 @@ class TelescopeData:
         _parameters = gen.collectDataFromYamlOrDict(_parameterFile, None)
         self._configData = gen.validateConfigData(_configDataIn, _parameters)
 
-        # Making configData entries into attributes
+        # Making config entries into attributes
         for par, value in self._configData.items():
             self.__dict__['_' + par] = value
 
