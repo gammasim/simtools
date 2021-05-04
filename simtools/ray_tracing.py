@@ -165,6 +165,20 @@ class RayTracing:
 
     @classmethod
     def fromKwargs(cls, **kwargs):
+        '''
+        Builds a RayTracing object from kwargs only.
+        The configurable parameters can be given as kwargs, instead of using the
+        configData or configFile arguments.
+
+        Parameters
+        ----------
+        kwargs
+            Containing the arguments and the configurable parameters.
+
+        Returns
+        -------
+        Instance of this class.
+        '''
         args, configData = gen.separateArgsAndConfigData(
             expectedArgs=['telescopeModel', 'label', 'simtelSourcePath', 'filesLocation'],
             **kwargs

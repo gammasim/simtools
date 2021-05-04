@@ -96,6 +96,28 @@ class CameraEfficiency:
         self._loadFiles()
     # END of init
 
+    @classmethod
+    def fromKwargs(cls, **kwargs):
+        '''
+        Builds a CameraEfficiency object from kwargs only.
+        The configurable parameters can be given as kwargs, instead of using the
+        configData or configFile arguments.
+
+        Parameters
+        ----------
+        kwargs
+            Containing the arguments and the configurable parameters.
+
+        Returns
+        -------
+        Instance of this class.
+        '''
+        args, configData = gen.separateArgsAndConfigData(
+            expectedArgs=['telescopeModel', 'label', 'simtelSourcePath', 'filesLocation'],
+            **kwargs
+        )
+        return cls(**args, configData=configData)
+
     def __repr__(self):
         return 'CameraEfficiency(label={})\n'.format(self.label)
 

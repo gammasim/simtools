@@ -141,6 +141,28 @@ class TelescopeData:
         for par, value in zip(self.config._fields, self.config):
             self.__dict__['_' + par] = value
 
+    @classmethod
+    def fromKwargs(cls, **kwargs):
+        '''
+        Builds a TelescopeData object from kwargs only.
+        The configurable parameters can be given as kwargs, instead of using the
+        configData or configFile arguments.
+
+        Parameters
+        ----------
+        kwargs
+            Containing the arguments and the configurable parameters.
+
+        Returns
+        -------
+        Instance of this class.
+        '''
+        args, configData = gen.separateArgsAndConfigData(
+            expectedArgs=['name', 'prodId'],
+            **kwargs
+        )
+        return cls(**args, configData=configData)
+
     def __repr__(self):
         telstr = self.name
         if self.hasLocalCoordinates():

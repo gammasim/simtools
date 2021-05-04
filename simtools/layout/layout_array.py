@@ -126,6 +126,29 @@ class LayoutArray:
         self._outputDirectory = io.getLayoutOutputDirectory(self._filesLocation, self.label)
         self._outputDirectory.mkdir(parents=True, exist_ok=True)
 
+    @classmethod
+    def fromKwargs(cls, **kwargs):
+        '''
+        Builds a LayoutArray object from kwargs only.
+        The configurable parameters can be given as kwargs, instead of using the
+        configData or configFile arguments.
+
+        Parameters
+        ----------
+        kwargs
+            Containing the arguments and the configurable parameters.
+
+        Returns
+        -------
+        Instance of this class.
+        '''
+        args, configData = gen.separateArgsAndConfigData(
+            expectedArgs=['name', 'label', 'filesLocation'],
+            **kwargs
+        )
+        return cls(**args, configData=configData)
+
+
     def __len__(self):
         return len(self._telescopeList)
 
