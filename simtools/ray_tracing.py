@@ -28,11 +28,11 @@ class RayTracing:
     Class for handling ray tracing simulations and analysis.
 
     Configurable parameters:
-        zenithAngle: 
+        zenithAngle:
             len: 1
             unit: deg
             default: 20 deg
-        offAxisAngle: 
+        offAxisAngle:
             len: null
             unit: deg
             default: [0 deg]
