@@ -135,10 +135,10 @@ class TelescopeData:
         _configDataIn = gen.collectDataFromYamlOrDict(configFile, configData, allowEmpty=True)
         _parameterFile = io.getDataFile('parameters', 'telescope-data_parameters.yml')
         _parameters = gen.collectDataFromYamlOrDict(_parameterFile, None)
-        self._configData = gen.validateConfigData(_configDataIn, _parameters)
+        self.config = gen.validateConfigData(_configDataIn, _parameters)
 
         # Making config entries into attributes
-        for par, value in self._configData.items():
+        for par, value in zip(self.config._fields, self.config):
             self.__dict__['_' + par] = value
 
     def __repr__(self):
