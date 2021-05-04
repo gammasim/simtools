@@ -1,5 +1,6 @@
 import logging
 import copy
+from collections import namedtuple
 
 import astropy.units as u
 from astropy.io.misc import yaml
@@ -133,7 +134,9 @@ def validateConfigData(configData, parameters):
             )
             logger.error(msg)
             raise MissingRequiredConfigEntry(msg)
-    return outData
+
+    ConfigData = namedtuple('ConfigData', outData)
+    return ConfigData(**outData)
 
 
 def _validateAndConvertValue(parName, parInfo, valueIn):
