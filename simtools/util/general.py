@@ -12,7 +12,8 @@ __all__ = [
     'setDefaultKwargs',
     'sortArrays',
     'collectFinalLines',
-    'getLogLevelFromUser'
+    'getLogLevelFromUser',
+    'separateArgsAndConfigData'
 ]
 
 
@@ -386,3 +387,32 @@ def copyAsList(value):
             return list(value)
         except Exception:
             return [value]
+
+
+def separateArgsAndConfigData(expectedArgs, **kwargs):
+    '''
+    Separate kwargs into the arguments expected for instancing a class and
+    the dict to be given as configData.
+    This function is specific for methods fromKwargs in classes which use the
+    validateConfigData system.
+
+    Parameters
+    ----------
+    expectedArgs: list of str
+        List of arguments expected for the class.
+    **kwargs:
+
+    Returns
+    -------
+    dict, dict
+        A dict with the args collected and another one with configData.
+    '''
+    args = dict()
+    configData = dict()
+    for key, value in kwargs.items():
+        if key in expectedArgs:
+            args[key] = value
+        else:
+            configData[key] = value
+
+    return args, configData

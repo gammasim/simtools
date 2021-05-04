@@ -163,6 +163,14 @@ class RayTracing:
 
     # END of init
 
+    @classmethod
+    def fromKwargs(cls, **kwargs):
+        args, configData = gen.separateArgsAndConfigData(
+            expectedArgs=['telescopeModel', 'label', 'simtelSourcePath', 'filesLocation'],
+            **kwargs
+        )
+        return cls(**args, configData=configData)
+
     def __repr__(self):
         return 'RayTracing(label={})\n'.format(self.label)
 
