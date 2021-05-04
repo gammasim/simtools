@@ -45,16 +45,16 @@ def test_validate_config_data():
     validatedData = gen.validateConfigData(configData=configData, parameters=parameters)
 
     # Testing undefined len
-    assert len(validatedData['offAxisAngle']) == 3
+    assert len(validatedData.offAxisAngle) == 3
 
     # Testing name validation
-    assert 'validatedName' in validatedData.keys()
+    assert validatedData.validatedName == 10
 
     # Testing unit convertion
-    assert validatedData['sourceDistance'] == 20
+    assert validatedData.sourceDistance == 20
 
     # Testing dict par
-    assert validatedData['dictPar']['bleh'] == 500
+    assert validatedData.dictPar['bleh'] == 500
 
 
 if __name__ == '__main__':
