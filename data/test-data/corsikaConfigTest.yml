@@ -1,0 +1,44 @@
+# Run number
+nrun: 10
+
+# Number of showers per run
+nshow: 100
+
+# Primary particle name - proton, gamma, ...
+primary: 'proton'
+
+# Energy range - [emin, emax]
+erange:
+- !astropy.units.Quantity
+  unit: !astropy.units.Unit {unit: GeV}
+  value: 0.01
+- !astropy.units.Quantity
+  unit: !astropy.units.Unit {unit: GeV}
+  value: 10.0
+
+# Slope of energy spectrum
+eslope: -2
+
+# Zenith angle - single value or list of len 2 for range with min and max zenith
+zenith: !astropy.units.Quantity
+  unit: !astropy.units.Unit {unit: deg}
+  value: 20.0
+
+# Azimuth angle - single value or list of len 2 for range with min and max azimuth
+phi: !astropy.units.Quantity
+  unit: !astropy.units.Unit {unit: deg}
+  value: 0.0
+
+# CSCAT parameters - list of len 3
+# First entry is the number of uses of each shower
+# Second entry is the scattering radius in units of distance
+# Third entry is 0, for circlar scattering area
+cscat:
+- 10
+- !astropy.units.Quantity
+  unit: !astropy.units.Unit {unit: m}
+  value: 1500.0
+- 0
+viewcone: !astropy.units.Quantity
+  unit: !astropy.units.Unit {unit: deg}
+  value: 5.0
