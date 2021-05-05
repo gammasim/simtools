@@ -19,7 +19,7 @@ class TestDBHandler(unittest.TestCase):
         self.logger.setLevel(logging.DEBUG)
 
         self.db = db_handler.DatabaseHandler()
-        self.testDataDirectory = io.getTestDataDirectory()
+        self.testDataDirectory = io.getTestOutputDirectory()
         self.DB_CTA_SIMULATION_MODEL = 'CTA-Simulation-Model'
 
     def test_reading_db_lst(self):
