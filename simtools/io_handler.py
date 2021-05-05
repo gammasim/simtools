@@ -192,6 +192,17 @@ def getTestDataFile(fileName):
     return directory.joinpath(fileName)
 
 
+def getTestOutputDirectory():
+    '''
+    Get path of a test directory, using the  testDataLocation taken from the config file.
+
+    Returns
+    -------
+    Path
+    '''
+    return Path(cfg.get('dataLocation')).joinpath('test-output')
+
+
 def getTestOutputFile(fileName):
     '''
     Get path of a test file, using the  testDataLocation taken from the config file.
@@ -205,7 +216,8 @@ def getTestOutputFile(fileName):
     -------
     Path
     '''
-    return Path(cfg.get('dataLocation')).joinpath('test-output').joinpath(fileName)
+    directory = getTestOutputDirectory()
+    return directory.joinpath(fileName)
 
 
 def getTestPlotFile(fileName):
