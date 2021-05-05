@@ -273,7 +273,6 @@ class TelescopeModel:
             self.site,
             self.name,
             self.modelVersion,
-            self._configFileDirectory,
             onlyApplicable=True
         )
 
@@ -281,7 +280,6 @@ class TelescopeModel:
         _sitePars = db.getSiteParameters(
             self.site,
             self.modelVersion,
-            self._configFileDirectory,
             onlyApplicable=True
         )
         # UPDATE: SimtelConfigWriter delas with which parameters should be written or not.
@@ -469,8 +467,16 @@ class TelescopeModel:
         shutil.copy(filePath, self._configFileDirectory)
         return
 
+    def exportModelFiles(self):
+        ''' Exports the model files into the config file directory. '''
+        db = db_handler.DatabaseHandler()
+        db.exportModelFiles(self._parameters, self._configFileDirectory)
+
     def exportConfigFile(self):
         ''' Export the config file used by sim_telarray. '''
+
+        # Exporting model file
+        self.exportModelFiles()
 
         # Using SimtelConfigWriter to write the config file.
         self._loadSimtelConfigWriter()
