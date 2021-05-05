@@ -2,15 +2,23 @@
 
 import logging
 import subprocess
+import unittest
 
-from simtools import db_handler
 import simtools.config as cfg
+import simtools.io_handler as io
+from simtools import db_handler
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 testDataDirectory = './data/test-output'
 DB_CTA_SIMULATION_MODEL = 'CTA-Simulation-Model'
+
+class TestDBHandler(unittest.TestCase):
+
+    def setUpClass(self):
+        self.db = db_handler.DatabaseHandler()
+        self.testDataDirectory = io.getTestDataDirectory()
 
 
 def test_reading_db_lst():
@@ -189,6 +197,9 @@ def test_reading_db_sites():
 
     return
 
+
+def test_separating_get_and_write():
+    pass   
 
 if __name__ == '__main__':
 
