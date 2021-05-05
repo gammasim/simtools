@@ -22,7 +22,7 @@ class TestDBHandler(unittest.TestCase):
     def test_reading_db_lst(self):
 
         self.logger.info('----Testing reading LST-----')
-        pars = self.db.getModelParameters('north', 'lst-1', 'Current', self.testDataDirectory)
+        pars = self.db.getModelParameters('north', 'lst-1', 'Current')
         if cfg.get('useMongoDB'):
             assert(pars['parabolic_dish']['Value'] == 1)
             assert(pars['camera_pixels']['Value'] == 1855)
@@ -30,6 +30,7 @@ class TestDBHandler(unittest.TestCase):
             assert(pars['parabolic_dish'] == 1)
             assert(pars['camera_pixels'] == 1855)
 
+        self.db.exportModelFiles(pars, self.testDataDirectory)
         self.logger.info('Listing files written in {}'.format(self.testDataDirectory))
         subprocess.call(['ls -lh {}'.format(self.testDataDirectory)], shell=True)
 
@@ -224,9 +225,9 @@ if __name__ == '__main__':
 
     tt = TestDBHandler()
     tt.setUp()
-    tt.test_separating_get_and_write()
+    # tt.test_separating_get_and_write()
 
-    # test_reading_db_lst()
+    tt.test_reading_db_lst()
     # test_reading_db_mst_nc()
     # test_reading_db_mst_fc()
     # test_reading_db_sst()
