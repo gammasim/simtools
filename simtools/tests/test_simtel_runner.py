@@ -41,10 +41,20 @@ def test_catching_model_error():
 
     # Adding a invalid parameter
     # tel.addParameters(invalid_parameter='invalid_value')
-    file_spe = cfg.findFile(name='spe_FlashCam_7dynode_v0a.dat')
-    file_pulse = cfg.findFile(name='pulse_FlashCam_7dynode_v2a.dat')
 
-    tel.changeMultipleParameters(pm_photoelectron_spectrum=file_spe, fadc_pulse_shape=file_pulse)
+    file_spe_name = 'spe_FlashCam_7dynode_v0a.dat'
+    file_pulse_name = 'pulse_FlashCam_7dynode_v2a.dat'
+
+    file_spe = cfg.findFile(name=file_spe_name)
+    file_pulse = cfg.findFile(name=file_pulse_name)
+
+    tel.changeMultipleParameters(
+        pm_photoelectron_spectrum=file_spe_name,
+        fadc_pulse_shape=file_pulse_name
+    )
+
+    tel.addParameterFile('pm_photoelectron_spectrum', file_spe)
+    tel.addParameterFile('fadc_pulse_shape', file_pulse)
 
     simtel = SimtelRunner(
         mode='ray-tracing',
