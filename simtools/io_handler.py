@@ -10,6 +10,7 @@ __all__ = [
     'getRayTracingOutputDirectory',
     'getCorsikaOutputDirectory',
     'getTestDataFile',
+    'getTestDataDirectory',
     'getTestOutputFile',
     'getTestPlotFile'
 ]
@@ -163,6 +164,17 @@ def getDataFile(parentDir, fileName):
     return Path(cfg.get('dataLocation')).joinpath(parentDir).joinpath(fileName)
 
 
+def getTestDataDirectory():
+    '''
+    Get path of a test file directory, using the  testDataLocation taken from the config file.
+
+    Returns
+    -------
+    Path
+    '''
+    return Path(cfg.get('dataLocation')).joinpath('test-data')
+
+
 def getTestDataFile(fileName):
     '''
     Get path of a test file, using the  testDataLocation taken from the config file.
@@ -176,7 +188,8 @@ def getTestDataFile(fileName):
     -------
     Path
     '''
-    return Path(cfg.get('dataLocation')).joinpath('test-data').joinpath(fileName)
+    directory = getTestDataDirectory()
+    return directory.joinpath(fileName)
 
 
 def getTestOutputFile(fileName):
