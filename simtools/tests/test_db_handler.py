@@ -9,9 +9,6 @@ import simtools.io_handler as io
 from simtools import db_handler
 
 
-testDataDirectory = './data/test-output'
-DB_CTA_SIMULATION_MODEL = 'CTA-Simulation-Model'
-
 class TestDBHandler(unittest.TestCase):
 
     def setUp(self):
@@ -99,14 +96,14 @@ class TestDBHandler(unittest.TestCase):
 
         self.logger.info('----Testing copying a whole telescope-----')
         self.db.copyTelescope(
-            DB_CTA_SIMULATION_MODEL,
+            self.DB_CTA_SIMULATION_MODEL,
             'North-LST-1',
             'Current',
             'North-LST-Test',
             'sandbox'
         )
         self.db.copyDocuments(
-            DB_CTA_SIMULATION_MODEL,
+            self.DB_CTA_SIMULATION_MODEL,
             'metadata',
             {'Entry': 'Simulation-Model-Tags'},
             'sandbox'
@@ -212,11 +209,20 @@ class TestDBHandler(unittest.TestCase):
         return
 
     def test_separating_get_and_write(self):
-        pass
+        pars = self.db.getModelParameters('north', 'lst-1', 'Current', self.testDataDirectory)
+
+        self.logger.info('Listing files written in {}'.format(self.testDataDirectory))
+        out = subprocess.call(['ls -lh {}'.format(self.testDataDirectory)], shell=True)
+        print(out)
+
 
 
 if __name__ == '__main__':
-    unittest.main()
+    # unittest.main()
+
+    tt = TestDBHandler()
+    tt.setUp()
+    tt.test_separating_get_and_write()
 
     # test_reading_db_lst()
     # test_reading_db_mst_nc()
