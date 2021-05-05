@@ -195,7 +195,6 @@ class DatabaseHandler:
         site,
         telescopeModelName,
         modelVersion,
-        runLocation=None,
         onlyApplicable=False,
     ):
         '''
@@ -209,8 +208,6 @@ class DatabaseHandler:
             Name of the telescope model (e.g. LST-1, MST-FlashCam-D)
         modelVersion: str
             Version of the model.
-        runLocation: Path or str
-            The sim_telarray run location to write the tabulated data files into.
         onlyApplicable: bool
             If True, only applicable parameters will be read.
 
@@ -234,7 +231,6 @@ class DatabaseHandler:
                 _siteValidated,
                 _telModelNameValidated,
                 _versionValidated,
-                runLocation,
                 onlyApplicable
             )
             return _pars
@@ -245,6 +241,22 @@ class DatabaseHandler:
                 _versionValidated,
                 onlyApplicable
             )
+
+    def exportModelFiles(self, parameters, dest):
+
+        if cfg.get('useMongoDB'):
+            for par in parameters:
+                if not par['isFile']:
+                    continue
+                file = self._getFileMongoDB(
+                    DatabaseHandler.DB_CTA_SIMULATION_MODEL,
+                    parameters[par]['Value']
+                )
+                self._writeFileFromMongoToDisk(DatabaseHandler.DB_CTA_SIMULATION_MODEL, dest, file)
+        else:
+            for par in parameters:
+                print(par)
+                self._writeModelFileYaml(par, dest)
 
     def _getModelParametersYaml(self, site, telescopeModelName, modelVersion, onlyApplicable=False):
         '''
@@ -305,7 +317,6 @@ class DatabaseHandler:
         site,
         telescopeModelName,
         modelVersion,
-        runLocation=None,
         onlyApplicable=False
     ):
         '''
@@ -321,8 +332,6 @@ class DatabaseHandler:
             Name of the telescope model (e.g. MST-FlashCam-D ...)
         modelVersion: str
             Version of the model.
-        runLocation: Path or str
-            The sim_telarray run location to write the tabulated data files into.
         onlyApplicable: bool
             If True, only applicable parameters will be read.
 
@@ -361,9 +370,9 @@ class DatabaseHandler:
                 dbName,
                 _tel,
                 modelVersion,
-                runLocation,
-                (runLocation is not None),
-                _selectOnlyApplicable
+                runLocation=None,
+                writeFiles=False,
+                onlyApplicable=_selectOnlyApplicable
             ))
 
         return _pars
@@ -428,12 +437,12 @@ class DatabaseHandler:
             _parameters[parNow].pop('Telescope', None)
             _parameters[parNow]['entryDate'] = ObjectId(post['_id']).generation_time
             if _parameters[parNow]['File'] and writeFiles:
-                file = self.getFileMongoDB(
+                file = self._getFileMongoDB(
                     dbName,
                     _parameters[parNow]['Value']
                 )
 
-                self.writeFileFromMongoToDisk(dbName, runLocation, file)
+                self._writeFileFromMongoToDisk(dbName, runLocation, file)
 
         return _parameters
 
@@ -466,7 +475,6 @@ class DatabaseHandler:
         self,
         site,
         modelVersion,
-        runLocation=None,
         onlyApplicable=False,
     ):
         '''
@@ -478,8 +486,6 @@ class DatabaseHandler:
             South or North.
         modelVersion: str
             Version of the model.
-        runLocation: Path or str
-            The sim_telarray run location to write the tabulated data files into.
         onlyApplicable: bool
             If True, only applicable parameters will be read.
 
@@ -495,7 +501,6 @@ class DatabaseHandler:
                 DatabaseHandler.DB_CTA_SIMULATION_MODEL,
                 _site,
                 _modelVersion,
-                runLocation,
                 onlyApplicable
             )
             return _pars
@@ -544,7 +549,6 @@ class DatabaseHandler:
         dbName,
         site,
         modelVersion,
-        runLocation=None,
         onlyApplicable=False
     ):
         '''
@@ -558,8 +562,6 @@ class DatabaseHandler:
             South or North.
         modelVersion: str
             Version of the model.
-        runLocation: Path or str
-            The sim_telarray run location to write the tabulated data files into.
         onlyApplicable: bool
             If True, only applicable parameters will be read.
 
@@ -590,18 +592,10 @@ class DatabaseHandler:
             _parameters[parNow].pop('Parameter', None)
             _parameters[parNow].pop('Site', None)
             _parameters[parNow]['entryDate'] = ObjectId(post['_id']).generation_time
-            if _parameters[parNow]['File']:
-                file = self.getFileMongoDB(
-                    dbName,
-                    _parameters[parNow]['Value']
-                )
-
-                if runLocation is not None:
-                    self.writeFileFromMongoToDisk(dbName, runLocation, file)
 
         return _parameters
 
-    def writeModelFile(self, fileName, destDir):
+    def _writeModelFileYaml(self, fileName, destDir):
         '''
         Find the fileName in the model files location and write a copy
         at the destDir directory.
@@ -615,28 +609,10 @@ class DatabaseHandler:
         '''
 
         destFile = Path(destDir).joinpath(fileName)
-        file = Path(self.getModelFile(fileName))
+        file = cfg.findFile(fileName, cfg.get('modelFilesLocations'))
         destFile.write_text(file.read_text())
 
-    def getModelFile(self, fileName):
-        '''
-        Find file in model files locations and return its full path.
-
-        Parameters
-        ----------
-        fileName: str
-            File name to be found.
-
-        Returns
-        -------
-        Path
-            Full path of the file.
-        '''
-
-        file = cfg.findFile(fileName, cfg.get('modelFilesLocations'))
-        return file
-
-    def getFileMongoDB(self, dbName, fileName):
+    def _getFileMongoDB(self, dbName, fileName):
         '''
         Extract a file from MongoDB and write it to disk
 
@@ -662,7 +638,7 @@ class DatabaseHandler:
                 'The file {} does not exist in the database {}'.format(fileName, dbName)
             )
 
-    def writeFileFromMongoToDisk(self, dbName, path, file):
+    def _writeFileFromMongoToDisk(self, dbName, path, file):
         '''
         Extract a file from MongoDB and write it to disk
 
