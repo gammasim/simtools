@@ -209,13 +209,15 @@ class TestDBHandler(unittest.TestCase):
         return
 
     def test_separating_get_and_write(self):
-        pars = self.db.getModelParameters('north', 'lst-1', 'Current', self.testDataDirectory)
+        pars = self.db.getModelParameters('north', 'lst-1', 'prod4')
 
         self.logger.info('Listing files written in {}'.format(self.testDataDirectory))
-        out = subprocess.call(['ls -lh {}'.format(self.testDataDirectory)], shell=True)
-        print(out)
+        subprocess.call(['ls -lh {}'.format(self.testDataDirectory)], shell=True)
 
+        self.db.exportModelFiles(pars, self.testDataDirectory)
 
+        self.logger.info('Listing files written in {}'.format(self.testDataDirectory))
+        subprocess.call(['ls -lh {}'.format(self.testDataDirectory)], shell=True)
 
 if __name__ == '__main__':
     # unittest.main()
