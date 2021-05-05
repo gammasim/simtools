@@ -216,16 +216,18 @@ class DatabaseHandler:
         dict containing the parameters
         '''
 
-        _modelVersion = self._convertVersionToTagged(
-            modelVersion,
-            DatabaseHandler.DB_CTA_SIMULATION_MODEL
-        )
-
         _siteValidated = names.validateSiteName(site)
-        _versionValidated = names.validateModelVersionName(_modelVersion)
         _telModelNameValidated = names.validateTelescopeModelName(telescopeModelName)
 
         if cfg.get('useMongoDB'):
+
+            # Only MongoDB suppports tagged version
+            _modelVersion = self._convertVersionToTagged(
+                modelVersion,
+                DatabaseHandler.DB_CTA_SIMULATION_MODEL
+            )
+            _versionValidated = names.validateModelVersionName(_modelVersion)
+
             _pars = self._getModelParametersMongoDB(
                 DatabaseHandler.DB_CTA_SIMULATION_MODEL,
                 _siteValidated,
@@ -235,6 +237,8 @@ class DatabaseHandler:
             )
             return _pars
         else:
+            _versionValidated = names.validateModelVersionName(modelVersion)
+
             return self._getModelParametersYaml(
                 _siteValidated,
                 _telModelNameValidated,
@@ -245,18 +249,46 @@ class DatabaseHandler:
     def exportModelFiles(self, parameters, dest):
 
         if cfg.get('useMongoDB'):
-            for par in parameters:
-                if not par['isFile']:
+            self._logger.debug('Exporting model files from MongoDB')
+            for par, info in parameters.items():
+                if not info['File']:
                     continue
                 file = self._getFileMongoDB(
                     DatabaseHandler.DB_CTA_SIMULATION_MODEL,
-                    parameters[par]['Value']
+                    info['Value']
                 )
                 self._writeFileFromMongoToDisk(DatabaseHandler.DB_CTA_SIMULATION_MODEL, dest, file)
         else:
-            for par in parameters:
-                print(par)
-                self._writeModelFileYaml(par, dest)
+            self._logger.debug('Exporting model files from local model file directories')
+            for par, value in parameters.items():
+                if not isinstance(value, str) or '.' not in value:
+                    continue
+                self._writeModelFileYaml(value, dest, noFileOk=True)
+
+    def _writeModelFileYaml(self, fileName, destDir, noFileOk=False):
+        '''
+        Find the fileName in the model files location and write a copy
+        at the destDir directory.
+
+        Parameters
+        ----------
+        fileName: str or Path
+            File name to be found and copied.
+        destDir: str or Path
+            Path of the directory where the file will be written.
+        '''
+
+        destFile = Path(destDir).joinpath(fileName)
+        try:
+            file = cfg.findFile(fileName, cfg.get('modelFilesLocations'))
+        except FileNotFoundError:
+            if noFileOk:
+                self._logger.debug('File not found but noFileOk')
+                return
+            else:
+                raise
+
+        destFile.write_text(file.read_text())
 
     def _getModelParametersYaml(self, site, telescopeModelName, modelVersion, onlyApplicable=False):
         '''
@@ -293,7 +325,7 @@ class DatabaseHandler:
         # Selecting version and applicable (if on)
         _pars = dict()
         for _tel in _whichTelLabels:
-            _allPars = self._getAllModelParametersYaml(_tel, modelVersion)
+            _allPars = self._getAllModelParametersYaml(_tel)
 
             # If _tel is a structure, only the applicable parameters will be collected, always.
             # The default ones will be covered by the camera parameters.
@@ -594,23 +626,6 @@ class DatabaseHandler:
             _parameters[parNow]['entryDate'] = ObjectId(post['_id']).generation_time
 
         return _parameters
-
-    def _writeModelFileYaml(self, fileName, destDir):
-        '''
-        Find the fileName in the model files location and write a copy
-        at the destDir directory.
-
-        Parameters
-        ----------
-        fileName: str or Path
-            File name to be found and copied.
-        destDir: str or Path
-            Path of the directory where the file will be written.
-        '''
-
-        destFile = Path(destDir).joinpath(fileName)
-        file = cfg.findFile(fileName, cfg.get('modelFilesLocations'))
-        destFile.write_text(file.read_text())
 
     def _getFileMongoDB(self, dbName, fileName):
         '''
