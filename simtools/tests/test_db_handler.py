@@ -40,8 +40,7 @@ class TestDBHandler(unittest.TestCase):
         pars = self.db.getModelParameters(
             'north',
             'mst-NectarCam-D',
-            'Current',
-            self.testDataDirectory
+            'Current'
         )
         if cfg.get('useMongoDB'):
             assert(pars['camera_pixels']['Value'] == 1855)
@@ -60,8 +59,7 @@ class TestDBHandler(unittest.TestCase):
         pars = self.db.getModelParameters(
             'north',
             'mst-FlashCam-D',
-            'Current',
-            self.testDataDirectory
+            'Current'
         )
         if cfg.get('useMongoDB'):
             assert(pars['camera_pixels']['Value'] == 1764)
@@ -77,7 +75,7 @@ class TestDBHandler(unittest.TestCase):
     def test_reading_db_sst(self):
 
         self.logger.info('----Testing reading SST-----')
-        pars = self.db.getModelParameters('south', 'sst-D', 'Current', self.testDataDirectory)
+        pars = self.db.getModelParameters('south', 'sst-D', 'Current')
         if cfg.get('useMongoDB'):
             assert(pars['camera_pixels']['Value'] == 2048)
         else:
@@ -182,7 +180,7 @@ class TestDBHandler(unittest.TestCase):
             return
 
         self.logger.info('----Testing reading La Palma parameters-----')
-        pars = self.db.getSiteParameters('North', 'Current', self.testDataDirectory)
+        pars = self.db.getSiteParameters('North', 'Current')
         if cfg.get('useMongoDB'):
             assert(pars['altitude']['Value'] == 2158)
         else:
@@ -195,7 +193,7 @@ class TestDBHandler(unittest.TestCase):
         subprocess.call(['rm -f {}/*'.format(self.testDataDirectory)], shell=True)
 
         self.logger.info('----Testing reading Paranal parameters-----')
-        pars = self.db.getSiteParameters('South', 'Current', self.testDataDirectory)
+        pars = self.db.getSiteParameters('South', 'Current')
         if cfg.get('useMongoDB'):
             assert(pars['altitude']['Value'] == 2147)
         else:
@@ -220,14 +218,15 @@ class TestDBHandler(unittest.TestCase):
         self.logger.info('Listing files written in {}'.format(self.testDataDirectory))
         subprocess.call(['ls -lh {}'.format(self.testDataDirectory)], shell=True)
 
-if __name__ == '__main__':
-    # unittest.main()
 
-    tt = TestDBHandler()
-    tt.setUp()
+if __name__ == '__main__':
+    unittest.main()
+
+    # tt = TestDBHandler()
+    # tt.setUp()
     # tt.test_separating_get_and_write()
 
-    tt.test_reading_db_lst()
+    # tt.test_reading_db_lst()
     # test_reading_db_mst_nc()
     # test_reading_db_mst_fc()
     # test_reading_db_sst()
