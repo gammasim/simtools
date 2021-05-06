@@ -185,7 +185,7 @@ if __name__ == '__main__':
             newPars = yaml.load(file, Loader=yaml.FullLoader)
         telModel.changeParameters(**newPars)
 
-    ray = RayTracing(
+    ray = RayTracing.fromKwargs(
         telescopeModel=telModel,
         sourceDistance=args.src_distance * u.km,
         zenithAngle=args.zenith * u.deg,

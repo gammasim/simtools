@@ -21,6 +21,26 @@ class SimtelRunner:
     '''
     SimtelRunner is the interface with sim_telarray.
 
+    Configurable parameters:
+        zenithAngle:
+            len: 1
+            unit: deg
+            default: 20 deg
+        offAxisAngle:
+            len: 1
+            unit: deg
+            default: 0 deg
+        sourceDistance:
+            len: 1
+            unit: km
+            default: 10 km
+        useRandomFocalLength:
+            len: 1
+            default: False
+        mirrorNumber:
+            len: 1
+            default: 1
+
     Attributes
     ----------
     mode: str
@@ -29,6 +49,8 @@ class SimtelRunner:
         Instance of the TelescopeModel class.
     label: str, optional
         Instance label.
+    config: namedtuple
+        Contains the configurable parameters (zenithAngle).
 
     Methods
     -------
@@ -36,13 +58,6 @@ class SimtelRunner:
         Run sim_telarray. test=True will make it faster and force=True will remove existing files
         and run again.
     '''
-    ALL_INPUTS = {
-        'zenithAngle': {'default': 20, 'unit': u.deg},
-        'sourceDistance': {'default': 10, 'unit': u.km},
-        'offAxisAngle': {'default': 0, 'unit': u.deg},
-        'mirrorNumber': {'default': 1, 'unit': None},
-        'useRandomFocalLength': {'default': False, 'unit': None}
-    }
 
     def __init__(
         self,
@@ -51,7 +66,8 @@ class SimtelRunner:
         label=None,
         simtelSourcePath=None,
         filesLocation=None,
-        **kwargs
+        configData=None,
+        configFile=None
     ):
         '''
         SimtelRunner.
@@ -70,9 +86,10 @@ class SimtelRunner:
         filesLocation: str (or Path), optional
             Parent location of the output files created by this class. If not given, it will be
             taken from the config.yml file.
-        **kwargs:
-            Input parameters listed in ALL_INPUTS (zenithAngle, sourceDistance, offAxisAngle,
-            mirrorNumber, useRandomFocalLength)
+        configData: dict.
+            Dict containing the configurable parameters.
+        configFile: str or Path
+            Path of the yaml file containing the configurable parameters.
         '''
         self._logger = logging.getLogger(__name__)
         self._logger.debug('Init SimtelRunner')
@@ -96,19 +113,12 @@ class SimtelRunner:
         self.RUNS_PER_SET = 1 if self._isSingleMirrorMode() else 20  # const
         self.PHOTONS_PER_RUN = 10000  # const
 
-        if self._isRayTracingMode():
-            gen.collectArguments(
-                self,
-                args=[
-                    'zenithAngle',
-                    'offAxisAngle',
-                    'sourceDistance',
-                    'mirrorNumber',
-                    'useRandomFocalLength'
-                ],
-                allInputs=self.ALL_INPUTS,
-                **kwargs
-            )
+        # Loading configData
+        _configDataIn = gen.collectDataFromYamlOrDict(configFile, configData)
+        _parameterFile = io.getDataFile('parameters', 'simtel-runner_parameters.yml')
+        _parameters = gen.collectDataFromYamlOrDict(_parameterFile, None)
+        self.config = gen.validateConfigData(_configDataIn, _parameters)
+
     # END of _init_
 
     def __repr__(self):
@@ -216,10 +226,10 @@ class SimtelRunner:
             photonsFileName = names.rayTracingFileName(
                 self.telescopeModel.site,
                 self.telescopeModel.name,
-                self._sourceDistance,
-                self._zenithAngle,
-                self._offAxisAngle,
-                self._mirrorNumber if self._isSingleMirrorMode() else None,
+                self.config.sourceDistance,
+                self.config.zenithAngle,
+                self.config.offAxisAngle,
+                self.config.mirrorNumber if self._isSingleMirrorMode() else None,
                 self.label,
                 'photons'
             )
@@ -244,10 +254,10 @@ class SimtelRunner:
                 fileName = names.rayTracingFileName(
                     self.telescopeModel.site,
                     self.telescopeModel.name,
-                    self._sourceDistance,
-                    self._zenithAngle,
-                    self._offAxisAngle,
-                    self._mirrorNumber if self._isSingleMirrorMode() else None,
+                    self.config.sourceDistance,
+                    self.config.zenithAngle,
+                    self.config.offAxisAngle,
+                    self.config.mirrorNumber if self._isSingleMirrorMode() else None,
                     self.label,
                     baseName
                 )
@@ -263,15 +273,18 @@ class SimtelRunner:
                 file.write('# List of photons for RayTracing simulations\n')
                 file.write('#{}\n'.format(50 * '='))
                 file.write('# configFile = {}\n'.format(self.telescopeModel.getConfigFile()))
-                file.write('# zenithAngle [deg] = {}\n'.format(self._zenithAngle))
-                file.write('# offAxisAngle [deg] = {}\n'.format(self._offAxisAngle))
-                file.write('# sourceDistance [km] = {}\n'.format(self._sourceDistance))
+                file.write('# zenithAngle [deg] = {}\n'.format(self.config.zenithAngle))
+                file.write('# offAxisAngle [deg] = {}\n'.format(self.config.offAxisAngle))
+                file.write('# sourceDistance [km] = {}\n'.format(self.config.sourceDistance))
                 if self._isSingleMirrorMode():
-                    file.write('# mirrorNumber = {}\n\n'.format(self._mirrorNumber))
+                    file.write('# mirrorNumber = {}\n\n'.format(self.config.mirrorNumber))
 
             # Filling in star file with a single star.
             with self._starsFileName.open('w') as file:
-                file.write('0. {} 1.0 {}'.format(90. - self._zenithAngle, self._sourceDistance))
+                file.write('0. {} 1.0 {}'.format(
+                    90. - self.config.zenithAngle,
+                    self.config.sourceDistance)
+                )
 
         # Trigger
         # elif self._isTriggerMode()
@@ -296,7 +309,10 @@ class SimtelRunner:
         command += _configOption('IMAGING_LIST', str(self._photonsFileName))
         command += _configOption('stars', str(self._starsFileName))
         command += _configOption('altitude', self.telescopeModel.getParameterValue('altitude'))
-        command += _configOption('telescope_theta', self._zenithAngle + self._offAxisAngle)
+        command += _configOption(
+            'telescope_theta',
+            self.config.zenithAngle + self.config.offAxisAngle
+        )
         command += _configOption('star_photons', str(self.PHOTONS_PER_RUN))
         command += _configOption('telescope_phi', '0')
         command += _configOption('camera_transmission', '1.0')
@@ -317,11 +333,11 @@ class SimtelRunner:
             command += _configOption(
                 'mirror_list',
                 self.telescopeModel.getSingleMirrorListFile(
-                    self._mirrorNumber,
-                    self._useRandomFocalLength
+                    self.config.mirrorNumber,
+                    self.config.useRandomFocalLength
                 )
             )
-            command += _configOption('focal_length', self._sourceDistance * u.km.to(u.cm))
+            command += _configOption('focal_length', self.config.sourceDistance * u.km.to(u.cm))
             command += _configOption('dish_shape_length', _mirrorFocalLength)
             command += _configOption('mirror_focal_length', _mirrorFocalLength)
             command += _configOption('parabolic_dish', '0')
