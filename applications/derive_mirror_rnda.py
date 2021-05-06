@@ -243,7 +243,7 @@ if __name__ == '__main__':
     def run(rnda, plot=False):
         ''' Runs the simulations for one given value of rnda '''
         tel.changeParameter('mirror_reflection_random_angle', str(rnda))
-        ray = RayTracing(
+        ray = RayTracing.fromKwargs(
             telescopeModel=tel,
             singleMirrorMode=True,
             mirrorNumbers=list(range(1, 10)) if args.test else 'all',
