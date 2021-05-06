@@ -36,7 +36,7 @@ List of Applications
 * `compare_cumulative_psf`_
 * `validate_camera_efficiency`_
 * `validate_camera_fov`_
-* `make_regular_array`_
+* `make_regular_arrays`_
 * `produce_array_config`_
 * `sim_showers_for_trigger_rates`_
 
@@ -78,10 +78,10 @@ validate_camera_fov
    :members:
 
 
-make_regular_array
-------------------
+make_regular_arrays
+-------------------
 
-.. automodule:: make_regular_array
+.. automodule:: make_regular_arrays
    :members:
 
 
