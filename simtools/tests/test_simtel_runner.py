@@ -11,6 +11,23 @@ logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 
+def test_ray_tracing_script():
+    tel = TelescopeModel(
+        site='north',
+        telescopeModelName='lst-1',
+        modelVersion='Current',
+        label='test-simtel'
+    )
+
+    script = SimtelRunner.getRayTracingRunScript(
+        TelescopeModel=tel,
+        zenithAngle=20 * u.deg,
+        offAxisAngle=2 * u.deg,
+        sourceDistance=12 * u.km
+    )
+    print(script)
+
+
 def test_ray_tracing_mode():
     tel = TelescopeModel(
         site='north',
@@ -67,5 +84,7 @@ def test_catching_model_error():
 
 if __name__ == '__main__':
 
-    test_ray_tracing_mode()
-    test_catching_model_error()
+    test_ray_tracing_script()
+    # test_ray_tracing_mode()
+    # test_catching_model_error()
+
