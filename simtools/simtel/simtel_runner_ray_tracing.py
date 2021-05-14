@@ -63,7 +63,8 @@ class SimtelRunnerRayTracing(SimtelRunner):
         simtelSourcePath=None,
         filesLocation=None,
         configData=None,
-        configFile=None
+        configFile=None,
+        singleMirrorMode=False
     ):
         '''
         SimtelRunner.
@@ -90,9 +91,14 @@ class SimtelRunnerRayTracing(SimtelRunner):
         self._logger = logging.getLogger(__name__)
         self._logger.debug('Init SimtelRunnerRayTracing')
 
-        super()._init_(label=label, simtelSourcePath=simtelSourcePath, filesLocation=filesLocation)
+        super().__init__(
+            label=label,
+            simtelSourcePath=simtelSourcePath,
+            filesLocation=filesLocation
+        )
 
         self.telescopeModel = self._validateTelescopeModel(telescopeModel)
+        self.label = label if label is not None else self.telescopeModel.label
 
         # File location
         self._baseDirectory = io.getOutputDirectory(
@@ -102,10 +108,12 @@ class SimtelRunnerRayTracing(SimtelRunner):
         )
         self._baseDirectory.mkdir(parents=True, exist_ok=True)
 
+        self._singleMirrorMode = singleMirrorMode
+
         # RayTracing - default parameters
         self._repNumber = 0
-        self.RUNS_PER_SET = 1 if self._isSingleMirrorMode() else 20  # const
-        self.PHOTONS_PER_RUN = 10000  # const
+        self.RUNS_PER_SET = 1 if self._singleMirrorMode else 20
+        self.PHOTONS_PER_RUN = 10000
 
         # Loading configData
         _configDataIn = gen.collectDataFromYamlOrDict(configFile, configData)
