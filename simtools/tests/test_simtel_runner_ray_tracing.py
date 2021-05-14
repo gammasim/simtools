@@ -28,7 +28,7 @@ def test_ray_tracing():
     )
 
     logger.info(simtel)
-    # simtel.run(test=True, force=True)
+    simtel.run(test=True, force=True)
 
 
 if __name__ == '__main__':
