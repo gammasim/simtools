@@ -9,6 +9,7 @@ import simtools.config as cfg
 import simtools.util.general as gen
 from simtools.util import names
 from simtools.model.telescope_model import TelescopeModel
+from simtools.model.array_model import ArrayModel
 
 __all__ = ['SimtelRunner']
 
@@ -90,10 +91,30 @@ class SimtelRunner:
         self._logger = logging.getLogger(__name__)
 
         self._simtelSourcePath = Path(cfg.getConfigArg('simtelPath', simtelSourcePath))
-        self.label = label if label is not None else self.telescopeModel.label
+        self.label = label
 
         # File location
         self._filesLocation = cfg.getConfigArg('outputLocation', filesLocation)
+
+    def _validateTelescopeModel(self, tel):
+        ''' Validate TelescopeModel '''
+        if isinstance(tel, TelescopeModel):
+            self._logger.debug('TelescopeModel is valid')
+            return tel
+        else:
+            msg = 'Invalid TelescopeModel'
+            self._logger.error(msg)
+            raise ValueError(msg)
+
+    def _validateArrayModel(self, array):
+        ''' Validate TelescopeModel '''
+        if isinstance(array, ArrayModel):
+            self._logger.debug('ArrayModel is valid')
+            return array
+        else:
+            msg = 'Invalid ArrayModel'
+            self._logger.error(msg)
+            raise ValueError(msg)
 
     # def __repr__(self):
     #     return 'SimtelRunner(mode={}, label={})\n'.format(self.mode, self.label)
@@ -111,15 +132,6 @@ class SimtelRunner:
     #     else:
     #         return 'generic'
 
-    # def _validateTelescopeModel(self, tel):
-    #     ''' Validate TelescopeModel '''
-    #     if isinstance(tel, TelescopeModel):
-    #         self._logger.debug('TelescopeModel OK')
-    #         return tel
-    #     else:
-    #         msg = 'Invalid TelescopeModel'
-    #         self._logger.error(msg)
-    #         raise ValueError(msg)
 
     # def run(self, test=False, force=False):
     #     '''

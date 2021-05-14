@@ -3,15 +3,14 @@
 import logging
 import astropy.units as u
 
-from simtools.simtel.simtel_runner import SimtelRunner, SimtelExecutionError
+from simtools.simtel.simtel_runner_ray_tracing import SimtelRunnerRayTracing
 from simtools.model.telescope_model import TelescopeModel
-import simtools.config as cfg
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 
-def test_ray_tracing_script():
+def test_ray_tracing():
     tel = TelescopeModel(
         site='north',
         telescopeModelName='lst-1',
@@ -19,25 +18,7 @@ def test_ray_tracing_script():
         label='test-simtel'
     )
 
-    script = SimtelRunner.getRayTracingRunScript(
-        TelescopeModel=tel,
-        zenithAngle=20 * u.deg,
-        offAxisAngle=2 * u.deg,
-        sourceDistance=12 * u.km
-    )
-    print(script)
-
-
-def test_ray_tracing_mode():
-    tel = TelescopeModel(
-        site='north',
-        telescopeModelName='lst-1',
-        modelVersion='Current',
-        label='test-simtel'
-    )
-
-    simtel = SimtelRunner(
-        mode='ray-tracing',
+    simtel = SimtelRunnerRayTracing(
         telescopeModel=tel,
         configData={
             'zenithAngle': 20 * u.deg,
@@ -50,41 +31,6 @@ def test_ray_tracing_mode():
     # simtel.run(test=True, force=True)
 
 
-def test_catching_model_error():
-    tel = TelescopeModel(
-        site='north',
-        telescopeModelName='lst-1',
-        modelVersion='Current',
-        label='test-simtel'
-    )
-
-    # Adding a invalid parameter
-    # tel.addParameters(invalid_parameter='invalid_value')
-    file_spe = cfg.findFile(name='spe_FlashCam_7dynode_v0a.dat')
-    file_pulse = cfg.findFile(name='pulse_FlashCam_7dynode_v2a.dat')
-
-    tel.changeMultipleParameters(pm_photoelectron_spectrum=file_spe, fadc_pulse_shape=file_pulse)
-
-    simtel = SimtelRunner(
-        mode='ray-tracing',
-        telescopeModel=tel,
-        configData={
-            'zenithAngle': 20 * u.deg,
-            'offAxisAngle': 0 * u.deg,
-            'sourceDistance': 12 * u.km
-        }
-    )
-
-    logger.info(simtel)
-    try:
-        simtel.run(test=True, force=True)
-    except SimtelExecutionError:
-        logger.info('Error catch properly - everything seems fine')
-
-
 if __name__ == '__main__':
 
-    test_ray_tracing_script()
-    # test_ray_tracing_mode()
-    # test_catching_model_error()
-
+    test_ray_tracing()
