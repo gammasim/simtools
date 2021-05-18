@@ -159,13 +159,18 @@ class SimtelRunner:
         return sysOutput != '0'
 
     def _raiseSimtelError(self):
-        msg = gen.collectFinalLines(self._logFile, 10)
-        self._logger.error(
-            'Simtel Error - See below the relevant part of the simtel log file.\n'
-            + '===== from simtel log file ======\n'
-            + msg
-            + '================================='
-        )
+        if hasattr(self, '_logFile'):
+            logLines = gen.collectFinalLines(self._logFile, 10)
+            msg = (
+                'Simtel Error - See below the relevant part of the simtel log file.\n'
+                + '===== from simtel log file ======\n'
+                + logLines
+                + '================================='
+            )
+        else:
+            msg = 'Simtel log file does not exist'
+
+        self._logger.error(msg)
         raise SimtelExecutionError()
 
     def _shallRun(self):
