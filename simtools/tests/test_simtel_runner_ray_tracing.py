@@ -1,6 +1,8 @@
 #!/usr/bin/python3
 
 import logging
+import unittest
+
 import astropy.units as u
 
 from simtools.simtel.simtel_runner_ray_tracing import SimtelRunnerRayTracing
@@ -10,27 +12,28 @@ logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 
-def test_general():
-    tel = TelescopeModel(
-        site='north',
-        telescopeModelName='lst-1',
-        modelVersion='Current',
-        label='test-simtel'
-    )
+class TestSimtelRunnerRayTracing(unittest.TestCase):
 
-    simtel = SimtelRunnerRayTracing(
-        telescopeModel=tel,
-        configData={
-            'zenithAngle': 20 * u.deg,
-            'offAxisAngle': 2 * u.deg,
-            'sourceDistance': 12 * u.km
-        }
-    )
+    def setUp(self):
+        self.telescopeModel = TelescopeModel(
+            site='north',
+            telescopeModelName='lst-1',
+            modelVersion='Current',
+            label='test-simtel'
+        )
 
-    logger.info(simtel)
-    simtel.run(test=True, force=True)
+        self.simtelRunner = SimtelRunnerRayTracing(
+            telescopeModel=self.telescopeModel,
+            configData={
+                'zenithAngle': 20 * u.deg,
+                'offAxisAngle': 2 * u.deg,
+                'sourceDistance': 12 * u.km
+            }
+        )
+
+    def test_run(self):
+        self.simtelRunner.run(test=True, force=True)
 
 
 if __name__ == '__main__':
-
-    test_general()
+    unittest.main()
