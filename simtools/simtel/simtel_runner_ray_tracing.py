@@ -1,14 +1,10 @@
 import logging
-import os
-from pathlib import Path
 
 import astropy.units as u
 
 import simtools.io_handler as io
-import simtools.config as cfg
 import simtools.util.general as gen
 from simtools.util import names
-from simtools.model.telescope_model import TelescopeModel
 from simtools.simtel.simtel_runner import SimtelRunner
 
 __all__ = ['SimtelRunnerRayTracing']
@@ -255,5 +251,7 @@ class SimtelRunnerRayTracing(SimtelRunner):
             self._logger.debug('Everything looks fine with output file.')
 
     def _isPhotonListFileOK(self):
-        nLines = sum(1 for ll in open(self._photonsFile, 'r'))
+        with open(self._photonsFile, 'r') as ff:
+            nLines = len(ff.readlines())
+
         return nLines > 100
