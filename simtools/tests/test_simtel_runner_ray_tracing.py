@@ -10,7 +10,7 @@ logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 
-def test_ray_tracing():
+def test_general():
     tel = TelescopeModel(
         site='north',
         telescopeModelName='lst-1',
@@ -33,4 +33,4 @@ def test_ray_tracing():
 
 if __name__ == '__main__':
 
-    test_ray_tracing()
+    test_general()
