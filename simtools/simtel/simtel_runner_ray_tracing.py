@@ -180,7 +180,7 @@ class SimtelRunnerRayTracing(SimtelRunner):
 
     def _shallRun(self):
         ''' Tells if simulations should be run again based on the existence of output files. '''
-        return not self._photonsFile.exists()
+        return not self._isPhotonListFileOK()
 
     def _makeRunCommand(self):
         ''' Return the command to run simtel_array. '''
