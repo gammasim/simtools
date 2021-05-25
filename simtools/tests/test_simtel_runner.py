@@ -15,7 +15,8 @@ class TestSimtelRunner(unittest.TestCase):
         self.simtelRunner = SimtelRunner()
 
     def test_run(self):
-        self.simtelRunner.run()
+        with self.assertRaises(RuntimeError):
+            self.simtelRunner.run()
 
     def test_simtel_execution_error(self):
         with self.assertRaises(SimtelExecutionError):
