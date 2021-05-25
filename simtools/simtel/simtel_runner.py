@@ -96,7 +96,7 @@ class SimtelRunner:
         '''
         self._logger.debug('Running sim_telarray')
 
-        if hasattr(self, '_makeRunCommand'):
+        if not hasattr(self, '_makeRunCommand'):
             msg = 'run method cannot be executed without the _makeRunCommand'
             self._logger.error(msg)
             raise RuntimeError(msg)
