@@ -2,12 +2,8 @@ import logging
 import os
 from pathlib import Path
 
-import astropy.units as u
-
-import simtools.io_handler as io
 import simtools.config as cfg
 import simtools.util.general as gen
-from simtools.util import names
 from simtools.model.telescope_model import TelescopeModel
 from simtools.model.array_model import ArrayModel
 
@@ -20,38 +16,12 @@ class SimtelExecutionError(Exception):
 
 class SimtelRunner:
     '''
-    SimtelRunner is the interface with sim_telarray.
-
-    Configurable parameters:
-        zenithAngle:
-            len: 1
-            unit: deg
-            default: 20 deg
-        offAxisAngle:
-            len: 1
-            unit: deg
-            default: 0 deg
-        sourceDistance:
-            len: 1
-            unit: km
-            default: 10 km
-        useRandomFocalLength:
-            len: 1
-            default: False
-        mirrorNumber:
-            len: 1
-            default: 1
+    SimtelRunner is the base class of the sim_telarray interfaces.
 
     Attributes
     ----------
-    mode: str
-        RayTracing, Trigger, etc.
-    telescopeModel: TelescopeModel
-        Instance of the TelescopeModel class.
     label: str, optional
         Instance label.
-    config: namedtuple
-        Contains the configurable parameters (zenithAngle).
 
     Methods
     -------
@@ -71,10 +41,6 @@ class SimtelRunner:
 
         Parameters
         ----------
-        mode: str
-            RayTracing, Trigger, ...
-        telescopeModel: str
-            Instance of TelescopeModel class.
         label: str, optional
             Instance label. Important for output file naming.
         simtelSourcePath: str (or Path), optional
@@ -83,10 +49,6 @@ class SimtelRunner:
         filesLocation: str (or Path), optional
             Parent location of the output files created by this class. If not given, it will be
             taken from the config.yml file.
-        configData: dict.
-            Dict containing the configurable parameters.
-        configFile: str or Path
-            Path of the yaml file containing the configurable parameters.
         '''
         self._logger = logging.getLogger(__name__)
 
@@ -123,7 +85,7 @@ class SimtelRunner:
 
     def run(self, test=False, force=False):
         '''
-        Run sim_telarray.
+        Basic sim_telarray run method.
 
         Parameters
         ----------
@@ -133,7 +95,11 @@ class SimtelRunner:
             If True, remove possible existing output files and run again.
         '''
         self._logger.debug('Running sim_telarray')
-        # write all the important parameters
+
+        if hasattr(self, '_makeRunCommand'):
+            msg = 'run method cannot be executed without the _makeRunCommand'
+            self._logger.error(msg)
+            raise RuntimeError(msg)
 
         if not self._shallRun() and not force:
             self._logger.debug('Skipping because output exists and force = False')
@@ -150,8 +116,8 @@ class SimtelRunner:
             for _ in range(self.RUNS_PER_SET - 1):
                 os.system(command)
 
-        # if self._simtelFailed(sysOutput):
-        #     self._raiseSimtelError()
+        if self._simtelFailed(sysOutput):
+            self._raiseSimtelError()
 
         self._checkRunResult()
 
@@ -159,6 +125,10 @@ class SimtelRunner:
         return sysOutput != '0'
 
     def _raiseSimtelError(self):
+        '''
+        Raise sim_telarray execution error. Final 10 lines from the log file
+        are collected and printed.
+        '''
         if hasattr(self, '_logFile'):
             logLines = gen.collectFinalLines(self._logFile, 10)
             msg = (
@@ -171,7 +141,7 @@ class SimtelRunner:
             msg = 'Simtel log file does not exist'
 
         self._logger.error(msg)
-        raise SimtelExecutionError()
+        raise SimtelExecutionError(msg)
 
     def _shallRun(self):
         self._logger.debug(
