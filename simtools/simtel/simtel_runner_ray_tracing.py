@@ -12,7 +12,7 @@ __all__ = ['SimtelRunnerRayTracing']
 
 class SimtelRunnerRayTracing(SimtelRunner):
     '''
-    SimtelRunner is the interface with sim_telarray.
+    SimtelRunnerRayTracing is the interface with sim_telarray to perform ray tracing simulations.
 
     Configurable parameters:
         zenithAngle:
@@ -36,12 +36,10 @@ class SimtelRunnerRayTracing(SimtelRunner):
 
     Attributes
     ----------
-    mode: str
-        RayTracing, Trigger, etc.
-    telescopeModel: TelescopeModel
-        Instance of the TelescopeModel class.
     label: str, optional
         Instance label.
+    telescopeModel: TelescopeModel
+        Instance of the TelescopeModel class.
     config: namedtuple
         Contains the configurable parameters (zenithAngle).
 
@@ -67,8 +65,6 @@ class SimtelRunnerRayTracing(SimtelRunner):
 
         Parameters
         ----------
-        mode: str
-            RayTracing, Trigger, ...
         telescopeModel: str
             Instance of TelescopeModel class.
         label: str, optional
@@ -83,6 +79,8 @@ class SimtelRunnerRayTracing(SimtelRunner):
             Dict containing the configurable parameters.
         configFile: str or Path
             Path of the yaml file containing the configurable parameters.
+        singleMirrorMode: bool
+            True for single mirror simulations.
         '''
         self._logger = logging.getLogger(__name__)
         self._logger.debug('Init SimtelRunnerRayTracing')
@@ -251,6 +249,7 @@ class SimtelRunnerRayTracing(SimtelRunner):
             self._logger.debug('Everything looks fine with output file.')
 
     def _isPhotonListFileOK(self):
+        ''' Check if the photon list is valid,'''
         with open(self._photonsFile, 'r') as ff:
             nLines = len(ff.readlines())
 
