@@ -225,7 +225,8 @@ class RayTracing:
                         'offAxisAngle': thisOffAxis * u.deg,
                         'mirrorNumber': thisMirror,
                         'useRandomFocalLength': self.config.useRandomFocalLength
-                    }
+                    },
+                    singleMirrorMode=self.config.singleMirrorMode
                 )
                 simtel.run(test=test, force=force)
     # END of simulate
