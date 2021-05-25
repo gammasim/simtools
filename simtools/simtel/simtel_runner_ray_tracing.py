@@ -120,7 +120,7 @@ class SimtelRunnerRayTracing(SimtelRunner):
     def _loadRequiredFiles(self):
         '''
         Which file are required for running depends on the mode.
-        Here we define and write some information into these files. Log files are always requires.
+        Here we define and write some information into these files. Log files are always required.
         '''
 
         self._corsikaFile = self._simtelSourcePath.joinpath('run9991.corsika.gz')
