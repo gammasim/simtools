@@ -17,7 +17,7 @@ from simtools.psf_analysis import PSFImage
 from simtools.util import names
 from simtools.util.model import computeTelescopeTransmission
 from simtools.model.telescope_model import TelescopeModel
-from simtools.simtel.simtel_runner import SimtelRunner
+from simtools.simtel.simtel_runner_ray_tracing import SimtelRunnerRayTracing
 from simtools import visualize
 
 __all__ = ['RayTracing']
@@ -60,7 +60,7 @@ class RayTracing:
     Methods
     -------
     simulate(test=False, force=False)
-        Simulate RayTracing using SimtelRunner.
+        Simulate RayTracing using SimtelRunnerRayTracing.
     analyse(export=True, force=False, useRX=False, noTelTransmission=False)
         Analyze RayTracing, meaning read simtel files, compute psfs and eff areas and store the
         results in _results.
@@ -199,7 +199,7 @@ class RayTracing:
 
     def simulate(self, test=False, force=False):
         '''
-        Simulate RayTracing using SimtelRunner.
+        Simulate RayTracing using SimtelRunnerRayTracing.
 
         Parameters
         ----------
@@ -215,13 +215,9 @@ class RayTracing:
                     thisOffAxis,
                     thisMirror
                 ))
-                simtel = SimtelRunner(
+                simtel = SimtelRunnerRayTracing(
                     simtelSourcePath=self._simtelSourcePath,
                     filesLocation=self._filesLocation,
-                    mode=(
-                        'ray-tracing' if not self.config.singleMirrorMode
-                        else 'raytracing-singlemirror'
-                    ),
                     telescopeModel=self._telescopeModel,
                     configData={
                         'zenithAngle': self.config.zenithAngle * u.deg,
@@ -229,7 +225,8 @@ class RayTracing:
                         'offAxisAngle': thisOffAxis * u.deg,
                         'mirrorNumber': thisMirror,
                         'useRandomFocalLength': self.config.useRandomFocalLength
-                    }
+                    },
+                    singleMirrorMode=self.config.singleMirrorMode
                 )
                 simtel.run(test=test, force=force)
     # END of simulate
