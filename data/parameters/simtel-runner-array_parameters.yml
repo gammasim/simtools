@@ -1,7 +1,7 @@
 simtelDataDirectory:
   len: 1
   unit: null
-  default: '.'
+  default: null
 primary:
   len: 1
   unit: null
