@@ -41,7 +41,7 @@ class TestSimtelRunnerArray(unittest.TestCase):
         )
 
         print(corsikaFile)
-        self.simtelRunner.run(force=True, input=corsikaFile)
+        self.simtelRunner.run(test=False, force=True, inputFile=corsikaFile)
 
 
 if __name__ == '__main__':
