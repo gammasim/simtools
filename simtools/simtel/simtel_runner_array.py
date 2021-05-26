@@ -172,56 +172,23 @@ class SimtelRunnerArray(SimtelRunner):
 
         print(inputFile)
 
-    #     if self._singleMirrorMode:
-    #         _mirrorFocalLength = float(self.telescopeModel.getParameterValue('mirror_focal_length'))
+        # Array
+        command = str(self._simtelSourcePath.joinpath('sim_telarray/bin/sim_telarray'))
+        command += ' -c {}'.format(self.arrayModel.getConfigFile())
+        command += ' -I{}'.format(self.arrayModel.getConfigDirectory())
+        command += self._configOption('telescope_theta', self.config.zenithAngle)
+        command += self._configOption('telescope_phi', self.config.azimuthAngle)
+        command += self._configOption('power_law', '2.5')
+        command += self._configOption('histogram_file', self.histogramFile)
+        command += self._configOption('output_file', self.ottputFile)
+        command += self._configOption('random_state', 'auto')
+        command += self._configOption('show', 'all')
 
-    #     # RayTracing
-    #     command = str(self._simtelSourcePath.joinpath('sim_telarray/bin/sim_telarray'))
-    #     command += ' -c {}'.format(self.telescopeModel.getConfigFile())
-    #     command += ' -I../cfg/CTA'
-    #     command += _configOption('IMAGING_LIST', str(self._photonsFile))
-    #     command += _configOption('stars', str(self._starsFile))
-    #     command += _configOption('altitude', self.telescopeModel.getParameterValue('altitude'))
-    #     command += _configOption(
-    #         'telescope_theta',
-    #         self.config.zenithAngle + self.config.offAxisAngle
-    #     )
-    #     command += _configOption('star_photons', str(self.PHOTONS_PER_RUN))
-    #     command += _configOption('telescope_phi', '0')
-    #     command += _configOption('camera_transmission', '1.0')
-    #     command += _configOption('nightsky_background', 'all:0.')
-    #     command += _configOption('trigger_current_limit', '1e10')
-    #     command += _configOption('telescope_random_angle', '0')
-    #     command += _configOption('telescope_random_error', '0')
-    #     command += _configOption('convergent_depth', '0')
-    #     command += _configOption('maximum_telescopes', '1')
-    #     command += _configOption('show', 'all')
-    #     command += _configOption('camera_filter', 'none')
-    #     if self._singleMirrorMode:
-    #         command += _configOption('focus_offset', 'all:0.')
-    #         command += _configOption('camera_config_file', 'single_pixel_camera.dat')
-    #         command += _configOption('camera_pixels', '1')
-    #         command += _configOption('trigger_pixels', '1')
-    #         command += _configOption('camera_body_diameter', '0')
-    #         command += _configOption(
-    #             'mirror_list',
-    #             self.telescopeModel.getSingleMirrorListFile(
-    #                 self.config.mirrorNumber,
-    #                 self.config.useRandomFocalLength
-    #             )
-    #         )
-    #         command += _configOption('focal_length', self.config.sourceDistance * u.km.to(u.cm))
-    #         command += _configOption('dish_shape_length', _mirrorFocalLength)
-    #         command += _configOption('mirror_focal_length', _mirrorFocalLength)
-    #         command += _configOption('parabolic_dish', '0')
-    #         # command += _configOption('random_focal_length', '0.')
-    #         command += _configOption('mirror_align_random_distance', '0.')
-    #         command += _configOption('mirror_align_random_vertical', '0.,28.,0.,0.')
-    #     command += ' ' + str(self._corsikaFile)
-    #     command += ' 2>&1 > ' + str(self._logFile) + ' 2>&1'
+        command += ' ' + str(inputFile)
+        command += ' 2>&1 > ' + str(self._logFile) + ' 2>&1'
 
-    #     return command
-    # # END of makeRunCommand
+        return command
+    # END of makeRunCommand
 
     def _checkRunResult(self):
         # Checking run
