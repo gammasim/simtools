@@ -1,0 +1,14 @@
+zenithAngle: 
+  len: 1
+  unit: !astropy.units.Unit {unit: deg}
+  default: !astropy.units.Quantity
+    value: 20
+    unit: !astropy.units.Unit {unit: deg}
+  names: ['zenith', 'theta']
+azimuthAngle: 
+  len: 1
+  unit: !astropy.units.Unit {unit: deg}
+  default: !astropy.units.Quantity
+    value: 0
+    unit: !astropy.units.Unit {unit: deg}
+  names: ['azimuth', 'phi']
