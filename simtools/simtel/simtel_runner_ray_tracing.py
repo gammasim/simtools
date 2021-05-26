@@ -182,7 +182,7 @@ class SimtelRunnerRayTracing(SimtelRunner):
         ''' Tells if simulations should be run again based on the existence of output files. '''
         return not self._isPhotonListFileOK()
 
-    def _makeRunCommand(self, inputFile):
+    def _makeRunCommand(self, inputFile, run=None):
         ''' Return the command to run simtel_array. '''
 
         if self._singleMirrorMode:
