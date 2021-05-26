@@ -25,7 +25,7 @@ class SimtelRunner:
 
     Methods
     -------
-    run(test=False, force=False)
+    run(test=False, force=False, input=None)
         Run sim_telarray. test=True will make it faster and force=True will remove existing files
         and run again.
     '''
@@ -83,7 +83,7 @@ class SimtelRunner:
             self._logger.error(msg)
             raise ValueError(msg)
 
-    def run(self, test=False, force=False):
+    def run(self, test=False, force=False, inputFile=None):
         '''
         Basic sim_telarray run method.
 
@@ -97,7 +97,7 @@ class SimtelRunner:
         self._logger.debug('Running sim_telarray')
 
         if not hasattr(self, '_makeRunCommand'):
-            msg = 'run method cannot be executed without the _makeRunCommand'
+            msg = 'run method cannot be executed without the _makeRunCommand method'
             self._logger.error(msg)
             raise RuntimeError(msg)
 
@@ -105,7 +105,7 @@ class SimtelRunner:
             self._logger.debug('Skipping because output exists and force = False')
             return
 
-        command = self._makeRunCommand()
+        command = self._makeRunCommand(inputFile=inputFile)
 
         if test:
             self._logger.info('Running (test) with command:{}'.format(command))
