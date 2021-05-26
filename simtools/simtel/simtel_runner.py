@@ -14,6 +14,10 @@ class SimtelExecutionError(Exception):
     pass
 
 
+class InvalidOutputFile(Exception):
+    pass
+
+
 class SimtelRunner:
     '''
     SimtelRunner is the base class of the sim_telarray interfaces.
@@ -101,7 +105,7 @@ class SimtelRunner:
             self._logger.error(msg)
             raise RuntimeError(msg)
 
-        if not self._shallRun() and not force:
+        if not self._shallRun(run) and not force:
             self._logger.debug('Skipping because output exists and force = False')
             return
 
@@ -121,7 +125,7 @@ class SimtelRunner:
         # if self._simtelFailed(sysOutput):
         #     self._raiseSimtelError()
 
-        self._checkRunResult()
+        self._checkRunResult(run=run)
 
     def _simtelFailed(self, sysOutput):
         return sysOutput != '0'
@@ -140,12 +144,12 @@ class SimtelRunner:
                 + '================================='
             )
         else:
-            msg = 'Simtel log file does not exist'
+            msg = 'Simtel log file does not exist.'
 
         self._logger.error(msg)
         raise SimtelExecutionError(msg)
 
-    def _shallRun(self):
+    def _shallRun(self, run=None):
         self._logger.debug(
             'shallRun is being called from the base class - returning False -'
             + 'it should be implemented in the sub class'
