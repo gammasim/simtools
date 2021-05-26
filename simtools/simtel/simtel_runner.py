@@ -151,3 +151,8 @@ class SimtelRunner:
             + 'it should be implemented in the sub class'
         )
         return False
+
+    def _configOption(par, value=None):
+        c = ' -C {}'.format(par)
+        c += '={}'.format(value) if value is not None else ''
+        return c
