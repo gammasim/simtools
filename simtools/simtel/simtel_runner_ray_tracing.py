@@ -194,7 +194,10 @@ class SimtelRunnerRayTracing(SimtelRunner):
         command += ' -I../cfg/CTA'
         command += super()._configOption('IMAGING_LIST', str(self._photonsFile))
         command += super()._configOption('stars', str(self._starsFile))
-        command += super()._configOption('altitude', self.telescopeModel.getParameterValue('altitude'))
+        command += super()._configOption(
+            'altitude',
+            self.telescopeModel.getParameterValue('altitude')
+        )
         command += super()._configOption(
             'telescope_theta',
             self.config.zenithAngle + self.config.offAxisAngle
