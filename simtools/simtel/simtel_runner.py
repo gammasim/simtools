@@ -107,15 +107,14 @@ class SimtelRunner:
 
         command = self._makeRunCommand(inputFile=inputFile, run=run)
 
-        print(command)
-        # if test:
-        #     self._logger.info('Running (test) with command:{}'.format(command))
-        #     sysOutput = os.system(command)
-        # else:
-        #     self._logger.info('Running ({}x) with command:{}'.format(self.RUNS_PER_SET, command))
-        #     sysOutput = os.system(command)
-        #     for _ in range(self.RUNS_PER_SET - 1):
-        #         os.system(command)
+        if test:
+            self._logger.info('Running (test) with command:{}'.format(command))
+            sysOutput = os.system(command)
+        else:
+            self._logger.info('Running ({}x) with command:{}'.format(self.RUNS_PER_SET, command))
+            sysOutput = os.system(command)
+            for _ in range(self.RUNS_PER_SET - 1):
+                os.system(command)
 
         # TODO: fix the fact any ray tracing simulations are failing and
         # uncomment this
