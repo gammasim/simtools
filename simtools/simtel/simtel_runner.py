@@ -153,6 +153,7 @@ class SimtelRunner:
         )
         return False
 
+    @staticmethod
     def _configOption(par, value=None):
         c = ' -C {}'.format(par)
         c += '={}'.format(value) if value is not None else ''
