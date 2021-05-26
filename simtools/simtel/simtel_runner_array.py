@@ -15,6 +15,11 @@ class SimtelRunnerArray(SimtelRunner):
     SimtelRunnerRayTracing is the interface with sim_telarray to perform ray tracing simulations.
 
     Configurable parameters:
+        simtelDataDirectory:
+            len: 1
+            default: '.'
+        primary:
+            len: 1
         zenithAngle:
             len: 1
             unit: deg
@@ -102,14 +107,52 @@ class SimtelRunnerArray(SimtelRunner):
 
         # self._loadRequiredFiles()
 
-    def _getLogFile(self):
-        return 'test.log'
+    def _loadSimtelDataDirectories(self):
+        ''' Create CORSIKA directories for data, log and input. '''
+        simtelBaseDir = self.config.simtelDataDirectory.joinpath(self.arrayModel.site)
+        simtelBaseDir = simtelBaseDir.joinpath(self.config.primary)
+        simtelBaseDir = simtelBaseDir.absolute()
 
-    def _getHistogramFile(self):
-        return'test_hist.zst'
+        self._simtelDataDir = simtelBaseDir.joinpath('data')
+        self._simtelDataDir.mkdir(parents=True, exist_ok=True)
+        self._simtelLogDir = simtelBaseDir.joinpath('log')
+        self._simtelLogDir.mkdir(parents=True, exist_ok=True)
 
-    def _getOutputFile(self):
-        return 'test_output.zst'
+    def _getLogFile(self, run):
+        fileName = names.simtelLogFileName(
+            run=run,
+            primary=self.config.primary,
+            arrayName=self.arrayModel.layoutName,
+            site=self.arrayModel.site,
+            zenith=self.config.zenith,
+            azimuth=self.config.azimuth,
+            label=self.label
+        )
+        return self._simtelLogDir.joinpath(fileName)
+
+    def _getHistogramFile(self, run):
+        fileName = names.simtelHistogramFileName(
+            run=run,
+            primary=self.config.primary,
+            arrayName=self.arrayModel.layoutName,
+            site=self.arrayModel.site,
+            zenith=self.config.zenith,
+            azimuth=self.config.azimuth,
+            label=self.label
+        )
+        return self._simtelDataDir.joinpath(fileName)
+
+    def _getOutputFile(self, run):
+        fileName = names.simtelOutputFileName(
+            run=run,
+            primary=self.config.primary,
+            arrayName=self.arrayModel.layoutName,
+            site=self.arrayModel.site,
+            zenith=self.config.zenith,
+            azimuth=self.config.azimuth,
+            label=self.label
+        )
+        return self._simtelDataDir.joinpath(fileName)
 
     # def _getRunScript(self, test=False):
     #     self._logger.debug('Creating run bash script')
@@ -130,12 +173,15 @@ class SimtelRunnerArray(SimtelRunner):
         ''' Tells if simulations should be run again based on the existence of output files. '''
         return True
 
-    def _makeRunCommand(self, inputFile):
+    def _makeRunCommand(self, inputFile, run=1):
         ''' Return the command to run simtel_array. '''
 
-        logFile = self._getLogFile()
-        histogramFile = self._getHistogramFile()
-        outputFile = self._getOutputFile()
+        logFile = self._getLogFile(run)
+        histogramFile = self._getHistogramFile(run)
+        outputFile = self._getOutputFile(run)
+
+        print(logFile)
+        print(histogramFile)
 
         # Array
         command = str(self._simtelSourcePath.joinpath('sim_telarray/bin/sim_telarray'))
