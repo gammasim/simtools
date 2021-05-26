@@ -83,7 +83,7 @@ class SimtelRunner:
             self._logger.error(msg)
             raise ValueError(msg)
 
-    def run(self, test=False, force=False, inputFile=None):
+    def run(self, test=False, force=False, inputFile=None, run=None):
         '''
         Basic sim_telarray run method.
 
@@ -105,7 +105,7 @@ class SimtelRunner:
             self._logger.debug('Skipping because output exists and force = False')
             return
 
-        command = self._makeRunCommand(inputFile=inputFile)
+        command = self._makeRunCommand(inputFile=inputFile, run=run)
 
         print(command)
         # if test:
