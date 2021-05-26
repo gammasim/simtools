@@ -102,66 +102,29 @@ class SimtelRunnerArray(SimtelRunner):
 
         # self._loadRequiredFiles()
 
-    def _loadRequiredFiles(self):
-        '''
-        Which file are required for running depends on the mode.
-        Here we define and write some information into these files. Log files are always required.
-        '''
+    def _getLogFile(self):
+        return 'test.log'
 
-        self._corsikaFile = self._simtelSourcePath.joinpath('run9991.corsika.gz')
+    def _getHistogramFile(self):
+        return'test_hist.zst'
 
-        # Loop to define and remove existing files.
-        # Files will be named _baseFile = self.__dict__['_' + base + 'File']
-        for baseName in ['stars', 'photons', 'log']:
-            fileName = names.rayTracingFileName(
-                self.telescopeModel.site,
-                self.telescopeModel.name,
-                self.config.sourceDistance,
-                self.config.zenithAngle,
-                self.config.offAxisAngle,
-                self.config.mirrorNumber if self._singleMirrorMode else None,
-                self.label,
-                baseName
-            )
-            file = self._baseDirectory.joinpath(fileName)
-            if file.exists():
-                file.unlink()
-            # Defining the file name variable as an class atribute.
-            self.__dict__['_' + baseName + 'File'] = file
+    def _getOutputFile(self):
+        return 'test_output.zst'
 
-        # Adding header to photon list file.
-        with self._photonsFile.open('w') as file:
-            file.write('#{}\n'.format(50 * '='))
-            file.write('# List of photons for RayTracing simulations\n')
-            file.write('#{}\n'.format(50 * '='))
-            file.write('# configFile = {}\n'.format(self.telescopeModel.getConfigFile()))
-            file.write('# zenithAngle [deg] = {}\n'.format(self.config.zenithAngle))
-            file.write('# offAxisAngle [deg] = {}\n'.format(self.config.offAxisAngle))
-            file.write('# sourceDistance [km] = {}\n'.format(self.config.sourceDistance))
-            if self._singleMirrorMode:
-                file.write('# mirrorNumber = {}\n\n'.format(self.config.mirrorNumber))
+    # def _getRunScript(self, test=False):
+    #     self._logger.debug('Creating run bash script')
+    #     self._scriptFile = self._baseDirectory.joinpath('run_script')
+    #     self._logger.debug('Run bash script - {}'.format(self._scriptFile))
 
-        # Filling in star file with a single star.
-        with self._starsFile.open('w') as file:
-            file.write('0. {} 1.0 {}'.format(
-                90. - self.config.zenithAngle,
-                self.config.sourceDistance)
-            )
+    #     command = self._makeRunCommand()
+    #     with self._scriptFile.open('w') as file:
+    #         # TODO: header
+    #         file.write('#/usr/bin/bash\n\n')
+    #         N = 1 if test else self.RUNS_PER_SET
+    #         for _ in range(N):
+    #             file.write('{}\n\n'.format(command))
 
-    def _getRunScript(self, test=False):
-        self._logger.debug('Creating run bash script')
-        self._scriptFile = self._baseDirectory.joinpath('run_script')
-        self._logger.debug('Run bash script - {}'.format(self._scriptFile))
-
-        command = self._makeRunCommand()
-        with self._scriptFile.open('w') as file:
-            # TODO: header
-            file.write('#/usr/bin/bash\n\n')
-            N = 1 if test else self.RUNS_PER_SET
-            for _ in range(N):
-                file.write('{}\n\n'.format(command))
-
-        return self._scriptFile
+    #     return self._scriptFile
 
     def _shallRun(self):
         ''' Tells if simulations should be run again based on the existence of output files. '''
@@ -170,7 +133,9 @@ class SimtelRunnerArray(SimtelRunner):
     def _makeRunCommand(self, inputFile):
         ''' Return the command to run simtel_array. '''
 
-        print(inputFile)
+        logFile = self._getLogFile()
+        histogramFile = self._getHistogramFile()
+        outputFile = self._getOutputFile()
 
         # Array
         command = str(self._simtelSourcePath.joinpath('sim_telarray/bin/sim_telarray'))
@@ -179,27 +144,29 @@ class SimtelRunnerArray(SimtelRunner):
         command += super()._configOption('telescope_theta', self.config.zenithAngle)
         command += super()._configOption('telescope_phi', self.config.azimuthAngle)
         command += super()._configOption('power_law', '2.5')
-        # command += _configOption('histogram_file', self.histogramFile)
-        # command += _configOption('output_file', self.outputFile)
+        command += super()._configOption('histogram_file', histogramFile)
+        command += super()._configOption('output_file', outputFile)
         command += super()._configOption('random_state', 'auto')
         command += super()._configOption('show', 'all')
 
         command += ' ' + str(inputFile)
-        command += ' 2>&1 > ' + str(self._logFile) + ' 2>&1'
+        command += ' 2>&1 > ' + str(logFile)
 
         return command
     # END of makeRunCommand
 
     def _checkRunResult(self):
-        # Checking run
-        if not self._isPhotonListFileOK():
-            self._logger.error('Photon list is empty.')
-        else:
-            self._logger.debug('Everything looks fine with output file.')
+        # # Checking run
+        # if not self._isPhotonListFileOK():
+        #     self._logger.error('Photon list is empty.')
+        # else:
+        #     self._logger.debug('Everything looks fine with output file.')
+        pass
 
     def _isPhotonListFileOK(self):
-        ''' Check if the photon list is valid,'''
-        with open(self._photonsFile, 'r') as ff:
-            nLines = len(ff.readlines())
+        # ''' Check if the photon list is valid,'''
+        # with open(self._photonsFile, 'r') as ff:
+        #     nLines = len(ff.readlines())
 
-        return nLines > 100
+        # return nLines > 100
+        return True
