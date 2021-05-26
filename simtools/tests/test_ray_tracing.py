@@ -254,8 +254,8 @@ if __name__ == '__main__':
 
     # test_ssts()
     # test_rx()
-    # test_single_mirror()
+    test_single_mirror()
     # test_plot_image()
     # test_integral_curve()
     # test_config_data()
-    test_from_kwargs()
+    # test_from_kwargs()
