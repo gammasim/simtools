@@ -1,4 +1,5 @@
 import logging
+from pathlib import Path
 
 import astropy.units as u
 
@@ -94,22 +95,18 @@ class SimtelRunnerArray(SimtelRunner):
         )
         self._baseDirectory.mkdir(parents=True, exist_ok=True)
 
-        # # RayTracing - default parameters
-        # self._repNumber = 0
-        # self.RUNS_PER_SET = 1 if self._singleMirrorMode else 20
-        # self.PHOTONS_PER_RUN = 10000
-
         # Loading configData
         _configDataIn = gen.collectDataFromYamlOrDict(configFile, configData)
         _parameterFile = io.getDataFile('parameters', 'simtel-runner-array_parameters.yml')
         _parameters = gen.collectDataFromYamlOrDict(_parameterFile, None)
         self.config = gen.validateConfigData(_configDataIn, _parameters)
 
-        # self._loadRequiredFiles()
+        self._loadSimtelDataDirectories()
 
     def _loadSimtelDataDirectories(self):
         ''' Create CORSIKA directories for data, log and input. '''
-        simtelBaseDir = self.config.simtelDataDirectory.joinpath(self.arrayModel.site)
+        simtelBaseDir = Path(self.config.simtelDataDirectory).joinpath('simtel-data')
+        simtelBaseDir = simtelBaseDir.joinpath(self.arrayModel.site)
         simtelBaseDir = simtelBaseDir.joinpath(self.config.primary)
         simtelBaseDir = simtelBaseDir.absolute()
 
@@ -124,8 +121,8 @@ class SimtelRunnerArray(SimtelRunner):
             primary=self.config.primary,
             arrayName=self.arrayModel.layoutName,
             site=self.arrayModel.site,
-            zenith=self.config.zenith,
-            azimuth=self.config.azimuth,
+            zenith=self.config.zenithAngle,
+            azimuth=self.config.azimuthAngle,
             label=self.label
         )
         return self._simtelLogDir.joinpath(fileName)
@@ -136,8 +133,8 @@ class SimtelRunnerArray(SimtelRunner):
             primary=self.config.primary,
             arrayName=self.arrayModel.layoutName,
             site=self.arrayModel.site,
-            zenith=self.config.zenith,
-            azimuth=self.config.azimuth,
+            zenith=self.config.zenithAngle,
+            azimuth=self.config.azimuthAngle,
             label=self.label
         )
         return self._simtelDataDir.joinpath(fileName)
@@ -148,8 +145,8 @@ class SimtelRunnerArray(SimtelRunner):
             primary=self.config.primary,
             arrayName=self.arrayModel.layoutName,
             site=self.arrayModel.site,
-            zenith=self.config.zenith,
-            azimuth=self.config.azimuth,
+            zenith=self.config.zenithAngle,
+            azimuth=self.config.azimuthAngle,
             label=self.label
         )
         return self._simtelDataDir.joinpath(fileName)
@@ -179,9 +176,6 @@ class SimtelRunnerArray(SimtelRunner):
         logFile = self._getLogFile(run)
         histogramFile = self._getHistogramFile(run)
         outputFile = self._getOutputFile(run)
-
-        print(logFile)
-        print(histogramFile)
 
         # Array
         command = str(self._simtelSourcePath.joinpath('sim_telarray/bin/sim_telarray'))
