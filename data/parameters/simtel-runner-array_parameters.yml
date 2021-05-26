@@ -1,3 +1,10 @@
+simtelDataDirectory:
+  len: 1
+  unit: null
+  default: '.'
+primary:
+  len: 1
+  unit: null
 zenithAngle: 
   len: 1
   unit: !astropy.units.Unit {unit: deg}
