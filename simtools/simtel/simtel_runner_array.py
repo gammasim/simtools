@@ -1,12 +1,11 @@
 import logging
+import os
 from pathlib import Path
-
-import astropy.units as u
 
 import simtools.io_handler as io
 import simtools.util.general as gen
 from simtools.util import names
-from simtools.simtel.simtel_runner import SimtelRunner
+from simtools.simtel.simtel_runner import SimtelRunner, InvalidOutputFile
 
 __all__ = ['SimtelRunnerArray']
 
@@ -105,7 +104,13 @@ class SimtelRunnerArray(SimtelRunner):
 
     def _loadSimtelDataDirectories(self):
         ''' Create CORSIKA directories for data, log and input. '''
-        simtelBaseDir = Path(self.config.simtelDataDirectory).joinpath('simtel-data')
+
+        if self.config.simtelDataDirectory is None:
+            simtelBaseDir = self._baseDirectory
+        else:
+            simtelBaseDir = Path(self.config.simtelDataDirectory)
+
+        simtelBaseDir = simtelBaseDir.joinpath('simtel-data')
         simtelBaseDir = simtelBaseDir.joinpath(self.arrayModel.site)
         simtelBaseDir = simtelBaseDir.joinpath(self.config.primary)
         simtelBaseDir = simtelBaseDir.absolute()
@@ -151,29 +156,32 @@ class SimtelRunnerArray(SimtelRunner):
         )
         return self._simtelDataDir.joinpath(fileName)
 
-    # def _getRunScript(self, test=False):
-    #     self._logger.debug('Creating run bash script')
-    #     self._scriptFile = self._baseDirectory.joinpath('run_script')
-    #     self._logger.debug('Run bash script - {}'.format(self._scriptFile))
+    def getRunScript(self, test=False, inputFile=None, run=None):
+        self._logger.debug('Creating run bash script')
+        self._scriptFile = self._baseDirectory.joinpath(
+            'run{}_script'.format(run if run is not None else '')
+        )
+        self._logger.debug('Run bash script - {}'.format(self._scriptFile))
 
-    #     command = self._makeRunCommand()
-    #     with self._scriptFile.open('w') as file:
-    #         # TODO: header
-    #         file.write('#/usr/bin/bash\n\n')
-    #         N = 1 if test else self.RUNS_PER_SET
-    #         for _ in range(N):
-    #             file.write('{}\n\n'.format(command))
+        command = self._makeRunCommand(inputFile=inputFile, run=run)
+        with self._scriptFile.open('w') as file:
+            # TODO: header
+            file.write('#/usr/bin/bash\n\n')
+            N = 1 if test else self.RUNS_PER_SET
+            for _ in range(N):
+                file.write('{}\n\n'.format(command))
 
-    #     return self._scriptFile
+        os.system('chmod ug+x {}'.format(self._scriptFile))
+        return self._scriptFile
 
-    def _shallRun(self):
+    def _shallRun(self, run=None):
         ''' Tells if simulations should be run again based on the existence of output files. '''
-        return True
+        return not self._getOutputFile(run).exists()
 
     def _makeRunCommand(self, inputFile, run=1):
         ''' Return the command to run simtel_array. '''
 
-        logFile = self._getLogFile(run)
+        self._logFile = self._getLogFile(run)
         histogramFile = self._getHistogramFile(run)
         outputFile = self._getOutputFile(run)
 
@@ -188,25 +196,17 @@ class SimtelRunnerArray(SimtelRunner):
         command += super()._configOption('output_file', outputFile)
         command += super()._configOption('random_state', 'auto')
         command += super()._configOption('show', 'all')
-
         command += ' ' + str(inputFile)
-        command += ' 2>&1 > ' + str(logFile)
+        command += ' > ' + str(self._logFile) + ' 2>&1'
 
         return command
     # END of makeRunCommand
 
-    def _checkRunResult(self):
-        # # Checking run
-        # if not self._isPhotonListFileOK():
-        #     self._logger.error('Photon list is empty.')
-        # else:
-        #     self._logger.debug('Everything looks fine with output file.')
-        pass
-
-    def _isPhotonListFileOK(self):
-        # ''' Check if the photon list is valid,'''
-        # with open(self._photonsFile, 'r') as ff:
-        #     nLines = len(ff.readlines())
-
-        # return nLines > 100
-        return True
+    def _checkRunResult(self, run):
+        # Checking run
+        if not self._getOutputFile(run).exists():
+            msg = 'sim_telarray output file does not exist.'
+            self._logger.error(msg)
+            raise InvalidOutputFile(msg)
+        else:
+            self._logger.debug('Everything looks fine with the sim_telarray output file.')

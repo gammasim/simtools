@@ -2,6 +2,7 @@
 
 import logging
 import unittest
+from pathlib import Path
 
 import astropy.units as u
 
@@ -34,14 +35,16 @@ class TestSimtelRunnerArray(unittest.TestCase):
                 'azimuthAngle': 0 * u.deg
             }
         )
-
-    def test_run(self):
-
-        corsikaFile = io.getTestDataFile(
+        self.corsikaFile = io.getTestDataFile(
             'run1_proton_za20deg_azm0deg-North-1LST_trigger_rates.corsika.zst'
         )
 
-        self.simtelRunner.run(test=False, force=True, inputFile=corsikaFile, run=1)
+    def test_run(self):
+        self.simtelRunner.run(test=False, force=True, inputFile=self.corsikaFile, run=1)
+
+    def test_run_script(self):
+        script = self.simtelRunner.getRunScript(run=1, inputFile=self.corsikaFile)
+        assert Path(script).exists()
 
 
 if __name__ == '__main__':
