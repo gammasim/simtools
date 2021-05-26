@@ -192,47 +192,47 @@ class SimtelRunnerRayTracing(SimtelRunner):
         command = str(self._simtelSourcePath.joinpath('sim_telarray/bin/sim_telarray'))
         command += ' -c {}'.format(self.telescopeModel.getConfigFile())
         command += ' -I../cfg/CTA'
-        command += self._configOption('IMAGING_LIST', str(self._photonsFile))
-        command += self._configOption('stars', str(self._starsFile))
-        command += self._configOption('altitude', self.telescopeModel.getParameterValue('altitude'))
-        command += self._configOption(
+        command += super()._configOption('IMAGING_LIST', str(self._photonsFile))
+        command += super()._configOption('stars', str(self._starsFile))
+        command += super()._configOption('altitude', self.telescopeModel.getParameterValue('altitude'))
+        command += super()._configOption(
             'telescope_theta',
             self.config.zenithAngle + self.config.offAxisAngle
         )
-        command += self._configOption('star_photons', str(self.PHOTONS_PER_RUN))
-        command += self._configOption('telescope_phi', '0')
-        command += self._configOption('camera_transmission', '1.0')
-        command += self._configOption('nightsky_background', 'all:0.')
-        command += self._configOption('trigger_current_limit', '1e10')
-        command += self._configOption('telescope_random_angle', '0')
-        command += self._configOption('telescope_random_error', '0')
-        command += self._configOption('convergent_depth', '0')
-        command += self._configOption('maximum_telescopes', '1')
-        command += self._configOption('show', 'all')
-        command += self._configOption('camera_filter', 'none')
+        command += super()._configOption('star_photons', str(self.PHOTONS_PER_RUN))
+        command += super()._configOption('telescope_phi', '0')
+        command += super()._configOption('camera_transmission', '1.0')
+        command += super()._configOption('nightsky_background', 'all:0.')
+        command += super()._configOption('trigger_current_limit', '1e10')
+        command += super()._configOption('telescope_random_angle', '0')
+        command += super()._configOption('telescope_random_error', '0')
+        command += super()._configOption('convergent_depth', '0')
+        command += super()._configOption('maximum_telescopes', '1')
+        command += super()._configOption('show', 'all')
+        command += super()._configOption('camera_filter', 'none')
         if self._singleMirrorMode:
-            command += self._configOption('focus_offset', 'all:0.')
-            command += self._configOption('camera_config_file', 'single_pixel_camera.dat')
-            command += self._configOption('camera_pixels', '1')
-            command += self._configOption('trigger_pixels', '1')
-            command += self._configOption('camera_body_diameter', '0')
-            command += self._configOption(
+            command += super()._configOption('focus_offset', 'all:0.')
+            command += super()._configOption('camera_config_file', 'single_pixel_camera.dat')
+            command += super()._configOption('camera_pixels', '1')
+            command += super()._configOption('trigger_pixels', '1')
+            command += super()._configOption('camera_body_diameter', '0')
+            command += super()._configOption(
                 'mirror_list',
                 self.telescopeModel.getSingleMirrorListFile(
                     self.config.mirrorNumber,
                     self.config.useRandomFocalLength
                 )
             )
-            command += self._configOption(
+            command += super()._configOption(
                 'focal_length',
                 self.config.sourceDistance * u.km.to(u.cm)
             )
-            command += self._configOption('dish_shape_length', _mirrorFocalLength)
-            command += self._configOption('mirror_focal_length', _mirrorFocalLength)
-            command += self._configOption('parabolic_dish', '0')
-            # command += self._configOption('random_focal_length', '0.')
-            command += self._configOption('mirror_align_random_distance', '0.')
-            command += self._configOption('mirror_align_random_vertical', '0.,28.,0.,0.')
+            command += super()._configOption('dish_shape_length', _mirrorFocalLength)
+            command += super()._configOption('mirror_focal_length', _mirrorFocalLength)
+            command += super()._configOption('parabolic_dish', '0')
+            # command += super()._configOption('random_focal_length', '0.')
+            command += super()._configOption('mirror_align_random_distance', '0.')
+            command += super()._configOption('mirror_align_random_vertical', '0.,28.,0.,0.')
         command += ' ' + str(self._corsikaFile)
         command += ' 2>&1 > ' + str(self._logFile) + ' 2>&1'
 
