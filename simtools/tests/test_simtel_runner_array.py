@@ -40,7 +40,6 @@ class TestSimtelRunnerArray(unittest.TestCase):
             'run1_proton_za20deg_azm0deg-North-1LST_trigger_rates.corsika.zst'
         )
 
-        print(corsikaFile)
         self.simtelRunner.run(test=False, force=True, inputFile=corsikaFile)
 
 
