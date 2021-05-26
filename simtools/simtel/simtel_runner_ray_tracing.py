@@ -163,12 +163,12 @@ class SimtelRunnerRayTracing(SimtelRunner):
                 self.config.sourceDistance)
             )
 
-    def _getRunScript(self, test=False):
+    def _getRunScript(self, test=False, inputFile=None):
         self._logger.debug('Creating run bash script')
         self._scriptFile = self._baseDirectory.joinpath('run_script')
         self._logger.debug('Run bash script - {}'.format(self._scriptFile))
 
-        command = self._makeRunCommand()
+        command = self._makeRunCommand(inputFile=inputFile)
         with self._scriptFile.open('w') as file:
             # TODO: header
             file.write('#/usr/bin/bash\n\n')
@@ -182,7 +182,7 @@ class SimtelRunnerRayTracing(SimtelRunner):
         ''' Tells if simulations should be run again based on the existence of output files. '''
         return not self._isPhotonListFileOK()
 
-    def _makeRunCommand(self):
+    def _makeRunCommand(self, inputFile):
         ''' Return the command to run simtel_array. '''
 
         def _configOption(par, value=None):

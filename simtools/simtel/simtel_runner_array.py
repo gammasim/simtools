@@ -167,7 +167,7 @@ class SimtelRunnerArray(SimtelRunner):
         ''' Tells if simulations should be run again based on the existence of output files. '''
         return not self._isPhotonListFileOK()
 
-    def _makeRunCommand(self):
+    def _makeRunCommand(self, inputFile):
         ''' Return the command to run simtel_array. '''
 
         def _configOption(par, value=None):
