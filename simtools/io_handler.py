@@ -160,7 +160,7 @@ def getDataFile(parentDir, fileName):
     -------
     Path
     '''
-    return Path(cfg.get('dataLocation')).joinpath(parentDir).joinpath(fileName)
+    return Path(cfg.get('dataLocation')).joinpath(parentDir).joinpath(fileName).absolute()
 
 
 def getTestDataFile(fileName):
@@ -176,7 +176,7 @@ def getTestDataFile(fileName):
     -------
     Path
     '''
-    return Path(cfg.get('dataLocation')).joinpath('test-data').joinpath(fileName)
+    return Path(cfg.get('dataLocation')).joinpath('test-data').joinpath(fileName).absolute()
 
 
 def getTestOutputFile(fileName):
@@ -192,7 +192,7 @@ def getTestOutputFile(fileName):
     -------
     Path
     '''
-    return Path(cfg.get('dataLocation')).joinpath('test-output').joinpath(fileName)
+    return Path(cfg.get('dataLocation')).joinpath('test-output').joinpath(fileName).absolute()
 
 
 def getTestPlotFile(fileName):
@@ -208,4 +208,4 @@ def getTestPlotFile(fileName):
     -------
     Path
     '''
-    return Path(cfg.get('dataLocation')).joinpath('test-plots').joinpath(fileName)
+    return Path(cfg.get('dataLocation')).joinpath('test-plots').joinpath(fileName).absolute()
