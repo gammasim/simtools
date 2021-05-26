@@ -179,8 +179,8 @@ class SimtelRunnerArray(SimtelRunner):
         command += self._configOption('telescope_theta', self.config.zenithAngle)
         command += self._configOption('telescope_phi', self.config.azimuthAngle)
         command += self._configOption('power_law', '2.5')
-        command += self._configOption('histogram_file', self.histogramFile)
-        command += self._configOption('output_file', self.ottputFile)
+        # command += self._configOption('histogram_file', self.histogramFile)
+        # command += self._configOption('output_file', self.outputFile)
         command += self._configOption('random_state', 'auto')
         command += self._configOption('show', 'all')
 
