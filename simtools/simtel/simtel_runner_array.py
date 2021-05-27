@@ -12,14 +12,16 @@ __all__ = ['SimtelRunnerArray']
 
 class SimtelRunnerArray(SimtelRunner):
     '''
-    SimtelRunnerRayTracing is the interface with sim_telarray to perform ray tracing simulations.
+    SimtelRunnerArray is the interface with sim_telarray to perform array simulations.
 
     Configurable parameters:
         simtelDataDirectory:
             len: 1
-            default: '.'
+            default: null
+            unit: null
         primary:
             len: 1
+            unit: null
         zenithAngle:
             len: 1
             unit: deg
@@ -40,7 +42,10 @@ class SimtelRunnerArray(SimtelRunner):
 
     Methods
     -------
-    run(test=False, force=False)
+    getRunScript(self, test=False, inputFile=None, run=None)
+        Builds and returns the full path of the bash run script containing
+        the sim_telarray command.
+    run(test=False, force=False, inputFile=None, run=None)
         Run sim_telarray. test=True will make it faster and force=True will remove existing files
         and run again.
     '''
@@ -103,9 +108,17 @@ class SimtelRunnerArray(SimtelRunner):
         self._loadSimtelDataDirectories()
 
     def _loadSimtelDataDirectories(self):
-        ''' Create CORSIKA directories for data, log and input. '''
+        '''
+        Create sim_telarray output directories for data, log and input.
+
+        If simtelDataDirectory is not given as a configurable parameter,
+        the standard directory of simtools output (simtools-output) will
+        be used. A sub directory simtel-data will be created and subdirectories for
+        log and data will be created inside it.
+        '''
 
         if self.config.simtelDataDirectory is None:
+            # Default config value
             simtelBaseDir = self._baseDirectory
         else:
             simtelBaseDir = Path(self.config.simtelDataDirectory)
@@ -121,6 +134,7 @@ class SimtelRunnerArray(SimtelRunner):
         self._simtelLogDir.mkdir(parents=True, exist_ok=True)
 
     def _getLogFile(self, run):
+        ''' Get full path of the simtel log file for a given run. '''
         fileName = names.simtelLogFileName(
             run=run,
             primary=self.config.primary,
@@ -133,6 +147,7 @@ class SimtelRunnerArray(SimtelRunner):
         return self._simtelLogDir.joinpath(fileName)
 
     def _getHistogramFile(self, run):
+        ''' Get full path of the simtel histogram file for a given run. '''
         fileName = names.simtelHistogramFileName(
             run=run,
             primary=self.config.primary,
@@ -145,6 +160,7 @@ class SimtelRunnerArray(SimtelRunner):
         return self._simtelDataDir.joinpath(fileName)
 
     def _getOutputFile(self, run):
+        ''' Get full path of the simtel output file for a given run. '''
         fileName = names.simtelOutputFileName(
             run=run,
             primary=self.config.primary,
@@ -156,30 +172,12 @@ class SimtelRunnerArray(SimtelRunner):
         )
         return self._simtelDataDir.joinpath(fileName)
 
-    def getRunScript(self, test=False, inputFile=None, run=None):
-        self._logger.debug('Creating run bash script')
-        self._scriptFile = self._baseDirectory.joinpath(
-            'run{}_script'.format(run if run is not None else '')
-        )
-        self._logger.debug('Run bash script - {}'.format(self._scriptFile))
-
-        command = self._makeRunCommand(inputFile=inputFile, run=run)
-        with self._scriptFile.open('w') as file:
-            # TODO: header
-            file.write('#/usr/bin/bash\n\n')
-            N = 1 if test else self.RUNS_PER_SET
-            for _ in range(N):
-                file.write('{}\n\n'.format(command))
-
-        os.system('chmod ug+x {}'.format(self._scriptFile))
-        return self._scriptFile
-
     def _shallRun(self, run=None):
         ''' Tells if simulations should be run again based on the existence of output files. '''
         return not self._getOutputFile(run).exists()
 
     def _makeRunCommand(self, inputFile, run=1):
-        ''' Return the command to run simtel_array. '''
+        ''' Builds and returns the command to run simtel_array. '''
 
         self._logFile = self._getLogFile(run)
         histogramFile = self._getHistogramFile(run)
