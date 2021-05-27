@@ -29,6 +29,9 @@ class SimtelRunner:
 
     Methods
     -------
+    getRunScript(self, test=False, inputFile=None, run=None)
+        Builds and returns the full path of the bash run script containing
+        the sim_telarray command.
     run(test=False, force=False, input=None)
         Run sim_telarray. test=True will make it faster and force=True will remove existing files
         and run again.
@@ -78,7 +81,7 @@ class SimtelRunner:
             raise ValueError(msg)
 
     def _validateArrayModel(self, array):
-        ''' Validate TelescopeModel '''
+        ''' Validate ArrayModel '''
         if isinstance(array, ArrayModel):
             self._logger.debug('ArrayModel is valid')
             return array
@@ -86,6 +89,42 @@ class SimtelRunner:
             msg = 'Invalid ArrayModel'
             self._logger.error(msg)
             raise ValueError(msg)
+
+    def getRunScript(self, test=False, inputFile=None, run=None):
+        '''
+        Builds and returns the full path of the bash run script containing
+        the sim_telarray command.
+
+        Parameters
+        ----------
+        test: bool
+            Test flag for faster execution. 
+        inputFile: str or Path
+            Full path of the input CORSIKA file.
+        run: int
+            Run number.
+            
+        Returns
+        -------
+        Path
+            Full path of the run script.
+        '''
+        self._logger.debug('Creating run bash script')
+        self._scriptFile = self._baseDirectory.joinpath(
+            'run{}_script'.format(run if run is not None else '')
+        )
+        self._logger.debug('Run bash script - {}'.format(self._scriptFile))
+
+        command = self._makeRunCommand(inputFile=inputFile, run=run)
+        with self._scriptFile.open('w') as file:
+            # TODO: header
+            file.write('#/usr/bin/bash\n\n')
+            N = 1 if test else self.RUNS_PER_SET
+            for _ in range(N):
+                file.write('{}\n\n'.format(command))
+
+        os.system('chmod ug+x {}'.format(self._scriptFile))
+        return self._scriptFile
 
     def run(self, test=False, force=False, inputFile=None, run=None):
         '''
@@ -158,6 +197,7 @@ class SimtelRunner:
 
     @staticmethod
     def _configOption(par, value=None):
+        ''' Util function for building sim_telarray command. '''
         c = ' -C {}'.format(par)
         c += '={}'.format(value) if value is not None else ''
         return c
