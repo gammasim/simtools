@@ -45,6 +45,9 @@ class SimtelRunnerRayTracing(SimtelRunner):
 
     Methods
     -------
+    getRunScript(self, test=False, inputFile=None, run=None)
+        Builds and returns the full path of the bash run script containing
+        the sim_telarray command.
     run(test=False, force=False)
         Run sim_telarray. test=True will make it faster and force=True will remove existing files
         and run again.
@@ -162,21 +165,6 @@ class SimtelRunnerRayTracing(SimtelRunner):
                 90. - self.config.zenithAngle,
                 self.config.sourceDistance)
             )
-
-    def getRunScript(self, test=False, inputFile=None, run=None):
-        self._logger.debug('Creating run bash script')
-        self._scriptFile = self._baseDirectory.joinpath('run_script')
-        self._logger.debug('Run bash script - {}'.format(self._scriptFile))
-
-        command = self._makeRunCommand(inputFile=inputFile)
-        with self._scriptFile.open('w') as file:
-            # TODO: header
-            file.write('#/usr/bin/bash\n\n')
-            N = 1 if test else self.RUNS_PER_SET
-            for _ in range(N):
-                file.write('{}\n\n'.format(command))
-
-        return self._scriptFile
 
     def _shallRun(self, run=None):
         ''' Tells if simulations should be run again based on the existence of output files. '''
