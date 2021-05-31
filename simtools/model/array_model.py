@@ -50,8 +50,10 @@ class ArrayModel:
     exportAllSimtelConfigFiles()
         Export sim_telarray config file for the array and for each individual telescope
         into the output model directory.
-    getArrayConfigFile()
+    getConfigFile()
         Get the path to the config file for sim_telarray.
+    getConfigDirectory()
+        Get the path of the array config directory for sim_telarray.
     '''
 
     def __init__(
@@ -394,3 +396,13 @@ class ArrayModel:
         '''
         self.exportAllSimtelConfigFiles()
         return self._configFilePath
+
+    def getConfigDirectory(self):
+        '''
+        Get the path of the array config directory for sim_telarray.
+
+        Returns
+        -------
+        Path of the config diretcory path for sim_telarray.
+        '''
+        return self._configFileDirectory
