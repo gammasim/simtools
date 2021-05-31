@@ -14,6 +14,10 @@ class SimtelExecutionError(Exception):
     pass
 
 
+class InvalidOutputFile(Exception):
+    pass
+
+
 class SimtelRunner:
     '''
     SimtelRunner is the base class of the sim_telarray interfaces.
@@ -25,7 +29,10 @@ class SimtelRunner:
 
     Methods
     -------
-    run(test=False, force=False)
+    getRunScript(self, test=False, inputFile=None, run=None)
+        Builds and returns the full path of the bash run script containing
+        the sim_telarray command.
+    run(test=False, force=False, input=None)
         Run sim_telarray. test=True will make it faster and force=True will remove existing files
         and run again.
     '''
@@ -74,7 +81,7 @@ class SimtelRunner:
             raise ValueError(msg)
 
     def _validateArrayModel(self, array):
-        ''' Validate TelescopeModel '''
+        ''' Validate ArrayModel '''
         if isinstance(array, ArrayModel):
             self._logger.debug('ArrayModel is valid')
             return array
@@ -83,7 +90,43 @@ class SimtelRunner:
             self._logger.error(msg)
             raise ValueError(msg)
 
-    def run(self, test=False, force=False):
+    def getRunScript(self, test=False, inputFile=None, run=None):
+        '''
+        Builds and returns the full path of the bash run script containing
+        the sim_telarray command.
+
+        Parameters
+        ----------
+        test: bool
+            Test flag for faster execution. 
+        inputFile: str or Path
+            Full path of the input CORSIKA file.
+        run: int
+            Run number.
+            
+        Returns
+        -------
+        Path
+            Full path of the run script.
+        '''
+        self._logger.debug('Creating run bash script')
+        self._scriptFile = self._baseDirectory.joinpath(
+            'run{}_script'.format(run if run is not None else '')
+        )
+        self._logger.debug('Run bash script - {}'.format(self._scriptFile))
+
+        command = self._makeRunCommand(inputFile=inputFile, run=run)
+        with self._scriptFile.open('w') as file:
+            # TODO: header
+            file.write('#/usr/bin/bash\n\n')
+            N = 1 if test else self.RUNS_PER_SET
+            for _ in range(N):
+                file.write('{}\n\n'.format(command))
+
+        os.system('chmod ug+x {}'.format(self._scriptFile))
+        return self._scriptFile
+
+    def run(self, test=False, force=False, inputFile=None, run=None):
         '''
         Basic sim_telarray run method.
 
@@ -97,15 +140,15 @@ class SimtelRunner:
         self._logger.debug('Running sim_telarray')
 
         if not hasattr(self, '_makeRunCommand'):
-            msg = 'run method cannot be executed without the _makeRunCommand'
+            msg = 'run method cannot be executed without the _makeRunCommand method'
             self._logger.error(msg)
             raise RuntimeError(msg)
 
-        if not self._shallRun() and not force:
+        if not self._shallRun(run) and not force:
             self._logger.debug('Skipping because output exists and force = False')
             return
 
-        command = self._makeRunCommand()
+        command = self._makeRunCommand(inputFile=inputFile, run=run)
 
         if test:
             self._logger.info('Running (test) with command:{}'.format(command))
@@ -121,7 +164,7 @@ class SimtelRunner:
         # if self._simtelFailed(sysOutput):
         #     self._raiseSimtelError()
 
-        self._checkRunResult()
+        self._checkRunResult(run=run)
 
     def _simtelFailed(self, sysOutput):
         return sysOutput != '0'
@@ -140,14 +183,21 @@ class SimtelRunner:
                 + '================================='
             )
         else:
-            msg = 'Simtel log file does not exist'
+            msg = 'Simtel log file does not exist.'
 
         self._logger.error(msg)
         raise SimtelExecutionError(msg)
 
-    def _shallRun(self):
+    def _shallRun(self, run=None):
         self._logger.debug(
             'shallRun is being called from the base class - returning False -'
             + 'it should be implemented in the sub class'
         )
         return False
+
+    @staticmethod
+    def _configOption(par, value=None):
+        ''' Util function for building sim_telarray command. '''
+        c = ' -C {}'.format(par)
+        c += '={}'.format(value) if value is not None else ''
+        return c
