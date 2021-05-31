@@ -45,6 +45,9 @@ class SimtelRunnerRayTracing(SimtelRunner):
 
     Methods
     -------
+    getRunScript(self, test=False, inputFile=None, run=None)
+        Builds and returns the full path of the bash run script containing
+        the sim_telarray command.
     run(test=False, force=False)
         Run sim_telarray. test=True will make it faster and force=True will remove existing files
         and run again.
@@ -163,32 +166,12 @@ class SimtelRunnerRayTracing(SimtelRunner):
                 self.config.sourceDistance)
             )
 
-    def _getRunScript(self, test=False):
-        self._logger.debug('Creating run bash script')
-        self._scriptFile = self._baseDirectory.joinpath('run_script')
-        self._logger.debug('Run bash script - {}'.format(self._scriptFile))
-
-        command = self._makeRunCommand()
-        with self._scriptFile.open('w') as file:
-            # TODO: header
-            file.write('#/usr/bin/bash\n\n')
-            N = 1 if test else self.RUNS_PER_SET
-            for _ in range(N):
-                file.write('{}\n\n'.format(command))
-
-        return self._scriptFile
-
-    def _shallRun(self):
+    def _shallRun(self, run=None):
         ''' Tells if simulations should be run again based on the existence of output files. '''
         return not self._isPhotonListFileOK()
 
-    def _makeRunCommand(self):
+    def _makeRunCommand(self, inputFile, run=None):
         ''' Return the command to run simtel_array. '''
-
-        def _configOption(par, value=None):
-            c = ' -C {}'.format(par)
-            c += '={}'.format(value) if value is not None else ''
-            return c
 
         if self._singleMirrorMode:
             _mirrorFocalLength = float(self.telescopeModel.getParameterValue('mirror_focal_length'))
@@ -197,51 +180,57 @@ class SimtelRunnerRayTracing(SimtelRunner):
         command = str(self._simtelSourcePath.joinpath('sim_telarray/bin/sim_telarray'))
         command += ' -c {}'.format(self.telescopeModel.getConfigFile())
         command += ' -I../cfg/CTA'
-        command += _configOption('IMAGING_LIST', str(self._photonsFile))
-        command += _configOption('stars', str(self._starsFile))
-        command += _configOption('altitude', self.telescopeModel.getParameterValue('altitude'))
-        command += _configOption(
+        command += super()._configOption('IMAGING_LIST', str(self._photonsFile))
+        command += super()._configOption('stars', str(self._starsFile))
+        command += super()._configOption(
+            'altitude',
+            self.telescopeModel.getParameterValue('altitude')
+        )
+        command += super()._configOption(
             'telescope_theta',
             self.config.zenithAngle + self.config.offAxisAngle
         )
-        command += _configOption('star_photons', str(self.PHOTONS_PER_RUN))
-        command += _configOption('telescope_phi', '0')
-        command += _configOption('camera_transmission', '1.0')
-        command += _configOption('nightsky_background', 'all:0.')
-        command += _configOption('trigger_current_limit', '1e10')
-        command += _configOption('telescope_random_angle', '0')
-        command += _configOption('telescope_random_error', '0')
-        command += _configOption('convergent_depth', '0')
-        command += _configOption('maximum_telescopes', '1')
-        command += _configOption('show', 'all')
-        command += _configOption('camera_filter', 'none')
+        command += super()._configOption('star_photons', str(self.PHOTONS_PER_RUN))
+        command += super()._configOption('telescope_phi', '0')
+        command += super()._configOption('camera_transmission', '1.0')
+        command += super()._configOption('nightsky_background', 'all:0.')
+        command += super()._configOption('trigger_current_limit', '1e10')
+        command += super()._configOption('telescope_random_angle', '0')
+        command += super()._configOption('telescope_random_error', '0')
+        command += super()._configOption('convergent_depth', '0')
+        command += super()._configOption('maximum_telescopes', '1')
+        command += super()._configOption('show', 'all')
+        command += super()._configOption('camera_filter', 'none')
         if self._singleMirrorMode:
-            command += _configOption('focus_offset', 'all:0.')
-            command += _configOption('camera_config_file', 'single_pixel_camera.dat')
-            command += _configOption('camera_pixels', '1')
-            command += _configOption('trigger_pixels', '1')
-            command += _configOption('camera_body_diameter', '0')
-            command += _configOption(
+            command += super()._configOption('focus_offset', 'all:0.')
+            command += super()._configOption('camera_config_file', 'single_pixel_camera.dat')
+            command += super()._configOption('camera_pixels', '1')
+            command += super()._configOption('trigger_pixels', '1')
+            command += super()._configOption('camera_body_diameter', '0')
+            command += super()._configOption(
                 'mirror_list',
                 self.telescopeModel.getSingleMirrorListFile(
                     self.config.mirrorNumber,
                     self.config.useRandomFocalLength
                 )
             )
-            command += _configOption('focal_length', self.config.sourceDistance * u.km.to(u.cm))
-            command += _configOption('dish_shape_length', _mirrorFocalLength)
-            command += _configOption('mirror_focal_length', _mirrorFocalLength)
-            command += _configOption('parabolic_dish', '0')
-            # command += _configOption('random_focal_length', '0.')
-            command += _configOption('mirror_align_random_distance', '0.')
-            command += _configOption('mirror_align_random_vertical', '0.,28.,0.,0.')
+            command += super()._configOption(
+                'focal_length',
+                self.config.sourceDistance * u.km.to(u.cm)
+            )
+            command += super()._configOption('dish_shape_length', _mirrorFocalLength)
+            command += super()._configOption('mirror_focal_length', _mirrorFocalLength)
+            command += super()._configOption('parabolic_dish', '0')
+            # command += super()._configOption('random_focal_length', '0.')
+            command += super()._configOption('mirror_align_random_distance', '0.')
+            command += super()._configOption('mirror_align_random_vertical', '0.,28.,0.,0.')
         command += ' ' + str(self._corsikaFile)
         command += ' 2>&1 > ' + str(self._logFile) + ' 2>&1'
 
         return command
     # END of makeRunCommand
 
-    def _checkRunResult(self):
+    def _checkRunResult(self, run=None):
         # Checking run
         if not self._isPhotonListFileOK():
             self._logger.error('Photon list is empty.')
