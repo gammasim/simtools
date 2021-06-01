@@ -7,22 +7,14 @@ from copy import copy
 
 import simtools.config as cfg
 import simtools.io_handler as io
-from simtools.corsika.corsika_runner import CorsikaRunner
+from simtools.simtel.simtel_runner_array import SimtelRunnerArray
 from simtools.util import names
 from simtools.util.general import collectDataFromYamlOrDict
 
-__all__ = ['ShowerSimulator']
+__all__ = ['ArraySimulator']
 
 
-class MissingRequiredEntryInShowerConfig(Exception):
-    pass
-
-
-class InvalidRunsToSimulate(Exception):
-    pass
-
-
-class ShowerSimulator:
+class ArraySimulator:
     '''
     ShowerSimulator is responsible for managing simulation of showers. \
     It interfaces with simulation software-specific packages, like CORSIKA.
@@ -75,8 +67,8 @@ class ShowerSimulator:
         label=None,
         filesLocation=None,
         simtelSourcePath=None,
-        showerConfigData=None,
-        showerConfigFile=None
+        configData=None,
+        configFile=None
     ):
         '''
         ShowerSimulator init.
@@ -96,25 +88,29 @@ class ShowerSimulator:
             Path to yaml file containing shower config data.
         '''
         self._logger = logging.getLogger(__name__)
-        self._logger.debug('Init CorsikaRunner')
+        self._logger.debug('Init ArraySimulator')
 
         self.label = label
 
-        self._simtelSourcePath = Path(cfg.getConfigArg('simtelPath', simtelSourcePath))
-        self._filesLocation = cfg.getConfigArg('outputLocation', filesLocation)
-        self._outputDirectory = io.getCorsikaOutputDirectory(self._filesLocation, self.label)
-        self._outputDirectory.mkdir(parents=True, exist_ok=True)
-        self._logger.debug(
-            'Output directory {} - creating it, if needed.'.format(self._outputDirectory)
-        )
+        # self._simtelSourcePath = Path(cfg.getConfigArg('simtelPath', simtelSourcePath))
+        # self._filesLocation = cfg.getConfigArg('outputLocation', filesLocation)
+        # self._outputDirectory = io.getCorsikaOutputDirectory(self._filesLocation, self.label)
+        # self._outputDirectory.mkdir(parents=True, exist_ok=True)
+        # self._logger.debug(
+        #     'Output directory {} - creating it, if needed.'.format(self._outputDirectory)
+        # )
 
-        showerConfigData = collectDataFromYamlOrDict(showerConfigFile, showerConfigData)
-        self._loadShowerConfigData(showerConfigData)
-        self._setCorsikaRunner()
+        configData = collectDataFromYamlOrDict(configFile, configData)
+        self._loadArrayConfigData(configData)
+        self._setSimtelRunner()
     # End of init
 
-    def _loadShowerConfigData(self, showerConfigData):
+    def _loaArrayConfigData(self, showerConfigData):
         ''' Validate showerConfigData and store the relevant data in variables.'''
+
+        # arrayModel
+        # configData for simtelRunner
+        # atttributes
 
         # Copying showerConfigData to corsikaConfigData
         # Few keys will be removed before passing it to CorsikaRunner
@@ -145,9 +141,9 @@ class ShowerSimulator:
         self._corsikaParametersFile = showerConfigData.get('corsikaParametersFile', None)
         self._corsikaConfigData.pop('corsikaParametersFile', None)
 
-    def _setCorsikaRunner(self):
+    def _setSimtelRunner(self):
         ''' Creating a CorsikaRunner and setting it to self._corsikaRunner. '''
-        self._corsikaRunner = CorsikaRunner(
+        self._simtelRunner = SimtelRunnerArray(
             site=self.site,
             layoutName=self.layoutName,
             label=self.label,
