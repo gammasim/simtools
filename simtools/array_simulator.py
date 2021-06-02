@@ -5,13 +5,20 @@ import numpy as np
 from pathlib import Path
 from copy import copy
 
+import astropy.units as u
+
 import simtools.config as cfg
 import simtools.io_handler as io
-from simtools.simtel.simtel_runner_array import SimtelRunnerArray
+import simtools.util.general as gen
 from simtools.util import names
-from simtools.util.general import collectDataFromYamlOrDict
+from simtools.simtel.simtel_runner_array import SimtelRunnerArray
+from simtools.model.array_model import ArrayModel
 
 __all__ = ['ArraySimulator']
+
+
+class MissingRequiredEntryInArrayConfig(Exception):
+    pass
 
 
 class ArraySimulator:
@@ -92,68 +99,66 @@ class ArraySimulator:
 
         self.label = label
 
-        # self._simtelSourcePath = Path(cfg.getConfigArg('simtelPath', simtelSourcePath))
-        # self._filesLocation = cfg.getConfigArg('outputLocation', filesLocation)
-        # self._outputDirectory = io.getCorsikaOutputDirectory(self._filesLocation, self.label)
+        self._simtelSourcePath = Path(cfg.getConfigArg('simtelPath', simtelSourcePath))
+        self._filesLocation = cfg.getConfigArg('outputLocation', filesLocation)
+        # self._outputDirectory = io.getSimtelOutputDirectory(self._filesLocation, self.label)
         # self._outputDirectory.mkdir(parents=True, exist_ok=True)
         # self._logger.debug(
         #     'Output directory {} - creating it, if needed.'.format(self._outputDirectory)
         # )
 
-        configData = collectDataFromYamlOrDict(configFile, configData)
+        configData = gen.collectDataFromYamlOrDict(configFile, configData)
         self._loadArrayConfigData(configData)
         self._setSimtelRunner()
     # End of init
 
-    def _loaArrayConfigData(self, showerConfigData):
+    def _loadArrayConfigData(self, configData):
         ''' Validate showerConfigData and store the relevant data in variables.'''
+        _arrayModelConfig, _restConfig = self._collectArrayModelParameters(configData)
 
-        # arrayModel
-        # configData for simtelRunner
-        # atttributes
+        _parameterFile = io.getDataFile('parameters', 'array-simulator_parameters.yml')
+        _parameters = gen.collectDataFromYamlOrDict(_parameterFile, None)
+        self.config = gen.validateConfigData(_restConfig, _parameters)
 
-        # Copying showerConfigData to corsikaConfigData
-        # Few keys will be removed before passing it to CorsikaRunner
-        self._corsikaConfigData = copy(showerConfigData)
+        self.arrayModel = ArrayModel(label=self.label, arrayConfigData=_arrayModelConfig)
 
-        # Storing site and layoutName entries in attributes.
+    def _collectArrayModelParameters(self, configData):
+        _arrayModelData = dict()
+        _restData = copy(configData)
+
         try:
-            self.site = names.validateSiteName(showerConfigData['site'])
-            self.layoutName = names.validateLayoutArrayName(showerConfigData['layoutName'])
-            self._corsikaConfigData.pop('site')
-            self._corsikaConfigData.pop('layoutName')
+            _arrayModelData['site'] = _restData.pop('site')
+            _arrayModelData['layoutName'] = _restData.pop('layoutName')
+            _arrayModelData['modelVersion'] = _restData.pop('modelVersion')
+            _arrayModelData['default'] = _restData.pop('default')
         except KeyError:
-            msg = 'site and/or layoutName were not given in showerConfig'
+            msg = 'site, layoutName, modelVersion and/or default were not given in configData'
             self._logger.error(msg)
-            raise MissingRequiredEntryInShowerConfig(msg)
+            raise MissingRequiredEntryInArrayConfig(msg)
 
-        # Grabbing runList and runRange
-        runList = showerConfigData.get('runList', None)
-        runRange = showerConfigData.get('runRange', None)
-        # Validating and merging runList and runRange, if needed.
-        self.runs = self._validateRunListAndRange(runList, runRange)
+        # Grabbing the telescope keys
+        telKeys = [k for k in _restData.keys() if k[0:2] in ['L-', 'M-', 'S-']]
+        for key in telKeys:
+            _arrayModelData[key] = _restData.pop(key)
 
-        # Removing runs key from corsikaConfigData
-        self._corsikaConfigData.pop('runList', None)
-        self._corsikaConfigData.pop('runRange', None)
-
-        # Searching for corsikaParametersFile in showerConfig
-        self._corsikaParametersFile = showerConfigData.get('corsikaParametersFile', None)
-        self._corsikaConfigData.pop('corsikaParametersFile', None)
+        return _arrayModelData, _restData
 
     def _setSimtelRunner(self):
         ''' Creating a CorsikaRunner and setting it to self._corsikaRunner. '''
         self._simtelRunner = SimtelRunnerArray(
-            site=self.site,
-            layoutName=self.layoutName,
             label=self.label,
-            filesLocation=self._filesLocation,
+            arrayModel=self.arrayModel,
             simtelSourcePath=self._simtelSourcePath,
-            corsikaParametersFile=self._corsikaParametersFile,
-            corsikaConfigData=self._corsikaConfigData
+            filesLocation=self._filesLocation,
+            configData={
+                'simtelDataDirectory': self.config.simtelDataDirectory,
+                'primary': self.config.primary,
+                'zenithAngle': self.config.zenithAngle * u.deg,
+                'azimuthAngle': self.config.azimuthAngle * u.deg
+            }
         )
 
-    def run(self, runList=None, runRange=None):
+    def run(self, inputFileList):
         '''
         Run simulation.
 
@@ -169,50 +174,69 @@ class ArraySimulator:
         InvalidRunsToSimulate
             If runs in runList or runRange are invalid.
         '''
-        runsToSimulate = self._getRunsToSimulate(runList, runRange)
-        self._logger.info('Running scripts for {} runs'.format(len(runsToSimulate)))
 
-        self._logger.info('Starting running scripts')
-        for run in runsToSimulate:
-            runScript = self._corsikaRunner.getRunScriptFile(runNumber=run)
+        # inputFile into list
+
+        inputFileList = self._makeInputList(inputFileList)
+
+        for file in inputFileList:
+            run = self._guessRunFromFile(file)
+
+            self._logger.info('Running scripts for run {}'.format(run))
+
+            runScript = self._simtelRunner.getRunScriptFile(runNumber=run)
             self._logger.info('Run {} - Running script {}'.format(run, runScript))
             os.system(runScript)
 
-    def submit(self, runList=None, runRange=None, submitCommand=None, extraCommands=None):
-        '''
-        Submit a run script as a job. The submit command can be given by \
-        submitCommand or it will be taken from the config.yml file.
+    def _makeInputList(self, inputFileList):
 
-        Parameters
-        ----------
-        runList: list
-            List of run numbers to be simulated.
-        runRange: list
-            List of len 2 with the limits ofthe range for runs to be simulated.
+        if not isinstance(inputFileList, list) and not isinstance(inputFileList, str):
+            msg = 'inputFileList must be a list of str or a str (single file).'
+            self._logger.error(msg)
+            raise Exception(msg)
+        elif isinstance(inputFileList, str):
+            return [inputFileList]
+        else:
+            return inputFileList
 
-        Raises
-        ------
-        InvalidRunsToSimulate
-            If runs in runList or runRange are invalid.
-        '''
+    def _guessRunFromFile(self, file):
+        return 1
 
-        subCmd = submitCommand if submitCommand is not None else cfg.get('submissionCommand')
-        self._logger.info('Submission command: {}'.format(subCmd))
+    # def submit(self, runList=None, runRange=None, submitCommand=None, extraCommands=None):
+    #     '''
+    #     Submit a run script as a job. The submit command can be given by \
+    #     submitCommand or it will be taken from the config.yml file.
 
-        runsToSimulate = self._getRunsToSimulate(runList, runRange)
-        self._logger.info('Submitting run scripts for {} runs'.format(len(runsToSimulate)))
+    #     Parameters
+    #     ----------
+    #     runList: list
+    #         List of run numbers to be simulated.
+    #     runRange: list
+    #         List of len 2 with the limits ofthe range for runs to be simulated.
 
-        self._logger.info('Starting submission')
-        for run in runsToSimulate:
-            runScript = self._corsikaRunner.getRunScriptFile(
-                runNumber=run,
-                extraCommands=extraCommands
-            )
-            self._logger.info('Run {} - Submitting script {}'.format(run, runScript))
+    #     Raises
+    #     ------
+    #     InvalidRunsToSimulate
+    #         If runs in runList or runRange are invalid.
+    #     '''
 
-            shellCommand = subCmd + ' ' + str(runScript)
-            self._logger.debug(shellCommand)
-            os.system(shellCommand)
+    #     subCmd = submitCommand if submitCommand is not None else cfg.get('submissionCommand')
+    #     self._logger.info('Submission command: {}'.format(subCmd))
+
+    #     runsToSimulate = self._getRunsToSimulate(runList, runRange)
+    #     self._logger.info('Submitting run scripts for {} runs'.format(len(runsToSimulate)))
+
+    #     self._logger.info('Starting submission')
+    #     for run in runsToSimulate:
+    #         runScript = self._corsikaRunner.getRunScriptFile(
+    #             runNumber=run,
+    #             extraCommands=extraCommands
+    #         )
+    #         self._logger.info('Run {} - Submitting script {}'.format(run, runScript))
+
+    #         shellCommand = subCmd + ' ' + str(runScript)
+    #         self._logger.debug(shellCommand)
+    #         os.system(shellCommand)
 
     def _getRunsToSimulate(self, runList, runRange):
         ''' Process runList and runRange and return the validated list of runs. '''

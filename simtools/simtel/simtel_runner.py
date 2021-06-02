@@ -98,12 +98,12 @@ class SimtelRunner:
         Parameters
         ----------
         test: bool
-            Test flag for faster execution. 
+            Test flag for faster execution.
         inputFile: str or Path
             Full path of the input CORSIKA file.
         run: int
             Run number.
-            
+
         Returns
         -------
         Path
