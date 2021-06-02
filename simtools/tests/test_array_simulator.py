@@ -6,7 +6,8 @@ from copy import copy
 
 import astropy.units as u
 
-from simtools.array_simulator import ArraySimulator
+import simtools.io_handler as io
+from simtools.array_simulator import ArraySimulator, MissingRequiredEntryInArrayConfig
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
@@ -20,14 +21,15 @@ class TestArraySimulator(unittest.TestCase):
             'primary': 'gamma',
             'zenith': 20 * u.deg,
             'azimuth': 0 * u.deg,
-            'viewcone': 0 * u.deg,
+            'viewcone': [0 * u.deg, 0 * u.deg],
             # ArrayModel
             'site': 'North',
             'layoutName': '1LST',
             'modelVersion': 'Prod5',
             'default': {
                 'LST': '1'
-            }
+            },
+            'M-01': 'FlashCam-D'
         }
         self.arraySimulator = ArraySimulator(
             label=self.label,
@@ -35,43 +37,19 @@ class TestArraySimulator(unittest.TestCase):
         )
 
     # def test_invalid_shower_data(self):
-    #     newShowerConfigData = copy(self.showerConfigData)
-    #     newShowerConfigData.pop('site')
-    #     with self.assertRaises(MissingRequiredEntryInShowerConfig):
-    #         newShowerSimulator = ShowerSimulator(
+    #     newArrayConfigData = copy(self.arrayConfigData)
+    #     newArrayConfigData.pop('site')
+    #     with self.assertRaises(MissingRequiredEntryInArrayConfig):
+    #         newArraySimulator = ArraySimulator(
     #             label=self.label,
-    #             showerConfigData=newShowerConfigData
+    #             configData=newArrayConfigData
     #         )
-    #         newShowerSimulator.runs
 
-    # def test_runs_invalid_input(self):
-    #     newShowerConfigData = copy(self.showerConfigData)
-    #     newShowerConfigData['runList'] = [1, 2.5, 'bla']  # Invalid run list
-    #     with self.assertRaises(InvalidRunsToSimulate):
-    #         newShowerSimulator = ShowerSimulator(
-    #             label=self.label,
-    #             showerConfigData=newShowerConfigData
-    #         )
-    #         newShowerSimulator.runs
-
-    # def test_runs_input(self):
-    #     newShowerConfigData = copy(self.showerConfigData)
-    #     newShowerConfigData['runList'] = [1, 2, 4]
-    #     newShowerConfigData['runRange'] = [5, 8]
-    #     newShowerSimulator = ShowerSimulator(
-    #         label=self.label,
-    #         showerConfigData=newShowerConfigData
-    #     )
-    #     self.assertEqual(newShowerSimulator.runs, [1, 2, 4, 5, 6, 7])
-
-    #     # With overlap
-    #     newShowerConfigData['runList'] = [1, 3, 4]
-    #     newShowerConfigData['runRange'] = [3, 7]
-    #     newShowerSimulator = ShowerSimulator(
-    #         label=self.label,
-    #         showerConfigData=newShowerConfigData
-    #     )
-    #     self.assertEqual(newShowerSimulator.runs, [1, 3, 4, 5, 6])
+    def test_run(self):
+        self.corsikaFile = io.getTestDataFile(
+            'run1_proton_za20deg_azm0deg-North-1LST_trigger_rates.corsika.zst'
+        )
+        self.arraySimulator.run(inputFileList=str(self.corsikaFile))
 
     # def test_no_corsika_data(self):
     #     newShowerConfigData = copy(self.showerConfigData)
