@@ -35,8 +35,19 @@ class TestArraySimulator(unittest.TestCase):
             label=self.label,
             configData=self.arrayConfigData
         )
+        self.corsikaFile = io.getTestDataFile(
+            'run1_proton_za20deg_azm0deg-North-1LST_trigger_rates.corsika.zst'
+        )
 
-    # def test_invalid_shower_data(self):
+    # def test_guess_run(self):
+    #     run = self.arraySimulator._guessRunFromFile('run12345_bla_ble')
+    #     self.assertEqual(run, 12345)
+
+    #     # Invalid run number - returns 1
+    #     run = self.arraySimulator._guessRunFromFile('run1test2_bla_ble')
+    #     self.assertEqual(run, 1)
+
+    # def test_invalid_array_data(self):
     #     newArrayConfigData = copy(self.arrayConfigData)
     #     newArrayConfigData.pop('site')
     #     with self.assertRaises(MissingRequiredEntryInArrayConfig):
@@ -45,28 +56,11 @@ class TestArraySimulator(unittest.TestCase):
     #             configData=newArrayConfigData
     #         )
 
-    def test_run(self):
-        self.corsikaFile = io.getTestDataFile(
-            'run1_proton_za20deg_azm0deg-North-1LST_trigger_rates.corsika.zst'
-        )
-        self.arraySimulator.run(inputFileList=str(self.corsikaFile))
+    # def test_run(self):
+    #     self.arraySimulator.run(inputFileList=self.corsikaFile)
 
-    # def test_no_corsika_data(self):
-    #     newShowerConfigData = copy(self.showerConfigData)
-    #     newShowerConfigData.pop('corsikaDataDirectory')
-    #     newShowerSimulator = ShowerSimulator(
-    #         label=self.label,
-    #         showerConfigData=newShowerConfigData
-    #     )
-    #     newShowerSimulator.runs
-    #     files = newShowerSimulator.getListOfOutputFiles(runList=[3])
-    #     self.assertTrue('/' + self.label + '/' in files[0])
-
-    # def test_submitting(self):
-    #     self.showerSimulator.submit(runList=[2], submitCommand='more ')
-
-    # def test_runs_range(self):
-    #     self.showerSimulator.submit(runRange=[4, 8], submitCommand='more ')
+    def test_submitting(self):
+        self.arraySimulator.submit(inputFileList=self.corsikaFile, submitCommand='more ')
 
     # def test_get_list_of_files(self):
     #     files = self.showerSimulator.getListOfOutputFiles()
