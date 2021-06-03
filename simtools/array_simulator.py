@@ -184,192 +184,151 @@ class ArraySimulator:
 
             self._logger.info('Running scripts for run {}'.format(run))
 
-            runScript = self._simtelRunner.getRunScriptFile(runNumber=run)
+            runScript = self._simtelRunner.getRunScript(run=run)
             self._logger.info('Run {} - Running script {}'.format(run, runScript))
             os.system(runScript)
 
     def _makeInputList(self, inputFileList):
 
-        if not isinstance(inputFileList, list) and not isinstance(inputFileList, str):
-            msg = 'inputFileList must be a list of str or a str (single file).'
-            self._logger.error(msg)
-            raise Exception(msg)
-        elif isinstance(inputFileList, str):
+        if not isinstance(inputFileList, list):
             return [inputFileList]
         else:
             return inputFileList
 
     def _guessRunFromFile(self, file):
-        return 1
 
-    # def submit(self, runList=None, runRange=None, submitCommand=None, extraCommands=None):
+        fileName = str(file)
+        runStr = fileName[3:fileName.find('_')]
+
+        try:
+            runNumber = int(runStr)
+            return runNumber
+        except ValueError:
+            msg = 'Run number could not be guessed from the input file name - using run = 1'
+            self._logger.warning(msg)
+            return 1
+
+    def submit(self, inputFileList, submitCommand=None, extraCommands=None):
+        '''
+        Submit a run script as a job. The submit command can be given by \
+        submitCommand or it will be taken from the config.yml file.
+
+        Parameters
+        ----------
+        runList: list
+            List of run numbers to be simulated.
+        runRange: list
+            List of len 2 with the limits ofthe range for runs to be simulated.
+
+        Raises
+        ------
+        InvalidRunsToSimulate
+            If runs in runList or runRange are invalid.
+        '''
+
+        subCmd = submitCommand if submitCommand is not None else cfg.get('submissionCommand')
+        self._logger.info('Submission command: {}'.format(subCmd))
+
+        inputFileList = self._makeInputList(inputFileList)
+
+        self._logger.info('Starting submission')
+        for file in inputFileList:
+            run = self._guessRunFromFile(file)
+            runScript = self._simtelRunner.getRunScript(
+                run=run,
+                extraCommands=extraCommands
+            )
+            self._logger.info('Run {} - Submitting script {}'.format(run, runScript))
+
+            shellCommand = subCmd + ' ' + str(runScript)
+            self._logger.debug(shellCommand)
+            os.system(shellCommand)
+
+    # def getListOfOutputFiles(self, runList=None, runRange=None):
     #     '''
-    #     Submit a run script as a job. The submit command can be given by \
-    #     submitCommand or it will be taken from the config.yml file.
+    #     Get list of output files.
 
     #     Parameters
     #     ----------
     #     runList: list
-    #         List of run numbers to be simulated.
+    #         List of run numbers.
     #     runRange: list
-    #         List of len 2 with the limits ofthe range for runs to be simulated.
+    #         List of len 2 with the limits ofthe range of the run numbers.
+
+    #     Raises
+    #     ------
+    #     InvalidRunsToSimulate
+    #         If runs in runList or runRange are invalid.
+
+    #     Returns
+    #     -------
+    #     list
+    #         List with the full path of all the output files.
+    #     '''
+    #     self._logger.info('Getting list of output files')
+    #     return self._getListOfFiles(runList=runList, runRange=runRange, which='output')
+
+    # def printListOfOutputFiles(self, runList=None, runRange=None):
+    #     '''
+    #     Get list of output files.
+
+    #     Parameters
+    #     ----------
+    #     runList: list
+    #         List of run numbers.
+    #     runRange: list
+    #         List of len 2 with the limits of the range of the run numbers.
 
     #     Raises
     #     ------
     #     InvalidRunsToSimulate
     #         If runs in runList or runRange are invalid.
     #     '''
+    #     self._logger.info('Printing list of output files')
+    #     self._printListOfFiles(runList=runList, runRange=runRange, which='output')
 
-    #     subCmd = submitCommand if submitCommand is not None else cfg.get('submissionCommand')
-    #     self._logger.info('Submission command: {}'.format(subCmd))
+    # def getListOfLogFiles(self, runList=None, runRange=None):
+    #     '''
+    #     Get list of log files.
 
-    #     runsToSimulate = self._getRunsToSimulate(runList, runRange)
-    #     self._logger.info('Submitting run scripts for {} runs'.format(len(runsToSimulate)))
+    #     Parameters
+    #     ----------
+    #     runList: list
+    #         List of run numbers.
+    #     runRange: list
+    #         List of len 2 with the limits of the range of the run numbers.
 
-    #     self._logger.info('Starting submission')
-    #     for run in runsToSimulate:
-    #         runScript = self._corsikaRunner.getRunScriptFile(
-    #             runNumber=run,
-    #             extraCommands=extraCommands
-    #         )
-    #         self._logger.info('Run {} - Submitting script {}'.format(run, runScript))
+    #     Raises
+    #     ------
+    #     InvalidRunsToSimulate
+    #         If runs in runList or runRange are invalid.
 
-    #         shellCommand = subCmd + ' ' + str(runScript)
-    #         self._logger.debug(shellCommand)
-    #         os.system(shellCommand)
+    #     Returns
+    #     -------
+    #     list
+    #         List with the full path of all the log files.
+    #     '''
+    #     self._logger.info('Getting list of log files')
+    #     return self._getListOfFiles(runList=runList, runRange=runRange, which='log')
 
-    def _getRunsToSimulate(self, runList, runRange):
-        ''' Process runList and runRange and return the validated list of runs. '''
-        if runList is None and runRange is None:
-            if self.runs is None:
-                msg = (
-                    'Runs to simulate were not given as arguments nor '
-                    + 'in showerConfigData - aborting'
-                )
-                self._logger.error(msg)
-                raise InvalidRunsToSimulate(msg)
-            else:
-                return self.runs
-        else:
-            return self._validateRunListAndRange(runList, runRange)
+    # def printListOfLogFiles(self, runList=None, runRange=None):
+    #     '''
+    #     Print list of log files.
 
-    def _validateRunListAndRange(self, runList, runRange):
-        '''
-        Validate runList and runRange and return the list of runs. \
-        If both arguments are given, they will be merged into a single list.
-        '''
-        if runList is None and runRange is None:
-            self._logger.debug('Nothing to validate - runList and runRange not given.')
-            return None
+    #     Parameters
+    #     ----------
+    #     runList: list
+    #         List of run numbers.
+    #     runRange: list
+    #         List of len 2 with the limits of the range of the run numbers.
 
-        validatedRuns = list()
-        if runList is not None:
-            if not all(isinstance(r, int) for r in runList):
-                msg = 'runList must contain only integers.'
-                self._logger.error(msg)
-                raise InvalidRunsToSimulate(msg)
-            else:
-                self._logger.debug('runList: {}'.format(runList))
-                validatedRuns = list(runList)
-
-        if runRange is not None:
-            if not all(isinstance(r, int) for r in runRange) or len(runRange) != 2:
-                msg = 'runRange must contain two integers only.'
-                self._logger.error(msg)
-                raise InvalidRunsToSimulate(msg)
-            else:
-                runRange = np.arange(runRange[0], runRange[1])
-                self._logger.debug('runRange: {}'.format(runRange))
-                validatedRuns.extend(list(runRange))
-
-        validatedRunsUnique = set(validatedRuns)
-        return list(validatedRunsUnique)
-
-    def getListOfOutputFiles(self, runList=None, runRange=None):
-        '''
-        Get list of output files.
-
-        Parameters
-        ----------
-        runList: list
-            List of run numbers.
-        runRange: list
-            List of len 2 with the limits ofthe range of the run numbers.
-
-        Raises
-        ------
-        InvalidRunsToSimulate
-            If runs in runList or runRange are invalid.
-
-        Returns
-        -------
-        list
-            List with the full path of all the output files.
-        '''
-        self._logger.info('Getting list of output files')
-        return self._getListOfFiles(runList=runList, runRange=runRange, which='output')
-
-    def printListOfOutputFiles(self, runList=None, runRange=None):
-        '''
-        Get list of output files.
-
-        Parameters
-        ----------
-        runList: list
-            List of run numbers.
-        runRange: list
-            List of len 2 with the limits of the range of the run numbers.
-
-        Raises
-        ------
-        InvalidRunsToSimulate
-            If runs in runList or runRange are invalid.
-        '''
-        self._logger.info('Printing list of output files')
-        self._printListOfFiles(runList=runList, runRange=runRange, which='output')
-
-    def getListOfLogFiles(self, runList=None, runRange=None):
-        '''
-        Get list of log files.
-
-        Parameters
-        ----------
-        runList: list
-            List of run numbers.
-        runRange: list
-            List of len 2 with the limits of the range of the run numbers.
-
-        Raises
-        ------
-        InvalidRunsToSimulate
-            If runs in runList or runRange are invalid.
-
-        Returns
-        -------
-        list
-            List with the full path of all the log files.
-        '''
-        self._logger.info('Getting list of log files')
-        return self._getListOfFiles(runList=runList, runRange=runRange, which='log')
-
-    def printListOfLogFiles(self, runList=None, runRange=None):
-        '''
-        Print list of log files.
-
-        Parameters
-        ----------
-        runList: list
-            List of run numbers.
-        runRange: list
-            List of len 2 with the limits of the range of the run numbers.
-
-        Raises
-        ------
-        InvalidRunsToSimulate
-            If runs in runList or runRange are invalid.
-        '''
-        self._logger.info('Printing list of log files')
-        self._printListOfFiles(runList=runList, runRange=runRange, which='log')
+    #     Raises
+    #     ------
+    #     InvalidRunsToSimulate
+    #         If runs in runList or runRange are invalid.
+    #     '''
+    #     self._logger.info('Printing list of log files')
+    #     self._printListOfFiles(runList=runList, runRange=runRange, which='log')
 
     def _getListOfFiles(self, which, runList, runRange):
         runsToList = self._getRunsToSimulate(runList=runList, runRange=runRange)
