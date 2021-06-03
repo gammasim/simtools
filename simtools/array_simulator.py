@@ -101,11 +101,6 @@ class ArraySimulator:
 
         self._simtelSourcePath = Path(cfg.getConfigArg('simtelPath', simtelSourcePath))
         self._filesLocation = cfg.getConfigArg('outputLocation', filesLocation)
-        # self._outputDirectory = io.getSimtelOutputDirectory(self._filesLocation, self.label)
-        # self._outputDirectory.mkdir(parents=True, exist_ok=True)
-        # self._logger.debug(
-        #     'Output directory {} - creating it, if needed.'.format(self._outputDirectory)
-        # )
 
         configData = gen.collectDataFromYamlOrDict(configFile, configData)
         self._loadArrayConfigData(configData)
