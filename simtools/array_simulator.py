@@ -160,19 +160,10 @@ class ArraySimulator:
 
         Parameters
         ----------
-        runList: list
-            List of run numbers to be simulated.
-        runRange: list
-            List of len 2 with the limits ofthe range for runs to be simulated.
+        inputFileList: str or list of str
+            Single file or list of files of shower simulations.
 
-        Raises
-        ------
-        InvalidRunsToSimulate
-            If runs in runList or runRange are invalid.
         '''
-
-        # inputFile into list
-
         inputFileList = self._makeInputList(inputFileList)
 
         for file in inputFileList:
@@ -188,26 +179,6 @@ class ArraySimulator:
             self._results['output'].append(self._simtelRunner.getOutputFile(run))
             self._results['log'].append(self._simtelRunner.getLogFile(run))
 
-    def _makeInputList(self, inputFileList):
-
-        if not isinstance(inputFileList, list):
-            return [inputFileList]
-        else:
-            return inputFileList
-
-    def _guessRunFromFile(self, file):
-
-        fileName = str(file)
-        runStr = fileName[3:fileName.find('_')]
-
-        try:
-            runNumber = int(runStr)
-            return runNumber
-        except ValueError:
-            msg = 'Run number could not be guessed from the input file name - using run = 1'
-            self._logger.warning(msg)
-            return 1
-
     def submit(self, inputFileList, submitCommand=None, extraCommands=None, test=False):
         '''
         Submit a run script as a job. The submit command can be given by \
@@ -215,15 +186,14 @@ class ArraySimulator:
 
         Parameters
         ----------
-        runList: list
-            List of run numbers to be simulated.
-        runRange: list
-            List of len 2 with the limits ofthe range for runs to be simulated.
-
-        Raises
-        ------
-        InvalidRunsToSimulate
-            If runs in runList or runRange are invalid.
+        inputFileList: str or list of str
+            Single file or list of files of shower simulations.
+        submitCommand: str
+            Command to be used before the script name.
+        extraCommands: str or list of str
+            Extra commands to be added to the run script before the run command,
+        test: bool
+            If True, job is not submitted.
         '''
 
         subCmd = submitCommand if submitCommand is not None else cfg.get('submissionCommand')
@@ -248,6 +218,30 @@ class ArraySimulator:
             self._results['input'].append(str(file))
             self._results['output'].append(str(self._simtelRunner.getOutputFile(run)))
             self._results['log'].append(str(self._simtelRunner.getLogFile(run)))
+
+    def _makeInputList(self, inputFileList):
+        ''' Enforce the input list to be a list. '''
+        if not isinstance(inputFileList, list):
+            return [inputFileList]
+        else:
+            return inputFileList
+
+    def _guessRunFromFile(self, file):
+        '''
+        Finds the run number for a given input file name.
+        Input file names must follow 'run1234_*' pattern.
+        If not found, returns 1.
+        '''
+        fileName = str(file)
+        runStr = fileName[3:fileName.find('_')]
+
+        try:
+            runNumber = int(runStr)
+            return runNumber
+        except ValueError:
+            msg = 'Run number could not be guessed from the input file name - using run = 1'
+            self._logger.warning(msg)
+            return 1
 
     def getListOfOutputFiles(self, runList=None, runRange=None):
         '''
