@@ -1,7 +1,6 @@
 
 import logging
 import os
-import numpy as np
 from pathlib import Path
 from copy import copy
 
@@ -10,7 +9,6 @@ import astropy.units as u
 import simtools.config as cfg
 import simtools.io_handler as io
 import simtools.util.general as gen
-from simtools.util import names
 from simtools.simtel.simtel_runner_array import SimtelRunnerArray
 from simtools.model.array_model import ArrayModel
 
@@ -23,50 +21,43 @@ class MissingRequiredEntryInArrayConfig(Exception):
 
 class ArraySimulator:
     '''
-    ShowerSimulator is responsible for managing simulation of showers. \
-    It interfaces with simulation software-specific packages, like CORSIKA.
+    ArraySimulator is responsible for managing simulation of array of telescopes. \
+    It interfaces with simulation software-specific packages, like sim_telarray.
 
-    The configuration is set as a dict showerConfigData or a yaml \
-    file showerConfigFile. An example of showerConfigData can be found \
+    The configuration is set as a dict configData or a yaml \
+    file configFile. An example of configData can be found \
     below.
 
     .. code-block:: python
 
-    self.showerConfigData = {
-        'corsikaDataDirectory': './corsika-data',
-        'site': 'South',
-        'layoutName': 'Prod5',
-        'runRange': [1, 100],
-        'nshow': 10,
+    configData = {
+        'simtelDataDirectory': '.',
         'primary': 'gamma',
-        'erange': [100 * u.GeV, 1 * u.TeV],
-        'eslope': -2,
         'zenith': 20 * u.deg,
         'azimuth': 0 * u.deg,
         'viewcone': 0 * u.deg,
-        'cscat': [10, 1500 * u.m, 0]
+        # ArrayModel
+        'site': 'North',
+        'layoutName': '1LST',
+        'modelVersion': 'Prod5',
+        'default': {
+            'LST': '1'
+        },
+        'M-01': 'FlashCam-D'
     }
 
 
     Attributes
     ----------
-    site: str
-        North or South.
-    layoutName: str
-        Name of the layout.
     label: str
         Instance label.
+    config: NamedTuple
+        Configurable parameters.
+    arrayModel: ArrayModel
+        Instance of ArrayModel.
 
     Methods
     -------
-    getRunScriptFile(runNumber)
-        Get the full path of the run script file for a given run number.
-    getRunLogFile(runNumber)
-        Get the full path of the run log file.
-    getCorsikaLogFile(runNumber)
-        Get the full path of the CORSIKA log file.
-    getCorsikaOutputFile(runNumber)
-        Get the full path of the CORSIKA output file.
     '''
 
     def __init__(
@@ -78,7 +69,7 @@ class ArraySimulator:
         configFile=None
     ):
         '''
-        ShowerSimulator init.
+        ArraySimulator init.
 
         Parameters
         ----------
@@ -89,10 +80,10 @@ class ArraySimulator:
             the config.yml file.
         simtelSourcePath: str or Path
             Location of source of the sim_telarray/CORSIKA package.
-        showerConfigData: dict
-            Dict with shower config data.
-        showerConfigFile: str or Path
-            Path to yaml file containing shower config data.
+        configData: dict
+            Dict with configurable data.
+        configFile: str or Path
+            Path to yaml file containing configurable data.
         '''
         self._logger = logging.getLogger(__name__)
         self._logger.debug('Init ArraySimulator')
@@ -106,6 +97,7 @@ class ArraySimulator:
         self._loadArrayConfigData(configData)
         self._setSimtelRunner()
 
+        # Storing list of files
         self._results = dict()
         self._results['output'] = list()
         self._results['input'] = list()
@@ -113,7 +105,7 @@ class ArraySimulator:
     # End of init
 
     def _loadArrayConfigData(self, configData):
-        ''' Validate showerConfigData and store the relevant data in variables.'''
+        ''' Load configData, create arrayModel and store reamnining parameters in config. '''
         _arrayModelConfig, _restConfig = self._collectArrayModelParameters(configData)
 
         _parameterFile = io.getDataFile('parameters', 'array-simulator_parameters.yml')
@@ -123,6 +115,10 @@ class ArraySimulator:
         self.arrayModel = ArrayModel(label=self.label, arrayConfigData=_arrayModelConfig)
 
     def _collectArrayModelParameters(self, configData):
+        '''
+        Separate parameters from configData into parameters to create the arrayModel
+        and reamnining parameters to be stored in config.
+        '''
         _arrayModelData = dict()
         _restData = copy(configData)
 
@@ -144,7 +140,7 @@ class ArraySimulator:
         return _arrayModelData, _restData
 
     def _setSimtelRunner(self):
-        ''' Creating a CorsikaRunner and setting it to self._corsikaRunner. '''
+        ''' Creating a SimtelRunnerArray. '''
         self._simtelRunner = SimtelRunnerArray(
             label=self.label,
             arrayModel=self.arrayModel,
