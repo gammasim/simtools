@@ -258,9 +258,9 @@ class ArraySimulator:
 
     def _fillResults(self, file, run):
         ''' Fill the results dict with input, output and log files. '''
-        self._results['input'].append(file)
-        self._results['output'].append(self._simtelRunner.getOutputFile(run))
-        self._results['log'].append(self._simtelRunner.getLogFile(run))
+        self._results['input'].append(str(file))
+        self._results['output'].append(str(self._simtelRunner.getOutputFile(run)))
+        self._results['log'].append(str(self._simtelRunner.getLogFile(run)))
 
     def getListOfOutputFiles(self):
         '''
