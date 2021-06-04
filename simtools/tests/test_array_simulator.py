@@ -70,7 +70,7 @@ class TestArraySimulator(unittest.TestCase):
         self.arraySimulator.printListOfInputFiles()
 
         inputFiles = self.arraySimulator.getListOfInputFiles()
-        self.assertEqual(inputFiles[0], str(self.corsikaFile))
+        self.assertEqual(str(inputFiles[0]), str(self.corsikaFile))
 
 
 if __name__ == '__main__':
