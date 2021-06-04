@@ -58,6 +58,23 @@ class ArraySimulator:
 
     Methods
     -------
+    run(inputFileList):
+        Run simulation.
+    submit(inputFileList, submitCommand=None, extraCommands=None, test=False):
+        Submit a run script as a job. The submit command can be given by submitCommand \
+        or it will be taken from the config.yml file.
+    getListOfOutputFiles():
+        Get list of output files.
+    getListOfInputFiles():
+        Get list of input files.
+    getListOfLogFiles():
+        Get list of log files.
+    printListOfOutputFiles():
+        Print list of output files.
+    printListOfInputFiles():
+        Print list of output files.
+    printListOfLogFiles():
+        Print list of log files.
     '''
 
     def __init__(
@@ -175,9 +192,7 @@ class ArraySimulator:
             self._logger.info('Run {} - Running script {}'.format(run, runScript))
             os.system(runScript)
 
-            self._results['input'].append(file)
-            self._results['output'].append(self._simtelRunner.getOutputFile(run))
-            self._results['log'].append(self._simtelRunner.getLogFile(run))
+            self._fillResults(file, run)
 
     def submit(self, inputFileList, submitCommand=None, extraCommands=None, test=False):
         '''
@@ -215,9 +230,7 @@ class ArraySimulator:
             if not test:
                 os.system(shellCommand)
 
-            self._results['input'].append(str(file))
-            self._results['output'].append(str(self._simtelRunner.getOutputFile(run)))
-            self._results['log'].append(str(self._simtelRunner.getLogFile(run)))
+            self._fillResults(file, run)
 
     def _makeInputList(self, inputFileList):
         ''' Enforce the input list to be a list. '''
@@ -243,21 +256,15 @@ class ArraySimulator:
             self._logger.warning(msg)
             return 1
 
-    def getListOfOutputFiles(self, runList=None, runRange=None):
+    def _fillResults(self, file, run):
+        ''' Fill the results dict with input, output and log files. '''
+        self._results['input'].append(file)
+        self._results['output'].append(self._simtelRunner.getOutputFile(run))
+        self._results['log'].append(self._simtelRunner.getLogFile(run))
+
+    def getListOfOutputFiles(self):
         '''
         Get list of output files.
-
-        Parameters
-        ----------
-        runList: list
-            List of run numbers.
-        runRange: list
-            List of len 2 with the limits ofthe range of the run numbers.
-
-        Raises
-        ------
-        InvalidRunsToSimulate
-            If runs in runList or runRange are invalid.
 
         Returns
         -------
@@ -267,83 +274,21 @@ class ArraySimulator:
         self._logger.info('Getting list of output files')
         return self._results['output']
 
-    def printListOfInputFiles(self):
-        '''
-        Get list of output files.
-
-        Parameters
-        ----------
-        runList: list
-            List of run numbers.
-        runRange: list
-            List of len 2 with the limits of the range of the run numbers.
-
-        Raises
-        ------
-        InvalidRunsToSimulate
-            If runs in runList or runRange are invalid.
-        '''
-        self._logger.info('Printing list of input files')
-        self._printListOfFiles(which='input')
-
     def getListOfInputFiles(self):
         '''
-        Get list of output files.
-
-        Parameters
-        ----------
-        runList: list
-            List of run numbers.
-        runRange: list
-            List of len 2 with the limits ofthe range of the run numbers.
-
-        Raises
-        ------
-        InvalidRunsToSimulate
-            If runs in runList or runRange are invalid.
+        Get list of input files.
 
         Returns
         -------
         list
-            List with the full path of all the output files.
+            List with the full path of all the intput files.
         '''
         self._logger.info('Getting list of input files')
         return self._results['input']
 
-    def printListOfOutputFiles(self):
-        '''
-        Get list of output files.
-
-        Parameters
-        ----------
-        runList: list
-            List of run numbers.
-        runRange: list
-            List of len 2 with the limits of the range of the run numbers.
-
-        Raises
-        ------
-        InvalidRunsToSimulate
-            If runs in runList or runRange are invalid.
-        '''
-        self._logger.info('Printing list of output files')
-        self._printListOfFiles(which='output')
-
     def getListOfLogFiles(self):
         '''
         Get list of log files.
-
-        Parameters
-        ----------
-        runList: list
-            List of run numbers.
-        runRange: list
-            List of len 2 with the limits of the range of the run numbers.
-
-        Raises
-        ------
-        InvalidRunsToSimulate
-            If runs in runList or runRange are invalid.
 
         Returns
         -------
@@ -353,22 +298,18 @@ class ArraySimulator:
         self._logger.info('Getting list of log files')
         return self._results['log']
 
+    def printListOfOutputFiles(self):
+        ''' Print list of output files. '''
+        self._logger.info('Printing list of output files')
+        self._printListOfFiles(which='output')
+
+    def printListOfInputFiles(self):
+        ''' Print list of output files. '''
+        self._logger.info('Printing list of input files')
+        self._printListOfFiles(which='input')
+
     def printListOfLogFiles(self):
-        '''
-        Print list of log files.
-
-        Parameters
-        ----------
-        runList: list
-            List of run numbers.
-        runRange: list
-            List of len 2 with the limits of the range of the run numbers.
-
-        Raises
-        ------
-        InvalidRunsToSimulate
-            If runs in runList or runRange are invalid.
-        '''
+        ''' Print list of log files. '''
         self._logger.info('Printing list of log files')
         self._printListOfFiles(which='log')
 
