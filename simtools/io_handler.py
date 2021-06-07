@@ -161,7 +161,7 @@ def getDataFile(parentDir, fileName):
     -------
     Path
     '''
-    return Path(cfg.get('dataLocation')).joinpath(parentDir).joinpath(fileName)
+    return Path(cfg.get('dataLocation')).joinpath(parentDir).joinpath(fileName).absolute()
 
 
 def getTestDataDirectory():
@@ -233,4 +233,4 @@ def getTestPlotFile(fileName):
     -------
     Path
     '''
-    return Path(cfg.get('dataLocation')).joinpath('test-plots').joinpath(fileName)
+    return Path(cfg.get('dataLocation')).joinpath('test-plots').joinpath(fileName).absolute()
