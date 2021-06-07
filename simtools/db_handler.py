@@ -195,7 +195,6 @@ class DatabaseHandler:
         site,
         telescopeModelName,
         modelVersion,
-        runLocation=None,
         onlyApplicable=False,
     ):
         '''
@@ -209,8 +208,6 @@ class DatabaseHandler:
             Name of the telescope model (e.g. LST-1, MST-FlashCam-D)
         modelVersion: str
             Version of the model.
-        runLocation: Path or str
-            The sim_telarray run location to write the tabulated data files into.
         onlyApplicable: bool
             If True, only applicable parameters will be read.
 
@@ -219,32 +216,85 @@ class DatabaseHandler:
         dict containing the parameters
         '''
 
-        _modelVersion = self._convertVersionToTagged(
-            modelVersion,
-            DatabaseHandler.DB_CTA_SIMULATION_MODEL
-        )
-
         _siteValidated = names.validateSiteName(site)
-        _versionValidated = names.validateModelVersionName(_modelVersion)
         _telModelNameValidated = names.validateTelescopeModelName(telescopeModelName)
 
         if cfg.get('useMongoDB'):
+
+            # Only MongoDB suppports tagged version
+            _modelVersion = self._convertVersionToTagged(
+                modelVersion,
+                DatabaseHandler.DB_CTA_SIMULATION_MODEL
+            )
+            _versionValidated = names.validateModelVersionName(_modelVersion)
+
             _pars = self._getModelParametersMongoDB(
                 DatabaseHandler.DB_CTA_SIMULATION_MODEL,
                 _siteValidated,
                 _telModelNameValidated,
                 _versionValidated,
-                runLocation,
                 onlyApplicable
             )
             return _pars
         else:
+            _versionValidated = names.validateModelVersionName(modelVersion)
+
             return self._getModelParametersYaml(
                 _siteValidated,
                 _telModelNameValidated,
                 _versionValidated,
                 onlyApplicable
             )
+
+    def exportModelFiles(self, parameters, dest):
+
+        if cfg.get('useMongoDB'):
+            self._logger.debug('Exporting model files from MongoDB')
+            for par, info in parameters.items():
+                if not info['File']:
+                    continue
+                file = self._getFileMongoDB(
+                    DatabaseHandler.DB_CTA_SIMULATION_MODEL,
+                    info['Value']
+                )
+                self._writeFileFromMongoToDisk(DatabaseHandler.DB_CTA_SIMULATION_MODEL, dest, file)
+        else:
+            self._logger.debug('Exporting model files from local model file directories')
+            for par, value in parameters.items():
+
+                if not self._isFile(value):
+                    continue
+                self._writeModelFileYaml(value, dest, noFileOk=True)
+
+    @staticmethod
+    def _isFile(value):
+        ''' Vefiry if a parameter value is a file name. '''
+        return any(ext in str(value) for ext in ['.dat', '.txt', '.lis'])
+
+    def _writeModelFileYaml(self, fileName, destDir, noFileOk=False):
+        '''
+        Find the fileName in the model files location and write a copy
+        at the destDir directory.
+
+        Parameters
+        ----------
+        fileName: str or Path
+            File name to be found and copied.
+        destDir: str or Path
+            Path of the directory where the file will be written.
+        '''
+
+        destFile = Path(destDir).joinpath(fileName)
+        try:
+            file = cfg.findFile(fileName, cfg.get('modelFilesLocations'))
+        except FileNotFoundError:
+            if noFileOk:
+                self._logger.debug('File {} not found but noFileOk'.format(fileName))
+                return
+            else:
+                raise
+
+        destFile.write_text(file.read_text())
 
     def _getModelParametersYaml(self, site, telescopeModelName, modelVersion, onlyApplicable=False):
         '''
@@ -281,7 +331,7 @@ class DatabaseHandler:
         # Selecting version and applicable (if on)
         _pars = dict()
         for _tel in _whichTelLabels:
-            _allPars = self._getAllModelParametersYaml(_tel, modelVersion)
+            _allPars = self._getAllModelParametersYaml(_tel)
 
             # If _tel is a structure, only the applicable parameters will be collected, always.
             # The default ones will be covered by the camera parameters.
@@ -305,7 +355,6 @@ class DatabaseHandler:
         site,
         telescopeModelName,
         modelVersion,
-        runLocation=None,
         onlyApplicable=False
     ):
         '''
@@ -321,8 +370,6 @@ class DatabaseHandler:
             Name of the telescope model (e.g. MST-FlashCam-D ...)
         modelVersion: str
             Version of the model.
-        runLocation: Path or str
-            The sim_telarray run location to write the tabulated data files into.
         onlyApplicable: bool
             If True, only applicable parameters will be read.
 
@@ -361,9 +408,9 @@ class DatabaseHandler:
                 dbName,
                 _tel,
                 modelVersion,
-                runLocation,
-                (runLocation is not None),
-                _selectOnlyApplicable
+                runLocation=None,
+                writeFiles=False,
+                onlyApplicable=_selectOnlyApplicable
             ))
 
         return _pars
@@ -428,12 +475,12 @@ class DatabaseHandler:
             _parameters[parNow].pop('Telescope', None)
             _parameters[parNow]['entryDate'] = ObjectId(post['_id']).generation_time
             if _parameters[parNow]['File'] and writeFiles:
-                file = self.getFileMongoDB(
+                file = self._getFileMongoDB(
                     dbName,
                     _parameters[parNow]['Value']
                 )
 
-                self.writeFileFromMongoToDisk(dbName, runLocation, file)
+                self._writeFileFromMongoToDisk(dbName, runLocation, file)
 
         return _parameters
 
@@ -466,7 +513,6 @@ class DatabaseHandler:
         self,
         site,
         modelVersion,
-        runLocation=None,
         onlyApplicable=False,
     ):
         '''
@@ -478,8 +524,6 @@ class DatabaseHandler:
             South or North.
         modelVersion: str
             Version of the model.
-        runLocation: Path or str
-            The sim_telarray run location to write the tabulated data files into.
         onlyApplicable: bool
             If True, only applicable parameters will be read.
 
@@ -495,7 +539,6 @@ class DatabaseHandler:
                 DatabaseHandler.DB_CTA_SIMULATION_MODEL,
                 _site,
                 _modelVersion,
-                runLocation,
                 onlyApplicable
             )
             return _pars
@@ -544,7 +587,6 @@ class DatabaseHandler:
         dbName,
         site,
         modelVersion,
-        runLocation=None,
         onlyApplicable=False
     ):
         '''
@@ -558,8 +600,6 @@ class DatabaseHandler:
             South or North.
         modelVersion: str
             Version of the model.
-        runLocation: Path or str
-            The sim_telarray run location to write the tabulated data files into.
         onlyApplicable: bool
             If True, only applicable parameters will be read.
 
@@ -590,53 +630,10 @@ class DatabaseHandler:
             _parameters[parNow].pop('Parameter', None)
             _parameters[parNow].pop('Site', None)
             _parameters[parNow]['entryDate'] = ObjectId(post['_id']).generation_time
-            if _parameters[parNow]['File']:
-                file = self.getFileMongoDB(
-                    dbName,
-                    _parameters[parNow]['Value']
-                )
-
-                if runLocation is not None:
-                    self.writeFileFromMongoToDisk(dbName, runLocation, file)
 
         return _parameters
 
-    def writeModelFile(self, fileName, destDir):
-        '''
-        Find the fileName in the model files location and write a copy
-        at the destDir directory.
-
-        Parameters
-        ----------
-        fileName: str or Path
-            File name to be found and copied.
-        destDir: str or Path
-            Path of the directory where the file will be written.
-        '''
-
-        destFile = Path(destDir).joinpath(fileName)
-        file = Path(self.getModelFile(fileName))
-        destFile.write_text(file.read_text())
-
-    def getModelFile(self, fileName):
-        '''
-        Find file in model files locations and return its full path.
-
-        Parameters
-        ----------
-        fileName: str
-            File name to be found.
-
-        Returns
-        -------
-        Path
-            Full path of the file.
-        '''
-
-        file = cfg.findFile(fileName, cfg.get('modelFilesLocations'))
-        return file
-
-    def getFileMongoDB(self, dbName, fileName):
+    def _getFileMongoDB(self, dbName, fileName):
         '''
         Extract a file from MongoDB and write it to disk
 
@@ -662,7 +659,7 @@ class DatabaseHandler:
                 'The file {} does not exist in the database {}'.format(fileName, dbName)
             )
 
-    def writeFileFromMongoToDisk(self, dbName, path, file):
+    def _writeFileFromMongoToDisk(self, dbName, path, file):
         '''
         Extract a file from MongoDB and write it to disk
 

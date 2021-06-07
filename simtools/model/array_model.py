@@ -183,7 +183,6 @@ class ArrayModel:
         self._siteParameters = db.getSiteParameters(
             self.site,
             self.modelVersion,
-            self._configFileDirectory,
             onlyApplicable=True
         )
 
