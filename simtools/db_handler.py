@@ -248,13 +248,6 @@ class DatabaseHandler:
 
     def exportModelFiles(self, parameters, dest):
 
-        def isfloat(value):
-            try:
-                float(value)
-                return True
-            except ValueError:
-                return False
-
         if cfg.get('useMongoDB'):
             self._logger.debug('Exporting model files from MongoDB')
             for par, info in parameters.items():
@@ -269,15 +262,14 @@ class DatabaseHandler:
             self._logger.debug('Exporting model files from local model file directories')
             for par, value in parameters.items():
 
-                shallNotSearch = (
-                    not isinstance(value, str)
-                    or isfloat(value)
-                    or '.' not in value
-                )
-
-                if shallNotSearch:
+                if not self._isFile(value):
                     continue
                 self._writeModelFileYaml(value, dest, noFileOk=True)
+
+    @staticmethod
+    def _isFile(value):
+        ''' Vefiry if a parameter value is a file name. '''
+        return any(ext in str(value) for ext in ['.dat', '.txt', '.lis'])
 
     def _writeModelFileYaml(self, fileName, destDir, noFileOk=False):
         '''
