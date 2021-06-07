@@ -477,12 +477,12 @@ class TelescopeModel:
         db = db_handler.DatabaseHandler()
 
         # Removing parameter files added manually (which are not in DB)
-        parsToExportFiles = copy(self._parameters)
+        parsFromDB = copy(self._parameters)
         if hasattr(self, '_addedParameterFiles'):
             for par in self._addedParameterFiles:
-                parsToExportFiles.pop(par)
+                parsFromDB.pop(par)
 
-        db.exportModelFiles(parsToExportFiles, self._configFileDirectory)
+        db.exportModelFiles(parsFromDB, self._configFileDirectory)
 
     def exportConfigFile(self):
         ''' Export the config file used by sim_telarray. '''
