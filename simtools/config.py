@@ -165,7 +165,6 @@ def findFile(name, loc=None):
     allLocations = [allLocations] if not isinstance(allLocations, list) else allLocations
 
     def _searchDirectory(directory, filename, rec=False):
-        _logger.debug('Searching directory {}'.format(directory))
         if not Path(directory).exists():
             msg = 'Directory {} does not exist'.format(directory)
             _logger.debug(msg)
