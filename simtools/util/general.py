@@ -1,30 +1,20 @@
 import logging
 import copy
+from collections import namedtuple
 
 import astropy.units as u
 from astropy.io.misc import yaml
 
 __all__ = [
-    'collectArguments',
+    'validateConfigData',
     'collectDataFromYamlOrDict',
     'collectKwargs',
     'setDefaultKwargs',
     'sortArrays',
     'collectFinalLines',
-    'getLogLevelFromUser'
+    'getLogLevelFromUser',
+    'separateArgsAndConfigData'
 ]
-
-
-class ArgumentWithWrongUnit(Exception):
-    pass
-
-
-class ArgumentCannotBeCollected(Exception):
-    pass
-
-
-class MissingRequiredArgument(Exception):
-    pass
 
 
 class UnableToIdentifyConfigEntry(Exception):
@@ -36,6 +26,10 @@ class MissingRequiredConfigEntry(Exception):
 
 
 class InvalidConfigEntry(Exception):
+    pass
+
+
+class InvalidConfigData(Exception):
     pass
 
 
@@ -59,55 +53,6 @@ def fileHasText(file, text):
             if text in ll:
                 return True
     return False
-
-
-def _unitsAreConvertible(quantity_1, quantity_2):
-    '''
-    Parameters
-    ----------
-    quantity_1: astropy.Quantity
-    quantity_2: astropy.Quantity
-
-    Returns
-    -------
-    Bool
-    '''
-    try:
-        quantity_1.to(quantity_2)
-        return True
-    except Exception:
-        return False
-
-
-def _unitIsValid(quantity, unit):
-    '''
-    Parameters
-    ----------
-    quantity: astropy.Quantity
-    unit: astropy.unit
-
-    Returns
-    -------
-    Bool
-    '''
-    if unit is None and not isinstance(1 * quantity, u.quantity.Quantity):
-        return True
-    else:
-        return _unitsAreConvertible(quantity, unit)
-
-
-def _convertUnit(quantity, unit):
-    '''
-    Parameters
-    ----------
-    quantity: astropy.Quantity
-    unit: astropy.unit
-
-    Returns
-    -------
-    astropy.quantity
-    '''
-    return quantity if unit is None else quantity.to(unit).value
 
 
 def validateConfigData(configData, parameters):
@@ -137,14 +82,17 @@ def validateConfigData(configData, parameters):
 
     Returns
     -------
-    dict:
-        Dict containing the validated config data entries.
+    namedtuple:
+        Containing the validated config data entries.
     '''
 
     logger = logging.getLogger(__name__)
 
     # Dict to be filled and returned
     outData = dict()
+
+    if configData is None:
+        configData = dict()
 
     # Collecting all entries given as in configData.
     for keyData, valueData in configData.items():
@@ -171,13 +119,15 @@ def validateConfigData(configData, parameters):
     for parName, parInfo in parameters.items():
         if parName in outData.keys():
             continue
-        elif 'default' in parInfo.keys():
+        elif 'default' in parInfo.keys() and parInfo['default'] is not None:
             validatedValue = _validateAndConvertValue(
                 parName,
                 parInfo,
                 parInfo['default']
             )
             outData[parName] = validatedValue
+        elif 'default' in parInfo.keys() and parInfo['default'] is None:
+            outData[parName] = None
         else:
             msg = (
                 'Required entry in configData {} '.format(parName)
@@ -185,10 +135,12 @@ def validateConfigData(configData, parameters):
             )
             logger.error(msg)
             raise MissingRequiredConfigEntry(msg)
-    return outData
+
+    ConfigData = namedtuple('ConfigData', outData)
+    return ConfigData(**outData)
 
 
-def _validateAndConvertValue(parName, parInfo, value):
+def _validateAndConvertValue(parName, parInfo, valueIn):
     '''
     Validate input user parameter and convert it to the right units, if needed.
     Returns the validated arguments in a list.
@@ -197,10 +149,17 @@ def _validateAndConvertValue(parName, parInfo, value):
     logger = logging.getLogger(__name__)
 
     # Turning value into a list, if it is not.
-    value = copyAsList(value)
+    if isinstance(valueIn, dict):
+        valueIsDict = True
+        value = [d for (k, d) in valueIn.items()]
+        valueKeys = [k for (k, d) in valueIn.items()]
+    else:
+        valueIsDict = False
+        value = copyAsList(valueIn)
 
     # Checking the entry length
     valueLength = len(value)
+    logger.debug('Value len of {}: {}'.format(parName, valueLength))
     undefinedLength = False
     if parInfo['len'] is None:
         undefinedLength = True
@@ -211,7 +170,17 @@ def _validateAndConvertValue(parName, parInfo, value):
 
     # Checking unit
     if 'unit' not in parInfo.keys():
-        return value
+
+        # Checking if values have unit and raising error, if so.
+        if any([u.Quantity(v).unit != u.dimensionless_unscaled for v in value]):
+            msg = 'Config entry {} shoul not have units'.format(parName)
+            logger.error(msg)
+            raise InvalidConfigEntry(msg)
+        else:
+            if valueIsDict:
+                return {k: v for (k, v) in zip(valueKeys, value)}
+            else:
+                return value if len(value) > 1 or undefinedLength else value[0]
     else:
         # Turning parInfo['unit'] into a list, if it is not.
         parUnit = copyAsList(parInfo['unit'])
@@ -226,7 +195,8 @@ def _validateAndConvertValue(parName, parInfo, value):
         # Checking units and converting them, if needed.
         valueWithUnits = list()
         for arg, unit in zip(value, parUnit):
-            if unit is None:
+            # In case a entry is None, None should be returned.
+            if unit is None or arg is None:
                 valueWithUnits.append(arg)
                 continue
 
@@ -241,125 +211,15 @@ def _validateAndConvertValue(parName, parInfo, value):
             else:
                 valueWithUnits.append(arg.to(unit).value)
 
-        return valueWithUnits
-
-
-def collectArguments(obj, args, allInputs, **kwargs):
-    '''
-    Collect certain arguments and validate them.
-    To be used during initialization of classes, where kwargs with
-    physical meaning and units are expected.
-
-    Note
-    ----
-
-    In ray_tracing class,
-
-    .. code-block:: python
-
-        collectArguments(
-            self,
-            args=['zenithAngle', 'offAxisAngle', 'sourceDistance'],
-            allInputs=self.ALL_INPUTS,
-            **kwargs
-        )
-
-    where,
-
-    .. code-block:: python
-
-        ALL_INPUTS = {
-            'zenithAngle': {'default': 20, 'unit': u.deg},
-            'offAxisAngle': {'default': [0, 1.5, 3.0], 'unit': u.deg, 'isList': True},
-            'sourceDistance': {'default': 10, 'unit': u.km},
-            'mirrorNumbers': {'default': [1], 'unit': None, 'isList': True}
-        }
-
-
-    Parameters
-    ----------
-    obj: class instance (self)
-    args: list of str
-        List of names of the parameters to be collected.
-    allInputs: dict
-        Dict with info about all the expected inputs. See example.
-    **kwargs:
-        kwargs from the input arguments.
-    '''
-    _logger = logging.getLogger(__name__)
-
-    def processSingleArg(arg, inArgName, argG, argD):
-        if _unitIsValid(argG, argD['unit']):
-            obj.__dict__[inArgName] = _convertUnit(argG, argD['unit'])
+        if valueIsDict:
+            return {k: v for (k, v) in zip(valueKeys, valueWithUnits)}
         else:
-            msg = 'Argument {} given with wrong unit'.format(arg)
-            _logger.error(msg)
-            raise ArgumentWithWrongUnit(msg)
-
-    def processListArg(arg, inArgName, argG, argD):
-        outArg = list()
-        try:
-            argG = list(argG)
-        except Exception:
-            argG = [argG]
-
-        for aa in argG:
-            if _unitIsValid(aa, argD['unit']):
-                outArg.append(_convertUnit(aa, argD['unit']))
-            else:
-                msg = 'Argument {} given with wrong unit'.format(arg)
-                _logger.error(msg)
-                raise ArgumentWithWrongUnit(msg)
-        obj.__dict__[inArgName] = outArg
-
-    def processDictArg(arg, inArgName, argG, argD):
-        outArg = dict()
-
-        if not isinstance(argG, dict):
-            msg = 'Argument is not a dict - aborting'
-            _logger.error(msg)
-            raise ArgumentCannotBeCollected(msg)
-
-        for key, value in argG.items():
-            if _unitIsValid(value, argD['unit']):
-                outArg[key] = _convertUnit(value, argD['unit'])
-            else:
-                msg = 'Argument {} given with wrong unit'.format(arg)
-                _logger.error(msg)
-                raise ArgumentWithWrongUnit(msg)
-        obj.__dict__[inArgName] = outArg
-
-    for arg in args:
-        inArgName = '_' + arg
-        argData = allInputs[arg]
-
-        if arg not in allInputs.keys():
-            msg = 'Arg {} cannot be collected because it is not in allInputs'.format(arg)
-            _logger.error(msg)
-            raise ArgumentCannotBeCollected(msg)
-
-        if arg in kwargs.keys():
-            argGiven = kwargs[arg]
-            if argGiven is None:
-                obj.__dict__[inArgName] = None
-            elif 'isDict' in argData and argData['isDict']:  # Dict
-                processDictArg(arg, inArgName, argGiven, argData)
-            elif 'isList' in argData and argData['isList']:  # List
-                processListArg(arg, inArgName, argGiven, argData)
-            else:  # Not a list or dict
-                processSingleArg(arg, inArgName, argGiven, argData)
-
-        elif 'default' in argData:
-            obj.__dict__[inArgName] = argData['default']
-        else:
-            msg = 'Required argument (without default) {} was not given'.format(arg)
-            _logger.warning(msg)
-            raise MissingRequiredArgument(msg)
-
-    return
+            return (
+                valueWithUnits if len(valueWithUnits) > 1 or undefinedLength else valueWithUnits[0]
+            )
 
 
-def collectDataFromYamlOrDict(inYaml, inDict):
+def collectDataFromYamlOrDict(inYaml, inDict, allowEmpty=False):
     '''
     Collect input data that can be given either as a dict
     or as a yaml file.
@@ -370,6 +230,8 @@ def collectDataFromYamlOrDict(inYaml, inDict):
         Name of the Yaml file.
     inDict: dict
         Data as dict.
+    allowEmpty: bool
+        If True, an error won't be raised in case both yaml and dict are None.
 
     Returns
     -------
@@ -387,8 +249,13 @@ def collectDataFromYamlOrDict(inYaml, inDict):
     elif inDict is not None:
         return dict(inDict)
     else:
-        _logger.error('No data was given - aborting')
-        return None
+        msg = 'configData has not been provided (by yaml file neither by dict)'
+        if allowEmpty:
+            _logger.warning(msg)
+            return None
+        else:
+            _logger.error(msg)
+            raise InvalidConfigData(msg)
 
 
 def collectKwargs(label, inKwargs):
@@ -513,7 +380,39 @@ def copyAsList(value):
     value: list
         Copy of value if it is a list of [value] otherwise.
     '''
-    try:
-        return list(value)
-    except Exception:
+    if isinstance(value, str):
         return [value]
+    else:
+        try:
+            return list(value)
+        except Exception:
+            return [value]
+
+
+def separateArgsAndConfigData(expectedArgs, **kwargs):
+    '''
+    Separate kwargs into the arguments expected for instancing a class and
+    the dict to be given as configData.
+    This function is specific for methods fromKwargs in classes which use the
+    validateConfigData system.
+
+    Parameters
+    ----------
+    expectedArgs: list of str
+        List of arguments expected for the class.
+    **kwargs:
+
+    Returns
+    -------
+    dict, dict
+        A dict with the args collected and another one with configData.
+    '''
+    args = dict()
+    configData = dict()
+    for key, value in kwargs.items():
+        if key in expectedArgs:
+            args[key] = value
+        else:
+            configData[key] = value
+
+    return args, configData

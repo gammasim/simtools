@@ -823,3 +823,126 @@ def corsikaRunLogFileName(arrayName, site, run, label=None):
     name += '_{}'.format(label) if label is not None else ''
     name += '.log'
     return name
+
+
+def simtelOutputFileName(run, primary, arrayName, site, zenith, azimuth, label=None):
+    '''
+    sim_telarray output file name.
+
+    Warning
+    -------
+        zst extension is hardcoded here.
+
+    Parameters
+    ----------
+    arrayName: str
+        Array name.
+    site: str
+        Paranal or LaPalma.
+    zenith: float
+        Zenith angle (deg).
+    viewCone: list of float
+        View cone limits (len = 2).
+    run: int
+        Run number.
+    label: str
+        Instance label.
+
+    Returns
+    -------
+    str
+        File name.
+    '''
+    name = 'run{}_{}_za{:d}deg_azm{:d}deg-{}-{}'.format(
+        run,
+        primary,
+        int(zenith),
+        int(azimuth),
+        site,
+        arrayName
+    )
+    name += '_{}'.format(label) if label is not None else ''
+    name += '.simtel.zst'
+    return name
+
+
+def simtelHistogramFileName(run, primary, arrayName, site, zenith, azimuth, label=None):
+    '''
+    sim_telarray histogram file name.
+
+    Warning
+    -------
+        zst extension is hardcoded here.
+
+    Parameters
+    ----------
+    arrayName: str
+        Array name.
+    site: str
+        Paranal or LaPalma.
+    zenith: float
+        Zenith angle (deg).
+    viewCone: list of float
+        View cone limits (len = 2).
+    run: int
+        Run number.
+    label: str
+        Instance label.
+
+    Returns
+    -------
+    str
+        File name.
+    '''
+    name = 'run{}_{}_za{:d}deg_azm{:d}deg-{}-{}'.format(
+        run,
+        primary,
+        int(zenith),
+        int(azimuth),
+        site,
+        arrayName
+    )
+    name += '_{}'.format(label) if label is not None else ''
+    name += '.hdata.zst'
+    return name
+
+
+def simtelLogFileName(run, primary, arrayName, site, zenith, azimuth, label=None):
+    '''
+    sim_telarray histogram file name.
+
+    Warning
+    -------
+        zst extension is hardcoded here.
+
+    Parameters
+    ----------
+    arrayName: str
+        Array name.
+    site: str
+        Paranal or LaPalma.
+    zenith: float
+        Zenith angle (deg).
+    viewCone: list of float
+        View cone limits (len = 2).
+    run: int
+        Run number.
+    label: str
+        Instance label.
+
+    Returns
+    -------
+    str
+        File name.
+    '''
+    name = 'run{}_{}_za{:d}deg_azm{:d}deg-{}-{}'.format(
+        run,
+        primary,
+        int(zenith),
+        int(azimuth),
+        site,
+        arrayName
+    )
+    name += '_{}'.format(label) if label is not None else ''
+    name += '.log'
+    return name

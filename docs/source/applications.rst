@@ -23,7 +23,7 @@ The output files from the applications will be written to $outputLocation/$label
 is a config parameter and *label* is the name of the application. The plots produced directly by the application
 are stored in the sub-directory *application-plots*. The high-level data produced intermediately (e.g PSF tables)
 can be found in the sub-directories relative to the specific type of application (e.g *ray-tracing* for optics
-related applications, *camera-efficincy* for camera efficiency applications etc). All files related to the
+related applications, *camera-efficiency* for camera efficiency applications etc). All files related to the
 model (e.g sim_telarray config files) are stored in the sub-directory *model*.    
 
 Below you find the list of the currently available applications and their respective documentation.
@@ -36,7 +36,7 @@ List of Applications
 * `compare_cumulative_psf`_
 * `validate_camera_efficiency`_
 * `validate_camera_fov`_
-* `make_regular_array`_
+* `make_regular_arrays`_
 * `produce_array_config`_
 * `sim_showers_for_trigger_rates`_
 
@@ -78,10 +78,10 @@ validate_camera_fov
    :members:
 
 
-make_regular_array
-------------------
+make_regular_arrays
+-------------------
 
-.. automodule:: make_regular_array
+.. automodule:: make_regular_arrays
    :members:
 
 
