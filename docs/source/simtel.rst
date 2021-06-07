@@ -19,6 +19,12 @@ and also the PSF image plotting.
 .. automodule:: simtel_runner
    :members:
 
+.. automodule:: simtel_runner_ray_tracing
+   :members:
+
+.. automodule:: simtel_runner_array
+   :members:
+
 
 sim_telarray Config Writer
 ==========================

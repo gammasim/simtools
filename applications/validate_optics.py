@@ -159,7 +159,7 @@ if __name__ == '__main__':
         ' for {}\n'.format(telModel.name)
     )
 
-    ray = RayTracing(
+    ray = RayTracing.fromKwargs(
         telescopeModel=telModel,
         sourceDistance=args.src_distance * u.km,
         zenithAngle=args.zenith * u.deg,
