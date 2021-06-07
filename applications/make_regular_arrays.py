@@ -113,7 +113,7 @@ if __name__ == '__main__':
     for site in ['South', 'North']:
         for arrayName in ['1SST', '4SST', '1MST', '4MST', '1LST', '4LST']:
             logger.info('Processing array {}'.format(arrayName))
-            layout = LayoutArray(
+            layout = LayoutArray.fromKwargs(
                 label=label,
                 name=site + '-' + arrayName,
                 **sitePars[site]
