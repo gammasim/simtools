@@ -90,7 +90,7 @@ class SimtelRunner:
             self._logger.error(msg)
             raise ValueError(msg)
 
-    def getRunScript(self, test=False, inputFile=None, run=None):
+    def getRunScript(self, test=False, inputFile=None, run=None, extraCommands=None):
         '''
         Builds and returns the full path of the bash run script containing
         the sim_telarray command.
@@ -98,12 +98,12 @@ class SimtelRunner:
         Parameters
         ----------
         test: bool
-            Test flag for faster execution. 
+            Test flag for faster execution.
         inputFile: str or Path
             Full path of the input CORSIKA file.
         run: int
             Run number.
-            
+
         Returns
         -------
         Path
@@ -115,10 +115,20 @@ class SimtelRunner:
         )
         self._logger.debug('Run bash script - {}'.format(self._scriptFile))
 
+        extraCommands = self._getExtraCommands(extraCommands)
+        self._logger.debug('Extra commands to be added to the run script {}'.format(extraCommands))
+
         command = self._makeRunCommand(inputFile=inputFile, run=run)
         with self._scriptFile.open('w') as file:
             # TODO: header
             file.write('#/usr/bin/bash\n\n')
+
+            if extraCommands is not None:
+                file.write('# Writing extras\n')
+                for line in extraCommands:
+                    file.write('{}\n'.format(line))
+                file.write('# End of extras\n\n')
+
             N = 1 if test else self.RUNS_PER_SET
             for _ in range(N):
                 file.write('{}\n\n'.format(command))
@@ -194,6 +204,19 @@ class SimtelRunner:
             + 'it should be implemented in the sub class'
         )
         return False
+
+    def _getExtraCommands(self, extra):
+        '''
+        Get extra commands by combining the one given as argument and
+        what is given in config.yml
+        '''
+        extra = gen.copyAsList(extra) if extra is not None else list()
+
+        extraFromConfig = cfg.get('extraCommands')
+        extraFromConfig = gen.copyAsList(extraFromConfig) if extraFromConfig is not None else list()
+
+        extra.extend(extraFromConfig)
+        return extra
 
     @staticmethod
     def _configOption(par, value=None):
