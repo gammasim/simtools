@@ -31,7 +31,7 @@ class ArraySimulator:
     .. code-block:: python
 
     configData = {
-        'simtelDataDirectory': '.',
+        'simtelDataDirectory': '(..)/data',
         'primary': 'gamma',
         'zenith': 20 * u.deg,
         'azimuth': 0 * u.deg,
