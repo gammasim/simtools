@@ -133,7 +133,7 @@ class SimtelRunnerArray(SimtelRunner):
         self._simtelLogDir = simtelBaseDir.joinpath('log')
         self._simtelLogDir.mkdir(parents=True, exist_ok=True)
 
-    def _getLogFile(self, run):
+    def getLogFile(self, run):
         ''' Get full path of the simtel log file for a given run. '''
         fileName = names.simtelLogFileName(
             run=run,
@@ -146,7 +146,7 @@ class SimtelRunnerArray(SimtelRunner):
         )
         return self._simtelLogDir.joinpath(fileName)
 
-    def _getHistogramFile(self, run):
+    def getHistogramFile(self, run):
         ''' Get full path of the simtel histogram file for a given run. '''
         fileName = names.simtelHistogramFileName(
             run=run,
@@ -159,7 +159,7 @@ class SimtelRunnerArray(SimtelRunner):
         )
         return self._simtelDataDir.joinpath(fileName)
 
-    def _getOutputFile(self, run):
+    def getOutputFile(self, run):
         ''' Get full path of the simtel output file for a given run. '''
         fileName = names.simtelOutputFileName(
             run=run,
@@ -174,14 +174,14 @@ class SimtelRunnerArray(SimtelRunner):
 
     def _shallRun(self, run=None):
         ''' Tells if simulations should be run again based on the existence of output files. '''
-        return not self._getOutputFile(run).exists()
+        return not self.getOutputFile(run).exists()
 
     def _makeRunCommand(self, inputFile, run=1):
         ''' Builds and returns the command to run simtel_array. '''
 
-        self._logFile = self._getLogFile(run)
-        histogramFile = self._getHistogramFile(run)
-        outputFile = self._getOutputFile(run)
+        self._logFile = self.getLogFile(run)
+        histogramFile = self.getHistogramFile(run)
+        outputFile = self.getOutputFile(run)
 
         # Array
         command = str(self._simtelSourcePath.joinpath('sim_telarray/bin/sim_telarray'))
@@ -202,7 +202,7 @@ class SimtelRunnerArray(SimtelRunner):
 
     def _checkRunResult(self, run):
         # Checking run
-        if not self._getOutputFile(run).exists():
+        if not self.getOutputFile(run).exists():
             msg = 'sim_telarray output file does not exist.'
             self._logger.error(msg)
             raise InvalidOutputFile(msg)
