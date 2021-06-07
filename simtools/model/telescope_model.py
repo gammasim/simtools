@@ -1,5 +1,6 @@
 import logging
 import shutil
+from copy import copy
 
 import simtools.config as cfg
 import simtools.io_handler as io
@@ -273,7 +274,6 @@ class TelescopeModel:
             self.site,
             self.name,
             self.modelVersion,
-            self._configFileDirectory,
             onlyApplicable=True
         )
 
@@ -281,7 +281,6 @@ class TelescopeModel:
         _sitePars = db.getSiteParameters(
             self.site,
             self.modelVersion,
-            self._configFileDirectory,
             onlyApplicable=True
         )
         # UPDATE: SimtelConfigWriter delas with which parameters should be written or not.
@@ -457,20 +456,39 @@ class TelescopeModel:
                 raise InvalidParameter(msg)
         self._isConfigFileUpdated = False
 
-    def addParameterFile(self, filePath):
+    def addParameterFile(self, parName, filePath):
         '''
         Add a file to the config file directory.
 
         Parameters
         ----------
+        parName: str
+            Name of the parameter.
         filePath: str
             Path of the file to be added to the config file directory.
         '''
+        if not hasattr(self, '_addedParameterFiles'):
+            self._addedParameterFiles = list()
+        self._addedParameterFiles.append(parName)
         shutil.copy(filePath, self._configFileDirectory)
-        return
+
+    def exportModelFiles(self):
+        ''' Exports the model files into the config file directory. '''
+        db = db_handler.DatabaseHandler()
+
+        # Removing parameter files added manually (which are not in DB)
+        parsFromDB = copy(self._parameters)
+        if hasattr(self, '_addedParameterFiles'):
+            for par in self._addedParameterFiles:
+                parsFromDB.pop(par)
+
+        db.exportModelFiles(parsFromDB, self._configFileDirectory)
 
     def exportConfigFile(self):
         ''' Export the config file used by sim_telarray. '''
+
+        # Exporting model file
+        self.exportModelFiles()
 
         # Using SimtelConfigWriter to write the config file.
         self._loadSimtelConfigWriter()
