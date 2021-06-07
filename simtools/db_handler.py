@@ -297,7 +297,7 @@ class DatabaseHandler:
             file = cfg.findFile(fileName, cfg.get('modelFilesLocations'))
         except FileNotFoundError:
             if noFileOk:
-                self._logger.debug('File not found but noFileOk')
+                self._logger.debug('File {} not found but noFileOk'.format(fileName))
                 return
             else:
                 raise
