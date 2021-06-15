@@ -1,5 +1,6 @@
+label: 'test-production'
+
 default:
-  label: 'test-production'
   site: North
   layoutName: Prod5
   modelVersion: Prod5
@@ -12,6 +13,7 @@ default:
     eslope: -2
     zenith: '20 deg'
     phi: '0 deg'
+    nruns: 3
 
 proton:
   showers:
@@ -28,4 +30,5 @@ gamma:
     erange: ['10 GeV', '300 TeV']
     cscat: [5, '1500.0 m', 0]
     viewcone: '0 deg'
-
+  array:
+    M-05: NectarCam-D
