@@ -77,13 +77,19 @@ def proccessConfigFile(configFile):
     configArrays = dict()
 
     for primary, primaryData in configData.items():
-        configShowers[primary] = copy(defaultData.get('showers', dict()))
-        configArrays[primary] = copy(defaultData.get('array', dict()))
+        configShowers[primary] = copy(defaultData.pop('showers', dict()))
+        configArrays[primary] = copy(defaultData.pop('array', dict()))
 
         for key, value in primaryData.get('showers', dict()).items():
             configShowers[primary][key] = value
+        configShowers[primary]['primary'] = primary
 
         for key, value in primaryData.get('array', dict()).items():
+            configArrays[primary][key] = value
+
+        # Filling in the remaining default keys
+        for key, value in defaultData.items():
+            configShowers[primary][key] = value
             configArrays[primary][key] = value
 
     return label, configShowers, configArrays
@@ -129,4 +135,9 @@ if __name__ == '__main__':
     # ShowerSimulators
     showerSimulators = list()
     for primary, configData in showerConfigs.items():
-        ss = ShowerSimulator()
+        print(configData)
+        ss = ShowerSimulator(label=label, showerConfigData=configData)
+        print(ss)
+        showerSimulators.append(ss)
+
+    print(showerSimulators)
