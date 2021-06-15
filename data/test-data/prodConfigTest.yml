@@ -1,10 +1,31 @@
-site: North
-layoutName: Prod5
-modelVersion: Prod5
 default:
-    LST: '1'
-    MST: FlashCam-D
-M-05:
-    name: NectarCam-D
-    fadc_pulse_shape: Pulse_template_nectarCam_17042020-noshift.dat
-    discriminator_pulse_shape: Pulse_template_nectarCam_17042020-noshift.dat
+  label: 'test-production'
+  site: North
+  layoutName: Prod5
+  modelVersion: Prod5
+  array:
+    default:
+      LST: 'D234'
+      MST: FlashCam-D
+    L-01: '1'
+  showers:
+    eslope: -2
+    zenith: '20 deg'
+    phi: '0 deg'
+
+proton:
+  showers:
+    nruns: 200
+    nshow: 10000
+    erange: ['30 GeV', '600 TeV']
+    cscat: [20, '2000.0 m', 0]
+    viewcone: '10 deg'
+
+gamma:
+  showers:
+    nruns: 100
+    nshow: 10000
+    erange: ['10 GeV', '300 TeV']
+    cscat: [5, '1500.0 m', 0]
+    viewcone: '0 deg'
+
