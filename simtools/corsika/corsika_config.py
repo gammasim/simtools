@@ -276,6 +276,9 @@ class CorsikaConfig:
                     valueArgsWithUnits.append(arg)
                     continue
 
+                if isinstance(arg, str):
+                    arg = u.quantity.Quantity(arg)
+
                 if not isinstance(arg, u.quantity.Quantity):
                     msg = 'CORSIKA input given without unit: {}'.format(parName)
                     self._logger.error(msg)

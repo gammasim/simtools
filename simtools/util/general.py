@@ -200,6 +200,10 @@ def _validateAndConvertValue(parName, parInfo, valueIn):
                 valueWithUnits.append(arg)
                 continue
 
+            # Converting strings to Quantity
+            if isinstance(arg, str):
+                arg = u.quantity.Quantity(arg)
+
             if not isinstance(arg, u.quantity.Quantity):
                 msg = 'Config entry given without unit: {}'.format(parName)
                 logger.error(msg)
