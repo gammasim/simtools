@@ -13,11 +13,10 @@ default:
     eslope: -2
     zenith: '20 deg'
     phi: '0 deg'
-    nruns: 3
 
 proton:
   showers:
-    nruns: 200
+    runList: [1, 200]
     nshow: 10000
     erange: ['30 GeV', '600 TeV']
     cscat: [20, '2000.0 m', 0]
@@ -25,7 +24,7 @@ proton:
 
 gamma:
   showers:
-    nruns: 100
+    runList: [0, 100]
     nshow: 10000
     erange: ['10 GeV', '300 TeV']
     cscat: [5, '1500.0 m', 0]
