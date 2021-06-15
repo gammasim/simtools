@@ -54,6 +54,7 @@
 
 import logging
 import argparse
+from copy import copy
 
 import astropy.units as u
 from astropy.io.misc import yaml
@@ -70,9 +71,22 @@ def proccessConfigFile(configFile):
     with open(configFile) as file:
         configData = yaml.load(file)
 
-    print(configData)
+    label = configData.pop('label', dict())
+    defaultData = configData.pop('default', dict())
+    configShowers = dict()
+    configArrays = dict()
 
-    return None, None
+    for primary, primaryData in configData.items():
+        configShowers[primary] = copy(defaultData.get('showers', dict()))
+        configArrays[primary] = copy(defaultData.get('array', dict()))
+
+        for key, value in primaryData.get('showers', dict()).items():
+            configShowers[primary][key] = value
+
+        for key, value in primaryData.get('array', dict()).items():
+            configArrays[primary][key] = value
+
+    return label, configShowers, configArrays
 
 
 if __name__ == '__main__':
@@ -110,4 +124,9 @@ if __name__ == '__main__':
 
     configFile = args.config
 
-    showerConfigs, arrayConfigs = proccessConfigFile(args.config)
+    label, showerConfigs, arrayConfigs = proccessConfigFile(args.config)
+
+    # ShowerSimulators
+    showerSimulators = list()
+    for primary, configData in showerConfigs.items():
+        ss = ShowerSimulator()
