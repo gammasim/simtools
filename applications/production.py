@@ -56,12 +56,23 @@ import logging
 import argparse
 
 import astropy.units as u
+from astropy.io.misc import yaml
 
 import simtools.io_handler as io
 import simtools.config as cfg
 import simtools.util.general as gen
 from simtools.shower_simulator import ShowerSimulator
 from simtools.array_simulator import ArraySimulator
+
+
+def proccessConfigFile(configFile):
+
+    with open(configFile) as file:
+        configData = yaml.load(file)
+
+    print(configData)
+
+    return None, None
 
 
 if __name__ == '__main__':
@@ -97,46 +108,6 @@ if __name__ == '__main__':
     logger = logging.getLogger()
     logger.setLevel(gen.getLogLevelFromUser(args.logLevel))
 
-    # Output directory to save files related directly to this app
-    outputDir = io.getApplicationOutputDirectory(cfg.get('outputLocation'), label)
+    configFile = args.config
 
-    showerConfigData = {
-        'corsikaDataDirectory': args.output,
-        'site': args.site,
-        'layoutName': args.array,
-        'runRange': [1, args.nruns + 1],
-        'nshow': args.nevents,
-        'primary': args.primary,
-        'erange': [10 * u.GeV, 300 * u.TeV],
-        'eslope': -2,
-        'zenith': args.zenith * u.deg,
-        'azimuth': args.azimuth * u.deg,
-        'viewcone': 10 * u.deg,
-        'cscat': [20, 1500 * u.m, 0]
-    }
-
-    showerSimulator = ShowerSimulator(
-        label=label,
-        showerConfigData=showerConfigData
-    )
-
-    if not args.test:
-        showerSimulator.submit()
-    else:
-        logger.info('Test flag is on - it will not submit any job.')
-        logger.info('This is an example of the run script:')
-        showerSimulator.submit(runList=[1], submitCommand='more ')
-
-    # Exporting the list of output/log/input files into the application folder
-    outputFileList = outputDir.joinpath('outputFiles_{}.list'.format(args.primary))
-    logFileList = outputDir.joinpath('logFiles_{}.list'.format(args.primary))
-
-    def printListIntoFile(listOfFiles, fileName):
-        with open(fileName, 'w') as f:
-            for line in listOfFiles:
-                f.write(line + '\n')
-
-    logger.info('List of output files exported to {}'.format(outputFileList))
-    printListIntoFile(showerSimulator.getListOfOutputFiles(), outputFileList)
-    logger.info('List of log files exported to {}'.format(logFileList))
-    printListIntoFile(showerSimulator.getListOfLogFiles(), logFileList)
+    showerConfigs, arrayConfigs = proccessConfigFile(args.config)
