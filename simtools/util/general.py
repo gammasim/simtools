@@ -255,7 +255,7 @@ def collectDataFromYamlOrDict(inYaml, inDict, allowEmpty=False):
     else:
         msg = 'configData has not been provided (by yaml file neither by dict)'
         if allowEmpty:
-            _logger.warning(msg)
+            _logger.debug(msg)
             return None
         else:
             _logger.error(msg)
