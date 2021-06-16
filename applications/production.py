@@ -89,6 +89,7 @@ def proccessConfigFile(configFile):
 
         for key, value in primaryData.get('array', dict()).items():
             configArrays[primary][key] = value
+        configArrays[primary]['primary'] = primary
 
         # Filling in the remaining default keys
         for key, value in thisDefault.items():
@@ -136,11 +137,28 @@ if __name__ == '__main__':
     label, showerConfigs, arrayConfigs = proccessConfigFile(args.config)
 
     # ShowerSimulators
-    showerSimulators = list()
+    showerSimulators = dict()
     for primary, configData in showerConfigs.items():
-        # print(configData)
         ss = ShowerSimulator(label=label, showerConfigData=configData)
-        # print(ss)
-        showerSimulators.append(ss)
+        showerSimulators[primary] = ss
 
-    # print(showerSimulators)
+    # ArraySimulators
+    arraySimulators = dict()
+    for primary, configData in arrayConfigs.items():
+        aa = ArraySimulator(label=label, configData=configData)
+        arraySimulators[primary] = aa
+
+    submitCommand = 'more ' if args.test else None
+
+    # Running Showers
+    for primary, shower in showerSimulators.items():
+        print('Running ShowerSimulator for primary {}'.format(primary))
+        shower.submit(submitCommand=submitCommand)
+
+    # Running Arrays
+    for primary, array in arraySimulators.items():
+        print('Running ArraySimulator for primary {}'.format(primary))
+
+        inputList = showerSimulators[primary].getListOfOutputFiles()
+
+        array.submit(inputFileList=inputList, submitCommand=submitCommand)
