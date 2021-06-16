@@ -16,7 +16,7 @@ default:
 
 proton:
   showers:
-    runRange: [1, 200]
+    runRange: [1, 10]
     nshow: 10000
     erange: [30 GeV, '600 TeV']
     cscat: [20, '2000.0 m', 0]
@@ -24,13 +24,13 @@ proton:
   array:
     viewcone: [10 deg, 10 deg]
 
-gamma:
-  showers:
-    runRange: [1, 100]
-    nshow: 10000
-    erange: ['10 GeV', '300 TeV']
-    cscat: [5, '1500.0 m', 0]
-    viewcone: '0 deg'
-  array:
-    M-05: NectarCam-D
-    viewcone: [0 deg, 0 deg]
+# gamma:
+#   showers:
+#     runRange: [1, 100]
+#     nshow: 10000
+#     erange: ['10 GeV', '300 TeV']
+#     cscat: [5, '1500.0 m', 0]
+#     viewcone: '0 deg'
+#   array:
+#     M-05: NectarCam-D
+#     viewcone: [0 deg, 0 deg]
