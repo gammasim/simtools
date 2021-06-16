@@ -3,8 +3,8 @@ label: 'test-production'
 default:
   site: North
   layoutName: Prod5
-  modelVersion: Prod5
   array:
+    modelVersion: Prod5
     default:
       LST: 'D234'
       MST: FlashCam-D
@@ -18,7 +18,7 @@ proton:
   showers:
     runList: [1, 200]
     nshow: 10000
-    erange: ['30 GeV', '600 TeV']
+    erange: [30 GeV, '600 TeV']
     cscat: [20, '2000.0 m', 0]
     viewcone: '10 deg'
 
