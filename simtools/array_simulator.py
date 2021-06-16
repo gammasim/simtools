@@ -218,7 +218,9 @@ class ArraySimulator:
 
         self._logger.info('Starting submission')
         for file in inputFileList:
+            print('file ', file)
             run = self._guessRunFromFile(file)
+            print('run ', run)
             runScript = self._simtelRunner.getRunScript(
                 run=run,
                 extraCommands=extraCommands
@@ -245,7 +247,7 @@ class ArraySimulator:
         Input file names must follow 'run1234_*' pattern.
         If not found, returns 1.
         '''
-        fileName = str(file)
+        fileName = str(Path(file).name)
         runStr = fileName[3:fileName.find('_')]
 
         try:
