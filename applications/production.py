@@ -83,10 +83,19 @@ def proccessConfigFile(configFile):
         configShowers[primary] = copy(thisDefault.pop('showers', dict()))
         configArrays[primary] = copy(thisDefault.pop('array', dict()))
 
+        # Grabbing common entries for showers and array
+        for key, value in primaryData.items():
+            if key in ['showers', 'array']:
+                continue
+            configShowers[primary][key] = value
+            configArrays[primary][key] = value
+
+        # Grabbing showers entries
         for key, value in primaryData.get('showers', dict()).items():
             configShowers[primary][key] = value
         configShowers[primary]['primary'] = primary
 
+        # Grabbing array entries
         for key, value in primaryData.get('array', dict()).items():
             configArrays[primary][key] = value
         configArrays[primary]['primary'] = primary
