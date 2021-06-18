@@ -928,7 +928,7 @@ class DatabaseHandler:
         dbEntry['Value'] = value
         dbEntry['Type'] = kwargs['Type'] if 'Type' in kwargs else str(type(value))
         dbEntry['File'] = False
-        if '.dat' in str(value) or '.txt' in str(value):
+        if self._isFile(value):
             dbEntry['File'] = True
 
         kwargs.pop('Type', None)
