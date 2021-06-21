@@ -3,6 +3,7 @@ label: 'test-production'
 default:
   site: North
   layoutName: Prod5
+  dataDirectory: /home/nb315/Work/Projects/CTA_MC/data-test
   array:
     modelVersion: Prod5
     default:
