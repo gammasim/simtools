@@ -63,7 +63,7 @@ from simtools.shower_simulator import ShowerSimulator
 from simtools.array_simulator import ArraySimulator
 
 
-def proccessConfigFile(configFile):
+def proccessConfigFile(configFile, primaryConfig):
 
     with open(configFile) as file:
         configData = yaml.load(file)
@@ -74,6 +74,9 @@ def proccessConfigFile(configFile):
     configArrays = dict()
 
     for primary, primaryData in configData.items():
+
+        if primaryConfig is not None and primary != primaryConfig:
+            continue
 
         thisDefault = copy(defaultData)
 
@@ -119,6 +122,13 @@ if __name__ == '__main__':
         type=str,
         required=True
     )
+    parser.add_argument(
+        '--primary',
+        help='Primary to be selected from the config file.',
+        type=str,
+        required=False,
+        choices=['gamma', 'proton', 'helium']
+    )
     group = parser.add_mutually_exclusive_group()
     group.add_argument(
         '--array_only',
@@ -149,9 +159,7 @@ if __name__ == '__main__':
     logger = logging.getLogger()
     logger.setLevel(gen.getLogLevelFromUser(args.logLevel))
 
-    configFile = args.config
-
-    label, showerConfigs, arrayConfigs = proccessConfigFile(args.config)
+    label, showerConfigs, arrayConfigs = proccessConfigFile(args.config, args.primary)
 
     submitCommand = 'more ' if args.test else None
 
