@@ -56,11 +56,8 @@ import logging
 import argparse
 from copy import copy
 
-import astropy.units as u
 from astropy.io.misc import yaml
 
-import simtools.io_handler as io
-import simtools.config as cfg
 import simtools.util.general as gen
 from simtools.shower_simulator import ShowerSimulator
 from simtools.array_simulator import ArraySimulator
@@ -158,25 +155,25 @@ if __name__ == '__main__':
 
     submitCommand = 'more ' if args.test else None
 
-    if not args.array_only:
-        # ShowerSimulators
-        showerSimulators = dict()
-        for primary, configData in showerConfigs.items():
-            ss = ShowerSimulator(label=label, showerConfigData=configData)
-            showerSimulators[primary] = ss
+    # ShowerSimulators
+    showerSimulators = dict()
+    for primary, configData in showerConfigs.items():
+        ss = ShowerSimulator(label=label, showerConfigData=configData)
+        showerSimulators[primary] = ss
 
+    if not args.array_only:
         # Running Showers
         for primary, shower in showerSimulators.items():
             print('Running ShowerSimulator for primary {}'.format(primary))
             shower.submit(submitCommand=submitCommand)
 
-    if not args.showers_only:
-        # ArraySimulators
-        arraySimulators = dict()
-        for primary, configData in arrayConfigs.items():
-            aa = ArraySimulator(label=label, configData=configData)
-            arraySimulators[primary] = aa
+    # ArraySimulators
+    arraySimulators = dict()
+    for primary, configData in arrayConfigs.items():
+        aa = ArraySimulator(label=label, configData=configData)
+        arraySimulators[primary] = aa
 
+    if not args.showers_only:
         # Running Arrays
         for primary, array in arraySimulators.items():
             print('Running ArraySimulator for primary {}'.format(primary))
