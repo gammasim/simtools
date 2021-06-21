@@ -1,4 +1,4 @@
-simtelDataDirectory:
+dataDirectory:
   len: 1
   unit: null
   default: null
