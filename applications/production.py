@@ -122,6 +122,17 @@ if __name__ == '__main__':
         type=str,
         required=True
     )
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument(
+        '--array_only',
+        help='Simulates only array detection, no showers',
+        action='store_true'
+    )
+    group.add_argument(
+        '--showers_only',
+        help='Simulates only showers, no array detection',
+        action='store_true'
+    )
     parser.add_argument(
         '--test',
         help='Test option will not submit any job.',
@@ -145,29 +156,30 @@ if __name__ == '__main__':
 
     label, showerConfigs, arrayConfigs = proccessConfigFile(args.config)
 
-    # ShowerSimulators
-    showerSimulators = dict()
-    for primary, configData in showerConfigs.items():
-        ss = ShowerSimulator(label=label, showerConfigData=configData)
-        showerSimulators[primary] = ss
-
-    # ArraySimulators
-    arraySimulators = dict()
-    for primary, configData in arrayConfigs.items():
-        aa = ArraySimulator(label=label, configData=configData)
-        arraySimulators[primary] = aa
-
     submitCommand = 'more ' if args.test else None
 
-    # Running Showers
-    for primary, shower in showerSimulators.items():
-        print('Running ShowerSimulator for primary {}'.format(primary))
-        shower.submit(submitCommand=submitCommand)
+    if not args.array_only:
+        # ShowerSimulators
+        showerSimulators = dict()
+        for primary, configData in showerConfigs.items():
+            ss = ShowerSimulator(label=label, showerConfigData=configData)
+            showerSimulators[primary] = ss
 
-    # Running Arrays
-    for primary, array in arraySimulators.items():
-        print('Running ArraySimulator for primary {}'.format(primary))
+        # Running Showers
+        for primary, shower in showerSimulators.items():
+            print('Running ShowerSimulator for primary {}'.format(primary))
+            shower.submit(submitCommand=submitCommand)
 
-        inputList = showerSimulators[primary].getListOfOutputFiles()
+    if not args.showers_only:
+        # ArraySimulators
+        arraySimulators = dict()
+        for primary, configData in arrayConfigs.items():
+            aa = ArraySimulator(label=label, configData=configData)
+            arraySimulators[primary] = aa
 
-        array.submit(inputFileList=inputList, submitCommand=submitCommand)
+        # Running Arrays
+        for primary, array in arraySimulators.items():
+            print('Running ArraySimulator for primary {}'.format(primary))
+
+            inputList = showerSimulators[primary].getListOfOutputFiles()
+            array.submit(inputFileList=inputList, submitCommand=submitCommand)
