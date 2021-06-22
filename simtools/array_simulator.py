@@ -220,8 +220,8 @@ class ArraySimulator:
         for file in inputFileList:
             run = self._guessRunFromFile(file)
 
-            self._logger.info('Input file: ', file)
-            self._logger.info('Run:', run)
+            self._logger.info('Input file: {}'.format(file))
+            self._logger.info('Run:'.format(run))
 
             runScript = self._simtelRunner.getRunScript(
                 run=run,
