@@ -213,6 +213,7 @@ class CorsikaRunner:
         scriptFileName = names.corsikaRunScriptFileName(
             arrayName=self.layoutName,
             site=self.site,
+            primary=self.corsikaConfig.primary,
             run=runNumber,
             label=self.label
         )
