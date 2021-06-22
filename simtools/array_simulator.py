@@ -222,6 +222,7 @@ class ArraySimulator:
 
             runScript = self._simtelRunner.getRunScript(
                 run=run,
+                inputFile=file,
                 extraCommands=extraCommands
             )
             self._logger.info('Run {} - Submitting script {}'.format(run, runScript))
