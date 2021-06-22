@@ -262,7 +262,7 @@ class ShowerSimulator:
                 self._logger.error(msg)
                 raise InvalidRunsToSimulate(msg)
             else:
-                runRange = np.arange(runRange[0], runRange[1])
+                runRange = np.arange(runRange[0], runRange[1] + 1)
                 self._logger.debug('runRange: {}'.format(runRange))
                 validatedRuns.extend(list(runRange))
 
