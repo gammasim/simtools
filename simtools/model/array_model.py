@@ -100,6 +100,9 @@ class ArrayModel:
         self._setConfigFileDirectory()
 
         self._buildArrayModel()
+
+        self._telescopeModelFilesExported = False
+        self._arrayModelFileExported = False
         # End of init
 
     @property
@@ -344,6 +347,8 @@ class ArrayModel:
             else:
                 self._logger.debug('Config file for tel {} already exists - skipping'.format(name))
 
+        self._telescopeModelFilesExported = True
+
     def exportSimtelArrayConfigFile(self):
         '''
         Export sim_telarray config file for the array into the output model
@@ -373,6 +378,7 @@ class ArrayModel:
             telescopeModel=self._telescopeModel,
             siteParameters=self._siteParameters
         )
+        self._arrayModelFileExported = True
 
     # END exportSimtelArrayConfigFile
 
@@ -381,8 +387,10 @@ class ArrayModel:
         Export sim_telarray config file for the array and for each individual telescope
         into the output model directory.
         '''
-        self.exportSimtelTelescopeConfigFiles()
-        self.exportSimtelArrayConfigFile()
+        if not self._telescopeModelFilesExported:
+            self.exportSimtelTelescopeConfigFiles()
+        if not self._arrayModelFileExported:
+            self.exportSimtelArrayConfigFile()
 
     def getConfigFile(self):
         '''
