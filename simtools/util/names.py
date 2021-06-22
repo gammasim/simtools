@@ -793,7 +793,7 @@ def corsikaRunScriptFileName(arrayName, site, run, label=None):
     str
         File path.
     '''
-    name = 'run-corsika-run{}-{}-{}'.format(run, arrayName, site)
+    name = 'run{}-corsika-{}-{}'.format(run, arrayName, site)
     name += '_{}'.format(label) if label is not None else ''
     name += '.sh'
     return name
