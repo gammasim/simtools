@@ -6,6 +6,8 @@ default:
   dataDirectory: /home/nb315/Work/Projects/CTA_MC/data-test
   array:
     modelVersion: Prod5
+    zenith: 20 deg
+    phi: 0 deg
     default:
       LST: 'D234'
       MST: FlashCam-D
