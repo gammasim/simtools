@@ -218,9 +218,11 @@ class ArraySimulator:
 
         self._logger.info('Starting submission')
         for file in inputFileList:
-            print('file ', file)
             run = self._guessRunFromFile(file)
-            print('run ', run)
+
+            self._logger.info('Input file: ', file)
+            self._logger.info('Run:', run)
+
             runScript = self._simtelRunner.getRunScript(
                 run=run,
                 extraCommands=extraCommands
