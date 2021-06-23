@@ -3,53 +3,39 @@
 '''
     Summary
     -------
-    This application simulates showers to be used in trigger rate calculations.
-    Arrays with one (1MST) or four telescopes (4LST) can be used, in case of \
-    mono or stereo trigger configurations, respectively.
+    This application perform array simulations.
 
-    Simulations are managed by the shower_simulator module.
-    Each run is simulated in a job. Each job is submitted by using the submission \
-    command from the global config settings (see config_template.yml). \
-    The config entry extraCommands can be used to extra commands to be ran in each job,
-    before the actual simulation.
+    The simulations are split into two stages: showers and array.
+    Shower simulations are performed with CORSIKA and array simulations \
+    with sim_telarray.
 
-    At the moment, the shower simulations are performed by CORSIKA, which requires \
-    the zstd package. Please, make sure that the command to set your zstd path is \
-    properly set by the extraCommands in config.yml.
+    A configuration file is required. See data/test-data/prodConfigTest.yml \
+    for an example.
 
     Command line arguments
     ----------------------
-    array (str, required)
-        Name of the array (1MST, 4LST ...).
-    site (str, required)
-        South or North.
-    primary (str, required)
-        Name of the primary particle (proton, helium ...).
-    nruns (int, optional)
-        Number of runs to be simulated (default=100).
-    nevents (int, optional)
-        Number of events simulated per run (default=100000).
-    zenith (float, optional)
-        Zenith angle in deg (default=20).
-    azimuth (float, optional)
-        Azimuth angle in deg (default=0).
-    output (str, optional)
-        Path of the directory to store the output simulations. By default, \
-        the standard output directory defined by config will be used.
+    config (str, required)
+        Path to the configuration file.
+    primary (str)
+        Name of the primary to be selected from the configuration file. In case it \
+        is not given, all the primaries listed in the configuration file will be simulated.
+    array_only (activation mode)
+        Simulates only array detection (no showers).
+    showers_only (activation mode)
+        Simulates only showers (no array detection).
     test (activation mode, optional)
-        If activated, no job will be submitted. Instead, an example of the \
-        run script willbe printed.
+        If activated, no job will be submitted, but all configuration files
+        and run scripts will be created. 
     verbosity (str, optional)
         Log level to print (default=INFO).
 
     Example
     -------
-    Producing a set of proton showers for trigger rate simulations of LST.
+    Testing a mini-prod5 simulation.
 
     .. code-block:: console
 
-        python applications/sim_showers_for_trigger_rates.py -a 4LST -s North \
-        --primary proton --nruns 100 --nevents 10000 --output {some dir for large files}
+        python applications/production -c data/test-data/prodConfigTest.yml --test
 '''
 
 import logging
