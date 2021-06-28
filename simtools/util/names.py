@@ -773,7 +773,7 @@ def corsikaOutputGenericFileName(arrayName, site, label=None):
     return name
 
 
-def corsikaRunScriptFileName(arrayName, site, run, label=None):
+def corsikaRunScriptFileName(arrayName, site, primary, run, label=None):
     '''
     Corsika script file path.
 
@@ -793,7 +793,7 @@ def corsikaRunScriptFileName(arrayName, site, run, label=None):
     str
         File path.
     '''
-    name = 'run-corsika-run{}-{}-{}'.format(run, arrayName, site)
+    name = 'run{}-corsika-{}-{}-{}'.format(run, arrayName, site, primary)
     name += '_{}'.format(label) if label is not None else ''
     name += '.sh'
     return name

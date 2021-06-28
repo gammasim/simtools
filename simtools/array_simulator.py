@@ -31,7 +31,7 @@ class ArraySimulator:
     .. code-block:: python
 
     configData = {
-        'simtelDataDirectory': '(..)/data',
+        'dataDirectory': '(..)/data',
         'primary': 'gamma',
         'zenith': 20 * u.deg,
         'azimuth': 0 * u.deg,
@@ -164,7 +164,7 @@ class ArraySimulator:
             simtelSourcePath=self._simtelSourcePath,
             filesLocation=self._filesLocation,
             configData={
-                'simtelDataDirectory': self.config.simtelDataDirectory,
+                'simtelDataDirectory': self.config.dataDirectory,
                 'primary': self.config.primary,
                 'zenithAngle': self.config.zenithAngle * u.deg,
                 'azimuthAngle': self.config.azimuthAngle * u.deg
@@ -219,8 +219,10 @@ class ArraySimulator:
         self._logger.info('Starting submission')
         for file in inputFileList:
             run = self._guessRunFromFile(file)
+
             runScript = self._simtelRunner.getRunScript(
                 run=run,
+                inputFile=file,
                 extraCommands=extraCommands
             )
             self._logger.info('Run {} - Submitting script {}'.format(run, runScript))
@@ -245,7 +247,7 @@ class ArraySimulator:
         Input file names must follow 'run1234_*' pattern.
         If not found, returns 1.
         '''
-        fileName = str(file)
+        fileName = str(Path(file).name)
         runStr = fileName[3:fileName.find('_')]
 
         try:

@@ -200,6 +200,10 @@ def _validateAndConvertValue(parName, parInfo, valueIn):
                 valueWithUnits.append(arg)
                 continue
 
+            # Converting strings to Quantity
+            if isinstance(arg, str):
+                arg = u.quantity.Quantity(arg)
+
             if not isinstance(arg, u.quantity.Quantity):
                 msg = 'Config entry given without unit: {}'.format(parName)
                 logger.error(msg)
@@ -251,7 +255,7 @@ def collectDataFromYamlOrDict(inYaml, inDict, allowEmpty=False):
     else:
         msg = 'configData has not been provided (by yaml file neither by dict)'
         if allowEmpty:
-            _logger.warning(msg)
+            _logger.debug(msg)
             return None
         else:
             _logger.error(msg)
