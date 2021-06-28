@@ -156,6 +156,8 @@ class CorsikaRunner:
             # corsikaDataDirectory given and not None.
             self._corsikaDataDirectory = Path(corsikaDataDirectoryFromConfig)
 
+        self._corsikaDataDirectory = self._corsikaDataDirectory.joinpath('corsika-data')
+
         # Copying corsikaConfigData and removing corsikaDataDirectory
         # (it does not go to CorsikaConfig)
         self._corsikaConfigData = copy(corsikaConfigData)
@@ -211,6 +213,7 @@ class CorsikaRunner:
         scriptFileName = names.corsikaRunScriptFileName(
             arrayName=self.layoutName,
             site=self.site,
+            primary=self.corsikaConfig.primary,
             run=runNumber,
             label=self.label
         )
