@@ -113,7 +113,15 @@ if __name__ == '__main__':
         help='Primary to be selected from the config file.',
         type=str,
         required=False,
-        choices=['gamma', 'proton', 'helium']
+        choices=[
+            'gamma',
+            'electron',
+            'proton',
+            'helium',
+            'nitrogen',
+            'silicon',
+            'iron'
+        ]
     )
     group = parser.add_mutually_exclusive_group()
     group.add_argument(
