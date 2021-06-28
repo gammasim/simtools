@@ -20,12 +20,12 @@
         Name of the primary to be selected from the configuration file. In case it \
         is not given, all the primaries listed in the configuration file will be simulated.
     array_only (activation mode)
-        Simulates only array detection (no showers).
+        Simulates only array detector (no showers).
     showers_only (activation mode)
-        Simulates only showers (no array detection).
+        Simulates only showers (no array detector).
     test (activation mode, optional)
-        If activated, no job will be submitted, but all configuration files
-        and run scripts will be created. 
+        If activated, no job will be submitted, but all configuration files \
+        and run scripts will be created.
     verbosity (str, optional)
         Log level to print (default=INFO).
 
