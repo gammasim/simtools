@@ -149,8 +149,6 @@ class ShowerSimulator:
 
     def _setCorsikaRunner(self):
         ''' Creating a CorsikaRunner and setting it to self._corsikaRunner. '''
-        # print('HERE')
-        # print(self._corsikaConfigData)
         self._corsikaRunner = CorsikaRunner(
             site=self.site,
             layoutName=self.layoutName,
