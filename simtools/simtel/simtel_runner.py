@@ -111,7 +111,7 @@ class SimtelRunner:
         '''
         self._logger.debug('Creating run bash script')
         self._scriptFile = self._baseDirectory.joinpath(
-            'run{}_script'.format(run if run is not None else '')
+            'run{}-simtel'.format(run if run is not None else '')
         )
         self._logger.debug('Run bash script - {}'.format(self._scriptFile))
 
