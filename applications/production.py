@@ -35,7 +35,7 @@
 
     .. code-block:: console
 
-        python applications/production -c data/test-data/prodConfigTest.yml --test
+        python applications/production.py -c data/test-data/prodConfigTest.yml --test
 '''
 
 import logging
