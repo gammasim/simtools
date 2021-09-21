@@ -20,7 +20,7 @@ class TestShowerSimulator(unittest.TestCase):
     def setUp(self):
         self.label = 'test-shower-simulator'
         self.showerConfigData = {
-            # 'corsikaDataDirectory': './corsika-data',
+            'dataDirectory': './corsika-data',
             'site': 'South',
             'layoutName': 'Prod5',
             'runList': [3, 4],
