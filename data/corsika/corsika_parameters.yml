@@ -24,7 +24,7 @@ USER_PARAMETERS:
     len: 2
     names: ['THETA', 'ZENITH']
     unit: [!astropy.units.Unit {unit: deg}, !astropy.units.Unit {unit: deg}]
-  PHIP:
+  AZm:
     len: 2
     names: ['PHI', 'AZIMUTH']
     unit: [!astropy.units.Unit {unit: deg}, !astropy.units.Unit {unit: deg}]
@@ -65,12 +65,14 @@ SITE_PARAMETERS:
     OBSLEV: [2150.e2]
     ATMOSPHERE: [26, 'Y']
     MAGNET: [20.925, -9.119]
-    ARRANG: [-3.433]
+    # ARRANG: [-3.433]
+    ARRANG: [0]
   North:
     OBSLEV: [2158.e2]
     ATMOSPHERE: [36, 'Y']
     MAGNET: [30.576, 23.571]
-    ARRANG: [-5.3195]
+    # ARRANG: [-5.3195]
+    ARRANG: [0]
 
 INTERACTION_FLAGS:
   FIXHEI: [0., 0]
