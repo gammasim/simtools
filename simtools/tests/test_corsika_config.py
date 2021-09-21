@@ -49,6 +49,9 @@ class TestCorsikaConfig(unittest.TestCase):
         self.assertEqual(self.corsikaConfig.getUserParameter('nshow'), 100)
         self.assertEqual(self.corsikaConfig.getUserParameter('thetap'), [20, 20])
         self.assertEqual(self.corsikaConfig.getUserParameter('erange'), [10., 10000.])
+        # Testing convertion between AZM (sim_telarray) and PHIP (corsika)
+        self.assertEqual(self.corsikaConfig.getUserParameter('azm'), [0., 0.])
+        self.assertEqual(self.corsikaConfig.getUserParameter('phip'), [180., 180.])
         with self.assertRaises(KeyError):
             self.corsikaConfig.getUserParameter('inexistent_par')
 
