@@ -24,7 +24,7 @@ USER_PARAMETERS:
     len: 2
     names: ['THETA', 'ZENITH']
     unit: [!astropy.units.Unit {unit: deg}, !astropy.units.Unit {unit: deg}]
-  AZm:
+  AZM:
     len: 2
     names: ['PHI', 'AZIMUTH']
     unit: [!astropy.units.Unit {unit: deg}, !astropy.units.Unit {unit: deg}]
