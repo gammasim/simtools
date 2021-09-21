@@ -1,5 +1,6 @@
 import logging
 import random
+import copy
 
 import astropy.units as u
 from astropy.io.misc import yaml
