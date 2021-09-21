@@ -17,7 +17,7 @@ class TestArraySimulator(unittest.TestCase):
     def setUp(self):
         self.label = 'test-array-simulator'
         self.arrayConfigData = {
-            'simtelDataDirectory': '.',
+            'dataDirectory': '.',
             'primary': 'gamma',
             'zenith': 20 * u.deg,
             'azimuth': 0 * u.deg,
