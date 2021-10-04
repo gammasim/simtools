@@ -467,6 +467,7 @@ class CorsikaConfig:
         configFileName = names.corsikaConfigFileName(
             arrayName=self.layoutName,
             site=self.site,
+            primary=self.primary,
             zenith=self._userParameters['THETAP'],
             viewCone=self._userParameters['VIEWCONE'],
             label=self.label
@@ -530,6 +531,7 @@ class CorsikaConfig:
         return names.corsikaConfigTmpFileName(
             arrayName=self.layoutName,
             site=self.site,
+            primary=self.primary,
             zenith=self._userParameters['THETAP'],
             viewCone=self._userParameters['VIEWCONE'],
             run=runNumber,

@@ -657,7 +657,7 @@ def cameraEfficiencyLogFileName(site, telescopeModelName, zenithAngle, label):
     return name
 
 
-def corsikaConfigFileName(arrayName, site, zenith, viewCone, label=None):
+def corsikaConfigFileName(arrayName, site, primary, zenith, viewCone, label=None):
     '''
     Corsika config file name.
 
@@ -667,6 +667,8 @@ def corsikaConfigFileName(arrayName, site, zenith, viewCone, label=None):
         Array name.
     site: str
         Paranal or LaPalma.
+    primary: str
+        Primary particle (e.g gamma, proton etc).
     zenith: float
         Zenith angle (deg).
     viewCone: list of float
@@ -681,7 +683,7 @@ def corsikaConfigFileName(arrayName, site, zenith, viewCone, label=None):
     '''
     isDiffuse = (viewCone[0] != 0 or viewCone[1] != 0)
 
-    name = 'corsika-config_{}_{}'.format(site, arrayName)
+    name = 'corsika-config_{}_{}_{}'.format(site, arrayName, primary)
     name += '_za{:d}-{:d}'.format(int(zenith[0]), int(zenith[1]))
     name += '_cone{:d}-{:d}'.format(int(viewCone[0]), int(viewCone[1])) if isDiffuse else ''
     name += '_{}'.format(label) if label is not None else ''
@@ -689,7 +691,7 @@ def corsikaConfigFileName(arrayName, site, zenith, viewCone, label=None):
     return name
 
 
-def corsikaConfigTmpFileName(arrayName, site, zenith, viewCone, run, label=None):
+def corsikaConfigTmpFileName(arrayName, site, primary, zenith, viewCone, run, label=None):
     '''
     Corsika config file name.
 
@@ -699,6 +701,8 @@ def corsikaConfigTmpFileName(arrayName, site, zenith, viewCone, run, label=None)
         Array name.
     site: str
         South or North.
+    primary: str
+        Primary particle (e.g gamma, proton etc).
     zenith: float
         Zenith angle (deg).
     viewCone: list of float
@@ -716,9 +720,9 @@ def corsikaConfigTmpFileName(arrayName, site, zenith, viewCone, run, label=None)
     isDiffuse = (viewCone[0] != 0 or viewCone[1] != 0)
 
     name = 'corsika-config-run{}'.format(run)
-    name += '-{}-{}'.format(arrayName, site)
-    name += '-za{:d}-{:d}'.format(int(zenith[0]), int(zenith[1]))
-    name += '-cone{:d}-{:d}'.format(int(viewCone[0]), int(viewCone[1])) if isDiffuse else ''
+    name += '_{}_{}_{}'.format(arrayName, site, primary)
+    name += '_za{:d}-{:d}'.format(int(zenith[0]), int(zenith[1]))
+    name += '_cone{:d}-{:d}'.format(int(viewCone[0]), int(viewCone[1])) if isDiffuse else ''
     name += '_{}'.format(label) if label is not None else ''
     name += '.txt'
     return name
