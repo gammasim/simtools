@@ -112,10 +112,10 @@ if __name__ == '__main__':
         '-t',
         '--task',
         help=(
-            'What task to execute. Options: \n'
-            + '\t-simulate: perform simulations'
-            + '\t-lists: print list of output files'
-            + '\t-inspect: plot sim_telarray histograms for quick inspection'
+            'What task to execute. Options: '
+            + 'simulate (perform simulations),'
+            + 'lists (print list of output files)'
+            + 'inspect (plot sim_telarray histograms for quick inspection)'
         ),
         type=str,
         required=True,
