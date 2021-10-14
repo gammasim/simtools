@@ -19,6 +19,11 @@
     primary (str)
         Name of the primary to be selected from the configuration file. In case it \
         is not given, all the primaries listed in the configuration file will be simulated.
+    task (str)
+        What task to execute. Options:
+            simulate (perform simulations),
+            lists (print list of output files) [NOT IMPLEMENTED]
+            inspect (plot sim_telarray histograms for quick inspection) [NOT IMPLEMENTED]
     array_only (activation mode)
         Simulates only array detector (no showers).
     showers_only (activation mode)
