@@ -38,7 +38,7 @@ class CorsikaConfig:
 
     corsikaConfigData = {
         'primary': 'proton',
-        'nshow': 10000,azimuth
+        'nshow': 10000,
         'nrun': 1,
         'zenith': 20 * u.deg,
         'viewcone': 5 * u.deg,
