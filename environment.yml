@@ -14,6 +14,7 @@ dependencies:
   - sphinx_rtd_theme
   - pyproj
   - eventio
+  - zstandard
 # cheatsheet
 
 # create: conda env create -f environment.yml
