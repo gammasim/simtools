@@ -13,6 +13,7 @@ dependencies:
   - numpydoc
   - sphinx_rtd_theme
   - pyproj
+  - pyeventio
 # cheatsheet
 
 # create: conda env create -f environment.yml
