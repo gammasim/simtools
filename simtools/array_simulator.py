@@ -284,7 +284,7 @@ class ArraySimulator:
         path
             Path of the pdf file.
         '''
-        figName = Path(self._baseDirectory).join('histograms.pdf')
+        figName = self._baseDirectory.joinpath('histograms.pdf')
         histFileList = self.getListOfHistogramFiles()
         simtelHistograms = SimtelHistograms(histFileList)
         simtelHistograms.plotAndSaveFigures(figName)
