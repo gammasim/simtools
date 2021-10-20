@@ -1,8 +1,8 @@
 
 import logging
 import os
-from pathlib import Path
 from copy import copy
+from pathlib import Path
 
 import astropy.units as u
 
@@ -284,7 +284,7 @@ class ArraySimulator:
         path
             Path of the pdf file.
         '''
-        figName = self._baseDirectory.join('histograms.pdf')
+        figName = Path(self._baseDirectory).join('histograms.pdf')
         histFileList = self.getListOfHistogramFiles()
         simtelHistograms = SimtelHistograms(histFileList)
         simtelHistograms.plotAndSaveFigures(figName)
