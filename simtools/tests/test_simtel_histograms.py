@@ -1,13 +1,6 @@
 #!/usr/bin/python3
 
 import logging
-import copy
-import numpy as np
-import matplotlib.pyplot as plt
-from matplotlib.backends.backend_pdf import PdfPages
-
-from eventio import EventIOFile, Histograms
-from eventio.search_utils import yield_toplevel_of_type
 
 import simtools.io_handler as io
 from simtools.simtel.simtel_histograms import SimtelHistograms
