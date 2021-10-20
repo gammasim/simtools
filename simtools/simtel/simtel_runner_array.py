@@ -97,7 +97,6 @@ class SimtelRunnerArray(SimtelRunner):
             self.label,
             'array'
         )
-        self._baseDirectory.mkdir(parents=True, exist_ok=True)
 
         # Loading configData
         _configDataIn = gen.collectDataFromYamlOrDict(configFile, configData)
