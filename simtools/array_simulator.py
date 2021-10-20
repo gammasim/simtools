@@ -9,8 +9,10 @@ import astropy.units as u
 import simtools.config as cfg
 import simtools.io_handler as io
 import simtools.util.general as gen
-from simtools.simtel.simtel_runner_array import SimtelRunnerArray
 from simtools.model.array_model import ArrayModel
+from simtools.simtel.simtel_histograms import SimtelHistograms
+from simtools.simtel.simtel_runner_array import SimtelRunnerArray
+
 
 __all__ = ['ArraySimulator']
 
@@ -63,6 +65,8 @@ class ArraySimulator:
     submit(inputFileList, submitCommand=None, extraCommands=None, test=False):
         Submit a run script as a job. The submit command can be given by submitCommand \
         or it will be taken from the config.yml file.
+    printHistograms():
+        Print histograms and save a pdf file.
     getListOfOutputFiles():
         Get list of output files.
     getListOfInputFiles():
@@ -272,7 +276,20 @@ class ArraySimulator:
         self._results['log'].append(str(self._simtelRunner.getLogFile(run)))
 
     def printHistograms(self):
+        '''
+        Print histograms and save a pdf file.
 
+        Returns
+        -------
+        path
+            Path of the pdf file.
+        '''
+        figName = self._baseDirectory.join('histograms.pdf')
+        histFileList = self.getListOfHistogramFiles()
+        simtelHistograms = SimtelHistograms(histFileList)
+        simtelHistograms.plotAndSaveFigures(figName)
+
+        return figName
 
     def getListOfOutputFiles(self):
         '''
