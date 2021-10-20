@@ -110,7 +110,10 @@ class SimtelRunner:
             Full path of the run script.
         '''
         self._logger.debug('Creating run bash script')
-        self._scriptFile = self._baseDirectory.joinpath(
+
+        self._scriptDir = self._baseDirectory.joinpath('scripts')
+        self._scriptDir.mkdir(parents=True, exist_ok=True)
+        self._scriptFile = self._scriptDir.joinpath(
             'run{}-simtel'.format(run if run is not None else '')
         )
         self._logger.debug('Run bash script - {}'.format(self._scriptFile))
