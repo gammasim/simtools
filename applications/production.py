@@ -197,7 +197,6 @@ if __name__ == '__main__':
             else:
                 continue
 
-
     # ArraySimulators
     arraySimulators = dict()
     for primary, configData in arrayConfigs.items():
@@ -218,10 +217,10 @@ if __name__ == '__main__':
                 print('Printing ArraySimulator file lists for primary {}'.format(primary))
                 print('TODO')
 
-
             elif args.task == 'inspect':
                 print('Plotting ArraySimulator histograms for primary {}'.format(primary))
-                print('TODO')
+                file = array.printHistograms()
+                print('Histograms file {}'.format(file))
 
             else:
                 continue
