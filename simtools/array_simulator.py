@@ -110,6 +110,12 @@ class ArraySimulator:
         self._simtelSourcePath = Path(cfg.getConfigArg('simtelPath', simtelSourcePath))
         self._filesLocation = cfg.getConfigArg('outputLocation', filesLocation)
 
+        # File location
+        self._baseDirectory = io.getOutputDirectory(
+            self._filesLocation,
+            self.label
+        )
+
         configData = gen.collectDataFromYamlOrDict(configFile, configData)
         self._loadArrayConfigData(configData)
         self._setSimtelRunner()
@@ -262,7 +268,11 @@ class ArraySimulator:
         ''' Fill the results dict with input, output and log files. '''
         self._results['input'].append(str(file))
         self._results['output'].append(str(self._simtelRunner.getOutputFile(run)))
+        self._results['hist'].append(str(self._simtelRunner.getHistogramFile(run)))
         self._results['log'].append(str(self._simtelRunner.getLogFile(run)))
+
+    def printHistograms(self):
+
 
     def getListOfOutputFiles(self):
         '''
@@ -275,6 +285,18 @@ class ArraySimulator:
         '''
         self._logger.info('Getting list of output files')
         return self._results['output']
+
+    def getListOfHistogramFiles(self):
+        '''
+        Get list of histogram files.
+
+        Returns
+        -------
+        list
+            List with the full path of all the histogram files.
+        '''
+        self._logger.info('Getting list of histogram files')
+        return self._results['hist']
 
     def getListOfInputFiles(self):
         '''
@@ -304,6 +326,11 @@ class ArraySimulator:
         ''' Print list of output files. '''
         self._logger.info('Printing list of output files')
         self._printListOfFiles(which='output')
+
+    def printListOfHistogramFiles(self):
+        ''' Print list of histogram files. '''
+        self._logger.info('Printing list of histogram files')
+        self._printListOfFiles(which='hist')
 
     def printListOfInputFiles(self):
         ''' Print list of output files. '''
