@@ -207,10 +207,10 @@ if __name__ == '__main__':
         # Running Arrays
         for primary, array in arraySimulators.items():
 
+            inputList = showerSimulators[primary].getListOfOutputFiles()
             if args.task == 'simulate':
                 print('Running ArraySimulator for primary {}'.format(primary))
 
-                inputList = showerSimulators[primary].getListOfOutputFiles()
                 array.submit(inputFileList=inputList, submitCommand=submitCommand)
 
             elif args.task == 'lists':
@@ -219,7 +219,7 @@ if __name__ == '__main__':
 
             elif args.task == 'inspect':
                 print('Plotting ArraySimulator histograms for primary {}'.format(primary))
-                file = array.printHistograms()
+                file = array.printHistograms(inputList)
                 print('Histograms file {}'.format(file))
 
             else:

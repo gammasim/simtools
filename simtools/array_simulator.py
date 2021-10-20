@@ -127,6 +127,7 @@ class ArraySimulator:
         # Storing list of files
         self._results = dict()
         self._results['output'] = list()
+        self._results['hist'] = list()
         self._results['input'] = list()
         self._results['log'] = list()
     # End of init
@@ -180,6 +181,14 @@ class ArraySimulator:
                 'azimuthAngle': self.config.azimuthAngle * u.deg
             }
         )
+
+    def _fillResultsWithoutRun(self, inputFileList):
+        ''' Fill in the results dict wihtout calling run or submit. '''
+        inputFileList = self._makeInputList(inputFileList)
+
+        for file in inputFileList:
+            run = self._guessRunFromFile(file)
+            self._fillResults(file, run)
 
     def run(self, inputFileList):
         '''
@@ -275,15 +284,24 @@ class ArraySimulator:
         self._results['hist'].append(str(self._simtelRunner.getHistogramFile(run)))
         self._results['log'].append(str(self._simtelRunner.getLogFile(run)))
 
-    def printHistograms(self):
+    def printHistograms(self, inputFileList=None):
         '''
         Print histograms and save a pdf file.
+
+        Parameters
+        ----------
+        inputFileList: str or list of str
+            Single file or list of files of shower simulations.
 
         Returns
         -------
         path
             Path of the pdf file.
         '''
+
+        if len(self._results['hist']) == 0 and inputFileList is not None:
+            self._fillResultsWithoutRun(inputFileList)
+
         figName = self._baseDirectory.joinpath('histograms.pdf')
         histFileList = self.getListOfHistogramFiles()
         simtelHistograms = SimtelHistograms(histFileList)
