@@ -808,7 +808,7 @@ class DatabaseHandler:
 
         return
 
-    def updateParameter(self, dbName, telescope, version, parameter, newValue):
+    def updateParameter(self, dbName, telescope, version, parameter, newValue, filePrefix=None):
         '''
         Update a parameter value for a specific telescope/version.
         (This function should be rarely used since new values
@@ -826,6 +826,8 @@ class DatabaseHandler:
             Which parameter to update
         newValue: type identical to the original parameter type
             The new value to set for the parameter
+        filePrefix: str or Path
+            where to find files to upload to the DB
         '''
 
         collection = DatabaseHandler.dbClient[dbName].telescopes
@@ -849,9 +851,26 @@ class DatabaseHandler:
             newValue
         ))
 
-        queryUpdate = {'$set': {'Value': newValue}}
+        filesToAddToDB = set()
+        if self._isFile(newValue):
+            file = True
+            if filePrefix is None:
+                raise FileNotFoundError(
+                    'The location of the file to upload, '
+                    'corresponding to the {} parameter, must be provided.'
+                ).format(parameter)
+            filePath = Path(filePrefix).joinpath(newValue)
+            filesToAddToDB.add('{}'.format(filePath))
+            self._logger.info(
+                'Will also add the file {} to the DB'.format(filePath)
+            )
+        else:
+            file = False
+
+        queryUpdate = {'$set': {'Value': newValue, 'File': file}}
 
         collection.update_one(query, queryUpdate)
+        insertFilesToDB(dbClient, DB_TABULATED_DATA, filesToAddToDB)
 
         return
 
