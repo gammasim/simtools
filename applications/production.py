@@ -194,10 +194,6 @@ if __name__ == '__main__':
                 print('Printing ShowerSimulator file lists for primary {}'.format(primary))
                 print('TODO')
 
-            else:
-                continue
-
-
     # ArraySimulators
     arraySimulators = dict()
     for primary, configData in arrayConfigs.items():
@@ -216,12 +212,8 @@ if __name__ == '__main__':
 
             elif args.task == 'lists':
                 print('Printing ArraySimulator file lists for primary {}'.format(primary))
-                print('TODO')
-
+                raise NotImplementedError()
 
             elif args.task == 'inspect':
                 print('Plotting ArraySimulator histograms for primary {}'.format(primary))
-                print('TODO')
-
-            else:
-                continue
+                raise NotImplementedError()
