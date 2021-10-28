@@ -12,6 +12,13 @@ __all__ = ['SimtelHistograms']
 
 class SimtelHistograms:
     '''
+    This class handle sim_telarray histograms.
+    Histogram files are handled by using eventio library.
+
+    Methods
+    -------
+    plotAndSaveFigures(figName)
+        Plot all histograms and save a single pdf file.
     '''
 
     def __init__(
@@ -19,22 +26,29 @@ class SimtelHistograms:
         histogramFiles
     ):
         '''
+        SimtelHistograms
+
+        Parameters
+        ----------
+        histogramFiles: list
+            List of sim_telarray histogram files (str of Path).
+
         '''
         self._logger = logging.getLogger(__name__)
-
-        self.histogramFiles = histogramFiles
+        self._histogramFiles = histogramFiles
 
     def plotAndSaveFigures(self, figName):
+        ''' Plot all histograms and save a single pdf file. '''
         combinedHists = self._combineHistogramFiles()
         self._plotCombinedHistograms(combinedHists, figName)
 
     def _combineHistogramFiles(self):
-
+        ''' Combine histograms from all files into one single list of histograms. '''
         # Processing and combining histograms from multiple files
         combinedHists = list()
 
         nFiles = 0
-        for file in self.histogramFiles:
+        for file in self._histogramFiles:
 
             countFile = 1
             with EventIOFile(file) as f:
@@ -74,6 +88,7 @@ class SimtelHistograms:
         return combinedHists
 
     def _plotCombinedHistograms(self, combinedHists, figName):
+        ''' Plot all histograms into pdf pages and save the figure as a pdf file. '''
 
         def _get_bins(hist, axis=0):
             ax_str = 'x' if axis == 0 else 'y'
