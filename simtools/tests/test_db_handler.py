@@ -3,6 +3,7 @@
 import logging
 import subprocess
 import unittest
+from pathlib import Path
 
 import simtools.config as cfg
 import simtools.io_handler as io
@@ -217,6 +218,23 @@ class TestDBHandler(unittest.TestCase):
 
         self.logger.info('Listing files written in {}'.format(self.testDataDirectory))
         subprocess.call(['ls -lh {}'.format(self.testDataDirectory)], shell=True)
+
+    def test_insert_files_db(self):
+
+        # This test is only relevant for the MongoDB
+        if not cfg.get('useMongoDB'):
+            return
+
+        self.logger.info('----Testing inserting files to the DB-----')
+        self.logger.info('Creating a temporary file in {}'.format(self.testDataDirectory))
+        fileName = Path(self.testDataDirectory).joinpath('test_file.dat')
+        with open(fileName, 'w') as f:
+            f.write('# This is a test file')
+
+        file_id = self.db.insertFileToDB(fileName, 'sandbox')
+        assert(file_id == self.db._getFileMongoDB('sandbox', 'test_file.dat'))
+
+        subprocess.call(['rm -f {}'.format(fileName)], shell=True)
 
 
 if __name__ == '__main__':

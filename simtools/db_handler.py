@@ -48,6 +48,10 @@ class DatabaseHandler:
         Add a parameter value for a specific telescope.
     addNewParamete()
         Add a new parameter for a specific telescope.
+    insertFileToDB()
+        Insert a file to the DB.
+    insertFilesToDB()
+        Insert a list of files to the DB.
     '''
 
     # TODO move into config file?
@@ -995,7 +999,7 @@ class DatabaseHandler:
 
         return tags['Tags'][version]['Value']
 
-    def insertFileToDB(self, dbName, file, **kwargs):
+    def insertFileToDB(self, file, dbName=DatabaseHandler.DB_CTA_SIMULATION_MODEL, **kwargs):
         '''
         Insert a file to the DB.
 
@@ -1027,7 +1031,7 @@ class DatabaseHandler:
 
         return file_id
 
-    def insertFilesToDB(self, dbName, filesToAddToDB):
+    def insertFilesToDB(self, filesToAddToDB, dbName=DatabaseHandler.DB_CTA_SIMULATION_MODEL):
         '''
         Insert a list of files to the DB.
 
