@@ -192,10 +192,7 @@ if __name__ == '__main__':
 
             elif args.task == 'list':
                 print('Printing ShowerSimulator file lists for primary {}'.format(primary))
-                print('TODO')
-
-            else:
-                continue
+                raise NotImplementedError()
 
     # ArraySimulators
     arraySimulators = dict()
@@ -210,17 +207,13 @@ if __name__ == '__main__':
             inputList = showerSimulators[primary].getListOfOutputFiles()
             if args.task == 'simulate':
                 print('Running ArraySimulator for primary {}'.format(primary))
-
                 array.submit(inputFileList=inputList, submitCommand=submitCommand)
 
             elif args.task == 'lists':
                 print('Printing ArraySimulator file lists for primary {}'.format(primary))
-                print('TODO')
+                raise NotImplementedError()
 
             elif args.task == 'inspect':
                 print('Plotting ArraySimulator histograms for primary {}'.format(primary))
                 file = array.printHistograms(inputList)
                 print('Histograms file {}'.format(file))
-
-            else:
-                continue
