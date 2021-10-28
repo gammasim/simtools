@@ -429,7 +429,11 @@ class TelescopeModel:
             If at least one of the parameters to be changed does not exist in this model.
         '''
         for par, value in kwargs.items():
-            self.changeParameter(par, value)
+            if par in self._parameters.keys():
+                self.changeParameter(par, value)
+            else:
+                self.addParameter(par, value)
+
         self._isConfigFileUpdated = False
 
     def removeParameters(self, *args):
