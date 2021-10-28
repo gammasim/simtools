@@ -19,6 +19,11 @@
     primary (str)
         Name of the primary to be selected from the configuration file. In case it \
         is not given, all the primaries listed in the configuration file will be simulated.
+    task (str)
+        What task to execute. Options:
+            simulate (perform simulations),
+            lists (print list of output files) [NOT IMPLEMENTED]
+            inspect (plot sim_telarray histograms for quick inspection) [NOT IMPLEMENTED]
     array_only (activation mode)
         Simulates only array detector (no showers).
     showers_only (activation mode)
@@ -109,6 +114,19 @@ if __name__ == '__main__':
         required=True
     )
     parser.add_argument(
+        '-t',
+        '--task',
+        help=(
+            'What task to execute. Options: '
+            + 'simulate (perform simulations),'
+            + 'lists (print list of output files)'
+            + 'inspect (plot sim_telarray histograms for quick inspection)'
+        ),
+        type=str,
+        required=True,
+        choices=['simulate', 'lists', 'inspect']
+    )
+    parser.add_argument(
         '--primary',
         help='Primary to be selected from the config file.',
         type=str,
@@ -134,6 +152,7 @@ if __name__ == '__main__':
         help='Simulates only showers, no array detection',
         action='store_true'
     )
+
     parser.add_argument(
         '--test',
         help='Test option will not submit any job.',
@@ -166,8 +185,14 @@ if __name__ == '__main__':
     if not args.array_only:
         # Running Showers
         for primary, shower in showerSimulators.items():
-            print('Running ShowerSimulator for primary {}'.format(primary))
-            shower.submit(submitCommand=submitCommand)
+
+            if args.task == 'simulate':
+                print('Running ShowerSimulator for primary {}'.format(primary))
+                shower.submit(submitCommand=submitCommand)
+
+            elif args.task == 'list':
+                print('Printing ShowerSimulator file lists for primary {}'.format(primary))
+                print('TODO')
 
     # ArraySimulators
     arraySimulators = dict()
@@ -178,7 +203,17 @@ if __name__ == '__main__':
     if not args.showers_only:
         # Running Arrays
         for primary, array in arraySimulators.items():
-            print('Running ArraySimulator for primary {}'.format(primary))
 
-            inputList = showerSimulators[primary].getListOfOutputFiles()
-            array.submit(inputFileList=inputList, submitCommand=submitCommand)
+            if args.task == 'simulate':
+                print('Running ArraySimulator for primary {}'.format(primary))
+
+                inputList = showerSimulators[primary].getListOfOutputFiles()
+                array.submit(inputFileList=inputList, submitCommand=submitCommand)
+
+            elif args.task == 'lists':
+                print('Printing ArraySimulator file lists for primary {}'.format(primary))
+                raise NotImplementedError()
+
+            elif args.task == 'inspect':
+                print('Plotting ArraySimulator histograms for primary {}'.format(primary))
+                raise NotImplementedError()

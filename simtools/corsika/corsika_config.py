@@ -1,5 +1,6 @@
 import logging
 import random
+import copy
 
 import astropy.units as u
 from astropy.io.misc import yaml
@@ -235,6 +236,13 @@ class CorsikaConfig:
                 msg = 'Required parameters {} was not given (there may be more).'.format(parName)
                 self._logger.error(msg)
                 raise MissingRequiredInputInCorsikaConfigData(msg)
+
+        # Converting AZM to CORSIKA reference (PHIP)
+        phip = 180. - self._userParameters['AZM'][0]
+        phip = phip + 360. if phip < 0. else phip
+        phip = phip - 360. if phip >= 360. else phip
+        self._userParameters['PHIP'] = [phip, phip]
+
         self._isFileUpdated = False
     # End of setUserParameters
 
@@ -247,9 +255,9 @@ class CorsikaConfig:
         # Turning valueArgs into a list, if it is not.
         valueArgs = gen.copyAsList(valueArgsIn)
 
-        if len(valueArgs) == 1 and parName in ['THETAP', 'PHIP']:
+        if len(valueArgs) == 1 and parName in ['THETAP', 'AZM']:
             # Fixing single value zenith or azimuth angle.
-            # THETAP and PHIP should be written as a 2 values range in the CORSIKA input file
+            # THETAP and AZM should be written as a 2 values range in the CORSIKA input file
             valueArgs = valueArgs * 2
         elif len(valueArgs) == 1 and parName == 'VIEWCONE':
             # Fixing single value viewcone.
@@ -373,7 +381,7 @@ class CorsikaConfig:
             self.layoutName,
             self.site,
             self._userParameters['THETAP'][0],
-            self._userParameters['PHIP'][0],
+            self._userParameters['AZM'][0],
             self.label
         )
 
@@ -402,7 +410,10 @@ class CorsikaConfig:
 
         with open(self._configFilePath, 'w') as file:
             file.write('\n* [ RUN PARAMETERS ]\n')
-            textParameters = _getTextSingleLine(self._userParameters)
+            # Removing AZM entry first
+            _userParsTemp = copy.copy(self._userParameters)
+            _userParsTemp.pop('AZM')
+            textParameters = _getTextSingleLine(_userParsTemp)
             file.write(textParameters)
 
             file.write('\n* [ SITE PARAMETERS ]\n')
@@ -415,7 +426,7 @@ class CorsikaConfig:
             file.write('\n')
             file.write('IACT setenv PRMNAME {}\n'.format(self.primary))
             file.write('IACT setenv ZA {}\n'.format(int(self._userParameters['THETAP'][0])))
-            file.write('IACT setenv AZM {}\n'.format(int(self._userParameters['PHIP'][0])))
+            file.write('IACT setenv AZM {}\n'.format(int(self._userParameters['AZM'][0])))
 
             file.write('\n* [ SEEDS ]\n')
             self._writeSeeds(file)
@@ -456,6 +467,7 @@ class CorsikaConfig:
         configFileName = names.corsikaConfigFileName(
             arrayName=self.layoutName,
             site=self.site,
+            primary=self.primary,
             zenith=self._userParameters['THETAP'],
             viewCone=self._userParameters['VIEWCONE'],
             label=self.label
@@ -519,6 +531,7 @@ class CorsikaConfig:
         return names.corsikaConfigTmpFileName(
             arrayName=self.layoutName,
             site=self.site,
+            primary=self.primary,
             zenith=self._userParameters['THETAP'],
             viewCone=self._userParameters['VIEWCONE'],
             run=runNumber,
