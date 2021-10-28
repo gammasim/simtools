@@ -88,7 +88,7 @@ class TestDBHandler(unittest.TestCase):
         self.logger.info('Removing the files written in {}'.format(self.testDataDirectory))
         subprocess.call(['rm -f {}/*'.format(self.testDataDirectory)], shell=True)
 
-    def test_modify_db(self):
+    def test_copy_telescope_db(self):
 
         # This test is only relevant for the MongoDB
         if not cfg.get('useMongoDB'):
@@ -117,7 +117,26 @@ class TestDBHandler(unittest.TestCase):
         )
         assert(pars['camera_pixels']['Value'] == 1855)
 
-        self.logger.info('----Testing adding a parameter-----')
+        self.logger.info('Testing deleting a query (a whole telescope in this case and metadata)')
+        query = {'Telescope': 'North-LST-Test'}
+        self.db.deleteQuery('sandbox', 'telescopes', query)
+        query = {'Entry': 'Simulation-Model-Tags'}
+        self.db.deleteQuery('sandbox', 'metadata', query)
+
+    def test_adding_parameter_version_db(self):
+
+        # This test is only relevant for the MongoDB
+        if not cfg.get('useMongoDB'):
+            return
+
+        self.logger.info('----Testing adding a new version of a parameter-----')
+        self.db.copyTelescope(
+            self.DB_CTA_SIMULATION_MODEL,
+            'North-LST-1',
+            'Current',
+            'North-LST-Test',
+            'sandbox'
+        )
         self.db.addParameter(
             'sandbox',
             'North-LST-Test',
@@ -134,7 +153,30 @@ class TestDBHandler(unittest.TestCase):
         )
         assert(pars['camera_config_version']['Value'] == 42)
 
+        query = {'Telescope': 'North-LST-Test'}
+        self.db.deleteQuery('sandbox', 'telescopes', query)
+
+    def test_update_parameter_db(self):
+
+        # This test is only relevant for the MongoDB
+        if not cfg.get('useMongoDB'):
+            return
+
         self.logger.info('----Testing updating a parameter-----')
+        self.db.copyTelescope(
+            self.DB_CTA_SIMULATION_MODEL,
+            'North-LST-1',
+            'Current',
+            'North-LST-Test',
+            'sandbox'
+        )
+        self.db.addParameter(
+            'sandbox',
+            'North-LST-Test',
+            'camera_config_version',
+            'test',
+            42
+        )
         self.db.updateParameter(
             'sandbox',
             'North-LST-Test',
@@ -151,7 +193,23 @@ class TestDBHandler(unittest.TestCase):
         )
         assert(pars['camera_config_version']['Value'] == 999)
 
+        query = {'Telescope': 'North-LST-Test'}
+        self.db.deleteQuery('sandbox', 'telescopes', query)
+
+    def test_adding_new_parameter_db(self):
+
+        # This test is only relevant for the MongoDB
+        if not cfg.get('useMongoDB'):
+            return
+
         self.logger.info('----Testing adding a new parameter-----')
+        self.db.copyTelescope(
+            self.DB_CTA_SIMULATION_MODEL,
+            'North-LST-1',
+            'Current',
+            'North-LST-Test',
+            'sandbox'
+        )
         self.db.addNewParameter(
             'sandbox',
             'North-LST-Test',
@@ -168,11 +226,8 @@ class TestDBHandler(unittest.TestCase):
         )
         assert(pars['camera_config_version_test']['Value'] == 999)
 
-        self.logger.info('Testing deleting a query (a whole telescope in this case and metadata)')
         query = {'Telescope': 'North-LST-Test'}
         self.db.deleteQuery('sandbox', 'telescopes', query)
-        query = {'Entry': 'Simulation-Model-Tags'}
-        self.db.deleteQuery('sandbox', 'metadata', query)
 
     def test_reading_db_sites(self):
 
@@ -232,7 +287,7 @@ class TestDBHandler(unittest.TestCase):
             f.write('# This is a test file')
 
         file_id = self.db.insertFileToDB(fileName, 'sandbox')
-        assert(file_id == self.db._getFileMongoDB('sandbox', 'test_file.dat'))
+        assert(file_id._id == self.db._getFileMongoDB('sandbox', 'test_file.dat')._id)
 
         subprocess.call(['rm -f {}'.format(fileName)], shell=True)
 
