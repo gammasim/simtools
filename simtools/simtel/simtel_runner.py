@@ -121,7 +121,7 @@ class SimtelRunner:
         command = self._makeRunCommand(inputFile=inputFile, run=run)
         with self._scriptFile.open('w') as file:
             # TODO: header
-            file.write('#/usr/bin/bash\n\n')
+            file.write('#!/usr/bin/bash\n\n')
 
             if extraCommands is not None:
                 file.write('# Writing extras\n')

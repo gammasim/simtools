@@ -34,7 +34,7 @@ class ShowerSimulator:
     .. code-block:: python
 
     self.showerConfigData = {
-        'dataDirectory': './corsika-data',
+        'dataDirectory': '.',
         'site': 'South',
         'layoutName': 'Prod5',
         'runRange': [1, 100],
@@ -126,7 +126,7 @@ class ShowerSimulator:
             self.layoutName = names.validateLayoutArrayName(showerConfigData['layoutName'])
             self._corsikaConfigData.pop('site')
             self._corsikaConfigData.pop('layoutName')
-            dataDir = self._corsikaConfigData.pop('dataDirectory')
+            dataDir = self._corsikaConfigData.pop('dataDirectory', None)
             self._corsikaConfigData['corsikaDataDirectory'] = dataDir
         except KeyError:
             msg = 'site and/or layoutName were not given in showerConfig'
