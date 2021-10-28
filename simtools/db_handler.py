@@ -870,7 +870,7 @@ class DatabaseHandler:
         queryUpdate = {'$set': {'Value': newValue, 'File': file}}
 
         collection.update_one(query, queryUpdate)
-        insertFilesToDB(dbClient, DB_TABULATED_DATA, filesToAddToDB)
+        self.insertFilesToDB(dbName, filesToAddToDB)
 
         return
 
@@ -994,3 +994,53 @@ class DatabaseHandler:
         tags = collection.find(query).sort('_id', pymongo.DESCENDING)[0]
 
         return tags['Tags'][version]['Value']
+
+    def insertFileToDB(self, dbName, file, **kwargs):
+        '''
+        Insert a file to the DB.
+
+        Parameters
+        ----------
+        dbName: str
+            the name of the DB
+        file: str or Path
+            The name of the file to insert (full path).
+
+        Returns
+        -------
+        file_id: gridfs "_id"
+            If the file exists, returns the "_id" of that one, otherwise creates a new one.
+        '''
+
+        db = DatabaseHandler.dbClient[dbName]
+        fileSystem = gridfs.GridFS(db)
+        if fileSystem.exists({'filename': kwargs['filename']}):
+            return fileSystem.find_one({'filename': kwargs['filename']})
+
+        if 'content_type' not in kwargs:
+            kwargs['content_type'] = 'ascii/dat'
+        if 'filename' not in kwargs:
+            kwargs['filename'] = Path(file).name
+
+        with open(file, 'rb') as dataFile:
+            file_id = fileSystem.put(dataFile, **kwargs)
+
+        return file_id
+
+    def insertFilesToDB(self, dbName, filesToAddToDB):
+        '''
+        Insert a list of files to the DB.
+
+        Parameters
+        ----------
+        dbName: str
+            the name of the DB
+        filesToAddToDB: list of strings or Paths
+            Each entry in the list is the name of the file to insert (full path).
+        '''
+
+        for fileNow in filesToAddToDB:
+            kwargs = {'content_type': 'ascii/dat', 'filename': Path(fileNow).name}
+            insertFileToDB(dbName, fileNow, **kwargs)
+
+        return
