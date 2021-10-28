@@ -874,7 +874,7 @@ class DatabaseHandler:
         queryUpdate = {'$set': {'Value': newValue, 'File': file}}
 
         collection.update_one(query, queryUpdate)
-        self.insertFilesToDB(dbName, filesToAddToDB)
+        self.insertFilesToDB(filesToAddToDB, dbName)
 
         return
 
@@ -999,7 +999,7 @@ class DatabaseHandler:
 
         return tags['Tags'][version]['Value']
 
-    def insertFileToDB(self, file, dbName=DatabaseHandler.DB_CTA_SIMULATION_MODEL, **kwargs):
+    def insertFileToDB(self, file, dbName=DB_CTA_SIMULATION_MODEL, **kwargs):
         '''
         Insert a file to the DB.
 
@@ -1018,20 +1018,21 @@ class DatabaseHandler:
 
         db = DatabaseHandler.dbClient[dbName]
         fileSystem = gridfs.GridFS(db)
-        if fileSystem.exists({'filename': kwargs['filename']}):
-            return fileSystem.find_one({'filename': kwargs['filename']})
 
         if 'content_type' not in kwargs:
             kwargs['content_type'] = 'ascii/dat'
         if 'filename' not in kwargs:
             kwargs['filename'] = Path(file).name
 
+        if fileSystem.exists({'filename': kwargs['filename']}):
+            return fileSystem.find_one({'filename': kwargs['filename']})
+
         with open(file, 'rb') as dataFile:
             file_id = fileSystem.put(dataFile, **kwargs)
 
         return file_id
 
-    def insertFilesToDB(self, filesToAddToDB, dbName=DatabaseHandler.DB_CTA_SIMULATION_MODEL):
+    def insertFilesToDB(self, filesToAddToDB, dbName=DB_CTA_SIMULATION_MODEL):
         '''
         Insert a list of files to the DB.
 
@@ -1045,6 +1046,6 @@ class DatabaseHandler:
 
         for fileNow in filesToAddToDB:
             kwargs = {'content_type': 'ascii/dat', 'filename': Path(fileNow).name}
-            insertFileToDB(dbName, fileNow, **kwargs)
+            self.insertFileToDB(fileNow, dbName, **kwargs)
 
         return
