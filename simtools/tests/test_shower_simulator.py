@@ -20,7 +20,7 @@ class TestShowerSimulator(unittest.TestCase):
     def setUp(self):
         self.label = 'test-shower-simulator'
         self.showerConfigData = {
-            # 'corsikaDataDirectory': './corsika-data',
+            'dataDirectory': '.',
             'site': 'South',
             'layoutName': 'Prod5',
             'runList': [3, 4],
@@ -67,7 +67,7 @@ class TestShowerSimulator(unittest.TestCase):
             label=self.label,
             showerConfigData=newShowerConfigData
         )
-        self.assertEqual(newShowerSimulator.runs, [1, 2, 4, 5, 6, 7])
+        self.assertEqual(newShowerSimulator.runs, [1, 2, 4, 5, 6, 7, 8])
 
         # With overlap
         newShowerConfigData['runList'] = [1, 3, 4]
@@ -76,17 +76,18 @@ class TestShowerSimulator(unittest.TestCase):
             label=self.label,
             showerConfigData=newShowerConfigData
         )
-        self.assertEqual(newShowerSimulator.runs, [1, 3, 4, 5, 6])
+        self.assertEqual(newShowerSimulator.runs, [1, 3, 4, 5, 6, 7])
 
     def test_no_corsika_data(self):
         newShowerConfigData = copy(self.showerConfigData)
-        newShowerConfigData.pop('corsikaDataDirectory', None)
+        newShowerConfigData.pop('dataDirectory', None)
         newShowerSimulator = ShowerSimulator(
             label=self.label,
             showerConfigData=newShowerConfigData
         )
         newShowerSimulator.runs
         files = newShowerSimulator.getListOfOutputFiles(runList=[3])
+        print(files)
         self.assertTrue('/' + self.label + '/' in files[0])
 
     def test_submitting(self):
@@ -105,4 +106,8 @@ class TestShowerSimulator(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    unittest.main()
+    # unittest.main()
+
+    test = TestShowerSimulator()
+    test.setUp()
+    test.test_no_corsika_data()
