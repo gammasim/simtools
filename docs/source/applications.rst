@@ -39,6 +39,7 @@ List of Applications
 * `make_regular_arrays`_
 * `produce_array_config`_
 * `sim_showers_for_trigger_rates`_
+* `production`_
 
 
 derive_mirror_rnda
@@ -95,4 +96,10 @@ sim_showers_for_trigger_rates
 -----------------------------
 
 .. automodule:: sim_showers_for_trigger_rates
+   :members:
+
+production
+----------
+
+.. automodule:: production
    :members:
