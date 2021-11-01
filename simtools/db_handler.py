@@ -878,7 +878,7 @@ class DatabaseHandler:
 
         return
 
-    def addParameter(self, dbName, telescope, parameter, newVersion, newValue):
+    def addParameter(self, dbName, telescope, parameter, newVersion, newValue, filePrefix=None):
         '''
         Add a parameter value for a specific telescope.
         A new document will be added to the DB,
@@ -897,6 +897,8 @@ class DatabaseHandler:
             The version of the new parameter value
         newValue: type identical to the original parameter type
             The new value to set for the parameter
+        filePrefix: str or Path
+            where to find files to upload to the DB
         '''
 
         collection = DatabaseHandler.dbClient[dbName].telescopes
@@ -913,13 +915,40 @@ class DatabaseHandler:
         parEntry['Version'] = _newVersion
         parEntry.pop('_id', None)
 
+        filesToAddToDB = set()
+        if self._isFile(newValue):
+            parEntry['File'] = True
+            if filePrefix is None:
+                raise FileNotFoundError(
+                    'The location of the file to upload, '
+                    'corresponding to the {} parameter, must be provided.'
+                ).format(parameter)
+            filePath = Path(filePrefix).joinpath(newValue)
+            filesToAddToDB.add('{}'.format(filePath))
+        else:
+            parEntry['File'] = False
+
         self._logger.info('Will add the following entry to DB\n', parEntry)
 
         collection.insert_one(parEntry)
+        if len(filesToAddToDB) > 0:
+            self._logger.info(
+                'Will also add the file {} to the DB'.format(filePath)
+            )
+            self.insertFilesToDB(filesToAddToDB, dbName)
 
         return
 
-    def addNewParameter(self, dbName, telescope, version, parameter, value, **kwargs):
+    def addNewParameter(
+        self,
+        dbName,
+        telescope,
+        version,
+        parameter,
+        value,
+        filePrefix=None,
+        **kwargs
+    ):
         '''
         Add a parameter value for a specific telescope.
         A new document will be added to the DB,
@@ -938,6 +967,8 @@ class DatabaseHandler:
             The version of the new parameter value
         value: can be any type, preferably given in kwargs
             The value to set for the new parameter
+        filePrefix: str or Path
+            where to find files to upload to the DB
         kwargs: dict
             Any additional fields to add to the parameter
         '''
@@ -950,9 +981,18 @@ class DatabaseHandler:
         dbEntry['Parameter'] = parameter
         dbEntry['Value'] = value
         dbEntry['Type'] = kwargs['Type'] if 'Type' in kwargs else str(type(value))
+
+        filesToAddToDB = set()
         dbEntry['File'] = False
         if self._isFile(value):
             dbEntry['File'] = True
+            if filePrefix is None:
+                raise FileNotFoundError(
+                    'The location of the file to upload, '
+                    'corresponding to the {} parameter, must be provided.'
+                ).format(parameter)
+            filePath = Path(filePrefix).joinpath(newValue)
+            filesToAddToDB.add('{}'.format(filePath))
 
         kwargs.pop('Type', None)
         dbEntry.update(kwargs)
@@ -960,6 +1000,11 @@ class DatabaseHandler:
         self._logger.info('Will add the following entry to DB\n', dbEntry)
 
         collection.insert_one(dbEntry)
+        if len(filesToAddToDB) > 0:
+            self._logger.info(
+                'Will also add the file {} to the DB'.format(filePath)
+            )
+            self.insertFilesToDB(filesToAddToDB, dbName)
 
         return
 
