@@ -287,21 +287,15 @@ class TestDBHandler(unittest.TestCase):
             f.write('# This is a test file')
 
         file_id = self.db.insertFileToDB(fileName, 'sandbox')
-        assert(file_id._id == self.db._getFileMongoDB('sandbox', 'test_file.dat')._id)
+        assert(file_id == self.db._getFileMongoDB('sandbox', 'test_file.dat')._id)
 
         subprocess.call(['rm -f {}'.format(fileName)], shell=True)
 
+        self.logger.info('Dropping the temporary files in the sandbox')
+        self.db.dbClient['sandbox']['fs.chunks'].drop()
+        self.db.dbClient['sandbox']['fs.files'].drop()
+
 
 if __name__ == '__main__':
+
     unittest.main()
-
-    # tt = TestDBHandler()
-    # tt.setUp()
-    # tt.test_separating_get_and_write()
-
-    # tt.test_reading_db_lst()
-    # test_reading_db_mst_nc()
-    # test_reading_db_mst_fc()
-    # test_reading_db_sst()
-    # test_modify_db()
-    # test_reading_db_sites()
