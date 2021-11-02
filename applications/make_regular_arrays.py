@@ -19,7 +19,9 @@
     -------
     Runtime < 1 min.
 
-    python applications/make_regular_arrays.py
+    .. code-block:: console
+    
+        python applications/make_regular_arrays.py
 '''
 
 import logging
