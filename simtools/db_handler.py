@@ -59,6 +59,8 @@ class DatabaseHandler:
     DB_CTA_SIMULATION_MODEL = 'CTA-Simulation-Model'
     DB_CTA_SIMULATION_MODEL_DESCRIPTIONS = 'CTA-Simulation-Model-Descriptions'
 
+    ALLOWED_FILE_EXTENSIONS = ['.dat', '.txt', '.lis']
+
     dbClient = None
     tunnel = None
 
@@ -273,7 +275,7 @@ class DatabaseHandler:
     @staticmethod
     def _isFile(value):
         ''' Vefiry if a parameter value is a file name. '''
-        return any(ext in str(value) for ext in ['.dat', '.txt', '.lis'])
+        return any(ext in str(value) for ext in DatabaseHandler.ALLOWED_FILE_EXTENSIONS)
 
     def _writeModelFileYaml(self, fileName, destDir, noFileOk=False):
         '''
