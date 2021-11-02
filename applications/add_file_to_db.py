@@ -11,9 +11,17 @@
 
     Command line arguments
     ----------------------
-    fileName (str, required)
-        Name of the file to upload including the full path.
+    fileName (str or list of str, required)
+        Name of the file to upload including the full path. \
+        A list of files is also allowed, in which case only one -f is necessary, \
+        i.e., python applications/add_file_to_db.py -f file_1.dat file_2.dat file_3.dat \
         If no path is given, the file is assumed to be in the CWD.
+    directory (str, required if fileName isn't given)
+        A directory with files to upload to the DB. \
+        All files in the directory with a predefined list of extensions will be uploaded.
+    db (str)
+        The DB to insert the files to. \
+        The choices are either the default CTA simulation DB or a sandbox for testing.
     verbosity (str, optional)
         Log level to print (default=INFO).
 
@@ -28,6 +36,7 @@
 
 import logging
 import argparse
+from pathlib import Path
 
 from simtools import db_handler
 import simtools.util.general as gen
@@ -35,7 +44,7 @@ import simtools.util.general as gen
 
 def userConfirm():
     '''
-    Ask the user to enter Y or N (case-insensitive).
+    Ask the user to enter y or n (case-insensitive).
 
     Returns
     -------
@@ -44,25 +53,54 @@ def userConfirm():
 
     answer = ''
     while answer not in ['y', 'n']:
-        answer = input('Is this OK? [Y/N]').lower()
+        answer = input('Is this OK? [y/n]').lower()
 
     return answer == 'y'
 
 
 if __name__ == '__main__':
 
+    db = db_handler.DatabaseHandler()
+
     parser = argparse.ArgumentParser(
         description=(
-            'Add a file to the DB.'
+            'Add a file or files to the DB.'
         )
     )
-    parser.add_argument(
+    group = parser.add_mutually_exclusive_group(required=True)
+    group.add_argument(
         '-f',
         '--fileName',
-        default='./',
-        help='The file name to upload. If no path is given, the file is assumed to be in the CWD.',
+        help=(
+            'The file name to upload. '
+            'A list of files is also allowed, in which case only one -f is necessary, '
+            'i.e., python applications/add_file_to_db.py -f file_1.dat file_2.dat file_3.dat '
+            'If no path is given, the file is assumed to be in the CWD.'
+        ),
         type=str,
-        required=True
+        nargs='+',
+    )
+    group.add_argument(
+        '-d',
+        '--directory',
+        help=(
+            'A directory with files to upload to the DB. '
+            'All files in the directory with the following extensions '
+            'will be uploaded: {}'.format(', '.join(db.ALLOWED_FILE_EXTENSIONS))
+        ),
+        type=str,
+    )
+    parser.add_argument(
+        '-db',
+        dest='dbToInsertTo',
+        type=str,
+        default=db.DB_TABULATED_DATA,
+        choices=['sandbox', db.DB_TABULATED_DATA],
+        help=(
+            'The DB to insert the files to. '
+            'The choices are {0} or "sandbox", '
+            'the default is {0}'.format(db.DB_TABULATED_DATA)
+        )
     )
     parser.add_argument(
         '-v',
@@ -78,11 +116,30 @@ if __name__ == '__main__':
     logger = logging.getLogger()
     logger.setLevel(gen.getLogLevelFromUser(args.logLevel))
 
-    db = db_handler.DatabaseHandler()
-
-    print('Should I insert the file {} to the DB?'.format(args.fileName))
-    if userConfirm():
-        db.insertFileToDB(args.fileName)
-        logger.info('File inserted to DB')
+    if args.fileName is not None:
+        filesToInsert = args.fileName
     else:
-        logger.info('Aborted, did not insert file to the DB')
+        filesToInsert = list()
+        for extNow in db.ALLOWED_FILE_EXTENSIONS:
+            filesToInsert.extend(
+                Path(args.directory).glob('*{}'.format(extNow))
+            )
+
+    plural = 's'
+    if len(filesToInsert) < 1:
+        raise ValueError('No files were provided to upload')
+    elif len(filesToInsert) == 1:
+        plural = ''
+    else:
+        pass
+
+    print('Should I insert the following file{} to the {} DB?:\n'.format(plural, args.dbToInsertTo))
+    print(*filesToInsert, sep='\n')
+    print()
+    if userConfirm():
+        db.insertFilesToDB(filesToInsert, args.dbToInsertTo)
+        logger.info('File{} inserted to {} DB'.format(plural, args.dbToInsertTo))
+    else:
+        logger.info(
+            'Aborted, did not insert the file{} to the {} DB'.format(plural, args.dbToInsertTo)
+        )
