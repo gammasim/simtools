@@ -38,7 +38,14 @@ class SimtelHistograms:
         self._histogramFiles = histogramFiles
 
     def plotAndSaveFigures(self, figName):
-        ''' Plot all histograms and save a single pdf file. '''
+        '''
+        Plot all histograms and save a single pdf file.
+
+        Parameters
+        ----------
+        figName: str
+            Name of the output figure file.
+        '''
         combinedHists = self._combineHistogramFiles()
         self._plotCombinedHistograms(combinedHists, figName)
 
