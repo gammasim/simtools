@@ -48,12 +48,18 @@ class DatabaseHandler:
         Add a parameter value for a specific telescope.
     addNewParamete()
         Add a new parameter for a specific telescope.
+    insertFileToDB()
+        Insert a file to the DB.
+    insertFilesToDB()
+        Insert a list of files to the DB.
     '''
 
     # TODO move into config file?
     DB_TABULATED_DATA = 'CTA-Simulation-Model'
     DB_CTA_SIMULATION_MODEL = 'CTA-Simulation-Model'
     DB_CTA_SIMULATION_MODEL_DESCRIPTIONS = 'CTA-Simulation-Model-Descriptions'
+
+    ALLOWED_FILE_EXTENSIONS = ['.dat', '.txt', '.lis']
 
     dbClient = None
     tunnel = None
@@ -269,7 +275,7 @@ class DatabaseHandler:
     @staticmethod
     def _isFile(value):
         ''' Vefiry if a parameter value is a file name. '''
-        return any(ext in str(value) for ext in ['.dat', '.txt', '.lis'])
+        return any(ext in str(value) for ext in DatabaseHandler.ALLOWED_FILE_EXTENSIONS)
 
     def _writeModelFileYaml(self, fileName, destDir, noFileOk=False):
         '''
@@ -808,7 +814,7 @@ class DatabaseHandler:
 
         return
 
-    def updateParameter(self, dbName, telescope, version, parameter, newValue):
+    def updateParameter(self, dbName, telescope, version, parameter, newValue, filePrefix=None):
         '''
         Update a parameter value for a specific telescope/version.
         (This function should be rarely used since new values
@@ -826,6 +832,8 @@ class DatabaseHandler:
             Which parameter to update
         newValue: type identical to the original parameter type
             The new value to set for the parameter
+        filePrefix: str or Path
+            where to find files to upload to the DB
         '''
 
         collection = DatabaseHandler.dbClient[dbName].telescopes
@@ -849,13 +857,30 @@ class DatabaseHandler:
             newValue
         ))
 
-        queryUpdate = {'$set': {'Value': newValue}}
+        filesToAddToDB = set()
+        if self._isFile(newValue):
+            file = True
+            if filePrefix is None:
+                raise FileNotFoundError(
+                    'The location of the file to upload, '
+                    'corresponding to the {} parameter, must be provided.'
+                ).format(parameter)
+            filePath = Path(filePrefix).joinpath(newValue)
+            filesToAddToDB.add('{}'.format(filePath))
+            self._logger.info(
+                'Will also add the file {} to the DB'.format(filePath)
+            )
+        else:
+            file = False
+
+        queryUpdate = {'$set': {'Value': newValue, 'File': file}}
 
         collection.update_one(query, queryUpdate)
+        self.insertFilesToDB(filesToAddToDB, dbName)
 
         return
 
-    def addParameter(self, dbName, telescope, parameter, newVersion, newValue):
+    def addParameter(self, dbName, telescope, parameter, newVersion, newValue, filePrefix=None):
         '''
         Add a parameter value for a specific telescope.
         A new document will be added to the DB,
@@ -874,6 +899,8 @@ class DatabaseHandler:
             The version of the new parameter value
         newValue: type identical to the original parameter type
             The new value to set for the parameter
+        filePrefix: str or Path
+            where to find files to upload to the DB
         '''
 
         collection = DatabaseHandler.dbClient[dbName].telescopes
@@ -890,13 +917,40 @@ class DatabaseHandler:
         parEntry['Version'] = _newVersion
         parEntry.pop('_id', None)
 
+        filesToAddToDB = set()
+        if self._isFile(newValue):
+            parEntry['File'] = True
+            if filePrefix is None:
+                raise FileNotFoundError(
+                    'The location of the file to upload, '
+                    'corresponding to the {} parameter, must be provided.'
+                ).format(parameter)
+            filePath = Path(filePrefix).joinpath(newValue)
+            filesToAddToDB.add('{}'.format(filePath))
+        else:
+            parEntry['File'] = False
+
         self._logger.info('Will add the following entry to DB\n', parEntry)
 
         collection.insert_one(parEntry)
+        if len(filesToAddToDB) > 0:
+            self._logger.info(
+                'Will also add the file {} to the DB'.format(filePath)
+            )
+            self.insertFilesToDB(filesToAddToDB, dbName)
 
         return
 
-    def addNewParameter(self, dbName, telescope, version, parameter, value, **kwargs):
+    def addNewParameter(
+        self,
+        dbName,
+        telescope,
+        version,
+        parameter,
+        value,
+        filePrefix=None,
+        **kwargs
+    ):
         '''
         Add a parameter value for a specific telescope.
         A new document will be added to the DB,
@@ -915,6 +969,8 @@ class DatabaseHandler:
             The version of the new parameter value
         value: can be any type, preferably given in kwargs
             The value to set for the new parameter
+        filePrefix: str or Path
+            where to find files to upload to the DB
         kwargs: dict
             Any additional fields to add to the parameter
         '''
@@ -927,9 +983,18 @@ class DatabaseHandler:
         dbEntry['Parameter'] = parameter
         dbEntry['Value'] = value
         dbEntry['Type'] = kwargs['Type'] if 'Type' in kwargs else str(type(value))
+
+        filesToAddToDB = set()
         dbEntry['File'] = False
         if self._isFile(value):
             dbEntry['File'] = True
+            if filePrefix is None:
+                raise FileNotFoundError(
+                    'The location of the file to upload, '
+                    'corresponding to the {} parameter, must be provided.'
+                ).format(parameter)
+            filePath = Path(filePrefix).joinpath(newValue)
+            filesToAddToDB.add('{}'.format(filePath))
 
         kwargs.pop('Type', None)
         dbEntry.update(kwargs)
@@ -937,6 +1002,11 @@ class DatabaseHandler:
         self._logger.info('Will add the following entry to DB\n', dbEntry)
 
         collection.insert_one(dbEntry)
+        if len(filesToAddToDB) > 0:
+            self._logger.info(
+                'Will also add the file {} to the DB'.format(filePath)
+            )
+            self.insertFilesToDB(filesToAddToDB, dbName)
 
         return
 
@@ -975,3 +1045,54 @@ class DatabaseHandler:
         tags = collection.find(query).sort('_id', pymongo.DESCENDING)[0]
 
         return tags['Tags'][version]['Value']
+
+    def insertFileToDB(self, file, dbName=DB_CTA_SIMULATION_MODEL, **kwargs):
+        '''
+        Insert a file to the DB.
+
+        Parameters
+        ----------
+        dbName: str
+            the name of the DB
+        file: str or Path
+            The name of the file to insert (full path).
+
+        Returns
+        -------
+        file_id: gridfs "_id"
+            If the file exists, returns the "_id" of that one, otherwise creates a new one.
+        '''
+
+        db = DatabaseHandler.dbClient[dbName]
+        fileSystem = gridfs.GridFS(db)
+
+        if 'content_type' not in kwargs:
+            kwargs['content_type'] = 'ascii/dat'
+        if 'filename' not in kwargs:
+            kwargs['filename'] = Path(file).name
+
+        if fileSystem.exists({'filename': kwargs['filename']}):
+            return fileSystem.find_one({'filename': kwargs['filename']})
+
+        with open(file, 'rb') as dataFile:
+            file_id = fileSystem.put(dataFile, **kwargs)
+
+        return file_id
+
+    def insertFilesToDB(self, filesToAddToDB, dbName=DB_CTA_SIMULATION_MODEL):
+        '''
+        Insert a list of files to the DB.
+
+        Parameters
+        ----------
+        dbName: str
+            the name of the DB
+        filesToAddToDB: list of strings or Paths
+            Each entry in the list is the name of the file to insert (full path).
+        '''
+
+        for fileNow in filesToAddToDB:
+            kwargs = {'content_type': 'ascii/dat', 'filename': Path(fileNow).name}
+            self.insertFileToDB(fileNow, dbName, **kwargs)
+
+        return
