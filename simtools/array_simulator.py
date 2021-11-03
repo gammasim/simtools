@@ -1,16 +1,18 @@
 
 import logging
 import os
-from pathlib import Path
 from copy import copy
+from pathlib import Path
 
 import astropy.units as u
 
 import simtools.config as cfg
 import simtools.io_handler as io
 import simtools.util.general as gen
-from simtools.simtel.simtel_runner_array import SimtelRunnerArray
 from simtools.model.array_model import ArrayModel
+from simtools.simtel.simtel_histograms import SimtelHistograms
+from simtools.simtel.simtel_runner_array import SimtelRunnerArray
+
 
 __all__ = ['ArraySimulator']
 
@@ -63,6 +65,8 @@ class ArraySimulator:
     submit(inputFileList, submitCommand=None, extraCommands=None, test=False):
         Submit a run script as a job. The submit command can be given by submitCommand \
         or it will be taken from the config.yml file.
+    printHistograms():
+        Print histograms and save a pdf file.
     getListOfOutputFiles():
         Get list of output files.
     getListOfInputFiles():
@@ -110,6 +114,12 @@ class ArraySimulator:
         self._simtelSourcePath = Path(cfg.getConfigArg('simtelPath', simtelSourcePath))
         self._filesLocation = cfg.getConfigArg('outputLocation', filesLocation)
 
+        # File location
+        self._baseDirectory = io.getArraySimulatorOutputDirectory(
+            self._filesLocation,
+            self.label
+        )
+
         configData = gen.collectDataFromYamlOrDict(configFile, configData)
         self._loadArrayConfigData(configData)
         self._setSimtelRunner()
@@ -117,6 +127,7 @@ class ArraySimulator:
         # Storing list of files
         self._results = dict()
         self._results['output'] = list()
+        self._results['hist'] = list()
         self._results['input'] = list()
         self._results['log'] = list()
     # End of init
@@ -170,6 +181,14 @@ class ArraySimulator:
                 'azimuthAngle': self.config.azimuthAngle * u.deg
             }
         )
+
+    def _fillResultsWithoutRun(self, inputFileList):
+        ''' Fill in the results dict wihtout calling run or submit. '''
+        inputFileList = self._makeInputList(inputFileList)
+
+        for file in inputFileList:
+            run = self._guessRunFromFile(file)
+            self._fillResults(file, run)
 
     def run(self, inputFileList):
         '''
@@ -262,7 +281,33 @@ class ArraySimulator:
         ''' Fill the results dict with input, output and log files. '''
         self._results['input'].append(str(file))
         self._results['output'].append(str(self._simtelRunner.getOutputFile(run)))
+        self._results['hist'].append(str(self._simtelRunner.getHistogramFile(run)))
         self._results['log'].append(str(self._simtelRunner.getLogFile(run)))
+
+    def printHistograms(self, inputFileList=None):
+        '''
+        Print histograms and save a pdf file.
+
+        Parameters
+        ----------
+        inputFileList: str or list of str
+            Single file or list of files of shower simulations.
+
+        Returns
+        -------
+        path
+            Path of the pdf file.
+        '''
+
+        if len(self._results['hist']) == 0 and inputFileList is not None:
+            self._fillResultsWithoutRun(inputFileList)
+
+        figName = self._baseDirectory.joinpath('histograms.pdf')
+        histFileList = self.getListOfHistogramFiles()
+        simtelHistograms = SimtelHistograms(histFileList)
+        simtelHistograms.plotAndSaveFigures(figName)
+
+        return figName
 
     def getListOfOutputFiles(self):
         '''
@@ -275,6 +320,18 @@ class ArraySimulator:
         '''
         self._logger.info('Getting list of output files')
         return self._results['output']
+
+    def getListOfHistogramFiles(self):
+        '''
+        Get list of histogram files.
+
+        Returns
+        -------
+        list
+            List with the full path of all the histogram files.
+        '''
+        self._logger.info('Getting list of histogram files')
+        return self._results['hist']
 
     def getListOfInputFiles(self):
         '''
@@ -304,6 +361,11 @@ class ArraySimulator:
         ''' Print list of output files. '''
         self._logger.info('Printing list of output files')
         self._printListOfFiles(which='output')
+
+    def printListOfHistogramFiles(self):
+        ''' Print list of histogram files. '''
+        self._logger.info('Printing list of histogram files')
+        self._printListOfFiles(which='hist')
 
     def printListOfInputFiles(self):
         ''' Print list of output files. '''
