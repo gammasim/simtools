@@ -115,7 +115,7 @@ class ArraySimulator:
         self._filesLocation = cfg.getConfigArg('outputLocation', filesLocation)
 
         # File location
-        self._baseDirectory = io.getOutputDirectory(
+        self._baseDirectory = io.getArraySimulatorOutputDirectory(
             self._filesLocation,
             self.label
         )
