@@ -53,7 +53,7 @@ APP_LIST = {
         ['-s', 'North', '-t', 'LST-1', '-p', 'mirror_list', '--model_version', 'prod4']
     ],
     'production': [
-        ['-c', 'data/test-data/prodConfigTest.yml', '--test']
+        ['-c', 'data/test-data/prodConfigTest.yml', '-t', 'simulate', '--test']
     ]
 }
 
