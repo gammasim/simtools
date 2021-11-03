@@ -10,6 +10,10 @@ from eventio.search_utils import yield_toplevel_of_type
 __all__ = ['SimtelHistograms']
 
 
+class BadHistogramFormat(Exception):
+    pass
+
+
 class SimtelHistograms:
     '''
     This class handle sim_telarray histograms.
@@ -79,9 +83,9 @@ class SimtelHistograms:
                             # Checking consistency of histograms
                             for key_to_test in ['lower_x', 'upper_x', 'n_bins_x', 'title']:
                                 if hist[key_to_test] != thisCombinedHist[key_to_test]:
-                                    self._logger.warning(
-                                        'WARNING: {} is not consistency'.format(key_to_test)
-                                    )
+                                    msg = 'Trying to add histograms with inconsistent dimensions'
+                                    self._logger.error(msg)
+                                    raise BadHistogramFormat(msg)
 
                             thisCombinedHist['data'] = np.add(
                                 thisCombinedHist['data'],
