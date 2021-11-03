@@ -183,7 +183,7 @@ if __name__ == '__main__':
     if args.pars is not None:
         with open(args.pars) as file:
             newPars = yaml.load(file, Loader=yaml.FullLoader)
-        telModel.changeParameters(**newPars)
+        telModel.changeMultipleParameters(**newPars)
 
     ray = RayTracing.fromKwargs(
         telescopeModel=telModel,
