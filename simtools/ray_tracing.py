@@ -141,7 +141,7 @@ class RayTracing:
             self._sourceDistance = 2 * float(mirFlen) * u.cm.to(u.km)  # km
 
             # Setting mirror numbers.
-            if self.config.mirrorNumbers is None:
+            if self.config.mirrorNumbers[0] == 'all':
                 self._mirrorNumbers = list(range(0, self._telescopeModel.mirrors.numberOfMirrors))
             else:
                 self._mirrorNumbers = self.config.mirrorNumbers
