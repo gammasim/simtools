@@ -99,7 +99,16 @@ class SimtelHistograms:
         return combinedHists
 
     def _plotCombinedHistograms(self, combinedHists, figName):
-        ''' Plot all histograms into pdf pages and save the figure as a pdf file. '''
+        '''
+        Plot all histograms into pdf pages and save the figure as a pdf file.
+
+        Parameters
+        ----------
+        combinedHists: list
+            Hisograms from all files combined by the function _combinedHistogramFiles
+        figName: str
+            Name of the output figure file.
+        '''
 
         def _get_bins(hist, axis=0):
             ax_str = 'x' if axis == 0 else 'y'
