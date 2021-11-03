@@ -110,7 +110,7 @@ class SimtelHistograms:
             )
 
         def _get_ax_lim(hist, axis=0):
-            if np.sum(hist['data']) < 1:
+            if np.sum(hist['data']) == 0:
                 return 0, 1
 
             bins = _get_bins(hist, axis=axis)
@@ -138,7 +138,7 @@ class SimtelHistograms:
                 xlim = _get_ax_lim(hist, axis=0)
                 ylim = _get_ax_lim(hist, axis=1)
 
-                if np.sum(hist['data']) < 1:
+                if np.sum(hist['data']) == 0:
                     ax.text(
                         0.5,
                         0.5,
@@ -161,7 +161,7 @@ class SimtelHistograms:
 
                 xlim = _get_ax_lim(hist, axis=0)
 
-                if np.sum(hist['data']) < 1:
+                if np.sum(hist['data']) == 0:
                     ax.text(
                         0.5,
                         0.5,
