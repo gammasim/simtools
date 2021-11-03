@@ -172,15 +172,20 @@ def _validateAndConvertValue(parName, parInfo, valueIn):
     if 'unit' not in parInfo.keys():
 
         # Checking if values have unit and raising error, if so.
-        if any([u.Quantity(v).unit != u.dimensionless_unscaled for v in value]):
-            msg = 'Config entry {} shoul not have units'.format(parName)
+        if all([isinstance(v, str) for v in value]):
+            # In case values are string, e.g. mirrorNumbers = 'all'
+            # This is needed otherwise the elif condition will break
+            pass
+        elif any([u.Quantity(v).unit != u.dimensionless_unscaled for v in value]):
+            msg = 'Config entry {} should not have units'.format(parName)
             logger.error(msg)
             raise InvalidConfigEntry(msg)
+
+        if valueIsDict:
+            return {k: v for (k, v) in zip(valueKeys, value)}
         else:
-            if valueIsDict:
-                return {k: v for (k, v) in zip(valueKeys, value)}
-            else:
-                return value if len(value) > 1 or undefinedLength else value[0]
+            return value if len(value) > 1 or undefinedLength else value[0]
+
     else:
         # Turning parInfo['unit'] into a list, if it is not.
         parUnit = copyAsList(parInfo['unit'])
