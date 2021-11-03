@@ -62,7 +62,7 @@ PRIMARIES:
 
 SITE_PARAMETERS:
   South:
-    OBSLEV: [2150.e2]
+    OBSLEV: [2147.e2]
     ATMOSPHERE: [26, 'Y']
     MAGNET: [20.925, -9.119]
     # ARRANG: [-3.433]
