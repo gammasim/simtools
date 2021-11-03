@@ -16,7 +16,7 @@ __all__ = [
 ]
 
 
-def getOutputDirectory(filesLocation, label, mode=None):
+def _getOutputDirectory(filesLocation, label, mode=None):
     '''
     Get main output directory for a generic mode
 
@@ -26,6 +26,8 @@ def getOutputDirectory(filesLocation, label, mode=None):
         Main location of the output files.
     label: str
         Instance label.
+    mode: str
+        Name of the subdirectory (ray-tracing, model etc)
 
     Returns
     -------
@@ -55,7 +57,7 @@ def getModelOutputDirectory(filesLocation, label):
     -------
     Path
     '''
-    return getOutputDirectory(filesLocation, label, 'model')
+    return _getOutputDirectory(filesLocation, label, 'model')
 
 
 def getLayoutOutputDirectory(filesLocation, label):
@@ -73,7 +75,7 @@ def getLayoutOutputDirectory(filesLocation, label):
     -------
     Path
     '''
-    return getOutputDirectory(filesLocation, label, 'layout')
+    return _getOutputDirectory(filesLocation, label, 'layout')
 
 
 def getRayTracingOutputDirectory(filesLocation, label):
@@ -91,7 +93,7 @@ def getRayTracingOutputDirectory(filesLocation, label):
     -------
     Path
     '''
-    return getOutputDirectory(filesLocation, label, 'ray-tracing')
+    return _getOutputDirectory(filesLocation, label, 'ray-tracing')
 
 
 def getCorsikaOutputDirectory(filesLocation, label):
@@ -109,7 +111,7 @@ def getCorsikaOutputDirectory(filesLocation, label):
     -------
     Path
     '''
-    return getOutputDirectory(filesLocation, label, 'corsika')
+    return _getOutputDirectory(filesLocation, label, 'corsika')
 
 
 def getCameraEfficiencyOutputDirectory(filesLocation, label):
@@ -127,7 +129,7 @@ def getCameraEfficiencyOutputDirectory(filesLocation, label):
     -------
     Path
     '''
-    return getOutputDirectory(filesLocation, label, 'camera-efficiency')
+    return _getOutputDirectory(filesLocation, label, 'camera-efficiency')
 
 
 def getApplicationOutputDirectory(filesLocation, label):
@@ -145,7 +147,25 @@ def getApplicationOutputDirectory(filesLocation, label):
     -------
     Path
     '''
-    return getOutputDirectory(filesLocation, label, 'application-plots')
+    return _getOutputDirectory(filesLocation, label, 'application-plots')
+
+
+def getArraySimulatorOutputDirectory(filesLocation, label):
+    '''
+    Get output directory for array-simulator related files.
+
+    Parameters
+    ----------
+    filesLocation: str, or Path
+        Main location of the output files.
+    label: str
+        Instance label.
+
+    Returns
+    -------
+    Path
+    '''
+    return _getOutputDirectory(filesLocation, label, 'array-simulator')
 
 
 def getDataFile(parentDir, fileName):
