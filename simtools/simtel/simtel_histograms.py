@@ -57,7 +57,7 @@ class SimtelHistograms:
         nFiles = 0
         for file in self._histogramFiles:
 
-            countFile = 1
+            countFile = True
             with EventIOFile(file) as f:
 
                 for i, o in enumerate(yield_toplevel_of_type(f, Histograms)):
@@ -65,7 +65,7 @@ class SimtelHistograms:
                         hists = o.parse()
                     except Exception:
                         self._logger.warning('Problematic file {}'.format(file))
-                        countFile = 0
+                        countFile = False
                         continue
 
                     if len(combinedHists) == 0:
@@ -88,7 +88,7 @@ class SimtelHistograms:
                                 hist['data']
                             )
 
-                    nFiles += countFile
+                    nFiles += int(countFile)
 
         self._logger.debug('End of reading {} files'.format(nFiles))
 
