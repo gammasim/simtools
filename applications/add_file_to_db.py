@@ -116,10 +116,17 @@ if __name__ == '__main__':
     logger = logging.getLogger()
     logger.setLevel(gen.getLogLevelFromUser(args.logLevel))
 
+    filesToInsert = list()
     if args.fileName is not None:
-        filesToInsert = args.fileName
+        for fileNow in args.fileName:
+            if Path(fileNow).suffix in db.ALLOWED_FILE_EXTENSIONS:
+                filesToInsert.append(fileNow)
+            else:
+                logger.debug(
+                    'The file {} will not be uploaded to the DB because its extension is not '
+                    'in the allowed extension list: {}'.format(fileNow, db.ALLOWED_FILE_EXTENSIONS)
+                )
     else:
-        filesToInsert = list()
         for extNow in db.ALLOWED_FILE_EXTENSIONS:
             filesToInsert.extend(
                 Path(args.directory).glob('*{}'.format(extNow))
