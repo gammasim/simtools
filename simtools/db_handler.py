@@ -1056,6 +1056,10 @@ class DatabaseHandler:
             the name of the DB
         file: str or Path
             The name of the file to insert (full path).
+        **kwargs (optional): keyword arguments for file creation.
+            The full list of arguments can be found in, \
+            https://docs.mongodb.com/manual/core/gridfs/#the-files-collection
+            mostly these are unnecessary though.
 
         Returns
         -------
