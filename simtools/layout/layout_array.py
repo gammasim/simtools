@@ -8,7 +8,7 @@ import simtools.config as cfg
 import simtools.io_handler as io
 import simtools.util.general as gen
 from simtools.util import names
-from simtools.layout.telescope_data import TelescopeData
+from simtools.layout.telescope_position import TelescopePosition
 
 
 class InvalidTelescopeListFile(Exception):
@@ -205,7 +205,7 @@ class LayoutArray:
     def _loadArrayCenter(self):
         ''' Load the array center and make convertions if needed. '''
 
-        self._arrayCenter = TelescopeData()
+        self._arrayCenter = TelescopePosition()
         self._arrayCenter.name = 'array_center'
 
         self._arrayCenter.setLocalCoordinates(0 * u.m, 0 * u.m, 0 * u.m)
@@ -245,7 +245,7 @@ class LayoutArray:
     def _appendTelescope(self, row, table, prodList):
         ''' Append a new telescope from table row to list of telescopes. '''
 
-        tel = TelescopeData()
+        tel = TelescopePosition()
         tel.name = row['telescope_name']
 
         if (
@@ -393,7 +393,7 @@ class LayoutArray:
             'altitude': altitude
         }
 
-        tel = TelescopeData(
+        tel = TelescopePosition(
             name=telescopeName,
             configData=configData
         )
