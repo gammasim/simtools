@@ -125,7 +125,7 @@ if __name__ == '__main__':
                 logger.debug(
                     'The file {} will not be uploaded to the DB because its extension is not '
                     'in the allowed extension list: {}'.format(fileNow, db.ALLOWED_FILE_EXTENSIONS)
-                    )
+                )
     else:
         for extNow in db.ALLOWED_FILE_EXTENSIONS:
             filesToInsert.extend(
