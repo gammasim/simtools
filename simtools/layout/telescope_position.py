@@ -15,7 +15,7 @@ class MissingInputForConvertion(Exception):
     pass
 
 
-class TelescopeData:
+class TelescopePosition:
     '''
     Store and perform coordinate transformations with single telescope positions.
 
@@ -111,7 +111,7 @@ class TelescopeData:
         configFile=None
     ):
         '''
-        TelescopeData init.
+        TelescopePosition init.
 
         Parameters
         ----------
@@ -126,14 +126,14 @@ class TelescopeData:
         '''
 
         self._logger = logging.getLogger(__name__)
-        self._logger.debug('Init TelescopeData')
+        self._logger.debug('Init TelescopePosition')
 
         self.name = name
         self._prodId = prodId
 
         # Loading configData
         _configDataIn = gen.collectDataFromYamlOrDict(configFile, configData, allowEmpty=True)
-        _parameterFile = io.getDataFile('parameters', 'telescope-data_parameters.yml')
+        _parameterFile = io.getDataFile('parameters', 'telescope-position_parameters.yml')
         _parameters = gen.collectDataFromYamlOrDict(_parameterFile, None)
         self.config = gen.validateConfigData(_configDataIn, _parameters)
 
@@ -144,7 +144,7 @@ class TelescopeData:
     @classmethod
     def fromKwargs(cls, **kwargs):
         '''
-        Builds a TelescopeData object from kwargs only.
+        Builds a TelescopePosition object from kwargs only.
         The configurable parameters can be given as kwargs, instead of using the
         configData or configFile arguments.
 
