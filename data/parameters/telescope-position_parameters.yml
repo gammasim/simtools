@@ -1,0 +1,52 @@
+posX: 
+  len: 1
+  unit: !astropy.units.Unit {unit: m}
+  names: ['x']
+  default: null
+posY: 
+  len: 1
+  unit: !astropy.units.Unit {unit: m}
+  names: ['y']
+  default: null
+posZ: 
+  len: 1
+  unit: !astropy.units.Unit {unit: m}
+  names: ['z']
+  default: null
+longitude:
+  len: 1
+  unit: !astropy.units.Unit {unit: deg}
+  names: ['long']
+  default: null
+latitude:
+  len: 1
+  unit: !astropy.units.Unit {unit: deg}
+  names: ['lat']
+  default: null
+utmEast:
+  len: 1
+  unit: !astropy.units.Unit {unit: m}
+  names: ['east']
+  default: null
+utmNorth:
+  len: 1
+  unit: !astropy.units.Unit {unit: m}
+  names: ['north']
+  default: null
+altitude:
+  len: 1
+  unit: !astropy.units.Unit {unit: m}
+  names: ['alt']
+  default: null
+corsikaObsLevel:
+  len: 1
+  unit: !astropy.units.Unit {unit: m}
+  default: null
+corsikaSphereCenter:
+  len: 1
+  unit: !astropy.units.Unit {unit: m}
+  default: null
+corsikaSphereRadius:
+  len: 1
+  unit: !astropy.units.Unit {unit: m}
+  default: null
