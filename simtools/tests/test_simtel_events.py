@@ -12,10 +12,10 @@ logger.setLevel(logging.DEBUG)
 def test_reading_files():
     files = list()
     files.append(io.getTestDataFile(
-        'run1_gamma_za20deg_azm0deg-North-Prod5_test-production-5.hdata.zst')
+        'run1_gamma_za20deg_azm0deg-North-Prod5_test-production-5.simtel.zst')
     )
     files.append(io.getTestDataFile(
-        'run2_gamma_za20deg_azm0deg-North-Prod5_test-production-5.hdata.zst')
+        'run2_gamma_za20deg_azm0deg-North-Prod5_test-production-5.simtel.zst')
     )
 
     print(files)
