@@ -21,8 +21,16 @@ class TestSimtelEvents(unittest.TestCase):
             'run202_proton_za20deg_azm0deg-North-Prod5_test-production-5-mini.simtel.zst')
         )
 
-    def test_reading_files():
+    def test_reading_files(self):
         simtel_events = SimtelEvents(inputFiles=self.testFiles)
+        self.assertEqual(len(simtel_events.inputFiles), 2)
+
+    def test_loading_files(self):
+        simtel_events = SimtelEvents()
+        self.assertEqual(len(simtel_events.inputFiles), 0)
+
+        simtel_events.loadInputFiles(self.testFiles)
+        self.assertEqual(len(simtel_events.inputFiles), 2)
 
 
 if __name__ == '__main__':
