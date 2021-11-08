@@ -36,15 +36,19 @@ class TestSimtelEvents(unittest.TestCase):
     #     simtel_events = SimtelEvents(inputFiles=self.testFiles)
     #     simtel_events.loadHeader()
 
-    def test_larger_files(self):
-        directory = '/lustre/fs24/group/cta/users/prado/gammasim-files/simtel-data/North/gamma/data'
-        files = [
-            directory + '/run93_gamma_za20deg_azm0deg-North-Prod5_test-production-5.simtel.zst',
-            directory + '/run94_gamma_za20deg_azm0deg-North-Prod5_test-production-5.simtel.zst'
-        ]
+    # def test_larger_files(self):
+    #     directory = '/lustre/fs24/group/cta/users/prado/gammasim-files/simtel-data/North/gamma/data'
+    #     files = [
+    #         directory + '/run93_gamma_za20deg_azm0deg-North-Prod5_test-production-5.simtel.zst',
+    #         directory + '/run94_gamma_za20deg_azm0deg-North-Prod5_test-production-5.simtel.zst'
+    #     ]
 
-        simtel_events = SimtelEvents(inputFiles=files)
-        print(simtel_events._mcHeader)
+    #     simtel_events = SimtelEvents(inputFiles=files)
+    #     print(simtel_events._mcHeader)
+
+    def test_select_events(self):
+        simtel_events = SimtelEvents(inputFiles=self.testFiles)
+        simtel_events.selectEvents()
 
 
 if __name__ == '__main__':
