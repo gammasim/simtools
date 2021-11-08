@@ -1,8 +1,8 @@
-import copy
 import logging
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib.backends.backend_pdf import PdfPages
+from copy import copy
+from collections import defaultdict
 
 from eventio.simtel import SimTelFile
 
@@ -61,9 +61,11 @@ class SimtelEvents:
     def loadHeader(self):
 
         self._numberOfFiles = len(self.inputFiles)
-        self._mcHeader = dict()
         keysToGrab = ['obsheight', 'n_showers', 'n_use', 'core_range', 'diffuse', 'viewcone',
                       'E_range', 'spectral_index', 'B_total']
+        # Dict has to have its keys defined and filled beforehands
+        self._mcHeader = {k: 0 for k in keysToGrab}
+        self._mcHeader['rscat'] = 0
 
         def _areHeadersConsistent(header0, header1):
             comparison = dict()
@@ -77,12 +79,17 @@ class SimtelEvents:
             rscat = str(corsikaInputCards[0]).split('CSCAT')
             return float(rscat[1].split()[1])
 
+        isFirstFile = True
+        numberOfTriggeredEvents = 0
         for file in self.inputFiles:
             with SimTelFile(file) as f:
 
-                if len(self._mcHeader) == 0:
+                for event in f:
+                    numberOfTriggeredEvents += 1
+
+                if isFirstFile:
                     # First file - grabbing parameters
-                    self._mcHeader = {key: f.mc_run_headers[0][key] for key in keysToGrab}
+                    self._mcHeader.update({k: copy(f.mc_run_headers[0][k]) for k in keysToGrab})
                     self._mcHeader['rscat'] = _readCSCAT(f.corsika_inputcards)
                 else:
                     # Remaining files - Checking whether the parameters are consistent
@@ -91,10 +98,11 @@ class SimtelEvents:
                         self._logger.error(msg)
                         raise InconsistentInputFile(msg)
 
-        print(self._mcHeader['n_use'])
+                isFirstFile = False
+
         # Calculating number of events
         self._mcHeader['n_events'] = (
-            # self._mcHeader['n_use'] * self._mcHeader['n_showers'] * self._numberOfFiles
-            self._mcHeader['n_showers'] * self._numberOfFiles
+            self._mcHeader['n_use'] * self._mcHeader['n_showers'] * self._numberOfFiles
         )
+        self._mcHeader['n_triggered'] = numberOfTriggeredEvents
         return
