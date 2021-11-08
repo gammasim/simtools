@@ -12,15 +12,15 @@ logger.setLevel(logging.DEBUG)
 def test_reading_files():
     files = list()
     files.append(io.getTestDataFile(
-        'run1_gamma_za20deg_azm0deg-North-Prod5_test-production-5.simtel.zst')
+        'run201_proton_za20deg_azm0deg-North-Prod5_test-production-5-mini.simtel.zst')
     )
     files.append(io.getTestDataFile(
-        'run2_gamma_za20deg_azm0deg-North-Prod5_test-production-5.simtel.zst')
+        'run202_proton_za20deg_azm0deg-North-Prod5_test-production-5-mini.simtel.zst')
     )
 
     print(files)
 
-    simtel_events = SimtelEvents(files=files)
+    simtel_events = SimtelEvents(inputFiles=files)
 
 
 if __name__ == '__main__':
