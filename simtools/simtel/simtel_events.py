@@ -1,3 +1,4 @@
+import math
 import logging
 import numpy as np
 import matplotlib.pyplot as plt
@@ -106,11 +107,35 @@ class SimtelEvents:
         if energyRange is None:
             energyRange = self._mcHeader['E_range']
 
+        if coreMax is None:
+            coreMax = self._mcHeader['core_range'][1]
+
+        selectedEvents = list()
         for file in self.inputFiles:
             with SimTelFile(file) as f:
 
                 for event in f:
-                    print(event['mc_event'].keys())
-                    break
 
-        print(energyRange)
+                    energy = event['mc_shower']['energy']
+                    x_core = event['mc_event']['xcore']
+                    y_core = event['mc_event']['ycore']
+                    r_core = math.sqrt(math.pow(x_core, 2) + math.pow(y_core, 2))
+
+                    print(energy)
+                    print(r_core)
+
+                    if energy < energyRange[0] or energy > energyRange[1]:
+                        continue
+
+                    if r_core > coreMax:
+                        continue
+
+                    selectedEvents.append(event)
+
+                    # print(event.keys())
+                    # print(event['mc_shower'].keys())
+                    # print(event['mc_event'].keys())
+        print(coreMax)
+
+        print(len(selectedEvents))
+        print(self._mcHeader)
