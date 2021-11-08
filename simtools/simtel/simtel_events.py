@@ -23,7 +23,7 @@ class SimtelEvents:
 
     def __init__(
         self,
-        inputFiles
+        inputFiles=None
     ):
         '''
         SimtelHistograms
@@ -38,4 +38,16 @@ class SimtelEvents:
         self.loadInputFiles(inputFiles)
 
     def loadInputFiles(self, files):
-        pass
+        if not hasattr(self, 'inputFiles'):
+            self.inputFiles = list()
+
+        if files is None:
+            msg = 'No input file was given'
+            self._logger.debug(msg)
+            return
+
+        if not isinstance(files, list):
+            files = [files]
+
+        for file in files:
+            self.inputFiles.append(file)
