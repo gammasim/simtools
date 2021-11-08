@@ -40,6 +40,7 @@ class SimtelEvents:
         '''
         self._logger = logging.getLogger(__name__)
         self.loadInputFiles(inputFiles)
+        self.loadHeader()
 
     def loadInputFiles(self, files):
         if not hasattr(self, 'inputFiles'):
@@ -55,6 +56,7 @@ class SimtelEvents:
 
         for file in files:
             self.inputFiles.append(file)
+        return
 
     def loadHeader(self):
 
@@ -71,12 +73,17 @@ class SimtelEvents:
 
             return all(comparison)
 
+        def _readCSCAT(corsikaInputCards):
+            rscat = str(corsikaInputCards[0]).split('CSCAT')
+            return float(rscat[1].split()[1])
+
         for file in self.inputFiles:
             with SimTelFile(file) as f:
 
                 if len(self._mcHeader) == 0:
                     # First file - grabbing parameters
                     self._mcHeader = {key: f.mc_run_headers[0][key] for key in keysToGrab}
+                    self._mcHeader['rscat'] = _readCSCAT(f.corsika_inputcards)
                 else:
                     # Remaining files - Checking whether the parameters are consistent
                     if not _areHeadersConsistent(self._mcHeader, f.mc_run_headers[0]):
@@ -84,9 +91,10 @@ class SimtelEvents:
                         self._logger.error(msg)
                         raise InconsistentInputFile(msg)
 
+        print(self._mcHeader['n_use'])
         # Calculating number of events
         self._mcHeader['n_events'] = (
-            self._mcHeader['n_use'] * self._mcHeader['n_showers'] * self._numberOfFiles
+            # self._mcHeader['n_use'] * self._mcHeader['n_showers'] * self._numberOfFiles
+            self._mcHeader['n_showers'] * self._numberOfFiles
         )
-
         return
