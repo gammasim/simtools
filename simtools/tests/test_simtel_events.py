@@ -50,6 +50,9 @@ class TestSimtelEvents(unittest.TestCase):
         simtel_events = SimtelEvents(inputFiles=self.testFiles)
         simtel_events.selectEvents()
 
+        simEvents = simtel_events.countSimulatedEvents(energyRange=[0.3, 300], coreMax=1900)
+        print(simEvents)
+
 
 if __name__ == '__main__':
     unittest.main()
