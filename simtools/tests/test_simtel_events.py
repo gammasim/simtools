@@ -32,6 +32,10 @@ class TestSimtelEvents(unittest.TestCase):
         simtel_events.loadInputFiles(self.testFiles)
         self.assertEqual(len(simtel_events.inputFiles), 2)
 
+    def test_loading_header(self):
+        simtel_events = SimtelEvents(inputFiles=self.testFiles)
+        simtel_events.loadHeader()
+
 
 if __name__ == '__main__':
     unittest.main()
