@@ -3,7 +3,6 @@ import logging
 import numpy as np
 import matplotlib.pyplot as plt
 from copy import copy
-from collections import defaultdict
 
 from eventio.simtel import SimTelFile
 
@@ -102,8 +101,11 @@ class SimtelEvents:
         self._mcHeader['n_triggered'] = numberOfTriggeredEvents
         return
 
+    def countTriggeredEvents(self, energyRange=None, coreMax=None, coneMax=None):
+        events = self.selectEvents(energyRange=energyRange, coreMax=coreMax, coneMax=coneMax)
+        return len(events)
+
     def selectEvents(self, energyRange=None, coreMax=None, coneMax=None):
-        print(self._mcHeader)
         if energyRange is None:
             energyRange = self._mcHeader['E_range']
 
@@ -115,14 +117,10 @@ class SimtelEvents:
             with SimTelFile(file) as f:
 
                 for event in f:
-
                     energy = event['mc_shower']['energy']
                     x_core = event['mc_event']['xcore']
                     y_core = event['mc_event']['ycore']
                     r_core = math.sqrt(math.pow(x_core, 2) + math.pow(y_core, 2))
-
-                    print(energy)
-                    print(r_core)
 
                     if energy < energyRange[0] or energy > energyRange[1]:
                         continue
@@ -131,11 +129,26 @@ class SimtelEvents:
                         continue
 
                     selectedEvents.append(event)
+        return selectedEvents
 
-                    # print(event.keys())
-                    # print(event['mc_shower'].keys())
-                    # print(event['mc_event'].keys())
-        print(coreMax)
+    def countSimulatedEvents(self, energyRange=None, coreMax=None, coneMax=None):
+        if energyRange is None:
+            energyRange = self._mcHeader['E_range']
 
-        print(len(selectedEvents))
-        print(self._mcHeader)
+        if coreMax is None:
+            coreMax = self._mcHeader['core_range'][1]
+
+        # energy factor
+        def integral(erange):
+            power = self._mcHeader['spectral_index'] + 1
+            return math.pow(erange[0], power) - math.pow(erange[1], power)
+
+        energy_factor = integral(energyRange) / integral(self._mcHeader['E_range'])
+
+        # core factor
+        core_factor = math.pow(coreMax, 2) / math.pow(self._mcHeader['core_range'][1], 2)
+
+        # cone factor
+        # TODO
+
+        return self._mcHeader['n_events'] * energy_factor * core_factor
