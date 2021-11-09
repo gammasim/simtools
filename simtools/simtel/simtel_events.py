@@ -66,6 +66,11 @@ class SimtelEvents:
         # Dict has to have its keys defined and filled beforehands
         self._mcHeader = {k: 0 for k in keysToGrab}
 
+        self.summaryEvents = {
+            'energy': np.array([]),
+            'r_core': np.array([])
+        }
+
         def _areHeadersConsistent(header0, header1):
             comparison = dict()
             for k in keysToGrab:
@@ -80,6 +85,14 @@ class SimtelEvents:
             with SimTelFile(file) as f:
 
                 for event in f:
+                    en = event['mc_shower']['energy']
+                    rc = math.sqrt(
+                        math.pow(event['mc_event']['xcore'], 2)
+                        + math.pow(event['mc_event']['ycore'], 2)
+                    )
+
+                    self.summaryEvents['energy'] = np.append(self.summaryEvents['energy'], en)
+                    self.summaryEvents['r_core'] = np.append(self.summaryEvents['r_core'], rc)
                     numberOfTriggeredEvents += 1
 
                 if isFirstFile:
@@ -102,8 +115,21 @@ class SimtelEvents:
         return
 
     def countTriggeredEvents(self, energyRange=None, coreMax=None, coneMax=None):
-        events = self.selectEvents(energyRange=energyRange, coreMax=coreMax, coneMax=coneMax)
-        return len(events)
+        if energyRange is None:
+            energyRange = self._mcHeader['E_range']
+
+        if coreMax is None:
+            coreMax = self._mcHeader['core_range'][1]
+
+        isInEnergyRange = list(map(
+            lambda e: e > energyRange[0] and e < energyRange[1],
+            self.summaryEvents['energy']
+        ))
+        isInCoreRange = list(map(
+            lambda r: r < coreMax,
+            self.summaryEvents['r_core']
+        ))
+        return np.sum(np.array(isInEnergyRange) * np.array(isInCoreRange))
 
     def selectEvents(self, energyRange=None, coreMax=None, coneMax=None):
         if energyRange is None:
