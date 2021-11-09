@@ -23,45 +23,42 @@ class TestSimtelEvents(unittest.TestCase):
             'run202_proton_za20deg_azm0deg-North-Prod5_test-production-5-mini.simtel.zst')
         )
 
-    # def test_reading_files(self):
-    #     simtel_events = SimtelEvents(inputFiles=self.testFiles)
-    #     self.assertEqual(len(simtel_events.inputFiles), 2)
+    def test_reading_files(self):
+        simtel_events = SimtelEvents(inputFiles=self.testFiles)
+        self.assertEqual(len(simtel_events.inputFiles), 2)
 
-    # def test_loading_files(self):
-    #     simtel_events = SimtelEvents()
-    #     self.assertEqual(len(simtel_events.inputFiles), 0)
+    def test_loading_files(self):
+        simtel_events = SimtelEvents()
+        self.assertEqual(len(simtel_events.inputFiles), 0)
 
-    #     simtel_events.loadInputFiles(self.testFiles)
-    #     self.assertEqual(len(simtel_events.inputFiles), 2)
+        simtel_events.loadInputFiles(self.testFiles)
+        self.assertEqual(len(simtel_events.inputFiles), 2)
 
-    # def test_loading_header(self):
-    #     simtel_events = SimtelEvents(inputFiles=self.testFiles)
-    #     simtel_events.loadHeader()
+    def test_loading_header(self):
+        simtel_events = SimtelEvents(inputFiles=self.testFiles)
+        simtel_events.loadHeaderAndSummary()
 
-    # def test_larger_files(self):
-    #     directory = '/lustre/fs24/group/cta/users/prado/gammasim-files/simtel-data/North/gamma/data'
-    #     files = [
-    #         directory + '/run93_gamma_za20deg_azm0deg-North-Prod5_test-production-5.simtel.zst',
-    #         directory + '/run94_gamma_za20deg_azm0deg-North-Prod5_test-production-5.simtel.zst'
-    #     ]
-
-    #     simtel_events = SimtelEvents(inputFiles=files)
-    #     print(simtel_events._mcHeader)
-
-    # def test_select_events(self):
-    #     simtel_events = SimtelEvents(inputFiles=self.testFiles)
-    #     simtel_events.selectEvents()
-
-    #     simEvents = simtel_events.countSimulatedEvents(energyRange=[0.3, 300], coreMax=1900)
-    #     print(simEvents)
-
+    def test_select_events(self):
+        simtel_events = SimtelEvents(inputFiles=self.testFiles)
+        events = simtel_events.selectEvents()
+        self.assertEqual(len(events), 7)
 
     def test_units(self):
         simtel_events = SimtelEvents(inputFiles=self.testFiles)
         # simtel_events.selectEvents()
 
-        simEvents = simtel_events.countSimulatedEvents(energyRange=[0.3 * u.TeV, 300 * u.TeV], coreMax=1500 * u.m)
-        print(simEvents)
+        # coreMax without units
+        with self.assertRaises(TypeError):
+            simEvents = simtel_events.countSimulatedEvents(energyRange=[0.3 * u.TeV, 300 * u.TeV], coreMax=1500)
+
+        # energyRange without units
+        with self.assertRaises(TypeError):
+            simEvents = simtel_events.countSimulatedEvents(energyRange=[0.3, 300], coreMax=1500 * u.m)
+
+        # energyRange with wrong units
+        with self.assertRaises(TypeError):
+            simEvents = simtel_events.countSimulatedEvents(energyRange=[0.3 * u.m, 300 * u.m], coreMax=1500 * u.m)
+
 
 if __name__ == '__main__':
     unittest.main()
