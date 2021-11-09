@@ -3,6 +3,8 @@
 import logging
 import unittest
 
+import astropy.units as u
+
 import simtools.io_handler as io
 from simtools.simtel.simtel_events import SimtelEvents
 
@@ -46,13 +48,20 @@ class TestSimtelEvents(unittest.TestCase):
     #     simtel_events = SimtelEvents(inputFiles=files)
     #     print(simtel_events._mcHeader)
 
-    def test_select_events(self):
+    # def test_select_events(self):
+    #     simtel_events = SimtelEvents(inputFiles=self.testFiles)
+    #     simtel_events.selectEvents()
+
+    #     simEvents = simtel_events.countSimulatedEvents(energyRange=[0.3, 300], coreMax=1900)
+    #     print(simEvents)
+
+
+    def test_units(self):
         simtel_events = SimtelEvents(inputFiles=self.testFiles)
-        simtel_events.selectEvents()
+        # simtel_events.selectEvents()
 
-        simEvents = simtel_events.countSimulatedEvents(energyRange=[0.3, 300], coreMax=1900)
+        simEvents = simtel_events.countSimulatedEvents(energyRange=[0.3 * u.TeV, 300 * u.TeV], coreMax=1500 * u.m)
         print(simEvents)
-
 
 if __name__ == '__main__':
     unittest.main()
