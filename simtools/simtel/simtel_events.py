@@ -1,7 +1,6 @@
 import math
 import logging
 import numpy as np
-import matplotlib.pyplot as plt
 from copy import copy
 
 from eventio.simtel import SimTelFile
@@ -16,33 +15,45 @@ class InconsistentInputFile(Exception):
 
 class SimtelEvents:
     '''
-    This class handle sim_telarray histograms.
-    Histogram files are handled by using eventio library.
+    This class handle sim_telarray events.
+    sim_telarray files are read with eventio package,
 
     Methods
     -------
     plotAndSaveFigures(figName)
         Plot all histograms and save a single pdf file.
+
+
+    Attributes
+    ----------
+    inputFiles: list
+        List of sim_telarray files.
+    summaryEvents: dict
+        Arrays of energy and core radius of events.
     '''
 
-    def __init__(
-        self,
-        inputFiles=None
-    ):
+    def __init__(self, inputFiles=None):
         '''
-        SimtelHistograms
+        SimtelEvents
 
         Parameters
         ----------
-        histogramFiles: list
-            List of sim_telarray histogram files (str of Path).
-
+        inputFiles: list
+            List of sim_telarray output files (str of Path).
         '''
         self._logger = logging.getLogger(__name__)
         self.loadInputFiles(inputFiles)
-        self.loadHeader()
+        self.loadHeaderAndSummary()
 
     def loadInputFiles(self, files):
+        '''
+        Store list of input files into inputFiles attribute.
+
+        Parameters
+        ----------
+        files: list
+            List of sim_telarray files (str or Path).
+        '''
         if not hasattr(self, 'inputFiles'):
             self.inputFiles = list()
 
@@ -58,7 +69,11 @@ class SimtelEvents:
             self.inputFiles.append(file)
         return
 
-    def loadHeader(self):
+    def loadHeaderAndSummary(self):
+        '''
+        Read MC header from sim_telarray files and store it into _mcHeader.
+        Also fills summaryEvents with energy and core radius of triggered events.
+        '''
 
         self._numberOfFiles = len(self.inputFiles)
         keysToGrab = ['obsheight', 'n_showers', 'n_use', 'core_range', 'diffuse', 'viewcone',
@@ -114,7 +129,22 @@ class SimtelEvents:
         self._mcHeader['n_triggered'] = numberOfTriggeredEvents
         return
 
-    def countTriggeredEvents(self, energyRange=None, coreMax=None, coneMax=None):
+    def countTriggeredEvents(self, energyRange=None, coreMax=None):
+        '''
+        Count number of triggered events within a certain energy range and core radius.
+
+        Parameters
+        ----------
+        energyRange: Tuple (len 2)
+            Max and min energy of energy range, e.g. energyRange=(100 * u.GeV, 10 * u.TeV)
+        coreMax: astropy.Quantity (distance)
+            Maximum core radius for selecting showers, e.g. coreMax=1000 * u.m
+
+        Returns
+        -------
+        int
+            Number of triggered events.
+        '''
         if energyRange is None:
             energyRange = self._mcHeader['E_range']
 
@@ -131,7 +161,22 @@ class SimtelEvents:
         ))
         return np.sum(np.array(isInEnergyRange) * np.array(isInCoreRange))
 
-    def selectEvents(self, energyRange=None, coreMax=None, coneMax=None):
+    def selectEvents(self, energyRange=None, coreMax=None):
+        '''
+        Select sim_telarray events within a certain energy range and core radius.
+
+        Parameters
+        ----------
+        energyRange: Tuple (len 2)
+            Max and min energy of energy range, e.g. energyRange=(100 * u.GeV, 10 * u.TeV)
+        coreMax: astropy.Quantity (distance)
+            Maximum core radius for selecting showers, e.g. coreMax=1000 * u.m
+
+        Returns
+        -------
+        list
+            List of events.
+        '''
         if energyRange is None:
             energyRange = self._mcHeader['E_range']
 
@@ -157,7 +202,23 @@ class SimtelEvents:
                     selectedEvents.append(event)
         return selectedEvents
 
-    def countSimulatedEvents(self, energyRange=None, coreMax=None, coneMax=None):
+    def countSimulatedEvents(self, energyRange=None, coreMax=None):
+        '''
+        Count (or calculate) number of simulated events within a certain energy range and \
+        core radius, nased on the simulated power law.
+
+        Parameters
+        ----------
+        energyRange: Tuple (len 2)
+            Max and min energy of energy range, e.g. energyRange=(100 * u.GeV, 10 * u.TeV)
+        coreMax: astropy.Quantity (distance)
+            Maximum core radius for selecting showers, e.g. coreMax=1000 * u.m
+
+        Returns
+        -------
+        int
+            Number of simulated events.
+        '''
         if energyRange is None:
             energyRange = self._mcHeader['E_range']
 
@@ -173,8 +234,5 @@ class SimtelEvents:
 
         # core factor
         core_factor = math.pow(coreMax, 2) / math.pow(self._mcHeader['core_range'][1], 2)
-
-        # cone factor
-        # TODO
 
         return self._mcHeader['n_events'] * energy_factor * core_factor
