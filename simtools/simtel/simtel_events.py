@@ -234,10 +234,20 @@ class SimtelEvents:
         return self._mcHeader['n_events'] * energy_factor * core_factor
 
     def _validateEnergyRange(self, energyRange):
-        return (
-            self._mcHeader['E_range'] if energyRange is None
-            else (energyRange[0].to(u.TeV).value, energyRange[1].to(u.TeV).value)
-        )
+        if energyRange is None:
+            return self._mcHeader['E_range']
+
+        if not isinstance(energyRange[0], u.Quantity) or not isinstance(energyRange[1], u.Quantity):
+            msg = 'energyRange must be given as u.Quantity in units of energy'
+            self._logger.error(msg)
+            raise TypeError(msg)
+
+        try:
+            return (energyRange[0].to(u.TeV).value, energyRange[1].to(u.TeV).value)
+        except u.core.UnitConversionError:
+            msg = 'energyRange must be in units of energy'
+            self._logger.error(msg)
+            raise TypeError(msg)
 
     def _validateCoreMax(self, coreMax):
         return self._mcHeader['core_range'][1] if coreMax is None else coreMax.to(u.m).value
