@@ -3,6 +3,8 @@ import logging
 import numpy as np
 from copy import copy
 
+import astropy.units as u
+
 from eventio.simtel import SimTelFile
 
 
@@ -129,6 +131,7 @@ class SimtelEvents:
         self._mcHeader['n_triggered'] = numberOfTriggeredEvents
         return
 
+    @u.quantity_input(coreMax=u.m)
     def countTriggeredEvents(self, energyRange=None, coreMax=None):
         '''
         Count number of triggered events within a certain energy range and core radius.
@@ -145,11 +148,8 @@ class SimtelEvents:
         int
             Number of triggered events.
         '''
-        if energyRange is None:
-            energyRange = self._mcHeader['E_range']
-
-        if coreMax is None:
-            coreMax = self._mcHeader['core_range'][1]
+        energyRange = self._validateEnergyRange(energyRange)
+        coreMax = self._validateCoreMax(coreMax)
 
         isInEnergyRange = list(map(
             lambda e: e > energyRange[0] and e < energyRange[1],
@@ -161,6 +161,7 @@ class SimtelEvents:
         ))
         return np.sum(np.array(isInEnergyRange) * np.array(isInCoreRange))
 
+    @u.quantity_input(coreMax=u.m)
     def selectEvents(self, energyRange=None, coreMax=None):
         '''
         Select sim_telarray events within a certain energy range and core radius.
@@ -177,11 +178,8 @@ class SimtelEvents:
         list
             List of events.
         '''
-        if energyRange is None:
-            energyRange = self._mcHeader['E_range']
-
-        if coreMax is None:
-            coreMax = self._mcHeader['core_range'][1]
+        energyRange = self._validateEnergyRange(energyRange)
+        coreMax = self._validateCoreMax(coreMax)
 
         selectedEvents = list()
         for file in self.inputFiles:
@@ -202,6 +200,7 @@ class SimtelEvents:
                     selectedEvents.append(event)
         return selectedEvents
 
+    @u.quantity_input(coreMax=u.m)
     def countSimulatedEvents(self, energyRange=None, coreMax=None):
         '''
         Count (or calculate) number of simulated events within a certain energy range and \
@@ -219,11 +218,8 @@ class SimtelEvents:
         int
             Number of simulated events.
         '''
-        if energyRange is None:
-            energyRange = self._mcHeader['E_range']
-
-        if coreMax is None:
-            coreMax = self._mcHeader['core_range'][1]
+        energyRange = self._validateEnergyRange(energyRange)
+        coreMax = self._validateCoreMax(coreMax)
 
         # energy factor
         def integral(erange):
@@ -236,3 +232,12 @@ class SimtelEvents:
         core_factor = math.pow(coreMax, 2) / math.pow(self._mcHeader['core_range'][1], 2)
 
         return self._mcHeader['n_events'] * energy_factor * core_factor
+
+    def _validateEnergyRange(self, energyRange):
+        return (
+            self._mcHeader['E_range'] if energyRange is None
+            else (energyRange[0].to(u.TeV).value, energyRange[1].to(u.TeV).value)
+        )
+
+    def _validateCoreMax(self, coreMax):
+        return self._mcHeader['core_range'][1] if coreMax is None else coreMax.to(u.m).value
