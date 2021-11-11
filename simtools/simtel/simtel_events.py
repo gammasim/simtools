@@ -210,6 +210,7 @@ class SimtelEvents:
         '''
         Count (or calculate) number of simulated events within a certain energy range and \
         core radius, nased on the simulated power law.
+        This calculation assumes the simulated spectrum is given by a single power law.
 
         Parameters
         ----------
