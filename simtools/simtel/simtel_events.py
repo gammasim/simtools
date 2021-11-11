@@ -234,6 +234,10 @@ class SimtelEvents:
         return self._mcHeader['n_events'] * energy_factor * core_factor
 
     def _validateEnergyRange(self, energyRange):
+        '''
+        Returns the default energy range from mcHeader in case energyRange=None.
+        Checks units, convert it to TeV and return it in the right format, otherwise.
+        '''
         if energyRange is None:
             return self._mcHeader['E_range']
 
@@ -250,4 +254,8 @@ class SimtelEvents:
             raise TypeError(msg)
 
     def _validateCoreMax(self, coreMax):
+        '''
+        Returns the default coreMAx from mcHeader in case coreMax=None.
+        Checks units, convert it to m and return it in the right format, otherwise.
+        '''
         return self._mcHeader['core_range'][1] if coreMax is None else coreMax.to(u.m).value
