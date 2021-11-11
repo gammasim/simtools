@@ -45,7 +45,7 @@ class SimtelEvents:
         '''
         self._logger = logging.getLogger(__name__)
         self.loadInputFiles(inputFiles)
-        if inputFiles is not None:
+        if self.numberOfFiles > 0:
             self.loadHeaderAndSummary()
 
     def loadInputFiles(self, files=None):
@@ -71,6 +71,11 @@ class SimtelEvents:
         for file in files:
             self.inputFiles.append(file)
         return
+
+    @property
+    def numberOfFiles(self):
+        ''' Number of files loaded. '''
+        return len(self.inputFiles) if hasattr(self, 'inputFiles') else 0
 
     def loadHeaderAndSummary(self):
         '''
