@@ -45,7 +45,8 @@ class SimtelEvents:
         '''
         self._logger = logging.getLogger(__name__)
         self.loadInputFiles(inputFiles)
-        self.loadHeaderAndSummary()
+        if inputFiles is not None:
+            self.loadHeaderAndSummary()
 
     def loadInputFiles(self, files=None):
         '''
@@ -80,8 +81,7 @@ class SimtelEvents:
         self._numberOfFiles = len(self.inputFiles)
         keysToGrab = ['obsheight', 'n_showers', 'n_use', 'core_range', 'diffuse', 'viewcone',
                       'E_range', 'spectral_index', 'B_total']
-        # Dict has to have its keys defined and filled beforehands
-        self._mcHeader = {k: 0 for k in keysToGrab}
+        self._mcHeader = dict()
 
         def _areHeadersConsistent(header0, header1):
             comparison = dict()
