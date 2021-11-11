@@ -47,7 +47,7 @@ class SimtelEvents:
         self.loadInputFiles(inputFiles)
         self.loadHeaderAndSummary()
 
-    def loadInputFiles(self, files):
+    def loadInputFiles(self, files=None):
         '''
         Store list of input files into inputFiles attribute.
 
