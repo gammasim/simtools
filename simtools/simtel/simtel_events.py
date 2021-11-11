@@ -1,194 +1,267 @@
-import copy
+import math
 import logging
 import numpy as np
-import matplotlib.pyplot as plt
-from matplotlib.backends.backend_pdf import PdfPages
+from copy import copy
 
-from eventio import EventIOFile, Histograms
-from eventio.search_utils import yield_toplevel_of_type
+import astropy.units as u
 
-__all__ = ['SimtelHistograms']
+from eventio.simtel import SimTelFile
 
 
-class BadHistogramFormat(Exception):
+__all__ = ['SimtelEvents']
+
+
+class InconsistentInputFile(Exception):
     pass
 
 
-class SimtelHistograms:
+class SimtelEvents:
     '''
-    This class handle sim_telarray histograms.
-    Histogram files are handled by using eventio library.
+    This class handle sim_telarray events.
+    sim_telarray files are read with eventio package,
 
     Methods
     -------
     plotAndSaveFigures(figName)
         Plot all histograms and save a single pdf file.
+
+
+    Attributes
+    ----------
+    inputFiles: list
+        List of sim_telarray files.
+    summaryEvents: dict
+        Arrays of energy and core radius of events.
     '''
 
-    def __init__(
-        self,
-        histogramFiles
-    ):
+    def __init__(self, inputFiles=None):
         '''
-        SimtelHistograms
+        SimtelEvents
 
         Parameters
         ----------
-        histogramFiles: list
-            List of sim_telarray histogram files (str of Path).
-
+        inputFiles: list
+            List of sim_telarray output files (str of Path).
         '''
         self._logger = logging.getLogger(__name__)
-        self._histogramFiles = histogramFiles
+        self.loadInputFiles(inputFiles)
+        if self.numberOfFiles > 0:
+            self.loadHeaderAndSummary()
 
-    def plotAndSaveFigures(self, figName):
+    def loadInputFiles(self, files=None):
         '''
-        Plot all histograms and save a single pdf file.
+        Store list of input files into inputFiles attribute.
 
         Parameters
         ----------
-        figName: str
-            Name of the output figure file.
+        files: list
+            List of sim_telarray files (str or Path).
         '''
-        combinedHists = self._combineHistogramFiles()
-        self._plotCombinedHistograms(combinedHists, figName)
+        if not hasattr(self, 'inputFiles'):
+            self.inputFiles = list()
 
-    def _combineHistogramFiles(self):
-        ''' Combine histograms from all files into one single list of histograms. '''
-        # Processing and combining histograms from multiple files
-        combinedHists = list()
+        if files is None:
+            msg = 'No input file was given'
+            self._logger.debug(msg)
+            return
 
-        nFiles = 0
-        for file in self._histogramFiles:
+        if not isinstance(files, list):
+            files = [files]
 
-            countFile = True
-            with EventIOFile(file) as f:
+        for file in files:
+            self.inputFiles.append(file)
+        return
 
-                for i, o in enumerate(yield_toplevel_of_type(f, Histograms)):
-                    try:
-                        hists = o.parse()
-                    except Exception:
-                        self._logger.warning('Problematic file {}'.format(file))
-                        countFile = False
+    @property
+    def numberOfFiles(self):
+        ''' Number of files loaded. '''
+        return len(self.inputFiles) if hasattr(self, 'inputFiles') else 0
+
+    def loadHeaderAndSummary(self):
+        '''
+        Read MC header from sim_telarray files and store it into _mcHeader.
+        Also fills summaryEvents with energy and core radius of triggered events.
+        '''
+
+        self._numberOfFiles = len(self.inputFiles)
+        keysToGrab = ['obsheight', 'n_showers', 'n_use', 'core_range', 'diffuse', 'viewcone',
+                      'E_range', 'spectral_index', 'B_total']
+        self._mcHeader = dict()
+
+        def _areHeadersConsistent(header0, header1):
+            comparison = dict()
+            for k in keysToGrab:
+                value = (header0[k] == header1[k])
+                comparison[k] = value if isinstance(value, bool) else all(value)
+
+            return all(comparison)
+
+        isFirstFile = True
+        numberOfTriggeredEvents = 0
+        summaryEnergy, summaryRcore = list(), list()
+        for file in self.inputFiles:
+            with SimTelFile(file) as f:
+
+                for event in f:
+                    en = event['mc_shower']['energy']
+                    rc = math.sqrt(
+                        math.pow(event['mc_event']['xcore'], 2)
+                        + math.pow(event['mc_event']['ycore'], 2)
+                    )
+
+                    summaryEnergy.append(en)
+                    summaryRcore.append(rc)
+                    numberOfTriggeredEvents += 1
+
+                if isFirstFile:
+                    # First file - grabbing parameters
+                    self._mcHeader.update({k: copy(f.mc_run_headers[0][k]) for k in keysToGrab})
+                else:
+                    # Remaining files - Checking whether the parameters are consistent
+                    if not _areHeadersConsistent(self._mcHeader, f.mc_run_headers[0]):
+                        msg = 'MC header pamameters from different files are inconsistent'
+                        self._logger.error(msg)
+                        raise InconsistentInputFile(msg)
+
+                isFirstFile = False
+
+        self.summaryEvents = {
+            'energy': np.array(summaryEnergy),
+            'r_core': np.array(summaryRcore)
+        }
+
+        # Calculating number of events
+        self._mcHeader['n_events'] = (
+            self._mcHeader['n_use'] * self._mcHeader['n_showers'] * self._numberOfFiles
+        )
+        self._mcHeader['n_triggered'] = numberOfTriggeredEvents
+        return
+
+    @u.quantity_input(coreMax=u.m)
+    def countTriggeredEvents(self, energyRange=None, coreMax=None):
+        '''
+        Count number of triggered events within a certain energy range and core radius.
+
+        Parameters
+        ----------
+        energyRange: Tuple (len 2)
+            Max and min energy of energy range, e.g. energyRange=(100 * u.GeV, 10 * u.TeV)
+        coreMax: astropy.Quantity (distance)
+            Maximum core radius for selecting showers, e.g. coreMax=1000 * u.m
+
+        Returns
+        -------
+        int
+            Number of triggered events.
+        '''
+        energyRange = self._validateEnergyRange(energyRange)
+        coreMax = self._validateCoreMax(coreMax)
+
+        isInEnergyRange = list(map(
+            lambda e: e > energyRange[0] and e < energyRange[1],
+            self.summaryEvents['energy']
+        ))
+        isInCoreRange = list(map(
+            lambda r: r < coreMax,
+            self.summaryEvents['r_core']
+        ))
+        return np.sum(np.array(isInEnergyRange) * np.array(isInCoreRange))
+
+    @u.quantity_input(coreMax=u.m)
+    def selectEvents(self, energyRange=None, coreMax=None):
+        '''
+        Select sim_telarray events within a certain energy range and core radius.
+
+        Parameters
+        ----------
+        energyRange: Tuple (len 2)
+            Max and min energy of energy range, e.g. energyRange=(100 * u.GeV, 10 * u.TeV)
+        coreMax: astropy.Quantity (distance)
+            Maximum core radius for selecting showers, e.g. coreMax=1000 * u.m
+
+        Returns
+        -------
+        list
+            List of events.
+        '''
+        energyRange = self._validateEnergyRange(energyRange)
+        coreMax = self._validateCoreMax(coreMax)
+
+        selectedEvents = list()
+        for file in self.inputFiles:
+            with SimTelFile(file) as f:
+
+                for event in f:
+                    energy = event['mc_shower']['energy']
+                    if energy < energyRange[0] or energy > energyRange[1]:
                         continue
 
-                    if len(combinedHists) == 0:
-                        # First file
-                        combinedHists = copy.copy(hists)
+                    x_core = event['mc_event']['xcore']
+                    y_core = event['mc_event']['ycore']
+                    r_core = math.sqrt(math.pow(x_core, 2) + math.pow(y_core, 2))
+                    if r_core > coreMax:
+                        continue
 
-                    else:
-                        # Remaning files
-                        for hist, thisCombinedHist in zip(hists, combinedHists):
+                    selectedEvents.append(event)
+        return selectedEvents
 
-                            # Checking consistency of histograms
-                            for key_to_test in ['lower_x', 'upper_x', 'n_bins_x', 'title']:
-                                if hist[key_to_test] != thisCombinedHist[key_to_test]:
-                                    msg = 'Trying to add histograms with inconsistent dimensions'
-                                    self._logger.error(msg)
-                                    raise BadHistogramFormat(msg)
-
-                            thisCombinedHist['data'] = np.add(
-                                thisCombinedHist['data'],
-                                hist['data']
-                            )
-
-                    nFiles += int(countFile)
-
-        self._logger.debug('End of reading {} files'.format(nFiles))
-
-        return combinedHists
-
-    def _plotCombinedHistograms(self, combinedHists, figName):
+    @u.quantity_input(coreMax=u.m)
+    def countSimulatedEvents(self, energyRange=None, coreMax=None):
         '''
-        Plot all histograms into pdf pages and save the figure as a pdf file.
+        Count (or calculate) number of simulated events within a certain energy range and \
+        core radius, nased on the simulated power law.
+        This calculation assumes the simulated spectrum is given by a single power law.
 
         Parameters
         ----------
-        combinedHists: list
-            Hisograms from all files combined by the function _combinedHistogramFiles
-        figName: str
-            Name of the output figure file.
+        energyRange: Tuple (len 2)
+            Max and min energy of energy range, e.g. energyRange=(100 * u.GeV, 10 * u.TeV)
+        coreMax: astropy.Quantity (distance)
+            Maximum core radius for selecting showers, e.g. coreMax=1000 * u.m
+
+        Returns
+        -------
+        int
+            Number of simulated events.
         '''
+        energyRange = self._validateEnergyRange(energyRange)
+        coreMax = self._validateCoreMax(coreMax)
 
-        def _get_bins(hist, axis=0):
-            ax_str = 'x' if axis == 0 else 'y'
-            return np.linspace(
-                hist['lower_' + ax_str],
-                hist['upper_' + ax_str],
-                hist['n_bins_' + ax_str] + 1
-            )
+        # energy factor
+        def integral(erange):
+            power = self._mcHeader['spectral_index'] + 1
+            return math.pow(erange[0], power) - math.pow(erange[1], power)
 
-        def _get_ax_lim(hist, axis=0):
-            if np.sum(hist['data']) == 0:
-                return 0, 1
+        energy_factor = integral(energyRange) / integral(self._mcHeader['E_range'])
 
-            bins = _get_bins(hist, axis=axis)
+        # core factor
+        core_factor = math.pow(coreMax, 2) / math.pow(self._mcHeader['core_range'][1], 2)
 
-            if hist['data'].ndim == 1:
-                non_zero = np.where(hist['data'] != 0)
-            else:
-                marginal = np.sum(hist['data'], axis=axis)
-                non_zero = np.where(marginal != 0)
+        return self._mcHeader['n_events'] * energy_factor * core_factor
 
-            return bins[non_zero[0][0]], bins[non_zero[0][-1] + 1]
+    def _validateEnergyRange(self, energyRange):
+        '''
+        Returns the default energy range from mcHeader in case energyRange=None.
+        Checks units, convert it to TeV and return it in the right format, otherwise.
+        '''
+        if energyRange is None:
+            return self._mcHeader['E_range']
 
-        pdfPages = PdfPages(figName)
-        for hist in combinedHists:
+        if not isinstance(energyRange[0], u.Quantity) or not isinstance(energyRange[1], u.Quantity):
+            msg = 'energyRange must be given as u.Quantity in units of energy'
+            self._logger.error(msg)
+            raise TypeError(msg)
 
-            self._logger.debug('Processing: {}'.format(hist['title']))
+        try:
+            return (energyRange[0].to(u.TeV).value, energyRange[1].to(u.TeV).value)
+        except u.core.UnitConversionError:
+            msg = 'energyRange must be in units of energy'
+            self._logger.error(msg)
+            raise TypeError(msg)
 
-            fig = plt.figure(figsize=(8, 6))
-            ax = plt.gca()
-            ax.set_title(hist['title'])
-
-            if hist['n_bins_y'] > 0:
-                # 2D histogram
-
-                xlim = _get_ax_lim(hist, axis=0)
-                ylim = _get_ax_lim(hist, axis=1)
-
-                if np.sum(hist['data']) == 0:
-                    ax.text(
-                        0.5,
-                        0.5,
-                        'EMPTY',
-                        horizontalalignment='center',
-                        verticalalignment='center',
-                        transform=ax.transAxes
-                    )
-                    continue
-
-                x_bins = _get_bins(hist, axis=0)
-                y_bins = _get_bins(hist, axis=1)
-
-                ax.pcolormesh(x_bins, y_bins, hist['data'])
-                ax.set_xlim(xlim)
-                ax.set_ylim(ylim)
-
-            else:
-                # 1D histogram
-
-                xlim = _get_ax_lim(hist, axis=0)
-
-                if np.sum(hist['data']) == 0:
-                    ax.text(
-                        0.5,
-                        0.5,
-                        'EMPTY',
-                        horizontalalignment='center',
-                        verticalalignment='center',
-                        transform=ax.transAxes
-                    )
-                    continue
-
-                x_bins = _get_bins(hist, axis=0)
-                centers = 0.5 * (x_bins[:-1] + x_bins[1:])
-                ax.hist(centers, bins=x_bins, weights=hist['data'])
-                ax.set_xlim(xlim)
-
-            plt.tight_layout()
-            pdfPages.savefig(fig)
-            plt.close()
-
-        pdfPages.close()
-    # End
+    def _validateCoreMax(self, coreMax):
+        '''
+        Returns the default coreMAx from mcHeader in case coreMax=None.
+        Checks units, convert it to m and return it in the right format, otherwise.
+        '''
+        return self._mcHeader['core_range'][1] if coreMax is None else coreMax.to(u.m).value
