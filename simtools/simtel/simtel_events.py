@@ -188,13 +188,12 @@ class SimtelEvents:
 
                 for event in f:
                     energy = event['mc_shower']['energy']
-                    x_core = event['mc_event']['xcore']
-                    y_core = event['mc_event']['ycore']
-                    r_core = math.sqrt(math.pow(x_core, 2) + math.pow(y_core, 2))
-
                     if energy < energyRange[0] or energy > energyRange[1]:
                         continue
 
+                    x_core = event['mc_event']['xcore']
+                    y_core = event['mc_event']['ycore']
+                    r_core = math.sqrt(math.pow(x_core, 2) + math.pow(y_core, 2))
                     if r_core > coreMax:
                         continue
 
