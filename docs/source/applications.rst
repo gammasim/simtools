@@ -40,6 +40,8 @@ List of Applications
 * `produce_array_config`_
 * `sim_showers_for_trigger_rates`_
 * `production`_
+* `add_file_to_db`_
+* `get_parameter`_
 
 
 derive_mirror_rnda
@@ -102,4 +104,16 @@ production
 ----------
 
 .. automodule:: production
+   :members:
+
+add_file_to_db
+--------------
+
+.. automodule:: add_file_to_db
+   :members:
+
+get_parameter
+-------------
+
+.. automodule:: get_parameter
    :members:
