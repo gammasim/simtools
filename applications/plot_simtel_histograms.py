@@ -45,6 +45,8 @@
 
 import logging
 import argparse
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_pdf import PdfPages
 
 import simtools.util.general as gen
 from simtools.simtel.simtel_histograms import SimtelHistograms
@@ -59,8 +61,9 @@ if __name__ == '__main__':
     )
     parser.add_argument(
         '-l',
-        '--file_list',
+        '--file_lists',
         help='File containing the list of histogram files to be plotted',
+        nargs='+',
         type=str,
         required=True
     )
@@ -85,11 +88,48 @@ if __name__ == '__main__':
     logger = logging.getLogger()
     logger.setLevel(gen.getLogLevelFromUser(args.logLevel))
 
-    histogramFiles = list()
-    with open(args.file_list) as file:
-        for line in file:
-            histogramFiles.append(line.replace('\n', ''))
+    nLists = len(args.file_lists)
+    simtelHistograms = list()
+    for thisListOfFiles in args.file_lists:
+        # Collecting hist files
+        histogramFiles = list()
+        with open(thisListOfFiles) as file:
+            for line in file:
+                histogramFiles.append(line.replace('\n', ''))
 
-    simtelHistograms = SimtelHistograms(histogramFiles)
-    simtelHistograms.plotAndSaveFigures(args.output + '.pdf')
-    print(simtelHistograms.numberOfHistograms)
+        # Building SimtelHistograms
+        sh = SimtelHistograms(histogramFiles)
+        simtelHistograms.append(sh)
+
+
+    # Checking if number of histograms is consistent
+    numberOfHists = [sh.numberOfHistograms for sh in simtelHistograms]
+    # Converting list to set will remove the duplicated entries.
+    # If all entries in the list are the same, len(set) will be 1
+    if len(set(numberOfHists)) > 1:
+        msg = (
+            'Number of histograms in different sets of simulations are inconsistent'
+            ' - please make sure the simulations sets are consistent'
+        )
+        logger.error(msg)
+        raise IOError(msg)
+
+    # Plotting
+    pdfPages = PdfPages(args.output + '.pdf')
+    for iHist in range(numberOfHists[0]):
+
+        title = simtelHistograms[0].combinedHists[iHist]['title']
+
+        logger.debug('Processing: {}'.format(title))
+
+        fig, axs = plt.subplots(1, nLists, figsize=(6 * nLists, 6))
+
+        for sh, ax in zip(simtelHistograms, axs):
+            sh.plotOneHistogram(iHist, ax)
+
+        plt.tight_layout()
+        pdfPages.savefig(fig)
+        plt.clf()
+
+    plt.close()
+    pdfPages.close()
