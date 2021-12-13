@@ -46,6 +46,7 @@
 import logging
 import argparse
 
+import simtools.util.general as gen
 from simtools.simtel.simtel_histograms import SimtelHistograms
 
 
@@ -63,13 +64,20 @@ if __name__ == '__main__':
         type=str,
         required=True
     )
-
     parser.add_argument(
         '-o',
         '--output',
         help='File name for the pdf output (without extension)',
         type=str,
-        required=False
+        required=True
+    )
+    parser.add_argument(
+        '-v',
+        '--verbosity',
+        dest='logLevel',
+        action='store',
+        default='info',
+        help='Log level to print (default is INFO)'
     )
 
     args = parser.parse_args()
@@ -77,8 +85,10 @@ if __name__ == '__main__':
     logger = logging.getLogger()
     logger.setLevel(gen.getLogLevelFromUser(args.logLevel))
 
-    simtelHistograms = SimtelHistograms(args.file_list)
-    if args.output is not None:
-        simtelHistograms.plotAndSaveFigures(args.output)
-    else:
-        simtelHistograms.plotFigures(args.output)
+    histogramFiles = list()
+    with open(args.file_list) as file:
+        for line in file:
+            histogramFiles.append(line.replace('\n', ''))
+
+    simtelHistograms = SimtelHistograms(histogramFiles)
+    simtelHistograms.plotAndSaveFigures(args.output + '.pdf')
