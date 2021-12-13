@@ -3,44 +3,26 @@
 '''
     Summary
     -------
-    This application perform array simulations.
+    This application prints sim_telarray histograms into pdf file.
+    It accepts multiple lists of histograms files that are plot together,
+    side-by-side. Each histogram is plotted in a page of the pdf.
 
-    The simulations are split into two stages: showers and array.
-    Shower simulations are performed with CORSIKA and array simulations \
-    with sim_telarray.
-
-    A configuration file is required. See data/test-data/prodConfigTest.yml \
-    for an example.
 
     Command line arguments
     ----------------------
-    config (str, required)
-        Path to the configuration file.
-    primary (str)
-        Name of the primary to be selected from the configuration file. In case it \
-        is not given, all the primaries listed in the configuration file will be simulated.
-    task (str)
-        What task to execute. Options:
-            simulate (perform simulations),
-            lists (print list of output files) [NOT IMPLEMENTED]
-            inspect (plot sim_telarray histograms for quick inspection) [NOT IMPLEMENTED]
-    array_only (activation mode)
-        Simulates only array detector (no showers).
-    showers_only (activation mode)
-        Simulates only showers (no array detector).
-    test (activation mode, optional)
-        If activated, no job will be submitted, but all configuration files \
-        and run scripts will be created.
+    file_lists (str, required)
+        Text file containing the list of sim_telarray histogram files to be plotted. \
+        Multiple text files can be given.
+    output (str, required)
+        File name for the pdf output (without extension).
     verbosity (str, optional)
         Log level to print (default=INFO).
 
     Example
     -------
-    Testing a mini-prod5 simulation.
-
     .. code-block:: console
 
-        python applications/production.py -c data/test-data/prodConfigTest.yml --test
+        python applications/plot_simtel_histograms.py -l list_test1.txt list_test2.txt -o histograms_comparison
 '''
 
 import logging
@@ -56,13 +38,13 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(
         description=(
-            'Simulate showers to be used for trigger rate calculations'
+            'Plots sim_telarray histograms.'
         )
     )
     parser.add_argument(
         '-l',
         '--file_lists',
-        help='File containing the list of histogram files to be plotted',
+        help='File containing the list of histogram files to be plotted.',
         nargs='+',
         type=str,
         required=True
@@ -70,7 +52,7 @@ if __name__ == '__main__':
     parser.add_argument(
         '-o',
         '--output',
-        help='File name for the pdf output (without extension)',
+        help='File name for the pdf output (without extension).',
         type=str,
         required=True
     )
