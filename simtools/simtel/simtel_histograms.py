@@ -55,7 +55,7 @@ class SimtelHistograms:
 
     @property
     def numberOfHistograms(self):
-        if not isattr(self, 'combinedHists'):
+        if not hasattr(self, 'combinedHists'):
             self._combineHistogramFiles()
         return len(self.combinedHists)
 
