@@ -53,6 +53,12 @@ class SimtelHistograms:
         self._combineHistogramFiles()
         self._plotCombinedHistograms(figName)
 
+    @property
+    def numberOfHistograms(self):
+        if not isattr(self, 'combinedHists'):
+            self._combineHistogramFiles()
+        return len(self.combinedHists)
+
     def _combineHistogramFiles(self):
         ''' Combine histograms from all files into one single list of histograms. '''
         # Processing and combining histograms from multiple files
