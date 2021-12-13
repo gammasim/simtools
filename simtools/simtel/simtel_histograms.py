@@ -23,6 +23,15 @@ class SimtelHistograms:
     -------
     plotAndSaveFigures(figName)
         Plot all histograms and save a single pdf file.
+    plotOneHistogram(iHist, ax)
+        Plot a single histogram referent to the index iHist.
+
+    Attributes
+    ----------
+    numberOfHistograms
+        Number of histograms
+    combinedHistograms
+        List of histogram data.
     '''
 
     def __init__(
@@ -55,6 +64,7 @@ class SimtelHistograms:
 
     @property
     def numberOfHistograms(self):
+        ''' Returns numer of histograms. '''
         if not hasattr(self, 'combinedHists'):
             self._combineHistogramFiles()
         return len(self.combinedHists)
@@ -132,6 +142,16 @@ class SimtelHistograms:
 
 
     def plotOneHistogram(self, iHist, ax):
+        '''
+        Plot a single histogram referent to the index iHist.
+
+        Parameters
+        ----------
+        iHist: int
+            Index of the histogram to be plotted.
+        ax: matplotlib.axes.Axes
+            Axes in which to plot the histogram. 
+        '''
 
         hist = self.combinedHists[iHist]
         ax.set_title(hist['title'])
@@ -157,7 +177,6 @@ class SimtelHistograms:
                 non_zero = np.where(marginal != 0)
 
             return bins[non_zero[0][0]], bins[non_zero[0][-1] + 1]
-
 
         if hist['n_bins_y'] > 0:
             # 2D histogram
