@@ -92,3 +92,4 @@ if __name__ == '__main__':
 
     simtelHistograms = SimtelHistograms(histogramFiles)
     simtelHistograms.plotAndSaveFigures(args.output + '.pdf')
+    print(simtelHistograms.numberOfHistograms)
