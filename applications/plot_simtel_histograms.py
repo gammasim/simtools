@@ -98,6 +98,7 @@ if __name__ == '__main__':
         raise IOError(msg)
 
     # Plotting
+
     # Checking if it is needed to add the pdf extension to the file name
     figName = args.output if args.output.split('.')[-1] == 'pdf' else args.output + '.pdf'
     pdfPages = PdfPages(figName)
@@ -109,8 +110,12 @@ if __name__ == '__main__':
 
         fig, axs = plt.subplots(1, nLists, figsize=(6 * nLists, 6))
 
-        for sh, ax in zip(simtelHistograms, axs):
-            sh.plotOneHistogram(iHist, ax)
+        if nLists == 1:
+            # If only one simulation set, axs is a single axes (not iterable)
+            sh.plotOneHistogram(iHist, axs)
+        else:
+            for sh, ax in zip(simtelHistograms, axs):
+                sh.plotOneHistogram(iHist, ax)
 
         plt.tight_layout()
         pdfPages.savefig(fig)
