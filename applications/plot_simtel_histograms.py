@@ -52,7 +52,7 @@ if __name__ == '__main__':
     parser.add_argument(
         '-o',
         '--output',
-        help='File name for the pdf output (without extension).',
+        help='File name for the pdf output.',
         type=str,
         required=True
     )
@@ -77,6 +77,7 @@ if __name__ == '__main__':
         histogramFiles = list()
         with open(thisListOfFiles) as file:
             for line in file:
+                # Removing '\n' from filename, in case it is left there.
                 histogramFiles.append(line.replace('\n', ''))
 
         # Building SimtelHistograms
@@ -97,7 +98,9 @@ if __name__ == '__main__':
         raise IOError(msg)
 
     # Plotting
-    pdfPages = PdfPages(args.output + '.pdf')
+    # Checking if it is needed to add the pdf extension to the file name
+    figName = args.output if args.output.split('.')[-1] == 'pdf' else args.output + '.pdf'
+    pdfPages = PdfPages(figName)
     for iHist in range(numberOfHists[0]):
 
         title = simtelHistograms[0].combinedHists[iHist]['title']
