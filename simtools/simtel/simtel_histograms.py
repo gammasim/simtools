@@ -69,6 +69,24 @@ class SimtelHistograms:
             self._combineHistogramFiles()
         return len(self.combinedHists)
 
+    def getHistogramTitle(self, iHist):
+        '''
+        Returns the title of the histogram with index iHist.
+
+        Parameters
+        ----------
+        iHist: int
+            Histogram index.
+
+        Returns
+        -------
+        str: histogram title
+        '''
+        if not hasattr(self, 'combinedHists'):
+            self._combineHistogramFiles()
+        return self.combinedHists[iHist]['title']
+
+
     def _combineHistogramFiles(self):
         ''' Combine histograms from all files into one single list of histograms. '''
         # Processing and combining histograms from multiple files
