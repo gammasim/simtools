@@ -91,7 +91,7 @@ if __name__ == '__main__':
     # If all entries in the list are the same, len(set) will be 1
     if len(set(numberOfHists)) > 1:
         msg = (
-            'Number of histograms in different sets of simulations are inconsistent'
+            'Number of histograms in different sets of simulations is inconsistent'
             ' - please make sure the simulations sets are consistent'
         )
         logger.error(msg)
