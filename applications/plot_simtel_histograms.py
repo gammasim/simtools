@@ -103,7 +103,7 @@ if __name__ == '__main__':
     pdfPages = PdfPages(figName)
     for iHist in range(numberOfHists[0]):
 
-        title = simtelHistograms[0].combinedHists[iHist]['title']
+        title = simtelHistograms[0].getHistogramTitle(iHist)
 
         logger.debug('Processing: {}'.format(title))
 
