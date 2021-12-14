@@ -3,7 +3,7 @@
 '''
     Summary
     -------
-    This application prints sim_telarray histograms into pdf file.
+    This application plots and prints sim_telarray histograms into pdf file.
     It accepts multiple lists of histograms files that are plot together,
     side-by-side. Each histogram is plotted in a page of the pdf.
 
