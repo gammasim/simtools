@@ -33,5 +33,6 @@ jobs:
           source set_simtools.sh
 
       - name: Tests
+        shell: bash -leo pipefail {0}
         run: |
           pytest
