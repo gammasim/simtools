@@ -36,4 +36,10 @@ jobs:
       - name: Tests
         shell: bash -leo pipefail {0}
         run: |
-          pytest
+          : # pytest
+
+      - name: Check for Python errors
+        shell: bash -leo pipefail {0}
+        run: |
+          mamba install pyflakes
+          pyflakes ctapipe
