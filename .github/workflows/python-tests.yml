@@ -36,6 +36,7 @@ jobs:
       - name: Tests
         shell: bash -leo pipefail {0}
         run: |
+          echo "Disabled pytest"
           : # pytest
 
       - name: Check for Python errors
