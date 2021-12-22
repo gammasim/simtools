@@ -27,6 +27,10 @@ jobs:
           conda config --set always_yes yes --set changeps1 no
           conda update -q conda
           conda env create -f environment.yml
+          conda activate gammasim-tools-dev
+          echo 'source $CONDA/etc/profile.d/conda.sh' >> ~/.bash_profile
+          echo 'conda activate ci' >> ~/.bash_profile
+          source set_simtools.sh
 
 #    - name: Tests
 #      run: |
