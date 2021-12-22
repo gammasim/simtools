@@ -32,8 +32,6 @@ jobs:
           echo 'conda activate ci' >> ~/.bash_profile
           source set_simtools.sh
 
-#    - name: Tests
-#      run: |
-#        conda activate gammasim-tools-dev
-#        source set_simtools.sh
-#        pytest
+      - name: Tests
+        run: |
+          pytest
