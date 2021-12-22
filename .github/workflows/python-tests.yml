@@ -29,7 +29,7 @@ jobs:
           conda env create -f environment.yml
           conda activate gammasim-tools-dev
           echo 'source $CONDA/etc/profile.d/conda.sh' >> ~/.bash_profile
-          echo 'conda activate ci' >> ~/.bash_profile
+          echo 'conda activate gammasim-tools-dev' >> ~/.bash_profile
           source set_simtools.sh
 
       - name: Tests
