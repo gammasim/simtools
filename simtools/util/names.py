@@ -4,14 +4,15 @@ __all__ = [
     'validateModelVersionName',
     'validateSimtelModeName',
     'validateSiteName',
-    'validateArrayName',
-    'validateTelescopeName',
+    'validateLayoutArrayName',
+    'validateTelescopeModelName',
     'validateCameraName',
-    'convertTelescopeNameToYaml',
-    'splitTelescopeName',
+    'convertTelescopeModelNameToYaml',
+    'splitTelescopeModelName',
     'getSiteFromTelescopeName',
     'rayTracingFileName',
-    'simtelConfigFileName',
+    'simtelTelescopeConfigFileName',
+    'simtelArrayConfigFileName',
     'simtelSingleMirrorListFileName',
     'corsikaConfigFileName',
     'corsikaOutputFileName'
@@ -102,9 +103,9 @@ def validateSiteName(name):
     return validateName(name, allSiteNames)
 
 
-def validateArrayName(name):
+def validateLayoutArrayName(name):
     '''
-    Validate a array name.
+    Validate a layout array name.
 
     Raises
     ------
@@ -120,7 +121,7 @@ def validateArrayName(name):
     str
         Validated name.
     '''
-    return validateName(name, allArrayNames)
+    return validateName(name, allLayoutArrayNames)
 
 
 def validateName(name, allNames):
@@ -176,9 +177,9 @@ def isValidName(name, allNames):
     return False
 
 
-def validateTelescopeName(name):
+def validateTelescopeModelName(name):
     '''
-    Validate a telescope name.
+    Validate a telescope model name.
 
     Raises
     ------
@@ -194,8 +195,7 @@ def validateTelescopeName(name):
     str
         Validated name.
     '''
-    telSite, telClass, telType = splitTelescopeName(name)
-    telSite = validateSiteName(telSite)
+    telClass, telType = splitTelescopeModelName(name)
     telClass = validateName(telClass, allTelescopeClassNames)
     if 'flashcam' in telType:
         telType = telType.replace('flashcam', 'FlashCam')
@@ -210,12 +210,12 @@ def validateTelescopeName(name):
     if '-d' in '-' + telType:
         telType = telType.replace('d', 'D')
 
-    return telSite + '-' + telClass + '-' + telType
+    return telClass + '-' + telType
 
 
-def splitTelescopeName(name):
+def splitTelescopeModelName(name):
     '''
-    Split a telescope name into site, class and type.
+    Split a telescope name into class and type.
 
     Raises
     ------
@@ -233,10 +233,9 @@ def splitTelescopeName(name):
         Site (South or North), class (LST, MST, SST ...) and type (any complement).
     '''
     nameParts = name.split('-')
-    thisSite = nameParts[0]
-    telClass = nameParts[1]
-    telType = '-'.join(nameParts[2:])
-    return thisSite, telClass, telType
+    telClass = nameParts[0]
+    telType = '-'.join(nameParts[1:])
+    return telClass, telType
 
 
 def getSiteFromTelescopeName(name):
@@ -258,21 +257,21 @@ def getSiteFromTelescopeName(name):
     return thisSite
 
 
-def convertTelescopeNameToYaml(name):
+def convertTelescopeModelNameToYaml(name):
     '''
     Get telescope name following the old convention (yaml files) from the current telescope name.
 
     Parameters
     ----------
     name: str
-        Telescope name.
+        Telescope model name.
 
     Returns
     -------
     str
         Telescope name (old convention).
     '''
-    telSite, telClass, telType = splitTelescopeName(name)
+    telClass, telType = splitTelescopeModelName(name)
     newName = telClass + '-' + telType
     oldNames = {
         'SST-D': 'SST',
@@ -343,7 +342,7 @@ allSimtelModeNames = {
     'Trigger': ['trigger']
 }
 
-allArrayNames = {
+allLayoutArrayNames = {
     '4LST': ['4-lst', '4lst'],
     '1LST': ['1-lst', '1lst'],
     '4MST': ['4-mst', '4mst'],
@@ -354,16 +353,47 @@ allArrayNames = {
 }
 
 
-def simtelConfigFileName(version, telescopeName, label):
+def simtelTelescopeConfigFileName(site, telescopeModelName, modelVersion, label, extraLabel):
     '''
-    sim_telarray config file name.
+    sim_telarray config file name for a telescope.
 
     Parameters
     ----------
+    site: str
+        South or North.
+    telescopeModelName: str
+        LST-1, MST-FlashCam, ...
+    modelVersion: str
+        Version of the model.
+    label: str
+        Instance label.
+    extraLabel: str
+        Extra label in case of multiple telescope config files.
+
+    Returns
+    -------
+    str
+        File name.
+    '''
+    name = 'CTA-{}-{}-{}'.format(site, telescopeModelName, modelVersion)
+    name += '_{}'.format(label) if label is not None else ''
+    name += '_{}'.format(extraLabel) if extraLabel is not None else ''
+    name += '.cfg'
+    return name
+
+
+def simtelArrayConfigFileName(arrayName, site, version, label):
+    '''
+    sim_telarray config file name for an array.
+
+    Parameters
+    ----------
+    arrayName: str
+        Prod5, ...
+    site: str
+        South or North.
     version: str
         Version of the model.
-    telescopeName: str
-        North-LST-1, South-MST-FlashCam, ...
     label: str
         Instance label.
 
@@ -372,22 +402,24 @@ def simtelConfigFileName(version, telescopeName, label):
     str
         File name.
     '''
-    name = 'CTA-{}-{}'.format(version, telescopeName)
+    name = 'CTA-{}-{}-{}'.format(arrayName, site, version)
     name += '_{}'.format(label) if label is not None else ''
     name += '.cfg'
     return name
 
 
-def simtelSingleMirrorListFileName(version, telescopeName, mirrorNumber, label):
+def simtelSingleMirrorListFileName(site, telescopeModelName, modelVersion, mirrorNumber, label):
     '''
     sim_telarray mirror list file with a single mirror.
 
     Parameters
     ----------
-    version: str
-        Version of the model.
-    telescopeName: str
+    site: str
+        South or North.
+    telescopeModelName: str
         North-LST-1, South-MST-FlashCam, ...
+    modelVersion: str
+        Version of the model.
     mirrorNumber: int
         Mirror number.
     label: str
@@ -398,7 +430,7 @@ def simtelSingleMirrorListFileName(version, telescopeName, mirrorNumber, label):
     str
         File name.
     '''
-    name = 'CTA-single-mirror-list-{}-{}'.format(version, telescopeName)
+    name = 'CTA-single-mirror-list-{}-{}-{}'.format(site, telescopeModelName, modelVersion)
     name += '-mirror{}'.format(mirrorNumber)
     name += '_{}'.format(label) if label is not None else ''
     name += '.dat'
@@ -428,7 +460,8 @@ def layoutTelescopeListFileName(name, label):
 
 
 def rayTracingFileName(
-    telescopeName,
+    site,
+    telescopeModelName,
     sourceDistance,
     zenithAngle,
     offAxisAngle,
@@ -441,8 +474,10 @@ def rayTracingFileName(
 
     Parameters
     ----------
-    telescopeName: str
-        North-LST-1, South-MST-FlashCam, ...
+    site: str
+        South or North.
+    telescopeModelName: str
+        LST-1, MST-FlashCam, ...
     sourceDistance: float
         Source distance (km).
     zenithAngle: float
@@ -461,9 +496,10 @@ def rayTracingFileName(
     str
         File name.
     '''
-    name = '{}-{}-d{:.1f}-za{:.1f}-off{:.3f}'.format(
+    name = '{}-{}-{}-d{:.1f}-za{:.1f}-off{:.3f}'.format(
         base,
-        telescopeName,
+        site,
+        telescopeModelName,
         sourceDistance,
         zenithAngle,
         offAxisAngle
@@ -474,42 +510,16 @@ def rayTracingFileName(
     return name
 
 
-def rayTracingResultsFileName(telescopeName, sourceDistance, zenithAngle, label):
+def rayTracingResultsFileName(site, telescopeModelName, sourceDistance, zenithAngle, label):
     '''
     Ray tracing results file name.
 
     Parameters
     ----------
-    telescopeName: str
-        North-LST-1, South-MST-FlashCam, ...
-    sourceDistance: float
-        Source distance (km).
-    zenithAngle: float
-        Zenith angle (deg).
-    label: str
-        Instance label.
-
-    Returns
-    -------
-    str
-        File name.
-    '''
-    name = 'ray-tracing-{}-d{:.1f}-za{:.1f}'.format(telescopeName, sourceDistance, zenithAngle)
-    name += '_{}'.format(label) if label is not None else ''
-    name += '.cvs'
-    return name
-
-
-def rayTracingPlotFileName(key, telescopeName, sourceDistance, zenithAngle, label):
-    '''
-    Ray tracing plot file name.
-
-    Parameters
-    ----------
-    key: str
-        Quantity to be plotted (d80_cm, d80_deg, eff_area or eff_flen)
-    telescopeName: str
-        South-LST-1, North-MST-FlashCam, ...
+    site: str
+        South or North.
+    telescopeModelName: str
+        LST-1, MST-FlashCam, ...
     sourceDistance: float
         Source distance (km).
     zenithAngle: float
@@ -523,7 +533,43 @@ def rayTracingPlotFileName(key, telescopeName, sourceDistance, zenithAngle, labe
         File name.
     '''
     name = 'ray-tracing-{}-{}-d{:.1f}-za{:.1f}'.format(
-        telescopeName,
+        site,
+        telescopeModelName,
+        sourceDistance,
+        zenithAngle
+    )
+    name += '_{}'.format(label) if label is not None else ''
+    name += '.cvs'
+    return name
+
+
+def rayTracingPlotFileName(key, site, telescopeModelName, sourceDistance, zenithAngle, label):
+    '''
+    Ray tracing plot file name.
+
+    Parameters
+    ----------
+    key: str
+        Quantity to be plotted (d80_cm, d80_deg, eff_area or eff_flen)
+    site: str
+        South or North.
+    telescopeModelName: str
+        LST-1, MST-FlashCam, ...
+    sourceDistance: float
+        Source distance (km).
+    zenithAngle: float
+        Zenith angle (deg).
+    label: str
+        Instance label.
+
+    Returns
+    -------
+    str
+        File name.
+    '''
+    name = 'ray-tracing-{}-{}-{}-d{:.1f}-za{:.1f}'.format(
+        site,
+        telescopeModelName,
         key,
         sourceDistance,
         zenithAngle
@@ -533,14 +579,16 @@ def rayTracingPlotFileName(key, telescopeName, sourceDistance, zenithAngle, labe
     return name
 
 
-def cameraEfficiencyResultsFileName(telescopeName, zenithAngle, label):
+def cameraEfficiencyResultsFileName(site, telescopeModelName, zenithAngle, label):
     '''
     Camera efficiency results file name.
 
     Parameters
     ----------
-    telescopeName: str
-        South-LST-1, North-MST-FlashCam, ...
+    site: str
+        South or North.
+    telescopeModelName: str
+        LST-1, MST-FlashCam, ...
     zenithAngle: float
         Zenith angle (deg).
     label: str
@@ -551,20 +599,22 @@ def cameraEfficiencyResultsFileName(telescopeName, zenithAngle, label):
     str
         File name.
     '''
-    name = 'camera-efficiency-{}-za{:.1f}'.format(telescopeName, zenithAngle)
+    name = 'camera-efficiency-{}-{}-za{:.1f}'.format(site, telescopeModelName, zenithAngle)
     name += '_{}'.format(label) if label is not None else ''
     name += '.csv'
     return name
 
 
-def cameraEfficiencySimtelFileName(telescopeName, zenithAngle, label):
+def cameraEfficiencySimtelFileName(site, telescopeModelName, zenithAngle, label):
     '''
     Camera efficiency simtel output file name.
 
     Parameters
     ----------
-    telescopeName: str
-        North-LST-1, South-MST-FlashCam, ...
+    site: str
+        South or North.
+    telescopeModelName: str
+        LST-1, MST-FlashCam-D, ...
     zenithAngle: float
         Zenith angle (deg).
     label: str
@@ -575,20 +625,22 @@ def cameraEfficiencySimtelFileName(telescopeName, zenithAngle, label):
     str
         File name.
     '''
-    name = 'camera-efficiency-{}-za{:.1f}'.format(telescopeName, zenithAngle)
+    name = 'camera-efficiency-{}-{}-za{:.1f}'.format(site, telescopeModelName, zenithAngle)
     name += '_{}'.format(label) if label is not None else ''
     name += '.dat'
     return name
 
 
-def cameraEfficiencyLogFileName(telescopeName, zenithAngle, label):
+def cameraEfficiencyLogFileName(site, telescopeModelName, zenithAngle, label):
     '''
     Camera efficiency log file name.
 
     Parameters
     ----------
-    telescopeName: str
-        South-LST-1, North-MST-FlashCam, ...
+    site: str
+        South or North.
+    telescopeModelName: str
+        LST-1, MST-FlashCam-D, ...
     zenithAngle: float
         Zenith angle (deg).
     label: str
@@ -599,13 +651,13 @@ def cameraEfficiencyLogFileName(telescopeName, zenithAngle, label):
     str
         File name.
     '''
-    name = 'camera-efficiency-{}-za{:.1f}'.format(telescopeName, zenithAngle)
+    name = 'camera-efficiency-{}-{}-za{:.1f}'.format(site, telescopeModelName, zenithAngle)
     name += '_{}'.format(label) if label is not None else ''
     name += '.log'
     return name
 
 
-def corsikaConfigFileName(arrayName, site, zenith, viewCone, label=None):
+def corsikaConfigFileName(arrayName, site, primary, zenith, viewCone, label=None):
     '''
     Corsika config file name.
 
@@ -615,6 +667,8 @@ def corsikaConfigFileName(arrayName, site, zenith, viewCone, label=None):
         Array name.
     site: str
         Paranal or LaPalma.
+    primary: str
+        Primary particle (e.g gamma, proton etc).
     zenith: float
         Zenith angle (deg).
     viewCone: list of float
@@ -629,15 +683,52 @@ def corsikaConfigFileName(arrayName, site, zenith, viewCone, label=None):
     '''
     isDiffuse = (viewCone[0] != 0 or viewCone[1] != 0)
 
-    name = 'corsika-config-{}-{}'.format(arrayName, site)
-    name += '-za{:d}-{:d}'.format(int(zenith[0]), int(zenith[1]))
-    name += '-cone{:d}-{:d}'.format(int(viewCone[0]), int(viewCone[1])) if isDiffuse else ''
+    name = 'corsika-config_{}_{}_{}'.format(site, arrayName, primary)
+    name += '_za{:d}-{:d}'.format(int(zenith[0]), int(zenith[1]))
+    name += '_cone{:d}-{:d}'.format(int(viewCone[0]), int(viewCone[1])) if isDiffuse else ''
+    name += '_{}'.format(label) if label is not None else ''
+    name += '.input'
+    return name
+
+
+def corsikaConfigTmpFileName(arrayName, site, primary, zenith, viewCone, run, label=None):
+    '''
+    Corsika config file name.
+
+    Parameters
+    ----------
+    arrayName: str
+        Array name.
+    site: str
+        South or North.
+    primary: str
+        Primary particle (e.g gamma, proton etc).
+    zenith: float
+        Zenith angle (deg).
+    viewCone: list of float
+        View cone limits (len = 2).
+    run: int
+        Run number.
+    label: str
+        Instance label.
+
+    Returns
+    -------
+    str
+        File name.
+    '''
+    isDiffuse = (viewCone[0] != 0 or viewCone[1] != 0)
+
+    name = 'corsika-config-run{}'.format(run)
+    name += '_{}_{}_{}'.format(arrayName, site, primary)
+    name += '_za{:d}-{:d}'.format(int(zenith[0]), int(zenith[1]))
+    name += '_cone{:d}-{:d}'.format(int(viewCone[0]), int(viewCone[1])) if isDiffuse else ''
     name += '_{}'.format(label) if label is not None else ''
     name += '.txt'
     return name
 
 
-def corsikaOutputFileName(arrayName, site, zenith, viewCone, run, label=None):
+def corsikaOutputFileName(run, primary, arrayName, site, zenith, azimuth, label=None):
     '''
     Corsika output file name.
 
@@ -665,16 +756,197 @@ def corsikaOutputFileName(arrayName, site, zenith, viewCone, run, label=None):
     str
         File name.
     '''
-    isDiffuse = (viewCone[0] != 0 or viewCone[1] != 0)
-
-    name = 'corsika-run{}-{}-{}-za{:d}-{:d}'.format(
+    name = 'run{}_{}_za{:d}deg_azm{:d}deg-{}-{}'.format(
         run,
-        arrayName,
+        primary,
+        int(zenith),
+        int(azimuth),
         site,
-        int(zenith[0]),
-        int(zenith[1])
+        arrayName
     )
-    name += '-cone{:d}-{:d}'.format(int(viewCone[0]), int(viewCone[1])) if isDiffuse else ''
     name += '_{}'.format(label) if label is not None else ''
     name += '.corsika.zst'
+    return name
+
+
+def corsikaOutputGenericFileName(arrayName, site, label=None):
+    name = 'run${RUNNR}_${PRMNAME}_za${ZA}deg_azm${AZM}deg'
+    name += '-{}-{}'.format(site, arrayName)
+    name += '_{}'.format(label) if label is not None else ''
+    name += '.corsika.zst'
+    return name
+
+
+def corsikaRunScriptFileName(arrayName, site, primary, run, label=None):
+    '''
+    Corsika script file path.
+
+    Parameters
+    ----------
+    arrayName: str
+        Array name.
+    site: str
+        Paranal or LaPalma.
+    run: int
+        RUn number.
+    label: str
+        Instance label.
+
+    Returns
+    -------
+    str
+        File path.
+    '''
+    name = 'run{}-corsika-{}-{}-{}'.format(run, arrayName, site, primary)
+    name += '_{}'.format(label) if label is not None else ''
+    name += '.sh'
+    return name
+
+
+def corsikaRunLogFileName(arrayName, site, run, label=None):
+    '''
+    Corsika script file path.
+
+    Parameters
+    ----------
+    arrayName: str
+        Array name.
+    site: str
+        Paranal or LaPalma.
+    run: int
+        RUn number.
+    label: str
+        Instance label.
+
+    Returns
+    -------
+    str
+        File path.
+    '''
+    name = 'log-corsika-run{}-{}-{}'.format(run, arrayName, site)
+    name += '_{}'.format(label) if label is not None else ''
+    name += '.log'
+    return name
+
+
+def simtelOutputFileName(run, primary, arrayName, site, zenith, azimuth, label=None):
+    '''
+    sim_telarray output file name.
+
+    Warning
+    -------
+        zst extension is hardcoded here.
+
+    Parameters
+    ----------
+    arrayName: str
+        Array name.
+    site: str
+        Paranal or LaPalma.
+    zenith: float
+        Zenith angle (deg).
+    viewCone: list of float
+        View cone limits (len = 2).
+    run: int
+        Run number.
+    label: str
+        Instance label.
+
+    Returns
+    -------
+    str
+        File name.
+    '''
+    name = 'run{}_{}_za{:d}deg_azm{:d}deg-{}-{}'.format(
+        run,
+        primary,
+        int(zenith),
+        int(azimuth),
+        site,
+        arrayName
+    )
+    name += '_{}'.format(label) if label is not None else ''
+    name += '.simtel.zst'
+    return name
+
+
+def simtelHistogramFileName(run, primary, arrayName, site, zenith, azimuth, label=None):
+    '''
+    sim_telarray histogram file name.
+
+    Warning
+    -------
+        zst extension is hardcoded here.
+
+    Parameters
+    ----------
+    arrayName: str
+        Array name.
+    site: str
+        Paranal or LaPalma.
+    zenith: float
+        Zenith angle (deg).
+    viewCone: list of float
+        View cone limits (len = 2).
+    run: int
+        Run number.
+    label: str
+        Instance label.
+
+    Returns
+    -------
+    str
+        File name.
+    '''
+    name = 'run{}_{}_za{:d}deg_azm{:d}deg-{}-{}'.format(
+        run,
+        primary,
+        int(zenith),
+        int(azimuth),
+        site,
+        arrayName
+    )
+    name += '_{}'.format(label) if label is not None else ''
+    name += '.hdata.zst'
+    return name
+
+
+def simtelLogFileName(run, primary, arrayName, site, zenith, azimuth, label=None):
+    '''
+    sim_telarray histogram file name.
+
+    Warning
+    -------
+        zst extension is hardcoded here.
+
+    Parameters
+    ----------
+    arrayName: str
+        Array name.
+    site: str
+        Paranal or LaPalma.
+    zenith: float
+        Zenith angle (deg).
+    viewCone: list of float
+        View cone limits (len = 2).
+    run: int
+        Run number.
+    label: str
+        Instance label.
+
+    Returns
+    -------
+    str
+        File name.
+    '''
+    name = 'run{}_{}_za{:d}deg_azm{:d}deg-{}-{}'.format(
+        run,
+        primary,
+        int(zenith),
+        int(azimuth),
+        site,
+        arrayName
+    )
+    name += '_{}'.format(label) if label is not None else ''
+    name += '.log'
     return name

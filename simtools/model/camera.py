@@ -52,14 +52,14 @@ class Camera:
     SIPM_NEIGHBOR_RADIUS_FACTOR = 1.4
     SIPM_ROW_COLUMN_DIST_FACTOR = 0.2
 
-    def __init__(self, telescopeName, cameraConfigFile, focalLength):
+    def __init__(self, telescopeModelName, cameraConfigFile, focalLength):
         '''
         Camera class, defining pixel layout including rotation, finding neighbour pixels,
         calculating FoV and plotting the camera.
 
         Parameters
         ----------
-        telescopeName: string
+        telescopeModelName: string
                     As provided by the telescope model method TelescopeModel (ex South-LST-1).
         cameraConfigFile: string
                     The sim_telarray file name.
@@ -70,8 +70,8 @@ class Camera:
 
         self._logger = logging.getLogger(__name__)
 
-        self._telescopeName = telescopeName
-        self._cameraName = getCameraName(self._telescopeName)
+        self._telescopeModelName = telescopeModelName
+        self._cameraName = getCameraName(self._telescopeModelName)
         self._cameraConfigFile = cameraConfigFile
         self._focalLength = focalLength
         if self._focalLength <= 0:
@@ -187,7 +187,7 @@ class Camera:
         One can check if the telescope is a two mirror one with isTwoMirrorTelescope.
         '''
 
-        if isTwoMirrorTelescope(self._telescopeName):
+        if isTwoMirrorTelescope(self._telescopeModelName):
             pixels['y'] = [(-1) * yVal for yVal in pixels['y']]
 
         rotateAngle = pixels['rotateAngle']  # So not to change the original angle
@@ -558,7 +558,7 @@ class Camera:
 
         invertYaxis = False
         xLeft = 0.7  # Position of the left most axis
-        if not isTwoMirrorTelescope(self._telescopeName):
+        if not isTwoMirrorTelescope(self._telescopeModelName):
             invertYaxis = True
             xLeft = 0.8
 
@@ -701,7 +701,7 @@ class Camera:
         plt: pyplot.plt instance with the pixel layout
         '''
 
-        self._logger.info('Plotting the {} camera'.format(self._telescopeName))
+        self._logger.info('Plotting the {} camera'.format(self._telescopeModelName))
 
         _, ax = plt.subplots()
         plt.gcf().set_size_inches(8, 8)
@@ -740,7 +740,7 @@ class Camera:
 
             if self._pixels['pixID'][i_pix] < 51:
                 fontSize = 4
-                if getTelescopeClass(self._telescopeName) == 'SCT':
+                if getTelescopeClass(self._telescopeModelName) == 'SCT':
                     fontSize = 2
                 plt.text(
                     xyPixPos[0],
@@ -797,7 +797,7 @@ class Camera:
         plt.xlabel('Horizontal scale [cm]', fontsize=18, labelpad=0)
         plt.ylabel('Vertical scale [cm]', fontsize=18, labelpad=0)
         ax.set_title(
-            'Pixels layout in {0:s} camera'.format(self._telescopeName),
+            'Pixels layout in {0:s} camera'.format(self._telescopeModelName),
             fontsize=15,
             y=1.02
         )

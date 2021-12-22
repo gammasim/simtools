@@ -1,7 +1,8 @@
 #!/bin/bash
 
-rm telarray_rand.conf.used > /dev/null 2>&1
+rm telarray_rand.conf.used* > /dev/null 2>&1
 rm -r simtools-output  > /dev/null 2>&1
-rm data/test-plots/*  > /dev/null 2>&1
-rm data/test-output/*  > /dev/null 2>&1
+rm -r data/test-plots/*  > /dev/null 2>&1
+rm -r data/test-output/*  > /dev/null 2>&1
 rm *pdf  > /dev/null 2>&1
+find . | grep -E "(__pycache__|\.pyc|\.pyo$)" | xargs rm -rf

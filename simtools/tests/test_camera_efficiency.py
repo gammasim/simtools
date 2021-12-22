@@ -13,10 +13,10 @@ logger.setLevel(logging.DEBUG)
 
 def test_main():
     tel = TelescopeModel(
-        telescopeName='north-lst-1',
-        version='p3',
-        label='test_camera_eff',
-        logger=logger.name
+        site='north',
+        telescopeModelName='lst-1',
+        modelVersion='p3',
+        label='test_camera_eff'
     )
     ce = CameraEfficiency(telescopeModel=tel)
     ce.simulate(force=True)

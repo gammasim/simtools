@@ -3,7 +3,8 @@ import astropy.units as u
 
 import pyproj
 
-from simtools.util.general import collectArguments
+import simtools.util.general as gen
+import simtools.io_handler as io
 
 
 class InvalidCoordSystem(Exception):
@@ -14,14 +15,51 @@ class MissingInputForConvertion(Exception):
     pass
 
 
-class TelescopeData:
+class TelescopePosition:
     '''
-    Store and do coordenate transformations with single telescope positions
+    Store and perform coordinate transformations with single telescope positions.
+
+    Configurable parameters:
+        posX:
+            len: 1
+            unit: m
+        posY:
+            len: 1
+            unit: m
+        posZ:
+            len: 1
+            unit: m
+        longitude:
+            len: 1
+            unit: m
+        latitude:
+            len: 1
+            unit: m
+        utmEast:
+            len: 1
+            unit: m
+        utmNorth:
+            len: 1
+            unit: m
+        altitude:
+            len: 1
+            unit: m
+        corsikaObsLevel:
+            len: 1
+            unit: m
+        corsikaSphereCenter:
+            len: 1
+            unit: m
+        corsikaSphereRadius:
+            len: 1
+            unit: m
 
     Attributes
     ----------
     name: str
         Name of the telescope (e.g L-01, S-05, ...).
+    config: namedtuple
+        Contains the configurable parameters (zenithAngle).
 
     Methods
     -------
@@ -65,28 +103,15 @@ class TelescopeData:
         Perform all the necessary convertions in order to fill all the coordinate variables.
     '''
 
-    ALL_INPUTS = {
-        'posX': {'default': None, 'unit': u.m},
-        'posY': {'default': None, 'unit': u.m},
-        'posZ': {'default': None, 'unit': u.m},
-        'longitude': {'default': None, 'unit': u.deg},
-        'latitude': {'default': None, 'unit': u.deg},
-        'utmEast': {'default': None, 'unit': u.m},
-        'utmNorth': {'default': None, 'unit': u.m},
-        'altitude': {'default': None, 'unit': u.m},
-        'corsikaObsLevel': {'default': None, 'unit': u.m},
-        'corsikaSphereCenter': {'default': None, 'unit': u.m},
-        'corsikaSphereRadius': {'default': None, 'unit': u.m}
-    }
-
     def __init__(
         self,
         name=None,
         prodId=dict(),
-        **kwargs
+        configData=None,
+        configFile=None
     ):
         '''
-        TelescopeData init.
+        TelescopePosition init.
 
         Parameters
         ----------
@@ -94,26 +119,49 @@ class TelescopeData:
             Name of the telescope (e.g L-01, S-05, ...)
         prodId: dict
             ...
-        **kwargs:
-            Physical parameters with units (if applicable). Options: posX, posY, posZ,
-            longitude, latitude, utmsEast, utmNorth, altitude, corsikaSphereRadius,
-            corsikaSphereCenter
+        configData: dict.
+            Dict containing the configurable parameters.
+        configFile: str or Path
+            Path of the yaml file containing the configurable parameters.
         '''
 
         self._logger = logging.getLogger(__name__)
-        self._logger.debug('Init TelescopeData')
+        self._logger.debug('Init TelescopePosition')
 
         self.name = name
         self._prodId = prodId
 
-        # Collecting arguments
-        collectArguments(
-            self,
-            args=[*self.ALL_INPUTS],
-            allInputs=self.ALL_INPUTS,
+        # Loading configData
+        _configDataIn = gen.collectDataFromYamlOrDict(configFile, configData, allowEmpty=True)
+        _parameterFile = io.getDataFile('parameters', 'telescope-position_parameters.yml')
+        _parameters = gen.collectDataFromYamlOrDict(_parameterFile, None)
+        self.config = gen.validateConfigData(_configDataIn, _parameters)
+
+        # Making config entries into attributes
+        for par, value in zip(self.config._fields, self.config):
+            self.__dict__['_' + par] = value
+
+    @classmethod
+    def fromKwargs(cls, **kwargs):
+        '''
+        Builds a TelescopePosition object from kwargs only.
+        The configurable parameters can be given as kwargs, instead of using the
+        configData or configFile arguments.
+
+        Parameters
+        ----------
+        kwargs
+            Containing the arguments and the configurable parameters.
+
+        Returns
+        -------
+        Instance of this class.
+        '''
+        args, configData = gen.separateArgsAndConfigData(
+            expectedArgs=['name', 'prodId'],
             **kwargs
         )
-        # End of __init__
+        return cls(**args, configData=configData)
 
     def __repr__(self):
         telstr = self.name
