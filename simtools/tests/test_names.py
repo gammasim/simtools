@@ -10,10 +10,10 @@ def test_validate_telescope_names():
 
     def validate(name):
         print('Validating {}'.format(name))
-        newName = names.validateTelescopeName(name)
+        newName = names.validateTelescopeModelName(name)
         print('New name {}'.format(newName))
 
-    for n in ['north-sst-d', 'south-mst-flashcam-d', 'north-sct-d']:
+    for n in ['sst-d', 'mst-flashcam-d', 'sct-d']:
         validate(n)
 
 
@@ -26,4 +26,3 @@ if __name__ == '__main__':
 
     test_validate_telescope_names()
     test_validate_other_names()
-    pass
