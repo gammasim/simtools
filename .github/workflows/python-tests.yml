@@ -11,18 +11,23 @@ jobs:
         python-version: [3.9]    
     steps:
     - uses: actions/checkout@v2
+
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v2
       with:
         python-version: ${{ matrix.python-version }}
-    - uses: conda-incubator/setup-miniconda@v2
-      with:
-          miniconda-version: "latest"
-          activate-environment: foo
-    - name: Install dependencies
-      shell: bash -l {0}
+
+    - name: Install conda dependencies
+      evn:
+        PYTHON_VERSION: ${{ matrix.python-version }}
       run: |
+        source $CONDA/etc/profile.d/conda.sh
+        conda config --set always_yes yes --set changeps1 no
+        conda update -q conda
         conda env create -f environment.yml
-        conda activate gammasim-tools-dev
-        source set_simtools.sh
-        pytest
+
+#    - name: Tests
+#      run: |
+#        conda activate gammasim-tools-dev
+#        source set_simtools.sh
+#        pytest
