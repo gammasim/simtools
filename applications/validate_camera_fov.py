@@ -15,8 +15,10 @@
 
     Command line arguments
     ----------------------
-    tel_name (str, required)
-        Telescope name (e.g. North-LST-1, South-SST-D, ...)
+    site (str, required)
+        North or South.
+    telescope (str, required)
+        Telescope model name (e.g. LST-1, SST-D, ...)
     model_version (str, optional)
         Model version (default=prod4)
     verbosity (str, optional)
@@ -30,7 +32,7 @@
 
     .. code-block:: console
 
-        python applications/validate_camera_fov.py --tel_name North-LST-1 --model_version prod4
+        python applications/validate_camera_fov.py --site North --telescope LST-1 --model_version prod4
 
     .. todo::
 
@@ -58,8 +60,16 @@ if __name__ == '__main__':
         )
     )
     parser.add_argument(
-        '--tel_name',
-        help='Telescope name (e.g. North-LST-1, South-SST-D)',
+        '-s',
+        '--site',
+        help='North or South',
+        type=str,
+        required=True
+    )
+    parser.add_argument(
+        '-t',
+        '--telescope',
+        help='Telescope model name (e.g. LST-1, SST-D)',
         type=str,
         required=True
     )
@@ -88,17 +98,18 @@ if __name__ == '__main__':
     outputDir = io.getApplicationOutputDirectory(cfg.get('outputLocation'), label)
 
     telModel = TelescopeModel(
-        telescopeName=args.tel_name,
-        version=args.model_version,
+        site=args.site,
+        telescopeModelName=args.telescope,
+        modelVersion=args.model_version,
         label=label
     )
 
-    print('\nValidating the camera FoV of {}\n'.format(telModel.telescopeName))
+    print('\nValidating the camera FoV of {}\n'.format(telModel.name))
 
-    cameraConfigFile = telModel.getParameter('camera_config_file')
-    focalLength = float(telModel.getParameter('effective_focal_length'))
+    cameraConfigFile = telModel.getParameterValue('camera_config_file')
+    focalLength = float(telModel.getParameterValue('effective_focal_length'))
     camera = Camera(
-        telescopeName=telModel.telescopeName,
+        telescopeModelName=telModel.name,
         cameraConfigFile=cfg.findFile(cameraConfigFile),
         focalLength=focalLength
     )
@@ -106,12 +117,12 @@ if __name__ == '__main__':
     fov, rEdgeAvg = camera.calcFOV()
 
     print('\nEffective focal length = ' + '{0:.3f} cm'.format(focalLength))
-    print('{0} FoV = {1:.3f} deg'.format(telModel.telescopeName, fov))
+    print('{0} FoV = {1:.3f} deg'.format(telModel.name, fov))
     print('Avg. edge radius = {0:.3f} cm\n'.format(rEdgeAvg))
 
     # Now plot the camera as well
     plt = camera.plotPixelLayout()
-    plotFileName = label + '_' + telModel.telescopeName + '_pixelLayout'
+    plotFileName = label + '_' + telModel.name + '_pixelLayout'
     plotFile = outputDir.joinpath(plotFileName)
     for f in ['pdf', 'png']:
         plt.savefig(str(plotFile) + '.' + f, format=f, bbox_inches='tight')

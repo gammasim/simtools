@@ -6,21 +6,20 @@ import astropy.units as u
 
 import pyproj
 
-from simtools.layout.telescope_data import TelescopeData
+from simtools.layout.telescope_position import TelescopePosition
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 
 def test_input():
-    inp = {
-        'name': 'L-01',
+    configData = {
         'posX': -70.93 * u.m,
         'posY': -52.07 * u.m,
         'posZ': 43.00 * u.m,
         'altitude': 2.177 * u.km
     }
-    tel = TelescopeData(**inp)
+    tel = TelescopePosition(name='L-01', configData=configData)
 
     assert tel._posX == -70.93
     # Testing default unit convertion
@@ -29,14 +28,13 @@ def test_input():
 
 
 def test_coordinate_transformations():
-    inp = {
-        'name': 'L-01',
+    configData = {
         'posX': 0 * u.m,
         'posY': 0 * u.m,
         'posZ': 43.00 * u.m,
         'altitude': 2.177 * u.km,
     }
-    tel = TelescopeData(**inp)
+    tel = TelescopePosition(name='L-01', configData=configData)
 
     wgs84 = pyproj.CRS('EPSG:4326')
 
@@ -71,13 +69,12 @@ def test_coordinate_transformations():
 
 
 def test_corsika_transformations():
-    inp = {
-        'name': 'L-01',
+    configData = {
         'posX': 0 * u.m,
         'posY': 0 * u.m,
         'altitude': 2.177 * u.km,
     }
-    tel = TelescopeData(**inp)
+    tel = TelescopePosition(name='L-01', configData=configData)
 
     # ASL -> CORSIKA
     tel.convertAslToCorsika(
@@ -98,13 +95,12 @@ def test_corsika_transformations():
 
 
 def test_convert_all():
-    inp = {
-        'name': 'L-01',
+    configData = {
         'posX': 0 * u.m,
         'posY': 0 * u.m,
         'posZ': 43.00 * u.m,
     }
-    tel = TelescopeData(**inp)
+    tel = TelescopePosition(name='L-01', configData=configData)
 
     wgs84 = pyproj.CRS('EPSG:4326')
 

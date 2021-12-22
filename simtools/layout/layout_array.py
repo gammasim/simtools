@@ -6,9 +6,9 @@ from astropy.table import Table
 
 import simtools.config as cfg
 import simtools.io_handler as io
+import simtools.util.general as gen
 from simtools.util import names
-from simtools.util.general import collectArguments
-from simtools.layout.telescope_data import TelescopeData
+from simtools.layout.telescope_position import TelescopePosition
 
 
 class InvalidTelescopeListFile(Exception):
@@ -19,12 +19,42 @@ class LayoutArray:
     '''
     Manage telescope positions at the array layout level.
 
+    Configurable parameters:
+        epsg:
+            len: 1
+        centerLongitude:
+            len: 1
+            unit: deg
+        centerLatitude:
+            len: 1
+            unit: deg
+        centerNorthing:
+            len: 1
+            unit: m
+        centerEasting:
+            len: 1
+            unit: m
+        centerAltitude:
+            len: 1
+            unit: m
+        corsikaObsLevel:
+            len: 1
+            unit: m
+        corsikaSphereCenter:
+            len: 3
+            unit: [m, m, m]
+        corsikaSphereRadius:
+            len: 3
+            unit: [m, m, m]
+
     Attributes
     ----------
     name: str
         Name of the telescope (e.g L-01, S-05, ...).
     label: str
         Instance label.
+    config: namedtuple
+        Contains the configurable parameters (zenithAngle).
 
     Methods
     -------
@@ -57,19 +87,7 @@ class LayoutArray:
         Perform all the possible conversions the coordinates of the tel positions.
     '''
 
-    ALL_INPUTS = {
-        'epsg': {'default': None, 'unit': None},
-        'centerLongitude': {'default': None, 'unit': u.deg},
-        'centerLatitude': {'default': None, 'unit': u.deg},
-        'centerNorthing': {'default': None, 'unit': u.m},
-        'centerEasting': {'default': None, 'unit': u.m},
-        'centerAltitude': {'default': None, 'unit': u.m},
-        'corsikaObsLevel': {'default': None, 'unit': u.m},
-        'corsikaSphereCenter': {'default': None, 'isDict': True, 'unit': u.m},
-        'corsikaSphereRadius': {'default': None, 'isDict': True, 'unit': u.m}
-    }
-
-    def __init__(self, label=None, name=None, filesLocation=None, **kwargs):
+    def __init__(self, label=None, name=None, filesLocation=None, configData=None, configFile=None):
         '''
         LayoutArray init.
 
@@ -82,18 +100,10 @@ class LayoutArray:
         filesLocation: str (or Path), optional
             Parent location of the output files created by this class. If not given, it will be
             taken from the config.yml file.
-        **kwargs:
-            Physical parameters with units (if applicable).
-            Options:
-                epsg
-                centerLongitude (u.deg)
-                centerLatitude (u.deg)
-                centerNorthing (u.m)
-                cernterEasting (u.m)
-                centerAltitude (u.m)
-                corsikaObsLevel (u.m)
-                corsikaSphereCenter {(u.m)}
-                corsikaSphereRadius {(u.m)}
+        configData: dict.
+            Dict containing the configurable parameters.
+        configFile: str or Path
+            Path of the yaml file containing the configurable parameters.
         '''
         self._logger = logging.getLogger(__name__)
         self._logger.debug('Init LayoutArray')
@@ -103,13 +113,15 @@ class LayoutArray:
         self.name = name
         self._telescopeList = []
 
-        # Collecting arguments
-        collectArguments(
-            self,
-            args=[*self.ALL_INPUTS],
-            allInputs=self.ALL_INPUTS,
-            **kwargs
-        )
+        # Loading configData
+        _configDataIn = gen.collectDataFromYamlOrDict(configFile, configData, allowEmpty=True)
+        _parameterFile = io.getDataFile('parameters', 'layout-array_parameters.yml')
+        _parameters = gen.collectDataFromYamlOrDict(_parameterFile, None)
+        self.config = gen.validateConfigData(_configDataIn, _parameters)
+
+        # Making config entries into attributes
+        for par, value in zip(self.config._fields, self.config):
+            self.__dict__['_' + par] = value
 
         self._loadArrayCenter()
 
@@ -117,6 +129,28 @@ class LayoutArray:
         self._filesLocation = cfg.getConfigArg('outputLocation', filesLocation)
         self._outputDirectory = io.getLayoutOutputDirectory(self._filesLocation, self.label)
         self._outputDirectory.mkdir(parents=True, exist_ok=True)
+
+    @classmethod
+    def fromKwargs(cls, **kwargs):
+        '''
+        Builds a LayoutArray object from kwargs only.
+        The configurable parameters can be given as kwargs, instead of using the
+        configData or configFile arguments.
+
+        Parameters
+        ----------
+        kwargs
+            Containing the arguments and the configurable parameters.
+
+        Returns
+        -------
+        Instance of this class.
+        '''
+        args, configData = gen.separateArgsAndConfigData(
+            expectedArgs=['name', 'label', 'filesLocation'],
+            **kwargs
+        )
+        return cls(**args, configData=configData)
 
     @classmethod
     def fromLayoutArrayName(
@@ -144,7 +178,7 @@ class LayoutArray:
         '''
         spl = layoutArrayName.split('-')
         siteName = names.validateSiteName(spl[0])
-        arrayName = names.validateArrayName(spl[1])
+        arrayName = names.validateLayoutArrayName(spl[1])
         validLayoutArrayName = siteName + '-' + arrayName
 
         layout = cls(
@@ -162,10 +196,16 @@ class LayoutArray:
         return layout
         # End of fromLayoutArrayName
 
+    def __len__(self):
+        return len(self._telescopeList)
+
+    def __getitem__(self, i):
+        return self._telescopeList[i]
+
     def _loadArrayCenter(self):
         ''' Load the array center and make convertions if needed. '''
 
-        self._arrayCenter = TelescopeData()
+        self._arrayCenter = TelescopePosition()
         self._arrayCenter.name = 'array_center'
 
         self._arrayCenter.setLocalCoordinates(0 * u.m, 0 * u.m, 0 * u.m)
@@ -197,13 +237,15 @@ class LayoutArray:
             (self._centerNorthing is None or self._centerEasting is None)
             and self._arrayCenter.hasUtmCoordinates()
         ):
-            self._centerNorthing, self._centerEasting = self._arrayCenter.getUtmCoordinates()
+            centerNorthingWithUnit, centerEastingWithUnit = self._arrayCenter.getUtmCoordinates()
+            self._centerNorthing = centerNorthingWithUnit.to(u.m).value
+            self._centerEasting = centerEastingWithUnit.to(u.m).value
     # End of _loadArrayCenter
 
     def _appendTelescope(self, row, table, prodList):
         ''' Append a new telescope from table row to list of telescopes. '''
 
-        tel = TelescopeData()
+        tel = TelescopePosition()
         tel.name = row['telescope_name']
 
         if (
@@ -299,8 +341,8 @@ class LayoutArray:
         posZ=u.m,
         longitude=u.deg,
         latitude=u.deg,
-        utmEast=u.deg,
-        utmNorth=u.deg,
+        utmEast=u.m,
+        utmNorth=u.m,
         altitude=u.m
     )
     def addTelescope(
@@ -340,16 +382,20 @@ class LayoutArray:
             Altitude coordinate in equivalent units of u.m.
         '''
 
-        tel = TelescopeData(
+        configData = {
+            'posX': posX,
+            'posY': posY,
+            'posZ': posZ,
+            'longitude': longitude,
+            'latitude': latitude,
+            'utmEast': utmEast,
+            'utmNorth': utmNorth,
+            'altitude': altitude
+        }
+
+        tel = TelescopePosition(
             name=telescopeName,
-            posX=posX,
-            posY=posY,
-            posZ=posZ,
-            longitude=longitude,
-            latitude=latitude,
-            utmEast=utmEast,
-            utmNorth=utmNorth,
-            altitude=altitude
+            configData=configData
         )
         self._telescopeList.append(tel)
 

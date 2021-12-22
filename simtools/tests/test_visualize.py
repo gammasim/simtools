@@ -1,7 +1,6 @@
 #!/usr/bin/python3
 
 import logging
-from pathlib import Path
 
 import numpy as np
 import astropy.units as u
@@ -29,13 +28,13 @@ def test_plot_1D():
     # Change y-axis to percent
     if '%' in yTitle:
         if np.max(dataIn[yTitle]) <= 1:
-            dataIn[yTitle] = 100*dataIn[yTitle]
+            dataIn[yTitle] = 100 * dataIn[yTitle]
     data = dict()
     data['Reflectivity'] = dataIn
     for i in range(5):
         newData = np.copy(dataIn)
-        newData[yTitle] = newData[yTitle]*(1 - 0.1*(i + 1))
-        data['{}%% reflectivity'.format(100*(1 - 0.1*(i + 1)))] = newData
+        newData[yTitle] = newData[yTitle] * (1 - 0.1 * (i + 1))
+        data['{}%% reflectivity'.format(100 * (1 - 0.1 * (i + 1)))] = newData
 
     plt = visualize.plot1D(data, title=title, palette='autumn')
 
