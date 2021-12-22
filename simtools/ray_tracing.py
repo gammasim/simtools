@@ -12,12 +12,12 @@ from astropy.table import QTable
 
 import simtools.config as cfg
 import simtools.io_handler as io
+import simtools.util.general as gen
 from simtools.psf_analysis import PSFImage
 from simtools.util import names
 from simtools.util.model import computeTelescopeTransmission
 from simtools.model.telescope_model import TelescopeModel
-from simtools.simtel_runner import SimtelRunner
-from simtools.util.general import collectArguments
+from simtools.simtel.simtel_runner_ray_tracing import SimtelRunnerRayTracing
 from simtools import visualize
 
 __all__ = ['RayTracing']
@@ -27,15 +27,40 @@ class RayTracing:
     '''
     Class for handling ray tracing simulations and analysis.
 
+    Configurable parameters:
+        zenithAngle:
+            len: 1
+            unit: deg
+            default: 20 deg
+        offAxisAngle:
+            len: null
+            unit: deg
+            default: [0 deg]
+        sourceDistance:
+            len: 1
+            unit: km
+            default: 10 km
+        singleMirrorMode:
+            len: 1
+            default: False
+        useRandomFocalLength:
+            len: 1
+            default: False
+        mirrorNumbers:
+            len: null
+            default: 'all'
+
     Attributes
     ----------
     label: str
         Instance label.
+    config: namedtuple
+        Contains the configurable parameters (zenithAngle).
 
     Methods
     -------
     simulate(test=False, force=False)
-        Simulate RayTracing using SimtelRunner.
+        Simulate RayTracing using SimtelRunnerRayTracing.
     analyse(export=True, force=False, useRX=False, noTelTransmission=False)
         Analyze RayTracing, meaning read simtel files, compute psfs and eff areas and store the
         results in _results.
@@ -52,16 +77,6 @@ class RayTracing:
     images()
         Get list of PSFImages.
     '''
-    ALL_INPUTS = {
-        'zenithAngle': {'default': 20, 'unit': u.deg},
-        'offAxisAngle': {
-            'default': [0.0],
-            'unit': u.deg,
-            'isList': True
-        },
-        'sourceDistance': {'default': 10, 'unit': u.km}
-    }
-
     YLABEL = {
         'd80_cm': r'$D_{80}$',
         'd80_deg': r'$D_{80}$',
@@ -75,10 +90,8 @@ class RayTracing:
         label=None,
         simtelSourcePath=None,
         filesLocation=None,
-        singleMirrorMode=False,
-        useRandomFocalLength=False,
-        mirrorNumbers='all',
-        **kwargs
+        configData=None,
+        configFile=None
     ):
         '''
         RayTracing init.
@@ -95,11 +108,10 @@ class RayTracing:
         filesLocation: str (or Path), optional
             Parent location of the output files created by this class. If not given, it will be
             taken from the config.yml file.
-        singleMirrorMode: bool
-        useRandomFocalLength: bool
-        **kwargs:
-            Physical parameters with units (if applicable). Options: zenithAngle, offAxisAngle,
-            sourceDistance, mirrorNumbers
+        configData: dict.
+            Dict containing the configurable parameters.
+        configFile: str or Path
+            Path of the yaml file containing the configurable parameters.
         '''
         self._logger = logging.getLogger(__name__)
 
@@ -108,51 +120,69 @@ class RayTracing:
 
         self._telescopeModel = self._validateTelescopeModel(telescopeModel)
 
-        self._singleMirrorMode = singleMirrorMode
-        self._useRandomFocalLength = useRandomFocalLength
-
-        # Default parameters
-        if self._singleMirrorMode:
-            collectArguments(
-                self,
-                args=['zenithAngle', 'offAxisAngle'],
-                allInputs=self.ALL_INPUTS,
-                **kwargs
-            )
-            mirFlen = self._telescopeModel.getParameter('mirror_focal_length')
-            self._sourceDistance = 2 * float(mirFlen) * u.cm.to(u.km)  # km
-            self._mirrorNumbers = mirrorNumbers
-        else:
-            collectArguments(
-                self,
-                args=['zenithAngle', 'offAxisAngle', 'sourceDistance'],
-                allInputs=self.ALL_INPUTS,
-                **kwargs
-            )
+        # Loading configData
+        _configDataIn = gen.collectDataFromYamlOrDict(configFile, configData)
+        _parameterFile = io.getDataFile('parameters', 'ray-tracing_parameters.yml')
+        _parameters = gen.collectDataFromYamlOrDict(_parameterFile, None)
+        self.config = gen.validateConfigData(_configDataIn, _parameters)
 
         self.label = label if label is not None else self._telescopeModel.label
 
         self._outputDirectory = io.getRayTracingOutputDirectory(self._filesLocation, self.label)
         self._outputDirectory.mkdir(parents=True, exist_ok=True)
 
-        if self._singleMirrorMode:
-            if self._mirrorNumbers == 'all':
+        # Loading relevant attributes in case of single mirror mode.
+        if self.config.singleMirrorMode:
+            # Recalculating source distance.
+            self._logger.debug(
+                'Single mirror mode is activate - source distance is being recalculated to 2 * flen'
+            )
+            mirFlen = self._telescopeModel.getParameterValue('mirror_focal_length')
+            self._sourceDistance = 2 * float(mirFlen) * u.cm.to(u.km)  # km
+
+            # Setting mirror numbers.
+            if self.config.mirrorNumbers[0] == 'all':
                 self._mirrorNumbers = list(range(0, self._telescopeModel.mirrors.numberOfMirrors))
-            if not isinstance(self._mirrorNumbers, list):
-                self._mirrorNumbers = [self._mirrorNumbers]
+            else:
+                self._mirrorNumbers = self.config.mirrorNumbers
+        else:
+            self._sourceDistance = self.config.sourceDistance
 
         self._hasResults = False
 
         # Results file
         fileNameResults = names.rayTracingResultsFileName(
-            self._telescopeModel.telescopeName,
+            self._telescopeModel.site,
+            self._telescopeModel.name,
             self._sourceDistance,
-            self._zenithAngle,
+            self.config.zenithAngle,
             self.label
         )
         self._outputDirectory.joinpath('results').mkdir(parents=True, exist_ok=True)
         self._fileResults = self._outputDirectory.joinpath('results').joinpath(fileNameResults)
     # END of init
+
+    @classmethod
+    def fromKwargs(cls, **kwargs):
+        '''
+        Builds a RayTracing object from kwargs only.
+        The configurable parameters can be given as kwargs, instead of using the
+        configData or configFile arguments.
+
+        Parameters
+        ----------
+        kwargs
+            Containing the arguments and the configurable parameters.
+
+        Returns
+        -------
+        Instance of this class.
+        '''
+        args, configData = gen.separateArgsAndConfigData(
+            expectedArgs=['telescopeModel', 'label', 'simtelSourcePath', 'filesLocation'],
+            **kwargs
+        )
+        return cls(**args, configData=configData)
 
     def __repr__(self):
         return 'RayTracing(label={})\n'.format(self.label)
@@ -160,7 +190,7 @@ class RayTracing:
     def _validateTelescopeModel(self, tel):
         ''' Validate TelescopeModel '''
         if isinstance(tel, TelescopeModel):
-            self._logger.debug('TelescopeModel OK')
+            self._logger.debug('RayTracing contains a valid TelescopeModel')
             return tel
         else:
             msg = 'Invalid TelescopeModel'
@@ -169,7 +199,7 @@ class RayTracing:
 
     def simulate(self, test=False, force=False):
         '''
-        Simulate RayTracing using SimtelRunner.
+        Simulate RayTracing using SimtelRunnerRayTracing.
 
         Parameters
         ----------
@@ -178,23 +208,25 @@ class RayTracing:
         force: bool
             Force flag will remove existing files and simulate again.
         '''
-        allMirrors = self._mirrorNumbers if self._singleMirrorMode else [0]
-        for thisOffAxis in self._offAxisAngle:
+        allMirrors = self._mirrorNumbers if self.config.singleMirrorMode else [0]
+        for thisOffAxis in self.config.offAxisAngle:
             for thisMirror in allMirrors:
                 self._logger.info('Simulating RayTracing for offAxis={}, mirror={}'.format(
                     thisOffAxis,
                     thisMirror
                 ))
-                simtel = SimtelRunner(
+                simtel = SimtelRunnerRayTracing(
                     simtelSourcePath=self._simtelSourcePath,
                     filesLocation=self._filesLocation,
-                    mode='ray-tracing' if not self._singleMirrorMode else 'raytracing-singlemirror',
                     telescopeModel=self._telescopeModel,
-                    zenithAngle=self._zenithAngle * u.deg,
-                    sourceDistance=self._sourceDistance * u.km,
-                    offAxisAngle=thisOffAxis * u.deg,
-                    mirrorNumber=thisMirror,
-                    useRandomFocalLength=self._useRandomFocalLength
+                    configData={
+                        'zenithAngle': self.config.zenithAngle * u.deg,
+                        'sourceDistance': self._sourceDistance * u.km,
+                        'offAxisAngle': thisOffAxis * u.deg,
+                        'mirrorNumber': thisMirror,
+                        'useRandomFocalLength': self.config.useRandomFocalLength
+                    },
+                    singleMirrorMode=self.config.singleMirrorMode
                 )
                 simtel.run(test=test, force=force)
     # END of simulate
@@ -220,7 +252,7 @@ class RayTracing:
 
         doAnalyze = (not self._fileResults.exists() or force)
 
-        focalLength = float(self._telescopeModel.getParameter('focal_length'))
+        focalLength = float(self._telescopeModel.getParameterValue('focal_length'))
         telTransmissionPars = (
             self._telescopeModel.getTelescopeTransmissionParameters()
             if not noTelTransmission else [1, 0, 0, 0]
@@ -234,19 +266,20 @@ class RayTracing:
         else:
             self._readResults()
 
-        allMirrors = self._mirrorNumbers if self._singleMirrorMode else [0]
-        for thisOffAxis in self._offAxisAngle:
+        allMirrors = self._mirrorNumbers if self.config.singleMirrorMode else [0]
+        for thisOffAxis in self.config.offAxisAngle:
             for thisMirror in allMirrors:
                 self._logger.debug('Analyzing RayTracing for offAxis={}'.format(thisOffAxis))
-                if self._singleMirrorMode:
+                if self.config.singleMirrorMode:
                     self._logger.debug('mirrorNumber={}'.format(thisMirror))
 
                 photonsFileName = names.rayTracingFileName(
-                    self._telescopeModel.telescopeName,
+                    self._telescopeModel.site,
+                    self._telescopeModel.name,
                     self._sourceDistance,
-                    self._zenithAngle,
+                    self.config.zenithAngle,
                     thisOffAxis,
-                    thisMirror if self._singleMirrorMode else None,
+                    thisMirror if self.config.singleMirrorMode else None,
                     self.label,
                     'photons'
                 )
@@ -284,7 +317,7 @@ class RayTracing:
                     effArea * u.m * u.m,
                     effFlen * u.cm
                 )
-                if self._singleMirrorMode:
+                if self.config.singleMirrorMode:
                     _currentResults += (thisMirror,)
                 _rows.append(_currentResults)
         # END for offAxis, mirrorNumber
@@ -292,7 +325,7 @@ class RayTracing:
         if doAnalyze:
             _columns = ['Off-axis angle']
             _columns.extend(list(self.YLABEL.keys()))
-            if self._singleMirrorMode:
+            if self.config.singleMirrorMode:
                 _columns.append('mirror_number')
             self._results = QTable(rows=_rows, names=_columns)
 
@@ -376,9 +409,9 @@ class RayTracing:
         if save:
             plotFileName = names.rayTracingPlotFileName(
                 key,
-                self._telescopeModel.telescopeName,
+                self._telescopeModel.name,
                 self._sourceDistance,
-                self._zenithAngle,
+                self.config.zenithAngle,
                 self.label
             )
             self._outputDirectory.joinpath('figures').mkdir(exist_ok=True)
@@ -469,7 +502,7 @@ class RayTracing:
         List of PSFImage's
         '''
         images = list()
-        for thisOffAxis in self._offAxisAngle:
+        for thisOffAxis in self.config.offAxisAngle:
             if thisOffAxis in self._psfImages.keys():
                 images.append(self._psfImages[thisOffAxis])
         if len(images) == 0:

@@ -2,19 +2,18 @@ import logging
 import numpy as np
 import matplotlib.pyplot as plt
 import os
+import re
 from pathlib import Path
 from collections import defaultdict
-import re
 
-import astropy.units as u
 from astropy.io import ascii
 from astropy.table import Table
 
 import simtools.config as cfg
 import simtools.io_handler as io
+import simtools.util.general as gen
 from simtools import visualize
 from simtools.util import names
-from simtools.util.general import collectArguments
 from simtools.util.model import getCameraName
 from simtools.model.telescope_model import TelescopeModel
 from simtools.model.model_parameters import CAMERA_RADIUS_CURV
@@ -26,10 +25,15 @@ class CameraEfficiency:
     '''
     Class for handling camera efficiency simulations and analysis.
 
+    Configurable parameters:
+        zenithAngle: {len: 1, unit: deg, default: 20 deg, names: ['zenith', 'theta']}
+
     Attributes
     ----------
     label: str
         Instance label.
+    config: namedtuple
+        Contains the configurable parameters (zenithAngle).
 
     Methods
     -------
@@ -42,7 +46,6 @@ class CameraEfficiency:
     plot(key, **kwargs)
         Plot key vs wavelength, where key may be cherenkov or nsb.
     '''
-    ALL_INPUTS = {'zenithAngle': {'default': 20, 'unit': u.deg}}
 
     def __init__(
         self,
@@ -50,7 +53,8 @@ class CameraEfficiency:
         label=None,
         simtelSourcePath=None,
         filesLocation=None,
-        **kwargs
+        configData=None,
+        configFile=None
     ):
         '''
         CameraEfficiency init.
@@ -67,8 +71,10 @@ class CameraEfficiency:
         filesLocation: str (or Path), optional.
             Parent location of the output files created by this class. If not given, it will be
             taken from the config.yml file.
-        **kwargs:
-            Physical parameters with units (if applicable). Options: zenithAngle (default 20 deg).
+        configData: dict.
+            Dict containing the configurable parameters.
+        configFile: str or Path
+            Path of the yaml file containing the configurable parameters.
         '''
         self._logger = logging.getLogger(__name__)
 
@@ -82,10 +88,35 @@ class CameraEfficiency:
 
         self._hasResults = False
 
-        collectArguments(self, args=['zenithAngle'], allInputs=self.ALL_INPUTS, **kwargs)
+        _configDataIn = gen.collectDataFromYamlOrDict(configFile, configData, allowEmpty=True)
+        _parameterFile = io.getDataFile('parameters', 'camera-efficiency_parameters.yml')
+        _parameters = gen.collectDataFromYamlOrDict(_parameterFile, None)
+        self.config = gen.validateConfigData(_configDataIn, _parameters)
 
         self._loadFiles()
     # END of init
+
+    @classmethod
+    def fromKwargs(cls, **kwargs):
+        '''
+        Builds a CameraEfficiency object from kwargs only.
+        The configurable parameters can be given as kwargs, instead of using the
+        configData or configFile arguments.
+
+        Parameters
+        ----------
+        kwargs
+            Containing the arguments and the configurable parameters.
+
+        Returns
+        -------
+        Instance of this class.
+        '''
+        args, configData = gen.separateArgsAndConfigData(
+            expectedArgs=['telescopeModel', 'label', 'simtelSourcePath', 'filesLocation'],
+            **kwargs
+        )
+        return cls(**args, configData=configData)
 
     def __repr__(self):
         return 'CameraEfficiency(label={})\n'.format(self.label)
@@ -111,22 +142,25 @@ class CameraEfficiency:
         ''' Define the variables for the file names, including the results, simtel and log file. '''
         # Results file
         fileNameResults = names.cameraEfficiencyResultsFileName(
-            self._telescopeModel.telescopeName,
-            self._zenithAngle,
+            self._telescopeModel.site,
+            self._telescopeModel.name,
+            self.config.zenithAngle,
             self.label
         )
         self._fileResults = self._baseDirectory.joinpath(fileNameResults)
         # SimtelOutput file
         fileNameSimtel = names.cameraEfficiencySimtelFileName(
-            self._telescopeModel.telescopeName,
-            self._zenithAngle,
+            self._telescopeModel.site,
+            self._telescopeModel.name,
+            self.config.zenithAngle,
             self.label
         )
         self._fileSimtel = self._baseDirectory.joinpath(fileNameSimtel)
         # Log file
         fileNameLog = names.cameraEfficiencyLogFileName(
-            self._telescopeModel.telescopeName,
-            self._zenithAngle,
+            self._telescopeModel.site,
+            self._telescopeModel.name,
+            self.config.zenithAngle,
             self.label
         )
         self._fileLog = self._baseDirectory.joinpath(fileNameLog)
@@ -152,25 +186,25 @@ class CameraEfficiency:
         pixelDiameter = self._telescopeModel.camera.getPixelDiameter()
 
         # Processing focal length
-        focalLength = self._telescopeModel.getParameter('effective_focal_length')
+        focalLength = self._telescopeModel.getParameterValue('effective_focal_length')
         if focalLength == 0.:
             self._logger.warning('Using focal_lenght because effective_focal_length is 0')
-            focalLength = self._telescopeModel.getParameter('focal_length')
+            focalLength = self._telescopeModel.getParameterValue('focal_length')
 
         # Processing mirror class
         mirrorClass = 1
         if self._telescopeModel.hasParameter('mirror_class'):
-            mirrorClass = self._telescopeModel.getParameter('mirror_class')
+            mirrorClass = self._telescopeModel.getParameterValue('mirror_class')
 
         # Processing camera transmission
         cameraTransmission = 1
         if self._telescopeModel.hasParameter('camera_transmission'):
-            cameraTransmission = self._telescopeModel.getParameter('camera_transmission')
+            cameraTransmission = self._telescopeModel.getParameterValue('camera_transmission')
 
         # Processing camera filter
         # A special case is needed for recent ASTRI models because testeff does not
         # support 2D camera filters
-        cameraFilterFile = self._telescopeModel.getParameter('camera_filter')
+        cameraFilterFile = self._telescopeModel.getParameterValue('camera_filter')
         if self._telescopeModel.isASTRI() and self._telescopeModel.isFile2D('camera_filter'):
             self._logger.warning(
                 'Camera filter file is being replaced by transmission_astri_window_average.dat'
@@ -181,7 +215,7 @@ class CameraEfficiency:
         # Processing mirror reflectivity
         # A special case is needed for recent ASTRI models because testeff does not
         # support 2D mirror reflectivity
-        mirrorReflectivity = self._telescopeModel.getParameter('mirror_reflectivity')
+        mirrorReflectivity = self._telescopeModel.getParameterValue('mirror_reflectivity')
         if self._telescopeModel.isASTRI() and self._telescopeModel.isFile2D('mirror_reflectivity'):
             self._logger.warning(
                 'Mirror reflectivity (and secondary) file is being replaced by'
@@ -190,18 +224,20 @@ class CameraEfficiency:
             mirrorReflectivity = 'ref_astri_2017-06_T0.dat'
 
         # Camera name
-        cameraName = getCameraName(self._telescopeModel.telescopeName)
+        cameraName = getCameraName(self._telescopeModel.name)
 
         # cmd -> Command to be run at the shell
         cmd = str(self._simtelSourcePath.joinpath('sim_telarray/bin/testeff'))
         cmd += ' -nm -nsb-extra'
-        cmd += ' -alt {}'.format(self._telescopeModel.getParameter('altitude'))
-        cmd += ' -fatm {}'.format(self._telescopeModel.getParameter('atmospheric_transmission'))
+        cmd += ' -alt {}'.format(self._telescopeModel.getParameterValue('altitude'))
+        cmd += ' -fatm {}'.format(
+            self._telescopeModel.getParameterValue('atmospheric_transmission')
+        )
         cmd += ' -flen {}'.format(focalLength * 0.01)  # focal lenght in meters
         cmd += ' -fcur {}'.format(CAMERA_RADIUS_CURV[cameraName])
         cmd += ' {} {}'.format(pixelShapeCmd, pixelDiameter)
         if mirrorClass == 1:
-            cmd += ' -fmir {}'.format(self._telescopeModel.getParameter('mirror_list'))
+            cmd += ' -fmir {}'.format(self._telescopeModel.getParameterValue('mirror_list'))
         cmd += ' -fref {}'.format(mirrorReflectivity)
         if mirrorClass == 2:
             cmd += ' -m2'
@@ -214,9 +250,9 @@ class CameraEfficiency:
         cmd += ' -fwl {}'.format(
             self._telescopeModel.camera.getLightguideEfficiencyWavelengthFileName()
         )
-        cmd += ' -fqe {}'.format(self._telescopeModel.getParameter('quantum_efficiency'))
+        cmd += ' -fqe {}'.format(self._telescopeModel.getParameterValue('quantum_efficiency'))
         cmd += ' {} {}'.format(200, 1000)  # lmin and lmax
-        cmd += ' {} 1 {}'.format(300, self._zenithAngle)  # Xmax, ioatm, zenith angle
+        cmd += ' {} 1 {}'.format(300, self.config.zenithAngle)  # Xmax, ioatm, zenith angle
         cmd += ' 2>{}'.format(self._fileLog)
         cmd += ' >{}'.format(self._fileSimtel)
 
@@ -491,7 +527,7 @@ class CameraEfficiency:
         plt = visualize.plotTable(
             tableToPlot,
             yTitle='Cherenkov light efficiency',
-            title='{} response to Cherenkov light'.format(self._telescopeModel.telescopeName),
+            title='{} response to Cherenkov light'.format(self._telescopeModel.name),
             noMarkers=True
         )
 
@@ -524,7 +560,7 @@ class CameraEfficiency:
             tableToPlot,
             yTitle='Nightsky background light efficiency',
             title='{} response to nightsky background light'.format(
-                self._telescopeModel.telescopeName
+                self._telescopeModel.name
             ),
             noMarkers=True
         )

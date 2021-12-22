@@ -19,7 +19,9 @@
     -------
     Runtime < 1 min.
 
-    python applications/make_regular_arrays.py
+    .. code-block:: console
+    
+        python applications/make_regular_arrays.py
 '''
 
 import logging
@@ -94,7 +96,7 @@ if __name__ == '__main__':
     siteParsDB = dict()
     sitePars = dict()
     for site in ['North', 'South']:
-        siteParsDB[site] = db.getSiteParameters(site=site, version='prod3_compatible')
+        siteParsDB[site] = db.getSiteParameters(site=site, modelVersion='prod3_compatible')
 
         sitePars[site] = dict()
         sitePars[site]['centerLatitude'] = float(siteParsDB[site]['ref_lat']['Value']) * u.deg
@@ -113,7 +115,7 @@ if __name__ == '__main__':
     for site in ['South', 'North']:
         for arrayName in ['1SST', '4SST', '1MST', '4MST', '1LST', '4LST']:
             logger.info('Processing array {}'.format(arrayName))
-            layout = LayoutArray(
+            layout = LayoutArray.fromKwargs(
                 label=label,
                 name=site + '-' + arrayName,
                 **sitePars[site]

@@ -19,9 +19,16 @@ if __name__ == '__main__':
         )
     )
     parser.add_argument(
+        '-s',
+        '--site',
+        help='Site (North or South)',
+        type=str,
+        required=True
+    )
+    parser.add_argument(
         '-t',
-        '--tel_type',
-        help='Telescope type (e.g. north-lst-1, south-sst-d)',
+        '--telescope',
+        help='Telescope type (e.g. LST-1, SST-D)',
         type=str,
         required=True
     )
@@ -34,7 +41,7 @@ if __name__ == '__main__':
     )
     parser.add_argument(
         '-v',
-        '--version',
+        '--model_version',
         help=(
             'Parameter version. If no version is provided, '
             'the entries of the last 5 versions are printed.'
@@ -59,13 +66,15 @@ if __name__ == '__main__':
     if not cfg.get('useMongoDB'):
         raise ValueError('This application works only with MongoDB and you asked not to use it')
 
+    logger.info('TEST')
+
     db = db_handler.DatabaseHandler()
 
-    if args.version == 'all':
+    if args.model_version == 'all':
         raise NotImplemented('Printing last 5 versions is not implemented yet.')
     else:
-        version = args.version
-    pars = db.getModelParameters(args.tel_type, version)
+        version = args.model_version
+    pars = db.getModelParameters(args.site, args.telescope, version)
     print()
     pprint(pars[args.parameter])
     print()

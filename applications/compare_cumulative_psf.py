@@ -25,8 +25,10 @@
 
     Command line arguments
     ----------------------
-    tel_name (str, required)
-        Telescope name (e.g. North-LST-1, South-SST-D, ...).
+    site (str, required)
+        North or South.
+    telescope (str, required)
+        Telescope model name (e.g. LST-1, SST-D, ...).
     model_version (str, optional)
         Model version (default=prod4).
     src_distance (float, optional)
@@ -60,8 +62,7 @@
 
     .. code-block:: console
 
-        python applications/compare_cumulative_psf.py --tel_name North-LST-1 \
-        --model_version prod4 --pars lst_pars.yml --data PSFcurve_data_v2.txt
+        python applications/compare_cumulative_psf.py --site North --telescope LST-1 --model_version prod4 --pars lst_pars.yml --data PSFcurve_data_v2.txt
 
     .. todo::
 
@@ -106,9 +107,16 @@ if __name__ == '__main__':
         )
     )
     parser.add_argument(
+        '-s',
+        '--site',
+        help='North or South',
+        type=str,
+        required=True
+    )
+    parser.add_argument(
         '-t',
-        '--tel_name',
-        help='Telescope name (e.g. North-MST-FlashCam-D, North-LST-1)',
+        '--telescope',
+        help='Telescope model name (e.g. MST-FlashCam-D, LST-1)',
         type=str,
         required=True
     )
@@ -165,8 +173,9 @@ if __name__ == '__main__':
     outputDir = io.getApplicationOutputDirectory(cfg.get('outputLocation'), label)
 
     telModel = TelescopeModel(
-        telescopeName=args.tel_name,
-        version=args.model_version,
+        site=args.site,
+        telescopeModelName=args.telescope,
+        modelVersion=args.model_version,
         label=label
     )
 
@@ -174,9 +183,9 @@ if __name__ == '__main__':
     if args.pars is not None:
         with open(args.pars) as file:
             newPars = yaml.load(file, Loader=yaml.FullLoader)
-        telModel.changeParameters(**newPars)
+        telModel.changeMultipleParameters(**newPars)
 
-    ray = RayTracing(
+    ray = RayTracing.fromKwargs(
         telescopeModel=telModel,
         sourceDistance=args.src_distance * u.km,
         zenithAngle=args.zenith * u.deg,
@@ -200,7 +209,7 @@ if __name__ == '__main__':
     plt = visualize.plot1D(dataToPlot)
     plt.gca().set_ylim(0, 1.05)
 
-    plotFileName = label + '_' + telModel.telescopeName + '_cumulativePSF'
+    plotFileName = label + '_' + telModel.name + '_cumulativePSF'
     plotFile = outputDir.joinpath(plotFileName)
     for f in ['pdf', 'png']:
         plt.savefig(str(plotFile) + '.' + f, format=f, bbox_inches='tight')
@@ -212,7 +221,7 @@ if __name__ == '__main__':
     circle = plt.Circle((0, 0), im.getPSF(0.8) / 2, color='k', fill=False, lw=2, ls='--')
     plt.gca().add_artist(circle)
 
-    plotFileName = label + '_' + telModel.telescopeName + '_image'
+    plotFileName = label + '_' + telModel.name + '_image'
     plotFile = outputDir.joinpath(plotFileName)
     for f in ['pdf', 'png']:
         plt.savefig(str(plotFile) + '.' + f, format=f, bbox_inches='tight')
