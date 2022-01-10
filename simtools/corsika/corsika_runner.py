@@ -287,7 +287,7 @@ class CorsikaRunner:
 
     def _getExtraCommands(self, extra):
         '''
-        Get extra commands by combining the one given as argument and 
+        Get extra commands by combining the one given as argument and
         what is given in config.yml
         '''
         extra = gen.copyAsList(extra) if extra is not None else list()
@@ -301,7 +301,7 @@ class CorsikaRunner:
     def hasRunLogFile(self, runNumber=None):
         runNumber = self._validateRunNumber(runNumber)
         runLogFile = self.getRunLogFile(runNumber=runNumber)
-        return Path(runLogFile).is_file():
+        return Path(runLogFile).is_file()
 
     def getResources(self, runNumber=None):
         runNumber = self._validateRunNumber(runNumber)
@@ -319,7 +319,8 @@ class CorsikaRunner:
 
         # Calculating number of events
         nEvents = (
-            self.corsikaConfig.getUserParameter('NSHOW') * self.corsikaConfig.getUserParameter('CSCAT')[0]
+            self.corsikaConfig.getUserParameter('NSHOW')
+            * self.corsikaConfig.getUserParameter('CSCAT')[0]
         )
 
         return nEvents, runtime
