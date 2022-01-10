@@ -119,12 +119,13 @@ if __name__ == '__main__':
         help=(
             'What task to execute. Options: '
             + 'simulate (perform simulations),'
-            + 'lists (print list of output files)'
-            + 'inspect (plot sim_telarray histograms for quick inspection)'
+            + 'lists (print list of output files),'
+            + 'inspect (plot sim_telarray histograms for quick inspection),'
+            + 'resources (print report of computing resources)'
         ),
         type=str,
         required=True,
-        choices=['simulate', 'lists', 'inspect']
+        choices=['simulate', 'lists', 'inspect', 'resources']
     )
     parser.add_argument(
         '--primary',
@@ -193,6 +194,10 @@ if __name__ == '__main__':
             elif args.task == 'list':
                 print('Printing ShowerSimulator file lists for primary {}'.format(primary))
                 raise NotImplementedError()
+
+            elif args.task == 'resources':
+                print('Printing computing resources report for primary {}'.format(primary))
+                shower.printResourcesReport()
 
     # ArraySimulators
     arraySimulators = dict()
