@@ -298,6 +298,20 @@ class CorsikaRunner:
         extra.extend(extraFromConfig)
         return extra
 
+    def getResources(self, runNumber=None):
+        runNumber = self._validateRunNumber(runNumber)
+
+        runLogFile = self.getRunLogFile(runNumber=runNumber)
+
+        runtime = None
+        with open(runLogFile, 'r') as file:
+            for line in file:
+                if 'RUNTIME' in line:
+                    runtime = int(line.split()[1])
+                    break
+
+        return runtime
+
     def getRunLogFile(self, runNumber=None):
         '''
         Get the full path of the run log file.
