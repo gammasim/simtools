@@ -310,7 +310,12 @@ class CorsikaRunner:
                     runtime = int(line.split()[1])
                     break
 
-        return runtime
+        # Calculating number of events
+        nEvents = (
+            self.corsikaConfig.getUserParameter('NSHOW') * self.corsikaConfig.getUserParameter('CSCAT')[0]
+        )
+
+        return nEvents, runtime
 
     def getRunLogFile(self, runNumber=None):
         '''
