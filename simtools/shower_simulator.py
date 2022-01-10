@@ -220,8 +220,7 @@ class ShowerSimulator:
             self._logger.debug(shellCommand)
             os.system(shellCommand)
 
-    def makeResourcesReport(self, runList=None, runRange=None):
-
+    def makeResourcesReport(self):
         runtime = list()
         nEvents = None
         for run in self.runs:
@@ -238,7 +237,11 @@ class ShowerSimulator:
         resources['Runtime/1000 events [hrs]'] = meanRuntime * 1000 / nEvents
         return resources
 
-    def printResourcesReport(self)
+    def printResourcesReport(self):
+        resources = self.makeResourcesReport()
+        print('Computing Resources - Report')
+        for key, value in resources:
+            print('{} = {}'.format(key, value))
 
     def _getRunsToSimulate(self, runList, runRange):
         ''' Process runList and runRange and return the validated list of runs. '''
