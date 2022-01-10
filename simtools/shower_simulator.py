@@ -220,6 +220,26 @@ class ShowerSimulator:
             self._logger.debug(shellCommand)
             os.system(shellCommand)
 
+    def makeResourcesReport(self, runList=None, runRange=None):
+
+        runtime = list()
+        nEvents = None
+        for run in self.runs:
+            if self._corsikaRunner.hasRunLogFile(runNumber=run):
+                nEvents, thisRuntime = self._corsikaRunner.getResources(runNumber=run)
+                runtime.append(thisRuntime)
+
+        secToHour = 1 / (60 * 60)
+        meanRuntime = np.mean(runtime) * secToHour
+
+        resources = dict()
+        resources['#events/run'] = nEvents
+        resources['Runtime/run [hrs]'] = meanRuntime
+        resources['Runtime/1000 events [hrs]'] = meanRuntime * 1000 / nEvents
+        return resources
+
+    def printResourcesReport(self)
+
     def _getRunsToSimulate(self, runList, runRange):
         ''' Process runList and runRange and return the validated list of runs. '''
         if runList is None and runRange is None:
