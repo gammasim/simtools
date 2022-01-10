@@ -232,6 +232,12 @@ class CorsikaRunner:
         self._logger.debug('Extra commands to be added to the run script {}'.format(extraCommands))
 
         with open(scriptFilePath, 'w') as file:
+            # shebang
+            file.write('#!/usr/bin/bash')
+
+            # Setting SECONDS variable to measure runtime
+            file.write('SECONDS=0')
+
             if extraCommands is not None:
                 file.write('# Writing extras\n')
                 for line in extraCommands:
@@ -249,6 +255,9 @@ class CorsikaRunner:
             file.write('\n')
             file.write('# Running corsika_autoinputs\n')
             file.write(autoinputsCommand)
+
+            # Printing out runtime
+            file.write('echo "RUNTIME: $SECONDS"')
 
         # Changing permissions
         os.system('chmod ug+x {}'.format(scriptFilePath))
