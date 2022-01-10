@@ -298,9 +298,13 @@ class CorsikaRunner:
         extra.extend(extraFromConfig)
         return extra
 
+    def hasRunLogFile(self, runNumber=None):
+        runNumber = self._validateRunNumber(runNumber)
+        runLogFile = self.getRunLogFile(runNumber=runNumber)
+        return Path(runLogFile).is_file():
+
     def getResources(self, runNumber=None):
         runNumber = self._validateRunNumber(runNumber)
-
         runLogFile = self.getRunLogFile(runNumber=runNumber)
 
         runtime = None
@@ -309,6 +313,9 @@ class CorsikaRunner:
                 if 'RUNTIME' in line:
                     runtime = int(line.split()[1])
                     break
+
+        if runtime is None:
+            self._logger.debug('RUNTIME was not found in run log file')
 
         # Calculating number of events
         nEvents = (
