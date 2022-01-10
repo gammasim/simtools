@@ -233,31 +233,28 @@ class CorsikaRunner:
 
         with open(scriptFilePath, 'w') as file:
             # shebang
-            file.write('#!/usr/bin/bash')
+            file.write('#!/usr/bin/bash\n')
 
             # Setting SECONDS variable to measure runtime
-            file.write('SECONDS=0')
+            file.write('\nSECONDS=0\n')
 
             if extraCommands is not None:
-                file.write('# Writing extras\n')
+                file.write('\n# Writing extras\n')
                 for line in extraCommands:
                     file.write('{}\n'.format(line))
                 file.write('# End of extras\n\n')
 
             file.write('export CORSIKA_DATA={}\n'.format(self._corsikaDataDir))
-            file.write('# Creating CORSIKA_DATA\n')
+            file.write('\n# Creating CORSIKA_DATA\n')
             file.write('mkdir -p {}\n'.format(self._corsikaDataDir))
-            file.write('\n')
             file.write('cd {} || exit 2\n'.format(self._corsikaDataDir))
-            file.write('\n')
-            file.write('# Running pfp\n')
+            file.write('\n# Running pfp\n')
             file.write(pfpCommand)
-            file.write('\n')
-            file.write('# Running corsika_autoinputs\n')
+            file.write('\n# Running corsika_autoinputs\n')
             file.write(autoinputsCommand)
 
             # Printing out runtime
-            file.write('echo "RUNTIME: $SECONDS"')
+            file.write('\necho "RUNTIME: $SECONDS"\n')
 
         # Changing permissions
         os.system('chmod ug+x {}'.format(scriptFilePath))
