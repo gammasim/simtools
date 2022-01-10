@@ -239,9 +239,11 @@ class ShowerSimulator:
 
     def printResourcesReport(self):
         resources = self.makeResourcesReport()
+        print('-----------------------------')
         print('Computing Resources - Report')
         for key, value in resources:
             print('{} = {}'.format(key, value))
+        print('-----------------------------')
 
     def _getRunsToSimulate(self, runList, runRange):
         ''' Process runList and runRange and return the validated list of runs. '''
