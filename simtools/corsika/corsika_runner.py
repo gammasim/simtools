@@ -323,7 +323,7 @@ class CorsikaRunner:
             self._logger.debug('RUNTIME was not found in run log file')
 
         # Calculating number of events
-        nEvents = (
+        nEvents = int(
             self.corsikaConfig.getUserParameter('NSHOW')
             * self.corsikaConfig.getUserParameter('CSCAT')[0]
         )
