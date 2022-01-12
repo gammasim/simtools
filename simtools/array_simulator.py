@@ -399,6 +399,8 @@ class ArraySimulator:
                 thisRuntime = self.simtelRunner.getResources(run=run)
                 runtime.append(thisRuntime)
 
+        print(runtime)
+
         secToHour = 1 / (60 * 60)
         meanRuntime = np.mean(runtime) * secToHour
 
