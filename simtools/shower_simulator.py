@@ -252,9 +252,9 @@ class ShowerSimulator:
     def printResourcesReport(self):
         resources = self.makeResourcesReport()
         print('-----------------------------')
-        print('Computing Resources - Report')
+        print('Computing Resources Report - Showers')
         for key, value in resources.items():
-            print('{} = {}'.format(key, value))
+            print('{} = {:.2f}'.format(key, value))
         print('-----------------------------')
 
     def _getRunsToSimulate(self, runList, runRange):
