@@ -227,25 +227,6 @@ class SimtelRunner:
         extra.extend(extraFromConfig)
         return extra
 
-    def hasSubLogFile(self, run, mode='out'):
-        runSubFile = self.getSubLogFile(run=run, mode=mode)
-        return Path(runSubFile).is_file()
-
-    def getResources(self, run):
-        subLogFile = self.getSubLogFile(run=run, mode='out')
-
-        runtime = None
-        with open(subLogFile, 'r') as file:
-            for line in file:
-                if 'RUNTIME' in line:
-                    runtime = int(line.split()[1])
-                    break
-
-        if runtime is None:
-            self._logger.debug('RUNTIME was not found in run log file')
-
-        return runtime
-
     @staticmethod
     def _configOption(par, value=None):
         ''' Util function for building sim_telarray command. '''

@@ -244,9 +244,21 @@ class ArraySimulator:
                 inputFile=file,
                 extraCommands=extraCommands
             )
+
+            thisSubCmd = copy(subCmd)
+
+            # Checking for log files in sub command and replacing them
+            if 'log_out' in subCmd:
+                logOutFile = self._simtelRunner.getSubLogFile(run=run, mode='out')
+                thisSubCmd = thisSubCmd.replace('log_out', str(logOutFile))
+
+            if 'log_err' in subCmd:
+                logErrFile = self._simtelRunner.getSubLogFile(run=run, mode='err')
+                thisSubCmd = thisSubCmd.replace('log_err', str(logErrFile))
+
             self._logger.info('Run {} - Submitting script {}'.format(run, runScript))
 
-            shellCommand = subCmd + ' ' + str(runScript)
+            shellCommand = thisSubCmd + ' ' + str(runScript)
             self._logger.debug(shellCommand)
             if not test:
                 os.system(shellCommand)
@@ -283,6 +295,7 @@ class ArraySimulator:
         self._results['output'].append(str(self._simtelRunner.getOutputFile(run)))
         self._results['hist'].append(str(self._simtelRunner.getHistogramFile(run)))
         self._results['log'].append(str(self._simtelRunner.getLogFile(run)))
+        self._results['sub_out'].append(str(self._simtelRunner.getSubLogFile(run, mode='out')))
 
     def printHistograms(self, inputFileList=None):
         '''
@@ -380,5 +393,28 @@ class ArraySimulator:
     def _printListOfFiles(self, which):
         for f in self._results[which]:
             print(f)
+
+    def makeResourcesReport(self):
+        runtime = list()
+        for file in self.results['log_out']:
+            if Path(file).is_file():
+                thisRuntime = self.simtelRunner.getResources(run=run)
+                runtime.append(thisRuntime)
+
+        secToHour = 1 / (60 * 60)
+        meanRuntime = np.mean(runtime) * secToHour
+
+        resources = dict()
+        resources['Runtime/run [hrs]'] = meanRuntime
+        return resources
+
+    def printResourcesReport(self):
+        resources = self.makeResourcesReport()
+        print('-----------------------------')
+        print('Computing Resources Report - Array Simulations')
+        for key, value in resources.items():
+            print('{} = {:.2f}'.format(key, value))
+        print('-----------------------------')
+
 
 # End of ShowerSimulator
