@@ -410,8 +410,8 @@ class ArraySimulator:
         resources['Runtime/run [hrs]'] = meanRuntime
         return resources
 
-    def printResourcesReport(self):
-        resources = self.makeResourcesReport()
+    def printResourcesReport(self, inputFileList):
+        resources = self.makeResourcesReport(inputFileList)
         print('-----------------------------')
         print('Computing Resources Report - Array Simulations')
         for key, value in resources.items():
