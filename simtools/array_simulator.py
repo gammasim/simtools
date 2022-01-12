@@ -398,7 +398,9 @@ class ArraySimulator:
             self._fillResultsWithoutRun(inputFileList)
 
         runtime = list()
+        print(self._results['log_out'])
         for file in self._results['log_out']:
+            print(file)
             if Path(file).is_file():
                 thisRuntime = self.simtelRunner.getResources(run=run)
                 runtime.append(thisRuntime)
