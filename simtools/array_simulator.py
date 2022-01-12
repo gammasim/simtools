@@ -392,7 +392,7 @@ class ArraySimulator:
         for f in self._results[which]:
             print(f)
 
-    def makeResourcesReport(self):
+    def makeResourcesReport(self, inputFileList):
 
         if len(self._results['log_out']) == 0 and inputFileList is not None:
             self._fillResultsWithoutRun(inputFileList)

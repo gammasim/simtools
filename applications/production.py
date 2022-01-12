@@ -225,4 +225,4 @@ if __name__ == '__main__':
 
             elif args.task == 'resources':
                 print('Printing computing resources report for primary {}'.format(primary))
-                array.printResourcesReport()
+                array.printResourcesReport(inputList)
