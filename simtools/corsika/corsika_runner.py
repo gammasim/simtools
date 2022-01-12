@@ -386,7 +386,8 @@ class CorsikaRunner:
             run=runNumber,
             primary=self.corsikaConfig.primary,
             arrayName=self.layoutName,
-            label=self.label
+            label=self.label,
+            mode=mode
         )
 
         subLogFileDir = self._outputDirectory.joinpath('logs')
