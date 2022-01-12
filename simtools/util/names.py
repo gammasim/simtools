@@ -804,7 +804,7 @@ def corsikaRunScriptFileName(arrayName, site, primary, run, label=None):
     return name
 
 
-def corsikaRunLogFileName(arrayName, site, run, label=None):
+def corsikaRunLogFileName(arrayName, site, primary, run, label=None):
     '''
     Corsika script file name.
 
@@ -814,6 +814,8 @@ def corsikaRunLogFileName(arrayName, site, run, label=None):
         Array name.
     site: str
         Paranal or LaPalma.
+    primary: str
+        Primary particle name.
     run: int
         RUn number.
     label: str
@@ -824,7 +826,7 @@ def corsikaRunLogFileName(arrayName, site, run, label=None):
     str
         File path.
     '''
-    name = 'log-corsika-run{}-{}-{}'.format(run, arrayName, site)
+    name = 'log-corsika-run{}-{}-{}-{}'.format(run, arrayName, site, primary)
     name += '_{}'.format(label) if label is not None else ''
     name += '.log'
     return name

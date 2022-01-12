@@ -303,6 +303,11 @@ class CorsikaRunner:
         runLogFile = self.getRunLogFile(runNumber=runNumber)
         return Path(runLogFile).is_file()
 
+    def hasSubLogFile(self, runNumber=None, mode='out'):
+        runNumber = self._validateRunNumber(runNumber)
+        runSubFile = self.getSubLogFile(runNumber=runNumber, mode=mode)
+        return Path(runSubFile).is_file()
+
     def getResources(self, runNumber=None):
         runNumber = self._validateRunNumber(runNumber)
         runLogFile = self.getRunLogFile(runNumber=runNumber)
@@ -348,10 +353,45 @@ class CorsikaRunner:
         logFileName = names.corsikaRunLogFileName(
             site=self.site,
             run=runNumber,
+            primary=self.corsikaConfig.primary,
             arrayName=self.layoutName,
             label=self.label
         )
         return self._corsikaLogDir.joinpath(logFileName)
+
+    def getSubLogFile(self, runNumber=None, mode='out'):
+        '''
+        Get the full path of the submission log file.
+
+        Parameters
+        ----------
+        runNumber: int
+            Run number.
+        mode: str
+            out or err
+
+        Raises
+        ------
+        ValueError
+            If runNumber is not valid (not an unsigned int).
+
+        Returns
+        -------
+        Path:
+            Full path of the run log file.
+        '''
+        runNumber = self._validateRunNumber(runNumber)
+        logFileName = names.corsikaSubLogFileName(
+            site=self.site,
+            run=runNumber,
+            primary=self.corsikaConfig.primary,
+            arrayName=self.layoutName,
+            label=self.label
+        )
+
+        subLogFileDir = self._outputDirectory.joinpath('logs')
+        subLogFileDir.mkdir(parents=True, exist_ok=True)
+        return subLogFileDir.joinpath(logFileName)
 
     def getCorsikaLogFile(self, runNumber=None):
         '''
