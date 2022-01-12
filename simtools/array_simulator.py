@@ -395,8 +395,10 @@ class ArraySimulator:
     def makeResourcesReport(self):
         runtime = list()
         for file in self._results['log_out']:
+            print('file {}'.format(file))
             if Path(file).is_file():
                 thisRuntime = self.simtelRunner.getResources(run=run)
+                print('here')
                 runtime.append(thisRuntime)
 
         print(runtime)
