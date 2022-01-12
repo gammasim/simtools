@@ -224,12 +224,12 @@ class ShowerSimulator:
 
             # Checking for log files in sub command and replacing them
             if 'log_out' in subCmd:
-                logOutFileName = self._getSubLogFile(runNumber=run, 'out')
+                logOutFileName = self._getSubLogFile(runNumber=run, mode='out')
                 logOutFile = logDir.joinpath(logOutFileName)
                 thisSubCmd = thisSubCmd.replace('log_out', logOutFile)
 
             if 'log_err' in subCmd:
-                logErrFileName = self._getSubLogFile(runNumber=run, 'err')
+                logErrFileName = self._getSubLogFile(runNumber=run, mode='err')
                 logErrFile = logDir.joinpath(logErrFileName)
                 thisSubCmd = thisSubCmd.replace('log_err', logErrFile)
 
