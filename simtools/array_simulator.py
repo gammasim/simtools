@@ -3,6 +3,7 @@ import logging
 import os
 from copy import copy
 from pathlib import Path
+from collections import defaultdict
 
 import astropy.units as u
 
@@ -125,11 +126,7 @@ class ArraySimulator:
         self._setSimtelRunner()
 
         # Storing list of files
-        self._results = dict()
-        self._results['output'] = list()
-        self._results['hist'] = list()
-        self._results['input'] = list()
-        self._results['log'] = list()
+        self._results = defaultdict(list())
     # End of init
 
     def _loadArrayConfigData(self, configData):
