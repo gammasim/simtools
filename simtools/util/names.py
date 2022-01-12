@@ -983,3 +983,41 @@ def simtelLogFileName(run, primary, arrayName, site, zenith, azimuth, label=None
     name += '_{}'.format(label) if label is not None else ''
     name += '.log'
     return name
+
+def simtelSubLogFileName(run, primary, arrayName, site, zenith, azimuth, mode, label=None):
+    '''
+    sim_telarray submission log file name.
+
+    Parameters
+    ----------
+    arrayName: str
+        Array name.
+    site: str
+        Paranal or LaPalma.
+    zenith: float
+        Zenith angle (deg).
+    viewCone: list of float
+        View cone limits (len = 2).
+    run: int
+        Run number.
+    mode: str
+        out or err
+    label: str
+        Instance label.
+
+    Returns
+    -------
+    str
+        File name.
+    '''
+    name = 'log-sub-run{}_{}_za{:d}deg_azm{:d}deg-{}-{}'.format(
+        run,
+        primary,
+        int(zenith),
+        int(azimuth),
+        site,
+        arrayName
+    )
+    name += '_{}'.format(label) if label is not None else ''
+    name += '-' + mode + '.log'
+    return name
