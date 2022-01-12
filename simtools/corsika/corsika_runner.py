@@ -310,10 +310,10 @@ class CorsikaRunner:
 
     def getResources(self, runNumber=None):
         runNumber = self._validateRunNumber(runNumber)
-        runLogFile = self.getRunLogFile(runNumber=runNumber)
+        subLogFile = self.getSubLogFile(runNumber=runNumber, mode='out')
 
         runtime = None
-        with open(runLogFile, 'r') as file:
+        with open(subLogFile, 'r') as file:
             for line in file:
                 if 'RUNTIME' in line:
                     runtime = int(line.split()[1])

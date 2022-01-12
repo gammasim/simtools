@@ -236,9 +236,11 @@ class ShowerSimulator:
         runtime = list()
         nEvents = None
         for run in self.runs:
-            if self._corsikaRunner.hasRunLogFile(runNumber=run):
+            if self._corsikaRunner.hasSubLogFile(runNumber=run):
                 nEvents, thisRuntime = self._corsikaRunner.getResources(runNumber=run)
                 runtime.append(thisRuntime)
+
+        print(runtime)
 
         secToHour = 1 / (60 * 60)
         meanRuntime = np.mean(runtime) * secToHour
