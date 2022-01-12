@@ -393,15 +393,15 @@ class ArraySimulator:
             print(f)
 
     def makeResourcesReport(self):
+
+        if len(self._results['log_out']) == 0 and inputFileList is not None:
+            self._fillResultsWithoutRun(inputFileList)
+
         runtime = list()
         for file in self._results['log_out']:
-            print('file {}'.format(file))
             if Path(file).is_file():
                 thisRuntime = self.simtelRunner.getResources(run=run)
-                print('here')
                 runtime.append(thisRuntime)
-
-        print(runtime)
 
         secToHour = 1 / (60 * 60)
         meanRuntime = np.mean(runtime) * secToHour
