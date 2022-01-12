@@ -208,11 +208,6 @@ class ShowerSimulator:
         runsToSimulate = self._getRunsToSimulate(runList, runRange)
         self._logger.info('Submitting run scripts for {} runs'.format(len(runsToSimulate)))
 
-        # Checking for log files in sub command and creating directory
-        if 'log_out' in subCmd or 'log_err' in subCmd:
-            logDir = self._outputDirectory.joinpath('logs')
-            logDir.mkdir(parents=True, exist_ok=True)
-
         self._logger.info('Starting submission')
         for run in runsToSimulate:
             runScript = self._corsikaRunner.getRunScriptFile(
@@ -224,13 +219,11 @@ class ShowerSimulator:
 
             # Checking for log files in sub command and replacing them
             if 'log_out' in subCmd:
-                logOutFileName = self._getSubLogFile(runNumber=run, mode='out')
-                logOutFile = logDir.joinpath(logOutFileName)
+                logOutFile = self._corsikaRunner.getSubLogFile(runNumber=run, mode='out')
                 thisSubCmd = thisSubCmd.replace('log_out', str(logOutFile))
 
             if 'log_err' in subCmd:
-                logErrFileName = self._getSubLogFile(runNumber=run, mode='err')
-                logErrFile = logDir.joinpath(logErrFileName)
+                logErrFile = self._corsikaRunner.getSubLogFile(runNumber=run, mode='err')
                 thisSubCmd = thisSubCmd.replace('log_err', str(logErrFile))
 
             self._logger.info('Run {} - Submitting script {}'.format(run, runScript))
@@ -238,17 +231,6 @@ class ShowerSimulator:
             shellCommand = thisSubCmd + ' ' + str(runScript)
             self._logger.debug(shellCommand)
             os.system(shellCommand)
-
-    def _getSubLogFile(self, runNumber, mode='out'):
-        fileName = names.corsikaSubLogFileName(
-            arrayName=self.layoutName,
-            site=self.site,
-            primary=self._corsikaRunner.corsikaConfig.primary,
-            run=runNumber,
-            mode=mode,
-            label=self.label
-        )
-        return fileName
 
     def makeResourcesReport(self):
         runtime = list()
