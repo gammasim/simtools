@@ -144,6 +144,20 @@ class SimtelRunnerArray(SimtelRunner):
         )
         return self._simtelLogDir.joinpath(fileName)
 
+    def getSubLogFile(self, run, mode='out'):
+        ''' Get full path of the simtel log file for a given run. '''
+        fileName = names.simtelSubLogFileName(
+            run=run,
+            primary=self.config.primary,
+            arrayName=self.arrayModel.layoutName,
+            site=self.arrayModel.site,
+            zenith=self.config.zenithAngle,
+            azimuth=self.config.azimuthAngle,
+            label=self.label,
+            mode=mode
+        )
+        return self._simtelLogDir.joinpath(fileName)
+
     def getHistogramFile(self, run):
         ''' Get full path of the simtel histogram file for a given run. '''
         fileName = names.simtelHistogramFileName(
@@ -169,6 +183,25 @@ class SimtelRunnerArray(SimtelRunner):
             label=self.label
         )
         return self._simtelDataDir.joinpath(fileName)
+
+    def hasSubLogFile(self, run, mode='out'):
+        runSubFile = self.getSubLogFile(run=run, mode=mode)
+        return Path(runSubFile).is_file()
+
+    def getResources(self, run):
+        subLogFile = self.getSubLogFile(run=run, mode='out')
+
+        runtime = None
+        with open(subLogFile, 'r') as file:
+            for line in file:
+                if 'RUNTIME' in line:
+                    runtime = int(line.split()[1])
+                    break
+
+        if runtime is None:
+            self._logger.debug('RUNTIME was not found in run log file')
+
+        return runtime
 
     def _shallRun(self, run=None):
         ''' Tells if simulations should be run again based on the existence of output files. '''
