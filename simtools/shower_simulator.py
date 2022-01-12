@@ -208,17 +208,47 @@ class ShowerSimulator:
         runsToSimulate = self._getRunsToSimulate(runList, runRange)
         self._logger.info('Submitting run scripts for {} runs'.format(len(runsToSimulate)))
 
+        # Checking for log files in sub command and creating directory
+        if 'log_out' in subCmd or 'log_err' in subCmd:
+            logDir = self._outputDirectory.joinpath('logs')
+            logDir.mkdir(parents=True, exist_ok=True)
+
         self._logger.info('Starting submission')
         for run in runsToSimulate:
             runScript = self._corsikaRunner.getRunScriptFile(
                 runNumber=run,
                 extraCommands=extraCommands
             )
+
+            thisSubCmd = copy(subCmd)
+
+            # Checking for log files in sub command and replacing them
+            if 'log_out' in subCmd:
+                logOutFileName = self._getSubLogFile(runNumber=run, 'out')
+                logOutFile = logDir.joinpath(logOutFileName)
+                thisSubCmd = thisSubCmd.replace('log_out', logOutFile)
+
+            if 'log_err' in subCmd:
+                logErrFileName = self._getSubLogFile(runNumber=run, 'err')
+                logErrFile = logDir.joinpath(logErrFileName)
+                thisSubCmd = thisSubCmd.replace('log_err', logErrFile)
+
             self._logger.info('Run {} - Submitting script {}'.format(run, runScript))
 
-            shellCommand = subCmd + ' ' + str(runScript)
+            shellCommand = thisSubCmd + ' ' + str(runScript)
             self._logger.debug(shellCommand)
             os.system(shellCommand)
+
+    def _getSubLogFile(self, runNumber, mode='out'):
+        fileName = names.corsikaSubLogFileName(
+            arrayName=self.layoutName,
+            site=self.site,
+            primary=self._corsikaRunner.corsikaConfig.primary,
+            run=runNumber,
+            mode=mode,
+            label=self.label
+        )
+        return fileName
 
     def makeResourcesReport(self):
         runtime = list()
