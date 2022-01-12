@@ -126,6 +126,9 @@ class SimtelRunner:
             # TODO: header
             file.write('#!/usr/bin/bash\n\n')
 
+            # Setting SECONDS variable to measure runtime
+            file.write('\nSECONDS=0\n')
+
             if extraCommands is not None:
                 file.write('# Writing extras\n')
                 for line in extraCommands:
@@ -135,6 +138,9 @@ class SimtelRunner:
             N = 1 if test else self.RUNS_PER_SET
             for _ in range(N):
                 file.write('{}\n\n'.format(command))
+
+            # Printing out runtime
+            file.write('\necho "RUNTIME: $SECONDS"\n')
 
         os.system('chmod ug+x {}'.format(self._scriptFile))
         return self._scriptFile
@@ -220,6 +226,25 @@ class SimtelRunner:
 
         extra.extend(extraFromConfig)
         return extra
+
+    def hasSubLogFile(self, run, mode='out'):
+        runSubFile = self.getSubLogFile(run=run, mode=mode)
+        return Path(runSubFile).is_file()
+
+    def getResources(self, run):
+        subLogFile = self.getSubLogFile(run=run, mode='out')
+
+        runtime = None
+        with open(subLogFile, 'r') as file:
+            for line in file:
+                if 'RUNTIME' in line:
+                    runtime = int(line.split()[1])
+                    break
+
+        if runtime is None:
+            self._logger.debug('RUNTIME was not found in run log file')
+
+        return runtime
 
     @staticmethod
     def _configOption(par, value=None):
