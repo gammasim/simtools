@@ -830,7 +830,7 @@ def corsikaRunLogFileName(arrayName, site, run, label=None):
     return name
 
 
-def corsikaSubLogFileName(arrayName, site, run, mode, label=None):
+def corsikaSubLogFileName(arrayName, site, primary, run, mode, label=None):
     '''
     Corsika submission file name.
 
@@ -840,6 +840,8 @@ def corsikaSubLogFileName(arrayName, site, run, mode, label=None):
         Array name.
     site: str
         Paranal or LaPalma.
+    primary: str
+        Primary particle name.
     run: int
         RUn number.
     mode: str
@@ -852,7 +854,7 @@ def corsikaSubLogFileName(arrayName, site, run, mode, label=None):
     str
         File path.
     '''
-    name = 'log-sub-corsika-run{}-{}-{}'.format(run, arrayName, site)
+    name = 'log-sub-corsika-run{}-{}-{}-{}'.format(run, arrayName, site, primary)
     name += '_{}'.format(label) if label is not None else ''
     name += '-' + mode + '.log'
     return name
