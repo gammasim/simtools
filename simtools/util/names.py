@@ -15,7 +15,8 @@ __all__ = [
     'simtelArrayConfigFileName',
     'simtelSingleMirrorListFileName',
     'corsikaConfigFileName',
-    'corsikaOutputFileName'
+    'corsikaOutputFileName',
+    'corsikaSubLogFileName'
 ]
 
 
@@ -805,7 +806,7 @@ def corsikaRunScriptFileName(arrayName, site, primary, run, label=None):
 
 def corsikaRunLogFileName(arrayName, site, run, label=None):
     '''
-    Corsika script file path.
+    Corsika script file name.
 
     Parameters
     ----------
@@ -826,6 +827,34 @@ def corsikaRunLogFileName(arrayName, site, run, label=None):
     name = 'log-corsika-run{}-{}-{}'.format(run, arrayName, site)
     name += '_{}'.format(label) if label is not None else ''
     name += '.log'
+    return name
+
+
+def corsikaSubLogFileName(arrayName, site, run, mode, label=None):
+    '''
+    Corsika submission file name.
+
+    Parameters
+    ----------
+    arrayName: str
+        Array name.
+    site: str
+        Paranal or LaPalma.
+    run: int
+        RUn number.
+    mode: str
+        out or err.
+    label: str
+        Instance label.
+
+    Returns
+    -------
+    str
+        File path.
+    '''
+    name = 'log-sub-corsika-run{}-{}-{}'.format(run, arrayName, site)
+    name += '_{}'.format(label) if label is not None else ''
+    name += '-' + mode + '.log'
     return name
 
 
