@@ -222,3 +222,7 @@ if __name__ == '__main__':
                 print('Plotting ArraySimulator histograms for primary {}'.format(primary))
                 file = array.printHistograms(inputList)
                 print('Histograms file {}'.format(file))
+
+            elif args.task == 'resources':
+                print('Printing computing resources report for primary {}'.format(primary))
+                array.printResourcesReport()
