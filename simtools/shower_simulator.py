@@ -226,12 +226,12 @@ class ShowerSimulator:
             if 'log_out' in subCmd:
                 logOutFileName = self._getSubLogFile(runNumber=run, mode='out')
                 logOutFile = logDir.joinpath(logOutFileName)
-                thisSubCmd = thisSubCmd.replace('log_out', logOutFile)
+                thisSubCmd = thisSubCmd.replace('log_out', str(logOutFile))
 
             if 'log_err' in subCmd:
                 logErrFileName = self._getSubLogFile(runNumber=run, mode='err')
                 logErrFile = logDir.joinpath(logErrFileName)
-                thisSubCmd = thisSubCmd.replace('log_err', logErrFile)
+                thisSubCmd = thisSubCmd.replace('log_err', str(logErrFile))
 
             self._logger.info('Run {} - Submitting script {}'.format(run, runScript))
 
