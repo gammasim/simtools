@@ -1,6 +1,7 @@
 
 import logging
 import os
+import numpy as np
 from copy import copy
 from pathlib import Path
 from collections import defaultdict
