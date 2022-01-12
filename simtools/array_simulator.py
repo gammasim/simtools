@@ -126,7 +126,7 @@ class ArraySimulator:
         self._setSimtelRunner()
 
         # Storing list of files
-        self._results = defaultdict(list())
+        self._results = defaultdict(list)
     # End of init
 
     def _loadArrayConfigData(self, configData):
