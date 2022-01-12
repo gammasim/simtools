@@ -397,8 +397,9 @@ class ArraySimulator:
         if len(self._results['log_out']) == 0 and inputFileList is not None:
             self._fillResultsWithoutRun(inputFileList)
 
+        print(inputFileList)
         runtime = list()
-        print(self._results['log_out'])
+        print(self._results)
         for file in self._results['log_out']:
             print(file)
             if Path(file).is_file():
