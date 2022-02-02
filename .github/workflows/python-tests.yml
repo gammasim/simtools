@@ -37,7 +37,9 @@ jobs:
         shell: bash -leo pipefail {0}
         run: |
           echo "Disabled pytest"
-          : # pytest
+          conda activate gammasim-tools-dev
+          source set_simtools.sh
+          pytest
 
       - name: Check for Python errors
         shell: bash -leo pipefail {0}
