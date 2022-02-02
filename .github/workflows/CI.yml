@@ -33,6 +33,7 @@ jobs:
           echo 'source $CONDA/etc/profile.d/conda.sh' >> ~/.bash_profile
           echo 'conda activate gammasim-tools-dev' >> ~/.bash_profile
           source set_simtools.sh
+          python --version
 
       - name: pyflakes liniting
         shell: bash -leo pipefail {0}
