@@ -22,7 +22,7 @@ jobs:
       - name: pyflakes liniting
         run: |
           source $CONDA/etc/profile.d/conda.sh
-          conda activate ci
+          conda install pyflakes
           pyflakes .
 
       - name: Install conda dependencies
