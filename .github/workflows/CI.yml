@@ -19,12 +19,6 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: pyflakes liniting
-        shell: bash -leo pipefail {0}
-        run: |
-          mamba install -q pyflakes
-          pyflakes .
-
       - name: Install conda dependencies
         env:
           PYTHON_VERSION: ${{ matrix.python-version }}
@@ -39,6 +33,12 @@ jobs:
           echo 'source $CONDA/etc/profile.d/conda.sh' >> ~/.bash_profile
           echo 'conda activate gammasim-tools-dev' >> ~/.bash_profile
           source set_simtools.sh
+
+      - name: pyflakes liniting
+        shell: bash -leo pipefail {0}
+        run: |
+          mamba install -q pyflakes
+          pyflakes .
 
       - name: Tests
         shell: bash -leo pipefail {0}
