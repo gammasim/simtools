@@ -245,8 +245,8 @@ def plot1D(data, **kwargs):
 
     Returns
     -------
-    pyplot.plt
-        a pyplot.plt instance in which the plot was produced
+    pyplot.figure
+        A pyplot.figure instance in which the plot was produced
     '''
 
     palette = kwargs.get('palette', 'default')
@@ -285,10 +285,10 @@ def plot1D(data, **kwargs):
 
     if plotRatio:
         gs = gridspec.GridSpec(2, 1, height_ratios=[3, 1])
-        plt.figure(figsize=(8, 8))
+        fig = plt.figure(figsize=(8, 8))
     else:
         gs = gridspec.GridSpec(1, 1)
-        plt.figure(figsize=(8, 6))
+        fig = plt.figure(figsize=(8, 6))
 
     ##########################################################################################
     # Plot the data
@@ -349,7 +349,7 @@ def plot1D(data, **kwargs):
         plt.locator_params(axis='y', nbins=nbins)
         plt.gca().autoscale(enable=True, axis='x', tight=True)
 
-    return plt
+    return fig
 
 
 def plotTable(table, yTitle, **kwargs):
@@ -383,7 +383,7 @@ def plotTable(table, yTitle, **kwargs):
 
     Returns
     -------
-    pyplot.plt
+    pyplot.fig
 
     '''
 
