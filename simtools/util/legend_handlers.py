@@ -38,7 +38,7 @@ class hexPixelHandler(object):
 
     def legend_artist(self, legend, orig_handle, fontsize, handlebox):
         x0, y0 = handlebox.xdescent + handlebox.width / 3, handlebox.ydescent + handlebox.height / 3
-        width = height = handlebox.height
+        # width = height = handlebox.height
         patch = mpatches.RegularPolygon(
             (x0, y0),
             numVertices=6,
@@ -59,7 +59,7 @@ class hexEdgePixelHandler(object):
 
     def legend_artist(self, legend, orig_handle, fontsize, handlebox):
         x0, y0 = handlebox.xdescent + handlebox.width / 3, handlebox.ydescent + handlebox.height / 3
-        width = height = handlebox.height
+        # width = height = handlebox.height
         patch = mpatches.RegularPolygon(
             (x0, y0),
             numVertices=6,
@@ -80,7 +80,7 @@ class hexOffPixelHandler(object):
 
     def legend_artist(self, legend, orig_handle, fontsize, handlebox):
         x0, y0 = handlebox.xdescent + handlebox.width / 3, handlebox.ydescent + handlebox.height / 3
-        width = height = handlebox.height
+        # width = height = handlebox.height
         patch = mpatches.RegularPolygon(
             (x0, y0),
             numVertices=6,
