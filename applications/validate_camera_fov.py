@@ -41,7 +41,6 @@
 '''
 
 import logging
-import matplotlib.pyplot as plt
 import argparse
 
 import simtools.config as cfg
@@ -121,10 +120,10 @@ if __name__ == '__main__':
     print('Avg. edge radius = {0:.3f} cm\n'.format(rEdgeAvg))
 
     # Now plot the camera as well
-    plt = camera.plotPixelLayout()
+    fig = camera.plotPixelLayout()
     plotFileName = label + '_' + telModel.name + '_pixelLayout'
     plotFile = outputDir.joinpath(plotFileName)
     for f in ['pdf', 'png']:
-        plt.savefig(str(plotFile) + '.' + f, format=f, bbox_inches='tight')
+        fig.savefig(str(plotFile) + '.' + f, format=f, bbox_inches='tight')
     print('\nPlotted camera in {}\n'.format(plotFile))
-    plt.clf()
+    fig.clf()
