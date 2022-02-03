@@ -993,7 +993,7 @@ class DatabaseHandler:
                     'The location of the file to upload, '
                     'corresponding to the {} parameter, must be provided.'
                 ).format(parameter)
-            filePath = Path(filePrefix).joinpath(newValue)
+            filePath = Path(filePrefix).joinpath(value)
             filesToAddToDB.add('{}'.format(filePath))
 
         kwargs.pop('Type', None)
