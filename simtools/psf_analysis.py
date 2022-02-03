@@ -403,7 +403,7 @@ class PSFImage:
 
         # PSF circle
         center = (0, 0) if centralized else (self.centroidX, self.centroidY)
-        circle = plt.Circle((0, 0), self.getPSF(0.8) / 2, **kwargsForPSF)
+        circle = plt.Circle(center, self.getPSF(0.8) / 2, **kwargsForPSF)
         ax.add_artist(circle)
 
     def getCumulativeData(self):
