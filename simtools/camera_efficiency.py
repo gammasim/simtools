@@ -469,6 +469,28 @@ class CameraEfficiency:
 
         return c2Sum/c1Sum/self._results['masts'][0]
 
+    def calcNsbRate(self):
+        '''
+        Calculate the NSB rate.
+        '''
+
+        n4Sum = np.sum(self._results['N4'])
+        nsbPePerNs = 1e-06*n4Sum*extraInfo['pixActiveSolidAngle']*extraInfo['onAxisEffOpticalArea']
+
+
+        # Sum(C1) from 300 - 550 nm:
+        c1ReducedWL = self._results['C1'][
+            [wlNow > 299 and wlNow < 551 for wlNow in self._results['wl']]
+        ]
+        c1Sum = np.sum(c1ReducedWL)
+        # Sum(C2) from 300 - 550 nm:
+        c2ReducedWL = self._results['C2'][
+            [wlNow > 299 and wlNow < 551 for wlNow in self._results['wl']]
+        ]
+        c2Sum = np.sum(c2ReducedWL)
+
+        return c2Sum/c1Sum/self._results['masts'][0]
+
     def plot(self, key, **kwargs):
         '''
         Plot key vs wavelength.
