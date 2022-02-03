@@ -49,15 +49,18 @@ class TestSimtelEvents(unittest.TestCase):
 
         # coreMax without units
         with self.assertRaises(TypeError):
-            simEvents = simtel_events.countSimulatedEvents(energyRange=[0.3 * u.TeV, 300 * u.TeV], coreMax=1500)
+            simtel_events.countSimulatedEvents(energyRange=[0.3 * u.TeV, 300 * u.TeV], coreMax=1500)
 
         # energyRange without units
         with self.assertRaises(TypeError):
-            simEvents = simtel_events.countSimulatedEvents(energyRange=[0.3, 300], coreMax=1500 * u.m)
+            simtel_events.countSimulatedEvents(energyRange=[0.3, 300], coreMax=1500 * u.m)
 
         # energyRange with wrong units
         with self.assertRaises(TypeError):
-            simEvents = simtel_events.countSimulatedEvents(energyRange=[0.3 * u.m, 300 * u.m], coreMax=1500 * u.m)
+            simtel_events.countSimulatedEvents(
+                energyRange=[0.3 * u.m, 300 * u.m],
+                coreMax=1500 * u.m
+            )
 
 
 if __name__ == '__main__':
