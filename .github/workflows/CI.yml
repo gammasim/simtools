@@ -41,10 +41,10 @@ jobs:
           mamba install -q pyflakes
           pyflakes .
 
-      - name: Tests
-        shell: bash -leo pipefail {0}
-        run: |
-          conda activate gammasim-tools-dev
-          source set_simtools.sh
-          pytest
+      #- name: Tests
+      #  shell: bash -leo pipefail {0}
+      #  run: |
+      #    conda activate gammasim-tools-dev
+      #    source set_simtools.sh
+      #    pytest
 
