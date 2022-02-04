@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-'''
+"""
     Summary
     -------
     This application validates the optical model parameters through ray tracing simulations \
@@ -57,7 +57,7 @@
     .. todo::
 
         * Change default model to default (after this feature is implemented in db_handler)
-'''
+"""
 
 import logging
 import matplotlib.pyplot as plt
@@ -71,111 +71,104 @@ import simtools.util.general as gen
 import simtools.io_handler as io
 from simtools.model.telescope_model import TelescopeModel
 from simtools.ray_tracing import RayTracing
+
 # from simtools.visualize import setStyle
 
 # setStyle()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(
         description=(
-            'Calculate and plot the PSF and eff. mirror area as a function of off-axis angle '
-            'of the telescope requested.'
+            "Calculate and plot the PSF and eff. mirror area as a function of off-axis angle "
+            "of the telescope requested."
         )
     )
+    parser.add_argument("-s", "--site", help="North or South", type=str, required=True)
     parser.add_argument(
-        '-s',
-        '--site',
-        help='North or South',
+        "-t",
+        "--telescope",
+        help="Telescope model name (e.g. MST-FlashCam-D, LST-1)",
         type=str,
-        required=True
+        required=True,
     )
     parser.add_argument(
-        '-t',
-        '--telescope',
-        help='Telescope model name (e.g. MST-FlashCam-D, LST-1)',
+        "-m",
+        "--model_version",
+        help="Model version (default=prod4)",
         type=str,
-        required=True
+        default="prod4",
     )
     parser.add_argument(
-        '-m',
-        '--model_version',
-        help='Model version (default=prod4)',
-        type=str,
-        default='prod4'
-    )
-    parser.add_argument(
-        '--src_distance',
-        help='Source distance in km (default=10)',
+        "--src_distance",
+        help="Source distance in km (default=10)",
         type=float,
-        default=10
+        default=10,
     )
     parser.add_argument(
-        '--zenith',
-        help='Zenith angle in deg (default=20)',
+        "--zenith", help="Zenith angle in deg (default=20)", type=float, default=20
+    )
+    parser.add_argument(
+        "--max_offset",
+        help="Maximum offset angle in deg (default=4)",
         type=float,
-        default=20
+        default=4,
     )
     parser.add_argument(
-        '--max_offset',
-        help='Maximum offset angle in deg (default=4)',
-        type=float,
-        default=4
+        "--test",
+        help="Test option will be faster by simulating fewer photons.",
+        action="store_true",
     )
     parser.add_argument(
-        '--test',
-        help='Test option will be faster by simulating fewer photons.',
-        action='store_true'
-    )
-    parser.add_argument(
-        '-v',
-        '--verbosity',
-        dest='logLevel',
-        action='store',
-        default='info',
-        help='Log level to print (default is INFO)'
+        "-v",
+        "--verbosity",
+        dest="logLevel",
+        action="store",
+        default="info",
+        help="Log level to print (default is INFO)",
     )
 
     args = parser.parse_args()
-    label = 'validate_optics'
+    label = "validate_optics"
 
     logger = logging.getLogger()
     logger.setLevel(gen.getLogLevelFromUser(args.logLevel))
 
     # Output directory to save files related directly to this app
-    outputDir = io.getApplicationOutputDirectory(cfg.get('outputLocation'), label)
+    outputDir = io.getApplicationOutputDirectory(cfg.get("outputLocation"), label)
 
     telModel = TelescopeModel(
         site=args.site,
         telescopeModelName=args.telescope,
         modelVersion=args.model_version,
         label=label,
-        readFromDB=True
+        readFromDB=True,
     )
 
     print(
-        '\nValidating telescope optics with ray tracing simulations'
-        ' for {}\n'.format(telModel.name)
+        "\nValidating telescope optics with ray tracing simulations"
+        " for {}\n".format(telModel.name)
     )
 
     ray = RayTracing.fromKwargs(
         telescopeModel=telModel,
         sourceDistance=args.src_distance * u.km,
         zenithAngle=args.zenith * u.deg,
-        offAxisAngle=np.linspace(0, args.max_offset, int(args.max_offset / 0.25) + 1) * u.deg
+        offAxisAngle=np.linspace(0, args.max_offset, int(args.max_offset / 0.25) + 1)
+        * u.deg,
     )
     ray.simulate(test=args.test, force=False)
     ray.analyze(force=True)
 
     # Plotting
-    for key in ['d80_deg', 'd80_cm', 'eff_area', 'eff_flen']:
+    for key in ["d80_deg", "d80_cm", "eff_area", "eff_flen"]:
         plt.figure(figsize=(8, 6), tight_layout=True)
 
-        ray.plot(key, marker='o', linestyle=':', color='k')
+        ray.plot(key, marker="o", linestyle=":", color="k")
 
-        plotFileName = label + '_' + telModel.name + '_' + key
+        plotFileName = label + "_" + telModel.name + "_" + key
         plotFile = outputDir.joinpath(plotFileName)
-        plt.savefig(str(plotFile) + '.pdf', format='pdf', bbox_inches='tight')
-        plt.savefig(str(plotFile) + '.png', format='png', bbox_inches='tight')
+        plt.savefig(str(plotFile) + ".pdf", format="pdf", bbox_inches="tight")
+        plt.savefig(str(plotFile) + ".png", format="png", bbox_inches="tight")
         plt.clf()

@@ -13,14 +13,17 @@ logger.setLevel(logging.DEBUG)
 
 
 class TestSimtelEvents(unittest.TestCase):
-
     def setUp(self):
         self.testFiles = list()
-        self.testFiles.append(io.getTestDataFile(
-            'run201_proton_za20deg_azm0deg-North-Prod5_test-production-5-mini.simtel.zst')
+        self.testFiles.append(
+            io.getTestDataFile(
+                "run201_proton_za20deg_azm0deg-North-Prod5_test-production-5-mini.simtel.zst"
+            )
         )
-        self.testFiles.append(io.getTestDataFile(
-            'run202_proton_za20deg_azm0deg-North-Prod5_test-production-5-mini.simtel.zst')
+        self.testFiles.append(
+            io.getTestDataFile(
+                "run202_proton_za20deg_azm0deg-North-Prod5_test-production-5-mini.simtel.zst"
+            )
         )
 
     def test_reading_files(self):
@@ -49,16 +52,22 @@ class TestSimtelEvents(unittest.TestCase):
 
         # coreMax without units
         with self.assertRaises(TypeError):
-            simEvents = simtel_events.countSimulatedEvents(energyRange=[0.3 * u.TeV, 300 * u.TeV], coreMax=1500)
+            simEvents = simtel_events.countSimulatedEvents(
+                energyRange=[0.3 * u.TeV, 300 * u.TeV], coreMax=1500
+            )
 
         # energyRange without units
         with self.assertRaises(TypeError):
-            simEvents = simtel_events.countSimulatedEvents(energyRange=[0.3, 300], coreMax=1500 * u.m)
+            simEvents = simtel_events.countSimulatedEvents(
+                energyRange=[0.3, 300], coreMax=1500 * u.m
+            )
 
         # energyRange with wrong units
         with self.assertRaises(TypeError):
-            simEvents = simtel_events.countSimulatedEvents(energyRange=[0.3 * u.m, 300 * u.m], coreMax=1500 * u.m)
+            simEvents = simtel_events.countSimulatedEvents(
+                energyRange=[0.3 * u.m, 300 * u.m], coreMax=1500 * u.m
+            )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

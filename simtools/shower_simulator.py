@@ -1,4 +1,3 @@
-
 import logging
 import os
 import numpy as np
@@ -11,7 +10,7 @@ from simtools.corsika.corsika_runner import CorsikaRunner
 from simtools.util import names
 from simtools.util.general import collectDataFromYamlOrDict
 
-__all__ = ['ShowerSimulator']
+__all__ = ["ShowerSimulator"]
 
 
 class MissingRequiredEntryInShowerConfig(Exception):
@@ -23,7 +22,7 @@ class InvalidRunsToSimulate(Exception):
 
 
 class ShowerSimulator:
-    '''
+    """
     ShowerSimulator is responsible for managing simulation of showers. \
     It interfaces with simulation software-specific packages, like CORSIKA.
 
@@ -68,7 +67,7 @@ class ShowerSimulator:
         Get the full path of the CORSIKA log file.
     getCorsikaOutputFile(runNumber)
         Get the full path of the CORSIKA output file.
-    '''
+    """
 
     def __init__(
         self,
@@ -76,9 +75,9 @@ class ShowerSimulator:
         filesLocation=None,
         simtelSourcePath=None,
         showerConfigData=None,
-        showerConfigFile=None
+        showerConfigFile=None,
     ):
-        '''
+        """
         ShowerSimulator init.
 
         Parameters
@@ -94,27 +93,32 @@ class ShowerSimulator:
             Dict with shower config data.
         showerConfigFile: str or Path
             Path to yaml file containing shower config data.
-        '''
+        """
         self._logger = logging.getLogger(__name__)
-        self._logger.debug('Init CorsikaRunner')
+        self._logger.debug("Init CorsikaRunner")
 
         self.label = label
 
-        self._simtelSourcePath = Path(cfg.getConfigArg('simtelPath', simtelSourcePath))
-        self._filesLocation = cfg.getConfigArg('outputLocation', filesLocation)
-        self._outputDirectory = io.getCorsikaOutputDirectory(self._filesLocation, self.label)
+        self._simtelSourcePath = Path(cfg.getConfigArg("simtelPath", simtelSourcePath))
+        self._filesLocation = cfg.getConfigArg("outputLocation", filesLocation)
+        self._outputDirectory = io.getCorsikaOutputDirectory(
+            self._filesLocation, self.label
+        )
         self._outputDirectory.mkdir(parents=True, exist_ok=True)
         self._logger.debug(
-            'Output directory {} - creating it, if needed.'.format(self._outputDirectory)
+            "Output directory {} - creating it, if needed.".format(
+                self._outputDirectory
+            )
         )
 
         showerConfigData = collectDataFromYamlOrDict(showerConfigFile, showerConfigData)
         self._loadShowerConfigData(showerConfigData)
         self._setCorsikaRunner()
+
     # End of init
 
     def _loadShowerConfigData(self, showerConfigData):
-        ''' Validate showerConfigData and store the relevant data in variables.'''
+        """Validate showerConfigData and store the relevant data in variables."""
 
         # Copying showerConfigData to corsikaConfigData
         # Few keys will be removed before passing it to CorsikaRunner
@@ -122,33 +126,37 @@ class ShowerSimulator:
 
         # Storing site and layoutName entries in attributes.
         try:
-            self.site = names.validateSiteName(showerConfigData['site'])
-            self.layoutName = names.validateLayoutArrayName(showerConfigData['layoutName'])
-            self._corsikaConfigData.pop('site')
-            self._corsikaConfigData.pop('layoutName')
-            dataDir = self._corsikaConfigData.pop('dataDirectory', None)
-            self._corsikaConfigData['corsikaDataDirectory'] = dataDir
+            self.site = names.validateSiteName(showerConfigData["site"])
+            self.layoutName = names.validateLayoutArrayName(
+                showerConfigData["layoutName"]
+            )
+            self._corsikaConfigData.pop("site")
+            self._corsikaConfigData.pop("layoutName")
+            dataDir = self._corsikaConfigData.pop("dataDirectory", None)
+            self._corsikaConfigData["corsikaDataDirectory"] = dataDir
         except KeyError:
-            msg = 'site and/or layoutName were not given in showerConfig'
+            msg = "site and/or layoutName were not given in showerConfig"
             self._logger.error(msg)
             raise MissingRequiredEntryInShowerConfig(msg)
 
         # Grabbing runList and runRange
-        runList = showerConfigData.get('runList', None)
-        runRange = showerConfigData.get('runRange', None)
+        runList = showerConfigData.get("runList", None)
+        runRange = showerConfigData.get("runRange", None)
         # Validating and merging runList and runRange, if needed.
         self.runs = self._validateRunListAndRange(runList, runRange)
 
         # Removing runs key from corsikaConfigData
-        self._corsikaConfigData.pop('runList', None)
-        self._corsikaConfigData.pop('runRange', None)
+        self._corsikaConfigData.pop("runList", None)
+        self._corsikaConfigData.pop("runRange", None)
 
         # Searching for corsikaParametersFile in showerConfig
-        self._corsikaParametersFile = showerConfigData.get('corsikaParametersFile', None)
-        self._corsikaConfigData.pop('corsikaParametersFile', None)
+        self._corsikaParametersFile = showerConfigData.get(
+            "corsikaParametersFile", None
+        )
+        self._corsikaConfigData.pop("corsikaParametersFile", None)
 
     def _setCorsikaRunner(self):
-        ''' Creating a CorsikaRunner and setting it to self._corsikaRunner. '''
+        """Creating a CorsikaRunner and setting it to self._corsikaRunner."""
         self._corsikaRunner = CorsikaRunner(
             site=self.site,
             layoutName=self.layoutName,
@@ -156,11 +164,11 @@ class ShowerSimulator:
             filesLocation=self._filesLocation,
             simtelSourcePath=self._simtelSourcePath,
             corsikaParametersFile=self._corsikaParametersFile,
-            corsikaConfigData=self._corsikaConfigData
+            corsikaConfigData=self._corsikaConfigData,
         )
 
     def run(self, runList=None, runRange=None):
-        '''
+        """
         Run simulation.
 
         Parameters
@@ -174,18 +182,20 @@ class ShowerSimulator:
         ------
         InvalidRunsToSimulate
             If runs in runList or runRange are invalid.
-        '''
+        """
         runsToSimulate = self._getRunsToSimulate(runList, runRange)
-        self._logger.info('Running scripts for {} runs'.format(len(runsToSimulate)))
+        self._logger.info("Running scripts for {} runs".format(len(runsToSimulate)))
 
-        self._logger.info('Starting running scripts')
+        self._logger.info("Starting running scripts")
         for run in runsToSimulate:
             runScript = self._corsikaRunner.getRunScriptFile(runNumber=run)
-            self._logger.info('Run {} - Running script {}'.format(run, runScript))
+            self._logger.info("Run {} - Running script {}".format(run, runScript))
             os.system(runScript)
 
-    def submit(self, runList=None, runRange=None, submitCommand=None, extraCommands=None):
-        '''
+    def submit(
+        self, runList=None, runRange=None, submitCommand=None, extraCommands=None
+    ):
+        """
         Submit a run script as a job. The submit command can be given by \
         submitCommand or it will be taken from the config.yml file.
 
@@ -200,33 +210,36 @@ class ShowerSimulator:
         ------
         InvalidRunsToSimulate
             If runs in runList or runRange are invalid.
-        '''
+        """
 
-        subCmd = submitCommand if submitCommand is not None else cfg.get('submissionCommand')
-        self._logger.info('Submission command: {}'.format(subCmd))
+        subCmd = (
+            submitCommand if submitCommand is not None else cfg.get("submissionCommand")
+        )
+        self._logger.info("Submission command: {}".format(subCmd))
 
         runsToSimulate = self._getRunsToSimulate(runList, runRange)
-        self._logger.info('Submitting run scripts for {} runs'.format(len(runsToSimulate)))
+        self._logger.info(
+            "Submitting run scripts for {} runs".format(len(runsToSimulate))
+        )
 
-        self._logger.info('Starting submission')
+        self._logger.info("Starting submission")
         for run in runsToSimulate:
             runScript = self._corsikaRunner.getRunScriptFile(
-                runNumber=run,
-                extraCommands=extraCommands
+                runNumber=run, extraCommands=extraCommands
             )
-            self._logger.info('Run {} - Submitting script {}'.format(run, runScript))
+            self._logger.info("Run {} - Submitting script {}".format(run, runScript))
 
-            shellCommand = subCmd + ' ' + str(runScript)
+            shellCommand = subCmd + " " + str(runScript)
             self._logger.debug(shellCommand)
             os.system(shellCommand)
 
     def _getRunsToSimulate(self, runList, runRange):
-        ''' Process runList and runRange and return the validated list of runs. '''
+        """Process runList and runRange and return the validated list of runs."""
         if runList is None and runRange is None:
             if self.runs is None:
                 msg = (
-                    'Runs to simulate were not given as arguments nor '
-                    + 'in showerConfigData - aborting'
+                    "Runs to simulate were not given as arguments nor "
+                    + "in showerConfigData - aborting"
                 )
                 self._logger.error(msg)
                 raise InvalidRunsToSimulate(msg)
@@ -236,39 +249,39 @@ class ShowerSimulator:
             return self._validateRunListAndRange(runList, runRange)
 
     def _validateRunListAndRange(self, runList, runRange):
-        '''
+        """
         Validate runList and runRange and return the list of runs. \
         If both arguments are given, they will be merged into a single list.
-        '''
+        """
         if runList is None and runRange is None:
-            self._logger.debug('Nothing to validate - runList and runRange not given.')
+            self._logger.debug("Nothing to validate - runList and runRange not given.")
             return None
 
         validatedRuns = list()
         if runList is not None:
             if not all(isinstance(r, int) for r in runList):
-                msg = 'runList must contain only integers.'
+                msg = "runList must contain only integers."
                 self._logger.error(msg)
                 raise InvalidRunsToSimulate(msg)
             else:
-                self._logger.debug('runList: {}'.format(runList))
+                self._logger.debug("runList: {}".format(runList))
                 validatedRuns = list(runList)
 
         if runRange is not None:
             if not all(isinstance(r, int) for r in runRange) or len(runRange) != 2:
-                msg = 'runRange must contain two integers only.'
+                msg = "runRange must contain two integers only."
                 self._logger.error(msg)
                 raise InvalidRunsToSimulate(msg)
             else:
                 runRange = np.arange(runRange[0], runRange[1] + 1)
-                self._logger.debug('runRange: {}'.format(runRange))
+                self._logger.debug("runRange: {}".format(runRange))
                 validatedRuns.extend(list(runRange))
 
         validatedRunsUnique = set(validatedRuns)
         return list(validatedRunsUnique)
 
     def getListOfOutputFiles(self, runList=None, runRange=None):
-        '''
+        """
         Get list of output files.
 
         Parameters
@@ -287,12 +300,12 @@ class ShowerSimulator:
         -------
         list
             List with the full path of all the output files.
-        '''
-        self._logger.info('Getting list of output files')
-        return self._getListOfFiles(runList=runList, runRange=runRange, which='output')
+        """
+        self._logger.info("Getting list of output files")
+        return self._getListOfFiles(runList=runList, runRange=runRange, which="output")
 
     def printListOfOutputFiles(self, runList=None, runRange=None):
-        '''
+        """
         Get list of output files.
 
         Parameters
@@ -306,12 +319,12 @@ class ShowerSimulator:
         ------
         InvalidRunsToSimulate
             If runs in runList or runRange are invalid.
-        '''
-        self._logger.info('Printing list of output files')
-        self._printListOfFiles(runList=runList, runRange=runRange, which='output')
+        """
+        self._logger.info("Printing list of output files")
+        self._printListOfFiles(runList=runList, runRange=runRange, which="output")
 
     def getListOfLogFiles(self, runList=None, runRange=None):
-        '''
+        """
         Get list of log files.
 
         Parameters
@@ -330,12 +343,12 @@ class ShowerSimulator:
         -------
         list
             List with the full path of all the log files.
-        '''
-        self._logger.info('Getting list of log files')
-        return self._getListOfFiles(runList=runList, runRange=runRange, which='log')
+        """
+        self._logger.info("Getting list of log files")
+        return self._getListOfFiles(runList=runList, runRange=runRange, which="log")
 
     def printListOfLogFiles(self, runList=None, runRange=None):
-        '''
+        """
         Print list of log files.
 
         Parameters
@@ -349,21 +362,21 @@ class ShowerSimulator:
         ------
         InvalidRunsToSimulate
             If runs in runList or runRange are invalid.
-        '''
-        self._logger.info('Printing list of log files')
-        self._printListOfFiles(runList=runList, runRange=runRange, which='log')
+        """
+        self._logger.info("Printing list of log files")
+        self._printListOfFiles(runList=runList, runRange=runRange, which="log")
 
     def _getListOfFiles(self, which, runList, runRange):
         runsToList = self._getRunsToSimulate(runList=runList, runRange=runRange)
 
         outputFiles = list()
         for run in runsToList:
-            if which == 'output':
+            if which == "output":
                 file = self._corsikaRunner.getCorsikaOutputFile(runNumber=run)
-            elif which == 'log':
+            elif which == "log":
                 file = self._corsikaRunner.getCorsikaLogFile(runNumber=run)
             else:
-                self._logger.error('Invalid type of files - log or output')
+                self._logger.error("Invalid type of files - log or output")
                 return None
             outputFiles.append(str(file))
 
@@ -373,5 +386,6 @@ class ShowerSimulator:
         files = self._getListOfFiles(runList=runList, runRange=runRange, which=which)
         for f in files:
             print(f)
+
 
 # End of ShowerSimulator
