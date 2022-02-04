@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-'''
+"""
     Summary
     -------
     This application is an example of how to produce sim_telarray config \
@@ -78,7 +78,7 @@
 
     All the produced model files can be found in simtools-output/test/model/
 
-'''
+"""
 
 import logging
 import argparse
@@ -87,46 +87,43 @@ import simtools.util.general as gen
 from simtools.model.array_model import ArrayModel
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(
         description=(
-            'Example of how to produce sim_telarray config files for a given array.'
+            "Example of how to produce sim_telarray config files for a given array."
         )
     )
     parser.add_argument(
-        '-l',
-        '--label',
-        help='Identifier str for the output naming.',
+        "-l",
+        "--label",
+        help="Identifier str for the output naming.",
         type=str,
-        required=False
+        required=False,
     )
     parser.add_argument(
-        '-c',
-        '--array_config',
-        help='Yaml file with array config data.',
+        "-c",
+        "--array_config",
+        help="Yaml file with array config data.",
         type=str,
-        required=True
+        required=True,
     )
     parser.add_argument(
-        '-v',
-        '--verbosity',
-        dest='logLevel',
-        action='store',
-        default='info',
-        help='Log level to print (default is INFO)'
+        "-v",
+        "--verbosity",
+        dest="logLevel",
+        action="store",
+        default="info",
+        help="Log level to print (default is INFO)",
     )
 
     args = parser.parse_args()
-    label = 'produce_array_config' if args.label is None else args.label
+    label = "produce_array_config" if args.label is None else args.label
 
-    logger = logging.getLogger('simtools')
+    logger = logging.getLogger("simtools")
     logger.setLevel(gen.getLogLevelFromUser(args.logLevel))
 
-    arrayModel = ArrayModel(
-        label=label,
-        arrayConfigFile=args.array_config
-    )
+    arrayModel = ArrayModel(label=label, arrayConfigFile=args.array_config)
 
     # Printing list of telescope for quick inspection.
     arrayModel.printTelescopeList()
