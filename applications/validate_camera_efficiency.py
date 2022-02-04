@@ -43,7 +43,6 @@
 '''
 
 import logging
-import matplotlib.pyplot as plt
 import argparse
 
 import simtools.util.general as gen
@@ -117,19 +116,19 @@ if __name__ == '__main__':
     ce.analyze(force=True)
 
     # Plotting the camera efficiency for Cherenkov light
-    plt = ce.plotCherenkovEfficiency()
+    fig = ce.plotCherenkovEfficiency()
     cherenkovPlotFileName = label + '_' + telModel.name + '_cherenkov'
     cherenkovPlotFile = outputDir.joinpath(cherenkovPlotFileName)
     for f in ['pdf', 'png']:
-        plt.savefig(str(cherenkovPlotFile) + '.' + f, format=f, bbox_inches='tight')
+        fig.savefig(str(cherenkovPlotFile) + '.' + f, format=f, bbox_inches='tight')
     logger.info('Plotted cherenkov efficiency in {}'.format(cherenkovPlotFile))
-    plt.clf()
+    fig.clf()
 
     # Plotting the camera efficiency for NSB light
-    plt = ce.plotNSBEfficiency()
+    fig = ce.plotNSBEfficiency()
     nsbPlotFileName = label + '_' + telModel.name + '_nsb'
     nsbPlotFile = outputDir.joinpath(nsbPlotFileName)
     for f in ['pdf', 'png']:
-        plt.savefig(str(nsbPlotFile) + '.' + f, format=f, bbox_inches='tight')
+        fig.savefig(str(nsbPlotFile) + '.' + f, format=f, bbox_inches='tight')
     logger.info('Plotted NSB efficiency in {}'.format(nsbPlotFile))
-    plt.clf()
+    fig.clf()
