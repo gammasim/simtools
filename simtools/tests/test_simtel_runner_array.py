@@ -15,28 +15,27 @@ logger.setLevel(logging.DEBUG)
 
 
 class TestSimtelRunnerArray(unittest.TestCase):
-
     def setUp(self):
         arrayConfigData = {
-            'site': 'North',
-            'layoutName': '1LST',
-            'modelVersion': 'Prod5',
-            'default': {
-                'LST': '1'
-            }
+            "site": "North",
+            "layoutName": "1LST",
+            "modelVersion": "Prod5",
+            "default": {"LST": "1"},
         }
-        self.arrayModel = ArrayModel(label='test-lst-array', arrayConfigData=arrayConfigData)
+        self.arrayModel = ArrayModel(
+            label="test-lst-array", arrayConfigData=arrayConfigData
+        )
 
         self.simtelRunner = SimtelRunnerArray(
             arrayModel=self.arrayModel,
             configData={
-                'primary': 'proton',
-                'zenithAngle': 20 * u.deg,
-                'azimuthAngle': 0 * u.deg
-            }
+                "primary": "proton",
+                "zenithAngle": 20 * u.deg,
+                "azimuthAngle": 0 * u.deg,
+            },
         )
         self.corsikaFile = io.getTestDataFile(
-            'run1_proton_za20deg_azm0deg-North-1LST_trigger_rates.corsika.zst'
+            "run1_proton_za20deg_azm0deg-North-1LST_trigger_rates.corsika.zst"
         )
 
     def test_run(self):
@@ -47,5 +46,5 @@ class TestSimtelRunnerArray(unittest.TestCase):
         assert Path(script).exists()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()
