@@ -13,10 +13,10 @@ logger.setLevel(logging.DEBUG)
 
 def test_main():
     tel = TelescopeModel(
-        site='north',
-        telescopeModelName='lst-1',
-        modelVersion='p3',
-        label='test_camera_eff'
+        site="north",
+        telescopeModelName="lst-1",
+        modelVersion="p3",
+        label="test_camera_eff",
     )
     ce = CameraEfficiency(telescopeModel=tel)
     ce.simulate(force=True)
@@ -25,28 +25,28 @@ def test_main():
     # Plotting Cherenkov
     plt.figure(figsize=(8, 6), tight_layout=True)
     ax = plt.gca()
-    ax.set_xlabel('wl')
-    ax.set_ylabel('eff')
+    ax.set_xlabel("wl")
+    ax.set_ylabel("eff")
 
-    ce.plot('cherenkov')
+    ce.plot("cherenkov")
 
-    plotFileCherenkov = io.getTestPlotFile('camera_eff_cherenkov.pdf')
+    plotFileCherenkov = io.getTestPlotFile("camera_eff_cherenkov.pdf")
     plt.savefig(plotFileCherenkov)
 
     # Plotting NSB
     plt.figure(figsize=(8, 6), tight_layout=True)
     ax = plt.gca()
-    ax.set_yscale('log')
-    ax.set_xlabel('wl')
-    ax.set_ylabel('eff')
+    ax.set_yscale("log")
+    ax.set_xlabel("wl")
+    ax.set_ylabel("eff")
 
-    ce.plot('nsb')
+    ce.plot("nsb")
 
-    plotFileNSB = io.getTestPlotFile('camera_eff_nsb.pdf')
+    plotFileNSB = io.getTestPlotFile("camera_eff_nsb.pdf")
     plt.savefig(plotFileNSB)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
 
     test_main()
     pass
