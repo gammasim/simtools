@@ -1,4 +1,4 @@
-''' Module to handle input and output conventions. '''
+""" Module to handle input and output conventions. """
 
 import datetime
 from pathlib import Path
@@ -6,18 +6,18 @@ from pathlib import Path
 import simtools.config as cfg
 
 __all__ = [
-    'getModelOutputDirectory',
-    'getRayTracingOutputDirectory',
-    'getCorsikaOutputDirectory',
-    'getTestDataFile',
-    'getTestDataDirectory',
-    'getTestOutputFile',
-    'getTestPlotFile'
+    "getModelOutputDirectory",
+    "getRayTracingOutputDirectory",
+    "getCorsikaOutputDirectory",
+    "getTestDataFile",
+    "getTestDataDirectory",
+    "getTestOutputFile",
+    "getTestPlotFile",
 ]
 
 
 def _getOutputDirectory(filesLocation, label, mode=None):
-    '''
+    """
     Get main output directory for a generic mode
 
     Parameters
@@ -32,10 +32,10 @@ def _getOutputDirectory(filesLocation, label, mode=None):
     Returns
     -------
     Path
-    '''
+    """
     today = datetime.date.today()
-    labelDir = label if label is not None else 'd-' + str(today)
-    path = Path(filesLocation).joinpath('simtools-output').joinpath(labelDir)
+    labelDir = label if label is not None else "d-" + str(today)
+    path = Path(filesLocation).joinpath("simtools-output").joinpath(labelDir)
     if mode is not None:
         path = path.joinpath(mode)
     path.mkdir(parents=True, exist_ok=True)
@@ -43,7 +43,7 @@ def _getOutputDirectory(filesLocation, label, mode=None):
 
 
 def getModelOutputDirectory(filesLocation, label):
-    '''
+    """
     Get output directory for model related files.
 
     Parameters
@@ -56,12 +56,12 @@ def getModelOutputDirectory(filesLocation, label):
     Returns
     -------
     Path
-    '''
-    return _getOutputDirectory(filesLocation, label, 'model')
+    """
+    return _getOutputDirectory(filesLocation, label, "model")
 
 
 def getLayoutOutputDirectory(filesLocation, label):
-    '''
+    """
     Get output directory for layout related files.
 
     Parameters
@@ -74,12 +74,12 @@ def getLayoutOutputDirectory(filesLocation, label):
     Returns
     -------
     Path
-    '''
-    return _getOutputDirectory(filesLocation, label, 'layout')
+    """
+    return _getOutputDirectory(filesLocation, label, "layout")
 
 
 def getRayTracingOutputDirectory(filesLocation, label):
-    '''
+    """
     Get output directory for ray tracing related files.
 
     Parameters
@@ -92,12 +92,12 @@ def getRayTracingOutputDirectory(filesLocation, label):
     Returns
     -------
     Path
-    '''
-    return _getOutputDirectory(filesLocation, label, 'ray-tracing')
+    """
+    return _getOutputDirectory(filesLocation, label, "ray-tracing")
 
 
 def getCorsikaOutputDirectory(filesLocation, label):
-    '''
+    """
     Get output directory for corsika related files.
 
     Parameters
@@ -110,12 +110,12 @@ def getCorsikaOutputDirectory(filesLocation, label):
     Returns
     -------
     Path
-    '''
-    return _getOutputDirectory(filesLocation, label, 'corsika')
+    """
+    return _getOutputDirectory(filesLocation, label, "corsika")
 
 
 def getCameraEfficiencyOutputDirectory(filesLocation, label):
-    '''
+    """
     Get output directory for camera efficiency related files.
 
     Parameters
@@ -128,12 +128,12 @@ def getCameraEfficiencyOutputDirectory(filesLocation, label):
     Returns
     -------
     Path
-    '''
-    return _getOutputDirectory(filesLocation, label, 'camera-efficiency')
+    """
+    return _getOutputDirectory(filesLocation, label, "camera-efficiency")
 
 
 def getApplicationOutputDirectory(filesLocation, label):
-    '''
+    """
     Get output directory for applications related files.
 
     Parameters
@@ -146,12 +146,12 @@ def getApplicationOutputDirectory(filesLocation, label):
     Returns
     -------
     Path
-    '''
-    return _getOutputDirectory(filesLocation, label, 'application-plots')
+    """
+    return _getOutputDirectory(filesLocation, label, "application-plots")
 
 
 def getArraySimulatorOutputDirectory(filesLocation, label):
-    '''
+    """
     Get output directory for array-simulator related files.
 
     Parameters
@@ -164,12 +164,12 @@ def getArraySimulatorOutputDirectory(filesLocation, label):
     Returns
     -------
     Path
-    '''
-    return _getOutputDirectory(filesLocation, label, 'array-simulator')
+    """
+    return _getOutputDirectory(filesLocation, label, "array-simulator")
 
 
 def getDataFile(parentDir, fileName):
-    '''
+    """
     Get path of a data file, using the  dataLocation taken from the config file.
 
     Parameters
@@ -182,23 +182,25 @@ def getDataFile(parentDir, fileName):
     Returns
     -------
     Path
-    '''
-    return Path(cfg.get('dataLocation')).joinpath(parentDir).joinpath(fileName).absolute()
+    """
+    return (
+        Path(cfg.get("dataLocation")).joinpath(parentDir).joinpath(fileName).absolute()
+    )
 
 
 def getTestDataDirectory():
-    '''
+    """
     Get path of a test file directory, using the  testDataLocation taken from the config file.
 
     Returns
     -------
     Path
-    '''
-    return Path(cfg.get('dataLocation')).joinpath('test-data')
+    """
+    return Path(cfg.get("dataLocation")).joinpath("test-data")
 
 
 def getTestDataFile(fileName):
-    '''
+    """
     Get path of a test file, using the  testDataLocation taken from the config file.
 
     Parameters
@@ -209,24 +211,24 @@ def getTestDataFile(fileName):
     Returns
     -------
     Path
-    '''
+    """
     directory = getTestDataDirectory()
     return directory.joinpath(fileName)
 
 
 def getTestOutputDirectory():
-    '''
+    """
     Get path of a test directory, using the  testDataLocation taken from the config file.
 
     Returns
     -------
     Path
-    '''
-    return Path(cfg.get('dataLocation')).joinpath('test-output')
+    """
+    return Path(cfg.get("dataLocation")).joinpath("test-output")
 
 
 def getTestOutputFile(fileName):
-    '''
+    """
     Get path of a test file, using the  testDataLocation taken from the config file.
 
     Parameters
@@ -237,13 +239,13 @@ def getTestOutputFile(fileName):
     Returns
     -------
     Path
-    '''
+    """
     directory = getTestOutputDirectory()
     return directory.joinpath(fileName)
 
 
 def getTestPlotFile(fileName):
-    '''
+    """
     Get path of a test plot file, using the  testDataLocation taken from the config file.
 
     Parameters
@@ -254,5 +256,10 @@ def getTestPlotFile(fileName):
     Returns
     -------
     Path
-    '''
-    return Path(cfg.get('dataLocation')).joinpath('test-plots').joinpath(fileName).absolute()
+    """
+    return (
+        Path(cfg.get("dataLocation"))
+        .joinpath("test-plots")
+        .joinpath(fileName)
+        .absolute()
+    )

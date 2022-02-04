@@ -13,14 +13,17 @@ logger.setLevel(logging.DEBUG)
 
 
 class TestSimtelEvents(unittest.TestCase):
-
     def setUp(self):
         self.testFiles = list()
-        self.testFiles.append(io.getTestDataFile(
-            'run201_proton_za20deg_azm0deg-North-Prod5_test-production-5-mini.simtel.zst')
+        self.testFiles.append(
+            io.getTestDataFile(
+                "run201_proton_za20deg_azm0deg-North-Prod5_test-production-5-mini.simtel.zst"
+            )
         )
-        self.testFiles.append(io.getTestDataFile(
-            'run202_proton_za20deg_azm0deg-North-Prod5_test-production-5-mini.simtel.zst')
+        self.testFiles.append(
+            io.getTestDataFile(
+                "run202_proton_za20deg_azm0deg-North-Prod5_test-production-5-mini.simtel.zst"
+            )
         )
 
     def test_reading_files(self):
@@ -63,5 +66,5 @@ class TestSimtelEvents(unittest.TestCase):
             )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()
