@@ -10,40 +10,101 @@ import re
 import astropy.units as u
 from astropy.table import QTable
 
-__all__ = ['setStyle', 'plot1D', 'plotTable']
+__all__ = ["setStyle", "plot1D", "plotTable"]
 
 COLORS = dict()
-COLORS['classic'] = ['#ba2c54', '#5B90DC', '#FFAB44', '#0C9FB3', '#57271B', '#3B507D',
-                     '#794D88', '#FD6989', '#8A978E', '#3B507D', '#D8153C', '#cc9214']
-COLORS['modified classic'] = ['#D6088F', '#424D9C', '#178084', '#AF99DA', '#F58D46', '#634B5B',
-                              '#0C9FB3', '#7C438A', '#328cd6', '#8D0F25', '#8A978E', '#ffcb3d']
-COLORS['autumn'] = ['#A9434D', '#4E615D', '#3C8DAB', '#A4657A', '#424D9C', '#DC575A',
-                    '#1D2D38', '#634B5B', '#56276D', '#577580', '#134663', '#196096']
-COLORS['purples'] = ['#a57bb7', '#343D80', '#EA60BF', '#B7308E', '#E099C3', '#7C438A',
-                     '#AF99DA', '#4D428E', '#56276D', '#CC4B93', '#DC4E76', '#5C4AE4']
-COLORS['greens'] = ['#268F92', '#abc14d', '#8A978E', '#0C9FB3', '#BDA962', '#B0CB9E',
-                    '#769168', '#5E93A5', '#178084', '#B7BBAD', '#163317', '#76A63F']
+COLORS["classic"] = [
+    "#ba2c54",
+    "#5B90DC",
+    "#FFAB44",
+    "#0C9FB3",
+    "#57271B",
+    "#3B507D",
+    "#794D88",
+    "#FD6989",
+    "#8A978E",
+    "#3B507D",
+    "#D8153C",
+    "#cc9214",
+]
+COLORS["modified classic"] = [
+    "#D6088F",
+    "#424D9C",
+    "#178084",
+    "#AF99DA",
+    "#F58D46",
+    "#634B5B",
+    "#0C9FB3",
+    "#7C438A",
+    "#328cd6",
+    "#8D0F25",
+    "#8A978E",
+    "#ffcb3d",
+]
+COLORS["autumn"] = [
+    "#A9434D",
+    "#4E615D",
+    "#3C8DAB",
+    "#A4657A",
+    "#424D9C",
+    "#DC575A",
+    "#1D2D38",
+    "#634B5B",
+    "#56276D",
+    "#577580",
+    "#134663",
+    "#196096",
+]
+COLORS["purples"] = [
+    "#a57bb7",
+    "#343D80",
+    "#EA60BF",
+    "#B7308E",
+    "#E099C3",
+    "#7C438A",
+    "#AF99DA",
+    "#4D428E",
+    "#56276D",
+    "#CC4B93",
+    "#DC4E76",
+    "#5C4AE4",
+]
+COLORS["greens"] = [
+    "#268F92",
+    "#abc14d",
+    "#8A978E",
+    "#0C9FB3",
+    "#BDA962",
+    "#B0CB9E",
+    "#769168",
+    "#5E93A5",
+    "#178084",
+    "#B7BBAD",
+    "#163317",
+    "#76A63F",
+]
 
-COLORS['default'] = COLORS['classic']
+COLORS["default"] = COLORS["classic"]
 
-MARKERS = ['o', 's', 'v', '^', '*', 'P', 'd', 'X', 'p', '<', '>', 'h']
-LINES = [(0, ()),  # solid
-         (0, (1, 1)),  # densely dotted
-         (0, (3, 1, 1, 1)),  # densely dashdotted
-         (0, (5, 5)),  # dashed
-         (0, (3, 1, 1, 1, 1, 1)),  # densely dashdotdotted
-         (0, (5, 1)),  # desnely dashed
-         (0, (1, 5)),  # dotted
-         (0, (3, 5, 1, 5)),  # dashdotted
-         (0, (3, 5, 1, 5, 1, 5)),  # dashdotdotted
-         (0, (5, 10)),  # loosely dashed
-         (0, (1, 10)),  # loosely dotted
-         (0, (3, 10, 1, 10)),  # loosely dashdotted
-         ]
+MARKERS = ["o", "s", "v", "^", "*", "P", "d", "X", "p", "<", ">", "h"]
+LINES = [
+    (0, ()),  # solid
+    (0, (1, 1)),  # densely dotted
+    (0, (3, 1, 1, 1)),  # densely dashdotted
+    (0, (5, 5)),  # dashed
+    (0, (3, 1, 1, 1, 1, 1)),  # densely dashdotdotted
+    (0, (5, 1)),  # desnely dashed
+    (0, (1, 5)),  # dotted
+    (0, (3, 5, 1, 5)),  # dashdotted
+    (0, (3, 5, 1, 5, 1, 5)),  # dashdotdotted
+    (0, (5, 10)),  # loosely dashed
+    (0, (1, 10)),  # loosely dotted
+    (0, (3, 10, 1, 10)),  # loosely dashdotted
+]
 
 
 def _addUnit(title, array):
-    '''
+    """
     A function to add a unit to "title" (presumably an axis title).
     The unit is extracted from the unit field of the array, in case array is an astropy quantity.
     If a unit is found, it is added to title in the form [unit].
@@ -60,29 +121,29 @@ def _addUnit(title, array):
     -------
     str
         Title with units.
-    '''
+    """
     _logger = logging.getLogger(__name__)
 
-    unit = ''
+    unit = ""
     if isinstance(array, u.Quantity):
         unit = str(array[0].unit)
         if len(unit) > 0:
-            unit = ' [{}]'.format(unit)
-        if re.search(r'\d', unit):
-            unit = re.sub(r'(\d)', r'^\1', unit)
-            unit = unit.replace('[', r'$[').replace(']', r']$')
-        if '[' in title and ']' in title:
+            unit = " [{}]".format(unit)
+        if re.search(r"\d", unit):
+            unit = re.sub(r"(\d)", r"^\1", unit)
+            unit = unit.replace("[", r"$[").replace("]", r"]$")
+        if "[" in title and "]" in title:
             _logger.warning(
-                'Tried to add a unit from astropy.unit, '
-                'but axis already has an explicit unit. Left axis title as is.'
+                "Tried to add a unit from astropy.unit, "
+                "but axis already has an explicit unit. Left axis title as is."
             )
-            unit = ''
+            unit = ""
 
-    return _makeLatexCompatible('{}{}'.format(title, unit))
+    return _makeLatexCompatible("{}{}".format(title, unit))
 
 
 def _makeLatexCompatible(text):
-    '''
+    """
     A utility function to add an escape before underscores to comply with Latex.
 
     Parameters
@@ -93,16 +154,16 @@ def _makeLatexCompatible(text):
     -------
     str
         text compatible with Latex.
-    '''
+    """
 
-    if not any(_ in text for _ in ['$', r'\_']):
-        text = text.replace('_', r'\_')
+    if not any(_ in text for _ in ["$", r"\_"]):
+        text = text.replace("_", r"\_")
 
     return text
 
 
-def setStyle(palette='default', bigPlot=False):
-    '''
+def setStyle(palette="default", bigPlot=False):
+    """
     A function to set the plotting style as part of an effort to
     homogenize plot style across the framework.
     The function receives the colour palette name and whether it is
@@ -127,42 +188,45 @@ def setStyle(palette='default', bigPlot=False):
     Raises
     ------
     KeyError if provided palette does not exist.
-    '''
+    """
 
     if palette not in COLORS.keys():
-        raise KeyError('palette must be one of {}'.format(', '.join(COLORS)))
+        raise KeyError("palette must be one of {}".format(", ".join(COLORS)))
 
-    fontsize = {'default': 17, 'bigPlot': 30}
-    markersize = {'default': 8, 'bigPlot': 18}
-    plotSize = 'default'
+    fontsize = {"default": 17, "bigPlot": 30}
+    markersize = {"default": 8, "bigPlot": 18}
+    plotSize = "default"
     if bigPlot:
-        plotSize = 'bigPlot'
+        plotSize = "bigPlot"
 
-    plt.rc('lines', linewidth=2, markersize=markersize[plotSize])
-    plt.rc('axes', prop_cycle=(
-        cycler(color=COLORS[palette])
-        + cycler(linestyle=LINES)
-        + cycler(marker=MARKERS))
+    plt.rc("lines", linewidth=2, markersize=markersize[plotSize])
+    plt.rc(
+        "axes",
+        prop_cycle=(
+            cycler(color=COLORS[palette])
+            + cycler(linestyle=LINES)
+            + cycler(marker=MARKERS)
+        ),
     )
     plt.rc(
-        'axes',
+        "axes",
         titlesize=fontsize[plotSize],
         labelsize=fontsize[plotSize],
         labelpad=5,
         grid=True,
-        axisbelow=True
+        axisbelow=True,
     )
-    plt.rc('xtick', labelsize=fontsize[plotSize])
-    plt.rc('ytick', labelsize=fontsize[plotSize])
-    plt.rc('legend', loc='best', shadow=False, fontsize='medium')
-    plt.rc('text', usetex=True)
-    plt.rc('font', family='serif', size=fontsize[plotSize])
+    plt.rc("xtick", labelsize=fontsize[plotSize])
+    plt.rc("ytick", labelsize=fontsize[plotSize])
+    plt.rc("legend", loc="best", shadow=False, fontsize="medium")
+    plt.rc("text", usetex=True)
+    plt.rc("font", family="serif", size=fontsize[plotSize])
 
     return
 
 
-def getColors(palette='default'):
-    '''
+def getColors(palette="default"):
+    """
     Get the colour list of the palette requested.
     If no palette is provided, the default is returned.
 
@@ -177,40 +241,40 @@ def getColors(palette='default'):
     Returns
     -------
     list: colour list
-    '''
+    """
 
     if palette not in COLORS.keys():
-        raise KeyError('palette must be one of {}'.format(', '.join(COLORS)))
+        raise KeyError("palette must be one of {}".format(", ".join(COLORS)))
 
     return COLORS[palette]
 
 
 def getMarkers():
-    '''
+    """
     Get the marker list used in this module.
 
     Returns
     -------
     list: marker list
-    '''
+    """
 
     return MARKERS
 
 
 def getLines():
-    '''
+    """
     Get the line style list used in this module.
 
     Returns
     -------
     list: line style list
-    '''
+    """
 
     return LINES
 
 
 def plot1D(data, **kwargs):
-    '''
+    """
     Produce a high contrast one dimensional plot from multiple datasets.
     A ratio plot can be added at the bottom to allow easy comparison.
     Additional options, such as plot title, plot legend, etc., are given in kwargs.
@@ -247,41 +311,41 @@ def plot1D(data, **kwargs):
     -------
     pyplot.plt
         a pyplot.plt instance in which the plot was produced
-    '''
+    """
 
-    palette = kwargs.get('palette', 'default')
-    kwargs.pop('palette', None)
-    bigPlot = kwargs.get('bigPlot', False)
-    kwargs.pop('bigPlot', None)
-    title = kwargs.get('title', '')
-    kwargs.pop('title', None)
-    noLegend = kwargs.get('noLegend', False)
-    kwargs.pop('noLegend', None)
-    noMarkers = kwargs.get('noMarkers', False)
-    kwargs.pop('noMarkers', None)
-    emptyMarkers = kwargs.get('emptyMarkers', False)
-    kwargs.pop('emptyMarkers', None)
+    palette = kwargs.get("palette", "default")
+    kwargs.pop("palette", None)
+    bigPlot = kwargs.get("bigPlot", False)
+    kwargs.pop("bigPlot", None)
+    title = kwargs.get("title", "")
+    kwargs.pop("title", None)
+    noLegend = kwargs.get("noLegend", False)
+    kwargs.pop("noLegend", None)
+    noMarkers = kwargs.get("noMarkers", False)
+    kwargs.pop("noMarkers", None)
+    emptyMarkers = kwargs.get("emptyMarkers", False)
+    kwargs.pop("emptyMarkers", None)
 
     if noMarkers:
-        kwargs['marker'] = 'None'
-        kwargs['linewidth'] = 4
+        kwargs["marker"] = "None"
+        kwargs["linewidth"] = 4
     if emptyMarkers:
-        kwargs['markerfacecolor'] = 'None'
-        kwargs.pop('emptyMarkers', None)
+        kwargs["markerfacecolor"] = "None"
+        kwargs.pop("emptyMarkers", None)
 
     setStyle(palette, bigPlot)
 
     if not isinstance(data, dict):
         dataDict = dict()
-        dataDict['_default'] = data
+        dataDict["_default"] = data
     else:
         dataDict = data
 
-    plotRatio = kwargs.get('plotRatio', False)
-    kwargs.pop('plotRatio', None)
+    plotRatio = kwargs.get("plotRatio", False)
+    kwargs.pop("plotRatio", None)
     if plotRatio:
         if len(dataDict) < 2:
-            raise ValueError('Asked to plot ratio with just one set of data')
+            raise ValueError("Asked to plot ratio with just one set of data")
 
     if plotRatio:
         gs = gridspec.GridSpec(2, 1, height_ratios=[3, 1])
@@ -297,11 +361,18 @@ def plot1D(data, **kwargs):
     plt.subplot(gs[0])
 
     for label, dataNow in dataDict.items():
-        assert len(dataNow.dtype.names) == 2, 'Input array must have two columns with titles.'
+        assert (
+            len(dataNow.dtype.names) == 2
+        ), "Input array must have two columns with titles."
         xTitle, yTitle = dataNow.dtype.names[0], dataNow.dtype.names[1]
         xTitleUnit = _addUnit(xTitle, dataNow[xTitle])
         yTitleUnit = _addUnit(yTitle, dataNow[yTitle])
-        plt.plot(dataNow[xTitle], dataNow[yTitle], label=_makeLatexCompatible(label), **kwargs)
+        plt.plot(
+            dataNow[xTitle],
+            dataNow[yTitle],
+            label=_makeLatexCompatible(label),
+            **kwargs
+        )
 
     if plotRatio:
         plt.gca().set_xticklabels([])
@@ -312,7 +383,7 @@ def plot1D(data, **kwargs):
 
     if len(title) > 0:
         plt.title(_makeLatexCompatible(title), y=1.02)
-    if '_default' not in list(dataDict.keys()) and not noLegend:
+    if "_default" not in list(dataDict.keys()) and not noLegend:
         plt.legend()
     if not plotRatio:
         plt.tight_layout()
@@ -336,24 +407,28 @@ def plot1D(data, **kwargs):
             else:
                 xTitle, yTitle = dataNow.dtype.names[0], dataNow.dtype.names[1]
                 xTitleUnit = _addUnit(xTitle, dataNow[xTitle])
-                plt.plot(dataNow[xTitle], dataNow[yTitle] / dataDict[dataRefName][yTitle], **kwargs)
+                plt.plot(
+                    dataNow[xTitle],
+                    dataNow[yTitle] / dataDict[dataRefName][yTitle],
+                    **kwargs
+                )
 
         plt.xlabel(xTitleUnit)
-        yTitleRatio = 'Ratio to {}'.format(_makeLatexCompatible(dataRefName))
+        yTitleRatio = "Ratio to {}".format(_makeLatexCompatible(dataRefName))
         if len(yTitleRatio) > 20:
-            yTitleRatio = 'Ratio'
+            yTitleRatio = "Ratio"
         plt.ylabel(yTitleRatio)
 
         ylim = plt.gca().get_ylim()
         nbins = min(int((ylim[1] - ylim[0]) / 0.05 + 1), 6)
-        plt.locator_params(axis='y', nbins=nbins)
-        plt.gca().autoscale(enable=True, axis='x', tight=True)
+        plt.locator_params(axis="y", nbins=nbins)
+        plt.gca().autoscale(enable=True, axis="x", tight=True)
 
     return plt
 
 
 def plotTable(table, yTitle, **kwargs):
-    '''
+    """
     Produce a high contrast one dimensional plot from the data in an astropy.Table.
     A ratio plot can be added at the bottom to allow easy comparison.
     Additional options, such as plot title, plot legend, etc., are given in kwargs.
@@ -385,22 +460,21 @@ def plotTable(table, yTitle, **kwargs):
     -------
     pyplot.plt
 
-    '''
+    """
 
     if len(table.keys()) < 2:
-        raise ValueError('Table has to have at least two columns')
+        raise ValueError("Table has to have at least two columns")
 
     xAxis = table.keys()[0]
     dataDict = OrderedDict()
     for i_col, column in enumerate(table.keys()[1:]):
-        dataDict[column] = QTable([table[xAxis], table[column]],
-                                  names=[xAxis, yTitle])
+        dataDict[column] = QTable([table[xAxis], table[column]], names=[xAxis, yTitle])
 
     return plot1D(dataDict, **kwargs)
 
 
 def plotHist2D(data, **kwargs):
-    '''
+    """
     Produce a two dimensional histogram plot.
     Any option that can be changed after plotting (e.g., axes limits, log scale, etc.) should be
     done using the returned plt instance.
@@ -418,14 +492,14 @@ def plotHist2D(data, **kwargs):
     pyplot.plt
         a pyplot.plt instance in which the plot was produced
 
-    '''
+    """
 
     cmap = plt.cm.gist_heat_r
-    if 'title' in kwargs:
-        title = kwargs['title']
-        kwargs.pop('title', None)
+    if "title" in kwargs:
+        title = kwargs["title"]
+        kwargs.pop("title", None)
     else:
-        title = ''
+        title = ""
 
     # Set default style since the usual options do not affect 2D plots (for now).
     setStyle()
@@ -438,7 +512,7 @@ def plotHist2D(data, **kwargs):
     ##########################################################################################
 
     plt.subplot(gs[0])
-    assert len(data.dtype.names) == 2, 'Input array must have two columns with titles.'
+    assert len(data.dtype.names) == 2, "Input array must have two columns with titles."
     xTitle, yTitle = data.dtype.names[0], data.dtype.names[1]
     xTitleUnit = _addUnit(xTitle, data[xTitle])
     yTitleUnit = _addUnit(yTitle, data[yTitle])
@@ -447,7 +521,7 @@ def plotHist2D(data, **kwargs):
     plt.xlabel(xTitleUnit)
     plt.ylabel(yTitleUnit)
 
-    plt.gca().set_aspect('equal', adjustable='datalim')
+    plt.gca().set_aspect("equal", adjustable="datalim")
 
     if len(title) > 0:
         plt.title(title, y=1.02)
