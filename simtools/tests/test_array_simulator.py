@@ -48,8 +48,9 @@ class TestArraySimulator(unittest.TestCase):
         newArrayConfigData = copy(self.arrayConfigData)
         newArrayConfigData.pop("site")
         with self.assertRaises(MissingRequiredEntryInArrayConfig):
-            newArraySimulator = ArraySimulator(
-                label=self.label, configData=newArrayConfigData
+            ArraySimulator(
+                label=self.label,
+                configData=newArrayConfigData
             )
 
     def test_run(self):

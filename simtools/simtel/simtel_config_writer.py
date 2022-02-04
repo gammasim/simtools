@@ -48,7 +48,6 @@ class SimtelConfigWriter:
         "magnetic_field",
     ]
     COMMON_PARS = {
-        "trigger_telescopes": 1,
         "array_trigger": "none",
         "trigger_telescopes": 2,
         "only_triggered_telescopes": 1,
