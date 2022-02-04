@@ -170,7 +170,7 @@ class SimtelRunner:
             # sysOutput = os.system(command)
             os.system(command)
         else:
-            self._logger.infRunning ({}x) with command:{}".format(self.RUNS_PER_SET, command))
+            self._logger.info("Running ({}x) with command:{}".format(self.RUNS_PER_SET, command))
             # sysOutput = os.system(command)
             os.system(command)
 
