@@ -1,5 +1,4 @@
 import logging
-import os
 from pathlib import Path
 
 import simtools.io_handler as io

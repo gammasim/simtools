@@ -756,8 +756,8 @@ class DatabaseHandler:
             A dictionary with a query to search for documents to copy.
             For example,
             query = {
-                'Telescope': 'North-LST-1',
-                'Version': 'prod4',
+                "Telescope": "North-LST-1",
+                "Version": "prod4",
             }
             would copy all entries of prod4 version from telescope North-LST-1 to "dbToCopyTo".
         dbToCopyTo: str
@@ -797,8 +797,8 @@ class DatabaseHandler:
             A dictionary listing the fields/values to delete.
             For example,
             query = {
-                'Telescope': 'North-LST-1',
-                'Version': 'prod4',
+                "Telescope": "North-LST-1",
+                "Version": "prod4",
             }
             would delete the entire prod4 version from telescope North-LST-1.
         """
@@ -989,7 +989,7 @@ class DatabaseHandler:
                     "The location of the file to upload, "
                     "corresponding to the {} parameter, must be provided."
                 ).format(parameter)
-            filePath = Path(filePrefix).joinpath(newValue)
+            filePath = Path(filePrefix).joinpath(value)
             filesToAddToDB.add("{}".format(filePath))
 
         kwargs.pop("Type", None)

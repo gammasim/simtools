@@ -65,7 +65,7 @@ if __name__ == "__main__":
     db = db_handler.DatabaseHandler()
 
     if args.model_version == "all":
-        raise NotImplemented("Printing last 5 versions is not implemented yet.")
+        raise NotImplementedError("Printing last 5 versions is not implemented yet.")
     else:
         version = args.model_version
     pars = db.getModelParameters(args.site, args.telescope, version)

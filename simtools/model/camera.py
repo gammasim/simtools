@@ -691,12 +691,12 @@ class Camera:
 
         Returns
         -------
-        plt: pyplot.plt instance with the pixel layout
+        fig: plt.figure instance with the pixel layout
         """
 
         self._logger.info("Plotting the {} camera".format(self._telescopeModelName))
 
-        _, ax = plt.subplots()
+        fig, ax = plt.subplots()
         plt.gcf().set_size_inches(8, 8)
 
         onPixels, edgePixels, offPixels = list(), list(), list()
@@ -851,4 +851,4 @@ class Camera:
         ax.set_aspect("equal", "datalim")
         plt.tight_layout()
 
-        return plt
+        return fig

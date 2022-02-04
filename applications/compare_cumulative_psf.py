@@ -189,26 +189,24 @@ if __name__ == "__main__":
     dataToPlot[r"sim$\_$telarray"] = im.getCumulativeData()
     if args.data is not None:
         dataFile = cfg.findFile(args.data)
-        dataToPlot["measured"] = loadData(dataFile)
-    plt = visualize.plot1D(dataToPlot)
-    plt.gca().set_ylim(0, 1.05)
+        dataToPlot['measured'] = loadData(dataFile)
+    fig = visualize.plot1D(dataToPlot)
+    fig.gca().set_ylim(0, 1.05)
 
     plotFileName = label + "_" + telModel.name + "_cumulativePSF"
     plotFile = outputDir.joinpath(plotFileName)
     for f in ["pdf", "png"]:
         plt.savefig(str(plotFile) + "." + f, format=f, bbox_inches="tight")
-    plt.clf()
+    fig.clf()
 
     # Plotting image
     dataToPlot = im.getImageData()
     visualize.plotHist2D(dataToPlot, bins=80)
-    circle = plt.Circle(
-        (0, 0), im.getPSF(0.8) / 2, color="k", fill=False, lw=2, ls="--"
-    )
-    plt.gca().add_artist(circle)
+    circle = plt.Circle((0, 0), im.getPSF(0.8) / 2, color="k", fill=False, lw=2, ls="--")
+    fig.gca().add_artist(circle)
 
     plotFileName = label + "_" + telModel.name + "_image"
     plotFile = outputDir.joinpath(plotFileName)
     for f in ["pdf", "png"]:
-        plt.savefig(str(plotFile) + "." + f, format=f, bbox_inches="tight")
-    plt.clf()
+        fig.savefig(str(plotFile) + "." + f, format=f, bbox_inches="tight")
+    fig.clf()
