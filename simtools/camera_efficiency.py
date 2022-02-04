@@ -562,14 +562,14 @@ class CameraEfficiency:
         for columnNow, columnTitle in columnTitles.items():
             tableToPlot.rename_column(columnNow, columnTitle)
 
-        plt = visualize.plotTable(
+        fig = visualize.plotTable(
             tableToPlot,
             yTitle="Cherenkov light efficiency",
             title="{} response to Cherenkov light".format(self._telescopeModel.name),
             noMarkers=True,
         )
 
-        return plt
+        return fig
 
     def plotNSBEfficiency(self):
         """
