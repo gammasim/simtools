@@ -489,8 +489,8 @@ def plotHist2D(data, **kwargs):
 
     Returns
     -------
-    pyplot.plt
-        a pyplot.plt instance in which the plot was produced
+    pyplot.figure
+        A pyplot.figure instance in which the plot was produced
 
     """
 
@@ -505,7 +505,7 @@ def plotHist2D(data, **kwargs):
     setStyle()
 
     gs = gridspec.GridSpec(1, 1)
-    plt.figure(figsize=(8, 6))
+    fig = plt.figure(figsize=(8, 6))
 
     ##########################################################################################
     # Plot the data
@@ -526,6 +526,6 @@ def plotHist2D(data, **kwargs):
     if len(title) > 0:
         plt.title(title, y=1.02)
 
-    plt.tight_layout()
+    fig.tight_layout()
 
-    return plt
+    return fig
