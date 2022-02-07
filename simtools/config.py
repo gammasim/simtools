@@ -81,7 +81,9 @@ def get(par):
 
     config = loadConfig()
     if par not in config.keys():
-        _logger.error("Config does not contain {}".format(par))
+        _logger.error(
+            "Configuration file does not contain an entry for the parameter {}".format(par)
+        )
         raise KeyError()
     else:
         if isinstance(config[par], str) and config[par][0] == "$":
