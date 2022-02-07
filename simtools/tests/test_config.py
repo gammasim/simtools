@@ -4,6 +4,8 @@ import logging
 import unittest
 
 import simtools.config as cfg
+from simtools.config import ParameterNotFoundInConfigFile
+
 
 logging.getLogger().setLevel(logging.DEBUG)
 
@@ -24,7 +26,7 @@ class TestConfig(unittest.TestCase):
                 cfg.get(par)
 
     def test_get_non_existing_parameter(self):
-        with self.assertRaises(KeyError):
+        with self.assertRaises(ParameterNotFoundInConfigFile):
             cfg.get("NonExistingEntry")
 
     def test_input_options(self):
