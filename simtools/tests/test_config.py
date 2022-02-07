@@ -1,35 +1,43 @@
 #!/usr/bin/python3
 
 import logging
+import unittest
 
 import simtools.config as cfg
 
 logging.getLogger().setLevel(logging.DEBUG)
 
 
-def test_get():
-    modelFilesLocations = cfg.get("modelFilesLocations")
-    logging.info(modelFilesLocations)
-    # nek = config.get('NonExistingKey')
+class TestConfig(unittest.TestCase):
 
+    def test_get_parameters(self):
+        parameters = (
+            "modelFilesLocations",
+            "dataLocation",
+            "outputLocation",
+            "simtelPath",
+            "useMongoDB",
+            "mongoDBConfigFile",
+        )
+        for par in parameters:
+            with self.subTest(msg="Testing get {}".format(par)):
+                cfg.get(par)
 
-def test_input_options():
-    print("modelFilesLocations: {}".format(cfg.get("modelFilesLocations")))
-    cfg.setConfigFileName("config.yml")
-    print("cfg.CONFIG_FILE_NAME: {}".format(cfg.CONFIG_FILE_NAME))
-    print("modelFilesLocations: {}".format(cfg.get("modelFilesLocations")))
+    def test_get_non_existing_parameter(self):
+        with self.assertRaises(KeyError):
+            cfg.get("NonExistingEntry")
 
+    def test_input_options(self):
+        cfg.setConfigFileName("config.yml")
+        print("cfg.CONFIG_FILE_NAME: {}".format(cfg.CONFIG_FILE_NAME))
+        print("modelFilesLocations: {}".format(cfg.get("modelFilesLocations")))
 
-def test_find_file():
-    f1 = cfg.findFile("mirror_MST_D80.dat")
-    print(f1)
-    f2 = cfg.findFile("parValues-LST.yml")
-    print(f2)
+    def test_find_file(self):
+        files = ("mirror_MST_D80.dat", "parValues-LST.yml")
+        for file in files:
+            with self.subTest(msg="Testing find file {}".format(file)):
+                cfg.findFile(file)
 
 
 if __name__ == "__main__":
-
-    # test_get()
-    # test_input_options()
-    # test_find_file()
-    pass
+    unittest.main()
