@@ -441,7 +441,7 @@ class RayTracing:
             )
             self._outputDirectory.joinpath("figures").mkdir(exist_ok=True)
             plotFile = self._outputDirectory.joinpath("figures").joinpath(plotFileName)
-            self._logger.info("Ssaving fig in {}".format(plotFile))
+            self._logger.info("Saving fig in {}".format(plotFile))
             plt.savefig(plotFile)
 
     def plotHistogram(self, key, **kwargs):
