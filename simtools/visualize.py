@@ -219,7 +219,6 @@ def setStyle(palette="default", bigPlot=False):
     plt.rc("xtick", labelsize=fontsize[plotSize])
     plt.rc("ytick", labelsize=fontsize[plotSize])
     plt.rc("legend", loc="best", shadow=False, fontsize="medium")
-    plt.rc("text", usetex=True)
     plt.rc("font", family="serif", size=fontsize[plotSize])
 
     return
