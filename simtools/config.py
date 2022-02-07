@@ -13,6 +13,10 @@ class ConfigEnvironmentalVariableNotSet(Exception):
     pass
 
 
+class ParameterNotFoundInConfigFile(Exception):
+    pass
+
+
 def setConfigFileName(fileName):
     """
     Redefines the config file name by resetting the a global variable.
@@ -81,8 +85,12 @@ def get(par):
 
     config = loadConfig()
     if par not in config.keys():
-        _logger.error("Config does not contain {}".format(par))
-        raise KeyError()
+        msg = (
+            "Configuration file does not contain an entry for the parameter "
+            "{}".format(par)
+        )
+        _logger.error(msg)
+        raise ParameterNotFoundInConfigFile(msg)
     else:
         if isinstance(config[par], str) and config[par][0] == "$":
             envName = config[par][1:].replace("{", "")
