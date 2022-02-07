@@ -201,9 +201,10 @@ if __name__ == "__main__":
 
     # Plotting image
     dataToPlot = im.getImageData()
-    visualize.plotHist2D(dataToPlot, bins=80)
+    fig = visualize.plotHist2D(dataToPlot, bins=80)
     circle = plt.Circle((0, 0), im.getPSF(0.8) / 2, color="k", fill=False, lw=2, ls="--")
     fig.gca().add_artist(circle)
+    fig.gca().set_aspect('equal')
 
     plotFileName = label + "_" + telModel.name + "_image"
     plotFile = outputDir.joinpath(plotFileName)
