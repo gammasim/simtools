@@ -287,7 +287,6 @@ if __name__ == "__main__":
         rndaStart = args.rnda
     else:
         rndaStart = tel.getParameter("mirror_reflection_random_angle")["Value"]
-        print('HEREEE {}'.format(rndaStart))
         if isinstance(rndaStart, str):
             rndaStart = rndaStart.split()
             rndaStart = float(rndaStart[0])
