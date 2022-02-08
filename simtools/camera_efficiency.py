@@ -422,8 +422,8 @@ class CameraEfficiency:
         c4xSum = np.sum(c4xReducedWL)
         fillFactor = self._telescopeModel.camera.getCameraFillFactor()
 
-        camEffeciencyNoGaps = c4xSum/c1Sum
-        camEffeciency = camEffeciencyNoGaps*fillFactor
+        camEffeciencyNoGaps = c4xSum / c1Sum
+        camEffeciency = camEffeciencyNoGaps * fillFactor
 
         return camEffeciency
 
@@ -447,9 +447,9 @@ class CameraEfficiency:
         mastsFactor = self._results['masts'][0]
         fillFactor = self._telescopeModel.camera.getCameraFillFactor()
 
-        telEffeciencyNSB = fillFactor*(n4Sum/(mastsFactor*n1Sum))
+        telEffeciencyNSB = fillFactor * (n4Sum / (mastsFactor * n1Sum))
 
-        return telEffeciency/np.sqrt(telEffeciencyNSB)
+        return telEffeciency / np.sqrt(telEffeciencyNSB)
 
     def calcReflectivity(self):
         '''
@@ -467,7 +467,7 @@ class CameraEfficiency:
         ]
         c2Sum = np.sum(c2ReducedWL)
 
-        return c2Sum/c1Sum/self._results['masts'][0]
+        return c2Sum / c1Sum / self._results['masts'][0]
 
     def calcNsbRate(self):
         '''
@@ -475,21 +475,18 @@ class CameraEfficiency:
         '''
 
         n4Sum = np.sum(self._results['N4'])
-        nsbPePerNs = 1e-06*n4Sum*extraInfo['pixActiveSolidAngle']*extraInfo['onAxisEffOpticalArea']
+        pixActiveSolidAngle = self._telescopeModel.camera.getPixelActiveSolidAngle()
+        onAxisEffOpticalArea = self._telescopeModel.camera.getOnAxisEffOpticalArea()
+        nsbPePerNs = 1e-06 * n4Sum * pixActiveSolidAngle * onAxisEffOpticalArea
 
-
-        # Sum(C1) from 300 - 550 nm:
-        c1ReducedWL = self._results['C1'][
-            [wlNow > 299 and wlNow < 551 for wlNow in self._results['wl']]
-        ]
-        c1Sum = np.sum(c1ReducedWL)
-        # Sum(C2) from 300 - 550 nm:
-        c2ReducedWL = self._results['C2'][
-            [wlNow > 299 and wlNow < 551 for wlNow in self._results['wl']]
-        ]
-        c2Sum = np.sum(c2ReducedWL)
-
-        return c2Sum/c1Sum/self._results['masts'][0]
+        # # NSB input spectrum is from Benn&Ellison (integral is in ph./(cm² ns sr) ) from 300 - 650 nm:
+        # n1ReducedWL = extraColums['n1'][[wlNow > 299 and wlNow < 651 for wlNow in table['W.l.']]]
+        # n1Sum = np.sum(n1ReducedWL)
+        # n1IntegralEdges = extraColums['n1'][[wlNow == 300 or wlNow == 650 for wlNow in table['W.l.']]]
+        # n1IntegralEdgesSum = np.sum(n1IntegralEdges)
+        # nsbIntegral = 0.0001*(n1Sum - 0.5*n1IntegralEdgesSum)
+        # nsbRate = nsbPePerNs*extraInfo['nsbRefValue']/nsbIntegral
+        # return nsbRate, n1Sum
 
     def plot(self, key, **kwargs):
         '''
