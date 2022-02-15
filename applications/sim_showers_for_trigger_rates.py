@@ -38,7 +38,7 @@
         the standard output directory defined by config will be used.
     test (activation mode, optional)
         If activated, no job will be submitted. Instead, an example of the \
-        run script willbe printed.
+        run script will be printed.
     verbosity (str, optional)
         Log level to print (default=INFO).
 

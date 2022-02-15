@@ -107,7 +107,7 @@ class SimtelHistograms:
                         self.combinedHists = copy.copy(hists)
 
                     else:
-                        # Remaning files
+                        # Remaining files
                         for hist, thisCombinedHist in zip(hists, self.combinedHists):
 
                             # Checking consistency of histograms
