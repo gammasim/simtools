@@ -254,7 +254,7 @@ class RayTracing:
         Parameters
         ----------
         export: bool
-            If True, results will be exported to a file automatically. Alternativelly,
+            If True, results will be exported to a file automatically. Alternatively,
             exportResults function can be used.
         force: bool
             If True, existing results files will be removed and analysis will be done again.
@@ -505,7 +505,7 @@ class RayTracing:
         Returns
         -------
         float
-            Srd deviation of key.
+            Std deviation of key.
 
         Raises
         ------
