@@ -48,7 +48,7 @@ class TestCorsikaConfig(unittest.TestCase):
         self.assertEqual(self.corsikaConfig.getUserParameter("nshow"), 100)
         self.assertEqual(self.corsikaConfig.getUserParameter("thetap"), [20, 20])
         self.assertEqual(self.corsikaConfig.getUserParameter("erange"), [10.0, 10000.0])
-        # Testing convertion between AZM (sim_telarray) and PHIP (corsika)
+        # Testing conversion between AZM (sim_telarray) and PHIP (corsika)
         self.assertEqual(self.corsikaConfig.getUserParameter("azm"), [0.0, 0.0])
         self.assertEqual(self.corsikaConfig.getUserParameter("phip"), [180.0, 180.0])
         with self.assertRaises(KeyError):

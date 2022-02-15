@@ -100,7 +100,7 @@ class TelescopePosition:
     convertCorsikaToAsl(corsikaObsLevel, corsikaSphereCenter):
         Convert corsika (posZ) to altitude.
     convertAll(crsLocal, wgs84, crsUtm, corsikaObsLevel, corsikaSphereCenter)
-        Perform all the necessary convertions in order to fill all the coordinate variables.
+        Perform all the necessary conversions in order to fill all the coordinate variables.
     """
 
     def __init__(self, name=None, prodId=dict(), configData=None, configFile=None):
@@ -396,7 +396,7 @@ class TelescopePosition:
             self._logger.error(msg)
             raise MissingInputForConvertion(msg)
 
-        # Calculate utms of a telescope
+        # Calculate UTM position of a telescope
         self._utmEast, self._utmNorth = pyproj.transform(
             crsLocal, crsUtm, self._posX, self._posY
         )
@@ -596,7 +596,7 @@ class TelescopePosition:
         corsikaSphereCenter=None,
     ):
         """
-        Perform all the necessary convertions in order to fill all the coordinate variables.
+        Perform all the necessary conversions in order to fill all the coordinate variables.
 
         Parameters
         ----------
@@ -613,11 +613,11 @@ class TelescopePosition:
         """
 
         if crsLocal is None:
-            self._logger.warning("crsLocal is None - convertions will be impacted")
+            self._logger.warning("crsLocal is None - conversions will be impacted")
         if crsUtm is None:
-            self._logger.warning("crsUtm is None - convertions will be impacted")
+            self._logger.warning("crsUtm is None - conversions will be impacted")
         if wgs84 is None:
-            self._logger.warning("wgs84 is None - convertions will be impacted")
+            self._logger.warning("wgs84 is None - conversions will be impacted")
 
         # Starting by local <-> UTM <-> Mercator
 
@@ -652,7 +652,7 @@ class TelescopePosition:
         # Dealing with altitude <-> posZ
         if corsikaObsLevel is None or corsikaSphereCenter is None:
             self._logger.warning(
-                "CORSIKA convertions cannot be done - missing obs level and/or sphere center"
+                "CORSIKA conversions cannot be done - missing obs level and/or sphere center"
             )
         elif self.hasLocalCoordinates() and not self.hasAltitude():
             self.convertCorsikaToAsl(corsikaObsLevel, corsikaSphereCenter)
