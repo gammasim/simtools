@@ -146,7 +146,7 @@ class ArrayModel:
                 arrayConfigData["modelVersion"]
             )
 
-        # Removing keys that were stored in attributes and keepig the remaining as a dict
+        # Removing keys that were stored in attributes and keeping the remaining as a dict
         self._arrayConfigData = {
             k: v
             for (k, v) in arrayConfigData.items()
@@ -424,6 +424,6 @@ class ArrayModel:
 
         Returns
         -------
-        Path of the config diretcory path for sim_telarray.
+        Path of the config directory path for sim_telarray.
         """
         return self._configFileDirectory

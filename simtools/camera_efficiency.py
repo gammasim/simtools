@@ -44,7 +44,7 @@ class CameraEfficiency:
     exportResults()
         Export results to a csv file.
     plot(key, **kwargs)
-        Plot key vs wavelength, where key may be cherenkov or nsb.
+        Plot key vs wavelength, where key may be Cherenkov or NSB.
     """
 
     def __init__(
@@ -203,7 +203,7 @@ class CameraEfficiency:
         focalLength = self._telescopeModel.getParameterValue("effective_focal_length")
         if focalLength == 0.0:
             self._logger.warning(
-                "Using focal_lenght because effective_focal_length is 0"
+                "Using focal_length because effective_focal_length is 0"
             )
             focalLength = self._telescopeModel.getParameterValue("focal_length")
 
@@ -257,7 +257,7 @@ class CameraEfficiency:
         cmd += " -fatm {}".format(
             self._telescopeModel.getParameterValue("atmospheric_transmission")
         )
-        cmd += " -flen {}".format(focalLength * 0.01)  # focal lenght in meters
+        cmd += " -flen {}".format(focalLength * 0.01)  # focal length in meters
         cmd += " -fcur {}".format(CAMERA_RADIUS_CURV[cameraName])
         cmd += " {} {}".format(pixelShapeCmd, pixelDiameter)
         if mirrorClass == 1:
@@ -540,13 +540,13 @@ class CameraEfficiency:
 
     def plotCherenkovEfficiency(self):
         """
-        Plot cherenkov efficiency vc wavelength.
+        Plot Cherenkov efficiency vs wavelength.
 
         Returns
         -------
         plt
         """
-        self._logger.info("Plotting cherenkov efficiency vs wavelength")
+        self._logger.info("Plotting Cherenkov efficiency vs wavelength")
 
         columnTitles = {
             "wl": "Wavelength [nm]",
@@ -573,7 +573,7 @@ class CameraEfficiency:
 
     def plotNSBEfficiency(self):
         """
-        Plot NSB efficiency vc wavelength.
+        Plot NSB efficiency vs wavelength.
 
         Returns
         -------

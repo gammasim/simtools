@@ -15,7 +15,7 @@
 
     The algorithm works as follow: A starting value of rnda is first defined as the one taken \
     from the :ref:`Model Parameters DB` \
-    (or alternativelly one may want to set it using the argument rnda).\
+    (or alternatively one may want to set it using the argument rnda).\
     Secondly, ray tracing simulations are performed for single mirror configurations for each \
     mirror given in the mirror_list. The mean simulated D80 for all the mirrors is compared with \
     the mean measured D80. A new value of rnda is then defined based on the sign of \
@@ -26,10 +26,10 @@
     interpolation. Finally, simulations are performed by using the the interpolated value \
     of rnda, which is defined as the desired optimal.
 
-    A option no_tunning can be used if one only wants to simulate one value of rnda and compare \
+    A option no_tuning can be used if one only wants to simulate one value of rnda and compare \
     the results with the measured ones.
 
-    The results of the tunning are plotted. See examples of the D80 vs rnda plot, on the left, \
+    The results of the tuning are plotted. See examples of the D80 vs rnda plot, on the left, \
     and the D80 distributions, on the right.
 
     .. _deriva_rnda_plot:
@@ -166,8 +166,8 @@ if __name__ == "__main__":
         default=0.0,
     )
     parser.add_argument(
-        "--no_tunning",
-        help="Turn off the tunning - A single case will be simulated and plotted.",
+        "--no_tuning",
+        help="Turn off the tuning - A single case will be simulated and plotted.",
         action="store_true",
     )
     parser.add_argument(
@@ -291,7 +291,7 @@ if __name__ == "__main__":
             rndaStart = rndaStart.split()
             rndaStart = float(rndaStart[0])
 
-    if not args.no_tunning:
+    if not args.no_tuning:
         resultsRnda = list()
         resultsMean = list()
         resultsSig = list()
@@ -346,7 +346,7 @@ if __name__ == "__main__":
     ax.set_xlabel(r"mirror$\_$random$\_$reflection$\_$angle")
     ax.set_ylabel(r"$D_{80}$ [cm]")
 
-    if not args.no_tunning:
+    if not args.no_tuning:
         ax.errorbar(
             resultsRnda,
             resultsMean,

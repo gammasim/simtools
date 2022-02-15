@@ -743,7 +743,7 @@ def corsikaOutputFileName(run, primary, arrayName, site, zenith, azimuth, label=
 
     Warning
     -------
-        zst extension is hardcoded here.
+        zst extension is hard coded here.
 
     Parameters
     ----------
@@ -839,7 +839,7 @@ def simtelOutputFileName(run, primary, arrayName, site, zenith, azimuth, label=N
 
     Warning
     -------
-        zst extension is hardcoded here.
+        zst extension is hard coded here.
 
     Parameters
     ----------
@@ -875,7 +875,7 @@ def simtelHistogramFileName(run, primary, arrayName, site, zenith, azimuth, labe
 
     Warning
     -------
-        zst extension is hardcoded here.
+        zst extension is hard coded here.
 
     Parameters
     ----------
@@ -911,7 +911,7 @@ def simtelLogFileName(run, primary, arrayName, site, zenith, azimuth, label=None
 
     Warning
     -------
-        zst extension is hardcoded here.
+        zst extension is hard coded here.
 
     Parameters
     ----------

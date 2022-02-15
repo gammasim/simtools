@@ -281,7 +281,7 @@ class TelescopeModel:
         _sitePars = db.getSiteParameters(
             self.site, self.modelVersion, onlyApplicable=True
         )
-        # UPDATE: SimtelConfigWriter delas with which parameters should be written or not.
+        # UPDATE: SimtelConfigWriter deals with which parameters should be written or not.
         # _parameters here can contain all the parameters from the DB.
         self._parameters.update(_sitePars)
 
@@ -362,7 +362,7 @@ class TelescopeModel:
         isFile: bool
             Indicates whether the new parameter is a file or not.
         isAplicable: bool
-            Indicates whether the new parameter is aplicable or not.
+            Indicates whether the new parameter is applicable or not.
 
         Raises
         ------
@@ -532,7 +532,7 @@ class TelescopeModel:
         Returns
         -------
         list of floats
-            List of 4 parameters that decsribe the tel. transmission vs off-axis.
+            List of 4 parameters that describe the tel. transmission vs off-axis.
         """
         return [
             float(v) for v in self.getParameterValue("telescope_transmission").split()
@@ -593,7 +593,7 @@ class TelescopeModel:
         return self._singleMirrorListFilePaths[mirrorNumber]
 
     def _loadMirrors(self):
-        """Load the attribute mirrors by creating a Mirrors object iwth the mirror list file."""
+        """Load the attribute mirrors by creating a Mirrors object with the mirror list file."""
         mirrorListFileName = self._parameters["mirror_list"]["Value"]
         try:
             mirrorListFile = cfg.findFile(mirrorListFileName, self._configFileDirectory)

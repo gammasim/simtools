@@ -30,9 +30,9 @@ class Camera:
     getPixelShape()
         Get pixel shape.
     getLightguideEfficiencyAngleFileName()
-        Get the file name of the lightguide efficiency as a function of incidence angle.
+        Get the file name of the light guide efficiency as a function of incidence angle.
     getLightguideEfficiencyWavelengthFileName()
-        Get the file name of the lightguide efficiency as a function of wavelength.
+        Get the file name of the light guide efficiency as a function of wavelength.
     calcFOV()
         Calculate the FOV of the camera in degrees,
         taking into account the focal length (preferably the effective focal length).
@@ -241,21 +241,21 @@ class Camera:
 
     def getLightguideEfficiencyAngleFileName(self):
         """
-        Get the file name of the lightguide efficiency as a function of incidence angle.
+        Get the file name of the light guide efficiency as a function of incidence angle.
 
         Returns
         -------
-        str: file name of the lightguide efficiency as a function of incidence angle.
+        str: file name of the light guide efficiency as a function of incidence angle.
         """
         return self._pixels["lightguide_efficiency_angle_file"]
 
     def getLightguideEfficiencyWavelengthFileName(self):
         """
-        Get the file name of the lightguide efficiency as a function of wavelength.
+        Get the file name of the light guide efficiency as a function of wavelength.
 
         Returns
         -------
-        str: file name of the lightguide efficiency as a function of wavelength.
+        str: file name of the light guide efficiency as a function of wavelength.
         """
         return self._pixels["lightguide_efficiency_wavelength_file"]
 
