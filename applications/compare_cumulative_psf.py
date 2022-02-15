@@ -9,7 +9,7 @@
 
     The measured cumulative PSF should be provided by using the command line argument data. \
     A file name is expected, in which the file should contains 3 columns: radial distance in mm, \
-    differential value of photon intensisity and its integral value.
+    differential value of photon intensity and its integral value.
 
     The MC model can be changed by providing a yaml file with the new parameter values using \
     the argument pars (see example below).

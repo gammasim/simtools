@@ -109,7 +109,7 @@ class SimtelRunnerArray(SimtelRunner):
 
         If simtelDataDirectory is not given as a configurable parameter,
         the standard directory of simtools output (simtools-output) will
-        be used. A sub directory simtel-data will be created and subdirectories for
+        be used. A sub directory simtel-data will be created and sub directories for
         log and data will be created inside it.
         """
 

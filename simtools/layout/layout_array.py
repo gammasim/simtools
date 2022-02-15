@@ -205,7 +205,7 @@ class LayoutArray:
         return self._telescopeList[i]
 
     def _loadArrayCenter(self):
-        """Load the array center and make convertions if needed."""
+        """Load the array center and make conversions if needed."""
 
         self._arrayCenter = TelescopePosition()
         self._arrayCenter.name = "array_center"

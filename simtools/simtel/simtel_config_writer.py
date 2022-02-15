@@ -154,7 +154,7 @@ class SimtelConfigWriter:
         with open(configFilePath, "w") as file:
             self._writeHeader(file, "ARRAY CONFIGURATION FILE")
 
-            # Be carefull with the formating - simtel is sensitive
+            # Be careful with the formatting - simtel is sensitive
             file.write("#ifndef TELESCOPE\n")
             file.write("# define TELESCOPE 0\n")
             file.write("#endif\n\n")

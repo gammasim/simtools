@@ -93,7 +93,7 @@ LINES = [
     (0, (3, 1, 1, 1)),  # densely dashdotted
     (0, (5, 5)),  # dashed
     (0, (3, 1, 1, 1, 1, 1)),  # densely dashdotdotted
-    (0, (5, 1)),  # desnely dashed
+    (0, (5, 1)),  # densely dashed
     (0, (1, 5)),  # dotted
     (0, (3, 5, 1, 5)),  # dashdotted
     (0, (3, 5, 1, 5, 1, 5)),  # dashdotdotted
@@ -274,7 +274,7 @@ def getLines():
 
 def plot1D(data, **kwargs):
     """
-    Produce a high contrast one dimensional plot from multiple datasets.
+    Produce a high contrast one dimensional plot from multiple data sets.
     A ratio plot can be added at the bottom to allow easy comparison.
     Additional options, such as plot title, plot legend, etc., are given in kwargs.
     Any option that can be changed after plotting (e.g., axes limits, log scale, etc.) should be
@@ -295,7 +295,7 @@ def plot1D(data, **kwargs):
         * npLegend: bool
           Do not print a legend for the plot.
         * bigPlot: bool
-          Increase marker and font sizes (like in a wide lightcurve).
+          Increase marker and font sizes (like in a wide light curve).
         * noMarkers: bool
           Do not print markers.
         * emptyMarkers: bool
@@ -447,7 +447,7 @@ def plotTable(table, yTitle, **kwargs):
         * palette: choose a colour palette (see setStyle for additional information).
         * title: set a plot title.
         * noLegend: do not print a legend for the plot.
-        * bigPlot: increase marker and font sizes (like in a wide lightcurve).
+        * bigPlot: increase marker and font sizes (like in a wide light curve).
         * noMarkers: do not print markers.
         * emptyMarkers: print empty (hollow) markers
         * plotRatio: add a ratio plot at the bottom. The first entry in the data dictionary

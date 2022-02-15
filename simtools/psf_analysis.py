@@ -1,5 +1,5 @@
 """
-Module to analise psf images (e.g. results from ray tracing simulations).
+Module to analyse psf images (e.g. results from ray tracing simulations).
 Main functionalities are: computing centroids, psf containers etc.
 
 Author: Raul R Prado
@@ -32,7 +32,7 @@ class PSFImage:
         Focal length of the system in cm, needed to convert quantities from cm to deg. If None,
         getPSF will only work in cm (not in deg).
 
-    Atributtes
+    Attributes
     ----------
     effectiveArea: float
         Mirror effective area in cm.
@@ -311,7 +311,7 @@ class PSFImage:
 
         def scan(dr, radMin, radMax):
             """
-            Scan the image from radMin to radMax uin steps of dr ntil it finds targetNumber photons
+            Scan the image from radMin to radMax in steps of dr until it finds targetNumber photons
             inside.
 
             Returns
