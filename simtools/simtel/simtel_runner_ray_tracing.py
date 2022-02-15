@@ -142,7 +142,7 @@ class SimtelRunnerRayTracing(SimtelRunner):
             file = self._baseDirectory.joinpath(fileName)
             if file.exists():
                 file.unlink()
-            # Defining the file name variable as an class atribute.
+            # Defining the file name variable as an class attribute.
             self.__dict__["_" + baseName + "File"] = file
 
         # Adding header to photon list file.

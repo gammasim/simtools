@@ -132,7 +132,7 @@ class ArraySimulator:
     # End of init
 
     def _loadArrayConfigData(self, configData):
-        """Load configData, create arrayModel and store reamnining parameters in config."""
+        """Load configData, create arrayModel and store remaining parameters in config."""
         _arrayModelConfig, _restConfig = self._collectArrayModelParameters(configData)
 
         _parameterFile = io.getDataFile("parameters", "array-simulator_parameters.yml")
@@ -146,7 +146,7 @@ class ArraySimulator:
     def _collectArrayModelParameters(self, configData):
         """
         Separate parameters from configData into parameters to create the arrayModel
-        and reamnining parameters to be stored in config.
+        and remaining parameters to be stored in config.
         """
         _arrayModelData = dict()
         _restData = copy(configData)
@@ -184,7 +184,7 @@ class ArraySimulator:
         )
 
     def _fillResultsWithoutRun(self, inputFileList):
-        """Fill in the results dict wihtout calling run or submit."""
+        """Fill in the results dict without calling run or submit."""
         inputFileList = self._makeInputList(inputFileList)
 
         for file in inputFileList:
@@ -341,7 +341,7 @@ class ArraySimulator:
         Returns
         -------
         list
-            List with the full path of all the intput files.
+            List with the full path of all the input files.
         """
         self._logger.info("Getting list of input files")
         return self._results["input"]

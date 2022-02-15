@@ -48,7 +48,7 @@ def test_validate_config_data():
     # Testing name validation
     assert validatedData.validatedName == 10
 
-    # Testing unit convertion
+    # Testing unit conversion
     assert validatedData.sourceDistance == 20
 
     # Testing dict par

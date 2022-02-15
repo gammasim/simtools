@@ -228,7 +228,7 @@ class DatabaseHandler:
 
         if cfg.get("useMongoDB"):
 
-            # Only MongoDB suppports tagged version
+            # Only MongoDB supports tagged version
             _modelVersion = self._convertVersionToTagged(
                 modelVersion, DatabaseHandler.DB_CTA_SIMULATION_MODEL
             )
@@ -277,7 +277,7 @@ class DatabaseHandler:
 
     @staticmethod
     def _isFile(value):
-        """Vefiry if a parameter value is a file name."""
+        """Verify if a parameter value is a file name."""
         return any(ext in str(value) for ext in DatabaseHandler.ALLOWED_FILE_EXTENSIONS)
 
     def _writeModelFileYaml(self, fileName, destDir, noFileOk=False):
@@ -408,7 +408,7 @@ class DatabaseHandler:
         _pars = dict()
         for _tel in _whichTelLabels:
 
-            # If tel is a struture, only applicable pars will be collected, always.
+            # If tel is a structure, only applicable pars will be collected, always.
             # The default ones will be covered by the camera pars.
             _selectOnlyApplicable = onlyApplicable or (
                 _tel

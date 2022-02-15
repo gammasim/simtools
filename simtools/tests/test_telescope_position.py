@@ -22,7 +22,7 @@ def test_input():
     tel = TelescopePosition(name="L-01", configData=configData)
 
     assert tel._posX == -70.93
-    # Testing default unit convertion
+    # Testing default unit conversion
     # altitude should be converted to m
     assert tel._altitude == 2177
 
