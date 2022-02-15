@@ -176,7 +176,7 @@ class ShowerSimulator:
         runList: list
             List of run numbers to be simulated.
         runRange: list
-            List of len 2 with the limits ofthe range for runs to be simulated.
+            List of len 2 with the limits of the range for runs to be simulated.
 
         Raises
         ------
@@ -204,7 +204,7 @@ class ShowerSimulator:
         runList: list
             List of run numbers to be simulated.
         runRange: list
-            List of len 2 with the limits ofthe range for runs to be simulated.
+            List of len 2 with the limits of the range for runs to be simulated.
 
         Raises
         ------
@@ -289,7 +289,7 @@ class ShowerSimulator:
         runList: list
             List of run numbers.
         runRange: list
-            List of len 2 with the limits ofthe range of the run numbers.
+            List of len 2 with the limits of the range of the run numbers.
 
         Raises
         ------
