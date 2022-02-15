@@ -641,7 +641,7 @@ class DatabaseHandler:
 
     def _getFileMongoDB(self, dbName, fileName):
         """
-        Extract a file from MongoDB and write it to disk
+        Extract a file from MongoDB and return GridFS file instance
 
         Parameters
         ----------
