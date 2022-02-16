@@ -54,6 +54,7 @@ jobs:
         run: |
           whereis python
           whereis sphinx-build
+          conda list
           sphinx-build --version
           make -C docs/ html
           touch docs/build/html/.nojekyll
