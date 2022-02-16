@@ -56,6 +56,7 @@ jobs:
           whereis sphinx-build
           conda list
           sphinx-build --version
+          conda info --envs
           make -C docs/ html
           touch docs/build/html/.nojekyll
 
