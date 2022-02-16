@@ -53,13 +53,13 @@ jobs:
       - name: Build docs
       - run: make -C docs/ html && touch docs/build/html/.nojekyll
 
-      - name: Deploy to gihub pages
-        # only run on push to master
-        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/docs' }}
-        uses: JamesIves/github-pages-deploy-action@3.7.1
-        with:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          BRANCH: gh-pages
-          FOLDER: docs/_build/html
-          CLEAN: true
-          SINGLE_COMMIT: true
+      # - name: Deploy to gihub pages
+      #   # only run on push to master
+      #   if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/docs' }}
+      #   uses: JamesIves/github-pages-deploy-action@3.7.1
+      #   with:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #     BRANCH: gh-pages
+      #     FOLDER: docs/_build/html
+      #     CLEAN: true
+      #     SINGLE_COMMIT: true
