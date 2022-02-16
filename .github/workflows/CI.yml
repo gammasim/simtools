@@ -55,6 +55,7 @@ jobs:
           make -C docs/ html
           touch docs/build/html/.nojekyll
 
+
       # - name: Deploy to gihub pages
       #   # only run on push to master
       #   if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/docs' }}
