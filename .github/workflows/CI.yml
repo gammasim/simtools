@@ -51,7 +51,9 @@ jobs:
 
       ### DOCS
       - name: Build docs
-      - run: make -C docs/ html && touch docs/build/html/.nojekyll
+        run: |
+          make -C docs/ html
+          touch docs/build/html/.nojekyll
 
       # - name: Deploy to gihub pages
       #   # only run on push to master
