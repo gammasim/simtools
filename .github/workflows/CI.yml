@@ -52,10 +52,7 @@ jobs:
       ### DOCS
       - name: Build docs
         run: |
-          whereis python
-          whereis sphinx-build
-          conda list
-          conda info --envs
+          conda activate gammasim-tools-dev
           make -C docs/ html
           touch docs/build/html/.nojekyll
 
