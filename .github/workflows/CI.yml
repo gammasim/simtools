@@ -32,7 +32,7 @@ jobs:
           conda activate gammasim-tools-dev
           echo 'source $CONDA/etc/profile.d/conda.sh' >> ~/.bash_profile
           echo 'conda activate gammasim-tools-dev' >> ~/.bash_profile
-          source set_simtools.sh
+          echo 'source set_simtools.sh' >> ~/.bash_profile
           python --version
 
       - name: pyflakes liniting
@@ -44,22 +44,17 @@ jobs:
       #- name: Tests
       #  shell: bash -leo pipefail {0}
       #  run: |
-      #    conda activate gammasim-tools-dev
-      #    source set_simtools.sh
+      #    shell: bash -l {0}
       #    pytest
-
 
       ### DOCS
       - name: Build docs
+        shell: bash -l {0}
         run: |
-          source $CONDA/etc/profile.d/conda.sh
-          conda activate gammasim-tools-dev
           make -C docs/ html
           touch docs/build/html/.nojekyll
 
       - name: Deploy to gihub pages
-        # only run on push to master
-        # if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
         uses: JamesIves/github-pages-deploy-action@3.7.1
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
