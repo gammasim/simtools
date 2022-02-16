@@ -52,6 +52,9 @@ jobs:
       ### DOCS
       - name: Build docs
         run: |
+          whereis python
+          whereis sphinx-build
+          sphinx-build --version
           make -C docs/ html
           touch docs/build/html/.nojekyll
 
