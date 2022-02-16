@@ -7,12 +7,15 @@ on:
     types: [opened, closed]
 
 jobs:
-  build:
 
+  ### TESTS - pyflakes and pytest 
+  tests:
     runs-on: ubuntu-latest
+    
     strategy:
       matrix:
         python-version: [3.6, 3.7, 3.8]
+    
     steps:
       - name: checkout
         uses: actions/checkout@v2
@@ -50,7 +53,35 @@ jobs:
       #    shell: bash -l {0}
       #    pytest
 
-      ### DOCS
+  ### DOCS - build and deploy
+  docs:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+
+      - name: Install conda dependencies
+        env:
+          PYTHON_VERSION: 3.8
+        run: |
+          source $CONDA/etc/profile.d/conda.sh
+          conda config --set always_yes yes --set changeps1 no
+          conda update -q conda
+          conda install -c conda-forge mamba
+          sed -i -e "s/- python<=3.8/- python=$PYTHON_VERSION/g" environment.yml
+          mamba env create -f environment.yml
+          conda activate gammasim-tools-dev
+          echo 'source $CONDA/etc/profile.d/conda.sh' >> ~/.bash_profile
+          echo 'conda activate gammasim-tools-dev' >> ~/.bash_profile
+          echo 'source set_simtools.sh' >> ~/.bash_profile
+          python --version
+
       - name: Build docs
         shell: bash -l {0}
         run: |
@@ -59,7 +90,7 @@ jobs:
 
       - name: Deploy to gihub pages
         # only run when PR is merged
-        if: github.event.pull_request.merged
+        # if: github.event.pull_request.merged
         uses: JamesIves/github-pages-deploy-action@3.7.1
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
