@@ -52,6 +52,7 @@ jobs:
       ### DOCS
       - name: Build docs
         run: |
+          source $CONDA/etc/profile.d/conda.sh
           conda activate gammasim-tools-dev
           make -C docs/ html
           touch docs/build/html/.nojekyll
