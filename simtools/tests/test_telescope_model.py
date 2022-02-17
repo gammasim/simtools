@@ -63,6 +63,15 @@ class TestTelescopeModel(unittest.TestCase):
         )
         tel.exportConfigFile()
 
+    def test_updating_export_model_files(self):
+        logger.info("Changing mirror_reflection_random_angle")
+        new_mrra = "0.0080 0 0"
+        self.telModel.changeParameter("mirror_reflection_random_angle", new_mrra)
+
+        self.assertTrue(self.telModel._areModelFilesUpdated)
+
+        self.telModel.exportConfigFile()
+
 
 if __name__ == "__main__":
     unittest.main()
