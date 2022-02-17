@@ -418,7 +418,7 @@ class TelescopeModel:
             self._logger.debug("Changing parameter {}".format(parName))
 
             # In case parameter is a file, the model files will be outdated
-            if self._parameters[parName]["isFile"]:
+            if self._parameters[parName]["File"]:
                 self._isModelFilesUpdated = False
 
         self._isConfigFileUpdated = False
