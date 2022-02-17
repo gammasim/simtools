@@ -109,7 +109,7 @@ class TestTelescopeModel(unittest.TestCase):
         logger.info("DB should NOT be read next.")
         tel.exportConfigFile()
 
-        # Changing a file parameter
+        # Changing a parameter that is a file
         logger.debug(
             "Changing a parameter that IS a file - camera_config_file"
         )
@@ -118,8 +118,8 @@ class TestTelescopeModel(unittest.TestCase):
             tel.getParameterValue("camera_config_file")
         )
         logger.debug(
-            "tel._isExportedModelFiles should be False because a file parameter "
-            "was changed."
+            "tel._isExportedModelFiles should be False because a parameter that "
+            "is a file was changed."
         )
         self.assertFalse(tel._isExportedModelFilesUpToDate)
 
