@@ -119,8 +119,8 @@ class TelescopeModel:
             self._loadParametersFromDB()
 
         self._setConfigFileDirectoryAndName()
-        self._isConfigFileUpdated = False
-        self._isExportedModelFilesUpdated = False
+        self._isConfigFileUpToDate = False
+        self._isExportedModelFilesUpToDate = False
 
     @property
     def mirrors(self):
@@ -383,9 +383,9 @@ class TelescopeModel:
             self._parameters[parName]["Applicable"] = isAplicable
             self._parameters[parName]["File"] = isFile
 
-        self._isConfigFileUpdated = False
+        self._isConfigFileUpToDate = False
         if isFile:
-            self._isExportedModelFilesUpdated = False
+            self._isExportedModelFilesUpToDate = False
 
     def changeParameter(self, parName, value):
         """
@@ -419,9 +419,9 @@ class TelescopeModel:
 
             # In case parameter is a file, the model files will be outdated
             if self._parameters[parName]["File"]:
-                self._isExportedModelFilesUpdated = False
+                self._isExportedModelFilesUpToDate = False
 
-        self._isConfigFileUpdated = False
+        self._isConfigFileUpToDate = False
 
     def changeMultipleParameters(self, **kwargs):
         """
@@ -444,7 +444,7 @@ class TelescopeModel:
             else:
                 self.addParameter(par, value)
 
-        self._isConfigFileUpdated = False
+        self._isConfigFileUpToDate = False
 
     def removeParameters(self, *args):
         """
@@ -470,7 +470,7 @@ class TelescopeModel:
                 )
                 self._logger.error(msg)
                 raise InvalidParameter(msg)
-        self._isConfigFileUpdated = False
+        self._isConfigFileUpToDate = False
 
     def addParameterFile(self, parName, filePath):
         """
@@ -499,13 +499,13 @@ class TelescopeModel:
                 parsFromDB.pop(par)
 
         db.exportModelFiles(parsFromDB, self._configFileDirectory)
-        self._isExportedModelFilesUpdated = True
+        self._isExportedModelFilesUpToDate = True
 
     def exportConfigFile(self):
         """Export the config file used by sim_telarray."""
 
         # Exporting model file
-        if not self._isExportedModelFilesUpdated:
+        if not self._isExportedModelFilesUpToDate:
             self.exportModelFiles()
 
         # Using SimtelConfigWriter to write the config file.
@@ -528,7 +528,7 @@ class TelescopeModel:
         -------
         Path of the exported config file for sim_telarray.
         """
-        if not self._isConfigFileUpdated and not noExport:
+        if not self._isConfigFileUpToDate and not noExport:
             self.exportConfigFile()
         return self._configFilePath
 
