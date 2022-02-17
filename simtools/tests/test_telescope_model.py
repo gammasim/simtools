@@ -67,7 +67,7 @@ class TestTelescopeModel(unittest.TestCase):
         """
         It was found in derive_mirror_rnda_angle that the DB was being
         accessed each time the model was changed, because the model
-        files were being re-exported. A flag called _isExportedModelFilesUpdated
+        files were being re-exported. A flag called _isExportedModelFilesUpToDate
         was added to prevent this behavior. This test is meant to assure
         it is working properly.
         """
@@ -84,7 +84,7 @@ class TestTelescopeModel(unittest.TestCase):
             "tel._isExportedModelFiles should be False because exportConfigFile"
             " was not called yet."
         )
-        self.assertFalse(tel._isExportedModelFilesUpdated)
+        self.assertFalse(tel._isExportedModelFilesUpToDate)
 
         # Exporting config file
         tel.exportConfigFile()
@@ -92,7 +92,7 @@ class TestTelescopeModel(unittest.TestCase):
             "tel._isExportedModelFiles should be True because exportConfigFile"
             " was called."
         )
-        self.assertTrue(tel._isExportedModelFilesUpdated)
+        self.assertTrue(tel._isExportedModelFilesUpToDate)
 
         # Changing a non-file parameter
         logger.info(
@@ -103,7 +103,7 @@ class TestTelescopeModel(unittest.TestCase):
             "tel._isExportedModelFiles should still be True because the changed "
             "parameter was not a file"
         )
-        self.assertTrue(tel._isExportedModelFilesUpdated)
+        self.assertTrue(tel._isExportedModelFilesUpToDate)
 
         # Testing the DB connection
         logger.info("DB should NOT be read next.")
@@ -121,7 +121,7 @@ class TestTelescopeModel(unittest.TestCase):
             "tel._isExportedModelFiles should be False because a file parameter "
             "was changed."
         )
-        self.assertFalse(tel._isExportedModelFilesUpdated)
+        self.assertFalse(tel._isExportedModelFilesUpToDate)
 
         # Testing the DB connection
         logger.info("DB should be read next.")
