@@ -19,64 +19,106 @@ class TestTelescopeModel(unittest.TestCase):
             label="test-telescope-model",
         )
 
-    # def test_handling_parameters(self):
-    #     logger.info(
-    #         "Old mirror_reflection_random_angle:{}".format(
-    #             self.telModel.getParameterValue("mirror_reflection_random_angle")
-    #         )
-    #     )
-    #     logger.info("Changing mirror_reflection_random_angle")
-    #     new_mrra = "0.0080 0 0"
-    #     self.telModel.changeParameter("mirror_reflection_random_angle", new_mrra)
-    #     self.assertEqual(
-    #         self.telModel.getParameterValue("mirror_reflection_random_angle"), new_mrra
-    #     )
+    def test_handling_parameters(self):
+        logger.info(
+            "Old mirror_reflection_random_angle:{}".format(
+                self.telModel.getParameterValue("mirror_reflection_random_angle")
+            )
+        )
+        logger.info("Changing mirror_reflection_random_angle")
+        new_mrra = "0.0080 0 0"
+        self.telModel.changeParameter("mirror_reflection_random_angle", new_mrra)
+        self.assertEqual(
+            self.telModel.getParameterValue("mirror_reflection_random_angle"), new_mrra
+        )
 
-    #     logging.info("Adding new_parameter")
-    #     new_par = "23"
-    #     self.telModel.addParameter("new_parameter", new_par)
-    #     self.assertEqual(self.telModel.getParameterValue("new_parameter"), new_par)
+        logging.info("Adding new_parameter")
+        new_par = "23"
+        self.telModel.addParameter("new_parameter", new_par)
+        self.assertEqual(self.telModel.getParameterValue("new_parameter"), new_par)
 
-    #     with self.assertRaises(InvalidParameter):
-    #         self.telModel.getParameter("bla_bla")
+        with self.assertRaises(InvalidParameter):
+            self.telModel.getParameter("bla_bla")
 
-    # def test_flen_type(self):
-    #     flenInfo = self.telModel.getParameter("focal_length")
-    #     logger.info(
-    #         "Focal Length = {}, type = {}".format(flenInfo["Value"], flenInfo["Type"])
-    #     )
-    #     self.assertIsInstance(flenInfo["Value"], float)
+    def test_flen_type(self):
+        flenInfo = self.telModel.getParameter("focal_length")
+        logger.info(
+            "Focal Length = {}, type = {}".format(flenInfo["Value"], flenInfo["Type"])
+        )
+        self.assertIsInstance(flenInfo["Value"], float)
 
-    # def test_cfg_file(self):
-    #     # Exporting
-    #     self.telModel.exportConfigFile()
+    def test_cfg_file(self):
+        # Exporting
+        self.telModel.exportConfigFile()
 
-    #     logger.info("Config file: {}".format(self.telModel.getConfigFile()))
+        logger.info("Config file: {}".format(self.telModel.getConfigFile()))
 
-    #     # Importing
-    #     cfgFile = self.telModel.getConfigFile()
-    #     tel = TelescopeModel.fromConfigFile(
-    #         site="south",
-    #         telescopeModelName="sst-d",
-    #         label="test-sst",
-    #         configFileName=cfgFile,
-    #     )
-    #     tel.exportConfigFile()
+        # Importing
+        cfgFile = self.telModel.getConfigFile()
+        tel = TelescopeModel.fromConfigFile(
+            site="south",
+            telescopeModelName="sst-d",
+            label="test-sst",
+            configFileName=cfgFile,
+        )
+        tel.exportConfigFile()
 
     def test_updating_export_model_files(self):
-        logger.info("Changing a parameter that is not a file - mirror_reflection_random_angle")
-        new_mrra = "0.0080 0 0"
 
-        print('HEREE', self.telModel._isModelFilesUpdated)
+        # We need a brand new telescopeModel to avoid interference
+        tel = TelescopeModel(
+            site="North",
+            telescopeModelName="LST-1",
+            modelVersion="Current",
+            label="test-telescope-model-2",
+        )
 
-        self.telModel.changeParameter("mirror_reflection_random_angle", new_mrra)
+        logger.debug(
+            "tel._isExportedModelFiles should be False because exportConfigFile"
+            " was not called yet."
+        )
+        self.assertFalse(tel._isExportedModelFilesUpdated)
 
-        print('HEREE', self.telModel._isModelFilesUpdated)
+        # Exporting config file
+        tel.exportConfigFile()
+        logger.debug(
+            "tel._isExportedModelFiles should be True because exportConfigFile"
+            " was called."
+        )
+        self.assertTrue(tel._isExportedModelFilesUpdated)
 
-        self.assertTrue(self.telModel._isModelFilesUpdated)
+        # Changing a non-file parameter
+        logger.info(
+            "Changing a parameter that IS NOT a file - mirror_reflection_random_angle"
+        )
+        tel.changeParameter("mirror_reflection_random_angle", "0.0080 0 0")
+        logger.debug(
+            "tel._isExportedModelFiles should still be True because the changed "
+            "parameter was not a file"
+        )
+        self.assertTrue(tel._isExportedModelFilesUpdated)
 
-        # This should not connect to the DB
-        self.telModel.exportConfigFile()
+        # Testing the DB connection
+        logger.info("DB should NOT be read next.")
+        tel.exportConfigFile()
+
+        # Changing a file parameter
+        logger.debug(
+            "Changing a parameter that IS a file - camera_config_file"
+        )
+        tel.changeParameter(
+            "camera_config_file",
+            tel.getParameterValue("camera_config_file")
+        )
+        logger.debug(
+            "tel._isExportedModelFiles should be False because a file parameter "
+            "was changed."
+        )
+        self.assertFalse(tel._isExportedModelFilesUpdated)
+
+        # Testing the DB connection
+        logger.info("DB should be read next.")
+        tel.exportConfigFile()
 
 
 if __name__ == "__main__":
