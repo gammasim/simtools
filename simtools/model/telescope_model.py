@@ -281,10 +281,7 @@ class TelescopeModel:
         _sitePars = db.getSiteParameters(
             self.site, self.modelVersion, onlyApplicable=True
         )
-        # UPDATE: SimtelConfigWriter deals with which parameters should be written or not.
-        # _parameters here can contain all the parameters from the DB.
         self._parameters.update(_sitePars)
-
     # END _loadParametersFromDB
 
     def hasParameter(self, parName):
