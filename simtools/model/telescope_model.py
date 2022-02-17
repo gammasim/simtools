@@ -120,6 +120,7 @@ class TelescopeModel:
 
         self._setConfigFileDirectoryAndName()
         self._isConfigFileUpdated = False
+        self._isModelFilesUpdated = False
 
     @property
     def mirrors(self):
@@ -383,6 +384,8 @@ class TelescopeModel:
             self._parameters[parName]["File"] = isFile
 
         self._isConfigFileUpdated = False
+        if isFile:
+            self._isModelFilesUpdated = False
 
     def changeParameter(self, parName, value):
         """
@@ -413,6 +416,11 @@ class TelescopeModel:
                 self._logger.warning("Value type differs from the current one")
             self._parameters[parName]["Value"] = value
             self._logger.debug("Changing parameter {}".format(parName))
+
+            # In case parameter is a file, the model files will be outdated
+            if self._parameters[parName]["isFile"]:
+                self._isModelFilesUpdated = False
+
         self._isConfigFileUpdated = False
 
     def changeMultipleParameters(self, **kwargs):
@@ -491,12 +499,14 @@ class TelescopeModel:
                 parsFromDB.pop(par)
 
         db.exportModelFiles(parsFromDB, self._configFileDirectory)
+        self._isModelFilesUpdated = True
 
     def exportConfigFile(self):
         """Export the config file used by sim_telarray."""
 
         # Exporting model file
-        self.exportModelFiles()
+        if not self._isModelFilesUpdated:
+            self.exportModelFiles()
 
         # Using SimtelConfigWriter to write the config file.
         self._loadSimtelConfigWriter()
