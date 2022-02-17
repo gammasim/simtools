@@ -63,6 +63,70 @@ class TestTelescopeModel(unittest.TestCase):
         )
         tel.exportConfigFile()
 
+    def test_updating_export_model_files(self):
+        """
+        It was found in derive_mirror_rnda_angle that the DB was being
+        accessed each time the model was changed, because the model
+        files were being re-exported. A flag called _isExportedModelFilesUpToDate
+        was added to prevent this behavior. This test is meant to assure
+        it is working properly.
+        """
+
+        # We need a brand new telescopeModel to avoid interference
+        tel = TelescopeModel(
+            site="North",
+            telescopeModelName="LST-1",
+            modelVersion="Current",
+            label="test-telescope-model-2",
+        )
+
+        logger.debug(
+            "tel._isExportedModelFiles should be False because exportConfigFile"
+            " was not called yet."
+        )
+        self.assertFalse(tel._isExportedModelFilesUpToDate)
+
+        # Exporting config file
+        tel.exportConfigFile()
+        logger.debug(
+            "tel._isExportedModelFiles should be True because exportConfigFile"
+            " was called."
+        )
+        self.assertTrue(tel._isExportedModelFilesUpToDate)
+
+        # Changing a non-file parameter
+        logger.info(
+            "Changing a parameter that IS NOT a file - mirror_reflection_random_angle"
+        )
+        tel.changeParameter("mirror_reflection_random_angle", "0.0080 0 0")
+        logger.debug(
+            "tel._isExportedModelFiles should still be True because the changed "
+            "parameter was not a file"
+        )
+        self.assertTrue(tel._isExportedModelFilesUpToDate)
+
+        # Testing the DB connection
+        logger.info("DB should NOT be read next.")
+        tel.exportConfigFile()
+
+        # Changing a parameter that is a file
+        logger.debug(
+            "Changing a parameter that IS a file - camera_config_file"
+        )
+        tel.changeParameter(
+            "camera_config_file",
+            tel.getParameterValue("camera_config_file")
+        )
+        logger.debug(
+            "tel._isExportedModelFiles should be False because a parameter that "
+            "is a file was changed."
+        )
+        self.assertFalse(tel._isExportedModelFilesUpToDate)
+
+        # Testing the DB connection
+        logger.info("DB should be read next.")
+        tel.exportConfigFile()
+
 
 if __name__ == "__main__":
     unittest.main()
