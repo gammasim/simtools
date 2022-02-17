@@ -64,6 +64,13 @@ class TestTelescopeModel(unittest.TestCase):
         tel.exportConfigFile()
 
     def test_updating_export_model_files(self):
+        """
+        It was found in derive_mirror_rnda_angle that the DB was being
+        accessed each time the model was changed, because the model
+        files were being re-exported. A flag called _isExportedModelFilesUpdated
+        was added to prevent this behavior. This test is meant to assure
+        it is working properly.
+        """
 
         # We need a brand new telescopeModel to avoid interference
         tel = TelescopeModel(
