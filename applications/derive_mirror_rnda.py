@@ -64,6 +64,8 @@
     random_flen (float, optional)
         Value to replace the default random_focal_length. Only used if use_random_flen \
         is activated.
+    no_tuning (activation mode, optional)
+        Turn off the tuning - A single case will be simulated and plotted.
     test (activation mode, optional)
         If activated, application will be faster by simulating only few mirrors.
     verbosity (str, optional)
@@ -166,11 +168,6 @@ if __name__ == "__main__":
         default=0.0,
     )
     parser.add_argument(
-        "--no_tuning",
-        help="Turn off the tuning - A single case will be simulated and plotted.",
-        action="store_true",
-    )
-    parser.add_argument(
         "--mirror_list",
         help=(
             "Mirror list file to replace the default one. It should be used if measured mirror"
@@ -192,6 +189,11 @@ if __name__ == "__main__":
         help="Value to replace the default random_focal_length.",
         type=float,
         required=False,
+    )
+    parser.add_argument(
+        "--no_tuning",
+        help="Turn off the tuning - A single case will be simulated and plotted.",
+        action="store_true",
     )
     parser.add_argument(
         "--test",
