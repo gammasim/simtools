@@ -66,7 +66,12 @@ class TestTelescopeModel(unittest.TestCase):
     def test_updating_export_model_files(self):
         logger.info("Changing a parameter that is not a file - mirror_reflection_random_angle")
         new_mrra = "0.0080 0 0"
+
+        print('HEREE', self.telModel._isModelFilesUpdated)
+
         self.telModel.changeParameter("mirror_reflection_random_angle", new_mrra)
+
+        print('HEREE', self.telModel._isModelFilesUpdated)
 
         self.assertTrue(self.telModel._isModelFilesUpdated)
 
