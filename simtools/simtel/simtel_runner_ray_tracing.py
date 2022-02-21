@@ -7,11 +7,11 @@ import simtools.util.general as gen
 from simtools.util import names
 from simtools.simtel.simtel_runner import SimtelRunner
 
-__all__ = ['SimtelRunnerRayTracing']
+__all__ = ["SimtelRunnerRayTracing"]
 
 
 class SimtelRunnerRayTracing(SimtelRunner):
-    '''
+    """
     SimtelRunnerRayTracing is the interface with sim_telarray to perform ray tracing simulations.
 
     Configurable parameters:
@@ -51,7 +51,7 @@ class SimtelRunnerRayTracing(SimtelRunner):
     run(test=False, force=False)
         Run sim_telarray. test=True will make it faster and force=True will remove existing files
         and run again.
-    '''
+    """
 
     def __init__(
         self,
@@ -61,9 +61,9 @@ class SimtelRunnerRayTracing(SimtelRunner):
         filesLocation=None,
         configData=None,
         configFile=None,
-        singleMirrorMode=False
+        singleMirrorMode=False,
     ):
-        '''
+        """
         SimtelRunner.
 
         Parameters
@@ -84,14 +84,12 @@ class SimtelRunnerRayTracing(SimtelRunner):
             Path of the yaml file containing the configurable parameters.
         singleMirrorMode: bool
             True for single mirror simulations.
-        '''
+        """
         self._logger = logging.getLogger(__name__)
-        self._logger.debug('Init SimtelRunnerRayTracing')
+        self._logger.debug("Init SimtelRunnerRayTracing")
 
         super().__init__(
-            label=label,
-            simtelSourcePath=simtelSourcePath,
-            filesLocation=filesLocation
+            label=label, simtelSourcePath=simtelSourcePath, filesLocation=filesLocation
         )
 
         self.telescopeModel = self._validateTelescopeModel(telescopeModel)
@@ -99,8 +97,7 @@ class SimtelRunnerRayTracing(SimtelRunner):
 
         # File location
         self._baseDirectory = io.getRayTracingOutputDirectory(
-            self._filesLocation,
-            self.label
+            self._filesLocation, self.label
         )
         self._baseDirectory.mkdir(parents=True, exist_ok=True)
 
@@ -113,23 +110,25 @@ class SimtelRunnerRayTracing(SimtelRunner):
 
         # Loading configData
         _configDataIn = gen.collectDataFromYamlOrDict(configFile, configData)
-        _parameterFile = io.getDataFile('parameters', 'simtel-runner-ray-tracing_parameters.yml')
+        _parameterFile = io.getDataFile(
+            "parameters", "simtel-runner-ray-tracing_parameters.yml"
+        )
         _parameters = gen.collectDataFromYamlOrDict(_parameterFile, None)
         self.config = gen.validateConfigData(_configDataIn, _parameters)
 
         self._loadRequiredFiles()
 
     def _loadRequiredFiles(self):
-        '''
+        """
         Which file are required for running depends on the mode.
         Here we define and write some information into these files. Log files are always required.
-        '''
+        """
 
-        self._corsikaFile = self._simtelSourcePath.joinpath('run9991.corsika.gz')
+        self._corsikaFile = self._simtelSourcePath.joinpath("run9991.corsika.gz")
 
         # Loop to define and remove existing files.
         # Files will be named _baseFile = self.__dict__['_' + base + 'File']
-        for baseName in ['stars', 'photons', 'log']:
+        for baseName in ["stars", "photons", "log"]:
             fileName = names.rayTracingFileName(
                 self.telescopeModel.site,
                 self.telescopeModel.name,
@@ -138,107 +137,115 @@ class SimtelRunnerRayTracing(SimtelRunner):
                 self.config.offAxisAngle,
                 self.config.mirrorNumber if self._singleMirrorMode else None,
                 self.label,
-                baseName
+                baseName,
             )
             file = self._baseDirectory.joinpath(fileName)
             if file.exists():
                 file.unlink()
-            # Defining the file name variable as an class atribute.
-            self.__dict__['_' + baseName + 'File'] = file
+            # Defining the file name variable as an class attribute.
+            self.__dict__["_" + baseName + "File"] = file
 
         # Adding header to photon list file.
-        with self._photonsFile.open('w') as file:
-            file.write('#{}\n'.format(50 * '='))
-            file.write('# List of photons for RayTracing simulations\n')
-            file.write('#{}\n'.format(50 * '='))
-            file.write('# configFile = {}\n'.format(self.telescopeModel.getConfigFile()))
-            file.write('# zenithAngle [deg] = {}\n'.format(self.config.zenithAngle))
-            file.write('# offAxisAngle [deg] = {}\n'.format(self.config.offAxisAngle))
-            file.write('# sourceDistance [km] = {}\n'.format(self.config.sourceDistance))
+        with self._photonsFile.open("w") as file:
+            file.write("#{}\n".format(50 * "="))
+            file.write("# List of photons for RayTracing simulations\n")
+            file.write("#{}\n".format(50 * "="))
+            file.write(
+                "# configFile = {}\n".format(self.telescopeModel.getConfigFile())
+            )
+            file.write("# zenithAngle [deg] = {}\n".format(self.config.zenithAngle))
+            file.write("# offAxisAngle [deg] = {}\n".format(self.config.offAxisAngle))
+            file.write(
+                "# sourceDistance [km] = {}\n".format(self.config.sourceDistance)
+            )
             if self._singleMirrorMode:
-                file.write('# mirrorNumber = {}\n\n'.format(self.config.mirrorNumber))
+                file.write("# mirrorNumber = {}\n\n".format(self.config.mirrorNumber))
 
         # Filling in star file with a single star.
-        with self._starsFile.open('w') as file:
-            file.write('0. {} 1.0 {}'.format(
-                90. - self.config.zenithAngle,
-                self.config.sourceDistance)
+        with self._starsFile.open("w") as file:
+            file.write(
+                "0. {} 1.0 {}".format(
+                    90.0 - self.config.zenithAngle, self.config.sourceDistance
+                )
             )
 
     def _shallRun(self, run=None):
-        ''' Tells if simulations should be run again based on the existence of output files. '''
+        """Tells if simulations should be run again based on the existence of output files."""
         return not self._isPhotonListFileOK()
 
     def _makeRunCommand(self, inputFile, run=None):
-        ''' Return the command to run simtel_array. '''
+        """Return the command to run simtel_array."""
 
         if self._singleMirrorMode:
-            _mirrorFocalLength = float(self.telescopeModel.getParameterValue('mirror_focal_length'))
+            _mirrorFocalLength = float(
+                self.telescopeModel.getParameterValue("mirror_focal_length")
+            )
 
         # RayTracing
-        command = str(self._simtelSourcePath.joinpath('sim_telarray/bin/sim_telarray'))
-        command += ' -c {}'.format(self.telescopeModel.getConfigFile())
-        command += ' -I../cfg/CTA'
-        command += super()._configOption('IMAGING_LIST', str(self._photonsFile))
-        command += super()._configOption('stars', str(self._starsFile))
+        command = str(self._simtelSourcePath.joinpath("sim_telarray/bin/sim_telarray"))
+        command += " -c {}".format(self.telescopeModel.getConfigFile())
+        command += " -I../cfg/CTA"
+        command += super()._configOption("IMAGING_LIST", str(self._photonsFile))
+        command += super()._configOption("stars", str(self._starsFile))
         command += super()._configOption(
-            'altitude',
-            self.telescopeModel.getParameterValue('altitude')
+            "altitude", self.telescopeModel.getParameterValue("altitude")
         )
         command += super()._configOption(
-            'telescope_theta',
-            self.config.zenithAngle + self.config.offAxisAngle
+            "telescope_theta", self.config.zenithAngle + self.config.offAxisAngle
         )
-        command += super()._configOption('star_photons', str(self.PHOTONS_PER_RUN))
-        command += super()._configOption('telescope_phi', '0')
-        command += super()._configOption('camera_transmission', '1.0')
-        command += super()._configOption('nightsky_background', 'all:0.')
-        command += super()._configOption('trigger_current_limit', '1e10')
-        command += super()._configOption('telescope_random_angle', '0')
-        command += super()._configOption('telescope_random_error', '0')
-        command += super()._configOption('convergent_depth', '0')
-        command += super()._configOption('maximum_telescopes', '1')
-        command += super()._configOption('show', 'all')
-        command += super()._configOption('camera_filter', 'none')
+        command += super()._configOption("star_photons", str(self.PHOTONS_PER_RUN))
+        command += super()._configOption("telescope_phi", "0")
+        command += super()._configOption("camera_transmission", "1.0")
+        command += super()._configOption("nightsky_background", "all:0.")
+        command += super()._configOption("trigger_current_limit", "1e10")
+        command += super()._configOption("telescope_random_angle", "0")
+        command += super()._configOption("telescope_random_error", "0")
+        command += super()._configOption("convergent_depth", "0")
+        command += super()._configOption("maximum_telescopes", "1")
+        command += super()._configOption("show", "all")
+        command += super()._configOption("camera_filter", "none")
         if self._singleMirrorMode:
-            command += super()._configOption('focus_offset', 'all:0.')
-            command += super()._configOption('camera_config_file', 'single_pixel_camera.dat')
-            command += super()._configOption('camera_pixels', '1')
-            command += super()._configOption('trigger_pixels', '1')
-            command += super()._configOption('camera_body_diameter', '0')
+            command += super()._configOption("focus_offset", "all:0.")
             command += super()._configOption(
-                'mirror_list',
+                "camera_config_file", "single_pixel_camera.dat"
+            )
+            command += super()._configOption("camera_pixels", "1")
+            command += super()._configOption("trigger_pixels", "1")
+            command += super()._configOption("camera_body_diameter", "0")
+            command += super()._configOption(
+                "mirror_list",
                 self.telescopeModel.getSingleMirrorListFile(
-                    self.config.mirrorNumber,
-                    self.config.useRandomFocalLength
-                )
+                    self.config.mirrorNumber, self.config.useRandomFocalLength
+                ),
             )
             command += super()._configOption(
-                'focal_length',
-                self.config.sourceDistance * u.km.to(u.cm)
+                "focal_length", self.config.sourceDistance * u.km.to(u.cm)
             )
-            command += super()._configOption('dish_shape_length', _mirrorFocalLength)
-            command += super()._configOption('mirror_focal_length', _mirrorFocalLength)
-            command += super()._configOption('parabolic_dish', '0')
+            command += super()._configOption("dish_shape_length", _mirrorFocalLength)
+            command += super()._configOption("mirror_focal_length", _mirrorFocalLength)
+            command += super()._configOption("parabolic_dish", "0")
             # command += super()._configOption('random_focal_length', '0.')
-            command += super()._configOption('mirror_align_random_distance', '0.')
-            command += super()._configOption('mirror_align_random_vertical', '0.,28.,0.,0.')
-        command += ' ' + str(self._corsikaFile)
-        command += ' 2>&1 > ' + str(self._logFile) + ' 2>&1'
+            command += super()._configOption("mirror_align_random_distance", "0.")
+            command += super()._configOption(
+                "mirror_align_random_vertical", "0.,28.,0.,0."
+            )
+        command += " " + str(self._corsikaFile)
+        command += " 2>&1 > " + str(self._logFile) + " 2>&1"
 
         return command
+
     # END of makeRunCommand
 
     def _checkRunResult(self, run=None):
         # Checking run
         if not self._isPhotonListFileOK():
-            self._logger.error('Photon list is empty.')
+            self._logger.error("Photon list is empty.")
         else:
-            self._logger.debug('Everything looks fine with output file.')
+            self._logger.debug("Everything looks fine with output file.")
 
     def _isPhotonListFileOK(self):
-        ''' Check if the photon list is valid,'''
-        with open(self._photonsFile, 'r') as ff:
+        """Check if the photon list is valid,"""
+        with open(self._photonsFile, "r") as ff:
             nLines = len(ff.readlines())
 
         return nLines > 100

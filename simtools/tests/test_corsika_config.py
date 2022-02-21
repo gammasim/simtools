@@ -10,7 +10,7 @@ import simtools.io_handler as io
 from simtools.corsika.corsika_config import (
     CorsikaConfig,
     InvalidCorsikaInput,
-    MissingRequiredInputInCorsikaConfigData
+    MissingRequiredInputInCorsikaConfigData,
 )
 
 logger = logging.getLogger()
@@ -18,135 +18,134 @@ logger.setLevel(logging.DEBUG)
 
 
 class TestCorsikaConfig(unittest.TestCase):
-
     def setUp(self):
-        logger.info('setUp')
+        logger.info("setUp")
         self.corsikaConfigData = {
-            'nshow': 100,
-            'nrun': 10,
-            'zenith': 20 * u.deg,
-            'viewcone': 5 * u.deg,
-            'erange': [10 * u.GeV, 10 * u.TeV],
-            'eslope': -2,
-            'phi': 0 * u.deg,
-            'cscat': [10, 1500 * u.m, 0],
-            'primary': 'proton'
+            "nshow": 100,
+            "nrun": 10,
+            "zenith": 20 * u.deg,
+            "viewcone": 5 * u.deg,
+            "erange": [10 * u.GeV, 10 * u.TeV],
+            "eslope": -2,
+            "phi": 0 * u.deg,
+            "cscat": [10, 1500 * u.m, 0],
+            "primary": "proton",
         }
         self.corsikaConfig = CorsikaConfig(
-            site='Paranal',
-            layoutName='4LST',
-            label='test-corsika-config',
-            corsikaConfigData=self.corsikaConfigData
+            site="Paranal",
+            layoutName="4LST",
+            label="test-corsika-config",
+            corsikaConfigData=self.corsikaConfigData,
         )
 
     def test_repr(self):
-        logger.info('test_repr')
+        logger.info("test_repr")
         text = repr(self.corsikaConfig)
-        self.assertTrue('site' in text)
+        self.assertTrue("site" in text)
 
     def test_user_parameters(self):
-        logger.info('test_user_parameters')
-        self.assertEqual(self.corsikaConfig.getUserParameter('nshow'), 100)
-        self.assertEqual(self.corsikaConfig.getUserParameter('thetap'), [20, 20])
-        self.assertEqual(self.corsikaConfig.getUserParameter('erange'), [10., 10000.])
-        # Testing convertion between AZM (sim_telarray) and PHIP (corsika)
-        self.assertEqual(self.corsikaConfig.getUserParameter('azm'), [0., 0.])
-        self.assertEqual(self.corsikaConfig.getUserParameter('phip'), [180., 180.])
+        logger.info("test_user_parameters")
+        self.assertEqual(self.corsikaConfig.getUserParameter("nshow"), 100)
+        self.assertEqual(self.corsikaConfig.getUserParameter("thetap"), [20, 20])
+        self.assertEqual(self.corsikaConfig.getUserParameter("erange"), [10.0, 10000.0])
+        # Testing conversion between AZM (sim_telarray) and PHIP (corsika)
+        self.assertEqual(self.corsikaConfig.getUserParameter("azm"), [0.0, 0.0])
+        self.assertEqual(self.corsikaConfig.getUserParameter("phip"), [180.0, 180.0])
         with self.assertRaises(KeyError):
-            self.corsikaConfig.getUserParameter('inexistent_par')
+            self.corsikaConfig.getUserParameter("inexistent_par")
 
     def test_export_input_file(self):
-        logger.info('test_export_input_file')
+        logger.info("test_export_input_file")
         self.corsikaConfig.exportInputFile()
         inputFile = self.corsikaConfig.getInputFile()
         self.assertTrue(inputFile.exists())
 
     def test_wrong_par_in_config_data(self):
-        logger.info('test_wrong_primary_name')
+        logger.info("test_wrong_primary_name")
         newConfigData = copy(self.corsikaConfigData)
-        newConfigData['wrong_par'] = 20 * u.m
+        newConfigData["wrong_par"] = 20 * u.m
         with self.assertRaises(InvalidCorsikaInput):
             corsikaConfig = CorsikaConfig(
-                site='LaPalma',
-                layoutName='1LST',
-                label='test-corsika-config',
-                corsikaConfigData=newConfigData
+                site="LaPalma",
+                layoutName="1LST",
+                label="test-corsika-config",
+                corsikaConfigData=newConfigData,
             )
             corsikaConfig.printUserParameters()
 
     def test_units_of_config_data(self):
-        logger.info('test_units_of_config_data')
+        logger.info("test_units_of_config_data")
         newConfigData = copy(self.corsikaConfigData)
-        newConfigData['zenith'] = 20 * u.m
+        newConfigData["zenith"] = 20 * u.m
         with self.assertRaises(InvalidCorsikaInput):
             corsikaConfig = CorsikaConfig(
-                site='LaPalma',
-                layoutName='1LST',
-                label='test-corsika-config',
-                corsikaConfigData=newConfigData
+                site="LaPalma",
+                layoutName="1LST",
+                label="test-corsika-config",
+                corsikaConfigData=newConfigData,
             )
             corsikaConfig.printUserParameters()
 
     def test_len_of_config_data(self):
-        logger.info('test_len_of_config_data')
+        logger.info("test_len_of_config_data")
         newConfigData = copy(self.corsikaConfigData)
-        newConfigData['erange'] = [20 * u.TeV]
+        newConfigData["erange"] = [20 * u.TeV]
         with self.assertRaises(InvalidCorsikaInput):
             corsikaConfig = CorsikaConfig(
-                site='LaPalma',
-                layoutName='1LST',
-                label='test-corsika-config',
-                corsikaConfigData=newConfigData
+                site="LaPalma",
+                layoutName="1LST",
+                label="test-corsika-config",
+                corsikaConfigData=newConfigData,
             )
             corsikaConfig.printUserParameters()
 
     def test_wrong_primary_name(self):
-        logger.info('test_wrong_primary_name')
+        logger.info("test_wrong_primary_name")
         newConfigData = copy(self.corsikaConfigData)
-        newConfigData['primary'] = 'rock'
+        newConfigData["primary"] = "rock"
         with self.assertRaises(InvalidCorsikaInput):
             corsikaConfig = CorsikaConfig(
-                site='LaPalma',
-                layoutName='1LST',
-                label='test-corsika-config',
-                corsikaConfigData=newConfigData
+                site="LaPalma",
+                layoutName="1LST",
+                label="test-corsika-config",
+                corsikaConfigData=newConfigData,
             )
             corsikaConfig.printUserParameters()
 
     def test_missing_input(self):
-        logger.info('test_missing_input')
+        logger.info("test_missing_input")
         newConfigData = copy(self.corsikaConfigData)
-        newConfigData.pop('primary')
+        newConfigData.pop("primary")
         with self.assertRaises(MissingRequiredInputInCorsikaConfigData):
             corsikaConfig = CorsikaConfig(
-                site='LaPalma',
-                layoutName='1LST',
-                label='test-corsika-config',
-                corsikaConfigData=newConfigData
+                site="LaPalma",
+                layoutName="1LST",
+                label="test-corsika-config",
+                corsikaConfigData=newConfigData,
             )
             corsikaConfig.printUserParameters()
 
     def test_set_user_parameters(self):
-        logger.info('test_set_user_parameters')
+        logger.info("test_set_user_parameters")
         newConfigData = copy(self.corsikaConfigData)
-        newConfigData['zenith'] = 0 * u.deg
+        newConfigData["zenith"] = 0 * u.deg
         newCorsikaConfig = copy(self.corsikaConfig)
         newCorsikaConfig.setUserParameters(newConfigData)
-        self.assertEqual(newCorsikaConfig.getUserParameter('thetap'), [0, 0])
+        self.assertEqual(newCorsikaConfig.getUserParameter("thetap"), [0, 0])
 
     def test_config_data_from_yaml_file(self):
-        logger.info('test_config_data_from_yaml_file')
-        corsikaConfigFile = io.getTestDataFile('corsikaConfigTest.yml')
+        logger.info("test_config_data_from_yaml_file")
+        corsikaConfigFile = io.getTestDataFile("corsikaConfigTest.yml")
         cc = CorsikaConfig(
-            site='Paranal',
-            layoutName='4LST',
-            label='test-corsika-config',
-            corsikaConfigFile=corsikaConfigFile
+            site="Paranal",
+            layoutName="4LST",
+            label="test-corsika-config",
+            corsikaConfigFile=corsikaConfigFile,
         )
         cc.printUserParameters()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()
 
     # tt = TestCorsikaConfig()

@@ -1,6 +1,6 @@
 import logging
 
-__all__ = ['Mirrors']
+__all__ = ["Mirrors"]
 
 
 class InvalidMirrorListFile(Exception):
@@ -8,7 +8,7 @@ class InvalidMirrorListFile(Exception):
 
 
 class Mirrors:
-    '''
+    """
     Mirrors class, created from a mirror list file.
 
     Attributes
@@ -29,69 +29,69 @@ class Mirrors:
         Read the mirror list and store the data.
     plotMirrorLayout()
         Plot the mirror layout (to be implemented).
-    '''
+    """
 
     def __init__(self, mirrorListFile):
-        '''
+        """
         Mirrors.
 
         Parameters
         ----------
         mirrorListFile: str
             The sim_telarray file name.
-        '''
+        """
         self._logger = logging.getLogger(__name__)
-        self._logger.debug('Mirrors Init')
+        self._logger.debug("Mirrors Init")
 
         self._mirrorListFile = mirrorListFile
         self._readMirrorList()
 
     def _readMirrorList(self):
-        '''
+        """
         Read the mirror list in sim_telarray format and store the data.
 
         Raises
         ------
         InvalidMirrorListFile
             If number of mirrors is 0.
-        '''
+        """
         self._mirrors = dict()
-        self._mirrors['number'] = list()
-        self._mirrors['posX'] = list()
-        self._mirrors['posY'] = list()
-        self._mirrors['diameter'] = list()
-        self._mirrors['flen'] = list()
-        self._mirrors['shape'] = list()
+        self._mirrors["number"] = list()
+        self._mirrors["posX"] = list()
+        self._mirrors["posY"] = list()
+        self._mirrors["diameter"] = list()
+        self._mirrors["flen"] = list()
+        self._mirrors["shape"] = list()
 
         mirrorCounter = 0
         collectGeoPars = True
-        with open(self._mirrorListFile, 'r') as file:
+        with open(self._mirrorListFile, "r") as file:
             for line in file:
                 line = line.split()
-                if '#' in line[0] or '$' in line[0]:
+                if "#" in line[0] or "$" in line[0]:
                     continue
                 if collectGeoPars:
                     self.diameter = float(line[2])
                     self.shape = int(line[4])
                     collectGeoPars = False
-                    self._logger.debug('Shape = {}'.format(self.shape))
-                    self._logger.debug('Diameter = {}'.format(self.diameter))
+                    self._logger.debug("Shape = {}".format(self.shape))
+                    self._logger.debug("Diameter = {}".format(self.diameter))
 
-                self._mirrors['number'].append(mirrorCounter)
-                self._mirrors['posX'].append(float(line[0]))
-                self._mirrors['posY'].append(float(line[1]))
-                self._mirrors['diameter'].append(float(line[2]))
-                self._mirrors['flen'].append(float(line[3]))
-                self._mirrors['shape'].append(float(line[4]))
+                self._mirrors["number"].append(mirrorCounter)
+                self._mirrors["posX"].append(float(line[0]))
+                self._mirrors["posY"].append(float(line[1]))
+                self._mirrors["diameter"].append(float(line[2]))
+                self._mirrors["flen"].append(float(line[3]))
+                self._mirrors["shape"].append(float(line[4]))
                 mirrorCounter += 1
         self.numberOfMirrors = mirrorCounter
         if self.numberOfMirrors == 0:
-            msg = 'Problem reading mirror list file'
+            msg = "Problem reading mirror list file"
             self._logger.error(msg)
             raise InvalidMirrorListFile()
 
     def getSingleMirrorParameters(self, number):
-        '''
+        """
         Get parameters for a single mirror given by number.
 
         Parameters
@@ -102,20 +102,20 @@ class Mirrors:
         Returns
         -------
         (posX, posY, diameter, flen, shape)
-        '''
+        """
         if number > self.numberOfMirrors - 1:
-            self._logger.error('Mirror number is out range')
+            self._logger.error("Mirror number is out range")
             return None
         return (
-            self._mirrors['posX'][number],
-            self._mirrors['posY'][number],
-            self._mirrors['diameter'][number],
-            self._mirrors['flen'][number],
-            self._mirrors['shape'][number]
+            self._mirrors["posX"][number],
+            self._mirrors["posY"][number],
+            self._mirrors["diameter"][number],
+            self._mirrors["flen"][number],
+            self._mirrors["shape"][number],
         )
 
     def plotMirrorLayout(self):
-        '''
+        """
         Plot the mirror layout.
-        '''
+        """
         pass
