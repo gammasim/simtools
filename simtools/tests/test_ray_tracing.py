@@ -203,20 +203,20 @@ def test_config_data():
     assert len(ray.config.offAxisAngle) == 2
 
 
-@pytest.mark.skipif(not simtel_installed(), reason=SIMTEL_MSG)
 def test_from_kwargs():
 
     label = "test-from-kwargs"
-    version = "prod4"
 
     sourceDistance = 10 * u.km
     zenithAngle = 30 * u.deg
     offAxisAngle = [0, 2] * u.deg
 
-    tel = TelescopeModel(
+    cfgFile = io.getTestDataFile("CTA-North-LST-1-Current_test-telescope-model.cfg")
+
+    tel = TelescopeModel.fromConfigFile(
         site="north",
-        telescopeModelName="mst-FlashCam-D",
-        modelVersion=version,
+        telescopeModelName="lst-1",
+        configFileName=cfgFile,
         label=label,
     )
 
