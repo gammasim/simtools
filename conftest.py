@@ -21,3 +21,7 @@ else:
     # Checking whether there is DB connection
     useMongoDB = cfg.get("useMongoDB")
     os.environ["HAS_DB_CONNECTION"] = "1" if useMongoDB else "0"
+
+
+def pytest_sessionfinish(session, exitstatus):
+    os.system('./clean_files')
