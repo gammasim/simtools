@@ -7,7 +7,7 @@ import simtools.util.general as gen
 from simtools.model.telescope_model import TelescopeModel
 from simtools.model.array_model import ArrayModel
 
-__all__ = ['SimtelRunner']
+__all__ = ["SimtelRunner"]
 
 
 class SimtelExecutionError(Exception):
@@ -19,7 +19,7 @@ class InvalidOutputFile(Exception):
 
 
 class SimtelRunner:
-    '''
+    """
     SimtelRunner is the base class of the sim_telarray interfaces.
 
     Attributes
@@ -35,7 +35,7 @@ class SimtelRunner:
     run(test=False, force=False, input=None)
         Run sim_telarray. test=True will make it faster and force=True will remove existing files
         and run again.
-    '''
+    """
 
     def __init__(
         self,
@@ -43,7 +43,7 @@ class SimtelRunner:
         simtelSourcePath=None,
         filesLocation=None,
     ):
-        '''
+        """
         SimtelRunner.
 
         Parameters
@@ -56,42 +56,42 @@ class SimtelRunner:
         filesLocation: str (or Path), optional
             Parent location of the output files created by this class. If not given, it will be
             taken from the config.yml file.
-        '''
+        """
         self._logger = logging.getLogger(__name__)
 
-        self._simtelSourcePath = Path(cfg.getConfigArg('simtelPath', simtelSourcePath))
+        self._simtelSourcePath = Path(cfg.getConfigArg("simtelPath", simtelSourcePath))
         self.label = label
 
         # File location
-        self._filesLocation = cfg.getConfigArg('outputLocation', filesLocation)
+        self._filesLocation = cfg.getConfigArg("outputLocation", filesLocation)
 
         self.RUNS_PER_SET = 1
 
     def __repr__(self):
-        return 'SimtelRunner(label={})\n'.format(self.label)
+        return "SimtelRunner(label={})\n".format(self.label)
 
     def _validateTelescopeModel(self, tel):
-        ''' Validate TelescopeModel '''
+        """Validate TelescopeModel"""
         if isinstance(tel, TelescopeModel):
-            self._logger.debug('TelescopeModel is valid')
+            self._logger.debug("TelescopeModel is valid")
             return tel
         else:
-            msg = 'Invalid TelescopeModel'
+            msg = "Invalid TelescopeModel"
             self._logger.error(msg)
             raise ValueError(msg)
 
     def _validateArrayModel(self, array):
-        ''' Validate ArrayModel '''
+        """Validate ArrayModel"""
         if isinstance(array, ArrayModel):
-            self._logger.debug('ArrayModel is valid')
+            self._logger.debug("ArrayModel is valid")
             return array
         else:
-            msg = 'Invalid ArrayModel'
+            msg = "Invalid ArrayModel"
             self._logger.error(msg)
             raise ValueError(msg)
 
     def getRunScript(self, test=False, inputFile=None, run=None, extraCommands=None):
-        '''
+        """
         Builds and returns the full path of the bash run script containing
         the sim_telarray command.
 
@@ -108,45 +108,51 @@ class SimtelRunner:
         -------
         Path
             Full path of the run script.
-        '''
-        self._logger.debug('Creating run bash script')
+        """
+        self._logger.debug("Creating run bash script")
 
-        self._scriptDir = self._baseDirectory.joinpath('scripts')
+        self._scriptDir = self._baseDirectory.joinpath("scripts")
         self._scriptDir.mkdir(parents=True, exist_ok=True)
         self._scriptFile = self._scriptDir.joinpath(
-            'run{}-simtel'.format(run if run is not None else '')
+            "run{}-simtel".format(run if run is not None else "")
         )
-        self._logger.debug('Run bash script - {}'.format(self._scriptFile))
+        self._logger.debug("Run bash script - {}".format(self._scriptFile))
 
         extraCommands = self._getExtraCommands(extraCommands)
-        self._logger.debug('Extra commands to be added to the run script {}'.format(extraCommands))
+        self._logger.debug(
+            "Extra commands to be added to the run script {}".format(extraCommands)
+        )
 
         command = self._makeRunCommand(inputFile=inputFile, run=run)
-        with self._scriptFile.open('w') as file:
+        with self._scriptFile.open("w") as file:
             # TODO: header
-            file.write('#!/usr/bin/bash\n\n')
+            file.write("#!/usr/bin/bash\n\n")
 
             # Setting SECONDS variable to measure runtime
             file.write('\nSECONDS=0\n')
 
             if extraCommands is not None:
-                file.write('# Writing extras\n')
+                file.write("# Writing extras\n")
                 for line in extraCommands:
-                    file.write('{}\n'.format(line))
-                file.write('# End of extras\n\n')
+                    file.write("{}\n".format(line))
+                file.write("# End of extras\n\n")
 
             N = 1 if test else self.RUNS_PER_SET
             for _ in range(N):
-                file.write('{}\n\n'.format(command))
+                file.write("{}\n\n".format(command))
 
+<<<<<<< HEAD
             # Printing out runtime
             file.write('\necho "RUNTIME: $SECONDS"\n')
 
         os.system('chmod ug+x {}'.format(self._scriptFile))
+=======
+        os.system("chmod ug+x {}".format(self._scriptFile))
+>>>>>>> master
         return self._scriptFile
 
     def run(self, test=False, force=False, inputFile=None, run=None):
-        '''
+        """
         Basic sim_telarray run method.
 
         Parameters
@@ -155,26 +161,29 @@ class SimtelRunner:
             If True, make simulations faster.
         force: bool
             If True, remove possible existing output files and run again.
-        '''
-        self._logger.debug('Running sim_telarray')
+        """
+        self._logger.debug("Running sim_telarray")
 
-        if not hasattr(self, '_makeRunCommand'):
-            msg = 'run method cannot be executed without the _makeRunCommand method'
+        if not hasattr(self, "_makeRunCommand"):
+            msg = "run method cannot be executed without the _makeRunCommand method"
             self._logger.error(msg)
             raise RuntimeError(msg)
 
         if not self._shallRun(run) and not force:
-            self._logger.debug('Skipping because output exists and force = False')
+            self._logger.debug("Skipping because output exists and force = False")
             return
 
         command = self._makeRunCommand(inputFile=inputFile, run=run)
 
         if test:
-            self._logger.info('Running (test) with command:{}'.format(command))
-            sysOutput = os.system(command)
+            self._logger.info("Running (test) with command:{}".format(command))
+            # sysOutput = os.system(command)
+            os.system(command)
         else:
-            self._logger.info('Running ({}x) with command:{}'.format(self.RUNS_PER_SET, command))
-            sysOutput = os.system(command)
+            self._logger.info("Running ({}x) with command:{}".format(self.RUNS_PER_SET, command))
+            # sysOutput = os.system(command)
+            os.system(command)
+
             for _ in range(self.RUNS_PER_SET - 1):
                 os.system(command)
 
@@ -186,50 +195,52 @@ class SimtelRunner:
         self._checkRunResult(run=run)
 
     def _simtelFailed(self, sysOutput):
-        return sysOutput != '0'
+        return sysOutput != "0"
 
     def _raiseSimtelError(self):
-        '''
+        """
         Raise sim_telarray execution error. Final 10 lines from the log file
         are collected and printed.
-        '''
-        if hasattr(self, '_logFile'):
+        """
+        if hasattr(self, "_logFile"):
             logLines = gen.collectFinalLines(self._logFile, 10)
             msg = (
-                'Simtel Error - See below the relevant part of the simtel log file.\n'
-                + '===== from simtel log file ======\n'
+                "Simtel Error - See below the relevant part of the simtel log file.\n"
+                + "===== from simtel log file ======\n"
                 + logLines
-                + '================================='
+                + "================================="
             )
         else:
-            msg = 'Simtel log file does not exist.'
+            msg = "Simtel log file does not exist."
 
         self._logger.error(msg)
         raise SimtelExecutionError(msg)
 
     def _shallRun(self, run=None):
         self._logger.debug(
-            'shallRun is being called from the base class - returning False -'
-            + 'it should be implemented in the sub class'
+            "shallRun is being called from the base class - returning False -"
+            + "it should be implemented in the sub class"
         )
         return False
 
     def _getExtraCommands(self, extra):
-        '''
+        """
         Get extra commands by combining the one given as argument and
         what is given in config.yml
-        '''
+        """
         extra = gen.copyAsList(extra) if extra is not None else list()
 
-        extraFromConfig = cfg.get('extraCommands')
-        extraFromConfig = gen.copyAsList(extraFromConfig) if extraFromConfig is not None else list()
+        extraFromConfig = cfg.get("extraCommands")
+        extraFromConfig = (
+            gen.copyAsList(extraFromConfig) if extraFromConfig is not None else list()
+        )
 
         extra.extend(extraFromConfig)
         return extra
 
     @staticmethod
     def _configOption(par, value=None):
-        ''' Util function for building sim_telarray command. '''
-        c = ' -C {}'.format(par)
-        c += '={}'.format(value) if value is not None else ''
+        """Util function for building sim_telarray command."""
+        c = " -C {}".format(par)
+        c += "={}".format(value) if value is not None else ""
         return c

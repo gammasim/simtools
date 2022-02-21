@@ -14,40 +14,38 @@ logger.setLevel(logging.DEBUG)
 
 
 class TestSimtelConfigWriter(unittest.TestCase):
-
     def setUp(self):
         self.simtelConfigWriter = SimtelConfigWriter(
-            site='North',
-            modelVersion='Current',
-            label='test-simtel-config-writer',
-            telescopeModelName='TestTelecope'
+            site="North",
+            modelVersion="Current",
+            label="test-simtel-config-writer",
+            telescopeModelName="TestTelecope",
         )
         self.telescopeModel = TelescopeModel(
-            site='North',
-            telescopeModelName='LST-1',
-            modelVersion='Current',
-            label='test-telescope-model'
+            site="North",
+            telescopeModelName="LST-1",
+            modelVersion="Current",
+            label="test-telescope-model",
         )
-        self.layout = LayoutArray.fromLayoutArrayName('South-4LST')
+        self.layout = LayoutArray.fromLayoutArrayName("South-4LST")
 
     def test_write_array_config_file(self):
-        file = io.getTestOutputFile('simtel-config-writer_array.txt')
+        file = io.getTestOutputFile("simtel-config-writer_array.txt")
         self.simtelConfigWriter.writeArrayConfigFile(
             configFilePath=file,
             layout=self.layout,
             telescopeModel=[self.telescopeModel] * 4,
-            siteParameters={}
+            siteParameters={},
         )
-        self.assertTrue(fileHasText(file, 'TELESCOPE == 1'))
+        self.assertTrue(fileHasText(file, "TELESCOPE == 1"))
 
     def test_write_tel_config_file(self):
-        file = io.getTestOutputFile('simtel-config-writer_telescope.txt')
+        file = io.getTestOutputFile("simtel-config-writer_telescope.txt")
         self.simtelConfigWriter.writeTelescopeConfigFile(
-            configFilePath=file,
-            parameters={'par': {'Value': 1}}
+            configFilePath=file, parameters={"par": {"Value": 1}}
         )
-        self.assertTrue(fileHasText(file, 'par = 1'))
+        self.assertTrue(fileHasText(file, "par = 1"))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()
