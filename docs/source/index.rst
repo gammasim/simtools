@@ -43,3 +43,4 @@ General Documentation
   library
   databases
   conventions
+  guidelines

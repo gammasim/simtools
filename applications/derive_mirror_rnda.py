@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-'''
+"""
     Summary
     -------
     This application derives the parameter mirror_reflection_random_angle \
@@ -15,7 +15,7 @@
 
     The algorithm works as follow: A starting value of rnda is first defined as the one taken \
     from the :ref:`Model Parameters DB` \
-    (or alternativelly one may want to set it using the argument rnda).\
+    (or alternatively one may want to set it using the argument rnda).\
     Secondly, ray tracing simulations are performed for single mirror configurations for each \
     mirror given in the mirror_list. The mean simulated D80 for all the mirrors is compared with \
     the mean measured D80. A new value of rnda is then defined based on the sign of \
@@ -26,10 +26,10 @@
     interpolation. Finally, simulations are performed by using the the interpolated value \
     of rnda, which is defined as the desired optimal.
 
-    A option no_tunning can be used if one only wants to simulate one value of rnda and compare \
+    A option no_tuning can be used if one only wants to simulate one value of rnda and compare \
     the results with the measured ones.
 
-    The results of the tunning are plotted. See examples of the D80 vs rnda plot, on the left, \
+    The results of the tuning are plotted. See examples of the D80 vs rnda plot, on the left, \
     and the D80 distributions, on the right.
 
     .. _deriva_rnda_plot:
@@ -64,6 +64,8 @@
     random_flen (float, optional)
         Value to replace the default random_focal_length. Only used if use_random_flen \
         is activated.
+    no_tuning (activation mode, optional)
+        Turn off the tuning - A single case will be simulated and plotted.
     test (activation mode, optional)
         If activated, application will be faster by simulating only few mirrors.
     verbosity (str, optional)
@@ -99,7 +101,7 @@
 
         * Change default model to default (after this feature is implemented in db_handler)
         * Fix the setStyle. For some reason, sphinx cannot built docs with it on.
-'''
+"""
 
 
 import logging
@@ -114,6 +116,7 @@ import simtools.util.general as gen
 import simtools.io_handler as io
 from simtools.ray_tracing import RayTracing
 from simtools.model.telescope_model import TelescopeModel
+
 # from simtools.visualize import setStyle
 
 # setStyle()
@@ -125,129 +128,117 @@ def plotMeasuredDistribution(file, **kwargs):
     ax.hist(data, **kwargs)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
+    parser.add_argument("-s", "--site", help="North or South", type=str, required=True)
     parser.add_argument(
-        '-s',
-        '--site',
-        help='North or South',
+        "-t",
+        "--telescope",
+        help="Telescope model name (e.g. LST-1, SST-D, ...)",
         type=str,
-        required=True
+        required=True,
     )
     parser.add_argument(
-        '-t',
-        '--telescope',
-        help='Telescope model name (e.g. LST-1, SST-D, ...)',
+        "-m",
+        "--model_version",
+        help="Model version (default=prod4)",
         type=str,
-        required=True
+        default="prod4",
     )
     parser.add_argument(
-        '-m',
-        '--model_version',
-        help='Model version (default=prod4)',
-        type=str,
-        default='prod4'
+        "--mean_d80", help="Mean of measured D80 [cm]", type=float, required=True
     )
     parser.add_argument(
-        '--mean_d80',
-        help='Mean of measured D80 [cm]',
-        type=float,
-        required=True
+        "--sig_d80", help="Std dev of measured D80 [cm]", type=float, required=False
     )
     parser.add_argument(
-        '--sig_d80',
-        help='Std dev of measured D80 [cm]',
-        type=float,
-        required=False
-    )
-    parser.add_argument(
-        '--d80_list',
+        "--d80_list",
         help=(
-            'File with single column list of measured D80 [cm]. If given, the measured '
-            'distribution will be plotted on the top of the simulated one.'
+            "File with single column list of measured D80 [cm]. If given, the measured "
+            "distribution will be plotted on the top of the simulated one."
         ),
         type=str,
-        required=False
+        required=False,
     )
     parser.add_argument(
-        '--rnda',
-        help='Starting value of mirror_reflection_random_angle',
+        "--rnda",
+        help="Starting value of mirror_reflection_random_angle",
         type=float,
-        default=0.
+        default=0.0,
     )
     parser.add_argument(
-        '--no_tunning',
-        help='Turn off the tunning - A single case will be simulated and plotted.',
-        action='store_true'
-    )
-    parser.add_argument(
-        '--mirror_list',
+        "--mirror_list",
         help=(
-            'Mirror list file to replace the default one. It should be used if measured mirror'
-            ' focal lengths need to be accounted'
+            "Mirror list file to replace the default one. It should be used if measured mirror"
+            " focal lengths need to be accounted"
         ),
         type=str,
-        required=False
+        required=False,
     )
     parser.add_argument(
-        '--use_random_flen',
+        "--use_random_flen",
         help=(
-            'Use random focal lengths. The argument random_flen can be used to replace the default'
-            ' random_focal_length parameter.'
+            "Use random focal lengths. The argument random_flen can be used to replace the default"
+            " random_focal_length parameter."
         ),
-        action='store_true'
+        action="store_true",
     )
     parser.add_argument(
-        '--random_flen',
-        help='Value to replace the default random_focal_length.',
+        "--random_flen",
+        help="Value to replace the default random_focal_length.",
         type=float,
-        required=False
+        required=False,
     )
     parser.add_argument(
-        '--test',
-        help='Test option will be faster by simulating only 10 mirrors.',
-        action='store_true'
+        "--no_tuning",
+        help="Turn off the tuning - A single case will be simulated and plotted.",
+        action="store_true",
     )
     parser.add_argument(
-        '-v',
-        '--verbosity',
-        dest='logLevel',
-        action='store',
-        default='info',
-        help='Log level to print (default is INFO).'
+        "--test",
+        help="Test option will be faster by simulating only 10 mirrors.",
+        action="store_true",
+    )
+    parser.add_argument(
+        "-v",
+        "--verbosity",
+        dest="logLevel",
+        action="store",
+        default="info",
+        help="Log level to print (default is INFO).",
     )
 
     args = parser.parse_args()
-    label = 'derive_mirror_rnda'
+    label = "derive_mirror_rnda"
 
     logger = logging.getLogger()
     logger.setLevel(gen.getLogLevelFromUser(args.logLevel))
 
     # Output directory to save files related directly to this app
-    outputDir = io.getApplicationOutputDirectory(cfg.get('outputLocation'), label)
+    outputDir = io.getApplicationOutputDirectory(cfg.get("outputLocation"), label)
 
     tel = TelescopeModel(
         site=args.site,
         telescopeModelName=args.telescope,
         modelVersion=args.model_version,
-        label=label
+        label=label,
     )
     if args.mirror_list is not None:
         mirrorListFile = cfg.findFile(name=args.mirror_list)
-        tel.changeParameter('mirror_list', args.mirror_list)
-        tel.addParameterFile('mirror_list', mirrorListFile)
+        tel.changeParameter("mirror_list", args.mirror_list)
+        tel.addParameterFile("mirror_list", mirrorListFile)
     if args.random_flen is not None:
-        tel.changeParameter('random_focal_length', str(args.random_flen))
+        tel.changeParameter("random_focal_length", str(args.random_flen))
 
     def run(rnda, plot=False):
-        ''' Runs the simulations for one given value of rnda '''
-        tel.changeParameter('mirror_reflection_random_angle', str(rnda))
+        """Runs the simulations for one given value of rnda"""
+        tel.changeParameter("mirror_reflection_random_angle", str(rnda))
         ray = RayTracing.fromKwargs(
             telescopeModel=tel,
             singleMirrorMode=True,
-            mirrorNumbers=list(range(1, 10)) if args.test else 'all',
-            useRandomFocalLength=args.use_random_flen
+            mirrorNumbers=list(range(1, 10)) if args.test else "all",
+            useRandomFocalLength=args.use_random_flen,
         )
         ray.simulate(test=False, force=True)  # force has to be True, always
         ray.analyze(force=True)
@@ -256,50 +247,53 @@ if __name__ == '__main__':
         if plot:
             plt.figure(figsize=(8, 6), tight_layout=True)
             ax = plt.gca()
-            ax.set_xlabel(r'D$_{80}$ [cm]')
+            ax.set_xlabel(r"D$_{80}$ [cm]")
 
             bins = np.linspace(0.8, 3.5, 27)
             ray.plotHistogram(
-                'd80_cm',
-                color='r',
-                linestyle='-',
+                "d80_cm",
+                color="r",
+                linestyle="-",
                 alpha=0.5,
-                facecolor='r',
-                edgecolor='r',
+                facecolor="r",
+                edgecolor="r",
                 bins=bins,
-                label='simulated'
+                label="simulated",
             )
             # Only plot measured D80 if the data is given
             if args.d80_list is not None:
                 d80ListFile = cfg.findFile(args.d80_list)
                 plotMeasuredDistribution(
                     d80ListFile,
-                    color='b',
-                    linestyle='-',
-                    facecolor='None',
-                    edgecolor='b',
+                    color="b",
+                    linestyle="-",
+                    facecolor="None",
+                    edgecolor="b",
                     bins=bins,
-                    label='measured'
+                    label="measured",
                 )
 
             ax.legend(frameon=False)
-            plotFileName = label + '_' + tel.name + '_' + 'D80-distributions'
+            plotFileName = label + "_" + tel.name + "_" + "D80-distributions"
             plotFile = outputDir.joinpath(plotFileName)
-            plt.savefig(str(plotFile) + '.pdf', format='pdf', bbox_inches='tight')
-            plt.savefig(str(plotFile) + '.png', format='png', bbox_inches='tight')
+            plt.savefig(str(plotFile) + ".pdf", format="pdf", bbox_inches="tight")
+            plt.savefig(str(plotFile) + ".png", format="png", bbox_inches="tight")
 
-        return ray.getMean('d80_cm').to(u.cm).value, ray.getStdDev('d80_cm').to(u.cm).value
+        return (
+            ray.getMean("d80_cm").to(u.cm).value,
+            ray.getStdDev("d80_cm").to(u.cm).value,
+        )
 
     # First - rnda from previous model
     if args.rnda != 0:
         rndaStart = args.rnda
     else:
-        rndaStart = tel.getParameter('mirror_reflection_random_angle')
+        rndaStart = tel.getParameter("mirror_reflection_random_angle")["Value"]
         if isinstance(rndaStart, str):
             rndaStart = rndaStart.split()
             rndaStart = float(rndaStart[0])
 
-    if not args.no_tunning:
+    if not args.no_tuning:
         resultsRnda = list()
         resultsMean = list()
         resultsSig = list()
@@ -318,13 +312,15 @@ if __name__ == '__main__':
             newRnda = rnda - (0.1 * rndaStart * signDelta)
             meanD80, sigD80 = run(newRnda)
             newSignDelta = np.sign(meanD80 - args.mean_d80)
-            stop = (newSignDelta != signDelta)
+            stop = newSignDelta != signDelta
             signDelta = newSignDelta
             rnda = newRnda
             collectResults(rnda, meanD80, sigD80)
 
         # Linear interpolation using two last rnda values
-        resultsRnda, resultsMean, resultsSig = gen.sortArrays(resultsRnda, resultsMean, resultsSig)
+        resultsRnda, resultsMean, resultsSig = gen.sortArrays(
+            resultsRnda, resultsMean, resultsSig
+        )
         rndaOpt = np.interp(x=args.mean_d80, xp=resultsMean, fp=resultsRnda)
     else:
         rndaOpt = rndaStart
@@ -333,63 +329,67 @@ if __name__ == '__main__':
     meanD80, sigD80 = run(rndaOpt, plot=True)
 
     # Printing results to stdout
-    print('\nMeasured D80:')
+    print("\nMeasured D80:")
     if args.sig_d80 is not None:
-        print('Mean = {:.3f} cm, StdDev = {:.3f} cm'.format(args.mean_d80, args.sig_d80))
+        print(
+            "Mean = {:.3f} cm, StdDev = {:.3f} cm".format(args.mean_d80, args.sig_d80)
+        )
     else:
-        print('Mean = {:.3f} cm'.format(args.mean_d80))
-    print('\nSimulated D80:')
-    print('Mean = {:.3f} cm, StdDev = {:.3f} cm'.format(meanD80, sigD80))
-    print('\nmirror_random_reflection_angle')
-    print('Previous value = {:.6f}'.format(rndaStart))
-    print('New value = {:.6f}\n'.format(rndaOpt))
+        print("Mean = {:.3f} cm".format(args.mean_d80))
+    print("\nSimulated D80:")
+    print("Mean = {:.3f} cm, StdDev = {:.3f} cm".format(meanD80, sigD80))
+    print("\nmirror_random_reflection_angle")
+    print("Previous value = {:.6f}".format(rndaStart))
+    print("New value = {:.6f}\n".format(rndaOpt))
 
     # Plotting D80 vs rnda
     plt.figure(figsize=(8, 6), tight_layout=True)
     ax = plt.gca()
-    ax.set_xlabel(r'mirror$\_$random$\_$reflection$\_$angle')
-    ax.set_ylabel(r'$D_{80}$ [cm]')
+    ax.set_xlabel(r"mirror$\_$random$\_$reflection$\_$angle")
+    ax.set_ylabel(r"$D_{80}$ [cm]")
 
-    if not args.no_tunning:
+    if not args.no_tuning:
         ax.errorbar(
             resultsRnda,
             resultsMean,
             yerr=resultsSig,
-            color='k',
-            marker='o',
-            linestyle='none'
+            color="k",
+            marker="o",
+            linestyle="none",
         )
     ax.errorbar(
         [rndaOpt],
         [meanD80],
         yerr=[sigD80],
-        color='r',
-        marker='o',
-        linestyle='none',
-        label='rnda = {:.6f} (D80 = {:.3f} +/- {:.3f} cm)'.format(rndaOpt, meanD80, sigD80)
+        color="r",
+        marker="o",
+        linestyle="none",
+        label="rnda = {:.6f} (D80 = {:.3f} +/- {:.3f} cm)".format(
+            rndaOpt, meanD80, sigD80
+        ),
     )
 
     xlim = ax.get_xlim()
-    ax.plot(xlim, [args.mean_d80, args.mean_d80], color='k', linestyle='-')
+    ax.plot(xlim, [args.mean_d80, args.mean_d80], color="k", linestyle="-")
     if args.sig_d80 is not None:
         ax.plot(
             xlim,
             [args.mean_d80 + args.sig_d80, args.mean_d80 + args.sig_d80],
-            color='k',
-            linestyle=':',
-            marker=','
+            color="k",
+            linestyle=":",
+            marker=",",
         )
         ax.plot(
             xlim,
             [args.mean_d80 - args.sig_d80, args.mean_d80 - args.sig_d80],
-            color='k',
-            linestyle=':',
-            marker=','
+            color="k",
+            linestyle=":",
+            marker=",",
         )
 
-    ax.legend(frameon=False, loc='upper left')
+    ax.legend(frameon=False, loc="upper left")
 
-    plotFileName = label + '_' + tel.name
+    plotFileName = label + "_" + tel.name
     plotFile = outputDir.joinpath(plotFileName)
-    plt.savefig(str(plotFile) + '.pdf', format='pdf', bbox_inches='tight')
-    plt.savefig(str(plotFile) + '.png', format='png', bbox_inches='tight')
+    plt.savefig(str(plotFile) + ".pdf", format="pdf", bbox_inches="tight")
+    plt.savefig(str(plotFile) + ".png", format="png", bbox_inches="tight")

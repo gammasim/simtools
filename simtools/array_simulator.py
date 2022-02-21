@@ -1,4 +1,3 @@
-
 import logging
 import os
 import numpy as np
@@ -16,7 +15,7 @@ from simtools.simtel.simtel_histograms import SimtelHistograms
 from simtools.simtel.simtel_runner_array import SimtelRunnerArray
 
 
-__all__ = ['ArraySimulator']
+__all__ = ["ArraySimulator"]
 
 
 class MissingRequiredEntryInArrayConfig(Exception):
@@ -24,7 +23,7 @@ class MissingRequiredEntryInArrayConfig(Exception):
 
 
 class ArraySimulator:
-    '''
+    """
     ArraySimulator is responsible for managing simulation of array of telescopes. \
     It interfaces with simulation software-specific packages, like sim_telarray.
 
@@ -81,7 +80,7 @@ class ArraySimulator:
         Print list of output files.
     printListOfLogFiles():
         Print list of log files.
-    '''
+    """
 
     def __init__(
         self,
@@ -89,9 +88,9 @@ class ArraySimulator:
         filesLocation=None,
         simtelSourcePath=None,
         configData=None,
-        configFile=None
+        configFile=None,
     ):
-        '''
+        """
         ArraySimulator init.
 
         Parameters
@@ -107,19 +106,18 @@ class ArraySimulator:
             Dict with configurable data.
         configFile: str or Path
             Path to yaml file containing configurable data.
-        '''
+        """
         self._logger = logging.getLogger(__name__)
-        self._logger.debug('Init ArraySimulator')
+        self._logger.debug("Init ArraySimulator")
 
         self.label = label
 
-        self._simtelSourcePath = Path(cfg.getConfigArg('simtelPath', simtelSourcePath))
-        self._filesLocation = cfg.getConfigArg('outputLocation', filesLocation)
+        self._simtelSourcePath = Path(cfg.getConfigArg("simtelPath", simtelSourcePath))
+        self._filesLocation = cfg.getConfigArg("outputLocation", filesLocation)
 
         # File location
         self._baseDirectory = io.getArraySimulatorOutputDirectory(
-            self._filesLocation,
-            self.label
+            self._filesLocation, self.label
         )
 
         configData = gen.collectDataFromYamlOrDict(configFile, configData)
@@ -127,61 +125,72 @@ class ArraySimulator:
         self._setSimtelRunner()
 
         # Storing list of files
+<<<<<<< HEAD
         self._results = defaultdict(list)
+=======
+        self._results = dict()
+        self._results["output"] = list()
+        self._results["hist"] = list()
+        self._results["input"] = list()
+        self._results["log"] = list()
+
+>>>>>>> master
     # End of init
 
     def _loadArrayConfigData(self, configData):
-        ''' Load configData, create arrayModel and store reamnining parameters in config. '''
+        """Load configData, create arrayModel and store remaining parameters in config."""
         _arrayModelConfig, _restConfig = self._collectArrayModelParameters(configData)
 
-        _parameterFile = io.getDataFile('parameters', 'array-simulator_parameters.yml')
+        _parameterFile = io.getDataFile("parameters", "array-simulator_parameters.yml")
         _parameters = gen.collectDataFromYamlOrDict(_parameterFile, None)
         self.config = gen.validateConfigData(_restConfig, _parameters)
 
-        self.arrayModel = ArrayModel(label=self.label, arrayConfigData=_arrayModelConfig)
+        self.arrayModel = ArrayModel(
+            label=self.label, arrayConfigData=_arrayModelConfig
+        )
 
     def _collectArrayModelParameters(self, configData):
-        '''
+        """
         Separate parameters from configData into parameters to create the arrayModel
-        and reamnining parameters to be stored in config.
-        '''
+        and remaining parameters to be stored in config.
+        """
         _arrayModelData = dict()
         _restData = copy(configData)
 
         try:
-            _arrayModelData['site'] = _restData.pop('site')
-            _arrayModelData['layoutName'] = _restData.pop('layoutName')
-            _arrayModelData['modelVersion'] = _restData.pop('modelVersion')
-            _arrayModelData['default'] = _restData.pop('default')
+            _arrayModelData["site"] = _restData.pop("site")
+            _arrayModelData["layoutName"] = _restData.pop("layoutName")
+            _arrayModelData["modelVersion"] = _restData.pop("modelVersion")
+            _arrayModelData["default"] = _restData.pop("default")
         except KeyError:
-            msg = 'site, layoutName, modelVersion and/or default were not given in configData'
+            msg = "site, layoutName, modelVersion and/or default were not given in configData"
             self._logger.error(msg)
             raise MissingRequiredEntryInArrayConfig(msg)
 
         # Grabbing the telescope keys
-        telKeys = [k for k in _restData.keys() if k[0:2] in ['L-', 'M-', 'S-']]
+        telKeys = [k for k in _restData.keys() if k[0:2] in ["L-", "M-", "S-"]]
         for key in telKeys:
             _arrayModelData[key] = _restData.pop(key)
 
         return _arrayModelData, _restData
 
     def _setSimtelRunner(self):
-        ''' Creating a SimtelRunnerArray. '''
+        """Creating a SimtelRunnerArray."""
         self._simtelRunner = SimtelRunnerArray(
             label=self.label,
             arrayModel=self.arrayModel,
             simtelSourcePath=self._simtelSourcePath,
             filesLocation=self._filesLocation,
             configData={
-                'simtelDataDirectory': self.config.dataDirectory,
-                'primary': self.config.primary,
-                'zenithAngle': self.config.zenithAngle * u.deg,
-                'azimuthAngle': self.config.azimuthAngle * u.deg
-            }
+                "simtelDataDirectory": self.config.dataDirectory,
+                "primary": self.config.primary,
+                "zenithAngle": self.config.zenithAngle * u.deg,
+                "azimuthAngle": self.config.azimuthAngle * u.deg,
+            },
         )
 
     def _fillResultsWithoutRun(self, inputFileList):
-        ''' Fill in the results dict wihtout calling run or submit. '''
+        """Fill in the results dict without calling run or submit."""
         inputFileList = self._makeInputList(inputFileList)
 
         for file in inputFileList:
@@ -189,7 +198,7 @@ class ArraySimulator:
             self._fillResults(file, run)
 
     def run(self, inputFileList):
-        '''
+        """
         Run simulation.
 
         Parameters
@@ -197,22 +206,22 @@ class ArraySimulator:
         inputFileList: str or list of str
             Single file or list of files of shower simulations.
 
-        '''
+        """
         inputFileList = self._makeInputList(inputFileList)
 
         for file in inputFileList:
             run = self._guessRunFromFile(file)
 
-            self._logger.info('Running scripts for run {}'.format(run))
+            self._logger.info("Running scripts for run {}".format(run))
 
             runScript = self._simtelRunner.getRunScript(run=run)
-            self._logger.info('Run {} - Running script {}'.format(run, runScript))
+            self._logger.info("Run {} - Running script {}".format(run, runScript))
             os.system(runScript)
 
             self._fillResults(file, run)
 
     def submit(self, inputFileList, submitCommand=None, extraCommands=None, test=False):
-        '''
+        """
         Submit a run script as a job. The submit command can be given by \
         submitCommand or it will be taken from the config.yml file.
 
@@ -226,22 +235,23 @@ class ArraySimulator:
             Extra commands to be added to the run script before the run command,
         test: bool
             If True, job is not submitted.
-        '''
+        """
 
-        subCmd = submitCommand if submitCommand is not None else cfg.get('submissionCommand')
-        self._logger.info('Submission command: {}'.format(subCmd))
+        subCmd = (
+            submitCommand if submitCommand is not None else cfg.get("submissionCommand")
+        )
+        self._logger.info("Submission command: {}".format(subCmd))
 
         inputFileList = self._makeInputList(inputFileList)
 
-        self._logger.info('Starting submission')
+        self._logger.info("Starting submission")
         for file in inputFileList:
             run = self._guessRunFromFile(file)
 
             runScript = self._simtelRunner.getRunScript(
-                run=run,
-                inputFile=file,
-                extraCommands=extraCommands
+                run=run, inputFile=file, extraCommands=extraCommands
             )
+<<<<<<< HEAD
 
             thisSubCmd = copy(subCmd)
 
@@ -257,6 +267,11 @@ class ArraySimulator:
             self._logger.info('Run {} - Submitting script {}'.format(run, runScript))
 
             shellCommand = thisSubCmd + ' ' + str(runScript)
+=======
+            self._logger.info("Run {} - Submitting script {}".format(run, runScript))
+
+            shellCommand = subCmd + " " + str(runScript)
+>>>>>>> master
             self._logger.debug(shellCommand)
             if not test:
                 os.system(shellCommand)
@@ -264,39 +279,47 @@ class ArraySimulator:
             self._fillResults(file, run)
 
     def _makeInputList(self, inputFileList):
-        ''' Enforce the input list to be a list. '''
+        """Enforce the input list to be a list."""
         if not isinstance(inputFileList, list):
             return [inputFileList]
         else:
             return inputFileList
 
     def _guessRunFromFile(self, file):
-        '''
+        """
         Finds the run number for a given input file name.
         Input file names must follow 'run1234_*' pattern.
         If not found, returns 1.
-        '''
+        """
         fileName = str(Path(file).name)
-        runStr = fileName[3:fileName.find('_')]
+        runStr = fileName[3 : fileName.find("_")]
 
         try:
             runNumber = int(runStr)
             return runNumber
         except ValueError:
-            msg = 'Run number could not be guessed from the input file name - using run = 1'
+            msg = "Run number could not be guessed from the input file name - using run = 1"
             self._logger.warning(msg)
             return 1
 
     def _fillResults(self, file, run):
+<<<<<<< HEAD
         ''' Fill the results dict with input, output and log files. '''
         self._results['input'].append(str(file))
         self._results['output'].append(str(self._simtelRunner.getOutputFile(run)))
         self._results['hist'].append(str(self._simtelRunner.getHistogramFile(run)))
         self._results['log'].append(str(self._simtelRunner.getLogFile(run)))
         self._results['sub_out'].append(str(self._simtelRunner.getSubLogFile(run, mode='out')))
+=======
+        """Fill the results dict with input, output and log files."""
+        self._results["input"].append(str(file))
+        self._results["output"].append(str(self._simtelRunner.getOutputFile(run)))
+        self._results["hist"].append(str(self._simtelRunner.getHistogramFile(run)))
+        self._results["log"].append(str(self._simtelRunner.getLogFile(run)))
+>>>>>>> master
 
     def printHistograms(self, inputFileList=None):
-        '''
+        """
         Print histograms and save a pdf file.
 
         Parameters
@@ -308,12 +331,12 @@ class ArraySimulator:
         -------
         path
             Path of the pdf file.
-        '''
+        """
 
-        if len(self._results['hist']) == 0 and inputFileList is not None:
+        if len(self._results["hist"]) == 0 and inputFileList is not None:
             self._fillResultsWithoutRun(inputFileList)
 
-        figName = self._baseDirectory.joinpath('histograms.pdf')
+        figName = self._baseDirectory.joinpath("histograms.pdf")
         histFileList = self.getListOfHistogramFiles()
         simtelHistograms = SimtelHistograms(histFileList)
         simtelHistograms.plotAndSaveFigures(figName)
@@ -321,77 +344,78 @@ class ArraySimulator:
         return figName
 
     def getListOfOutputFiles(self):
-        '''
+        """
         Get list of output files.
 
         Returns
         -------
         list
             List with the full path of all the output files.
-        '''
-        self._logger.info('Getting list of output files')
-        return self._results['output']
+        """
+        self._logger.info("Getting list of output files")
+        return self._results["output"]
 
     def getListOfHistogramFiles(self):
-        '''
+        """
         Get list of histogram files.
 
         Returns
         -------
         list
             List with the full path of all the histogram files.
-        '''
-        self._logger.info('Getting list of histogram files')
-        return self._results['hist']
+        """
+        self._logger.info("Getting list of histogram files")
+        return self._results["hist"]
 
     def getListOfInputFiles(self):
-        '''
+        """
         Get list of input files.
 
         Returns
         -------
         list
-            List with the full path of all the intput files.
-        '''
-        self._logger.info('Getting list of input files')
-        return self._results['input']
+            List with the full path of all the input files.
+        """
+        self._logger.info("Getting list of input files")
+        return self._results["input"]
 
     def getListOfLogFiles(self):
-        '''
+        """
         Get list of log files.
 
         Returns
         -------
         list
             List with the full path of all the log files.
-        '''
-        self._logger.info('Getting list of log files')
-        return self._results['log']
+        """
+        self._logger.info("Getting list of log files")
+        return self._results["log"]
 
     def printListOfOutputFiles(self):
-        ''' Print list of output files. '''
-        self._logger.info('Printing list of output files')
-        self._printListOfFiles(which='output')
+        """Print list of output files."""
+        self._logger.info("Printing list of output files")
+        self._printListOfFiles(which="output")
 
     def printListOfHistogramFiles(self):
-        ''' Print list of histogram files. '''
-        self._logger.info('Printing list of histogram files')
-        self._printListOfFiles(which='hist')
+        """Print list of histogram files."""
+        self._logger.info("Printing list of histogram files")
+        self._printListOfFiles(which="hist")
 
     def printListOfInputFiles(self):
-        ''' Print list of output files. '''
-        self._logger.info('Printing list of input files')
-        self._printListOfFiles(which='input')
+        """Print list of output files."""
+        self._logger.info("Printing list of input files")
+        self._printListOfFiles(which="input")
 
     def printListOfLogFiles(self):
-        ''' Print list of log files. '''
-        self._logger.info('Printing list of log files')
-        self._printListOfFiles(which='log')
+        """Print list of log files."""
+        self._logger.info("Printing list of log files")
+        self._printListOfFiles(which="log")
 
     def _printListOfFiles(self, which):
         for f in self._results[which]:
             print(f)
 
+<<<<<<< HEAD
     def makeResourcesReport(self, inputFileList):
 
         if len(self._results['log_out']) == 0 and inputFileList is not None:
@@ -421,5 +445,7 @@ class ArraySimulator:
             print('{} = {:.2f}'.format(key, value))
         print('-----------------------------')
 
+=======
+>>>>>>> master
 
 # End of ShowerSimulator
