@@ -1,11 +1,11 @@
 import os
 
 
-CONFIG_FILE_MSG = "Configuration file is not available"
+CONFIG_FILE_MSG = "The simtools configuration file (config.yml) is not available"
 
-DB_CONNECTION_MSG = "There is not connection with DB"
+DB_CONNECTION_MSG = "Connection with the DB is not available"
 
-SIMTEL_MSG = "sim_telarray is not installed"
+SIMTEL_MSG = "sim_telarray installation is not available"
 
 
 def _collect_conftest_flag(name):
