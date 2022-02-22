@@ -307,7 +307,7 @@ class RayTracing:
                     telTransmissionPars, thisOffAxis
                 )
                 image = PSFImage(focalLength, None)
-                image.readSimtelFile(photonsFile)
+                image.readPhotoListFromSimtelFile(photonsFile)
                 self._psfImages[thisOffAxis] = copy(image)
 
                 if not doAnalyze:
