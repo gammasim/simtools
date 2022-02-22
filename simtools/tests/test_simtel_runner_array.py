@@ -45,6 +45,7 @@ class TestSimtelRunnerArray(unittest.TestCase):
     def test_run(self):
         self.simtelRunner.run(test=False, force=True, inputFile=self.corsikaFile, run=1)
 
+    @pytest.mark.skipif(not simtel_installed(), reason=SIMTEL_MSG)
     def test_run_script(self):
         script = self.simtelRunner.getRunScript(run=1, inputFile=self.corsikaFile)
         assert Path(script).exists()
