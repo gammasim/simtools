@@ -9,7 +9,12 @@ import astropy.units as u
 
 import simtools.io_handler as io
 from simtools.array_simulator import ArraySimulator, MissingRequiredEntryInArrayConfig
-from simtools.util.tests import has_db_connection, DB_CONNECTION_MSG
+from simtools.util.tests import (
+    has_db_connection,
+    has_config_file,
+    DB_CONNECTION_MSG,
+    CONFIG_FILE_MSG,
+)
 
 
 logger = logging.getLogger()
@@ -39,6 +44,7 @@ class TestArraySimulator(unittest.TestCase):
             "run1_proton_za20deg_azm0deg-North-1LST_trigger_rates.corsika.zst"
         )
 
+    @pytest.mark.skipif(not has_config_file(), reason=CONFIG_FILE_MSG)
     def test_guess_run(self):
         run = self.arraySimulator._guessRunFromFile("run12345_bla_ble")
         self.assertEqual(run, 12345)
@@ -47,6 +53,7 @@ class TestArraySimulator(unittest.TestCase):
         run = self.arraySimulator._guessRunFromFile("run1test2_bla_ble")
         self.assertEqual(run, 1)
 
+    @pytest.mark.skipif(not has_config_file(), reason=CONFIG_FILE_MSG)
     def test_invalid_array_data(self):
         newArrayConfigData = copy(self.arrayConfigData)
         newArrayConfigData.pop("site")
