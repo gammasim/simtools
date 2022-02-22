@@ -1,13 +1,15 @@
 #!/usr/bin/python3
 
+import pytest
 import logging
-import subprocess
 import unittest
+import subprocess
 from pathlib import Path
 
 import simtools.config as cfg
 import simtools.io_handler as io
 from simtools import db_handler
+from simtools.util.tests import has_db_connection, DB_CONNECTION_MSG
 
 
 class TestDBHandler(unittest.TestCase):
@@ -19,6 +21,7 @@ class TestDBHandler(unittest.TestCase):
         self.testDataDirectory = io.getTestOutputDirectory()
         self.DB_CTA_SIMULATION_MODEL = "CTA-Simulation-Model"
 
+    @pytest.mark.skipif(not has_db_connection(), reason=DB_CONNECTION_MSG)
     def test_reading_db_lst(self):
 
         self.logger.info("----Testing reading LST-----")
@@ -34,6 +37,7 @@ class TestDBHandler(unittest.TestCase):
         self.logger.info("Listing files written in {}".format(self.testDataDirectory))
         subprocess.call(["ls -lh {}".format(self.testDataDirectory)], shell=True)
 
+    @pytest.mark.skipif(not has_db_connection(), reason=DB_CONNECTION_MSG)
     def test_reading_db_mst_nc(self):
 
         self.logger.info("----Testing reading MST-NectarCam-----")
@@ -51,6 +55,7 @@ class TestDBHandler(unittest.TestCase):
         )
         subprocess.call(["rm -f {}/*".format(self.testDataDirectory)], shell=True)
 
+    @pytest.mark.skipif(not has_db_connection(), reason=DB_CONNECTION_MSG)
     def test_reading_db_mst_fc(self):
 
         self.logger.info("----Testing reading MST-FlashCam-----")
@@ -68,6 +73,7 @@ class TestDBHandler(unittest.TestCase):
         )
         subprocess.call(["rm -f {}/*".format(self.testDataDirectory)], shell=True)
 
+    @pytest.mark.skipif(not has_db_connection(), reason=DB_CONNECTION_MSG)
     def test_reading_db_sst(self):
 
         self.logger.info("----Testing reading SST-----")
@@ -85,11 +91,8 @@ class TestDBHandler(unittest.TestCase):
         )
         subprocess.call(["rm -f {}/*".format(self.testDataDirectory)], shell=True)
 
+    @pytest.mark.skipif(not has_db_connection(), reason=DB_CONNECTION_MSG)
     def test_copy_telescope_db(self):
-
-        # This test is only relevant for the MongoDB
-        if not cfg.get("useMongoDB"):
-            return
 
         self.logger.info("----Testing copying a whole telescope-----")
         self.db.copyTelescope(
@@ -118,11 +121,8 @@ class TestDBHandler(unittest.TestCase):
         query = {"Entry": "Simulation-Model-Tags"}
         self.db.deleteQuery("sandbox", "metadata", query)
 
+    @pytest.mark.skipif(not has_db_connection(), reason=DB_CONNECTION_MSG)
     def test_adding_parameter_version_db(self):
-
-        # This test is only relevant for the MongoDB
-        if not cfg.get("useMongoDB"):
-            return
 
         self.logger.info("----Testing adding a new version of a parameter-----")
         self.db.copyTelescope(
@@ -143,11 +143,8 @@ class TestDBHandler(unittest.TestCase):
         query = {"Telescope": "North-LST-Test"}
         self.db.deleteQuery("sandbox", "telescopes", query)
 
+    @pytest.mark.skipif(not has_db_connection(), reason=DB_CONNECTION_MSG)
     def test_update_parameter_db(self):
-
-        # This test is only relevant for the MongoDB
-        if not cfg.get("useMongoDB"):
-            return
 
         self.logger.info("----Testing updating a parameter-----")
         self.db.copyTelescope(
@@ -171,11 +168,8 @@ class TestDBHandler(unittest.TestCase):
         query = {"Telescope": "North-LST-Test"}
         self.db.deleteQuery("sandbox", "telescopes", query)
 
+    @pytest.mark.skipif(not has_db_connection(), reason=DB_CONNECTION_MSG)
     def test_adding_new_parameter_db(self):
-
-        # This test is only relevant for the MongoDB
-        if not cfg.get("useMongoDB"):
-            return
 
         self.logger.info("----Testing adding a new parameter-----")
         self.db.copyTelescope(
@@ -196,11 +190,8 @@ class TestDBHandler(unittest.TestCase):
         query = {"Telescope": "North-LST-Test"}
         self.db.deleteQuery("sandbox", "telescopes", query)
 
+    @pytest.mark.skipif(not has_db_connection(), reason=DB_CONNECTION_MSG)
     def test_reading_db_sites(self):
-
-        # This test is only relevant for the MongoDB
-        if not cfg.get("useMongoDB"):
-            return
 
         self.logger.info("----Testing reading La Palma parameters-----")
         pars = self.db.getSiteParameters("North", "Current")
@@ -234,6 +225,7 @@ class TestDBHandler(unittest.TestCase):
 
         return
 
+    @pytest.mark.skipif(not has_db_connection(), reason=DB_CONNECTION_MSG)
     def test_separating_get_and_write(self):
         pars = self.db.getModelParameters("north", "lst-1", "prod4")
 
@@ -245,11 +237,8 @@ class TestDBHandler(unittest.TestCase):
         self.logger.info("Listing files written in {}".format(self.testDataDirectory))
         subprocess.call(["ls -lh {}".format(self.testDataDirectory)], shell=True)
 
+    @pytest.mark.skipif(not has_db_connection(), reason=DB_CONNECTION_MSG)
     def test_insert_files_db(self):
-
-        # This test is only relevant for the MongoDB
-        if not cfg.get("useMongoDB"):
-            return
 
         self.logger.info("----Testing inserting files to the DB-----")
         self.logger.info(
