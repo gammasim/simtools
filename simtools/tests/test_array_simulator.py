@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 
+import pytest
 import logging
 import unittest
 from copy import copy
@@ -8,6 +9,8 @@ import astropy.units as u
 
 import simtools.io_handler as io
 from simtools.array_simulator import ArraySimulator, MissingRequiredEntryInArrayConfig
+from simtools.util.tests import has_db_connection, DB_CONNECTION_MSG
+
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
@@ -53,14 +56,17 @@ class TestArraySimulator(unittest.TestCase):
                 configData=newArrayConfigData
             )
 
+    @pytest.mark.skipif(not has_db_connection(), reason=DB_CONNECTION_MSG)
     def test_run(self):
         self.arraySimulator.run(inputFileList=self.corsikaFile)
 
+    @pytest.mark.skipif(not has_db_connection(), reason=DB_CONNECTION_MSG)
     def test_submitting(self):
         self.arraySimulator.submit(
             inputFileList=self.corsikaFile, submitCommand="more "
         )
 
+    @pytest.mark.skipif(not has_db_connection(), reason=DB_CONNECTION_MSG)
     def test_list_of_files(self):
         self.arraySimulator.submit(
             inputFileList=self.corsikaFile, submitCommand="more ", test=True
