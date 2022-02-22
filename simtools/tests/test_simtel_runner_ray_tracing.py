@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 
+import pytest
 import logging
 import unittest
 
@@ -7,6 +8,8 @@ import astropy.units as u
 
 from simtools.simtel.simtel_runner_ray_tracing import SimtelRunnerRayTracing
 from simtools.model.telescope_model import TelescopeModel
+from simtools.util.tests import simtel_installed, SIMTEL_MSG
+
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
@@ -30,6 +33,7 @@ class TestSimtelRunnerRayTracing(unittest.TestCase):
             },
         )
 
+    @pytest.mark.skipif(not simtel_installed(), reason=SIMTEL_MSG)
     def test_run(self):
         self.simtelRunner.run(test=True, force=True)
 
