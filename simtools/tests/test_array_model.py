@@ -4,13 +4,18 @@ import pytest
 import logging
 
 from simtools.model.array_model import ArrayModel
-from simtools.util.tests import has_db_connection, DB_CONNECTION_MSG
-
+from simtools.util.tests import (
+    has_db_connection,
+    has_config_file,
+    DB_CONNECTION_MSG,
+    CONFIG_FILE_MSG,
+)
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 
+@pytest.mark.skipif(not has_config_file(), reason=CONFIG_FILE_MSG)
 def test_input_validation():
     arrayConfigData = {
         "site": "North",
