@@ -1,5 +1,4 @@
 import os
-import yaml
 import logging
 
 import simtools.config as cfg
