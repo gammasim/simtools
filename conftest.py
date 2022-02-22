@@ -2,7 +2,7 @@ import os
 import logging
 
 import simtools.config as cfg
-import simtools.db_handler as db
+from simtools import db_handler
 
 logger = logging.getLogger()
 
@@ -33,11 +33,16 @@ else:
         os.environ["HAS_DB_CONNECTION"] = "0"
     else:
         # Trying to connect to the DB
-        db.DatabaseHandler()
-        os.environ["HAS_DB_CONNECTION"] = "1"
-        print('DB CONNECTEDDDDDDDDDDDDDD')
-
-    logger.debug("Setting HAS_DB_CONNECTION = {}".format(os.environ["HAS_DB_CONNECTION"]))
+        db = db_handler.DatabaseHandler()
+        try:
+            db.getModelParameters("north", "lst-1", "Current")
+            os.environ["HAS_DB_CONNECTION"] = "1"
+            logger.debug("DB connection is available")
+            logger.debug("Setting HAS_DB_CONNECTION = 1")
+        except Exception:
+            os.environ["HAS_DB_CONNECTION"] = "0"
+            logger.debug("DB connection is NOT available")
+            logger.debug("Setting HAS_DB_CONNECTION = 0")
 
 
 def pytest_sessionfinish(session, exitstatus):
