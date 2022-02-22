@@ -47,4 +47,4 @@ else:
 
 def pytest_sessionfinish(session, exitstatus):
     """ Cleaning up output files before ending the pytest session. """
-    os.system('./clean_files')
+    os.system("./clean_files")
