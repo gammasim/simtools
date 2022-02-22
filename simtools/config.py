@@ -222,6 +222,7 @@ def createDummyConfigFile():
     """Create a dummy config.yml file to be used in test enviroments only."""
     config = {
         "useMongoDB": False,
+        "mongoDBConfigFile": None,
         "dataLocation": "./data/",
         "modelFilesLocations": ".",
         "simtelPath": ".",
