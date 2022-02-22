@@ -1,8 +1,8 @@
 #!/usr/bin/python3
 
+import pytest
 import logging
 import matplotlib.pyplot as plt
-import pytest
 from copy import copy
 
 import astropy.units as u
@@ -10,12 +10,18 @@ import astropy.units as u
 import simtools.io_handler as io
 from simtools.ray_tracing import RayTracing
 from simtools.model.telescope_model import TelescopeModel
-from simtools.util.tests import simtel_installed, SIMTEL_MSG
+from simtools.util.tests import (
+    has_db_connection,
+    simtel_installed,
+    SIMTEL_MSG,
+    DB_CONNECTION_MSG,
+)
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 
+@pytest.mark.skipif(not has_db_connection(), reason=DB_CONNECTION_MSG)
 @pytest.mark.skipif(not simtel_installed(), reason=SIMTEL_MSG)
 @pytest.mark.parametrize("telescopeModelName", ["sst-1M", "sst-ASTRI", "sst-GCT"])
 def test_ssts(telescopeModelName):
@@ -38,6 +44,7 @@ def test_ssts(telescopeModelName):
     ray.analyze(force=True)
 
 
+@pytest.mark.skipif(not has_db_connection(), reason=DB_CONNECTION_MSG)
 @pytest.mark.skipif(not simtel_installed(), reason=SIMTEL_MSG)
 def test_rx():
     version = "current"
@@ -86,6 +93,7 @@ def test_rx():
     plt.savefig(plotFileArea)
 
 
+@pytest.mark.skipif(not has_db_connection(), reason=DB_CONNECTION_MSG)
 @pytest.mark.skipif(not simtel_installed(), reason=SIMTEL_MSG)
 def test_plot_image():
     version = "prod3"
@@ -116,6 +124,7 @@ def test_plot_image():
         plt.savefig(plotFile)
 
 
+@pytest.mark.skipif(not has_db_connection(), reason=DB_CONNECTION_MSG)
 @pytest.mark.skipif(not simtel_installed(), reason=SIMTEL_MSG)
 def test_single_mirror(plot=False):
 
@@ -144,6 +153,7 @@ def test_single_mirror(plot=False):
     plt.savefig(plotFile)
 
 
+@pytest.mark.skipif(not has_db_connection(), reason=DB_CONNECTION_MSG)
 @pytest.mark.skipif(not simtel_installed(), reason=SIMTEL_MSG)
 def test_integral_curve():
     version = "prod4"
@@ -229,14 +239,3 @@ def test_from_kwargs():
 
     assert ray.config.zenithAngle == 30
     assert len(ray.config.offAxisAngle) == 2
-
-
-if __name__ == "__main__":
-
-    # test_ssts()
-    # test_rx()
-    test_single_mirror()
-    # test_plot_image()
-    # test_integral_curve()
-    # test_config_data()
-    # test_from_kwargs()
