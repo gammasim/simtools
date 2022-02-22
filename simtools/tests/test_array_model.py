@@ -1,8 +1,11 @@
 #!/usr/bin/python3
 
+import pytest
 import logging
 
 from simtools.model.array_model import ArrayModel
+from simtools.util.tests import has_db_connection, DB_CONNECTION_MSG
+
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
@@ -21,6 +24,7 @@ def test_input_validation():
     am.printTelescopeList()
 
 
+@pytest.mark.skipif(not has_db_connection(), reason=DB_CONNECTION_MSG)
 def test_exporting_config_files():
     arrayConfigData = {
         "site": "North",
@@ -37,8 +41,3 @@ def test_exporting_config_files():
 
     am.exportSimtelTelescopeConfigFiles()
     am.exportSimtelArrayConfigFile()
-
-
-if __name__ == "__main__":
-    # test_input_validation()
-    test_exporting_config_files()
