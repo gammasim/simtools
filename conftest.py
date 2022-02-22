@@ -1,4 +1,5 @@
 import os
+import yaml
 import logging
 
 import simtools.config as cfg
@@ -17,6 +18,10 @@ except FileNotFoundError:
     os.environ["HAS_CONFIG_FILE"] = "0"
     os.environ["SIMTEL_INSTALLED"] = "0"
     os.environ["HAS_DB_CONNECTION"] = "0"
+
+    # Creating a dummy config.yml file
+    cfg.createDummyConfigFile()
+
 else:
     os.environ["HAS_CONFIG_FILE"] = "1"
     logger.debug("simtools configuration found WAS found")
