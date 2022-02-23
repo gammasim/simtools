@@ -218,14 +218,14 @@ def findFile(name, loc=None):
     raise FileNotFoundError(msg)
 
 
-def createDummyConfigFile(filename='configDummy.yml'):
+def createDummyConfigFile(filename="config.yml"):
     """
     Create a dummy config.yml file to be used in test enviroments only.
 
     Parameters
     ----------
     filename: str
-        Name of the dummy config file (default=configDummy.yml)
+        Name of the dummy config file (default=config.yml)
     """
     config = {
         "useMongoDB": False,

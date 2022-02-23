@@ -19,9 +19,7 @@ except FileNotFoundError:
     os.environ["HAS_DB_CONNECTION"] = "0"
 
     # Creating a dummy config.yml file
-    configFilename = 'configDummy.yml'
-    cfg.createDummyConfigFile(configFilename)
-    cfg.setConfigFileName(configFilename)
+    cfg.createDummyConfigFile()
 
 else:
     os.environ["HAS_CONFIG_FILE"] = "1"
@@ -52,6 +50,9 @@ else:
 
 
 def pytest_sessionfinish(session, exitstatus):
-    """ Cleaning up output files before ending the pytest session. """
+    # Cleaning up output files before ending the pytest session
     os.system("./clean_files")
-    os.system("rm configDummy.yml | true")
+
+    # Removing dummy config file
+    if os.environ["HAS_CONFIG_FILE"] == "0":
+        os.system("rm config.yml")
