@@ -1,10 +1,12 @@
 #!/usr/bin/python3
 
+import pytest
 import logging
 import unittest
 
 import simtools.config as cfg
 from simtools.config import ParameterNotFoundInConfigFile
+from simtools.util.tests import has_config_file, CONFIG_FILE_MSG
 
 
 logging.getLogger().setLevel(logging.DEBUG)
@@ -34,6 +36,7 @@ class TestConfig(unittest.TestCase):
         print("cfg.CONFIG_FILE_NAME: {}".format(cfg.CONFIG_FILE_NAME))
         print("modelFilesLocations: {}".format(cfg.get("modelFilesLocations")))
 
+    @pytest.mark.skipif(not has_config_file(), reason=CONFIG_FILE_MSG)
     def test_find_file(self):
         files = ("mirror_MST_D80.dat", "parValues-LST.yml")
         for file in files:

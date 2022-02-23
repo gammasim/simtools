@@ -17,6 +17,10 @@ except FileNotFoundError:
     os.environ["HAS_CONFIG_FILE"] = "0"
     os.environ["SIMTEL_INSTALLED"] = "0"
     os.environ["HAS_DB_CONNECTION"] = "0"
+
+    # Creating a dummy config.yml file
+    cfg.createDummyConfigFile()
+
 else:
     os.environ["HAS_CONFIG_FILE"] = "1"
     logger.debug("simtools configuration found WAS found")
@@ -46,5 +50,9 @@ else:
 
 
 def pytest_sessionfinish(session, exitstatus):
-    """ Cleaning up output files before ending the pytest session. """
+    # Cleaning up output files before ending the pytest session
     os.system("./clean_files")
+
+    # Removing dummy config file
+    if os.environ["HAS_CONFIG_FILE"] == "0":
+        os.system("rm config.yml")
