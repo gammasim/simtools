@@ -1,6 +1,5 @@
 ---
 name: CI-sim_telarray
-# testing sim_telarray
 
 on:
   pull_request:
@@ -8,12 +7,14 @@ on:
     types: [opened, synchronize]
 
 jobs:
-
   sim_telarray:
+    name: sim_telarray testing
     runs-on: ubuntu-latest
-    container:
-      image: gernotmaier/gammasim-tools-dev:v0.1.1
-      run: |
-        node -v
-        cat /etc/os-release
-        /workdir/sim_telarray/sim_telarray/sim_telarray
+    steps:
+      - name: docker running
+        uses: addnab/docker-run-action@v3
+        with:
+          image: gernotmaier/gammasim-tools-dev:v0.1.1
+          options: -v ${{ github.workspace }}:/workdir/external
+          run: |
+            /workdir/sim_telarray/sim_telarray/sim_telarray
