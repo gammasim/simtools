@@ -47,8 +47,8 @@ jobs:
           mamba install -q pyflakes
           pyflakes .
 
-      #- name: Tests
-      #  shell: bash -leo pipefail {0}
-      #  run: |
-      #    shell: bash -l {0}
-      #    pytest
+      - name: Unit tests
+        shell: bash -leo pipefail {0}
+        run: |
+          shell: bash -l {0}
+          pytest
