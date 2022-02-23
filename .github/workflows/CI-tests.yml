@@ -54,6 +54,5 @@ jobs:
       - name: sim_telarray
         shell: bash -l {0}
         run: |
-          mkdir external
-          docker run --rm -it -v "$(pwd)/external:/workdir/external" gernotmaier/gammasim-tools-dev:v0.1.1 /workdir/sim_telarray/sim_telarray/sim_telarray
+          docker run --rm -it -v "$(pwd):/workdir/external" gernotmaier/gammasim-tools-dev:v0.1.1 /workdir/sim_telarray/sim_telarray/sim_telarray
       
