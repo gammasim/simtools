@@ -212,6 +212,7 @@ class TelescopeModel:
                 w = w.replace("=", "")
                 w = w.replace(",", " ")
                 parValue += w + " "
+            parValue = parValue.rstrip().lstrip()  # Removing trailing spaces (left and right)
             return parName, parValue
 
         with open(configFileName, "r") as file:
