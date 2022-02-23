@@ -228,6 +228,8 @@ class TelescopeModel:
 
         for par, value in parameters.items():
             tel.addParameter(par, value)
+
+        tel._isExportedModelFilesUpToDate = True
         return tel
 
     # End of fromConfigFile
