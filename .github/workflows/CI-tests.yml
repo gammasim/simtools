@@ -47,15 +47,6 @@ jobs:
           mamba install -q pyflakes
           pyflakes .
 
-#      - name: Unit tests
-#        shell: bash -l {0}
-#        run: pytest
-
-
-      - name: sim_telarray
-        container:
-          image: gernotmaier/gammasim-tools-dev:v0.1.1
-        run: |
-          node -v
-          cat /etc/os-release
-          /workdir/sim_telarray/sim_telarray/sim_telarray
+      - name: Unit tests
+        shell: bash -l {0}
+        run: pytest
