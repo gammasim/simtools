@@ -21,6 +21,26 @@ logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 
+@pytest.mark.skipif(not simtel_installed(), reason=SIMTEL_MSG)
+def test_run_no_db():
+    cfgFile = io.getTestDataFile("CTA-North-LST-1-Current_test-telescope-model.cfg")
+    configData = {
+        "sourceDistance": 10 * u.km,
+        "zenithAngle": 20 * u.deg,
+        "offAxisAngle": [0, 1.0, 2.0, 3.0, 4.0] * u.deg,
+    }
+    tel = TelescopeModel.fromConfigFile(
+        site="North",
+        telescopeModelName="LST-1",
+        label="test-run-no-db",
+        configFileName=cfgFile,
+    )
+
+    ray = RayTracing(telescopeModel=tel, configData=configData)
+    ray.simulate(test=True, force=True)
+    ray.analyze(force=True)
+
+
 @pytest.mark.skipif(not has_db_connection(), reason=DB_CONNECTION_MSG)
 @pytest.mark.skipif(not simtel_installed(), reason=SIMTEL_MSG)
 @pytest.mark.parametrize("telescopeModelName", ["sst-1M", "sst-ASTRI", "sst-GCT"])
@@ -239,3 +259,7 @@ def test_from_kwargs():
 
     assert ray.config.zenithAngle == 30
     assert len(ray.config.offAxisAngle) == 2
+
+
+if __name__ == "__main__":
+    test_run_no_db()
