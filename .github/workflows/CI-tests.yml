@@ -48,7 +48,5 @@ jobs:
           pyflakes .
 
       - name: Unit tests
-        shell: bash -leo pipefail {0}
-        run: |
-          shell: bash -l {0}
-          pytest
+        shell: bash -l {0}
+        run: pytest
