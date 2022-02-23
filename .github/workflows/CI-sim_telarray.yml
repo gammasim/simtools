@@ -1,0 +1,19 @@
+---
+name: CI-sim_telarray
+# testing sim_telarray
+
+on:
+  pull_request:
+    branches: [master]
+    types: [opened, synchronize]
+
+jobs:
+
+  sim_telarray:
+    runs-on: ubuntu-latest
+    container:
+      image: gernotmaier/gammasim-tools-dev:v0.1.1
+      run: |
+        node -v
+        cat /etc/os-release
+        /workdir/sim_telarray/sim_telarray/sim_telarray
