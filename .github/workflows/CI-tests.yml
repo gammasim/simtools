@@ -51,8 +51,11 @@ jobs:
 #        shell: bash -l {0}
 #        run: pytest
 
+
       - name: sim_telarray
-        shell: bash -l {0}
+        container:
+          image: gernotmaier/gammasim-tools-dev:v0.1.1
         run: |
-          docker run --rm -it gernotmaier/gammasim-tools-dev:v0.1.1 /workdir/sim_telarray/sim_telarray/sim_telarray
-      
+          node -v
+          cat /etc/os-release
+          /workdir/sim_telarray/sim_telarray/sim_telarray
