@@ -218,8 +218,15 @@ def findFile(name, loc=None):
     raise FileNotFoundError(msg)
 
 
-def createDummyConfigFile():
-    """Create a dummy config.yml file to be used in test enviroments only."""
+def createDummyConfigFile(filename='configDummy.yml'):
+    """
+    Create a dummy config.yml file to be used in test enviroments only.
+
+    Parameters
+    ----------
+    filename: str
+        Name of the dummy config file (default=configDummy.yml)
+    """
     config = {
         "useMongoDB": False,
         "mongoDBConfigFile": None,
@@ -229,5 +236,6 @@ def createDummyConfigFile():
         "outputLocation": ".",
         "extraCommands": []
     }
-    with open('config.yml', 'w') as outfile:
+
+    with open(filename, 'w') as outfile:
         yaml.dump(config, outfile)
