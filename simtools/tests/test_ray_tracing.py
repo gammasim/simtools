@@ -259,7 +259,3 @@ def test_from_kwargs():
 
     assert ray.config.zenithAngle == 30
     assert len(ray.config.offAxisAngle) == 2
-
-
-if __name__ == "__main__":
-    test_run_no_db()
