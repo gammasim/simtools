@@ -1,23 +1,34 @@
 #!/usr/bin/python3
 
+import pytest
 import logging
 import matplotlib.pyplot as plt
 
 import simtools.io_handler as io
 from simtools.model.telescope_model import TelescopeModel
 from simtools.camera_efficiency import CameraEfficiency
+from simtools.util.tests import (
+    has_db_connection,
+    simtel_installed,
+    DB_CONNECTION_MSG,
+    SIMTEL_MSG,
+)
+
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 
+@pytest.mark.skipif(not has_db_connection(), reason=DB_CONNECTION_MSG)
+@pytest.mark.skipif(not simtel_installed(), reason=SIMTEL_MSG)
 def test_main():
+    label = "test_camera_eff"
     tel = TelescopeModel(
-        site="north",
-        telescopeModelName="lst-1",
-        modelVersion="p3",
-        label="test_camera_eff",
+        site="North",
+        telescopeModelName="LST-1",
+        label=label
     )
+
     ce = CameraEfficiency(telescopeModel=tel)
     ce.simulate(force=True)
     ce.analyze(force=True)

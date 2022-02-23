@@ -76,6 +76,13 @@ def get(par):
     ----------
     par: str
         Name of the desired parameter.
+    allowNonExisting: bool (default=False)
+        If True, a non-existing parameter will return None (not raise and error)
+
+    Raises
+    ------
+    ParameterNotFoundInConfigFile
+        In case the parameter is not in config.
 
     Returns
     -------
@@ -209,3 +216,26 @@ def findFile(name, loc=None):
     msg = "File {} could not be found in {}".format(name, loc)
     _logger.error(msg)
     raise FileNotFoundError(msg)
+
+
+def createDummyConfigFile(filename="config.yml"):
+    """
+    Create a dummy config.yml file to be used in test enviroments only.
+
+    Parameters
+    ----------
+    filename: str
+        Name of the dummy config file (default=config.yml)
+    """
+    config = {
+        "useMongoDB": False,
+        "mongoDBConfigFile": None,
+        "dataLocation": "./data/",
+        "modelFilesLocations": ".",
+        "simtelPath": ".",
+        "outputLocation": ".",
+        "extraCommands": []
+    }
+
+    with open(filename, 'w') as outfile:
+        yaml.dump(config, outfile)
