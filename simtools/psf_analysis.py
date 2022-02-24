@@ -7,10 +7,11 @@ Author: Raul R Prado
 """
 
 import logging
+import numpy as np
+import matplotlib.pyplot as plt
 from math import sqrt, fabs, pi
 
-import matplotlib.pyplot as plt
-import numpy as np
+import astropy.units as u
 
 from simtools.util.general import collectKwargs, setDefaultKwargs
 
@@ -409,15 +410,25 @@ class PSFImage:
         circle = plt.Circle(center, self.getPSF(0.8) / 2, **kwargsForPSF)
         ax.add_artist(circle)
 
-    def getCumulativeData(self):
+    def getCumulativeData(self, radius=None):
         """
         Provide cumulative data (intensity vs radius).
+
+        Parameters
+        ----------
+        radius: array
+            Array with radius calculate the cumulative PSF in distance units.
 
         Returns
         -------
         (radius, intensity)
         """
-        radiusAll = list(np.linspace(0, 1.6 * self.getPSF(0.8), 30))
+
+        if radius is not None:
+            radiusAll = radius.to(u.cm)
+        else:
+            radiusAll = list(np.linspace(0, 1.6 * self.getPSF(0.8), 30))
+
         intensity = list()
         for rad in radiusAll:
             intensity.append(
