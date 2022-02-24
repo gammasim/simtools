@@ -50,6 +50,10 @@ class PSFImage:
         Plot image as a 2D histogram
     plotIntegral(**kwargs)
         Plot cumulative intensity as a function containing fraction.
+    getCumulativeData(radius=None)
+        Provide cumulative data (intensity vs radius).
+    plotCumulative(**kwargs):
+        Plot cumulative data (intensity vs radius).
     """
 
     def __init__(self, focalLength=None, totalScatteredArea=None):
