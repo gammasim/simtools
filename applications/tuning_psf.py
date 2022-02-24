@@ -75,6 +75,7 @@ import argparse
 import numpy as np
 import matplotlib.pyplot as plt
 from collections import OrderedDict
+from matplotlib.backends.backend_pdf import PdfPages
 
 import astropy.units as u
 
@@ -131,9 +132,6 @@ if __name__ == "__main__":
         "--data", help="Data file name with the measured PSF vs radius [cm]", type=str
     )
     parser.add_argument(
-        "--pars", help="Yaml file with the model parameters to be replaced", type=str
-    )
-    parser.add_argument(
         "--test",
         help="Test option will be faster by simulating fewer photons.",
         action="store_true",
@@ -163,28 +161,38 @@ if __name__ == "__main__":
         label=label,
     )
 
-    # New parameters
-    if args.pars is not None:
-        with open(args.pars) as file:
-            newPars = yaml.load(file, Loader=yaml.FullLoader)
-        telModel.changeMultipleParameters(**newPars)
+    grid = list()
 
-    ray = RayTracing.fromKwargs(
-        telescopeModel=telModel,
-        sourceDistance=args.src_distance * u.km,
-        zenithAngle=args.zenith * u.deg,
-        offAxisAngle=[0.0 * u.deg],
-    )
+    def addParametersToGrid(
+        mirror_reflection,
+        mirror_align,
+        mirror_reflection_fraction=0.15,
+        mirror_reflection_2=0.035
+    ):
+        pars = dict()
+        mrra = "{:.4f},{},{}".format(
+            mirror_reflection,
+            mirror_reflection_fraction,
+            mirror_reflection_2
+        )
+        pars["mirror_reflection_random_angle"] = mrra
+        mar = "{:.4f},28.,0.,0.".format(mirror_align)
+        pars["mirror_align_random_horizontal"] = mar
+        pars["mirror_align_random_vertical"] = mar
+        grid.append(pars)
 
-    ray.simulate(test=args.test, force=False)
-    ray.analyze(force=False)
+    addParametersToGrid(0.0070, 0.0040)
+    addParametersToGrid(0.0075, 0.0040)
+    addParametersToGrid(0.0080, 0.0040)
 
-    # Plotting cumulative PSF
-    im = ray.images()[0]
+    addParametersToGrid(0.0070, 0.0045)
+    addParametersToGrid(0.0075, 0.0045)
+    addParametersToGrid(0.0080, 0.0045)
 
-    print("d80 in cm = {}".format(im.getPSF()))
+    addParametersToGrid(0.0070, 0.0035)
+    addParametersToGrid(0.0075, 0.0035)
+    addParametersToGrid(0.0080, 0.0035)
 
-    # Plotting cumulative PSF
     # Measured cumulative PSF
     dataToPlot = OrderedDict()
     if args.data is not None:
@@ -192,27 +200,61 @@ if __name__ == "__main__":
         dataToPlot["measured"] = loadData(dataFile)
         radius = dataToPlot["measured"]["Radius [cm]"]
 
-    # Simulated cumulative PSF
-    dataToPlot[r"sim$\_$telarray"] = im.getCumulativeData(radius * u.cm)
+    pdfPages = PdfPages("test.pdf")
 
-    fig = visualize.plot1D(dataToPlot)
-    fig.gca().set_ylim(0, 1.05)
+    def calculateRMSD(data, sim):
+        return np.sqrt(np.mean((data - sim)**2))
 
-    plotFileName = label + "_" + telModel.name + "_cumulativePSF"
-    plotFile = outputDir.joinpath(plotFileName)
-    for f in ["pdf", "png"]:
-        plt.savefig(str(plotFile) + "." + f, format=f, bbox_inches="tight")
-    fig.clf()
+    for pars in grid:
+        telModel.changeMultipleParameters(**pars)
 
-    # Plotting image
-    dataToPlot = im.getImageData()
-    fig = visualize.plotHist2D(dataToPlot, bins=80)
-    circle = plt.Circle((0, 0), im.getPSF(0.8) / 2, color="k", fill=False, lw=2, ls="--")
-    fig.gca().add_artist(circle)
-    fig.gca().set_aspect("equal")
+        ray = RayTracing.fromKwargs(
+            telescopeModel=telModel,
+            sourceDistance=args.src_distance * u.km,
+            zenithAngle=args.zenith * u.deg,
+            offAxisAngle=[0.0 * u.deg],
+        )
 
-    plotFileName = label + "_" + telModel.name + "_image"
-    plotFile = outputDir.joinpath(plotFileName)
-    for f in ["pdf", "png"]:
-        fig.savefig(str(plotFile) + "." + f, format=f, bbox_inches="tight")
-    fig.clf()
+        ray.simulate(test=args.test, force=False)
+        ray.analyze(force=False)
+
+        # Plotting cumulative PSF
+        im = ray.images()[0]
+
+        d80 = im.getPSF()
+
+        # Simulated cumulative PSF
+        dataToPlot["simulated"] = im.getCumulativeData(radius * u.cm)
+
+        rmsd = calculateRMSD(
+            dataToPlot["measured"]["Relative intensity"],
+            dataToPlot["simulated"]["Relative intensity"]
+        )
+
+        print(rmsd)
+
+        fig = visualize.plot1D(dataToPlot)
+        ax = plt.gca()
+        ax.set_ylim(0, 1.05)
+        ax.set_title("refl_rnd={}, align_rnd={}".format(
+            pars["mirror_reflection_random_angle"],
+            pars["mirror_align_random_vertical"]
+        ))
+
+        ax.legend(loc='lower right')
+
+        ax.text(
+            0.8,
+            0.5,
+            "D80 = {:.3f} cm\nRMSD = {:.4f}".format(d80, rmsd),
+            verticalalignment="center",
+            horizontalalignment="center",
+            transform=ax.transAxes,
+        )
+
+        plt.tight_layout()
+        pdfPages.savefig(fig)
+        plt.clf()
+
+    plt.close()
+    pdfPages.close()
