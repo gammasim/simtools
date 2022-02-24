@@ -429,8 +429,6 @@ class PSFImage:
         else:
             radiusAll = list(np.linspace(0, 1.6 * self.getPSF(0.8), 30))
 
-        print(radiusAll)
-
         intensity = list()
         for rad in radiusAll:
             intensity.append(
