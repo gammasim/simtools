@@ -185,11 +185,16 @@ if __name__ == "__main__":
     print("d80 in cm = {}".format(im.getPSF()))
 
     # Plotting cumulative PSF
+    # Measured cumulative PSF
     dataToPlot = OrderedDict()
-    dataToPlot[r"sim$\_$telarray"] = im.getCumulativeData()
     if args.data is not None:
         dataFile = cfg.findFile(args.data)
-        dataToPlot['measured'] = loadData(dataFile)
+        dataToPlot["measured"] = loadData(dataFile)
+        radius = dataToPlot["measured"]["Radius [cm]"]
+
+    # Simulated cumulative PSF
+    dataToPlot[r"sim$\_$telarray"] = im.getCumulativeData()
+
     fig = visualize.plot1D(dataToPlot)
     fig.gca().set_ylim(0, 1.05)
 
