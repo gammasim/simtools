@@ -214,10 +214,10 @@ if __name__ == "__main__":
     # Number of runs is hardcoded
     N_RUNS = 50
     for _ in range(N_RUNS):
-        mrra = np.random.uniform(mrra_0 - 0.15, mrra_0 + 0.15)
-        mrf = np.random.uniform(mfr_0 - 0.05, mfr_0 + 0.05)
-        mrra2 = np.random.uniform(mrra2_0 - 0.002, mrra2_0 + 0.004)
-        mar = np.random.uniform(mar_0 - 0.1, mar_0 + 0.1)
+        mrra = np.random.uniform(max(mrra_0 - 0.002, 0), mrra_0 + 0.002)
+        mrf = np.random.uniform(max(mfr_0 - 0.05, 0), mfr_0 + 0.05)
+        mrra2 = np.random.uniform(max(mrra2_0 - 0.002, 0), mrra2_0 + 0.002)
+        mar = np.random.uniform(max(mar_0 - 0.002, 0), mar_0 + 0.002)
         addParameters(mrra, mar, mrf, mrra2)
 
     # Loading measured cumulative PSF
