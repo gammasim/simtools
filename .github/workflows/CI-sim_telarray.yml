@@ -1,12 +1,36 @@
 ---
 name: CI-sim_telarray
 
+env:
+  SIMTELPATH: ${{ GITHUB_WORKSPACE }}/sim_telarray/
+
 on:
   pull_request:
     branches: [master]
     types: [opened, synchronize]
 
 jobs:
+
+  compile_simtelarray:
+    name: compile simtel_array
+    runs-on: ubuntu-latest
+    steps:
+      - name: dependencies
+        run: |
+          sudo apt-get update -y -qq
+          sudo apt-get install -y -qq bash build-essential bzip2 csh gfortran gcc g++ git libgsl-dev make wget
+      - name: corsikasimtelpackage
+        run: |
+          wget https://syncandshare.desy.de/index.php/s/DHc3kKPx3AkXSML/download
+          mv download corsika7.7_simtelarray.tar.gz
+          tar -xzf corsika7.7_simtelarray.tar.gz
+          ./build_all prod5 qgs2 gsl
+      - name: run sim_telarray
+        run: |
+          echo "${SIMTELPATH}"
+          ls "${SIMTELPATH}"
+
+
   sim_telarray:
     name: sim_telarray testing
     runs-on: ubuntu-latest
