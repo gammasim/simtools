@@ -1,6 +1,9 @@
 ---
 name: CI-tests
 # Execute tests - pyflakes and pytest
+#
+env:
+  SIMTELPATH: ${{ github.workspace }}/sim_telarray/
 
 on:
   pull_request:
@@ -58,14 +61,14 @@ jobs:
           mv download corsika7.7_simtelarray.tar.gz
           tar -xzf corsika7.7_simtelarray.tar.gz
           ./build_all prod5 qgs2 gsl
-        env: |
-          SIMTELPATH="./sim_telarray/"
 
       - name: run sim_telarray
         run: |
-          ls ./sim_telarray/
-          ls ${SIMTELPATH}
+          echo "${SIMTELPATH}"
+          ls "${SIMTELPATH}"
 
       - name: Unit tests
+        env:
+          SIMTELPATH: ${{ GITHUB_WORKSPACE }}/sim_telarray
         shell: bash -l {0}
         run: pytest
