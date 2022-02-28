@@ -3,7 +3,7 @@ name: CI-tests
 # Execute tests - pyflakes and pytest
 #
 env:
-  SIMTELPATH: ${{ github.workspace }}/sim_telarray/
+  SIMTELPATH: ${{ github.workspace }}/
 
 on:
   pull_request:
