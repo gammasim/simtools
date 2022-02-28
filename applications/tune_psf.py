@@ -62,7 +62,6 @@
         python applications/tune_psf.py --site North --telescope LST-1 --model_version prod5 --data PSFcurve_data_v2.txt --plot_all
 """
 
-import yaml
 import logging
 import argparse
 import numpy as np
