@@ -22,6 +22,21 @@ the same application can be tested with a number of different set of arguments.
 
 APP_LIST = {
     # Optics
+    "tune_psf": [
+        [
+            "-s",
+            "North",
+            "-t",
+            "LST-1",
+            "--model_version",
+            "prod4",
+            "--data",
+            "PSFcurve_data_v2.txt",
+            "--zenith",
+            "20",
+            "--test",
+        ]
+    ],
     "compare_cumulative_psf": [
         [
             "-s",
