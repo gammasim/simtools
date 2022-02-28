@@ -2,11 +2,6 @@
 
 import logging
 import yaml
-import shlex
-import subprocess
-import time
-import atexit
-import getpass
 from pathlib import Path
 from bson.objectid import ObjectId
 from threading import Lock
@@ -62,7 +57,6 @@ class DatabaseHandler:
     ALLOWED_FILE_EXTENSIONS = [".dat", ".txt", ".lis"]
 
     dbClient = None
-    tunnel = None
 
     def __init__(self):
         """
@@ -72,13 +66,10 @@ class DatabaseHandler:
         self._logger.debug("Initialize DatabaseHandler")
 
         if cfg.get("useMongoDB"):
-            if DatabaseHandler.dbClient is None or DatabaseHandler.tunnel is None:
+            if DatabaseHandler.dbClient is None:
                 with Lock():
                     self.dbDetails = self._readDetailsMongoDB()
-                    (
-                        DatabaseHandler.dbClient,
-                        DatabaseHandler.tunnel,
-                    ) = self._openMongoDB()
+                    DatabaseHandler.dbClient = self._openMongoDB()
 
     # END of _init_
 
@@ -105,29 +96,12 @@ class DatabaseHandler:
 
         Returns
         -------
-        A PyMongo DB client and the tunnel process handle
+        A PyMongo DB client
         """
-
-        user = getpass.getuser()
-        if "userDESY" in self.dbDetails:
-            user = self.dbDetails["userDESY"]
-
-        # Start tunnel
-        _tunnel = self._createTunnel(
-            localport=self.dbDetails["localport"],
-            remoteport=self.dbDetails["remoteport"],
-            user=user,
-            mongodbServer=self.dbDetails["mongodbServer"],
-            tunnelServer=self.dbDetails["tunnelServer"],
-        )
-        atexit.register(self._closeSSHTunnel, [_tunnel])
-
-        userDB = self.dbDetails["userDB"]
-        dbServer = "localhost"
         _dbClient = MongoClient(
-            dbServer,
+            self.dbDetails["mongodbServer"],
             port=self.dbDetails["dbPort"],
-            username=userDB,
+            username=self.dbDetails["userDB"],
             password=self.dbDetails["passDB"],
             authSource=self.dbDetails["authenticationDatabase"],
             ssl=True,
@@ -135,63 +109,7 @@ class DatabaseHandler:
             tlsallowinvalidcertificates=True,
         )
 
-        return _dbClient, _tunnel
-
-    def _createTunnel(self, localport, remoteport, user, mongodbServer, tunnelServer):
-        """
-        Create SSH Tunnels for database connection.
-
-        Parameters
-        ----------
-        localport: int
-            The local port to connect to the DB through (for MongoDB, usually 27018)
-        remoteport: int
-            The port on the server to connect to the DB through (for MongoDB, usually 27017)
-        user: str
-            User name to connect with.
-        tunnelServer: str
-            The server to run the tunnel through (should be warp).
-
-        Returns
-        -------
-        Tunnel process handle.
-        """
-
-        tunnelCmd = "ssh -4 -N -L {localport}:{mongodbServer}:{remoteport} {user}@{tunnelServer}".format(
-            localport=localport,
-            remoteport=remoteport,
-            user=user,
-            mongodbServer=mongodbServer,
-            tunnelServer=tunnelServer,
-        )
-
-        args = shlex.split(tunnelCmd)
-        _tunnel = subprocess.Popen(args)
-
-        time.sleep(2)  # Give it a couple seconds to finish setting up
-
-        # return the tunnel so you can kill it before you stop
-        # the program - else the connection will persist
-        # after the script ends
-        return _tunnel
-
-    def _closeSSHTunnel(self, tunnels):
-        """
-        Close SSH tunnels given in the process handles "tunnels"
-
-        Parameters
-        ----------
-        tunnels: a tunnel process handle (or a list of those)
-        """
-
-        self._logger.info("Closing SSH tunnel(s)")
-        if not isinstance(tunnels, list):
-            tunnels = [tunnels]
-
-        for _tunnel in tunnels:
-            _tunnel.kill()
-
-        return
+        return _dbClient
 
     def _getTelescopeModelNameForDB(self, site, telescopeModelName):
         """Make telescope name as the DB needs from site and telescopeModelName."""
