@@ -239,9 +239,9 @@ def createDummyConfigFile(filename="config.yml", **kwargs):
         "extraCommands": []
     }
 
-    # Overwritting parameters with kwargs
+    # # Overwritting parameters with kwargs
     if len(kwargs) > 0:
-        for key, value in kwargs:
+        for key, value in kwargs.items():
             config[key] = value
 
     with open(filename, 'w') as outfile:
