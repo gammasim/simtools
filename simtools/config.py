@@ -218,7 +218,7 @@ def findFile(name, loc=None):
     raise FileNotFoundError(msg)
 
 
-def createDummyConfigFile(filename="config.yml"):
+def createDummyConfigFile(filename="config.yml", **kwargs):
     """
     Create a dummy config.yml file to be used in test enviroments only.
 
@@ -226,6 +226,8 @@ def createDummyConfigFile(filename="config.yml"):
     ----------
     filename: str
         Name of the dummy config file (default=config.yml)
+    **kwargs
+        The default parameters can be overwritten using kwargs.
     """
     config = {
         "useMongoDB": False,
@@ -236,6 +238,11 @@ def createDummyConfigFile(filename="config.yml"):
         "outputLocation": ".",
         "extraCommands": []
     }
+
+    # # Overwritting parameters with kwargs
+    if len(kwargs) > 0:
+        for key, value in kwargs.items():
+            config[key] = value
 
     with open(filename, 'w') as outfile:
         yaml.dump(config, outfile)
