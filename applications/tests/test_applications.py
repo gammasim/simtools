@@ -129,6 +129,7 @@ APP_LIST = {
 # List of applications that require sim_telarray installation
 REQUIRE_SIMTEL = (
     "compare_cumulative_psf",
+    "tune_psf",
     "derive_mirror_rnda",
     "validate_optics",
     "validate_camera_efficiency",
@@ -136,6 +137,7 @@ REQUIRE_SIMTEL = (
 
 REQUIRE_DB_CONNECTION = (
     "compare_cumulative_psf",
+    "tune_psf",
     "derive_mirror_rnda",
     "validate_optics",
     "validate_camera_efficiency",
