@@ -25,7 +25,6 @@ except FileNotFoundError:
         parsToConfigFile["simtelPath"] = os.environ["SIMTELPATH"]
         os.environ["SIMTEL_INSTALLED"] = "1"
 
-
     # Creating a dummy config.yml file
     cfg.createDummyConfigFile(**parsToConfigFile)
 
