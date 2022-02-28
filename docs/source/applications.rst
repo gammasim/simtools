@@ -34,6 +34,7 @@ List of Applications
 * `derive_mirror_rnda`_
 * `validate_optics`_
 * `compare_cumulative_psf`_
+* `tune_psf`_
 * `validate_camera_efficiency`_
 * `validate_camera_fov`_
 * `make_regular_arrays`_
@@ -65,6 +66,13 @@ compare_cumulative_psf
 .. automodule:: compare_cumulative_psf
    :members:
 
+
+tune_psf
+----------------------
+
+
+.. automodule:: tune_psf
+   :members:
 
 
 validate_camera_efficiency
