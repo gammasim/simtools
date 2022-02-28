@@ -293,4 +293,6 @@ if __name__ == "__main__":
     pdfPages.close()
 
     # Printing the results
-    # print()
+    print('Best parameters:')
+    for par, value in best_pars.items():
+        print("{} = {}".format(par, value))
