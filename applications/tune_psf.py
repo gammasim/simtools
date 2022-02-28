@@ -89,7 +89,6 @@ from simtools import visualize
 
 def loadData(datafile):
     dType = {"names": ("Radius [cm]", "Relative intensity"), "formats": ("f8", "f8")}
-    # testDataFile = io.getTestDataFile('PSFcurve_data_v2.txt')
     data = np.loadtxt(datafile, dtype=dType, usecols=(0, 2))
     data["Radius [cm]"] *= 0.1
     data["Relative intensity"] /= np.max(np.abs(data["Relative intensity"]))
@@ -100,8 +99,8 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(
         description=(
-            "Calculate and plot the PSF and eff. mirror area as a function of off-axis angle "
-            "of the telescope requested."
+            "Tune mirror_reflection_random_angle, mirror_align_random_horizontal "
+            "and mirror_align_random_vertical using cumulative PSF measurement."
         )
     )
     parser.add_argument("-s", "--site", help="North or South", type=str, required=True)
@@ -132,6 +131,14 @@ if __name__ == "__main__":
         "--data", help="Data file name with the measured PSF vs radius [cm]", type=str
     )
     parser.add_argument(
+        "--plot_all",
+        help=(
+            "On: plot cumulative PSF for all tested combinations, "
+            "Off: plot it only for the best set of values"
+        ),
+        action="store_true",
+    )
+    parser.add_argument(
         "--test",
         help="Test option will be faster by simulating fewer photons.",
         action="store_true",
@@ -146,7 +153,7 @@ if __name__ == "__main__":
     )
 
     args = parser.parse_args()
-    label = "compare_cumulative_psf"
+    label = "tune_psf"
 
     logger = logging.getLogger()
     logger.setLevel(gen.getLogLevelFromUser(args.logLevel))
@@ -161,16 +168,20 @@ if __name__ == "__main__":
         label=label,
     )
 
-    grid = list()
+    allParameters = list()
 
-    def addParametersToGrid(
+    def addParameters(
         mirror_reflection,
         mirror_align,
         mirror_reflection_fraction=0.15,
         mirror_reflection_2=0.035
     ):
+        """
+        Transform the parameters to the proper format and add a new set of
+        parameters to the allParameters list.
+        """
         pars = dict()
-        mrra = "{:.4f},{},{}".format(
+        mrra = "{:.4f},{:.2f},{:.4f}".format(
             mirror_reflection,
             mirror_reflection_fraction,
             mirror_reflection_2
@@ -179,33 +190,44 @@ if __name__ == "__main__":
         mar = "{:.4f},28.,0.,0.".format(mirror_align)
         pars["mirror_align_random_horizontal"] = mar
         pars["mirror_align_random_vertical"] = mar
-        grid.append(pars)
+        allParameters.append(pars)
 
-    addParametersToGrid(0.0070, 0.0040)
-    addParametersToGrid(0.0075, 0.0040)
-    addParametersToGrid(0.0080, 0.0040)
+    # Drawing parameters randonly
+    N_RUNS = 40
+    for _ in range(N_RUNS):
+        mrra = np.random.uniform(0.0060, 0.0090)
+        mar = np.random.uniform(0.0030, 0.0050)
+        mrf = np.random.uniform(0.10, 0.15)
+        mrra2 = np.random.uniform(0.025, 0.050)
 
-    addParametersToGrid(0.0070, 0.0045)
-    addParametersToGrid(0.0075, 0.0045)
-    addParametersToGrid(0.0080, 0.0045)
+        addParameters(mrra, mar, mrf, mrra2)
 
-    addParametersToGrid(0.0070, 0.0035)
-    addParametersToGrid(0.0075, 0.0035)
-    addParametersToGrid(0.0080, 0.0035)
-
-    # Measured cumulative PSF
+    # Loading measured cumulative PSF
     dataToPlot = OrderedDict()
     if args.data is not None:
         dataFile = cfg.findFile(args.data)
         dataToPlot["measured"] = loadData(dataFile)
         radius = dataToPlot["measured"]["Radius [cm]"]
 
-    pdfPages = PdfPages("test.pdf")
+    # Preparing figure name
+    plotFileName = "_".join((
+        label, telModel.name + ".pdf"
+    ))
+    plotFile = outputDir.joinpath(plotFileName)
+    pdfPages = PdfPages(plotFile)
 
     def calculateRMSD(data, sim):
+        """
+        Calculates the Root Mean Squared Deviation to be used
+        as metric to find the best parameters.
+        """
         return np.sqrt(np.mean((data - sim)**2))
 
-    for pars in grid:
+    def runPars(pars, plot=True):
+        """
+        Runs the tuning for one set of parameters, add a plot to the pdfPages
+        (if plot=True) and returns the RMSD and the D80.
+        """
         telModel.changeMultipleParameters(**pars)
 
         ray = RayTracing.fromKwargs(
@@ -215,12 +237,11 @@ if __name__ == "__main__":
             offAxisAngle=[0.0 * u.deg],
         )
 
-        ray.simulate(test=args.test, force=False)
-        ray.analyze(force=False)
+        ray.simulate(test=args.test, force=True)
+        ray.analyze(force=True)
 
         # Plotting cumulative PSF
         im = ray.images()[0]
-
         d80 = im.getPSF()
 
         # Simulated cumulative PSF
@@ -231,30 +252,45 @@ if __name__ == "__main__":
             dataToPlot["simulated"]["Relative intensity"]
         )
 
-        print(rmsd)
+        if plot:
+            fig = visualize.plot1D(dataToPlot)
+            ax = plt.gca()
+            ax.set_ylim(0, 1.05)
+            ax.set_title("refl_rnd={}, align_rnd={}".format(
+                pars["mirror_reflection_random_angle"],
+                pars["mirror_align_random_vertical"]
+            ))
 
-        fig = visualize.plot1D(dataToPlot)
-        ax = plt.gca()
-        ax.set_ylim(0, 1.05)
-        ax.set_title("refl_rnd={}, align_rnd={}".format(
-            pars["mirror_reflection_random_angle"],
-            pars["mirror_align_random_vertical"]
-        ))
+            ax.legend(loc='lower right')
 
-        ax.legend(loc='lower right')
+            ax.text(
+                0.8,
+                0.5,
+                "D80 = {:.3f} cm\nRMSD = {:.4f}".format(d80, rmsd),
+                verticalalignment="center",
+                horizontalalignment="center",
+                transform=ax.transAxes,
+            )
+            plt.tight_layout()
+            pdfPages.savefig(fig)
+            plt.clf()
 
-        ax.text(
-            0.8,
-            0.5,
-            "D80 = {:.3f} cm\nRMSD = {:.4f}".format(d80, rmsd),
-            verticalalignment="center",
-            horizontalalignment="center",
-            transform=ax.transAxes,
-        )
+        return d80, rmsd
 
-        plt.tight_layout()
-        pdfPages.savefig(fig)
-        plt.clf()
+    # Running the tuning for all parameters in allParameters
+    # and storing the best parameters in best_pars
+    min_rmsd = 100
+    for pars in allParameters:
+        _, rmsd = runPars(pars, plot=args.plot_all)
+        if rmsd < min_rmsd:
+            min_rmsd = rmsd
+            best_pars = pars
+
+    # Rerunnig and plotting the best pars
+    runPars(best_pars, plot=True)
 
     plt.close()
     pdfPages.close()
+
+    # Printing the results
+    # print()
