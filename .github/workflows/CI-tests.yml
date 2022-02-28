@@ -68,7 +68,5 @@ jobs:
           ls "${SIMTELPATH}"
 
       - name: Unit tests
-        env:
-          SIMTELPATH: ${{ GITHUB_WORKSPACE }}/sim_telarray
         shell: bash -l {0}
         run: pytest
