@@ -240,8 +240,9 @@ def createDummyConfigFile(filename="config.yml", **kwargs):
     }
 
     # Overwritting parameters with kwargs
-    for key, value in kwargs:
-        config[key] = value
+    if len(kwargs) > 0:
+        for key, value in kwargs:
+            config[key] = value
 
     with open(filename, 'w') as outfile:
         yaml.dump(config, outfile)
