@@ -212,6 +212,7 @@ class TelescopeModel:
                 w = w.replace("=", "")
                 w = w.replace(",", " ")
                 parValue += w + " "
+            parValue = parValue.rstrip().lstrip()  # Removing trailing spaces (left and right)
             return parName, parValue
 
         with open(configFileName, "r") as file:
@@ -228,6 +229,8 @@ class TelescopeModel:
 
         for par, value in parameters.items():
             tel.addParameter(par, value)
+
+        tel._isExportedModelFilesUpToDate = True
         return tel
 
     # End of fromConfigFile
