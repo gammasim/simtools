@@ -83,6 +83,7 @@ import simtools.config as cfg
 from simtools.ray_tracing import RayTracing
 from simtools.model.telescope_model import TelescopeModel
 from simtools import visualize
+from simtools.util.model import splitSimtelParameter
 
 
 def loadData(datafile):
@@ -198,12 +199,13 @@ if __name__ == "__main__":
     # mar -> mirror align random (first entry of mirror_align_random_horizontal/vertical)
 
     rawPar = telModel.getParameter("mirror_reflection_random_angle")["Value"]
-    mrra_0 = float(rawPar.split(" ")[0])
-    mfr_0 = float(rawPar.split(" ")[1])
-    mrra2_0 = float(rawPar.split(" ")[2])
+    splitPar = splitSimtelParameter(rawPar)
+    mrra_0 = splitPar[0]
+    mfr_0 = splitPar[1]
+    mrra2_0 = splitPar[2]
 
     rawPar = telModel.getParameter("mirror_align_random_horizontal")["Value"]
-    mar_0 = float(rawPar.split(" ")[0])
+    mar_0 = splitSimtelParameter(rawPar)[0]
 
     logger.debug(
         "Previous parameter values: \n"
