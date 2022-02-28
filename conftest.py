@@ -18,8 +18,15 @@ except FileNotFoundError:
     os.environ["SIMTEL_INSTALLED"] = "0"
     os.environ["HAS_DB_CONNECTION"] = "0"
 
+    parsToConfigFile = dict()
+
+    # Checking for the SIMTELPATH env variables
+    if "SIMTELPATH" in os.environ.keys():
+        parsToConfigFile["simtelPath"] = os.environ["SIMTELPATH"]
+        os.environ["SIMTEL_INSTALLED"] = "1"
+
     # Creating a dummy config.yml file
-    cfg.createDummyConfigFile()
+    cfg.createDummyConfigFile(**parsToConfigFile)
 
 else:
     os.environ["HAS_CONFIG_FILE"] = "1"
