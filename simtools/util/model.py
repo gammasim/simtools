@@ -12,7 +12,30 @@ __all__ = [
     "getTelescopeClass",
     "getCameraName",
     "isTwoMirrorTelescope",
+    "splitSimtelParameter",
 ]
+
+
+def splitSimtelParameter(value):
+    """
+    Some array parameters are stored in sim_telarray model as
+    string separated by comma or spaces. This functions turns
+    this string into a list of floats. The delimiter is identified automatically.
+
+    Parameters
+    ----------
+    value: str
+        String with the array of floats separated by comma or spaces.
+
+    Returns
+    -------
+    list
+        Array of floats.
+    """
+
+    delimiter = "," if "," in value else " "
+    float_values = [float(v) for v in value.split(delimiter)]
+    return float_values
 
 
 def computeTelescopeTransmission(pars, offAxis):
