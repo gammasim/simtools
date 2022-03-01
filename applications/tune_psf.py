@@ -46,6 +46,8 @@
         Name of the data file with the measured cumulative PSF.
     plot_all (activation mode, optional)
         If activated, plots will be generated for all values tested during tuning.
+    fixed (activation mode, optional)
+        Keep the first entry of mirror_reflection_random_angle fixed.
     test (activation mode, optional)
         If activated, application will be faster by simulating fewer photons.
     verbosity (str, optional)
@@ -132,6 +134,13 @@ if __name__ == "__main__":
         action="store_true",
     )
     parser.add_argument(
+        "--fixed",
+        help=(
+            "Keep the first entry of mirror_reflection_random_angle fixed."
+        ),
+        action="store_true",
+    )
+    parser.add_argument(
         "--test",
         help="Test option will be faster by simulating fewer photons.",
         action="store_true",
@@ -209,12 +218,18 @@ if __name__ == "__main__":
         "MAR = " + str(mar_0) + "\n"
     )
 
+    if args.fixed:
+        logger.debug(
+            "fixed=True - First entry of mirror_reflection_random_angle is kept fixed."
+        )
+
     # Drawing parameters randonly
     # Range around the previous values are hardcoded
     # Number of runs is hardcoded
     N_RUNS = 50
     for _ in range(N_RUNS):
-        mrra = np.random.uniform(max(mrra_0 - 0.002, 0), mrra_0 + 0.002)
+        mrra_range = 0.002 if not args.fixed else 0
+        mrra = np.random.uniform(max(mrra_0 - mrra_range, 0), mrra_0 + mrra_range)
         mrf = np.random.uniform(max(mfr_0 - 0.05, 0), mfr_0 + 0.05)
         mrra2 = np.random.uniform(max(mrra2_0 - 0.002, 0), mrra2_0 + 0.002)
         mar = np.random.uniform(max(mar_0 - 0.002, 0), mar_0 + 0.002)
