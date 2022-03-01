@@ -99,20 +99,9 @@ def get(par):
         _logger.error(msg)
         raise ParameterNotFoundInConfigFile(msg)
     else:
-        if isinstance(config[par], str) and config[par][0] == "$":
-            envName = config[par][1:].replace("{", "")
-            envName = envName.replace("}", "")
-            envPath = os.environ.get(envName)
-            if envPath is None:
-                msg = (
-                    "Config entry {} is interpreted as environmental variables ".format(
-                        par
-                    )
-                    + "that is not set."
-                )
-                _logger.error(msg)
-                raise ConfigEnvironmentalVariableNotSet(msg)
-            return envPath
+        # Enviroment variable
+        if isinstance(config[par], str) and "$" in config[par]:
+            return os.path.expandvars(config[par])
         else:
             return config[par]
 
