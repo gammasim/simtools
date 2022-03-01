@@ -22,6 +22,21 @@ the same application can be tested with a number of different set of arguments.
 
 APP_LIST = {
     # Optics
+    "tune_psf": [
+        [
+            "-s",
+            "North",
+            "-t",
+            "LST-1",
+            "--model_version",
+            "prod4",
+            "--data",
+            "PSFcurve_data_v2.txt",
+            "--zenith",
+            "20",
+            "--test",
+        ]
+    ],
     "compare_cumulative_psf": [
         [
             "-s",
@@ -114,6 +129,7 @@ APP_LIST = {
 # List of applications that require sim_telarray installation
 REQUIRE_SIMTEL = (
     "compare_cumulative_psf",
+    "tune_psf",
     "derive_mirror_rnda",
     "validate_optics",
     "validate_camera_efficiency",
@@ -121,6 +137,7 @@ REQUIRE_SIMTEL = (
 
 REQUIRE_DB_CONNECTION = (
     "compare_cumulative_psf",
+    "tune_psf",
     "derive_mirror_rnda",
     "validate_optics",
     "validate_camera_efficiency",
