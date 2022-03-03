@@ -22,9 +22,7 @@ def test_histograms():
         )
     )
 
-    print(histogram_files)
-
-    hists = SimtelHistograms(histogramFiles=histogram_files)
+    hists = SimtelHistograms(histogramFiles=histogram_files, test=True)
 
     figName = io.getTestPlotFile("simtelHistograms.pdf")
     hists.plotAndSaveFigures(figName=figName)
