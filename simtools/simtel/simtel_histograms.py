@@ -34,7 +34,7 @@ class SimtelHistograms:
         List of histogram data.
     """
 
-    def __init__(self, histogramFiles):
+    def __init__(self, histogramFiles, test=False):
         """
         SimtelHistograms
 
@@ -42,10 +42,13 @@ class SimtelHistograms:
         ----------
         histogramFiles: list
             List of sim_telarray histogram files (str of Path).
-
+        test: bool
+            If True, only a fraction of the histograms will be processed, leading to \
+        a much shorter runtime.
         """
         self._logger = logging.getLogger(__name__)
         self._histogramFiles = histogramFiles
+        self._isTest = test
 
     def plotAndSaveFigures(self, figName):
         """
@@ -144,6 +147,13 @@ class SimtelHistograms:
 
         pdfPages = PdfPages(figName)
         for iHist in range(len(self.combinedHists)):
+
+            # Test case: processing only 1/5 of the histograms
+            if self._isTest and iHist % 5 != 0:
+                self._logger.debug(
+                    "Skipping (test=True): {}".format(self.combinedHists[iHist]["title"])
+                )
+                continue
 
             self._logger.debug(
                 "Processing: {}".format(self.combinedHists[iHist]["title"])
