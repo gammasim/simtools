@@ -235,3 +235,30 @@ def createDummyConfigFile(filename="config.yml", **kwargs):
 
     with open(filename, 'w') as outfile:
         yaml.dump(config, outfile)
+
+
+def createDummyDbDetails(filename="dbDetails.yml", **kwargs):
+    """
+    Create a dummy dbDetails.yml file to be used in test enviroments only.
+
+    Parameters
+    ----------
+    filename: str
+        Name of the dummy dbDetails file (default=dbDetails.yml)
+    **kwargs
+        The default parameters can be overwritten using kwargs.
+    """
+    pars = {
+        "dbPort": 27017,
+        "mongodbServer": "cta-simpipe-protodb.zeuthen.desy.de",
+        "userDB": None,
+        "passDB": None,
+        "authenticationDatabase": "admin"
+    }
+
+    if len(kwargs) > 0:
+        for key, value in kwargs.items():
+            pars[key] = value
+
+    with open(filename, 'w') as outfile:
+        yaml.dump(pars, outfile)
