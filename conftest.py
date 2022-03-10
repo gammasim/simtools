@@ -43,6 +43,8 @@ except FileNotFoundError:
     # Creating a dummy config.yml file
     cfg.createDummyConfigFile(**parsToConfigFile)
 
+    os.system("cat dbDetails.yml")
+
     db = db_handler.DatabaseHandler()
     try:
         db.getModelParameters("north", "lst-1", "Current")
