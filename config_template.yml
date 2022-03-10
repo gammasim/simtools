@@ -11,12 +11,12 @@ mongoDBConfigFile: ./dbDetails.yml
 
 # List with the locations of the model files. The location of the dataFromTheInstruments is
 # required for most of the applications and can be found  in
-# https://gitlab.cta-observatory.org/cta-consortium/aswg/simulations/simulation-model/verification/data-from-instrument-teams.
+# https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/verification/data-from-instrument-teams
 # The location of the directory with the yaml files for the model parameters and the sim_telarray
 # config files are required in case useMongoDB is set to False. They can be found 
 # https://gitlab.cta-observatory.org/cta-consortium/aswg/simulations/simulation-model/simulation-model-description/-/tree/master/configReports
 # and https://gitlab.cta-observatory.org/cta-consortium/aswg/simulations/simulation-model/simulation-model-description/-/tree/master/datFiles.
-# The files will always be serached recursively within all the subdirectories inside the directory given by the location.
+# The files will always be searched recursively within all the subdirectories inside the directory given by the location.
 modelFilesLocations: [
   (...)/configReports,
   (...)/datFiles,
@@ -26,12 +26,16 @@ modelFilesLocations: [
 # Path to the root directory where the output directory will be created.
 outputLocation: .
 
-# Path to the directory containing the data used to perform automatic tests. These data is provided at gammasim-tools/data/.
-testDataLocation: './data/'
+# Path to the directory containing the data. These data is provided at gammasim-tools/data/.
+dataLocation: './data/'
 
 # Path to the root sim_telarray directory, containing the sim_telarray software unpacked and compiled.
 simtelPath: None
 
-# Not used yet
+# Command used to submit jobs to a batch system.
 submissionCommand: 'qsub '
+# List of xtra commands to be added in the run scripts for submmission.
+# Ex. extraCommands = ['export PATH=/afs/ifh.de/group/cta/cta/software/zstd/:${PATH}']
+extraCommands: []
+
 

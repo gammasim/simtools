@@ -1,0 +1,72 @@
+---
+name: CI-tests
+# Execute tests - pyflakes and pytest
+#
+env:
+  SIMTELPATH: ${{ github.workspace }}/
+
+on:
+  pull_request:
+    branches: [master]
+    types: [opened, synchronize]
+
+jobs:
+
+  tests:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        python-version: [3.6, 3.7, 3.8]
+
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install conda dependencies
+        env:
+          PYTHON_VERSION: ${{ matrix.python-version }}
+        run: |
+          source $CONDA/etc/profile.d/conda.sh
+          conda config --set always_yes yes --set changeps1 no
+          conda update -q conda
+          conda install -c conda-forge mamba
+          sed -i -e "s/- python<=3.8/- python=$PYTHON_VERSION/g" environment.yml
+          mamba env create -f environment.yml
+          conda activate gammasim-tools-dev
+          echo 'source $CONDA/etc/profile.d/conda.sh' >> ~/.bash_profile
+          echo 'conda activate gammasim-tools-dev' >> ~/.bash_profile
+          echo 'source set_simtools.sh' >> ~/.bash_profile
+          python --version
+
+      - name: pyflakes liniting
+        shell: bash -leo pipefail {0}
+        run: |
+          mamba install -q pyflakes
+          pyflakes .
+
+      - name: simteldependencies
+        run: |
+          sudo apt-get update -y -qq
+          sudo apt-get install -y -qq bash build-essential bzip2 csh gfortran gcc g++ git libgsl-dev make wget
+
+      - name: corsikasimtelpackage
+        run: |
+          wget https://syncandshare.desy.de/index.php/s/${{ secrets.CLOUD_SIMTEL }}/download
+          mv download corsika7.7_simtelarray.tar.gz
+          tar -xzf corsika7.7_simtelarray.tar.gz
+          ./build_all prod5 qgs2 gsl
+
+      - name: run sim_telarray
+        run: |
+          echo "${SIMTELPATH}"
+          ls "${SIMTELPATH}"
+
+      - name: Unit tests
+        shell: bash -l {0}
+        run: pytest
