@@ -16,18 +16,18 @@ only receives the focal length and the list of photons positions. From that, it 
 and also the PSF image plotting.
 
 
-.. automodule:: simtel_runner
+.. automodule:: simtel.simtel_runner
    :members:
 
-.. automodule:: simtel_runner_ray_tracing
+.. automodule:: simtel.simtel_runner_ray_tracing
    :members:
 
-.. automodule:: simtel_runner_array
+.. automodule:: simtel.simtel_runner_array
    :members:
 
 
 sim_telarray Config Writer
 ==========================
 
-.. automodule:: simtel_config_writer
+.. automodule:: simtel.simtel_config_writer
    :members:
