@@ -11,9 +11,8 @@ try:
     cfg.loadConfig()
 except FileNotFoundError:
     logger.debug("simtools configuration file was NOT found")
-    logger.debug("Setting HAS_CONFIG_FILE = 0")
-    logger.debug("Setting SIMTEL_INSTALLED = 0")
-    logger.debug("Setting HAS_DB_CONNECTION = 0")
+
+    # Creating env variables and setting them to false
     os.environ["HAS_CONFIG_FILE"] = "0"
     os.environ["SIMTEL_INSTALLED"] = "0"
     os.environ["HAS_DB_CONNECTION"] = "0"
@@ -35,10 +34,13 @@ except FileNotFoundError:
     if "DB_READ_PW" in os.environ:
         parsToDbDetails["passDB"] = os.environ["DB_READ_PW"]
 
+    os.environ["HAS_DB_CONNECTION"] = "1"
+    parsToConfigFile["useMongoDB"] = True
+
     cfg.createDummyDbDetails(**parsToDbDetails)
 
     # Creating a dummy config.yml file
-    cfg.createDummyConfigFile(**parsToConfigFile, useMongoDB=True)
+    cfg.createDummyConfigFile(**parsToConfigFile)
 
 else:
     os.environ["HAS_CONFIG_FILE"] = "1"
