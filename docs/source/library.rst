@@ -7,8 +7,10 @@ simtools Library
   :maxdepth: 1
   :glob:
 
+  simulators
   mc_model
   ray_tracing
   camera_efficiency
-  simtel_runner
+  simtel
+  layout
   util
