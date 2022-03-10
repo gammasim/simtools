@@ -25,6 +25,13 @@ except FileNotFoundError:
         parsToConfigFile["simtelPath"] = os.environ["SIMTELPATH"]
         os.environ["SIMTEL_INSTALLED"] = "1"
 
+    # Creating dbDetails with read only user
+    # Collecting parameters from env variables
+    parsToDbDetails = dict()
+    for par in ["DB_READ_NAME", "DB_READ_USER", "DB_READ_PW"]:
+        parsToDbDetails[par] = os.environ.get(par, None)
+    cfg.createDummyDbDetails(**parsToDbDetails)
+
     # Creating a dummy config.yml file
     cfg.createDummyConfigFile(**parsToConfigFile)
 
