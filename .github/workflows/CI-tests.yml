@@ -4,6 +4,9 @@ name: CI-tests
 #
 env:
   SIMTELPATH: ${{ github.workspace }}/
+  DB_READ_NAME: ${{ github.DB_READ_NAME }}
+  DB_READ_USER: ${{ github.DB_READ_USER }}
+  DB_READ_PW: ${{ github.DB_READ_PW }}
 
 on:
   pull_request:
