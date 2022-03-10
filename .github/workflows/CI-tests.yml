@@ -72,4 +72,6 @@ jobs:
 
       - name: Unit tests
         shell: bash -l {0}
-        run: pytest
+        run: |
+          cat dbDetails.yml
+          pytest
