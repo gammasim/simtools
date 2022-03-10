@@ -36,8 +36,9 @@ except FileNotFoundError:
 
     os.environ["HAS_DB_CONNECTION"] = "1"
     parsToConfigFile["useMongoDB"] = True
-
-    cfg.createDummyDbDetails(**parsToDbDetails)
+    dbDetailsFileName = "dbDetails.yml"
+    cfg.createDummyDbDetails(filename=dbDetailsFileName, **parsToDbDetails)
+    parsToConfigFile["mongoDBConfigFile"] = dbDetailsFileName
 
     # Creating a dummy config.yml file
     cfg.createDummyConfigFile(**parsToConfigFile)
