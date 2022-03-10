@@ -1,6 +1,7 @@
 # A conda environment with all useful package for ctamclib developers
 name: gammasim-tools-dev
 dependencies:
+  - python<=3.8
   - pyyaml
   - numpy
   - astropy
@@ -11,7 +12,12 @@ dependencies:
   - scipy
   - pymongo
   - numpydoc
+  - sphinx=3.5
   - sphinx_rtd_theme
+  - pyproj
+  - zstandard
+  - conda-forge::eventio>=1.5.0
+  - pyflakes
 # cheatsheet
 
 # create: conda env create -f environment.yml
