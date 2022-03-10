@@ -20,6 +20,16 @@ import simtools.io_handler as io
 Handling data files
 ===================
 
+Data files are auxiliary files containing data required to run simtools.
+These day is kept in files to avoid having it hardcoded throughout the code.
+They are located in the data directory inside the main repository and its location
+must be given in the config file.
+
+Data files are organized in subdirectories. One can get a data file using the function
+io.getDataFile(subdirectory, filename).
+
+Examples of files that are kept as data files are: test files, ecsv files used to define
+the layouts and parameter files (see Input validation section).
 
 Input validation
 ================
