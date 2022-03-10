@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-''' 
+"""
     Summary
     -------
     This application calculate the camera FoV of the telescope requested and plot the camera \
@@ -15,8 +15,10 @@
 
     Command line arguments
     ----------------------
-    tel_name (str, required)
-        Telescope name (e.g. North-LST-1, South-SST-D, ...)
+    site (str, required)
+        North or South.
+    telescope (str, required)
+        Telescope model name (e.g. LST-1, SST-D, ...)
     model_version (str, optional)
         Model version (default=prod4)
     verbosity (str, optional)
@@ -30,16 +32,15 @@
 
     .. code-block:: console
 
-        python applications/validate_camera_fov.py --tel_name North-LST-1 --model_version prod4
+        python applications/validate_camera_fov.py --site North --telescope LST-1 --model_version prod4
 
     .. todo::
 
         * Change default model to default (after this feature is implemented in db_handler)
         * Fix the setStyle. For some reason, sphinx cannot built docs with it on.
-'''
+"""
 
 import logging
-import matplotlib.pyplot as plt
 import argparse
 
 import simtools.config as cfg
@@ -49,73 +50,74 @@ from simtools.model.telescope_model import TelescopeModel
 from simtools.model.camera import Camera
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(
         description=(
-            'Calculate the camera FoV of the telescope requested. '
-            'Plot the camera as well, as seen for an observer facing the camera.'
+            "Calculate the camera FoV of the telescope requested. "
+            "Plot the camera as well, as seen for an observer facing the camera."
         )
     )
+    parser.add_argument("-s", "--site", help="North or South", type=str, required=True)
     parser.add_argument(
-        '--tel_name',
-        help='Telescope name (e.g. North-LST-1, South-SST-D)',
+        "-t",
+        "--telescope",
+        help="Telescope model name (e.g. LST-1, SST-D)",
         type=str,
-        required=True
+        required=True,
     )
     parser.add_argument(
-        '--model_version',
-        help='Model version (default=prod4)',
+        "--model_version",
+        help="Model version (default=prod4)",
         type=str,
-        default='prod4'
+        default="prod4",
     )
     parser.add_argument(
-        '-v',
-        '--verbosity',
-        dest='logLevel',
-        action='store',
-        default='info',
-        help='Log level to print (default is INFO)'
+        "-v",
+        "--verbosity",
+        dest="logLevel",
+        action="store",
+        default="info",
+        help="Log level to print (default is INFO)",
     )
 
     args = parser.parse_args()
-    label = 'validate_camera_fov'
+    label = "validate_camera_fov"
 
-    logger = logging.getLogger(label)
+    logger = logging.getLogger()
     logger.setLevel(gen.getLogLevelFromUser(args.logLevel))
 
     # Output directory to save files related directly to this app
-    outputDir = io.getApplicationOutputDirectory(cfg.get('outputLocation'), label)
+    outputDir = io.getApplicationOutputDirectory(cfg.get("outputLocation"), label)
 
     telModel = TelescopeModel(
-        telescopeName=args.tel_name,
-        version=args.model_version,
+        site=args.site,
+        telescopeModelName=args.telescope,
+        modelVersion=args.model_version,
         label=label,
-        logger=logger.name
     )
 
-    print('\nValidating the camera FoV of {}\n'.format(telModel.telescopeName))
+    print("\nValidating the camera FoV of {}\n".format(telModel.name))
 
-    cameraConfigFile = telModel.getParameter('camera_config_file')
-    focalLength = float(telModel.getParameter('effective_focal_length'))
+    cameraConfigFile = telModel.getParameterValue("camera_config_file")
+    focalLength = float(telModel.getParameterValue("effective_focal_length"))
     camera = Camera(
-        telescopeName=telModel.telescopeName,
+        telescopeModelName=telModel.name,
         cameraConfigFile=cfg.findFile(cameraConfigFile),
         focalLength=focalLength,
-        logger=logger.name
     )
 
     fov, rEdgeAvg = camera.calcFOV()
 
-    print('\nEffective focal length = ' + '{0:.3f} cm'.format(focalLength))
-    print('{0} FoV = {1:.3f} deg'.format(telModel.telescopeName, fov))
-    print('Avg. edge radius = {0:.3f} cm\n'.format(rEdgeAvg))
+    print("\nEffective focal length = " + "{0:.3f} cm".format(focalLength))
+    print("{0} FoV = {1:.3f} deg".format(telModel.name, fov))
+    print("Avg. edge radius = {0:.3f} cm\n".format(rEdgeAvg))
 
     # Now plot the camera as well
-    plt = camera.plotPixelLayout()
-    plotFileName = label + '_' + telModel.telescopeName + '_pixelLayout'
+    fig = camera.plotPixelLayout()
+    plotFileName = label + "_" + telModel.name + "_pixelLayout"
     plotFile = outputDir.joinpath(plotFileName)
-    for f in ['pdf', 'png']:
-        plt.savefig(str(plotFile) + '.' + f, format=f, bbox_inches='tight')
-    print('\nPlotted camera in {}\n'.format(plotFile))
-    plt.clf()
+    for f in ["pdf", "png"]:
+        fig.savefig(str(plotFile) + "." + f, format=f, bbox_inches="tight")
+    print("\nPlotted camera in {}\n".format(plotFile))
+    fig.clf()
