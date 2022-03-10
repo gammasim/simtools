@@ -72,9 +72,4 @@ jobs:
 
       - name: Unit tests
         shell: bash -l {0}
-        run: |
-          echo "90909090909"
-          echo $DB_READ_USER
-          echo $DB_READ_NAME
-          echo "90909090909" 
-          pytest
+        run: pytest
