@@ -46,21 +46,21 @@ List of Applications
 
 
 derive_mirror_rnda
-------------------
+******************
 
 .. automodule:: derive_mirror_rnda
    :members:
 
 
 validate_optics
----------------
+***************
 
 .. automodule:: validate_optics
    :members:
 
 
 compare_cumulative_psf
-----------------------
+**********************
 
 
 .. automodule:: compare_cumulative_psf
@@ -68,60 +68,59 @@ compare_cumulative_psf
 
 
 tune_psf
-----------------------
-
+********
 
 .. automodule:: tune_psf
    :members:
 
 
 validate_camera_efficiency
---------------------------
+**************************
 
 .. automodule:: validate_camera_efficiency
    :members:
 
 
 validate_camera_fov
--------------------
+*******************
 
 .. automodule:: validate_camera_fov
    :members:
 
 
 make_regular_arrays
--------------------
+*******************
 
 .. automodule:: make_regular_arrays
    :members:
 
 
 produce_array_config
---------------------
+********************
 
 .. automodule:: produce_array_config
    :members:
 
 sim_showers_for_trigger_rates
------------------------------
+*****************************
 
 .. automodule:: sim_showers_for_trigger_rates
    :members:
 
 production
-----------
+**********
 
 .. automodule:: production
    :members:
 
 add_file_to_db
---------------
+**************
 
 .. automodule:: add_file_to_db
    :members:
 
 get_parameter
--------------
+*************
 
 .. automodule:: get_parameter
    :members:
