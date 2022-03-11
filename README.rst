@@ -42,9 +42,5 @@ STYLE GUIDELINES:
 * Follow `Style Guide and Code Guidelines from ctapipe <https://cta-observatory.github.io/ctapipe/development/index.html>`_
 * Keep it clean!
 * Sphinx for docs with docstrings in `Numpy style <https://numpydoc.readthedocs.io/en/latest/format.html#id4>`_
-* Pep8
-* Use the following namespaces consistently:
-.. code-block:: python
-| import simtools.config as cfg
-| import simtools.io_handler as io
+* Pep8 is required.
 
