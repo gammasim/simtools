@@ -27,14 +27,17 @@ except FileNotFoundError:
     # Creating dbDetails with read only user
     # Collecting parameters from env variables
     parsToDbDetails = dict()
-    if "DB_READ_NAME" in os.environ:
-        parsToDbDetails["mongodbServer"] = os.environ["DB_READ_NAME"]
-    if "DB_READ_USER" in os.environ:
-        parsToDbDetails["userDB"] = os.environ["DB_READ_USER"]
-    if "DB_READ_PW" in os.environ:
-        parsToDbDetails["passDB"] = os.environ["DB_READ_PW"]
-    if "DB_READ_PORT" in os.environ:
-        parsToDbDetails["dbPort"] = os.environ["DB_READ_PORT"]
+    environVariblesToCheck = {
+        "mongodbServer": "DB_READ_NAME",
+        "userDB": "DB_READ_USER",
+        "passDB": "DB_READ_PW",
+        "dbPort": "DB_READ_PORT",
+    }
+
+    # Checking env variables
+    for par, env in environVariblesToCheck.items():
+        if env in os.environ:
+            parsToDbDetails[par] = os.environ[env]
 
     os.environ["HAS_DB_CONNECTION"] = "1"
     parsToConfigFile["useMongoDB"] = True
