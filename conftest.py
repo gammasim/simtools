@@ -48,6 +48,14 @@ except FileNotFoundError:
     # Creating a dummy config.yml file
     cfg.createDummyConfigFile(**parsToConfigFile)
 
+    db = db_handler.DatabaseHandler()
+    try:
+        db.getModelParameters("north", "lst-1", "Current")
+        print("testestestsetetest")
+    except Exception:
+        print("blabalbalbalbalblabalb")
+
+
 else:
     os.environ["HAS_CONFIG_FILE"] = "1"
     logger.debug("simtools configuration found WAS found")
