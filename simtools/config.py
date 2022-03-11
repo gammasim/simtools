@@ -258,7 +258,7 @@ def createDummyDbDetails(filename="dbDetails.yml", **kwargs):
 
     if len(kwargs) > 0:
         for key, value in kwargs.items():
-            pars[key] = value
+            pars[key] = int(value) if key == "dbPort" else str(value)
 
     with open(filename, 'w') as outfile:
         yaml.dump(pars, outfile)
