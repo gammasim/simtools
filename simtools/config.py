@@ -249,8 +249,8 @@ def createDummyDbDetails(filename="dbDetails.yml", **kwargs):
         The default parameters can be overwritten using kwargs.
     """
     pars = {
-        "dbPort": 27017,
-        "mongodbServer": "cta-simpipe-protodb.zeuthen.desy.de",
+        "dbPort": None,
+        "mongodbServer": None,
         "userDB": None,
         "passDB": None,
         "authenticationDatabase": "admin"
