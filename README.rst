@@ -1,6 +1,9 @@
 gammasim-tools
 ===========
 
+.. image:: https://zenodo.org/badge/195011575.svg
+   :target: https://zenodo.org/badge/latestdoi/195011575
+
 Prototype implementation of tools for the Simulation System of the `CTA Observatory <www.cta-observatory.org>`_
 
 gammasim-tools provides a framework and tools for:
