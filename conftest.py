@@ -11,9 +11,8 @@ try:
     cfg.loadConfig()
 except FileNotFoundError:
     logger.debug("simtools configuration file was NOT found")
-    logger.debug("Setting HAS_CONFIG_FILE = 0")
-    logger.debug("Setting SIMTEL_INSTALLED = 0")
-    logger.debug("Setting HAS_DB_CONNECTION = 0")
+
+    # Creating env variables and setting them to false
     os.environ["HAS_CONFIG_FILE"] = "0"
     os.environ["SIMTEL_INSTALLED"] = "0"
     os.environ["HAS_DB_CONNECTION"] = "0"
@@ -24,6 +23,27 @@ except FileNotFoundError:
     if "SIMTELPATH" in os.environ.keys():
         parsToConfigFile["simtelPath"] = os.environ["SIMTELPATH"]
         os.environ["SIMTEL_INSTALLED"] = "1"
+
+    # Creating dbDetails with read only user
+    # Collecting parameters from env variables
+    parsToDbDetails = dict()
+    environVariblesToCheck = {
+        "mongodbServer": "DB_API_NAME",
+        "userDB": "DB_API_USER",
+        "passDB": "DB_API_PW",
+        "dbPort": "DB_API_PORT",
+    }
+
+    # Checking env variables
+    for par, env in environVariblesToCheck.items():
+        if env in os.environ:
+            parsToDbDetails[par] = os.environ[env]
+
+    os.environ["HAS_DB_CONNECTION"] = "1"
+    parsToConfigFile["useMongoDB"] = True
+    dbDetailsFileName = "dbDetails.yml"
+    cfg.createDummyDbDetails(filename=dbDetailsFileName, **parsToDbDetails)
+    parsToConfigFile["mongoDBConfigFile"] = dbDetailsFileName
 
     # Creating a dummy config.yml file
     cfg.createDummyConfigFile(**parsToConfigFile)
