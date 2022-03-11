@@ -7,8 +7,10 @@ import logging
 from simtools.util.tests import (
     has_db_connection,
     simtel_installed,
+    has_config_file,
     DB_CONNECTION_MSG,
     SIMTEL_MSG,
+    CONFIG_FILE_MSG,
 )
 
 logger = logging.getLogger()
@@ -148,6 +150,11 @@ REQUIRE_DB_CONNECTION = (
     "production",
 )
 
+REQUIRE_CFG_FILE = (
+    "derive_mirror_rnda",
+    "production",
+)
+
 
 @pytest.mark.parametrize("application", APP_LIST.keys())
 def test_applications(application):
@@ -160,6 +167,10 @@ def test_applications(application):
     # Checking for sim_telarray installation
     if application in REQUIRE_SIMTEL and not simtel_installed():
         pytest.skip(SIMTEL_MSG)
+
+    # Checking for cfg file
+    if application in REQUIRE_CFG_FILE and not has_config_file():
+        pytest.skip(CONFIG_FILE_MSG)
 
     def makeCommand(app, args):
         cmd = "python applications/" + app + ".py"
