@@ -28,10 +28,10 @@ except FileNotFoundError:
     # Collecting parameters from env variables
     parsToDbDetails = dict()
     environVariblesToCheck = {
-        "mongodbServer": "DB_READ_NAME",
-        "userDB": "DB_READ_USER",
-        "passDB": "DB_READ_PW",
-        "dbPort": "DB_READ_PORT",
+        "mongodbServer": "DB_API_NAME",
+        "userDB": "DB_API_USER",
+        "passDB": "DB_API_PW",
+        "dbPort": "DB_API_PORT",
     }
 
     # Checking env variables
@@ -47,14 +47,6 @@ except FileNotFoundError:
 
     # Creating a dummy config.yml file
     cfg.createDummyConfigFile(**parsToConfigFile)
-
-    db = db_handler.DatabaseHandler()
-    try:
-        db.getModelParameters("north", "lst-1", "Current")
-        print("testestestsetetest")
-    except Exception:
-        print("blabalbalbalbalblabalb")
-
 
 else:
     os.environ["HAS_CONFIG_FILE"] = "1"
