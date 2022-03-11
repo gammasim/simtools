@@ -14,6 +14,8 @@ gammasim-tools follows these design principles:
 * maximizes the sharing of tools and algorithms with other DPPS subsystems (e.g., `ctapipe <https://github.com/cta-observatory/ctapipe>`_ and calibpipe)
 * I/O and reporting tools for the MC simulation model parameter and production database
 
+gammasim-tools makes extensive use of the `CORSIKA <https://www.iap.kit.edu/corsika/>`_ air shower simulation code and the `sim_telarray <https://www.mpi-hd.mpg.de/hfm/~bernlohr/sim_telarray/>`_ telescope simulation code.
+
 AUTHORS:
 --------
     
@@ -40,9 +42,5 @@ STYLE GUIDELINES:
 * Follow `Style Guide and Code Guidelines from ctapipe <https://cta-observatory.github.io/ctapipe/development/index.html>`_
 * Keep it clean!
 * Sphinx for docs with docstrings in `Numpy style <https://numpydoc.readthedocs.io/en/latest/format.html#id4>`_
-* Pep8
-* Use the following namespaces consistently:
-.. code-block:: python
-| import simtools.config as cfg
-| import simtools.io_handler as io
+* Pep8 is required.
 
