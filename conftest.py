@@ -33,6 +33,8 @@ except FileNotFoundError:
         parsToDbDetails["userDB"] = os.environ["DB_READ_USER"]
     if "DB_READ_PW" in os.environ:
         parsToDbDetails["passDB"] = os.environ["DB_READ_PW"]
+    if "DB_READ_PORT" in os.environ:
+        parsToDbDetails["dbPort"] = os.environ["DB_READ_PORT"]
 
     os.environ["HAS_DB_CONNECTION"] = "1"
     parsToConfigFile["useMongoDB"] = True
