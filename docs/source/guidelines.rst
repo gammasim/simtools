@@ -56,22 +56,21 @@ The file is read through the function io.getDataFile("parameters", filename)
 The parameter yaml file contains the list of parameters to be validated and its
 properties. See an example below:
 
-.. code-block::
+.. code-block:: yaml
 
-zenithAngle: 
-  len: 1
-  unit: !astropy.units.Unit {unit: deg}
-  default: !astropy.units.Quantity
-    value: 20
+  zenithAngle: 
+    len: 1
     unit: !astropy.units.Unit {unit: deg}
-  names: ['zenith', 'theta']
+    default: !astropy.units.Quantity
+      value: 20
+      unit: !astropy.units.Unit {unit: deg}
+    names: ['zenith', 'theta']
 
 
 * len gives the length of the input. If null, any len is accepted.
 * unit is the astropy unit
 * default must have the same len
-* names is a list of acceptable input names. The key in the returned dict will have the name given
-at the definition of the block (zenithAngle in this example)
+* names is a list of acceptable input names. The key in the returned dict will have the name given at the definition of the block (zenithAngle in this example)
 
 
 Testing
