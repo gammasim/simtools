@@ -38,6 +38,40 @@ For the Type field, any string will be accepted and a selected list of variation
 (e.g "flashcam" will be converted to "FlashCam").
 
 
+Validating names
+================
+
+Any name that is reccurently used along the the package should be validated when given as input.
+Examples of names are: telescope, site, camera, model version. The functionaties to validate names
+are found in util.names. The function validateName receives the input string and a name dictionary,
+that is usually called allSomethingNames. This dictionary contain the possible names (as keys) and lists
+of allowed alternatives names as values. In case the input name is found in one of the lists, the key
+is returned.
+
+The name dictnaries are also defined in util.names. One should also define especific functions named
+validateSomethingNames that call the validateName with the proper name dictionary. This is only meant to
+provide a clear interface.
+
+This is an example of a name dictionary:
+
+
+.. code-block:: yaml
+
+  allSiteNames = {
+    "South": ["paranal", "south"],
+    "North": ["lapalma", "north"]
+  }
+
+And this is an example of how the site name is validated in the telescope model module:
+
+
+.. code-block:: python
+
+  self.site = names.validateSiteName(site)
+
+where site was given as parameter to the __init__ function.
+
+
 Handling data files
 ===================
 
@@ -51,6 +85,7 @@ io.getDataFile(subdirectory, filename).
 
 Examples of files that are kept as data files are: test files, ecsv files used to define
 the layouts and parameter files (see Input validation section).
+
 
 Input validation
 ================
