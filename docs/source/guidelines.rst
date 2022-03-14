@@ -129,6 +129,24 @@ properties. See an example below:
 * names is a list of acceptable input names. The key in the returned dict will have the name given at the definition of the block (zenithAngle in this example)
 
 
+Applications
+============
+
+Layout arrays
+=============
+
+The layout arrays provide the telescope positions and deal with coordenate transformations. The main module
+that implements it is simtools.layout.layout_array. A LayoutArray can be created on the fly by providing the
+telescope positions. However that is only supposed to be done once for each layout. After that it is
+recommended to use a pre-defined layout file (ecsv format) and create a LayoutArray by using the class
+method fromLayoutArrayName.
+
+The creation of the layout should be done in a separate application of the ones in which it will be used.
+The layout file can be then exported and stored at the data/layout directory.
+
+An example of how to create a layout can be found at the application make_regular_arrays.
+
+
 Testing
 =======
 
