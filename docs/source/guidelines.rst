@@ -132,11 +132,19 @@ properties. See an example below:
 Applications
 ============
 
+Applications are simple command lines tools that should be build off of the simtools libray.
+It is recommended to avoid implementing complex algorithm in the applications. Instead, that
+should be done at some module in the library.
 
 
-Configuration
-=============
+Docstrings
+==========
 
+Docstrings following the Numpy style must be added to any public function, class or method.
+It is also recommended to add docstrings-like comments on private ones for the sake of organization.
+
+In the application, the modules should contain docstrings with a general description, command line
+parameters, examples etc.
 
 
 Layout arrays
