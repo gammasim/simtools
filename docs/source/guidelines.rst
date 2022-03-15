@@ -55,7 +55,7 @@ provide a clear interface.
 This is an example of a name dictionary:
 
 
-.. code-block:: yaml
+.. code-block::
 
   allSiteNames = {
     "South": ["paranal", "south"],
