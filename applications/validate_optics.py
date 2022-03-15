@@ -60,9 +60,10 @@
 """
 
 import logging
-import matplotlib.pyplot as plt
 import argparse
 import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_pdf import PdfPages
 
 import astropy.units as u
 
@@ -116,6 +117,11 @@ if __name__ == "__main__":
         default=4,
     )
     parser.add_argument(
+        "--plot_images",
+        help="Produce a multiple pages pdf file with the image plots.",
+        action="store_true",
+    )
+    parser.add_argument(
         "--test",
         help="Test option will be faster by simulating fewer photons.",
         action="store_true",
@@ -155,7 +161,7 @@ if __name__ == "__main__":
         telescopeModel=telModel,
         sourceDistance=args.src_distance * u.km,
         zenithAngle=args.zenith * u.deg,
-        offAxisAngle=np.linspace(0, args.max_offset, int(args.max_offset / 0.25) + 1)
+        offAxisAngle=np.linspace(0, args.max_offset, int(args.max_offset / 1.0) + 1)
         * u.deg,
     )
     ray.simulate(test=args.test, force=False)
@@ -167,8 +173,26 @@ if __name__ == "__main__":
 
         ray.plot(key, marker="o", linestyle=":", color="k")
 
-        plotFileName = label + "_" + telModel.name + "_" + key
+        plotFileName = "_".join((label, telModel.name, key))
         plotFile = outputDir.joinpath(plotFileName)
         plt.savefig(str(plotFile) + ".pdf", format="pdf", bbox_inches="tight")
         plt.savefig(str(plotFile) + ".png", format="png", bbox_inches="tight")
         plt.clf()
+
+    # Plotting images
+    if args.plot_images:
+        plotFileName = "_".join((
+            label, telModel.name, "images.pdf"
+        ))
+        plotFile = outputDir.joinpath(plotFileName)
+        pdfPages = PdfPages(plotFile)
+
+        logger.info("Plotting images into {}".format(plotFile))
+
+        for image in ray.images():
+            fig = plt.figure(figsize=(8, 6), tight_layout=True)
+            image.plotImage()
+            pdfPages.savefig(fig)
+            plt.clf()
+        plt.close()
+        pdfPages.close()
