@@ -132,6 +132,13 @@ properties. See an example below:
 Applications
 ============
 
+
+
+Configuration
+=============
+
+
+
 Layout arrays
 =============
 
