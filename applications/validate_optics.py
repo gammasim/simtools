@@ -161,7 +161,7 @@ if __name__ == "__main__":
         telescopeModel=telModel,
         sourceDistance=args.src_distance * u.km,
         zenithAngle=args.zenith * u.deg,
-        offAxisAngle=np.linspace(0, args.max_offset, int(args.max_offset / 1.0) + 1)
+        offAxisAngle=np.linspace(0, args.max_offset, int(args.max_offset / 0.25) + 1)
         * u.deg,
     )
     ray.simulate(test=args.test, force=False)
