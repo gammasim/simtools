@@ -12,9 +12,11 @@ Conventions
 Imports
 -------
 
-import simtools.config as cfg
-import simtools.util.general as gen
-import simtools.io_handler as io
+.. code-block:: python
+
+  import simtools.config as cfg
+  import simtools.util.general as gen
+  import simtools.io_handler as io
 
 
 Telescope Names
