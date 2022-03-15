@@ -408,6 +408,7 @@ class PSFImage:
         ax = plt.gca()
         # Image histogram
         ax.hist2d(data["X"], data["Y"], **kwargsForImage)
+        ax.set_aspect("equal", "datalim")
 
         # PSF circle
         center = (0, 0) if centralized else (self.centroidX, self.centroidY)
