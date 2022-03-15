@@ -415,6 +415,9 @@ class PSFImage:
         circle = plt.Circle(center, self.getPSF(0.8) / 2, **kwargsForPSF)
         ax.add_artist(circle)
 
+        ax.axhline(0, color="k", linestyle="--", zorder=3, linewidth=0.5)
+        ax.axvline(0, color="k", linestyle="--", zorder=3, linewidth=0.5)
+
     def getCumulativeData(self, radius=None):
         """
         Provide cumulative data (intensity vs radius).
