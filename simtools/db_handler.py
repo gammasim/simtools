@@ -39,6 +39,8 @@ class DatabaseHandler:
         Delete all entries from the DB which correspond to the provided query.
     updateParameter()
         Update a parameter value for a specific telescope/version.
+    updateParameterField()
+        Update a parameter field other than value for a specific telescope/version.
     addParameter()
         Add a parameter value for a specific telescope.
     addNewParamete()
@@ -798,6 +800,70 @@ class DatabaseHandler:
 
         collection.update_one(query, queryUpdate)
         self.insertFilesToDB(filesToAddToDB, dbName)
+
+        return
+
+    def updateParameterField(
+        self, dbName, telescope, version, parameter, field, newValue
+    ):
+        """
+        Update a parameter field value for a specific telescope/version.
+        This function only modifies the value of one of the following
+        DB entries: Applicable, units, Type, items, minimum, maximum.
+        These type of changes should be very rare. However they can
+        be done without changing the Object ID of the entry since
+        they are generally "harmless".
+
+        Parameters
+        ----------
+        dbName: str
+            the name of the DB
+        telescope: str
+            Which telescope to update
+        version: str
+            Which version to update
+        parameter: str
+            Which parameter to update
+        field: str
+            Field to update (only options are Applicable, units, Type, items, minimum, maximum).
+        newValue: type identical to the original field type
+            The new value to set to the field given in "field".
+        """
+
+        allowed_fields = ["Applicable", "units", "Type", "items", "minimum", "maximum"]
+        if field not in allowed_fields:
+            raise ValueError("The field to change must be one of {}".format(", ".join(allowed_fields)))
+
+        collection = DatabaseHandler.dbClient[dbName].telescopes
+
+        _modelVersion = self._convertVersionToTagged(version, dbName)
+
+        query = {
+            "Telescope": telescope,
+            "Version": _modelVersion,
+            "Parameter": parameter,
+        }
+
+        parEntry = collection.find_one(query)
+        if parEntry is None:
+            self._logger.warning("The query {} did not return any results. I will not make any changes.".format(query))
+            return
+
+        oldFieldValue = parEntry[field]
+
+        if oldFieldValue == newValue:
+            self._logger.warning("The value of the field {} is already {}. No changes are necessary".format(field, newValue))
+            return
+
+        self._logger.info(
+            "For telescope {}, version {} and parameter {},\nreplacing the field {} value from {} to {}".format(
+                telescope, _modelVersion, parameter, field, oldFieldValue, newValue
+            )
+        )
+
+        queryUpdate = {"$set": {field: newValue}}
+
+        collection.update_one(query, queryUpdate)
 
         return
 
