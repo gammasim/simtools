@@ -78,7 +78,7 @@ Handling data files
 ===================
 
 Data files are auxiliary files containing data required to run simtools.
-These day is kept in files to avoid having it hardcoded throughout the code.
+These data is kept in files to avoid having it hardcoded throughout the code.
 They are located in the data directory inside the main repository and its location
 must be given in the config file.
 
@@ -180,3 +180,16 @@ requires: a) a config file properly set, b) a sim_telarray installation and
 c) DB connection. Each of these are identified before each pytest session
 and environment variables are used to store this information. See the implementation
 in conftest.py. In util/tests.py one can find functions that reads these variables.
+
+
+Integration with CORSIKA and sim_telarray
+=========================================
+
+CORSIKA and sim_telarray are external tools to simtools. Their integration should be
+minimally coupled with the rest of the packege. The modules that depend directly on these
+tools should be connected to the rest of the package through interfaces. This way, it 
+will be easier to replace these tools in the future.
+
+One example of this approach is shower_simulator module, that is an interface module that
+connects to the tool specific module that is meant to manage shower simulations. In this case,
+this tool specific module is the corsika_runner, which can be replaced in the future.
