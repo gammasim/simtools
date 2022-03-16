@@ -17,7 +17,6 @@ import argparse
 import yaml
 
 from simtools import db_handler
-import simtools.config as cfg
 import simtools.util.general as gen
 
 if __name__ == "__main__":
