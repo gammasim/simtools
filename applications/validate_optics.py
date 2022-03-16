@@ -39,6 +39,8 @@
         Zenith angle in deg (default=20).
     max_offset (float, optional)
         Maximum offset angle in deg (default=4).
+    plot_images (activation mode, optional)
+        Produce a multiple pages pdf file with the image plots.
     test (activation mode, optional)
         If activated, application will be faster by simulating fewer photons.
     verbosity (str, optional)
@@ -53,10 +55,6 @@
     .. code-block:: console
 
         python applications/validate_optics.py --site North --telescope LST-1 --max_offset 5.0
-
-    .. todo::
-
-        * Change default model to default (after this feature is implemented in db_handler)
 """
 
 import logging
@@ -99,7 +97,7 @@ if __name__ == "__main__":
         "--model_version",
         help="Model version (default=prod4)",
         type=str,
-        default="prod4",
+        default="Current",
     )
     parser.add_argument(
         "--src_distance",
