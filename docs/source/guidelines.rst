@@ -43,14 +43,14 @@ For the Type field, any string will be accepted and a selected list of variation
 Validating names
 ================
 
-Any name that is reccurently used along the the package should be validated when given as input.
-Examples of names are: telescope, site, camera, model version. The functionaties to validate names
+Any name that is recurrently used along the the package should be validated when given as input.
+Examples of names are: telescope, site, camera, model version. The functionalities to validate names
 are found in util.names. The function validateName receives the input string and a name dictionary,
 that is usually called allSomethingNames. This dictionary contain the possible names (as keys) and lists
 of allowed alternatives names as values. In case the input name is found in one of the lists, the key
 is returned.
 
-The name dictnaries are also defined in util.names. One should also define especific functions named
+The name dictionaries are also defined in util.names. One should also define specific functions named
 validateSomethingNames that call the validateName with the proper name dictionary. This is only meant to
 provide a clear interface.
 
@@ -96,13 +96,13 @@ Any module that receives configurable inputs (e.g. physical parameters)
 must have them validated. The validation assures that the units, type and
 format are correct and also allow for default values.
 
-The configurable input must be passed to classes through a dictonary or a yaml
+The configurable input must be passed to classes through a dictionary or a yaml
 file. In the case of a dictionary the parameter is called configData, and in the
 case of a yaml file, configFile. See the ray_tracing module for an example.
 
 The function gen.collectDataFromYamlOrDict(configData, configFile, allowEmpty=False)
 must be used to read these arguments. It identifies which case was given and
-reads it accordinly, returnig a dictinary. It also raises an exception in case none are
+reads it accordingly, returning a dictionary. It also raises an exception in case none are
 given and not allowEmpty.
 
 The validation of the input is done by the function gen.validateConfigData, which
@@ -134,7 +134,7 @@ properties. See an example below:
 Applications
 ============
 
-Applications are simple command lines tools that should be build off of the simtools libray.
+Applications are simple command lines tools that should be build off of the simtools library.
 It is recommended to avoid implementing complex algorithm in the applications. Instead, that
 should be done at some module in the library.
 
@@ -152,7 +152,7 @@ parameters, examples etc.
 Layout arrays
 =============
 
-The layout arrays provide the telescope positions and deal with coordenate transformations. The main module
+The layout arrays provide the telescope positions and deal with coordinate transformations. The main module
 that implements it is simtools.layout.layout_array. A LayoutArray can be created on the fly by providing the
 telescope positions. However that is only supposed to be done once for each layout. After that it is
 recommended to use a pre-defined layout file (ecsv format) and create a LayoutArray by using the class
@@ -186,7 +186,7 @@ Integration with CORSIKA and sim_telarray
 =========================================
 
 CORSIKA and sim_telarray are external tools to simtools. Their integration should be
-minimally coupled with the rest of the packege. The modules that depend directly on these
+minimally coupled with the rest of the package. The modules that depend directly on these
 tools should be connected to the rest of the package through interfaces. This way, it 
 will be easier to replace these tools in the future.
 
