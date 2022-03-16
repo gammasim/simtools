@@ -191,6 +191,42 @@ class TestDBHandler(unittest.TestCase):
         self.db.deleteQuery("sandbox", "telescopes", query)
 
     @pytest.mark.skipif(not has_db_connection(), reason=DB_CONNECTION_MSG)
+    def test_update_parameter_field_db(self):
+
+        self.logger.info("----Testing modifying a field of a parameter-----")
+        self.db.copyTelescope(
+            self.DB_CTA_SIMULATION_MODEL,
+            "North-LST-1",
+            "Current",
+            "North-LST-Test",
+            "sandbox",
+        )
+        self.db.copyDocuments(
+            self.DB_CTA_SIMULATION_MODEL,
+            "metadata",
+            {"Entry": "Simulation-Model-Tags"},
+            "sandbox",
+        )
+
+        self.db.updateParameterField(
+            dbName="sandbox",
+            telescope="North-LST-Test",
+            version="Current",
+            parameter="camera_pixels",
+            field="Applicable",
+            newValue=False
+        )
+        pars = self.db.readMongoDB(
+            "sandbox", "North-LST-Test", "Current", self.testDataDirectory, False
+        )
+        assert pars["camera_pixels"]["Applicable"] is False
+
+        query = {"Telescope": "North-LST-Test"}
+        self.db.deleteQuery("sandbox", "telescopes", query)
+        query = {"Entry": "Simulation-Model-Tags"}
+        self.db.deleteQuery("sandbox", "metadata", query)
+
+    @pytest.mark.skipif(not has_db_connection(), reason=DB_CONNECTION_MSG)
     def test_reading_db_sites(self):
 
         self.logger.info("----Testing reading La Palma parameters-----")
