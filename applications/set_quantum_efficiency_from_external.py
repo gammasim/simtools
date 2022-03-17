@@ -12,8 +12,6 @@
         Workflow description (yml format)
     input_meta (str, required)
         User-provided meta data file (yml format)
-    input_data (str, required)
-        User-provided data file (ecsv format)
     verbosity (str, optional)
         Log level to print (default=INFO).
 
@@ -26,8 +24,7 @@
 
         python ./set_quantum_efficiency_from_external.py \
             --workflow_schema set_quantum_efficiency_from_external.yml \
-            --input_meta qe_R12992-100-05b.meta.yml \
-            --input_data qe_R12992-100-05b.meta.ecsv
+            --input_meta qe_R12992-100-05b.usermeta.yml \
 
 
 """
@@ -61,13 +58,6 @@ if __name__ == "__main__":
         required=True,
     )
     parser.add_argument(
-        "-d",
-        "--input_data",
-        help="User-provided data file (ecsv)",
-        type=str,
-        required=True,
-    )
-    parser.add_argument(
         "-v",
         "--verbosity",
         dest="logLevel",
@@ -88,10 +78,9 @@ if __name__ == "__main__":
     # validate, transform, clean, enrich user metadata and data
 #    output_meta, output_data = transformInput(
 #        args.workflow_schema,
-#        args.input_meta,
-#        args.input_data)
+#        args.input_meta)
 
-    # write model data in the format expected 
+    # write model data in the format expected
 #    writeModelData(
 #        output_meta,
 #        output_data)
