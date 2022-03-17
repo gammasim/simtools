@@ -172,50 +172,50 @@ if __name__ == "__main__":
 
     submitCommand = "more " if args.test else None
 
-    # ShowerSimulators
-    showerSimulators = dict()
-    for primary, configData in showerConfigs.items():
-        ss = ShowerSimulator(label=label, showerConfigData=configData)
-        showerSimulators[primary] = ss
+    # # ShowerSimulators
+    # showerSimulators = dict()
+    # for primary, configData in showerConfigs.items():
+    #     ss = ShowerSimulator(label=label, showerConfigData=configData)
+    #     showerSimulators[primary] = ss
 
-    if not args.array_only:
-        # Running Showers
-        for primary, shower in showerSimulators.items():
+    # if not args.array_only:
+    #     # Running Showers
+    #     for primary, shower in showerSimulators.items():
 
-            if args.task == "simulate":
-                print("Running ShowerSimulator for primary {}".format(primary))
-                shower.submit(submitCommand=submitCommand)
+    #         if args.task == "simulate":
+    #             print("Running ShowerSimulator for primary {}".format(primary))
+    #             shower.submit(submitCommand=submitCommand)
 
-            elif args.task == "list":
-                print(
-                    "Printing ShowerSimulator file lists for primary {}".format(primary)
-                )
-                raise NotImplementedError()
+    #         elif args.task == "list":
+    #             print(
+    #                 "Printing ShowerSimulator file lists for primary {}".format(primary)
+    #             )
+    #             raise NotImplementedError()
 
-    # ArraySimulators
-    arraySimulators = dict()
-    for primary, configData in arrayConfigs.items():
-        aa = ArraySimulator(label=label, configData=configData)
-        arraySimulators[primary] = aa
+    # # ArraySimulators
+    # arraySimulators = dict()
+    # for primary, configData in arrayConfigs.items():
+    #     aa = ArraySimulator(label=label, configData=configData)
+    #     arraySimulators[primary] = aa
 
-    if not args.showers_only:
-        # Running Arrays
-        for primary, array in arraySimulators.items():
+    # if not args.showers_only:
+    #     # Running Arrays
+    #     for primary, array in arraySimulators.items():
 
-            inputList = showerSimulators[primary].getListOfOutputFiles()
-            if args.task == "simulate":
-                print("Running ArraySimulator for primary {}".format(primary))
-                array.submit(inputFileList=inputList, submitCommand=submitCommand)
+    #         inputList = showerSimulators[primary].getListOfOutputFiles()
+    #         if args.task == "simulate":
+    #             print("Running ArraySimulator for primary {}".format(primary))
+    #             array.submit(inputFileList=inputList, submitCommand=submitCommand)
 
-            elif args.task == "lists":
-                print(
-                    "Printing ArraySimulator file lists for primary {}".format(primary)
-                )
-                raise NotImplementedError()
+    #         elif args.task == "lists":
+    #             print(
+    #                 "Printing ArraySimulator file lists for primary {}".format(primary)
+    #             )
+    #             raise NotImplementedError()
 
-            elif args.task == "inspect":
-                print(
-                    "Plotting ArraySimulator histograms for primary {}".format(primary)
-                )
-                file = array.printHistograms(inputList)
-                print("Histograms file {}".format(file))
+    #         elif args.task == "inspect":
+    #             print(
+    #                 "Plotting ArraySimulator histograms for primary {}".format(primary)
+    #             )
+    #             file = array.printHistograms(inputList)
+    #             print("Histograms file {}".format(file))
