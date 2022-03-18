@@ -42,5 +42,4 @@ General Documentation
   applications
   library
   databases
-  conventions
   guidelines
