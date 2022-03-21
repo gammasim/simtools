@@ -327,12 +327,10 @@ class RayTracing:
                     centroidY = image.centroidY
                     effArea = image.getEffectiveArea() * telTransmission
 
-                centroidR = sqrt(centroidX * centroidX + centroidY * centroidY)
-
                 effFlen = (
                     np.nan
                     if thisOffAxis == 0
-                    else centroidR / tan(thisOffAxis * pi / 180.0)
+                    else centroidX / tan(thisOffAxis * pi / 180.0)
                 )
                 _currentResults = (
                     thisOffAxis * u.deg,
