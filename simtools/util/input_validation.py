@@ -107,8 +107,8 @@ class SchemaValidator:
             else:
                 self._check_if_field_is_optional(key, value)
                 continue
-            if isinstance(value, dict) and 'type' in value:
-                self._validate_data_type(
-                    value, key, _this_data)
-            else:
-                self._validate_schema(value, _this_data)
+            if isinstance(value, dict):
+                if 'type' in value:
+                    self._validate_data_type(value, key, _this_data)
+                else:
+                    self._validate_schema(value, _this_data)
