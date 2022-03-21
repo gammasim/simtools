@@ -23,8 +23,8 @@
     .. code-block:: console
 
         python ./set_quantum_efficiency_from_external.py \
-            --workflow_schema set_quantum_efficiency_from_external.yml \
-            --input_meta qe_R12992-100-05b.usermeta.yml \
+            --workflow_schema_file set_quantum_efficiency_from_external.yml \
+            --input_meta_file qe_R12992-100-05b.usermeta.yml \
 
 
 """
@@ -35,6 +35,33 @@ import logging
 import simtools.config as cfg
 import simtools.io_handler as io
 import simtools.util.general as gen
+import simtools.util.input_validation as validator
+
+def transformInput(
+    workflow_schema_file,
+    input_meta_file):
+    """
+    data transformation for simulation model data
+
+    includes:
+    -
+    - schema validation
+    - data validation
+    - data cleaning
+    - data conversion to standard units
+    - metadata enrichment
+    """
+
+    input_meta = gen.collectDataFromYamlOrDict(
+        input_meta_file,
+        None)
+    _schema_validator = validator.SchemaValidator(
+        workflow_schema_file,
+        input_meta)
+    _schema_validator.validate()
+
+    return None, None
+
 
 if __name__ == "__main__":
 
@@ -45,14 +72,14 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "-w",
-        "--workflow_schema",
+        "--workflow_schema_file",
         help="workflow description",
         type=str,
         required=True,
     )
     parser.add_argument(
         "-m",
-        "--input_meta",
+        "--input_meta_file",
         help="User-provided meta data file (yml)",
         type=str,
         required=True,
@@ -76,9 +103,9 @@ if __name__ == "__main__":
     logger.info("Outputdirectory {}".format(outputDir))
 
     # validate, transform, clean, enrich user metadata and data
-#    output_meta, output_data = transformInput(
-#        args.workflow_schema,
-#        args.input_meta)
+    output_meta, output_data = transformInput(
+        args.workflow_schema_file,
+        args.input_meta_file)
 
     # write model data in the format expected
 #    writeModelData(
