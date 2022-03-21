@@ -1,5 +1,6 @@
 import datetime
 import logging
+import re
 
 import simtools.util.general as gen
 
@@ -25,8 +26,9 @@ class SchemaValidator:
 
         self._logger = logging.getLogger(__name__)
 
-        self._reference_schema = gen.collectDataFromYamlOrDict(
-            reference_schema_file, None)
+        if reference_schema_file:
+            self._reference_schema = gen.collectDataFromYamlOrDict(
+                reference_schema_file, None)
         self.data_dict = data_dict
 
     def validate(self):
@@ -45,26 +47,29 @@ class SchemaValidator:
 
         Raises value error if data types are inconsistent
         """
+        self._logger.debug('checking data field {} for {}'.format(
+            key, schema['type']))
 
         if schema['type'] == 'datetime':
             format = "%Y-%m-%d %H:%M:%S"
-            print('AAAA', data_field)
             try:
                 datetime.datetime.strptime(data_field, format)
             except:
                 raise ValueError(
                     'invalid date format. Expected {}; Found {}'.format(
                         format, data_field))
-            self._logger.debug('checking {} for datetime'.format(key))
 
-        # TODO
-        self._logger.debug('data type checking to be fixed {}'.format(schema['type']))
-        return None
+        elif schema['type'] == 'email':
+            regex = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'
+            if not re.fullmatch(regex, data_field):
+                raise ValueError(
+                    'invalid email format in field {}: {}'.format(
+                        key, data_field))
 
-        if not str(type(data_field)) is schema['type']:
+        elif type(data_field).__name__ != schema['type']:
             raise ValueError(
                 'invalid data type for key {}. Expected: {}, Found: {}'.format(
-                    key, schema['type'], type(data_field)))
+                    key, schema['type'], type(data_field).__name__))
 
     def _check_if_field_is_optional(self, key, value):
         """
@@ -101,7 +106,7 @@ class SchemaValidator:
                 _this_data = data_dict[key]
             else:
                 self._check_if_field_is_optional(key, value)
-                return None
+                continue
             if isinstance(value, dict) and 'type' in value:
                 self._validate_data_type(
                     value, key, _this_data)
