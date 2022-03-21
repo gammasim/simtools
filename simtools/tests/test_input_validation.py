@@ -20,6 +20,11 @@ def test__validate_data_type_datetime():
     date_validator._validate_data_type(
         date_schema1, date_key, '2018-03-01 12:00:00')
 
+    date_data2 = '2018-15-01 12:00:00'
+    with pytest.raises(
+        ValueError,
+        match=r"invalid date format. Expected %Y-%m-%d %H:%M:%S; Found 2018-15-01 12:00"):
+            date_validator._validate_data_type(date_schema1, date_key, date_data2)
     # tests should fail
     date_data1 = '2018-03-01 12:00'
     with pytest.raises(
