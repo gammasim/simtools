@@ -3,7 +3,7 @@ import subprocess
 import matplotlib.pyplot as plt
 from copy import copy
 from pathlib import Path
-from math import pi, tan, sqrt
+from math import pi, tan
 
 import numpy as np
 import astropy.units as u
