@@ -3,7 +3,7 @@
 import pytest
 import logging
 
-import simtools.util.input_validation as validator
+import simtools.util.validate_schema as validator
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)

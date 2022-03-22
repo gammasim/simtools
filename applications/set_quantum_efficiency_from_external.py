@@ -35,7 +35,7 @@ import logging
 import simtools.config as cfg
 import simtools.io_handler as io
 import simtools.util.general as gen
-import simtools.util.input_validation as validator
+import simtools.util.validate_schema as validator
 
 def transformInput(
     workflow_schema_file,
