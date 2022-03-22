@@ -50,41 +50,60 @@ def test__validate_data_type_email():
         match=r"invalid email format in field EMAIL: me-blabla.de"):
             date_validator._validate_data_type(email_schema1, email_key, 'me-blabla.de')
 
-def test__validate_data_type_othertypes():
+def test__validate_data_type_schema_str():
 
     date_validator = validator.SchemaValidator(None, None)
     test_key = 'SUBTYPE'
     test_schema_1 = {'type': 'str'}
-    test_schema_2 = {'type': 'float'}
-    test_schema_3 = {'type': 'int'}
-    test_schema_4 = {'type': 'bool'}
-
     date_validator._validate_data_type(
         test_schema_1, test_key, 'test_string')
     date_validator._validate_data_type(
         test_schema_1, test_key, 25)
+
+def test__validate_data_type_schema_float():
+
+    date_validator = validator.SchemaValidator(None, None)
+    test_key = 'SUBTYPE'
+    test_schema_2 = {'type': 'float'}
+
     date_validator._validate_data_type(
         test_schema_2, test_key, 25.0)
     date_validator._validate_data_type(
         test_schema_2, test_key, 25)
-    date_validator._validate_data_type(
-        test_schema_3, test_key, 25.5)
-    date_validator._validate_data_type(
-        test_schema_3, test_key, 25)
+
+    with pytest.raises(
+        ValueError,
+        match=r"invalid data type for key SUBTYPE. Expected: float, Found: str"):
+            date_validator._validate_data_type(test_schema_2, test_key, 'abc')
+
+def test__validate_data_type_schema_bool():
+
+    date_validator = validator.SchemaValidator(None, None)
+    test_key = 'SUBTYPE'
+    test_schema_4 = {'type': 'bool'}
+
     date_validator._validate_data_type(
         test_schema_4, test_key, False)
     date_validator._validate_data_type(
         test_schema_4, test_key, True)
 
-    # tests should fail
-    with pytest.raises(
-        ValueError,
-        match=r"invalid data type for key SUBTYPE. Expected: float, Found: str"):
-            date_validator._validate_data_type(test_schema_2, test_key, 'abc')
+def test__validate_data_type_schema_int():
+
+    date_validator = validator.SchemaValidator(None, None)
+    test_key = 'SUBTYPE'
+    test_schema_3 = {'type': 'int'}
+
+    date_validator._validate_data_type(
+        test_schema_3, test_key, 25)
+
     with pytest.raises(
         ValueError,
         match=r"invalid data type for key SUBTYPE. Expected: int, Found: str"):
             date_validator._validate_data_type(test_schema_3, test_key, 'abc')
+    with pytest.raises(
+        ValueError,
+        match=r"invalid data type for key SUBTYPE. Expected: int, Found: float"):
+            date_validator._validate_data_type(test_schema_3, test_key, 25.5)
 
 def test__check_if_field_is_optional():
 
