@@ -87,7 +87,7 @@ class SchemaValidator:
                 and 'required' in value \
                 and value['required']:
             raise ValueError(
-                'required data field {} not found')
+                'required data field {} not found'.format(key))
 
         self._logger.debug(
             'checking optional key {}'.format(key))
