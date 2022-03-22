@@ -50,6 +50,9 @@ class SchemaValidator:
         self._logger.debug("checking data field %s for %s",
                            key, schema['type'])
 
+        convert = {'str': type('str'), 'float': type(1.0),
+                   'int': type(0), 'bool': type(True)}
+
         if schema['type'] == 'datetime':
             format_date = "%Y-%m-%d %H:%M:%S"
             try:
@@ -65,9 +68,12 @@ class SchemaValidator:
                     f'invalid email format in field {key}: {data_field}')
 
         elif type(data_field).__name__ != schema['type']:
-            raise ValueError(
-                'invalid data type for key {}. Expected: {}, Found: {}'.format(
-                    key, schema['type'], type(data_field).__name__))
+            try:
+                convert[schema['type']](data_field)
+            except ValueError as error:
+                raise ValueError(
+                    'invalid data type for key {}. Expected: {}, Found: {}'.format(
+                        key, schema['type'], type(data_field).__name__)) from error
 
     def _check_if_field_is_optional(self, key, value):
         """
