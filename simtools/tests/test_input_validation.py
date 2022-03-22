@@ -81,8 +81,5 @@ def test__check_if_field_is_optional():
         match=r"required data field test_key not found"):
             date_validator._check_if_field_is_optional(test_key, test_value_2)
 
-
-
-
 # TODO
-# several missing tests
+# tests for _validate_schema
