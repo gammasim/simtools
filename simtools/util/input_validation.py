@@ -69,7 +69,10 @@ class SchemaValidator:
 
         elif type(data_field).__name__ != schema['type']:
             try:
-                convert[schema['type']](data_field)
+                if isinstance(data_field, (int, str)):
+                    convert[schema['type']](data_field)
+                else:
+                    raise ValueError
             except ValueError as error:
                 raise ValueError(
                     'invalid data type for key {}. Expected: {}, Found: {}'.format(
