@@ -47,24 +47,22 @@ class SchemaValidator:
 
         Raises value error if data types are inconsistent
         """
-        self._logger.debug('checking data field {} for {}'.format(
-            key, schema['type']))
+        self._logger.debug("checking data field %s for %s",
+                           key, schema['type'])
 
         if schema['type'] == 'datetime':
-            format = "%Y-%m-%d %H:%M:%S"
+            format_date = "%Y-%m-%d %H:%M:%S"
             try:
-                datetime.datetime.strptime(data_field, format)
-            except:
+                datetime.datetime.strptime(data_field, format_date)
+            except (ValueError, TypeError):
                 raise ValueError(
-                    'invalid date format. Expected {}; Found {}'.format(
-                        format, data_field))
+                    f'invalid date format. Expected {format_date}; Found {data_field}')
 
         elif schema['type'] == 'email':
             regex = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'
             if not re.fullmatch(regex, data_field):
                 raise ValueError(
-                    'invalid email format in field {}: {}'.format(
-                        key, data_field))
+                    f'invalid email format in field {key}: {data_field}')
 
         elif type(data_field).__name__ != schema['type']:
             raise ValueError(
@@ -87,10 +85,9 @@ class SchemaValidator:
                 and 'required' in value \
                 and value['required']:
             raise ValueError(
-                'required data field {} not found'.format(key))
+                f'required data field {key} not found')
 
-        self._logger.debug(
-            'checking optional key {}'.format(key))
+        self._logger.debug("checking optional key %s", key)
 
     def _validate_schema(
             self,
