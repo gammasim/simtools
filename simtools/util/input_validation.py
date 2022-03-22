@@ -54,9 +54,9 @@ class SchemaValidator:
             format_date = "%Y-%m-%d %H:%M:%S"
             try:
                 datetime.datetime.strptime(data_field, format_date)
-            except (ValueError, TypeError):
+            except (ValueError, TypeError) as error:
                 raise ValueError(
-                    f'invalid date format. Expected {format_date}; Found {data_field}')
+                    f'invalid date format. Expected {format_date}; Found {data_field}') from error
 
         elif schema['type'] == 'email':
             regex = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'
