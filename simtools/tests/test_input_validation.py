@@ -50,5 +50,39 @@ def test__validate_data_type_email():
         match=r"invalid email format in field EMAIL: me-blabla.de"):
             date_validator._validate_data_type(email_schema1, email_key, 'me-blabla.de')
 
+def test__validate_data_type_othertypes():
+
+    date_validator = validator.SchemaValidator(None, None)
+    test_key = 'SUBTYPE'
+    test_schmema = {'type': 'str'}
+
+    date_validator._validate_data_type(
+        test_schmema, test_key, 'test_string' )
+
+    # tests should fail
+    with pytest.raises(
+        ValueError,
+        match=r"invalid data type for key SUBTYPE. Expected: str, Found: int"):
+            date_validator._validate_data_type(test_schmema, test_key, 25)
+
+def test__check_if_field_is_optional():
+
+    date_validator = validator.SchemaValidator(None, None)
+
+    test_key = 'test_key'
+    test_value_1 = {'required': False}
+    test_value_2 = {'required': True}
+
+    date_validator._check_if_field_is_optional(test_key, test_value_1)
+
+    # tests should fail
+    with pytest.raises(
+        ValueError,
+        match=r"required data field test_key not found"):
+            date_validator._check_if_field_is_optional(test_key, test_value_2)
+
+
+
+
 # TODO
 # several missing tests
