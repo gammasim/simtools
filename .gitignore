@@ -21,3 +21,5 @@ docs/build
 
 # DB config gfile
 dbDetails.yml
+
+.DS_Store
