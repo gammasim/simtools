@@ -8,10 +8,14 @@
 
     Command line arguments
     ----------------------
-    workflow_schema (str, required)
-        Workflow description (yml format)
+    workflow_config_file (str, required)
+        Workflow configuration (yml format)
     input_meta (str, required)
         User-provided meta data file (yml format)
+    input_data (str, required)
+        User-provided data file
+    reference_schema_directory (str, required)
+        directory for reference schema
     verbosity (str, optional)
         Log level to print (default=INFO).
 
@@ -23,8 +27,10 @@
     .. code-block:: console
 
         python ./set_quantum_efficiency_from_external.py \
-            --workflow_schema_file set_quantum_efficiency_from_external.yml \
+            --workflow_config_file set_quantum_efficiency_from_external.yml \
             --input_meta_file qe_R12992-100-05b.usermeta.yml \
+            --input_data_file qe_R12992-100-05b.data.ecsv \
+            --reference_schema_directory ./REFERENCE_DIR
 
 
 """
@@ -38,8 +44,9 @@ import simtools.util.general as gen
 import simtools.util.validate_schema as validator
 
 def transformInput(
-    workflow_schema_file,
-    input_meta_file):
+        workflow_config,
+        reference_schema_dir,
+        input_meta_file):
     """
     data transformation for simulation model data
 
@@ -55,8 +62,10 @@ def transformInput(
     input_meta = gen.collectDataFromYamlOrDict(
         input_meta_file,
         None)
+
     _schema_validator = validator.SchemaValidator(
-        workflow_schema_file,
+        reference_schema_dir + '/' +
+        workflow_config["CTASIMPIPE"]["SCHEMA"]["USERINPUT"],
         input_meta)
     _schema_validator.validate()
 
@@ -71,9 +80,9 @@ if __name__ == "__main__":
         )
     )
     parser.add_argument(
-        "-w",
-        "--workflow_schema_file",
-        help="workflow description",
+        "-c",
+        "--workflow_config_file",
+        help="workflow configuration",
         type=str,
         required=True,
     )
@@ -81,6 +90,20 @@ if __name__ == "__main__":
         "-m",
         "--input_meta_file",
         help="User-provided meta data file (yml)",
+        type=str,
+        required=True,
+    )
+    parser.add_argument(
+        "-d",
+        "--input_data_file",
+        help="User-provided data file (ecsv)",
+        type=str,
+        required=True,
+    )
+    parser.add_argument(
+        "-r",
+        "--reference_schema_directory",
+        help="Directory with reference schema",
         type=str,
         required=True,
     )
@@ -94,17 +117,23 @@ if __name__ == "__main__":
     )
 
     args = parser.parse_args()
-    label = "set_quantum_efficiency_from_external"
 
     logger = logging.getLogger()
     logger.setLevel(gen.getLogLevelFromUser(args.logLevel))
 
-    outputDir = io.getApplicationOutputDirectory(cfg.get("outputLocation"), label)
-    logger.info("Outputdirectory {}".format(outputDir))
+    workflow_config = gen.collectDataFromYamlOrDict(
+        args.workflow_config_file,
+        None)
+
+    outputDir = io.getApplicationOutputDirectory(
+        cfg.get("outputLocation"),
+        workflow_config["CTASIMPIPE"]["ACTIVITY"]["NAME"])
+    logger.info("Outputdirectory %s", outputDir)
 
     # validate, transform, clean, enrich user metadata and data
     output_meta, output_data = transformInput(
-        args.workflow_schema_file,
+        workflow_config,
+        args.reference_schema_directory,
         args.input_meta_file)
 
     # write model data in the format expected
