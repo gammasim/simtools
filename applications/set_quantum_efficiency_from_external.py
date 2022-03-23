@@ -41,12 +41,15 @@ import logging
 import simtools.config as cfg
 import simtools.io_handler as io
 import simtools.util.general as gen
-import simtools.util.validate_schema as validator
+import simtools.util.validate_schema as vs
+import simtools.util.validate_data as ds
+import simtools.util.write_model_data as writer
 
 def transformInput(
         workflow_config,
         reference_schema_dir,
-        input_meta_file):
+        input_meta_file,
+        input_data_file):
     """
     data transformation for simulation model data
 
@@ -56,20 +59,30 @@ def transformInput(
     - data validation
     - data cleaning
     - data conversion to standard units
-    - metadata enrichment
+    - metadata writer
     """
 
     input_meta = gen.collectDataFromYamlOrDict(
         input_meta_file,
         None)
 
-    _schema_validator = validator.SchemaValidator(
+    _schema_validator = vs.SchemaValidator(
         reference_schema_dir + '/' +
         workflow_config["CTASIMPIPE"]["SCHEMA"]["USERINPUT"],
         input_meta)
     _schema_validator.validate()
 
-    return None, None
+    _data_validator = ds.DataValidator(
+        workflow_config["CTASIMPIPE"]["DATA_COLUMNS"],
+        input_data_file)
+    output_data = _data_validator.validate_and_transform()
+
+    # TODO: data cleaning?
+
+    # TODO: metadata filling (happens in writer, ok?)
+
+    # FIXME: input_meta = ouput_meta
+    return input_meta, output_data
 
 
 if __name__ == "__main__":
@@ -134,9 +147,12 @@ if __name__ == "__main__":
     output_meta, output_data = transformInput(
         workflow_config,
         args.reference_schema_directory,
-        args.input_meta_file)
+        args.input_meta_file,
+        args.input_data_file)
 
-    # write model data in the format expected
-#    writeModelData(
-#        output_meta,
-#        output_data)
+    file_writer = writer.ModelData()
+    file_writer.write_model_file(
+        workflow_config,
+        output_meta,
+        output_data,
+        outputDir)
