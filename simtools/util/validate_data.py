@@ -185,7 +185,7 @@ class DataValidator:
                 return None
         except KeyError:
             raise KeyError(
-                "Missing column '{col_name} in reference range'".format(col_name))
+                f"Missing column '{col_name} in reference range'")
 
         try:
             if not self._interval_check(
