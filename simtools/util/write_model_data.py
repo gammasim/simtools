@@ -1,10 +1,23 @@
 import logging
 import yaml
 
+
 class ModelData:
     """
-    Simulation model class including metadata
-    enrichment and model data writing
+    Simulation model data class.
+
+    Includes metadata enrichment and model data writing.
+
+    Limitations:
+    - allows only for writing of ascii.ecsv format
+
+    Attributes:
+    -----------
+
+    Methods:
+    --------
+    write_model_file()
+        Write model and model metadata to file.
 
     """
 
@@ -19,7 +32,36 @@ class ModelData:
         self._modelfile = None
         self._modelfile_data_format = 'ascii.ecsv'
 
-    def _write(self, data_meta = None, data = None):
+    def write_model_file(self,
+                         workflow_config,
+                         user_meta,
+                         user_data,
+                         output_dir):
+        """
+        Write a model data file including a complete
+        set of metadata
+
+        Parameters
+        ----------
+        workflow_config: dict
+            Workflow configuration.
+        user_meta: dict
+            User given meta data.
+        user_data: astropy Table
+            Model data.
+        output_dir: str
+            Ouput directory for model and meta data writing.
+
+
+        """
+        # FIXME where do we state the name of the output file?
+        self._modelfile = str(output_dir) + '/tt'
+
+        toplevel_meta = self._prepare_metadata(user_meta)
+
+        self._write(toplevel_meta, user_data)
+
+    def _write(self, data_meta=None, data=None):
         """
         Write model metadata and data files
 
@@ -62,23 +104,6 @@ class ModelData:
             raise
 
         return toplevel_meta
-
-    def write_model_file(self,
-                         workflow_config,
-                         user_meta,
-                         user_data,
-                         output_dir):
-        """
-        Write a model data file including a complete
-        set of metadata
-
-        """
-        self._modelfile = str(output_dir) + '/tt'
-        self._logger.info('Writing model data file to %s', self._modelfile)
-
-        toplevel_meta = self._prepare_metadata(user_meta)
-
-        self._write(toplevel_meta, user_data)
 
     def _get_toplevel_template(self):
         """
