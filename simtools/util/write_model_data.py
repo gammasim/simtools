@@ -132,12 +132,12 @@ class ModelData:
                     'CREATION_TIME': None,
                     'ID': None,
                     'DATA': {
-                        'CATEGORY': None,
-                        'LEVEL': None,
+                        'CATEGORY': 'SIM',
+                        'LEVEL': 'R0',
                         'ASSOCIATION': None,
                         'TYPE': 'service',
                         'MODEL': {
-                            'NAME': None,
+                            'NAME': 'simpipe-table',
                             'VERSION': '0.1.0',
                             'URL': None},
                         'FORMAT': None,
