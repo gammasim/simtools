@@ -147,7 +147,6 @@ if __name__ == "__main__":
         workflow_config["CTASIMPIPE"]["ACTIVITY"]["NAME"])
     logger.info("Outputdirectory %s", outputDir)
 
-    # validate, transform, clean, enrich user metadata and data
     output_meta, output_data = transformInput(
         workflow_config,
         args.reference_schema_directory,
