@@ -6,7 +6,24 @@ from astropy import units as u
 
 class DataValidator:
     """
-    Simulation model data transformation:
+    Simulation model data transformation for data validation.
+
+    Attributes
+    ----------
+    reference_data_columns: dict
+        data columns description
+    data_file_name: str
+        name of input data file
+
+
+    Methods
+    -------
+    validate_and_transform()
+        Main function to validate and transform.
+    validate_data_file()
+        Open data file and check for file consistency
+    validate_data_columns()
+        Check each data column for correct units and data ranges.
 
     """
 
@@ -14,13 +31,6 @@ class DataValidator:
         """
         Initalize validation class and read required
         reference data columns
-
-        Parameters:
-        -----------
-        reference_data_columns: dict
-            data columns description
-        data_file_name: dict
-            name of data file
 
         """
 
@@ -44,7 +54,7 @@ class DataValidator:
 
     def validate_data_file(self):
         """
-        Open data file into astropy Table
+        Open data file and check for file consistency
 
         """
 
@@ -55,6 +65,20 @@ class DataValidator:
         # astropy.io.ascii.core.InconsistentTableError
         self.data_table = Table.read(self._data_file_name, guess=True)
         self._logger.info("Reading data from %s", self._data_file_name)
+
+    def validate_data_columns(self):
+        """
+        Validate that required data columns are available
+        and in the correct units
+
+        """
+
+        self._check_required_columns()
+
+        for col in self.data_table.itercols():
+            self._check_and_convert_units(col)
+            self._check_range(col.name, col.min(), col.max(), 'allowed_range')
+            self._check_range(col.name, col.min(), col.max(), 'required_range')
 
     def _check_required_columns(self):
         """
@@ -75,7 +99,7 @@ class DataValidator:
     def _get_reference_unit(self, key):
         """
         Return reference column unit.
-        Includes Correct treatment of dimensionless units
+        Includes correct treatment of dimensionless units
 
         """
 
@@ -86,7 +110,7 @@ class DataValidator:
                 "Data column '%s' not found in reference column definition", key)
             raise
 
-        if reference_unit == 'dimensionless':
+        if reference_unit == 'dimensionless' or reference_unit is None:
             return u.dimensionless_unscaled
 
         return u.Unit(reference_unit)
@@ -94,16 +118,17 @@ class DataValidator:
     def _check_and_convert_units(self, col):
         """
         Check that all columns have an allowed units.
-        Convert to reference unit (e.g., Angstrom to nm)
+        Convert to reference unit (e.g., Angstrom to nm).
 
         Note on dimensionless columns:
-        - given in the data file is unit: ''
-        - be forgiving and assume that no unit given in the data files
+            - should be given in unit descriptor as unit: ''
+        - be forgiving and assume that in cases no unit is given in the data files
           means that it should be dimensionless (e.g., for a efficiency)
 
         """
 
         self._logger.debug("Checking data column '%s'", col.name)
+
         try:
             reference_unit = self._get_reference_unit(col.name)
             if col.unit is None or col.unit == 'dimensionless':
@@ -123,13 +148,10 @@ class DataValidator:
 
         return col
 
-    def _interval_check(self,
-            data_min, data_max,
-            axis_min, axis_max,
-            range_type):
+    def _interval_check(self, data_min, data_max, axis_min, axis_max, range_type):
         """
         Check that values are inside allowed range (range_type='allowed_range')
-        or span at least the given inveral (range_type='required_range')
+        or span at least the given inveral (range_type='required_range').
 
         """
 
@@ -187,17 +209,3 @@ class DataValidator:
             raise
 
         return None
-
-    def validate_data_columns(self):
-        """
-        Validate that required data columns are available
-        and in the correct units
-
-        """
-
-        self._check_required_columns()
-
-        for col in self.data_table.itercols():
-            self._check_and_convert_units(col)
-            self._check_range(col.name, col.min(), col.max(), 'allowed_range')
-            self._check_range(col.name, col.min(), col.max(), 'required_range')
