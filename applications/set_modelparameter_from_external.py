@@ -3,7 +3,11 @@
 """
     Summary
     -------
-    Setting workflow for photodetector / quantum efficiency
+    Setting workflow for a model parameter (value, table)
+    through an external interface.
+
+    Prototype implementation allowing to submit metadata and
+    data through the command line.
 
 
     Command line arguments
@@ -26,7 +30,7 @@
 
     .. code-block:: console
 
-        python ./set_quantum_efficiency_from_external.py \
+        python ./set_modelparameter_from_external.py \
             --workflow_config_file set_quantum_efficiency_from_external.yml \
             --input_meta_file qe_R12992-100-05b.usermeta.yml \
             --input_data_file qe_R12992-100-05b.data.ecsv \
