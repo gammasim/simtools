@@ -12,6 +12,7 @@ import simtools.util.validate_data as ds
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
+
 def get_reference_columns():
     """
     return a test reference data column definition

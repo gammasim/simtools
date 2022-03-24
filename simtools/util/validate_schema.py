@@ -8,19 +8,24 @@ class SchemaValidator:
     """
     Validate a dictionary against a reference schema
 
+    Attributes
+    ----------
+    reference_schema_file: str
+        file name of reference schema file
+    data_dict: dict
+        data dictionary to be validated agains reference schema
+
+    Methods
+    -------
+    validate(user_meta_file_name=None)
+        validate user meta data
+
     """
 
-    def __init__(self, reference_schema_file, data_dict):
+    def __init__(self, reference_schema_file=None, data_dict=None):
         """
         Initalize validation class and read required
         reference schema
-
-        Parameters:
-        -----------
-        reference_schema: dict
-            reference schema
-        data_dict: dict
-            dictionary to be validated
 
         """
 
@@ -29,16 +34,30 @@ class SchemaValidator:
         if reference_schema_file:
             self._reference_schema = gen.collectDataFromYamlOrDict(
                 reference_schema_file, None)
+
         self.data_dict = data_dict
 
-    def validate(self):
+    def validate(self, user_meta_file_name=None):
         """
         Schema validation
 
+        Parameters
+        ----------
+        user_meta_file_name
+            file name with meta data to be validated
+            (might also be given as dictionary during
+            initialization of the class)
+
         """
+        if user_meta_file_name:
+            self.data_dict = gen.collectDataFromYamlOrDict(
+                    user_meta_file_name, None)
+
         self._validate_schema(
             self._reference_schema,
             self.data_dict)
+
+        return self.data_dict
 
     def _validate_data_type(self, schema, key, data_field):
         """
@@ -47,8 +66,8 @@ class SchemaValidator:
 
         Raises value error if data types are inconsistent
         """
-        self._logger.debug("checking data field %s for %s",
-                           key, schema['type'])
+        self._logger.debug("checking data field {} for {}".format(
+                           key, schema['type']))
 
         convert = {'str': type('str'), 'float': type(1.0),
                    'int': type(0), 'bool': type(True)}
@@ -59,13 +78,15 @@ class SchemaValidator:
                 datetime.datetime.strptime(data_field, format_date)
             except (ValueError, TypeError) as error:
                 raise ValueError(
-                    f'invalid date format. Expected {format_date}; Found {data_field}') from error
+                    'invalid date format. Expected {}; Found {}'.format(
+                        format_date, data_field)) from error
 
         elif schema['type'] == 'email':
             regex = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'
             if not re.fullmatch(regex, data_field):
                 raise ValueError(
-                    f'invalid email format in field {key}: {data_field}')
+                    'invalid email format in field {}: {}'.format(
+                        key, data_field))
 
         elif type(data_field).__name__ != schema['type']:
             try:
@@ -75,7 +96,7 @@ class SchemaValidator:
                     raise ValueError
             except ValueError as error:
                 raise ValueError(
-                    'invalid data type for key {}. Expected: {}, Found: {}'.format(
+                    'invalid type for key {}. Expected: {}, Found: {}'.format(
                         key, schema['type'], type(data_field).__name__)) from error
 
     def _check_if_field_is_optional(self, key, value):
@@ -96,7 +117,7 @@ class SchemaValidator:
             raise ValueError(
                 f'required data field {key} not found')
 
-        self._logger.debug("checking optional key %s", key)
+        self._logger.debug("checking optional key {}".format(key))
 
     def _validate_schema(
             self,

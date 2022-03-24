@@ -49,11 +49,7 @@ import simtools.util.validate_schema as vs
 import simtools.util.validate_data as ds
 import simtools.util.write_model_data as writer
 
-def transformInput(
-        workflow_config,
-        reference_schema_dir,
-        input_meta_file,
-        input_data_file):
+def transformInput(workflow_config, args):
     """
     data transformation for simulation model data
 
@@ -64,37 +60,94 @@ def transformInput(
     - data cleaning
     - data conversion to standard units
     - metadata writer
+
+    Parameters:
+    -----------
+    workflow_config
+        workflow configuration
+    args
+        command line parameters
+
+    Returns:
+    -------
+    output_meta: dict
+        transformed user meta data
+    output_data: astropy Table
+        transformed data table
+
     """
 
-    input_meta = gen.collectDataFromYamlOrDict(
-        input_meta_file,
-        None)
-
     _schema_validator = vs.SchemaValidator(
-        reference_schema_dir + '/' +
-        workflow_config["CTASIMPIPE"]["REFERENCESCHEMA"]["USERINPUT"],
-        input_meta)
-    _schema_validator.validate()
+        workflow_config['CTASIMPIPE']['DATAMODEL']['SCHEMADIRECTORY']
+        + '/' +
+        workflow_config["CTASIMPIPE"]["DATAMODEL"]["USERINPUTSCHEMA"])
+    output_meta = _schema_validator.validate(args.input_meta_file)
 
     _data_validator = ds.DataValidator(
         workflow_config["CTASIMPIPE"]["DATA_COLUMNS"],
-        input_data_file)
+        args.input_data_file)
     output_data = _data_validator.validate_and_transform()
 
     # TODO: data cleaning?
 
-    # TODO: metadata filling (happens in writer, ok?)
-
-    # FIXME: input_meta = ouput_meta
-    return input_meta, output_data
+    return output_meta, output_data
 
 
-if __name__ == "__main__":
+def collect_configuration(args, logger):
+    """
+    Collect configuration parameter into a single dict
+    (simplifies processing)
+
+    Parameters:
+    -----------
+    args
+        command line parameters
+    logger
+        logger
+
+    Return:
+    -------
+    workflow_config: dict
+        workflow configuration
+
+    """
+
+    workflow_config = gen.collectDataFromYamlOrDict(
+        args.workflow_config_file,
+        None)
+
+    if args.reference_schema_directory:
+        try:
+            workflow_config['CTASIMPIPE']['DATAMODEL']['SCHEMADIRECTORY'] = \
+                args.reference_schema_directory
+        except KeyError:
+            logger.error(
+                "Workflow configuration incomplete")
+            raise KeyError
+
+    outputDir = io.getApplicationOutputDirectory(
+        cfg.get("outputLocation"),
+        workflow_config["CTASIMPIPE"]["ACTIVITY"]["NAME"])
+    logger.info("Outputdirectory {}".format(outputDir))
+    try:
+        workflow_config['CTASIMPIPE']['PRODUCT']['DIRECTORY'] = outputDir
+    except KeyError:
+        logger.error(
+            "Workflow configuration incomplete")
+        raise KeyError
+
+
+    return workflow_config
+
+
+def parse():
+    """
+    Parse command line configuration
+
+    """
 
     parser = argparse.ArgumentParser(
-        description=(
-            "Setting workflow for photodetector / quantum efficiency. "
-        )
+        description=("Setting workflow model parameter data")
     )
     parser.add_argument(
         "-c",
@@ -122,7 +175,8 @@ if __name__ == "__main__":
         "--reference_schema_directory",
         help="Directory with reference schema",
         type=str,
-        required=True,
+        default=None,
+        required=False
     )
     parser.add_argument(
         "-v",
@@ -132,30 +186,19 @@ if __name__ == "__main__":
         default="info",
         help="Log level to print (default is INFO)",
     )
+    return parser.parse_args()
 
-    args = parser.parse_args()
+
+if __name__ == "__main__":
+
+    args = parse()
 
     logger = logging.getLogger()
     logger.setLevel(gen.getLogLevelFromUser(args.logLevel))
 
-    workflow_config = gen.collectDataFromYamlOrDict(
-        args.workflow_config_file,
-        None)
+    workflow_config = collect_configuration(args, logger)
 
-    outputDir = io.getApplicationOutputDirectory(
-        cfg.get("outputLocation"),
-        workflow_config["CTASIMPIPE"]["ACTIVITY"]["NAME"])
-    logger.info("Outputdirectory %s", outputDir)
+    output_meta, output_data = transformInput(workflow_config, args)
 
-    output_meta, output_data = transformInput(
-        workflow_config,
-        args.reference_schema_directory,
-        args.input_meta_file,
-        args.input_data_file)
-
-    file_writer = writer.ModelData()
-    file_writer.write_model_file(
-        workflow_config,
-        output_meta,
-        output_data,
-        outputDir)
+    file_writer = writer.ModelData(workflow_config)
+    file_writer.write_model_file(output_meta, output_data)
