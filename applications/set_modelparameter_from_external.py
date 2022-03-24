@@ -72,7 +72,7 @@ def transformInput(
 
     _schema_validator = vs.SchemaValidator(
         reference_schema_dir + '/' +
-        workflow_config["CTASIMPIPE"]["SCHEMA"]["USERINPUT"],
+        workflow_config["CTASIMPIPE"]["REFERENCESCHEMA"]["USERINPUT"],
         input_meta)
     _schema_validator.validate()
 
