@@ -64,7 +64,7 @@ class DataValidator:
         # FileNotFoundError
         # astropy.io.ascii.core.InconsistentTableError
         self.data_table = Table.read(self._data_file_name, guess=True)
-        self._logger.info("Reading data from %s", self._data_file_name)
+        self._logger.info("Reading data from {}".format(self._data_file_name))
 
     def validate_data_columns(self):
         """
@@ -91,9 +91,9 @@ class DataValidator:
             if 'required_column' in value and value['required_column'] is True:
                 try:
                     self.data_table.columns[key]
-                    self._logger.debug("Found required data column '%s'", key)
+                    self._logger.debug("Found required data column '{}'".format(key))
                 except KeyError:
-                    self._logger.error("Missing required column '%s'", key)
+                    self._logger.error("Missing required column '{}'".format(key))
                     raise
 
     def _get_reference_unit(self, key):
@@ -107,7 +107,8 @@ class DataValidator:
             reference_unit = self._reference_data_columns[key]['unit']
         except KeyError:
             self._logger.error(
-                "Data column '%s' not found in reference column definition", key)
+                "Data column '{}' not found in reference column definition".format(
+                    key))
             raise
 
         if reference_unit == 'dimensionless' or reference_unit is None:
@@ -127,7 +128,7 @@ class DataValidator:
 
         """
 
-        self._logger.debug("Checking data column '%s'", col.name)
+        self._logger.debug("Checking data column '{}'".format(col.name))
 
         try:
             reference_unit = self._get_reference_unit(col.name)
@@ -135,15 +136,15 @@ class DataValidator:
                 col.unit = u.dimensionless_unscaled
 
             self._logger.debug(
-                "Data column '%s' with reference unit '%s' and data unit '%s'",
-                col.name, reference_unit, col.unit)
+                "Data column '{}' with reference unit '{}' and data unit '{}'".format(
+                    col.name, reference_unit, col.unit))
 
             col.convert_unit_to(reference_unit)
 
         except u.core.UnitConversionError:
             self._logger.error(
-                "Invalid unit in data column '%s'. Expected type '%s', found '%s'",
-                col.name, reference_unit, col.unit)
+                "Invalid unit in data column '{}'. Expected type '%s', found '{}'".format(
+                    col.name, reference_unit, col.unit))
             raise
 
         return col
@@ -175,8 +176,8 @@ class DataValidator:
         Assume that column and ranges have the same units
         """
         self._logger.debug(
-            "Checking data in column '%s' for '%s'",
-            col_name, range_type)
+            "Checking data in column '{}' for '{}'".format(
+                col_name, range_type))
 
         try:
             if range_type != 'allowed_range' and range_type != 'required_range':
@@ -196,8 +197,8 @@ class DataValidator:
                 raise ValueError
         except KeyError:
             self._logger.error(
-                "Invalid range ('%s') definition for column '%s'",
-                range_type, col_name)
+                "Invalid range ('{}') definition for column '{}'".format(
+                    range_type, col_name))
         except ValueError:
             self._logger.error(
                 "Value for column '{}' out of range. [[{}, {}], {}: [[{}, {}]".format(
