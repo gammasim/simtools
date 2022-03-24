@@ -73,7 +73,7 @@ def test__validate_data_type_schema_float():
 
     with pytest.raises(
         ValueError,
-        match=r"invalid data type for key SUBTYPE. Expected: float, Found: str"):
+        match=r"invalid type for key SUBTYPE. Expected: float, Found: str"):
             date_validator._validate_data_type(test_schema_2, test_key, 'abc')
 
 def test__validate_data_type_schema_bool():
@@ -98,11 +98,11 @@ def test__validate_data_type_schema_int():
 
     with pytest.raises(
         ValueError,
-        match=r"invalid data type for key SUBTYPE. Expected: int, Found: str"):
+        match=r"invalid type for key SUBTYPE. Expected: int, Found: str"):
             date_validator._validate_data_type(test_schema_3, test_key, 'abc')
     with pytest.raises(
         ValueError,
-        match=r"invalid data type for key SUBTYPE. Expected: int, Found: float"):
+        match=r"invalid type for key SUBTYPE. Expected: int, Found: float"):
             date_validator._validate_data_type(test_schema_3, test_key, 25.5)
 
 def test__check_if_field_is_optional():

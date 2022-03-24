@@ -3,6 +3,8 @@ import logging
 import uuid
 import yaml
 
+import simtools.util.general as gen
+
 
 class ModelData:
     """
@@ -15,6 +17,8 @@ class ModelData:
 
     Attributes:
     -----------
+    workflow_config: dict
+        workflow configuration
 
     Methods:
     --------
@@ -23,7 +27,7 @@ class ModelData:
 
     """
 
-    def __init__(self):
+    def __init__(self, workflow_config=None):
         """
         Initialize model data
 
@@ -31,68 +35,61 @@ class ModelData:
 
         self._logger = logging.getLogger(__name__)
 
+        self.workflow_config = workflow_config
         self.toplevel_meta = self._get_toplevel_template()
-
-        self._modelfile = None
-        self._modelfile_data_format = 'ascii.ecsv'
-        self._workflow_config = None
         self._user_meta = None
+        self._user_data = None
 
-    def write_model_file(self,
-                         workflow_config,
-                         user_meta,
-                         user_data,
-                         output_dir):
+    def write_model_file(self, user_meta, user_data):
         """
         Write a model data file including a complete
         set of metadata
 
         Parameters
         ----------
-        workflow_config: dict
-            Workflow configuration.
         user_meta: dict
-            User given meta data.
+            User meta data.
         user_data: astropy Table
             Model data.
-        output_dir: str
-            Ouput directory for model and meta data writing.
-
 
         """
-        # FIXME where do we state the name of the output file?
-        self._modelfile = str(output_dir) + '/tt'
 
-        self._workflow_config = workflow_config
         self._user_meta = user_meta
+        self._user_data = user_data
 
         self._prepare_metadata()
+        self._write_metadata()
+        self._write_data()
 
-        self._write(user_data)
-
-    def _write(self, data=None):
+    def _write_metadata(self):
         """
-        Write model metadata and data files
+        Write model metadata file
 
         """
 
         if self.toplevel_meta:
-            ymlfile = str(self._modelfile+'.yml')
+            ymlfile = self._read_data_file_name('.yml')
             self._logger.debug(
-                "Writing metadata to %s", ymlfile)
+                "Writing metadata to {}".format(ymlfile))
             with open(ymlfile, 'w') as file:
                 yaml.dump(
                     self.toplevel_meta,
                     file,
                     sort_keys=False)
 
-        if data:
-            ecsvfile = self._modelfile + '.' + self._modelfile_data_format
+    def _write_data(self):
+        """
+        Write model data file
+
+        """
+
+        if self._user_data:
+            ecsvfile = self._read_data_file_name()
             self._logger.debug(
-                "Writing data to %s", ecsvfile)
-            data.write(
+                "Writing data to {}".format(ecsvfile))
+            self._user_data.write(
                 ecsvfile,
-                format=self._modelfile_data_format,
+                format=self._read_data_file_format(),
                 overwrite=True)
 
     def _prepare_metadata(self):
@@ -103,14 +100,7 @@ class ModelData:
         """
 
         self._fill_user_meta()
-
-        self.toplevel_meta['CTA']['PRODUCT']['ID'] = str(uuid.uuid4())
-
-        try:
-            self.toplevel_meta['CTA']['PRODUCT']['FORMAT'] = self._modelfile_data_format
-        except KeyError:
-            raise
-
+        self._fill_product_meta()
         self._fill_activity_meta()
 
     def _fill_user_meta(self):
@@ -133,6 +123,20 @@ class ModelData:
         except KeyError:
             raise
 
+    def _fill_product_meta(self):
+        """
+        Fill product related meta data
+
+        """
+
+        self.toplevel_meta['CTA']['PRODUCT']['ID'] = str(uuid.uuid4())
+
+        try:
+            self.toplevel_meta['CTA']['PRODUCT']['FORMAT'] = \
+                self._read_data_file_format()
+        except KeyError:
+            raise
+
     def _fill_activity_meta(self):
         """
         Fill activity (software) related meta data
@@ -140,7 +144,7 @@ class ModelData:
         """
         try:
             self.toplevel_meta['CTA']['ACTIVITY']['NAME'] = \
-                self._workflow_config['CTASIMPIPE']['ACTIVITY']['NAME']
+                self.workflow_config['CTASIMPIPE']['ACTIVITY']['NAME']
             self.toplevel_meta['CTA']['ACTIVITY']['START'] = \
                 datetime.datetime.now().isoformat()
             self.toplevel_meta['CTA']['ACTIVITY']['END'] = \
@@ -150,57 +154,60 @@ class ModelData:
 
     def _get_toplevel_template(self):
         """
-        Return toplevel data model template
+        Read and return toplevel data model template
 
         """
 
-        return {
-            'CTA': {
-                'REFERENCE': {
-                    'VERSION': '1.0.0'},
-                'PRODUCT': {
-                    'DESCRIPTION': None,
-                    'CONTEXT': None,
-                    'CREATION_TIME': None,
-                    'ID': None,
-                    'DATA': {
-                        'CATEGORY': 'SIM',
-                        'LEVEL': 'R0',
-                        'ASSOCIATION': None,
-                        'TYPE': 'service',
-                        'MODEL': {
-                            'NAME': 'simpipe-table',
-                            'VERSION': '0.1.0',
-                            'URL': None},
-                    },
-                    'FORMAT': None
-                },
-                'INSTRUMENT': {
-                    'SITE': None,
-                    'CLASS': None,
-                    'TYPE': None,
-                    'SUBTYPE': None,
-                    'ID': None
-                },
-                'PROCESS': {
-                    'TYPE': None,
-                    'SUBTYPE': None,
-                    'ID': None
-                },
-                'CONTACT': {
-                    'ORGANIZATION': None,
-                    'NAME': None,
-                    'EMAIL': None
-                },
-                'ACTIVITY': {
-                    'NAME': None,
-                    'TYPE': 'software',
-                    'ID': None,
-                    'START': None,
-                    'END': None,
-                    'SOFTWARE': {
-                        'NAME': 'gammasim-tools',
-                        'VERSION': None}
-                }
-            }
-        }
+        if self._read_toplevel_metadata_file():
+            return gen.collectDataFromYamlOrDict(
+                self._read_toplevel_metadata_file(),
+                None)
+
+    def _read_toplevel_metadata_file(self):
+        """
+        Return full path and name of top level data file
+
+        """
+        try:
+            return str(
+                self.workflow_config['CTASIMPIPE']['DATAMODEL']['SCHEMADIRECTORY']
+                + '/' +
+                self.workflow_config['CTASIMPIPE']['DATAMODEL']['TOPLEVELMODEL'])
+        except (KeyError, TypeError):
+            self._logger.error(
+                "Missing description of DATAMODEL:SCHEMADIRECTORY/TOPLEVELMODEL")
+            raise
+
+    def _read_data_file_format(self):
+        """
+        Return file format for data file
+
+        """
+        try:
+            return self.workflow_config['CTASIMPIPE']['PRODUCT']['FORMAT']
+        except KeyError:
+            self._logger.info(
+                "using default file format for model file: ascii.ecsv")
+
+        return "ascii.ecsv"
+
+    def _read_data_file_name(self, suffix=None):
+        """
+        Return full path and name of data file
+
+        """
+
+        # FIXME
+        try:
+            _model_file = str(
+                str(self.workflow_config["CTASIMPIPE"]['PRODUCT']['DIRECTORY'])
+                + '/' + 'tt')
+        except KeyError:
+            self._logger.error(
+                "Missing description of PRODUCT:DIRECTORY")
+            raise
+
+        if suffix:
+            return _model_file + suffix
+
+        return str(_model_file + '.' + self._read_data_file_format())
