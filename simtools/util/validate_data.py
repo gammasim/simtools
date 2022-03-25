@@ -143,7 +143,7 @@ class DataValidator:
 
         except u.core.UnitConversionError:
             self._logger.error(
-                "Invalid unit in data column '{}'. Expected type '%s', found '{}'".format(
+                "Invalid unit in data column '{}'. Expected type '{}', found '{}'".format(
                     col.name, reference_unit, col.unit))
             raise
 
