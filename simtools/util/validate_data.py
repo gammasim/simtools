@@ -43,7 +43,7 @@ class DataValidator:
 
     def validate_and_transform(self):
         """
-        Schema validation
+        Data validation and coordination transformation
 
         """
 
