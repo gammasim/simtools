@@ -33,8 +33,10 @@ class SchemaValidator:
 
         self._logger = logging.getLogger(__name__)
 
-        reference_schema_file = self._read_reference_schema_file(
-            workflow_config)
+        reference_schema_file = None
+        if workflow_config:
+            reference_schema_file = self._read_reference_schema_file(
+                workflow_config)
         if reference_schema_file:
             self._reference_schema = gen.collectDataFromYamlOrDict(
                 reference_schema_file, None)
