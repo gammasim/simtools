@@ -151,7 +151,7 @@ class ModelData:
             self.toplevel_meta['CTA']['ACTIVITY']['NAME'] = \
                 self.workflow_config['CTASIMPIPE']['ACTIVITY']['NAME']
             self.toplevel_meta['CTA']['ACTIVITY']['START'] = \
-                datetime.datetime.now().isoformat()
+                datetime.datetime.now().isoformat(timespec='seconds')
             self.toplevel_meta['CTA']['ACTIVITY']['END'] = \
                 self.toplevel_meta['CTA']['ACTIVITY']['START']
         except KeyError:
