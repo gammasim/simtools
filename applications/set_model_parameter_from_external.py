@@ -77,11 +77,8 @@ def transformInput(workflow_config, args):
 
     """
 
-    _schema_validator = vs.SchemaValidator(
-        workflow_config['CTASIMPIPE']['DATAMODEL']['SCHEMADIRECTORY']
-        + '/' +
-        workflow_config["CTASIMPIPE"]["DATAMODEL"]["USERINPUTSCHEMA"])
-    output_meta = _schema_validator.validate(args.input_meta_file)
+    _schema_validator = vs.SchemaValidator(workflow_config)
+    output_meta = _schema_validator.validate_and_transform(args.input_meta_file)
 
     _data_validator = ds.DataValidator(
         workflow_config["CTASIMPIPE"]["DATA_COLUMNS"],
