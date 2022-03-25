@@ -10,6 +10,8 @@ class SchemaValidator:
 
     Attributes
     ----------
+    workflow_config: dict
+        workflow configuration
     reference_schema_file: str
         file name of reference schema file
     data_dict: dict
@@ -22,7 +24,7 @@ class SchemaValidator:
 
     """
 
-    def __init__(self, reference_schema_file=None, data_dict=None):
+    def __init__(self, workflow_config=None, data_dict=None):
         """
         Initalize validation class and read required
         reference schema
@@ -31,15 +33,17 @@ class SchemaValidator:
 
         self._logger = logging.getLogger(__name__)
 
+        reference_schema_file = self._read_reference_schema_file(
+            workflow_config)
         if reference_schema_file:
             self._reference_schema = gen.collectDataFromYamlOrDict(
                 reference_schema_file, None)
 
         self.data_dict = data_dict
 
-    def validate(self, user_meta_file_name=None):
+    def validate_and_transform(self, user_meta_file_name=None):
         """
-        Schema validation
+        Schema validation and processing
 
         Parameters
         ----------
@@ -57,7 +61,48 @@ class SchemaValidator:
             self._reference_schema,
             self.data_dict)
 
+        self._process_schema()
+
         return self.data_dict
+
+    def _validate_schema(self, ref_schema, data_dict):
+        """
+        Validate schema for data types and required fields
+
+        """
+
+        for key, value in ref_schema.items():
+            if data_dict and key in data_dict:
+                _this_data = data_dict[key]
+            else:
+                self._check_if_field_is_optional(key, value)
+                continue
+            if isinstance(value, dict):
+                if 'type' in value:
+                    self._validate_data_type(value, key, _this_data)
+                else:
+                    self._validate_schema(value, _this_data)
+
+    def _process_schema(self):
+        """
+        Process schema entries for inconsistencies
+        (quite fine tuned)
+
+        """
+
+        try:
+            self.data_dict['PRODUCT']['DESCRIPTION'] = \
+                self._remove_line_feed(
+                    self.data_dict['PRODUCT']['DESCRIPTION'])
+        except KeyError:
+            pass
+
+    def _remove_line_feed(self, string):
+        """
+        Remove all line feed from a string
+        """
+
+        return string.replace('\n', ' ').replace('\r', '')
 
     def _validate_data_type(self, schema, key, data_field):
         """
@@ -97,7 +142,8 @@ class SchemaValidator:
             except ValueError as error:
                 raise ValueError(
                     'invalid type for key {}. Expected: {}, Found: {}'.format(
-                        key, schema['type'], type(data_field).__name__)) from error
+                        key, schema['type'],
+                        type(data_field).__name__)) from error
 
     def _check_if_field_is_optional(self, key, value):
         """
@@ -119,23 +165,18 @@ class SchemaValidator:
 
         self._logger.debug("checking optional key {}".format(key))
 
-    def _validate_schema(
-            self,
-            ref_schema,
-            data_dict):
+    def _read_reference_schema_file(self, workflow_config):
         """
-        Validate schema for data types and required fields
+        Return full path and name of reference schema file
 
         """
 
-        for key, value in ref_schema.items():
-            if data_dict and key in data_dict:
-                _this_data = data_dict[key]
-            else:
-                self._check_if_field_is_optional(key, value)
-                continue
-            if isinstance(value, dict):
-                if 'type' in value:
-                    self._validate_data_type(value, key, _this_data)
-                else:
-                    self._validate_schema(value, _this_data)
+        try:
+            return str(
+                workflow_config['CTASIMPIPE']['DATAMODEL']['SCHEMADIRECTORY']
+                + '/' +
+                workflow_config["CTASIMPIPE"]["DATAMODEL"]["USERINPUTSCHEMA"])
+        except KeyError:
+            self._logger.error(
+                "Missing description of DATAMODEL schema file")
+            raise
