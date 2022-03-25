@@ -19,6 +19,8 @@ class ModelData:
     -----------
     workflow_config: dict
         workflow configuration
+    toplevel_meta: dict
+        top-level meta data definition
 
     Methods:
     --------
@@ -27,7 +29,7 @@ class ModelData:
 
     """
 
-    def __init__(self, workflow_config=None):
+    def __init__(self, workflow_config=None, toplevel_meta=None):
         """
         Initialize model data
 
@@ -36,7 +38,10 @@ class ModelData:
         self._logger = logging.getLogger(__name__)
 
         self.workflow_config = workflow_config
-        self.toplevel_meta = self._get_toplevel_template()
+        if toplevel_meta:
+            self.toplevel_meta = toplevel_meta
+        else:
+            self.toplevel_meta = self._get_toplevel_template()
         self._user_meta = None
         self._user_data = None
 
