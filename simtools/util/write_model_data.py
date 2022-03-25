@@ -4,6 +4,7 @@ import uuid
 import yaml
 
 import simtools.util.general as gen
+import simtools.version
 
 
 class ModelData:
@@ -154,6 +155,8 @@ class ModelData:
                 datetime.datetime.now().isoformat(timespec='seconds')
             self.toplevel_meta['CTA']['ACTIVITY']['END'] = \
                 self.toplevel_meta['CTA']['ACTIVITY']['START']
+            self.toplevel_meta['CTA']['ACTIVITY']['SOFTWARE']['VERSION'] = \
+                simtools.version.__version__
         except KeyError:
             raise
 
