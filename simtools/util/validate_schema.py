@@ -83,13 +83,19 @@ class SchemaValidator:
                 _this_data = data_dict[key]
             else:
                 if self._field_is_optional(value):
+                    self._logger.debug(f"Optional field {key}")
                     continue
 
             if isinstance(value, dict):
-                if 'type' in value:
-                    self._validate_data_type(value, key, _this_data)
-                else:
-                    self._validate_schema(value, _this_data)
+                try:
+                    if 'type' in value:
+                        self._validate_data_type(value, key, _this_data)
+                    else:
+                        self._validate_schema(value, _this_data)
+                except UnboundLocalError:
+                    self._logger.error(
+                        f"No data for `{key}` key")
+                    raise
 
     def _process_schema(self):
         """
@@ -160,9 +166,6 @@ class SchemaValidator:
         Check if data field is labeled as not required in
         the reference schema
 
-        Assume that any field which is not label as required
-        is optional
-
         """
 
         try:
@@ -170,7 +173,7 @@ class SchemaValidator:
                 return False
             return True
         except KeyError:
-            return True
+            return False
 
     def _read_reference_schema_file(self, workflow_config):
         """
