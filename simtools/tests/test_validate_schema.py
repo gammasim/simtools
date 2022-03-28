@@ -14,12 +14,16 @@ def test__validate_data_type_datetime():
     date_validator = validator.SchemaValidator(None, None)
 
     date_key = 'CREATION_TIME'
-    date_schema1 = {'type': 'datetime'}
+    date_schema1 = {
+        'type': 'datetime',
+        'required': True
+    }
 
     # tests should succeed
     date_validator._validate_data_type(
         date_schema1, date_key, '2018-03-01 12:00:00')
 
+    # tests should fail
     date_data2 = '2018-15-01 12:00:00'
     with pytest.raises(
         ValueError,
@@ -109,17 +113,8 @@ def test__check_if_field_is_optional():
 
     date_validator = validator.SchemaValidator(None, None)
 
-    test_key = 'test_key'
     test_value_1 = {'required': False}
     test_value_2 = {'required': True}
 
-    date_validator._check_if_field_is_optional(test_key, test_value_1)
-
-    # tests should fail
-    with pytest.raises(
-        ValueError,
-        match=r"required data field test_key not found"):
-            date_validator._check_if_field_is_optional(test_key, test_value_2)
-
-# TODO
-# tests for _validate_schema
+    assert date_validator._field_is_optional(test_value_1) == True
+    assert date_validator._field_is_optional(test_value_2) == False
