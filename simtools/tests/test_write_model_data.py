@@ -34,7 +34,13 @@ def test_fill_user_meta():
         'INSTRUMENT': 'my_instrument',
         'PRODUCT': {
             'DESCRIPTION': 'my_product',
-            'CREATION_TIME': '2050-01-01'
+            'CREATION_TIME': '2050-01-01',
+            'ASSOCIATION': {
+                'SITE': 'South',
+                'CLASS': 'MST',
+                'TYPE': 'NectarCam',
+                'SUBTYPE': 'D'
+            }
         },
         'PROCESS': 'process_description'
     }
@@ -70,6 +76,7 @@ def test_fill_activity_meta():
 
     with pytest.raises(KeyError):
         file_writer_2._fill_activity_meta()
+
 
 def get_generic_toplevel_meta():
     """
