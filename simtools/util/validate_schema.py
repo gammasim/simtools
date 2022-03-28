@@ -13,8 +13,6 @@ class SchemaValidator:
     ----------
     workflow_config: dict
         workflow configuration
-    reference_schema_file: str
-        file name of reference schema file
     data_dict: dict
         data dictionary to be validated agains reference schema
 
@@ -78,8 +76,9 @@ class SchemaValidator:
             if data_dict and key in data_dict:
                 _this_data = data_dict[key]
             else:
-                self._check_if_field_is_optional(key, value)
-                continue
+                if self._field_is_optional(value):
+                    continue
+
             if isinstance(value, dict):
                 if 'type' in value:
                     self._validate_data_type(value, key, _this_data)
@@ -125,9 +124,10 @@ class SchemaValidator:
             try:
                 datetime.datetime.strptime(data_field, format_date)
             except (ValueError, TypeError) as error:
-                raise ValueError(
-                    'invalid date format. Expected {}; Found {}'.format(
-                        format_date, data_field)) from error
+                if not self._field_is_optional(schema):
+                    raise ValueError(
+                        'invalid date format. Expected {}; Found {}'.format(
+                            format_date, data_field)) from error
 
         elif schema['type'] == 'email':
             regex = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'
@@ -148,7 +148,7 @@ class SchemaValidator:
                         key, schema['type'],
                         type(data_field).__name__)) from error
 
-    def _check_if_field_is_optional(self, key, value):
+    def _field_is_optional(self, value):
         """
         Check if data field is labeled as not required in
         the reference schema
@@ -156,17 +156,15 @@ class SchemaValidator:
         Assume that any field which is not label as required
         is optional
 
-        Raises value error if required field is missing
 
         """
 
-        if isinstance(value, dict) \
-                and 'required' in value \
-                and value['required']:
-            raise ValueError(
-                f'required data field {key} not found')
-
-        self._logger.debug("checking optional key {}".format(key))
+        try:
+            if value['required']:
+                return False
+            return True
+        except KeyError:
+            return True
 
     def _read_reference_schema_file(self, workflow_config):
         """
