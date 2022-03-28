@@ -42,8 +42,6 @@
 import argparse
 import logging
 
-import simtools.config as cfg
-import simtools.io_handler as io
 import simtools.util.general as gen
 import simtools.util.validate_schema as vs
 import simtools.util.validate_data as ds
@@ -79,17 +77,17 @@ def transformInput(workflow_config, args):
     """
 
     _schema_validator = vs.SchemaValidator(workflow_config)
-    output_meta = _schema_validator.validate_and_transform(
+    _output_meta = _schema_validator.validate_and_transform(
         args.input_meta_file)
 
     _data_validator = ds.DataValidator(
         workflow_config["CTASIMPIPE"]["DATA_COLUMNS"],
         args.input_data_file)
-    output_data = _data_validator.validate_and_transform()
+    _output_data = _data_validator.validate_and_transform()
 
     # TODO: data cleaning?
 
-    return output_meta, output_data
+    return _output_meta, _output_data
 
 
 def collect_configuration(args, logger):
@@ -111,31 +109,20 @@ def collect_configuration(args, logger):
 
     """
 
-    workflow_config = gen.collectDataFromYamlOrDict(
+    _workflow_config = gen.collectDataFromYamlOrDict(
         args.workflow_config_file,
         None)
 
     if args.reference_schema_directory:
         try:
-            workflow_config['CTASIMPIPE']['DATAMODEL']['SCHEMADIRECTORY'] = \
+            _workflow_config['CTASIMPIPE']['DATAMODEL']['SCHEMADIRECTORY'] = \
                 args.reference_schema_directory
         except KeyError:
             logger.error(
                 "Workflow configuration incomplete")
             raise KeyError
 
-    outputDir = io.getApplicationOutputDirectory(
-        cfg.get("outputLocation"),
-        workflow_config["CTASIMPIPE"]["ACTIVITY"]["NAME"])
-    logger.info("Outputdirectory {}".format(outputDir))
-    try:
-        workflow_config['CTASIMPIPE']['PRODUCT']['DIRECTORY'] = outputDir
-    except KeyError:
-        logger.error(
-            "Workflow configuration incomplete")
-        raise KeyError
-
-    return workflow_config
+    return _workflow_config
 
 
 def parse():

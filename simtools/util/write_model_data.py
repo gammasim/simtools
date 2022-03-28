@@ -4,6 +4,8 @@ import os
 import uuid
 import yaml
 
+import simtools.config as cfg
+import simtools.io_handler as io
 import simtools.util.general as gen
 import simtools.version
 
@@ -13,9 +15,6 @@ class ModelData:
     Simulation model data class.
 
     Includes metadata enrichment and model data writing.
-
-    Limitations:
-    - allows only for writing of ascii.ecsv format
 
     Attributes:
     -----------
@@ -92,14 +91,13 @@ class ModelData:
 
     def _fill_user_meta(self):
         """
-        Fill all user-related meta data
+        Fill user-related meta data
 
         """
 
         try:
             self.toplevel_meta['CTA']['CONTACT'] = self._user_meta['CONTACT']
-            self.toplevel_meta['CTA']['INSTRUMENT'] = \
-                self._user_meta['INSTRUMENT']
+            self.toplevel_meta['CTA']['INSTRUMENT'] = self._user_meta['INSTRUMENT']
             self.toplevel_meta['CTA']['PRODUCT']['DESCRIPTION'] = \
                 self._user_meta['PRODUCT']['DESCRIPTION']
             self.toplevel_meta['CTA']['PRODUCT']['CREATION_TIME'] = \
@@ -169,7 +167,7 @@ class ModelData:
             return self.workflow_config['CTASIMPIPE']['PRODUCT']['FORMAT']
         except KeyError:
             self._logger.info(
-                "using default file format for model file: ascii.ecsv")
+                "Using default file format for model file: ascii.ecsv")
 
         return "ascii.ecsv"
 
@@ -183,14 +181,7 @@ class ModelData:
 
         """
 
-        # Directory
-        try:
-            _directory = str(
-                self.workflow_config["CTASIMPIPE"]['PRODUCT']['DIRECTORY'])
-        except KeyError:
-            self._logger.error(
-                "Missing description in workflow configuration of PRODUCT:DIRECTORY")
-            raise
+        _directory = self._read_data_directory()
 
         # Filename
         try:
@@ -212,6 +203,33 @@ class ModelData:
             suffix = '.' + self._read_data_file_format()
 
         return _directory+'/'+_filename+suffix
+
+    def _read_data_directory(self):
+        """
+        Return output directory for data products.
+        Create directory if necessary.
+
+        """
+
+        try:
+            _output_location = self.workflow_config['CTASIMPIPE']['PRODUCT']['DIRECTORY']
+            _output_label = self.workflow_config["CTASIMPIPE"]["ACTIVITY"]["NAME"]
+        except KeyError:
+            pass
+
+        if not _output_location:
+            _output_location = cfg.get("outputLocation")
+
+        if not _output_label:
+            _output_label = ''
+
+        _output_dir = io.getApplicationOutputDirectory(
+            _output_location,
+            _output_label)
+
+        self._logger.info("Outputdirectory {}".format(_output_dir))
+
+        return str(_output_dir)
 
     def _write_metadata(self):
         """
