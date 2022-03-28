@@ -49,6 +49,7 @@ import simtools.util.validate_schema as vs
 import simtools.util.validate_data as ds
 import simtools.util.write_model_data as writer
 
+
 def transformInput(workflow_config, args):
     """
     data transformation for simulation model data
@@ -78,7 +79,8 @@ def transformInput(workflow_config, args):
     """
 
     _schema_validator = vs.SchemaValidator(workflow_config)
-    output_meta = _schema_validator.validate_and_transform(args.input_meta_file)
+    output_meta = _schema_validator.validate_and_transform(
+        args.input_meta_file)
 
     _data_validator = ds.DataValidator(
         workflow_config["CTASIMPIPE"]["DATA_COLUMNS"],
@@ -132,7 +134,6 @@ def collect_configuration(args, logger):
         logger.error(
             "Workflow configuration incomplete")
         raise KeyError
-
 
     return workflow_config
 
