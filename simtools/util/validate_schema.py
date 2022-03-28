@@ -37,6 +37,9 @@ class SchemaValidator:
             reference_schema_file = self._read_reference_schema_file(
                 workflow_config)
         if reference_schema_file:
+            self._logger.debug(
+                "Reading reference schema from {}".format(
+                    reference_schema_file))
             self._reference_schema = gen.collectDataFromYamlOrDict(
                 reference_schema_file, None)
 
@@ -55,6 +58,9 @@ class SchemaValidator:
 
         """
         if user_meta_file_name:
+            self._logger.debug(
+                 "Reading user meta data from {}".format(
+                     user_meta_file_name))
             self.data_dict = gen.collectDataFromYamlOrDict(
                     user_meta_file_name, None)
 
@@ -148,14 +154,14 @@ class SchemaValidator:
                         key, schema['type'],
                         type(data_field).__name__)) from error
 
-    def _field_is_optional(self, value):
+    @staticmethod
+    def _field_is_optional(value):
         """
         Check if data field is labeled as not required in
         the reference schema
 
         Assume that any field which is not label as required
         is optional
-
 
         """
 
