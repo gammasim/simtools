@@ -48,7 +48,7 @@ import simtools.util.validate_data as ds
 import simtools.util.write_model_data as writer
 
 
-def transformInput(workflow_config, args):
+def transform_input(_args, _workflow_config):
     """
     data transformation for simulation model data
 
@@ -62,10 +62,10 @@ def transformInput(workflow_config, args):
 
     Parameters:
     -----------
-    workflow_config
-        workflow configuration
-    args
+    _args
         command line parameters
+    _workflow_config
+        workflow configuration
 
     Returns:
     -------
@@ -76,13 +76,13 @@ def transformInput(workflow_config, args):
 
     """
 
-    _schema_validator = vs.SchemaValidator(workflow_config)
+    _schema_validator = vs.SchemaValidator(_workflow_config)
     _output_meta = _schema_validator.validate_and_transform(
-        args.input_meta_file)
+        _args.input_meta_file)
 
     _data_validator = ds.DataValidator(
-        workflow_config["CTASIMPIPE"]["DATA_COLUMNS"],
-        args.input_data_file)
+        _workflow_config["CTASIMPIPE"]["DATA_COLUMNS"],
+        _args.input_data_file)
     _output_data = _data_validator.validate_and_transform()
 
     # TODO: data cleaning?
@@ -90,16 +90,16 @@ def transformInput(workflow_config, args):
     return _output_meta, _output_data
 
 
-def collect_configuration(args, logger):
+def collect_configuration(_args, _logger):
     """
     Collect configuration parameter into a single dict
     (simplifies processing)
 
     Parameters:
     -----------
-    args
+    _args
         command line parameters
-    logger
+    _logger
         logger
 
     Return:
@@ -110,17 +110,17 @@ def collect_configuration(args, logger):
     """
 
     _workflow_config = gen.collectDataFromYamlOrDict(
-        args.workflow_config_file,
+        _args.workflow_config_file,
         None)
 
-    if args.reference_schema_directory:
+    if _args.reference_schema_directory:
         try:
             _workflow_config['CTASIMPIPE']['DATAMODEL']['SCHEMADIRECTORY'] = \
-                args.reference_schema_directory
-        except KeyError:
-            logger.error(
+                _args.reference_schema_directory
+        except KeyError as error:
+            _logger.error(
                 "Workflow configuration incomplete")
-            raise KeyError
+            raise KeyError from error
 
     return _workflow_config
 
@@ -183,7 +183,7 @@ if __name__ == "__main__":
 
     workflow_config = collect_configuration(args, logger)
 
-    output_meta, output_data = transformInput(workflow_config, args)
+    output_meta, output_data = transform_input(args, workflow_config)
 
     file_writer = writer.ModelData(workflow_config)
     file_writer.write_model_file(output_meta, output_data)
