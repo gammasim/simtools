@@ -72,9 +72,13 @@ class ModelData:
 
         """
 
-        if self._read_toplevel_metadata_file():
+        _toplevel_metadata_file = self._read_toplevel_metadata_file()
+        if _toplevel_metadata_file:
+            self._logger.debug(
+                "Reading top-level metadata template from {}".format(
+                    _toplevel_metadata_file))
             return gen.collectDataFromYamlOrDict(
-                self._read_toplevel_metadata_file(),
+                _toplevel_metadata_file,
                 None)
         return None
 
@@ -105,9 +109,18 @@ class ModelData:
             if 'CONTEXT' in self._user_meta['PRODUCT']:
                 self.toplevel_meta['CTA']['PRODUCT']['CONTEXT'] = \
                     self._user_meta['PRODUCT']['CONTEXT']
+            if 'VALID' in self._user_meta['PRODUCT']:
+                if 'START' in self._user_meta['PRODUCT']['VALID']:
+                    self.toplevel_meta['CTA']['PRODUCT']['VALID']['START'] = \
+                        self._user_meta['PRODUCT']['VALID']['START']
+                if 'END' in self._user_meta['PRODUCT']['VALID']:
+                    self.toplevel_meta['CTA']['PRODUCT']['VALID']['END'] = \
+                        self._user_meta['PRODUCT']['VALID']['END']
             self.toplevel_meta['CTA']['PROCESS'] = self._user_meta['PROCESS']
         except KeyError:
             self._logger.debug("Error reading user input meta data")
+            print(self._user_meta)
+            print(self.toplevel_meta)
             raise
 
     def _fill_product_meta(self):
