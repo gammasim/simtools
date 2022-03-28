@@ -7,6 +7,7 @@ import yaml
 import simtools.config as cfg
 import simtools.io_handler as io
 import simtools.util.general as gen
+import simtools.util.names as names
 import simtools.version
 
 
@@ -95,7 +96,7 @@ class ModelData:
 
     def _fill_user_meta(self):
         """
-        Fill user-related meta data
+        Fill user-provided meta data
 
         """
 
@@ -116,6 +117,8 @@ class ModelData:
                 if 'END' in self._user_meta['PRODUCT']['VALID']:
                     self.toplevel_meta['CTA']['PRODUCT']['VALID']['END'] = \
                         self._user_meta['PRODUCT']['VALID']['END']
+            self.toplevel_meta['CTA']['PRODUCT']['ASSOCIATION'] = \
+                self._user_meta['PRODUCT']['ASSOCIATION']
             self.toplevel_meta['CTA']['PROCESS'] = self._user_meta['PROCESS']
         except KeyError:
             self._logger.debug("Error reading user input meta data")
@@ -137,6 +140,9 @@ class ModelData:
         except KeyError:
             self._logger.debug("Error PRODUCT meta from user input meta data")
             raise
+
+        self.toplevel_meta['CTA']['PRODUCT']['ASSOCIATION']['ID'] = \
+            self._read_instrument_name()
 
     def _fill_activity_meta(self):
         """
@@ -259,6 +265,37 @@ class ModelData:
                     self.toplevel_meta,
                     file,
                     sort_keys=False)
+
+    def _read_instrument_name(self):
+        """
+        Returns a string defining the instrument following
+        the gammasim-tools naming convention
+
+        """
+
+        # FIXME
+        # - works only for camera names (requires adding equivalent of
+        #   allCameraNames to names.py
+        # - no validation / generation of SUBTYPE
+        try:
+            _instrument = \
+                names.validateSiteName(
+                    self.toplevel_meta['CTA']['PRODUCT']['ASSOCIATION']['SITE']) \
+                + "-" + \
+                names.validateName(
+                    self.toplevel_meta['CTA']['PRODUCT']['ASSOCIATION']['CLASS'],
+                    names.allTelescopeClassNames) \
+                + "-" + \
+                names.validateName(
+                    self.toplevel_meta['CTA']['PRODUCT']['ASSOCIATION']['TYPE'],
+                    names.allCameraNames) \
+                + "-" + \
+                self.toplevel_meta['CTA']['PRODUCT']['ASSOCIATION']['SUBTYPE']
+        except KeyError:
+            self._logger.error('Error reading PRODUCT:ASSOCIATION')
+            raise
+
+        return _instrument
 
     def _write_data(self):
         """
