@@ -1,5 +1,6 @@
 import datetime
 import logging
+import os
 import uuid
 import yaml
 
@@ -21,7 +22,7 @@ class ModelData:
     workflow_config: dict
         workflow configuration
     toplevel_meta: dict
-        top-level meta data definition
+        top-level meta data definition (default: read from template file)
 
     Methods:
     --------
@@ -48,8 +49,7 @@ class ModelData:
 
     def write_model_file(self, user_meta, user_data):
         """
-        Write a model data file including a complete
-        set of metadata
+        Write model data consisting of metadata and data files
 
         Parameters
         ----------
@@ -67,36 +67,17 @@ class ModelData:
         self._write_metadata()
         self._write_data()
 
-    def _write_metadata(self):
+    def _get_toplevel_template(self):
         """
-        Write model metadata file
-
-        """
-
-        if self.toplevel_meta:
-            ymlfile = self._read_data_file_name('.yml')
-            self._logger.debug(
-                "Writing metadata to {}".format(ymlfile))
-            with open(ymlfile, 'w') as file:
-                yaml.dump(
-                    self.toplevel_meta,
-                    file,
-                    sort_keys=False)
-
-    def _write_data(self):
-        """
-        Write model data file
+        Read and return toplevel data model template
 
         """
 
-        if self._user_data:
-            ecsvfile = self._read_data_file_name()
-            self._logger.debug(
-                "Writing data to {}".format(ecsvfile))
-            self._user_data.write(
-                ecsvfile,
-                format=self._read_data_file_format(),
-                overwrite=True)
+        if self._read_toplevel_metadata_file():
+            return gen.collectDataFromYamlOrDict(
+                self._read_toplevel_metadata_file(),
+                None)
+        return None
 
     def _prepare_metadata(self):
         """
@@ -117,7 +98,8 @@ class ModelData:
 
         try:
             self.toplevel_meta['CTA']['CONTACT'] = self._user_meta['CONTACT']
-            self.toplevel_meta['CTA']['INSTRUMENT'] = self._user_meta['INSTRUMENT']
+            self.toplevel_meta['CTA']['INSTRUMENT'] = \
+                self._user_meta['INSTRUMENT']
             self.toplevel_meta['CTA']['PRODUCT']['DESCRIPTION'] = \
                 self._user_meta['PRODUCT']['DESCRIPTION']
             self.toplevel_meta['CTA']['PRODUCT']['CREATION_TIME'] = \
@@ -127,6 +109,7 @@ class ModelData:
                     self._user_meta['PRODUCT']['CONTEXT']
             self.toplevel_meta['CTA']['PROCESS'] = self._user_meta['PROCESS']
         except KeyError:
+            self._logger.debug("Error reading user input meta data")
             raise
 
     def _fill_product_meta(self):
@@ -141,6 +124,7 @@ class ModelData:
             self.toplevel_meta['CTA']['PRODUCT']['FORMAT'] = \
                 self._read_data_file_format()
         except KeyError:
+            self._logger.debug("Error PRODUCT meta from user input meta data")
             raise
 
     def _fill_activity_meta(self):
@@ -158,18 +142,8 @@ class ModelData:
             self.toplevel_meta['CTA']['ACTIVITY']['SOFTWARE']['VERSION'] = \
                 simtools.version.__version__
         except KeyError:
+            self._logger.debug("Error ACTIVITY meta from user input meta data")
             raise
-
-    def _get_toplevel_template(self):
-        """
-        Read and return toplevel data model template
-
-        """
-
-        if self._read_toplevel_metadata_file():
-            return gen.collectDataFromYamlOrDict(
-                self._read_toplevel_metadata_file(),
-                None)
 
     def _read_toplevel_metadata_file(self):
         """
@@ -203,19 +177,69 @@ class ModelData:
         """
         Return full path and name of data file
 
+        file name is determined by:
+        a. workflow_config['CTASIMPIPE']['PRODUCT']['NAME'] (preferred)
+        b. _user_meta['PRODUCT']['NAME']
+
         """
 
-        # FIXME
+        # Directory
         try:
-            _model_file = str(
-                str(self.workflow_config["CTASIMPIPE"]['PRODUCT']['DIRECTORY'])
-                + '/' + 'tt')
+            _directory = str(
+                self.workflow_config["CTASIMPIPE"]['PRODUCT']['DIRECTORY'])
         except KeyError:
             self._logger.error(
-                "Missing description of PRODUCT:DIRECTORY")
+                "Missing description in workflow configuration of PRODUCT:DIRECTORY")
             raise
 
-        if suffix:
-            return _model_file + suffix
+        # Filename
+        try:
+            _filename = str(
+                self.workflow_config['CTASIMPIPE']['PRODUCT']['NAME'])
+        except KeyError:
+            _filename = None
 
-        return str(_model_file + '.' + self._read_data_file_format())
+        if not _filename:
+            try:
+                _filename = os.path.splitext(
+                    self._user_meta['PRODUCT']['DATA'])[0]
+            except KeyError:
+                self._logger.error(
+                    "Missing description in user meta of PRODUCT:NAME")
+                raise
+        # Suffix
+        if not suffix:
+            suffix = '.' + self._read_data_file_format()
+
+        return _directory+'/'+_filename+suffix
+
+    def _write_metadata(self):
+        """
+        Write model metadata file
+
+        """
+
+        if self.toplevel_meta:
+            ymlfile = self._read_data_file_name('.yml')
+            self._logger.debug(
+                "Writing metadata to {}".format(ymlfile))
+            with open(ymlfile, 'w', encoding='UTF-8') as file:
+                yaml.dump(
+                    self.toplevel_meta,
+                    file,
+                    sort_keys=False)
+
+    def _write_data(self):
+        """
+        Write model data file
+
+        """
+
+        if self._user_data:
+            ecsvfile = self._read_data_file_name()
+            self._logger.debug(
+                "Writing data to {}".format(ecsvfile))
+            self._user_data.write(
+                ecsvfile,
+                format=self._read_data_file_format(),
+                overwrite=True)
