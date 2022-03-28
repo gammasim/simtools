@@ -112,6 +112,9 @@ def collect_configuration(_args, _logger):
     _workflow_config = gen.collectDataFromYamlOrDict(
         _args.workflow_config_file,
         None)
+    _logger.debug(
+        "Reading workflow configuration from {}".format(
+            _args.workflow_config_file))
 
     if _args.reference_schema_directory:
         try:
