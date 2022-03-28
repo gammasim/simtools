@@ -8,7 +8,6 @@ import simtools.util.write_model_data as writer
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
-
 def get_generic_workflow_config():
 
     return {
@@ -20,6 +19,9 @@ def get_generic_workflow_config():
                 'USERINPUTSCHEMA': 'schema',
                 'TOPLEVELMODEL': 'model',
                 'SCHEMADIRECTORY': 'directory'
+            },
+            'PRODUCT': {
+                'DIRECTORY': None
             }
         }
     }

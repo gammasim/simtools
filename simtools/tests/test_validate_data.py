@@ -46,24 +46,24 @@ def test__interval_check_allow_range():
 
     data_validator = ds.DataValidator(None, None)
 
-    assert data_validator._interval_check(0.1, 0.9, 0., 1., 'allowed_range') == True
-    assert data_validator._interval_check(0., 1., 0., 1., 'allowed_range') == True
+    assert data_validator._interval_check((0.1, 0.9), (0., 1.), 'allowed_range') == True
+    assert data_validator._interval_check((0., 1.), (0., 1.), 'allowed_range') == True
 
-    assert data_validator._interval_check(-1., 0.9, 0., 1., 'allowed_range') == False
-    assert data_validator._interval_check(0., 1.1, 0., 1., 'allowed_range') == False
-    assert data_validator._interval_check(-1., 1.1, 0., 1., 'allowed_range') == False
+    assert data_validator._interval_check((-1., 0.9), (0., 1.), 'allowed_range') == False
+    assert data_validator._interval_check((0., 1.1), (0., 1.), 'allowed_range') == False
+    assert data_validator._interval_check((-1., 1.1), (0., 1.), 'allowed_range') == False
 
 
 def test__interval_check_required_range():
 
     data_validator = ds.DataValidator(None, None)
 
-    assert data_validator._interval_check(250., 700., 300., 600, 'required_range') == True
-    assert data_validator._interval_check(300., 600., 300., 600, 'required_range') == True
+    assert data_validator._interval_check((250., 700.), (300., 600), 'required_range') == True
+    assert data_validator._interval_check((300., 600.), (300., 600), 'required_range') == True
 
-    assert data_validator._interval_check(350., 700., 300., 600, 'required_range') == False
-    assert data_validator._interval_check(300., 500., 300., 600, 'required_range') == False
-    assert data_validator._interval_check(350., 500., 300., 600, 'required_range') == False
+    assert data_validator._interval_check((350., 700.), (300., 600), 'required_range') == False
+    assert data_validator._interval_check((300., 500.), (300., 600), 'required_range') == False
+    assert data_validator._interval_check((350., 500.), (300., 600), 'required_range') == False
 
 
 def test__check_range():
