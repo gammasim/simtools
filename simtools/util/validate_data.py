@@ -149,22 +149,6 @@ class DataValidator:
 
         return col
 
-    def _interval_check(self, data_min, data_max, axis_min, axis_max, range_type):
-        """
-        Check that values are inside allowed range (range_type='allowed_range')
-        or span at least the given inveral (range_type='required_range').
-
-        """
-
-        if range_type == 'allowed_range' and \
-           data_min >= axis_min and data_max <= axis_max:
-            return True
-        elif range_type == 'required_range' and \
-           data_min <= axis_min and data_max >= axis_max:
-            return True
-
-        return False
-
     def _check_range(self,
                      col_name,
                      col_min, col_max,
@@ -190,9 +174,10 @@ class DataValidator:
 
         try:
             if not self._interval_check(
-                    col_min, col_max,
-                    self._reference_data_columns[col_name][range_type]['min'],
-                    self._reference_data_columns[col_name][range_type]['max'],
+                    (col_min,
+                     col_max),
+                    (self._reference_data_columns[col_name][range_type]['min'],
+                     self._reference_data_columns[col_name][range_type]['max']),
                     range_type):
                 raise ValueError
         except KeyError:
@@ -210,3 +195,20 @@ class DataValidator:
             raise
 
         return None
+
+    @staticmethod
+    def _interval_check(data, axis_range, range_type):
+        """
+        Check that values are inside allowed range (range_type='allowed_range')
+        or span at least the given inveral (range_type='required_range').
+
+        """
+
+        if range_type == 'allowed_range':
+            if data[0] >= axis_range[0] and data[1] <= axis_range[1]:
+                return True
+        if range_type == 'required_range':
+            if data[0] <= axis_range[0] and data[1] >= axis_range[1]:
+                return True
+
+        return False
