@@ -4,6 +4,7 @@ import re
 
 import simtools.util.general as gen
 
+
 class SchemaValidator:
     """
     Validate a dictionary against a reference schema
@@ -175,8 +176,8 @@ class SchemaValidator:
 
         try:
             return str(
-                workflow_config['CTASIMPIPE']['DATAMODEL']['SCHEMADIRECTORY']
-                + '/' +
+                workflow_config['CTASIMPIPE']['DATAMODEL']['SCHEMADIRECTORY'] +
+                '/' +
                 workflow_config["CTASIMPIPE"]["DATAMODEL"]["USERINPUTSCHEMA"])
         except KeyError:
             self._logger.error(
