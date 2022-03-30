@@ -148,6 +148,9 @@ class SchemaValidator:
                     'invalid email format in field {}: {}'.format(
                         key, data_field))
 
+        elif schema['type'] == 'instrumentlist':
+            self._validate_instrument_list(data_field)
+
         elif type(data_field).__name__ != schema['type']:
             try:
                 if isinstance(data_field, (int, str)):
@@ -159,6 +162,17 @@ class SchemaValidator:
                     'invalid type for key {}. Expected: {}, Found: {}'.format(
                         key, schema['type'],
                         type(data_field).__name__)) from error
+
+    def _validate_instrument_list(self, instrument_list):
+        """
+        Validate entry to be of type INSTRUMENT
+
+        """
+
+        for instrument in instrument_list:
+            self._validate_schema(
+                self._reference_schema['INSTRUMENT'],
+                instrument)
 
     @staticmethod
     def _field_is_optional(value):

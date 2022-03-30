@@ -18,22 +18,33 @@ def test_read_instrument_name():
     file_writer._user_meta = user_meta_1
     file_writer._fill_user_meta()
 
-    assert file_writer._read_instrument_name() == "South-MST-NectarCam-D"
+    print('aaaa', user_meta_1)
+
+    for association in user_meta_1['PRODUCT']['ASSOCIATION']:
+        print(association)
+    assert (
+        file_writer._read_instrument_name(user_meta_1['PRODUCT']['ASSOCIATION'][0])
+        == "South-MST-FlashCam-D")
+    assert (
+        file_writer._read_instrument_name(user_meta_1['PRODUCT']['ASSOCIATION'][1])
+        == "North-MST-NectarCam-7")
 
     user_meta_2 = get_generic_user_meta()
-    user_meta_2["PRODUCT"]["ASSOCIATION"]["TYPE"] = "Structure"
+    user_meta_2["PRODUCT"]["ASSOCIATION"][0]["TYPE"] = "Structure"
     file_writer._user_meta = user_meta_2
     file_writer._fill_user_meta()
 
-    assert file_writer._read_instrument_name() == "South-MST-Structure-D"
+    assert (
+        file_writer._read_instrument_name(user_meta_2["PRODUCT"]["ASSOCIATION"][0])
+        == "South-MST-Structure-D")
 
     user_meta_3 = get_generic_user_meta()
-    user_meta_3["PRODUCT"]["ASSOCIATION"]["SITE"] = "Neptun"
+    user_meta_3["PRODUCT"]["ASSOCIATION"][0]["SITE"] = "Neptun"
     file_writer._user_meta = user_meta_3
     file_writer._fill_user_meta()
 
     with pytest.raises(ValueError):
-        file_writer._read_instrument_name()
+        file_writer._read_instrument_name(user_meta_3["PRODUCT"]["ASSOCIATION"][0])
 
 
 def test_fill_user_meta():
@@ -98,13 +109,15 @@ def get_generic_toplevel_meta():
                         'URL': None},
                 },
                 'FORMAT': None,
-                'ASSOCIATION': {
-                    'SITE': None,
-                    'CLASS': None,
-                    'TYPE': None,
-                    'SUBTYPE': None,
-                    'ID': None
-                }
+                'ASSOCIATION': [
+                    {
+                        'SITE': None,
+                        'CLASS': None,
+                        'TYPE': None,
+                        'SUBTYPE': None,
+                        'ID': None
+                    }
+                ]
             },
             'INSTRUMENT': {
                 'SITE': None,
@@ -164,13 +177,23 @@ def get_generic_user_meta():
         'PRODUCT': {
             'DESCRIPTION': 'my_product',
             'CREATION_TIME': '2050-01-01',
-            'ASSOCIATION': {
-                'SITE': 'South',
-                'CLASS': 'MST',
-                'TYPE': 'NectarCam',
-                'SUBTYPE': 'D',
-                'ID:': None
-            }
+            'ASSOCIATION': [
+                {
+                    'SITE': 'South',
+                    'CLASS': 'MST',
+                    'TYPE': 'FlashCam',
+                    'SUBTYPE': 'D',
+                    'ID:': None
+                },
+                {
+                    'SITE': 'North',
+                    'CLASS': 'MST',
+                    'TYPE': 'NectarCam',
+                    'SUBTYPE': '7',
+                    'ID:': None
+                }
+            ]
+
         },
         'PROCESS': 'process_description'
     }
