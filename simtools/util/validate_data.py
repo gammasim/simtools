@@ -148,7 +148,7 @@ class DataValidator:
         """
 
         for key, value in self._reference_data_columns.items():
-            if 'attribute' in value and 'no_dublicates' in value['attribute']:
+            if 'attribute' in value and 'remove_duplicates' in value['attribute']:
                 self._logger.debug("Removing duplicates for column '{}'".format(
                     key))
                 self.data_table = unique(self.data_table)
