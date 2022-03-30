@@ -1,5 +1,6 @@
 import logging
 
+from astropy.table import unique
 from astropy.table import Table
 from astropy import units as u
 
@@ -41,7 +42,7 @@ class DataValidator:
 
         self.data_table = None
 
-    def validate_and_transform(self):
+    def validate(self):
         """
         Data validation and coordination transformation
 
@@ -52,9 +53,21 @@ class DataValidator:
 
         return self.data_table
 
+    def transform(self):
+        """
+        Apply any requested transformations to the
+        data columns
+
+        """
+
+        self._check_data_for_duplicates()
+        self._sort_data()
+
+        return self.data_table
+
     def validate_data_file(self):
         """
-        Open data file and check for file consistency
+        Open data file and read data from file
 
         """
 
@@ -95,6 +108,50 @@ class DataValidator:
                 except KeyError:
                     self._logger.error("Missing required column '{}'".format(key))
                     raise
+
+    def _sort_data(self):
+        """
+        Sort data according to one data column
+        (if required by any column attribute)
+
+        Data is either sorted or reverse sorted
+        """
+
+        _columns_to_sort = []
+        _columns_to_reverse_sort = []
+        for key, value in self._reference_data_columns.items():
+            if 'attribute' in value:
+                if 'sort' in value['attribute']:
+                    _columns_to_sort.append(key)
+                elif 'reversesort' in value['attribute']:
+                    _columns_to_reverse_sort.append(key)
+
+        if len(_columns_to_sort) > 0:
+            self._logger.debug("Sorting data columns: {}".format(
+                _columns_to_sort))
+            self.data_table.sort(_columns_to_sort)
+        elif len(_columns_to_reverse_sort) > 0:
+            self._logger.debug("Reverse sorting data columns: {}".format(
+                _columns_to_reverse_sort))
+            self.data_table.sort(_columns_to_reverse_sort, reverse=True)
+
+    def _check_data_for_duplicates(self):
+        """
+        Remove duplicates from data columns
+        (if required by any column attribute)
+
+        Note: checks values in given column and removes
+        duplicates for complete data row (even of other
+        columns have different values). Expectation is that
+        there is one column only with column attributes)
+
+        """
+
+        for key, value in self._reference_data_columns.items():
+            if 'attribute' in value and 'no_dublicates' in value['attribute']:
+                self._logger.debug("Removing duplicates for column '{}'".format(
+                    key))
+                self.data_table = unique(self.data_table)
 
     def _get_reference_unit(self, key):
         """
