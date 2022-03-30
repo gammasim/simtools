@@ -139,8 +139,8 @@ class ModelData:
             self._logger.debug("Error PRODUCT meta from user input meta data")
             raise
 
-        self.toplevel_meta['CTA']['PRODUCT']['ASSOCIATION']['ID'] = \
-            self._read_instrument_name()
+        self._fill_product_association(
+            self.toplevel_meta['CTA']['PRODUCT']['ASSOCIATION'])
 
     def _fill_activity_meta(self):
         """
@@ -264,28 +264,36 @@ class ModelData:
                     file,
                     sort_keys=False)
 
-    def _read_instrument_name(self):
+    def _fill_product_association(self, association_list):
+        """
+        Fill list of associations in top-level data model
+
+        """
+
+        for association in association_list:
+            association['ID'] = self._read_instrument_name(association)
+
+    def _read_instrument_name(self, association):
         """
         Returns a string defining the instrument following
         the gammasim-tools naming convention
 
         """
 
-        # FIXME
-        # - no validation / generation of SUBTYPE
         try:
             _instrument = \
                 names.validateSiteName(
-                    self.toplevel_meta['CTA']['PRODUCT']['ASSOCIATION']['SITE']) \
+                    association['SITE']) \
                 + "-" + \
                 names.validateName(
-                    self.toplevel_meta['CTA']['PRODUCT']['ASSOCIATION']['CLASS'],
+                    association['CLASS'],
                     names.allTelescopeClassNames) \
                 + "-" + \
                 names.validateSubSystemName(
-                    self.toplevel_meta['CTA']['PRODUCT']['ASSOCIATION']['TYPE']) \
+                    association['TYPE']) \
                 + "-" + \
-                self.toplevel_meta['CTA']['PRODUCT']['ASSOCIATION']['SUBTYPE']
+                names.validateTelescopeIDName(
+                    association['SUBTYPE'])
         except KeyError:
             self._logger.error('Error reading PRODUCT:ASSOCIATION')
             raise
