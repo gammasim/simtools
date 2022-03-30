@@ -132,21 +132,10 @@ class SchemaValidator:
                    'int': type(0), 'bool': type(True)}
 
         if schema['type'] == 'datetime':
-            format_date = "%Y-%m-%d %H:%M:%S"
-            try:
-                datetime.datetime.strptime(data_field, format_date)
-            except (ValueError, TypeError) as error:
-                if not self._field_is_optional(schema):
-                    raise ValueError(
-                        'invalid date format. Expected {}; Found {}'.format(
-                            format_date, data_field)) from error
+            self._validate_datetime(data_field, schema)
 
         elif schema['type'] == 'email':
-            regex = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'
-            if not re.fullmatch(regex, data_field):
-                raise ValueError(
-                    'invalid email format in field {}: {}'.format(
-                        key, data_field))
+            self._validate_email(data_field, key)
 
         elif schema['type'] == 'instrumentlist':
             self._validate_instrument_list(data_field)
@@ -162,6 +151,31 @@ class SchemaValidator:
                     'invalid type for key {}. Expected: {}, Found: {}'.format(
                         key, schema['type'],
                         type(data_field).__name__)) from error
+
+    def _validate_datetime(self, data_field, schema):
+        """
+        Validate entry to be of type datetime
+
+        """
+        format_date = "%Y-%m-%d %H:%M:%S"
+        try:
+            datetime.datetime.strptime(data_field, format_date)
+        except (ValueError, TypeError) as error:
+            if not self._field_is_optional(schema):
+                raise ValueError(
+                    'invalid date format. Expected {}; Found {}'.format(
+                        format_date, data_field)) from error
+
+    def _validate_email(self, data_field, key):
+        """
+        Validate entry to be a email address
+
+        """
+        regex = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'
+        if not re.fullmatch(regex, data_field):
+            raise ValueError(
+                'invalid email format in field {}: {}'.format(
+                    key, data_field))
 
     def _validate_instrument_list(self, instrument_list):
         """
