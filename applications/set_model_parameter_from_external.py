@@ -83,9 +83,8 @@ def transform_input(_args, _workflow_config):
     _data_validator = ds.DataValidator(
         _workflow_config["CTASIMPIPE"]["DATA_COLUMNS"],
         _args.input_data_file)
-    _output_data = _data_validator.validate_and_transform()
-
-    # TODO: data cleaning?
+    _data_validator.validate()
+    _output_data = _data_validator.transform()
 
     return _output_meta, _output_data
 
