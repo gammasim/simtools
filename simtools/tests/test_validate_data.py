@@ -2,9 +2,11 @@
 
 import logging
 import pytest
+import sys
 
 from astropy.table import Column
 from astropy.table import Table
+from astropy.utils.diff import report_diff_values
 from astropy import units as u
 
 import simtools.util.validate_data as ds
@@ -24,7 +26,9 @@ def get_reference_columns():
             'required_column': True,
             'unit': 'nm',
             'type': 'float32',
-            'required_range': {'unit': 'nm', 'min': 300, 'max': 700}},
+            'required_range': {'unit': 'nm', 'min': 300, 'max': 700},
+            'attribute': ['no_dublicates', 'sort']
+        },
         'qe': {
             'description': 'average quantum or photon detection efficiency',
             'required_column': True,
@@ -42,7 +46,68 @@ def get_reference_columns():
     }
 
 
-def test__interval_check_allow_range():
+def test_sort_data():
+
+    data_validator = ds.DataValidator(
+        get_reference_columns(),
+        None
+    )
+
+    table_1 = Table()
+    table_1['wavelength'] = Column([300.0, 350.0, 315.], unit='nm', dtype='float32')
+    table_1['qe'] = Column([0.1, 0.5, 0.2], dtype='float32')
+
+    table_sorted = Table()
+    table_sorted['wavelength'] = Column([300.0, 315., 350.0], unit='nm', dtype='float32')
+    table_sorted['qe'] = Column([0.1, 0.2, 0.5], dtype='float32')
+
+    data_validator.data_table = table_1
+    data_validator._sort_data()
+
+    identical = report_diff_values(
+        data_validator.data_table,
+        table_sorted, fileobj=sys.stdout)
+
+    assert identical
+
+def test_check_data_for_duplicates():
+
+    data_validator = ds.DataValidator(
+        get_reference_columns(),
+        None
+    )
+
+    table_1 = Table()
+    table_1['wavelength'] = Column([300.0, 350.0, 350.], unit='nm', dtype='float32')
+    table_1['qe'] = Column([0.1, 0.5, 0.5], dtype='float32')
+
+    table_2 = Table()
+    table_2['wavelength'] = Column([300.0, 315.0, 350.], unit='nm', dtype='float32')
+    table_2['qe'] = Column([0.1, 0.5, 0.5], dtype='float32')
+
+    table_unique = Table()
+    table_unique['wavelength'] = Column([300.0, 350.0], unit='nm', dtype='float32')
+    table_unique['qe'] = Column([0.1, 0.5], dtype='float32')
+
+    data_validator.data_table = table_1
+    data_validator._check_data_for_duplicates()
+
+    identical = report_diff_values(
+        data_validator.data_table,
+        table_unique, fileobj=sys.stdout)
+
+    assert identical
+
+    data_validator.data_table = table_2
+    data_validator._check_data_for_duplicates()
+
+    not_identical = report_diff_values(
+        data_validator.data_table,
+        table_2, fileobj=sys.stdout)
+
+    assert not_identical
+
+def test_interval_check_allow_range():
 
     data_validator = ds.DataValidator(None, None)
 
