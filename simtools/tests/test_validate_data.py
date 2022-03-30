@@ -27,7 +27,7 @@ def get_reference_columns():
             'unit': 'nm',
             'type': 'float32',
             'required_range': {'unit': 'nm', 'min': 300, 'max': 700},
-            'attribute': ['no_dublicates', 'sort']
+            'attribute': ['remove_duplicates', 'sort']
         },
         'qe': {
             'description': 'average quantum or photon detection efficiency',
