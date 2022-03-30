@@ -122,8 +122,6 @@ class ModelData:
             self.toplevel_meta['CTA']['PROCESS'] = self._user_meta['PROCESS']
         except KeyError:
             self._logger.debug("Error reading user input meta data")
-            print(self._user_meta)
-            print(self.toplevel_meta)
             raise
 
     def _fill_product_meta(self):
@@ -274,8 +272,6 @@ class ModelData:
         """
 
         # FIXME
-        # - works only for camera names (requires adding equivalent of
-        #   allCameraNames to names.py
         # - no validation / generation of SUBTYPE
         try:
             _instrument = \
@@ -286,13 +282,15 @@ class ModelData:
                     self.toplevel_meta['CTA']['PRODUCT']['ASSOCIATION']['CLASS'],
                     names.allTelescopeClassNames) \
                 + "-" + \
-                names.validateName(
-                    self.toplevel_meta['CTA']['PRODUCT']['ASSOCIATION']['TYPE'],
-                    names.allCameraNames) \
+                names.validateSubSystemName(
+                    self.toplevel_meta['CTA']['PRODUCT']['ASSOCIATION']['TYPE']) \
                 + "-" + \
                 self.toplevel_meta['CTA']['PRODUCT']['ASSOCIATION']['SUBTYPE']
         except KeyError:
             self._logger.error('Error reading PRODUCT:ASSOCIATION')
+            raise
+        except ValueError:
+            self._logger.error('Error reading naming in PRODUCT:ASSOCIATION')
             raise
 
         return _instrument

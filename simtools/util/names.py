@@ -7,6 +7,7 @@ __all__ = [
     "validateLayoutArrayName",
     "validateTelescopeModelName",
     "validateCameraName",
+    "validateSubSystemName",
     "convertTelescopeModelNameToYaml",
     "splitTelescopeModelName",
     "getSiteFromTelescopeName",
@@ -17,6 +18,27 @@ __all__ = [
     "corsikaConfigFileName",
     "corsikaOutputFileName",
 ]
+
+
+def validateSubSystemName(name):
+    """
+    Validate a sub system name (optics structure or camera)
+
+    Raises
+    ------
+    ValueError
+        If name is not valid.
+
+    Parameters
+    ----------
+    name: str
+
+    Returns
+    -------
+    str
+        Validated name.
+    """
+    return validateName(name, {**allCameraNames, **allStructureNames})
 
 
 def validateCameraName(name):
@@ -311,6 +333,9 @@ allCameraNames = {
     "LST": ["lst"],
 }
 
+allStructureNames = {
+    "Structure": ["Structure", "structure"]
+}
 
 allSiteNames = {"South": ["paranal", "south"], "North": ["lapalma", "north"]}
 
