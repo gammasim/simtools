@@ -1,7 +1,7 @@
 # A conda environment with all useful package for ctamclib developers
 name: gammasim-tools-dev
 dependencies:
-  - python<=3.8
+  - python
   - pyyaml
   - numpy
   - astropy
