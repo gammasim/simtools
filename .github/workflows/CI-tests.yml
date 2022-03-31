@@ -21,7 +21,7 @@ jobs:
 
     strategy:
       matrix:
-        python-version: [3.6, 3.7, 3.8]
+        python-version: [3.6, 3.7, 3.8, 3.10.4]
 
     steps:
       - name: checkout
@@ -40,7 +40,7 @@ jobs:
           conda config --set always_yes yes --set changeps1 no
           conda update -q conda
           conda install -c conda-forge mamba
-          sed -i -e "s/- python<=3.8/- python=$PYTHON_VERSION/g" environment.yml
+          sed -i -e "s/- python/- python=$PYTHON_VERSION/g" environment.yml
           mamba env create -f environment.yml
           conda activate gammasim-tools-dev
           echo 'source $CONDA/etc/profile.d/conda.sh' >> ~/.bash_profile
