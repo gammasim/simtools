@@ -3,6 +3,12 @@ gammasim-tools
 
 .. image:: https://zenodo.org/badge/195011575.svg
    :target: https://zenodo.org/badge/latestdoi/195011575
+   
+.. image:: https://github.com/gammasim/gammasim-tools/actions/workflows/CI-tests.yml/badge.svg
+   :target: https://github.com/gammasim/gammasim-tools/actions/workflows/CI-tests.yml
+  
+.. image:: https://github.com/gammasim/gammasim-tools/actions/workflows/CI-docs.yml/badge.svg
+   :target: https://github.com/gammasim/gammasim-tools/actions/workflows/CI-docs.yml
 
 Prototype implementation of tools for the Simulation System of the `CTA Observatory <www.cta-observatory.org>`_
 
