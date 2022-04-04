@@ -65,7 +65,10 @@ def test_coordinate_transformations():
     assert math.isclose(tel._latitude, center_lat, abs_tol=0.000001)
     assert math.isclose(tel._longitude, center_lon, abs_tol=0.000001)
 
-    print(tel._latitude, tel._longitude)
+    tel._posX = None
+    tel.convertUtmToLocal(crsUtm=crsUtm, crsLocal=crsLocal)
+    assert math.isclose(tel._posX, configData['posX'].value, abs_tol=0.000001)
+    assert math.isclose(tel._posY, configData['posY'].value, abs_tol=0.000001)
 
 
 def test_corsika_transformations():
@@ -118,8 +121,8 @@ def test_convert_all():
 
 if __name__ == "__main__":
 
-    test_input()
-    # test_coordinate_transformations()
+    # test_input()
+    test_coordinate_transformations()
     # test_corsika_transformations()
     # test_convert_all()
     pass
