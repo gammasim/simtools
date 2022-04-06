@@ -108,15 +108,15 @@ class SchemaValidator:
                     continue
 
             if isinstance(value, dict):
-                try:
-                    if 'type' in value:
+                if 'type' in value:
+                    try:
                         self._validate_data_type(value, key, _this_data)
-                    else:
-                        self._validate_schema(value, _this_data)
-                except UnboundLocalError:
-                    self._logger.error(
-                        f"No data for `{key}` key")
-                    raise
+                    except UnboundLocalError:
+                        self._logger.error(
+                            f"No data for `{key}` key")
+                        raise
+                else:
+                    self._validate_schema(value, _this_data)
 
     def _process_schema(self):
         """
@@ -243,8 +243,9 @@ class SchemaValidator:
 
         Parameters
         ----------
-        instrument list: dict
-            data field of type INSTRUMENT to be validated
+        instrument list: list
+            list of dictionaries of type INSTRUMENT
+            to be validated
 
         """
 
@@ -279,7 +280,8 @@ class SchemaValidator:
         try:
             if value['required']:
                 return False
-            return True
+            else:
+                return True
         except KeyError:
             return False
 
