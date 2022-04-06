@@ -22,7 +22,8 @@ class ModelData:
     workflow_config: dict
         workflow configuration
     toplevel_meta: dict
-        top-level meta data definition (default: read from template file)
+        top-level meta data definition
+        (default: read from template file)
 
     Methods:
     --------
@@ -41,6 +42,7 @@ class ModelData:
             workflow configuration
         toplevel_meta: dict
             top-level metadata definition
+            (default: read from template file)
 
         """
 
@@ -244,7 +246,10 @@ class ModelData:
 
         file name is determined by:
         a. workflow_config['CTASIMPIPE']['PRODUCT']['NAME'] (preferred)
-        b. _user_meta['PRODUCT']['NAME']
+        b. _user_meta['PRODUCT']['DATA']
+        c. _user_meta['PRODUCT']
+
+        File name always used CTA:PRODUCT:ID for unique identification
 
         Returns
         -------
@@ -270,17 +275,25 @@ class ModelData:
 
         if not _filename:
             try:
-                _filename = os.path.splitext(
-                    self._user_meta['PRODUCT']['DATA'])[0]
+                _filename = os.path.splitext(self._user_meta['PRODUCT']['DATA'])[0]
             except KeyError:
                 self._logger.error(
                     "Missing description in user meta of PRODUCT:NAME")
                 raise
-        # Suffix
+
+        # add UUID to file name
+        try:
+            _filename = self.toplevel_meta['CTA']['PRODUCT']['ID'] \
+                + '-' + _filename
+        except KeyError:
+            self._logger.error(
+                "Missing CTA:PRODUCT:ID in metadata")
+            raise
+
         if not suffix:
             suffix = '.' + self._read_data_file_format()
 
-        return _directory+'/'+_filename+suffix
+        return _directory + '/' + _filename+suffix
 
     def _get_data_directory(self):
         """
