@@ -146,28 +146,28 @@ class DataValidator:
         Data is either sorted or reverse sorted
         """
 
-        _columns_to_sort = []
-        _columns_to_reverse_sort = []
+        _columns_by_which_to_sort = []
+        _columns_by_which_to_reverse_sort = []
         for key, value in self._reference_data_columns.items():
             if 'attribute' in value:
                 if 'sort' in value['attribute']:
-                    _columns_to_sort.append(key)
+                    _columns_by_which_to_sort.append(key)
                 elif 'reversesort' in value['attribute']:
-                    _columns_to_reverse_sort.append(key)
+                    _columns_by_which_to_reverse_sort.append(key)
 
-        if len(_columns_to_sort) > 0:
+        if len(_columns_by_which_to_sort) > 0:
             self._logger.debug("Sorting data columns: {}".format(
-                _columns_to_sort))
+                _columns_by_which_to_sort))
             try:
-                self.data_table.sort(_columns_to_sort)
+                self.data_table.sort(_columns_by_which_to_sort)
             except AttributeError:
                 self._logger.error("No data table defined for sorting")
                 raise
-        elif len(_columns_to_reverse_sort) > 0:
+        elif len(_columns_by_which_to_reverse_sort) > 0:
             self._logger.debug("Reverse sorting data columns: {}".format(
-                _columns_to_reverse_sort))
+                _columns_by_which_to_reverse_sort))
             try:
-                self.data_table.sort(_columns_to_reverse_sort, reverse=True)
+                self.data_table.sort(_columns_by_which_to_reverse_sort, reverse=True)
             except AttributeError:
                 self._logger.error("No data table defined for sorting")
                 raise
