@@ -9,16 +9,9 @@ class SchemaValidator:
     """
     Validate a dictionary against a reference schema
 
-    Attributes
-    ----------
-    workflow_config: dict
-        workflow configuration
-    data_dict: dict
-        data dictionary to be validated agains reference schema
-
     Methods
     -------
-    validate(user_meta_file_name=None)
+    validate_and_transform(user_meta_file_name=None)
         validate user meta data
 
     """
@@ -28,13 +21,21 @@ class SchemaValidator:
         Initalize validation class and read required
         reference schema
 
+        Parameters
+        ----------
+        workflow_config: dict
+            workflow configuration
+        data_dict: dict
+            User-provided metadata dict to be validated against
+            reference schema
+
         """
 
         self._logger = logging.getLogger(__name__)
 
         reference_schema_file = None
         if workflow_config:
-            reference_schema_file = self._read_reference_schema_file(
+            reference_schema_file = self._get_reference_schema_file(
                 workflow_config)
         if reference_schema_file:
             self._logger.debug(
@@ -52,9 +53,15 @@ class SchemaValidator:
         Parameters
         ----------
         user_meta_file_name
-            file name with meta data to be validated
-            (might also be given as dictionary during
-            initialization of the class)
+            file name for file with user meta data to
+            be validated (might also be given as
+            dictionary during initialization of the class)
+
+        Returns
+        -------
+        dict
+            Complete set of metadata follwoing the CTA
+            top-level defintion
 
         """
         if user_meta_file_name:
@@ -75,6 +82,20 @@ class SchemaValidator:
     def _validate_schema(self, ref_schema, data_dict):
         """
         Validate schema for data types and required fields
+
+        Parameters
+        ----------
+        ref_schema: dict
+            Reference metadata schema
+        data_dict: dict
+            User-provided metadata dict to be validated against
+            reference schema
+
+        Raises
+        ------
+        UnboundLocalError
+            If no data is available for metadata key from the
+            reference schema
 
         """
 
@@ -101,6 +122,12 @@ class SchemaValidator:
         """
         Process schema entries for inconsistencies
         (quite fine tuned)
+        - remove linefeeds from description string
+
+        Raises
+        ------
+        KeyError
+            if data_dict['PRODUCT']['DESCRIPTION'] is not available
 
         """
 
@@ -111,20 +138,27 @@ class SchemaValidator:
         except KeyError:
             pass
 
-    def _remove_line_feed(self, string):
-        """
-        Remove all line feed from a string
-        """
-
-        return string.replace('\n', ' ').replace('\r', '')
-
     def _validate_data_type(self, schema, key, data_field):
         """
         Validate data type against the expected data type
         from schema
 
-        Raises value error if data types are inconsistent
+        Parameters
+        ----------
+        schema: dict
+            metadata description from reference schema
+        key: str
+            data field name to be validated
+        data_field: dict
+            data field to be validated
+
+        Raises
+        ------
+        ValueError
+            if data types are inconsistent
+
         """
+
         self._logger.debug("checking data field {} for {}".format(
                            key, schema['type']))
 
@@ -132,7 +166,9 @@ class SchemaValidator:
                    'int': type(0), 'bool': type(True)}
 
         if schema['type'] == 'datetime':
-            self._validate_datetime(data_field, schema)
+            self._validate_datetime(
+                data_field,
+                self._field_is_optional(schema))
 
         elif schema['type'] == 'email':
             self._validate_email(data_field, key)
@@ -152,16 +188,28 @@ class SchemaValidator:
                         key, schema['type'],
                         type(data_field).__name__)) from error
 
-    def _validate_datetime(self, data_field, schema):
+    def _validate_datetime(self, data_field, optional_field=False):
         """
         Validate entry to be of type datetime
+
+        Parameters
+        ----------
+        data_field: dict
+            data field to be validated
+        optional_field: boolean
+            data field is optional
+
+        Raises
+        ------
+        ValueError
+            if data field is of invalid format
 
         """
         format_date = "%Y-%m-%d %H:%M:%S"
         try:
             datetime.datetime.strptime(data_field, format_date)
         except (ValueError, TypeError) as error:
-            if not self._field_is_optional(schema):
+            if not optional_field:
                 raise ValueError(
                     'invalid date format. Expected {}; Found {}'.format(
                         format_date, data_field)) from error
@@ -169,6 +217,18 @@ class SchemaValidator:
     def _validate_email(self, data_field, key):
         """
         Validate entry to be a email address
+
+        Parameters
+        ----------
+        data_field: dict
+            data field to be validated
+        key: str
+            data field name to be validated
+
+        Raises
+        ------
+        ValueError
+            if data field is of invalid format
 
         """
         regex = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'
@@ -181,6 +241,11 @@ class SchemaValidator:
         """
         Validate entry to be of type INSTRUMENT
 
+        Parameters
+        ----------
+        instrument list: dict
+            data field of type INSTRUMENT to be validated
+
         """
 
         for instrument in instrument_list:
@@ -192,10 +257,25 @@ class SchemaValidator:
     def _field_is_optional(value):
         """
         Check if data field is labeled as not required in
-        the reference schema
+        the reference metadata schema
+
+        Parameters
+        ----------
+        value: dict
+            required field from reference metadata schema
+
+        Returns
+        -------
+        boolean
+            True if data field is required
+
+        Raises
+        ------
+        KeyError
+            if 'required' field is not defined in reference
+            metadata schema
 
         """
-
         try:
             if value['required']:
                 return False
@@ -203,9 +283,27 @@ class SchemaValidator:
         except KeyError:
             return False
 
-    def _read_reference_schema_file(self, workflow_config):
+    def _get_reference_schema_file(self, workflow_config):
         """
         Return full path and name of reference schema file
+        as defined in workflow configuration
+
+        Parameters
+        ----------
+        workflow_config: dict
+            workflow configuration
+
+        Returns
+        -------
+        str
+            Path and name of reference schema file
+
+        Raises
+        ------
+        KeyError
+            if directory and name of reference schema file is not
+            defined in workflow configuration
+
 
         """
 
@@ -218,3 +316,21 @@ class SchemaValidator:
             self._logger.error(
                 "Missing description of DATAMODEL schema file")
             raise
+
+    @staticmethod
+    def _remove_line_feed(string):
+        """
+        Remove all line feeds from a string
+
+        Parameters
+        ----------
+        str
+            input string
+
+        Returns
+        -------
+        str
+            with line feeds removed
+        """
+
+        return string.replace('\n', ' ').replace('\r', '')
