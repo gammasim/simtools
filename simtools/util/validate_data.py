@@ -1,6 +1,5 @@
 import logging
 import os
-import sys
 
 from astropy.table import unique
 from astropy.table import Table
