@@ -1,7 +1,10 @@
 import logging
+import os
+import sys
 
 from astropy.table import unique
 from astropy.table import Table
+from astropy.utils.diff import report_diff_values
 from astropy import units as u
 
 
@@ -127,6 +130,11 @@ class DataValidator:
         Check that all required data columns are available
         in the input data table
 
+        Raises
+        ------
+        KeyError
+            if a required data column is missing
+
         """
 
         for key, value in self._reference_data_columns.items():
@@ -144,6 +152,12 @@ class DataValidator:
         (if required by any column attribute)
 
         Data is either sorted or reverse sorted
+
+        Raises
+        ------
+        AttributeError
+            if no table is defined for sorting
+
         """
 
         _columns_by_which_to_sort = []
@@ -174,35 +188,84 @@ class DataValidator:
 
     def _check_data_for_duplicates(self):
         """
-        Remove duplicates from data columns
-        (if required by any column attribute)
+        Remove duplicates from data columns as defined
+        in the data columns description
 
-        Note: checks values in given column and removes
-        duplicates for complete data row (even of other
-        columns have different values). Expectation is that
-        there is one column only with column attributes)
+        Raises
+        ------
+            if row values are different for
+            those rows with duplications in the data columns
+            to be checked for unique values.
 
         """
+
+        _column_with_unique_requirement = self._get_unique_column_requirement()
+
+        _data_table_unique_for_key_column = unique(
+            self.data_table, keys=_column_with_unique_requirement)
+        _data_table_unique_for_all_columns = unique(
+            self.data_table, keys=None)
+        with open(os.devnull, 'w') as devnull:
+            if report_diff_values(
+               _data_table_unique_for_key_column,
+               _data_table_unique_for_all_columns,
+               fileobj=devnull):
+                self.data_table = unique(self.data_table)
+            else:
+                self._logger.error(
+                    'Failed removal of duplication for column {}, values are not unqiue'.format(
+                        _column_with_unique_requirement))
+                raise ValueError
+
+    def _get_unique_column_requirement(self):
+        """
+        Return data column name with unique value requirement
+
+        Returns
+        -------
+        list
+            list of data column with unique value requirement
+
+        """
+
+        _unique_required_column = []
 
         for key, value in self._reference_data_columns.items():
             if 'attribute' in value and 'remove_duplicates' in value['attribute']:
                 self._logger.debug("Removing duplicates for column '{}'".format(
                     key))
-                self.data_table = unique(self.data_table)
+                _unique_required_column.append(key)
 
-    def _get_reference_unit(self, key):
+        return _unique_required_column
+
+    def _get_reference_unit(self, column_name):
         """
         Return reference column unit.
         Includes correct treatment of dimensionless units
 
+        Parameters
+        ----------
+        column_name: str
+            column name of reference data column
+
+        Returns
+        -------
+        astro.unit
+            unit for reference column
+
+        Raises
+        ------
+        KeyError
+            if column name is not found in reference data columns
+
         """
 
         try:
-            reference_unit = self._reference_data_columns[key]['unit']
+            reference_unit = self._reference_data_columns[column_name]['unit']
         except KeyError:
             self._logger.error(
                 "Data column '{}' not found in reference column definition".format(
-                    key))
+                    column_name))
             raise
 
         if reference_unit == 'dimensionless' or reference_unit is None:
@@ -219,6 +282,21 @@ class DataValidator:
             - should be given in unit descriptor as unit: ''
         - be forgiving and assume that in cases no unit is given in the data files
           means that it should be dimensionless (e.g., for a efficiency)
+
+        Parameters
+        ----------
+        col: astropy.column
+            data column to be converted
+
+        Returns
+        -------
+        astropy.column
+            unit-converted data column
+
+        Raises
+        ------
+        u.core.UnitConversionError
+            If column unit conversions fails
 
         """
 
@@ -252,6 +330,27 @@ class DataValidator:
         or required range.
 
         Assume that column and ranges have the same units
+
+        Parameters
+        ----------
+        col_name: string
+            column name
+        col_min: float
+            minimum value of data column
+        col_max: float
+            maximum value of data column
+        range_type: string
+            column range type (either 'allowed_range' or 'required_range')
+
+        Raises
+        ------
+        ValueError
+            if columns are not in the required range
+        KeyError
+            if requested columns cannot be found or
+            if there is now defined of required or allowed
+            range columns
+
         """
         self._logger.debug(
             "Checking data in column '{}' for '{}'".format(
@@ -295,6 +394,20 @@ class DataValidator:
         """
         Check that values are inside allowed range (range_type='allowed_range')
         or span at least the given inveral (range_type='required_range').
+
+        Parameters
+        ----------
+        data: tuple
+            min and max of data
+        axis_range: tuple
+            allowed or required min max
+        range_type: string
+            column range type (either 'allowed_range' or 'required_range')
+
+        Returns
+        -------
+        boolean
+            True if range test is passed
 
         """
 
