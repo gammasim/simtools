@@ -35,6 +35,13 @@ class ModelData:
         """
         Initialize model data
 
+        Parameters
+        ----------
+        workflow_config: dict
+            workflow configuration
+        toplevel_meta: dict
+            top-level metadata definition
+
         """
 
         self._logger = logging.getLogger(__name__)
@@ -71,6 +78,11 @@ class ModelData:
         """
         Read and return toplevel data model template
 
+        Returns
+        -------
+        dict
+            top-level meta data definition
+
         """
 
         _toplevel_metadata_file = self._read_toplevel_metadata_file()
@@ -97,6 +109,12 @@ class ModelData:
     def _fill_user_meta(self):
         """
         Fill user-provided meta data
+
+        Raises
+        ------
+        KeyError
+            if corresponding fields cannot by accessed in the
+            user top-level or user metadata dictionaries
 
         """
 
@@ -126,11 +144,19 @@ class ModelData:
 
     def _fill_product_meta(self):
         """
-        Fill product related meta data
+        Fill metadata for data product
+
+        Raises
+        ------
+        KeyError
+            if relevant fields are not defined in toplevel metadata
+            dictionary
 
         """
 
         self.toplevel_meta['CTA']['PRODUCT']['ID'] = str(uuid.uuid4())
+        self._logger.debug("Issued UUID {}".format(
+            self.toplevel_meta['CTA']['PRODUCT']['ID']))
 
         try:
             self.toplevel_meta['CTA']['PRODUCT']['FORMAT'] = \
@@ -139,12 +165,17 @@ class ModelData:
             self._logger.debug("Error PRODUCT meta from user input meta data")
             raise
 
-        self._fill_product_association(
-            self.toplevel_meta['CTA']['PRODUCT']['ASSOCIATION'])
+        self._fill_product_association()
 
     def _fill_activity_meta(self):
         """
         Fill activity (software) related meta data
+
+        Raises
+        ------
+        KeyError
+            if relevant fields are not defined in toplevel metadata
+            dictionary
 
         """
         try:
@@ -164,6 +195,14 @@ class ModelData:
         """
         Return full path and name of top level data file
 
+        Raises
+        ------
+        KeyError
+            if relevant fields are not defined in toplevel metadata
+            dictionary
+        TypeError
+            if workflow directory cannot be converted to type str
+
         """
         try:
             return str(
@@ -179,6 +218,17 @@ class ModelData:
         """
         Return file format for data file
 
+        Returns
+        -------
+        str
+            file format of data product
+
+        Raises
+        ------
+        KeyError
+            if relevant fields are not defined in toplevel metadata
+            dictionary
+
         """
         try:
             return self.workflow_config['CTASIMPIPE']['PRODUCT']['FORMAT']
@@ -188,7 +238,7 @@ class ModelData:
 
         return "ascii.ecsv"
 
-    def _read_data_file_name(self, suffix=None):
+    def _get_data_file_name(self, suffix=None):
         """
         Return full path and name of data file
 
@@ -196,9 +246,20 @@ class ModelData:
         a. workflow_config['CTASIMPIPE']['PRODUCT']['NAME'] (preferred)
         b. _user_meta['PRODUCT']['NAME']
 
+        Returns
+        -------
+        str
+            data file path and name
+
+        Raises
+        ------
+        KeyError
+            if data file name is not defined in workflow configuration
+            or in product metadata dict
+
         """
 
-        _directory = self._read_data_directory()
+        _directory = self._get_data_directory()
 
         # Filename
         try:
@@ -221,10 +282,21 @@ class ModelData:
 
         return _directory+'/'+_filename+suffix
 
-    def _read_data_directory(self):
+    def _get_data_directory(self):
         """
         Return output directory for data products.
         Create directory if necessary.
+
+        Returns
+        -------
+        str
+            output directory for data products
+
+        Raises
+        ------
+        KeyError
+            if data file name is not defined in workflow configuration
+            or in product metadata dict
 
         """
 
@@ -251,11 +323,12 @@ class ModelData:
     def _write_metadata(self):
         """
         Write model metadata file
+        (yaml file format)
 
         """
 
         if self.toplevel_meta:
-            ymlfile = self._read_data_file_name('.yml')
+            ymlfile = self._get_data_file_name('.yml')
             self._logger.debug(
                 "Writing metadata to {}".format(ymlfile))
             with open(ymlfile, 'w', encoding='UTF-8') as file:
@@ -264,14 +337,23 @@ class ModelData:
                     file,
                     sort_keys=False)
 
-    def _fill_product_association(self, association_list):
+    def _fill_product_association(self):
         """
         Fill list of associations in top-level data model
 
+        Raises
+        ------
+        KeyError
+            if PRODUCT::ASSOCIATION is not found
+
         """
 
-        for association in association_list:
-            association['ID'] = self._read_instrument_name(association)
+        try:
+            for association in self.toplevel_meta['CTA']['PRODUCT']['ASSOCIATION']:
+                association['ID'] = self._read_instrument_name(association)
+        except KeyError:
+            self._logger.error('Error reading PRODUCT:ASSOCIATION')
+            raise
 
     def _read_instrument_name(self, association):
         """
@@ -306,14 +388,15 @@ class ModelData:
     def _write_data(self):
         """
         Write model data file
+        (with defined file format)
 
         """
 
         if self._user_data:
-            ecsvfile = self._read_data_file_name()
+            _file = self._get_data_file_name()
             self._logger.debug(
-                "Writing data to {}".format(ecsvfile))
+                "Writing data to {}".format(_file))
             self._user_data.write(
-                ecsvfile,
+                _file,
                 format=self._read_data_file_format(),
                 overwrite=True)
