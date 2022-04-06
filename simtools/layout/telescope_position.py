@@ -355,9 +355,8 @@ class TelescopePosition:
             raise InvalidCoordSystem(msg)
 
         # Calculate lon/lat of a telescope
-        self._latitude, self._longitude = pyproj.transform(
-            crsLocal, wgs84, self._posX, self._posY
-        )
+        transformer = pyproj.Transformer.from_crs(crsLocal, wgs84)
+        self._latitude, self._longitude = transformer.transform(self._posX, self._posY)
         return
 
     def convertLocalToUtm(self, crsLocal, crsUtm):
@@ -397,9 +396,8 @@ class TelescopePosition:
             raise MissingInputForConvertion(msg)
 
         # Calculate UTM position of a telescope
-        self._utmEast, self._utmNorth = pyproj.transform(
-            crsLocal, crsUtm, self._posX, self._posY
-        )
+        transformer = pyproj.Transformer.from_crs(crsLocal, crsUtm)
+        self._utmEast, self._utmNorth = transformer.transform(self._posX, self._posY)
         return
 
     def convertUtmToMercator(self, crsUtm, wgs84):
@@ -443,9 +441,8 @@ class TelescopePosition:
             raise InvalidCoordSystem(msg)
 
         # Calculate latitude and longitude
-        self._latitude, self._longitude = pyproj.transform(
-            crsUtm, wgs84, self._utmEast, self._utmNorth
-        )
+        transformer = pyproj.Transformer.from_crs(crsUtm, wgs84)
+        self._latitude, self._longitude = transformer.transform(self._utmEast, self._utmNorth)
         return
 
     def convertUtmToLocal(self, crsUtm, crsLocal):
@@ -488,9 +485,8 @@ class TelescopePosition:
             raise InvalidCoordSystem(msg)
 
         # Calculate posX and posY
-        self._posX, self._posY = pyproj.transform(
-            crsUtm, crsLocal, self._utmEast, self._utmNorth
-        )
+        transformer = pyproj.Transformer.from_crs(crsUtm, crsLocal)
+        self._posX, self._posY = transformer.transform(self._utmEast, self._utmNorth)
         return
 
     @u.quantity_input(corsikaObsLevel=u.m, corsikaSphereCenter=u.m)

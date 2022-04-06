@@ -408,11 +408,15 @@ class PSFImage:
         ax = plt.gca()
         # Image histogram
         ax.hist2d(data["X"], data["Y"], **kwargsForImage)
+        ax.set_aspect("equal", "datalim")
 
         # PSF circle
         center = (0, 0) if centralized else (self.centroidX, self.centroidY)
         circle = plt.Circle(center, self.getPSF(0.8) / 2, **kwargsForPSF)
         ax.add_artist(circle)
+
+        ax.axhline(0, color="k", linestyle="--", zorder=3, linewidth=0.5)
+        ax.axvline(0, color="k", linestyle="--", zorder=3, linewidth=0.5)
 
     def getCumulativeData(self, radius=None):
         """
