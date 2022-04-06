@@ -158,11 +158,19 @@ class DataValidator:
         if len(_columns_to_sort) > 0:
             self._logger.debug("Sorting data columns: {}".format(
                 _columns_to_sort))
-            self.data_table.sort(_columns_to_sort)
+            try:
+                self.data_table.sort(_columns_to_sort)
+            except AttributeError:
+                self._logger.error("No data table defined for sorting")
+                raise
         elif len(_columns_to_reverse_sort) > 0:
             self._logger.debug("Reverse sorting data columns: {}".format(
                 _columns_to_reverse_sort))
-            self.data_table.sort(_columns_to_reverse_sort, reverse=True)
+            try:
+                self.data_table.sort(_columns_to_reverse_sort, reverse=True)
+            except AttributeError:
+                self._logger.error("No data table defined for sorting")
+                raise
 
     def _check_data_for_duplicates(self):
         """
