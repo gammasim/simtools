@@ -18,3 +18,6 @@ docs/build
 
 # DB config gfile
 dbDetails.yml
+
+# Mac users
+.DS_Store
