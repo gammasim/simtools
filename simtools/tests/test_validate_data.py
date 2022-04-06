@@ -98,26 +98,26 @@ def test_check_data_for_duplicates():
         None
     )
 
-    table_1 = Table()
-    table_1['wavelength'] = Column([300.0, 350.0, 350.], unit='nm', dtype='float32')
-    table_1['qe'] = Column([0.1, 0.5, 0.5], dtype='float32')
-
-    table_2 = Table()
-    table_2['wavelength'] = Column([300.0, 315.0, 350.], unit='nm', dtype='float32')
-    table_2['qe'] = Column([0.1, 0.5, 0.5], dtype='float32')
-
     table_unique = Table()
     table_unique['wavelength'] = Column([300.0, 350.0], unit='nm', dtype='float32')
     table_unique['qe'] = Column([0.1, 0.5], dtype='float32')
 
+    table_1 = Table()
+    table_1['wavelength'] = Column([300.0, 350.0, 350.], unit='nm', dtype='float32')
+    table_1['qe'] = Column([0.1, 0.5, 0.5], dtype='float32')
+
     data_validator.data_table = table_1
     data_validator._check_data_for_duplicates()
 
-    identical = report_diff_values(
+    identical_1 = report_diff_values(
         data_validator.data_table,
         table_unique, fileobj=sys.stdout)
 
-    assert identical
+    assert identical_1
+
+    table_2 = Table()
+    table_2['wavelength'] = Column([300.0, 315.0, 350.], unit='nm', dtype='float32')
+    table_2['qe'] = Column([0.1, 0.5, 0.5], dtype='float32')
 
     data_validator.data_table = table_2
     data_validator._check_data_for_duplicates()
@@ -127,6 +127,16 @@ def test_check_data_for_duplicates():
         table_2, fileobj=sys.stdout)
 
     assert not_identical
+
+    table_3 = Table()
+    table_3['wavelength'] = Column([300.0, 350.0, 350.], unit='nm', dtype='float32')
+    table_3['qe'] = Column([0.1, 0.5, 0.8], dtype='float32')
+
+    data_validator.data_table = table_3
+    with pytest.raises(ValueError):
+        data_validator._check_data_for_duplicates()
+
+
 
 def test_interval_check_allow_range():
 
