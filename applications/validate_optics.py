@@ -39,6 +39,8 @@
         Zenith angle in deg (default=20).
     max_offset (float, optional)
         Maximum offset angle in deg (default=4).
+    plot_images (activation mode, optional)
+        Produce a multiple pages pdf file with the image plots.
     test (activation mode, optional)
         If activated, application will be faster by simulating fewer photons.
     verbosity (str, optional)
@@ -53,16 +55,13 @@
     .. code-block:: console
 
         python applications/validate_optics.py --site North --telescope LST-1 --max_offset 5.0
-
-    .. todo::
-
-        * Change default model to default (after this feature is implemented in db_handler)
 """
 
 import logging
-import matplotlib.pyplot as plt
 import argparse
 import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_pdf import PdfPages
 
 import astropy.units as u
 
@@ -98,7 +97,7 @@ if __name__ == "__main__":
         "--model_version",
         help="Model version (default=prod4)",
         type=str,
-        default="prod4",
+        default="Current",
     )
     parser.add_argument(
         "--src_distance",
@@ -114,6 +113,11 @@ if __name__ == "__main__":
         help="Maximum offset angle in deg (default=4)",
         type=float,
         default=4,
+    )
+    parser.add_argument(
+        "--plot_images",
+        help="Produce a multiple pages pdf file with the image plots.",
+        action="store_true",
     )
     parser.add_argument(
         "--test",
@@ -167,8 +171,26 @@ if __name__ == "__main__":
 
         ray.plot(key, marker="o", linestyle=":", color="k")
 
-        plotFileName = label + "_" + telModel.name + "_" + key
+        plotFileName = "_".join((label, telModel.name, key))
         plotFile = outputDir.joinpath(plotFileName)
         plt.savefig(str(plotFile) + ".pdf", format="pdf", bbox_inches="tight")
         plt.savefig(str(plotFile) + ".png", format="png", bbox_inches="tight")
         plt.clf()
+
+    # Plotting images
+    if args.plot_images:
+        plotFileName = "_".join((
+            label, telModel.name, "images.pdf"
+        ))
+        plotFile = outputDir.joinpath(plotFileName)
+        pdfPages = PdfPages(plotFile)
+
+        logger.info("Plotting images into {}".format(plotFile))
+
+        for image in ray.images():
+            fig = plt.figure(figsize=(8, 6), tight_layout=True)
+            image.plotImage()
+            pdfPages.savefig(fig)
+            plt.clf()
+        plt.close()
+        pdfPages.close()
