@@ -152,7 +152,7 @@ class TelescopeModel:
         Create a TelescopeModel from a sim_telarray config file.
 
         Notes
-        ----
+        -----
         Todo: Dealing with ifdef/indef etc. By now it just keeps the last version of the parameters
         in the file.
 
