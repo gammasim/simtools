@@ -12,7 +12,7 @@ dependencies:
   - scipy
   - pymongo
   - numpydoc
-  - sphinx=3.5
+  - sphinx
   - sphinx_rtd_theme
   - pyproj
   - zstandard
