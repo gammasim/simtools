@@ -19,10 +19,12 @@ class DataValidator:
 
     Methods
     -------
-    validate_and_transform()
-        Main function to validate and transform.
+    transform()
+        Apply transformations to data columns.
+    validate()
+        Data value and data file validation.
     validate_data_file()
-        Open data file and check for file consistency
+        Open data file and check for file consistency.
     validate_data_columns()
         Check each data column for correct units and data ranges.
 
@@ -32,6 +34,14 @@ class DataValidator:
         """
         Initalize validation class and read required
         reference data columns
+
+        Parameters
+        ----------
+        reference_data_columns: dict
+            definition of data columns and axes from workflow
+            configuration
+        data_file_name: string
+            Name of data table file to be validated
 
         """
 
@@ -44,7 +54,16 @@ class DataValidator:
 
     def validate(self):
         """
-        Data validation and coordination transformation
+        Data and data file validation
+
+        Parameters
+        ----------
+        (none)
+
+        Returns
+        -------
+        data_table: astropy.table
+            data table
 
         """
 
@@ -55,8 +74,18 @@ class DataValidator:
 
     def transform(self):
         """
-        Apply any requested transformations to the
-        data columns
+        Apply transformations to data columns:
+        - duplication removal
+        - sorting according to axes
+
+        Parameters
+        ----------
+        (none)
+
+        Returns
+        -------
+        data_table: astropy.table
+            data table
 
         """
 
