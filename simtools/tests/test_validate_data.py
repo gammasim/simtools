@@ -61,14 +61,35 @@ def test_sort_data():
     table_sorted['wavelength'] = Column([300.0, 315., 350.0], unit='nm', dtype='float32')
     table_sorted['qe'] = Column([0.1, 0.2, 0.5], dtype='float32')
 
+    table_reverse_sorted = Table()
+    table_reverse_sorted['wavelength'] = Column([350.0, 315., 300.0], unit='nm', dtype='float32')
+    table_reverse_sorted['qe'] = Column([0.5, 0.2, 0.1], dtype='float32')
+
     data_validator.data_table = table_1
     data_validator._sort_data()
 
-    identical = report_diff_values(
+    identical_sorted = report_diff_values(
         data_validator.data_table,
         table_sorted, fileobj=sys.stdout)
 
-    assert identical
+    reverse_sorted_data_columns = get_reference_columns()
+    reverse_sorted_data_columns['wavelength']['attribute'] = \
+        ['remove_duplicates', 'reversesort']
+    data_validator_reverse = ds.DataValidator(
+        reverse_sorted_data_columns,
+        None
+    )
+
+    data_validator_reverse.data_table = table_1
+    data_validator_reverse._sort_data()
+
+    identical_reverse_sorted = report_diff_values(
+        data_validator_reverse.data_table,
+        table_reverse_sorted, fileobj=sys.stdout)
+
+    assert identical_sorted
+    assert identical_reverse_sorted
+
 
 def test_check_data_for_duplicates():
 
