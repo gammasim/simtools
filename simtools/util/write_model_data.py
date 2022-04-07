@@ -3,6 +3,7 @@ import logging
 import os
 import uuid
 import yaml
+from pathlib import Path
 
 import simtools.config as cfg
 import simtools.io_handler as io
@@ -56,7 +57,10 @@ class ModelData:
         self._user_meta = None
         self._user_data = None
 
-    def write_model_file(self, user_meta, user_data):
+    def write_model_file(self,
+                         user_meta,
+                         user_data,
+                         product_directory=''):
         """
         Write model data consisting of metadata and data files
 
@@ -66,11 +70,15 @@ class ModelData:
             User meta data.
         user_data: astropy Table
             Model data.
+        product_directory: str
+            Output directory for data products
+            Default: None (use gammasim-tools default location)
 
         """
 
         self._user_meta = user_meta
         self._user_data = user_data
+        self._product_directory = product_directory
 
         self._prepare_metadata()
         self._write_metadata()
@@ -313,17 +321,22 @@ class ModelData:
 
         """
 
+        _output_label = ''
+
+        if len(self._product_directory) > 0:
+            _output_location = self._product_directory
+            path = Path(self._product_directory)
+            path.mkdir(parents=True, exist_ok=True)
+            return str(path.absolute())
+
         try:
             _output_location = self.workflow_config['CTASIMPIPE']['PRODUCT']['DIRECTORY']
             _output_label = self.workflow_config["CTASIMPIPE"]["ACTIVITY"]["NAME"]
         except KeyError:
             pass
 
-        if not _output_location:
+        if _output_location is None or _output_location == 'None':
             _output_location = cfg.get("outputLocation")
-
-        if not _output_label:
-            _output_label = ''
 
         _output_dir = io.getApplicationOutputDirectory(
             _output_location,
