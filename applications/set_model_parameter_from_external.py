@@ -158,6 +158,14 @@ def parse():
         required=True,
     )
     parser.add_argument(
+        "-p",
+        "--product_directory",
+        help="Directory for data products (output)",
+        type=str,
+        default='',
+        required=False,
+    )
+    parser.add_argument(
         "-r",
         "--reference_schema_directory",
         help="Directory with reference schema",
@@ -188,4 +196,6 @@ if __name__ == "__main__":
     output_meta, output_data = transform_input(args, workflow_config)
 
     file_writer = writer.ModelData(workflow_config)
-    file_writer.write_model_file(output_meta, output_data)
+    file_writer.write_model_file(output_meta,
+                                 output_data,
+                                 args.product_directory)
