@@ -107,8 +107,11 @@ class DataValidator:
         # opening and reading fails.
         # FileNotFoundError
         # astropy.io.ascii.core.InconsistentTableError
-        self.data_table = Table.read(self._data_file_name, guess=True)
         self._logger.info("Reading data from {}".format(self._data_file_name))
+        self.data_table = Table.read(
+            self._data_file_name,
+            guess=True,
+            delimiter=r'\s')
 
     def validate_data_columns(self):
         """
