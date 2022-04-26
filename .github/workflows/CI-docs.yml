@@ -28,7 +28,6 @@ jobs:
           source $CONDA/etc/profile.d/conda.sh
           conda config --set always_yes yes --set changeps1 no
           conda update -q conda
-          conda install -c conda-forge mamba
           sed -i -e "s/- python/- python=$PYTHON_VERSION/g" environment.yml
           conda env create -f environment.yml
           conda activate gammasim-tools-dev
