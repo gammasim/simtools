@@ -106,6 +106,9 @@ class SchemaValidator:
                 if self._field_is_optional(value):
                     self._logger.debug(f"Optional field {key}")
                     continue
+                else:
+                    msg = f"Missing required field {key}"
+                    raise ValueError(msg)
 
             if isinstance(value, dict):
                 if 'type' in value:

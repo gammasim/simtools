@@ -119,18 +119,18 @@ def test_validate_instrument_list():
             'SITE': 'South',
             'CLASS': 'MST',
             'TYPE': 'FlashCam',
-            'SUBTYPE': 'D'
+            'SUBTYPE': 'D',
+            'ID': 'A'
         }
     }
     instrument_list = [instrument_1['INSTRUMENT']]
     date_validator._validate_instrument_list(instrument_list)
 
-    instrument_2 = instrument_1
     del instrument_1['INSTRUMENT']['CLASS']
-    instrument_list.append(instrument_2)
+    instrument_list.append(instrument_1)
     with pytest.raises(
-        UnboundLocalError,
-        match=r"No data for `SITE` key"):
+        ValueError,
+        match=r"Missing required field CLASS"):
             date_validator._validate_instrument_list(instrument_list)
 
 def test_check_if_field_is_optional():
