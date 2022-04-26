@@ -21,7 +21,7 @@ jobs:
 
     strategy:
       matrix:
-        python-version: [3.6, 3.7, 3.8]
+        python-version: [3.8, 3.9, 3.10.4]
 
     steps:
       - name: checkout
@@ -40,7 +40,7 @@ jobs:
           conda config --set always_yes yes --set changeps1 no
           conda update -q conda
           conda install -c conda-forge mamba
-          sed -i -e "s/- python<=3.8/- python=$PYTHON_VERSION/g" environment.yml
+          sed -i -e "s/- python/- python=$PYTHON_VERSION/g" environment.yml
           mamba env create -f environment.yml
           conda activate gammasim-tools-dev
           echo 'source $CONDA/etc/profile.d/conda.sh' >> ~/.bash_profile
@@ -61,7 +61,7 @@ jobs:
 
       - name: corsikasimtelpackage
         run: |
-          wget https://syncandshare.desy.de/index.php/s/${{ secrets.CLOUD_SIMTEL }}/download
+          wget --no-verbose https://syncandshare.desy.de/index.php/s/${{ secrets.CLOUD_SIMTEL }}/download
           mv download corsika7.7_simtelarray.tar.gz
           tar -xzf corsika7.7_simtelarray.tar.gz
           ./build_all prod5 qgs2 gsl
