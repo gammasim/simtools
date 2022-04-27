@@ -7,6 +7,8 @@ __all__ = [
     "validateLayoutArrayName",
     "validateTelescopeModelName",
     "validateCameraName",
+    "validateSubSystemName",
+    "validateTelescopeIDName",
     "convertTelescopeModelNameToYaml",
     "splitTelescopeModelName",
     "getSiteFromTelescopeName",
@@ -17,6 +19,27 @@ __all__ = [
     "corsikaConfigFileName",
     "corsikaOutputFileName",
 ]
+
+
+def validateSubSystemName(name):
+    """
+    Validate a sub system name (optics structure or camera)
+
+    Raises
+    ------
+    ValueError
+        If name is not valid.
+
+    Parameters
+    ----------
+    name: str
+
+    Returns
+    -------
+    str
+        Validated name.
+    """
+    return validateName(name, {**allCameraNames, **allStructureNames})
 
 
 def validateCameraName(name):
@@ -38,6 +61,38 @@ def validateCameraName(name):
         Validated name.
     """
     return validateName(name, allCameraNames)
+
+def validateTelescopeIDName(name):
+    """
+    Validate a telescope ID name
+
+    Valid names e.g.,
+    - D
+    - telescope ID
+
+    Raises
+    ------
+    ValueError
+        If name is not valid.
+
+    Parameters
+    ----------
+    name: str
+
+    Returns
+    -------
+    str
+        Validated name.
+    """
+
+    # FIXME: validate telescope id range
+    if name == 'D' or name.isdigit():
+        return name
+
+    _logger = logging.getLogger(__name__)
+    msg = "Invalid telescope ID name {}".format(name)
+    _logger.error(msg)
+    raise ValueError(msg)
 
 
 def validateModelVersionName(name):
@@ -311,6 +366,9 @@ allCameraNames = {
     "LST": ["lst"],
 }
 
+allStructureNames = {
+    "Structure": ["Structure", "structure"]
+}
 
 allSiteNames = {"South": ["paranal", "south"], "North": ["lapalma", "north"]}
 
