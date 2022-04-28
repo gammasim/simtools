@@ -301,7 +301,8 @@ class ModelData:
         if not suffix:
             suffix = '.' + self._read_data_file_format()
 
-        return _directory + '/' + _filename+suffix
+        path = Path(_directory).joinpath(_filename+suffix)
+        return path
 
     def _get_data_directory(self):
         """
