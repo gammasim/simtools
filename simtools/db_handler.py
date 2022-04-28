@@ -919,7 +919,7 @@ class DatabaseHandler:
         else:
             parEntry["File"] = False
 
-        self._logger.info("Will add the following entry to DB\n", parEntry)
+        self._logger.info("Will add the following entry to DB:\n{}".format(parEntry))
 
         collection.insert_one(parEntry)
         if len(filesToAddToDB) > 0:
@@ -979,7 +979,7 @@ class DatabaseHandler:
         kwargs.pop("Type", None)
         dbEntry.update(kwargs)
 
-        self._logger.info("Will add the following entry to DB\n", dbEntry)
+        self._logger.info("Will add the following entry to DB:\n{}".format(dbEntry))
 
         collection.insert_one(dbEntry)
         if len(filesToAddToDB) > 0:
