@@ -161,10 +161,15 @@ class SimtelRunnerRayTracing(SimtelRunner):
             if self._singleMirrorMode:
                 file.write("# mirrorNumber = {}\n\n".format(self.config.mirrorNumber))
 
-        # Filling in star file with a single star.
+        # Filling in star file with a single light source.
+        # Parameters defining light source:
+        # - azimuth
+        # - elevation
+        # - flux
+        # - distance of light source
         with self._starsFile.open("w") as file:
             file.write(
-                "0. {} 1.0 {}".format(
+                "0. {} 1.0 {}\n".format(
                     90.0 - self.config.zenithAngle, self.config.sourceDistance
                 )
             )
