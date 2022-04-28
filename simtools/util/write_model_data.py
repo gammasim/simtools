@@ -149,7 +149,7 @@ class ModelData:
                 self._user_meta['PRODUCT']['ASSOCIATION']
             self.toplevel_meta['CTA']['PROCESS'] = self._user_meta['PROCESS']
         except KeyError:
-            self._logger.debug("Error reading user input meta data")
+            self._logger.error("Error reading user input meta data")
             raise
 
     def _fill_product_meta(self):
@@ -172,7 +172,7 @@ class ModelData:
             self.toplevel_meta['CTA']['PRODUCT']['FORMAT'] = \
                 self._read_data_file_format()
         except KeyError:
-            self._logger.debug("Error PRODUCT meta from user input meta data")
+            self._logger.error("Error PRODUCT meta from user input meta data")
             raise
 
         self._fill_product_association()
@@ -198,7 +198,7 @@ class ModelData:
             self.toplevel_meta['CTA']['ACTIVITY']['SOFTWARE']['VERSION'] = \
                 simtools.version.__version__
         except KeyError:
-            self._logger.debug("Error ACTIVITY meta from user input meta data")
+            self._logger.error("Error ACTIVITY meta from user input meta data")
             raise
 
     def _read_toplevel_metadata_file(self):
