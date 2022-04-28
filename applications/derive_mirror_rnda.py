@@ -79,7 +79,10 @@
 
     .. code-block:: console
 
-        python applications/derive_mirror_rnda.py --site North --telescope MST-FlashCam-D --mean_d80 1.4 --sig_d80 0.16 --mirror_list mirror_MST_focal_lengths.dat --d80_list mirror_MST_D80.dat --rnda 0.0075
+        python applications/derive_mirror_rnda.py --site North --telescope MST-FlashCam-D \
+            --mean_d80 1.4 --sig_d80 0.16 \
+            --mirror_list mirror_MST_focal_lengths.dat --d80_list mirror_MST_D80.dat \
+            --rnda 0.0075
 
 
     Expected output:
@@ -142,9 +145,9 @@ if __name__ == "__main__":
     parser.add_argument(
         "-m",
         "--model_version",
-        help="Model version (default=prod4)",
+        help="Model version (default=Current)",
         type=str,
-        default="prod4",
+        default="Current",
     )
     parser.add_argument(
         "--mean_d80", help="Mean of measured D80 [cm]", type=float, required=True
