@@ -596,7 +596,7 @@ def rayTracingResultsFileName(
         site, telescopeModelName, sourceDistance, zenithAngle
     )
     name += "_{}".format(label) if label is not None else ""
-    name += ".cvs"
+    name += ".ecsv"
     return name
 
 
@@ -658,7 +658,7 @@ def cameraEfficiencyResultsFileName(site, telescopeModelName, zenithAngle, label
         site, telescopeModelName, zenithAngle
     )
     name += "_{}".format(label) if label is not None else ""
-    name += ".csv"
+    name += ".ecsv"
     return name
 
 
