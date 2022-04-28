@@ -106,7 +106,7 @@ class SimtelRunnerRayTracing(SimtelRunner):
         # RayTracing - default parameters
         self._repNumber = 0
         self.RUNS_PER_SET = 1 if self._singleMirrorMode else 20
-        self.PHOTONS_PER_RUN = 10000
+        self.PHOTONS_PER_RUN = 100000
 
         # Loading configData
         _configDataIn = gen.collectDataFromYamlOrDict(configFile, configData)
