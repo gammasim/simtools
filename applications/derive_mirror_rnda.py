@@ -58,6 +58,9 @@
     rnda (float, optional)
         Starting value of mirror_reflection_random_angle. If not given, the value from the \
         default model will be used.
+    2f_measurement (file, optional)
+        File with results from 2f measurements including mirror panel raddii and spot size \
+        measurements
     d80_list (file, optional)
         File with single column list of measured D80 [cm]. It is used only for plotting the D80 \
         distributions. If given, the measured distribution will be plotted on the top of the \
@@ -196,6 +199,13 @@ if __name__ == "__main__":
         type=str,
         required=False,
     )
+    parser.add_argument(
+        "--2f_measurement",
+        help="Results from 2f measurements for each mirror panel radius and spot size",
+        type=str,
+        required=False,
+    )
+
     parser.add_argument(
         "--use_random_flen",
         help=(
@@ -349,7 +359,7 @@ if __name__ == "__main__":
         rndaOpt = rndaStart
 
     # Running the final simulation for rndaOpt
-    meanD80, sigD80 = run(rndaOpt, plot=True)
+    meanD80, sigD80 = run(rndaOpt, plot=False)
 
     # Printing results to stdout
     print("\nMeasured D{:}:".format(containment_fraction_percent))
