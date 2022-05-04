@@ -45,6 +45,7 @@ import logging
 import simtools.util.general as gen
 import simtools.util.validate_schema as vs
 import simtools.util.validate_data as ds
+import simtools.util.workflow_configuration as workflow_config
 import simtools.util.write_model_data as writer
 
 
@@ -87,44 +88,6 @@ def transform_input(_args, _workflow_config):
     _output_data = _data_validator.transform()
 
     return _output_meta, _output_data
-
-
-def collect_configuration(_args, _logger):
-    """
-    Collect configuration parameter into a single dict
-    (simplifies processing)
-
-    Parameters:
-    -----------
-    _args
-        command line parameters
-    _logger
-        logger
-
-    Return:
-    -------
-    workflow_config: dict
-        workflow configuration
-
-    """
-
-    _workflow_config = gen.collectDataFromYamlOrDict(
-        _args.workflow_config_file,
-        None)
-    _logger.debug(
-        "Reading workflow configuration from {}".format(
-            _args.workflow_config_file))
-
-    if _args.reference_schema_directory:
-        try:
-            _workflow_config['CTASIMPIPE']['DATAMODEL']['SCHEMADIRECTORY'] = \
-                _args.reference_schema_directory
-        except KeyError as error:
-            _logger.error(
-                "Workflow configuration incomplete")
-            raise KeyError from error
-
-    return _workflow_config
 
 
 def parse():
@@ -191,11 +154,16 @@ if __name__ == "__main__":
     logger = logging.getLogger()
     logger.setLevel(gen.getLogLevelFromUser(args.logLevel))
 
-    workflow_config = collect_configuration(args, logger)
+    workflow_config = workflow_config.WorkflowConfiguration()
+    workflow_config.collect_configuration(
+        args.workflow_config_file,
+        args.reference_schema_directory)
 
-    output_meta, output_data = transform_input(args, workflow_config)
+    output_meta, output_data = transform_input(
+        args,
+        workflow_config.configuration)
 
-    file_writer = writer.ModelData(workflow_config)
+    file_writer = writer.ModelData(workflow_config.configuration)
     file_writer.write_model_file(output_meta,
                                  output_data,
                                  args.product_directory)
