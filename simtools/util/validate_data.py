@@ -115,14 +115,19 @@ class DataValidator:
 
     def validate_data_columns(self):
         """
-        Validate that required data columns are available
-        and in the correct units
+        Validate that required data columns are available,
+        columns are in the correct units (if necessary apply a
+        unit conversion), and check min,max ranges.
+
+        This is not applied to columns of type 'string'
 
         """
 
         self._check_required_columns()
 
         for col in self.data_table.itercols():
+            if not self._column_status(col.name):
+                continue
             self._check_and_convert_units(col)
             self._check_range(col.name, col.min(), col.max(), 'allowed_range')
             self._check_range(col.name, col.min(), col.max(), 'required_range')
@@ -202,7 +207,9 @@ class DataValidator:
         """
 
         _column_with_unique_requirement = self._get_unique_column_requirement()
-
+        if len(_column_with_unique_requirement) == 0:
+            self._logger.debug('No data columns with unique value requirement')
+            return
         _data_table_unique_for_key_column = unique(
             self.data_table, keys=_column_with_unique_requirement)
         _data_table_unique_for_all_columns = unique(
@@ -238,6 +245,7 @@ class DataValidator:
                     key))
                 _unique_required_column.append(key)
 
+        self._logger.debug('Unique required columns: {}'.format(_unique_required_column))
         return _unique_required_column
 
     def _get_reference_unit(self, column_name):
@@ -270,10 +278,29 @@ class DataValidator:
                     column_name))
             raise
 
-        if reference_unit == 'dimensionless' or reference_unit is None:
+        if (reference_unit == 'dimensionless' or
+                reference_unit is None or
+                reference_unit == 'None'):
             return u.dimensionless_unscaled
 
         return u.Unit(reference_unit)
+
+    def _column_status(self, col_name):
+        """
+        Check that column is defined in reference schema (additional
+        data columns are allowed in the user input data, but are ignored)
+        and that column type is not string (string-type columns ignored
+        for range checks)
+
+        """
+
+        if col_name not in self._reference_data_columns:
+            return False
+        if 'type' in self._reference_data_columns[col_name] and \
+                self._reference_data_columns[col_name]['type'] == 'string':
+            return False
+
+        return True
 
     def _check_and_convert_units(self, col):
         """
@@ -308,6 +335,7 @@ class DataValidator:
             reference_unit = self._get_reference_unit(col.name)
             if col.unit is None or col.unit == 'dimensionless':
                 col.unit = u.dimensionless_unscaled
+                return col
 
             self._logger.debug(
                 "Data column '{}' with reference unit '{}' and data unit '{}'".format(
