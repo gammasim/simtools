@@ -138,6 +138,19 @@ def plotMeasuredDistribution(file, **kwargs):
     ax.hist(data, **kwargs)
 
 
+def efficiency_interval(value):
+    """
+    Argument parser check that value is an efficiency in the interval [0,1]
+
+    """
+    fvalue = float(value)
+    if fvalue < 0. or fvalue > 1.:
+        raise argparse.ArgumentTypeError(
+            "{} outside of allowed [0,1] interval".format(value))
+
+    return fvalue
+
+
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
@@ -169,7 +182,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--containment_fraction",
         help="Containment fraction for diameter calculation (in interval 0,1)",
-        type=float, required=False,
+        type=efficiency_interval, required=False,
         default=0.8,
     )
     parser.add_argument(
