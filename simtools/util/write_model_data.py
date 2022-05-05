@@ -1,14 +1,14 @@
 import datetime
 import logging
 import os
+from pathlib import Path
 import uuid
 import yaml
-from pathlib import Path
 
 import simtools.config as cfg
 import simtools.io_handler as io
 import simtools.util.general as gen
-import simtools.util.names as names
+from simtools.util import names
 import simtools.version
 
 
@@ -49,6 +49,9 @@ class ModelData:
 
         self._logger = logging.getLogger(__name__)
 
+        self._product_directory = None
+        self._product_data_filename = None
+
         self.workflow_config = workflow_config
         if toplevel_meta:
             self.toplevel_meta = toplevel_meta
@@ -76,11 +79,15 @@ class ModelData:
 
         """
 
-        self._user_meta = user_meta
         self._user_data = user_data
-        self._product_directory = product_directory
+        self._product_directory = str(product_directory)
+        try:
+            self._product_data_filename = os.path.splitext(
+               user_meta['PRODUCT']['DATA'])[0]
+        except KeyError:
+            pass
 
-        self._prepare_metadata()
+        self._prepare_metadata(user_meta)
         self._write_metadata()
         self._write_data()
 
@@ -105,18 +112,18 @@ class ModelData:
                 None)
         return None
 
-    def _prepare_metadata(self):
+    def _prepare_metadata(self, user_meta):
         """
         Prepare metadata for model data file according
         to top-level data model
 
         """
 
-        self._fill_user_meta()
+        self._fill_user_meta(user_meta)
         self._fill_product_meta()
         self._fill_activity_meta()
 
-    def _fill_user_meta(self):
+    def _fill_user_meta(self, user_meta):
         """
         Fill user-provided meta data
 
@@ -128,26 +135,29 @@ class ModelData:
 
         """
 
+        if not user_meta:
+            return
+
         try:
-            self.toplevel_meta['CTA']['CONTACT'] = self._user_meta['CONTACT']
-            self.toplevel_meta['CTA']['INSTRUMENT'] = self._user_meta['INSTRUMENT']
+            self.toplevel_meta['CTA']['CONTACT'] = user_meta['CONTACT']
+            self.toplevel_meta['CTA']['INSTRUMENT'] = user_meta['INSTRUMENT']
             self.toplevel_meta['CTA']['PRODUCT']['DESCRIPTION'] = \
-                self._user_meta['PRODUCT']['DESCRIPTION']
+                user_meta['PRODUCT']['DESCRIPTION']
             self.toplevel_meta['CTA']['PRODUCT']['CREATION_TIME'] = \
-                self._user_meta['PRODUCT']['CREATION_TIME']
-            if 'CONTEXT' in self._user_meta['PRODUCT']:
+                user_meta['PRODUCT']['CREATION_TIME']
+            if 'CONTEXT' in user_meta['PRODUCT']:
                 self.toplevel_meta['CTA']['PRODUCT']['CONTEXT'] = \
-                    self._user_meta['PRODUCT']['CONTEXT']
-            if 'VALID' in self._user_meta['PRODUCT']:
-                if 'START' in self._user_meta['PRODUCT']['VALID']:
+                    user_meta['PRODUCT']['CONTEXT']
+            if 'VALID' in user_meta['PRODUCT']:
+                if 'START' in user_meta['PRODUCT']['VALID']:
                     self.toplevel_meta['CTA']['PRODUCT']['VALID']['START'] = \
-                        self._user_meta['PRODUCT']['VALID']['START']
-                if 'END' in self._user_meta['PRODUCT']['VALID']:
+                        user_meta['PRODUCT']['VALID']['START']
+                if 'END' in user_meta['PRODUCT']['VALID']:
                     self.toplevel_meta['CTA']['PRODUCT']['VALID']['END'] = \
-                        self._user_meta['PRODUCT']['VALID']['END']
+                        user_meta['PRODUCT']['VALID']['END']
             self.toplevel_meta['CTA']['PRODUCT']['ASSOCIATION'] = \
-                self._user_meta['PRODUCT']['ASSOCIATION']
-            self.toplevel_meta['CTA']['PROCESS'] = self._user_meta['PROCESS']
+                user_meta['PRODUCT']['ASSOCIATION']
+            self.toplevel_meta['CTA']['PROCESS'] = user_meta['PROCESS']
         except KeyError:
             self._logger.error("Error reading user input meta data")
             raise
@@ -273,23 +283,17 @@ class ModelData:
         """
 
         _directory = self._get_data_directory()
+        _filename = self._product_data_filename
 
-        # Filename
         try:
             _filename = str(
                 self.workflow_config['CTASIMPIPE']['PRODUCT']['NAME'])
         except KeyError:
-            _filename = None
-
-        if not _filename:
-            try:
-                _filename = os.path.splitext(self._user_meta['PRODUCT']['DATA'])[0]
-            except KeyError:
+            if not _filename:
                 self._logger.error(
-                    "Missing description in user meta of PRODUCT:NAME")
+                    "Missing product file name definition")
                 raise
 
-        # add UUID to file name
         try:
             _filename = self.toplevel_meta['CTA']['PRODUCT']['ID'] \
                 + '-' + _filename
