@@ -119,7 +119,6 @@
 
 import logging
 import matplotlib.pyplot as plt
-import argparse
 
 import numpy as np
 import astropy.units as u
@@ -129,6 +128,7 @@ import simtools.util.general as gen
 import simtools.io_handler as io
 from simtools.ray_tracing import RayTracing
 from simtools.model.telescope_model import TelescopeModel
+import simtools.util.commandline_parser as argparser
 
 # from simtools.visualize import setStyle
 
@@ -141,37 +141,10 @@ def plotMeasuredDistribution(file, **kwargs):
     ax.hist(data, **kwargs)
 
 
-def efficiency_interval(value):
-    """
-    Argument parser check that value is an efficiency in the interval [0,1]
-
-    """
-    fvalue = float(value)
-    if fvalue < 0. or fvalue > 1.:
-        raise argparse.ArgumentTypeError(
-            "{} outside of allowed [0,1] interval".format(value))
-
-    return fvalue
-
-
 if __name__ == "__main__":
 
-    parser = argparse.ArgumentParser()
-    parser.add_argument("-s", "--site", help="North or South", type=str, required=True)
-    parser.add_argument(
-        "-t",
-        "--telescope",
-        help="Telescope model name (e.g. LST-1, SST-D, ...)",
-        type=str,
-        required=True,
-    )
-    parser.add_argument(
-        "-m",
-        "--model_version",
-        help="Model version (default=Current)",
-        type=str,
-        default="Current",
-    )
+    parser = argparser.CommandLineParser()
+    parser.initialize_telescope_model_arguments()
     parser.add_argument(
         "--containment_mean",
         help="Mean of measured containment diameter [cm]",
@@ -185,7 +158,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--containment_fraction",
         help="Containment fraction for diameter calculation (in interval 0,1)",
-        type=efficiency_interval, required=False,
+        type=argparser.CommandLineParser.efficiency_interval, required=False,
         default=0.8,
     )
     parser.add_argument(
@@ -238,19 +211,7 @@ if __name__ == "__main__":
         help="no tuning of random_reflection_rangle - A single case will be simulated and plotted.",
         action="store_true",
     )
-    parser.add_argument(
-        "--test",
-        help="Test option for faster simulations of only 10 mirrors.",
-        action="store_true",
-    )
-    parser.add_argument(
-        "-v",
-        "--verbosity",
-        dest="logLevel",
-        action="store",
-        default="info",
-        help="Log level to print (default is INFO).",
-    )
+    parser.initialize_default_arguments()
 
     args = parser.parse_args()
     containment_fraction_percent = int(args.containment_fraction*100)
