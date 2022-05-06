@@ -284,8 +284,8 @@ def splitTelescopeModelName(name):
 
     Returns
     -------
-    str, str, str
-        Site (South or North), class (LST, MST, SST ...) and type (any complement).
+    str, str
+       class (LST, MST, SST ...) and type (any complement).
     """
     nameParts = name.split("-")
     telClass = nameParts[0]
