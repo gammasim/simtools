@@ -6,6 +6,8 @@ from astropy.table import Table
 from astropy.utils.diff import report_diff_values
 from astropy import units as u
 
+import simtools.util.workflow_description as workflow_config
+
 
 class DataValidator:
     """
@@ -32,25 +34,22 @@ class DataValidator:
 
     """
 
-    def __init__(self, reference_data_columns, data_file_name):
+    def __init__(self, workflow):
         """
         Initalize validation class and read required
         reference data columns
 
         Parameters
         ----------
-        reference_data_columns: dict
-            definition of data columns and axes from workflow
-            configuration
-        data_file_name: string
-            Name of data table file to be validated
+        workflow: WorkflowDescription
+            workflow description
 
         """
 
         self._logger = logging.getLogger(__name__)
 
-        self._reference_data_columns = reference_data_columns
-        self._data_file_name = data_file_name
+        self._reference_data_columns = workflow.reference_data_columns()
+        self._data_file_name = workflow.input_data_file
 
         self.data_table = None
 
