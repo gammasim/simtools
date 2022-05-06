@@ -4,12 +4,15 @@ import argparse
 class CommandLineParser(argparse.ArgumentParser):
     """
     Command line parser for application and workflows
+    Wrapper around standard python argparse.ArgumentParser
 
     """
 
     def initialize_default_arguments(self):
         """
         Initialize default arguments used for all applications
+        (e.g., verbosity or test flag)
+
 
         """
 
@@ -32,6 +35,7 @@ class CommandLineParser(argparse.ArgumentParser):
     def initialize_workflow_arguments(self):
         """
         Initialize default arguments for workflow configuration parameters
+        and product data model
 
         """
 
@@ -51,9 +55,8 @@ class CommandLineParser(argparse.ArgumentParser):
             required=False,
         )
         self.add_argument(
-            "-r",
-            "--reference_schema_directory",
-            help="Directory with reference schema",
+            "--toplevel_metadata_schema",
+            help="Toplevel metadata reference schema",
             type=str,
             default=None,
             required=False
@@ -61,7 +64,8 @@ class CommandLineParser(argparse.ArgumentParser):
 
     def initialize_telescope_model_arguments(self):
         """
-        Initialize default arguments for telescope model definition
+        Initialize default arguments for site and telescope model
+        definition
 
         """
 
@@ -90,7 +94,19 @@ class CommandLineParser(argparse.ArgumentParser):
     @staticmethod
     def efficiency_interval(value):
         """
-        Argument parser check that value is an efficiency in the interval [0,1]
+        Argument parser type to check that value is an efficiency
+        in the interval [0,1]
+
+        Parameters
+        ----------
+        value: float
+            value provided through the command line
+
+        Raises
+        ------
+        argparse.ArgumentTypeError
+            When value is outside of the interval [0,1]
+
 
         """
         fvalue = float(value)
