@@ -129,6 +129,8 @@ import simtools.io_handler as io
 from simtools.ray_tracing import RayTracing
 from simtools.model.telescope_model import TelescopeModel
 import simtools.util.commandline_parser as argparser
+import simtools.util.workflow_description as workflow_config
+import simtools.util.model_data_writer as writer
 
 # from simtools.visualize import setStyle
 
@@ -141,9 +143,14 @@ def plotMeasuredDistribution(file, **kwargs):
     ax.hist(data, **kwargs)
 
 
-if __name__ == "__main__":
+def parse():
+    """
+    Parse command line configuration
+
+    """
 
     parser = argparser.CommandLineParser()
+    parser.initialize_workflow_arguments()
     parser.initialize_telescope_model_arguments()
     parser.add_argument(
         "--containment_mean",
@@ -212,16 +219,29 @@ if __name__ == "__main__":
         action="store_true",
     )
     parser.initialize_default_arguments()
+    return parser.parse_args()
 
-    args = parser.parse_args()
+
+if __name__ == "__main__":
+
+    args = parse()
     containment_fraction_percent = int(args.containment_fraction*100)
     label = "derive_mirror_rnda"
 
     logger = logging.getLogger()
     logger.setLevel(gen.getLogLevelFromUser(args.logLevel))
+    logging.getLogger('matplotlib.font_manager').disabled = True
+    logging.getLogger('matplotlib.backends.backend_pdf').disabled = True
 
-    # Output directory to save files related directly to this app
+    workflow = workflow_config.WorkflowDescription(args)
+
     outputDir = io.getApplicationOutputDirectory(cfg.get("outputLocation"), label)
+
+    file_writer = writer.ModelDataWriter(workflow)
+    file_writer.write_metadata()
+    file_writer.write_data(None)
+
+    exit()
 
     tel = TelescopeModel(
         site=args.site,

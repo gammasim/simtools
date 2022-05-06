@@ -3,72 +3,70 @@
 import logging
 import pytest
 
-import simtools.util.write_model_data as writer
+import simtools.util.workflow_description as workflow
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 def test_read_instrument_name():
 
-    file_writer = writer.ModelData(
+    workflow_1 = workflow.WorkflowDescription(
         get_generic_workflow_config(),
         get_generic_toplevel_meta())
 
     user_meta_1 = get_generic_user_meta()
-    file_writer._user_meta = user_meta_1
-    file_writer._fill_user_meta()
-
-    print('aaaa', user_meta_1)
+    workflow_1._user_meta = user_meta_1
+    workflow_1._fill_user_meta()
 
     for association in user_meta_1['PRODUCT']['ASSOCIATION']:
         print(association)
     assert (
-        file_writer._read_instrument_name(user_meta_1['PRODUCT']['ASSOCIATION'][0])
+        file_workflow._read_instrument_name(user_meta_1['PRODUCT']['ASSOCIATION'][0])
         == "South-MST-FlashCam-D")
     assert (
-        file_writer._read_instrument_name(user_meta_1['PRODUCT']['ASSOCIATION'][1])
+        file_workflow._read_instrument_name(user_meta_1['PRODUCT']['ASSOCIATION'][1])
         == "North-MST-NectarCam-7")
 
     user_meta_2 = get_generic_user_meta()
     user_meta_2["PRODUCT"]["ASSOCIATION"][0]["TYPE"] = "Structure"
-    file_writer._user_meta = user_meta_2
-    file_writer._fill_user_meta()
+    file_workflow._user_meta = user_meta_2
+    file_workflow._fill_user_meta()
 
     assert (
-        file_writer._read_instrument_name(user_meta_2["PRODUCT"]["ASSOCIATION"][0])
+        file_workflow._read_instrument_name(user_meta_2["PRODUCT"]["ASSOCIATION"][0])
         == "South-MST-Structure-D")
 
     user_meta_3 = get_generic_user_meta()
     user_meta_3["PRODUCT"]["ASSOCIATION"][0]["SITE"] = "Neptun"
-    file_writer._user_meta = user_meta_3
-    file_writer._fill_user_meta()
+    file_workflow._user_meta = user_meta_3
+    file_workflow._fill_user_meta()
 
     with pytest.raises(ValueError):
-        file_writer._read_instrument_name(user_meta_3["PRODUCT"]["ASSOCIATION"][0])
+        file_workflow._read_instrument_name(user_meta_3["PRODUCT"]["ASSOCIATION"][0])
 
 
 def test_fill_user_meta():
 
     user_meta_1 = get_generic_user_meta()
 
-    file_writer = writer.ModelData(
+    file_writer = workflow.ModelData(
         get_generic_workflow_config(),
         get_generic_toplevel_meta())
-    file_writer._user_meta = user_meta_1
-    file_writer._fill_user_meta()
+    file_workflow._user_meta = user_meta_1
+    file_workflow._fill_user_meta()
 
     user_meta_2 = {
         'CONTACT': 'my_name'
     }
-    file_writer._user_meta = user_meta_2
+    file_workflow._user_meta = user_meta_2
 
     with pytest.raises(KeyError):
-        file_writer._fill_user_meta()
+        file_workflow._fill_user_meta()
 
 
 def test_fill_activity_meta():
 
-    file_writer_1 = writer.ModelData(
+    file_writer_1 = workflow.ModelData(
         get_generic_workflow_config(),
         get_generic_toplevel_meta())
     file_writer_1._fill_activity_meta()
@@ -76,7 +74,7 @@ def test_fill_activity_meta():
     workflow_config_2 = get_generic_workflow_config()
     del workflow_config_2['CTASIMPIPE']['ACTIVITY']['NAME']
     workflow_config_2['CTASIMPIPE']['ACTIVITY']['NONAME'] = 'workflow_name'
-    file_writer_2 = writer.ModelData(
+    file_writer_2 = workflow.ModelData(
         workflow_config_2,
         get_generic_toplevel_meta())
 

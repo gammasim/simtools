@@ -48,11 +48,19 @@ class CommandLineParser(argparse.ArgumentParser):
         )
         self.add_argument(
             "-p",
-            "--product_directory",
+            "--product_data_directory",
             help="Directory for data products (output)",
             type=str,
             default='',
             required=False,
+        )
+        self.add_argument(
+            "-r",
+            "--reference_schema_directory",
+            help="Directory with reference schema",
+            type=str,
+            default=None,
+            required=False
         )
         self.add_argument(
             "--toplevel_metadata_schema",
