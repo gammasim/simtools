@@ -47,19 +47,19 @@ class ModelDataWriter:
         product_data: astropy Table
             Model data.
 
-        TODO:
-            try/except should be used for table writer.
-            Did not find out what exception to catch.
-
         """
 
-        if product_data:
+        try:
             _file = self.workflow_config.product_data_file_name()
             self._logger.debug("Writing data to {}".format(_file))
             product_data.write(
                 _file,
                 format=self.workflow_config.product_data_file_format(),
                 overwrite=True)
+        except AttributeError:
+            self._logger.error("Error writing model data to {}".format(
+                _file))
+            raise
 
     def write_metadata(self):
         """
