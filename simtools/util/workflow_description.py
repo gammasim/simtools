@@ -23,7 +23,10 @@ class WorkflowDescription:
 
     """
 
-    def __init__(self, args=None, toplevel_meta=None):
+    def __init__(self,
+                 label=None,
+                 args=None,
+                 toplevel_meta={}):
         """
         Initialize workflow configuration class
 
@@ -39,6 +42,7 @@ class WorkflowDescription:
 
         self._logger = logging.getLogger(__name__)
         self.workflow_config = {}
+        self.label = label
 
         self.product_data_dir = None
         self.product_data_filename = None
@@ -46,9 +50,7 @@ class WorkflowDescription:
         self.input_meta_file = None
         self.input_data_file = None
 
-        toplevel_meta = {}
-        if toplevel_meta:
-            self.toplevel_meta = toplevel_meta
+        self.toplevel_meta = toplevel_meta
 
         self.collect_configuration(args)
         self.collect_product_meta_data(args)
@@ -125,9 +127,8 @@ class WorkflowDescription:
         Return full path and name of product data file
 
         file name is determined by:
-        a. workflow_config['CTASIMPIPE']['PRODUCT']['NAME'] (preferred)
-        b. _user_meta['PRODUCT']['DATA']
-        c. _user_meta['PRODUCT']
+        a. Toplevel meta ['PRODUCT']['DATA']
+        b. Toplevel meta ['PRODUCT']['ID'] + label
 
         File name always used CTA:PRODUCT:ID for unique identification
 
@@ -145,24 +146,16 @@ class WorkflowDescription:
         """
 
         _directory = self.product_data_directory()
-        _filename = self.product_data_filename
-
-        try:
-            _filename = str(
-                self.workflow_config['CTASIMPIPE']['PRODUCT']['NAME'])
-        except KeyError:
-            if not _filename:
+        if self.product_data_filename:
+            _filename = self.product_data_filename
+        else:
+            try:
+                _filename = self.toplevel_meta['CTA']['PRODUCT']['ID'] \
+                    + '-' + self.label
+            except KeyError:
                 self._logger.error(
-                    "Missing product file name definition")
+                    "Missing CTA:PRODUCT:ID in metadata")
                 raise
-
-        try:
-            _filename = self.toplevel_meta['CTA']['PRODUCT']['ID'] \
-                + '-' + _filename
-        except KeyError:
-            self._logger.error(
-                "Missing CTA:PRODUCT:ID in metadata")
-            raise
 
         if not suffix:
             suffix = '.' + self.product_data_file_format(suffix=True)
@@ -177,6 +170,7 @@ class WorkflowDescription:
         ---------
         suffix: bool
             return file suffix (if true)
+            return file format (if false)
 
         Returns
         -------
@@ -208,6 +202,11 @@ class WorkflowDescription:
         Return output directory for data products.
         Create directory if necessary.
 
+        Output directory is determined following this sorted
+        list:
+        1. self.product_data_dir is set (e.g., through command line)
+        2. gammasim-tools output location
+
         Returns
         -------
         str
@@ -221,28 +220,18 @@ class WorkflowDescription:
 
         """
 
-        _output_label = ''
+        _output_label = self.label
 
         if len(self.product_data_dir) > 0:
             path = Path(self.product_data_dir)
             path.mkdir(parents=True, exist_ok=True)
-            return str(path.absolute())
-
-        try:
-            _output_location = self.workflow_config['CTASIMPIPE']['PRODUCT']['DIRECTORY']
-            _output_label = self.workflow_config["CTASIMPIPE"]["ACTIVITY"]["NAME"]
-        except KeyError:
-            pass
-
-        if _output_location is None or _output_location == 'None':
-            _output_location = cfg.get("outputLocation")
-
-        _output_dir = io.getApplicationOutputDirectory(
-            _output_location,
-            _output_label)
+            _output_dir = str(path.absolute())
+        else:
+            _output_dir = io.getApplicationOutputDirectory(
+                cfg.get("outputLocation"),
+                _output_label)
 
         self._logger.info("Outputdirectory {}".format(_output_dir))
-
         return str(_output_dir)
 
     def _fill_toplevel_meta_from_args(self, args):
@@ -257,7 +246,13 @@ class WorkflowDescription:
         """
 
         try:
-            print('HERE WE NEED TO FILL IN ASSOCIATION')
+            _association = {}
+            _association['SITE'] = args.site
+            _split_telescope_name = args.telescope.split("-")
+            _association['CLASS'] = _split_telescope_name[0]
+            _association['TYPE'] = _split_telescope_name[1]
+            _association['SUBTYPE'] = _split_telescope_name[2]
+            self.toplevel_meta['CTA']['PRODUCT']['ASSOCIATION'][0] = _association
         except KeyError:
             self._logger.error("Error reading user input meta data from args")
             raise
@@ -267,7 +262,7 @@ class WorkflowDescription:
     def _fill_toplevel_meta_from_file(self):
         """
         Read and validate user-provided metadata from file.
-        Fill into metadata into top-level template.
+        Fill metadata into top-level template.
 
         Raises
         ------
@@ -334,9 +329,9 @@ class WorkflowDescription:
             self._logger.error("Error PRODUCT meta from user input meta data")
             raise
 
-        self._fill_product_association()
+        self._fill_product_association_identifier()
 
-    def _fill_product_association(self):
+    def _fill_product_association_identifier(self):
         """
         Fill list of associations in top-level data model
 
@@ -357,24 +352,20 @@ class WorkflowDescription:
     def _read_instrument_name(self, association):
         """
         Returns a string defining the instrument following
-        the gammasim-tools naming convention
+        the gammasim-tools naming convention derived from
+        PRODUCT:ASSOCIATION entry
 
         """
 
         try:
             _instrument = \
-                names.validateSiteName(
-                    association['SITE']) \
+                names.validateSiteName(association['SITE']) \
                 + "-" + \
-                names.validateName(
-                    association['CLASS'],
-                    names.allTelescopeClassNames) \
+                names.validateName(association['CLASS'], names.allTelescopeClassNames) \
                 + "-" + \
-                names.validateSubSystemName(
-                    association['TYPE']) \
+                names.validateSubSystemName(association['TYPE']) \
                 + "-" + \
-                names.validateTelescopeIDName(
-                    association['SUBTYPE'])
+                names.validateTelescopeIDName(association['SUBTYPE'])
         except KeyError:
             self._logger.error('Error reading PRODUCT:ASSOCIATION')
             raise
@@ -477,7 +468,7 @@ class WorkflowDescription:
 
     def _read_toplevel_metadata_file(self):
         """
-        Return full path and name of top level metaa schema file
+        Return full path and name of top level data model schema file
 
         Raises
         ------
