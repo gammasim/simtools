@@ -233,9 +233,11 @@ if __name__ == "__main__":
     logging.getLogger('matplotlib.font_manager').disabled = True
     logging.getLogger('matplotlib.backends.backend_pdf').disabled = True
 
-    workflow = workflow_config.WorkflowDescription(args)
+    workflow = workflow_config.WorkflowDescription(
+        label=label,
+        args=args)
 
-    outputDir = io.getApplicationOutputDirectory(cfg.get("outputLocation"), label)
+    outputDir = workflow.product_data_dir
 
     file_writer = writer.ModelDataWriter(workflow)
     file_writer.write_metadata()
