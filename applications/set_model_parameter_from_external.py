@@ -81,7 +81,7 @@ if __name__ == "__main__":
     logger = logging.getLogger()
     logger.setLevel(gen.getLogLevelFromUser(args.logLevel))
 
-    workflow = workflow_config.WorkflowDescription(args)
+    workflow = workflow_config.WorkflowDescription(args=args)
 
     data_validator = ds.DataValidator(workflow)
     data_validator.validate()
