@@ -73,7 +73,8 @@ class WorkflowDescription:
         self._read_workflow_configuration(args.workflow_config_file)
         self._set_reference_schema_directory(args.reference_schema_directory)
 
-        self.product_data_dir = Path(args.product_data_directory).absolute()
+        if args.product_data_directory:
+            self.product_data_dir = Path(args.product_data_directory).absolute()
 
         try:
             self.input_meta_file = args.input_meta_file
@@ -222,7 +223,7 @@ class WorkflowDescription:
 
         _output_label = self.label
 
-        if len(str(self.product_data_dir)) > 0:
+        if self.product_data_dir:
             path = Path(self.product_data_dir)
             path.mkdir(parents=True, exist_ok=True)
             _output_dir = path.absolute()

@@ -51,7 +51,7 @@ class CommandLineParser(argparse.ArgumentParser):
             "--product_data_directory",
             help="Directory for data products (output)",
             type=str,
-            default='',
+            default=None,
             required=False,
         )
         self.add_argument(
