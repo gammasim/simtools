@@ -73,7 +73,7 @@ class WorkflowDescription:
         self._read_workflow_configuration(args.workflow_config_file)
         self._set_reference_schema_directory(args.reference_schema_directory)
 
-        self.product_data_dir = args.product_data_directory
+        self.product_data_dir = Path(args.product_data_directory).absolute()
 
         try:
             self.input_meta_file = args.input_meta_file
@@ -222,17 +222,17 @@ class WorkflowDescription:
 
         _output_label = self.label
 
-        if len(self.product_data_dir) > 0:
+        if len(str(self.product_data_dir)) > 0:
             path = Path(self.product_data_dir)
             path.mkdir(parents=True, exist_ok=True)
-            _output_dir = str(path.absolute())
+            _output_dir = path.absolute()
         else:
             _output_dir = io.getApplicationOutputDirectory(
                 cfg.get("outputLocation"),
                 _output_label)
 
         self._logger.info("Outputdirectory {}".format(_output_dir))
-        return str(_output_dir)
+        return _output_dir
 
     def _fill_toplevel_meta_from_args(self, args):
         """
