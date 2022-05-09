@@ -122,6 +122,7 @@ import matplotlib.pyplot as plt
 
 import numpy as np
 import astropy.units as u
+from astropy.table import QTable
 
 import simtools.config as cfg
 import simtools.util.general as gen
@@ -237,13 +238,7 @@ if __name__ == "__main__":
         label=label,
         args=args)
 
-    outputDir = workflow.product_data_dir
-
-    file_writer = writer.ModelDataWriter(workflow)
-    file_writer.write_metadata()
-    file_writer.write_data(None)
-
-    exit()
+    outputDir = workflow.product_data_directory()
 
     tel = TelescopeModel(
         site=args.site,
@@ -257,7 +252,6 @@ if __name__ == "__main__":
         tel.addParameterFile("mirror_list", mirrorListFile)
     if args.random_flen is not None:
         tel.changeParameter("random_focal_length", str(args.random_flen))
-
 
 
     def run(rnda, plot=False):
@@ -354,7 +348,6 @@ if __name__ == "__main__":
     else:
         rndaOpt = rndaStart
 
-    # Running the final simulation for rndaOpt
     meanD80, sigD80 = run(rndaOpt, plot=False)
 
     # Printing results to stdout
@@ -371,6 +364,23 @@ if __name__ == "__main__":
     print("\nmirror_random_reflection_angle")
     print("Previous value = {:.6f}".format(rndaStart))
     print("New value = {:.6f}\n".format(rndaOpt))
+
+    # Result table written to ecsv file in file_writer
+    result_table = QTable([
+        [True]+[False]*len(resultsRnda),
+        ([rndaOpt]+resultsRnda) * u.deg,
+        ([meanD80]+resultsMean) * u.cm,
+        ([sigD80]+resultsSig) * u.cm
+        ], names=(
+            'optimised result',
+            'mirror reflection random angle',
+            "containment radius ({:}\%)".format(containment_fraction_percent),
+            "containment radius sigma ({:}\%)".format(containment_fraction_percent)
+        )
+    )
+    file_writer = writer.ModelDataWriter(workflow)
+    file_writer.write_metadata()
+    file_writer.write_data(result_table)
 
     # Plotting D80 vs rnda
     plt.figure(figsize=(8, 6), tight_layout=True)
