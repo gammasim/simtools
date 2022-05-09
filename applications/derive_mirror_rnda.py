@@ -369,13 +369,17 @@ if __name__ == "__main__":
     result_table = QTable([
         [True]+[False]*len(resultsRnda),
         ([rndaOpt]+resultsRnda) * u.deg,
+        ([0.]*(len(resultsRnda)+1)),
+        ([0.]*(len(resultsRnda)+1)) * u.deg,
         ([meanD80]+resultsMean) * u.cm,
         ([sigD80]+resultsSig) * u.cm
         ], names=(
-            'optimised result',
-            'mirror reflection random angle',
-            "containment radius ({:}\%)".format(containment_fraction_percent),
-            "containment radius sigma ({:}\%)".format(containment_fraction_percent)
+            'best_fit',
+            'mirror_reflection_random_angle_sigma1',
+            'mirror_reflection_random_angle_fraction2',
+            'mirror_reflection_random_angle_sigma2',
+            f'containment_radius_D{containment_fraction_percent}',
+            f'containment_radius_sigma_D{containment_fraction_percent}'
         )
     )
     file_writer = writer.ModelDataWriter(workflow)
