@@ -118,7 +118,6 @@
 
 
 import logging
-import matplotlib.pyplot as plt
 
 import numpy as np
 import astropy.units as u
@@ -132,16 +131,6 @@ from simtools.model.telescope_model import TelescopeModel
 import simtools.util.commandline_parser as argparser
 import simtools.util.workflow_description as workflow_config
 import simtools.util.model_data_writer as writer
-
-# from simtools.visualize import setStyle
-
-# setStyle()
-
-
-def plotMeasuredDistribution(file, **kwargs):
-    data = np.loadtxt(file)
-    ax = plt.gca()
-    ax.hist(data, **kwargs)
 
 
 def parse():
@@ -168,15 +157,6 @@ def parse():
         help="Containment fraction for diameter calculation (in interval 0,1)",
         type=argparser.CommandLineParser.efficiency_interval, required=False,
         default=0.8,
-    )
-    parser.add_argument(
-        "--d80_list",
-        help=(
-            "File with single column list of measured D80 [cm]. If given, the measured "
-            "distribution will be plotted on the top of the simulated one."
-        ),
-        type=str,
-        required=False,
     )
     parser.add_argument(
         "--rnda",
@@ -231,8 +211,6 @@ if __name__ == "__main__":
 
     logger = logging.getLogger()
     logger.setLevel(gen.getLogLevelFromUser(args.logLevel))
-    logging.getLogger('matplotlib.font_manager').disabled = True
-    logging.getLogger('matplotlib.backends.backend_pdf').disabled = True
 
     workflow = workflow_config.WorkflowDescription(
         label=label,
@@ -253,8 +231,7 @@ if __name__ == "__main__":
     if args.random_flen is not None:
         tel.changeParameter("random_focal_length", str(args.random_flen))
 
-
-    def run(rnda, plot=False):
+    def run(rnda):
         """Runs the simulations for one given value of rnda"""
         tel.changeParameter("mirror_reflection_random_angle", str(rnda))
         ray = RayTracing.fromKwargs(
@@ -266,48 +243,12 @@ if __name__ == "__main__":
         ray.simulate(test=False, force=True)  # force has to be True, always
         ray.analyze(force=True)
 
-        # Plotting containment histograms
-        if plot:
-            plt.figure(figsize=(8, 6), tight_layout=True)
-            ax = plt.gca()
-            ax.set_xlabel(r"D$_{80}$ [cm]")
-
-            bins = np.linspace(0.8, 3.5, 27)
-            ray.plotHistogram(
-                "d80_cm",
-                color="r",
-                linestyle="-",
-                alpha=0.5,
-                facecolor="r",
-                edgecolor="r",
-                bins=bins,
-                label="simulated",
-            )
-            # Only plot measured D80 if the data is given
-            if args.d80_list is not None:
-                d80ListFile = cfg.findFile(args.d80_list)
-                plotMeasuredDistribution(
-                    d80ListFile,
-                    color="b",
-                    linestyle="-",
-                    facecolor="None",
-                    edgecolor="b",
-                    bins=bins,
-                    label="measured",
-                )
-
-            ax.legend(frameon=False)
-            plotFileName = label + "_" + tel.name + "_" + "D80-distributions"
-            plotFile = outputDir.joinpath(plotFileName)
-            plt.savefig(str(plotFile) + ".pdf", format="pdf", bbox_inches="tight")
-            plt.savefig(str(plotFile) + ".png", format="png", bbox_inches="tight")
-
         return (
             ray.getMean("d80_cm").to(u.cm).value,
             ray.getStdDev("d80_cm").to(u.cm).value,
         )
 
-    # First - rnda from previous model
+    # First - rnda from previous model or from command line
     if args.rnda != 0:
         rndaStart = args.rnda
     else:
@@ -316,11 +257,15 @@ if __name__ == "__main__":
             rndaStart = rndaStart.split()
             rndaStart = float(rndaStart[0])
 
-    if not args.no_tuning:
-        resultsRnda = list()
-        resultsMean = list()
-        resultsSig = list()
+    logger.info("Start value for mirror_reflection_random_angle: {:}".format(
+        rndaStart))
 
+    resultsRnda = list()
+    resultsMean = list()
+    resultsSig = list()
+    if args.no_tuning:
+        rndaOpt = rndaStart
+    else:
         def collectResults(rnda, mean, sig):
             resultsRnda.append(rnda)
             resultsMean.append(mean)
@@ -345,10 +290,8 @@ if __name__ == "__main__":
             resultsRnda, resultsMean, resultsSig
         )
         rndaOpt = np.interp(x=args.containment_mean, xp=resultsMean, fp=resultsRnda)
-    else:
-        rndaOpt = rndaStart
 
-    meanD80, sigD80 = run(rndaOpt, plot=False)
+    meanD80, sigD80 = run(rndaOpt)
 
     # Printing results to stdout
     print("\nMeasured D{:}:".format(containment_fraction_percent))
@@ -365,7 +308,8 @@ if __name__ == "__main__":
     print("Previous value = {:.6f}".format(rndaStart))
     print("New value = {:.6f}\n".format(rndaOpt))
 
-    # Result table written to ecsv file in file_writer
+    # Result table written to ecsv file using file_writer
+    # First entry is always the best fit result
     result_table = QTable([
         [True]+[False]*len(resultsRnda),
         ([rndaOpt]+resultsRnda) * u.deg,
@@ -385,57 +329,3 @@ if __name__ == "__main__":
     file_writer = writer.ModelDataWriter(workflow)
     file_writer.write_metadata()
     file_writer.write_data(result_table)
-
-    # Plotting D80 vs rnda
-    plt.figure(figsize=(8, 6), tight_layout=True)
-    ax = plt.gca()
-    ax.set_xlabel(r"mirror$\_$random$\_$reflection$\_$angle")
-    ax.set_ylabel(f"containment diameter $D_{{{containment_fraction_percent}}}$ [cm]")
-
-    if not args.no_tuning:
-        ax.errorbar(
-            resultsRnda,
-            resultsMean,
-            yerr=resultsSig,
-            color="k",
-            marker="o",
-            linestyle="none",
-        )
-    ax.errorbar(
-        [rndaOpt],
-        [meanD80],
-        yerr=[sigD80],
-        color="r",
-        marker="o",
-        linestyle="none",
-        label="rnda = {:.6f} (D{:} = {:.3f} +/- {:.3f} cm)".format(
-            rndaOpt, int(args.containment_fraction*100), meanD80, sigD80
-        ),
-    )
-
-    xlim = ax.get_xlim()
-    ax.plot(xlim, [args.containment_mean, args.containment_mean], color="k", linestyle="-")
-    if args.containment_sigma is not None:
-        ax.plot(
-            xlim,
-            [args.containment_mean + args.containment_sigma,
-             args.containment_mean + args.containment_sigma],
-            color="k",
-            linestyle=":",
-            marker=",",
-        )
-        ax.plot(
-            xlim,
-            [args.containment_mean - args.containment_sigma,
-             args.containment_mean - args.containment_sigma],
-            color="k",
-            linestyle=":",
-            marker=",",
-        )
-
-    ax.legend(frameon=False, loc="upper left")
-
-    plotFileName = label + "_" + tel.name
-    plotFile = outputDir.joinpath(plotFileName)
-    plt.savefig(str(plotFile) + ".pdf", format="pdf", bbox_inches="tight")
-    plt.savefig(str(plotFile) + ".png", format="png", bbox_inches="tight")
