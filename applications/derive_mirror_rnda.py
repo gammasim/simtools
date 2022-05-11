@@ -144,13 +144,18 @@ def parse():
     parser.initialize_telescope_model_arguments()
     parser.add_argument(
         "--containment_mean",
-        help="Mean of measured containment diameter [cm]",
+        help="Mean of measured PSF containment diameter [cm]",
         type=float, required=True
     )
     parser.add_argument(
         "--containment_sigma",
-        help="Std dev of measured containment diameter [cm]",
+        help="Std dev of measured PSF containment diameter [cm]",
         type=float, required=False
+    )
+    parser.add_argument(
+        "--psf_measurement",
+        help="Results from PSF measurements for each mirror panel spot size",
+        type=str, required=False,
     )
     parser.add_argument(
         "--containment_fraction",
@@ -161,43 +166,30 @@ def parse():
     parser.add_argument(
         "--rnda",
         help="Starting value of mirror_reflection_random_angle",
-        type=float,
+        type=float, required=False,
         default=0.0,
     )
     parser.add_argument(
         "--mirror_list",
-        help=(
-            "Mirror list file to replace the default one. It should be used if measured mirror"
-            " focal lengths need to be accounted"
-        ),
-        type=str,
-        required=False,
+        help=("Mirror list file to replace the default one. It should be used if"
+              " measured mirror focal lengths need to be accounted"),
+        type=str, required=False,
     )
-    parser.add_argument(
-        "--2f_measurement",
-        help="Results from 2f measurements for each mirror panel radius and spot size",
-        type=str,
-        required=False,
-    )
-
     parser.add_argument(
         "--use_random_flen",
-        help=(
-            "Use random focal lengths. The argument random_flen can be used to replace the default"
-            " random_focal_length parameter."
-        ),
-        action="store_true",
+        help=("Use random focal lengths. Read value for random_focal_length parameter read"
+              " from DB or provide by using the argument random_flen."),
+        action="store_true", required=False,
     )
     parser.add_argument(
         "--random_flen",
         help="Value to replace the default random_focal_length.",
-        type=float,
-        required=False,
+        type=float, required=False,
     )
     parser.add_argument(
         "--no_tuning",
-        help="no tuning of random_reflection_rangle - A single case will be simulated and plotted.",
-        action="store_true",
+        help="no tuning of random_reflection_angle (a single case will be simulated).",
+        action="store_true", required=False,
     )
     parser.initialize_default_arguments()
     return parser.parse_args()
