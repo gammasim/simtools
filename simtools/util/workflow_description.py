@@ -14,19 +14,27 @@ import simtools.version
 
 class WorkflowDescription:
     """
-    Workflow configuration and metadata class
+    Workflow description, configuration and metadata class
 
     Methods
     -------
     collect_configuration(args)
         Collect configuration parameters
+    product_data_directory()
+        Return product data directory
+    product_data_file_name()
+        Return product data file name
+    product_data_file_format()
+        Return product data file format
+    reference_data_columns()
+        Return reference data columns for input data
 
     """
 
     def __init__(self,
                  label=None,
                  args=None,
-                 toplevel_meta={}):
+                 toplevel_meta=None):
         """
         Initialize workflow configuration class
 
@@ -41,7 +49,6 @@ class WorkflowDescription:
         """
 
         self._logger = logging.getLogger(__name__)
-        self.workflow_config = {}
         self.label = label
 
         self.product_data_dir = None
@@ -50,15 +57,18 @@ class WorkflowDescription:
         self.input_meta_file = None
         self.input_data_file = None
 
-        self.toplevel_meta = toplevel_meta
+        if toplevel_meta:
+            self.toplevel_meta = toplevel_meta
+        else:
+            self.toplevel_meta = {}
 
-        self.collect_configuration(args)
+        self.collect_workflow_configuration(args)
         self.collect_product_meta_data(args)
 
-    def collect_configuration(self, args):
+    def collect_workflow_configuration(self, args):
         """
         Collect configuration parameters from command
-        line and configuration file
+        line and/or configuration file
 
         Parameters
         -----------
@@ -70,8 +80,19 @@ class WorkflowDescription:
         if not args:
             return
 
-        self._read_workflow_configuration(args.workflow_config_file)
-        self._set_reference_schema_directory(args.reference_schema_directory)
+        if args.workflow_config_file:
+            self._read_workflow_configuration(args.workflow_config_file)
+        else:
+            self.workflow_config = self._default_workflow_config()
+            self.workflow_config['CTASIMPIPE']['ACTIVITY']['NAME'] = self.label
+            if args.toplevel_metadata_schema:
+                self.workflow_config['CTASIMPIPE']['DATAMODEL']['SCHEMADIRECTORY'] = \
+                    Path(args.toplevel_metadata_schema).resolve().parent
+                self.workflow_config['CTASIMPIPE']['DATAMODEL']['TOPLEVELMODEL'] = \
+                    Path(args.toplevel_metadata_schema).name
+
+        if args.reference_schema_directory:
+            self._set_reference_schema_directory(args.reference_schema_directory)
 
         if args.product_data_directory:
             self.product_data_dir = Path(args.product_data_directory).absolute()
@@ -109,10 +130,19 @@ class WorkflowDescription:
 
     def reference_data_columns(self):
         """
-        Return reference data column definition
+        Return reference data column definition expected
+        in input data
 
         Returns
         -------
+        CTASIMPIPE:DATA_COLUMNS dict
+            reference data columns
+
+        Raises
+        ------
+        KeyError
+            if CTASIMPIPE:DATA_COLUMNS does not exist in workflow
+            configuration
 
         """
 
@@ -176,7 +206,7 @@ class WorkflowDescription:
         Returns
         -------
         str
-            file format of data product
+            file format of data product; default file format is 'ascii.ecsv'
 
         Raises
         ------
@@ -240,9 +270,14 @@ class WorkflowDescription:
         Fill metadata available through command line into top-level template
 
         Parameters
-        -----------
+        ----------
         args: argparse.Namespace
             command line parameters
+
+        Raises
+        ------
+        KeyError
+            if metadata description cannot be filled
 
         """
 
@@ -481,11 +516,39 @@ class WorkflowDescription:
 
         """
         try:
-            return str(
-                self.workflow_config['CTASIMPIPE']['DATAMODEL']['SCHEMADIRECTORY']
-                + '/' +
-                self.workflow_config['CTASIMPIPE']['DATAMODEL']['TOPLEVELMODEL'])
+            return str(self.workflow_config['CTASIMPIPE']['DATAMODEL']['SCHEMADIRECTORY']) \
+                + '/' + \
+                str(self.workflow_config['CTASIMPIPE']['DATAMODEL']['TOPLEVELMODEL'])
         except (KeyError, TypeError):
             self._logger.error(
                 "Missing description of DATAMODEL:SCHEMADIRECTORY/TOPLEVELMODEL")
             raise
+
+    @staticmethod
+    def _default_workflow_config():
+        """
+        Setup default dictionary for workflow config
+
+        TODO: not clear if it is the best solution
+        to hardwire the format
+
+        """
+
+        return {
+            'CTASIMPIPE': {
+                'REFERENCE': {
+                    'VERSION': '0.1.0'
+                },
+                'ACTIVITY': {
+                    'NAME': 'workflow_name'
+                },
+                'DATAMODEL': {
+                    'USERINPUTSCHEMA': 'schema',
+                    'TOPLEVELMODEL': 'model',
+                    'SCHEMADIRECTORY': 'directory'
+                },
+                'PRODUCT': {
+                    'DIRECTORY': None
+                }
+            }
+        }
