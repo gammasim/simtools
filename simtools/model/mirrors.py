@@ -39,10 +39,16 @@ class Mirrors:
         Parameters
         ----------
         mirrorListFile: str
-            The sim_telarray file name.
+            mirror list in sim_telarray or ecsv format (with 
+            panel focal length only)
         """
         self._logger = logging.getLogger(__name__)
         self._logger.debug("Mirrors Init")
+
+        self._mirrors = dict()
+        self.diameter = None
+        self.shape = None
+        self.numberOfMirrors = 0
 
         self._mirrorListFile = mirrorListFile
         self._readMirrorList()
@@ -70,19 +76,18 @@ class Mirrors:
 
         """
 
-        # TODO - temporary hard wired geopars
+        # TODO - temporary hard wired geopars - should come from DB
         self.diameter = 120
         self.shape = 1
         self._logger.debug("Shape = {}".format(self.shape))
         self._logger.debug("Diameter = {}".format(self.diameter))
 
-        self._mirrors = dict()
-
         _mirror_table = Table.read(self._mirrorListFile, format='ascii.ecsv')
         self._logger.debug("Reading mirror properties from {}".format(
             self._mirrorListFile))
         try:
-            self._mirrors["flen"] = list(_mirror_table['mirror_panel_radius'].to('cm')/2.)
+            self._mirrors["flen"] = list(
+                _mirror_table['mirror_panel_radius'].to('cm').value/2.)
             self.numberOfMirrors = len(self._mirrors["flen"])
             self._mirrors["number"] = list(range(self.numberOfMirrors))
             self._mirrors["posX"] = [0.]*self.numberOfMirrors
@@ -107,13 +112,13 @@ class Mirrors:
         InvalidMirrorListFile
             If number of mirrors is 0.
         """
-        self._mirrors = dict()
-        self._mirrors["number"] = list()
-        self._mirrors["posX"] = list()
-        self._mirrors["posY"] = list()
-        self._mirrors["diameter"] = list()
-        self._mirrors["flen"] = list()
-        self._mirrors["shape"] = list()
+
+        self._mirrors["number"] = []
+        self._mirrors["posX"] = []
+        self._mirrors["posY"] = []
+        self._mirrors["diameter"] = []
+        self._mirrors["flen"] = []
+        self._mirrors["shape"] = []
 
         mirrorCounter = 0
         collectGeoPars = True
@@ -169,5 +174,7 @@ class Mirrors:
     def plotMirrorLayout(self):
         """
         Plot the mirror layout.
+
+        TODO
         """
         pass
