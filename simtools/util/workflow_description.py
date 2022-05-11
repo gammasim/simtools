@@ -147,16 +147,16 @@ class WorkflowDescription:
         """
 
         _directory = self.product_data_directory()
-        if self.product_data_filename:
-            _filename = self.product_data_filename
-        else:
-            try:
-                _filename = self.toplevel_meta['CTA']['PRODUCT']['ID'] \
-                    + '-' + self.label
-            except KeyError:
-                self._logger.error(
-                    "Missing CTA:PRODUCT:ID in metadata")
-                raise
+        try:
+            _filename = self.toplevel_meta['CTA']['PRODUCT']['ID']
+            if self.product_data_filename:
+                _filename += '-' + self.product_data_filename
+            else:
+                _filename += '-' + self.label
+        except KeyError:
+            self._logger.error(
+                "Missing CTA:PRODUCT:ID in metadata")
+            raise
 
         if not suffix:
             suffix = '.' + self.product_data_file_format(suffix=True)
