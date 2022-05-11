@@ -44,7 +44,7 @@ class CommandLineParser(argparse.ArgumentParser):
             "--workflow_config_file",
             help="Workflow configuration file",
             type=str,
-            required=True,
+            required=False,
         )
         self.add_argument(
             "-p",
