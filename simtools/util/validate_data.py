@@ -6,8 +6,6 @@ from astropy.table import Table
 from astropy.utils.diff import report_diff_values
 from astropy import units as u
 
-import simtools.util.workflow_description as workflow_config
-
 
 class DataValidator:
     """
