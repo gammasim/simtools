@@ -125,7 +125,6 @@ from astropy.table import QTable
 
 import simtools.config as cfg
 import simtools.util.general as gen
-import simtools.io_handler as io
 from simtools.ray_tracing import RayTracing
 from simtools.model.telescope_model import TelescopeModel
 import simtools.util.commandline_parser as argparser

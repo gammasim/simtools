@@ -39,7 +39,7 @@ class Mirrors:
         Parameters
         ----------
         mirrorListFile: str
-            mirror list in sim_telarray or ecsv format (with 
+            mirror list in sim_telarray or ecsv format (with
             panel focal length only)
         """
         self._logger = logging.getLogger(__name__)
