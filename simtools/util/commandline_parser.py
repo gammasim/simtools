@@ -6,6 +6,11 @@ class CommandLineParser(argparse.ArgumentParser):
     Command line parser for application and workflows
     Wrapper around standard python argparse.ArgumentParser
 
+    Methods
+    -------
+    initialize_default_arguments
+       Initialize default arguments used for all applications
+
     """
 
     def initialize_default_arguments(self):
@@ -30,6 +35,29 @@ class CommandLineParser(argparse.ArgumentParser):
             default="info",
             help="Log level to print (default is INFO)",
             required=False,
+        )
+        self.add_argument(
+            "-V",
+            "--version",
+            help="Print the gammasim_tools version number and exit",
+            required=False,
+        )
+
+    def initialize_toplevel_metadata_scheme(self):
+        """
+        Default arguments for top-level meta data schema
+
+        (this option might go in future if top-level definition
+        is moved into gammasim-tools)
+
+        """
+
+        self.add_argument(
+            "--toplevel_metadata_schema",
+            help="Toplevel metadata reference schema",
+            type=str,
+            default=None,
+            required=False
         )
 
     def initialize_workflow_arguments(self):
@@ -62,13 +90,6 @@ class CommandLineParser(argparse.ArgumentParser):
             default=None,
             required=False
         )
-        self.add_argument(
-            "--toplevel_metadata_schema",
-            help="Toplevel metadata reference schema",
-            type=str,
-            default=None,
-            required=False
-        )
 
     def initialize_telescope_model_arguments(self):
         """
@@ -80,7 +101,7 @@ class CommandLineParser(argparse.ArgumentParser):
         self.add_argument(
             "-s",
             "--site",
-            help="North or South",
+            help="CTAO site (e.g. North, South)",
             type=str,
             required=True
         )
