@@ -18,16 +18,25 @@ class WorkflowDescription:
 
     Methods
     -------
-    collect_configuration(args)
-        Collect configuration parameters
+    collect_workflow_configuration()
+        Collect configuration parameters from command line or file
+    collect_product_meta_data()
+        Collect product meta data information and add activity information
+    configuration(key)
+        Returns entry of CONFIGURATION:key
+    label()
+        Return workflow name
     product_data_directory()
         Return product data directory
-    product_data_file_name()
-        Return product data file name
     product_data_file_format()
         Return product data file format
+    product_data_file_name()
+        Return product data file name
     reference_data_columns()
-        Return reference data columns for input data
+        Return reference data columns expected in input data
+    userinput_schema_file_name()
+        Return userinput schema file name
+
 
     """
 
@@ -49,84 +58,103 @@ class WorkflowDescription:
         """
 
         self._logger = logging.getLogger(__name__)
-        self.label = label
 
-        self.product_data_dir = None
-        self.product_data_filename = None
+        self.args = args
 
-        self.input_meta_file = None
-        self.input_data_file = None
+        self.workflow_config = self._default_workflow_config()
+        self.workflow_config['ACTIVITY']['NAME'] = label
+        self.workflow_config['ACTIVITY']['ID'] = str(uuid.uuid4())
 
-        if toplevel_meta:
-            self.toplevel_meta = toplevel_meta
-        else:
-            self.toplevel_meta = {}
+        if self.args:
+            self.collect_workflow_configuration()
 
-        self.collect_workflow_configuration(args)
-        self.collect_product_meta_data(args)
+        self._collect_toplevel_template()
 
-    def collect_workflow_configuration(self, args):
+        if self.args:
+            self.collect_product_meta_data()
+
+    def collect_workflow_configuration(self):
         """
         Collect configuration parameters from command
-        line and/or configuration file
+        line and/or configuration file and fill it into
+        workflow configuration dict.
 
-        Parameters
-        -----------
-        args: argparse.Namespace
-            command line parameters
+        Priority is given to arguments given through the
+        command line (if they are given in both workflow
+        configuration file and command line), with the
+        exception of 'None' values.
 
         """
 
-        if not args:
-            return
+        self._read_workflow_configuration(
+            self._from_args('workflow_config_file'))
 
-        if args.workflow_config_file:
-            self._read_workflow_configuration(args.workflow_config_file)
-        else:
-            self.workflow_config = self._default_workflow_config()
-            self.workflow_config['CTASIMPIPE']['ACTIVITY']['NAME'] = self.label
-            if args.toplevel_metadata_schema:
-                self.workflow_config['CTASIMPIPE']['DATAMODEL']['SCHEMADIRECTORY'] = \
-                    Path(args.toplevel_metadata_schema).resolve().parent
-                self.workflow_config['CTASIMPIPE']['DATAMODEL']['TOPLEVELMODEL'] = \
-                    Path(args.toplevel_metadata_schema).name
+        self.workflow_config['DATAMODEL']['TOPLEVELMODEL'] = \
+            self._from_args(
+                'toplevel_metadata_schema',
+                self.workflow_config['DATAMODEL']['TOPLEVELMODEL']
+            )
 
-        if args.reference_schema_directory:
-            self._set_reference_schema_directory(args.reference_schema_directory)
+        self.workflow_config['PRODUCT']['DIRECTORY'] = \
+            self._from_args(
+                'product_data_directory',
+                self.workflow_config['PRODUCT']['DIRECTORY']
+            )
+        if self.workflow_config['PRODUCT']['DIRECTORY']:
+            self.workflow_config['PRODUCT']['DIRECTORY'] = \
+                Path(self.workflow_config['PRODUCT']['DIRECTORY']).absolute()
 
-        if args.product_data_directory:
-            self.product_data_dir = Path(args.product_data_directory).absolute()
+        self.workflow_config['INPUT']['METAFILE'] = \
+            self._from_args(
+                'input_meta_file',
+                self.workflow_config['INPUT']['METAFILE'])
 
-        try:
-            self.input_meta_file = args.input_meta_file
-        except AttributeError:
-            pass
-        try:
-            self.input_data_file = args.input_data_file
-        except AttributeError:
-            pass
+        self.workflow_config['INPUT']['DATAFILE'] = \
+            self._from_args(
+                'input_data_file',
+                self.workflow_config['INPUT']['DATAFILE'])
 
-        self.toplevel_meta = self._get_toplevel_template()
+        for arg in vars(self.args):
+            self.workflow_config['CONFIGURATION'][str(arg)] = getattr(self.args, arg)
 
-    def collect_product_meta_data(self, args):
+    def collect_product_meta_data(self):
         """
         Collect product meta data and verify the
         schema
 
-        Parameters
-        -----------
-        args: argparse.Namespace
-            command line parameters
-
         """
 
-        self._fill_toplevel_meta_from_args(args)
+        self._fill_toplevel_meta_from_args()
 
-        if self.input_meta_file:
+        if self.workflow_config['INPUT']['METAFILE']:
             self._fill_toplevel_meta_from_file()
 
         self._fill_product_meta()
+        self._fill_product_association_identifier()
         self._fill_activity_meta()
+
+    def label(self):
+        """
+        Return workflow name
+        (often set as label)
+
+        """
+
+        return self.workflow_config['ACTIVITY']['NAME']
+
+    def configuration(self, key):
+        """
+        Return workflow configuration parameter.
+
+        Usually filled from argparser.
+
+        """
+
+        try:
+            return self.workflow_config['CONFIGURATION'][key]
+        except KeyError:
+            self._logger.error("Missing key {} in CONFIGURATION".format(key))
+            raise
 
     def reference_data_columns(self):
         """
@@ -135,22 +163,22 @@ class WorkflowDescription:
 
         Returns
         -------
-        CTASIMPIPE:DATA_COLUMNS dict
+        DATA_COLUMNS dict
             reference data columns
 
         Raises
         ------
         KeyError
-            if CTASIMPIPE:DATA_COLUMNS does not exist in workflow
+            if DATA_COLUMNS does not exist in workflow
             configuration
 
         """
 
         try:
-            return self.workflow_config["CTASIMPIPE"]["DATA_COLUMNS"]
+            return self.workflow_config["DATA_COLUMNS"]
         except KeyError:
             self._logger.error(
-                "Missing CTASIMPIPE:DATA_COLUMNS entry in workflow configuration")
+                "Missing DATA_COLUMNS entry in workflow configuration")
             raise
 
     def product_data_file_name(self, suffix=None):
@@ -165,7 +193,7 @@ class WorkflowDescription:
 
         Returns
         -------
-        str
+        Path
             data file path and name
 
         Raises
@@ -178,14 +206,15 @@ class WorkflowDescription:
 
         _directory = self.product_data_directory()
         try:
-            _filename = self.toplevel_meta['CTA']['PRODUCT']['ID']
-            if self.product_data_filename:
-                _filename += '-' + self.product_data_filename
+            _filename = self.workflow_config['ACTIVITY']['ID']
+            if self.workflow_config['PRODUCT']['FILENAME']:
+                _filename += '-' + self.workflow_config['PRODUCT']['FILENAME']
             else:
-                _filename += '-' + self.label
+                _filename += '-' + self.workflow_config['ACTIVITY']['NAME']
         except KeyError:
             self._logger.error(
                 "Missing CTA:PRODUCT:ID in metadata")
+            print(self.toplevel_meta)
             raise
 
         if not suffix:
@@ -218,7 +247,7 @@ class WorkflowDescription:
 
         _file_format = "ascii.ecsv"
         try:
-            _file_format = self.workflow_config['CTASIMPIPE']['PRODUCT']['FORMAT']
+            _file_format = self.workflow_config['PRODUCT']['FORMAT']
         except KeyError:
             self._logger.info(
                 "Using default file format for model file: ascii.ecsv")
@@ -251,10 +280,10 @@ class WorkflowDescription:
 
         """
 
-        _output_label = self.label
+        _output_label = self.workflow_config['ACTIVITY']['NAME']
 
-        if self.product_data_dir:
-            path = Path(self.product_data_dir)
+        if self.workflow_config['PRODUCT']['DIRECTORY']:
+            path = Path(self.workflow_config['PRODUCT']['DIRECTORY'])
             path.mkdir(parents=True, exist_ok=True)
             _output_dir = path.absolute()
         else:
@@ -265,7 +294,21 @@ class WorkflowDescription:
         self._logger.info("Outputdirectory {}".format(_output_dir))
         return _output_dir
 
-    def _fill_toplevel_meta_from_args(self, args):
+    def _from_args(self, key, default_return=None):
+        """
+        Return argparser argument.
+        No errors raised if argument does not exist
+
+        """
+
+        try:
+            return self.args.__dict__[key]
+        except KeyError:
+            pass
+
+        return default_return
+
+    def _fill_toplevel_meta_from_args(self):
         """
         Fill metadata available through command line into top-level template
 
@@ -283,8 +326,8 @@ class WorkflowDescription:
 
         try:
             _association = {}
-            _association['SITE'] = args.site
-            _split_telescope_name = args.telescope.split("-")
+            _association['SITE'] = self.args.site
+            _split_telescope_name = self.args.telescope.split("-")
             _association['CLASS'] = _split_telescope_name[0]
             _association['TYPE'] = _split_telescope_name[1]
             _association['SUBTYPE'] = _split_telescope_name[2]
@@ -310,7 +353,7 @@ class WorkflowDescription:
 
         _schema_validator = vs.SchemaValidator(self.workflow_config)
         _user_meta = _schema_validator.validate_and_transform(
-            self.input_meta_file)
+            self.workflow_config['INPUT']['METAFILE'])
 
         try:
             self.toplevel_meta['CTA']['CONTACT'] = _user_meta['CONTACT']
@@ -337,7 +380,7 @@ class WorkflowDescription:
             raise
 
         try:
-            self.product_data_filename = os.path.splitext(
+            self.workflow_config['PRODUCT']['FILENAME'] = os.path.splitext(
                 _user_meta['PRODUCT']['DATA'])[0]
         except KeyError:
             pass
@@ -354,8 +397,9 @@ class WorkflowDescription:
 
         """
 
-        self.toplevel_meta['CTA']['PRODUCT']['ID'] = str(uuid.uuid4())
-        self._logger.debug("Issued UUID {}".format(
+        self.toplevel_meta['CTA']['PRODUCT']['ID'] = \
+            self.workflow_config['ACTIVITY']['ID']
+        self._logger.debug("Assigned ACTIVITE UUID {}".format(
             self.toplevel_meta['CTA']['PRODUCT']['ID']))
 
         try:
@@ -364,8 +408,6 @@ class WorkflowDescription:
         except KeyError:
             self._logger.error("Error PRODUCT meta from user input meta data")
             raise
-
-        self._fill_product_association_identifier()
 
     def _fill_product_association_identifier(self):
         """
@@ -424,7 +466,7 @@ class WorkflowDescription:
         """
         try:
             self.toplevel_meta['CTA']['ACTIVITY']['NAME'] = \
-                self.workflow_config['CTASIMPIPE']['ACTIVITY']['NAME']
+                self.workflow_config['ACTIVITY']['NAME']
             self.toplevel_meta['CTA']['ACTIVITY']['START'] = \
                 datetime.datetime.now().isoformat(timespec='seconds')
             self.toplevel_meta['CTA']['ACTIVITY']['END'] = \
@@ -452,103 +494,101 @@ class WorkflowDescription:
 
         """
 
-        self.workflow_config = gen.collectDataFromYamlOrDict(
-            workflow_config_file, None)
-        self._logger.debug("Reading workflow configuration from {}".format(
-            workflow_config_file))
-
-    def _set_reference_schema_directory(self, reference_schema_directory=None):
-        """
-        Set reference schema directory
-
-        Parameters
-        ----------
-        reference_schema_directory
-            directory to reference schema
-
-        Raises
-        ------
-        KeyError
-            workflow configuration does not include SCHEMADIRECTORY key
-
-
-        """
-
-        if reference_schema_directory:
+        if workflow_config_file:
             try:
-                self.workflow_config['CTASIMPIPE']['DATAMODEL']['SCHEMADIRECTORY'] = \
-                    reference_schema_directory
-            except KeyError as error:
-                self._logger.error("Workflow configuration incomplete")
-                raise KeyError from error
+                self.workflow_config = gen.collectDataFromYamlOrDict(
+                    workflow_config_file, None)['CTASIMPIPE']
+                self._logger.debug("Reading workflow configuration from {}".format(
+                    workflow_config_file))
+            except KeyError:
+                self._logger.debug("Error reading CTASIMPIPE workflow configuration")
+                raise
 
-    def _get_toplevel_template(self):
+    def _collect_toplevel_template(self):
         """
-        Read toplevel data model template from file
+        Fill toplevel data model template from schema file
 
         Returns
         -------
         dict
-            top-level meta data definition
+            top-level meta data template
 
         """
 
-        _toplevel_metadata_file = self._read_toplevel_metadata_file()
-        if _toplevel_metadata_file:
-            self._logger.debug(
-                "Reading top-level metadata template from {}".format(
-                    _toplevel_metadata_file))
-            return gen.collectDataFromYamlOrDict(
-                _toplevel_metadata_file, None)
-        return None
-
-    def _read_toplevel_metadata_file(self):
-        """
-        Return full path and name of top level data model schema file
-
-        Raises
-        ------
-        KeyError
-            if relevant fields are not defined in toplevel metadata
-            dictionary
-        TypeError
-            if workflow directory cannot be converted to type str
-
-        """
         try:
-            return str(self.workflow_config['CTASIMPIPE']['DATAMODEL']['SCHEMADIRECTORY']) \
-                + '/' + \
-                str(self.workflow_config['CTASIMPIPE']['DATAMODEL']['TOPLEVELMODEL'])
-        except (KeyError, TypeError):
-            self._logger.error(
-                "Missing description of DATAMODEL:SCHEMADIRECTORY/TOPLEVELMODEL")
+            if self.workflow_config['DATAMODEL']['TOPLEVELMODEL']:
+                _workflow_config_file = Path(
+                    self._read_schema_directory(),
+                    self.workflow_config['DATAMODEL']['TOPLEVELMODEL']
+                )
+                self._logger.debug(
+                    "Reading top-level metadata template from {}".format(
+                        _workflow_config_file))
+                self.toplevel_meta = gen.collectDataFromYamlOrDict(
+                    _workflow_config_file, None)
+        except KeyError:
+            self._logger.error('Error reading DATAMODEL:TOPLEVELMODEL')
             raise
+
+        return self.toplevel_meta
+
+    def userinput_schema_file_name(self):
+        """
+        Return user meta file name.
+        (full path)
+        """
+
+        try:
+            if self.workflow_config['DATAMODEL']['USERINPUTSCHEMA']:
+                return Path(
+                    self._read_schema_directory(),
+                    self.workflow_config['DATAMODEL']['USERINPUTSCHEMA'])
+        except KeyError:
+            self._logger.error("Missing description of DATAMODEL:USERINPUTSCHEMA")
+            raise
+
+    @staticmethod
+    def _read_schema_directory():
+        """
+        Return directory for metadata schema file
+
+        TODO: decide who to deal with the default
+
+        """
+
+        return ""
 
     @staticmethod
     def _default_workflow_config():
         """
         Setup default dictionary for workflow config
 
-        TODO: not clear if it is the best solution
-        to hardwire the format
+        CONFIGURATION collects all argparse argument
 
         """
 
         return {
-            'CTASIMPIPE': {
-                'REFERENCE': {
-                    'VERSION': '0.1.0'
-                },
-                'ACTIVITY': {
-                    'NAME': 'workflow_name'
-                },
-                'DATAMODEL': {
-                    'USERINPUTSCHEMA': 'schema',
-                    'TOPLEVELMODEL': 'model',
-                    'SCHEMADIRECTORY': 'directory'
-                },
-                'PRODUCT': {
-                    'DIRECTORY': None
-                }
+            'REFERENCE': {
+                'VERSION': '0.1.0'
+            },
+            'ACTIVITY': {
+                'NAME': None,
+                'ID': None,
+            },
+            'DATAMODEL': {
+                'USERINPUTSCHEMA': None,
+                'TOPLEVELMODEL': None,
+            },
+            'INPUT': {
+                'METAFILE': None,
+                'DATAFILE': None,
+            },
+            'PRODUCT': {
+                'DIRECTORY': None,
+                'FILENAME': None,
+            },
+            'CONFIGURATION': {
+                'logLevel': 'INFO',
+                'test': False,
             }
         }

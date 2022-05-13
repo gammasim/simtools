@@ -139,7 +139,6 @@ def parse():
     """
 
     parser = argparser.CommandLineParser()
-    parser.initialize_workflow_arguments()
     parser.initialize_telescope_model_arguments()
     parser.add_argument(
         "--containment_mean",
@@ -152,15 +151,15 @@ def parse():
         type=float, required=False
     )
     parser.add_argument(
-        "--psf_measurement",
-        help="Results from PSF measurements for each mirror panel spot size",
-        type=str, required=False,
-    )
-    parser.add_argument(
         "--containment_fraction",
         help="Containment fraction for diameter calculation (in interval 0,1)",
         type=argparser.CommandLineParser.efficiency_interval, required=False,
         default=0.8,
+    )
+    parser.add_argument(
+        "--psf_measurement",
+        help="Results from PSF measurements for each mirror panel spot size",
+        type=str, required=False,
     )
     parser.add_argument(
         "--rnda",
@@ -190,109 +189,63 @@ def parse():
         help="no tuning of random_reflection_angle (a single case will be simulated).",
         action="store_true", required=False,
     )
+    parser.initialize_toplevel_metadata_scheme()
     parser.initialize_default_arguments()
     return parser.parse_args()
 
 
-if __name__ == "__main__":
+def define_telescope_model(workflow):
+    """
+    Define telescope model and update configuration
+    (if required)
 
-    args = parse()
-    containment_fraction_percent = int(args.containment_fraction*100)
-    label = "derive_mirror_rnda"
+    Returns
+    ------
+    tel TelescopeModel
+        telescope model
 
-    logger = logging.getLogger()
-    logger.setLevel(gen.getLogLevelFromUser(args.logLevel))
-
-    workflow = workflow_config.WorkflowDescription(
-        label=label,
-        args=args)
-
-    outputDir = workflow.product_data_directory()
+    """
 
     tel = TelescopeModel(
-        site=args.site,
-        telescopeModelName=args.telescope,
-        modelVersion=args.model_version,
-        label=label,
+        site=workflow.configuration('site'),
+        telescopeModelName=workflow.configuration('telescope'),
+        modelVersion=workflow.configuration('model_version'),
+        label=workflow.label()
     )
-    if args.mirror_list is not None:
-        mirrorListFile = cfg.findFile(name=args.mirror_list)
-        tel.changeParameter("mirror_list", args.mirror_list)
+    if workflow.configuration('mirror_list') is not None:
+        mirrorListFile = cfg.findFile(name=workflow.configuration('mirror_list'))
+        tel.changeParameter("mirror_list", workflow.configuration('mirror_list'))
         tel.addParameterFile("mirror_list", mirrorListFile)
-    if args.random_flen is not None:
-        tel.changeParameter("random_focal_length", str(args.random_flen))
+    if workflow.configuration('random_flen') is not None:
+        tel.changeParameter("random_focal_length",
+                            str(workflow.configuration('random_flen')))
 
-    def run(rnda):
-        """Runs the simulations for one given value of rnda"""
-        tel.changeParameter("mirror_reflection_random_angle", str(rnda))
-        ray = RayTracing.fromKwargs(
-            telescopeModel=tel,
-            singleMirrorMode=True,
-            mirrorNumbers=list(range(1, 10)) if args.test else "all",
-            useRandomFocalLength=args.use_random_flen,
-        )
-        ray.simulate(test=False, force=True)  # force has to be True, always
-        ray.analyze(force=True)
+    return tel
 
-        return (
-            ray.getMean("d80_cm").to(u.cm).value,
-            ray.getStdDev("d80_cm").to(u.cm).value,
-        )
 
-    # First - rnda from previous model or from command line
-    if args.rnda != 0:
-        rndaStart = args.rnda
-    else:
-        rndaStart = tel.getParameter("mirror_reflection_random_angle")["Value"]
-        if isinstance(rndaStart, str):
-            rndaStart = rndaStart.split()
-            rndaStart = float(rndaStart[0])
+def print_and_write_results(workflow,
+                            rndaStart, rndaOpt,
+                            meanD80, sigD80,
+                            resultsRnda, resultsMean, resultsSig):
+    """
+    Print results to screen write metadata and data files
+    in the requested format
 
-    logger.info("Start value for mirror_reflection_random_angle: {:}".format(
-        rndaStart))
+    """
 
-    resultsRnda = list()
-    resultsMean = list()
-    resultsSig = list()
-    if args.no_tuning:
-        rndaOpt = rndaStart
-    else:
-        def collectResults(rnda, mean, sig):
-            resultsRnda.append(rnda)
-            resultsMean.append(mean)
-            resultsSig.append(sig)
-
-        stop = False
-        meanD80, sigD80 = run(rndaStart)
-        rnda = rndaStart
-        signDelta = np.sign(meanD80 - args.containment_mean)
-        collectResults(rnda, meanD80, sigD80)
-        while not stop:
-            newRnda = rnda - (0.1 * rndaStart * signDelta)
-            meanD80, sigD80 = run(newRnda)
-            newSignDelta = np.sign(meanD80 - args.containment_mean)
-            stop = newSignDelta != signDelta
-            signDelta = newSignDelta
-            rnda = newRnda
-            collectResults(rnda, meanD80, sigD80)
-
-        # Linear interpolation using two last rnda values
-        resultsRnda, resultsMean, resultsSig = gen.sortArrays(
-            resultsRnda, resultsMean, resultsSig
-        )
-        rndaOpt = np.interp(x=args.containment_mean, xp=resultsMean, fp=resultsRnda)
-
-    meanD80, sigD80 = run(rndaOpt)
+    containment_fraction_percent = int(
+        workflow.configuration('containment_fraction')*100)
 
     # Printing results to stdout
     print("\nMeasured D{:}:".format(containment_fraction_percent))
-    if args.containment_sigma is not None:
+    if workflow.configuration('containment_sigma') is not None:
         print(
             "Mean = {:.3f} cm, StdDev = {:.3f} cm".format(
-                args.containment_mean, args.containment_sigma)
+                workflow.configuration('containment_mean'),
+                workflow.configuration('containment_sigma'))
         )
     else:
-        print("Mean = {:.3f} cm".format(args.containment_mean))
+        print("Mean = {:.3f} cm".format(workflow.configuration('containment_mean')))
     print("\nSimulated D{:}:".format(containment_fraction_percent))
     print("Mean = {:.3f} cm, StdDev = {:.3f} cm".format(meanD80, sigD80))
     print("\nmirror_random_reflection_angle")
@@ -320,3 +273,90 @@ if __name__ == "__main__":
     file_writer = writer.ModelDataWriter(workflow)
     file_writer.write_metadata()
     file_writer.write_data(result_table)
+
+
+def main():
+
+    args = parse()
+    label = "derive_mirror_rnda"
+
+    logger = logging.getLogger()
+    logger.setLevel(gen.getLogLevelFromUser(args.logLevel))
+
+    workflow = workflow_config.WorkflowDescription(label=label, args=args)
+
+    tel = define_telescope_model(workflow)
+
+    def run(rnda):
+        """Runs the simulations for one given value of rnda"""
+        tel.changeParameter("mirror_reflection_random_angle", str(rnda))
+        ray = RayTracing.fromKwargs(
+            telescopeModel=tel,
+            singleMirrorMode=True,
+            mirrorNumbers=list(range(1, 10)) if workflow.configuration('test') else "all",
+            useRandomFocalLength=workflow.configuration('use_random_flen'),
+        )
+        ray.simulate(test=False, force=True)  # force has to be True, always
+        ray.analyze(force=True)
+
+        return (
+            ray.getMean("d80_cm").to(u.cm).value,
+            ray.getStdDev("d80_cm").to(u.cm).value,
+        )
+
+    # First - rnda from previous model or from command line
+    if workflow.configuration('rnda') != 0:
+        rndaStart = workflow.configuration('rnda')
+    else:
+        rndaStart = tel.getParameter("mirror_reflection_random_angle")["Value"]
+        if isinstance(rndaStart, str):
+            rndaStart = rndaStart.split()
+            rndaStart = float(rndaStart[0])
+
+    logger.info("Start value for mirror_reflection_random_angle: {:}".format(
+        rndaStart))
+
+    resultsRnda = list()
+    resultsMean = list()
+    resultsSig = list()
+    if workflow.configuration('no_tuning'):
+        rndaOpt = rndaStart
+    else:
+        def collectResults(rnda, mean, sig):
+            resultsRnda.append(rnda)
+            resultsMean.append(mean)
+            resultsSig.append(sig)
+
+        stop = False
+        meanD80, sigD80 = run(rndaStart)
+        rnda = rndaStart
+        signDelta = np.sign(meanD80 - workflow.configuration('containment_mean'))
+        collectResults(rnda, meanD80, sigD80)
+        while not stop:
+            newRnda = rnda - (0.1 * rndaStart * signDelta)
+            meanD80, sigD80 = run(newRnda)
+            newSignDelta = np.sign(meanD80 - workflow.configuration('containment_mean'))
+            stop = newSignDelta != signDelta
+            signDelta = newSignDelta
+            rnda = newRnda
+            collectResults(rnda, meanD80, sigD80)
+
+        # Linear interpolation using two last rnda values
+        resultsRnda, resultsMean, resultsSig = gen.sortArrays(
+            resultsRnda, resultsMean, resultsSig
+        )
+        rndaOpt = np.interp(
+            x=workflow.configuration('containment_mean'),
+            xp=resultsMean, fp=resultsRnda)
+
+    meanD80, sigD80 = run(rndaOpt)
+
+    print_and_write_results(
+        workflow,
+        rndaStart, rndaOpt,
+        meanD80, sigD80,
+        resultsRnda, resultsMean, resultsSig)
+
+
+if __name__ == "__main__":
+    main()
