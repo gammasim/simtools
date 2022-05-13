@@ -49,8 +49,8 @@ class ModelDataWriter:
 
         """
 
+        _file = self.workflow_config.product_data_file_name()
         try:
-            _file = self.workflow_config.product_data_file_name()
             self._logger.debug("Writing data to {}".format(_file))
             product_data.write(
                 _file,
@@ -77,3 +77,5 @@ class ModelDataWriter:
                     self.workflow_config.toplevel_meta,
                     file,
                     sort_keys=False)
+        else:
+            self._logger.debug("No metadata defined for write")
