@@ -47,7 +47,7 @@ class DataValidator:
         self._logger = logging.getLogger(__name__)
 
         self._reference_data_columns = workflow.reference_data_columns()
-        self._data_file_name = workflow.input_data_file
+        self._data_file_name = workflow.userinput_data_file_name()
 
         self.data_table = None
 
