@@ -16,15 +16,15 @@ class SchemaValidator:
 
     """
 
-    def __init__(self, workflow_config=None, data_dict=None):
+    def __init__(self, schema_file=None, data_dict=None):
         """
         Initalize validation class and read required
         reference schema
 
         Parameters
         ----------
-        workflow_config: dict
-            workflow configuration
+        schema_file: str
+            file nome for user input schema
         data_dict: dict
             User-provided metadata dict to be validated against
             reference schema
@@ -33,9 +33,7 @@ class SchemaValidator:
 
         self._logger = logging.getLogger(__name__)
 
-        user_input_schema = None
-        if workflow_config:
-            user_input_schema = workflow_config.userinput_schema_file_name()
+        user_input_schema = schema_file
         if user_input_schema:
             self._logger.debug(
                 "Reading reference schema from {}".format(
