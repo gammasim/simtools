@@ -43,7 +43,7 @@ class CommandLineParser(argparse.ArgumentParser):
             required=False,
         )
 
-    def initialize_toplevel_metadata_scheme(self):
+    def initialize_toplevel_metadata_scheme(self, required=True):
         """
         Default arguments for top-level meta data schema
 
@@ -57,7 +57,7 @@ class CommandLineParser(argparse.ArgumentParser):
             help="Toplevel metadata reference schema",
             type=str,
             default=None,
-            required=False
+            required=required
         )
 
     def initialize_workflow_arguments(self):

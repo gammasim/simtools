@@ -141,25 +141,25 @@ def parse():
     parser = argparser.CommandLineParser()
     parser.initialize_telescope_model_arguments()
     parser.add_argument(
-        "--containment_mean",
+        "--psf_measurement_containment_mean",
         help="Mean of measured PSF containment diameter [cm]",
         type=float, required=True
     )
     parser.add_argument(
-        "--containment_sigma",
+        "--psf_measurement_containment_sigma",
         help="Std dev of measured PSF containment diameter [cm]",
         type=float, required=False
+    )
+    parser.add_argument(
+        "--psf_measurement",
+        help="Results from PSF measurements for each mirror panel spot size",
+        type=str, required=False,
     )
     parser.add_argument(
         "--containment_fraction",
         help="Containment fraction for diameter calculation (in interval 0,1)",
         type=argparser.CommandLineParser.efficiency_interval, required=False,
         default=0.8,
-    )
-    parser.add_argument(
-        "--psf_measurement",
-        help="Results from PSF measurements for each mirror panel spot size",
-        type=str, required=False,
     )
     parser.add_argument(
         "--rnda",
@@ -238,14 +238,15 @@ def print_and_write_results(workflow,
 
     # Printing results to stdout
     print("\nMeasured D{:}:".format(containment_fraction_percent))
-    if workflow.configuration('containment_sigma') is not None:
+    if workflow.configuration('psf_measurement_containment_sigma') is not None:
         print(
             "Mean = {:.3f} cm, StdDev = {:.3f} cm".format(
-                workflow.configuration('containment_mean'),
-                workflow.configuration('containment_sigma'))
+                workflow.configuration('psf_measurement_containment_mean'),
+                workflow.configuration('psf_measurement_containment_sigma'))
         )
     else:
-        print("Mean = {:.3f} cm".format(workflow.configuration('containment_mean')))
+        print("Mean = {:.3f} cm".format(
+            workflow.configuration('psf_measurement_containment_mean')))
     print("\nSimulated D{:}:".format(containment_fraction_percent))
     print("Mean = {:.3f} cm, StdDev = {:.3f} cm".format(meanD80, sigD80))
     print("\nmirror_random_reflection_angle")
@@ -330,12 +331,14 @@ def main():
         stop = False
         meanD80, sigD80 = run(rndaStart)
         rnda = rndaStart
-        signDelta = np.sign(meanD80 - workflow.configuration('containment_mean'))
+        signDelta = np.sign(
+            meanD80 - workflow.configuration('psf_measurement_containment_mean'))
         collectResults(rnda, meanD80, sigD80)
         while not stop:
             newRnda = rnda - (0.1 * rndaStart * signDelta)
             meanD80, sigD80 = run(newRnda)
-            newSignDelta = np.sign(meanD80 - workflow.configuration('containment_mean'))
+            newSignDelta = np.sign(
+                meanD80 - workflow.configuration('psf_measurement_containment_mean'))
             stop = newSignDelta != signDelta
             signDelta = newSignDelta
             rnda = newRnda
@@ -346,7 +349,7 @@ def main():
             resultsRnda, resultsMean, resultsSig
         )
         rndaOpt = np.interp(
-            x=workflow.configuration('containment_mean'),
+            x=workflow.configuration('psf_measurement_containment_mean'),
             xp=resultsMean, fp=resultsRnda)
 
     meanD80, sigD80 = run(rndaOpt)

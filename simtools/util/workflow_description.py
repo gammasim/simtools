@@ -351,7 +351,7 @@ class WorkflowDescription:
 
         """
 
-        _schema_validator = vs.SchemaValidator(self.workflow_config)
+        _schema_validator = vs.SchemaValidator(self.userinput_schema_file_name())
         _user_meta = _schema_validator.validate_and_transform(
             self.workflow_config['INPUT']['METAFILE'])
 
@@ -496,13 +496,33 @@ class WorkflowDescription:
 
         if workflow_config_file:
             try:
-                self.workflow_config = gen.collectDataFromYamlOrDict(
+                _workflow_from_file = gen.collectDataFromYamlOrDict(
                     workflow_config_file, None)['CTASIMPIPE']
                 self._logger.debug("Reading workflow configuration from {}".format(
                     workflow_config_file))
             except KeyError:
                 self._logger.debug("Error reading CTASIMPIPE workflow configuration")
-                raise
+
+            self._merge_config_dicts(_workflow_from_file, self.workflow_config)
+
+    def _merge_config_dicts(self, dict1, dict2):
+        """
+        Merge two config dicts and replace values which are Nonetype.
+        Priority to dict2 in case of conflicting entries.
+
+        """
+
+        for k in dict1:
+            if k in dict2:
+                if isinstance(dict1[k], dict):
+                    self._merge_config_dicts(dict1[k], dict2[k])
+                elif dict2[k] is None:
+                    dict2[k] = dict1[k]
+                elif dict2[k] != dict1[k] and dict1[k] is not None:
+                    self._logger.debug("Conflicting entries between dict: {} vs {}".format(
+                        dict2[k], dict1[k]))
+            else:
+                dict2[k] = dict1[k]
 
     def _collect_toplevel_template(self):
         """
@@ -547,14 +567,28 @@ class WorkflowDescription:
             self._logger.error("Missing description of DATAMODEL:USERINPUTSCHEMA")
             raise
 
-    @staticmethod
-    def _read_schema_directory():
+    def userinput_data_file_name(self):
+        """
+        Return user input data file
+        (full path)
+        """
+
+        try:
+            return self.workflow_config['INPUT']['DATAFILE']
+        except KeyError:
+            self._logger.error("Missing description of INPUT:DATAFILE")
+            raise
+
+    def _read_schema_directory(self):
         """
         Return directory for metadata schema file
 
-        TODO: decide who to deal with the default
 
         """
+
+        if 'reference_schema_directory' in self.workflow_config['CONFIGURATION'] \
+                and self.workflow_config['CONFIGURATION']['reference_schema_directory']:
+            return self.workflow_config['CONFIGURATION']['reference_schema_directory']
 
         return ""
 
@@ -574,6 +608,7 @@ class WorkflowDescription:
             'ACTIVITY': {
                 'NAME': None,
                 'ID': None,
+                'DESCRIPTION': None,
             },
             'DATAMODEL': {
                 'USERINPUTSCHEMA': None,
