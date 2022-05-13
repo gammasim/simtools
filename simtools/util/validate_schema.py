@@ -33,16 +33,15 @@ class SchemaValidator:
 
         self._logger = logging.getLogger(__name__)
 
-        reference_schema_file = None
+        user_input_schema = None
         if workflow_config:
-            reference_schema_file = self._get_reference_schema_file(
-                workflow_config)
-        if reference_schema_file:
+            user_input_schema = workflow_config.userinput_schema_file_name()
+        if user_input_schema:
             self._logger.debug(
                 "Reading reference schema from {}".format(
-                    reference_schema_file))
+                    user_input_schema))
             self._reference_schema = gen.collectDataFromYamlOrDict(
-                reference_schema_file, None)
+                user_input_schema, None)
 
         self.data_dict = data_dict
 
@@ -287,40 +286,6 @@ class SchemaValidator:
                 return True
         except KeyError:
             return False
-
-    def _get_reference_schema_file(self, workflow_config):
-        """
-        Return full path and name of reference schema file
-        as defined in workflow configuration
-
-        Parameters
-        ----------
-        workflow_config: dict
-            workflow configuration
-
-        Returns
-        -------
-        str
-            Path and name of reference schema file
-
-        Raises
-        ------
-        KeyError
-            if directory and name of reference schema file is not
-            defined in workflow configuration
-
-
-        """
-
-        try:
-            return str(
-                workflow_config['CTASIMPIPE']['DATAMODEL']['SCHEMADIRECTORY'] +
-                '/' +
-                workflow_config["CTASIMPIPE"]["DATAMODEL"]["USERINPUTSCHEMA"])
-        except KeyError:
-            self._logger.error(
-                "Missing description of DATAMODEL schema file")
-            raise
 
     @staticmethod
     def _remove_line_feed(string):
