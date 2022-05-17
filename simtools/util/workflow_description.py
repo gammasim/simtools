@@ -142,16 +142,19 @@ class WorkflowDescription:
 
         return self.workflow_config['ACTIVITY']['NAME']
 
-    def configuration(self, key):
+    def configuration(self, key, value=None):
         """
-        Return workflow configuration parameter.
+        Set or Return workflow configuration parameter.
 
         Usually filled from argparser.
 
         """
 
         try:
-            return self.workflow_config['CONFIGURATION'][key]
+            if value is None:
+                return self.workflow_config['CONFIGURATION'][key]
+            else:
+                self.workflow_config['CONFIGURATION'][key] = value
         except KeyError:
             self._logger.error("Missing key {} in CONFIGURATION".format(key))
             raise
