@@ -121,6 +121,7 @@ import logging
 
 import numpy as np
 import astropy.units as u
+from astropy.table import Table
 from astropy.table import QTable
 
 import simtools.config as cfg
@@ -140,20 +141,21 @@ def parse():
 
     parser = argparser.CommandLineParser()
     parser.initialize_telescope_model_arguments()
-    parser.add_argument(
+    psf_group = parser.add_mutually_exclusive_group()
+    psf_group.add_argument(
         "--psf_measurement_containment_mean",
         help="Mean of measured PSF containment diameter [cm]",
-        type=float, required=True
+        type=float, required=False
+    )
+    psf_group.add_argument(
+        "--psf_measurement",
+        help="Results from PSF measurements for each mirror panel spot size",
+        type=str, required=False,
     )
     parser.add_argument(
         "--psf_measurement_containment_sigma",
         help="Std dev of measured PSF containment diameter [cm]",
         type=float, required=False
-    )
-    parser.add_argument(
-        "--psf_measurement",
-        help="Results from PSF measurements for each mirror panel spot size",
-        type=str, required=False,
     )
     parser.add_argument(
         "--containment_fraction",
@@ -276,6 +278,32 @@ def print_and_write_results(workflow,
     file_writer.write_data(result_table)
 
 
+def get_psf_containment(logger, workflow):
+    """
+    Read measured containment values from file and return
+    mean and sigma
+
+    """
+
+    _psf_list = Table.read(
+        workflow.configuration('psf_measurement'), format='ascii.ecsv')
+    try:
+         workflow.configuration(
+             'psf_measurement_containment_mean',
+             np.nanmean(np.array(_psf_list['psf_opt'].to('cm').value)))
+         workflow.configuration(
+             'psf_measurement_containment_sigma',
+             np.nanstd(np.array(_psf_list['psf_opt'].to('cm').value)))
+    except KeyError:
+        logger.debug("Missing column for psf measurement (psf_opt) in {}".format(
+            workflow.configuration('psf_measurement')))
+        raise
+
+    logger.info('Determined PSF containment to {:.4} +- {:.4} cm'.format(
+         workflow.configuration('psf_measurement_containment_mean'),
+         workflow.configuration('psf_measurement_containment_sigma')))
+
+
 def main():
 
     args = parse()
@@ -287,6 +315,9 @@ def main():
     workflow = workflow_config.WorkflowDescription(label=label, args=args)
 
     tel = define_telescope_model(workflow)
+
+    if workflow.configuration('psf_measurement'):
+        get_psf_containment(logger, workflow)
 
     def run(rnda):
         """Runs the simulations for one given value of rnda"""
