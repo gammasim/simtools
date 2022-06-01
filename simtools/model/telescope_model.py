@@ -535,6 +535,16 @@ class TelescopeModel:
             self.exportConfigFile()
         return self._configFilePath
 
+    def getConfigDirectory(self):
+        """
+        Get the path where all the configuration files for sim_telarray are written to.
+
+        Returns
+        -------
+        Path where all the configuration files for sim_telarray are written to.
+        """
+        return self._configFileDirectory
+
     def getTelescopeTransmissionParameters(self):
         """
         Get tel. transmission pars as a list of floats.
