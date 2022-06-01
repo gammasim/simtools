@@ -9,6 +9,14 @@ class SchemaValidator:
     """
     Validate a dictionary against a reference schema
 
+    Attributes
+    ----------
+    schema_file: str
+        file nome for user input schema
+    data_dict: dict
+        User-provided metadata dict to be validated against
+        reference schema
+
     Methods
     -------
     validate_and_transform(user_meta_file_name=None)
