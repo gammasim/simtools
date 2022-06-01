@@ -39,12 +39,13 @@
 
 """
 
-import argparse
 import logging
 
 import simtools.util.general as gen
 import simtools.util.validate_schema as vs
 import simtools.util.validate_data as ds
+import simtools.util.commandline_parser as argparser
+import simtools.util.workflow_configuration as workflow_config
 import simtools.util.write_model_data as writer
 
 
@@ -89,60 +90,14 @@ def transform_input(_args, _workflow_config):
     return _output_meta, _output_data
 
 
-def collect_configuration(_args, _logger):
-    """
-    Collect configuration parameter into a single dict
-    (simplifies processing)
-
-    Parameters:
-    -----------
-    _args
-        command line parameters
-    _logger
-        logger
-
-    Return:
-    -------
-    workflow_config: dict
-        workflow configuration
-
-    """
-
-    _workflow_config = gen.collectDataFromYamlOrDict(
-        _args.workflow_config_file,
-        None)
-    _logger.debug(
-        "Reading workflow configuration from {}".format(
-            _args.workflow_config_file))
-
-    if _args.reference_schema_directory:
-        try:
-            _workflow_config['CTASIMPIPE']['DATAMODEL']['SCHEMADIRECTORY'] = \
-                _args.reference_schema_directory
-        except KeyError as error:
-            _logger.error(
-                "Workflow configuration incomplete")
-            raise KeyError from error
-
-    return _workflow_config
-
-
 def parse():
     """
     Parse command line configuration
 
     """
 
-    parser = argparse.ArgumentParser(
-        description=("Setting workflow model parameter data")
-    )
-    parser.add_argument(
-        "-c",
-        "--workflow_config_file",
-        help="workflow configuration",
-        type=str,
-        required=True,
-    )
+    parser = argparser.CommandLineParser("Setting workflow model parameter data")
+    parser.initialize_workflow_arguments()
     parser.add_argument(
         "-m",
         "--input_meta_file",
@@ -157,30 +112,7 @@ def parse():
         type=str,
         required=True,
     )
-    parser.add_argument(
-        "-p",
-        "--product_directory",
-        help="Directory for data products (output)",
-        type=str,
-        default='',
-        required=False,
-    )
-    parser.add_argument(
-        "-r",
-        "--reference_schema_directory",
-        help="Directory with reference schema",
-        type=str,
-        default=None,
-        required=False
-    )
-    parser.add_argument(
-        "-v",
-        "--verbosity",
-        dest="logLevel",
-        action="store",
-        default="info",
-        help="Log level to print (default is INFO)",
-    )
+    parser.initialize_default_arguments()
     return parser.parse_args()
 
 
@@ -191,11 +123,16 @@ if __name__ == "__main__":
     logger = logging.getLogger()
     logger.setLevel(gen.getLogLevelFromUser(args.logLevel))
 
-    workflow_config = collect_configuration(args, logger)
+    workflow_config = workflow_config.WorkflowConfiguration()
+    workflow_config.collect_configuration(
+        args.workflow_config_file,
+        args.reference_schema_directory)
 
-    output_meta, output_data = transform_input(args, workflow_config)
+    output_meta, output_data = transform_input(
+        args,
+        workflow_config.configuration)
 
-    file_writer = writer.ModelData(workflow_config)
+    file_writer = writer.ModelData(workflow_config.configuration)
     file_writer.write_model_file(output_meta,
                                  output_data,
                                  args.product_directory)
