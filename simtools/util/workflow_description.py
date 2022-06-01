@@ -16,6 +16,15 @@ class WorkflowDescription:
     """
     Workflow description, configuration and metadata class
 
+    Attributes
+    ----------
+    label: str
+        workflow (activity) name
+    args: argparse.Namespace
+        command line parameters
+    toplevel_meta: dict
+        top-level metadata definition
+
     Methods
     -------
     collect_workflow_configuration()
@@ -60,7 +69,6 @@ class WorkflowDescription:
         self._logger = logging.getLogger(__name__)
 
         self.args = args
-
         self.workflow_config = self._default_workflow_config()
         self.workflow_config['ACTIVITY']['NAME'] = label
         self.workflow_config['ACTIVITY']['ID'] = str(uuid.uuid4())

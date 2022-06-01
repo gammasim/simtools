@@ -8,13 +8,13 @@ class ModelDataWriter:
 
     Includes writing of metadata and model data.
 
-    Attributes:
-    -----------
+    Attributes
+    ----------
     workflow_config: WorkflowDescription
         workflow configuration
 
-    Methods:
-    --------
+    Methods
+    -------
     write_data()
         Write model data to file.
     write_metadata()
