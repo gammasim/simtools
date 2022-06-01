@@ -9,13 +9,13 @@ class CommandLineParser(argparse.ArgumentParser):
     Methods
     -------
     initialize_default_arguments
-       Initialize default arguments used for all applications
+       Initialize default arguments used by all applications
 
     """
 
     def initialize_default_arguments(self):
         """
-        Initialize default arguments used for all applications
+        Initialize default arguments used by all applications
         (e.g., verbosity or test flag)
 
 
