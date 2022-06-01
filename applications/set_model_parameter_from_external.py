@@ -34,6 +34,7 @@
             --workflow_config_file set_quantum_efficiency_from_external.yml \
             --input_meta_file qe_R12992-100-05b.usermeta.yml \
             --input_data_file qe_R12992-100-05b.data.ecsv \
+            --product_data_directory ./output/ \
             --reference_schema_directory ./REFERENCE_DIR
 
 
