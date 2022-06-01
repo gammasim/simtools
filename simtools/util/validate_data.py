@@ -13,11 +13,8 @@ class DataValidator:
 
     Attributes
     ----------
-    reference_data_columns: dict
-        data columns description
-    data_file_name: str
-        name of input data file
-
+    workflow_config: WorkflowDescription
+        workflow configuration
 
     Methods
     -------
@@ -114,7 +111,7 @@ class DataValidator:
         """
         Validate that required data columns are available,
         columns are in the correct units (if necessary apply a
-        unit conversion), and check min,max ranges.
+        unit conversion), and check ranges (minimum, maximum)
 
         This is not applied to columns of type 'string'
 
@@ -305,7 +302,7 @@ class DataValidator:
         Convert to reference unit (e.g., Angstrom to nm).
 
         Note on dimensionless columns:
-            - should be given in unit descriptor as unit: ''
+        - should be given in unit descriptor as unit: ''
         - be forgiving and assume that in cases no unit is given in the data files
           means that it should be dimensionless (e.g., for a efficiency)
 
