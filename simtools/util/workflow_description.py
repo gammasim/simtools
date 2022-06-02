@@ -51,18 +51,16 @@ class WorkflowDescription:
 
     def __init__(self,
                  label=None,
-                 args=None,
-                 toplevel_meta=None):
+                 args=None):
         """
         Initialize workflow configuration class
 
         Parameters
         ----------
+        label: str
+            workflow label
         args: argparse.Namespace
             command line parameters
-        toplevel_meta: dict
-            top-level metadata definition
-            (default behaviour: read from template file)
 
         """
 
@@ -76,7 +74,7 @@ class WorkflowDescription:
         if self.args:
             self.collect_workflow_configuration()
 
-        self._collect_toplevel_template()
+        self.toplevel_meta = self._collect_toplevel_template()
 
         if self.args:
             self.collect_product_meta_data()
@@ -546,6 +544,7 @@ class WorkflowDescription:
 
         """
 
+        _toplevel_meta = None
         try:
             if self.workflow_config['DATAMODEL']['TOPLEVELMODEL']:
                 _workflow_config_file = Path(
@@ -555,13 +554,13 @@ class WorkflowDescription:
                 self._logger.debug(
                     "Reading top-level metadata template from {}".format(
                         _workflow_config_file))
-                self.toplevel_meta = gen.collectDataFromYamlOrDict(
+                _toplevel_meta = gen.collectDataFromYamlOrDict(
                     _workflow_config_file, None)
         except KeyError:
             self._logger.error('Error reading DATAMODEL:TOPLEVELMODEL')
             raise
 
-        return self.toplevel_meta
+        return _toplevel_meta
 
     def userinput_schema_file_name(self):
         """
