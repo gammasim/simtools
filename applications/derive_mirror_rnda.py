@@ -5,7 +5,7 @@
     -------
     This application derives the parameter mirror_reflection_random_angle \
     (mirror roughness, also called rnda here) \
-    for a given set of measured photon containment diameter (e.g. 80\% containment, D80)
+    for a given set of measured photon containment diameter (e.g. 80\% containment) \
     of individual mirrors.  The mean value of the measured containment diameters \
     in cm is required and its sigma can be given optionally but will only be used for plotting. \
 
@@ -199,7 +199,13 @@ def parse():
 def define_telescope_model(workflow):
     """
     Define telescope model and update configuration
-    (if required)
+    with mirror list and/or random focal length given
+    as input
+
+    Attributes
+    ----------
+    workflow_config: WorkflowDescription
+       workflow configuration
 
     Returns
     ------
@@ -219,8 +225,7 @@ def define_telescope_model(workflow):
         tel.changeParameter("mirror_list", workflow.configuration('mirror_list'))
         tel.addParameterFile("mirror_list", mirrorListFile)
     if workflow.configuration('random_flen') is not None:
-        tel.changeParameter("random_focal_length",
-                            str(workflow.configuration('random_flen')))
+        tel.changeParameter("random_focal_length", str(workflow.configuration('random_flen')))
 
     return tel
 
@@ -280,18 +285,18 @@ def print_and_write_results(workflow,
 
 def get_psf_containment(logger, workflow):
     """
-    Read measured containment values from file and return
-    mean and sigma
+    Read measured single-mirror point-spread function (containment)
+    from file and return mean and sigma
 
     """
 
     _psf_list = Table.read(
         workflow.configuration('psf_measurement'), format='ascii.ecsv')
     try:
-         workflow.configuration(
+        workflow.configuration(
              'psf_measurement_containment_mean',
              np.nanmean(np.array(_psf_list['psf_opt'].to('cm').value)))
-         workflow.configuration(
+        workflow.configuration(
              'psf_measurement_containment_sigma',
              np.nanstd(np.array(_psf_list['psf_opt'].to('cm').value)))
     except KeyError:
