@@ -52,7 +52,8 @@ def test_validate_data_type_email():
     with pytest.raises(
         ValueError,
         match=r"invalid email format in field EMAIL: me-blabla.de"):
-            date_validator._validate_data_type(email_schema1, email_key, 'me-blabla.de')
+        date_validator._validate_data_type(email_schema1, email_key, 'me-blabla.de')
+
 
 def test_validate_data_type_schema_str():
 
@@ -64,7 +65,8 @@ def test_validate_data_type_schema_str():
     date_validator._validate_data_type(
         test_schema_1, test_key, 25)
 
-def test__validate_data_type_schema_float():
+
+def test_validate_data_type_schema_float():
 
     date_validator = validator.SchemaValidator(None, None)
     test_key = 'SUBTYPE'
@@ -78,9 +80,10 @@ def test__validate_data_type_schema_float():
     with pytest.raises(
         ValueError,
         match=r"invalid type for key SUBTYPE. Expected: float, Found: str"):
-            date_validator._validate_data_type(test_schema_2, test_key, 'abc')
+        date_validator._validate_data_type(test_schema_2, test_key, 'abc')
 
-def test__validate_data_type_schema_bool():
+
+def test_validate_data_type_schema_bool():
 
     date_validator = validator.SchemaValidator(None, None)
     test_key = 'SUBTYPE'
@@ -91,7 +94,8 @@ def test__validate_data_type_schema_bool():
     date_validator._validate_data_type(
         test_schema_4, test_key, True)
 
-def test__validate_data_type_schema_int():
+
+def test_validate_data_type_schema_int():
 
     date_validator = validator.SchemaValidator(None, None)
     test_key = 'SUBTYPE'
@@ -101,13 +105,33 @@ def test__validate_data_type_schema_int():
         test_schema_3, test_key, 25)
 
     with pytest.raises(
-        ValueError,
-        match=r"invalid type for key SUBTYPE. Expected: int, Found: str"):
-            date_validator._validate_data_type(test_schema_3, test_key, 'abc')
+        ValueError, match=r"invalid type for key SUBTYPE. Expected: int, Found: str"):
+        date_validator._validate_data_type(test_schema_3, test_key, 'abc')
     with pytest.raises(
-        ValueError,
-        match=r"invalid type for key SUBTYPE. Expected: int, Found: float"):
-            date_validator._validate_data_type(test_schema_3, test_key, 25.5)
+        ValueError, match=r"invalid type for key SUBTYPE. Expected: int, Found: float"):
+        date_validator._validate_data_type(test_schema_3, test_key, 25.5)
+
+
+def test_validate_schema():
+
+    date_validator = validator.SchemaValidator(None, None)
+    reference_schema = get_generic_instrument_reference_schema()
+    test_schema_1 = get_instrument_test_schema()
+    date_validator._validate_schema(reference_schema, test_schema_1)
+
+    test_schema_2 = get_instrument_test_schema()
+    test_schema_2['INSTRUMENT'].pop('CLASS')
+    with pytest.raises(ValueError, match=r"Missing required field CLASS"):
+        date_validator._validate_schema(reference_schema, test_schema_2)
+
+    reference_schema_2 = get_generic_instrument_reference_schema()
+    _telid = {'type': int, 'required': False}
+    reference_schema_2['INSTRUMENT']['TELID'] = _telid
+    test_schema_3 = get_instrument_test_schema()
+    test_schema_3['INSTRUMENT']['TELID'] = 5.5
+    with pytest.raises(ValueError):
+        date_validator._validate_schema(reference_schema_2, test_schema_3)
+
 
 def test_validate_instrument_list():
 
@@ -128,10 +152,9 @@ def test_validate_instrument_list():
 
     del instrument_1['INSTRUMENT']['CLASS']
     instrument_list.append(instrument_1)
-    with pytest.raises(
-        ValueError,
-        match=r"Missing required field CLASS"):
-            date_validator._validate_instrument_list(instrument_list)
+    with pytest.raises(ValueError, match=r"Missing required field CLASS"):
+        date_validator._validate_instrument_list(instrument_list)
+
 
 def test_check_if_field_is_optional():
 
@@ -139,41 +162,11 @@ def test_check_if_field_is_optional():
 
     test_value_1 = {'required': False}
     test_value_2 = {'required': True}
+    test_value_3 = {'required': None}
 
     assert date_validator._field_is_optional(test_value_1) == True
     assert date_validator._field_is_optional(test_value_2) == False
-
-def test_field_is_optional():
-
-    date_validator = validator.SchemaValidator(None, None)
-
-    value_1 = {'required': True}
-    value_2 = {'required': False}
-    value_3 = {'required': None}
-
-    assert date_validator._field_is_optional(value_1) == False
-    assert date_validator._field_is_optional(value_2) == True
-    assert date_validator._field_is_optional(value_3) == True
-    # TODO understand why no KeyError is raised
-    # value_4 = {'wrong_key': True}
-    # with pytest.raises(KeyError):
-    #    date_validator._field_is_optional(value_4)
-
-def test_get_reference_schema_file():
-
-    _workflow_config = get_generic_workflow_config()
-
-    date_validator = validator.SchemaValidator(None, None)
-
-    test_string = date_validator._get_reference_schema_file(
-        _workflow_config)
-
-    assert test_string == "directory/schema"
-
-    del _workflow_config["CTASIMPIPE"]["DATAMODEL"]["USERINPUTSCHEMA"]
-    with pytest.raises(KeyError, match=r"USERINPUTSCHEMA"):
-        date_validator._get_reference_schema_file(
-            _workflow_config)
+    assert date_validator._field_is_optional(test_value_3) == True
 
 
 def test_remove_line_feed():
@@ -214,6 +207,21 @@ def get_generic_workflow_config():
         }
     }
 
+
+def get_instrument_test_schema():
+
+    return {
+        'INSTRUMENT': {
+            'SITE': 'north',
+            'CLASS': 'camera',
+            'TYPE': 'lst',
+            'SUBTYPE': 'subtype',
+            'ID': 'id',
+            'TELID': 5.5
+        }
+    }
+
+
 def get_generic_instrument_reference_schema():
 
     return {
@@ -237,7 +245,6 @@ def get_generic_instrument_reference_schema():
             'ID': {
                 'type': 'str',
                 'required': True
-            }
+            },
         }
     }
-
