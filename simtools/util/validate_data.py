@@ -29,7 +29,7 @@ class DataValidator:
 
     """
 
-    def __init__(self, workflow):
+    def __init__(self, workflow=None):
         """
         Initalize validation class and read required
         reference data columns
@@ -43,8 +43,9 @@ class DataValidator:
 
         self._logger = logging.getLogger(__name__)
 
-        self._reference_data_columns = workflow.reference_data_columns()
-        self._data_file_name = workflow.userinput_data_file_name()
+        if workflow:
+            self._reference_data_columns = workflow.reference_data_columns()
+            self._data_file_name = workflow.userinput_data_file_name()
 
         self.data_table = None
 

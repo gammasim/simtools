@@ -10,48 +10,16 @@ from astropy.utils.diff import report_diff_values
 from astropy import units as u
 
 import simtools.util.validate_data as ds
+import simtools.util.workflow_description as workflow_config
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 
-def get_reference_columns():
-    """
-    return a test reference data column definition
-
-    """
-    return {
-        'wavelength': {
-            'description': 'wavelength',
-            'required_column': True,
-            'unit': 'nm',
-            'type': 'float32',
-            'required_range': {'unit': 'nm', 'min': 300, 'max': 700},
-            'attribute': ['remove_duplicates', 'sort']
-        },
-        'qe': {
-            'description': 'average quantum or photon detection efficiency',
-            'required_column': True,
-            'unit': 'dimensionless',
-            'type': 'float32',
-            'allowed_range': {'unit': 'unitless', 'min': 0.0, 'max': 1.0}
-        },
-        'abc': {
-            'description': 'not required',
-            'required_column': False,
-            'unit': 'kg',
-            'type': 'float32',
-            'allowed_range': {'unit': 'kg', 'min': 0.0, 'max': 100.0}
-        }
-    }
-
-
 def test_sort_data():
 
-    data_validator = ds.DataValidator(
-        get_reference_columns(),
-        None
-    )
+    data_validator = ds.DataValidator()
+    data_validator._reference_data_columns = get_reference_columns()
 
     table_1 = Table()
     table_1['wavelength'] = Column([300.0, 350.0, 315.], unit='nm', dtype='float32')
@@ -75,10 +43,8 @@ def test_sort_data():
     reverse_sorted_data_columns = get_reference_columns()
     reverse_sorted_data_columns['wavelength']['attribute'] = \
         ['remove_duplicates', 'reversesort']
-    data_validator_reverse = ds.DataValidator(
-        reverse_sorted_data_columns,
-        None
-    )
+    data_validator_reverse = ds.DataValidator()
+    data_validator_reverse._reference_data_columns = reverse_sorted_data_columns
 
     data_validator_reverse.data_table = table_1
     data_validator_reverse._sort_data()
@@ -93,10 +59,8 @@ def test_sort_data():
 
 def test_check_data_for_duplicates():
 
-    data_validator = ds.DataValidator(
-        get_reference_columns(),
-        None
-    )
+    data_validator = ds.DataValidator()
+    data_validator._reference_data_columns = get_reference_columns()
 
     table_unique = Table()
     table_unique['wavelength'] = Column([300.0, 350.0], unit='nm', dtype='float32')
@@ -140,7 +104,7 @@ def test_check_data_for_duplicates():
 
 def test_interval_check_allow_range():
 
-    data_validator = ds.DataValidator(None, None)
+    data_validator = ds.DataValidator()
 
     assert data_validator._interval_check((0.1, 0.9), (0., 1.), 'allowed_range') == True
     assert data_validator._interval_check((0., 1.), (0., 1.), 'allowed_range') == True
@@ -150,9 +114,9 @@ def test_interval_check_allow_range():
     assert data_validator._interval_check((-1., 1.1), (0., 1.), 'allowed_range') == False
 
 
-def test__interval_check_required_range():
+def test_interval_check_required_range():
 
-    data_validator = ds.DataValidator(None, None)
+    data_validator = ds.DataValidator()
 
     assert data_validator._interval_check((250., 700.), (300., 600), 'required_range') == True
     assert data_validator._interval_check((300., 600.), (300., 600), 'required_range') == True
@@ -162,14 +126,10 @@ def test__interval_check_required_range():
     assert data_validator._interval_check((350., 500.), (300., 600), 'required_range') == False
 
 
-def test__check_range():
+def test_check_range():
 
-    data_validator = ds.DataValidator(None, None)
-
-    data_validator = ds.DataValidator(
-        get_reference_columns(),
-        None
-    )
+    data_validator = ds.DataValidator()
+    data_validator._reference_data_columns = get_reference_columns()
 
     col_1 = Column(name='qe', data=[0.1, 0.5], dtype='float32')
     data_validator._check_range(
@@ -192,12 +152,10 @@ def test__check_range():
             'failed_range')
 
 
-def test__column_units():
+def test_column_units():
 
-    data_validator = ds.DataValidator(
-        get_reference_columns(),
-        None
-    )
+    data_validator = ds.DataValidator()
+    data_validator._reference_data_columns = get_reference_columns()
 
     table_1 = Table()
     table_1['wavelength'] = Column([300.0, 350.0], unit='nm', dtype='float32')
@@ -224,12 +182,10 @@ def test__column_units():
             data_validator._check_and_convert_units(col)
 
 
-def test__check_required_columns():
+def test_check_required_columns():
 
-    data_validator = ds.DataValidator(
-        get_reference_columns(),
-        None
-    )
+    data_validator = ds.DataValidator()
+    data_validator._reference_data_columns = get_reference_columns()
 
     table_1 = Table()
     table_1['wavelength'] = Column([300.0, 350.0], unit='nm', dtype='float32')
@@ -245,3 +201,53 @@ def test__check_required_columns():
 
     with pytest.raises(KeyError, match=r"'qe'"):
         data_validator._check_required_columns()
+
+
+def get_reference_columns():
+    """
+    return a test reference data column definition
+
+    """
+    return {
+        'wavelength': {
+            'description': 'wavelength',
+            'required_column': True,
+            'unit': 'nm',
+            'type': 'float32',
+            'required_range': {'unit': 'nm', 'min': 300, 'max': 700},
+            'attribute': ['remove_duplicates', 'sort']
+        },
+        'qe': {
+            'description': 'average quantum or photon detection efficiency',
+            'required_column': True,
+            'unit': 'dimensionless',
+            'type': 'float32',
+            'allowed_range': {'unit': 'unitless', 'min': 0.0, 'max': 1.0}
+        },
+        'abc': {
+            'description': 'not required',
+            'required_column': False,
+            'unit': 'kg',
+            'type': 'float32',
+            'allowed_range': {'unit': 'kg', 'min': 0.0, 'max': 100.0}
+        }
+    }
+
+
+def get_generic_workflow_config():
+
+    return {
+        'CTASIMPIPE': {
+            'ACTIVITY': {
+                'NAME': 'workflow_name'
+            },
+            'DATAMODEL': {
+                'USERINPUTSCHEMA': 'schema',
+                'TOPLEVELMODEL': 'model',
+                'SCHEMADIRECTORY': 'directory'
+            },
+            'PRODUCT': {
+                'DIRECTORY': None
+            }
+        }
+    }
