@@ -51,7 +51,7 @@ class ModelDataWriter:
 
         _file = self.workflow_config.product_data_file_name()
         try:
-            self._logger.debug("Writing data to {}".format(_file))
+            self._logger.info("Writing data to {}".format(_file))
             product_data.write(
                 _file,
                 format=self.workflow_config.product_data_file_format(),
@@ -70,10 +70,10 @@ class ModelDataWriter:
 
         if self.workflow_config.toplevel_meta:
             ymlfile = self.workflow_config.product_data_file_name('.yml')
-            self._logger.debug(
+            self._logger.info(
                 "Writing metadata to {}".format(ymlfile))
             with open(ymlfile, 'w', encoding='UTF-8') as file:
-                yaml.dump(
+                yaml.safe_dump(
                     self.workflow_config.toplevel_meta,
                     file,
                     sort_keys=False)
