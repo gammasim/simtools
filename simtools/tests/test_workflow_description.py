@@ -8,75 +8,92 @@ import simtools.util.workflow_description as workflow
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
-def test_read_instrument_name():
 
-    workflow_1 = workflow.WorkflowDescription(
-        get_generic_workflow_config(),
-        get_generic_toplevel_meta())
+def test_fill_product_association_identifier():
 
-    user_meta_1 = get_generic_user_meta()
-    workflow_1._user_meta = user_meta_1
-    workflow_1._fill_user_meta()
+    workflow_1 = workflow.WorkflowDescription()
+    workflow_1.toplevel_meta = get_generic_toplevel_meta()
+    workflow_1.toplevel_meta['CTA']['PRODUCT']['ASSOCIATION'] = \
+        get_generic_user_meta()['PRODUCT']['ASSOCIATION']
+    workflow_1._fill_product_association_identifier()
 
-    for association in user_meta_1['PRODUCT']['ASSOCIATION']:
-        print(association)
-    assert (
-        file_workflow._read_instrument_name(user_meta_1['PRODUCT']['ASSOCIATION'][0])
-        == "South-MST-FlashCam-D")
-    assert (
-        file_workflow._read_instrument_name(user_meta_1['PRODUCT']['ASSOCIATION'][1])
-        == "North-MST-NectarCam-7")
-
-    user_meta_2 = get_generic_user_meta()
-    user_meta_2["PRODUCT"]["ASSOCIATION"][0]["TYPE"] = "Structure"
-    file_workflow._user_meta = user_meta_2
-    file_workflow._fill_user_meta()
-
-    assert (
-        file_workflow._read_instrument_name(user_meta_2["PRODUCT"]["ASSOCIATION"][0])
-        == "South-MST-Structure-D")
-
-    user_meta_3 = get_generic_user_meta()
-    user_meta_3["PRODUCT"]["ASSOCIATION"][0]["SITE"] = "Neptun"
-    file_workflow._user_meta = user_meta_3
-    file_workflow._fill_user_meta()
-
-    with pytest.raises(ValueError):
-        file_workflow._read_instrument_name(user_meta_3["PRODUCT"]["ASSOCIATION"][0])
-
-
-def test_fill_user_meta():
-
-    user_meta_1 = get_generic_user_meta()
-
-    file_writer = workflow.ModelData(
-        get_generic_workflow_config(),
-        get_generic_toplevel_meta())
-    file_workflow._user_meta = user_meta_1
-    file_workflow._fill_user_meta()
-
-    user_meta_2 = {
-        'CONTACT': 'my_name'
-    }
-    file_workflow._user_meta = user_meta_2
+    workflow_1.toplevel_meta['CTA']['PRODUCT'].pop('ASSOCIATION')
 
     with pytest.raises(KeyError):
-        file_workflow._fill_user_meta()
+        workflow_1._fill_product_association_identifier()
+
+
+def test_read_instrument_name():
+
+    _workflow = workflow.WorkflowDescription()
+    _workflow.toplevel_meta = get_generic_toplevel_meta()
+
+    _association_1 = \
+        get_generic_user_meta()['PRODUCT']['ASSOCIATION'][0]
+    _association_2 = \
+        get_generic_user_meta()['PRODUCT']['ASSOCIATION'][1]
+
+    assert (
+        _workflow._read_instrument_name(_association_1)
+        == 'South-MST-FlashCam-D')
+    assert (
+        _workflow._read_instrument_name(_association_2)
+        == 'North-MST-NectarCam-7')
+
+    _association_3 = \
+        get_generic_user_meta()['PRODUCT']['ASSOCIATION'][0]
+    _association_3['SITE'] = 'Moon'
+
+    with pytest.raises(ValueError):
+        _workflow._read_instrument_name(_association_3)
+
+
+def test_merge_config_dicts():
+
+    d_low_priority = {
+        'REFERENCE': {'VERSION': '0.1.0'},
+        'ACTIVITY': {
+            'NAME': 'SetParameterFromExternal',
+            'DESCRIPTION': 'Set data columns'
+        },
+        'DATAMODEL': 'model-A',
+        'PRODUCT': None
+    }
+
+    d_high_priority = {
+        'REFERENCE': {'VERSION': '0.2.0'},
+        'ACTIVITY': {'NAME': None},
+        'PRODUCT': {'DIRECTORY': './'},
+        'DATAMODEL': 'model-B'
+    }
+
+    _workflow = workflow.WorkflowDescription()
+    _workflow._merge_config_dicts(d_low_priority, d_high_priority)
+
+    d_merged = {
+        'REFERENCE': {'VERSION': '0.2.0'},
+        'ACTIVITY': {
+            'NAME': 'SetParameterFromExternal',
+            'DESCRIPTION': 'Set data columns'
+        },
+        'PRODUCT': {'DIRECTORY': './'},
+        'DATAMODEL': 'model-B',
+    }
+
+    assert d_merged == d_high_priority
 
 
 def test_fill_activity_meta():
 
-    file_writer_1 = workflow.ModelData(
-        get_generic_workflow_config(),
-        get_generic_toplevel_meta())
+    file_writer_1 = workflow.WorkflowDescription()
+    file_writer_1.toplevel_meta = get_generic_toplevel_meta()
     file_writer_1._fill_activity_meta()
 
-    workflow_config_2 = get_generic_workflow_config()
-    del workflow_config_2['CTASIMPIPE']['ACTIVITY']['NAME']
-    workflow_config_2['CTASIMPIPE']['ACTIVITY']['NONAME'] = 'workflow_name'
-    file_writer_2 = workflow.ModelData(
-        workflow_config_2,
-        get_generic_toplevel_meta())
+    file_writer_2 = workflow.WorkflowDescription()
+    file_writer_2.toplevel_meta = get_generic_toplevel_meta()
+
+    del file_writer_2.workflow_config['ACTIVITY']['NAME']
+    file_writer_2.workflow_config['ACTIVITY']['NONAME'] = 'workflow_name'
 
     with pytest.raises(KeyError):
         file_writer_2._fill_activity_meta()
@@ -143,25 +160,6 @@ def get_generic_toplevel_meta():
                 'SOFTWARE': {
                     'NAME': 'gammasim-tools',
                     'VERSION': None}
-            }
-        }
-    }
-
-
-def get_generic_workflow_config():
-
-    return {
-        'CTASIMPIPE': {
-            'ACTIVITY': {
-                'NAME': 'workflow_name'
-            },
-            'DATAMODEL': {
-                'USERINPUTSCHEMA': 'schema',
-                'TOPLEVELMODEL': 'model',
-                'SCHEMADIRECTORY': 'directory'
-            },
-            'PRODUCT': {
-                'DIRECTORY': None
             }
         }
     }
