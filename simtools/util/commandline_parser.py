@@ -86,17 +86,6 @@ class CommandLineParser(argparse.ArgumentParser):
             default="Current",
         )
 
-    def parse(self):
-        """
-        Parse command line arguments.
-        Basic evaluation of arguements.
-
-        """
-
-        args = self.parse_args()
-
-        return args
-
     @staticmethod
     def efficiency_interval(value):
         """

@@ -103,8 +103,7 @@ class WorkflowDescription:
                 self.workflow_config['INPUT']['DATAFILE'])
 
         for arg in vars(self.args):
-            if getattr(self.args, arg):
-                self.workflow_config['CONFIGURATION'][str(arg)] = getattr(self.args, arg)
+            self.workflow_config['CONFIGURATION'][str(arg)] = getattr(self.args, arg)
 
         if self.workflow_config['CONFIGURATION']['configFile']:
             cfg.setConfigFileName(self.workflow_config['CONFIGURATION']['configFile'])
