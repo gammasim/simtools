@@ -2,6 +2,7 @@ import datetime
 import logging
 import re
 
+import simtools.util.data_model as data_model
 import simtools.util.general as gen
 
 
@@ -24,15 +25,13 @@ class SchemaValidator:
 
     """
 
-    def __init__(self, schema_file=None, data_dict=None):
+    def __init__(self, data_dict=None):
         """
         Initalize validation class and read required
         reference schema
 
         Parameters
         ----------
-        schema_file: str
-            file nome for user input schema
         data_dict: dict
             User-provided metadata dict to be validated against
             reference schema
@@ -41,14 +40,7 @@ class SchemaValidator:
 
         self._logger = logging.getLogger(__name__)
 
-        user_input_schema = schema_file
-        if user_input_schema:
-            self._logger.debug(
-                "Reading reference schema from {}".format(
-                    user_input_schema))
-            self._reference_schema = gen.collectDataFromYamlOrDict(
-                user_input_schema, None)
-
+        self._reference_schema = data_model.userinput_reference_schema()
         self.data_dict = data_dict
 
     def validate_and_transform(self, user_meta_file_name=None):
