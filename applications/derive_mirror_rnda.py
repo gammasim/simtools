@@ -116,8 +116,8 @@
         * Fix the setStyle. For some reason, sphinx cannot built docs with it on.
 """
 
-
 import logging
+import os
 
 import numpy as np
 import astropy.units as u
@@ -133,13 +133,13 @@ import simtools.util.workflow_description as workflow_config
 import simtools.util.model_data_writer as writer
 
 
-def parse():
+def parse(label):
     """
     Parse command line configuration
 
     """
 
-    parser = argparser.CommandLineParser()
+    parser = argparser.CommandLineParser(label)
     parser.initialize_telescope_model_arguments()
     psf_group = parser.add_mutually_exclusive_group()
     psf_group.add_argument(
@@ -184,6 +184,7 @@ def parse():
     parser.add_argument(
         "--random_flen",
         help="Value to replace the default random_focal_length.",
+        default=None,
         type=float, required=False,
     )
     parser.add_argument(
@@ -191,7 +192,6 @@ def parse():
         help="no tuning of random_reflection_angle (a single case will be simulated).",
         action="store_true", required=False,
     )
-    parser.initialize_toplevel_metadata_scheme()
     parser.initialize_default_arguments()
     return parser.parse_args()
 
@@ -311,8 +311,8 @@ def get_psf_containment(logger, workflow):
 
 def main():
 
-    args = parse()
-    label = "derive_mirror_rnda"
+    label = os.path.basename(__file__).split('.')[0]
+    args = parse(label)
 
     logger = logging.getLogger()
     logger.setLevel(gen.getLogLevelFromUser(args.logLevel))
