@@ -273,9 +273,7 @@ class DataValidator:
                     column_name))
             raise
 
-        if (reference_unit == 'dimensionless' or
-                reference_unit is None or
-                reference_unit == 'None'):
+        if (reference_unit == 'dimensionless' or reference_unit is None):
             return u.dimensionless_unscaled
 
         return u.Unit(reference_unit)
