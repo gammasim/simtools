@@ -18,8 +18,6 @@
         User-provided meta data file (yml format)
     input_data (str, required)
         User-provided data file
-    reference_schema_directory (str, required)
-        directory for reference schema
     verbosity (str, optional)
         Log level to print (default=INFO).
 
@@ -34,13 +32,12 @@
             --workflow_config_file set_quantum_efficiency_from_external.yml \
             --input_meta_file qe_R12992-100-05b.usermeta.yml \
             --input_data_file qe_R12992-100-05b.data.ecsv \
-            --product_data_directory ./output/ \
-            --reference_schema_directory ./REFERENCE_DIR
 
 
 """
 
 import logging
+import os
 
 import simtools.util.general as gen
 import simtools.util.validate_data as ds
@@ -49,14 +46,14 @@ import simtools.util.workflow_description as workflow_config
 import simtools.util.model_data_writer as writer
 
 
-def parse():
+def parse_args():
     """
     Parse command line configuration
 
     """
 
-    parser = argparser.CommandLineParser("Setting workflow model parameter data")
-    parser.initialize_workflow_arguments()
+    parser = argparser.CommandLineParser(
+        os.path.basename(__file__))
     parser.add_argument(
         "-m",
         "--input_meta_file",
@@ -72,12 +69,12 @@ def parse():
         required=True,
     )
     parser.initialize_default_arguments()
-    return parser.parse_args()
+    return parser.parse()
 
 
 if __name__ == "__main__":
 
-    args = parse()
+    args = parse_args()
 
     logger = logging.getLogger()
     logger.setLevel(gen.getLogLevelFromUser(args.logLevel))
