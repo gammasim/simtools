@@ -46,14 +46,13 @@ import simtools.util.workflow_description as workflow_config
 import simtools.util.model_data_writer as writer
 
 
-def parse_args():
+def parse(label):
     """
     Parse command line configuration
 
     """
 
-    parser = argparser.CommandLineParser(
-        os.path.basename(__file__))
+    parser = argparser.CommandLineParser(label)
     parser.add_argument(
         "-m",
         "--input_meta_file",
@@ -69,17 +68,18 @@ def parse_args():
         required=True,
     )
     parser.initialize_default_arguments()
-    return parser.parse()
+    return parser.parse_args()
 
 
 if __name__ == "__main__":
 
-    args = parse_args()
+    label = os.path.basename(__file__).split('.')[0]
+    args = parse(label)
 
     logger = logging.getLogger()
     logger.setLevel(gen.getLogLevelFromUser(args.logLevel))
 
-    workflow = workflow_config.WorkflowDescription(args=args)
+    workflow = workflow_config.WorkflowDescription(label=label, args=args)
 
     data_validator = ds.DataValidator(workflow)
     data_validator.validate()
