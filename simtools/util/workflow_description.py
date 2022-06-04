@@ -6,6 +6,7 @@ import uuid
 
 import simtools.config as cfg
 import simtools.io_handler as io
+import simtools.util.data_model as data_model
 import simtools.util.general as gen
 import simtools.util.validate_schema as vs
 from simtools.util import names
@@ -22,8 +23,6 @@ class WorkflowDescription:
         workflow (activity) name
     args: argparse.Namespace
         command line parameters
-    toplevel_meta: dict
-        top-level metadata definition
 
     Methods
     -------
@@ -43,8 +42,6 @@ class WorkflowDescription:
         Return product data file name
     reference_data_columns()
         Return reference data columns expected in input data
-    userinput_schema_file_name()
-        Return userinput schema file name
 
 
     """
@@ -74,7 +71,7 @@ class WorkflowDescription:
         if self.args:
             self.collect_workflow_configuration()
 
-        self.toplevel_meta = self._collect_toplevel_template()
+        self.toplevel_meta = data_model.toplevel_reference_schema()
 
         if self.args:
             self.collect_product_meta_data()
@@ -95,21 +92,6 @@ class WorkflowDescription:
         self._read_workflow_configuration(
             self._from_args('workflow_config_file'))
 
-        self.workflow_config['DATAMODEL']['TOPLEVELMODEL'] = \
-            self._from_args(
-                'toplevel_metadata_schema',
-                self.workflow_config['DATAMODEL']['TOPLEVELMODEL']
-            )
-
-        self.workflow_config['PRODUCT']['DIRECTORY'] = \
-            self._from_args(
-                'product_data_directory',
-                self.workflow_config['PRODUCT']['DIRECTORY']
-            )
-        if self.workflow_config['PRODUCT']['DIRECTORY']:
-            self.workflow_config['PRODUCT']['DIRECTORY'] = \
-                Path(self.workflow_config['PRODUCT']['DIRECTORY']).absolute()
-
         self.workflow_config['INPUT']['METAFILE'] = \
             self._from_args(
                 'input_meta_file',
@@ -121,7 +103,11 @@ class WorkflowDescription:
                 self.workflow_config['INPUT']['DATAFILE'])
 
         for arg in vars(self.args):
-            self.workflow_config['CONFIGURATION'][str(arg)] = getattr(self.args, arg)
+            if getattr(self.args, arg):
+                self.workflow_config['CONFIGURATION'][str(arg)] = getattr(self.args, arg)
+
+        if self.workflow_config['CONFIGURATION']['configFile']:
+            cfg.setConfigFileName(self.workflow_config['CONFIGURATION']['configFile'])
 
     def collect_product_meta_data(self):
         """
@@ -223,7 +209,6 @@ class WorkflowDescription:
         except KeyError:
             self._logger.error(
                 "Missing CTA:PRODUCT:ID in metadata")
-            print(self.toplevel_meta)
             raise
 
         if not suffix:
@@ -273,7 +258,7 @@ class WorkflowDescription:
 
         Output directory is determined following this sorted
         list:
-        1. self.product_data_dir is set (e.g., through command line)
+        1. PRODUCT:DIRECTORY is set (e.g., through workflow file)
         2. gammasim-tools output location
 
         Returns
@@ -296,9 +281,10 @@ class WorkflowDescription:
             path.mkdir(parents=True, exist_ok=True)
             _output_dir = path.absolute()
         else:
-            _output_dir = io.getApplicationOutputDirectory(
-                cfg.get("outputLocation"),
-                _output_label)
+            _output_dir = cfg.get("outputLocation")
+
+        _output_dir = io.getApplicationOutputDirectory(
+            _output_dir, _output_label)
 
         self._logger.info("Outputdirectory {}".format(_output_dir))
         return _output_dir
@@ -360,7 +346,7 @@ class WorkflowDescription:
 
         """
 
-        _schema_validator = vs.SchemaValidator(self.userinput_schema_file_name())
+        _schema_validator = vs.SchemaValidator()
         _user_meta = _schema_validator.validate_and_transform(
             self.workflow_config['INPUT']['METAFILE'])
 
@@ -533,50 +519,6 @@ class WorkflowDescription:
             else:
                 dict2[k] = dict1[k]
 
-    def _collect_toplevel_template(self):
-        """
-        Fill toplevel data model template from schema file
-
-        Returns
-        -------
-        dict
-            top-level meta data template
-
-        """
-
-        _toplevel_meta = None
-        try:
-            if self.workflow_config['DATAMODEL']['TOPLEVELMODEL']:
-                _workflow_config_file = Path(
-                    self._read_schema_directory(),
-                    self.workflow_config['DATAMODEL']['TOPLEVELMODEL']
-                )
-                self._logger.debug(
-                    "Reading top-level metadata template from {}".format(
-                        _workflow_config_file))
-                _toplevel_meta = gen.collectDataFromYamlOrDict(
-                    _workflow_config_file, None)
-        except KeyError:
-            self._logger.error('Error reading DATAMODEL:TOPLEVELMODEL')
-            raise
-
-        return _toplevel_meta
-
-    def userinput_schema_file_name(self):
-        """
-        Return user meta file name.
-        (full path)
-        """
-
-        try:
-            if self.workflow_config['DATAMODEL']['USERINPUTSCHEMA']:
-                return Path(
-                    self._read_schema_directory(),
-                    self.workflow_config['DATAMODEL']['USERINPUTSCHEMA'])
-        except KeyError:
-            self._logger.error("Missing description of DATAMODEL:USERINPUTSCHEMA")
-            raise
-
     def userinput_data_file_name(self):
         """
         Return user input data file
@@ -588,19 +530,6 @@ class WorkflowDescription:
         except KeyError:
             self._logger.error("Missing description of INPUT:DATAFILE")
             raise
-
-    def _read_schema_directory(self):
-        """
-        Return directory for metadata schema file
-
-
-        """
-
-        if 'reference_schema_directory' in self.workflow_config['CONFIGURATION'] \
-                and self.workflow_config['CONFIGURATION']['reference_schema_directory']:
-            return self.workflow_config['CONFIGURATION']['reference_schema_directory']
-
-        return ""
 
     @staticmethod
     def _default_workflow_config():
@@ -622,7 +551,6 @@ class WorkflowDescription:
             },
             'DATAMODEL': {
                 'USERINPUTSCHEMA': None,
-                'TOPLEVELMODEL': None,
             },
             'INPUT': {
                 'METAFILE': None,
@@ -633,6 +561,7 @@ class WorkflowDescription:
                 'FILENAME': None,
             },
             'CONFIGURATION': {
+                'configFile': './config.yml',
                 'logLevel': 'INFO',
                 'test': False,
             }
