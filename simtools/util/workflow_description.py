@@ -184,6 +184,7 @@ class WorkflowDescription:
         b. Toplevel meta ['PRODUCT']['ID'] + label
 
         File name always used CTA:PRODUCT:ID for unique identification
+        (not applied when CONFIGURATION:test is true)
 
         Returns
         -------
@@ -200,7 +201,10 @@ class WorkflowDescription:
 
         _directory = self.product_data_directory()
         try:
-            _filename = self.workflow_config['ACTIVITY']['ID']
+            if self.workflow_config['CONFIGURATION']['test']:
+                _filename = 'TEST'
+            else:
+                _filename = self.workflow_config['ACTIVITY']['ID']
             if self.workflow_config['PRODUCT']['FILENAME']:
                 _filename += '-' + self.workflow_config['PRODUCT']['FILENAME']
             else:
