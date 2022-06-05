@@ -75,4 +75,4 @@ jobs:
         shell: bash -l {0}
         run: pytest --cov --cov-report=xml
 
-      - uses: codecov/codecov-action@v2
+      - uses: codecov/codecov-action@v3.1.0
