@@ -11,7 +11,7 @@ logger.setLevel(logging.DEBUG)
 
 def test_validate_data_type_datetime():
 
-    date_validator = validator.SchemaValidator(None, None)
+    date_validator = validator.SchemaValidator()
 
     date_key = 'CREATION_TIME'
     date_schema1 = {
@@ -39,7 +39,7 @@ def test_validate_data_type_datetime():
 
 def test_validate_data_type_email():
 
-    date_validator = validator.SchemaValidator(None, None)
+    date_validator = validator.SchemaValidator()
 
     email_key = 'EMAIL'
     email_schema1 = {'type': 'email'}
@@ -57,7 +57,7 @@ def test_validate_data_type_email():
 
 def test_validate_data_type_schema_str():
 
-    date_validator = validator.SchemaValidator(None, None)
+    date_validator = validator.SchemaValidator()
     test_key = 'SUBTYPE'
     test_schema_1 = {'type': 'str'}
     date_validator._validate_data_type(
@@ -68,7 +68,7 @@ def test_validate_data_type_schema_str():
 
 def test_validate_data_type_schema_float():
 
-    date_validator = validator.SchemaValidator(None, None)
+    date_validator = validator.SchemaValidator()
     test_key = 'SUBTYPE'
     test_schema_2 = {'type': 'float'}
 
@@ -85,7 +85,7 @@ def test_validate_data_type_schema_float():
 
 def test_validate_data_type_schema_bool():
 
-    date_validator = validator.SchemaValidator(None, None)
+    date_validator = validator.SchemaValidator()
     test_key = 'SUBTYPE'
     test_schema_4 = {'type': 'bool'}
 
@@ -97,7 +97,7 @@ def test_validate_data_type_schema_bool():
 
 def test_validate_data_type_schema_int():
 
-    date_validator = validator.SchemaValidator(None, None)
+    date_validator = validator.SchemaValidator()
     test_key = 'SUBTYPE'
     test_schema_3 = {'type': 'int'}
 
@@ -114,7 +114,7 @@ def test_validate_data_type_schema_int():
 
 def test_validate_schema():
 
-    date_validator = validator.SchemaValidator(None, None)
+    date_validator = validator.SchemaValidator()
     reference_schema = get_generic_instrument_reference_schema()
     test_schema_1 = get_instrument_test_schema()
     date_validator._validate_schema(reference_schema, test_schema_1)
@@ -135,7 +135,7 @@ def test_validate_schema():
 
 def test_validate_instrument_list():
 
-    date_validator = validator.SchemaValidator(None, None)
+    date_validator = validator.SchemaValidator()
     date_validator._reference_schema = get_generic_instrument_reference_schema()
 
     instrument_1 = {
@@ -158,7 +158,7 @@ def test_validate_instrument_list():
 
 def test_check_if_field_is_optional():
 
-    date_validator = validator.SchemaValidator(None, None)
+    date_validator = validator.SchemaValidator()
 
     test_value_1 = {'required': False}
     test_value_2 = {'required': True}
@@ -176,7 +176,7 @@ def test_remove_line_feed():
     test_string_3 = "ABCK\rsdlkfjs sdlkf\njsd "
     test_string_4 = "ABCK\tsdlkfjs sdlkf\njsd "
 
-    date_validator = validator.SchemaValidator(None, None)
+    date_validator = validator.SchemaValidator()
 
     string_1 = date_validator._remove_line_feed(test_string_1)
     string_2 = date_validator._remove_line_feed(test_string_2)
