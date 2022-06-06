@@ -347,8 +347,7 @@ def main():
     else:
         rndaStart = tel.getParameter("mirror_reflection_random_angle")["Value"]
         if isinstance(rndaStart, str):
-            rndaStart = rndaStart.split()
-            rndaStart = float(rndaStart[0])
+            rndaStart = float(rndaStart.split()[0])
 
     logger.info("Start value for mirror_reflection_random_angle: {:}".format(
         rndaStart))
@@ -371,13 +370,12 @@ def main():
             meanD80 - workflow.configuration('psf_measurement_containment_mean'))
         collectResults(rnda, meanD80, sigD80)
         while not stop:
-            newRnda = rnda - (0.1 * rndaStart * signDelta)
-            meanD80, sigD80 = run(newRnda)
+            rnda = rnda - (0.1 * rndaStart * signDelta)
+            meanD80, sigD80 = run(rnda)
             newSignDelta = np.sign(
                 meanD80 - workflow.configuration('psf_measurement_containment_mean'))
             stop = newSignDelta != signDelta
             signDelta = newSignDelta
-            rnda = newRnda
             collectResults(rnda, meanD80, sigD80)
 
         # Linear interpolation using two last rnda values
