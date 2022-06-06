@@ -141,12 +141,11 @@ class DataValidator:
 
         for key, value in self._reference_data_columns.items():
             if 'required_column' in value and value['required_column'] is True:
-                try:
-                    self.data_table.columns[key]
+                if key in self.data_table.columns:
                     self._logger.debug("Found required data column '{}'".format(key))
-                except KeyError:
+                else:
                     self._logger.error("Missing required column '{}'".format(key))
-                    raise
+                    raise KeyError
 
     def _sort_data(self):
         """
