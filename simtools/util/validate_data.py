@@ -144,8 +144,7 @@ class DataValidator:
                 if key in self.data_table.columns:
                     self._logger.debug("Found required data column '{}'".format(key))
                 else:
-                    self._logger.error("Missing required column '{}'".format(key))
-                    raise KeyError
+                    raise KeyError("Missing required column '{}'".format(key))
 
     def _sort_data(self):
         """
