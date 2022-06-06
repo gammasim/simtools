@@ -188,9 +188,11 @@ class SchemaValidator:
                         key, schema['type'],
                         type(data_field).__name__)) from error
 
-    def _validate_datetime(self, data_field, optional_field=False):
+    @staticmethod
+    def _validate_datetime(data_field, optional_field=False):
         """
-        Validate entry to be of type datetime
+        Validate entry to be of type datetime and of
+        format %Y-%m-%d %H:%M:%S
 
         Parameters
         ----------
@@ -214,7 +216,8 @@ class SchemaValidator:
                     'invalid date format. Expected {}; Found {}'.format(
                         format_date, data_field)) from error
 
-    def _validate_email(self, data_field, key):
+    @staticmethod
+    def _validate_email(data_field, key):
         """
         Validate entry to be a email address
 
