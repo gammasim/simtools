@@ -190,6 +190,7 @@ class SimtelRunnerRayTracing(SimtelRunner):
         command = str(self._simtelSourcePath.joinpath("sim_telarray/bin/sim_telarray"))
         command += " -c {}".format(self.telescopeModel.getConfigFile())
         command += " -I../cfg/CTA"
+        command += " -I{}".format(self.telescopeModel.getConfigDirectory())
         command += super()._configOption("IMAGING_LIST", str(self._photonsFile))
         command += super()._configOption("stars", str(self._starsFile))
         command += super()._configOption(
