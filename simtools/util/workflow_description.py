@@ -310,11 +310,6 @@ class WorkflowDescription:
         """
         Fill metadata available through command line into top-level template
 
-        Parameters
-        ----------
-        args: argparse.Namespace
-            command line parameters
-
         Raises
         ------
         KeyError
