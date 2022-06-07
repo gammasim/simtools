@@ -121,8 +121,7 @@ import os
 
 import numpy as np
 import astropy.units as u
-from astropy.table import Table
-from astropy.table import QTable
+from astropy.table import Table, QTable
 
 import simtools.config as cfg
 import simtools.util.general as gen
