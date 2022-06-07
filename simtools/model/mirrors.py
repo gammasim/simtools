@@ -113,12 +113,12 @@ class Mirrors:
             If number of mirrors is 0.
         """
 
-        self._mirrors["number"] = []
-        self._mirrors["posX"] = []
-        self._mirrors["posY"] = []
-        self._mirrors["diameter"] = []
-        self._mirrors["flen"] = []
-        self._mirrors["shape"] = []
+        self._mirrors["number"] = list()
+        self._mirrors["posX"] = list()
+        self._mirrors["posY"] = list()
+        self._mirrors["diameter"] = list()
+        self._mirrors["flen"] = list()
+        self._mirrors["shape"] = list()
 
         mirrorCounter = 0
         collectGeoPars = True
