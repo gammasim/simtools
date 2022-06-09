@@ -300,7 +300,7 @@ class WorkflowDescription:
 
         Returns
         -------
-        str
+        path
             output directory for data products
 
         Raises
