@@ -113,7 +113,8 @@ class DatabaseHandler:
 
         return _dbClient
 
-    def _getTelescopeModelNameForDB(self, site, telescopeModelName):
+    @staticmethod
+    def _getTelescopeModelNameForDB(site, telescopeModelName):
         """Make telescope name as the DB needs from site and telescopeModelName."""
         return site + "-" + telescopeModelName
 
@@ -176,7 +177,7 @@ class DatabaseHandler:
 
         if cfg.get("useMongoDB"):
             self._logger.debug("Exporting model files from MongoDB")
-            for par, info in parameters.items():
+            for _, info in parameters.items():
                 if not info["File"]:
                     continue
                 file = self._getFileMongoDB(
@@ -559,7 +560,8 @@ class DatabaseHandler:
 
         return _parameters
 
-    def _getFileMongoDB(self, dbName, fileName):
+    @staticmethod
+    def _getFileMongoDB(dbName, fileName):
         """
         Extract a file from MongoDB and return GridFS file instance
 
@@ -995,7 +997,8 @@ class DatabaseHandler:
         else:
             return modelVersion
 
-    def _getTaggedVersion(self, dbName, version="Current"):
+    @staticmethod
+    def _getTaggedVersion(dbName, version="Current"):
         """
         Get the tag of the "Current" or "Latest" version of the MC Model.
         The "Current" is the latest stable MC Model,
