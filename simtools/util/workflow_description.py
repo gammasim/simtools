@@ -30,8 +30,10 @@ class WorkflowDescription:
         Collect configuration parameters from command line or file
     collect_product_meta_data()
         Collect product meta data information and add activity information
-    configuration(key)
-        Returns entry of CONFIGURATION:key
+    get_configuration_parameter()
+        Returns workflow configuration parameter (entry of CONFIGURATION:key)
+    set_configuration_parameter()
+        Sets workflow configuration parameter (entry of CONFIGURATION:key)
     label()
         Return workflow name
     product_data_directory()
@@ -138,19 +140,40 @@ class WorkflowDescription:
 
         return self.workflow_config['ACTIVITY']['NAME']
 
-    def configuration(self, key, value=None):
+    def set_configuration_parameter(self, key, value):
         """
-        Set or Return workflow configuration parameter.
+        Set value of workflow configuration parameter.
 
-        Usually filled from argparser.
+        Raises
+        ------
+        KeyError
+            if CONFIGURATION does not exist in workflow
+
+        """
+        try:
+            self.workflow_config['CONFIGURATION'][key] = value
+        except KeyError:
+            self._logger.error("Missing key {} in CONFIGURATION".format(key))
+            raise
+
+    def get_configuration_parameter(self, key):
+        """
+        Return value of workflow configuration parameter.
+
+        Returns
+        -------
+        configuration  value
+           value of CONFIGURATION parameter
+
+        Raises
+        ------
+        KeyError
+            if CONFIGURATION does not exist in workflow
 
         """
 
         try:
-            if value is None:
-                return self.workflow_config['CONFIGURATION'][key]
-            else:
-                self.workflow_config['CONFIGURATION'][key] = value
+            return self.workflow_config['CONFIGURATION'][key]
         except KeyError:
             self._logger.error("Missing key {} in CONFIGURATION".format(key))
             raise
