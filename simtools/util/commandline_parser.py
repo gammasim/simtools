@@ -1,6 +1,7 @@
 import argparse
 
 import simtools.version
+import simtools.util.names as names
 
 
 class CommandLineParser(argparse.ArgumentParser):
@@ -68,7 +69,7 @@ class CommandLineParser(argparse.ArgumentParser):
             "-s",
             "--site",
             help="CTAO site (e.g. North, South)",
-            type=str,
+            type=self.site,
             required=True
         )
         self.add_argument(
@@ -85,6 +86,34 @@ class CommandLineParser(argparse.ArgumentParser):
             type=str,
             default="Current",
         )
+
+    @staticmethod
+    def site(value):
+        """
+        Argument parser type to check that a valid site name is given
+
+        Parameters
+        ----------
+        value: str
+            site name
+
+        Raises
+        ------
+        Raises
+        ------
+        argparse.ArgumentTypeError
+            for invalid sites
+
+
+        """
+
+        fsite = str(value)
+
+        if not names.validateSiteName(fsite):
+            raise argparse.ArgumentTypeError(
+                "{} is an invalid site".format(fsite))
+
+        return fsite
 
     @staticmethod
     def efficiency_interval(value):
