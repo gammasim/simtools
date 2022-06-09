@@ -9,6 +9,14 @@ import simtools.util.commandline_parser as parser
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
+def test_site():
+
+    assert parser.CommandLineParser.site('North') == 'North'
+    assert parser.CommandLineParser.site('South') == 'South'
+
+    with pytest.raises(ValueError,
+                       match=r"Invalid name East"):
+        parser.CommandLineParser.site('East')
 
 def test_efficiency_interval():
 
