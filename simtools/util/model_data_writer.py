@@ -61,15 +61,21 @@ class ModelDataWriter:
                 _file))
             raise
 
-    def write_metadata(self):
+    def write_metadata(self, ymlfile=None):
         """
         Write model metadata file
         (yaml file format)
 
+        Attributes
+        ----------
+        ymlfile str
+            name of output file (default=None)
+
         """
 
         try:
-            ymlfile = self.workflow_config.product_data_file_name('.yml')
+            if not ymlfile:
+                ymlfile = self.workflow_config.product_data_file_name('.yml')
             self._logger.info(
                 "Writing metadata to {}".format(ymlfile))
             with open(ymlfile, 'w', encoding='UTF-8') as file:
@@ -82,5 +88,5 @@ class ModelDataWriter:
                 ymlfile))
             raise
         except AttributeError:
-            self._logger.erro("No metadata defined for write")
+            self._logger.error("No metadata defined for writing")
             raise
