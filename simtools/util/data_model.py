@@ -17,7 +17,6 @@ def toplevel_reference_schema():
             },
             'PRODUCT': {
                 'DESCRIPTION': None,
-                'CONTEXT': None,
                 'CREATION_TIME': None,
                 'ID': None,
                 'DATA': {
@@ -31,16 +30,6 @@ def toplevel_reference_schema():
                     }
                 },
                 'FORMAT': None,
-                'ASSOCIATION':
-                [
-                    {
-                        'SITE': None,
-                        'CLASS': None,
-                        'TYPE': None,
-                        'SUBTYPE': None,
-                        'ID': None
-                    }
-                ],
                 'VALID': {
                     'START': None,
                     'END': None
@@ -72,7 +61,29 @@ def toplevel_reference_schema():
                     'NAME': 'gammasim-tools',
                     'VERSION': None
                 }
-            }
+            },
+            'CONTEXT': {
+                'SIM': {
+                    'ASSOCIATION':
+                    [
+                        {
+                            'SITE': None,
+                            'CLASS': None,
+                            'TYPE': None,
+                            'SUBTYPE': None,
+                            'ID': None
+                        }
+                    ],
+                    'DOCUMENT':
+                    [
+                        {
+                            'TYPE': None,
+                            'ID': None,
+                            'LINK': None,
+                        },
+                    ],
+                },
+            },
         }
     }
 
@@ -170,9 +181,9 @@ def userinput_reference_schema():
                     "type": "datetime",
                     "required": False,
                     "default": "None"
-                }
+                },
             },
-            "CONTEXT": {
+            "DOCUMENT": {
                 "type": "list",
                 "required": False,
                 "default": "None"
