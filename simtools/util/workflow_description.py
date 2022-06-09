@@ -214,6 +214,12 @@ class WorkflowDescription:
         File name always used CTA:PRODUCT:ID for unique identification
         (not applied when CONFIGURATION:test is true)
 
+        Parameters
+        ----------
+        suffix str
+           file name extension (if none: use product_data_file_format()
+
+
         Returns
         -------
         Path
