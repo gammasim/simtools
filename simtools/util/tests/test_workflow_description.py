@@ -3,11 +3,12 @@
 import logging
 import pytest
 
-import simtools.util.workflow_description as workflow
 import simtools.util.data_model as data_model
+import simtools.util.workflow_description as workflow
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
+
 
 def test_fill_product_association_identifier():
 
