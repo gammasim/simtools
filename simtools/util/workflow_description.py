@@ -260,7 +260,7 @@ class WorkflowDescription:
         Parameter
         ---------
         suffix: bool
-            return file suffix (if true)
+            return just the ecsv suffix (if format is ascii.ecsv)
             return file format (if false)
 
         Returns

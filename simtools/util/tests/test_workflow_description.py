@@ -23,6 +23,19 @@ def test_fill_product_association_identifier():
         workflow_1._fill_product_association_identifier()
 
 
+def test_product_data_file_format():
+
+    workflow_1 = workflow.WorkflowDescription()
+
+    assert workflow_1.product_data_file_format(False) == 'ascii.ecsv'
+    assert workflow_1.product_data_file_format(True) == 'ecsv'
+
+    workflow_1.workflow_config['PRODUCT']['FORMAT'] = 'hdf5'
+
+    assert workflow_1.product_data_file_format(False) == 'hdf5'
+    assert workflow_1.product_data_file_format(True) == 'hdf5'
+
+
 def test_merge_config_dicts():
 
     d_low_priority = {
