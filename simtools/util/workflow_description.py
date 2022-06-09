@@ -510,26 +510,26 @@ class WorkflowDescription:
             except KeyError:
                 self._logger.debug("Error reading CTASIMPIPE workflow configuration")
 
-            self._merge_config_dicts(_workflow_from_file, self.workflow_config)
+            self._merge_config_dicts(self.workflow_config, _workflow_from_file)
 
-    def _merge_config_dicts(self, dict1, dict2):
+    def _merge_config_dicts(self, dict_high, dict_low):
         """
         Merge two config dicts and replace values which are Nonetype.
-        Priority to dict2 in case of conflicting entries.
+        Priority to dict_high in case of conflicting entries.
 
         """
 
-        for k in dict1:
-            if k in dict2:
-                if isinstance(dict1[k], dict):
-                    self._merge_config_dicts(dict1[k], dict2[k])
-                elif dict2[k] is None:
-                    dict2[k] = dict1[k]
-                elif dict2[k] != dict1[k] and dict1[k] is not None:
+        for k in dict_low:
+            if k in dict_high:
+                if isinstance(dict_low[k], dict):
+                    self._merge_config_dicts(dict_high[k], dict_low[k])
+                elif dict_high[k] is None:
+                    dict_high[k] = dict_low[k]
+                elif dict_high[k] != dict_low[k] and dict_low[k] is not None:
                     self._logger.debug("Conflicting entries between dict: {} vs {}".format(
-                        dict2[k], dict1[k]))
+                        dict_high[k], dict_low[k]))
             else:
-                dict2[k] = dict1[k]
+                dict_high[k] = dict_low[k]
 
     def userinput_data_file_name(self):
         """
