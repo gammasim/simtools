@@ -88,7 +88,7 @@ def top_level_reference_schema():
     }
 
 
-def userinput_reference_schema():
+def user_input_reference_schema():
     """
     Return datamodel reference schema
     for user input
