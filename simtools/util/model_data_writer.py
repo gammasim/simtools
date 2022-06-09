@@ -68,13 +68,13 @@ class ModelDataWriter:
 
         """
 
-        if self.workflow_config.toplevel_meta:
+        if self.workflow_config.top_level_meta:
             ymlfile = self.workflow_config.product_data_file_name('.yml')
             self._logger.info(
                 "Writing metadata to {}".format(ymlfile))
             with open(ymlfile, 'w', encoding='UTF-8') as file:
                 yaml.safe_dump(
-                    self.workflow_config.toplevel_meta,
+                    self.workflow_config.top_level_meta,
                     file,
                     sort_keys=False)
         else:

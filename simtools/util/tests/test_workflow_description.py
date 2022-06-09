@@ -12,12 +12,12 @@ logger.setLevel(logging.DEBUG)
 def test_fill_product_association_identifier():
 
     workflow_1 = workflow.WorkflowDescription()
-    workflow_1.toplevel_meta = data_model.toplevel_reference_schema()
-    workflow_1.toplevel_meta['CTA']['CONTEXT']['SIM']['ASSOCIATION'] = \
+    workflow_1.top_level_meta = data_model.top_level_reference_schema()
+    workflow_1.top_level_meta['CTA']['CONTEXT']['SIM']['ASSOCIATION'] = \
         get_generic_user_meta()['PRODUCT']['ASSOCIATION']
     workflow_1._fill_product_association_identifier()
 
-    workflow_1.toplevel_meta['CTA']['CONTEXT']['SIM'].pop('ASSOCIATION')
+    workflow_1.top_level_meta['CTA']['CONTEXT']['SIM'].pop('ASSOCIATION')
 
     with pytest.raises(KeyError):
         workflow_1._fill_product_association_identifier()
@@ -61,11 +61,11 @@ def test_merge_config_dicts():
 def test_fill_activity_meta():
 
     file_writer_1 = workflow.WorkflowDescription()
-    file_writer_1.toplevel_meta = data_model.toplevel_reference_schema()
+    file_writer_1.top_level_meta = data_model.top_level_reference_schema()
     file_writer_1._fill_activity_meta()
 
     file_writer_2 = workflow.WorkflowDescription()
-    file_writer_2.toplevel_meta = data_model.toplevel_reference_schema()
+    file_writer_2.top_level_meta = data_model.top_level_reference_schema()
 
     del file_writer_2.workflow_config['ACTIVITY']['NAME']
     file_writer_2.workflow_config['ACTIVITY']['NONAME'] = 'workflow_name'
