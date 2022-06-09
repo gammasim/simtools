@@ -71,7 +71,7 @@ class WorkflowDescription:
         if self.args:
             self.collect_workflow_configuration()
 
-        self.toplevel_meta = data_model.toplevel_reference_schema()
+        self.top_level_meta = data_model.top_level_reference_schema()
 
         if self.args:
             self.collect_product_meta_data()
@@ -115,10 +115,10 @@ class WorkflowDescription:
 
         """
 
-        self._fill_toplevel_meta_from_args()
+        self._fill_top_level_meta_from_args()
 
         if self.workflow_config['INPUT']['METAFILE']:
-            self._fill_toplevel_meta_from_file()
+            self._fill_top_level_meta_from_file()
 
         self._fill_product_meta()
         self._fill_product_association_identifier()
@@ -180,8 +180,8 @@ class WorkflowDescription:
         Return full path and name of product data file
 
         file name is determined by:
-        a. Toplevel meta ['PRODUCT']['DATA']
-        b. Toplevel meta ['PRODUCT']['ID'] + label
+        a. Top-level meta ['PRODUCT']['DATA']
+        b. Top-level meta ['PRODUCT']['ID'] + label
 
         File name always used CTA:PRODUCT:ID for unique identification
         (not applied when CONFIGURATION:test is true)
@@ -237,7 +237,7 @@ class WorkflowDescription:
         Raises
         ------
         KeyError
-            if relevant fields are not defined in toplevel metadata
+            if relevant fields are not defined in top level metadata
             dictionary
 
         """
@@ -306,7 +306,7 @@ class WorkflowDescription:
 
         return default_return
 
-    def _fill_toplevel_meta_from_args(self):
+    def _fill_top_level_meta_from_args(self):
         """
         Fill metadata available through command line into top-level template
 
@@ -324,14 +324,14 @@ class WorkflowDescription:
             _association['CLASS'] = _split_telescope_name[0]
             _association['TYPE'] = _split_telescope_name[1]
             _association['SUBTYPE'] = _split_telescope_name[2]
-            self.toplevel_meta['CTA']['CONTEXT']['SIM']['ASSOCIATION'][0] = _association
+            self.top_level_meta['CTA']['CONTEXT']['SIM']['ASSOCIATION'][0] = _association
         except KeyError:
             self._logger.error("Error reading user input meta data from args")
             raise
         except AttributeError:
             pass
 
-    def _fill_toplevel_meta_from_file(self):
+    def _fill_top_level_meta_from_file(self):
         """
         Read and validate user-provided metadata from file.
         Fill metadata into top-level template.
@@ -349,24 +349,24 @@ class WorkflowDescription:
             self.workflow_config['INPUT']['METAFILE'])
 
         try:
-            self.toplevel_meta['CTA']['CONTACT'] = _user_meta['CONTACT']
-            self.toplevel_meta['CTA']['INSTRUMENT'] = _user_meta['INSTRUMENT']
-            self.toplevel_meta['CTA']['PRODUCT']['DESCRIPTION'] = \
+            self.top_level_meta['CTA']['CONTACT'] = _user_meta['CONTACT']
+            self.top_level_meta['CTA']['INSTRUMENT'] = _user_meta['INSTRUMENT']
+            self.top_level_meta['CTA']['PRODUCT']['DESCRIPTION'] = \
                 _user_meta['PRODUCT']['DESCRIPTION']
-            self.toplevel_meta['CTA']['PRODUCT']['CREATION_TIME'] = \
+            self.top_level_meta['CTA']['PRODUCT']['CREATION_TIME'] = \
                 _user_meta['PRODUCT']['CREATION_TIME']
             if 'VALID' in _user_meta['PRODUCT']:
                 if 'START' in _user_meta['PRODUCT']['VALID']:
-                    self.toplevel_meta['CTA']['PRODUCT']['VALID']['START'] = \
+                    self.top_level_meta['CTA']['PRODUCT']['VALID']['START'] = \
                         _user_meta['PRODUCT']['VALID']['START']
                 if 'END' in _user_meta['PRODUCT']['VALID']:
-                    self.toplevel_meta['CTA']['PRODUCT']['VALID']['END'] = \
+                    self.top_level_meta['CTA']['PRODUCT']['VALID']['END'] = \
                         _user_meta['PRODUCT']['VALID']['END']
-            self.toplevel_meta['CTA']['PROCESS'] = _user_meta['PROCESS']
-            self.toplevel_meta['CTA']['CONTEXT']['SIM']['ASSOCIATION'] = \
+            self.top_level_meta['CTA']['PROCESS'] = _user_meta['PROCESS']
+            self.top_level_meta['CTA']['CONTEXT']['SIM']['ASSOCIATION'] = \
                 _user_meta['PRODUCT']['ASSOCIATION']
             try:
-                self.toplevel_meta['CTA']['CONTEXT']['SIM']['DOCUMENT'] = \
+                self.top_level_meta['CTA']['CONTEXT']['SIM']['DOCUMENT'] = \
                     _user_meta['CONTEXT']['DOCUMENT']
             except KeyError:
                 pass
@@ -387,18 +387,18 @@ class WorkflowDescription:
         Raises
         ------
         KeyError
-            if relevant fields are not defined in toplevel metadata
+            if relevant fields are not defined in top level metadata
             dictionary
 
         """
 
-        self.toplevel_meta['CTA']['PRODUCT']['ID'] = \
+        self.top_level_meta['CTA']['PRODUCT']['ID'] = \
             self.workflow_config['ACTIVITY']['ID']
         self._logger.debug("Assigned ACTIVITE UUID {}".format(
-            self.toplevel_meta['CTA']['PRODUCT']['ID']))
+            self.top_level_meta['CTA']['PRODUCT']['ID']))
 
         try:
-            self.toplevel_meta['CTA']['PRODUCT']['FORMAT'] = \
+            self.top_level_meta['CTA']['PRODUCT']['FORMAT'] = \
                 self.product_data_file_format()
         except KeyError:
             self._logger.error("Error PRODUCT meta from user input meta data")
@@ -416,7 +416,7 @@ class WorkflowDescription:
         """
 
         try:
-            for association in self.toplevel_meta['CTA']['CONTEXT']['SIM']['ASSOCIATION']:
+            for association in self.top_level_meta['CTA']['CONTEXT']['SIM']['ASSOCIATION']:
                 association['ID'] = names.simtoolsInstrumentName(
                     association['SITE'],
                     association['CLASS'],
@@ -433,18 +433,18 @@ class WorkflowDescription:
         Raises
         ------
         KeyError
-            if relevant fields are not defined in toplevel metadata
+            if relevant fields are not defined in top level metadata
             dictionary
 
         """
         try:
-            self.toplevel_meta['CTA']['ACTIVITY']['NAME'] = \
+            self.top_level_meta['CTA']['ACTIVITY']['NAME'] = \
                 self.workflow_config['ACTIVITY']['NAME']
-            self.toplevel_meta['CTA']['ACTIVITY']['START'] = \
+            self.top_level_meta['CTA']['ACTIVITY']['START'] = \
                 datetime.datetime.now().isoformat(timespec='seconds')
-            self.toplevel_meta['CTA']['ACTIVITY']['END'] = \
-                self.toplevel_meta['CTA']['ACTIVITY']['START']
-            self.toplevel_meta['CTA']['ACTIVITY']['SOFTWARE']['VERSION'] = \
+            self.top_level_meta['CTA']['ACTIVITY']['END'] = \
+                self.top_level_meta['CTA']['ACTIVITY']['START']
+            self.top_level_meta['CTA']['ACTIVITY']['SOFTWARE']['VERSION'] = \
                 simtools.version.__version__
         except KeyError:
             self._logger.error("Error ACTIVITY meta from user input meta data")
