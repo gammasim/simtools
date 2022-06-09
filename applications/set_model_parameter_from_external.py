@@ -18,8 +18,6 @@
         User-provided meta data file (yml format)
     input_data (str, required)
         User-provided data file
-    reference_schema_directory (str, required)
-        directory for reference schema
     verbosity (str, optional)
         Log level to print (default=INFO).
 
@@ -34,70 +32,27 @@
             --workflow_config_file set_quantum_efficiency_from_external.yml \
             --input_meta_file qe_R12992-100-05b.usermeta.yml \
             --input_data_file qe_R12992-100-05b.data.ecsv \
-            --reference_schema_directory ./REFERENCE_DIR
 
 
 """
 
 import logging
+import os
 
 import simtools.util.general as gen
-import simtools.util.validate_schema as vs
 import simtools.util.validate_data as ds
 import simtools.util.commandline_parser as argparser
-import simtools.util.workflow_configuration as workflow_config
-import simtools.util.write_model_data as writer
+import simtools.util.workflow_description as workflow_config
+import simtools.util.model_data_writer as writer
 
 
-def transform_input(_args, _workflow_config):
-    """
-    data transformation for simulation model data
-
-    includes:
-    -
-    - schema validation
-    - data validation
-    - data cleaning
-    - data conversion to standard units
-    - metadata writer
-
-    Parameters:
-    -----------
-    _args
-        command line parameters
-    _workflow_config
-        workflow configuration
-
-    Returns:
-    -------
-    output_meta: dict
-        transformed user meta data
-    output_data: astropy Table
-        transformed data table
-
-    """
-
-    _schema_validator = vs.SchemaValidator(_workflow_config)
-    _output_meta = _schema_validator.validate_and_transform(
-        _args.input_meta_file)
-
-    _data_validator = ds.DataValidator(
-        _workflow_config["CTASIMPIPE"]["DATA_COLUMNS"],
-        _args.input_data_file)
-    _data_validator.validate()
-    _output_data = _data_validator.transform()
-
-    return _output_meta, _output_data
-
-
-def parse():
+def parse(label):
     """
     Parse command line configuration
 
     """
 
-    parser = argparser.CommandLineParser("Setting workflow model parameter data")
-    parser.initialize_workflow_arguments()
+    parser = argparser.CommandLineParser(label)
     parser.add_argument(
         "-m",
         "--input_meta_file",
@@ -118,21 +73,17 @@ def parse():
 
 if __name__ == "__main__":
 
-    args = parse()
+    label = os.path.basename(__file__).split('.')[0]
+    args = parse(label)
 
     logger = logging.getLogger()
     logger.setLevel(gen.getLogLevelFromUser(args.logLevel))
 
-    workflow_config = workflow_config.WorkflowConfiguration()
-    workflow_config.collect_configuration(
-        args.workflow_config_file,
-        args.reference_schema_directory)
+    workflow = workflow_config.WorkflowDescription(label=label, args=args)
 
-    output_meta, output_data = transform_input(
-        args,
-        workflow_config.configuration)
+    data_validator = ds.DataValidator(workflow)
+    data_validator.validate()
 
-    file_writer = writer.ModelData(workflow_config.configuration)
-    file_writer.write_model_file(output_meta,
-                                 output_data,
-                                 args.product_directory)
+    file_writer = writer.ModelDataWriter(workflow)
+    file_writer.write_metadata()
+    file_writer.write_data(data_validator.transform())
