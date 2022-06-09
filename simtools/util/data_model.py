@@ -1,4 +1,4 @@
-def toplevel_reference_schema():
+def top_level_reference_schema():
     """
     Return datamodel reference schema
     derived from CTA Top-Level Data Model
