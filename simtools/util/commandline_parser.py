@@ -1,21 +1,41 @@
 import argparse
 
+import simtools.version
+import simtools.util.names as names
+
 
 class CommandLineParser(argparse.ArgumentParser):
     """
     Command line parser for application and workflows
     Wrapper around standard python argparse.ArgumentParser
 
+    Methods
+    -------
+    initialize_default_arguments
+       Initialize default arguments used by all applications
+
     """
 
     def initialize_default_arguments(self):
         """
-        Initialize default arguments used for all applications
+        Initialize default arguments used by all applications
         (e.g., verbosity or test flag)
 
 
         """
 
+        self.add_argument(
+            "--configFile",
+            help="gammasim-tools configuration file",
+            required=False,
+        )
+        self.add_argument(
+            "-c",
+            "--workflow_config_file",
+            help="Workflow configuration file",
+            type=str,
+            required=False,
+        )
         self.add_argument(
             "--test",
             help="Test option for faster execution during development",
@@ -31,35 +51,11 @@ class CommandLineParser(argparse.ArgumentParser):
             help="Log level to print (default is INFO)",
             required=False,
         )
-
-    def initialize_workflow_arguments(self):
-        """
-        Initialize default arguments for workflow configuration parameters
-        and product data model
-
-        """
-
         self.add_argument(
-            "-c",
-            "--workflow_config_file",
-            help="Workflow configuration file",
-            type=str,
-            required=True,
-        )
-        self.add_argument(
-            "-p",
-            "--product_directory",
-            help="Directory for data products (output)",
-            type=str,
-            default='',
-            required=False,
-        )
-        self.add_argument(
-            "--toplevel_metadata_schema",
-            help="Toplevel metadata reference schema",
-            type=str,
-            default=None,
-            required=False
+            '-V',
+            '--version',
+            action='version',
+            version=f'%(prog)s {simtools.version.__version__}'
         )
 
     def initialize_telescope_model_arguments(self):
@@ -72,8 +68,8 @@ class CommandLineParser(argparse.ArgumentParser):
         self.add_argument(
             "-s",
             "--site",
-            help="North or South",
-            type=str,
+            help="CTAO site (e.g. North, South)",
+            type=self.site,
             required=True
         )
         self.add_argument(
@@ -90,6 +86,34 @@ class CommandLineParser(argparse.ArgumentParser):
             type=str,
             default="Current",
         )
+
+    @staticmethod
+    def site(value):
+        """
+        Argument parser type to check that a valid site name is given
+
+        Parameters
+        ----------
+        value: str
+            site name
+
+        Raises
+        ------
+        Raises
+        ------
+        argparse.ArgumentTypeError
+            for invalid sites
+
+
+        """
+
+        fsite = str(value)
+
+        if not names.validateSiteName(fsite):
+            raise argparse.ArgumentTypeError(
+                "{} is an invalid site".format(fsite))
+
+        return fsite
 
     @staticmethod
     def efficiency_interval(value):
