@@ -534,7 +534,7 @@ class WorkflowDescription:
             else:
                 dict_high[k] = dict_low[k]
 
-    def userinput_data_file_name(self):
+    def user_input_data_file_name(self):
         """
         Return user input data file
         (full path)
