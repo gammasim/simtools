@@ -409,6 +409,37 @@ allLayoutArrayNames = {
     "Prod5": ["prod5", "p5"],
 }
 
+def simtoolsInstrumentName(site, telescopeClassName, subSystemName, telescopeIDName):
+    """
+    Instrument name following gammasim-tools naming convention
+
+    Parameters
+    ----------
+    site: str
+        South or North.
+    telescopeClassName: str
+        LST, MST, ...
+    subSystemName: str
+        FlashCam, NectarCam
+    telescopeIDName: str
+        telescope ID (e.g., D, numerial value)
+
+
+    Returns
+    -------
+    instrumentname str
+        instrument name
+
+    """
+
+    return validateSiteName(site) \
+        + "-" + \
+        validateName(telescopeClassName, allTelescopeClassNames) \
+        + "-" + \
+        validateSubSystemName(subSystemName) \
+        + "-" + \
+        validateTelescopeIDName(telescopeIDName)
+
 
 def simtelTelescopeConfigFileName(
     site, telescopeModelName, modelVersion, label, extraLabel
