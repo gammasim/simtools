@@ -362,7 +362,9 @@ class WorkflowDescription:
         except KeyError:
             self._logger.error("Error reading user input meta data from args")
             raise
-        except AttributeError:
+        except AttributeError as e:
+            self._logger.debug(
+                'Missing parameter on command line, use defaults ({})'.format(e))
             pass
 
     def _fill_top_level_meta_from_file(self):
