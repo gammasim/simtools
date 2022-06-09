@@ -40,7 +40,7 @@ class SchemaValidator:
 
         self._logger = logging.getLogger(__name__)
 
-        self._reference_schema = data_model.userinput_reference_schema()
+        self._reference_schema = data_model.user_input_reference_schema()
         self.data_dict = data_dict
 
     def validate_and_transform(self, user_meta_file_name=None):
