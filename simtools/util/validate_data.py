@@ -45,7 +45,7 @@ class DataValidator:
 
         if workflow:
             self._reference_data_columns = workflow.reference_data_columns()
-            self._data_file_name = workflow.userinput_data_file_name()
+            self._data_file_name = workflow.user_input_data_file_name()
 
         self.data_table = None
 
