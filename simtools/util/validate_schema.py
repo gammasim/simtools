@@ -2,12 +2,21 @@ import datetime
 import logging
 import re
 
+import simtools.util.data_model as data_model
 import simtools.util.general as gen
 
 
 class SchemaValidator:
     """
     Validate a dictionary against a reference schema
+
+    Attributes
+    ----------
+    schema_file: str
+        file nome for user input schema
+    data_dict: dict
+        User-provided metadata dict to be validated against
+        reference schema
 
     Methods
     -------
@@ -16,15 +25,13 @@ class SchemaValidator:
 
     """
 
-    def __init__(self, workflow_config=None, data_dict=None):
+    def __init__(self, data_dict=None):
         """
         Initalize validation class and read required
         reference schema
 
         Parameters
         ----------
-        workflow_config: dict
-            workflow configuration
         data_dict: dict
             User-provided metadata dict to be validated against
             reference schema
@@ -33,17 +40,7 @@ class SchemaValidator:
 
         self._logger = logging.getLogger(__name__)
 
-        reference_schema_file = None
-        if workflow_config:
-            reference_schema_file = self._get_reference_schema_file(
-                workflow_config)
-        if reference_schema_file:
-            self._logger.debug(
-                "Reading reference schema from {}".format(
-                    reference_schema_file))
-            self._reference_schema = gen.collectDataFromYamlOrDict(
-                reference_schema_file, None)
-
+        self._reference_schema = data_model.user_input_reference_schema()
         self.data_dict = data_dict
 
     def validate_and_transform(self, user_meta_file_name=None):
@@ -191,9 +188,11 @@ class SchemaValidator:
                         key, schema['type'],
                         type(data_field).__name__)) from error
 
-    def _validate_datetime(self, data_field, optional_field=False):
+    @staticmethod
+    def _validate_datetime(data_field, optional_field=False):
         """
-        Validate entry to be of type datetime
+        Validate entry to be of type datetime and of
+        format %Y-%m-%d %H:%M:%S
 
         Parameters
         ----------
@@ -217,7 +216,8 @@ class SchemaValidator:
                     'invalid date format. Expected {}; Found {}'.format(
                         format_date, data_field)) from error
 
-    def _validate_email(self, data_field, key):
+    @staticmethod
+    def _validate_email(data_field, key):
         """
         Validate entry to be a email address
 
@@ -287,40 +287,6 @@ class SchemaValidator:
                 return True
         except KeyError:
             return False
-
-    def _get_reference_schema_file(self, workflow_config):
-        """
-        Return full path and name of reference schema file
-        as defined in workflow configuration
-
-        Parameters
-        ----------
-        workflow_config: dict
-            workflow configuration
-
-        Returns
-        -------
-        str
-            Path and name of reference schema file
-
-        Raises
-        ------
-        KeyError
-            if directory and name of reference schema file is not
-            defined in workflow configuration
-
-
-        """
-
-        try:
-            return str(
-                workflow_config['CTASIMPIPE']['DATAMODEL']['SCHEMADIRECTORY'] +
-                '/' +
-                workflow_config["CTASIMPIPE"]["DATAMODEL"]["USERINPUTSCHEMA"])
-        except KeyError:
-            self._logger.error(
-                "Missing description of DATAMODEL schema file")
-            raise
 
     @staticmethod
     def _remove_line_feed(string):
