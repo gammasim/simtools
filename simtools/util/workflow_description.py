@@ -517,6 +517,7 @@ class WorkflowDescription:
         Merge two config dicts and replace values which are Nonetype.
         Priority to dict_high in case of conflicting entries.
 
+
         """
 
         for k in dict_low:
