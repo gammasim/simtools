@@ -435,7 +435,7 @@ class WorkflowDescription:
             self.top_level_meta['CTA']['PRODUCT']['FORMAT'] = \
                 self.product_data_file_format()
         except KeyError:
-            self._logger.error("Error PRODUCT meta from user input meta data")
+            self._logger.error("Missing CTA:PRODUCT:FORMAT key in user input meta data")
             raise
 
     def _fill_product_association_identifier(self):
