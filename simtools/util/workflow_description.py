@@ -324,7 +324,7 @@ class WorkflowDescription:
             _association['CLASS'] = _split_telescope_name[0]
             _association['TYPE'] = _split_telescope_name[1]
             _association['SUBTYPE'] = _split_telescope_name[2]
-            self.toplevel_meta['CTA']['PRODUCT']['ASSOCIATION'][0] = _association
+            self.toplevel_meta['CTA']['CONTEXT']['SIM']['ASSOCIATION'][0] = _association
         except KeyError:
             self._logger.error("Error reading user input meta data from args")
             raise
@@ -355,9 +355,6 @@ class WorkflowDescription:
                 _user_meta['PRODUCT']['DESCRIPTION']
             self.toplevel_meta['CTA']['PRODUCT']['CREATION_TIME'] = \
                 _user_meta['PRODUCT']['CREATION_TIME']
-            if 'CONTEXT' in _user_meta['PRODUCT']:
-                self.toplevel_meta['CTA']['PRODUCT']['CONTEXT'] = \
-                    _user_meta['PRODUCT']['CONTEXT']
             if 'VALID' in _user_meta['PRODUCT']:
                 if 'START' in _user_meta['PRODUCT']['VALID']:
                     self.toplevel_meta['CTA']['PRODUCT']['VALID']['START'] = \
@@ -365,9 +362,14 @@ class WorkflowDescription:
                 if 'END' in _user_meta['PRODUCT']['VALID']:
                     self.toplevel_meta['CTA']['PRODUCT']['VALID']['END'] = \
                         _user_meta['PRODUCT']['VALID']['END']
-            self.toplevel_meta['CTA']['PRODUCT']['ASSOCIATION'] = \
-                _user_meta['PRODUCT']['ASSOCIATION']
             self.toplevel_meta['CTA']['PROCESS'] = _user_meta['PROCESS']
+            self.toplevel_meta['CTA']['CONTEXT']['SIM']['ASSOCIATION'] = \
+                _user_meta['PRODUCT']['ASSOCIATION']
+            try:
+                self.toplevel_meta['CTA']['CONTEXT']['SIM']['DOCUMENT'] = \
+                    _user_meta['CONTEXT']['DOCUMENT']
+            except KeyError:
+                pass
         except KeyError:
             self._logger.error("Error reading user input meta data")
             raise
@@ -409,42 +411,20 @@ class WorkflowDescription:
         Raises
         ------
         KeyError
-            if PRODUCT::ASSOCIATION is not found
+            if CONTEXT:SIM:ASSOCIATION is not found
 
         """
 
         try:
-            for association in self.toplevel_meta['CTA']['PRODUCT']['ASSOCIATION']:
-                association['ID'] = self._read_instrument_name(association)
+            for association in self.toplevel_meta['CTA']['CONTEXT']['SIM']['ASSOCIATION']:
+                association['ID'] = names.simtoolsInstrumentName(
+                    association['SITE'],
+                    association['CLASS'],
+                    association['TYPE'],
+                    association['SUBTYPE'])
         except KeyError:
-            self._logger.error('Error reading PRODUCT:ASSOCIATION')
+            self._logger.error('Error reading CONTEXT:SIM:ASSOCIATION')
             raise
-
-    def _read_instrument_name(self, association):
-        """
-        Returns a string defining the instrument following
-        the gammasim-tools naming convention derived from
-        PRODUCT:ASSOCIATION entry
-
-        """
-
-        try:
-            _instrument = \
-                names.validateSiteName(association['SITE']) \
-                + "-" + \
-                names.validateName(association['CLASS'], names.allTelescopeClassNames) \
-                + "-" + \
-                names.validateSubSystemName(association['TYPE']) \
-                + "-" + \
-                names.validateTelescopeIDName(association['SUBTYPE'])
-        except KeyError:
-            self._logger.error('Error reading PRODUCT:ASSOCIATION')
-            raise
-        except ValueError:
-            self._logger.error('Error reading naming in PRODUCT:ASSOCIATION')
-            raise
-
-        return _instrument
 
     def _fill_activity_meta(self):
         """
