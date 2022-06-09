@@ -56,7 +56,7 @@ def test_merge_config_dicts():
     }
 
     _workflow = workflow.WorkflowDescription()
-    _workflow._merge_config_dicts(d_low_priority, d_high_priority)
+    _workflow._merge_config_dicts(d_high_priority, d_low_priority)
 
     d_merged = {
         'REFERENCE': {'VERSION': '0.2.0'},
