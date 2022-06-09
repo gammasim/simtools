@@ -129,6 +129,11 @@ class WorkflowDescription:
         Return workflow name
         (often set as label)
 
+        Returns
+        -------
+        label str
+           activity name
+
         """
 
         return self.workflow_config['ACTIVITY']['NAME']
