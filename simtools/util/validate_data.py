@@ -13,11 +13,8 @@ class DataValidator:
 
     Attributes
     ----------
-    reference_data_columns: dict
-        data columns description
-    data_file_name: str
-        name of input data file
-
+    workflow_config: WorkflowDescription
+        workflow configuration
 
     Methods
     -------
@@ -32,25 +29,23 @@ class DataValidator:
 
     """
 
-    def __init__(self, reference_data_columns, data_file_name):
+    def __init__(self, workflow=None):
         """
         Initalize validation class and read required
         reference data columns
 
         Parameters
         ----------
-        reference_data_columns: dict
-            definition of data columns and axes from workflow
-            configuration
-        data_file_name: string
-            Name of data table file to be validated
+        workflow: WorkflowDescription
+            workflow description
 
         """
 
         self._logger = logging.getLogger(__name__)
 
-        self._reference_data_columns = reference_data_columns
-        self._data_file_name = data_file_name
+        if workflow:
+            self._reference_data_columns = workflow.reference_data_columns()
+            self._data_file_name = workflow.user_input_data_file_name()
 
         self.data_table = None
 
@@ -117,7 +112,7 @@ class DataValidator:
         """
         Validate that required data columns are available,
         columns are in the correct units (if necessary apply a
-        unit conversion), and check min,max ranges.
+        unit conversion), and check ranges (minimum, maximum)
 
         This is not applied to columns of type 'string'
 
@@ -146,12 +141,10 @@ class DataValidator:
 
         for key, value in self._reference_data_columns.items():
             if 'required_column' in value and value['required_column'] is True:
-                try:
-                    self.data_table.columns[key]
+                if key in self.data_table.columns:
                     self._logger.debug("Found required data column '{}'".format(key))
-                except KeyError:
-                    self._logger.error("Missing required column '{}'".format(key))
-                    raise
+                else:
+                    raise KeyError("Missing required column '{}'".format(key))
 
     def _sort_data(self):
         """
@@ -278,9 +271,7 @@ class DataValidator:
                     column_name))
             raise
 
-        if (reference_unit == 'dimensionless' or
-                reference_unit is None or
-                reference_unit == 'None'):
+        if (reference_unit == 'dimensionless' or reference_unit is None):
             return u.dimensionless_unscaled
 
         return u.Unit(reference_unit)
@@ -308,7 +299,7 @@ class DataValidator:
         Convert to reference unit (e.g., Angstrom to nm).
 
         Note on dimensionless columns:
-            - should be given in unit descriptor as unit: ''
+        - should be given in unit descriptor as unit: ''
         - be forgiving and assume that in cases no unit is given in the data files
           means that it should be dimensionless (e.g., for a efficiency)
 

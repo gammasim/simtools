@@ -1,3 +1,4 @@
+from astropy.table import Table
 import logging
 
 __all__ = ["Mirrors"]
@@ -38,15 +39,71 @@ class Mirrors:
         Parameters
         ----------
         mirrorListFile: str
-            The sim_telarray file name.
+            mirror list in sim_telarray or ecsv format (with
+            panel focal length only)
         """
         self._logger = logging.getLogger(__name__)
         self._logger.debug("Mirrors Init")
+
+        self._mirrors = dict()
+        self.diameter = None
+        self.shape = None
+        self.numberOfMirrors = 0
 
         self._mirrorListFile = mirrorListFile
         self._readMirrorList()
 
     def _readMirrorList(self):
+        """
+        Read the mirror lists from disk and store the data
+
+        Allow reading of mirro lists in sim_telarray and ecsv
+        format
+
+        """
+
+        if str(self._mirrorListFile).find('ecsv') > 0:
+            self._readMirrorList_from_ecsv()
+        else:
+            self._readMirrorList_from_sim_telarray()
+
+    def _readMirrorList_from_ecsv(self):
+        """
+        Read the mirror list in ecsv format and store the data.
+
+        Raises
+        ------
+
+        """
+
+        # TODO - temporary hard wired geopars - should come from DB
+        self.diameter = 120
+        self.shape = 1
+        self._logger.debug("Shape = {}".format(self.shape))
+        self._logger.debug("Diameter = {}".format(self.diameter))
+
+        _mirror_table = Table.read(self._mirrorListFile, format='ascii.ecsv')
+        self._logger.debug("Reading mirror properties from {}".format(
+            self._mirrorListFile))
+        try:
+            self._mirrors["flen"] = list(
+                _mirror_table['mirror_panel_radius'].to('cm').value/2.)
+            self.numberOfMirrors = len(self._mirrors["flen"])
+            self._mirrors["number"] = list(range(self.numberOfMirrors))
+            self._mirrors["posX"] = [0.]*self.numberOfMirrors
+            self._mirrors["posY"] = [0.]*self.numberOfMirrors
+            self._mirrors["diameter"] = [self.diameter]*self.numberOfMirrors
+            self._mirrors["shape"] = [self.shape]*self.numberOfMirrors
+        except KeyError:
+            self._logger.debug("Missing column for mirror panel focal length (flen) in {}".format(
+                self._mirrorListFile))
+
+        if self.numberOfMirrors == 0:
+            msg = "Problem reading mirror list file"
+            self._logger.error(msg)
+            raise InvalidMirrorListFile()
+
+    def _readMirrorList_from_sim_telarray(self):
         """
         Read the mirror list in sim_telarray format and store the data.
 
@@ -55,7 +112,7 @@ class Mirrors:
         InvalidMirrorListFile
             If number of mirrors is 0.
         """
-        self._mirrors = dict()
+
         self._mirrors["number"] = list()
         self._mirrors["posX"] = list()
         self._mirrors["posY"] = list()
@@ -117,5 +174,7 @@ class Mirrors:
     def plotMirrorLayout(self):
         """
         Plot the mirror layout.
+
+        TODO
         """
         pass
