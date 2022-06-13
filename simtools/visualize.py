@@ -139,27 +139,7 @@ def _addUnit(title, array):
             )
             unit = ""
 
-    return _makeLatexCompatible("{}{}".format(title, unit))
-
-
-def _makeLatexCompatible(text):
-    """
-    A utility function to add an escape before underscores to comply with Latex.
-
-    Parameters
-    ----------
-    text: str
-
-    Returns
-    -------
-    str
-        text compatible with Latex.
-    """
-
-    if not any(_ in text for _ in ["$", r"\_"]):
-        text = text.replace("_", r"\_")
-
-    return text
+    return "{}{}".format(title, unit)
 
 
 def setStyle(palette="default", bigPlot=False):
@@ -358,6 +338,7 @@ def plot1D(data, **kwargs):
     ##########################################################################################
 
     plt.subplot(gs[0])
+    ax1 = plt.gca()
 
     for label, dataNow in dataDict.items():
         assert (
@@ -369,19 +350,18 @@ def plot1D(data, **kwargs):
         plt.plot(
             dataNow[xTitle],
             dataNow[yTitle],
-            label=_makeLatexCompatible(label),
+            label=label,
             **kwargs
         )
 
     if plotRatio:
-        plt.gca().set_xticklabels([])
-        gs.update(hspace=0.06)
+        gs.update(hspace=0.02)
     else:
         plt.xlabel(xTitleUnit)
     plt.ylabel(yTitleUnit)
 
     if len(title) > 0:
-        plt.title(_makeLatexCompatible(title), y=1.02)
+        plt.title(title, y=1.02)
     if "_default" not in list(dataDict.keys()) and not noLegend:
         plt.legend()
     if not plotRatio:
@@ -392,7 +372,7 @@ def plot1D(data, **kwargs):
     ##########################################################################################
 
     if plotRatio:
-        plt.subplot(gs[1])
+        plt.subplot(gs[1], sharex=ax1)
         # In order to advance the cycler one color/style,
         # so the colors stay consistent in the ratio, plot null data first.
         plt.plot([], [])
@@ -413,7 +393,7 @@ def plot1D(data, **kwargs):
                 )
 
         plt.xlabel(xTitleUnit)
-        yTitleRatio = "Ratio to {}".format(_makeLatexCompatible(dataRefName))
+        yTitleRatio = "Ratio to {}".format(dataRefName)
         if len(yTitleRatio) > 20:
             yTitleRatio = "Ratio"
         plt.ylabel(yTitleRatio)
@@ -421,7 +401,6 @@ def plot1D(data, **kwargs):
         ylim = plt.gca().get_ylim()
         nbins = min(int((ylim[1] - ylim[0]) / 0.05 + 1), 6)
         plt.locator_params(axis="y", nbins=nbins)
-        plt.gca().autoscale(enable=True, axis="x", tight=True)
 
     return fig
 
