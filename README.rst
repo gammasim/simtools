@@ -10,6 +10,9 @@ gammasim-tools
 .. image:: https://github.com/gammasim/gammasim-tools/actions/workflows/CI-docs.yml/badge.svg
    :target: https://github.com/gammasim/gammasim-tools/actions/workflows/CI-docs.yml
 
+.. image:: https://codecov.io/gh/gammasim/gammasim-tools/branch/master/graph/badge.svg?token=AYAIRPARCH
+   :target: https://codecov.io/gh/gammasim/gammasim-tools
+
 Prototype implementation of tools for the Simulation System of the `CTA Observatory <www.cta-observatory.org>`_
 
 gammasim-tools provides a framework and tools for:

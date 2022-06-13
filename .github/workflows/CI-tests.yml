@@ -13,6 +13,9 @@ on:
   pull_request:
     branches: [master]
     types: [opened, synchronize]
+  push:
+    branches:
+    - master
 
 jobs:
 
@@ -73,4 +76,6 @@ jobs:
 
       - name: Unit tests
         shell: bash -l {0}
-        run: pytest
+        run: pytest --durations=10 --cov --cov-report=xml
+
+      - uses: codecov/codecov-action@v3.1.0
