@@ -284,6 +284,10 @@ def plot1D(data, **kwargs):
           Add a ratio plot at the bottom. The first entry in the data dictionary
           is used as the reference for the ratio.
           If data dictionary is not an OrderedDict, the reference will be random.
+        * plotDifference: bool
+          Add a difference plot at the bottom. The first entry in the data dictionary
+          is used as the reference for the difference.
+          If data dictionary is not an OrderedDict, the reference will be random.
         * Any additional kwargs for plt.plot
 
     Returns
@@ -322,11 +326,13 @@ def plot1D(data, **kwargs):
 
     plotRatio = kwargs.get("plotRatio", False)
     kwargs.pop("plotRatio", None)
-    if plotRatio:
+    plotDifference = kwargs.get("plotDifference", False)
+    kwargs.pop("plotDifference", None)
+    if plotRatio or plotDifference:
         if len(dataDict) < 2:
-            raise ValueError("Asked to plot ratio with just one set of data")
+            raise ValueError("Asked to plot a ratio or difference with just one set of data")
 
-    if plotRatio:
+    if plotRatio or plotDifference:
         gs = gridspec.GridSpec(2, 1, height_ratios=[3, 1])
         fig = plt.figure(figsize=(8, 8))
     else:
@@ -354,7 +360,7 @@ def plot1D(data, **kwargs):
             **kwargs
         )
 
-    if plotRatio:
+    if plotRatio or plotDifference:
         gs.update(hspace=0.02)
     else:
         plt.xlabel(xTitleUnit)
@@ -364,14 +370,14 @@ def plot1D(data, **kwargs):
         plt.title(title, y=1.02)
     if "_default" not in list(dataDict.keys()) and not noLegend:
         plt.legend()
-    if not plotRatio:
+    if not (plotRatio or plotDifference):
         plt.tight_layout()
 
     ##########################################################################################
     # Plot a ratio
     ##########################################################################################
 
-    if plotRatio:
+    if plotRatio or plotDifference:
         plt.subplot(gs[1], sharex=ax1)
         # In order to advance the cycler one color/style,
         # so the colors stay consistent in the ratio, plot null data first.
@@ -386,9 +392,13 @@ def plot1D(data, **kwargs):
             else:
                 xTitle, yTitle = dataNow.dtype.names[0], dataNow.dtype.names[1]
                 xTitleUnit = _addUnit(xTitle, dataNow[xTitle])
+                if plotRatio:
+                    yValues = dataNow[yTitle] / dataDict[dataRefName][yTitle]
+                else:
+                    yValues = dataNow[yTitle] - dataDict[dataRefName][yTitle]
                 plt.plot(
                     dataNow[xTitle],
-                    dataNow[yTitle] / dataDict[dataRefName][yTitle],
+                    yValues,
                     **kwargs
                 )
 
@@ -396,6 +406,8 @@ def plot1D(data, **kwargs):
         yTitleRatio = "Ratio to {}".format(dataRefName)
         if len(yTitleRatio) > 20:
             yTitleRatio = "Ratio"
+        if plotDifference:
+            yTitleRatio = "Difference to {}".format(dataRefName)
         plt.ylabel(yTitleRatio)
 
         ylim = plt.gca().get_ylim()
@@ -429,9 +441,14 @@ def plotTable(table, yTitle, **kwargs):
         * bigPlot: increase marker and font sizes (like in a wide light curve).
         * noMarkers: do not print markers.
         * emptyMarkers: print empty (hollow) markers
-        * plotRatio: add a ratio plot at the bottom. The first entry in the data dictionary
-                     is used as the reference for the ratio.
-                     If data dictionary is not an OrderedDict, the reference will be random.
+        * plotRatio: bool
+          Add a ratio plot at the bottom. The first entry in the data dictionary
+          is used as the reference for the ratio.
+          If data dictionary is not an OrderedDict, the reference will be random.
+        * plotDifference: bool
+          Add a difference plot at the bottom. The first entry in the data dictionary
+          is used as the reference for the difference.
+          If data dictionary is not an OrderedDict, the reference will be random.
         * Any additional kwargs for plt.plot
 
     Returns
