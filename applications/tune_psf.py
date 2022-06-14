@@ -83,10 +83,10 @@ from simtools.util.model import splitSimtelParameter
 
 
 def loadData(datafile):
-    dType = {"names": ("Radius [cm]", "Relative intensity"), "formats": ("f8", "f8")}
+    dType = {"names": ("Radius [cm]", "Cumulative PSF"), "formats": ("f8", "f8")}
     data = np.loadtxt(datafile, dtype=dType, usecols=(0, 2))
     data["Radius [cm]"] *= 0.1
-    data["Relative intensity"] /= np.max(np.abs(data["Relative intensity"]))
+    data["Cumulative PSF"] /= np.max(np.abs(data["Cumulative PSF"]))
     return data
 
 
@@ -109,9 +109,9 @@ if __name__ == "__main__":
     parser.add_argument(
         "-m",
         "--model_version",
-        help="Model version (default=prod4)",
+        help="Model version (default=Current)",
         type=str,
-        default="prod4",
+        default="Current",
     )
     parser.add_argument(
         "--src_distance",
@@ -169,6 +169,14 @@ if __name__ == "__main__":
         modelVersion=args.model_version,
         label=label,
     )
+    # If we want to start from values different than the ones currently in the model:
+    # align = 0.0046
+    # parsToChange = {
+    #     'mirror_reflection_random_angle': '0.0075 0.125 0.0037',
+    #     'mirror_align_random_horizontal': f'{align} 28 0 0',
+    #     'mirror_align_random_vertical': f'{align} 28 0 0',
+    # }
+    # telModel.changeMultipleParameters(**parsToChange)
 
     allParameters = list()
 
@@ -228,11 +236,14 @@ if __name__ == "__main__":
     # Number of runs is hardcoded
     N_RUNS = 50
     for _ in range(N_RUNS):
-        mrra_range = 0.002 if not args.fixed else 0
+        mrra_range = 0.004 if not args.fixed else 0
+        mrf_range = 0.1
+        mrra2_range = 0.03
+        mar_range = 0.005
         mrra = np.random.uniform(max(mrra_0 - mrra_range, 0), mrra_0 + mrra_range)
-        mrf = np.random.uniform(max(mfr_0 - 0.05, 0), mfr_0 + 0.05)
-        mrra2 = np.random.uniform(max(mrra2_0 - 0.002, 0), mrra2_0 + 0.002)
-        mar = np.random.uniform(max(mar_0 - 0.002, 0), mar_0 + 0.002)
+        mrf = np.random.uniform(max(mfr_0 - mrf_range, 0), mfr_0 + mrf_range)
+        mrra2 = np.random.uniform(max(mrra2_0 - mrra2_range, 0), mrra2_0 + mrra2_range)
+        mar = np.random.uniform(max(mar_0 - mar_range, 0), mar_0 + mar_range)
         addParameters(mrra, mar, mrf, mrra2)
 
     # Loading measured cumulative PSF
@@ -271,7 +282,7 @@ if __name__ == "__main__":
         )
 
         ray.simulate(test=args.test, force=True)
-        ray.analyze(force=True)
+        ray.analyze(force=True, useRX=False)
 
         # Plotting cumulative PSF
         im = ray.images()[0]
@@ -281,24 +292,26 @@ if __name__ == "__main__":
         dataToPlot["simulated"] = im.getCumulativeData(radius * u.cm)
 
         rmsd = calculateRMSD(
-            dataToPlot["measured"]["Relative intensity"],
-            dataToPlot["simulated"]["Relative intensity"]
+            dataToPlot["measured"]["Cumulative PSF"],
+            dataToPlot["simulated"]["Cumulative PSF"]
         )
 
         if plot:
-            fig = visualize.plot1D(dataToPlot)
-            ax = plt.gca()
+            fig = visualize.plot1D(
+                dataToPlot,
+                plotDifference=True,
+                noMarkers=True,
+            )
+            ax = fig.get_axes()[0]
             ax.set_ylim(0, 1.05)
             ax.set_title("refl_rnd={}, align_rnd={}".format(
                 pars["mirror_reflection_random_angle"],
                 pars["mirror_align_random_vertical"]
             ))
 
-            ax.legend(loc='lower right')
-
             ax.text(
                 0.8,
-                0.5,
+                0.3,
                 "D80 = {:.3f} cm\nRMSD = {:.4f}".format(d80, rmsd),
                 verticalalignment="center",
                 horizontalalignment="center",
