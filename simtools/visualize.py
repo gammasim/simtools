@@ -373,7 +373,7 @@ def plot1D(data, **kwargs):
         plt.title(title, y=1.02)
     if "_default" not in list(dataDict.keys()) and not noLegend:
         plt.legend()
-    if not plotRatio or plotDifference:
+    if not (plotRatio or plotDifference):
         plt.tight_layout()
 
     ##########################################################################################
