@@ -19,7 +19,7 @@ on:
 
 jobs:
 
-  tests:
+  functionaltests:
     runs-on: ubuntu-latest
 
     strategy:

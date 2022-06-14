@@ -19,7 +19,7 @@ on:
 
 jobs:
 
-  tests:
+  unittests:
     runs-on: ubuntu-latest
 
     strategy:
