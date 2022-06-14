@@ -209,7 +209,6 @@ def test_integral_curve():
 
 
 @pytest.mark.skipif(not has_db_connection(), reason=DB_CONNECTION_MSG)
-@pytest.mark.skipif(not simtel_installed(), reason=SIMTEL_MSG)
 def test_config_data():
 
     label = "test-config-data"
