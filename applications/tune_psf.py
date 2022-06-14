@@ -169,7 +169,7 @@ if __name__ == "__main__":
         modelVersion=args.model_version,
         label=label,
     )
-    # If we want to start from different values then the one in the model:
+    # If we want to start from values different than the ones currently in the model:
     # align = 0.0046
     # parsToChange = {
     #     'mirror_reflection_random_angle': '0.0075 0.125 0.0037',
