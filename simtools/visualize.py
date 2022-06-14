@@ -326,14 +326,11 @@ def plot1D(data, **kwargs):
 
     plotRatio = kwargs.get("plotRatio", False)
     kwargs.pop("plotRatio", None)
-    if plotRatio:
-        if len(dataDict) < 2:
-            raise ValueError("Asked to plot ratio with just one set of data")
     plotDifference = kwargs.get("plotDifference", False)
     kwargs.pop("plotDifference", None)
-    if plotDifference:
+    if plotRatio or plotDifference:
         if len(dataDict) < 2:
-            raise ValueError("Asked to plot ratio with just one set of data")
+            raise ValueError("Asked to plot a ratio or difference with just one set of data")
 
     if plotRatio or plotDifference:
         gs = gridspec.GridSpec(2, 1, height_ratios=[3, 1])
