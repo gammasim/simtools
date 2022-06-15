@@ -1,6 +1,6 @@
 ---
-name: CI-functionaltests
-# Execute functional tests for applications
+name: CI-integrationtests
+# Execute integration tests for applications
 #
 env:
   SIMTELPATH: ${{ github.workspace }}/
@@ -19,7 +19,7 @@ on:
 
 jobs:
 
-  functionaltests:
+  integrationtests:
     runs-on: ubuntu-latest
 
     strategy:
