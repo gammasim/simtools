@@ -70,4 +70,4 @@ jobs:
 
       - name: Unit tests
         shell: bash -l {0}
-        run: pytest --durations=10 --no-cov applications/tests/*
+        run: pytest --durations=10 --no-cov integrationtests/*
