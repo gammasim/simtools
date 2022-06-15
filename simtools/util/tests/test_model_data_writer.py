@@ -2,7 +2,6 @@
 
 import logging
 import re
-import sys
 import pytest
 
 import simtools.util.model_data_writer as writer
