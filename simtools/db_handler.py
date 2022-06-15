@@ -190,7 +190,7 @@ class DatabaseHandler:
             self._logger.debug(
                 "Exporting model files from local model file directories"
             )
-            for par, value in parameters.items():
+            for value in parameters.values():
 
                 if not self._isFile(value):
                     continue
