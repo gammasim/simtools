@@ -447,6 +447,7 @@ class RayTracing:
         if save:
             plotFileName = names.rayTracingPlotFileName(
                 key,
+                self._telescopeModel.site,
                 self._telescopeModel.name,
                 self._sourceDistance,
                 self.config.zenithAngle,
