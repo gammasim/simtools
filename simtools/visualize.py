@@ -466,7 +466,7 @@ def plotTable(table, yTitle, **kwargs):
 
     xAxis = table.keys()[0]
     dataDict = OrderedDict()
-    for _, column in enumerate(table.keys()[1:]):
+    for column in table.keys()[1:]:
         dataDict[column] = QTable([table[xAxis], table[column]], names=[xAxis, yTitle])
 
     return plot1D(dataDict, **kwargs)
