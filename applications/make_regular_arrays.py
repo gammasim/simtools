@@ -20,7 +20,7 @@
     Runtime < 1 min.
 
     .. code-block:: console
-    
+
         python applications/make_regular_arrays.py
 """
 

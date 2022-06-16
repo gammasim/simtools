@@ -133,7 +133,8 @@ class TestCorsikaConfig(unittest.TestCase):
         newCorsikaConfig.setUserParameters(newConfigData)
         self.assertEqual(newCorsikaConfig.getUserParameter("thetap"), [0, 0])
 
-    def test_config_data_from_yaml_file(self):
+    @staticmethod
+    def test_config_data_from_yaml_file():
         logger.info("test_config_data_from_yaml_file")
         corsikaConfigFile = io.getTestDataFile("corsikaConfigTest.yml")
         cc = CorsikaConfig(
