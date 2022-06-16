@@ -178,7 +178,7 @@ class DatabaseHandler:
 
         if cfg.get("useMongoDB"):
             self._logger.debug("Exporting model files from MongoDB")
-            for _, info in parameters.items():
+            for info in parameters.values():
                 if not info["File"]:
                     continue
                 file = self._getFileMongoDB(
