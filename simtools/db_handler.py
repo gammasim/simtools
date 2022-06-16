@@ -75,7 +75,8 @@ class DatabaseHandler:
 
     # END of _init_
 
-    def _readDetailsMongoDB(self):
+    @staticmethod
+    def _readDetailsMongoDB():
         """
         Read the MongoDB details (server, user, pass, etc.) from an external file.
 
@@ -113,7 +114,8 @@ class DatabaseHandler:
 
         return _dbClient
 
-    def _getTelescopeModelNameForDB(self, site, telescopeModelName):
+    @staticmethod
+    def _getTelescopeModelNameForDB(site, telescopeModelName):
         """Make telescope name as the DB needs from site and telescopeModelName."""
         return site + "-" + telescopeModelName
 
@@ -176,7 +178,7 @@ class DatabaseHandler:
 
         if cfg.get("useMongoDB"):
             self._logger.debug("Exporting model files from MongoDB")
-            for par, info in parameters.items():
+            for info in parameters.values():
                 if not info["File"]:
                     continue
                 file = self._getFileMongoDB(
@@ -189,7 +191,7 @@ class DatabaseHandler:
             self._logger.debug(
                 "Exporting model files from local model file directories"
             )
-            for par, value in parameters.items():
+            for value in parameters.values():
 
                 if not self._isFile(value):
                     continue
@@ -559,7 +561,8 @@ class DatabaseHandler:
 
         return _parameters
 
-    def _getFileMongoDB(self, dbName, fileName):
+    @staticmethod
+    def _getFileMongoDB(dbName, fileName):
         """
         Extract a file from MongoDB and return GridFS file instance
 
@@ -585,7 +588,8 @@ class DatabaseHandler:
                 "The file {} does not exist in the database {}".format(fileName, dbName)
             )
 
-    def _writeFileFromMongoToDisk(self, dbName, path, file):
+    @staticmethod
+    def _writeFileFromMongoToDisk(dbName, path, file):
         """
         Extract a file from MongoDB and write it to disk
 
@@ -995,7 +999,8 @@ class DatabaseHandler:
         else:
             return modelVersion
 
-    def _getTaggedVersion(self, dbName, version="Current"):
+    @staticmethod
+    def _getTaggedVersion(dbName, version="Current"):
         """
         Get the tag of the "Current" or "Latest" version of the MC Model.
         The "Current" is the latest stable MC Model,
@@ -1024,7 +1029,8 @@ class DatabaseHandler:
 
         return tags["Tags"][version]["Value"]
 
-    def insertFileToDB(self, file, dbName=DB_CTA_SIMULATION_MODEL, **kwargs):
+    @staticmethod
+    def insertFileToDB(file, dbName=DB_CTA_SIMULATION_MODEL, **kwargs):
         """
         Insert a file to the DB.
 
