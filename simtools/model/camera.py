@@ -507,7 +507,7 @@ class Camera:
 
         edgePixelIndices = list()
 
-        for i_pix, _ in enumerate(zip(pixels["x"], pixels["y"])):
+        for i_pix in range(len(pixels["x"])):
             if pixels["pixel_shape"] == 1 or pixels["pixel_shape"] == 3:
                 if pixels["pixOn"][i_pix]:
                     if len(neighbours[i_pix]) < 6:
