@@ -103,7 +103,7 @@ class TelescopePosition:
         Perform all the necessary conversions in order to fill all the coordinate variables.
     """
 
-    def __init__(self, name=None, prodId=dict(), configData=None, configFile=None):
+    def __init__(self, name=None, prodId=None, configData=None, configFile=None):
         """
         TelescopePosition init.
 
@@ -177,7 +177,7 @@ class TelescopePosition:
         if self.hasAltitude():
             telstr += "\t Alt: {:0.2f}".format(self._altitude)
 
-        if len(self._prodId) > 0:
+        if self._prodId and len(self._prodId) > 0:
             telstr += "\t", self._prodId
         return telstr
 

@@ -22,4 +22,3 @@ def test_read_list():
 if __name__ == "__main__":
 
     test_read_list()
-    pass
