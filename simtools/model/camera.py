@@ -88,7 +88,8 @@ class Camera:
 
         return
 
-    def readPixelList(self, cameraConfigFile):
+    @staticmethod
+    def readPixelList(cameraConfigFile):
         """
         Read the pixel layout from the camera config file, assumed to be in a sim_telarray format.
 
@@ -338,7 +339,8 @@ class Camera:
 
         return fov, averageEdgeDistance
 
-    def _findNeighbours(self, xPos, yPos, radius):
+    @staticmethod
+    def _findNeighbours(xPos, yPos, radius):
         """
         use a KD-Tree to quickly find nearest neighbours
         (e.g., of the pixels in a camera or mirror facets)
@@ -505,7 +507,7 @@ class Camera:
 
         edgePixelIndices = list()
 
-        for i_pix, xyPixPos in enumerate(zip(pixels["x"], pixels["y"])):
+        for i_pix in range(len(pixels["x"])):
             if pixels["pixel_shape"] == 1 or pixels["pixel_shape"] == 3:
                 if pixels["pixOn"][i_pix]:
                     if len(neighbours[i_pix]) < 6:
@@ -615,7 +617,8 @@ class Camera:
 
         return
 
-    def _plotOneAxisDef(self, plt, **kwargs):
+    @staticmethod
+    def _plotOneAxisDef(plt, **kwargs):
         """
         Plot an axis on the pyplot.plt instance provided.
 
