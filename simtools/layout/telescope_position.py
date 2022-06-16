@@ -103,7 +103,7 @@ class TelescopePosition:
         Perform all the necessary conversions in order to fill all the coordinate variables.
     """
 
-    def __init__(self, name=None, prodId=dict(), configData=None, configFile=None):
+    def __init__(self, name=None, prodId=None, configData=None, configFile=None):
         """
         TelescopePosition init.
 
