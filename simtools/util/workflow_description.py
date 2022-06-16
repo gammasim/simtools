@@ -244,8 +244,10 @@ class WorkflowDescription:
             else:
                 _filename += '-' + self.workflow_config['ACTIVITY']['NAME']
         except KeyError:
-            self._logger.error(
-                "Missing CTA:PRODUCT:ID in metadata")
+            self._logger.error("Missing CTA:PRODUCT:ID in metadata")
+            raise
+        except TypeError:
+            self._logger.error("Missing ACTIVITY:NAME in metadata")
             raise
 
         if not suffix:
