@@ -75,7 +75,8 @@ class DatabaseHandler:
 
     # END of _init_
 
-    def _readDetailsMongoDB(self):
+    @staticmethod
+    def _readDetailsMongoDB():
         """
         Read the MongoDB details (server, user, pass, etc.) from an external file.
 
@@ -587,7 +588,8 @@ class DatabaseHandler:
                 "The file {} does not exist in the database {}".format(fileName, dbName)
             )
 
-    def _writeFileFromMongoToDisk(self, dbName, path, file):
+    @staticmethod
+    def _writeFileFromMongoToDisk(dbName, path, file):
         """
         Extract a file from MongoDB and write it to disk
 
@@ -1027,7 +1029,8 @@ class DatabaseHandler:
 
         return tags["Tags"][version]["Value"]
 
-    def insertFileToDB(self, file, dbName=DB_CTA_SIMULATION_MODEL, **kwargs):
+    @staticmethod
+    def insertFileToDB(file, dbName=DB_CTA_SIMULATION_MODEL, **kwargs):
         """
         Insert a file to the DB.
 

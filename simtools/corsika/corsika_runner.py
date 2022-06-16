@@ -294,7 +294,8 @@ class CorsikaRunner:
         cmd + " || exit 3\n"
         return cmd
 
-    def _getExtraCommands(self, extra):
+    @staticmethod
+    def _getExtraCommands(extra):
         """
         Get extra commands by combining the one given as argument and
         what is given in config.yml
