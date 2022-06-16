@@ -58,7 +58,8 @@ class hexEdgePixelHandler(object):
     Legend handler class to plot a hexagonal "edge" pixel.
     """
 
-    def legend_artist(self, legend, orig_handle, fontsize, handlebox):
+    @staticmethod
+    def legend_artist(legend, orig_handle, fontsize, handlebox):
         x0, y0 = (
           handlebox.xdescent + handlebox.width / 3,
           handlebox.ydescent + handlebox.height / 3
