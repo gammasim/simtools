@@ -177,7 +177,7 @@ class TelescopePosition:
         if self.hasAltitude():
             telstr += "\t Alt: {:0.2f}".format(self._altitude)
 
-        if len(self._prodId) > 0:
+        if self._prodId and len(self._prodId) > 0:
             telstr += "\t", self._prodId
         return telstr
 
