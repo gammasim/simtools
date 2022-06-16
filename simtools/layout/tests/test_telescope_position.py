@@ -2,6 +2,7 @@
 
 import logging
 import math
+import pytest
 import astropy.units as u
 
 import pyproj
@@ -117,6 +118,12 @@ def test_convert_all():
         corsikaObsLevel=2158 * u.m,
         corsikaSphereCenter=16 * u.m,
     )
+
+    assert 2185.0 == pytest.approx(tel._altitude, 0.01)
+    assert 28.7621 == pytest.approx(tel._latitude, 1.e-4)
+    assert -17.8920302 == pytest.approx(tel._longitude,1.e-7)
+    assert 3185067.2783240844 == pytest.approx(tel._utmNorth,1.e-9)
+    assert 217609.2270142641 == pytest.approx(tel._utmEast, 1.e-9)
 
 
 if __name__ == "__main__":
