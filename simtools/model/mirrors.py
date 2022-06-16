@@ -177,4 +177,3 @@ class Mirrors:
 
         TODO
         """
-        pass

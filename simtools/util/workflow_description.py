@@ -367,7 +367,6 @@ class WorkflowDescription:
         except AttributeError as e:
             self._logger.debug(
                 'Missing parameter on command line, use defaults ({})'.format(e))
-            pass
 
     def _fill_top_level_meta_from_file(self):
         """

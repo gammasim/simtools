@@ -97,7 +97,7 @@ class SimtelHistograms:
             countFile = True
             with EventIOFile(file) as f:
 
-                for i, o in enumerate(yield_toplevel_of_type(f, Histograms)):
+                for o in yield_toplevel_of_type(f, Histograms):
                     try:
                         hists = o.parse()
                     except Exception:
