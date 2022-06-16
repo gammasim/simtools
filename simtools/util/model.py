@@ -81,7 +81,7 @@ def validateModelParameter(parNameIn, parValueIn):
     """
     _logger = logging.getLogger(__name__)
     _logger.debug("Validating parameter {}".format(parNameIn))
-    for parNameModel in MODEL_PARS.keys():
+    for parNameModel in MODEL_PARS:
         if parNameIn == parNameModel or parNameIn in MODEL_PARS[parNameModel]["names"]:
             parType = MODEL_PARS[parNameModel]["type"]
             return parNameModel, parType(parValueIn)
