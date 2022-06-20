@@ -18,72 +18,110 @@ APP_LIST = {
     # Optics
     "tune_psf": [
         [
-            "-s",
-            "North",
-            "-t",
-            "LST-1",
-            "--model_version",
-            "prod4",
-            "--data",
-            "PSFcurve_data_v2.txt",
-            "--zenith",
-            "20",
+            "-s", "North",
+            "-t", "LST-1",
+            "--model_version", "prod4",
+            "--data", "PSFcurve_data_v2.txt",
+            "--zenith", "20",
             "--test",
         ]
     ],
     "compare_cumulative_psf": [
         [
-            "-s",
-            "North",
-            "-t",
-            "LST-1",
-            "--model_version",
-            "prod4",
-            "--data",
-            "PSFcurve_data_v2.txt",
-            "--zenith",
-            "20",
+            "-s", "North",
+            "-t", "LST-1",
+            "--model_version", "prod4",
+            "--data", "PSFcurve_data_v2.txt",
+            "--zenith", "20",
             "--test",
         ]
     ],
-    "derive_mirror_rnda": [
+    "set_model_parameter_from_external::help": [
         [
-            "-s",
-            "North",
-            "-t",
-            "MST-FlashCam-D",
-            "--containment_fraction",
-            "0.8",
-            "--mirror_list",
-            "tests/resources/MLTdata-preproduction.ecsv",
-            "--psf_measurement",
-            "tests/resources/MLTdata-preproduction.ecsv",
-            "--rnda",
-            "0.0063",
+            "--help",
+        ]
+    ],
+    "set_model_parameter_from_external::submit": [
+        [
+            "--workflow_config_file",
+            "tests/resources/set_MST_mirror_2f_measurements_from_external.config.yml",
+            "--input_meta_file", "tests/resources/MLTdata-preproduction.usermeta.yml",
+            "--input_data_file", "tests/resources/MLTdata-preproduction.ecsv",
+            " --test",
+        ]
+    ],
+    "derive_mirror_rnda::help": [
+        [
+            "--help",
+        ]
+    ],
+    "derive_mirror_rnda::psf_random_flen": [
+        [
+            "-s", "North",
+            "-t", "MST-FlashCam-D",
+            "--containment_fraction", "0.8",
+            "--psf_measurement_containment_mean", "1.4",
+            "--use_random_flen",
+            "--rnda", "0.0063",
+            " --test",
+        ]
+    ],
+    "derive_mirror_rnda::psf_notuning": [
+        [
+            "-s", "North",
+            "-t", "MST-FlashCam-D",
+            "--containment_fraction", "0.8",
+            "--mirror_list", "tests/resources/MLTdata-preproduction.ecsv",
+            "--psf_measurement", "tests/resources/MLTdata-preproduction.ecsv",
+            "--rnda", "0.0063",
+            " --test",
+        ]
+    ],
+    "derive_mirror_rnda::psf_measurement": [
+        [
+            "-s", "North",
+            "-t", "MST-FlashCam-D",
+            "--containment_fraction", "0.8",
+            "--mirror_list", "tests/resources/MLTdata-preproduction.ecsv",
+            "--psf_measurement", "tests/resources/MLTdata-preproduction.ecsv",
+            "--rnda", "0.0063",
+            " --test",
+        ]
+    ],
+    "derive_mirror_rnda::psf_mean": [
+        [
+            "-s", "North",
+            "-t", "MST-FlashCam-D",
+            "--containment_fraction", "0.8",
+            "--mirror_list", "tests/resources/MLTdata-preproduction.ecsv",
+            "--psf_measurement_containment_mean", "1.4",
+            "--rnda", "0.0063",
             " --test",
         ]
     ],
     "validate_optics": [
         [
-            "-s",
-            "North",
-            "-t",
-            "LST-1",
-            "--max_offset",
-            "1.0",
-            "--src_distance",
-            "11",
-            "--zenith",
-            "20",
-            "--test",
-        ]
+            "-s", "North",
+            "-t", "LST-1",
+            "--max_offset", "1.0",
+            "--src_distance", "11",
+            "--zenith", "20",
+            "--test", ]
     ],
     # Camera
     "validate_camera_efficiency": [
-        ["-s", "North", "-t", "MST-NectarCam-D", "--model_version", "prod4"]
+        [
+            "-s", "North",
+            "-t", "MST-NectarCam-D",
+            "--model_version", "prod4"
+        ]
     ],
     "validate_camera_fov": [
-        ["-s", "North", "-t", "MST-NectarCam-D", "--model_version", "prod4"]
+        [
+            "-s", "North",
+            "-t", "MST-NectarCam-D",
+            "--model_version", "prod4"
+        ]
     ],
     # Layout
     "make_regular_arrays": [[]],
@@ -94,54 +132,31 @@ APP_LIST = {
     # Trigger
     "sim_showers_for_trigger_rates": [
         [
-            "-a",
-            "4LST",
-            "-s",
-            "North",
-            "--primary",
-            "proton",
-            "--nruns",
-            "2",
-            "--nevents",
-            "10000",
+            "-a", "4LST",
+            "-s", "North",
+            "--primary", "proton",
+            "--nruns", "2",
+            "--nevents", "10000",
             "--test",
         ]
     ],
     # Database
     "get_parameter": [
-        ["-s", "North", "-t", "LST-1", "-p", "mirror_list", "--model_version", "prod4"]
+        [
+            "-s", "North",
+            "-t", "LST-1",
+            "-p", "mirror_list",
+            "--model_version", "prod4"
+        ]
     ],
     "production": [
-        ["-c", "data/test-data/prodConfigTest.yml", "-t", "simulate", "--test"]
+        [
+            "-c", "data/test-data/prodConfigTest.yml",
+            "-t", "simulate",
+            "--test"
+        ]
     ],
 }
-
-# List of applications that require sim_telarray installation
-REQUIRE_SIMTEL = (
-    "compare_cumulative_psf",
-    "tune_psf",
-    "derive_mirror_rnda",
-    "validate_optics",
-    "validate_camera_efficiency",
-)
-
-REQUIRE_DB_CONNECTION = (
-    "compare_cumulative_psf",
-    "tune_psf",
-    "derive_mirror_rnda",
-    "validate_optics",
-    "validate_camera_efficiency",
-    "validate_camera_fov",
-    "make_regular_arrays",
-    "produce_array_config",
-    "get_parameter",
-    "production",
-)
-
-REQUIRE_CFG_FILE = (
-    "derive_mirror_rnda",
-    "production",
-)
 
 
 @pytest.mark.parametrize("application", APP_LIST.keys())
@@ -158,10 +173,11 @@ def test_applications(set_simtools, application):
     for args in APP_LIST[application]:
         # TODO: skip all but derive_mirror_rando
         # (no configFile implemented for others)
-        if application != 'derive_mirror_rnda':
+        app_name = application.partition("::")[0]
+        if app_name != 'derive_mirror_rnda' and app_name != "set_model_parameter_from_external":
             continue
         logger.info("Running with args: {}".format(args))
-        cmd = makeCommand(application, args)
+        cmd = makeCommand(app_name, args)
         out = os.system(cmd)
         isOutputValid = out == 0
         assert isOutputValid
