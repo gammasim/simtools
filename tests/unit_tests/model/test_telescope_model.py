@@ -93,7 +93,7 @@ def test_cfg_file(telescope_model, lst_config_file):
     assert False == filecmp.cmp(lst_config_file, tel.getConfigFile())
 
 
-def test_updating_export_model_files(cfg_setup, set_db):
+def test_updating_export_model_files(set_db):
     """
     It was found in derive_mirror_rnda_angle that the DB was being
     accessed each time the model was changed, because the model

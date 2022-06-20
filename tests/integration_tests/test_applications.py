@@ -4,6 +4,7 @@ import os
 import pytest
 import logging
 
+import simtools.config as cfg
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
@@ -51,18 +52,14 @@ APP_LIST = {
             "North",
             "-t",
             "MST-FlashCam-D",
-            "--model_version",
-            "prod4",
-            "--mean_d80",
-            "1.4",
-            "--sig_d80",
-            "0.16",
+            "--containment_fraction",
+            "0.8",
             "--mirror_list",
-            "mirror_MST_focal_lengths.dat",
-            "--d80_list",
-            "mirror_MST_D80.dat",
+            "tests/resources/MLTdata-preproduction.ecsv",
+            "--psf_measurement",
+            "tests/resources/MLTdata-preproduction.ecsv",
             "--rnda",
-            "0.0075",
+            "0.0063",
             " --test",
         ]
     ],
@@ -148,20 +145,23 @@ REQUIRE_CFG_FILE = (
 
 
 @pytest.mark.parametrize("application", APP_LIST.keys())
-@pytest.mark.skip(reason='applications do not find config.yml')
-def test_applications(cfg_setup, set_simtelarray, set_db, application):
+def test_applications(set_simtools, application):
     logger.info("Testing {}".format(application))
 
     def makeCommand(app, args):
         cmd = "python applications/" + app + ".py"
         for aa in args:
             cmd += " " + aa
+        cmd += " --configFile " + cfg.CONFIG_FILE_NAME
         return cmd
 
     for args in APP_LIST[application]:
+        # TODO: skip all but derive_mirror_rando
+        # (no configFile implemented for others)
+        if application != 'derive_mirror_rnda':
+            continue
         logger.info("Running with args: {}".format(args))
         cmd = makeCommand(application, args)
         out = os.system(cmd)
-        out = 0
         isOutputValid = out == 0
         assert isOutputValid

@@ -35,7 +35,7 @@ def test_run_no_db(set_simtelarray):
 
 
 @pytest.mark.parametrize("telescopeModelName", ["sst-1M", "sst-ASTRI", "sst-GCT"])
-def test_ssts(set_simtelarray, set_db, telescopeModelName):
+def test_ssts(set_simtools, telescopeModelName):
     # Test with 3 SSTs
     version = "prod3"
     configData = {
@@ -56,7 +56,7 @@ def test_ssts(set_simtelarray, set_db, telescopeModelName):
 
 
 @pytest.mark.skip(reason='ignore unused rx method')
-def test_rx(cfg_setup, set_simtelarray):
+def test_rx(set_simtelarray):
     version = "current"
     label = "test-lst"
 
@@ -103,7 +103,7 @@ def test_rx(cfg_setup, set_simtelarray):
     plt.savefig(plotFileArea)
 
 
-def test_plot_image(set_simtelarray, set_db):
+def test_plot_image(set_simtools):
     version = "prod3"
     label = "test-astri"
     configData = {
@@ -132,7 +132,7 @@ def test_plot_image(set_simtelarray, set_db):
         plt.savefig(plotFile)
 
 
-def test_single_mirror(set_simtelarray, set_db, plot=False):
+def test_single_mirror(set_simtools, plot=False):
 
     # Test MST, single mirror PSF simulation
     version = "prod3"
@@ -159,7 +159,7 @@ def test_single_mirror(set_simtelarray, set_db, plot=False):
     plt.savefig(plotFile)
 
 
-def test_integral_curve(set_simtelarray, set_db):
+def test_integral_curve(set_simtools):
     version = "prod4"
     label = "lst_integral"
 
