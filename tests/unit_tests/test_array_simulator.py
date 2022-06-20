@@ -43,7 +43,6 @@ def corsikaFile():
 
 @pytest.fixture
 def array_simulator(cfg_setup, label, arrayConfigData):
-    cfg_setup
 
     arraySimulator = ArraySimulator(
         label=label, configData=arrayConfigData
