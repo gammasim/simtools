@@ -1,0 +1,3531 @@
+adjust_gain:
+  default: '1'
+  '2016-12-20': '1'
+  prod3_compatible: '1'
+  post_prod3_updates: '1'
+  '2018-11-07': '1'
+  '2019-02-22': '1'
+  '2019-05-13': '1'
+  '2019-11-20': '1'
+  '2019-12-30': '1'
+  '2020-02-26': '1'
+  '2020-06-28': '1'
+  prod4: '1'
+  Applicable: false
+afterpulse_alternate:
+  default: '0'
+  '2016-12-20': '0'
+  prod3_compatible: '0'
+  post_prod3_updates: '0'
+  '2018-11-07': '0'
+  '2019-02-22': '0'
+  '2019-05-13': '0'
+  '2019-11-20': '0'
+  '2019-12-30': '0'
+  '2020-02-26': '0'
+  '2020-06-28': '0'
+  prod4: '0'
+  Applicable: false
+axes_offsets:
+  default: 'all: 0'
+  prod3_compatible: 'all: 0'
+  post_prod3_updates: 'all: 0'
+  '2018-11-07': 160 0
+  '2019-02-22': 160 0
+  '2019-05-13': 160 0
+  '2019-11-20': 160 0
+  '2019-12-30': 160 0
+  '2020-02-26': 160 0
+  '2020-06-28': 160 0
+  prod4: 160 0
+  Applicable: false
+bypass_optics:
+  default: '0'
+  '2016-12-20': '0'
+  prod3_compatible: '0'
+  post_prod3_updates: '0'
+  '2018-11-07': '0'
+  '2019-02-22': '0'
+  '2019-05-13': '0'
+  '2019-11-20': '0'
+  '2019-12-30': '0'
+  '2020-02-26': '0'
+  '2020-06-28': '0'
+  prod4: '0'
+  Applicable: false
+camera_body_diameter:
+  default: 160.0
+  '2016-12-20': 339.0
+  prod3_compatible: 339.0
+  post_prod3_updates: 300.0
+  '2018-11-07': 300.0
+  '2019-02-22': 300.0
+  '2019-05-13': 300.0
+  '2019-11-20': 300.0
+  '2019-12-30': 300.0
+  '2020-02-26': 300.0
+  '2020-06-28': 291.8
+  prod4: 291.8
+  Applicable: false
+camera_body_shape:
+  default: 0
+  prod3_compatible: 0
+  post_prod3_updates: 2
+  '2018-11-07': 2
+  '2019-02-22': 2
+  '2019-05-13': 2
+  '2019-11-20': 2
+  '2019-12-30': 2
+  '2020-02-26': 2
+  '2020-06-28': 2
+  prod4: 2
+  Applicable: false
+camera_config_file:
+  default: hess_camera.dat
+  '2016-12-20': camera_CTA-MST-FlashCam.dat
+  prod3_compatible: camera_CTA-MST-FlashCam.dat
+  post_prod3_updates: camera_CTA-MST-FlashCam_patch3_digitalsum9.dat
+  '2018-11-07': camera_CTA-MST-FlashCam_patch3_digitalsum9_neweff.dat
+  '2019-02-22': camera_CTA-MST-FlashCam_patch3_digitalsum9_neweff2.dat
+  '2019-05-13': camera_CTA-MST-FlashCam_patch3_digitalsum9_neweff2.dat
+  '2019-11-20': camera_CTA-MST-FlashCam_patch3_digitalsum9_neweff2.dat
+  '2019-12-30': camera_CTA-MST-FlashCam_patch3_digitalsum9_neweff2.dat
+  '2020-02-26': camera_CTA-MST-FlashCam_patch3_digitalsum9_neweff2.dat
+  '2020-06-28': camera_CTA-MST-FlashCam_patch3_digitalsum9_neweff2.dat
+  prod4: camera_CTA-MST-FlashCam_patch3_digitalsum9_neweff2.dat
+  Applicable: true
+pixel_shape:
+  '2016-12-20': 3
+  prod3_compatible: 3
+  post_prod3_updates: 3
+  '2018-11-07': 3
+  '2019-02-22': 3
+  '2019-05-13': 3
+  '2019-11-20': 3
+  '2019-12-30': 3
+  '2020-02-26': 3
+  '2020-06-28': 3
+  prod4: 3
+  Applicable: true
+pixel_diameter:
+  '2016-12-20': 4.9
+  prod3_compatible: 4.9
+  post_prod3_updates: 4.9
+  '2018-11-07': 4.9
+  '2019-02-22': 4.9
+  '2019-05-13': 4.9
+  '2019-11-20': 4.9
+  '2019-12-30': 4.9
+  '2020-02-26': 4.9
+  '2020-06-28': 4.9
+  prod4: 4.9
+  Applicable: true
+lightguide_efficiency_angle_file:
+  '2016-12-20': CTA-LST_lightguide_eff.dat
+  prod3_compatible: CTA-LST_lightguide_eff.dat
+  post_prod3_updates: CTA-LST_lightguide_eff.dat
+  '2018-11-07': CTA-MST_lightguide_boost8_az-av_wl-av.dat
+  '2019-02-22': CTA-MST_lightguide_FC_weighted_average.dat
+  '2019-05-13': CTA-MST_lightguide_FC_weighted_average.dat
+  '2019-11-20': CTA-MST_lightguide_FC_weighted_average.dat
+  '2019-12-30': CTA-MST_lightguide_FC_weighted_average.dat
+  '2020-02-26': CTA-MST_lightguide_FC_weighted_average.dat
+  '2020-06-28': CTA-MST_lightguide_FC_weighted_average.dat
+  prod4: CTA-MST_lightguide_FC_weighted_average.dat
+  Applicable: true
+camera_config_name:
+  default: ''
+  prod3_compatible: ''
+  post_prod3_updates: ''
+  '2018-11-07': FlashCam
+  '2019-02-22': FlashCam
+  '2019-05-13': FlashCam
+  '2019-11-20': FlashCam
+  '2019-12-30': FlashCam
+  '2020-02-26': FlashCam
+  '2020-06-28': FlashCam
+  prod4: FlashCam
+  Applicable: true
+camera_config_variant:
+  default: ''
+  prod3_compatible: ''
+  post_prod3_updates: ''
+  '2018-11-07': ''
+  '2019-02-22': ''
+  '2019-05-13': ''
+  '2019-11-20': ''
+  '2019-12-30': ''
+  '2020-02-26': ''
+  '2020-06-28': ''
+  prod4: ''
+  Applicable: false
+camera_config_version:
+  default: ''
+  prod3_compatible: ''
+  post_prod3_updates: ''
+  '2018-11-07': '2018-09-20'
+  '2019-02-22': '2019-02-21'
+  '2019-05-13': '2019-05-13'
+  '2019-11-20': '2019-05-13'
+  '2019-12-30': '2019-05-13'
+  '2020-02-26': '2019-05-13'
+  '2020-06-28': '2019-06-28'
+  prod4: '2019-06-28'
+  Applicable: true
+camera_depth:
+  default: 0.0
+  '2016-12-20': 0.0
+  prod3_compatible: 0.0
+  post_prod3_updates: 0.0
+  '2018-11-07': 0.0
+  '2019-02-22': 0.0
+  '2019-05-13': 0.0
+  '2019-11-20': 0.0
+  '2019-12-30': 0.0
+  '2020-02-26': 0.0
+  '2020-06-28': 0.0
+  prod4: 0.0
+  Applicable: false
+camera_filter:
+  default: none
+  '2016-12-20': Aclylite8_tra_v2013ref.dat
+  prod3_compatible: Aclylite8_tra_v2013ref.dat
+  post_prod3_updates: Aclylite8_tra_v2013ref.dat
+  '2018-11-07': Aclylite8_tra_v2013ref.dat
+  '2019-02-22': Aclylite8_tra_v2013ref.dat
+  '2019-05-13': Aclylite8_tra_v2013ref.dat
+  '2019-11-20': Aclylite8_tra_v2013ref.dat
+  '2019-12-30': Aclylite8_tra_v2013ref.dat
+  '2020-02-26': Aclylite8_tra_v2013ref.dat
+  '2020-06-28': Aclylite8_tra_v2013ref.dat
+  prod4: Aclylite8_tra_v2013ref.dat
+  Applicable: true
+camera_pixels:
+  default: 960
+  '2016-12-20': 1764
+  prod3_compatible: 1764
+  post_prod3_updates: 1764
+  '2018-11-07': 1764
+  '2019-02-22': 1764
+  '2019-05-13': 1764
+  '2019-11-20': 1764
+  '2019-12-30': 1764
+  '2020-02-26': 1764
+  '2020-06-28': 1764
+  prod4: 1764
+  Applicable: true
+camera_scale_factor:
+  default: '1'
+  '2016-12-20': '1'
+  prod3_compatible: '1'
+  post_prod3_updates: '1'
+  '2018-11-07': '1'
+  '2019-02-22': '1'
+  '2019-05-13': '1'
+  '2019-11-20': '1'
+  '2019-12-30': '1'
+  '2020-02-26': '1'
+  '2020-06-28': '1'
+  prod4: '1'
+  Applicable: false
+camera_transmission:
+  default: 1.0
+  '2016-12-20': 1.0
+  prod3_compatible: 1.0
+  post_prod3_updates: 1.0
+  '2018-11-07': 1.0
+  '2019-02-22': 1.0
+  '2019-05-13': 1.0
+  '2019-11-20': 1.0
+  '2019-12-30': 1.0
+  '2020-02-26': 1.0
+  '2020-06-28': 1.0
+  prod4: 1.0
+  Applicable: true
+camera_type:
+  default: '3'
+  '2016-12-20': '3'
+  prod3_compatible: '3'
+  post_prod3_updates: '3'
+  '2018-11-07': '3'
+  '2019-02-22': '3'
+  '2019-05-13': '3'
+  '2019-11-20': '3'
+  '2019-12-30': '3'
+  '2020-02-26': '3'
+  '2020-06-28': '3'
+  prod4: '3'
+  Applicable: false
+channels_per_chip:
+  default: '4'
+  '2016-12-20': '4'
+  prod3_compatible: '4'
+  post_prod3_updates: '4'
+  '2018-11-07': '4'
+  '2019-02-22': '4'
+  '2019-05-13': '4'
+  '2019-11-20': '4'
+  '2019-12-30': '4'
+  '2020-02-26': '4'
+  '2020-06-28': '4'
+  prod4: '4'
+  Applicable: false
+dark_events:
+  default: '0'
+  '2016-12-20': '0'
+  prod3_compatible: '0'
+  post_prod3_updates: '0'
+  '2018-11-07': '0'
+  '2019-02-22': '0'
+  '2019-05-13': '0'
+  '2019-11-20': '0'
+  '2019-12-30': '0'
+  '2020-02-26': '0'
+  '2020-06-28': '0'
+  prod4: '0'
+  Applicable: false
+data_reduction:
+  default: '0'
+  '2016-12-20': '0'
+  prod3_compatible: '0'
+  post_prod3_updates: '0'
+  '2018-11-07': '0'
+  '2019-02-22': '0'
+  '2019-05-13': '0'
+  '2019-11-20': '0'
+  '2019-12-30': '0'
+  '2020-02-26': '0'
+  '2020-06-28': '0'
+  prod4: '0'
+  Applicable: false
+dead_board_probability:
+  default: '0'
+  prod3_compatible: '0'
+  post_prod3_updates: '0'
+  '2019-11-20': '0'
+  '2019-12-30': '0'
+  '2020-02-26': '0'
+  '2020-06-28': '0'
+  prod4: '0'
+  Applicable: false
+dead_module_probability:
+  default: '0'
+  prod3_compatible: '0'
+  post_prod3_updates: '0'
+  '2019-11-20': '0'
+  '2019-12-30': '0'
+  '2020-02-26': '0'
+  '2020-06-28': '0'
+  prod4: '0'
+  Applicable: false
+dead_pixel_probability:
+  default: '0'
+  prod3_compatible: '0'
+  post_prod3_updates: '0'
+  '2019-11-20': '0'
+  '2019-12-30': '0'
+  '2020-02-26': '0'
+  '2020-06-28': '0'
+  prod4: '0'
+  Applicable: false
+dead_pixels:
+  default: 'all: -1'
+  prod3_compatible: 'all: -1'
+  post_prod3_updates: 'all: -1'
+  '2019-11-20': 'all: -1'
+  '2019-12-30': 'all: -1'
+  '2020-02-26': 'all: -1'
+  '2020-06-28': 'all: -1'
+  prod4: 'all: -1'
+  Applicable: false
+default_trigger:
+  default: Majority
+  '2016-12-20': DigitalSum
+  prod3_compatible: DigitalSum
+  post_prod3_updates: DigitalSum
+  '2018-11-07': DigitalSum
+  '2019-02-22': DigitalSum
+  '2019-05-13': DigitalSum
+  '2019-11-20': DigitalSum
+  '2019-12-30': DigitalSum
+  '2020-02-26': DigitalSum
+  '2020-06-28': DigitalSum
+  prod4: DigitalSum
+  Applicable: true
+disc_ac_coupled:
+  default: 1
+  '2016-12-20': 1
+  prod3_compatible: 1
+  post_prod3_updates: 1
+  '2018-11-07': 1
+  '2019-02-22': 1
+  '2019-05-13': 1
+  '2019-11-20': 1
+  '2019-12-30': 1
+  '2020-02-26': 1
+  '2020-06-28': 1
+  prod4: 1
+  Applicable: false
+disc_bins:
+  default: 20
+  '2016-12-20': 30
+  prod3_compatible: 30
+  post_prod3_updates: 30
+  '2018-11-07': 30
+  '2019-02-22': 30
+  '2019-05-13': 30
+  '2019-11-20': 30
+  '2019-12-30': 30
+  '2020-02-26': 30
+  '2020-06-28': 30
+  prod4: 30
+  Applicable: true
+disc_start:
+  default: 0
+  '2016-12-20': 3
+  prod3_compatible: 3
+  post_prod3_updates: 3
+  '2018-11-07': 3
+  '2019-02-22': 3
+  '2019-05-13': 3
+  '2019-11-20': 3
+  '2019-12-30': 3
+  '2020-02-26': 3
+  '2020-06-28': 0
+  prod4: 0
+  Applicable: true
+dish_shape_length:
+  default: 0.0
+  '2016-12-20': 1920.0
+  prod3_compatible: 1920.0
+  post_prod3_updates: 1920.0
+  '2018-11-07': 1920.0
+  '2019-02-22': 1920.0
+  '2019-05-13': 1920.0
+  '2019-11-20': 1920.0
+  '2019-12-30': 1920.0
+  '2020-02-26': 1920.0
+  '2020-06-28': 1920.0
+  prod4: 1920.0
+  Applicable: false
+dsum_clipping:
+  default: 0
+  '2016-12-20': 360
+  prod3_compatible: 360
+  post_prod3_updates: 85
+  '2018-11-07': 85
+  '2019-02-22': 85
+  '2019-05-13': 85
+  '2019-11-20': 85
+  '2019-12-30': 85
+  '2020-02-26': 85
+  '2020-06-28': 85
+  prod4: 85
+  Applicable: true
+dsum_ignore_below:
+  default: 0
+  '2016-12-20': 0
+  prod3_compatible: 0
+  post_prod3_updates: 0
+  '2018-11-07': 0
+  '2019-02-22': 0
+  '2019-05-13': 0
+  '2019-11-20': 0
+  '2019-12-30': 0
+  '2020-02-26': 0
+  '2020-06-28': 0
+  prod4: 0
+  Applicable: true
+dsum_offset:
+  default: 0.0
+  '2016-12-20': 0.0
+  prod3_compatible: 0.0
+  post_prod3_updates: 0.0
+  '2018-11-07': 0.0
+  '2019-02-22': 0.0
+  '2019-05-13': 0.0
+  '2019-11-20': 0.0
+  '2019-12-30': 0.0
+  '2020-02-26': 0.0
+  '2020-06-28': 0.0
+  prod4: 0.0
+  Applicable: false
+dsum_pedsub:
+  default: 1
+  prod3_compatible: 0
+  post_prod3_updates: 0
+  '2018-11-07': 0
+  '2019-02-22': 0
+  '2019-05-13': 0
+  '2019-11-20': 0
+  '2019-12-30': 0
+  '2020-02-26': 0
+  '2020-06-28': 0
+  prod4: 0
+  Applicable: true
+dsum_pre_clipping:
+  default: '0'
+  '2016-12-20': '0'
+  prod3_compatible: '0'
+  post_prod3_updates: '0'
+  '2018-11-07': '0'
+  '2019-02-22': '0'
+  '2019-05-13': '0'
+  '2019-11-20': '0'
+  '2019-12-30': '0'
+  '2020-02-26': '0'
+  '2020-06-28': '0'
+  prod4: '0'
+  Applicable: false
+dsum_prescale:
+  default: 'all: 0'
+  prod3_compatible: 128 256
+  post_prod3_updates: 36 256
+  '2018-11-07': 36 256
+  '2019-02-22': 36 256
+  '2019-05-13': 36 256
+  '2019-11-20': 36 256
+  '2019-12-30': 36 256
+  '2020-02-26': 36 256
+  '2020-06-28': 40 256
+  prod4: 40 256
+  Applicable: true
+dsum_presum_max:
+  default: 0
+  prod3_compatible: 4095
+  post_prod3_updates: 127
+  '2018-11-07': 127
+  '2019-02-22': 127
+  '2019-05-13': 127
+  '2019-11-20': 127
+  '2019-12-30': 127
+  '2020-02-26': 127
+  '2020-06-28': 127
+  prod4: 127
+  Applicable: true
+dsum_presum_shift:
+  default: 0
+  prod3_compatible: 0
+  post_prod3_updates: 1
+  '2018-11-07': 1
+  '2019-02-22': 1
+  '2019-05-13': 1
+  '2019-11-20': 1
+  '2019-12-30': 1
+  '2020-02-26': 1
+  '2020-06-28': 1
+  prod4: 1
+  Applicable: true
+dsum_shaping_file:
+  default: none
+  '2016-12-20': CTA-ULTRA6-dsum-shaping-FlashCam-2a-pz.dat
+  prod3_compatible: CTA-ULTRA6-dsum-shaping-FlashCam-2a-int.dat
+  post_prod3_updates: CTA-ULTRA6-dsum-shaping-FlashCam-2a-int.dat
+  '2018-11-07': CTA-ULTRA6-dsum-shaping-FlashCam-2a-int.dat
+  '2019-02-22': CTA-ULTRA6-dsum-shaping-FlashCam-2a-int.dat
+  '2019-05-13': CTA-ULTRA6-dsum-shaping-FlashCam-2a-int.dat
+  '2019-11-20': CTA-ULTRA6-dsum-shaping-FlashCam-2a-int.dat
+  '2019-12-30': CTA-ULTRA6-dsum-shaping-FlashCam-2a-int.dat
+  '2020-02-26': CTA-ULTRA6-dsum-shaping-FlashCam-2a-int.dat
+  '2020-06-28': CTA-ULTRA6-dsum-shaping-FlashCam-2a-int.dat
+  prod4: CTA-ULTRA6-dsum-shaping-FlashCam-2a-int.dat
+  Applicable: true
+dsum_shaping_renormalize:
+  default: 0
+  prod3_compatible: 0
+  post_prod3_updates: 0
+  '2018-11-07': 0
+  '2019-02-22': 0
+  '2019-05-13': 0
+  '2019-11-20': 0
+  '2019-12-30': 0
+  '2020-02-26': 0
+  '2020-06-28': 0
+  prod4: 0
+  Applicable: true
+dsum_threshold:
+  default: 0
+  '2016-12-20': 523
+  prod3_compatible: 523
+  post_prod3_updates: 54
+  '2018-11-07': 54
+  '2019-02-22': 54
+  '2019-05-13': 54
+  '2019-11-20': 54
+  '2019-12-30': 54
+  '2020-02-26': 54
+  '2020-06-28': 50
+  prod4: 50
+  Applicable: true
+dsum_zero_clip:
+  default: 0
+  prod3_compatible: 0
+  post_prod3_updates: 1
+  '2018-11-07': 1
+  '2019-02-22': 1
+  '2019-05-13': 1
+  '2019-11-20': 1
+  '2019-12-30': 1
+  '2020-02-26': 1
+  '2020-06-28': 1
+  prod4: 1
+  Applicable: true
+effective_focal_length:
+  default: 0.0
+  prod3_compatible: 0.0
+  post_prod3_updates: 0.0
+  '2018-11-07': 1644.51
+  '2019-02-22': 1644.51
+  '2019-05-13': 1644.51
+  '2019-11-20': 1644.51
+  '2019-12-30': 1644.51
+  '2020-02-26': 1644.51
+  '2020-06-28': 1644.51
+  prod4: 1644.51
+  Applicable: false
+fadc_ac_coupled:
+  default: 1
+  '2016-12-20': 1
+  prod3_compatible: 1
+  post_prod3_updates: 1
+  '2018-11-07': 0
+  '2019-02-22': 0
+  '2019-05-13': 0
+  '2019-11-20': 0
+  '2019-12-30': 0
+  '2020-02-26': 0
+  '2020-06-28': 0
+  prod4: 0
+  Applicable: true
+fadc_amplitude:
+  default: 14.0
+  '2016-12-20': 12.0
+  prod3_compatible: 12.0
+  post_prod3_updates: 10.0
+  '2018-11-07': 10.33
+  '2019-02-22': 10.33
+  '2019-05-13': 10.33
+  '2019-11-20': 10.33
+  '2019-12-30': 10.33
+  '2020-02-26': 10.33
+  '2020-06-28': 8.787
+  prod4: 8.787
+  Applicable: true
+fadc_bins:
+  default: 20
+  '2016-12-20': 35
+  prod3_compatible: 35
+  post_prod3_updates: 42
+  '2018-11-07': 42
+  '2019-02-22': 42
+  '2019-05-13': 42
+  '2019-11-20': 42
+  '2019-12-30': 42
+  '2020-02-26': 42
+  '2020-06-28': 48
+  prod4: 48
+  Applicable: true
+fadc_dev_pedestal:
+  default: 0.0
+  '2016-12-20': 1.0
+  prod3_compatible: 0.0
+  post_prod3_updates: 0.0
+  '2018-11-07': 1.0
+  '2019-02-22': 0.0
+  '2019-05-13': 0.0
+  '2019-11-20': 0.0
+  '2019-12-30': 0.0
+  '2020-02-26': 0.0
+  '2020-06-28': 0.0
+  prod4: 0.0
+  Applicable: false
+fadc_err_pedestal:
+  default: 0.08
+  '2016-12-20': 0.08
+  prod3_compatible: 0.08
+  post_prod3_updates: 0.08
+  '2018-11-07': 0.08
+  '2019-02-22': 0.08
+  '2019-05-13': 0.08
+  '2019-11-20': 0.08
+  '2019-12-30': 0.08
+  '2020-02-26': 0.08
+  '2020-06-28': 0.08
+  prod4: 0.08
+  Applicable: false
+fadc_max_signal:
+  default: 0
+  '2016-12-20': 65535
+  prod3_compatible: 65535
+  post_prod3_updates: 65535
+  '2018-11-07': 65535
+  '2019-02-22': 65535
+  '2019-05-13': 65535
+  '2019-11-20': 65535
+  '2019-12-30': 4095
+  '2020-02-26': 65535
+  '2020-06-28': 65535
+  prod4: 65535
+  Applicable: true
+fadc_max_sum:
+  default: 0
+  '2016-12-20': 16777215
+  prod3_compatible: 16777215
+  post_prod3_updates: 16777215
+  '2018-11-07': 16777215
+  '2019-02-22': 16777215
+  '2019-05-13': 16777215
+  '2019-11-20': 16777215
+  '2019-12-30': 16777215
+  '2020-02-26': 16777215
+  '2020-06-28': 16777215
+  prod4: 16777215
+  Applicable: true
+fadc_mhz:
+  default: 1000.0
+  '2016-12-20': 250.0
+  prod3_compatible: 250.0
+  post_prod3_updates: 250.0
+  '2018-11-07': 250.0
+  '2019-02-22': 250.0
+  '2019-05-13': 250.0
+  '2019-11-20': 250.0
+  '2019-12-30': 250.0
+  '2020-02-26': 250.0
+  '2020-06-28': 250.0
+  prod4: 250.0
+  Applicable: true
+fadc_noise:
+  default: 4.0
+  '2016-12-20': 3.0
+  prod3_compatible: 3.0
+  post_prod3_updates: 3.0
+  '2018-11-07': 2.5
+  '2019-02-22': 2.5
+  '2019-05-13': 1.0
+  '2019-11-20': 1.0
+  '2019-12-30': 1.0
+  '2020-02-26': 1.0
+  '2020-06-28': 1.0
+  prod4: 1.0
+  Applicable: true
+fadc_pedestal:
+  default: 100.0
+  '2016-12-20': 100.0
+  prod3_compatible: 100.0
+  post_prod3_updates: 100.0
+  '2018-11-07': 100.0
+  '2019-02-22': 100.0
+  '2019-05-13': 200.0
+  '2019-11-20': 200.0
+  '2019-12-30': 200.0
+  '2020-02-26': 200.0
+  '2020-06-28': 200.0
+  prod4: 200.0
+  Applicable: true
+fadc_per_channel:
+  default: '1'
+  '2016-12-20': '1'
+  prod3_compatible: '1'
+  post_prod3_updates: '1'
+  '2018-11-07': '1'
+  '2019-02-22': '1'
+  '2019-05-13': '1'
+  '2019-11-20': '1'
+  '2019-12-30': '1'
+  '2020-02-26': '1'
+  '2020-06-28': '1'
+  prod4: '1'
+  Applicable: false
+fadc_pulse_shape:
+  default: hess_fadc_shape.dat
+  '2016-12-20': pulse_FlashCam_raw2.dat
+  prod3_compatible: pulse_FlashCam_raw2.dat
+  post_prod3_updates: pulse_FlashCam_raw2.dat
+  '2018-11-07': pulse_FlashCam_raw2.dat
+  '2019-02-22': pulse_FlashCam_7dynode_v2a.dat
+  '2019-05-13': pulse_FlashCam_7dynode_v2a.dat
+  '2019-11-20': pulse_FlashCam_7dynode_v2a.dat
+  '2019-12-30': pulse_FlashCam_7dynode_v2a.dat
+  '2020-02-26': pulse_FlashCam_7dynode_v2a.dat
+  '2020-06-28': pulse_FlashCam_7dynode_v2a.dat
+  prod4: pulse_FlashCam_7dynode_v2a.dat
+  Applicable: true
+fadc_sensitivity:
+  default: 1.0
+  '2016-12-20': 1.0
+  prod3_compatible: 1.0
+  post_prod3_updates: 1.0
+  '2018-11-07': 1.0
+  '2019-02-22': 1.0
+  '2019-05-13': 1.0
+  '2019-11-20': 1.0
+  '2019-12-30': 1.0
+  '2020-02-26': 1.0
+  '2020-06-28': 1.0
+  prod4: 1.0
+  Applicable: false
+fadc_sum_bins:
+  default: 0
+  '2016-12-20': 25
+  prod3_compatible: 25
+  post_prod3_updates: 25
+  '2018-11-07': 25
+  '2019-02-22': 25
+  '2019-05-13': 25
+  '2019-11-20': 25
+  '2019-12-30': 25
+  '2020-02-26': 25
+  '2020-06-28': 25
+  prod4: 25
+  Applicable: true
+fadc_sum_offset:
+  default: 0
+  '2016-12-20': 6
+  prod3_compatible: 6
+  post_prod3_updates: 6
+  '2018-11-07': 6
+  '2019-02-22': 6
+  '2019-05-13': 6
+  '2019-11-20': 6
+  '2019-12-30': 6
+  '2020-02-26': 6
+  '2020-06-28': 6
+  prod4: 6
+  Applicable: true
+fadc_sysvar_pedestal:
+  default: 0.04
+  '2016-12-20': 0.04
+  prod3_compatible: 0.04
+  post_prod3_updates: 0.04
+  '2018-11-07': 0.04
+  '2019-02-22': 0.04
+  '2019-05-13': 0.04
+  '2019-11-20': 0.04
+  '2019-12-30': 0.04
+  '2020-02-26': 0.04
+  '2020-06-28': 0.04
+  prod4: 0.04
+  Applicable: false
+fadc_var_pedestal:
+  default: 0.75
+  '2016-12-20': 0.75
+  prod3_compatible: 0.75
+  post_prod3_updates: 0.75
+  '2018-11-07': 0.75
+  '2019-02-22': 0.75
+  '2019-05-13': 0.75
+  '2019-11-20': 0.75
+  '2019-12-30': 0.75
+  '2020-02-26': 0.75
+  '2020-06-28': 0.75
+  prod4: 0.75
+  Applicable: false
+fadc_var_sensitivity:
+  default: 0.02
+  '2016-12-20': 0.02
+  prod3_compatible: 0.02
+  post_prod3_updates: 0.02
+  '2018-11-07': 0.02
+  '2019-02-22': 0.02
+  '2019-05-13': 0.02
+  '2019-11-20': 0.02
+  '2019-12-30': 0.02
+  '2020-02-26': 0.02
+  '2020-06-28': 0.02
+  prod4: 0.02
+  Applicable: false
+fake_delay:
+  default: '0'
+  prod3_compatible: '0'
+  post_prod3_updates: '0'
+  '2019-05-13': '0'
+  '2019-11-20': '0'
+  '2019-12-30': '0'
+  '2020-02-26': '0'
+  '2020-06-28': '0'
+  prod4: '0'
+  Applicable: false
+fake_trigger:
+  default: '0'
+  prod3_compatible: '0'
+  post_prod3_updates: '0'
+  '2019-05-13': '0'
+  '2019-11-20': '0'
+  '2019-12-30': '0'
+  '2020-02-26': '0'
+  '2020-06-28': '0'
+  prod4: '0'
+  Applicable: false
+flatfielding:
+  default: 1
+  prod3_compatible: 1
+  post_prod3_updates: 1
+  '2018-11-07': 1
+  '2019-02-22': 1
+  '2019-05-13': 1
+  '2019-11-20': 1
+  '2019-12-30': 1
+  '2020-02-26': 1
+  '2020-06-28': 1
+  prod4: 1
+  Applicable: false
+flip_mirrors:
+  default: '0'
+  '2016-12-20': '0'
+  prod3_compatible: '0'
+  post_prod3_updates: '0'
+  '2018-11-07': '0'
+  '2019-02-22': '0'
+  '2019-05-13': '0'
+  '2019-11-20': '0'
+  '2019-12-30': '0'
+  '2020-02-26': '0'
+  '2020-06-28': '0'
+  prod4: '0'
+  Applicable: false
+focal_length:
+  default: 1500.0
+  '2016-12-20': 1600.0
+  prod3_compatible: 1600.0
+  post_prod3_updates: 1600.0
+  '2018-11-07': 1600.0
+  '2019-02-22': 1600.0
+  '2019-05-13': 1600.0
+  '2019-11-20': 1600.0
+  '2019-12-30': 1600.0
+  '2020-02-26': 1600.0
+  '2020-06-28': 1600.0
+  prod4: 1600.0
+  Applicable: false
+focus_offset:
+  default: 2.8 28 0 0
+  '2016-12-20': 2.56
+  prod3_compatible: 2.56 28 0 0
+  post_prod3_updates: 2.55 28 0 0
+  '2018-11-07': 2.55 28 0 0
+  '2019-02-22': 2.55 28 0 0
+  '2019-05-13': 2.55 28 0 0
+  '2019-11-20': 2.55 28 0 0
+  '2019-12-30': 2.55 28 0 0
+  '2020-02-26': 2.55 28 0 0
+  '2020-06-28': 2.55 28 0 0
+  prod4: 2.55 28 0 0
+  Applicable: false
+force_fake_trigger:
+  default: '0'
+  prod3_compatible: '0'
+  post_prod3_updates: '0'
+  '2019-11-20': '0'
+  '2019-12-30': '0'
+  '2020-02-26': '0'
+  '2020-06-28': '0'
+  prod4: '0'
+  Applicable: false
+full_simulation:
+  default: '2'
+  '2016-12-20': '2'
+  prod3_compatible: '2'
+  post_prod3_updates: '2'
+  '2018-11-07': '2'
+  '2019-02-22': '2'
+  '2019-05-13': '2'
+  '2019-11-20': '2'
+  '2019-12-30': '2'
+  '2020-02-26': '2'
+  '2020-06-28': '2'
+  prod4: '2'
+  Applicable: false
+gain_variation:
+  default: 0.02
+  '2016-12-20': 0.02
+  prod3_compatible: 0.02
+  post_prod3_updates: 0.02
+  '2018-11-07': 0.02
+  '2019-02-22': 0.02
+  '2019-05-13': 0.02
+  '2019-11-20': 0.02
+  '2019-12-30': 0.02
+  '2020-02-26': 0.02
+  '2020-06-28': 0.02
+  prod4: 0.02
+  Applicable: true
+grading_of_focal_length:
+  default: '0'
+  '2016-12-20': '0'
+  prod3_compatible: '0'
+  post_prod3_updates: '0'
+  '2018-11-07': '0'
+  '2019-02-22': '0'
+  '2019-05-13': '0'
+  '2019-11-20': '0'
+  '2019-12-30': '0'
+  '2020-02-26': '0'
+  '2020-06-28': '0'
+  prod4: '0'
+  Applicable: false
+laser_events:
+  default: 'all: 0'
+  '2016-12-20': 'all: 0'
+  prod3_compatible: 'all: 0'
+  post_prod3_updates: 'all: 0'
+  '2018-11-07': 'all: 0'
+  '2019-02-22': 'all: 0'
+  '2019-05-13': 'all: 0'
+  '2019-11-20': 'all: 0'
+  '2019-12-30': 'all: 0'
+  '2020-02-26': 'all: 0'
+  '2020-06-28': 'all: 0'
+  prod4: 'all: 0'
+  Applicable: false
+laser_external_trigger:
+  default: '0'
+  '2016-12-20': '0'
+  prod3_compatible: '0'
+  post_prod3_updates: '0'
+  '2018-11-07': '0'
+  '2019-02-22': '0'
+  '2019-05-13': '0'
+  '2019-11-20': '0'
+  '2019-12-30': '0'
+  '2020-02-26': '0'
+  '2020-06-28': '0'
+  prod4: '0'
+  Applicable: false
+laser_photons:
+  default: 500 0 0 0 0 0 0 0 0 0
+  '2016-12-20': 500 0 0 0 0 0 0 0 0 0
+  prod3_compatible: 500 0 0 0 0 0 0 0 0 0
+  post_prod3_updates: 500 0 0 0 0 0 0 0 0 0
+  '2018-11-07': 500 0 0 0 0 0 0 0 0 0
+  '2019-02-22': 500 0 0 0 0 0 0 0 0 0
+  '2019-05-13': 500 0 0 0 0 0 0 0 0 0
+  '2019-11-20': 500 0 0 0 0 0 0 0 0 0
+  '2019-12-30': 500 0 0 0 0 0 0 0 0 0
+  '2020-02-26': 500 0 0 0 0 0 0 0 0 0
+  '2020-06-28': 500 0 0 0 0 0 0 0 0 0
+  prod4: 500 0 0 0 0 0 0 0 0 0
+  Applicable: false
+laser_pulse_exptime:
+  default: '0'
+  '2016-12-20': '0'
+  prod3_compatible: '0'
+  post_prod3_updates: '0'
+  '2018-11-07': '0'
+  '2019-02-22': '0'
+  '2019-05-13': '0'
+  '2019-11-20': '0'
+  '2019-12-30': '0'
+  '2020-02-26': '0'
+  '2020-06-28': '0'
+  prod4: '0'
+  Applicable: false
+laser_pulse_offset:
+  default: '0'
+  '2016-12-20': '0'
+  prod3_compatible: '0'
+  post_prod3_updates: '0'
+  '2018-11-07': '0'
+  '2019-02-22': '0'
+  '2019-05-13': '0'
+  '2019-11-20': '0'
+  '2019-12-30': '0'
+  '2020-02-26': '0'
+  '2020-06-28': '0'
+  prod4: '0'
+  Applicable: false
+laser_pulse_sigtime:
+  default: '0'
+  '2016-12-20': '0'
+  prod3_compatible: '0'
+  post_prod3_updates: '0'
+  '2018-11-07': '0'
+  '2019-02-22': '0'
+  '2019-05-13': '0'
+  '2019-11-20': '0'
+  '2019-12-30': '0'
+  '2020-02-26': '0'
+  '2020-06-28': '0'
+  prod4: '0'
+  Applicable: false
+laser_pulse_twidth:
+  default: '0'
+  '2016-12-20': '0'
+  prod3_compatible: '0'
+  post_prod3_updates: '0'
+  '2018-11-07': '0'
+  '2019-02-22': '0'
+  '2019-05-13': '0'
+  '2019-11-20': '0'
+  '2019-12-30': '0'
+  '2020-02-26': '0'
+  '2020-06-28': '0'
+  prod4: '0'
+  Applicable: false
+laser_var_photons:
+  default: 'all: 0.05'
+  '2016-12-20': 'all: 0.05'
+  prod3_compatible: 'all: 0.05'
+  post_prod3_updates: 'all: 0.05'
+  '2018-11-07': 'all: 0.05'
+  '2019-02-22': 'all: 0.05'
+  '2019-05-13': 'all: 0.05'
+  '2019-11-20': 'all: 0.05'
+  '2019-12-30': 'all: 0.05'
+  '2020-02-26': 'all: 0.05'
+  '2020-06-28': 'all: 0.05'
+  prod4: 'all: 0.05'
+  Applicable: false
+led_events:
+  default: '0'
+  '2016-12-20': '0'
+  prod3_compatible: '0'
+  post_prod3_updates: '0'
+  '2018-11-07': '0'
+  '2019-02-22': '0'
+  '2019-05-13': '0'
+  '2019-11-20': '0'
+  '2019-12-30': '0'
+  '2020-02-26': '0'
+  '2020-06-28': '0'
+  prod4: '0'
+  Applicable: false
+led_photons:
+  default: '4'
+  '2016-12-20': '4'
+  prod3_compatible: '4'
+  post_prod3_updates: '4'
+  '2018-11-07': '4'
+  '2019-02-22': '4'
+  '2019-05-13': '4'
+  '2019-11-20': '4'
+  '2019-12-30': '4'
+  '2020-02-26': '4'
+  '2020-06-28': '4'
+  prod4: '4'
+  Applicable: false
+led_pulse_offset:
+  default: '0'
+  '2016-12-20': '0'
+  prod3_compatible: '0'
+  post_prod3_updates: '0'
+  '2018-11-07': '0'
+  '2019-02-22': '0'
+  '2019-05-13': '0'
+  '2019-11-20': '0'
+  '2019-12-30': '0'
+  '2020-02-26': '0'
+  '2020-06-28': '0'
+  prod4: '0'
+  Applicable: false
+led_pulse_sigtime:
+  default: '0'
+  '2016-12-20': '0'
+  prod3_compatible: '0'
+  post_prod3_updates: '0'
+  '2018-11-07': '0'
+  '2019-02-22': '0'
+  '2019-05-13': '0'
+  '2019-11-20': '0'
+  '2019-12-30': '0'
+  '2020-02-26': '0'
+  '2020-06-28': '0'
+  prod4: '0'
+  Applicable: false
+led_var_photons:
+  default: '0'
+  '2016-12-20': '0'
+  prod3_compatible: '0'
+  post_prod3_updates: '0'
+  '2018-11-07': '0'
+  '2019-02-22': '0'
+  '2019-05-13': '0'
+  '2019-11-20': '0'
+  '2019-12-30': '0'
+  '2020-02-26': '0'
+  '2020-06-28': '0'
+  prod4: '0'
+  Applicable: false
+min_photoelectrons:
+  default: -1
+  '2016-12-20': 30
+  prod3_compatible: 28
+  post_prod3_updates: 28
+  '2018-11-07': 25
+  '2019-02-22': 25
+  '2019-05-13': 25
+  '2019-11-20': 25
+  '2019-12-30': 25
+  '2020-02-26': 25
+  '2020-06-28': 25
+  prod4: 25
+  Applicable: true
+min_photons:
+  default: -1.0
+  '2016-12-20': 450.0
+  prod3_compatible: 400.0
+  post_prod3_updates: 400.0
+  '2018-11-07': 360.0
+  '2019-02-22': 360.0
+  '2019-05-13': 360.0
+  '2019-11-20': 360.0
+  '2019-12-30': 360.0
+  '2020-02-26': 360.0
+  '2020-06-28': 360.0
+  prod4: 360.0
+  Applicable: true
+mirror_align_random_distance:
+  default: 2.0
+  '2016-12-20': 2.0
+  prod3_compatible: 2.0
+  post_prod3_updates: 2.0
+  '2018-11-07': 2.0
+  '2019-02-22': 2.0
+  '2019-05-13': 2.0
+  '2019-11-20': 2.0
+  '2019-12-30': 2.0
+  '2020-02-26': 2.0
+  '2020-06-28': 2.0
+  prod4: 2.0
+  Applicable: false
+mirror_align_random_horizontal:
+  default: 0.0035 28 0.023 0
+  '2016-12-20': 0.0035 28 0.023 0
+  prod3_compatible: 0.0035 28 0.023 0
+  post_prod3_updates: 0.0035 28 0.023 0
+  '2018-11-07': 0.0035 28 0.023 0
+  '2019-02-22': 0.0035 28 0.023 0
+  '2019-05-13': 0.0035 28 0.023 0
+  '2019-11-20': 0.0035 28 0.023 0
+  '2019-12-30': 0.0035 28 0.023 0
+  '2020-02-26': 0.0035 28 0.023 0
+  '2020-06-28': 0.005 31 0.0135 0.012
+  prod4: 0.005 31 0.0135 0.012
+  Applicable: false
+mirror_align_random_vertical:
+  default: 0.0034 28 0.01 0
+  '2016-12-20': 0.0034 28 0.01 0
+  prod3_compatible: 0.0034 28 0.01 0
+  post_prod3_updates: 0.0034 28 0.01 0
+  '2018-11-07': 0.0034 28 0.01 0
+  '2019-02-22': 0.0034 28 0.01 0
+  '2019-05-13': 0.0034 28 0.01 0
+  '2019-11-20': 0.0034 28 0.01 0
+  '2019-12-30': 0.0034 28 0.01 0
+  '2020-02-26': 0.0034 28 0.01 0
+  '2020-06-28': 0.005 31 0.0135 0.012
+  prod4: 0.005 31 0.0135 0.012
+  Applicable: false
+mirror_class:
+  default: 0
+  '2016-12-20': 0
+  prod3_compatible: 0
+  post_prod3_updates: 0
+  '2018-11-07': 0
+  '2019-02-22': 0
+  '2019-05-13': 0
+  '2019-11-20': 0
+  '2019-12-30': 0
+  '2020-02-26': 0
+  '2020-06-28': 0
+  prod4: 0
+  Applicable: false
+mirror_degraded_reflection:
+  default: '1'
+  '2016-12-20': '1'
+  prod3_compatible: '1'
+  post_prod3_updates: '1'
+  '2018-11-07': '1'
+  '2019-02-22': '1'
+  '2019-05-13': '1'
+  '2019-11-20': '1'
+  '2019-12-30': '1'
+  '2020-02-26': '1'
+  '2020-06-28': '1'
+  prod4: '1'
+  Applicable: false
+mirror_focal_length:
+  default: 0.0
+  '2016-12-20': 1607.0
+  prod3_compatible: 1607.0
+  post_prod3_updates: 1607.0
+  '2018-11-07': 1607.0
+  '2019-02-22': 1607.0
+  '2019-05-13': 1607.0
+  '2019-11-20': 1607.0
+  '2019-12-30': 1607.0
+  '2020-02-26': 1607.0
+  '2020-06-28': 1607.0
+  prod4: 1607.0
+  Applicable: false
+mirror_f_scale:
+  default: 'all: 1'
+  '2016-12-20': 'all: 1'
+  prod3_compatible: 'all: 1'
+  post_prod3_updates: 'all: 1'
+  '2018-11-07': 'all: 1'
+  '2019-02-22': 'all: 1'
+  '2019-05-13': 'all: 1'
+  '2019-11-20': 'all: 1'
+  '2019-12-30': 'all: 1'
+  '2020-02-26': 'all: 1'
+  '2020-06-28': 'all: 1'
+  prod4: 'all: 1'
+  Applicable: false
+mirror_list:
+  default: hess_mirrors.dat
+  '2016-12-20': mirror_CTA-100_1.20-84-0.02.dat
+  prod3_compatible: mirror_CTA-100_1.20-84-0.02.dat
+  post_prod3_updates: mirror_CTA-100_1.20-84-0.04.dat
+  '2018-11-07': mirror_CTA-100_1.20-86-0.04.dat
+  '2019-02-22': mirror_CTA-100_1.20-86-0.04.dat
+  '2019-05-13': mirror_CTA-100_1.20-86-0.04.dat
+  '2019-11-20': mirror_CTA-100_1.20-86-0.04.dat
+  '2019-12-30': mirror_CTA-100_1.20-86-0.04.dat
+  '2020-02-26': mirror_CTA-100_1.20-86-0.04.dat
+  '2020-06-28': mirror_CTA-100_1.20-86-0.04.dat
+  prod4: mirror_CTA-100_1.20-86-0.04.dat
+  Applicable: true
+mirror_offset:
+  default: 130.0
+  '2016-12-20': 0.0
+  prod3_compatible: 0.0
+  post_prod3_updates: 0.0
+  '2018-11-07': 0.0
+  '2019-02-22': 0.0
+  '2019-05-13': 0.0
+  '2019-11-20': 0.0
+  '2019-12-30': 0.0
+  '2020-02-26': 0.0
+  '2020-06-28': 0.0
+  prod4: 0.0
+  Applicable: false
+mirror_opt:
+  default: 'all: 0'
+  '2016-12-20': 'all: 0'
+  prod3_compatible: 'all: 0'
+  post_prod3_updates: 'all: 0'
+  '2018-11-07': 'all: 0'
+  '2019-02-22': 'all: 0'
+  '2019-05-13': 'all: 0'
+  '2019-11-20': 'all: 0'
+  '2019-12-30': 'all: 0'
+  '2020-02-26': 'all: 0'
+  '2020-06-28': 'all: 0'
+  prod4: 'all: 0'
+  Applicable: false
+mirror_reflection_random_angle:
+  default: 0.0066 0 0
+  '2016-12-20': 0.0066
+  prod3_compatible: 0.0066 0 0
+  post_prod3_updates: 0.0066 0 0
+  '2018-11-07': 0.0085 0 0
+  '2019-02-22': 0.0085 0 0
+  '2019-05-13': 0.0085 0 0
+  '2019-11-20': 0.0085 0 0
+  '2019-12-30': 0.0085 0 0
+  '2020-02-26': 0.0085 0 0
+  '2020-06-28': 0.006759 0 0
+  prod4: 0.006759 0 0
+  Applicable: false
+mirror_reflectivity:
+  default: hess_reflect.dat
+  '2016-12-20': ref_AlSiO2HfO2.dat
+  prod3_compatible: ref_AlSiO2HfO2.dat
+  post_prod3_updates: ref_AlSiO2HfO2.dat
+  '2018-11-07': ref_AlSiO2HfO2.dat
+  '2019-02-22': ref_AlSiO2HfO2.dat
+  '2019-05-13': ref_AlSiO2HfO2.dat
+  '2019-11-20': ref_AlSiO2HfO2.dat
+  '2019-12-30': ref_AlSiO2HfO2.dat
+  '2020-02-26': ref_AlSiO2HfO2.dat
+  '2020-06-28': ref_AlSiO2HfO2.dat
+  prod4: ref_AlSiO2HfO2.dat
+  Applicable: false
+mirrors:
+  default: '1'
+  '2016-12-20': '1'
+  prod3_compatible: '1'
+  post_prod3_updates: '1'
+  '2018-11-07': '1'
+  '2019-02-22': '1'
+  '2019-05-13': '1'
+  '2019-11-20': '1'
+  '2019-12-30': '1'
+  '2020-02-26': '1'
+  '2020-06-28': '1'
+  prod4: '1'
+  Applicable: false
+mirror_secondary_reflectivity:
+  default: same
+  '2016-12-20': same
+  prod3_compatible: same
+  post_prod3_updates: same
+  '2018-11-07': same
+  '2019-02-22': same
+  '2019-05-13': same
+  '2019-11-20': same
+  '2019-12-30': same
+  '2020-02-26': same
+  '2020-06-28': same
+  prod4: same
+  Applicable: false
+nightsky_background:
+  default: 'all: 0.1'
+  '2016-12-20': 'all: 0.2763'
+  prod3_compatible: 'all: 0.2763'
+  post_prod3_updates: 'all: 0.2763'
+  '2018-11-07': 'all: 0.2587'
+  '2019-02-22': 'all: 0.2587'
+  '2019-05-13': 'all: 0.2587'
+  '2019-11-20': 'all: 0.2587'
+  '2019-12-30': 'all: 0.2587'
+  '2020-02-26': 'all: 0.2587'
+  '2020-06-28': 'all: 0.21595'
+  prod4: 'all: 0.21595'
+  Applicable: false
+nsb_gain_drop_scale:
+  default: 0.0
+  prod3_compatible: 0.0
+  post_prod3_updates: 0.0
+  '2018-11-07': 0.0
+  '2019-02-22': 0.0
+  '2019-05-13': 0.0
+  '2019-11-20': 0.0
+  '2019-12-30': 0.0
+  '2020-02-26': 0.0
+  '2020-06-28': 0.0
+  prod4: 0.0
+  Applicable: false
+nsb_offaxis:
+  default: 'all: 0'
+  prod3_compatible: 'all: 0'
+  post_prod3_updates: 'all: 0'
+  '2018-11-07': 'all: 0'
+  '2019-02-22': 'all: 0'
+  '2019-05-13': 'all: 0'
+  '2019-11-20': 'all: 0'
+  '2019-12-30': 'all: 0'
+  '2020-02-26': 'all: 0'
+  '2020-06-28': 'all: 0'
+  prod4: 'all: 0'
+  Applicable: false
+num_gains:
+  default: 2
+  '2016-12-20': 1
+  prod3_compatible: 1
+  post_prod3_updates: 1
+  '2018-11-07': 1
+  '2019-02-22': 1
+  '2019-05-13': 1
+  '2019-11-20': 1
+  '2019-12-30': 1
+  '2020-02-26': 1
+  '2020-06-28': 1
+  prod4: 1
+  Applicable: true
+optics_config_name:
+  default: ''
+  prod3_compatible: ''
+  post_prod3_updates: ''
+  '2018-11-07': MST
+  '2019-02-22': MST
+  '2019-05-13': MST
+  '2019-11-20': MST
+  '2019-12-30': MST
+  '2020-02-26': MST
+  '2020-06-28': MST
+  prod4: MST
+  Applicable: false
+optics_config_variant:
+  default: ''
+  prod3_compatible: ''
+  post_prod3_updates: ''
+  '2018-11-07': MST86
+  '2019-02-22': MST86
+  '2019-05-13': MST86
+  '2019-11-20': MST86
+  '2019-12-30': MST86
+  '2020-02-26': MST86
+  '2020-06-28': MST86
+  prod4: MST86
+  Applicable: false
+optics_config_version:
+  default: ''
+  prod3_compatible: ''
+  post_prod3_updates: ''
+  '2018-11-07': '2018-09-20'
+  '2019-02-22': '2018-09-20'
+  '2019-05-13': '2018-09-20'
+  '2019-11-20': '2018-09-20'
+  '2019-12-30': '2018-09-20'
+  '2020-02-26': '2018-09-20'
+  '2020-06-28': '2020-06-08'
+  prod4: '2020-06-08'
+  Applicable: false
+output_format:
+  default: 0
+  '2016-12-20': 1
+  prod3_compatible: 1
+  post_prod3_updates: 1
+  '2018-11-07': 1
+  '2019-02-22': 1
+  '2019-05-13': 1
+  '2019-11-20': 1
+  '2019-12-30': 1
+  '2020-02-26': 1
+  '2020-06-28': 1
+  prod4: 1
+  Applicable: true
+parabolic_dish:
+  default: 0
+  '2016-12-20': 0
+  prod3_compatible: 0
+  post_prod3_updates: 0
+  '2018-11-07': 0
+  '2019-02-22': 0
+  '2019-05-13': 0
+  '2019-11-20': 0
+  '2019-12-30': 0
+  '2020-02-26': 0
+  '2020-06-28': 0
+  prod4: 0
+  Applicable: false
+peak_sensing:
+  default: 0
+  '2016-12-20': 0
+  prod3_compatible: 0
+  post_prod3_updates: 0
+  '2018-11-07': 0
+  '2019-02-22': 0
+  '2019-05-13': 0
+  '2019-11-20': 0
+  '2019-12-30': 0
+  '2020-02-26': 0
+  '2020-06-28': 0
+  prod4: 0
+  Applicable: false
+pedestal_events:
+  default: '0'
+  '2016-12-20': '0'
+  prod3_compatible: '0'
+  post_prod3_updates: '0'
+  '2018-11-07': '0'
+  '2019-02-22': '0'
+  '2019-05-13': '0'
+  '2019-11-20': '0'
+  '2019-12-30': '0'
+  '2020-02-26': '0'
+  '2020-06-28': '0'
+  prod4: '0'
+  Applicable: false
+photon_delay:
+  default: 0
+  '2016-12-20': 0
+  prod3_compatible: 0
+  post_prod3_updates: 0
+  '2018-11-07': 0
+  '2019-02-22': 0
+  '2019-05-13': 0
+  '2019-11-20': 0
+  '2019-12-30': 0
+  '2020-02-26': 0
+  '2020-06-28': 12
+  prod4: 12
+  Applicable: true
+pixel_cells:
+  default: 0
+  prod3_compatible: 0
+  post_prod3_updates: 0
+  '2018-11-07': 0
+  '2019-02-22': 0
+  '2019-05-13': 0
+  '2019-11-20': 0
+  '2019-12-30': 0
+  '2020-02-26': 0
+  '2020-06-28': 0
+  prod4: 0
+  Applicable: true
+pixels_parallel:
+  default: 1
+  '2016-12-20': 1
+  prod3_compatible: 1
+  post_prod3_updates: 1
+  '2018-11-07': 1
+  '2019-02-22': 1
+  '2019-05-13': 1
+  '2019-11-20': 1
+  '2019-12-30': 1
+  '2020-02-26': 1
+  '2020-06-28': 1
+  prod4: 1
+  Applicable: false
+pixeltrg_time_step:
+  default: 0.0
+  prod3_compatible: 0.0
+  post_prod3_updates: 0.0
+  '2018-11-07': 0.0
+  '2019-02-22': 0.0
+  '2019-05-13': 0.0
+  '2019-11-20': 0.0
+  '2019-12-30': 0.0
+  '2020-02-26': 0.0
+  '2020-06-28': 0.0
+  prod4: 0.0
+  Applicable: false
+pm_average_gain:
+  default: 172000.0
+  '2016-12-20': 50000.0
+  prod3_compatible: 50000.0
+  post_prod3_updates: 40000.0
+  '2018-11-07': 40000.0
+  '2019-02-22': 40000.0
+  '2019-05-13': 40000.0
+  '2019-11-20': 40000.0
+  '2019-12-30': 40000.0
+  '2020-02-26': 40000.0
+  '2020-06-28': 40000.0
+  prod4: 40000.0
+  Applicable: true
+pm_collection_efficiency:
+  default: 1.0
+  '2016-12-20': 1.0
+  prod3_compatible: 1.0
+  post_prod3_updates: 1.0
+  '2018-11-07': 1.0
+  '2019-02-22': 1.0
+  '2019-05-13': 1.0
+  '2019-11-20': 1.0
+  '2019-12-30': 1.0
+  '2020-02-26': 1.0
+  '2020-06-28': 1.0
+  prod4: 1.0
+  Applicable: true
+pm_gain_index:
+  default: 5.5
+  '2016-12-20': 7.0
+  prod3_compatible: 7.0
+  post_prod3_updates: 5.8
+  '2018-11-07': 5.8
+  '2019-02-22': 5.8
+  '2019-05-13': 5.8
+  '2019-11-20': 5.8
+  '2019-12-30': 5.8
+  '2020-02-26': 5.8
+  '2020-06-28': 4.0
+  prod4: 4.0
+  Applicable: true
+pm_photoelectron_spectrum:
+  default: hess_spe2.dat
+  '2016-12-20': spe_R11920-MS_ap0.0002.dat
+  prod3_compatible: spe_R11920-MS_ap0.0002.dat
+  post_prod3_updates: spe_R11920-MS_ap0.0002.dat
+  '2018-11-07': spe_R11920-MS_ap0.0002.dat
+  '2019-02-22': spe_FlashCam_7dynode_v0a.dat
+  '2019-05-13': spe_FlashCam_7dynode_v0a.dat
+  '2019-11-20': spe_FlashCam_7dynode_v0a.dat
+  '2019-12-30': spe_FlashCam_7dynode_v0a.dat
+  '2020-02-26': spe_FlashCam_7dynode_v0a.dat
+  '2020-06-28': spe_FlashCam_7dynode_v0a.dat
+  prod4: spe_FlashCam_7dynode_v0a.dat
+  Applicable: true
+pm_spe_table_size:
+  default: '10000'
+  '2016-12-20': '10000'
+  prod3_compatible: '10000'
+  post_prod3_updates: '10000'
+  '2018-11-07': '10000'
+  '2019-02-22': '10000'
+  '2019-05-13': '10000'
+  '2019-11-20': '10000'
+  '2019-12-30': '10000'
+  '2020-02-26': '10000'
+  '2020-06-28': '10000'
+  prod4: '10000'
+  Applicable: false
+pm_transit_time:
+  default: 20 0 0 0
+  '2016-12-20': 20.0
+  prod3_compatible: 20 0 0 0
+  post_prod3_updates: 20 0 0 0
+  '2018-11-07': 20.0
+  '2019-02-22': 20.0
+  '2019-05-13': 20.0
+  '2019-11-20': 20.0
+  '2019-12-30': 20.0
+  '2020-02-26': 20.0
+  '2020-06-28': 20 9.7 300 1100
+  prod4: 20 9.7 300 1100
+  Applicable: true
+pm_voltage_variation:
+  default: 0.03
+  '2016-12-20': 0.03
+  prod3_compatible: 0.03
+  post_prod3_updates: 0.03
+  '2018-11-07': 0.03
+  '2019-02-22': 0.03
+  '2019-05-13': 0.03
+  '2019-11-20': 0.03
+  '2019-12-30': 0.03
+  '2020-02-26': 0.03
+  '2020-06-28': 0.03
+  prod4: 0.03
+  Applicable: true
+primary_degraded_map:
+  default: none
+  prod3_compatible: none
+  post_prod3_updates: none
+  '2019-11-20': none
+  '2019-12-30': none
+  '2020-02-26': none
+  '2020-06-28': none
+  prod4: none
+  Applicable: false
+pulse_analysis:
+  default: 0
+  '2016-12-20': -40
+  prod3_compatible: -40
+  post_prod3_updates: -40
+  '2018-11-07': -40
+  '2019-02-22': -40
+  '2019-05-13': -40
+  '2019-11-20': -40
+  '2019-12-30': -40
+  '2020-02-26': -40
+  '2020-06-28': -40
+  prod4: -40
+  Applicable: true
+qe_variation:
+  default: 0.04
+  '2016-12-20': 0.035
+  prod3_compatible: 0.035
+  post_prod3_updates: 0.035
+  '2018-11-07': 0.035
+  '2019-02-22': 0.035
+  '2019-05-13': 0.035
+  '2019-11-20': 0.035
+  '2019-12-30': 0.035
+  '2020-02-26': 0.035
+  '2020-06-28': 0.035
+  prod4: 0.035
+  Applicable: true
+quantum_efficiency:
+  default: hess_qe2.dat
+  '2016-12-20': qe_R12992-100-05.dat
+  prod3_compatible: qe_R12992-100-05.dat
+  post_prod3_updates: qe_R12992-100-05.dat
+  '2018-11-07': qe_R12992-100-05.dat
+  '2019-02-22': qe_R12992-100-05.dat
+  '2019-05-13': qe_R12992-100-05.dat
+  '2019-11-20': qe_R12992-100-05.dat
+  '2019-12-30': qe_R12992-100-05.dat
+  '2020-02-26': qe_R12992-100-05.dat
+  '2020-06-28': qe_R12992-100-05b.dat
+  prod4: qe_R12992-100-05b.dat
+  Applicable: true
+random_focal_length:
+  default: 7.4 0
+  '2016-12-20': 7.4
+  prod3_compatible: 7.4 0
+  post_prod3_updates: 7.4 0
+  '2018-11-07': 9.4 0
+  '2019-02-22': 9.4 0
+  '2019-05-13': 4.7 0
+  '2019-11-20': 4.7 0
+  '2019-12-30': 4.7 0
+  '2020-02-26': 4.7 0
+  '2020-06-28': 3.9 0
+  prod4: 3.9 0
+  Applicable: false
+random_generator:
+  default: Ranlux
+  prod3_compatible: Ranlux
+  post_prod3_updates: Ranlux
+  '2020-02-26': Ranlux
+  '2020-06-28': Ranlux
+  prod4: Ranlux
+  Applicable: false
+random_seed:
+  default: auto
+  prod3_compatible: auto
+  post_prod3_updates: auto
+  '2020-02-26': auto
+  '2020-06-28': auto
+  prod4: auto
+  Applicable: false
+random_viewing_ring:
+  default: 'all: 0'
+  '2016-12-20': 'all: 0'
+  prod3_compatible: 'all: 0'
+  post_prod3_updates: 'all: 0'
+  '2018-11-07': 'all: 0'
+  '2019-02-22': 'all: 0'
+  '2019-05-13': 'all: 0'
+  '2019-11-20': 'all: 0'
+  '2019-12-30': 'all: 0'
+  '2020-02-26': 'all: 0'
+  '2020-06-28': 'all: 0'
+  prod4: 'all: 0'
+  Applicable: false
+reverse_mode:
+  default: '0'
+  '2016-12-20': '0'
+  prod3_compatible: '0'
+  post_prod3_updates: '0'
+  '2018-11-07': '0'
+  '2019-02-22': '0'
+  '2019-05-13': '0'
+  '2019-11-20': '0'
+  '2019-12-30': '0'
+  '2020-02-26': '0'
+  '2020-06-28': '0'
+  prod4: '0'
+  Applicable: false
+sampled_output:
+  default: '0'
+  '2016-12-20': '1'
+  prod3_compatible: '1'
+  post_prod3_updates: '1'
+  '2018-11-07': '1'
+  '2019-02-22': '1'
+  '2019-05-13': '1'
+  '2019-11-20': '1'
+  '2019-12-30': '1'
+  '2020-02-26': '1'
+  '2020-06-28': '1'
+  prod4: '1'
+  Applicable: false
+simple_threshold:
+  default: '4'
+  '2016-12-20': '4'
+  prod3_compatible: '4'
+  post_prod3_updates: '4'
+  '2018-11-07': '4'
+  '2019-02-22': '4'
+  '2019-05-13': '4'
+  '2019-11-20': '4'
+  '2019-12-30': '4'
+  '2020-02-26': '4'
+  '2020-06-28': '4'
+  prod4: '4'
+  Applicable: false
+store_photoelectrons:
+  default: -1
+  '2016-12-20': 26
+  prod3_compatible: 24
+  post_prod3_updates: 24
+  '2018-11-07': 22
+  '2019-02-22': 22
+  '2019-05-13': 22
+  '2019-11-20': 22
+  '2019-12-30': 22
+  '2020-02-26': 22
+  '2020-06-28': 22
+  prod4: 22
+  Applicable: true
+sum_after_peak:
+  default: -1
+  '2016-12-20': 1
+  prod3_compatible: 1
+  post_prod3_updates: 1
+  '2018-11-07': 1
+  '2019-02-22': 1
+  '2019-05-13': 1
+  '2019-11-20': 1
+  '2019-12-30': 1
+  '2020-02-26': 1
+  '2020-06-28': 1
+  prod4: 1
+  Applicable: true
+sum_before_peak:
+  default: -1
+  '2016-12-20': 1
+  prod3_compatible: 1
+  post_prod3_updates: 1
+  '2018-11-07': 1
+  '2019-02-22': 1
+  '2019-05-13': 1
+  '2019-11-20': 1
+  '2019-12-30': 1
+  '2020-02-26': 1
+  '2020-06-28': 1
+  prod4: 1
+  Applicable: true
+tailcut_scale:
+  default: 1.0
+  '2016-12-20': 2.6
+  prod3_compatible: 2.6
+  post_prod3_updates: 2.6
+  '2018-11-07': 2.6
+  '2019-02-22': 2.6
+  '2019-05-13': 2.6
+  '2019-11-20': 2.6
+  '2019-12-30': 2.6
+  '2020-02-26': 2.6
+  '2020-06-28': 2.6
+  prod4: 2.6
+  Applicable: false
+telescope_random_angle:
+  default: 0.001
+  '2016-12-20': 0.0
+  prod3_compatible: 0.0
+  post_prod3_updates: 0.0
+  '2018-11-07': 0.0
+  '2019-02-22': 0.0
+  '2019-05-13': 0.0
+  '2019-11-20': 0.0
+  '2019-12-30': 0.0
+  '2020-02-26': 0.0
+  '2020-06-28': 0.0
+  prod4: 0.0
+  Applicable: true
+telescope_random_error:
+  default: 0.001
+  '2016-12-20': 0.0
+  prod3_compatible: 0.0
+  post_prod3_updates: 0.0
+  '2018-11-07': 0.0
+  '2019-02-22': 0.0
+  '2019-05-13': 0.0
+  '2019-11-20': 0.0
+  '2019-12-30': 0.0
+  '2020-02-26': 0.0
+  '2020-06-28': 0.0
+  prod4: 0.0
+  Applicable: true
+telescope_transmission:
+  default: 0.89 0 0 0 0 0
+  '2016-12-20': 0.88 0 0 0 0
+  prod3_compatible: 0.88 0 0 0 0 0
+  post_prod3_updates: 0.89 1 0.023 4 2.1 0
+  '2018-11-07': 0.8928 1 0.0235 4 3.38 0
+  '2019-02-22': 0.8928 1 0.0235 4 3.38 0
+  '2019-05-13': 0.8928 1 0.0235 4 3.38 0
+  '2019-11-20': 0.8928 1 0.0235 4 3.38 0
+  '2019-12-30': 0.8928 1 0.0235 4 3.38 0
+  '2020-02-26': 0.8928 1 0.0235 4 3.38 0
+  '2020-06-28': 0.908661 0.0154576 4 1.21166 0 0
+  prod4: 0.908661 0.0154576 4 1.21166 0 0
+  Applicable: false
+transit_time_calib_error:
+  default: 0.0
+  '2016-12-20': 0.0
+  prod3_compatible: 0.0
+  post_prod3_updates: 0.0
+  '2018-11-07': 0.0
+  '2019-02-22': 0.0
+  '2019-05-13': 0.0
+  '2019-11-20': 0.0
+  '2019-12-30': 0.0
+  '2020-02-26': 0.0
+  '2020-06-28': 0.0
+  prod4: 0.0
+  Applicable: false
+transit_time_compensate_error:
+  default: 0.0
+  prod3_compatible: 0.0
+  post_prod3_updates: 0.0
+  '2018-11-07': 0.2
+  '2019-02-22': 0.2
+  '2019-05-13': 0.2
+  '2019-11-20': 0.2
+  '2019-12-30': 0.2
+  '2020-02-26': 0.2
+  '2020-06-28': 0.2
+  prod4: 0.2
+  Applicable: true
+transit_time_compensate_step:
+  default: 0.0
+  prod3_compatible: 0.0
+  post_prod3_updates: 0.0
+  '2018-11-07': 1.0
+  '2019-02-22': 1.0
+  '2019-05-13': 1.0
+  '2019-11-20': 1.0
+  '2019-12-30': 1.0
+  '2020-02-26': 1.0
+  '2020-06-28': 1.0
+  prod4: 1.0
+  Applicable: true
+transit_time_error:
+  default: 0.0
+  '2016-12-20': 0.0
+  prod3_compatible: 0.0
+  post_prod3_updates: 0.0
+  '2018-11-07': 0.0
+  '2019-02-22': 0.0
+  '2019-05-13': 0.0
+  '2019-11-20': 0.0
+  '2019-12-30': 0.0
+  '2020-02-26': 0.0
+  '2020-06-28': 0.0
+  prod4: 0.0
+  Applicable: false
+transit_time_jitter:
+  default: 0.75
+  '2016-12-20': 0.64
+  prod3_compatible: 0.64
+  post_prod3_updates: 0.64
+  '2018-11-07': 0.64
+  '2019-02-22': 0.64
+  '2019-05-13': 0.64
+  '2019-11-20': 0.64
+  '2019-12-30': 0.64
+  '2020-02-26': 0.7
+  '2020-06-28': 0.7
+  prod4: 0.7
+  Applicable: true
+trigger_current_limit:
+  default: 20.0
+  '2016-12-20': 20.0
+  prod3_compatible: 20.0
+  post_prod3_updates: 20.0
+  '2018-11-07': 2000.0
+  '2019-02-22': 2000.0
+  '2019-05-13': 2000.0
+  '2019-11-20': 2000.0
+  '2019-12-30': 2000.0
+  '2020-02-26': 2000.0
+  '2020-06-28': 2000.0
+  prod4: 2000.0
+  Applicable: true
+trigger_delay_compensation:
+  default: 'all: 0'
+  '2016-12-20': 0 -1 3
+  prod3_compatible: 0 -1 3 0
+  post_prod3_updates: 0 -1 3 0
+  '2018-11-07': 'all: 0'
+  '2019-02-22': 'all: 0'
+  '2019-05-13': 'all: 0'
+  '2019-11-20': 'all: 0'
+  '2019-12-30': 'all: 0'
+  '2020-02-26': 'all: 0'
+  '2020-06-28': 'all: 0'
+  prod4: 'all: 0'
+  Applicable: true
+trigger_telescopes:
+  default: 2
+  '2016-12-20': 1
+  prod3_compatible: 1
+  post_prod3_updates: 1
+  '2018-11-07': 1
+  '2019-02-22': 1
+  '2019-05-13': 1
+  '2019-11-20': 1
+  '2019-12-30': 1
+  '2020-02-26': 1
+  '2020-06-28': 1
+  prod4: 1
+  Applicable: true
+zero_suppression:
+  default: '0'
+  '2016-12-20': '0'
+  prod3_compatible: '0'
+  post_prod3_updates: '0'
+  '2018-11-07': '0'
+  '2019-02-22': '0'
+  '2019-05-13': '0'
+  '2019-11-20': '0'
+  '2019-12-30': '0'
+  '2020-02-26': '0'
+  '2020-06-28': '0'
+  prod4: '0'
+  Applicable: false
+asum_clipping:
+  default: 0.0
+  '2016-12-20': 0.0
+  prod3_compatible: 0.0
+  post_prod3_updates: 0.0
+  '2018-11-07': 0.0
+  '2019-02-22': 0.0
+  '2019-05-13': 0.0
+  '2019-11-20': 0.0
+  '2019-12-30': 0.0
+  '2020-02-26': 0.0
+  '2020-06-28': 0.0
+  prod4: 0.0
+  Applicable: false
+asum_offset:
+  default: 0.0
+  '2016-12-20': 0.0
+  prod3_compatible: 0.0
+  post_prod3_updates: 0.0
+  '2018-11-07': 0.0
+  '2019-02-22': 0.0
+  '2019-05-13': 0.0
+  '2019-11-20': 0.0
+  '2019-12-30': 0.0
+  '2020-02-26': 0.0
+  '2020-06-28': 0.0
+  prod4: 0.0
+  Applicable: true
+asum_shaping_file:
+  default: none
+  '2016-12-20': none
+  prod3_compatible: none
+  post_prod3_updates: none
+  '2018-11-07': none
+  '2019-02-22': none
+  '2019-05-13': none
+  '2019-11-20': none
+  '2019-12-30': none
+  '2020-02-26': none
+  '2020-06-28': none
+  prod4: none
+  Applicable: true
+asum_threshold:
+  default: 0.0
+  '2016-12-20': 0.0
+  prod3_compatible: 0.0
+  post_prod3_updates: 0.0
+  '2018-11-07': 0.0
+  '2019-02-22': 0.0
+  '2019-05-13': 0.0
+  '2019-11-20': 0.0
+  '2019-12-30': 0.0
+  '2020-02-26': 0.0
+  '2020-06-28': 0.0
+  prod4: 0.0
+  Applicable: true
+discriminator_amplitude:
+  default: 1.0
+  '2016-12-20': 0.0
+  prod3_compatible: 0.0
+  post_prod3_updates: 0.0
+  '2018-11-07': 0.0
+  '2019-02-22': 0.0
+  '2019-05-13': 0.0
+  '2019-11-20': 0.0
+  '2019-12-30': 0.0
+  '2020-02-26': 0.0
+  '2020-06-28': 0.0
+  prod4: 0.0
+  Applicable: true
+discriminator_fall_time:
+  default: 1.0
+  '2016-12-20': 1.0
+  prod3_compatible: 1.0
+  post_prod3_updates: 1.0
+  '2018-11-07': 1.0
+  '2019-02-22': 1.0
+  '2019-05-13': 1.0
+  '2019-11-20': 1.0
+  '2019-12-30': 1.0
+  '2020-02-26': 1.0
+  '2020-06-28': 1.0
+  prod4: 1.0
+  Applicable: false
+discriminator_gate_length:
+  default: 2.0
+  '2016-12-20': 2.0
+  prod3_compatible: 2.0
+  post_prod3_updates: 2.0
+  '2018-11-07': 2.0
+  '2019-02-22': 2.0
+  '2019-05-13': 2.0
+  '2019-11-20': 2.0
+  '2019-12-30': 2.0
+  '2020-02-26': 2.0
+  '2020-06-28': 2.0
+  prod4: 2.0
+  Applicable: false
+discriminator_hysteresis:
+  default: 0.0
+  '2016-12-20': 0.0
+  prod3_compatible: 0.0
+  post_prod3_updates: 0.0
+  '2018-11-07': 0.0
+  '2019-02-22': 0.0
+  '2019-05-13': 0.0
+  '2019-11-20': 0.0
+  '2019-12-30': 0.0
+  '2020-02-26': 0.0
+  '2020-06-28': 0.0
+  prod4: 0.0
+  Applicable: false
+discriminator_output_amplitude:
+  default: 42.0
+  '2016-12-20': 42.0
+  prod3_compatible: 42.0
+  post_prod3_updates: 42.0
+  '2018-11-07': 42.0
+  '2019-02-22': 42.0
+  '2019-05-13': 42.0
+  '2019-11-20': 42.0
+  '2019-12-30': 42.0
+  '2020-02-26': 42.0
+  '2020-06-28': 42.0
+  prod4: 42.0
+  Applicable: false
+discriminator_output_var_percent:
+  default: 10.0
+  '2016-12-20': 10.0
+  prod3_compatible: 10.0
+  post_prod3_updates: 10.0
+  '2018-11-07': 10.0
+  '2019-02-22': 10.0
+  '2019-05-13': 10.0
+  '2019-11-20': 10.0
+  '2019-12-30': 10.0
+  '2020-02-26': 10.0
+  '2020-06-28': 10.0
+  prod4: 10.0
+  Applicable: false
+discriminator_pulse_shape:
+  default: unspecified_shape.dat
+  '2016-12-20': pulse_FlashCam_raw2.dat
+  prod3_compatible: pulse_FlashCam_raw2.dat
+  post_prod3_updates: pulse_FlashCam_raw2.dat
+  '2018-11-07': pulse_FlashCam_raw2.dat
+  '2019-02-22': pulse_FlashCam_7dynode_v2a.dat
+  '2019-05-13': pulse_FlashCam_7dynode_v2a.dat
+  '2019-11-20': pulse_FlashCam_7dynode_v2a.dat
+  '2019-12-30': pulse_FlashCam_7dynode_v2a.dat
+  '2020-02-26': pulse_FlashCam_7dynode_v2a.dat
+  '2020-06-28': pulse_FlashCam_7dynode_v2a.dat
+  prod4: pulse_FlashCam_7dynode_v2a.dat
+  Applicable: true
+discriminator_rise_time:
+  default: 1.0
+  '2016-12-20': 1.0
+  prod3_compatible: 1.0
+  post_prod3_updates: 1.0
+  '2018-11-07': 1.0
+  '2019-02-22': 1.0
+  '2019-05-13': 1.0
+  '2019-11-20': 1.0
+  '2019-12-30': 1.0
+  '2020-02-26': 1.0
+  '2020-06-28': 1.0
+  prod4: 1.0
+  Applicable: false
+discriminator_scale_threshold:
+  default: '1'
+  '2016-12-20': '1'
+  prod3_compatible: '1'
+  post_prod3_updates: '1'
+  '2018-11-07': '1'
+  '2019-02-22': '1'
+  '2019-05-13': '1'
+  '2019-11-20': '1'
+  '2019-12-30': '1'
+  '2020-02-26': '1'
+  '2020-06-28': '1'
+  prod4: '1'
+  Applicable: false
+discriminator_sigsum_over_threshold:
+  default: 0.0
+  '2016-12-20': 0.0
+  prod3_compatible: 0.0
+  post_prod3_updates: 0.0
+  '2018-11-07': 0.0
+  '2019-02-22': 0.0
+  '2019-05-13': 0.0
+  '2019-11-20': 0.0
+  '2019-12-30': 0.0
+  '2020-02-26': 0.0
+  '2020-06-28': 0.0
+  prod4: 0.0
+  Applicable: false
+discriminator_threshold:
+  default: 4.0
+  '2016-12-20': 99999.0
+  prod3_compatible: 99999.0
+  post_prod3_updates: 99999.0
+  '2018-11-07': 99999.0
+  '2019-02-22': 99999.0
+  '2019-05-13': 99999.0
+  '2019-11-20': 99999.0
+  '2019-12-30': 99999.0
+  '2020-02-26': 99999.0
+  '2020-06-28': 99999.0
+  prod4: 99999.0
+  Applicable: true
+discriminator_time_over_threshold:
+  default: 1.5
+  '2016-12-20': 1.5
+  prod3_compatible: 1.5
+  post_prod3_updates: 1.5
+  '2018-11-07': 1.5
+  '2019-02-22': 1.5
+  '2019-05-13': 1.5
+  '2019-11-20': 1.5
+  '2019-12-30': 1.5
+  '2020-02-26': 1.5
+  '2020-06-28': 1.5
+  prod4: 1.5
+  Applicable: false
+discriminator_var_gate_length:
+  default: 0.1
+  '2016-12-20': 0.1
+  prod3_compatible: 0.1
+  post_prod3_updates: 0.1
+  '2018-11-07': 0.1
+  '2019-02-22': 0.1
+  '2019-05-13': 0.1
+  '2019-11-20': 0.1
+  '2019-12-30': 0.1
+  '2020-02-26': 0.1
+  '2020-06-28': 0.1
+  prod4: 0.1
+  Applicable: false
+discriminator_var_sigsum_over_threshold:
+  default: 0.0
+  '2016-12-20': 0.0
+  prod3_compatible: 0.0
+  post_prod3_updates: 0.0
+  '2018-11-07': 0.0
+  '2019-02-22': 0.0
+  '2019-05-13': 0.0
+  '2019-11-20': 0.0
+  '2019-12-30': 0.0
+  '2020-02-26': 0.0
+  '2020-06-28': 0.0
+  prod4: 0.0
+  Applicable: false
+discriminator_var_threshold:
+  default: 0.2
+  '2016-12-20': 0.2
+  prod3_compatible: 0.2
+  post_prod3_updates: 0.2
+  '2018-11-07': 0.2
+  '2019-02-22': 0.2
+  '2019-05-13': 0.2
+  '2019-11-20': 0.2
+  '2019-12-30': 0.2
+  '2020-02-26': 0.2
+  '2020-06-28': 0.2
+  prod4: 0.2
+  Applicable: false
+discriminator_var_time_over_threshold:
+  default: 0.1
+  '2016-12-20': 0.1
+  prod3_compatible: 0.1
+  post_prod3_updates: 0.1
+  '2018-11-07': 0.1
+  '2019-02-22': 0.1
+  '2019-05-13': 0.1
+  '2019-11-20': 0.1
+  '2019-12-30': 0.1
+  '2020-02-26': 0.1
+  '2020-06-28': 0.1
+  prod4: 0.1
+  Applicable: false
+fadc_lg_amplitude:
+  default: 1.0
+  '2016-12-20': 1.0
+  prod3_compatible: 1.0
+  post_prod3_updates: 1.0
+  '2018-11-07': 1.0
+  '2019-02-22': 1.0
+  '2019-05-13': 1.0
+  '2019-11-20': 1.0
+  '2019-12-30': 1.0
+  '2020-02-26': 1.0
+  '2020-06-28': 1.0
+  prod4: 1.0
+  Applicable: false
+fadc_lg_dev_pedestal:
+  default: -1.0
+  '2016-12-20': -1.0
+  prod3_compatible: -1.0
+  post_prod3_updates: -1.0
+  '2018-11-07': -1.0
+  '2019-02-22': -1.0
+  '2019-05-13': -1.0
+  '2019-11-20': -1.0
+  '2019-12-30': -1.0
+  '2020-02-26': -1.0
+  '2020-06-28': -1.0
+  prod4: -1.0
+  Applicable: false
+fadc_lg_err_pedestal:
+  default: -1.0
+  '2016-12-20': -1.0
+  prod3_compatible: -1.0
+  post_prod3_updates: -1.0
+  '2018-11-07': -1.0
+  '2019-02-22': -1.0
+  '2019-05-13': -1.0
+  '2019-11-20': -1.0
+  '2019-12-30': -1.0
+  '2020-02-26': -1.0
+  '2020-06-28': -1.0
+  prod4: -1.0
+  Applicable: false
+fadc_lg_max_signal:
+  default: -1
+  '2016-12-20': -1
+  prod3_compatible: -1
+  post_prod3_updates: -1
+  '2018-11-07': -1
+  '2019-02-22': -1
+  '2019-05-13': -1
+  '2019-11-20': -1
+  '2019-12-30': -1
+  '2020-02-26': -1
+  '2020-06-28': -1
+  prod4: -1
+  Applicable: false
+fadc_lg_max_sum:
+  default: -1
+  '2016-12-20': -1
+  prod3_compatible: -1
+  post_prod3_updates: -1
+  '2018-11-07': -1
+  '2019-02-22': -1
+  '2019-05-13': -1
+  '2019-11-20': -1
+  '2019-12-30': -1
+  '2020-02-26': -1
+  '2020-06-28': -1
+  prod4: -1
+  Applicable: false
+fadc_lg_noise:
+  default: 1.3
+  '2016-12-20': 1.3
+  prod3_compatible: 1.3
+  post_prod3_updates: 1.3
+  '2018-11-07': 1.3
+  '2019-02-22': 1.3
+  '2019-05-13': 1.3
+  '2019-11-20': 1.3
+  '2019-12-30': 1.3
+  '2020-02-26': 1.3
+  '2020-06-28': 1.3
+  prod4: 1.3
+  Applicable: false
+fadc_lg_pedestal:
+  default: -1.0
+  '2016-12-20': -1.0
+  prod3_compatible: -1.0
+  post_prod3_updates: -1.0
+  '2018-11-07': -1.0
+  '2019-02-22': -1.0
+  '2019-05-13': -1.0
+  '2019-11-20': -1.0
+  '2019-12-30': -1.0
+  '2020-02-26': -1.0
+  '2020-06-28': -1.0
+  prod4: -1.0
+  Applicable: false
+fadc_lg_sensitivity:
+  default: '-1'
+  prod3_compatible: '-1'
+  post_prod3_updates: '-1'
+  '2018-11-07': '-1'
+  '2019-02-22': '-1'
+  '2019-05-13': '-1'
+  '2019-11-20': '-1'
+  '2019-12-30': '-1'
+  '2020-02-26': '-1'
+  '2020-06-28': '-1'
+  prod4: '-1'
+  Applicable: false
+fadc_lg_sysvar_pedestal:
+  default: -1.0
+  '2016-12-20': -1.0
+  prod3_compatible: -1.0
+  post_prod3_updates: -1.0
+  '2018-11-07': -1.0
+  '2019-02-22': -1.0
+  '2019-05-13': -1.0
+  '2019-11-20': -1.0
+  '2019-12-30': -1.0
+  '2020-02-26': -1.0
+  '2020-06-28': -1.0
+  prod4: -1.0
+  Applicable: false
+fadc_lg_var_pedestal:
+  default: -1.0
+  '2016-12-20': -1.0
+  prod3_compatible: -1.0
+  post_prod3_updates: -1.0
+  '2018-11-07': -1.0
+  '2019-02-22': -1.0
+  '2019-05-13': -1.0
+  '2019-11-20': -1.0
+  '2019-12-30': -1.0
+  '2020-02-26': -1.0
+  '2020-06-28': -1.0
+  prod4: -1.0
+  Applicable: false
+fadc_lg_var_sensitivity:
+  default: '-1'
+  prod3_compatible: '-1'
+  post_prod3_updates: '-1'
+  '2018-11-07': '-1'
+  '2019-02-22': '-1'
+  '2019-05-13': '-1'
+  '2019-11-20': '-1'
+  '2019-12-30': '-1'
+  '2020-02-26': '-1'
+  '2020-06-28': '-1'
+  prod4: '-1'
+  Applicable: false
+focal_surface_parameters:
+  default: 'all: 0'
+  '2016-12-20': 'all: 0'
+  prod3_compatible: 'all: 0'
+  post_prod3_updates: 'all: 0'
+  '2018-11-07': 'all: 0'
+  '2019-02-22': 'all: 0'
+  '2019-05-13': 'all: 0'
+  '2019-11-20': 'all: 0'
+  '2019-12-30': 'all: 0'
+  '2020-02-26': 'all: 0'
+  '2020-06-28': 'all: 0'
+  prod4: 'all: 0'
+  Applicable: false
+focal_surface_ref_radius:
+  default: 1.0
+  '2016-12-20': 1.0
+  prod3_compatible: 1.0
+  post_prod3_updates: 1.0
+  '2018-11-07': 1.0
+  '2019-02-22': 1.0
+  '2019-05-13': 1.0
+  '2019-11-20': 1.0
+  '2019-12-30': 1.0
+  '2020-02-26': 1.0
+  '2020-06-28': 1.0
+  prod4: 1.0
+  Applicable: false
+hg_lg_variation:
+  default: 0.0
+  prod3_compatible: 0.0
+  post_prod3_updates: 0.0
+  '2018-11-07': 0.0
+  '2019-02-22': 0.0
+  '2019-05-13': 0.0
+  '2019-11-20': 0.0
+  '2019-12-30': 0.0
+  '2020-02-26': 0.0
+  '2020-06-28': 0.0
+  prod4: 0.0
+  Applicable: false
+lens_refidx_nominal:
+  default: '1.5'
+  prod3_compatible: '1.5'
+  post_prod3_updates: '1.5'
+  '2019-11-20': '1.5'
+  '2019-12-30': '1.5'
+  '2020-02-26': '1.5'
+  '2020-06-28': '1.5'
+  prod4: '1.5'
+  Applicable: false
+multiplicity_offset:
+  default: -0.5
+  '2016-12-20': -0.5
+  prod3_compatible: -0.5
+  post_prod3_updates: -0.5
+  '2018-11-07': -0.5
+  '2019-02-22': -0.5
+  '2019-05-13': -0.5
+  '2019-11-20': -0.5
+  '2019-12-30': -0.5
+  '2020-02-26': -0.5
+  '2020-06-28': -0.5
+  prod4: -0.5
+  Applicable: true
+primary_diameter:
+  default: 0.0
+  '2016-12-20': 0.0
+  prod3_compatible: 0.0
+  post_prod3_updates: 0.0
+  '2018-11-07': 0.0
+  '2019-02-22': 0.0
+  '2019-05-13': 0.0
+  '2019-11-20': 0.0
+  '2019-12-30': 0.0
+  '2020-02-26': 0.0
+  '2020-06-28': 0.0
+  prod4: 0.0
+  Applicable: false
+primary_hole_diameter:
+  default: 0.0
+  '2016-12-20': 0.0
+  prod3_compatible: 0.0
+  post_prod3_updates: 0.0
+  '2018-11-07': 0.0
+  '2019-02-22': 0.0
+  '2019-05-13': 0.0
+  '2019-11-20': 0.0
+  '2019-12-30': 0.0
+  '2020-02-26': 0.0
+  '2020-06-28': 0.0
+  prod4: 0.0
+  Applicable: false
+primary_mirror_parameters:
+  default: 'all: 0'
+  '2016-12-20': 'all: 0'
+  prod3_compatible: 'all: 0'
+  post_prod3_updates: 'all: 0'
+  '2018-11-07': 'all: 0'
+  '2019-02-22': 'all: 0'
+  '2019-05-13': 'all: 0'
+  '2019-11-20': 'all: 0'
+  '2019-12-30': 'all: 0'
+  '2020-02-26': 'all: 0'
+  '2020-06-28': 'all: 0'
+  prod4: 'all: 0'
+  Applicable: false
+primary_ref_radius:
+  default: 1.0
+  '2016-12-20': 1.0
+  prod3_compatible: 1.0
+  post_prod3_updates: 1.0
+  '2018-11-07': 1.0
+  '2019-02-22': 1.0
+  '2019-05-13': 1.0
+  '2019-11-20': 1.0
+  '2019-12-30': 1.0
+  '2020-02-26': 1.0
+  '2020-06-28': 1.0
+  prod4: 1.0
+  Applicable: false
+primary_segmentation:
+  default: none
+  '2016-12-20': none
+  prod3_compatible: none
+  post_prod3_updates: none
+  '2018-11-07': none
+  '2019-02-22': none
+  '2019-05-13': none
+  '2019-11-20': none
+  '2019-12-30': none
+  '2020-02-26': none
+  '2020-06-28': none
+  prod4: none
+  Applicable: false
+secondary_baffle:
+  default: 'all: 0'
+  '2016-12-20': 'all: 0'
+  prod3_compatible: 'all: 0'
+  post_prod3_updates: 'all: 0'
+  '2018-11-07': 'all: 0'
+  '2019-02-22': 'all: 0'
+  '2019-05-13': 'all: 0'
+  '2019-11-20': 'all: 0'
+  '2019-12-30': 'all: 0'
+  '2020-02-26': 'all: 0'
+  '2020-06-28': 'all: 0'
+  prod4: 'all: 0'
+  Applicable: false
+secondary_degraded_map:
+  default: none
+  prod3_compatible: none
+  post_prod3_updates: none
+  '2019-11-20': none
+  '2019-12-30': none
+  '2020-02-26': none
+  '2020-06-28': none
+  prod4: none
+  Applicable: false
+secondary_diameter:
+  default: 0.0
+  '2016-12-20': 0.0
+  prod3_compatible: 0.0
+  post_prod3_updates: 0.0
+  '2018-11-07': 0.0
+  '2019-02-22': 0.0
+  '2019-05-13': 0.0
+  '2019-11-20': 0.0
+  '2019-12-30': 0.0
+  '2020-02-26': 0.0
+  '2020-06-28': 0.0
+  prod4: 0.0
+  Applicable: false
+secondary_hole_diameter:
+  default: 0.0
+  '2016-12-20': 0.0
+  prod3_compatible: 0.0
+  post_prod3_updates: 0.0
+  '2018-11-07': 0.0
+  '2019-02-22': 0.0
+  '2019-05-13': 0.0
+  '2019-11-20': 0.0
+  '2019-12-30': 0.0
+  '2020-02-26': 0.0
+  '2020-06-28': 0.0
+  prod4: 0.0
+  Applicable: false
+secondary_mirror_parameters:
+  default: 'all: 0'
+  '2016-12-20': 'all: 0'
+  prod3_compatible: 'all: 0'
+  post_prod3_updates: 'all: 0'
+  '2018-11-07': 'all: 0'
+  '2019-02-22': 'all: 0'
+  '2019-05-13': 'all: 0'
+  '2019-11-20': 'all: 0'
+  '2019-12-30': 'all: 0'
+  '2020-02-26': 'all: 0'
+  '2020-06-28': 'all: 0'
+  prod4: 'all: 0'
+  Applicable: false
+secondary_ref_radius:
+  default: 1.0
+  '2016-12-20': 1.0
+  prod3_compatible: 1.0
+  post_prod3_updates: 1.0
+  '2018-11-07': 1.0
+  '2019-02-22': 1.0
+  '2019-05-13': 1.0
+  '2019-11-20': 1.0
+  '2019-12-30': 1.0
+  '2020-02-26': 1.0
+  '2020-06-28': 1.0
+  prod4: 1.0
+  Applicable: false
+secondary_segmentation:
+  default: none
+  '2016-12-20': none
+  prod3_compatible: none
+  post_prod3_updates: none
+  '2018-11-07': none
+  '2019-02-22': none
+  '2019-05-13': none
+  '2019-11-20': none
+  '2019-12-30': none
+  '2020-02-26': none
+  '2020-06-28': none
+  prod4: none
+  Applicable: false
+secondary_shadow_diameter:
+  default: -1.0
+  '2016-12-20': -1.0
+  prod3_compatible: -1.0
+  post_prod3_updates: -1.0
+  '2018-11-07': -1.0
+  '2019-02-22': -1.0
+  '2019-05-13': -1.0
+  '2019-11-20': -1.0
+  '2019-12-30': -1.0
+  '2020-02-26': -1.0
+  '2020-06-28': -1.0
+  prod4: -1.0
+  Applicable: false
+secondary_shadow_offset:
+  default: 0.0
+  '2016-12-20': 0.0
+  prod3_compatible: 0.0
+  post_prod3_updates: 0.0
+  '2018-11-07': 0.0
+  '2019-02-22': 0.0
+  '2019-05-13': 0.0
+  '2019-11-20': 0.0
+  '2019-12-30': 0.0
+  '2020-02-26': 0.0
+  '2020-06-28': 0.0
+  prod4: 0.0
+  Applicable: false
+teltrig_min_sigsum:
+  default: 7.8
+  '2016-12-20': 7.8
+  prod3_compatible: 0.0
+  post_prod3_updates: 0.0
+  '2018-11-07': 0.0
+  '2019-02-22': 0.0
+  '2019-05-13': 0.0
+  '2019-11-20': 0.0
+  '2019-12-30': 0.0
+  '2020-02-26': 0.0
+  '2020-06-28': 0.0
+  prod4: 0.0
+  Applicable: true
+teltrig_min_time:
+  default: 1.5
+  '2016-12-20': 0.5
+  prod3_compatible: 0.0
+  post_prod3_updates: 0.0
+  '2018-11-07': 0.0
+  '2019-02-22': 0.0
+  '2019-05-13': 0.0
+  '2019-11-20': 0.0
+  '2019-12-30': 0.0
+  '2020-02-26': 0.0
+  '2020-06-28': 0.0
+  prod4: 0.0
+  Applicable: true
+trigger_neighbours:
+  default: '1'
+  '2016-12-20': '1'
+  prod3_compatible: '1'
+  post_prod3_updates: '1'
+  '2018-11-07': '1'
+  '2019-02-22': '1'
+  '2019-05-13': '1'
+  '2019-11-20': '1'
+  '2019-12-30': '1'
+  '2020-02-26': '1'
+  '2020-06-28': '1'
+  prod4: '1'
+  Applicable: false
+trigger_pixels:
+  default: 4
+  '2016-12-20': 4
+  prod3_compatible: 4
+  post_prod3_updates: 4
+  '2018-11-07': 4
+  '2019-02-22': 4
+  '2019-05-13': 4
+  '2019-11-20': 4
+  '2019-12-30': 4
+  '2020-02-26': 4
+  '2020-06-28': 4
+  prod4: 4
+  Applicable: false
+all_wl_random:
+  default: '0'
+  '2016-12-20': '0'
+  prod3_compatible: '0'
+  post_prod3_updates: '0'
+  '2018-11-07': '0'
+  '2019-02-22': '0'
+  '2019-05-13': '0'
+  '2019-11-20': '0'
+  '2019-12-30': '0'
+  '2020-02-26': '0'
+  '2020-06-28': '0'
+  prod4: '0'
+  Applicable: false
+altitude:
+  default: '1800'
+  '2016-12-20': '2000'
+  prod3_compatible: '2000'
+  post_prod3_updates: '2000'
+  '2018-11-07': '2150'
+  '2019-02-22': '2150'
+  '2019-05-13': '2150'
+  '2019-11-20': '2150'
+  '2019-12-30': '2150'
+  '2020-02-26': '2150'
+  '2020-06-28': '2150'
+  prod4: '2150'
+  Applicable: false
+always_aweights:
+  default: '0'
+  '2016-12-20': '0'
+  prod3_compatible: '0'
+  post_prod3_updates: '0'
+  '2018-11-07': '0'
+  '2019-02-22': '0'
+  '2019-05-13': '0'
+  '2019-11-20': '0'
+  '2019-12-30': '0'
+  '2020-02-26': '0'
+  '2020-06-28': '0'
+  prod4: '0'
+  Applicable: false
+array_clock_window:
+  default: '0'
+  prod3_compatible: '0'
+  post_prod3_updates: '0'
+  '2019-11-20': '0'
+  '2019-12-30': '0'
+  '2020-02-26': '0'
+  '2020-06-28': '0'
+  prod4: '0'
+  Applicable: false
+array_config_name:
+  default: ''
+  prod3_compatible: ''
+  post_prod3_updates: ''
+  '2018-11-07': ''
+  '2019-02-22': ''
+  '2019-05-13': ''
+  '2019-11-20': ''
+  '2019-12-30': ''
+  '2020-02-26': ''
+  '2020-06-28': ''
+  prod4: ''
+  Applicable: false
+array_config_variant:
+  default: ''
+  prod3_compatible: ''
+  post_prod3_updates: ''
+  '2018-11-07': ''
+  '2019-02-22': ''
+  '2019-05-13': ''
+  '2019-11-20': ''
+  '2019-12-30': ''
+  '2020-02-26': ''
+  '2020-06-28': ''
+  prod4: ''
+  Applicable: false
+array_config_version:
+  default: ''
+  prod3_compatible: ''
+  post_prod3_updates: ''
+  '2018-11-07': ''
+  '2019-02-22': ''
+  '2019-05-13': ''
+  '2019-11-20': ''
+  '2019-12-30': ''
+  '2020-02-26': ''
+  '2020-06-28': ''
+  prod4: ''
+  Applicable: false
+array_triggers:
+  default: none
+  '2016-12-20': none
+  prod3_compatible: none
+  post_prod3_updates: none
+  '2018-11-07': none
+  '2019-02-22': none
+  '2019-05-13': none
+  '2019-11-20': none
+  '2019-12-30': none
+  '2020-02-26': none
+  '2020-06-28': none
+  prod4: none
+  Applicable: false
+array_window:
+  default: 100.0
+  '2016-12-20': 1000.0
+  prod3_compatible: 1000.0
+  post_prod3_updates: 1000.0
+  '2018-11-07': 1000.0
+  '2019-02-22': 1000.0
+  '2019-05-13': 1000.0
+  '2019-11-20': 1000.0
+  '2019-12-30': 1000.0
+  '2020-02-26': 1000.0
+  '2020-06-28': 1000.0
+  prod4: 1000.0
+  Applicable: true
+atmospheric_transmission:
+  default: hess_atmo_trans.dat
+  '2016-12-20': atm_trans_2000_1_10_0_0_2000.dat
+  prod3_compatible: atm_trans_2000_1_10_0_0_2000.dat
+  post_prod3_updates: atm_trans_2000_1_10_0_0_2000.dat
+  '2018-11-07': atm_trans_2150_1_10_0_0_2150.dat
+  '2019-02-22': atm_trans_2150_1_10_0_0_2150.dat
+  '2019-05-13': atm_trans_2150_1_10_0_0_2150.dat
+  '2019-11-20': atm_trans_2150_1_10_0_0_2150.dat
+  '2019-12-30': atm_trans_2150_1_10_0_0_2150.dat
+  '2020-02-26': atm_trans_2150_1_10_0_0_2150.dat
+  '2020-06-28': atm_trans_2150_1_10_0_0_2150.dat
+  prod4: atm_trans_2150_1_10_0_0_2150.dat
+  Applicable: false
+base_telescope_number:
+  default: '1'
+  '2016-12-20': '1'
+  prod3_compatible: '1'
+  post_prod3_updates: '1'
+  '2018-11-07': '1'
+  '2019-02-22': '1'
+  '2019-05-13': '1'
+  '2019-11-20': '1'
+  '2019-12-30': '1'
+  '2020-02-26': '1'
+  '2020-06-28': '1'
+  prod4: '1'
+  Applicable: false
+channel_save_restore:
+  default: '0'
+  '2016-12-20': '0'
+  prod3_compatible: '0'
+  post_prod3_updates: '0'
+  '2018-11-07': '0'
+  '2019-02-22': '0'
+  '2019-05-13': '0'
+  '2019-11-20': '0'
+  '2019-12-30': '0'
+  '2020-02-26': '0'
+  '2020-06-28': '0'
+  prod4: '0'
+  Applicable: false
+convergent_depth:
+  default: 0.0
+  '2016-12-20': 0.0
+  prod3_compatible: 0.0
+  post_prod3_updates: 0.0
+  '2018-11-07': 0.0
+  '2019-02-22': 0.0
+  '2019-05-13': 0.0
+  '2019-11-20': 0.0
+  '2019-12-30': 0.0
+  '2020-02-26': 0.0
+  '2020-06-28': 0.0
+  prod4: 0.0
+  Applicable: true
+convergent_height:
+  default: '0'
+  '2016-12-20': '0'
+  prod3_compatible: '0'
+  post_prod3_updates: '0'
+  '2018-11-07': '0'
+  '2019-02-22': '0'
+  '2019-05-13': '0'
+  '2019-11-20': '0'
+  '2019-12-30': '0'
+  '2020-02-26': '0'
+  '2020-06-28': '0'
+  prod4: '0'
+  Applicable: false
+convergent_position:
+  default: 'all: 0'
+  '2016-12-20': 'all: 0'
+  prod3_compatible: 'all: 0'
+  post_prod3_updates: 'all: 0'
+  '2018-11-07': 'all: 0'
+  '2019-02-22': 'all: 0'
+  '2019-05-13': 'all: 0'
+  '2019-11-20': 'all: 0'
+  '2019-12-30': 'all: 0'
+  '2020-02-26': 'all: 0'
+  '2020-06-28': 'all: 0'
+  prod4: 'all: 0'
+  Applicable: false
+histogram_file:
+  default: ctsim.hdata
+  '2016-12-20': ctsim.hdata
+  prod3_compatible: ctsim.hdata
+  post_prod3_updates: ctsim.hdata
+  '2018-11-07': ctsim.hdata
+  '2019-02-22': ctsim.hdata
+  '2019-05-13': ctsim.hdata
+  '2019-11-20': ctsim.hdata
+  '2019-12-30': ctsim.hdata
+  '2020-02-26': ctsim.hdata
+  '2020-06-28': ctsim.hdata
+  prod4: ctsim.hdata
+  Applicable: false
+ignore_mc_data:
+  default: '0'
+  '2016-12-20': '0'
+  prod3_compatible: '0'
+  post_prod3_updates: '0'
+  '2018-11-07': '0'
+  '2019-02-22': '0'
+  '2019-05-13': '0'
+  '2019-11-20': '0'
+  '2019-12-30': '0'
+  '2020-02-26': '0'
+  '2020-06-28': '0'
+  prod4: '0'
+  Applicable: false
+ignore_nontriggered_showers:
+  default: '0'
+  '2016-12-20': '0'
+  prod3_compatible: '0'
+  post_prod3_updates: '0'
+  '2018-11-07': '0'
+  '2019-02-22': '0'
+  '2019-05-13': '0'
+  '2019-11-20': '0'
+  '2019-12-30': '0'
+  '2020-02-26': '0'
+  '2020-06-28': '0'
+  prod4: '0'
+  Applicable: false
+ignore_telescopes:
+  default: 'all: -1'
+  '2016-12-20': 'all: -1'
+  prod3_compatible: 'all: -1'
+  post_prod3_updates: 'all: -1'
+  '2018-11-07': 'all: -1'
+  '2019-02-22': 'all: -1'
+  '2019-05-13': 'all: -1'
+  '2019-11-20': 'all: -1'
+  '2019-12-30': 'all: -1'
+  '2020-02-26': 'all: -1'
+  '2020-06-28': 'all: -1'
+  prod4: 'all: -1'
+  Applicable: false
+image_file:
+  default: none
+  '2016-12-20': none
+  prod3_compatible: none
+  post_prod3_updates: none
+  '2018-11-07': none
+  '2019-02-22': none
+  '2019-05-13': none
+  '2019-11-20': none
+  '2019-12-30': none
+  '2020-02-26': none
+  '2020-06-28': none
+  prod4: none
+  Applicable: false
+image_gamma_coefficient:
+  default: '0.85'
+  '2016-12-20': '0.85'
+  prod3_compatible: '0.85'
+  post_prod3_updates: '0.85'
+  '2018-11-07': '0.85'
+  '2019-02-22': '0.85'
+  '2019-05-13': '0.85'
+  '2019-11-20': '0.85'
+  '2019-12-30': '0.85'
+  '2020-02-26': '0.85'
+  '2020-06-28': '0.85'
+  prod4: '0.85'
+  Applicable: false
+image_pe_range:
+  default: '30'
+  '2016-12-20': '30'
+  prod3_compatible: '30'
+  post_prod3_updates: '30'
+  '2018-11-07': '30'
+  '2019-02-22': '30'
+  '2019-05-13': '30'
+  '2019-11-20': '30'
+  '2019-12-30': '30'
+  '2020-02-26': '30'
+  '2020-06-28': '30'
+  prod4: '30'
+  Applicable: false
+imaging_list:
+  default: none
+  '2016-12-20': none
+  prod3_compatible: none
+  post_prod3_updates: none
+  '2018-11-07': none
+  '2019-02-22': none
+  '2019-05-13': none
+  '2019-11-20': none
+  '2019-12-30': none
+  '2020-02-26': none
+  '2020-06-28': none
+  prod4: none
+  Applicable: false
+input_file:
+  default: iact.dat
+  '2016-12-20': iact.dat
+  prod3_compatible: iact.dat
+  post_prod3_updates: iact.dat
+  '2018-11-07': iact.dat
+  '2019-02-22': iact.dat
+  '2019-05-13': iact.dat
+  '2019-11-20': iact.dat
+  '2019-12-30': iact.dat
+  '2020-02-26': iact.dat
+  '2020-06-28': iact.dat
+  prod4: iact.dat
+  Applicable: false
+iobuf_maximum:
+  default: 200000000
+  '2016-12-20': 1000000000
+  prod3_compatible: 1000000000
+  post_prod3_updates: 1000000000
+  '2018-11-07': 1000000000
+  '2019-02-22': 1000000000
+  '2019-05-13': 1000000000
+  '2019-11-20': 1000000000
+  '2019-12-30': 1000000000
+  '2020-02-26': 1000000000
+  '2020-06-28': 1000000000
+  prod4: 1000000000
+  Applicable: true
+iobuf_output_maximum:
+  default: 20000000
+  '2016-12-20': 400000000
+  prod3_compatible: 400000000
+  post_prod3_updates: 400000000
+  '2018-11-07': 400000000
+  '2019-02-22': 400000000
+  '2019-05-13': 400000000
+  '2019-11-20': 400000000
+  '2019-12-30': 400000000
+  '2020-02-26': 400000000
+  '2020-06-28': 400000000
+  prod4: 400000000
+  Applicable: true
+maximum_events:
+  default: '0'
+  '2016-12-20': '0'
+  prod3_compatible: '0'
+  post_prod3_updates: '0'
+  '2018-11-07': '0'
+  '2019-02-22': '0'
+  '2019-05-13': '0'
+  '2019-11-20': '0'
+  '2019-12-30': '0'
+  '2020-02-26': '0'
+  '2020-06-28': '0'
+  prod4: '0'
+  Applicable: false
+maximum_telescopes:
+  default: '16'
+  '2016-12-20': '1'
+  prod3_compatible: '16'
+  post_prod3_updates: '16'
+  '2018-11-07': '1'
+  '2019-02-22': '16'
+  '2019-05-13': '1'
+  '2019-11-20': '1'
+  '2019-12-30': '1'
+  '2020-02-26': '16'
+  '2020-06-28': '16'
+  prod4: '16'
+  Applicable: false
+maximum_triggered_events:
+  default: '0'
+  '2016-12-20': '0'
+  prod3_compatible: '0'
+  post_prod3_updates: '0'
+  '2018-11-07': '0'
+  '2019-02-22': '0'
+  '2019-05-13': '0'
+  '2019-11-20': '0'
+  '2019-12-30': '0'
+  '2020-02-26': '0'
+  '2020-06-28': '0'
+  prod4: '0'
+  Applicable: false
+mc_only_triggered_showers:
+  default: '0'
+  '2016-12-20': '0'
+  prod3_compatible: '0'
+  post_prod3_updates: '0'
+  '2018-11-07': '0'
+  '2019-02-22': '0'
+  '2019-05-13': '0'
+  '2019-11-20': '0'
+  '2019-12-30': '0'
+  '2020-02-26': '0'
+  '2020-06-28': '0'
+  prod4: '0'
+  Applicable: false
+movie:
+  default: '0'
+  '2016-12-20': '0'
+  prod3_compatible: '0'
+  post_prod3_updates: '0'
+  '2018-11-07': '0'
+  '2019-02-22': '0'
+  '2019-05-13': '0'
+  '2019-11-20': '0'
+  '2019-12-30': '0'
+  '2020-02-26': '0'
+  '2020-06-28': '0'
+  prod4: '0'
+  Applicable: false
+nsb_autoscale_airmass:
+  default: 0 0.15
+  prod3_compatible: 0 0.15
+  post_prod3_updates: 0 0.15
+  '2018-11-07': 0 0.15
+  '2019-02-22': 0 0.15
+  '2019-05-13': 0 0.15
+  '2019-11-20': 0 0.15
+  '2019-12-30': 0 0.15
+  '2020-02-26': 0 0.15
+  '2020-06-28': 0 0.15
+  prod4: 0 0.15
+  Applicable: false
+nsb_scaling_factor:
+  default: 1.0
+  '2016-12-20': 1.0
+  prod3_compatible: 1.0
+  post_prod3_updates: 1.0
+  '2018-11-07': 1.0
+  '2019-02-22': 1.0
+  '2019-05-13': 1.0
+  '2019-11-20': 1.0
+  '2019-12-30': 1.0
+  '2020-02-26': 1.0
+  '2020-06-28': 1.0
+  prod4: 1.0
+  Applicable: true
+nsb_sky_map:
+  default: none
+  prod3_compatible: none
+  post_prod3_updates: none
+  '2019-05-13': none
+  '2019-11-20': none
+  '2019-12-30': none
+  '2020-02-26': none
+  '2020-06-28': none
+  prod4: none
+  Applicable: false
+only_triggered_arrays:
+  default: 1
+  '2016-12-20': 1
+  prod3_compatible: 1
+  post_prod3_updates: 1
+  '2018-11-07': 1
+  '2019-02-22': 1
+  '2019-05-13': 1
+  '2019-11-20': 1
+  '2019-12-30': 1
+  '2020-02-26': 1
+  '2020-06-28': 1
+  prod4: 1
+  Applicable: false
+only_triggered_telescopes:
+  default: 1
+  '2016-12-20': 1
+  prod3_compatible: 1
+  post_prod3_updates: 1
+  '2018-11-07': 1
+  '2019-02-22': 1
+  '2019-05-13': 1
+  '2019-11-20': 1
+  '2019-12-30': 1
+  '2020-02-26': 1
+  '2020-06-28': 1
+  prod4: 1
+  Applicable: true
+output_file:
+  default: none
+  '2016-12-20': none
+  prod3_compatible: none
+  post_prod3_updates: none
+  '2018-11-07': none
+  '2019-02-22': none
+  '2019-05-13': none
+  '2019-11-20': none
+  '2019-12-30': none
+  '2020-02-26': none
+  '2020-06-28': none
+  prod4: none
+  Applicable: false
+photoelectron_file:
+  default: none
+  '2016-12-20': none
+  prod3_compatible: none
+  post_prod3_updates: none
+  '2018-11-07': none
+  '2019-02-22': none
+  '2019-05-13': none
+  '2019-11-20': none
+  '2019-12-30': none
+  '2020-02-26': none
+  '2020-06-28': none
+  prod4: none
+  Applicable: false
+plot_file:
+  default: none
+  '2016-12-20': none
+  prod3_compatible: none
+  post_prod3_updates: none
+  '2018-11-07': none
+  '2019-02-22': none
+  '2019-05-13': none
+  '2019-11-20': none
+  '2019-12-30': none
+  '2020-02-26': none
+  '2020-06-28': none
+  prod4: none
+  Applicable: false
+power_law:
+  default: '2.68'
+  '2016-12-20': '2.68'
+  prod3_compatible: '2.68'
+  post_prod3_updates: '2.68'
+  '2018-11-07': '2.68'
+  '2019-02-22': '2.68'
+  '2019-05-13': '2.68'
+  '2019-11-20': '2.68'
+  '2019-12-30': '2.68'
+  '2020-02-26': '2.68'
+  '2020-06-28': '2.68'
+  prod4: '2.68'
+  Applicable: false
+random_state:
+  default: none
+  '2016-12-20': none
+  prod3_compatible: none
+  post_prod3_updates: none
+  '2018-11-07': none
+  '2019-02-22': none
+  '2019-05-13': none
+  '2019-11-20': none
+  '2019-12-30': none
+  '2020-02-26': none
+  '2020-06-28': none
+  prod4: none
+  Applicable: false
+reference_position:
+  default: 0 0 750
+  '2016-12-20': 0 0 750
+  prod3_compatible: 0 0 750
+  post_prod3_updates: 0 0 750
+  '2018-11-07': 0 0 750
+  '2019-02-22': 0 0 750
+  '2019-05-13': 0 0 750
+  '2019-11-20': 0 0 750
+  '2019-12-30': 0 0 750
+  '2020-02-26': 0 0 750
+  '2020-06-28': 0 0 750
+  prod4: 0 0 750
+  Applicable: false
+save_pe_with_amplitude:
+  default: '0'
+  prod3_compatible: '0'
+  post_prod3_updates: '0'
+  '2019-11-20': '0'
+  '2019-12-30': '0'
+  '2020-02-26': '0'
+  '2020-06-28': '0'
+  prod4: '0'
+  Applicable: false
+save_photons:
+  default: '0'
+  '2016-12-20': '0'
+  prod3_compatible: '0'
+  post_prod3_updates: '0'
+  '2018-11-07': '0'
+  '2019-02-22': '0'
+  '2019-05-13': '0'
+  '2019-11-20': '0'
+  '2019-12-30': '0'
+  '2020-02-26': '0'
+  '2020-06-28': '0'
+  prod4: '0'
+  Applicable: false
+select_light_component:
+  default: '0'
+  prod3_compatible: '0'
+  post_prod3_updates: '0'
+  '2019-02-22': '0'
+  '2019-05-13': '0'
+  '2019-11-20': '0'
+  '2019-12-30': '0'
+  '2020-02-26': '0'
+  '2020-06-28': '0'
+  prod4: '0'
+  Applicable: false
+sky_is_variable:
+  default: '0'
+  '2016-12-20': '0'
+  prod3_compatible: '0'
+  post_prod3_updates: '0'
+  '2018-11-07': '0'
+  '2019-02-22': '0'
+  '2019-05-13': '0'
+  '2019-11-20': '0'
+  '2019-12-30': '0'
+  '2020-02-26': '0'
+  '2020-06-28': '0'
+  prod4: '0'
+  Applicable: false
+source_altitude:
+  default: '0'
+  '2016-12-20': '0'
+  prod3_compatible: '0'
+  post_prod3_updates: '0'
+  '2018-11-07': '0'
+  '2019-02-22': '0'
+  '2019-05-13': '0'
+  '2019-11-20': '0'
+  '2019-12-30': '0'
+  '2020-02-26': '0'
+  '2020-06-28': '0'
+  prod4: '0'
+  Applicable: false
+source_azimuth:
+  default: '0'
+  '2016-12-20': '0'
+  prod3_compatible: '0'
+  post_prod3_updates: '0'
+  '2018-11-07': '0'
+  '2019-02-22': '0'
+  '2019-05-13': '0'
+  '2019-11-20': '0'
+  '2019-12-30': '0'
+  '2020-02-26': '0'
+  '2020-06-28': '0'
+  prod4: '0'
+  Applicable: false
+star_photons:
+  default: '4000'
+  '2016-12-20': '4000'
+  prod3_compatible: '4000'
+  post_prod3_updates: '4000'
+  '2018-11-07': '4000'
+  '2019-02-22': '4000'
+  '2019-05-13': '4000'
+  '2019-11-20': '4000'
+  '2019-12-30': '4000'
+  '2020-02-26': '4000'
+  '2020-06-28': '4000'
+  prod4: '4000'
+  Applicable: false
+stars:
+  default: none
+  '2016-12-20': none
+  prod3_compatible: none
+  post_prod3_updates: none
+  '2018-11-07': none
+  '2019-02-22': none
+  '2019-05-13': none
+  '2019-11-20': none
+  '2019-12-30': none
+  '2020-02-26': none
+  '2020-06-28': none
+  prod4: none
+  Applicable: false
+telescope_altitude:
+  default: ''
+  '2016-12-20': ''
+  prod3_compatible: ''
+  post_prod3_updates: ''
+  '2018-11-07': ''
+  '2019-02-22': ''
+  '2019-05-13': ''
+  '2019-11-20': ''
+  '2019-12-30': ''
+  '2020-02-26': ''
+  '2020-06-28': ''
+  prod4: ''
+  Applicable: false
+telescope_azimuth:
+  default: '0'
+  '2016-12-20': '0'
+  prod3_compatible: '0'
+  post_prod3_updates: '0'
+  '2018-11-07': '0'
+  '2019-02-22': '0'
+  '2019-05-13': '0'
+  '2019-11-20': '0'
+  '2019-12-30': '0'
+  '2020-02-26': '0'
+  '2020-06-28': '0'
+  prod4: '0'
+  Applicable: false
+telescope_phi:
+  default: '0'
+  '2016-12-20': '0'
+  prod3_compatible: '0'
+  post_prod3_updates: '0'
+  '2018-11-07': '0'
+  '2019-02-22': '0'
+  '2019-05-13': '0'
+  '2019-11-20': '0'
+  '2019-12-30': '0'
+  '2020-02-26': '0'
+  '2020-06-28': '0'
+  prod4: '0'
+  Applicable: false
+telescope_theta:
+  default: '0'
+  '2016-12-20': '0'
+  prod3_compatible: '0'
+  post_prod3_updates: '0'
+  '2018-11-07': '0'
+  '2019-02-22': '0'
+  '2019-05-13': '0'
+  '2019-11-20': '0'
+  '2019-12-30': '0'
+  '2020-02-26': '0'
+  '2020-06-28': '0'
+  prod4: '0'
+  Applicable: false
+telescope_zenith_angle:
+  default: '0'
+  '2016-12-20': '0'
+  prod3_compatible: '0'
+  post_prod3_updates: '0'
+  '2018-11-07': '0'
+  '2019-02-22': '0'
+  '2019-05-13': '0'
+  '2019-11-20': '0'
+  '2019-12-30': '0'
+  '2020-02-26': '0'
+  '2020-06-28': '0'
+  prod4: '0'
+  Applicable: false
