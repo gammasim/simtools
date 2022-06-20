@@ -63,7 +63,6 @@ def test_guess_run(set_db, array_simulator):
 def test_invalid_array_data(cfg_setup,
                             arrayConfigData,
                             label):
-    cfg_setup
 
     newArrayConfigData = copy(arrayConfigData)
     newArrayConfigData.pop("site")
