@@ -2,7 +2,7 @@
 
 import pytest
 import logging
-import subprocess
+# import subprocess
 from pathlib import Path
 
 import simtools.config as cfg
@@ -38,7 +38,7 @@ def test_reading_db_lst(db):
     # TODO - is this part of testing the reading from the DB?
     db.exportModelFiles(pars, io.getTestOutputDirectory())
     logger.info("Listing files written in {}".format(io.getTestOutputDirectory()))
-    subprocess.call(["ls -lh {}".format(io.getTestOutputDirectory())], shell=True)
+    # subprocess.call(["ls -lh {}".format(io.getTestOutputDirectory())], shell=True)
 
 
 def test_reading_db_mst_nc(db):
@@ -219,12 +219,12 @@ def test_reading_db_sites(db):
         assert pars["altitude"] == 2158
 
     logger.info("Listing files written in {}".format(io.getTestOutputDirectory()))
-    subprocess.call(["ls -lh {}".format(io.getTestOutputDirectory())], shell=True)
+    # subprocess.call(["ls -lh {}".format(io.getTestOutputDirectory())], shell=True)
 
     logger.info(
         "Removing the files written in {}".format(io.getTestOutputDirectory())
     )
-    subprocess.call(["rm -f {}/*".format(io.getTestOutputDirectory())], shell=True)
+    # subprocess.call(["rm -f {}/*".format(io.getTestOutputDirectory())], shell=True)
 
     logger.info("----Testing reading Paranal parameters-----")
     pars = db.getSiteParameters("South", "Current")
@@ -234,12 +234,12 @@ def test_reading_db_sites(db):
         assert pars["altitude"] == 2147
 
     logger.info("Listing files written in {}".format(io.getTestOutputDirectory()))
-    subprocess.call(["ls -lh {}".format(io.getTestOutputDirectory())], shell=True)
+    # subprocess.call(["ls -lh {}".format(io.getTestOutputDirectory())], shell=True)
 
     logger.info(
         "Removing the files written in {}".format(io.getTestOutputDirectory())
     )
-    subprocess.call(["rm -f {}/*".format(io.getTestOutputDirectory())], shell=True)
+    # subprocess.call(["rm -f {}/*".format(io.getTestOutputDirectory())], shell=True)
 
     return
 
@@ -248,12 +248,12 @@ def test_separating_get_and_write(db):
     pars = db.getModelParameters("north", "lst-1", "prod4")
 
     logger.info("Listing files written in {}".format(io.getTestOutputDirectory()))
-    subprocess.call(["ls -lh {}".format(io.getTestOutputDirectory())], shell=True)
+    # subprocess.call(["ls -lh {}".format(io.getTestOutputDirectory())], shell=True)
 
     db.exportModelFiles(pars, io.getTestOutputDirectory())
 
     logger.info("Listing files written in {}".format(io.getTestOutputDirectory()))
-    subprocess.call(["ls -lh {}".format(io.getTestOutputDirectory())], shell=True)
+    # subprocess.call(["ls -lh {}".format(io.getTestOutputDirectory())], shell=True)
 
 
 def test_insert_files_db(db):
@@ -269,7 +269,7 @@ def test_insert_files_db(db):
     file_id = db.insertFileToDB(fileName, "sandbox")
     assert file_id == db._getFileMongoDB("sandbox", "test_file.dat")._id
 
-    subprocess.call(["rm -f {}".format(fileName)], shell=True)
+    # subprocess.call(["rm -f {}".format(fileName)], shell=True)
 
     logger.info("Dropping the temporary files in the sandbox")
     db.dbClient["sandbox"]["fs.chunks"].drop()
