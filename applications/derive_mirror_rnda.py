@@ -324,6 +324,9 @@ def main():
 
     if workflow.get_configuration_parameter('psf_measurement'):
         get_psf_containment(logger, workflow)
+    if not workflow.get_configuration_parameter('psf_measurement_containment_mean'):
+        logger.error("Missing PSF measurement")
+        raise ValueError
 
     def run(rnda):
         """Runs the simulations for one given value of rnda"""
