@@ -63,7 +63,7 @@ def loadConfig(fileName=None, useGlobals=True):
         config = yaml.load(stream, Loader=yaml.FullLoader)
 
     # Running over the parameters set for change
-    if useGlobals and  "CONFIG_CHANGED_PARS" in globals():
+    if useGlobals and "CONFIG_CHANGED_PARS" in globals():
         for par, value in CONFIG_CHANGED_PARS.items():
             config[par] = value
 
