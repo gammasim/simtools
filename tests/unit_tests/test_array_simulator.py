@@ -42,7 +42,7 @@ def corsikaFile():
 
 
 @pytest.fixture
-def array_simulator(cfg_setup, label, arrayConfigData):
+def array_simulator(set_db, label, arrayConfigData):
 
     arraySimulator = ArraySimulator(
         label=label, configData=arrayConfigData
@@ -50,7 +50,7 @@ def array_simulator(cfg_setup, label, arrayConfigData):
     return arraySimulator
 
 
-def test_guess_run(set_db, array_simulator):
+def test_guess_run(array_simulator):
 
     run = array_simulator._guessRunFromFile("run12345_bla_ble")
     assert run == 12345
@@ -74,7 +74,7 @@ def test_invalid_array_data(cfg_setup,
         )
 
 
-def test_run(set_db, array_simulator, corsikaFile):
+def test_run(array_simulator, corsikaFile):
 
     array_simulator.run(inputFileList=corsikaFile)
 
@@ -85,7 +85,7 @@ def test_run(set_db, array_simulator, corsikaFile):
     assert Path(array_simulator._results['log'][0]).parents[0].exists()
 
 
-def test_submitting(set_db, array_simulator, corsikaFile):
+def test_submitting(array_simulator, corsikaFile):
 
     array_simulator.submit(
         inputFileList=corsikaFile, submitCommand="more "
@@ -93,7 +93,7 @@ def test_submitting(set_db, array_simulator, corsikaFile):
     # TODO - add a test here
 
 
-def test_list_of_files(set_db, array_simulator, corsikaFile):
+def test_list_of_files(array_simulator, corsikaFile):
 
     array_simulator.submit(
         inputFileList=corsikaFile, submitCommand="more ", test=True
