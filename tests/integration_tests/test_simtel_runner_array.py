@@ -25,7 +25,7 @@ def arrayConfigData():
 
 
 @pytest.fixture
-def arrayModel(arrayConfigData, cfg_setup, set_db):
+def arrayModel(arrayConfigData, set_simtools):
     arrayModel = ArrayModel(
         label="test-lst-array", arrayConfigData=arrayConfigData
     )
@@ -53,5 +53,5 @@ def corsikaFile():
     return corsikaFile
 
 
-def test_run(set_simtelarray, simtelRunner, corsikaFile):
+def test_run(simtelRunner, corsikaFile):
     simtelRunner.run(test=False, force=True, inputFile=corsikaFile, run=1)
