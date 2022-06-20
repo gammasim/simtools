@@ -105,7 +105,6 @@ def test_no_corsika_data(cfg_setup, showerConfigData, label):
     newShowerSimulator = ShowerSimulator(
         label=label, showerConfigData=newShowerConfigData
     )
-    newShowerSimulator.runs
     files = newShowerSimulator.getListOfOutputFiles(runList=[3])
     print(files)
 
