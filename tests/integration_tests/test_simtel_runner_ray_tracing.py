@@ -14,7 +14,7 @@ logger.setLevel(logging.DEBUG)
 
 
 @pytest.fixture
-def telescopeModel(cfg_setup, set_db):
+def telescopeModel(set_simtools):
     telescopeModel = TelescopeModel(
         site="north",
         telescopeModelName="lst-1",
@@ -37,5 +37,5 @@ def simtelRunner(telescopeModel):
     return simtelRunner
 
 
-def test_run(set_simtelarray, simtelRunner):
+def test_run(simtelRunner):
     simtelRunner.run(test=True, force=True)
