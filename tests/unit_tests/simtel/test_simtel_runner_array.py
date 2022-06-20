@@ -26,7 +26,7 @@ def arrayConfigData():
 
 
 @pytest.fixture
-def arrayModel(arrayConfigData, cfg_setup, set_db):
+def arrayModel(arrayConfigData, set_db):
     arrayModel = ArrayModel(
         label="test-lst-array", arrayConfigData=arrayConfigData
     )
