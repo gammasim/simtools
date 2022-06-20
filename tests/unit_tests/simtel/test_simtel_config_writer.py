@@ -26,7 +26,7 @@ def telescopeModel():
 
 
 @pytest.fixture
-def simtelConfigWriter(cfg_setup, set_db):
+def simtelConfigWriter(set_db):
 
     simtelConfigWriter = SimtelConfigWriter(
         site="North",
