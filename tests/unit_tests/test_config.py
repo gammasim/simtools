@@ -25,8 +25,8 @@ def test_get_non_existing_parameter(cfg_setup):
         cfg.get("NonExistingEntry")
 
 
-def test_input_options(tmp_configuration_test_file):
-    configfile = str(tmp_configuration_test_file)
+def test_input_options(tmp_test_directory):
+    configfile = str(tmp_test_directory) + "/config-test.yml"
     cfg.setConfigFileName(configfile)
     assert configfile == cfg.CONFIG_FILE_NAME
 
