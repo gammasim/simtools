@@ -41,8 +41,8 @@
 """
 
 import logging
-import argparse
 
+import simtools.util.commandline_parser as argparser
 import simtools.config as cfg
 import simtools.io_handler as io
 import simtools.util.general as gen
@@ -52,37 +52,19 @@ from simtools.model.camera import Camera
 
 if __name__ == "__main__":
 
-    parser = argparse.ArgumentParser(
+    parser = argparser.CommandLineParser(
         description=(
             "Calculate the camera FoV of the telescope requested. "
             "Plot the camera as well, as seen for an observer facing the camera."
         )
     )
-    parser.add_argument("-s", "--site", help="North or South", type=str, required=True)
-    parser.add_argument(
-        "-t",
-        "--telescope",
-        help="Telescope model name (e.g. LST-1, SST-D)",
-        type=str,
-        required=True,
-    )
-    parser.add_argument(
-        "--model_version",
-        help="Model version (default=prod4)",
-        type=str,
-        default="prod4",
-    )
-    parser.add_argument(
-        "-v",
-        "--verbosity",
-        dest="logLevel",
-        action="store",
-        default="info",
-        help="Log level to print (default is INFO)",
-    )
+    parser.initialize_telescope_model_arguments()
+    parser.initialize_default_arguments(add_workflow_config=False)
 
     args = parser.parse_args()
     label = "validate_camera_fov"
+    if args.configFile:
+        cfg.setConfigFileName(args.configFile)
 
     logger = logging.getLogger()
     logger.setLevel(gen.getLogLevelFromUser(args.logLevel))
