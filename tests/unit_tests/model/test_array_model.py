@@ -41,8 +41,6 @@ def test_exporting_config_files(set_db):
     am.exportSimtelTelescopeConfigFiles()
     am.exportSimtelArrayConfigFile()
 
-    print('AAAAA', am.getConfigDirectory())
-
     list_of_export_files = [
         'Aclylite8_tra_v2013ref.dat',
         'CTA-LST_lightguide_eff_2020-04-12_average.dat',
