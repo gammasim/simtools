@@ -81,15 +81,16 @@
 """
 
 import logging
-import argparse
 
+import simtools.config as cfg
+import simtools.util.commandline_parser as argparser
 import simtools.util.general as gen
 from simtools.model.array_model import ArrayModel
 
 
 if __name__ == "__main__":
 
-    parser = argparse.ArgumentParser(
+    parser = argparser.CommandLineParser(
         description=(
             "Example of how to produce sim_telarray config files for a given array."
         )
@@ -102,22 +103,19 @@ if __name__ == "__main__":
         required=False,
     )
     parser.add_argument(
-        "-c",
+        "-a",
         "--array_config",
         help="Yaml file with array config data.",
         type=str,
         required=True,
     )
-    parser.add_argument(
-        "-v",
-        "--verbosity",
-        dest="logLevel",
-        action="store",
-        default="info",
-        help="Log level to print (default is INFO)",
-    )
+    parser.initialize_default_arguments()
 
     args = parser.parse_args()
+
+    if args.configFile:
+        cfg.setConfigFileName(args.configFile)
+
     label = "produce_array_config" if args.label is None else args.label
 
     logger = logging.getLogger("simtools")

@@ -43,9 +43,9 @@
 """
 
 import logging
-import argparse
 
 import simtools.util.general as gen
+import simtools.util.commandline_parser as argparser
 import simtools.io_handler as io
 import simtools.config as cfg
 from simtools.model.telescope_model import TelescopeModel
@@ -54,38 +54,19 @@ from simtools.camera_efficiency import CameraEfficiency
 
 if __name__ == "__main__":
 
-    parser = argparse.ArgumentParser(
+    parser = argparser.CommandLineParser(
         description=(
             "Calculate the camera efficiency of the telescope requested. "
             "Plot the camera efficiency vs wavelength for cherenkov and NSB light."
         )
     )
-    parser.add_argument("-s", "--site", help="North or South", type=str, required=True)
-    parser.add_argument(
-        "-t",
-        "--telescope",
-        help="Telescope model name (e.g. LST-1, SST-D)",
-        type=str,
-        required=True,
-    )
-    parser.add_argument(
-        "-m",
-        "--model_version",
-        help="Model version (default=prod4)",
-        type=str,
-        default="prod4",
-    )
-    parser.add_argument(
-        "-v",
-        "--verbosity",
-        dest="logLevel",
-        action="store",
-        default="info",
-        help="Log level to print (default is INFO)",
-    )
+    parser.initialize_telescope_model_arguments()
+    parser.initialize_default_arguments(add_workflow_config=False)
 
     args = parser.parse_args()
     label = "validate_camera_efficiency"
+    if args.configFile:
+        cfg.setConfigFileName(args.configFile)
 
     logger = logging.getLogger()
     logger.setLevel(gen.getLogLevelFromUser(args.logLevel))
