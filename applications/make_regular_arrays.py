@@ -25,10 +25,11 @@
 """
 
 import logging
-import argparse
 
 import astropy.units as u
 
+import simtools.config as cfg
+import simtools.util.commandline_parser as argparser
 import simtools.util.general as gen
 from simtools import db_handler
 from simtools.layout.layout_array import LayoutArray
@@ -36,22 +37,18 @@ from simtools.layout.layout_array import LayoutArray
 
 if __name__ == "__main__":
 
-    parser = argparse.ArgumentParser(
+    parser = argparser.CommandLineParser(
         description=(
             "Calculate and plot the PSF and eff. mirror area as a function of off-axis angle "
             "of the telescope requested."
         )
     )
-    parser.add_argument(
-        "-v",
-        "--verbosity",
-        dest="logLevel",
-        action="store",
-        default="info",
-        help="Log level to print (default is INFO)",
-    )
+    parser.initialize_default_arguments()
 
     args = parser.parse_args()
+    if args.configFile:
+        cfg.setConfigFileName(args.configFile)
+
     label = "make_regular_arrays"
 
     logger = logging.getLogger()

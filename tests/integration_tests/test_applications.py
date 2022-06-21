@@ -1,4 +1,5 @@
 #!/usr/bin/python3
+#
 
 import os
 import pytest
@@ -36,12 +37,12 @@ APP_LIST = {
             "--test",
         ]
     ],
-    "set_model_parameter_from_external::help": [
+    "submit_data_from_external::help": [
         [
             "--help",
         ]
     ],
-    "set_model_parameter_from_external::submit": [
+    "submit_data_from_external::submit": [
         [
             "--workflow_config_file",
             "tests/resources/set_MST_mirror_2f_measurements_from_external.config.yml",
@@ -123,11 +124,16 @@ APP_LIST = {
             "--model_version", "prod4"
         ]
     ],
+    "plot_simtel_histograms::help": [
+        [
+            "--help",
+        ]
+    ],
     # Layout
     "make_regular_arrays": [[]],
     # Production
     "produce_array_config": [
-        ["--array_config", "data/test-data/arrayConfigTest.yml"]
+        ["--array_config", "./tests/resources/arrayConfigTest.yml"]
     ],
     # Trigger
     "sim_showers_for_trigger_rates": [
@@ -151,7 +157,7 @@ APP_LIST = {
     ],
     "production": [
         [
-            "-c", "data/test-data/prodConfigTest.yml",
+            "-c", "./tests/resources/prodConfigTest.yml",
             "-t", "simulate",
             "--test"
         ]
@@ -171,13 +177,12 @@ def test_applications(set_simtools, application):
         return cmd
 
     for args in APP_LIST[application]:
-        # TODO: skip all but derive_mirror_rando
-        # (no configFile implemented for others)
         app_name = application.partition("::")[0]
-        if app_name != 'derive_mirror_rnda' and app_name != "set_model_parameter_from_external":
-            continue
+        if app_name == "validate_camera_fov":
+            pytest.skip(reason="requires issue fixing")
         logger.info("Running with args: {}".format(args))
         cmd = makeCommand(app_name, args)
+        logger.info("Running command: {}".format(cmd))
         out = os.system(cmd)
         isOutputValid = out == 0
         assert isOutputValid

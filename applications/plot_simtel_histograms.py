@@ -26,17 +26,18 @@
 """
 
 import logging
-import argparse
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 
+import simtools.util.commandline_parser as argparser
+import simtools.config as cfg
 import simtools.util.general as gen
 from simtools.simtel.simtel_histograms import SimtelHistograms
 
 
 if __name__ == "__main__":
 
-    parser = argparse.ArgumentParser(description=("Plots sim_telarray histograms."))
+    parser = argparser.CommandLineParser(description=("Plots sim_telarray histograms."))
     parser.add_argument(
         "-l",
         "--file_lists",
@@ -48,16 +49,12 @@ if __name__ == "__main__":
     parser.add_argument(
         "-o", "--output", help="File name for the pdf output.", type=str, required=True
     )
-    parser.add_argument(
-        "-v",
-        "--verbosity",
-        dest="logLevel",
-        action="store",
-        default="info",
-        help="Log level to print (default is INFO)",
-    )
+    parser.initialize_default_arguments(add_workflow_config=False)
 
     args = parser.parse_args()
+
+    if args.configFile:
+        cfg.setConfigFileName(args.configFile)
 
     logger = logging.getLogger()
     logger.setLevel(gen.getLogLevelFromUser(args.logLevel))

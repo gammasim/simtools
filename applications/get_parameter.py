@@ -1,16 +1,16 @@
 #!/usr/bin/python3
 
 import logging
-import argparse
 from pprint import pprint
 
+import simtools.util.commandline_parser as argparser
 from simtools import db_handler
 import simtools.config as cfg
 import simtools.util.general as gen
 
 if __name__ == "__main__":
 
-    parser = argparse.ArgumentParser(
+    parser = argparser.CommandLineParser(
         description=(
             "Get a parameter entry from DB for a specific telescope. "
             "The application receives a parameter name and optionally a version. "
@@ -18,39 +18,16 @@ if __name__ == "__main__":
             "If no version is provided, the entries of the last 5 versions are printed."
         )
     )
-    parser.add_argument(
-        "-s", "--site", help="Site (North or South)", type=str, required=True
-    )
-    parser.add_argument(
-        "-t",
-        "--telescope",
-        help="Telescope type (e.g. LST-1, SST-D)",
-        type=str,
-        required=True,
-    )
+    parser.initialize_telescope_model_arguments()
     parser.add_argument(
         "-p", "--parameter", help="Parameter name", type=str, required=True
     )
-    parser.add_argument(
-        "-v",
-        "--model_version",
-        help=(
-            "Parameter version. If no version is provided, "
-            "the entries of the last 5 versions are printed."
-        ),
-        type=str,
-        default="all",
-    )
-    parser.add_argument(
-        "-V",
-        "--verbosity",
-        dest="logLevel",
-        action="store",
-        default="info",
-        help="Log level to print (default is INFO)",
-    )
+    parser.initialize_default_arguments()
 
     args = parser.parse_args()
+
+    if args.configFile:
+        cfg.setConfigFileName(args.configFile)
 
     logger = logging.getLogger()
     logger.setLevel(gen.getLogLevelFromUser(args.logLevel))
