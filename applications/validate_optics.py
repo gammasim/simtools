@@ -58,7 +58,6 @@
 """
 
 import logging
-import argparse
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
@@ -67,6 +66,7 @@ import astropy.units as u
 
 import simtools.config as cfg
 import simtools.util.general as gen
+import simtools.util.commandline_parser as argparser
 import simtools.io_handler as io
 from simtools.model.telescope_model import TelescopeModel
 from simtools.ray_tracing import RayTracing
@@ -78,27 +78,13 @@ from simtools.ray_tracing import RayTracing
 
 if __name__ == "__main__":
 
-    parser = argparse.ArgumentParser(
+    parser = argparser.CommandLineParser(
         description=(
             "Calculate and plot the PSF and eff. mirror area as a function of off-axis angle "
             "of the telescope requested."
         )
     )
-    parser.add_argument("-s", "--site", help="North or South", type=str, required=True)
-    parser.add_argument(
-        "-t",
-        "--telescope",
-        help="Telescope model name (e.g. MST-FlashCam-D, LST-1)",
-        type=str,
-        required=True,
-    )
-    parser.add_argument(
-        "-m",
-        "--model_version",
-        help="Model version (default=Current)",
-        type=str,
-        default="Current",
-    )
+    parser.initialize_telescope_model_arguments()
     parser.add_argument(
         "--src_distance",
         help="Source distance in km (default=10)",
@@ -125,22 +111,12 @@ if __name__ == "__main__":
         help="Produce a multiple pages pdf file with the image plots.",
         action="store_true",
     )
-    parser.add_argument(
-        "--test",
-        help="Test option will be faster by simulating fewer photons.",
-        action="store_true",
-    )
-    parser.add_argument(
-        "-v",
-        "--verbosity",
-        dest="logLevel",
-        action="store",
-        default="info",
-        help="Log level to print (default is INFO)",
-    )
+    parser.initialize_default_arguments(add_workflow_config=False)
 
     args = parser.parse_args()
     label = "validate_optics"
+    if args.configFile:
+        cfg.setConfigFileName(args.configFile)
 
     logger = logging.getLogger()
     logger.setLevel(gen.getLogLevelFromUser(args.logLevel))

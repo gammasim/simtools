@@ -53,10 +53,10 @@
 """
 
 import logging
-import argparse
 
 import astropy.units as u
 
+import simtools.util.commandline_parser as argparser
 import simtools.io_handler as io
 import simtools.config as cfg
 import simtools.util.general as gen
@@ -65,7 +65,7 @@ from simtools.shower_simulator import ShowerSimulator
 
 if __name__ == "__main__":
 
-    parser = argparse.ArgumentParser(
+    parser = argparser.CommandLineParser(
         description=("Simulate showers to be used for trigger rate calculations")
     )
     parser.add_argument(
@@ -75,9 +75,8 @@ if __name__ == "__main__":
         type=str,
         required=True,
     )
-    parser.add_argument(
-        "-s", "--site", help="Site name (North or South)", type=str, required=True
-    )
+    parser.initialize_telescope_model_arguments(
+        add_model_version=False, add_telescope=False)
     parser.add_argument(
         "--primary",
         help="Name of the primary particle (e.g. proton, helium ...)",
@@ -102,20 +101,12 @@ if __name__ == "__main__":
         type=str,
         default=None,
     )
-    parser.add_argument(
-        "--test", help="Test option will not submit any job.", action="store_true"
-    )
-    parser.add_argument(
-        "-v",
-        "--verbosity",
-        dest="logLevel",
-        action="store",
-        default="info",
-        help="Log level to print (default is INFO)",
-    )
+    parser.initialize_default_arguments(add_workflow_config=False)
 
     args = parser.parse_args()
     label = "trigger_rates"
+    if args.configFile:
+        cfg.setConfigFileName(args.configFile)
 
     logger = logging.getLogger()
     logger.setLevel(gen.getLogLevelFromUser(args.logLevel))

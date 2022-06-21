@@ -35,10 +35,11 @@
 """
 
 import logging
-import argparse
 from pathlib import Path
 
+import simtools.config as cfg
 from simtools import db_handler
+import simtools.util.commandline_parser as argparser
 import simtools.util.general as gen
 
 
@@ -62,7 +63,7 @@ if __name__ == "__main__":
 
     db = db_handler.DatabaseHandler()
 
-    parser = argparse.ArgumentParser(description=("Add a file or files to the DB."))
+    parser = argparser.CommandLineParser(description=("Add a file or files to the DB."))
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument(
         "-f",
@@ -98,16 +99,11 @@ if __name__ == "__main__":
             "the default is {0}".format(db.DB_TABULATED_DATA)
         ),
     )
-    parser.add_argument(
-        "-v",
-        "--verbosity",
-        dest="logLevel",
-        action="store",
-        default="info",
-        help="Log level to print (default is INFO)",
-    )
-
+    parser.initialize_default_arguments()
     args = parser.parse_args()
+
+    if args.configFile:
+        cfg.setConfigFileName(args.configFile)
 
     logger = logging.getLogger()
     logger.setLevel(gen.getLogLevelFromUser(args.logLevel))
