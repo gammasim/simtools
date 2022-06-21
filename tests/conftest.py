@@ -59,7 +59,7 @@ def db_connection(tmp_test_directory):
     try:
         dbDetailsFile = "dbDetails.yml"
         with open(dbDetailsFile, "r") as stream:
-            yaml.load(stream, Loader=yaml.FullLoader)
+            yaml.safe_load(stream)
         return dbDetailsFile
     # try if DB details are defined in environment
     # (e.g., as secrets in github actions)
