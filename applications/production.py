@@ -44,11 +44,12 @@
 """
 
 import logging
-import argparse
 from copy import copy
 
 from astropy.io.misc import yaml
 
+import simtools.util.commandline_parser as argparser
+import simtools.config as cfg
 import simtools.util.general as gen
 from simtools.shower_simulator import ShowerSimulator
 from simtools.array_simulator import ArraySimulator
@@ -101,7 +102,7 @@ def proccessConfigFile(configFile, primaryConfig):
 
 if __name__ == "__main__":
 
-    parser = argparse.ArgumentParser(
+    parser = argparser.CommandLineParser(
         description=("Simulate showers to be used for trigger rate calculations")
     )
     parser.add_argument(
@@ -150,20 +151,12 @@ if __name__ == "__main__":
         help="Simulates only showers, no array detection",
         action="store_true",
     )
-
-    parser.add_argument(
-        "--test", help="Test option will not submit any job.", action="store_true"
-    )
-    parser.add_argument(
-        "-v",
-        "--verbosity",
-        dest="logLevel",
-        action="store",
-        default="info",
-        help="Log level to print (default is INFO)",
-    )
+    parser.initialize_default_arguments(add_workflow_config=False)
 
     args = parser.parse_args()
+
+    if args.configFile:
+        cfg.setConfigFileName(args.configFile)
 
     logger = logging.getLogger()
     logger.setLevel(gen.getLogLevelFromUser(args.logLevel))

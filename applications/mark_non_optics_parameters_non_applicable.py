@@ -17,6 +17,7 @@ import argparse
 import yaml
 
 from simtools import db_handler
+import simtools.config as cfg
 import simtools.util.general as gen
 
 if __name__ == "__main__":
@@ -38,6 +39,11 @@ if __name__ == "__main__":
         required=True,
     )
     parser.add_argument(
+        "--configFile",
+        help="gammasim-tools configuration file",
+        required=False,
+    )
+    parser.add_argument(
         "-V",
         "--verbosity",
         dest="logLevel",
@@ -47,6 +53,9 @@ if __name__ == "__main__":
     )
 
     args = parser.parse_args()
+
+    if args.configFile:
+        cfg.setConfigFileName(args.configFile)
 
     logger = logging.getLogger()
     logger.setLevel(gen.getLogLevelFromUser(args.logLevel))
