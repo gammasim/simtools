@@ -16,7 +16,8 @@ class CommandLineParser(argparse.ArgumentParser):
 
     """
 
-    def initialize_default_arguments(self):
+    def initialize_default_arguments(self,
+                                     require_workflow_config=False):
         """
         Initialize default arguments used by all applications
         (e.g., verbosity or test flag)
@@ -34,7 +35,7 @@ class CommandLineParser(argparse.ArgumentParser):
             "--workflow_config_file",
             help="Workflow configuration file",
             type=str,
-            required=False,
+            required=require_workflow_config,
         )
         self.add_argument(
             "--test",
