@@ -5,12 +5,12 @@ ACTIVITY:
   NAME: set_MST_mirror_2f_measurements_from_external
 # Organisation and person submitting these data
 CONTACT:
-  ORGANISATION: 'MST Consortium'
-  NAME: 'Markus Garczarczyk '
+  ORGANISATION: 'FST Consortium'
+  NAME: 'No my name'
   EMAIL: 'a@email.org'
 # Description of instrument which obtained these data
 INSTRUMENT:
-  SITE: 'DESY 2f teststand'
+  SITE: '2f teststand'
   CLASS: mirror-panel
   TYPE: MLT
   SUBTYPE: pre-production
@@ -47,4 +47,4 @@ CONTEXT:
       ID: 22570
       LINK: https://forge.in2p3.fr/issues/22570
     - TYPE: Presentation
-      LINK: https://indico.cta-observatory.org/login/?next=%2Fevent%2F2680%2Fcontributions%2F23371%2Fattachments%2F17190%2F22730%2F200320_MST_optics.pdf
+      LINK: https://indico.cta-observatory.org/
