@@ -56,7 +56,7 @@ class DatabaseHandler:
     DB_CTA_SIMULATION_MODEL = "CTA-Simulation-Model"
     DB_CTA_SIMULATION_MODEL_DESCRIPTIONS = "CTA-Simulation-Model-Descriptions"
 
-    ALLOWED_FILE_EXTENSIONS = [".dat", ".txt", ".lis"]
+    ALLOWED_FILE_EXTENSIONS = [".dat", ".txt", ".lis", ".cfg"]
 
     dbClient = None
 
@@ -436,6 +436,7 @@ class DatabaseHandler:
 
         _fileNameDB = "parValues-{}.yml".format(telescopeNameYaml)
         _yamlFile = cfg.findFile(_fileNameDB, cfg.get("modelFilesLocations"))
+        print(_yamlFile)
         self._logger.debug("Reading DB file {}".format(_yamlFile))
         with open(_yamlFile, "r") as stream:
             _allPars = yaml.load(stream, Loader=yaml.FullLoader)

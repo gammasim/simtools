@@ -92,7 +92,7 @@ if __name__ == "__main__":
         dest="dbToInsertTo",
         type=str,
         default=db.DB_TABULATED_DATA,
-        choices=["sandbox", db.DB_TABULATED_DATA],
+        choices=[db.DB_TABULATED_DATA, "sandbox", "test-data"],
         help=(
             "The DB to insert the files to. "
             'The choices are {0} or "sandbox", '
@@ -114,7 +114,7 @@ if __name__ == "__main__":
             if Path(fileNow).suffix in db.ALLOWED_FILE_EXTENSIONS:
                 filesToInsert.append(fileNow)
             else:
-                logger.debug(
+                logger.warning(
                     "The file {} will not be uploaded to the DB because its extension is not "
                     "in the allowed extension list: {}".format(
                         fileNow, db.ALLOWED_FILE_EXTENSIONS
