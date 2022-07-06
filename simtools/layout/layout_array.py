@@ -592,6 +592,7 @@ class LayoutArray:
             )
             return None
 
-    def _getWgs84(self):
+    @staticmethod
+    def _getWgs84():
         """Get wgs84"""
         return pyproj.CRS("EPSG:4326")
