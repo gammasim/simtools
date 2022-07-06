@@ -12,5 +12,5 @@ simtools Library
   ray_tracing
   camera_efficiency
   simtel
-  layout
+  layout_array
   util

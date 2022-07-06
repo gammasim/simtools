@@ -1,0 +1,85 @@
+import os
+import logging
+
+import simtools.config as cfg
+from simtools import db_handler
+
+logger = logging.getLogger()
+
+
+try:
+    cfg.loadConfig()
+except FileNotFoundError:
+    logger.debug("simtools configuration file was NOT found")
+
+    # Creating env variables and setting them to false
+    os.environ["HAS_CONFIG_FILE"] = "0"
+    os.environ["SIMTEL_INSTALLED"] = "0"
+    os.environ["HAS_DB_CONNECTION"] = "0"
+
+    parsToConfigFile = dict()
+
+    # Checking for the SIMTELPATH env variables
+    if "SIMTELPATH" in os.environ.keys():
+        parsToConfigFile["simtelPath"] = os.environ["SIMTELPATH"]
+        os.environ["SIMTEL_INSTALLED"] = "1"
+
+    # Creating dbDetails with read only user
+    # Collecting parameters from env variables
+    parsToDbDetails = dict()
+    environVariblesToCheck = {
+        "mongodbServer": "DB_API_NAME",
+        "userDB": "DB_API_USER",
+        "passDB": "DB_API_PW",
+        "dbPort": "DB_API_PORT",
+    }
+
+    # Checking env variables
+    for par, env in environVariblesToCheck.items():
+        if env in os.environ:
+            parsToDbDetails[par] = os.environ[env]
+
+    os.environ["HAS_DB_CONNECTION"] = "1"
+    parsToConfigFile["useMongoDB"] = True
+    dbDetailsFileName = "dbDetails.yml"
+    cfg.createDummyDbDetails(filename=dbDetailsFileName, **parsToDbDetails)
+    parsToConfigFile["mongoDBConfigFile"] = dbDetailsFileName
+
+    # Creating a dummy config.yml file
+    cfg.createDummyConfigFile(**parsToConfigFile)
+
+else:
+    os.environ["HAS_CONFIG_FILE"] = "1"
+    logger.debug("simtools configuration found WAS found")
+    logger.debug("Setting HAS_CONFIG_FILE = 1")
+
+    # Checking whether sim_telarray is properly installed
+    simtelPath = cfg.get("simtelPath")
+    simtelBinPath = simtelPath + "/sim_telarray/bin/sim_telarray"
+    os.environ["SIMTEL_INSTALLED"] = "1" if os.path.exists(simtelBinPath) else "0"
+    logger.debug("Setting SIMTEL_INSTALLED = {}".format(os.environ["SIMTEL_INSTALLED"]))
+
+    # Checking whether there is DB connection
+    if not cfg.get("useMongoDB"):
+        os.environ["HAS_DB_CONNECTION"] = "0"
+    else:
+        # Trying to connect to the DB
+        db = db_handler.DatabaseHandler()
+        try:
+            db.getModelParameters("north", "lst-1", "Current")
+            os.environ["HAS_DB_CONNECTION"] = "1"
+            logger.debug("DB connection is available")
+            logger.debug("Setting HAS_DB_CONNECTION = 1")
+        except Exception:
+            os.environ["HAS_DB_CONNECTION"] = "0"
+            logger.debug("DB connection is NOT available")
+            logger.debug("Setting HAS_DB_CONNECTION = 0")
+
+
+def pytest_sessionfinish(session, exitstatus):
+    # Cleaning up output files before ending the pytest session
+    os.system("./clean_files")
+
+    # Removing dummy config file
+    if os.environ["HAS_CONFIG_FILE"] == "0":
+        os.system("rm config.yml")
