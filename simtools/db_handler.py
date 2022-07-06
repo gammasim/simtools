@@ -436,7 +436,6 @@ class DatabaseHandler:
 
         _fileNameDB = "parValues-{}.yml".format(telescopeNameYaml)
         _yamlFile = cfg.findFile(_fileNameDB, cfg.get("modelFilesLocations"))
-        print(_yamlFile)
         self._logger.debug("Reading DB file {}".format(_yamlFile))
         with open(_yamlFile, "r") as stream:
             _allPars = yaml.load(stream, Loader=yaml.FullLoader)
