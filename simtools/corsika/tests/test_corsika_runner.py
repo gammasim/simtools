@@ -12,25 +12,24 @@ logger.setLevel(logging.DEBUG)
 
 
 class TestCorsikaRunner(unittest.TestCase):
-
     def setUp(self):
         self.corsikaConfigData = {
-            'corsikaDataDirectory': './corsika-data',
-            'nshow': 10,
-            'primary': 'gamma',
-            'erange': [100 * u.GeV, 1 * u.TeV],
-            'eslope': -2,
-            'zenith': 20 * u.deg,
-            'azimuth': 0 * u.deg,
-            'viewcone': 0 * u.deg,
-            'cscat': [10, 1500 * u.m, 0]
+            "corsikaDataDirectory": "./corsika-data",
+            "nshow": 10,
+            "primary": "gamma",
+            "erange": [100 * u.GeV, 1 * u.TeV],
+            "eslope": -2,
+            "zenith": 20 * u.deg,
+            "azimuth": 0 * u.deg,
+            "viewcone": 0 * u.deg,
+            "cscat": [10, 1500 * u.m, 0],
         }
 
         self.corsikaRunner = CorsikaRunner(
-            site='south',
-            layoutName='Prod5',
-            label='test-corsika-runner',
-            corsikaConfigData=self.corsikaConfigData
+            site="south",
+            layoutName="Prod5",
+            label="test-corsika-runner",
+            corsikaConfigData=self.corsikaConfigData,
         )
 
     def test_get_run_script(self):
@@ -44,23 +43,23 @@ class TestCorsikaRunner(unittest.TestCase):
         self.assertTrue(script.exists())
 
     def test_get_run_script_with_invalid_run(self):
-        for run in [-2, 'test']:
+        for run in [-2, "test"]:
             with self.assertRaises(ValueError):
                 _ = self.corsikaRunner.getRunScriptFile(run)
 
     def test_run_script_with_extra(self):
-        extra = ['testing', 'testing-extra-2']
+        extra = ["testing", "testing-extra-2"]
         script = self.corsikaRunner.getRunScriptFile(runNumber=3, extraCommands=extra)
 
         def wordInFile(word, file):
-            with open(file, 'r') as ff:
+            with open(file, "r") as ff:
                 for ll in ff:
                     if word in ll:
                         return True
                 return False
 
-        self.assertTrue(wordInFile('testing-extra-2', script))
+        self.assertTrue(wordInFile("testing-extra-2", script))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

@@ -3,7 +3,7 @@
 Getting Started
 ***************
 
-A conda (or pip) installation is still not posssible. Meanwhile,
+A conda (or pip) installation is still not possible. Meanwhile,
 you need to clone (or fork) the repository.
 
 .. code-block:: console
