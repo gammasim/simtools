@@ -31,7 +31,7 @@ def test_config_data_from_dict(set_db):
     assert len(ray.config.offAxisAngle) == 2
 
 
-def test_from_kwargs(cfg_setup):
+def test_from_kwargs(set_db):
 
     label = "test-from-kwargs"
 
