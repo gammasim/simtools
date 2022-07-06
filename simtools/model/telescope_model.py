@@ -672,7 +672,7 @@ class TelescopeModel:
         Check if telescope is an ASTRI type.
 
         Returns
-        ----------
+        -------
         bool:
             True if telescope  is a ASTRI, False otherwise.
         """
