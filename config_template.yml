@@ -11,7 +11,7 @@ mongoDBConfigFile: ./dbDetails.yml
 
 # List with the locations of the model files. The location of the dataFromTheInstruments is
 # required for most of the applications and can be found  in
-# https://gitlab.cta-observatory.org/cta-consortium/aswg/simulations/simulation-model/verification/data-from-instrument-teams.
+# https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/verification/data-from-instrument-teams
 # The location of the directory with the yaml files for the model parameters and the sim_telarray
 # config files are required in case useMongoDB is set to False. They can be found 
 # https://gitlab.cta-observatory.org/cta-consortium/aswg/simulations/simulation-model/simulation-model-description/-/tree/master/configReports
