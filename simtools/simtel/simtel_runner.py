@@ -194,7 +194,8 @@ class SimtelRunner:
 
         self._checkRunResult(run=run)
 
-    def _simtelFailed(self, sysOutput):
+    @staticmethod
+    def _simtelFailed(sysOutput):
         return sysOutput != "0"
 
     def _raiseSimtelError(self):
@@ -223,7 +224,8 @@ class SimtelRunner:
         )
         return False
 
-    def _getExtraCommands(self, extra):
+    @staticmethod
+    def _getExtraCommands(extra):
         """
         Get extra commands by combining the one given as argument and
         what is given in config.yml

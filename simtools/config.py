@@ -76,6 +76,13 @@ def get(par):
     ----------
     par: str
         Name of the desired parameter.
+    allowNonExisting: bool (default=False)
+        If True, a non-existing parameter will return None (not raise and error)
+
+    Raises
+    ------
+    ParameterNotFoundInConfigFile
+        In case the parameter is not in config.
 
     Returns
     -------
@@ -92,20 +99,9 @@ def get(par):
         _logger.error(msg)
         raise ParameterNotFoundInConfigFile(msg)
     else:
-        if isinstance(config[par], str) and config[par][0] == "$":
-            envName = config[par][1:].replace("{", "")
-            envName = envName.replace("}", "")
-            envPath = os.environ.get(envName)
-            if envPath is None:
-                msg = (
-                    "Config entry {} is interpreted as environmental variables ".format(
-                        par
-                    )
-                    + "that is not set."
-                )
-                _logger.error(msg)
-                raise ConfigEnvironmentalVariableNotSet(msg)
-            return envPath
+        # Enviroment variable
+        if isinstance(config[par], str) and "$" in config[par]:
+            return os.path.expandvars(config[par])
         else:
             return config[par]
 
@@ -209,3 +205,60 @@ def findFile(name, loc=None):
     msg = "File {} could not be found in {}".format(name, loc)
     _logger.error(msg)
     raise FileNotFoundError(msg)
+
+
+def createDummyConfigFile(filename="config.yml", **kwargs):
+    """
+    Create a dummy config.yml file to be used in test enviroments only.
+
+    Parameters
+    ----------
+    filename: str
+        Name of the dummy config file (default=config.yml)
+    **kwargs
+        The default parameters can be overwritten using kwargs.
+    """
+    config = {
+        "useMongoDB": False,
+        "mongoDBConfigFile": None,
+        "dataLocation": "./data/",
+        "modelFilesLocations": ".",
+        "simtelPath": ".",
+        "outputLocation": ".",
+        "extraCommands": []
+    }
+
+    # # Overwritting parameters with kwargs
+    if len(kwargs) > 0:
+        for key, value in kwargs.items():
+            config[key] = value
+
+    with open(filename, 'w') as outfile:
+        yaml.dump(config, outfile)
+
+
+def createDummyDbDetails(filename="dbDetails.yml", **kwargs):
+    """
+    Create a dummy dbDetails.yml file to be used in test enviroments only.
+
+    Parameters
+    ----------
+    filename: str
+        Name of the dummy dbDetails file (default=dbDetails.yml)
+    **kwargs
+        The default parameters can be overwritten using kwargs.
+    """
+    pars = {
+        "dbPort": None,
+        "mongodbServer": None,
+        "userDB": None,
+        "passDB": None,
+        "authenticationDatabase": "admin"
+    }
+
+    if len(kwargs) > 0:
+        for key, value in kwargs.items():
+            pars[key] = int(value) if key == "dbPort" else str(value)
+
+    with open(filename, 'w') as outfile:
+        yaml.dump(pars, outfile)

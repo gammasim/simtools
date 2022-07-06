@@ -278,7 +278,8 @@ class ArraySimulator:
 
             self._fillResults(file, run)
 
-    def _makeInputList(self, inputFileList):
+    @staticmethod
+    def _makeInputList(inputFileList):
         """Enforce the input list to be a list."""
         if not isinstance(inputFileList, list):
             return [inputFileList]

@@ -45,7 +45,7 @@ class TestShowerSimulator(unittest.TestCase):
             newShowerSimulator = ShowerSimulator(
                 label=self.label, showerConfigData=newShowerConfigData
             )
-            newShowerSimulator.runs
+            newShowerSimulator.run()
 
     def test_runs_invalid_input(self):
         newShowerConfigData = copy(self.showerConfigData)
@@ -54,7 +54,7 @@ class TestShowerSimulator(unittest.TestCase):
             newShowerSimulator = ShowerSimulator(
                 label=self.label, showerConfigData=newShowerConfigData
             )
-            newShowerSimulator.runs
+            newShowerSimulator.run()
 
     def test_runs_input(self):
         newShowerConfigData = copy(self.showerConfigData)

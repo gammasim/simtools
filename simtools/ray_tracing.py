@@ -246,7 +246,12 @@ class RayTracing:
 
     # END of simulate
 
-    def analyze(self, export=True, force=False, useRX=False, noTelTransmission=False):
+    def analyze(self,
+                export=True,
+                force=False,
+                useRX=False,
+                noTelTransmission=False,
+                containment_fraction=0.8):
         """
         Analyze RayTracing, meaning read simtel files, compute psfs and eff areas and store the
         results in _results.
@@ -263,6 +268,9 @@ class RayTracing:
             calculations are done internally, by the module psf_analysis.
         noTelTransmission: bool
             If True, the telescope transmission is not applied.
+        containment_fraction: float
+            Containment fraction for PSF containment calculation. Allowed values are in the
+            inverval [0,1]
         """
 
         doAnalyze = not self._fileResults.exists() or force
@@ -307,22 +315,24 @@ class RayTracing:
                     telTransmissionPars, thisOffAxis
                 )
                 image = PSFImage(focalLength, None)
-                image.readSimtelFile(photonsFile)
+                image.readPhotonListFromSimtelFile(photonsFile)
                 self._psfImages[thisOffAxis] = copy(image)
 
                 if not doAnalyze:
                     continue
 
                 if useRX:
-                    d80_cm, centroidX, centroidY, effArea = self._processRX(photonsFile)
-                    d80_deg = d80_cm * cmToDeg
-                    image.setPSF(d80_cm, fraction=0.8, unit="cm")
+                    containment_diameter_cm, centroidX, centroidY, effArea = \
+                        self._processRX(photonsFile)
+                    containment_diameter_deg = containment_diameter_cm * cmToDeg
+                    image.setPSF(containment_diameter_cm,
+                                 fraction=containment_fraction, unit="cm")
                     image.centroidX = centroidX
                     image.centroidY = centroidY
                     image.setEffectiveArea(effArea * telTransmission)
                 else:
-                    d80_cm = image.getPSF(0.8, "cm")
-                    d80_deg = image.getPSF(0.8, "deg")
+                    containment_diameter_cm = image.getPSF(containment_fraction, "cm")
+                    containment_diameter_deg = image.getPSF(containment_fraction, "deg")
                     centroidX = image.centroidX
                     centroidY = image.centroidY
                     effArea = image.getEffectiveArea() * telTransmission
@@ -334,8 +344,8 @@ class RayTracing:
                 )
                 _currentResults = (
                     thisOffAxis * u.deg,
-                    d80_cm * u.cm,
-                    d80_deg * u.deg,
+                    containment_diameter_cm * u.cm,
+                    containment_diameter_deg * u.deg,
                     effArea * u.m * u.m,
                     effFlen * u.cm,
                 )
@@ -358,33 +368,36 @@ class RayTracing:
 
     # END of analyze
 
-    def _processRX(self, file):
+    def _processRX(self, file, containment_fraction=0.8):
         """
-        Process sim_telarray photon list with rx binary and return the results (d80, centroids and
-        eff area).
+        Process sim_telarray photon list with rx binary and return the results
+        (containment_diameter_cm, centroids and eff area).
 
         Parameters
         ----------
         file: str or Path
             Photon list file.
+        containment_fraction: float
+            Containment fraction for PSF containment calculation. Allowed values are in the
+            inverval [0,1]
 
         Returns
         -------
-        (d80_cm, xMean, yMean, effArea)
+        (containment_diameter_cm, xMean, yMean, effArea)
         """
         # Use -n to disable the cog optimization
         rxOutput = subprocess.check_output(
-            "{}/sim_telarray/bin/rx -f 0.8 -v < {}".format(
-                self._simtelSourcePath, file
+            "{}/sim_telarray/bin/rx -f {:.2f} -v < {}".format(
+                self._simtelSourcePath, containment_fraction, file
             ),
             shell=True,
         )
         rxOutput = rxOutput.split()
-        d80_cm = 2 * float(rxOutput[0])
+        containment_diameter_cm = 2 * float(rxOutput[0])
         xMean = float(rxOutput[1])
         yMean = float(rxOutput[2])
         effArea = float(rxOutput[5])
-        return d80_cm, xMean, yMean, effArea
+        return containment_diameter_cm, xMean, yMean, effArea
 
     def exportResults(self):
         """Export results to a csv file."""
@@ -434,6 +447,7 @@ class RayTracing:
         if save:
             plotFileName = names.rayTracingPlotFileName(
                 key,
+                self._telescopeModel.site,
                 self._telescopeModel.name,
                 self._sourceDistance,
                 self.config.zenithAngle,
