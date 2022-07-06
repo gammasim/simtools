@@ -1,0 +1,19 @@
+dataDirectory:
+  len: 1
+  unit: null
+  default: null
+primary:
+  len: 1
+  unit: null
+zenithAngle: 
+  len: 1
+  unit: !astropy.units.Unit {unit: deg}
+  names: ['zenith', 'theta']
+azimuthAngle: 
+  len: 1
+  unit: !astropy.units.Unit {unit: deg}
+  names: ['azimuth', 'phi']
+viewcone:
+  len: 2
+  unit: [!astropy.units.Unit {unit: deg}, !astropy.units.Unit {unit: deg}]
+  names: ['cone']
