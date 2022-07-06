@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 
+import pytest
 import logging
 import unittest
 from copy import copy
@@ -8,6 +9,13 @@ import astropy.units as u
 
 import simtools.io_handler as io
 from simtools.array_simulator import ArraySimulator, MissingRequiredEntryInArrayConfig
+from simtools.util.tests import (
+    has_db_connection,
+    has_config_file,
+    DB_CONNECTION_MSG,
+    CONFIG_FILE_MSG,
+)
+
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
@@ -36,6 +44,7 @@ class TestArraySimulator(unittest.TestCase):
             "run1_proton_za20deg_azm0deg-North-1LST_trigger_rates.corsika.zst"
         )
 
+    @pytest.mark.skipif(not has_config_file(), reason=CONFIG_FILE_MSG)
     def test_guess_run(self):
         run = self.arraySimulator._guessRunFromFile("run12345_bla_ble")
         self.assertEqual(run, 12345)
@@ -44,6 +53,7 @@ class TestArraySimulator(unittest.TestCase):
         run = self.arraySimulator._guessRunFromFile("run1test2_bla_ble")
         self.assertEqual(run, 1)
 
+    @pytest.mark.skipif(not has_config_file(), reason=CONFIG_FILE_MSG)
     def test_invalid_array_data(self):
         newArrayConfigData = copy(self.arrayConfigData)
         newArrayConfigData.pop("site")
@@ -53,14 +63,17 @@ class TestArraySimulator(unittest.TestCase):
                 configData=newArrayConfigData
             )
 
+    @pytest.mark.skipif(not has_db_connection(), reason=DB_CONNECTION_MSG)
     def test_run(self):
         self.arraySimulator.run(inputFileList=self.corsikaFile)
 
+    @pytest.mark.skipif(not has_db_connection(), reason=DB_CONNECTION_MSG)
     def test_submitting(self):
         self.arraySimulator.submit(
             inputFileList=self.corsikaFile, submitCommand="more "
         )
 
+    @pytest.mark.skipif(not has_db_connection(), reason=DB_CONNECTION_MSG)
     def test_list_of_files(self):
         self.arraySimulator.submit(
             inputFileList=self.corsikaFile, submitCommand="more ", test=True
