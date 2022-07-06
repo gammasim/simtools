@@ -70,6 +70,7 @@ class PSFImage:
 
         self.photonPosX = list()
         self.photonPosY = list()
+        self.photonR = list()
         self.centroidX = None
         self.centroidY = None
         self._totalArea = totalScatteredArea
@@ -111,6 +112,11 @@ class PSFImage:
         self._numberOfDetectedPhotons = len(self.photonPosX)
         self._effectiveArea = (
             self._numberOfDetectedPhotons * self._totalArea / self._totalPhotons
+        )
+        self.photonR = np.sort(
+            np.sqrt(
+                (self.photonPosX - self.centroidX) ** 2 + (self.photonPosY - self.centroidY) ** 2
+            )
         )
 
     def _isPhotonPositionsOK(self):
@@ -351,12 +357,10 @@ class PSFImage:
         return radius
 
     def _sumPhotonsInRadius(self, radius):
-        """Return the number of photons inside a certain radius."""
-        nPhotons = 0
-        for xx, yy in zip(self.photonPosX, self.photonPosY):
-            rr2 = (xx - self.centroidX) ** 2 + (yy - self.centroidY) ** 2
-            nPhotons += 1 if rr2 < radius**2 else 0
-        return nPhotons
+        """
+        Return the number of photons inside a certain radius.
+        """
+        return np.searchsorted(self.photonR, radius)
 
     def getImageData(self, centralized=True):
         """
@@ -443,7 +447,7 @@ class PSFImage:
                 self._sumPhotonsInRadius(rad) / self._numberOfDetectedPhotons
             )
         dType = {
-            "names": ("Radius [cm]", "Relative intensity"),
+            "names": ("Radius [cm]", "Cumulative PSF"),
             "formats": ("f8", "f8"),
         }
         return np.core.records.fromarrays(np.c_[radiusAll, intensity].T, dtype=dType)
@@ -451,7 +455,7 @@ class PSFImage:
     def plotCumulative(self, **kwargs):
         """Plot cumulative data (intensity vs radius)."""
         data = self.getCumulativeData()
-        plt.plot(data["Radius [cm]"], data["Relative intensity"], **kwargs)
+        plt.plot(data["Radius [cm]"], data["Cumulative PSF"], **kwargs)
 
 
 # end of PSFImage

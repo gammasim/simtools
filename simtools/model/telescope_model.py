@@ -416,7 +416,7 @@ class TelescopeModel:
         else:
             # TODO: fix this in order to use the type from the DB directly.
             if not isinstance(value, type(self._parameters[parName]["Value"])):
-                self._logger.warning("Value type differs from the current one")
+                self._logger.warning(f"Value type of {parName} differs from the current one")
             self._parameters[parName]["Value"] = value
             self._logger.debug("Changing parameter {}".format(parName))
 
@@ -535,6 +535,16 @@ class TelescopeModel:
             self.exportConfigFile()
         return self._configFilePath
 
+    def getConfigDirectory(self):
+        """
+        Get the path where all the configuration files for sim_telarray are written to.
+
+        Returns
+        -------
+        Path where all the configuration files for sim_telarray are written to.
+        """
+        return self._configFileDirectory
+
     def getTelescopeTransmissionParameters(self):
         """
         Get tel. transmission pars as a list of floats.
@@ -544,9 +554,14 @@ class TelescopeModel:
         list of floats
             List of 4 parameters that describe the tel. transmission vs off-axis.
         """
-        return [
-            float(v) for v in self.getParameterValue("telescope_transmission").split()
-        ]
+
+        telescopeTransmission = self.getParameterValue("telescope_transmission")
+        if isinstance(telescopeTransmission, str):
+            return [
+                float(v) for v in self.getParameterValue("telescope_transmission").split()
+            ]
+        else:
+            return [float(telescopeTransmission), 0, 0, 0]
 
     def exportSingleMirrorListFile(self, mirrorNumber, setFocalLengthToZero):
         """
