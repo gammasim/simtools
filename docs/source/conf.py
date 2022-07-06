@@ -23,8 +23,8 @@ sys.path.insert(0, os.path.abspath("../.."))
 # -- Project information -----------------------------------------------------
 
 project = "gammasim-tools"
-copyright = "2020, gammasim-tools developers"
-author = "Raul R Prado and Orel Gueta"
+copyright = "2022, gammasim-tools developers"
+author = "Raul R Prado and Orel Gueta and Gernot Maier"
 
 # The short X.Y version
 version = ""
@@ -49,7 +49,7 @@ extensions = [
     "sphinx.ext.githubpages",
     # 'sphinx.ext.napoleon',  # make sphinx understand google docstring format
     "sphinx.ext.todo",  # enabling todo's
-    "sphinx.ext.autosectionlabel",  # allows refs to section by its name
+    # "sphinx.ext.autosectionlabel",  # allows refs to section by its name
     "numpydoc",
 ]
 
