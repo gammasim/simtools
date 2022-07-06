@@ -352,7 +352,7 @@ class TelescopeModel:
     def addParameter(self, parName, value, isFile=False, isAplicable=True):
         """
         Add a new parameters to the model. \
-        This function does not modify the DB, it affects only the current instance. \
+        This function does not modify the DB, it affects only the current instance.
 
         Parameters
         ----------
