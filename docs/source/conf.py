@@ -68,6 +68,7 @@ autodoc_mock_imports = [
     "gridfs",
     "scipy",
     "cycler",
+    "eventio"
 ]
 
 # Change the look of autodoc classes
