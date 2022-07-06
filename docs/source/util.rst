@@ -6,17 +6,16 @@ Utilities
 In this section you find the reference documentation of the modules contained in
 the util module.
 
-
-* `commandline_parser <_utilcommandlineparser>`_
-* `data_model <_datamodel>`_
-* `general <utilgeneral>`_
-* `legend_handlers <utillegendhandlers>`_
-* `model <utilmodel>`_
-* `model_data_writer <utilmodeldatawriter>`_
-* `names <utilnames>`_
-* `validate_data <validatedata>`_
-* `validate_schema <validateschema>`_
-* `workflow_description <workflowdescription>`_
+* :ref:`commandline_parser <utilcommandlineparser>`
+* :ref:`data_model <utildatamodel>`
+* :ref:`general <utilgeneral>`
+* :ref:`legend_handlers <utillegendhandlers>`
+* :ref:`model <utilmodel>`
+* :ref:`model_data_writer <utilmodeldatawriter>`
+* :ref:`names <utilnames>`
+* :ref:`validate_data <utilvalidatedata>`
+* :ref:`validate_schema <utilvalidateschema>`
+* :ref:`workflow_description <utilworkflowdescription>`
 
 .. _utilcommandlineparser:
 
@@ -26,15 +25,15 @@ commandline_parser
 .. automodule:: util.commandline_parser
    :members:
 
-.. _utilgeneral:
-
-.. _datamodel:
+.. _utildatamodel:
 
 data_model
 ----------
 
 .. automodule:: util.data_model
    :members:
+
+.. _utilgeneral:
 
 general
 -------
