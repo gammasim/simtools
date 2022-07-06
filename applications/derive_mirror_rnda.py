@@ -207,7 +207,7 @@ def define_telescope_model(workflow):
        workflow configuration
 
     Returns
-    ------
+    -------
     tel TelescopeModel
         telescope model
 
