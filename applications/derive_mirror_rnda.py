@@ -1,11 +1,12 @@
 #!/usr/bin/python3
 
-'''
+"""
     Summary
     -------
     This application derives the parameter mirror_reflection_random_angle \
     (mirror roughness, also called rnda here) \
-    for a given set of measured D80 of individual mirrors. The mean value of the measured D80 \
+    for a given set of measured photon containment diameter (e.g. 80\% containment) \
+    of individual mirrors.  The mean value of the measured containment diameters \
     in cm is required and its sigma can be given optionally but will only be used for plotting. \
 
     The individual mirror focal length can be taken into account if a mirror list which contains \
@@ -15,22 +16,22 @@
 
     The algorithm works as follow: A starting value of rnda is first defined as the one taken \
     from the :ref:`Model Parameters DB` \
-    (or alternativelly one may want to set it using the argument rnda).\
+    (or alternatively one may want to set it using the argument rnda).\
     Secondly, ray tracing simulations are performed for single mirror configurations for each \
-    mirror given in the mirror_list. The mean simulated D80 for all the mirrors is compared with \
-    the mean measured D80. A new value of rnda is then defined based on the sign of \
-    the difference between measured and simulated D80 and a new set of simulations \
-    is performed. This process repeat until the sign of the difference changes, \
-    meaning that the two final values of rnda brackets the optimal. These \
+    mirror given in the mirror_list. The mean simulated containment diameter for all the mirrors \
+    is compared with the mean measured containment diameter. A new value of rnda is then defined \
+    based on the sign of the difference between measured and simulated containment diameters and a \
+    new set of simulations is performed. This process repeat until the sign of the \
+    difference changes, meaning that the two final values of rnda brackets the optimal. These \
     two values are used to find the optimal one by a linear \
     interpolation. Finally, simulations are performed by using the the interpolated value \
     of rnda, which is defined as the desired optimal.
 
-    A option no_tunning can be used if one only wants to simulate one value of rnda and compare \
+    A option no_tuning can be used if one only wants to simulate one value of rnda and compare \
     the results with the measured ones.
 
-    The results of the tunning are plotted. See examples of the D80 vs rnda plot, on the left, \
-    and the D80 distributions, on the right.
+    The results of the tuning are plotted. See examples of the containment diameter \
+    D80 vs rnda plot, on the left, and the D80 distributions, on the right. \
 
     .. _deriva_rnda_plot:
     .. image:: images/derive_mirror_rnda_North-MST-FlashCam-D.png
@@ -38,19 +39,28 @@
     .. image:: images/derive_mirror_rnda_North-MST-FlashCam-D_D80-distributions.png
       :width: 49 %
 
+    This application uses the following simulation software tools:
+        - sim_telarray/bin/sim_telarray
+        - sim_telarray/bin/rx (optional)
+
     Command line arguments
     ----------------------
     telescope (str, required)
         Telescope name (e.g. North-LST-1, South-SST-D, ...)
     model_version (str, optional)
         Model version (default=prod4)
-    mean_d80 (float, required)
-        Mean of measured D80 [cm]
-    sig_d80 (float, optional)
-        Std dev of measured D80 [cm]
+    containment_mean (float, required)
+        Mean of measured containment diameter [cm]
+    containment_sigma (float, optional)
+        Std dev of measured containment diameter [cm]
+    containment_fraction (float, required)
+        Containment fractio for diameter calculation (typically 0.8)
     rnda (float, optional)
         Starting value of mirror_reflection_random_angle. If not given, the value from the \
         default model will be used.
+    2f_measurement (file, optional)
+        File with results from 2f measurements including mirror panel raddii and spot size \
+        measurements
     d80_list (file, optional)
         File with single column list of measured D80 [cm]. It is used only for plotting the D80 \
         distributions. If given, the measured distribution will be plotted on the top of the \
@@ -64,6 +74,8 @@
     random_flen (float, optional)
         Value to replace the default random_focal_length. Only used if use_random_flen \
         is activated.
+    no_tuning (activation mode, optional)
+        Turn off the tuning - A single case will be simulated and plotted.
     test (activation mode, optional)
         If activated, application will be faster by simulating only few mirrors.
     verbosity (str, optional)
@@ -77,17 +89,20 @@
 
     .. code-block:: console
 
-        python applications/derive_mirror_rnda.py --site North --telescope MST-FlashCam-D --mean_d80 1.4 --sig_d80 0.16 --mirror_list mirror_MST_focal_lengths.dat --d80_list mirror_MST_D80.dat --rnda 0.0075
+        python applications/derive_mirror_rnda.py --site North --telescope MST-FlashCam-D \
+            --containment_mean 1.4 --containment_sigma 0.16 --containment_fraction 0.8 \
+            --mirror_list mirror_MST_focal_lengths.dat --d80_list mirror_MST_D80.dat \
+            --rnda 0.0075
 
 
     Expected output:
 
     .. code-block:: console
 
-        Measured D80:
+        Measured Containment Diameter (80% containment):
         Mean = 1.400 cm, StdDev = 0.160 cm
 
-        Simulated D80:
+        Simulated Containment Diameter (80% containment):
         Mean = 1.401 cm, StdDev = 0.200 cm
 
         mirror_random_reflection_angle
@@ -99,211 +114,252 @@
 
         * Change default model to default (after this feature is implemented in db_handler)
         * Fix the setStyle. For some reason, sphinx cannot built docs with it on.
-'''
-
+"""
 
 import logging
-import matplotlib.pyplot as plt
-import argparse
+import os
 
 import numpy as np
 import astropy.units as u
+from astropy.table import Table, QTable
 
 import simtools.config as cfg
 import simtools.util.general as gen
-import simtools.io_handler as io
 from simtools.ray_tracing import RayTracing
 from simtools.model.telescope_model import TelescopeModel
-# from simtools.visualize import setStyle
-
-# setStyle()
-
-
-def plotMeasuredDistribution(file, **kwargs):
-    data = np.loadtxt(file)
-    ax = plt.gca()
-    ax.hist(data, **kwargs)
+import simtools.util.commandline_parser as argparser
+import simtools.util.workflow_description as workflow_config
+import simtools.util.model_data_writer as writer
 
 
-if __name__ == '__main__':
+def parse(label):
+    """
+    Parse command line configuration
 
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        '-s',
-        '--site',
-        help='North or South',
-        type=str,
-        required=True
-    )
-    parser.add_argument(
-        '-t',
-        '--telescope',
-        help='Telescope model name (e.g. LST-1, SST-D, ...)',
-        type=str,
-        required=True
-    )
-    parser.add_argument(
-        '-m',
-        '--model_version',
-        help='Model version (default=prod4)',
-        type=str,
-        default='prod4'
-    )
-    parser.add_argument(
-        '--mean_d80',
-        help='Mean of measured D80 [cm]',
-        type=float,
-        required=True
-    )
-    parser.add_argument(
-        '--sig_d80',
-        help='Std dev of measured D80 [cm]',
-        type=float,
-        required=False
-    )
-    parser.add_argument(
-        '--d80_list',
-        help=(
-            'File with single column list of measured D80 [cm]. If given, the measured '
-            'distribution will be plotted on the top of the simulated one.'
-        ),
-        type=str,
-        required=False
-    )
-    parser.add_argument(
-        '--rnda',
-        help='Starting value of mirror_reflection_random_angle',
-        type=float,
-        default=0.
-    )
-    parser.add_argument(
-        '--no_tunning',
-        help='Turn off the tunning - A single case will be simulated and plotted.',
-        action='store_true'
-    )
-    parser.add_argument(
-        '--mirror_list',
-        help=(
-            'Mirror list file to replace the default one. It should be used if measured mirror'
-            ' focal lengths need to be accounted'
-        ),
-        type=str,
-        required=False
-    )
-    parser.add_argument(
-        '--use_random_flen',
-        help=(
-            'Use random focal lengths. The argument random_flen can be used to replace the default'
-            ' random_focal_length parameter.'
-        ),
-        action='store_true'
-    )
-    parser.add_argument(
-        '--random_flen',
-        help='Value to replace the default random_focal_length.',
-        type=float,
-        required=False
-    )
-    parser.add_argument(
-        '--test',
-        help='Test option will be faster by simulating only 10 mirrors.',
-        action='store_true'
-    )
-    parser.add_argument(
-        '-v',
-        '--verbosity',
-        dest='logLevel',
-        action='store',
-        default='info',
-        help='Log level to print (default is INFO).'
-    )
+    """
 
-    args = parser.parse_args()
-    label = 'derive_mirror_rnda'
+    parser = argparser.CommandLineParser(label)
+    parser.initialize_telescope_model_arguments()
+    psf_group = parser.add_mutually_exclusive_group()
+    psf_group.add_argument(
+        "--psf_measurement_containment_mean",
+        help="Mean of measured PSF containment diameter [cm]",
+        type=float, required=False
+    )
+    psf_group.add_argument(
+        "--psf_measurement",
+        help="Results from PSF measurements for each mirror panel spot size",
+        type=str, required=False,
+    )
+    parser.add_argument(
+        "--psf_measurement_containment_sigma",
+        help="Std dev of measured PSF containment diameter [cm]",
+        type=float, required=False
+    )
+    parser.add_argument(
+        "--containment_fraction",
+        help="Containment fraction for diameter calculation (in interval 0,1)",
+        type=argparser.CommandLineParser.efficiency_interval, required=False,
+        default=0.8,
+    )
+    parser.add_argument(
+        "--rnda",
+        help="Starting value of mirror_reflection_random_angle",
+        type=float, required=False,
+        default=0.0,
+    )
+    parser.add_argument(
+        "--mirror_list",
+        help=("Mirror list file to replace the default one. It should be used if"
+              " measured mirror focal lengths need to be accounted"),
+        type=str, required=False,
+    )
+    parser.add_argument(
+        "--use_random_flen",
+        help=("Use random focal lengths. Read value for random_focal_length parameter read"
+              " from DB or provide by using the argument random_flen."),
+        action="store_true", required=False,
+    )
+    parser.add_argument(
+        "--random_flen",
+        help="Value to replace the default random_focal_length.",
+        default=None,
+        type=float, required=False,
+    )
+    parser.add_argument(
+        "--no_tuning",
+        help="no tuning of random_reflection_angle (a single case will be simulated).",
+        action="store_true", required=False,
+    )
+    parser.initialize_default_arguments()
+    return parser.parse_args()
+
+
+def define_telescope_model(workflow):
+    """
+    Define telescope model and update configuration
+    with mirror list and/or random focal length given
+    as input
+
+    Attributes
+    ----------
+    workflow_config: WorkflowDescription
+       workflow configuration
+
+    Returns
+    ------
+    tel TelescopeModel
+        telescope model
+
+    """
+
+    tel = TelescopeModel(
+        site=workflow.get_configuration_parameter('site'),
+        telescopeModelName=workflow.get_configuration_parameter('telescope'),
+        modelVersion=workflow.get_configuration_parameter('model_version'),
+        label=workflow.label()
+    )
+    if workflow.get_configuration_parameter('mirror_list') is not None:
+        mirrorListFile = cfg.findFile(name=workflow.get_configuration_parameter('mirror_list'))
+        tel.changeParameter("mirror_list", workflow.get_configuration_parameter('mirror_list'))
+        tel.addParameterFile("mirror_list", mirrorListFile)
+    if workflow.get_configuration_parameter('random_flen') is not None:
+        tel.changeParameter(
+            "random_focal_length",
+            str(workflow.get_configuration_parameter('random_flen')))
+
+    return tel
+
+
+def print_and_write_results(workflow,
+                            rndaStart, rndaOpt,
+                            meanD80, sigD80,
+                            resultsRnda, resultsMean, resultsSig):
+    """
+    Print results to screen write metadata and data files
+    in the requested format
+
+    """
+
+    containment_fraction_percent = int(
+        workflow.get_configuration_parameter('containment_fraction')*100)
+
+    # Printing results to stdout
+    print("\nMeasured D{:}:".format(containment_fraction_percent))
+    if workflow.get_configuration_parameter('psf_measurement_containment_sigma') is not None:
+        print(
+            "Mean = {:.3f} cm, StdDev = {:.3f} cm".format(
+                workflow.get_configuration_parameter('psf_measurement_containment_mean'),
+                workflow.get_configuration_parameter('psf_measurement_containment_sigma'))
+        )
+    else:
+        print("Mean = {:.3f} cm".format(
+            workflow.get_configuration_parameter('psf_measurement_containment_mean')))
+    print("\nSimulated D{:}:".format(containment_fraction_percent))
+    print("Mean = {:.3f} cm, StdDev = {:.3f} cm".format(meanD80, sigD80))
+    print("\nmirror_random_reflection_angle")
+    print("Previous value = {:.6f}".format(rndaStart))
+    print("New value = {:.6f}\n".format(rndaOpt))
+
+    # Result table written to ecsv file using file_writer
+    # First entry is always the best fit result
+    result_table = QTable([
+        [True]+[False]*len(resultsRnda),
+        ([rndaOpt]+resultsRnda) * u.deg,
+        ([0.]*(len(resultsRnda)+1)),
+        ([0.]*(len(resultsRnda)+1)) * u.deg,
+        ([meanD80]+resultsMean) * u.cm,
+        ([sigD80]+resultsSig) * u.cm
+        ], names=(
+            'best_fit',
+            'mirror_reflection_random_angle_sigma1',
+            'mirror_reflection_random_angle_fraction2',
+            'mirror_reflection_random_angle_sigma2',
+            f'containment_radius_D{containment_fraction_percent}',
+            f'containment_radius_sigma_D{containment_fraction_percent}'
+        )
+    )
+    file_writer = writer.ModelDataWriter(workflow)
+    file_writer.write_metadata()
+    file_writer.write_data(result_table)
+
+
+def get_psf_containment(logger, workflow):
+    """
+    Read measured single-mirror point-spread function (containment)
+    from file and return mean and sigma
+
+    """
+
+    _psf_list = Table.read(
+        workflow.get_configuration_parameter('psf_measurement'), format='ascii.ecsv')
+    try:
+        workflow.set_configuration_parameter(
+             'psf_measurement_containment_mean',
+             np.nanmean(np.array(_psf_list['psf_opt'].to('cm').value)))
+        workflow.set_configuration_parameter(
+             'psf_measurement_containment_sigma',
+             np.nanstd(np.array(_psf_list['psf_opt'].to('cm').value)))
+    except KeyError:
+        logger.debug("Missing column for psf measurement (psf_opt) in {}".format(
+            workflow.get_configuration_parameter('psf_measurement')))
+        raise
+
+    logger.info('Determined PSF containment to {:.4} +- {:.4} cm'.format(
+        workflow.get_configuration_parameter('psf_measurement_containment_mean'),
+        workflow.get_configuration_parameter('psf_measurement_containment_sigma')))
+
+
+def main():
+
+    label = os.path.basename(__file__).split('.')[0]
+    args = parse(label)
 
     logger = logging.getLogger()
     logger.setLevel(gen.getLogLevelFromUser(args.logLevel))
 
-    # Output directory to save files related directly to this app
-    outputDir = io.getApplicationOutputDirectory(cfg.get('outputLocation'), label)
+    workflow = workflow_config.WorkflowDescription(label=label, args=args)
 
-    tel = TelescopeModel(
-        site=args.site,
-        telescopeModelName=args.telescope,
-        modelVersion=args.model_version,
-        label=label
-    )
-    if args.mirror_list is not None:
-        mirrorListFile = cfg.findFile(name=args.mirror_list)
-        tel.changeParameter('mirror_list', args.mirror_list)
-        tel.addParameterFile(mirrorListFile)  # Copying the mirror list to the model dir
-    if args.random_flen is not None:
-        tel.changeParameter('random_focal_length', str(args.random_flen))
+    tel = define_telescope_model(workflow)
 
-    def run(rnda, plot=False):
-        ''' Runs the simulations for one given value of rnda '''
-        tel.changeParameter('mirror_reflection_random_angle', str(rnda))
-        ray = RayTracing(
+    if workflow.get_configuration_parameter('psf_measurement'):
+        get_psf_containment(logger, workflow)
+
+    def run(rnda):
+        """Runs the simulations for one given value of rnda"""
+        tel.changeParameter("mirror_reflection_random_angle", str(rnda))
+        ray = RayTracing.fromKwargs(
             telescopeModel=tel,
             singleMirrorMode=True,
-            mirrorNumbers=list(range(1, 10)) if args.test else 'all',
-            useRandomFocalLength=args.use_random_flen
+            mirrorNumbers=list(range(1, 10))
+            if workflow.get_configuration_parameter('test') else "all",
+            useRandomFocalLength=workflow.get_configuration_parameter('use_random_flen'),
         )
         ray.simulate(test=False, force=True)  # force has to be True, always
         ray.analyze(force=True)
 
-        # Plotting D80 histograms
-        if plot:
-            plt.figure(figsize=(8, 6), tight_layout=True)
-            ax = plt.gca()
-            ax.set_xlabel(r'D$_{80}$ [cm]')
+        return (
+            ray.getMean("d80_cm").to(u.cm).value,
+            ray.getStdDev("d80_cm").to(u.cm).value,
+        )
 
-            bins = np.linspace(0.8, 3.5, 27)
-            ray.plotHistogram(
-                'd80_cm',
-                color='r',
-                linestyle='-',
-                alpha=0.5,
-                facecolor='r',
-                edgecolor='r',
-                bins=bins,
-                label='simulated'
-            )
-            # Only plot measured D80 if the data is given
-            if args.d80_list is not None:
-                d80ListFile = cfg.findFile(args.d80_list)
-                plotMeasuredDistribution(
-                    d80ListFile,
-                    color='b',
-                    linestyle='-',
-                    facecolor='None',
-                    edgecolor='b',
-                    bins=bins,
-                    label='measured'
-                )
-
-            ax.legend(frameon=False)
-            plotFileName = label + '_' + tel.name + '_' + 'D80-distributions'
-            plotFile = outputDir.joinpath(plotFileName)
-            plt.savefig(str(plotFile) + '.pdf', format='pdf', bbox_inches='tight')
-            plt.savefig(str(plotFile) + '.png', format='png', bbox_inches='tight')
-
-        return ray.getMean('d80_cm').to(u.cm).value, ray.getStdDev('d80_cm').to(u.cm).value
-
-    # First - rnda from previous model
-    if args.rnda != 0:
-        rndaStart = args.rnda
+    # First - rnda from previous model or from command line
+    if workflow.get_configuration_parameter('rnda') != 0:
+        rndaStart = workflow.get_configuration_parameter('rnda')
     else:
-        rndaStart = tel.getParameter('mirror_reflection_random_angle')
+        rndaStart = tel.getParameter("mirror_reflection_random_angle")["Value"]
         if isinstance(rndaStart, str):
-            rndaStart = rndaStart.split()
-            rndaStart = float(rndaStart[0])
+            rndaStart = float(rndaStart.split()[0])
 
-    if not args.no_tunning:
-        resultsRnda = list()
-        resultsMean = list()
-        resultsSig = list()
+    logger.info("Start value for mirror_reflection_random_angle: {:}".format(
+        rndaStart))
 
+    resultsRnda = list()
+    resultsMean = list()
+    resultsSig = list()
+    if workflow.get_configuration_parameter('no_tuning'):
+        rndaOpt = rndaStart
+    else:
         def collectResults(rnda, mean, sig):
             resultsRnda.append(rnda)
             resultsMean.append(mean)
@@ -312,84 +368,34 @@ if __name__ == '__main__':
         stop = False
         meanD80, sigD80 = run(rndaStart)
         rnda = rndaStart
-        signDelta = np.sign(meanD80 - args.mean_d80)
+        signDelta = np.sign(
+            meanD80 - workflow.get_configuration_parameter('psf_measurement_containment_mean'))
         collectResults(rnda, meanD80, sigD80)
         while not stop:
-            newRnda = rnda - (0.1 * rndaStart * signDelta)
-            meanD80, sigD80 = run(newRnda)
-            newSignDelta = np.sign(meanD80 - args.mean_d80)
-            stop = (newSignDelta != signDelta)
+            rnda = rnda - (0.1 * rndaStart * signDelta)
+            meanD80, sigD80 = run(rnda)
+            newSignDelta = np.sign(
+                meanD80 - workflow.get_configuration_parameter('psf_measurement_containment_mean'))
+            stop = newSignDelta != signDelta
             signDelta = newSignDelta
-            rnda = newRnda
             collectResults(rnda, meanD80, sigD80)
 
         # Linear interpolation using two last rnda values
-        resultsRnda, resultsMean, resultsSig = gen.sortArrays(resultsRnda, resultsMean, resultsSig)
-        rndaOpt = np.interp(x=args.mean_d80, xp=resultsMean, fp=resultsRnda)
-    else:
-        rndaOpt = rndaStart
-
-    # Running the final simulation for rndaOpt
-    meanD80, sigD80 = run(rndaOpt, plot=True)
-
-    # Printing results to stdout
-    print('\nMeasured D80:')
-    if args.sig_d80 is not None:
-        print('Mean = {:.3f} cm, StdDev = {:.3f} cm'.format(args.mean_d80, args.sig_d80))
-    else:
-        print('Mean = {:.3f} cm'.format(args.mean_d80))
-    print('\nSimulated D80:')
-    print('Mean = {:.3f} cm, StdDev = {:.3f} cm'.format(meanD80, sigD80))
-    print('\nmirror_random_reflection_angle')
-    print('Previous value = {:.6f}'.format(rndaStart))
-    print('New value = {:.6f}\n'.format(rndaOpt))
-
-    # Plotting D80 vs rnda
-    plt.figure(figsize=(8, 6), tight_layout=True)
-    ax = plt.gca()
-    ax.set_xlabel(r'mirror$\_$random$\_$reflection$\_$angle')
-    ax.set_ylabel(r'$D_{80}$ [cm]')
-
-    if not args.no_tunning:
-        ax.errorbar(
-            resultsRnda,
-            resultsMean,
-            yerr=resultsSig,
-            color='k',
-            marker='o',
-            linestyle='none'
+        resultsRnda, resultsMean, resultsSig = gen.sortArrays(
+            resultsRnda, resultsMean, resultsSig
         )
-    ax.errorbar(
-        [rndaOpt],
-        [meanD80],
-        yerr=[sigD80],
-        color='r',
-        marker='o',
-        linestyle='none',
-        label='rnda = {:.6f} (D80 = {:.3f} +/- {:.3f} cm)'.format(rndaOpt, meanD80, sigD80)
-    )
+        rndaOpt = np.interp(
+            x=workflow.get_configuration_parameter('psf_measurement_containment_mean'),
+            xp=resultsMean, fp=resultsRnda)
 
-    xlim = ax.get_xlim()
-    ax.plot(xlim, [args.mean_d80, args.mean_d80], color='k', linestyle='-')
-    if args.sig_d80 is not None:
-        ax.plot(
-            xlim,
-            [args.mean_d80 + args.sig_d80, args.mean_d80 + args.sig_d80],
-            color='k',
-            linestyle=':',
-            marker=','
-        )
-        ax.plot(
-            xlim,
-            [args.mean_d80 - args.sig_d80, args.mean_d80 - args.sig_d80],
-            color='k',
-            linestyle=':',
-            marker=','
-        )
+    meanD80, sigD80 = run(rndaOpt)
 
-    ax.legend(frameon=False, loc='upper left')
+    print_and_write_results(
+        workflow,
+        rndaStart, rndaOpt,
+        meanD80, sigD80,
+        resultsRnda, resultsMean, resultsSig)
 
-    plotFileName = label + '_' + tel.name
-    plotFile = outputDir.joinpath(plotFileName)
-    plt.savefig(str(plotFile) + '.pdf', format='pdf', bbox_inches='tight')
-    plt.savefig(str(plotFile) + '.png', format='png', bbox_inches='tight')
+
+if __name__ == "__main__":
+    main()

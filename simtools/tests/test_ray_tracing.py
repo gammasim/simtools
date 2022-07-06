@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 
+import pytest
 import logging
 import matplotlib.pyplot as plt
 from copy import copy
@@ -9,74 +10,77 @@ import astropy.units as u
 import simtools.io_handler as io
 from simtools.ray_tracing import RayTracing
 from simtools.model.telescope_model import TelescopeModel
+from simtools.util.tests import (
+    has_db_connection,
+    simtel_installed,
+    SIMTEL_MSG,
+    DB_CONNECTION_MSG,
+)
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 
-def test_ssts(show=False):
+@pytest.mark.skipif(not simtel_installed(), reason=SIMTEL_MSG)
+def test_run_no_db():
+    cfgFile = io.getTestDataFile("CTA-North-LST-1-Current_test-telescope-model.cfg")
+    configData = {
+        "sourceDistance": 10 * u.km,
+        "zenithAngle": 20 * u.deg,
+        "offAxisAngle": [0, 1.0, 2.0, 3.0, 4.0] * u.deg,
+    }
+    tel = TelescopeModel.fromConfigFile(
+        site="North",
+        telescopeModelName="LST-1",
+        label="test-run-no-db",
+        configFileName=cfgFile,
+    )
+
+    ray = RayTracing(telescopeModel=tel, configData=configData)
+    ray.simulate(test=True, force=True)
+    ray.analyze(force=True)
+
+
+@pytest.mark.skipif(not has_db_connection(), reason=DB_CONNECTION_MSG)
+@pytest.mark.skipif(not simtel_installed(), reason=SIMTEL_MSG)
+@pytest.mark.parametrize("telescopeModelName", ["sst-1M", "sst-ASTRI", "sst-GCT"])
+def test_ssts(telescopeModelName):
     # Test with 3 SSTs
-    sourceDistance = 10 * u.km
-    version = 'prod3'
-    zenithAngle = 20 * u.deg
-    offAxisAngle = [0, 1.0, 2.0, 3.0, 4.0] * u.deg
+    version = "prod3"
+    configData = {
+        "sourceDistance": 10 * u.km,
+        "zenithAngle": 20 * u.deg,
+        "offAxisAngle": [0, 1.0, 2.0, 3.0, 4.0] * u.deg,
+    }
+    tel = TelescopeModel(
+        site="south",
+        telescopeModelName=telescopeModelName,
+        modelVersion=version,
+        label="test-sst",
+    )
 
-    telTypes = ['sst-1M', 'sst-ASTRI', 'sst-GCT']
-    telModels = list()
-    rayTracing = list()
-    for t in telTypes:
-        tel = TelescopeModel(
-            site='south',
-            telescopeModelName=t,
-            modelVersion=version,
-            label='test-sst'
-        )
-        telModels.append(t)
-
-        ray = RayTracing(
-            telescopeModel=tel,
-            sourceDistance=sourceDistance,
-            zenithAngle=zenithAngle,
-            offAxisAngle=offAxisAngle
-        )
-        ray.simulate(test=True, force=True)
-        ray.analyze(force=True)
-
-        rayTracing.append(ray)
-
-    # Plotting
-    plt.figure(figsize=(8, 6), tight_layout=True)
-    ax = plt.gca()
-    ax.set_xlabel('off-axis')
-    ax.set_ylabel('d80')
-
-    for ray in rayTracing:
-        ray.plot('d80_deg', marker='o', linestyle=':')
-
-    plotFile = io.getTestPlotFile('d80_test_ssts.pdf')
-    plt.savefig(plotFile)
+    ray = RayTracing(telescopeModel=tel, configData=configData)
+    ray.simulate(test=True, force=True)
+    ray.analyze(force=True)
 
 
+@pytest.mark.skipif(not has_db_connection(), reason=DB_CONNECTION_MSG)
+@pytest.mark.skipif(not simtel_installed(), reason=SIMTEL_MSG)
 def test_rx():
-    sourceDistance = 10 * u.km
-    version = 'current'
-    label = 'test-lst'
-    zenithAngle = 20 * u.deg
-    offAxisAngle = [0, 2.5, 5.0] * u.deg
+    version = "current"
+    label = "test-lst"
+
+    configData = {
+        "sourceDistance": 10 * u.km,
+        "zenithAngle": 20 * u.deg,
+        "offAxisAngle": [0, 2.5, 5.0] * u.deg,
+    }
 
     tel = TelescopeModel(
-        site='north',
-        telescopeModelName='lst-1',
-        modelVersion=version,
-        label=label
+        site="north", telescopeModelName="lst-1", modelVersion=version, label=label
     )
 
-    ray = RayTracing(
-        telescopeModel=tel,
-        sourceDistance=sourceDistance,
-        zenithAngle=zenithAngle,
-        offAxisAngle=offAxisAngle
-    )
+    ray = RayTracing(telescopeModel=tel, configData=configData)
 
     ray.simulate(test=True, force=True)
     ray_rx = copy(ray)
@@ -87,49 +91,44 @@ def test_rx():
     # Plotting d80
     plt.figure(figsize=(8, 6), tight_layout=True)
     ax = plt.gca()
-    ax.set_xlabel('off-axis')
-    ax.set_ylabel('d80')
+    ax.set_xlabel("off-axis")
+    ax.set_ylabel("d80")
 
-    ray.plot('d80_deg', marker='o', linestyle=':')
-    ray_rx.plot('d80_deg', marker='s', linestyle='--')
+    ray.plot("d80_deg", marker="o", linestyle=":")
+    ray_rx.plot("d80_deg", marker="s", linestyle="--")
 
-    plotFilePSF = io.getTestPlotFile('d80_test_rx.pdf')
+    plotFilePSF = io.getTestPlotFile("d80_test_rx.pdf")
     plt.savefig(plotFilePSF)
 
     # Plotting effArea
     plt.figure(figsize=(8, 6), tight_layout=True)
     ax = plt.gca()
-    ax.set_xlabel('off-axis')
-    ax.set_ylabel('eff. area')
+    ax.set_xlabel("off-axis")
+    ax.set_ylabel("eff. area")
 
-    ray.plot('eff_area', marker='o', linestyle=':')
-    ray_rx.plot('d80_deg', marker='s', linestyle='--')
+    ray.plot("eff_area", marker="o", linestyle=":")
+    ray_rx.plot("d80_deg", marker="s", linestyle="--")
 
-    plotFileArea = io.getTestPlotFile('effArea_test_rx.pdf')
+    plotFileArea = io.getTestPlotFile("effArea_test_rx.pdf")
     plt.savefig(plotFileArea)
-    return
 
 
+@pytest.mark.skipif(not has_db_connection(), reason=DB_CONNECTION_MSG)
+@pytest.mark.skipif(not simtel_installed(), reason=SIMTEL_MSG)
 def test_plot_image():
-    sourceDistance = 10 * u.km
-    version = 'prod3'
-    label = 'test-astri'
-    zenithAngle = 20 * u.deg
-    offAxisAngle = [0, 2.5, 5.0] * u.deg
+    version = "prod3"
+    label = "test-astri"
+    configData = {
+        "sourceDistance": 10 * u.km,
+        "zenithAngle": 20 * u.deg,
+        "offAxisAngle": [0, 2.5, 5.0] * u.deg,
+    }
 
     tel = TelescopeModel(
-        site='south',
-        telescopeModelName='sst-D',
-        modelVersion=version,
-        label=label
+        site="south", telescopeModelName="sst-D", modelVersion=version, label=label
     )
 
-    ray = RayTracing(
-        telescopeModel=tel,
-        sourceDistance=sourceDistance,
-        zenithAngle=zenithAngle,
-        offAxisAngle=offAxisAngle
-    )
+    ray = RayTracing(telescopeModel=tel, configData=configData)
 
     ray.simulate(test=True, force=True)
     ray.analyze(force=True)
@@ -138,64 +137,62 @@ def test_plot_image():
     for ii, image in enumerate(ray.images()):
         plt.figure(figsize=(8, 6), tight_layout=True)
         ax = plt.gca()
-        ax.set_xlabel('X [cm]')
-        ax.set_ylabel('Y [cm]')
-        image.plotImage(psf_color='b')
-        plotFile = io.getTestPlotFile('test_plot_image_{}.pdf'.format(ii))
+        ax.set_xlabel("X [cm]")
+        ax.set_ylabel("Y [cm]")
+        image.plotImage(psf_color="b")
+        plotFile = io.getTestPlotFile("test_plot_image_{}.pdf".format(ii))
         plt.savefig(plotFile)
-    return
 
 
+@pytest.mark.skipif(not has_db_connection(), reason=DB_CONNECTION_MSG)
+@pytest.mark.skipif(not simtel_installed(), reason=SIMTEL_MSG)
 def test_single_mirror(plot=False):
 
     # Test MST, single mirror PSF simulation
-    version = 'prod3'
+    version = "prod3"
+    configData = {"mirrorNumbers": list(range(1, 5)), "singleMirrorMode": True}
 
     tel = TelescopeModel(
-        site='north',
-        telescopeModelName='mst-FlashCam-D',
+        site="north",
+        telescopeModelName="mst-FlashCam-D",
         modelVersion=version,
-        label='test-mst'
+        label="test-mst",
     )
 
-    ray = RayTracing(
-        telescopeModel=tel,
-        singleMirrorMode=True,
-        mirrorNumbers=list(range(1, 5))
-    )
+    ray = RayTracing(telescopeModel=tel, configData=configData)
     ray.simulate(test=True, force=True)
     ray.analyze(force=True)
 
     # Plotting d80 histogram
     plt.figure(figsize=(8, 6), tight_layout=True)
     ax = plt.gca()
-    ax.set_xlabel('d80')
+    ax.set_xlabel("d80")
 
-    ray.plotHistogram('d80_cm', color='r', bins=10)
-    plotFile = io.getTestPlotFile('d80_hist_test.pdf')
+    ray.plotHistogram("d80_cm", color="r", bins=10)
+    plotFile = io.getTestPlotFile("d80_hist_test.pdf")
     plt.savefig(plotFile)
 
 
+@pytest.mark.skipif(not has_db_connection(), reason=DB_CONNECTION_MSG)
+@pytest.mark.skipif(not simtel_installed(), reason=SIMTEL_MSG)
 def test_integral_curve():
-    sourceDistance = 10 * u.km
-    version = 'prod4'
-    label = 'lst_integral'
-    zenithAngle = 20 * u.deg
-    offAxisAngle = [0] * u.deg
+    version = "prod4"
+    label = "lst_integral"
+
+    configData = {
+        "sourceDistance": 10 * u.km,
+        "zenithAngle": 20 * u.deg,
+        "offAxisAngle": [0] * u.deg,
+    }
 
     tel = TelescopeModel(
-        site='north',
-        telescopeModelName='mst-FlashCam-D',
+        site="north",
+        telescopeModelName="mst-FlashCam-D",
         modelVersion=version,
-        label=label
+        label=label,
     )
 
-    ray = RayTracing(
-        telescopeModel=tel,
-        sourceDistance=sourceDistance,
-        zenithAngle=zenithAngle,
-        offAxisAngle=offAxisAngle
-    )
+    ray = RayTracing(telescopeModel=tel, configData=configData)
 
     ray.simulate(test=True, force=True)
     ray.analyze(force=True)
@@ -203,18 +200,63 @@ def test_integral_curve():
     # Plotting cumulative curve for each image
     plt.figure(figsize=(8, 6), tight_layout=True)
     ax = plt.gca()
-    ax.set_xlabel('radius [cm]')
-    ax.set_ylabel('relative intensity')
+    ax.set_xlabel("radius [cm]")
+    ax.set_ylabel("relative intensity")
     for im in ray.images():
-        im.plotCumulative(color='b')
-    plotFile = io.getTestPlotFile('test_cumulative_psf.pdf')
+        im.plotCumulative(color="b")
+    plotFile = io.getTestPlotFile("test_cumulative_psf.pdf")
     plt.savefig(plotFile)
 
 
-if __name__ == '__main__':
+@pytest.mark.skipif(not has_db_connection(), reason=DB_CONNECTION_MSG)
+@pytest.mark.skipif(not simtel_installed(), reason=SIMTEL_MSG)
+def test_config_data():
 
-    # test_ssts()
-    test_rx()
-    # test_single_mirror()
-    # test_plot_image()
-    # test_integral_curve()
+    label = "test-config-data"
+    version = "prod4"
+
+    configData = {
+        "sourceDistance": 10 * u.km,
+        "zenithAngle": 30 * u.deg,
+        "offAxisAngle": [0, 2] * u.deg,
+    }
+
+    tel = TelescopeModel(
+        site="north",
+        telescopeModelName="mst-FlashCam-D",
+        modelVersion=version,
+        label=label,
+    )
+
+    ray = RayTracing(telescopeModel=tel, configData=configData)
+
+    assert ray.config.zenithAngle == 30
+    assert len(ray.config.offAxisAngle) == 2
+
+
+def test_from_kwargs():
+
+    label = "test-from-kwargs"
+
+    sourceDistance = 10 * u.km
+    zenithAngle = 30 * u.deg
+    offAxisAngle = [0, 2] * u.deg
+
+    cfgFile = io.getTestDataFile("CTA-North-LST-1-Current_test-telescope-model.cfg")
+
+    tel = TelescopeModel.fromConfigFile(
+        site="north",
+        telescopeModelName="lst-1",
+        configFileName=cfgFile,
+        label=label,
+    )
+
+    ray = RayTracing.fromKwargs(
+        telescopeModel=tel,
+        sourceDistance=sourceDistance,
+        zenithAngle=zenithAngle,
+        offAxisAngle=offAxisAngle,
+    )
+
+    assert ray.config.zenithAngle == 30
+    assert len(ray.config.offAxisAngle) == 2
