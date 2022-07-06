@@ -10,7 +10,6 @@ logger.setLevel(logging.DEBUG)
 
 
 class TestSimtelRunner(unittest.TestCase):
-
     def setUp(self):
         self.simtelRunner = SimtelRunner()
 
@@ -23,5 +22,5 @@ class TestSimtelRunner(unittest.TestCase):
             self.simtelRunner._raiseSimtelError()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()
