@@ -294,7 +294,8 @@ class CorsikaRunner:
         cmd + " || exit 3\n"
         return cmd
 
-    def _getExtraCommands(self, extra):
+    @staticmethod
+    def _getExtraCommands(extra):
         """
         Get extra commands by combining the one given as argument and
         what is given in config.yml
@@ -383,7 +384,8 @@ class CorsikaRunner:
         runDir = self._getRunDirectory(runNumber)
         return self._corsikaDataDir.joinpath(runDir).joinpath(corsikaFileName)
 
-    def _getRunDirectory(self, runNumber):
+    @staticmethod
+    def _getRunDirectory(runNumber):
         """Get run directory created by sim_telarray (ex. run000014)."""
         nn = str(runNumber)
         return "run" + nn.zfill(6)

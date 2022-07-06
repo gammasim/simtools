@@ -13,6 +13,9 @@ on:
   pull_request:
     branches: [master]
     types: [opened, synchronize]
+  push:
+    branches:
+    - master
 
 jobs:
 
@@ -21,7 +24,8 @@ jobs:
 
     strategy:
       matrix:
-        python-version: [3.8, 3.9, 3.10.4]
+        #        python-version: [3.8, 3.9, 3.10.4]
+        python-version: [3.9]
 
     steps:
       - name: checkout
@@ -39,9 +43,8 @@ jobs:
           source $CONDA/etc/profile.d/conda.sh
           conda config --set always_yes yes --set changeps1 no
           conda update -q conda
-          conda install -c conda-forge mamba
           sed -i -e "s/- python/- python=$PYTHON_VERSION/g" environment.yml
-          mamba env create -f environment.yml
+          conda env create -f environment.yml
           conda activate gammasim-tools-dev
           echo 'source $CONDA/etc/profile.d/conda.sh' >> ~/.bash_profile
           echo 'conda activate gammasim-tools-dev' >> ~/.bash_profile
@@ -51,7 +54,7 @@ jobs:
       - name: pyflakes liniting
         shell: bash -leo pipefail {0}
         run: |
-          mamba install -q pyflakes
+          conda install -q pyflakes
           pyflakes .
 
       - name: simteldependencies
@@ -73,4 +76,6 @@ jobs:
 
       - name: Unit tests
         shell: bash -l {0}
-        run: pytest
+        run: pytest --durations=10 --cov --cov-report=xml
+
+      - uses: codecov/codecov-action@v3.1.0

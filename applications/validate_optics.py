@@ -95,7 +95,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "-m",
         "--model_version",
-        help="Model version (default=prod4)",
+        help="Model version (default=Current)",
         type=str,
         default="Current",
     )
@@ -113,6 +113,12 @@ if __name__ == "__main__":
         help="Maximum offset angle in deg (default=4)",
         type=float,
         default=4,
+    )
+    parser.add_argument(
+        "--offset_steps",
+        help="Offset angle step size (default=0.25 deg)",
+        type=float,
+        default=0.25,
     )
     parser.add_argument(
         "--plot_images",
@@ -150,6 +156,17 @@ if __name__ == "__main__":
         readFromDB=True,
     )
 
+    ######################################################################
+    # This is here as an example how to change parameters when necessary.
+    ######################################################################
+    # parsToChange = {
+    #     'mirror_focal_length': 1608.3,
+    #     'mirror_offset': -177.5,
+    #     'camera_body_diameter': 289.7,
+    #     'telescope_transmission': 1
+    # }
+    # telModel.changeMultipleParameters(**parsToChange)
+
     print(
         "\nValidating telescope optics with ray tracing simulations"
         " for {}\n".format(telModel.name)
@@ -159,7 +176,7 @@ if __name__ == "__main__":
         telescopeModel=telModel,
         sourceDistance=args.src_distance * u.km,
         zenithAngle=args.zenith * u.deg,
-        offAxisAngle=np.linspace(0, args.max_offset, int(args.max_offset / 0.25) + 1)
+        offAxisAngle=np.linspace(0, args.max_offset, int(args.max_offset / args.offset_steps) + 1)
         * u.deg,
     )
     ray.simulate(test=args.test, force=False)
