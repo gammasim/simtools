@@ -1,9 +1,13 @@
 #!/usr/bin/python3
 
+import pytest
 import logging
 import unittest
 
+import simtools.io_handler as io
 from simtools.model.telescope_model import TelescopeModel, InvalidParameter
+from simtools.util.tests import has_db_connection, DB_CONNECTION_MSG
+
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
@@ -11,12 +15,13 @@ logger.setLevel(logging.DEBUG)
 
 class TestTelescopeModel(unittest.TestCase):
     def setUp(self):
+        cfgFile = io.getTestDataFile("CTA-North-LST-1-Current_test-telescope-model.cfg")
         self.label = "test-telescope-model"
-        self.telModel = TelescopeModel(
+        self.telModel = TelescopeModel.fromConfigFile(
             site="North",
             telescopeModelName="LST-1",
-            modelVersion="Current",
-            label="test-telescope-model",
+            label=self.label,
+            configFileName=cfgFile,
         )
 
     def test_handling_parameters(self):
@@ -47,6 +52,7 @@ class TestTelescopeModel(unittest.TestCase):
         )
         self.assertIsInstance(flenInfo["Value"], float)
 
+    @pytest.mark.skipif(not has_db_connection(), reason=DB_CONNECTION_MSG)
     def test_cfg_file(self):
         # Exporting
         self.telModel.exportConfigFile()
@@ -63,6 +69,7 @@ class TestTelescopeModel(unittest.TestCase):
         )
         tel.exportConfigFile()
 
+    @pytest.mark.skipif(not has_db_connection(), reason=DB_CONNECTION_MSG)
     def test_updating_export_model_files(self):
         """
         It was found in derive_mirror_rnda_angle that the DB was being

@@ -245,7 +245,6 @@ class CorsikaRunner:
             "Extra commands to be added to the run script {}".format(extraCommands)
         )
 
-<<<<<<< HEAD
         with open(scriptFilePath, 'w') as file:
             # shebang
             file.write('#!/usr/bin/bash\n')
@@ -266,25 +265,6 @@ class CorsikaRunner:
             file.write('\n# Running pfp\n')
             file.write(pfpCommand)
             file.write('\n# Running corsika_autoinputs\n')
-=======
-        with open(scriptFilePath, "w") as file:
-            if extraCommands is not None:
-                file.write("# Writing extras\n")
-                for line in extraCommands:
-                    file.write("{}\n".format(line))
-                file.write("# End of extras\n\n")
-
-            file.write("export CORSIKA_DATA={}\n".format(self._corsikaDataDir))
-            file.write("# Creating CORSIKA_DATA\n")
-            file.write("mkdir -p {}\n".format(self._corsikaDataDir))
-            file.write("\n")
-            file.write("cd {} || exit 2\n".format(self._corsikaDataDir))
-            file.write("\n")
-            file.write("# Running pfp\n")
-            file.write(pfpCommand)
-            file.write("\n")
-            file.write("# Running corsika_autoinputs\n")
->>>>>>> master
             file.write(autoinputsCommand)
 
             # Printing out runtime
@@ -320,12 +300,9 @@ class CorsikaRunner:
         cmd + " || exit 3\n"
         return cmd
 
-    def _getExtraCommands(self, extra):
-<<<<<<< HEAD
-        '''
-=======
+    @staticmethod
+    def _getExtraCommands(extra):
         """
->>>>>>> master
         Get extra commands by combining the one given as argument and
         what is given in config.yml
         """
@@ -392,15 +369,11 @@ class CorsikaRunner:
         """
         runNumber = self._validateRunNumber(runNumber)
         logFileName = names.corsikaRunLogFileName(
-<<<<<<< HEAD
             site=self.site,
             run=runNumber,
             primary=self.corsikaConfig.primary,
             arrayName=self.layoutName,
             label=self.label
-=======
-            site=self.site, run=runNumber, arrayName=self.layoutName, label=self.label
->>>>>>> master
         )
         return self._corsikaLogDir.joinpath(logFileName)
 
@@ -488,7 +461,8 @@ class CorsikaRunner:
         runDir = self._getRunDirectory(runNumber)
         return self._corsikaDataDir.joinpath(runDir).joinpath(corsikaFileName)
 
-    def _getRunDirectory(self, runNumber):
+    @staticmethod
+    def _getRunDirectory(runNumber):
         """Get run directory created by sim_telarray (ex. run000014)."""
         nn = str(runNumber)
         return "run" + nn.zfill(6)

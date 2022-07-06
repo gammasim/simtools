@@ -69,13 +69,13 @@
         * Change default model to default (after this feature is implemented in db_handler)
 """
 
-import logging
-import matplotlib.pyplot as plt
-import argparse
 import yaml
+import logging
+import argparse
+import numpy as np
+import matplotlib.pyplot as plt
 from collections import OrderedDict
 
-import numpy as np
 import astropy.units as u
 
 import simtools.io_handler as io
@@ -185,11 +185,16 @@ if __name__ == "__main__":
     print("d80 in cm = {}".format(im.getPSF()))
 
     # Plotting cumulative PSF
+    # Measured cumulative PSF
     dataToPlot = OrderedDict()
-    dataToPlot[r"sim$\_$telarray"] = im.getCumulativeData()
     if args.data is not None:
         dataFile = cfg.findFile(args.data)
-        dataToPlot['measured'] = loadData(dataFile)
+        dataToPlot["measured"] = loadData(dataFile)
+        radius = dataToPlot["measured"]["Radius [cm]"]
+
+    # Simulated cumulative PSF
+    dataToPlot[r"sim$\_$telarray"] = im.getCumulativeData(radius * u.cm)
+
     fig = visualize.plot1D(dataToPlot)
     fig.gca().set_ylim(0, 1.05)
 
@@ -204,7 +209,7 @@ if __name__ == "__main__":
     fig = visualize.plotHist2D(dataToPlot, bins=80)
     circle = plt.Circle((0, 0), im.getPSF(0.8) / 2, color="k", fill=False, lw=2, ls="--")
     fig.gca().add_artist(circle)
-    fig.gca().set_aspect('equal')
+    fig.gca().set_aspect("equal")
 
     plotFileName = label + "_" + telModel.name + "_image"
     plotFile = outputDir.joinpath(plotFileName)

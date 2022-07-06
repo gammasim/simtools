@@ -1,20 +1,43 @@
 #!/usr/bin/python3
 
-import logging
 import os
 import pytest
+import logging
+
+from simtools.util.tests import (
+    has_db_connection,
+    simtel_installed,
+    has_config_file,
+    DB_CONNECTION_MSG,
+    SIMTEL_MSG,
+    CONFIG_FILE_MSG,
+)
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
-""" This module perform tests on the application by running them with a set
-of arguments. Each applications to be tested correspond to an key in
-APP_LIST, that contains a list of list of arguments to be tested, so that
-the same application can be tested with a number of different set of arguments.
-"""
+# This module perform tests on the application by running them with a set
+# of arguments. Each applications to be tested correspond to an key in
+# APP_LIST, that contains a list of list of arguments to be tested, so that
+# the same application can be tested with a number of different set of arguments.
 
 APP_LIST = {
     # Optics
+    "tune_psf": [
+        [
+            "-s",
+            "North",
+            "-t",
+            "LST-1",
+            "--model_version",
+            "prod4",
+            "--data",
+            "PSFcurve_data_v2.txt",
+            "--zenith",
+            "20",
+            "--test",
+        ]
+    ],
     "compare_cumulative_psf": [
         [
             "-s",
@@ -76,7 +99,9 @@ APP_LIST = {
     # Layout
     "make_regular_arrays": [[]],
     # Production
-    "produce_array_config": [["--array_config", "data/test-data/arrayConfigTest.yml"]],
+    "produce_array_config": [
+        ["--array_config", "data/test-data/arrayConfigTest.yml"]
+    ],
     # Trigger
     "sim_showers_for_trigger_rates": [
         [
@@ -102,10 +127,49 @@ APP_LIST = {
     ],
 }
 
+# List of applications that require sim_telarray installation
+REQUIRE_SIMTEL = (
+    "compare_cumulative_psf",
+    "tune_psf",
+    "derive_mirror_rnda",
+    "validate_optics",
+    "validate_camera_efficiency",
+)
+
+REQUIRE_DB_CONNECTION = (
+    "compare_cumulative_psf",
+    "tune_psf",
+    "derive_mirror_rnda",
+    "validate_optics",
+    "validate_camera_efficiency",
+    "validate_camera_fov",
+    "make_regular_arrays",
+    "produce_array_config",
+    "get_parameter",
+    "production",
+)
+
+REQUIRE_CFG_FILE = (
+    "derive_mirror_rnda",
+    "production",
+)
+
 
 @pytest.mark.parametrize("application", APP_LIST.keys())
 def test_applications(application):
     logger.info("Testing {}".format(application))
+
+    # Checking for DB connection
+    if application in REQUIRE_DB_CONNECTION and not has_db_connection():
+        pytest.skip(DB_CONNECTION_MSG)
+
+    # Checking for sim_telarray installation
+    if application in REQUIRE_SIMTEL and not simtel_installed():
+        pytest.skip(SIMTEL_MSG)
+
+    # Checking for cfg file
+    if application in REQUIRE_CFG_FILE and not has_config_file():
+        pytest.skip(CONFIG_FILE_MSG)
 
     def makeCommand(app, args):
         cmd = "python applications/" + app + ".py"

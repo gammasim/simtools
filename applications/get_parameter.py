@@ -60,8 +60,6 @@ if __name__ == "__main__":
             "This application works only with MongoDB and you asked not to use it"
         )
 
-    logger.info("TEST")
-
     db = db_handler.DatabaseHandler()
 
     if args.model_version == "all":
