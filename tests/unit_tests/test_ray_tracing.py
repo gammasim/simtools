@@ -7,12 +7,10 @@ from simtools.ray_tracing import RayTracing
 from simtools.model.telescope_model import TelescopeModel
 
 
-def test_config_data(cfg_setup):
+def test_config_data_from_dict(set_db):
 
     label = "test-config-data"
     version = "prod4"
-
-    cfg.change("mongoDBConfigFile", None)
 
     configData = {
         "sourceDistance": 10 * u.km,
@@ -41,8 +39,10 @@ def test_from_kwargs(cfg_setup):
     zenithAngle = 30 * u.deg
     offAxisAngle = [0, 2] * u.deg
 
-    cfgFile = cfg.findFile("CTA-North-LST-1-Current_test-telescope-model.cfg",
-                            cfg.get("modelFilesLocations"))
+    cfgFile = cfg.findFile(
+        "CTA-North-LST-1-Current_test-telescope-model.cfg",
+        cfg.get("modelFilesLocations")
+    )
 
     tel = TelescopeModel.fromConfigFile(
         site="north",
