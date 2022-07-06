@@ -25,6 +25,8 @@ __all__ = [
     "validateLayoutArrayName",
     "validateTelescopeModelName",
     "validateCameraName",
+    "validateSubSystemName",
+    "validateTelescopeIDName",
     "convertTelescopeModelNameToYaml",
     "splitTelescopeModelName",
     "getSiteFromTelescopeName",
@@ -36,6 +38,27 @@ __all__ = [
     "corsikaOutputFileName",
 >>>>>>> master
 ]
+
+
+def validateSubSystemName(name):
+    """
+    Validate a sub system name (optics structure or camera)
+
+    Raises
+    ------
+    ValueError
+        If name is not valid.
+
+    Parameters
+    ----------
+    name: str
+
+    Returns
+    -------
+    str
+        Validated name.
+    """
+    return validateName(name, {**allCameraNames, **allStructureNames})
 
 
 def validateCameraName(name):
@@ -57,6 +80,38 @@ def validateCameraName(name):
         Validated name.
     """
     return validateName(name, allCameraNames)
+
+def validateTelescopeIDName(name):
+    """
+    Validate a telescope ID name
+
+    Valid names e.g.,
+    - D
+    - telescope ID
+
+    Raises
+    ------
+    ValueError
+        If name is not valid.
+
+    Parameters
+    ----------
+    name: str
+
+    Returns
+    -------
+    str
+        Validated name.
+    """
+
+    # FIXME: validate telescope id range
+    if name == 'D' or name.isdigit():
+        return name
+
+    _logger = logging.getLogger(__name__)
+    msg = "Invalid telescope ID name {}".format(name)
+    _logger.error(msg)
+    raise ValueError(msg)
 
 
 def validateModelVersionName(name):
@@ -248,8 +303,8 @@ def splitTelescopeModelName(name):
 
     Returns
     -------
-    str, str, str
-        Site (South or North), class (LST, MST, SST ...) and type (any complement).
+    str, str
+       class (LST, MST, SST ...) and type (any complement).
     """
     nameParts = name.split("-")
     telClass = nameParts[0]
@@ -330,6 +385,9 @@ allCameraNames = {
     "LST": ["lst"],
 }
 
+allStructureNames = {
+    "Structure": ["Structure", "structure"]
+}
 
 allSiteNames = {"South": ["paranal", "south"], "North": ["lapalma", "north"]}
 
@@ -369,6 +427,37 @@ allLayoutArrayNames = {
     "1SST": ["1-sst", "sst"],
     "Prod5": ["prod5", "p5"],
 }
+
+def simtoolsInstrumentName(site, telescopeClassName, subSystemName, telescopeIDName):
+    """
+    Instrument name following gammasim-tools naming convention
+
+    Parameters
+    ----------
+    site: str
+        South or North.
+    telescopeClassName: str
+        LST, MST, ...
+    subSystemName: str
+        FlashCam, NectarCam
+    telescopeIDName: str
+        telescope ID (e.g., D, numerial value)
+
+
+    Returns
+    -------
+    instrumentname str
+        instrument name
+
+    """
+
+    return validateSiteName(site) \
+        + "-" + \
+        validateName(telescopeClassName, allTelescopeClassNames) \
+        + "-" + \
+        validateSubSystemName(subSystemName) \
+        + "-" + \
+        validateTelescopeIDName(telescopeIDName)
 
 
 def simtelTelescopeConfigFileName(
@@ -557,7 +646,7 @@ def rayTracingResultsFileName(
         site, telescopeModelName, sourceDistance, zenithAngle
     )
     name += "_{}".format(label) if label is not None else ""
-    name += ".cvs"
+    name += ".ecsv"
     return name
 
 
@@ -619,7 +708,7 @@ def cameraEfficiencyResultsFileName(site, telescopeModelName, zenithAngle, label
         site, telescopeModelName, zenithAngle
     )
     name += "_{}".format(label) if label is not None else ""
-    name += ".csv"
+    name += ".ecsv"
     return name
 
 

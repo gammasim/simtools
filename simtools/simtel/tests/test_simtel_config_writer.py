@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 
+import pytest
 import logging
 import unittest
 
@@ -8,6 +9,8 @@ from simtools.util.general import fileHasText
 from simtools.simtel.simtel_config_writer import SimtelConfigWriter
 from simtools.model.telescope_model import TelescopeModel
 from simtools.layout.layout_array import LayoutArray
+from simtools.util.tests import has_db_connection, DB_CONNECTION_MSG
+
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
@@ -29,6 +32,7 @@ class TestSimtelConfigWriter(unittest.TestCase):
         )
         self.layout = LayoutArray.fromLayoutArrayName("South-4LST")
 
+    @pytest.mark.skipif(not has_db_connection(), reason=DB_CONNECTION_MSG)
     def test_write_array_config_file(self):
         file = io.getTestOutputFile("simtel-config-writer_array.txt")
         self.simtelConfigWriter.writeArrayConfigFile(
@@ -39,6 +43,7 @@ class TestSimtelConfigWriter(unittest.TestCase):
         )
         self.assertTrue(fileHasText(file, "TELESCOPE == 1"))
 
+    @pytest.mark.skipif(not has_db_connection(), reason=DB_CONNECTION_MSG)
     def test_write_tel_config_file(self):
         file = io.getTestOutputFile("simtel-config-writer_telescope.txt")
         self.simtelConfigWriter.writeTelescopeConfigFile(

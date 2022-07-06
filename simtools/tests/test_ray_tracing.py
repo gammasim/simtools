@@ -1,8 +1,8 @@
 #!/usr/bin/python3
 
+import pytest
 import logging
 import matplotlib.pyplot as plt
-import pytest
 from copy import copy
 
 import astropy.units as u
@@ -10,11 +10,39 @@ import astropy.units as u
 import simtools.io_handler as io
 from simtools.ray_tracing import RayTracing
 from simtools.model.telescope_model import TelescopeModel
+from simtools.util.tests import (
+    has_db_connection,
+    simtel_installed,
+    SIMTEL_MSG,
+    DB_CONNECTION_MSG,
+)
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 
+@pytest.mark.skipif(not simtel_installed(), reason=SIMTEL_MSG)
+def test_run_no_db():
+    cfgFile = io.getTestDataFile("CTA-North-LST-1-Current_test-telescope-model.cfg")
+    configData = {
+        "sourceDistance": 10 * u.km,
+        "zenithAngle": 20 * u.deg,
+        "offAxisAngle": [0, 1.0, 2.0, 3.0, 4.0] * u.deg,
+    }
+    tel = TelescopeModel.fromConfigFile(
+        site="North",
+        telescopeModelName="LST-1",
+        label="test-run-no-db",
+        configFileName=cfgFile,
+    )
+
+    ray = RayTracing(telescopeModel=tel, configData=configData)
+    ray.simulate(test=True, force=True)
+    ray.analyze(force=True)
+
+
+@pytest.mark.skipif(not has_db_connection(), reason=DB_CONNECTION_MSG)
+@pytest.mark.skipif(not simtel_installed(), reason=SIMTEL_MSG)
 @pytest.mark.parametrize("telescopeModelName", ["sst-1M", "sst-ASTRI", "sst-GCT"])
 def test_ssts(telescopeModelName):
     # Test with 3 SSTs
@@ -36,6 +64,8 @@ def test_ssts(telescopeModelName):
     ray.analyze(force=True)
 
 
+@pytest.mark.skipif(not has_db_connection(), reason=DB_CONNECTION_MSG)
+@pytest.mark.skipif(not simtel_installed(), reason=SIMTEL_MSG)
 def test_rx():
     version = "current"
     label = "test-lst"
@@ -83,6 +113,8 @@ def test_rx():
     plt.savefig(plotFileArea)
 
 
+@pytest.mark.skipif(not has_db_connection(), reason=DB_CONNECTION_MSG)
+@pytest.mark.skipif(not simtel_installed(), reason=SIMTEL_MSG)
 def test_plot_image():
     version = "prod3"
     label = "test-astri"
@@ -112,6 +144,8 @@ def test_plot_image():
         plt.savefig(plotFile)
 
 
+@pytest.mark.skipif(not has_db_connection(), reason=DB_CONNECTION_MSG)
+@pytest.mark.skipif(not simtel_installed(), reason=SIMTEL_MSG)
 def test_single_mirror(plot=False):
 
     # Test MST, single mirror PSF simulation
@@ -139,6 +173,8 @@ def test_single_mirror(plot=False):
     plt.savefig(plotFile)
 
 
+@pytest.mark.skipif(not has_db_connection(), reason=DB_CONNECTION_MSG)
+@pytest.mark.skipif(not simtel_installed(), reason=SIMTEL_MSG)
 def test_integral_curve():
     version = "prod4"
     label = "lst_integral"
@@ -172,6 +208,8 @@ def test_integral_curve():
     plt.savefig(plotFile)
 
 
+@pytest.mark.skipif(not has_db_connection(), reason=DB_CONNECTION_MSG)
+@pytest.mark.skipif(not simtel_installed(), reason=SIMTEL_MSG)
 def test_config_data():
 
     label = "test-config-data"
@@ -199,16 +237,17 @@ def test_config_data():
 def test_from_kwargs():
 
     label = "test-from-kwargs"
-    version = "prod4"
 
     sourceDistance = 10 * u.km
     zenithAngle = 30 * u.deg
     offAxisAngle = [0, 2] * u.deg
 
-    tel = TelescopeModel(
+    cfgFile = io.getTestDataFile("CTA-North-LST-1-Current_test-telescope-model.cfg")
+
+    tel = TelescopeModel.fromConfigFile(
         site="north",
-        telescopeModelName="mst-FlashCam-D",
-        modelVersion=version,
+        telescopeModelName="lst-1",
+        configFileName=cfgFile,
         label=label,
     )
 
@@ -221,14 +260,3 @@ def test_from_kwargs():
 
     assert ray.config.zenithAngle == 30
     assert len(ray.config.offAxisAngle) == 2
-
-
-if __name__ == "__main__":
-
-    # test_ssts()
-    # test_rx()
-    test_single_mirror()
-    # test_plot_image()
-    # test_integral_curve()
-    # test_config_data()
-    # test_from_kwargs()
