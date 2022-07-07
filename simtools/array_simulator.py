@@ -402,7 +402,8 @@ class ArraySimulator:
         for file in self._results['log_out']:
             print(file)
             if Path(file).is_file():
-                thisRuntime = self.simtelRunner.getResources(run=run)
+                thisRuntime = self.simtelRunner.getResources(
+                    run=self._guessRunFromFile(file))
                 runtime.append(thisRuntime)
 
         secToHour = 1 / (60 * 60)
