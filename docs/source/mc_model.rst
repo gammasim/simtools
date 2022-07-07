@@ -9,8 +9,8 @@ related to the MC Model.
 The simtools description of the MC Model has the :ref:`telescope_model`
 module (and its main class TelescopeModel) as its central element.
 The TelescopeModel class provides a representation of a telescope in terms
-of the MC Model. A TelescopeModel is basically defined by its telescope name
-(see :ref:`Telescope Names`). An interface with the :ref:`Model Parameters DB`
+of the MC Model. A TelescopeModel is basically defined by its telescope name. 
+An interface with the :ref:`Model Parameters DB`
 is provided so the model parameters can be read and exported as configuration
 files.
 
