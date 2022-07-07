@@ -8,8 +8,8 @@ The Layout Array module deals with the telescope positions and its coordinate tr
 It is used within Corsika Config and Array Model in order to encapsulate the information about the
 telescope positions.
 
-* `layout_array <layoutarraymodule>`_
-* `telescope_position <telescopedatamodule>`_
+* :ref:`layout_array <layoutarraymodule>`
+* :ref:`telescope_position <telescopedatamodule>`
 
 
 .. _layoutarraymodule:
