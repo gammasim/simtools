@@ -48,14 +48,15 @@ def test_from_kwargs(db):
     zenithAngle = 30 * u.deg
     offAxisAngle = [0, 2] * u.deg
 
+    testFileName = "CTA-North-LST-1-Current_test-telescope-model.cfg"
     db.getFileDB(
         dbName="test-data",
         dest=io.getTestModelDirectory(),
-        fileName="CTA-North-LST-1-Current_test-telescope-model.cfg"
+        fileName=testFileName
     )
 
     cfgFile = cfg.findFile(
-        "CTA-North-LST-1-Current_test-telescope-model.cfg",
+        testFileName,
         io.getTestModelDirectory()
     )
 
