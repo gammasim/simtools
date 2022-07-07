@@ -291,7 +291,7 @@ class CorsikaRunner:
         if self._keepSeeds:
             cmd += " --keep-seeds"
         cmd += " {} > {} 2>&1".format(inputTmpFile, logFile)
-        cmd ++ " || exit 3\n"
+        cmd += " || exit 1\n"
         return cmd
 
     @staticmethod
