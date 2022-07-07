@@ -2,7 +2,6 @@
 
 import logging
 import yaml
-import pytest
 from pathlib import Path
 import astropy.units as u
 
@@ -10,8 +9,6 @@ import simtools.util.general as gen
 import simtools.io_handler as io
 
 logging.getLogger().setLevel(logging.DEBUG)
-
-MODULE_DIR = Path(__file__).parent
 
 
 def test_collect_dict_data(cfg_setup):
