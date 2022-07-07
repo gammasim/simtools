@@ -1,7 +1,6 @@
 import logging
 
 __all__ = [
-<<<<<<< HEAD
     'validateModelVersionName',
     'validateSimtelModeName',
     'validateSiteName',
@@ -18,25 +17,6 @@ __all__ = [
     'corsikaConfigFileName',
     'corsikaOutputFileName',
     'corsikaSubLogFileName'
-=======
-    "validateModelVersionName",
-    "validateSimtelModeName",
-    "validateSiteName",
-    "validateLayoutArrayName",
-    "validateTelescopeModelName",
-    "validateCameraName",
-    "validateSubSystemName",
-    "validateTelescopeIDName",
-    "convertTelescopeModelNameToYaml",
-    "splitTelescopeModelName",
-    "getSiteFromTelescopeName",
-    "rayTracingFileName",
-    "simtelTelescopeConfigFileName",
-    "simtelArrayConfigFileName",
-    "simtelSingleMirrorListFileName",
-    "corsikaConfigFileName",
-    "corsikaOutputFileName",
->>>>>>> master
 ]
 
 
@@ -915,15 +895,9 @@ def corsikaRunScriptFileName(arrayName, site, primary, run, label=None):
     return name
 
 
-<<<<<<< HEAD
 def corsikaRunLogFileName(arrayName, site, primary, run, label=None):
     '''
     Corsika script file name.
-=======
-def corsikaRunLogFileName(arrayName, site, run, label=None):
-    """
-    Corsika script file path.
->>>>>>> master
 
     Parameters
     ----------
@@ -942,17 +916,10 @@ def corsikaRunLogFileName(arrayName, site, run, label=None):
     -------
     str
         File path.
-<<<<<<< HEAD
     '''
     name = 'log-corsika-run{}-{}-{}-{}'.format(run, arrayName, site, primary)
     name += '_{}'.format(label) if label is not None else ''
     name += '.log'
-=======
-    """
-    name = "log-corsika-run{}-{}-{}".format(run, arrayName, site)
-    name += "_{}".format(label) if label is not None else ""
-    name += ".log"
->>>>>>> master
     return name
 
 
