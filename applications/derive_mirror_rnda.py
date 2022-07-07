@@ -31,7 +31,7 @@
     the results with the measured ones.
 
     The results of the tuning are plotted. See examples of the containment diameter \
-    D80 vs rnda plot, on the left, and the D80 distributions, on the right. \
+    D80 vs rnda plot, on the left, and the D80 distributions, on the right.
 
     .. _deriva_rnda_plot:
     .. image:: images/derive_mirror_rnda_North-MST-FlashCam-D.png
@@ -207,7 +207,7 @@ def define_telescope_model(workflow):
        workflow configuration
 
     Returns
-    ------
+    -------
     tel TelescopeModel
         telescope model
 
