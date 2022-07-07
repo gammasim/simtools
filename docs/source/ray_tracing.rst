@@ -12,8 +12,8 @@ The PSF Analysis module supports the Ray Tracing by handling a PSF Image. Its ma
 only receives the focal length and the list of photons positions. From that, it can handle the PSF calculation
 and also the PSF image plotting.
 
-* `ray_tracing <raytracingmodule>`_
-* `psf_analysis <psfanalysismodule>`_
+* :ref:`ray_tracing <raytracingmodule>`
+* :ref:`psf_analysis <psfanalysismodule>`
 
 
 .. _raytracingmodule:
