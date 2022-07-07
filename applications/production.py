@@ -176,8 +176,7 @@ if __name__ == "__main__":
     # ShowerSimulators
     showerSimulators = dict()
     for primary, configData in showerConfigs.items():
-        ss = ShowerSimulator(label=label, showerConfigData=configData)
-        showerSimulators[primary] = ss
+        showerSimulators[primary] = ShowerSimulator(label=label, showerConfigData=configData)
 
     if not args.array_only:
         # Running Showers
