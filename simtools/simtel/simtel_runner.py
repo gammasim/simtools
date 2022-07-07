@@ -141,14 +141,10 @@ class SimtelRunner:
             for _ in range(N):
                 file.write("{}\n\n".format(command))
 
-<<<<<<< HEAD
             # Printing out runtime
             file.write('\necho "RUNTIME: $SECONDS"\n')
 
         os.system('chmod ug+x {}'.format(self._scriptFile))
-=======
-        os.system("chmod ug+x {}".format(self._scriptFile))
->>>>>>> master
         return self._scriptFile
 
     def run(self, test=False, force=False, inputFile=None, run=None):

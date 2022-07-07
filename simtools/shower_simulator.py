@@ -227,7 +227,6 @@ class ShowerSimulator:
             runScript = self._corsikaRunner.getRunScriptFile(
                 runNumber=run, extraCommands=extraCommands
             )
-<<<<<<< HEAD
 
             thisSubCmd = copy(subCmd)
 
@@ -243,11 +242,6 @@ class ShowerSimulator:
             self._logger.info('Run {} - Submitting script {}'.format(run, runScript))
 
             shellCommand = thisSubCmd + ' ' + str(runScript)
-=======
-            self._logger.info("Run {} - Submitting script {}".format(run, runScript))
-
-            shellCommand = subCmd + " " + str(runScript)
->>>>>>> master
             self._logger.debug(shellCommand)
             os.system(shellCommand)
 
