@@ -56,7 +56,7 @@ class DatabaseHandler:
     DB_CTA_SIMULATION_MODEL = "CTA-Simulation-Model"
     DB_CTA_SIMULATION_MODEL_DESCRIPTIONS = "CTA-Simulation-Model-Descriptions"
 
-    ALLOWED_FILE_EXTENSIONS = [".dat", ".txt", ".lis"]
+    ALLOWED_FILE_EXTENSIONS = [".dat", ".txt", ".lis", ".cfg"]
 
     dbClient = None
 
