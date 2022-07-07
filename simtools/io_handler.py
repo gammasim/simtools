@@ -218,7 +218,7 @@ def getTestDataFile(fileName):
 
 def getTestOutputDirectory():
     """
-    Get path of a test directory, using the testDataLocation taken from the config file.
+    Get path of a test directory, using the outputLocation taken from the config file.
     Path is created, if it doesn't exist.
 
     Returns
@@ -232,7 +232,7 @@ def getTestOutputDirectory():
 
 def getTestOutputFile(fileName):
     """
-    Get path of a test file, using the testDataLocation taken from the config file.
+    Get path of a test file, using the outputLocation taken from the config file.
 
     Parameters
     ----------
@@ -245,6 +245,20 @@ def getTestOutputFile(fileName):
     """
     directory = getTestOutputDirectory()
     return directory.joinpath(fileName)
+
+
+def getTestModelDirectory():
+    """
+    Get path of a test model directory, using the outputLocation taken from the config file.
+    Path is created, if it doesn't exist.
+
+    Returns
+    -------
+    Path
+    """
+    path = Path(cfg.get("outputLocation")).joinpath("model")
+    path.mkdir(parents=True, exist_ok=True)
+    return path.absolute()
 
 
 def getTestPlotFile(fileName):
