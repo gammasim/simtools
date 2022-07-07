@@ -115,7 +115,6 @@ if __name__ == "__main__":
         "-t",
         "--task",
         help=(
-<<<<<<< HEAD
             'What task to execute. Options: '
             + 'simulate (perform simulations),'
             + 'lists (print list of output files),'
@@ -125,16 +124,6 @@ if __name__ == "__main__":
         type=str,
         required=True,
         choices=['simulate', 'lists', 'inspect', 'resources']
-=======
-            "What task to execute. Options: "
-            + "simulate (perform simulations),"
-            + "lists (print list of output files)"
-            + "inspect (plot sim_telarray histograms for quick inspection)"
-        ),
-        type=str,
-        required=True,
-        choices=["simulate", "lists", "inspect"],
->>>>>>> master
     )
     parser.add_argument(
         "--primary",
@@ -234,12 +223,8 @@ if __name__ == "__main__":
                     "Plotting ArraySimulator histograms for primary {}".format(primary)
                 )
                 file = array.printHistograms(inputList)
-<<<<<<< HEAD
                 print('Histograms file {}'.format(file))
 
             elif args.task == 'resources':
                 print('Printing computing resources report for primary {}'.format(primary))
                 array.printResourcesReport(inputList)
-=======
-                print("Histograms file {}".format(file))
->>>>>>> master

@@ -125,17 +125,7 @@ class ArraySimulator:
         self._setSimtelRunner()
 
         # Storing list of files
-<<<<<<< HEAD
         self._results = defaultdict(list)
-=======
-        self._results = dict()
-        self._results["output"] = list()
-        self._results["hist"] = list()
-        self._results["input"] = list()
-        self._results["log"] = list()
-
->>>>>>> master
-    # End of init
 
     def _loadArrayConfigData(self, configData):
         """Load configData, create arrayModel and store remaining parameters in config."""
@@ -251,8 +241,6 @@ class ArraySimulator:
             runScript = self._simtelRunner.getRunScript(
                 run=run, inputFile=file, extraCommands=extraCommands
             )
-<<<<<<< HEAD
-
             thisSubCmd = copy(subCmd)
 
             # Checking for log files in sub command and replacing them
@@ -267,11 +255,6 @@ class ArraySimulator:
             self._logger.info('Run {} - Submitting script {}'.format(run, runScript))
 
             shellCommand = thisSubCmd + ' ' + str(runScript)
-=======
-            self._logger.info("Run {} - Submitting script {}".format(run, runScript))
-
-            shellCommand = subCmd + " " + str(runScript)
->>>>>>> master
             self._logger.debug(shellCommand)
             if not test:
                 os.system(shellCommand)
@@ -304,20 +287,12 @@ class ArraySimulator:
             return 1
 
     def _fillResults(self, file, run):
-<<<<<<< HEAD
         ''' Fill the results dict with input, output and log files. '''
         self._results['input'].append(str(file))
         self._results['output'].append(str(self._simtelRunner.getOutputFile(run)))
         self._results['hist'].append(str(self._simtelRunner.getHistogramFile(run)))
         self._results['log'].append(str(self._simtelRunner.getLogFile(run)))
         self._results['sub_out'].append(str(self._simtelRunner.getSubLogFile(run, mode='out')))
-=======
-        """Fill the results dict with input, output and log files."""
-        self._results["input"].append(str(file))
-        self._results["output"].append(str(self._simtelRunner.getOutputFile(run)))
-        self._results["hist"].append(str(self._simtelRunner.getHistogramFile(run)))
-        self._results["log"].append(str(self._simtelRunner.getLogFile(run)))
->>>>>>> master
 
     def printHistograms(self, inputFileList=None):
         """
@@ -416,7 +391,6 @@ class ArraySimulator:
         for f in self._results[which]:
             print(f)
 
-<<<<<<< HEAD
     def makeResourcesReport(self, inputFileList):
 
         if len(self._results['log_out']) == 0 and inputFileList is not None:
@@ -445,8 +419,3 @@ class ArraySimulator:
         for key, value in resources.items():
             print('{} = {:.2f}'.format(key, value))
         print('-----------------------------')
-
-=======
->>>>>>> master
-
-# End of ShowerSimulator
