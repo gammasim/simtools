@@ -40,7 +40,7 @@
 
     .. code-block:: console
 
-        python applications/production.py -c data/test-data/prodConfigTest.yml --test
+        python applications/production.py -t simulate -c data/test-data/prodConfigTest.yml --test
 """
 
 import logging
