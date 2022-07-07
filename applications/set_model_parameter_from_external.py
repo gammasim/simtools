@@ -67,7 +67,8 @@ def parse(label):
         type=str,
         required=True,
     )
-    parser.initialize_default_arguments()
+    parser.initialize_default_arguments(
+        require_workflow_config=True)
     return parser.parse_args()
 
 
