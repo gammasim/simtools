@@ -346,7 +346,7 @@ class DatabaseHandler:
 
         if _telClass == "MST":
             # MST-FlashCam or MST-NectarCam
-            _whichTelLabels = [_telNameDB, "{}-MST-Structure-D".format(site)]
+            _whichTelLabels = ['{}-MST-Structure-D'.format(site), _telNameDB]
         elif _telClass == "SST":
             # SST = SST-Camera + SST-Structure
             _whichTelLabels = [
@@ -359,6 +359,7 @@ class DatabaseHandler:
         # Selecting version and applicable (if on)
         _pars = dict()
         for _tel in _whichTelLabels:
+            self._logger.debug('Getting {} parameters from MongoDB'.format(_tel))
 
             # If tel is a structure, only applicable pars will be collected, always.
             # The default ones will be covered by the camera pars.
