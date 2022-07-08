@@ -49,7 +49,7 @@ class DatabaseHandler:
         Insert a file to the DB.
     insertFilesToDB()
         Insert a list of files to the DB.
-    getFileDB()
+    exportFileDB()
         Get a file from the DB and write it to disk.
     """
 
@@ -176,7 +176,7 @@ class DatabaseHandler:
                 onlyApplicable,
             )
 
-    def getFileDB(self, dbName, dest, fileName):
+    def exportFileDB(self, dbName, dest, fileName):
         """
         Get a file from the DB and write it to disk.
 

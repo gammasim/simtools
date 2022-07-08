@@ -32,7 +32,7 @@ def test_plot_1D(db):
     title = "Test 1D plot"
 
     testFileName = "ref_200_1100_190211a.dat"
-    db.getFileDB(
+    db.exportFileDB(
         dbName=db.DB_CTA_SIMULATION_MODEL,
         dest=io.getTestModelDirectory(),
         fileName=testFileName
@@ -73,7 +73,7 @@ def test_plot_table(db):
     title = "Test plot table"
 
     testFileName = "Transmission_Spectrum_PlexiGlass.dat"
-    db.getFileDB(
+    db.exportFileDB(
         dbName="test-data",
         dest=io.getTestModelDirectory(),
         fileName=testFileName
