@@ -11,8 +11,10 @@ class CommandLineParser(argparse.ArgumentParser):
 
     Methods
     -------
-    initialize_default_arguments
-       Initialize default arguments used by all applications
+    initialize_default_arguments:
+        Initialize default arguments used by all applications
+    initialize_telescope_model_arguments:
+        nitialize default arguments for telescope model definitions
 
     """
 
@@ -102,8 +104,6 @@ class CommandLineParser(argparse.ArgumentParser):
         value: str
             site name
 
-        Raises
-        ------
         Raises
         ------
         argparse.ArgumentTypeError
