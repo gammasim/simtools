@@ -6,14 +6,18 @@ import pytest
 import logging
 
 import simtools.config as cfg
+import simtools.io_handler as io
+from simtools import db_handler
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
+
 
 # This module perform tests on the application by running them with a set
 # of arguments. Each applications to be tested correspond to an key in
 # APP_LIST, that contains a list of list of arguments to be tested, so that
 # the same application can be tested with a number of different set of arguments.
+
 
 APP_LIST = {
     # Optics
@@ -22,7 +26,7 @@ APP_LIST = {
             "-s", "North",
             "-t", "LST-1",
             "--model_version", "prod4",
-            "--data", "PSFcurve_data_v2.txt",
+            "--data", "TESTMODELDIR/PSFcurve_data_v2.txt",
             "--zenith", "20",
             "--test",
         ]
@@ -32,7 +36,7 @@ APP_LIST = {
             "-s", "North",
             "-t", "LST-1",
             "--model_version", "prod4",
-            "--data", "PSFcurve_data_v2.txt",
+            "--data", "TESTMODELDIR/PSFcurve_data_v2.txt",
             "--zenith", "20",
             "--test",
         ]
@@ -46,8 +50,8 @@ APP_LIST = {
         [
             "--workflow_config_file",
             "tests/resources/set_MST_mirror_2f_measurements_from_external.config.yml",
-            "--input_meta_file", "tests/resources/MLTdata-preproduction.usermeta.yml",
-            "--input_data_file", "tests/resources/MLTdata-preproduction.ecsv",
+            "--input_meta_file", "TESTMODELDIR/MLTdata-preproduction.usermeta.yml",
+            "--input_data_file", "TESTMODELDIR/MLTdata-preproduction.ecsv",
             " --test",
         ]
     ],
@@ -72,8 +76,8 @@ APP_LIST = {
             "-s", "North",
             "-t", "MST-FlashCam-D",
             "--containment_fraction", "0.8",
-            "--mirror_list", "tests/resources/MLTdata-preproduction.ecsv",
-            "--psf_measurement", "tests/resources/MLTdata-preproduction.ecsv",
+            "--mirror_list", "TESTMODELDIR/MLTdata-preproduction.ecsv",
+            "--psf_measurement", "TESTMODELDIR/MLTdata-preproduction.ecsv",
             "--rnda", "0.0063",
             " --test",
         ]
@@ -83,8 +87,8 @@ APP_LIST = {
             "-s", "North",
             "-t", "MST-FlashCam-D",
             "--containment_fraction", "0.8",
-            "--mirror_list", "tests/resources/MLTdata-preproduction.ecsv",
-            "--psf_measurement", "tests/resources/MLTdata-preproduction.ecsv",
+            "--mirror_list", "TESTMODELDIR/MLTdata-preproduction.ecsv",
+            "--psf_measurement", "TESTMODELDIR/MLTdata-preproduction.ecsv",
             "--rnda", "0.0063",
             " --test",
         ]
@@ -94,7 +98,7 @@ APP_LIST = {
             "-s", "North",
             "-t", "MST-FlashCam-D",
             "--containment_fraction", "0.8",
-            "--mirror_list", "tests/resources/MLTdata-preproduction.ecsv",
+            "--mirror_list", "TESTMODELDIR/MLTdata-preproduction.ecsv",
             "--psf_measurement_containment_mean", "1.4",
             "--rnda", "0.0063",
             " --test",
@@ -169,9 +173,22 @@ APP_LIST = {
 def test_applications(set_simtools, application):
     logger.info("Testing {}".format(application))
 
+    def prepare_one_file(fileName):
+        db.exportFileDB(
+            dbName="test-data",
+            dest=io.getTestModelDirectory(),
+            fileName=fileName
+        )
+
+    db = db_handler.DatabaseHandler()
+    prepare_one_file("PSFcurve_data_v2.txt")
+    prepare_one_file("MLTdata-preproduction.usermeta.yml")
+    prepare_one_file("MLTdata-preproduction.ecsv")
+
     def makeCommand(app, args):
         cmd = "python applications/" + app + ".py"
         for aa in args:
+            aa = aa.replace("TESTMODELDIR", str(io.getTestModelDirectory()))
             cmd += " " + aa
         cmd += " --configFile " + cfg.CONFIG_FILE_NAME
         return cmd
