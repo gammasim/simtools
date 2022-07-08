@@ -261,6 +261,23 @@ def getTestModelDirectory():
     return path.absolute()
 
 
+def getTestModelFile(fileName):
+    """
+    Get path of a model test file, using the outputLocation taken from the config file.
+
+    Parameters
+    ----------
+    filesName: str
+        File name
+
+    Returns
+    -------
+    Path
+    """
+    directory = getTestModelDirectory()
+    return directory.joinpath(fileName)
+
+
 def getTestPlotFile(fileName):
     """
     Get path of a test plot file, using the testDataLocation taken from the config file.
