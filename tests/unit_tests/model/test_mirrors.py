@@ -21,7 +21,7 @@ def db(set_db):
 def test_read_list(db):
 
     testFileName = "mirror_CTA-LST-flen_grouped.dat"
-    db.getFileDB(
+    db.exportFileDB(
         dbName=db.DB_CTA_SIMULATION_MODEL,
         dest=io.getTestModelDirectory(),
         fileName=testFileName
