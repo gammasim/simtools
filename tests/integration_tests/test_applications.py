@@ -174,7 +174,7 @@ def test_applications(set_simtools, application):
     logger.info("Testing {}".format(application))
 
     def prepare_one_file(fileName):
-        db.getFileDB(
+        db.exportFileDB(
             dbName="test-data",
             dest=io.getTestModelDirectory(),
             fileName=fileName
