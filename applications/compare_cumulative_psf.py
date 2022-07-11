@@ -71,7 +71,6 @@
 
 import yaml
 import logging
-import argparse
 import numpy as np
 import matplotlib.pyplot as plt
 from collections import OrderedDict
@@ -79,6 +78,7 @@ from collections import OrderedDict
 import astropy.units as u
 
 import simtools.io_handler as io
+import simtools.util.commandline_parser as argparser
 import simtools.util.general as gen
 import simtools.config as cfg
 from simtools.ray_tracing import RayTracing
@@ -97,27 +97,13 @@ def loadData(datafile):
 
 if __name__ == "__main__":
 
-    parser = argparse.ArgumentParser(
+    parser = argparser.CommandLineParser(
         description=(
             "Calculate and plot the PSF and eff. mirror area as a function of off-axis angle "
             "of the telescope requested."
         )
     )
-    parser.add_argument("-s", "--site", help="North or South", type=str, required=True)
-    parser.add_argument(
-        "-t",
-        "--telescope",
-        help="Telescope model name (e.g. MST-FlashCam-D, LST-1)",
-        type=str,
-        required=True,
-    )
-    parser.add_argument(
-        "-m",
-        "--model_version",
-        help="Model version (default=prod4)",
-        type=str,
-        default="prod4",
-    )
+    parser.initialize_telescope_model_arguments()
     parser.add_argument(
         "--src_distance",
         help="Source distance in km (default=10)",
@@ -133,22 +119,11 @@ if __name__ == "__main__":
     parser.add_argument(
         "--pars", help="Yaml file with the model parameters to be replaced", type=str
     )
-    parser.add_argument(
-        "--test",
-        help="Test option will be faster by simulating fewer photons.",
-        action="store_true",
-    )
-    parser.add_argument(
-        "-v",
-        "--verbosity",
-        dest="logLevel",
-        action="store",
-        default="info",
-        help="Log level to print (default is INFO)",
-    )
+    parser.initialize_default_arguments()
 
     args = parser.parse_args()
     label = "compare_cumulative_psf"
+    cfg.setConfigFileName(args.configFile)
 
     logger = logging.getLogger()
     logger.setLevel(gen.getLogLevelFromUser(args.logLevel))

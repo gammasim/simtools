@@ -191,7 +191,7 @@ def parse(label):
         help="no tuning of random_reflection_angle (a single case will be simulated).",
         action="store_true", required=False,
     )
-    parser.initialize_default_arguments()
+    parser.initialize_default_arguments(add_workflow_config=True)
     return parser.parse_args()
 
 
@@ -324,6 +324,9 @@ def main():
 
     if workflow.get_configuration_parameter('psf_measurement'):
         get_psf_containment(logger, workflow)
+    if not workflow.get_configuration_parameter('psf_measurement_containment_mean'):
+        logger.error("Missing PSF measurement")
+        raise ValueError
 
     def run(rnda):
         """Runs the simulations for one given value of rnda"""

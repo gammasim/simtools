@@ -1,0 +1,47 @@
+label: 'test-production'
+
+default:
+  site: North
+  layoutName: Prod5
+  dataDirectory: Null
+  array:
+    modelVersion: Prod5
+    zenith: 20 deg
+    phi: 0 deg
+    default:
+      LST: 'D234'
+      MST: FlashCam-D
+    L-01: '1'
+  showers:
+    eslope: -2
+    zenith: 20 deg
+    phi: 0 deg
+
+proton:
+  viewcone: [10 deg, 10 deg]
+  showers:
+    runRange: [1, 20]
+    nshow: 10000
+    erange: [30 GeV, 600 TeV]
+    cscat: [20, 2000.0 m, 0]
+
+gamma:
+  viewcone: [0 deg, 0 deg]
+  showers:
+    runRange: [1, 10]
+    nshow: 10000
+    erange: [10 GeV, 300 TeV]
+    cscat: [5, 1500.0 m, 0]
+  array:
+    M-05:
+      name: NectarCam-D
+      fadc_pulse_shape: Pulse_template_nectarCam_17042020-noshift.dat
+      discriminator_pulse_shape: Pulse_template_nectarCam_17042020-noshift.dat
+    M-06:
+      name: NectarCam-D
+      fadc_pulse_shape: Pulse_template_nectarCam_17042020-noshift.dat
+      discriminator_pulse_shape: Pulse_template_nectarCam_17042020-noshift.dat
+    M-07:
+      name: NectarCam-D
+      fadc_pulse_shape: Pulse_template_nectarCam_17042020-noshift.dat
+      discriminator_pulse_shape: Pulse_template_nectarCam_17042020-noshift.dat
