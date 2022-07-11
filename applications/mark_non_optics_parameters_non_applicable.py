@@ -53,9 +53,7 @@ if __name__ == "__main__":
     )
 
     args = parser.parse_args()
-
-    if args.configFile:
-        cfg.setConfigFileName(args.configFile)
+    cfg.setConfigFileName(args.configFile)
 
     logger = logging.getLogger()
     logger.setLevel(gen.getLogLevelFromUser(args.logLevel))
