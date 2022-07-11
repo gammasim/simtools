@@ -6,6 +6,7 @@ import pytest
 import astropy.units as u
 
 from simtools.corsika.corsika_runner import CorsikaRunner
+import simtools.util.general as gen
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
@@ -62,11 +63,4 @@ def test_run_script_with_extra(corsikaRunner):
     extra = ["testing", "testing-extra-2"]
     script = corsikaRunner.getRunScriptFile(runNumber=3, extraCommands=extra)
 
-    def wordInFile(word, file):
-        with open(file, "r") as ff:
-            for ll in ff:
-                if word in ll:
-                    return True
-            return False
-
-    assert wordInFile("testing-extra-2", script)
+    assert gen.fileHasText(script, "testing-extra-2")
