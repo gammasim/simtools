@@ -119,7 +119,6 @@ def test_build_layout(cfg_setup):
 def test_classmethod(cfg_setup):
 
     layout = LayoutArray.fromLayoutArrayName("south-Prod5")
-    layout.printTelescopeList()
 
     # assume that south-prod5 is the only array with 99 telescopes
     assert 99 == layout.getNumberOfTelescopes()
