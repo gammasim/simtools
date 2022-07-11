@@ -90,7 +90,7 @@ def test_cfg_file(telescope_model, lst_config_file):
     # TODO: testing that file can be written and that it is  different,
     #       but not the file has the
     #       correct contents
-    assert False == filecmp.cmp(lst_config_file, tel.getConfigFile())
+    assert False is filecmp.cmp(lst_config_file, tel.getConfigFile())
 
 
 def test_updating_export_model_files(set_db):
