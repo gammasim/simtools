@@ -49,6 +49,8 @@ class DatabaseHandler:
         Insert a file to the DB.
     insertFilesToDB()
         Insert a list of files to the DB.
+    exportFileDB()
+        Get a file from the DB and write it to disk.
     """
 
     # TODO move into config file?
@@ -56,7 +58,7 @@ class DatabaseHandler:
     DB_CTA_SIMULATION_MODEL = "CTA-Simulation-Model"
     DB_CTA_SIMULATION_MODEL_DESCRIPTIONS = "CTA-Simulation-Model-Descriptions"
 
-    ALLOWED_FILE_EXTENSIONS = [".dat", ".txt", ".lis"]
+    ALLOWED_FILE_EXTENSIONS = [".dat", ".txt", ".lis", ".cfg", ".yml", ".ecsv"]
 
     dbClient = None
 
@@ -174,7 +176,35 @@ class DatabaseHandler:
                 onlyApplicable,
             )
 
+    def exportFileDB(self, dbName, dest, fileName):
+        """
+        Get a file from the DB and write it to disk.
+
+        Parameters
+        ----------
+        dbName: str
+            Name of the DB to search in.
+        dest: str or Path
+            Location where to write the file to.
+        fileName: str
+            Name of the file to get.
+        """
+
+        self._logger.debug(f"Getting {fileName} and writing it to {dest}")
+        file = self._getFileMongoDB(dbName, fileName)
+        self._writeFileFromMongoToDisk(dbName, dest, file)
+
     def exportModelFiles(self, parameters, dest):
+        """
+        Export all the files in a model from the DB (Mongo or yaml) and write them to disk.
+
+        Parameters
+        ----------
+        parameters: dict
+            Dict of model parameters
+        dest: str or Path
+            Location where to write the files to.
+        """
 
         if cfg.get("useMongoDB"):
             self._logger.debug("Exporting model files from MongoDB")
