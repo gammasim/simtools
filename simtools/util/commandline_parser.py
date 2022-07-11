@@ -18,8 +18,7 @@ class CommandLineParser(argparse.ArgumentParser):
 
     """
 
-    def initialize_default_arguments(self,
-                                     require_workflow_config=False):
+    def initialize_default_arguments(self, add_workflow_config=True):
         """
         Initialize default arguments used by all applications
         (e.g., verbosity or test flag)
@@ -32,13 +31,14 @@ class CommandLineParser(argparse.ArgumentParser):
             help="gammasim-tools configuration file",
             required=False,
         )
-        self.add_argument(
-            "-c",
-            "--workflow_config_file",
-            help="Workflow configuration file",
-            type=str,
-            required=require_workflow_config,
-        )
+        if add_workflow_config:
+            self.add_argument(
+                "-c",
+                "--workflow_config_file",
+                help="Workflow configuration file",
+                type=str,
+                required=False,
+            )
         self.add_argument(
             "--test",
             help="Test option for faster execution during development",
@@ -61,7 +61,9 @@ class CommandLineParser(argparse.ArgumentParser):
             version=f'%(prog)s {simtools.version.__version__}'
         )
 
-    def initialize_telescope_model_arguments(self):
+    def initialize_telescope_model_arguments(self,
+                                             add_model_version=True,
+                                             add_telescope=True):
         """
         Initialize default arguments for site and telescope model
         definition
@@ -75,20 +77,22 @@ class CommandLineParser(argparse.ArgumentParser):
             type=self.site,
             required=True
         )
-        self.add_argument(
-            "-t",
-            "--telescope",
-            help="Telescope model name (e.g. LST-1, SST-D, ...)",
-            type=str,
-            required=True,
-        )
-        self.add_argument(
-            "-m",
-            "--model_version",
-            help="Model version (default=Current)",
-            type=str,
-            default="Current",
-        )
+        if add_telescope:
+            self.add_argument(
+                "-t",
+                "--telescope",
+                help="Telescope model name (e.g. LST-1, SST-D, ...)",
+                type=str,
+                required=True,
+            )
+        if add_model_version:
+            self.add_argument(
+                "-m",
+                "--model_version",
+                help="Model version (default=Current)",
+                type=str,
+                default="Current",
+            )
 
     @staticmethod
     def site(value):
