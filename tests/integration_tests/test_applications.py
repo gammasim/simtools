@@ -190,7 +190,7 @@ def test_applications(set_simtools, application):
         for aa in args:
             aa = aa.replace("TESTMODELDIR", str(io.getTestModelDirectory()))
             cmd += " " + aa
-        cmd += " --configFile " + cfg.CONFIG_FILE_NAME
+        cmd += " --configFile " + str(cfg.CONFIG_FILE_NAME)
         return cmd
 
     for args in APP_LIST[application]:
