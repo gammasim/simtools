@@ -152,8 +152,3 @@ def test_updating_export_model_files(set_db):
         "is a file was changed."
     )
     assert False == tel._isExportedModelFilesUpToDate
-
-    # TODO - test without assert / raise
-    # Testing the DB connection
-    logger.info("DB should be read next.")
-    tel.exportConfigFile()
