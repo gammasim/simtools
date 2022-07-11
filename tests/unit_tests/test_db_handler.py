@@ -146,7 +146,6 @@ def test_update_parameter_db(db, DB_CTA_SIMULATION_MODEL):
     )
     assert pars["camera_config_version"]["Value"] == 999
 
-    # TODO - what is tested here? or is this cleanup?
     query = {"Telescope": "North-LST-Test"}
     db.deleteQuery("sandbox", "telescopes", query)
 
