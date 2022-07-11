@@ -46,8 +46,7 @@ if __name__ == "__main__":
     parser.initialize_default_arguments()
 
     args = parser.parse_args()
-    if args.configFile:
-        cfg.setConfigFileName(args.configFile)
+    cfg.setConfigFileName(args.configFile)
 
     label = "make_regular_arrays"
 
