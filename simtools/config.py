@@ -26,6 +26,9 @@ def setConfigFileName(fileName):
     fileName: str
         Config file name.
     """
+    if not fileName:
+        return
+
     _logger = logging.getLogger(__name__)
     _logger.debug("Setting the config file name to {}".format(fileName))
     global CONFIG_FILE_NAME
@@ -44,7 +47,7 @@ def loadConfig(fileName=None, useGlobals=True):
     ----------
     fileName: str, optional
         Config file name.
-    ignoreGlobals: bool
+    useGlobals: bool
         Use global config settings
 
     Returns
