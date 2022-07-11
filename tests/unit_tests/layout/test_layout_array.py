@@ -37,7 +37,6 @@ def test_read_tel_list(cfg_setup, configData, testTelescopeFile):
     telFile = io.getTestDataFile(testTelescopeFile)
     layout.readTelescopeListFile(telFile)
     layout.convertCoordinates()
-    layout.printTelescopeList()
 
     assert 19 == layout.getNumberOfTelescopes()
 
