@@ -15,25 +15,6 @@ logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 
-def test_run_no_db(set_simtelarray):
-    cfgFile = io.getTestDataFile("CTA-North-LST-1-Current_test-telescope-model.cfg")
-    configData = {
-        "sourceDistance": 10 * u.km,
-        "zenithAngle": 20 * u.deg,
-        "offAxisAngle": [0, 1.0, 2.0, 3.0, 4.0] * u.deg,
-    }
-    tel = TelescopeModel.fromConfigFile(
-        site="North",
-        telescopeModelName="LST-1",
-        label="test-run-no-db",
-        configFileName=cfgFile,
-    )
-
-    ray = RayTracing(telescopeModel=tel, configData=configData)
-    ray.simulate(test=True, force=True)
-    ray.analyze(force=True)
-
-
 @pytest.mark.parametrize("telescopeModelName", ["sst-1M", "sst-ASTRI", "sst-GCT"])
 def test_ssts(set_simtools, telescopeModelName):
     # Test with 3 SSTs
