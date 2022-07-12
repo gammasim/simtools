@@ -5,7 +5,9 @@ import pytest
 
 import astropy.units as u
 
+import simtools.config as cfg
 import simtools.io_handler as io
+from simtools import db_handler
 from simtools.layout.layout_array import LayoutArray
 
 logger = logging.getLogger()
@@ -26,16 +28,32 @@ def configData():
 
 
 @pytest.fixture
-def testTelescopeFile():
-    return "telescope_positions_prod5_north.ecsv"
+def db(set_db):
+    db = db_handler.DatabaseHandler()
+    return db
+
+
+@pytest.fixture
+def testTelescopeFile(db):
+    testFileName = "telescope_positions_prod5_north.ecsv"
+    db.exportFileDB(
+        dbName="test-data",
+        dest=io.getTestModelDirectory(),
+        fileName=testFileName
+    )
+
+    cfgFile = cfg.findFile(
+        testFileName,
+        io.getTestModelDirectory()
+    )
+    return cfgFile
 
 
 def test_read_tel_list(cfg_setup, configData, testTelescopeFile):
 
     layout = LayoutArray(name="testLayout",
                          configData=configData)
-    telFile = io.getTestDataFile(testTelescopeFile)
-    layout.readTelescopeListFile(telFile)
+    layout.readTelescopeListFile(testTelescopeFile)
     layout.convertCoordinates()
 
     assert 19 == layout.getNumberOfTelescopes()
@@ -56,8 +74,7 @@ def test_dict_input(cfg_setup):
 def test_add_tel(cfg_setup, testTelescopeFile):
 
     layout = LayoutArray(name="testLayout")
-    telFile = io.getTestDataFile(testTelescopeFile)
-    layout.readTelescopeListFile(telFile)
+    layout.readTelescopeListFile(testTelescopeFile)
     ntel_before = layout.getNumberOfTelescopes()
     layout.addTelescope(
         telescopeName="L-05", posX=100 * u.m, posY=100 * u.m, posZ=100 * u.m
