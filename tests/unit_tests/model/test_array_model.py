@@ -32,8 +32,7 @@ def test_exporting_config_files(set_db):
         "default": {"LST": "1", "MST": "FlashCam-D"},
         "M-05": {
             "name": "NectarCam-D",
-            "fadc_pulse_shape": "Pulse_template_nectarCam_17042020-noshift.dat",
-            "discriminator_pulse_shape": "Pulse_template_nectarCam_17042020-noshift.dat",
+            "camera_config_name": "NectarCam-test",
         },
     }
     am = ArrayModel(label="test", arrayConfigData=arrayConfigData)
