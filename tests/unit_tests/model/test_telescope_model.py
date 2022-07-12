@@ -3,7 +3,6 @@
 import filecmp
 import pytest
 import logging
-from pathlib import Path
 
 import simtools.config as cfg
 from simtools import db_handler
