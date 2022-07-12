@@ -5,18 +5,36 @@ import pytest
 import logging
 from pathlib import Path
 
+import simtools.config as cfg
+from simtools import db_handler
+import simtools.io_handler as io
 from simtools.model.telescope_model import TelescopeModel, InvalidParameter
 
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
-MODULE_DIR = Path(__file__).parent
+
+@pytest.fixture
+def db(set_db):
+    db = db_handler.DatabaseHandler()
+    return db
 
 
-@pytest.fixture(scope="module")
-def lst_config_file():
-    return MODULE_DIR.parent / '../resources/CTA-North-LST-1-Current_test-telescope-model.cfg'
+@pytest.fixture
+def lst_config_file(db):
+    testFileName = "CTA-North-LST-1-Current_test-telescope-model.cfg"
+    db.exportFileDB(
+        dbName="test-data",
+        dest=io.getTestModelDirectory(),
+        fileName=testFileName
+    )
+
+    cfgFile = cfg.findFile(
+        testFileName,
+        io.getTestModelDirectory()
+    )
+    return cfgFile
 
 
 @pytest.fixture
@@ -30,6 +48,7 @@ def telescope_model(cfg_setup, lst_config_file):
         configFileName=lst_config_file,
     )
     return telModel
+
 
 def test_handling_parameters(telescope_model):
 
@@ -114,7 +133,7 @@ def test_updating_export_model_files(set_db):
         "tel._isExportedModelFiles should be False because exportConfigFile"
         " was not called yet."
     )
-    assert False == tel._isExportedModelFilesUpToDate
+    assert False is tel._isExportedModelFilesUpToDate
 
     # Exporting config file
     tel.exportConfigFile()
@@ -151,4 +170,4 @@ def test_updating_export_model_files(set_db):
         "tel._isExportedModelFiles should be False because a parameter that "
         "is a file was changed."
     )
-    assert False == tel._isExportedModelFilesUpToDate
+    assert False is tel._isExportedModelFilesUpToDate
