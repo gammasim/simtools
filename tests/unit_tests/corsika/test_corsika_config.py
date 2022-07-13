@@ -6,6 +6,8 @@ from copy import copy
 
 from astropy import units as u
 
+import simtools.config as cfg
+from simtools import db_handler
 import simtools.io_handler as io
 from simtools.corsika.corsika_config import (
     CorsikaConfig,
@@ -15,6 +17,12 @@ from simtools.corsika.corsika_config import (
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
+
+
+@pytest.fixture
+def db(set_db):
+    db = db_handler.DatabaseHandler()
+    return db
 
 
 @pytest.fixture
@@ -160,10 +168,20 @@ def test_set_user_parameters(corsikaConfigData, corsikaConfig):
     assert newCorsikaConfig.getUserParameter("thetap") == [0, 0]
 
 
-def test_config_data_from_yaml_file(cfg_setup):
+def test_config_data_from_yaml_file(db):
 
     logger.info("test_config_data_from_yaml_file")
-    corsikaConfigFile = io.getTestDataFile("corsikaConfigTest.yml")
+    testFileName = "corsikaConfigTest.yml"
+    db.exportFileDB(
+        dbName="test-data",
+        dest=io.getTestModelDirectory(),
+        fileName=testFileName
+    )
+
+    corsikaConfigFile = cfg.findFile(
+        testFileName,
+        io.getTestModelDirectory()
+    )
     cc = CorsikaConfig(
         site="Paranal",
         layoutName="4LST",
