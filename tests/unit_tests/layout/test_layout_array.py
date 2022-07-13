@@ -34,7 +34,7 @@ def db(set_db):
 
 
 @pytest.fixture
-def testTelescopeFile(db):
+def telescopeTestFile(db):
     testFileName = "telescope_positions_prod5_north.ecsv"
     db.exportFileDB(
         dbName="test-data",
@@ -49,11 +49,11 @@ def testTelescopeFile(db):
     return cfgFile
 
 
-def test_read_tel_list(cfg_setup, configData, testTelescopeFile):
+def test_read_tel_list(cfg_setup, configData, telescopeTestFile):
 
     layout = LayoutArray(name="testLayout",
                          configData=configData)
-    layout.readTelescopeListFile(testTelescopeFile)
+    layout.readTelescopeListFile(telescopeTestFile)
     layout.convertCoordinates()
 
     assert 19 == layout.getNumberOfTelescopes()
@@ -71,10 +71,10 @@ def test_dict_input(cfg_setup):
         assert sphere.value == layout._corsikaSphereRadius[tel]
 
 
-def test_add_tel(cfg_setup, testTelescopeFile):
+def test_add_tel(cfg_setup, telescopeTestFile):
 
     layout = LayoutArray(name="testLayout")
-    layout.readTelescopeListFile(testTelescopeFile)
+    layout.readTelescopeListFile(telescopeTestFile)
     ntel_before = layout.getNumberOfTelescopes()
     layout.addTelescope(
         telescopeName="L-05", posX=100 * u.m, posY=100 * u.m, posZ=100 * u.m
