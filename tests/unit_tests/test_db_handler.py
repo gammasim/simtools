@@ -30,11 +30,6 @@ def test_reading_db_lst(db):
         assert pars["parabolic_dish"] == 1
         assert pars["camera_pixels"] == 1855
 
-    # TODO - is this part of testing the reading from the DB?
-    db.exportModelFiles(pars, io.getTestOutputDirectory())
-    logger.info("Listing files written in {}".format(io.getTestOutputDirectory()))
-    # subprocess.call(["ls -lh {}".format(io.getTestOutputDirectory())], shell=True)
-
 
 def test_reading_db_mst_nc(db):
 
@@ -66,21 +61,6 @@ def test_reading_db_sst(db):
         assert pars["camera_pixels"] == 2048
 
 
-def test_export_model_files(db):
-
-    logger.info("----Testing reading LST-----")
-    pars = db.getModelParameters("north", "lst-1", "Current")
-
-    fileList = list()
-    for parNow in pars.values():
-        if parNow["File"]:
-            fileList.append(parNow["Value"])
-    db.exportModelFiles(pars, io.getTestOutputDirectory())
-    logger.debug("Checking files were written to {}".format(io.getTestOutputDirectory()))
-    for fileNow in fileList:
-        assert (io.getTestOutputDirectory() / fileNow).exists()
-
-
 def test_copy_telescope_db(db):
 
     logger.info("----Testing copying a whole telescope-----")
@@ -102,7 +82,6 @@ def test_copy_telescope_db(db):
     )
     assert pars["camera_pixels"]["Value"] == 1855
 
-    # TODO - no sure what is tested below
     logger.info(
         "Testing deleting a query (a whole telescope in this case and metadata)"
     )
@@ -110,6 +89,13 @@ def test_copy_telescope_db(db):
     db.deleteQuery("sandbox", "telescopes", query)
     query = {"Entry": "Simulation-Model-Tags"}
     db.deleteQuery("sandbox", "metadata", query)
+
+    # After deleting the copied telescope
+    # we always expect to get a ValueError (query returning zero results)
+    with pytest.raises(ValueError):
+        db.readMongoDB(
+            "sandbox", "North-LST-Test", "Current", io.getTestOutputDirectory(), False
+        )
 
 
 def test_adding_parameter_version_db(db):
@@ -130,6 +116,7 @@ def test_adding_parameter_version_db(db):
     )
     assert pars["camera_config_version"]["Value"] == 42
 
+    # Cleanup
     query = {"Telescope": "North-LST-Test"}
     db.deleteQuery("sandbox", "telescopes", query)
 
@@ -155,6 +142,7 @@ def test_update_parameter_db(db):
     )
     assert pars["camera_config_version"]["Value"] == 999
 
+    # Cleanup
     query = {"Telescope": "North-LST-Test"}
     db.deleteQuery("sandbox", "telescopes", query)
 
@@ -177,6 +165,7 @@ def test_adding_new_parameter_db(db):
     )
     assert pars["camera_config_version_test"]["Value"] == 999
 
+    # Cleanup
     query = {"Telescope": "North-LST-Test"}
     db.deleteQuery("sandbox", "telescopes", query)
 
@@ -211,6 +200,7 @@ def test_update_parameter_field_db(db):
     )
     assert pars["camera_pixels"]["Applicable"] is False
 
+    # Cleanup
     query = {"Telescope": "North-LST-Test"}
     db.deleteQuery("sandbox", "telescopes", query)
     query = {"Entry": "Simulation-Model-Tags"}
@@ -226,14 +216,6 @@ def test_reading_db_sites(db):
     else:
         assert pars["altitude"] == 2158
 
-    logger.info("Listing files written in {}".format(io.getTestOutputDirectory()))
-    # subprocess.call(["ls -lh {}".format(io.getTestOutputDirectory())], shell=True)
-
-    logger.info(
-        "Removing the files written in {}".format(io.getTestOutputDirectory())
-    )
-    # subprocess.call(["rm -f {}/*".format(io.getTestOutputDirectory())], shell=True)
-
     logger.info("----Testing reading Paranal parameters-----")
     pars = db.getSiteParameters("South", "Current")
     if cfg.get("useMongoDB"):
@@ -241,27 +223,20 @@ def test_reading_db_sites(db):
     else:
         assert pars["altitude"] == 2147
 
-    logger.info("Listing files written in {}".format(io.getTestOutputDirectory()))
-    # subprocess.call(["ls -lh {}".format(io.getTestOutputDirectory())], shell=True)
-
-    logger.info(
-        "Removing the files written in {}".format(io.getTestOutputDirectory())
-    )
-    # subprocess.call(["rm -f {}/*".format(io.getTestOutputDirectory())], shell=True)
-
-    return
-
 
 def test_separating_get_and_write(db):
-    pars = db.getModelParameters("north", "lst-1", "prod4")
 
-    logger.info("Listing files written in {}".format(io.getTestOutputDirectory()))
-    # subprocess.call(["ls -lh {}".format(io.getTestOutputDirectory())], shell=True)
+    logger.info("----Testing reading LST-----")
+    pars = db.getModelParameters("north", "lst-1", "Current")
 
+    fileList = list()
+    for parNow in pars.values():
+        if parNow["File"]:
+            fileList.append(parNow["Value"])
     db.exportModelFiles(pars, io.getTestOutputDirectory())
-
-    logger.info("Listing files written in {}".format(io.getTestOutputDirectory()))
-    # subprocess.call(["ls -lh {}".format(io.getTestOutputDirectory())], shell=True)
+    logger.debug("Checking files were written to {}".format(io.getTestOutputDirectory()))
+    for fileNow in fileList:
+        assert (io.getTestOutputDirectory() / fileNow).exists()
 
 
 def test_insert_files_db(db):
@@ -270,14 +245,12 @@ def test_insert_files_db(db):
     logger.info(
         "Creating a temporary file in {}".format(io.getTestOutputDirectory())
     )
-    fileName = Path(io.getTestOutputDirectory()).joinpath("test_file.dat")
+    fileName = io.getTestOutputDirectory() / "test_file.dat"
     with open(fileName, "w") as f:
         f.write("# This is a test file")
 
     file_id = db.insertFileToDB(fileName, "sandbox")
     assert file_id == db._getFileMongoDB("sandbox", "test_file.dat")._id
-
-    # subprocess.call(["rm -f {}".format(fileName)], shell=True)
 
     logger.info("Dropping the temporary files in the sandbox")
     db.dbClient["sandbox"]["fs.chunks"].drop()

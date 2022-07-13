@@ -422,7 +422,10 @@ class DatabaseHandler:
         collection = DatabaseHandler.dbClient[dbName]["telescopes"]
         _parameters = dict()
 
-        _modelVersion = self._convertVersionToTagged(modelVersion, dbName)
+        _modelVersion = self._convertVersionToTagged(
+            modelVersion,
+            DatabaseHandler.DB_CTA_SIMULATION_MODEL
+        )
 
         query = {
             "Telescope": telescopeModelNameDB,
@@ -570,7 +573,9 @@ class DatabaseHandler:
         collection = DatabaseHandler.dbClient[dbName].sites
         _parameters = dict()
 
-        _modelVersion = self._convertVersionToTagged(modelVersion, dbName)
+        _modelVersion = self._convertVersionToTagged(
+            modelVersion, DatabaseHandler.DB_CTA_SIMULATION_MODEL
+        )
 
         query = {
             "Site": site,
@@ -675,7 +680,9 @@ class DatabaseHandler:
         collection = DatabaseHandler.dbClient[dbName].telescopes
         dbEntries = list()
 
-        _versionToCopy = self._convertVersionToTagged(versionToCopy, dbName)
+        _versionToCopy = self._convertVersionToTagged(
+            versionToCopy, DatabaseHandler.DB_CTA_SIMULATION_MODEL
+        )
 
         query = {
             "Telescope": telToCopy,
@@ -761,7 +768,10 @@ class DatabaseHandler:
         _collection = DatabaseHandler.dbClient[dbName][collection]
 
         if "Version" in query:
-            query["Version"] = self._convertVersionToTagged(query["Version"], dbName)
+            query["Version"] = self._convertVersionToTagged(
+                query["Version"],
+                DatabaseHandler.DB_CTA_SIMULATION_MODEL
+            )
 
         self._logger.info(
             "Deleting {} entries from {}".format(
@@ -800,7 +810,10 @@ class DatabaseHandler:
 
         collection = DatabaseHandler.dbClient[dbName].telescopes
 
-        _modelVersion = self._convertVersionToTagged(version, dbName)
+        _modelVersion = self._convertVersionToTagged(
+            version,
+            DatabaseHandler.DB_CTA_SIMULATION_MODEL
+        )
 
         query = {
             "Telescope": telescope,
@@ -871,7 +884,10 @@ class DatabaseHandler:
 
         collection = DatabaseHandler.dbClient[dbName].telescopes
 
-        _modelVersion = self._convertVersionToTagged(version, dbName)
+        _modelVersion = self._convertVersionToTagged(
+            version,
+            DatabaseHandler.DB_CTA_SIMULATION_MODEL
+        )
 
         query = {
             "Telescope": telescope,
@@ -929,7 +945,10 @@ class DatabaseHandler:
 
         collection = DatabaseHandler.dbClient[dbName].telescopes
 
-        _newVersion = self._convertVersionToTagged(newVersion, dbName)
+        _newVersion = self._convertVersionToTagged(
+            newVersion,
+            DatabaseHandler.DB_CTA_SIMULATION_MODEL
+        )
 
         query = {
             "Telescope": telescope,
