@@ -2,8 +2,7 @@
 
 import pytest
 import logging
-# import subprocess
-from pathlib import Path
+import uuid
 
 import simtools.config as cfg
 import simtools.io_handler as io
@@ -11,6 +10,8 @@ from simtools import db_handler
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
+
+random_id = uuid.uuid4().hex
 
 
 @pytest.fixture
@@ -65,20 +66,28 @@ def test_copy_telescope_db(db):
 
     logger.info("----Testing copying a whole telescope-----")
     db.copyTelescope(
-        db.DB_CTA_SIMULATION_MODEL,
-        "North-LST-1",
-        "Current",
-        "North-LST-Test",
-        "sandbox",
+        dbName=db.DB_CTA_SIMULATION_MODEL,
+        telToCopy="North-LST-1",
+        versionToCopy="Current",
+        newTelName="North-LST-Test",
+        collectionName="telescopes",
+        dbToCopyTo="sandbox",
+        collectionToCopyTo="telescopes_" + random_id
     )
     db.copyDocuments(
-        db.DB_CTA_SIMULATION_MODEL,
-        "metadata",
-        {"Entry": "Simulation-Model-Tags"},
-        "sandbox",
+        dbName=db.DB_CTA_SIMULATION_MODEL,
+        collection="metadata",
+        query={"Entry": "Simulation-Model-Tags"},
+        dbToCopyTo="sandbox",
+        collectionToCopyTo="metadata_" + random_id
     )
     pars = db.readMongoDB(
-        "sandbox", "North-LST-Test", "Current", io.getTestOutputDirectory(), False
+        dbName="sandbox",
+        telescopeModelNameDB="North-LST-Test",
+        modelVersion="Current",
+        runLocation=io.getTestOutputDirectory(),
+        collectionName="telescopes_" + random_id,
+        writeFiles=False,
     )
     assert pars["camera_pixels"]["Value"] == 1855
 
@@ -86,16 +95,25 @@ def test_copy_telescope_db(db):
         "Testing deleting a query (a whole telescope in this case and metadata)"
     )
     query = {"Telescope": "North-LST-Test"}
-    db.deleteQuery("sandbox", "telescopes", query)
+    db.deleteQuery("sandbox", "telescopes_" + random_id, query)
     query = {"Entry": "Simulation-Model-Tags"}
-    db.deleteQuery("sandbox", "metadata", query)
+    db.deleteQuery("sandbox", "metadata_" + random_id, query)
 
     # After deleting the copied telescope
     # we always expect to get a ValueError (query returning zero results)
     with pytest.raises(ValueError):
         db.readMongoDB(
-            "sandbox", "North-LST-Test", "Current", io.getTestOutputDirectory(), False
+            dbName="sandbox",
+            telescopeModelNameDB="North-LST-Test",
+            modelVersion="Current",
+            runLocation=io.getTestOutputDirectory(),
+            collectionName="telescopes_" + random_id,
+            writeFiles=False,
         )
+
+    # Cleanup
+    db.dbClient["sandbox"]["telescopes_" + random_id].drop()
+    db.dbClient["sandbox"]["metadata_" + random_id].drop()
 
 
 def test_adding_parameter_version_db(db):
