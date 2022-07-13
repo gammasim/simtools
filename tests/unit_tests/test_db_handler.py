@@ -66,6 +66,21 @@ def test_reading_db_sst(db):
         assert pars["camera_pixels"] == 2048
 
 
+def test_export_model_files(db):
+
+    logger.info("----Testing reading LST-----")
+    pars = db.getModelParameters("north", "lst-1", "Current")
+
+    fileList = list()
+    for parNow in pars.values():
+        if parNow["File"]:
+            fileList.append(parNow["Value"])
+    db.exportModelFiles(pars, io.getTestOutputDirectory())
+    logger.debug("Checking files were written to {}".format(io.getTestOutputDirectory()))
+    for fileNow in fileList:
+        assert (io.getTestOutputDirectory() / fileNow).exists()
+
+
 def test_copy_telescope_db(db):
 
     logger.info("----Testing copying a whole telescope-----")
