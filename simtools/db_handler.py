@@ -390,6 +390,7 @@ class DatabaseHandler:
         telescopeModelNameDB,
         modelVersion,
         runLocation,
+        collectionName="telescopes",
         writeFiles=True,
         onlyApplicable=False,
     ):
@@ -409,6 +410,8 @@ class DatabaseHandler:
             Version of the model.
         runLocation: Path or str
             The sim_telarray run location to write the tabulated data files into.
+        collectionName: str
+            The name of the collection to read from (default is "telescopes")
         writeFiles: bool
             If true, write the files to the runLocation.
         onlyApplicable: bool
@@ -419,7 +422,7 @@ class DatabaseHandler:
         dict containing the parameters
         """
 
-        collection = DatabaseHandler.dbClient[dbName]["telescopes"]
+        collection = DatabaseHandler.dbClient[dbName][collectionName]
         _parameters = dict()
 
         _modelVersion = self._convertVersionToTagged(
@@ -647,7 +650,14 @@ class DatabaseHandler:
         return
 
     def copyTelescope(
-        self, dbName, telToCopy, versionToCopy, newTelName, dbToCopyTo=None
+        self,
+        dbName,
+        telToCopy,
+        versionToCopy,
+        newTelName,
+        collectionName="telescopes",
+        dbToCopyTo=None,
+        collectionToCopyTo=None
     ):
         """
         Copy a full telescope configuration to a new telescope name.
@@ -664,12 +674,19 @@ class DatabaseHandler:
             The version of the configuration to copy
         newTelName: str
             The name of the new telescope
+        collectionName: str
+            The name of the collection to copy from (default is "telescopes")
         dbToCopyTo: str
             The name of the DB to copy to (default is the same as dbName)
+        collectionToCopyTo: str
+            The name of the collection to copy to (default is the same as collection)
         """
 
         if dbToCopyTo is None:
             dbToCopyTo = dbName
+
+        if collectionToCopyTo is None:
+            collectionToCopyTo = collectionName
 
         self._logger.info(
             "Copying version {} of {} to the new telescope {} in the {} DB".format(
@@ -677,7 +694,7 @@ class DatabaseHandler:
             )
         )
 
-        collection = DatabaseHandler.dbClient[dbName].telescopes
+        collection = DatabaseHandler.dbClient[dbName][collectionName]
         dbEntries = list()
 
         _versionToCopy = self._convertVersionToTagged(
@@ -694,7 +711,7 @@ class DatabaseHandler:
             dbEntries.append(post)
 
         self._logger.info("Creating new telescope {}".format(newTelName))
-        collection = DatabaseHandler.dbClient[dbToCopyTo].telescopes
+        collection = DatabaseHandler.dbClient[dbToCopyTo][collectionToCopyTo]
         try:
             collection.insert_many(dbEntries)
         except BulkWriteError as exc:
@@ -702,7 +719,14 @@ class DatabaseHandler:
 
         return
 
-    def copyDocuments(self, dbName, collection, query, dbToCopyTo):
+    def copyDocuments(
+        self,
+        dbName,
+        collection,
+        query,
+        dbToCopyTo,
+        collectionToCopyTo=None
+    ):
         """
         Copy the documents matching to "query" to the DB "dbToCopyTo".
         The documents are copied to the same collection as in "dbName".
@@ -727,6 +751,8 @@ class DatabaseHandler:
         """
 
         _collection = DatabaseHandler.dbClient[dbName][collection]
+        if collectionToCopyTo is None:
+            collectionToCopyTo = collection
         dbEntries = list()
 
         for post in _collection.find(query):
@@ -738,7 +764,7 @@ class DatabaseHandler:
                 query, dbToCopyTo
             )
         )
-        _collection = DatabaseHandler.dbClient[dbToCopyTo][collection]
+        _collection = DatabaseHandler.dbClient[dbToCopyTo][collectionToCopyTo]
         try:
             _collection.insert_many(dbEntries)
         except BulkWriteError as exc:
@@ -785,7 +811,14 @@ class DatabaseHandler:
         return
 
     def updateParameter(
-        self, dbName, telescope, version, parameter, newValue, filePrefix=None
+        self,
+        dbName,
+        telescope,
+        version,
+        parameter,
+        newValue,
+        collectionName="telescopes",
+        filePrefix=None
     ):
         """
         Update a parameter value for a specific telescope/version.
@@ -804,11 +837,13 @@ class DatabaseHandler:
             Which parameter to update
         newValue: type identical to the original parameter type
             The new value to set for the parameter
+        collectionName: str
+            The name of the collection in which to update the parameter (default is "telescopes")
         filePrefix: str or Path
             where to find files to upload to the DB
         """
 
-        collection = DatabaseHandler.dbClient[dbName].telescopes
+        collection = DatabaseHandler.dbClient[dbName][collectionName]
 
         _modelVersion = self._convertVersionToTagged(
             version,
@@ -852,7 +887,14 @@ class DatabaseHandler:
         return
 
     def updateParameterField(
-        self, dbName, telescope, version, parameter, field, newValue
+        self,
+        dbName,
+        telescope,
+        version,
+        parameter,
+        field,
+        newValue,
+        collectionName="telescopes"
     ):
         """
         Update a parameter field value for a specific telescope/version.
@@ -876,13 +918,17 @@ class DatabaseHandler:
             Field to update (only options are Applicable, units, Type, items, minimum, maximum).
         newValue: type identical to the original field type
             The new value to set to the field given in "field".
+        collectionName: str
+            The name of the collection in which to update the parameter (default is "telescopes")
         """
 
         allowed_fields = ["Applicable", "units", "Type", "items", "minimum", "maximum"]
         if field not in allowed_fields:
-            raise ValueError("The field to change must be one of {}".format(", ".join(allowed_fields)))
+            raise ValueError(
+                "The field to change must be one of {}".format(", ".join(allowed_fields))
+            )
 
-        collection = DatabaseHandler.dbClient[dbName].telescopes
+        collection = DatabaseHandler.dbClient[dbName][collectionName]
 
         _modelVersion = self._convertVersionToTagged(
             version,
@@ -919,7 +965,14 @@ class DatabaseHandler:
         return
 
     def addParameter(
-        self, dbName, telescope, parameter, newVersion, newValue, filePrefix=None
+        self,
+        dbName,
+        telescope,
+        parameter,
+        newVersion,
+        newValue,
+        collectionName="telescopes",
+        filePrefix=None
     ):
         """
         Add a parameter value for a specific telescope.
@@ -939,11 +992,13 @@ class DatabaseHandler:
             The version of the new parameter value
         newValue: type identical to the original parameter type
             The new value to set for the parameter
+        collectionName: str
+            The name of the collection to which to add a parameter (default is "telescopes")
         filePrefix: str or Path
             where to find files to upload to the DB
         """
 
-        collection = DatabaseHandler.dbClient[dbName].telescopes
+        collection = DatabaseHandler.dbClient[dbName][collectionName]
 
         _newVersion = self._convertVersionToTagged(
             newVersion,
@@ -983,7 +1038,15 @@ class DatabaseHandler:
         return
 
     def addNewParameter(
-        self, dbName, telescope, version, parameter, value, filePrefix=None, **kwargs
+        self,
+        dbName,
+        telescope,
+        version,
+        parameter,
+        value,
+        collectionName="telescopes",
+        filePrefix=None,
+        **kwargs
     ):
         """
         Add a parameter value for a specific telescope.
@@ -1003,13 +1066,15 @@ class DatabaseHandler:
             The version of the new parameter value
         value: can be any type, preferably given in kwargs
             The value to set for the new parameter
+        collectionName: str
+            The name of the collection to add a parameter to (default is "telescopes")
         filePrefix: str or Path
             where to find files to upload to the DB
         kwargs: dict
             Any additional fields to add to the parameter
         """
 
-        collection = DatabaseHandler.dbClient[dbName].telescopes
+        collection = DatabaseHandler.dbClient[dbName][collectionName]
 
         dbEntry = dict()
         dbEntry["Telescope"] = telescope
