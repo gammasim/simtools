@@ -226,7 +226,7 @@ def test_reading_db_sites(db):
 
 def test_separating_get_and_write(db):
 
-    logger.info("----Testing reading LST-----")
+    logger.info("----Testing getting parameters and exporting model files-----")
     pars = db.getModelParameters("north", "lst-1", "Current")
 
     fileList = list()
