@@ -19,11 +19,6 @@ def db(set_db):
     return db
 
 
-@pytest.fixture
-def DB_CTA_SIMULATION_MODEL():
-    return "CTA-Simulation-Model"
-
-
 def test_reading_db_lst(db):
 
     logger.info("----Testing reading LST-----")
@@ -71,18 +66,18 @@ def test_reading_db_sst(db):
         assert pars["camera_pixels"] == 2048
 
 
-def test_copy_telescope_db(db, DB_CTA_SIMULATION_MODEL):
+def test_copy_telescope_db(db):
 
     logger.info("----Testing copying a whole telescope-----")
     db.copyTelescope(
-        DB_CTA_SIMULATION_MODEL,
+        db.DB_CTA_SIMULATION_MODEL,
         "North-LST-1",
         "Current",
         "North-LST-Test",
         "sandbox",
     )
     db.copyDocuments(
-        DB_CTA_SIMULATION_MODEL,
+        db.DB_CTA_SIMULATION_MODEL,
         "metadata",
         {"Entry": "Simulation-Model-Tags"},
         "sandbox",
@@ -102,11 +97,11 @@ def test_copy_telescope_db(db, DB_CTA_SIMULATION_MODEL):
     db.deleteQuery("sandbox", "metadata", query)
 
 
-def test_adding_parameter_version_db(db, DB_CTA_SIMULATION_MODEL):
+def test_adding_parameter_version_db(db):
 
     logger.info("----Testing adding a new version of a parameter-----")
     db.copyTelescope(
-        DB_CTA_SIMULATION_MODEL,
+        db.DB_CTA_SIMULATION_MODEL,
         "North-LST-1",
         "Current",
         "North-LST-Test",
@@ -124,11 +119,11 @@ def test_adding_parameter_version_db(db, DB_CTA_SIMULATION_MODEL):
     db.deleteQuery("sandbox", "telescopes", query)
 
 
-def test_update_parameter_db(db, DB_CTA_SIMULATION_MODEL):
+def test_update_parameter_db(db):
 
     logger.info("----Testing updating a parameter-----")
     db.copyTelescope(
-        DB_CTA_SIMULATION_MODEL,
+        db.DB_CTA_SIMULATION_MODEL,
         "North-LST-1",
         "Current",
         "North-LST-Test",
@@ -149,11 +144,11 @@ def test_update_parameter_db(db, DB_CTA_SIMULATION_MODEL):
     db.deleteQuery("sandbox", "telescopes", query)
 
 
-def test_adding_new_parameter_db(db, DB_CTA_SIMULATION_MODEL):
+def test_adding_new_parameter_db(db):
 
     logger.info("----Testing adding a new parameter-----")
     db.copyTelescope(
-        DB_CTA_SIMULATION_MODEL,
+        db.DB_CTA_SIMULATION_MODEL,
         "North-LST-1",
         "Current",
         "North-LST-Test",
@@ -171,18 +166,18 @@ def test_adding_new_parameter_db(db, DB_CTA_SIMULATION_MODEL):
     db.deleteQuery("sandbox", "telescopes", query)
 
 
-def test_update_parameter_field_db(db, DB_CTA_SIMULATION_MODEL):
+def test_update_parameter_field_db(db):
 
     logger.info("----Testing modifying a field of a parameter-----")
     db.copyTelescope(
-        DB_CTA_SIMULATION_MODEL,
+        db.DB_CTA_SIMULATION_MODEL,
         "North-LST-1",
         "Current",
         "North-LST-Test",
         "sandbox",
     )
     db.copyDocuments(
-        DB_CTA_SIMULATION_MODEL,
+        db.DB_CTA_SIMULATION_MODEL,
         "metadata",
         {"Entry": "Simulation-Model-Tags"},
         "sandbox",
