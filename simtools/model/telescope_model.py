@@ -49,9 +49,9 @@ class TelescopeModel:
         Create a TelescopeModel from a sim_telarray cfg file.
     setExtraLabel(extraLabel)
         Set an extra label for the name of the config file.
-    hasParameter(parName):
+    hasParameter(parName)
         Verify if parameter is in the model.
-    getParameter(parName):
+    getParameter(parName)
         Get an existing parameter of the model.
     addParameter(parName, value)
         Add new parameters to the model.
@@ -61,6 +61,8 @@ class TelescopeModel:
         Change the value of existing parameters to the model.
     removeParameters(*args)
         Remove parameters from the model.
+    printParameters()
+        Print parameters and their values for debugging purposes.
     exportConfigFile()
         Export config file for sim_telarray.
     getConfigFile()
@@ -151,8 +153,8 @@ class TelescopeModel:
         """
         Create a TelescopeModel from a sim_telarray config file.
 
-        Note
-        ----
+        Notes
+        -----
         Todo: Dealing with ifdef/indef etc. By now it just keeps the last version of the parameters
         in the file.
 
@@ -352,7 +354,7 @@ class TelescopeModel:
     def addParameter(self, parName, value, isFile=False, isAplicable=True):
         """
         Add a new parameters to the model. \
-        This function does not modify the DB, it affects only the current instance. \
+        This function does not modify the DB, it affects only the current instance.
 
         Parameters
         ----------
@@ -504,12 +506,19 @@ class TelescopeModel:
         db.exportModelFiles(parsFromDB, self._configFileDirectory)
         self._isExportedModelFilesUpToDate = True
 
+    def printParameters(self):
+        ''' Print parameters and their values for debugging purposes. '''
+        for par, info in self._parameters.items():
+            print('{} = {}'.format(par, info['Value']))
+
     def exportConfigFile(self):
         """Export the config file used by sim_telarray."""
 
         # Exporting model file
         if not self._isExportedModelFilesUpToDate:
             self.exportModelFiles()
+
+        self.printParameters()
 
         # Using SimtelConfigWriter to write the config file.
         self._loadSimtelConfigWriter()
@@ -672,7 +681,7 @@ class TelescopeModel:
         Check if telescope is an ASTRI type.
 
         Returns
-        ----------
+        -------
         bool:
             True if telescope  is a ASTRI, False otherwise.
         """
