@@ -32,20 +32,20 @@ class ShowerSimulator:
 
     .. code-block:: python
 
-    self.showerConfigData = {
-        'dataDirectory': '.',
-        'site': 'South',
-        'layoutName': 'Prod5',
-        'runRange': [1, 100],
-        'nshow': 10,
-        'primary': 'gamma',
-        'erange': [100 * u.GeV, 1 * u.TeV],
-        'eslope': -2,
-        'zenith': 20 * u.deg,
-        'azimuth': 0 * u.deg,
-        'viewcone': 0 * u.deg,
-        'cscat': [10, 1500 * u.m, 0]
-    }
+        self.showerConfigData = {
+            'dataDirectory': '.',
+            'site': 'South',
+            'layoutName': 'Prod5',
+            'runRange': [1, 100],
+            'nshow': 10,
+            'primary': 'gamma',
+            'erange': [100 * u.GeV, 1 * u.TeV],
+            'eslope': -2,
+            'zenith': 20 * u.deg,
+            'azimuth': 0 * u.deg,
+            'viewcone': 0 * u.deg,
+            'cscat': [10, 1500 * u.m, 0]
+        }
 
 
     Attributes
