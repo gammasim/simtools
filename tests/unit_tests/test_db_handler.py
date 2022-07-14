@@ -11,13 +11,26 @@ from simtools import db_handler
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
-random_id = uuid.uuid4().hex
+
+@pytest.fixture()
+def random_id():
+    random_id = uuid.uuid4().hex
+    return random_id
 
 
 @pytest.fixture
 def db(set_db):
     db = db_handler.DatabaseHandler()
     return db
+
+
+@pytest.fixture()
+def db_cleanup(db, random_id):
+    yield
+    # Cleanup
+    logger.info(f"dropping the telescopes_{random_id} and metadata_{random_id} collections")
+    db.dbClient["sandbox"]["telescopes_" + random_id].drop()
+    db.dbClient["sandbox"]["metadata_" + random_id].drop()
 
 
 def test_reading_db_lst(db):
@@ -62,7 +75,7 @@ def test_reading_db_sst(db):
         assert pars["camera_pixels"] == 2048
 
 
-def test_copy_telescope_db(db):
+def test_copy_telescope_db(db, random_id, db_cleanup):
 
     logger.info("----Testing copying a whole telescope-----")
     db.copyTelescope(
@@ -111,118 +124,145 @@ def test_copy_telescope_db(db):
             writeFiles=False,
         )
 
-    # Cleanup
-    db.dbClient["sandbox"]["telescopes_" + random_id].drop()
-    db.dbClient["sandbox"]["metadata_" + random_id].drop()
 
-
-def test_adding_parameter_version_db(db):
+def test_adding_parameter_version_db(db, random_id, db_cleanup):
 
     logger.info("----Testing adding a new version of a parameter-----")
     db.copyTelescope(
-        db.DB_CTA_SIMULATION_MODEL,
-        "North-LST-1",
-        "Current",
-        "North-LST-Test",
-        "sandbox",
+        dbName=db.DB_CTA_SIMULATION_MODEL,
+        telToCopy="North-LST-1",
+        versionToCopy="Current",
+        newTelName="North-LST-Test",
+        collectionName="telescopes",
+        dbToCopyTo="sandbox",
+        collectionToCopyTo="telescopes_" + random_id
     )
     db.addParameter(
-        "sandbox", "North-LST-Test", "camera_config_version", "test", 42
+        dbName="sandbox",
+        telescope="North-LST-Test",
+        parameter="camera_config_version",
+        newVersion="test",
+        newValue=42,
+        collectionName="telescopes_" + random_id
     )
     pars = db.readMongoDB(
-        "sandbox", "North-LST-Test", "test", io.getTestOutputDirectory(), False
+        dbName="sandbox",
+        telescopeModelNameDB="North-LST-Test",
+        modelVersion="test",
+        runLocation=io.getTestOutputDirectory(),
+        collectionName="telescopes_" + random_id,
+        writeFiles=False,
     )
     assert pars["camera_config_version"]["Value"] == 42
 
-    # Cleanup
-    query = {"Telescope": "North-LST-Test"}
-    db.deleteQuery("sandbox", "telescopes", query)
 
-
-def test_update_parameter_db(db):
+def test_update_parameter_db(db, random_id, db_cleanup):
 
     logger.info("----Testing updating a parameter-----")
     db.copyTelescope(
-        db.DB_CTA_SIMULATION_MODEL,
-        "North-LST-1",
-        "Current",
-        "North-LST-Test",
-        "sandbox",
+        dbName=db.DB_CTA_SIMULATION_MODEL,
+        telToCopy="North-LST-1",
+        versionToCopy="Current",
+        newTelName="North-LST-Test",
+        collectionName="telescopes",
+        dbToCopyTo="sandbox",
+        collectionToCopyTo="telescopes_" + random_id
     )
     db.addParameter(
-        "sandbox", "North-LST-Test", "camera_config_version", "test", 42
+        dbName="sandbox",
+        telescope="North-LST-Test",
+        parameter="camera_config_version",
+        newVersion="test",
+        newValue=42,
+        collectionName="telescopes_" + random_id
     )
     db.updateParameter(
-        "sandbox", "North-LST-Test", "test", "camera_config_version", 999
+        dbName="sandbox",
+        telescope="North-LST-Test",
+        version="test",
+        parameter="camera_config_version",
+        newValue=999,
+        collectionName="telescopes_" + random_id
     )
     pars = db.readMongoDB(
-        "sandbox", "North-LST-Test", "test", io.getTestOutputDirectory(), False
+        dbName="sandbox",
+        telescopeModelNameDB="North-LST-Test",
+        modelVersion="test",
+        runLocation=io.getTestOutputDirectory(),
+        collectionName="telescopes_" + random_id,
+        writeFiles=False,
     )
     assert pars["camera_config_version"]["Value"] == 999
 
-    # Cleanup
-    query = {"Telescope": "North-LST-Test"}
-    db.deleteQuery("sandbox", "telescopes", query)
 
-
-def test_adding_new_parameter_db(db):
+def test_adding_new_parameter_db(db, random_id, db_cleanup):
 
     logger.info("----Testing adding a new parameter-----")
     db.copyTelescope(
-        db.DB_CTA_SIMULATION_MODEL,
-        "North-LST-1",
-        "Current",
-        "North-LST-Test",
-        "sandbox",
+        dbName=db.DB_CTA_SIMULATION_MODEL,
+        telToCopy="North-LST-1",
+        versionToCopy="Current",
+        newTelName="North-LST-Test",
+        collectionName="telescopes",
+        dbToCopyTo="sandbox",
+        collectionToCopyTo="telescopes_" + random_id
     )
     db.addNewParameter(
-        "sandbox", "North-LST-Test", "test", "camera_config_version_test", 999
+        dbName="sandbox",
+        telescope="North-LST-Test",
+        version="test",
+        parameter="camera_config_version_test",
+        value=999,
+        collectionName="telescopes_" + random_id
     )
     pars = db.readMongoDB(
-        "sandbox", "North-LST-Test", "test", io.getTestOutputDirectory(), False
+        dbName="sandbox",
+        telescopeModelNameDB="North-LST-Test",
+        modelVersion="test",
+        runLocation=io.getTestOutputDirectory(),
+        collectionName="telescopes_" + random_id,
+        writeFiles=False,
     )
     assert pars["camera_config_version_test"]["Value"] == 999
 
-    # Cleanup
-    query = {"Telescope": "North-LST-Test"}
-    db.deleteQuery("sandbox", "telescopes", query)
 
-
-def test_update_parameter_field_db(db):
+def test_update_parameter_field_db(db, random_id, db_cleanup):
 
     logger.info("----Testing modifying a field of a parameter-----")
     db.copyTelescope(
-        db.DB_CTA_SIMULATION_MODEL,
-        "North-LST-1",
-        "Current",
-        "North-LST-Test",
-        "sandbox",
+        dbName=db.DB_CTA_SIMULATION_MODEL,
+        telToCopy="North-LST-1",
+        versionToCopy="Current",
+        newTelName="North-LST-Test",
+        collectionName="telescopes",
+        dbToCopyTo="sandbox",
+        collectionToCopyTo="telescopes_" + random_id
     )
     db.copyDocuments(
-        db.DB_CTA_SIMULATION_MODEL,
-        "metadata",
-        {"Entry": "Simulation-Model-Tags"},
-        "sandbox",
+        dbName=db.DB_CTA_SIMULATION_MODEL,
+        collection="metadata",
+        query={"Entry": "Simulation-Model-Tags"},
+        dbToCopyTo="sandbox",
+        collectionToCopyTo="metadata_" + random_id
     )
-
     db.updateParameterField(
         dbName="sandbox",
         telescope="North-LST-Test",
         version="Current",
         parameter="camera_pixels",
         field="Applicable",
-        newValue=False
+        newValue=False,
+        collectionName="telescopes_" + random_id
     )
     pars = db.readMongoDB(
-        "sandbox", "North-LST-Test", "Current", io.getTestOutputDirectory(), False
+        dbName="sandbox",
+        telescopeModelNameDB="North-LST-Test",
+        modelVersion="Current",
+        runLocation=io.getTestOutputDirectory(),
+        collectionName="telescopes_" + random_id,
+        writeFiles=False,
     )
     assert pars["camera_pixels"]["Applicable"] is False
-
-    # Cleanup
-    query = {"Telescope": "North-LST-Test"}
-    db.deleteQuery("sandbox", "telescopes", query)
-    query = {"Entry": "Simulation-Model-Tags"}
-    db.deleteQuery("sandbox", "metadata", query)
 
 
 def test_reading_db_sites(db):
