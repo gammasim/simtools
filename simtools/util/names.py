@@ -830,8 +830,8 @@ def corsikaOutputFileName(run, primary, arrayName, site, zenith, azimuth, label=
     """
     Corsika output file name.
 
-    Warning
-    -------
+    Warnings
+    --------
         zst extension is hardcoded here.
 
     Parameters

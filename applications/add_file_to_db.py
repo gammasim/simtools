@@ -35,10 +35,11 @@
 """
 
 import logging
-import argparse
 from pathlib import Path
 
+import simtools.config as cfg
 from simtools import db_handler
+import simtools.util.commandline_parser as argparser
 import simtools.util.general as gen
 
 
@@ -62,7 +63,7 @@ if __name__ == "__main__":
 
     db = db_handler.DatabaseHandler()
 
-    parser = argparse.ArgumentParser(description=("Add a file or files to the DB."))
+    parser = argparser.CommandLineParser(description=("Add a file or files to the DB."))
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument(
         "-f",
@@ -91,23 +92,16 @@ if __name__ == "__main__":
         dest="dbToInsertTo",
         type=str,
         default=db.DB_TABULATED_DATA,
-        choices=["sandbox", db.DB_TABULATED_DATA],
+        choices=[db.DB_TABULATED_DATA, "sandbox", "test-data"],
         help=(
             "The DB to insert the files to. "
             'The choices are {0} or "sandbox", '
             "the default is {0}".format(db.DB_TABULATED_DATA)
         ),
     )
-    parser.add_argument(
-        "-v",
-        "--verbosity",
-        dest="logLevel",
-        action="store",
-        default="info",
-        help="Log level to print (default is INFO)",
-    )
-
+    parser.initialize_default_arguments()
     args = parser.parse_args()
+    cfg.setConfigFileName(args.configFile)
 
     logger = logging.getLogger()
     logger.setLevel(gen.getLogLevelFromUser(args.logLevel))
@@ -118,7 +112,7 @@ if __name__ == "__main__":
             if Path(fileNow).suffix in db.ALLOWED_FILE_EXTENSIONS:
                 filesToInsert.append(fileNow)
             else:
-                logger.debug(
+                logger.warning(
                     "The file {} will not be uploaded to the DB because its extension is not "
                     "in the allowed extension list: {}".format(
                         fileNow, db.ALLOWED_FILE_EXTENSIONS

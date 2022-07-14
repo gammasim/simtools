@@ -26,13 +26,16 @@ def setConfigFileName(fileName):
     fileName: str
         Config file name.
     """
+    if not fileName:
+        return
+
     _logger = logging.getLogger(__name__)
     _logger.debug("Setting the config file name to {}".format(fileName))
     global CONFIG_FILE_NAME
     CONFIG_FILE_NAME = fileName
 
 
-def loadConfig(fileName=None):
+def loadConfig(fileName=None, useGlobals=True):
     """
     Load config file and return it as a dict.
     3 possible options for the config fileName:
@@ -44,6 +47,8 @@ def loadConfig(fileName=None):
     ----------
     fileName: str, optional
         Config file name.
+    useGlobals: bool
+        Use global config settings
 
     Returns
     -------
@@ -61,14 +66,14 @@ def loadConfig(fileName=None):
         config = yaml.load(stream, Loader=yaml.FullLoader)
 
     # Running over the parameters set for change
-    if "CONFIG_CHANGED_PARS" in globals():
+    if useGlobals and "CONFIG_CHANGED_PARS" in globals():
         for par, value in CONFIG_CHANGED_PARS.items():
             config[par] = value
 
     return config
 
 
-def get(par):
+def get(par, useGlobals=True):
     """
     Get a single entry from the config settings.
 
@@ -76,8 +81,8 @@ def get(par):
     ----------
     par: str
         Name of the desired parameter.
-    allowNonExisting: bool (default=False)
-        If True, a non-existing parameter will return None (not raise and error)
+    useGlobals: bool (default=True)
+        Use global config settings
 
     Raises
     ------
@@ -90,7 +95,7 @@ def get(par):
     """
     _logger = logging.getLogger(__name__)
 
-    config = loadConfig()
+    config = loadConfig(useGlobals=useGlobals)
     if par not in config.keys():
         msg = (
             "Configuration file does not contain an entry for the parameter "
@@ -202,7 +207,7 @@ def findFile(name, loc=None):
         ff = _searchDirectory(ll, name, True)
         if ff is not None:
             return ff
-    msg = "File {} could not be found in {}".format(name, loc)
+    msg = "File {} could not be found in {}".format(name, allLocations)
     _logger.error(msg)
     raise FileNotFoundError(msg)
 
