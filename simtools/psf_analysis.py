@@ -300,7 +300,7 @@ class PSFImage:
             return 2 * currentRadius
         else:
             self._logger.warning("Could not find PSF efficiently - trying by scanning")
-            return self._findRadiusByScanning(targetNumber, radiusSig)
+            return 2 * self._findRadiusByScanning(targetNumber, radiusSig)
 
     def _findRadiusByScanning(self, targetNumber, radiusSig):
         """
