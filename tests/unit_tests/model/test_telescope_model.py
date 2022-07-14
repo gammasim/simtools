@@ -37,7 +37,18 @@ def lst_config_file(db):
 
 
 @pytest.fixture
-def telescope_model(cfg_setup, lst_config_file):
+def telescope_model(set_simtools):
+    telescopeModel = TelescopeModel(
+        site="North",
+        telescopeModelName="LST-1",
+        modelVersion="Prod5",
+        label="test-telescope-model",
+    )
+    return telescopeModel
+
+
+@pytest.fixture
+def telescope_model_from_config_file(cfg_setup, lst_config_file):
 
     label = "test-telescope-model"
     telModel = TelescopeModel.fromConfigFile(
@@ -85,9 +96,9 @@ def test_flen_type(telescope_model):
     assert isinstance(flenInfo["Value"], float)
 
 
-def test_cfg_file(telescope_model, lst_config_file):
+def test_cfg_file(telescope_model_from_config_file, lst_config_file):
 
-    telModel = telescope_model
+    telModel = telescope_model_from_config_file
 
     telModel.exportConfigFile()
 
