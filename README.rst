@@ -38,15 +38,17 @@ AUTHORS:
 INSTALLATION:
 -------------
 
-Create (only once) and activate your conda enviroment:
+Create a conda environment (only once):
 
-conda env create -f environment.yml
+``conda env create -f environment.yml``
 
-conda activate gammasim-tools-dev
+``conda activate gammasim-tools-dev``
 
-While a proper conda installation has not been setup, you can add simtools to your python path by
+``pip install -e .``
 
-source set_simtools.sh
+Each time you want to use the package, just activate the conda environment:
+
+``conda activate gammasim-tools-dev``
  
 STYLE GUIDELINES:
 -----------------
