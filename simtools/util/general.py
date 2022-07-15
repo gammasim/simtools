@@ -52,7 +52,9 @@ def fileHasText(file, text):
     """
     with open(file, "rb",0) as stringFile, \
         mmap.mmap(stringFile.fileno(), 0, access=mmap.ACCESS_READ) as textFileInput:
-            re_search_1 = re.compile(br'.*(%s).*'%text.encode())
+
+            #re_search_1 = re.compile(br'.*(%s).*'%text.encode())
+            re_search_1 = re.compile(f"{text}".encode())
             searchResult_1 = re_search_1.search(textFileInput)
             if searchResult_1 is None:
                 return False
