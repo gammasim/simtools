@@ -1,6 +1,8 @@
 import logging
 import copy
 from collections import namedtuple
+import re
+import mmap
 
 import astropy.units as u
 from astropy.io.misc import yaml
@@ -48,12 +50,14 @@ def fileHasText(file, text):
     -------
     bool
     """
-    with open(file, "r") as ff:
-        for ll in ff:
-            if text in ll:
+    with open(file, "rb",0) as stringFile, \
+        mmap.mmap(stringFile.fileno(), 0, access=mmap.ACCESS_READ) as textFileInput:
+            re_search_1 = re.compile(f"{text}".encode())
+            searchResult_1 = re_search_1.search(textFileInput)
+            if searchResult_1 is None:
+                return False
+            else:
                 return True
-    return False
-
 
 def validateConfigData(configData, parameters):
     """
