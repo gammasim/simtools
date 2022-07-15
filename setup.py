@@ -1,5 +1,5 @@
 from setuptools import setup, find_packages
 setup(
-    name='event_types',
+    name='simtools',
     packages=find_packages(),
 )
