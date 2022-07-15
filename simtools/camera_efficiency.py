@@ -515,7 +515,7 @@ class CameraEfficiency:
         n4Sum = np.sum(self._results['N4'])
         pixActiveSolidAngle = self._telescopeModel.camera.getPixelActiveSolidAngle()
         onAxisEffOpticalArea = self._telescopeModel.camera.getOnAxisEffOpticalArea()
-        nsbPePerNs = 1e-06 * n4Sum * pixActiveSolidAngle * onAxisEffOpticalArea
+        nsbPePerNs = n4Sum * pixActiveSolidAngle * onAxisEffOpticalArea
 
         # NSB input spectrum is from Benn&Ellison
         # (integral is in ph./(cm² ns sr) ) from 300 - 650 nm:
