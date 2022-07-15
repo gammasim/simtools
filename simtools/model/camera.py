@@ -228,6 +228,18 @@ class Camera:
         """
         return self._pixels["pixel_diameter"]
 
+    def getPixelActiveSolidAngle(self):
+        """
+        Get the active solid angle of a pixel in micro sr.
+        """
+
+        pixelArea = self.getPixelDiameter() ** 2
+        # In case we have hexagonal pixels:
+        if self._pixels["pixel_shape"] == 1 or self._pixels["pixel_shape"] == 3:
+        # if any(self._pixels["pixel_shape"] == [1, 3]):
+            pixelArea *= 2*np.sqrt(3)
+        return pixelArea / (self._focalLength ** 2)
+
     def getPixelShape(self):
         """
         Get pixel shape code 1, 2 or 3, where 1 and 3 are hexagonal pixels,

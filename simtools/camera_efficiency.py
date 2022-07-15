@@ -517,10 +517,15 @@ class CameraEfficiency:
         onAxisEffOpticalArea = self._telescopeModel.camera.getOnAxisEffOpticalArea()
         nsbPePerNs = 1e-06 * n4Sum * pixActiveSolidAngle * onAxisEffOpticalArea
 
-        # # NSB input spectrum is from Benn&Ellison (integral is in ph./(cm² ns sr) ) from 300 - 650 nm:
-        n1ReducedWL = extraColums['n1'][[wlNow > 299 and wlNow < 651 for wlNow in table['W.l.']]]
+        # NSB input spectrum is from Benn&Ellison
+        # (integral is in ph./(cm² ns sr) ) from 300 - 650 nm:
+        n1ReducedWL = extraColums['n1'][
+            [wlNow > 299 and wlNow < 651 for wlNow in table['W.l.']]
+        ]
         n1Sum = np.sum(n1ReducedWL)
-        n1IntegralEdges = extraColums['n1'][[wlNow == 300 or wlNow == 650 for wlNow in table['W.l.']]]
+        n1IntegralEdges = extraColums['n1'][
+            [wlNow == 300 or wlNow == 650 for wlNow in table['W.l.']]
+        ]
         n1IntegralEdgesSum = np.sum(n1IntegralEdges)
         nsbIntegral = 0.0001*(n1Sum - 0.5*n1IntegralEdgesSum)
         nsbRate = nsbPePerNs*extraInfo['nsbRefValue']/nsbIntegral
