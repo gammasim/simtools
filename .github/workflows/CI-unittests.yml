@@ -47,7 +47,7 @@ jobs:
           conda activate gammasim-tools-dev
           echo 'source $CONDA/etc/profile.d/conda.sh' >> ~/.bash_profile
           echo 'conda activate gammasim-tools-dev' >> ~/.bash_profile
-          echo 'source set_simtools.sh' >> ~/.bash_profile
+          echo 'pip install -e .' >> ~/.bash_profile
           python --version
 
       - name: pyflakes liniting
