@@ -1,11 +1,3 @@
-# Produced files
-simtools-files
-telarray_rand.conf.used
-
-# Files produced tests
-data/test-plots/*
-data/test-output/*
-
 # Compiled files
 *.py[co]
 *.a

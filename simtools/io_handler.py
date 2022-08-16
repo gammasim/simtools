@@ -170,7 +170,7 @@ def getArraySimulatorOutputDirectory(filesLocation, label):
 
 def getDataFile(parentDir, fileName):
     """
-    Get path of a data file, using the  dataLocation taken from the config file.
+    Get path of a data file, using the dataLocation taken from the config file.
 
     Parameters
     ----------
@@ -190,18 +190,18 @@ def getDataFile(parentDir, fileName):
 
 def getTestDataDirectory():
     """
-    Get path of a test file directory, using the  testDataLocation taken from the config file.
+    Get path of a test file directory, using the testDataLocation taken from the config file.
 
     Returns
     -------
     Path
     """
-    return Path(cfg.get("dataLocation")).joinpath("test-data")
+    return Path("tests/resources/")
 
 
 def getTestDataFile(fileName):
     """
-    Get path of a test file, using the  testDataLocation taken from the config file.
+    Get path of a test file, using the testDataLocation taken from the config file.
 
     Parameters
     ----------
@@ -218,18 +218,21 @@ def getTestDataFile(fileName):
 
 def getTestOutputDirectory():
     """
-    Get path of a test directory, using the  testDataLocation taken from the config file.
+    Get path of a test directory, using the outputLocation taken from the config file.
+    Path is created, if it doesn't exist.
 
     Returns
     -------
     Path
     """
-    return Path(cfg.get("dataLocation")).joinpath("test-output")
+    path = Path(cfg.get("outputLocation")).joinpath("test-output")
+    path.mkdir(parents=True, exist_ok=True)
+    return path.absolute()
 
 
 def getTestOutputFile(fileName):
     """
-    Get path of a test file, using the  testDataLocation taken from the config file.
+    Get path of a test file, using the outputLocation taken from the config file.
 
     Parameters
     ----------
@@ -244,9 +247,23 @@ def getTestOutputFile(fileName):
     return directory.joinpath(fileName)
 
 
-def getTestPlotFile(fileName):
+def getTestModelDirectory():
     """
-    Get path of a test plot file, using the  testDataLocation taken from the config file.
+    Get path of a test model directory, using the outputLocation taken from the config file.
+    Path is created, if it doesn't exist.
+
+    Returns
+    -------
+    Path
+    """
+    path = Path(cfg.get("outputLocation")).joinpath("model")
+    path.mkdir(parents=True, exist_ok=True)
+    return path.absolute()
+
+
+def getTestModelFile(fileName):
+    """
+    Get path of a model test file, using the outputLocation taken from the config file.
 
     Parameters
     ----------
@@ -257,9 +274,25 @@ def getTestPlotFile(fileName):
     -------
     Path
     """
-    return (
-        Path(cfg.get("dataLocation"))
-        .joinpath("test-plots")
-        .joinpath(fileName)
-        .absolute()
-    )
+    directory = getTestModelDirectory()
+    return directory.joinpath(fileName)
+
+
+def getTestPlotFile(fileName):
+    """
+    Get path of a test plot file, using the testDataLocation taken from the config file.
+    Path is created, if it doesn't exist.
+
+    Parameters
+    ----------
+    filesName: str
+        File name
+
+    Returns
+    -------
+    Path
+    """
+
+    path = Path(cfg.get("outputLocation")).joinpath("test-plots")
+    path.mkdir(parents=True, exist_ok=True)
+    return path.joinpath(fileName).absolute()

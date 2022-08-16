@@ -148,6 +148,8 @@ It is also recommended to add docstrings-like comments on private ones for the s
 In the application, the modules should contain docstrings with a general description, command line
 parameters, examples etc.
 
+For a reference of the numpydoc names, see https://numpydoc.readthedocs.io/en/latest/format.html
+
 
 Layout arrays
 =============
