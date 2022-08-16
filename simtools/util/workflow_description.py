@@ -259,8 +259,8 @@ class WorkflowDescription:
         """
         Return file format for data file
 
-        Parameter
-        ---------
+        Parameters
+        ----------
         suffix: bool
             return just the ecsv suffix (if format is ascii.ecsv)
             return file format (if false)

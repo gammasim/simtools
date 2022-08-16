@@ -648,8 +648,10 @@ class TelescopePosition:
         # Dealing with altitude <-> posZ
         if corsikaObsLevel is None or corsikaSphereCenter is None:
             self._logger.warning(
-                "CORSIKA conversions cannot be done - missing obs level and/or sphere center"
-            )
+                "Warning: telescope height might be incorrect du to "\
+                "incomplete CORSIKA observation ({})"\
+                "or sphere centre information ({})".format(
+                    corsikaObsLevel, corsikaSphereCenter))
         elif self.hasLocalCoordinates() and not self.hasAltitude():
             self.convertCorsikaToAsl(corsikaObsLevel, corsikaSphereCenter)
         elif self.hasAltitude() and not self.hasLocalCoordinates():
