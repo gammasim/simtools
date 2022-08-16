@@ -153,8 +153,8 @@ class TelescopeModel:
         """
         Create a TelescopeModel from a sim_telarray config file.
 
-        Note
-        ----
+        Notes
+        -----
         Todo: Dealing with ifdef/indef etc. By now it just keeps the last version of the parameters
         in the file.
 
@@ -354,7 +354,7 @@ class TelescopeModel:
     def addParameter(self, parName, value, isFile=False, isAplicable=True):
         """
         Add a new parameters to the model. \
-        This function does not modify the DB, it affects only the current instance. \
+        This function does not modify the DB, it affects only the current instance.
 
         Parameters
         ----------
@@ -681,7 +681,7 @@ class TelescopeModel:
         Check if telescope is an ASTRI type.
 
         Returns
-        ----------
+        -------
         bool:
             True if telescope  is a ASTRI, False otherwise.
         """
