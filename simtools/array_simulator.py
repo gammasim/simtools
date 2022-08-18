@@ -404,7 +404,7 @@ class ArraySimulator:
             if Path(file).is_file():
                 thisRuntime = self._simtelRunner.getResources(
                     run=self._guessRunFromFile(
-                        file, 
+                        file,
                         str(Path(file).name).find("run")+3))
                 runtime.append(thisRuntime)
 
