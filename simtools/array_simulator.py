@@ -269,20 +269,23 @@ class ArraySimulator:
         else:
             return inputFileList
 
-    def _guessRunFromFile(self, file):
+    def _guessRunFromFile(self, file, runNumberIndex=3):
         """
         Finds the run number for a given input file name.
-        Input file names must follow 'run1234_*' pattern.
+        Input file names should follow any pattern starting at
+        runNumberIndex followed by a '_' (e.g., 'run1234_*' pattern
+        using runNumberIndex=3 as default)
         If not found, returns 1.
         """
         fileName = str(Path(file).name)
-        runStr = fileName[3 : fileName.find("_")]
+        runStr = fileName[runNumberIndex : fileName.find("_", runNumberIndex)]
 
         try:
             runNumber = int(runStr)
             return runNumber
         except ValueError:
-            msg = "Run number could not be guessed from the input file name - using run = 1"
+            msg = "Run number could not be guessed from {} using run = 1".format(
+                fileName)
             self._logger.warning(msg)
             return 1
 
@@ -393,24 +396,22 @@ class ArraySimulator:
 
     def makeResourcesReport(self, inputFileList):
 
-        if len(self._results['log_out']) == 0 and inputFileList is not None:
+        if len(self._results['sub_out']) == 0 and inputFileList is not None:
             self._fillResultsWithoutRun(inputFileList)
 
-        print(inputFileList)
         runtime = list()
-        print(self._results)
-        for file in self._results['log_out']:
-            print(file)
+        for file in self._results['sub_out']:
             if Path(file).is_file():
-                thisRuntime = self.simtelRunner.getResources(
-                    run=self._guessRunFromFile(file))
+                thisRuntime = self._simtelRunner.getResources(
+                    run=self._guessRunFromFile(
+                        file, 
+                        str(Path(file).name).find("run")+3))
                 runtime.append(thisRuntime)
 
-        secToHour = 1 / (60 * 60)
-        meanRuntime = np.mean(runtime) * secToHour
+        meanRuntime = np.mean(runtime)
 
         resources = dict()
-        resources['Runtime/run [hrs]'] = meanRuntime
+        resources['Runtime/run [sec]'] = meanRuntime
         return resources
 
     def printResourcesReport(self, inputFileList):
