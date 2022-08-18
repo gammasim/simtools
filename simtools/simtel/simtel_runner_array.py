@@ -187,11 +187,16 @@ class SimtelRunnerArray(SimtelRunner):
         return Path(runSubFile).is_file()
 
     def getResources(self, run):
+        """
+        Reading run time from last line of submission log file.
+
+        """
+        
         subLogFile = self.getSubLogFile(run=run, mode='out')
 
         runtime = None
         with open(subLogFile, 'r') as file:
-            for line in file:
+            for line in reversed(list(file)):
                 if 'RUNTIME' in line:
                     runtime = int(line.split()[1])
                     break
