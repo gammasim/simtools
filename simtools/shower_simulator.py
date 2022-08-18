@@ -253,13 +253,12 @@ class ShowerSimulator:
                 nEvents, thisRuntime = self._corsikaRunner.getResources(runNumber=run)
                 runtime.append(thisRuntime)
 
-        secToHour = 1 / (60 * 60)
-        meanRuntime = np.mean(runtime) * secToHour
+        meanRuntime = np.mean(runtime)
 
         resources = dict()
         resources['#events/run'] = nEvents
-        resources['Runtime/run [hrs]'] = meanRuntime
-        resources['Runtime/1000 events [hrs]'] = meanRuntime * 1000 / nEvents
+        resources['Runtime/run [sec]'] = meanRuntime
+        resources['Runtime/1000 events [sec]'] = meanRuntime * 1000 / nEvents
         return resources
 
     def printResourcesReport(self):

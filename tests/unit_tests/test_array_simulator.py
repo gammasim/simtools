@@ -59,6 +59,14 @@ def test_guess_run(array_simulator):
     run = array_simulator._guessRunFromFile("run1test2_bla_ble")
     assert run == 1
 
+    run = array_simulator._guessRunFromFile(
+        "abc-run12345_bla_ble", 7)
+    assert run == 12345
+
+    run = array_simulator._guessRunFromFile(
+        "abc-run12345_bla_ble", 22)
+    assert run == 1
+
 
 def test_invalid_array_data(cfg_setup,
                             arrayConfigData,
