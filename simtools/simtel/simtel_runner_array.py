@@ -191,7 +191,7 @@ class SimtelRunnerArray(SimtelRunner):
         Reading run time from last line of submission log file.
 
         """
-        
+
         subLogFile = self.getSubLogFile(run=run, mode='out')
 
         runtime = None
