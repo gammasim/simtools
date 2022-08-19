@@ -242,9 +242,7 @@ class ShowerSimulator:
             job_manager.submit(
                 run_script=runScript,
                 run_out_file=self._corsikaRunner.getSubLogFile(
-                    runNumber=run, mode='out'),
-                run_error_file=self._corsikaRunner.getSubLogFile(
-                    runNumber=run, mode='err')
+                    runNumber=run, mode='')
             )
 
     def makeResourcesReport(self):

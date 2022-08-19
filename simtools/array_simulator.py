@@ -257,9 +257,7 @@ class ArraySimulator:
             job_manager.submit(
                 run_script=runScript,
                 run_out_file=self._simtelRunner.getSubLogFile(
-                    run=run, mode='out'),
-                run_error_file=self._simtelRunner.getSubLogFile(
-                    run=run, mode='err')
+                    run=run, mode='')
             )
 
             self._fillResults(file, run)
