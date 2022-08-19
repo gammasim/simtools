@@ -7,10 +7,16 @@
 
     The simulations are split into two stages: showers and array.
     Shower simulations are performed with CORSIKA and array simulations \
-    with sim_telarray.
+    with sim_telarray. Note that either shower or array simulations are \
+    submitted (so typically you first run shower simulations, and then the \
+    array simulations).
 
     A configuration file is required. See tests/resources/prodConfigTest.yml \
     for an example.
+
+    The workload management system used is given in the configuration file. \
+    Allowed systems are qsub (using gridengine), condor_submit \
+    (using HTcondor), and seriell_script (running the script locally).
 
     Command line arguments
     ----------------------
@@ -41,6 +47,8 @@
     .. code-block:: console
 
         python applications/production.py -t simulate -p tests/resources/prodConfigTest.yml --test
+
+    Running shower simulations.
 """
 
 import logging
