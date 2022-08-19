@@ -54,7 +54,7 @@ class JobManager:
             self.test_submission_system()
         except MissingWorkloadManager:
             self._logger.error(
-                "Requested worklow manager not found: {}".format(
+                "Requested workflow manager not found: {}".format(
                     self.submitCommand))
             raise
 
@@ -72,11 +72,13 @@ class JobManager:
 
         if self.submitCommand is None:
             return
-        elif (self.submitCommand.find("qsub") >= 0
-                and not gen.program_is_executable('qsub')):
+        elif self.submitCommand.find("qsub") >= 0:
+            if gen.program_is_executable('qsub'):
+                return
             raise MissingWorkloadManager
-        elif (self.submitCommand.find("condor_submit") >= 0
-                and not gen.program_is_executable('condor_submit')):
+        elif self.submitCommand.find("condor_submit") >= 0:
+            if gen.program_is_executable('condor_submit'):
+                return
             raise MissingWorkloadManager
         elif self.submitCommand.find("seriell_script") >= 0:
             return
