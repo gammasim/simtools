@@ -13,7 +13,7 @@ def label():
 
 
 def test_test_submission_system(label):
-    job_manager_1 = jm.JobManager(submitCommand=None)
-    job_manager_2 = jm.JobManager(submitCommand="seriell_script")
+    jm.JobManager(submitCommand=None)
+    jm.JobManager(submitCommand="seriell_script")
     with pytest.raises(jm.MissingWorkloadManager):
-        job_manager_fail_1 = jm.JobManager(submitCommand='abc')
+        jm.JobManager(submitCommand='abc')
