@@ -119,7 +119,10 @@ class ShowerSimulator:
     # End of init
 
     def _loadShowerConfigData(self, showerConfigData):
-        """Validate showerConfigData and store the relevant data in variables."""
+        """
+        Validate showerConfigData and store the relevant data in variables.
+
+        """
 
         # Copying showerConfigData to corsikaConfigData
         # Few keys will be removed before passing it to CorsikaRunner
@@ -248,9 +251,9 @@ class ShowerSimulator:
         runtime = list()
         nEvents = None
         for run in self.runs:
-            if self._corsikaRunner.hasSubLogFile(runNumber=run):
-                nEvents, thisRuntime = self._corsikaRunner.getResources(runNumber=run)
-                runtime.append(thisRuntime)
+           if self._corsikaRunner.hasSubLogFile(runNumber=run):
+               nEvents, thisRuntime = self._corsikaRunner.getResources(runNumber=run)
+               runtime.append(thisRuntime)
 
         meanRuntime = np.mean(runtime)
 
