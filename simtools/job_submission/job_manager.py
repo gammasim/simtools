@@ -56,12 +56,14 @@ class JobManager:
         if (self.submitCommand.find("qsub") >= 0
                 and not gen.program_is_executable('qsub')):
             raise MissingWorkloadManager
+        elif (self.submitCommand.find("condor_submit") >= 0
+                and not gen.program_is_executable('condor_submit')):
+            raise MissingWorkloadManager
 
     def submit(
         self,
         run_script=None,
         run_out_file=None,
-        run_error_file=None,
     ):
         """
         Submit a job described by a shell script
@@ -71,47 +73,72 @@ class JobManager:
         run_script: string
             Shell script descring the job to be submitted
         run_out_file: string
-            Redirect output stream to this file
-        run_error_file: string
-            Redirect error stream to this file
+            Redirect output/error/job stream to this file (out,err,job suffix)
 
         """
-        self.run_script = run_script
-        self.run_out_file = run_out_file
-        self.run_error_file = run_error_file
+        self.run_script = str(run_script)
+        self.run_out_file = str(run_out_file)
+
+        self._logger.info(
+            'Submitting script {}'.format(self.run_script))
+        self._logger.info(
+            'Job output stream {}'.format(self.run_out_file+".out"))
+        self._logger.info(
+            'Job error stream {}'.format(self.run_out_file+".err"))
+        self._logger.info(
+            'Job log stream {}'.format(self.run_out_file+".job"))
 
         if self.submitCommand.find("qsub") >= 0:
             self._submit_gridengine()
+        elif self.submitCommand.find("condor_submit") >= 0:
+            self._submit_HTcondor()
+
+    def _submit_HTcondor(self):
+        """
+        Submit a job described by a shell script to HTcondor
+
+        """
+
+        _condor_file = self.run_script + ".condor"
+        self._logger.info('Submitting script to HTCondor ({})'.format(
+            _condor_file))
+        try:
+            with open(_condor_file, 'w') as file:
+                file.write("Executable = {}\n".format(self.run_script))
+                file.write("Output = {}\n".format(self.run_out_file+".out"))
+                file.write("Error = {}\n".format(self.run_out_file+".err"))
+                file.write("Log = {}\n".format(self.run_out_file+".job"))
+                file.write("queue 1\n")
+        except FileNotFoundError:
+            self._logger.error(
+                "Failed creating condor submission file {}".format(
+                    _condor_file))
+
+        shellCommand = self.submitCommand + " " + _condor_file
+        if not self.test:
+            os.system(shellCommand)
+        else:
+            self._logger.info('Testing (HTcondor')
 
     def _submit_gridengine(self):
         """
         Submit a job described by a shell script to gridengine
-
-        Parameters
-        ----------
-        run_script: string
-            Shell script descring the job to be submitted
-        run_out_file: string
-            Redirect output stream to this file
-        run_error_file: string
-            Redirect error stream to this file
 
         """
 
         thisSubCmd = copy(self.submitCommand)
         if 'log_out' in thisSubCmd:
             thisSubCmd = thisSubCmd.replace(
-                'log_out', str(self.run_out_file))
+                'log_out', self.run_out_file + ".out")
         if 'log_err' in thisSubCmd:
             thisSubCmd = thisSubCmd.replace(
-                'log_err', str(self.run_error_file))
+                'log_err', self.run_out_file + ".err")
 
-        self._logger.info(
-            'Submitting script {} to gridengine'.format(self.run_script))
+        self._logger.info('Submitting script to gridengine')
 
-        shellCommand = thisSubCmd + ' ' + str(self.run_script)
+        shellCommand = thisSubCmd + ' ' + self.run_script
         self._logger.debug(shellCommand)
         if not self.test:
             os.system(shellCommand)
         else:
-            self._logger.info('Testing')
+            self._logger.info('Testing (gridengine)')
