@@ -194,6 +194,9 @@ class SimtelRunnerArray(SimtelRunner):
 
         subLogFile = self.getSubLogFile(run=run, mode='out')
 
+        self._logger.info('Reading resources from {}'.format(
+            subLogFile))
+
         runtime = None
         with open(subLogFile, 'r') as file:
             for line in reversed(list(file)):
