@@ -16,20 +16,37 @@ class JobManager:
 
     Attributes
     ----------
+    submitCommand: str
+       job submission command (allowed is qsub, condor_submit, seriell_script
+    test: bool
+       testing mode without sub submission
 
     Methods
     -------
+    test_submission_system
+       Check that the requested workload manager exis
+    submit(run_script, run_out_file)
+       Submit a job described by a shell script
 
     """
 
     def __init__(
         self,
-        label=None,
         submitCommand=None,
         test=False
     ):
+        """
+        JobManager init
+
+        Parameters
+        ----------
+        submitCommand: str
+            job submission command
+        test: bool
+        testing mode without sub submission
+
+        """
         self._logger = logging.getLogger(__name__)
-        self.label = label
         self.submitCommand = submitCommand
         self.test = test
 
@@ -43,7 +60,7 @@ class JobManager:
 
     def test_submission_system(self):
         """
-        Check the requested workload manager exist on the
+        Check that the requested workload manager exist on the
         system this script is executed
 
         Raises
@@ -53,12 +70,18 @@ class JobManager:
 
         """
 
-        if (self.submitCommand.find("qsub") >= 0
+        if self.submitCommand is None:
+            return
+        elif (self.submitCommand.find("qsub") >= 0
                 and not gen.program_is_executable('qsub')):
             raise MissingWorkloadManager
         elif (self.submitCommand.find("condor_submit") >= 0
                 and not gen.program_is_executable('condor_submit')):
             raise MissingWorkloadManager
+        elif self.submitCommand.find("seriell_script") >= 0:
+            return
+
+        raise MissingWorkloadManager
 
     def submit(
         self,
@@ -92,6 +115,25 @@ class JobManager:
             self._submit_gridengine()
         elif self.submitCommand.find("condor_submit") >= 0:
             self._submit_HTcondor()
+        elif self.submitCommand.find("seriell_script") >= 0:
+            self._submit_seriell_script()
+
+    def _submit_seriell_script(self):
+        """
+        Run a job script on the command line
+        (no submission to a workload manager)
+
+        """
+
+        self._logger.info('Running script locally')
+
+        shellCommand = self.run_script + \
+            " > " + self.run_out_file + ".out"
+
+        if not self.test:
+            os.system(shellCommand)
+        else:
+            self._logger.info('Testing (seriell_script')
 
     def _submit_HTcondor(self):
         """
