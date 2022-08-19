@@ -98,7 +98,7 @@ def parse(description=None):
             "iron",
         ],
     )
-    group = parser.add_mutually_exclusive_group()
+    group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument(
         "--array_only",
         help="Simulates only array detection, no showers",
