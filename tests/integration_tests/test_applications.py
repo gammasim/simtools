@@ -159,7 +159,7 @@ APP_LIST = {
             "--model_version", "prod4"
         ]
     ],
-    "production:showers_only": [
+    "production::showers_only": [
         [
             "-p", "./tests/resources/prodConfigTest.yml",
             "-t", "simulate",
@@ -167,7 +167,7 @@ APP_LIST = {
             "--test"
         ]
     ],
-    "production:array_only": [
+    "production::array_only": [
         [
             "-p", "./tests/resources/prodConfigTest.yml",
             "-t", "simulate",
