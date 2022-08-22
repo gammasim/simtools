@@ -357,8 +357,8 @@ class CorsikaRunner:
         runNumber: int
             Run number.
 
-        Returns:
-        --------
+        Returns
+        -------
         nEvents: int
             number of simulated events
         runtime: int
