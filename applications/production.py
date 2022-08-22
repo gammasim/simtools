@@ -274,5 +274,6 @@ def main():
                 print('Printing computing resources report for primary {}'.format(primary))
                 array.printResourcesReport(inputList)
 
+
 if __name__ == "__main__":
     main()
