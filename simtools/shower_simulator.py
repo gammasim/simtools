@@ -246,6 +246,18 @@ class ShowerSimulator:
             )
 
     def makeResourcesReport(self):
+        """
+        Prepare a simple report on computing resources used
+        (includes run time per run only at this point)
+
+
+        Returns
+        -------
+        dict
+           Dictionary with reports on computing resources
+
+        """
+
         runtime = list()
         nEvents = None
         for run in self.runs:
@@ -262,6 +274,12 @@ class ShowerSimulator:
         return resources
 
     def printResourcesReport(self):
+        """
+        Print a simple report on computing resources used
+        (includes run time per run only at this point)
+
+        """
+
         resources = self.makeResourcesReport()
         print('-----------------------------')
         print('Computing Resources Report - Showers')
@@ -270,7 +288,22 @@ class ShowerSimulator:
         print('-----------------------------')
 
     def _getRunsToSimulate(self, runList, runRange):
-        """Process runList and runRange and return the validated list of runs."""
+        """
+        Process runList and runRange and return the validated list of runs.
+
+        Attributes
+        ----------
+        runList: list
+            list of runs (integers)
+        runRange:list
+            min and max of range of runs to be simulated (two list entries)
+
+        Returns
+        -------
+        list
+            list of unique run numbers (integers)
+
+        """
         if runList is None and runRange is None:
             if self.runs is None:
                 msg = (
@@ -288,6 +321,19 @@ class ShowerSimulator:
         """
         Validate runList and runRange and return the list of runs. \
         If both arguments are given, they will be merged into a single list.
+
+        Attributes
+        ----------
+        runList: list
+            list of runs (integers)
+        runRange:list
+            min and max of range of runs to be simulated (two list entries)
+
+        Returns
+        -------
+        list
+            list of unique run numbers (integers)
+
         """
         if runList is None and runRange is None:
             self._logger.debug("Nothing to validate - runList and runRange not given.")
