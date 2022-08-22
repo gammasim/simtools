@@ -205,7 +205,7 @@ def proccessSimulationConfigFile(configFile, primaryConfig, logger):
     return label, configShowers, configArrays
 
 
-if __name__ == "__main__":
+def main():
 
     args = parse(description=("Air shower and array simulations"))
 
@@ -273,3 +273,6 @@ if __name__ == "__main__":
             elif args.task == 'resources':
                 print('Printing computing resources report for primary {}'.format(primary))
                 array.printResourcesReport(inputList)
+
+if __name__ == "__main__":
+    main()
