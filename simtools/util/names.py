@@ -896,7 +896,7 @@ def corsikaRunScriptFileName(arrayName, site, primary, run, label=None):
 
 
 def corsikaRunLogFileName(arrayName, site, primary, run, label=None):
-    '''
+    """
     Corsika script file name.
 
     Parameters
@@ -916,7 +916,7 @@ def corsikaRunLogFileName(arrayName, site, primary, run, label=None):
     -------
     str
         File path.
-    '''
+    """
     name = 'log-corsika-run{}-{}-{}-{}'.format(run, arrayName, site, primary)
     name += '_{}'.format(label) if label is not None else ''
     name += '.log'
@@ -924,7 +924,7 @@ def corsikaRunLogFileName(arrayName, site, primary, run, label=None):
 
 
 def corsikaSubLogFileName(arrayName, site, primary, run, mode, label=None):
-    '''
+    """
     Corsika submission file name.
 
     Parameters
@@ -946,7 +946,7 @@ def corsikaSubLogFileName(arrayName, site, primary, run, mode, label=None):
     -------
     str
         File path.
-    '''
+    """
     name = 'log-sub-corsika-run{}-{}-{}-{}'.format(run, arrayName, site, primary)
     name += '_{}'.format(label) if label is not None else ''
     name += '-' + mode + '.log'
@@ -1061,7 +1061,7 @@ def simtelLogFileName(run, primary, arrayName, site, zenith, azimuth, label=None
     return name
 
 def simtelSubLogFileName(run, primary, arrayName, site, zenith, azimuth, mode, label=None):
-    '''
+    """
     sim_telarray submission log file name.
 
     Parameters
@@ -1085,7 +1085,7 @@ def simtelSubLogFileName(run, primary, arrayName, site, zenith, azimuth, mode, l
     -------
     str
         File name.
-    '''
+    """
     name = 'log-sub-run{}_{}_za{:d}deg_azm{:d}deg-{}-{}'.format(
         run,
         primary,
