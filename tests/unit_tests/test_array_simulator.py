@@ -59,12 +59,10 @@ def test_guess_run(array_simulator):
     run = array_simulator._guessRunFromFile("run1test2_bla_ble")
     assert run == 1
 
-    run = array_simulator._guessRunFromFile(
-        "abc-run12345_bla_ble", 7)
+    run = array_simulator._guessRunFromFile("abc-run12345_bla_ble")
     assert run == 12345
 
-    run = array_simulator._guessRunFromFile(
-        "abc-run12345_bla_ble", 22)
+    run = array_simulator._guessRunFromFile("abc-ran12345_bla_ble")
     assert run == 1
 
 
