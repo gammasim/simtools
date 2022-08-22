@@ -317,16 +317,55 @@ class CorsikaRunner:
         return extra
 
     def hasRunLogFile(self, runNumber=None):
+        """
+        Checks that the run log file for this run number
+        is a valid file on disk
+
+        Parameters
+        ----------
+        runNumber: int
+            Run number.
+
+        """
+
         runNumber = self._validateRunNumber(runNumber)
         runLogFile = self.getRunLogFile(runNumber=runNumber)
         return Path(runLogFile).is_file()
 
     def hasSubLogFile(self, runNumber=None, mode='out'):
+        """
+        Checks that the sub run log file for this run number
+        is a valid file on disk
+
+        Parameters
+        ----------
+        runNumber: int
+            Run number.
+
+        """
+
         runNumber = self._validateRunNumber(runNumber)
         runSubFile = self.getSubLogFile(runNumber=runNumber, mode=mode)
         return Path(runSubFile).is_file()
 
     def getResources(self, runNumber=None):
+        """
+        Read run time of job from last line of submission log file.
+
+        Parameters
+        ----------
+        runNumber: int
+            Run number.
+
+        Returns
+        -------
+        nEvents: int
+            number of simulated events
+        runtime: int
+            run time of job in seconds
+
+        """
+
         runNumber = self._validateRunNumber(runNumber)
         subLogFile = self.getSubLogFile(runNumber=runNumber, mode='out')
 
@@ -344,10 +383,7 @@ class CorsikaRunner:
             self._logger.debug('RUNTIME was not found in run log file')
 
         # Calculating number of events
-        nEvents = int(
-            self.corsikaConfig.getUserParameter('NSHOW')
-            * self.corsikaConfig.getUserParameter('CSCAT')[0]
-        )
+        nEvents = int(self.corsikaConfig.getUserParameter('NSHOW'))
 
         return nEvents, runtime
 
@@ -381,7 +417,7 @@ class CorsikaRunner:
         return self._corsikaLogDir.joinpath(logFileName)
 
     def getSubLogFile(self, runNumber=None, mode='out'):
-        '''
+        """
         Get the full path of the submission log file.
 
         Parameters
@@ -400,7 +436,7 @@ class CorsikaRunner:
         -------
         Path:
             Full path of the run log file.
-        '''
+        """
         runNumber = self._validateRunNumber(runNumber)
         logFileName = names.corsikaSubLogFileName(
             site=self.site,

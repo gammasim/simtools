@@ -67,6 +67,16 @@ def parse(description=None):
     """
     Parse command line configuration
 
+    Parameters
+    ----------
+    description: str
+        description of application.
+
+    Returns
+    -------
+    CommandLineParser
+        command line parser object
+
     """
 
     parser = argparser.CommandLineParser(description=description)
@@ -126,6 +136,22 @@ def proccessSimulationConfigFile(configFile, primaryConfig, logger):
     """
     Read simulation configuration file with details on shower
     and array simulations
+
+    Attributes
+    ----------
+    configFile: str
+        Name of simulation configuration file
+    primaryConfig: str
+        Name of the primary selected from the configuration file.
+
+    Returns
+    -------
+    str
+        label of simulation configuration
+    dict
+        configuration of shower simulations
+    dict
+        configuration of array simulations
 
     """
 
