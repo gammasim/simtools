@@ -82,6 +82,8 @@ class JobManager:
             raise MissingWorkloadManager
         elif self.submitCommand.find("seriell_script") >= 0:
             return
+        elif self.submitCommand.find("more") >= 0:
+            return
 
         raise MissingWorkloadManager
 
@@ -119,6 +121,23 @@ class JobManager:
             self._submit_HTcondor()
         elif self.submitCommand.find("seriell_script") >= 0:
             self._submit_seriell_script()
+        elif self.submitCommand.find("more") >= 0:
+            self._submit_for_testing()
+
+    def _submit_for_testing(self):
+        """
+        Print submit script to screen for testing
+
+        """
+
+        self._logger.info('Testing script')
+
+        shellCommand = 'more ' + self.run_script
+
+        if not self.test:
+            os.system(shellCommand)
+        else:
+            self._logger.info('Testing (submit_for_testing)')
 
     def _submit_seriell_script(self):
         """
