@@ -318,7 +318,17 @@ class ArraySimulator:
             return 1
 
     def _fillResults(self, file, run):
-        ''' Fill the results dict with input, output and log files. '''
+        """
+        Fill the results dict with input, output and log files.
+
+        Parameters
+        ----------
+        file: str
+            input file name
+        run: int
+            run number
+
+        """
         self._results['input'].append(str(file))
         self._results['output'].append(str(self._simtelRunner.getOutputFile(run)))
         self._results['hist'].append(str(self._simtelRunner.getHistogramFile(run)))
