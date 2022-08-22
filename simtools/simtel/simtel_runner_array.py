@@ -143,7 +143,27 @@ class SimtelRunnerArray(SimtelRunner):
         return self._simtelLogDir.joinpath(fileName)
 
     def getSubLogFile(self, run, mode='out'):
-        ''' Get full path of the simtel log file for a given run. '''
+        """
+        Get the full path of the submission log file.
+
+        Parameters
+        ----------
+        runNumber: int
+            Run number.
+        mode: str
+            out or err
+
+        Raises
+        ------
+        ValueError
+            If runNumber is not valid (not an unsigned int).
+
+        Returns
+        -------
+        Path:
+            Full path of the run log file.
+        """
+
         fileName = names.simtelSubLogFileName(
             run=run,
             primary=self.config.primary,
@@ -183,12 +203,28 @@ class SimtelRunnerArray(SimtelRunner):
         return self._simtelDataDir.joinpath(fileName)
 
     def hasSubLogFile(self, run, mode='out'):
+        """
+        Checks that the sub run log file for this run number
+        is a valid file on disk
+
+        Parameters
+        ----------
+        runNumber: int
+            Run number.
+
+        """
+
         runSubFile = self.getSubLogFile(run=run, mode=mode)
         return Path(runSubFile).is_file()
 
     def getResources(self, run):
         """
         Reading run time from last line of submission log file.
+
+        Parameters
+        ----------
+        runNumber: int
+            Run number.
 
         """
 
@@ -211,7 +247,17 @@ class SimtelRunnerArray(SimtelRunner):
         return not self.getOutputFile(run).exists()
 
     def _makeRunCommand(self, inputFile, run=1):
-        """Builds and returns the command to run simtel_array."""
+        """
+        Builds and returns the command to run simtel_array.
+
+        Attributes
+        ----------
+        inputFile: str
+            Full path of the input CORSIKA file
+        run: int
+            run number
+
+        """
 
         self._logFile = self.getLogFile(run)
         histogramFile = self.getHistogramFile(run)
