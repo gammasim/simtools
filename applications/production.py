@@ -59,6 +59,11 @@ def parse(description=None):
     """
     Parse command line configuration
 
+    Parameters
+    ----------
+    description: str
+        description of application.
+
     """
 
     parser = argparser.CommandLineParser(description=description)
