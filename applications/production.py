@@ -16,7 +16,7 @@
 
     The workload management system used is given in the configuration file. \
     Allowed systems are qsub (using gridengine), condor_submit \
-    (using HTcondor), and seriell_script (running the script locally).
+    (using HTcondor), and local (running the script locally).
 
     Command line arguments
     ----------------------
@@ -217,8 +217,6 @@ def main():
     label, showerConfigs, arrayConfigs = proccessSimulationConfigFile(
         args.productionconfig, args.primary, logger)
 
-    submitCommand = "more " if args.test else None
-
     # ShowerSimulators
     showerSimulators = dict()
     for primary, configData in showerConfigs.items():
@@ -230,7 +228,7 @@ def main():
 
             if args.task == "simulate":
                 print("Running ShowerSimulator for primary {}".format(primary))
-                shower.submit(submitCommand=submitCommand)
+                shower.submit()
 
             elif args.task == "list":
                 print(
@@ -243,19 +241,18 @@ def main():
                 shower.printResourcesReport()
 
     # ArraySimulators
-    arraySimulators = dict()
-    for primary, configData in arrayConfigs.items():
-        aa = ArraySimulator(label=label, configData=configData)
-        arraySimulators[primary] = aa
-
     if not args.showers_only:
+        arraySimulators = dict()
+        for primary, configData in arrayConfigs.items():
+            aa = ArraySimulator(label=label, configData=configData)
+            arraySimulators[primary] = aa
         # Running Arrays
         for primary, array in arraySimulators.items():
 
             inputList = showerSimulators[primary].getListOfOutputFiles()
             if args.task == "simulate":
                 print("Running ArraySimulator for primary {}".format(primary))
-                array.submit(inputFileList=inputList, submitCommand=submitCommand)
+                array.submit(inputFileList=inputList)
 
             elif args.task == "lists":
                 print(
