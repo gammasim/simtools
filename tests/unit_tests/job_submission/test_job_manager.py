@@ -14,6 +14,6 @@ def label():
 
 def test_test_submission_system(label):
     jm.JobManager(submitCommand=None)
-    jm.JobManager(submitCommand="seriell_script")
+    jm.JobManager(submitCommand="local")
     with pytest.raises(jm.MissingWorkloadManager):
         jm.JobManager(submitCommand='abc')
