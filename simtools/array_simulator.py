@@ -1,7 +1,10 @@
 import logging
 import os
+import re
+import numpy as np
 from copy import copy
 from pathlib import Path
+from collections import defaultdict
 
 import astropy.units as u
 
@@ -101,7 +104,7 @@ class ArraySimulator:
         simtelSourcePath: str or Path
             Location of source of the sim_telarray/CORSIKA package.
         configData: dict
-            Dict with configurable data.
+            Dict with array model configuration data.
         configFile: str or Path
             Path to yaml file containing configurable data.
         """
@@ -123,16 +126,19 @@ class ArraySimulator:
         self._setSimtelRunner()
 
         # Storing list of files
-        self._results = dict()
-        self._results["output"] = list()
-        self._results["hist"] = list()
-        self._results["input"] = list()
-        self._results["log"] = list()
-
-    # End of init
+        self._results = defaultdict(list)
 
     def _loadArrayConfigData(self, configData):
-        """Load configData, create arrayModel and store remaining parameters in config."""
+        """
+        Load configuration data, create arrayModel and store remaining
+        parameters in config.
+
+        Parameters
+        ----------
+        configData: dict
+            Dict with array model configuration data.
+
+        """
         _arrayModelConfig, _restConfig = self._collectArrayModelParameters(configData)
 
         _parameterFile = io.getDataFile("parameters", "array-simulator_parameters.yml")
@@ -147,6 +153,12 @@ class ArraySimulator:
         """
         Separate parameters from configData into parameters to create the arrayModel
         and remaining parameters to be stored in config.
+
+        Parameters
+        ----------
+        configData: dict
+            Dict with array model configuration data.
+
         """
         _arrayModelData = dict()
         _restData = copy(configData)
@@ -184,7 +196,14 @@ class ArraySimulator:
         )
 
     def _fillResultsWithoutRun(self, inputFileList):
-        """Fill in the results dict without calling run or submit."""
+        """
+        Fill in the results dict without calling run or submit.
+
+        Parameters
+        ----------
+        inputFileList: str or list of str
+            Single file or list of files of shower simulations.
+        """
         inputFileList = self._makeInputList(inputFileList)
 
         for file in inputFileList:
@@ -245,9 +264,20 @@ class ArraySimulator:
             runScript = self._simtelRunner.getRunScript(
                 run=run, inputFile=file, extraCommands=extraCommands
             )
-            self._logger.info("Run {} - Submitting script {}".format(run, runScript))
+            thisSubCmd = copy(subCmd)
 
-            shellCommand = subCmd + " " + str(runScript)
+            # Checking for log files in sub command and replacing them
+            if 'log_out' in subCmd:
+                logOutFile = self._simtelRunner.getSubLogFile(run=run, mode='out')
+                thisSubCmd = thisSubCmd.replace('log_out', str(logOutFile))
+
+            if 'log_err' in subCmd:
+                logErrFile = self._simtelRunner.getSubLogFile(run=run, mode='err')
+                thisSubCmd = thisSubCmd.replace('log_err', str(logErrFile))
+
+            self._logger.info('Run {} - Submitting script {}'.format(run, runScript))
+
+            shellCommand = thisSubCmd + ' ' + str(runScript)
             self._logger.debug(shellCommand)
             if not test:
                 os.system(shellCommand)
@@ -265,26 +295,45 @@ class ArraySimulator:
     def _guessRunFromFile(self, file):
         """
         Finds the run number for a given input file name.
-        Input file names must follow 'run1234_*' pattern.
+        Input file names can follow any pattern with the
+        string 'run' followed by the run number.
         If not found, returns 1.
+
+        Parameters
+        ----------
+        file: Path
+            Simulation file name
+
         """
         fileName = str(Path(file).name)
-        runStr = fileName[3 : fileName.find("_")]
 
         try:
-            runNumber = int(runStr)
+            runStr = re.search('run[0-9]*', fileName).group()
+            runNumber = int(runStr[3:])
             return runNumber
-        except ValueError:
-            msg = "Run number could not be guessed from the input file name - using run = 1"
+        except (ValueError, AttributeError):
+            msg = "Run number could not be guessed from {} using run = 1".format(
+                fileName)
             self._logger.warning(msg)
             return 1
 
     def _fillResults(self, file, run):
-        """Fill the results dict with input, output and log files."""
-        self._results["input"].append(str(file))
-        self._results["output"].append(str(self._simtelRunner.getOutputFile(run)))
-        self._results["hist"].append(str(self._simtelRunner.getHistogramFile(run)))
-        self._results["log"].append(str(self._simtelRunner.getLogFile(run)))
+        """
+        Fill the results dict with input, output and log files.
+
+        Parameters
+        ----------
+        file: str
+            input file name
+        run: int
+            run number
+
+        """
+        self._results['input'].append(str(file))
+        self._results['output'].append(str(self._simtelRunner.getOutputFile(run)))
+        self._results['hist'].append(str(self._simtelRunner.getHistogramFile(run)))
+        self._results['log'].append(str(self._simtelRunner.getLogFile(run)))
+        self._results['sub_out'].append(str(self._simtelRunner.getSubLogFile(run, mode='out')))
 
     def printHistograms(self, inputFileList=None):
         """
@@ -383,5 +432,53 @@ class ArraySimulator:
         for f in self._results[which]:
             print(f)
 
+    def makeResourcesReport(self, inputFileList):
+        """
+        Prepare a simple report on computing resources used
+        (includes run time per run only at this point)
 
-# End of ShowerSimulator
+        Parameters
+        ----------
+        inputFileList: str or list of str
+            Single file or list of files of shower simulations.
+
+        Returns
+        -------
+        dict
+           Dictionary with reports on computing resources
+
+        """
+
+        if len(self._results['sub_out']) == 0 and inputFileList is not None:
+            self._fillResultsWithoutRun(inputFileList)
+
+        runtime = list()
+        for file in self._results['sub_out']:
+            if Path(file).is_file():
+                thisRuntime = self._simtelRunner.getResources(
+                    run=self._guessRunFromFile(file))
+                runtime.append(thisRuntime)
+
+        meanRuntime = np.mean(runtime)
+
+        resources = dict()
+        resources['Runtime/run [sec]'] = meanRuntime
+        return resources
+
+    def printResourcesReport(self, inputFileList):
+        """
+        Print a simple report on computing resources used
+        (includes run time per run only at this point)
+
+        Parameters
+        ----------
+        inputFileList: str or list of str
+            Single file or list of files of shower simulations.
+
+        """
+        resources = self.makeResourcesReport(inputFileList)
+        print('-----------------------------')
+        print('Computing Resources Report - Array Simulations')
+        for key, value in resources.items():
+            print('{} = {:.2f}'.format(key, value))
+        print('-----------------------------')
