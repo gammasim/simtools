@@ -245,24 +245,30 @@ class CorsikaRunner:
             "Extra commands to be added to the run script {}".format(extraCommands)
         )
 
-        with open(scriptFilePath, "w") as file:
-            if extraCommands is not None:
-                file.write("# Writing extras\n")
-                for line in extraCommands:
-                    file.write("{}\n".format(line))
-                file.write("# End of extras\n\n")
+        with open(scriptFilePath, 'w') as file:
+            # shebang
+            file.write('#!/usr/bin/bash\n')
 
-            file.write("export CORSIKA_DATA={}\n".format(self._corsikaDataDir))
-            file.write("# Creating CORSIKA_DATA\n")
-            file.write("mkdir -p {}\n".format(self._corsikaDataDir))
-            file.write("\n")
-            file.write("cd {} || exit 2\n".format(self._corsikaDataDir))
-            file.write("\n")
-            file.write("# Running pfp\n")
+            # Setting SECONDS variable to measure runtime
+            file.write('\nSECONDS=0\n')
+
+            if extraCommands is not None:
+                file.write('\n# Writing extras\n')
+                for line in extraCommands:
+                    file.write('{}\n'.format(line))
+                file.write('# End of extras\n\n')
+
+            file.write('export CORSIKA_DATA={}\n'.format(self._corsikaDataDir))
+            file.write('\n# Creating CORSIKA_DATA\n')
+            file.write('mkdir -p {}\n'.format(self._corsikaDataDir))
+            file.write('cd {} || exit 2\n'.format(self._corsikaDataDir))
+            file.write('\n# Running pfp\n')
             file.write(pfpCommand)
-            file.write("\n")
-            file.write("# Running corsika_autoinputs\n")
+            file.write('\n# Running corsika_autoinputs\n')
             file.write(autoinputsCommand)
+
+            # Printing out runtime
+            file.write('\necho "RUNTIME: $SECONDS"\n')
 
         # Changing permissions
         os.system("chmod ug+x {}".format(scriptFilePath))
@@ -310,6 +316,74 @@ class CorsikaRunner:
         extra.extend(extraFromConfig)
         return extra
 
+    def hasRunLogFile(self, runNumber=None):
+        """
+        Checks that the run log file for this run number
+        is a valid file on disk
+
+        Parameters
+        ----------
+        runNumber: int
+            Run number.
+
+        """
+
+        runNumber = self._validateRunNumber(runNumber)
+        runLogFile = self.getRunLogFile(runNumber=runNumber)
+        return Path(runLogFile).is_file()
+
+    def hasSubLogFile(self, runNumber=None, mode='out'):
+        """
+        Checks that the sub run log file for this run number
+        is a valid file on disk
+
+        Parameters
+        ----------
+        runNumber: int
+            Run number.
+
+        """
+
+        runNumber = self._validateRunNumber(runNumber)
+        runSubFile = self.getSubLogFile(runNumber=runNumber, mode=mode)
+        return Path(runSubFile).is_file()
+
+    def getResources(self, runNumber=None):
+        """
+        Read run time of job from last line of submission log file.
+
+        Parameters
+        ----------
+        runNumber: int
+            Run number.
+
+        Returns
+        -------
+        nEvents: int
+            number of simulated events
+        runtime: int
+            run time of job in seconds
+
+        """
+
+        runNumber = self._validateRunNumber(runNumber)
+        subLogFile = self.getSubLogFile(runNumber=runNumber, mode='out')
+
+        runtime = None
+        with open(subLogFile, 'r') as file:
+            for line in file:
+                if 'RUNTIME' in line:
+                    runtime = int(line.split()[1])
+                    break
+
+        if runtime is None:
+            self._logger.debug('RUNTIME was not found in run log file')
+
+        # Calculating number of events
+        nEvents = int(self.corsikaConfig.getUserParameter('NSHOW'))
+
+        return nEvents, runtime
+
     def getRunLogFile(self, runNumber=None):
         """
         Get the full path of the run log file.
@@ -331,9 +405,48 @@ class CorsikaRunner:
         """
         runNumber = self._validateRunNumber(runNumber)
         logFileName = names.corsikaRunLogFileName(
-            site=self.site, run=runNumber, arrayName=self.layoutName, label=self.label
+            site=self.site,
+            run=runNumber,
+            primary=self.corsikaConfig.primary,
+            arrayName=self.layoutName,
+            label=self.label
         )
         return self._corsikaLogDir.joinpath(logFileName)
+
+    def getSubLogFile(self, runNumber=None, mode='out'):
+        """
+        Get the full path of the submission log file.
+
+        Parameters
+        ----------
+        runNumber: int
+            Run number.
+        mode: str
+            out or err
+
+        Raises
+        ------
+        ValueError
+            If runNumber is not valid (not an unsigned int).
+
+        Returns
+        -------
+        Path:
+            Full path of the run log file.
+        """
+        runNumber = self._validateRunNumber(runNumber)
+        logFileName = names.corsikaSubLogFileName(
+            site=self.site,
+            run=runNumber,
+            primary=self.corsikaConfig.primary,
+            arrayName=self.layoutName,
+            label=self.label,
+            mode=mode
+        )
+
+        subLogFileDir = self._outputDirectory.joinpath('logs')
+        subLogFileDir.mkdir(parents=True, exist_ok=True)
+        return subLogFileDir.joinpath(logFileName)
 
     def getCorsikaLogFile(self, runNumber=None):
         """
