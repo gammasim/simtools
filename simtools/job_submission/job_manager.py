@@ -6,8 +6,10 @@ import simtools.util.general as gen
 
 __all__ = ["JobManager"]
 
+
 class MissingWorkloadManager(Exception):
     pass
+
 
 class JobManager:
     """
@@ -17,14 +19,14 @@ class JobManager:
     Attributes
     ----------
     submitCommand: str
-       job submission command (allowed is qsub, condor_submit, seriell_script
+       job submission command (allowed is qsub, condor_submit, local).
     test: bool
        testing mode without sub submission
 
     Methods
     -------
     test_submission_system
-       Check that the requested workload manager exis
+       Check that the requested workload manager exist
     submit(run_script, run_out_file)
        Submit a job described by a shell script
 
@@ -80,9 +82,7 @@ class JobManager:
             if gen.program_is_executable('condor_submit'):
                 return
             raise MissingWorkloadManager
-        elif self.submitCommand.find("seriell_script") >= 0:
-            return
-        elif self.submitCommand.find("more") >= 0:
+        elif self.submitCommand.find("local") >= 0:
             return
 
         raise MissingWorkloadManager
@@ -104,7 +104,7 @@ class JobManager:
 
         """
         self.run_script = str(run_script)
-        self.run_out_file = str(run_out_file)
+        self.run_out_file = str(run_out_file).replace(".log", "-log")
 
         self._logger.info(
             'Submitting script {}'.format(self.run_script))
@@ -119,27 +119,10 @@ class JobManager:
             self._submit_gridengine()
         elif self.submitCommand.find("condor_submit") >= 0:
             self._submit_HTcondor()
-        elif self.submitCommand.find("seriell_script") >= 0:
-            self._submit_seriell_script()
-        elif self.submitCommand.find("more") >= 0:
-            self._submit_for_testing()
+        elif self.submitCommand.find("local") >= 0:
+            self._submit_local()
 
-    def _submit_for_testing(self):
-        """
-        Print submit script to screen for testing
-
-        """
-
-        self._logger.info('Testing script')
-
-        shellCommand = 'more ' + self.run_script
-
-        if not self.test:
-            os.system(shellCommand)
-        else:
-            self._logger.info('Testing (submit_for_testing)')
-
-    def _submit_seriell_script(self):
+    def _submit_local(self):
         """
         Run a job script on the command line
         (no submission to a workload manager)
@@ -149,12 +132,13 @@ class JobManager:
         self._logger.info('Running script locally')
 
         shellCommand = self.run_script + \
-            " > " + self.run_out_file + ".out"
+            " > " + self.run_out_file + ".out" \
+            " 2> " + self.run_out_file + ".err"
 
         if not self.test:
             os.system(shellCommand)
         else:
-            self._logger.info('Testing (seriell_script')
+            self._logger.info('Testing (local)')
 
     def _submit_HTcondor(self):
         """
@@ -190,12 +174,8 @@ class JobManager:
         """
 
         thisSubCmd = copy(self.submitCommand)
-        if 'log_out' in thisSubCmd:
-            thisSubCmd = thisSubCmd.replace(
-                'log_out', self.run_out_file + ".out")
-        if 'log_err' in thisSubCmd:
-            thisSubCmd = thisSubCmd.replace(
-                'log_err', self.run_out_file + ".err")
+        thisSubCmd = thisSubCmd + " -o " + self.run_out_file + ".out"
+        thisSubCmd = thisSubCmd + " -e " + self.run_out_file + ".err"
 
         self._logger.info('Submitting script to gridengine')
 
