@@ -12,7 +12,6 @@ from simtools.model.array_model import ArrayModel
 from simtools.simtel.simtel_histograms import SimtelHistograms
 from simtools.simtel.simtel_runner_array import SimtelRunnerArray
 
-
 __all__ = ["ArraySimulator"]
 
 
@@ -114,9 +113,7 @@ class ArraySimulator:
         self._filesLocation = cfg.getConfigArg("outputLocation", filesLocation)
 
         # File location
-        self._baseDirectory = io.getArraySimulatorOutputDirectory(
-            self._filesLocation, self.label
-        )
+        self._baseDirectory = io.getArraySimulatorOutputDirectory(self._filesLocation, self.label)
 
         configData = gen.collectDataFromYamlOrDict(configFile, configData)
         self._loadArrayConfigData(configData)
@@ -139,9 +136,7 @@ class ArraySimulator:
         _parameters = gen.collectDataFromYamlOrDict(_parameterFile, None)
         self.config = gen.validateConfigData(_restConfig, _parameters)
 
-        self.arrayModel = ArrayModel(
-            label=self.label, arrayConfigData=_arrayModelConfig
-        )
+        self.arrayModel = ArrayModel(label=self.label, arrayConfigData=_arrayModelConfig)
 
     def _collectArrayModelParameters(self, configData):
         """
@@ -231,9 +226,7 @@ class ArraySimulator:
             If True, job is not submitted.
         """
 
-        subCmd = (
-            submitCommand if submitCommand is not None else cfg.get("submissionCommand")
-        )
+        subCmd = submitCommand if submitCommand is not None else cfg.get("submissionCommand")
         self._logger.info("Submission command: {}".format(subCmd))
 
         inputFileList = self._makeInputList(inputFileList)

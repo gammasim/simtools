@@ -62,15 +62,10 @@ class SchemaValidator:
 
         """
         if user_meta_file_name:
-            self._logger.debug(
-                 "Reading user meta data from {}".format(
-                     user_meta_file_name))
-            self.data_dict = gen.collectDataFromYamlOrDict(
-                    user_meta_file_name, None)
+            self._logger.debug("Reading user meta data from {}".format(user_meta_file_name))
+            self.data_dict = gen.collectDataFromYamlOrDict(user_meta_file_name, None)
 
-        self._validate_schema(
-            self._reference_schema,
-            self.data_dict)
+        self._validate_schema(self._reference_schema, self.data_dict)
 
         self._process_schema()
 
@@ -108,12 +103,11 @@ class SchemaValidator:
                     raise ValueError(msg)
 
             if isinstance(value, dict):
-                if 'type' in value:
+                if "type" in value:
                     try:
                         self._validate_data_type(value, key, _this_data)
                     except UnboundLocalError:
-                        self._logger.error(
-                            f"No data for `{key}` key")
+                        self._logger.error(f"No data for `{key}` key")
                         raise
                 else:
                     self._validate_schema(value, _this_data)
@@ -132,9 +126,9 @@ class SchemaValidator:
         """
 
         try:
-            self.data_dict['PRODUCT']['DESCRIPTION'] = \
-                self._remove_line_feed(
-                    self.data_dict['PRODUCT']['DESCRIPTION'])
+            self.data_dict["PRODUCT"]["DESCRIPTION"] = self._remove_line_feed(
+                self.data_dict["PRODUCT"]["DESCRIPTION"]
+            )
         except KeyError:
             pass
 
@@ -159,34 +153,31 @@ class SchemaValidator:
 
         """
 
-        self._logger.debug("checking data field {} for {}".format(
-                           key, schema['type']))
+        self._logger.debug("checking data field {} for {}".format(key, schema["type"]))
 
-        convert = {'str': type('str'), 'float': type(1.0),
-                   'int': type(0), 'bool': type(True)}
+        convert = {"str": type("str"), "float": type(1.0), "int": type(0), "bool": type(True)}
 
-        if schema['type'] == 'datetime':
-            self._validate_datetime(
-                data_field,
-                self._field_is_optional(schema))
+        if schema["type"] == "datetime":
+            self._validate_datetime(data_field, self._field_is_optional(schema))
 
-        elif schema['type'] == 'email':
+        elif schema["type"] == "email":
             self._validate_email(data_field, key)
 
-        elif schema['type'] == 'instrumentlist':
+        elif schema["type"] == "instrumentlist":
             self._validate_instrument_list(data_field)
 
-        elif type(data_field).__name__ != schema['type']:
+        elif type(data_field).__name__ != schema["type"]:
             try:
                 if isinstance(data_field, (int, str)):
-                    convert[schema['type']](data_field)
+                    convert[schema["type"]](data_field)
                 else:
                     raise ValueError
             except ValueError as error:
                 raise ValueError(
-                    'invalid type for key {}. Expected: {}, Found: {}'.format(
-                        key, schema['type'],
-                        type(data_field).__name__)) from error
+                    "invalid type for key {}. Expected: {}, Found: {}".format(
+                        key, schema["type"], type(data_field).__name__
+                    )
+                ) from error
 
     @staticmethod
     def _validate_datetime(data_field, optional_field=False):
@@ -213,8 +204,8 @@ class SchemaValidator:
         except (ValueError, TypeError) as error:
             if not optional_field:
                 raise ValueError(
-                    'invalid date format. Expected {}; Found {}'.format(
-                        format_date, data_field)) from error
+                    "invalid date format. Expected {}; Found {}".format(format_date, data_field)
+                ) from error
 
     @staticmethod
     def _validate_email(data_field, key):
@@ -234,11 +225,9 @@ class SchemaValidator:
             if data field is of invalid format
 
         """
-        regex = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'
+        regex = r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b"
         if not re.fullmatch(regex, data_field):
-            raise ValueError(
-                'invalid email format in field {}: {}'.format(
-                    key, data_field))
+            raise ValueError("invalid email format in field {}: {}".format(key, data_field))
 
     def _validate_instrument_list(self, instrument_list):
         """
@@ -253,9 +242,7 @@ class SchemaValidator:
         """
 
         for instrument in instrument_list:
-            self._validate_schema(
-                self._reference_schema['INSTRUMENT'],
-                instrument)
+            self._validate_schema(self._reference_schema["INSTRUMENT"], instrument)
 
     @staticmethod
     def _field_is_optional(value):
@@ -281,7 +268,7 @@ class SchemaValidator:
 
         """
         try:
-            if value['required']:
+            if value["required"]:
                 return False
             else:
                 return True
@@ -304,4 +291,4 @@ class SchemaValidator:
             with line feeds removed
         """
 
-        return string.replace('\n', ' ').replace('\r', '')
+        return string.replace("\n", " ").replace("\r", "")

@@ -1,13 +1,13 @@
 """ Module to handle interaction with DB. """
 
 import logging
-import yaml
 from pathlib import Path
-from bson.objectid import ObjectId
 from threading import Lock
 
-import pymongo
 import gridfs
+import pymongo
+import yaml
+from bson.objectid import ObjectId
 from pymongo import MongoClient
 from pymongo.errors import BulkWriteError
 
@@ -211,16 +211,10 @@ class DatabaseHandler:
             for info in parameters.values():
                 if not info["File"]:
                     continue
-                file = self._getFileMongoDB(
-                    DatabaseHandler.DB_CTA_SIMULATION_MODEL, info["Value"]
-                )
-                self._writeFileFromMongoToDisk(
-                    DatabaseHandler.DB_CTA_SIMULATION_MODEL, dest, file
-                )
+                file = self._getFileMongoDB(DatabaseHandler.DB_CTA_SIMULATION_MODEL, info["Value"])
+                self._writeFileFromMongoToDisk(DatabaseHandler.DB_CTA_SIMULATION_MODEL, dest, file)
         else:
-            self._logger.debug(
-                "Exporting model files from local model file directories"
-            )
+            self._logger.debug("Exporting model files from local model file directories")
             for value in parameters.values():
 
                 if not self._isFile(value):
@@ -257,9 +251,7 @@ class DatabaseHandler:
 
         destFile.write_text(file.read_text())
 
-    def _getModelParametersYaml(
-        self, site, telescopeModelName, modelVersion, onlyApplicable=False
-    ):
+    def _getModelParametersYaml(self, site, telescopeModelName, modelVersion, onlyApplicable=False):
         """
         Get parameters from DB for one specific type.
 
@@ -298,9 +290,7 @@ class DatabaseHandler:
 
             # If _tel is a structure, only the applicable parameters will be collected, always.
             # The default ones will be covered by the camera parameters.
-            _selectOnlyApplicable = onlyApplicable or (
-                _tel in ["MST-optics", "SST-Structure"]
-            )
+            _selectOnlyApplicable = onlyApplicable or (_tel in ["MST-optics", "SST-Structure"])
 
             for parNameIn, parInfo in _allPars.items():
 
@@ -346,7 +336,7 @@ class DatabaseHandler:
 
         if _telClass == "MST":
             # MST-FlashCam or MST-NectarCam
-            _whichTelLabels = ['{}-MST-Structure-D'.format(site), _telNameDB]
+            _whichTelLabels = ["{}-MST-Structure-D".format(site), _telNameDB]
         elif _telClass == "SST":
             # SST = SST-Camera + SST-Structure
             _whichTelLabels = [
@@ -359,7 +349,7 @@ class DatabaseHandler:
         # Selecting version and applicable (if on)
         _pars = dict()
         for _tel in _whichTelLabels:
-            self._logger.debug('Getting {} parameters from MongoDB'.format(_tel))
+            self._logger.debug("Getting {} parameters from MongoDB".format(_tel))
 
             # If tel is a structure, only applicable pars will be collected, always.
             # The default ones will be covered by the camera pars.
@@ -426,8 +416,7 @@ class DatabaseHandler:
         _parameters = dict()
 
         _modelVersion = self._convertVersionToTagged(
-            modelVersion,
-            DatabaseHandler.DB_CTA_SIMULATION_MODEL
+            modelVersion, DatabaseHandler.DB_CTA_SIMULATION_MODEL
         )
 
         query = {
@@ -551,9 +540,7 @@ class DatabaseHandler:
 
         return _pars
 
-    def _getSiteParametersMongoDB(
-        self, dbName, site, modelVersion, onlyApplicable=False
-    ):
+    def _getSiteParametersMongoDB(self, dbName, site, modelVersion, onlyApplicable=False):
         """
         Get parameters from MongoDB for a specific telescope.
 
@@ -657,7 +644,7 @@ class DatabaseHandler:
         newTelName,
         collectionName="telescopes",
         dbToCopyTo=None,
-        collectionToCopyTo=None
+        collectionToCopyTo=None,
     ):
         """
         Copy a full telescope configuration to a new telescope name.
@@ -719,14 +706,7 @@ class DatabaseHandler:
 
         return
 
-    def copyDocuments(
-        self,
-        dbName,
-        collection,
-        query,
-        dbToCopyTo,
-        collectionToCopyTo=None
-    ):
+    def copyDocuments(self, dbName, collection, query, dbToCopyTo, collectionToCopyTo=None):
         """
         Copy the documents matching to "query" to the DB "dbToCopyTo".
         The documents are copied to the same collection as in "dbName".
@@ -760,9 +740,7 @@ class DatabaseHandler:
             dbEntries.append(post)
 
         self._logger.info(
-            "Copying documents matching the following query {}\nto {}".format(
-                query, dbToCopyTo
-            )
+            "Copying documents matching the following query {}\nto {}".format(query, dbToCopyTo)
         )
         _collection = DatabaseHandler.dbClient[dbToCopyTo][collectionToCopyTo]
         try:
@@ -795,8 +773,7 @@ class DatabaseHandler:
 
         if "Version" in query:
             query["Version"] = self._convertVersionToTagged(
-                query["Version"],
-                DatabaseHandler.DB_CTA_SIMULATION_MODEL
+                query["Version"], DatabaseHandler.DB_CTA_SIMULATION_MODEL
             )
 
         self._logger.info(
@@ -818,7 +795,7 @@ class DatabaseHandler:
         parameter,
         newValue,
         collectionName="telescopes",
-        filePrefix=None
+        filePrefix=None,
     ):
         """
         Update a parameter value for a specific telescope/version.
@@ -846,8 +823,7 @@ class DatabaseHandler:
         collection = DatabaseHandler.dbClient[dbName][collectionName]
 
         _modelVersion = self._convertVersionToTagged(
-            version,
-            DatabaseHandler.DB_CTA_SIMULATION_MODEL
+            version, DatabaseHandler.DB_CTA_SIMULATION_MODEL
         )
 
         query = {
@@ -887,14 +863,7 @@ class DatabaseHandler:
         return
 
     def updateParameterField(
-        self,
-        dbName,
-        telescope,
-        version,
-        parameter,
-        field,
-        newValue,
-        collectionName="telescopes"
+        self, dbName, telescope, version, parameter, field, newValue, collectionName="telescopes"
     ):
         """
         Update a parameter field value for a specific telescope/version.
@@ -931,8 +900,7 @@ class DatabaseHandler:
         collection = DatabaseHandler.dbClient[dbName][collectionName]
 
         _modelVersion = self._convertVersionToTagged(
-            version,
-            DatabaseHandler.DB_CTA_SIMULATION_MODEL
+            version, DatabaseHandler.DB_CTA_SIMULATION_MODEL
         )
 
         query = {
@@ -943,13 +911,21 @@ class DatabaseHandler:
 
         parEntry = collection.find_one(query)
         if parEntry is None:
-            self._logger.warning("The query {} did not return any results. I will not make any changes.".format(query))
+            self._logger.warning(
+                "The query {} did not return any results. I will not make any changes.".format(
+                    query
+                )
+            )
             return
 
         oldFieldValue = parEntry[field]
 
         if oldFieldValue == newValue:
-            self._logger.warning("The value of the field {} is already {}. No changes are necessary".format(field, newValue))
+            self._logger.warning(
+                "The value of the field {} is already {}. No changes are necessary".format(
+                    field, newValue
+                )
+            )
             return
 
         self._logger.info(
@@ -972,7 +948,7 @@ class DatabaseHandler:
         newVersion,
         newValue,
         collectionName="telescopes",
-        filePrefix=None
+        filePrefix=None,
     ):
         """
         Add a parameter value for a specific telescope.
@@ -1001,8 +977,7 @@ class DatabaseHandler:
         collection = DatabaseHandler.dbClient[dbName][collectionName]
 
         _newVersion = self._convertVersionToTagged(
-            newVersion,
-            DatabaseHandler.DB_CTA_SIMULATION_MODEL
+            newVersion, DatabaseHandler.DB_CTA_SIMULATION_MODEL
         )
 
         query = {
@@ -1046,7 +1021,7 @@ class DatabaseHandler:
         value,
         collectionName="telescopes",
         filePrefix=None,
-        **kwargs
+        **kwargs,
     ):
         """
         Add a parameter value for a specific telescope.

@@ -1,10 +1,10 @@
 import logging
-import astropy.units as u
 
+import astropy.units as u
 import pyproj
 
-import simtools.util.general as gen
 import simtools.io_handler as io
+import simtools.util.general as gen
 
 
 class InvalidCoordSystem(Exception):
@@ -126,12 +126,8 @@ class TelescopePosition:
         self._prodId = prodId
 
         # Loading configData
-        _configDataIn = gen.collectDataFromYamlOrDict(
-            configFile, configData, allowEmpty=True
-        )
-        _parameterFile = io.getDataFile(
-            "parameters", "telescope-position_parameters.yml"
-        )
+        _configDataIn = gen.collectDataFromYamlOrDict(configFile, configData, allowEmpty=True)
+        _parameterFile = io.getDataFile("parameters", "telescope-position_parameters.yml")
         _parameters = gen.collectDataFromYamlOrDict(_parameterFile, None)
         self.config = gen.validateConfigData(_configDataIn, _parameters)
 
@@ -155,9 +151,7 @@ class TelescopePosition:
         -------
         Instance of this class.
         """
-        args, configData = gen.separateArgsAndConfigData(
-            expectedArgs=["name", "prodId"], **kwargs
-        )
+        args, configData = gen.separateArgsAndConfigData(expectedArgs=["name", "prodId"], **kwargs)
         return cls(**args, configData=configData)
 
     def __repr__(self):
@@ -207,9 +201,7 @@ class TelescopePosition:
     def setLocalCoordinates(self, posX, posY, posZ):
         """Set the X, Y and Z coordinates."""
         if None not in [self._posX, self._posY, self._posZ]:
-            self._logger.warning(
-                "Local coordinates are already set and will be overwritten"
-            )
+            self._logger.warning("Local coordinates are already set and will be overwritten")
 
         self._posX = posX.value
         self._posY = posY.value
@@ -223,9 +215,7 @@ class TelescopePosition:
         -------
         bool
         """
-        return (
-            self._posX is not None and self._posY is not None and self._posZ is not None
-        )
+        return self._posX is not None and self._posY is not None and self._posZ is not None
 
     def getAltitude(self):
         """
@@ -269,9 +259,7 @@ class TelescopePosition:
     def setMercatorCoordinates(self, latitude, longitude):
         """Set the latitude and longitude coordinates."""
         if None not in [self._latitude, self._longitude]:
-            self._logger.warning(
-                "Mercator coordinates are already set and will be overwritten"
-            )
+            self._logger.warning("Mercator coordinates are already set and will be overwritten")
 
         self._latitude = latitude.value
         self._longitude = longitude.value
@@ -300,9 +288,7 @@ class TelescopePosition:
     def setUtmCoordinates(self, utmEast, utmNorth):
         """Set the UTM coordinates."""
         if None not in [self._utmEast, self._utmNorth]:
-            self._logger.warning(
-                "UTM coordinates are already set and will be overwritten"
-            )
+            self._logger.warning("UTM coordinates are already set and will be overwritten")
 
         self._utmEast = utmEast.value
         self._utmNorth = utmNorth.value
@@ -377,8 +363,7 @@ class TelescopePosition:
         """
         if self.hasUtmCoordinates():
             self._logger.debug(
-                "utm east and utm north are already set"
-                " - aborting convertion from local to UTM"
+                "utm east and utm north are already set" " - aborting convertion from local to UTM"
             )
             return
 
@@ -433,9 +418,7 @@ class TelescopePosition:
             raise MissingInputForConvertion(msg)
 
         # Require valid coordinate systems
-        if not isinstance(crsUtm, pyproj.crs.crs.CRS) or not isinstance(
-            wgs84, pyproj.crs.crs.CRS
-        ):
+        if not isinstance(crsUtm, pyproj.crs.crs.CRS) or not isinstance(wgs84, pyproj.crs.crs.CRS):
             msg = "crsUtm and/or wgs84 is not a valid coord system"
             self._logger.error(msg)
             raise InvalidCoordSystem(msg)
@@ -463,15 +446,13 @@ class TelescopePosition:
         """
         if self.hasLocalCoordinates():
             self._logger.debug(
-                "latitude and longitude are already set"
-                " - aborting convertion from utm to local"
+                "latitude and longitude are already set" " - aborting convertion from utm to local"
             )
             return
 
         if not self.hasUtmCoordinates():
             msg = (
-                "utm east and/or utm north are not set - "
-                "impossible to convert from utm to local"
+                "utm east and/or utm north are not set - " "impossible to convert from utm to local"
             )
             self._logger.error(msg)
             raise MissingInputForConvertion(msg)
@@ -505,9 +486,7 @@ class TelescopePosition:
             CORSIKA sphere center in equivalent units of meter.
         """
 
-        hasPars = (
-            self._corsikaObsLevel is not None and self._corsikaSphereCenter is not None
-        )
+        hasPars = self._corsikaObsLevel is not None and self._corsikaSphereCenter is not None
         givenPars = corsikaObsLevel is not None and corsikaSphereCenter is not None
 
         if not hasPars and not givenPars:
@@ -524,9 +503,7 @@ class TelescopePosition:
                     + corsikaSphereCenter.to(u.m).value
                 )
             else:  # hasPars
-                self._posZ = (
-                    self._altitude - self._corsikaObsLevel + self._corsikaSphereCenter
-                )
+                self._posZ = self._altitude - self._corsikaObsLevel + self._corsikaSphereCenter
 
             return
         else:
@@ -552,9 +529,7 @@ class TelescopePosition:
             CORSIKA sphere center in equivalent units of meter.
         """
 
-        hasPars = (
-            self._corsikaObsLevel is not None and self._corsikaSphereCenter is not None
-        )
+        hasPars = self._corsikaObsLevel is not None and self._corsikaSphereCenter is not None
         givenPars = corsikaObsLevel is not None and corsikaSphereCenter is not None
 
         if not hasPars and not givenPars:
@@ -566,14 +541,10 @@ class TelescopePosition:
 
             if givenPars:
                 self._altitude = (
-                    corsikaObsLevel.to(u.m).value
-                    + self._posZ
-                    - corsikaSphereCenter.to(u.m).value
+                    corsikaObsLevel.to(u.m).value + self._posZ - corsikaSphereCenter.to(u.m).value
                 )
             else:  # hasPars
-                self._altitude = (
-                    self._corsikaObsLevel + self._posZ - self._corsikaSphereCenter
-                )
+                self._altitude = self._corsikaObsLevel + self._posZ - self._corsikaSphereCenter
             return
         else:
             self._logger.warning(
@@ -624,34 +595,22 @@ class TelescopePosition:
         ):
             self.convertLocalToMercator(crsLocal, wgs84)
 
-        if (
-            self.hasLocalCoordinates()
-            and not self.hasUtmCoordinates()
-            and crsLocal is not None
-        ):
+        if self.hasLocalCoordinates() and not self.hasUtmCoordinates() and crsLocal is not None:
             self.convertLocalToUtm(crsLocal, crsUtm)
 
-        if (
-            self.hasUtmCoordinates()
-            and not self.hasLocalCoordinates()
-            and crsUtm is not None
-        ):
+        if self.hasUtmCoordinates() and not self.hasLocalCoordinates() and crsUtm is not None:
             self.convertUtmToLocal(crsUtm, crsLocal)
 
-        if (
-            self.hasUtmCoordinates()
-            and not self.hasMercatorCoordinates()
-            and crsUtm is not None
-        ):
+        if self.hasUtmCoordinates() and not self.hasMercatorCoordinates() and crsUtm is not None:
             self.convertUtmToMercator(crsUtm, wgs84)
 
         # Dealing with altitude <-> posZ
         if corsikaObsLevel is None or corsikaSphereCenter is None:
             self._logger.warning(
-                "Warning: telescope height might be incorrect du to "\
-                "incomplete CORSIKA observation ({})"\
-                "or sphere centre information ({})".format(
-                    corsikaObsLevel, corsikaSphereCenter))
+                "Warning: telescope height might be incorrect du to "
+                "incomplete CORSIKA observation ({})"
+                "or sphere centre information ({})".format(corsikaObsLevel, corsikaSphereCenter)
+            )
         elif self.hasLocalCoordinates() and not self.hasAltitude():
             self.convertCorsikaToAsl(corsikaObsLevel, corsikaSphereCenter)
         elif self.hasAltitude() and not self.hasLocalCoordinates():

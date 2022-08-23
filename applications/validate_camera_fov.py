@@ -42,13 +42,12 @@
 
 import logging
 
-import simtools.util.commandline_parser as argparser
 import simtools.config as cfg
 import simtools.io_handler as io
+import simtools.util.commandline_parser as argparser
 import simtools.util.general as gen
-from simtools.model.telescope_model import TelescopeModel
 from simtools.model.camera import Camera
-
+from simtools.model.telescope_model import TelescopeModel
 
 if __name__ == "__main__":
 

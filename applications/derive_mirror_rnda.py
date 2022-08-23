@@ -119,17 +119,17 @@
 import logging
 import os
 
-import numpy as np
 import astropy.units as u
-from astropy.table import Table, QTable
+import numpy as np
+from astropy.table import QTable, Table
 
 import simtools.config as cfg
-import simtools.util.general as gen
-from simtools.ray_tracing import RayTracing
-from simtools.model.telescope_model import TelescopeModel
 import simtools.util.commandline_parser as argparser
-import simtools.util.workflow_description as workflow_config
+import simtools.util.general as gen
 import simtools.util.model_data_writer as writer
+import simtools.util.workflow_description as workflow_config
+from simtools.model.telescope_model import TelescopeModel
+from simtools.ray_tracing import RayTracing
 
 
 def parse(label):
@@ -144,52 +144,65 @@ def parse(label):
     psf_group.add_argument(
         "--psf_measurement_containment_mean",
         help="Mean of measured PSF containment diameter [cm]",
-        type=float, required=False
+        type=float,
+        required=False,
     )
     psf_group.add_argument(
         "--psf_measurement",
         help="Results from PSF measurements for each mirror panel spot size",
-        type=str, required=False,
+        type=str,
+        required=False,
     )
     parser.add_argument(
         "--psf_measurement_containment_sigma",
         help="Std dev of measured PSF containment diameter [cm]",
-        type=float, required=False
+        type=float,
+        required=False,
     )
     parser.add_argument(
         "--containment_fraction",
         help="Containment fraction for diameter calculation (in interval 0,1)",
-        type=argparser.CommandLineParser.efficiency_interval, required=False,
+        type=argparser.CommandLineParser.efficiency_interval,
+        required=False,
         default=0.8,
     )
     parser.add_argument(
         "--rnda",
         help="Starting value of mirror_reflection_random_angle",
-        type=float, required=False,
+        type=float,
+        required=False,
         default=0.0,
     )
     parser.add_argument(
         "--mirror_list",
-        help=("Mirror list file to replace the default one. It should be used if"
-              " measured mirror focal lengths need to be accounted"),
-        type=str, required=False,
+        help=(
+            "Mirror list file to replace the default one. It should be used if"
+            " measured mirror focal lengths need to be accounted"
+        ),
+        type=str,
+        required=False,
     )
     parser.add_argument(
         "--use_random_flen",
-        help=("Use random focal lengths. Read value for random_focal_length parameter read"
-              " from DB or provide by using the argument random_flen."),
-        action="store_true", required=False,
+        help=(
+            "Use random focal lengths. Read value for random_focal_length parameter read"
+            " from DB or provide by using the argument random_flen."
+        ),
+        action="store_true",
+        required=False,
     )
     parser.add_argument(
         "--random_flen",
         help="Value to replace the default random_focal_length.",
         default=None,
-        type=float, required=False,
+        type=float,
+        required=False,
     )
     parser.add_argument(
         "--no_tuning",
         help="no tuning of random_reflection_angle (a single case will be simulated).",
-        action="store_true", required=False,
+        action="store_true",
+        required=False,
     )
     parser.initialize_default_arguments(add_workflow_config=True)
     return parser.parse_args()
@@ -214,27 +227,26 @@ def define_telescope_model(workflow):
     """
 
     tel = TelescopeModel(
-        site=workflow.get_configuration_parameter('site'),
-        telescopeModelName=workflow.get_configuration_parameter('telescope'),
-        modelVersion=workflow.get_configuration_parameter('model_version'),
-        label=workflow.label()
+        site=workflow.get_configuration_parameter("site"),
+        telescopeModelName=workflow.get_configuration_parameter("telescope"),
+        modelVersion=workflow.get_configuration_parameter("model_version"),
+        label=workflow.label(),
     )
-    if workflow.get_configuration_parameter('mirror_list') is not None:
-        mirrorListFile = cfg.findFile(name=workflow.get_configuration_parameter('mirror_list'))
-        tel.changeParameter("mirror_list", workflow.get_configuration_parameter('mirror_list'))
+    if workflow.get_configuration_parameter("mirror_list") is not None:
+        mirrorListFile = cfg.findFile(name=workflow.get_configuration_parameter("mirror_list"))
+        tel.changeParameter("mirror_list", workflow.get_configuration_parameter("mirror_list"))
         tel.addParameterFile("mirror_list", mirrorListFile)
-    if workflow.get_configuration_parameter('random_flen') is not None:
+    if workflow.get_configuration_parameter("random_flen") is not None:
         tel.changeParameter(
-            "random_focal_length",
-            str(workflow.get_configuration_parameter('random_flen')))
+            "random_focal_length", str(workflow.get_configuration_parameter("random_flen"))
+        )
 
     return tel
 
 
-def print_and_write_results(workflow,
-                            rndaStart, rndaOpt,
-                            meanD80, sigD80,
-                            resultsRnda, resultsMean, resultsSig):
+def print_and_write_results(
+    workflow, rndaStart, rndaOpt, meanD80, sigD80, resultsRnda, resultsMean, resultsSig
+):
     """
     Print results to screen write metadata and data files
     in the requested format
@@ -242,19 +254,24 @@ def print_and_write_results(workflow,
     """
 
     containment_fraction_percent = int(
-        workflow.get_configuration_parameter('containment_fraction')*100)
+        workflow.get_configuration_parameter("containment_fraction") * 100
+    )
 
     # Printing results to stdout
     print("\nMeasured D{:}:".format(containment_fraction_percent))
-    if workflow.get_configuration_parameter('psf_measurement_containment_sigma') is not None:
+    if workflow.get_configuration_parameter("psf_measurement_containment_sigma") is not None:
         print(
             "Mean = {:.3f} cm, StdDev = {:.3f} cm".format(
-                workflow.get_configuration_parameter('psf_measurement_containment_mean'),
-                workflow.get_configuration_parameter('psf_measurement_containment_sigma'))
+                workflow.get_configuration_parameter("psf_measurement_containment_mean"),
+                workflow.get_configuration_parameter("psf_measurement_containment_sigma"),
+            )
         )
     else:
-        print("Mean = {:.3f} cm".format(
-            workflow.get_configuration_parameter('psf_measurement_containment_mean')))
+        print(
+            "Mean = {:.3f} cm".format(
+                workflow.get_configuration_parameter("psf_measurement_containment_mean")
+            )
+        )
     print("\nSimulated D{:}:".format(containment_fraction_percent))
     print("Mean = {:.3f} cm, StdDev = {:.3f} cm".format(meanD80, sigD80))
     print("\nmirror_random_reflection_angle")
@@ -263,21 +280,23 @@ def print_and_write_results(workflow,
 
     # Result table written to ecsv file using file_writer
     # First entry is always the best fit result
-    result_table = QTable([
-        [True]+[False]*len(resultsRnda),
-        ([rndaOpt]+resultsRnda) * u.deg,
-        ([0.]*(len(resultsRnda)+1)),
-        ([0.]*(len(resultsRnda)+1)) * u.deg,
-        ([meanD80]+resultsMean) * u.cm,
-        ([sigD80]+resultsSig) * u.cm
-        ], names=(
-            'best_fit',
-            'mirror_reflection_random_angle_sigma1',
-            'mirror_reflection_random_angle_fraction2',
-            'mirror_reflection_random_angle_sigma2',
-            f'containment_radius_D{containment_fraction_percent}',
-            f'containment_radius_sigma_D{containment_fraction_percent}'
-        )
+    result_table = QTable(
+        [
+            [True] + [False] * len(resultsRnda),
+            ([rndaOpt] + resultsRnda) * u.deg,
+            ([0.0] * (len(resultsRnda) + 1)),
+            ([0.0] * (len(resultsRnda) + 1)) * u.deg,
+            ([meanD80] + resultsMean) * u.cm,
+            ([sigD80] + resultsSig) * u.cm,
+        ],
+        names=(
+            "best_fit",
+            "mirror_reflection_random_angle_sigma1",
+            "mirror_reflection_random_angle_fraction2",
+            "mirror_reflection_random_angle_sigma2",
+            f"containment_radius_D{containment_fraction_percent}",
+            f"containment_radius_sigma_D{containment_fraction_percent}",
+        ),
     )
     file_writer = writer.ModelDataWriter(workflow)
     file_writer.write_metadata()
@@ -292,27 +311,36 @@ def get_psf_containment(logger, workflow):
     """
 
     _psf_list = Table.read(
-        workflow.get_configuration_parameter('psf_measurement'), format='ascii.ecsv')
+        workflow.get_configuration_parameter("psf_measurement"), format="ascii.ecsv"
+    )
     try:
         workflow.set_configuration_parameter(
-             'psf_measurement_containment_mean',
-             np.nanmean(np.array(_psf_list['psf_opt'].to('cm').value)))
+            "psf_measurement_containment_mean",
+            np.nanmean(np.array(_psf_list["psf_opt"].to("cm").value)),
+        )
         workflow.set_configuration_parameter(
-             'psf_measurement_containment_sigma',
-             np.nanstd(np.array(_psf_list['psf_opt'].to('cm').value)))
+            "psf_measurement_containment_sigma",
+            np.nanstd(np.array(_psf_list["psf_opt"].to("cm").value)),
+        )
     except KeyError:
-        logger.debug("Missing column for psf measurement (psf_opt) in {}".format(
-            workflow.get_configuration_parameter('psf_measurement')))
+        logger.debug(
+            "Missing column for psf measurement (psf_opt) in {}".format(
+                workflow.get_configuration_parameter("psf_measurement")
+            )
+        )
         raise
 
-    logger.info('Determined PSF containment to {:.4} +- {:.4} cm'.format(
-        workflow.get_configuration_parameter('psf_measurement_containment_mean'),
-        workflow.get_configuration_parameter('psf_measurement_containment_sigma')))
+    logger.info(
+        "Determined PSF containment to {:.4} +- {:.4} cm".format(
+            workflow.get_configuration_parameter("psf_measurement_containment_mean"),
+            workflow.get_configuration_parameter("psf_measurement_containment_sigma"),
+        )
+    )
 
 
 def main():
 
-    label = os.path.basename(__file__).split('.')[0]
+    label = os.path.basename(__file__).split(".")[0]
     args = parse(label)
 
     logger = logging.getLogger()
@@ -322,9 +350,9 @@ def main():
 
     tel = define_telescope_model(workflow)
 
-    if workflow.get_configuration_parameter('psf_measurement'):
+    if workflow.get_configuration_parameter("psf_measurement"):
         get_psf_containment(logger, workflow)
-    if not workflow.get_configuration_parameter('psf_measurement_containment_mean'):
+    if not workflow.get_configuration_parameter("psf_measurement_containment_mean"):
         logger.error("Missing PSF measurement")
         raise ValueError
 
@@ -335,8 +363,9 @@ def main():
             telescopeModel=tel,
             singleMirrorMode=True,
             mirrorNumbers=list(range(1, 10))
-            if workflow.get_configuration_parameter('test') else "all",
-            useRandomFocalLength=workflow.get_configuration_parameter('use_random_flen'),
+            if workflow.get_configuration_parameter("test")
+            else "all",
+            useRandomFocalLength=workflow.get_configuration_parameter("use_random_flen"),
         )
         ray.simulate(test=False, force=True)  # force has to be True, always
         ray.analyze(force=True)
@@ -347,22 +376,22 @@ def main():
         )
 
     # First - rnda from previous model or from command line
-    if workflow.get_configuration_parameter('rnda') != 0:
-        rndaStart = workflow.get_configuration_parameter('rnda')
+    if workflow.get_configuration_parameter("rnda") != 0:
+        rndaStart = workflow.get_configuration_parameter("rnda")
     else:
         rndaStart = tel.getParameter("mirror_reflection_random_angle")["Value"]
         if isinstance(rndaStart, str):
             rndaStart = float(rndaStart.split()[0])
 
-    logger.info("Start value for mirror_reflection_random_angle: {:}".format(
-        rndaStart))
+    logger.info("Start value for mirror_reflection_random_angle: {:}".format(rndaStart))
 
     resultsRnda = list()
     resultsMean = list()
     resultsSig = list()
-    if workflow.get_configuration_parameter('no_tuning'):
+    if workflow.get_configuration_parameter("no_tuning"):
         rndaOpt = rndaStart
     else:
+
         def collectResults(rnda, mean, sig):
             resultsRnda.append(rnda)
             resultsMean.append(mean)
@@ -372,32 +401,32 @@ def main():
         meanD80, sigD80 = run(rndaStart)
         rnda = rndaStart
         signDelta = np.sign(
-            meanD80 - workflow.get_configuration_parameter('psf_measurement_containment_mean'))
+            meanD80 - workflow.get_configuration_parameter("psf_measurement_containment_mean")
+        )
         collectResults(rnda, meanD80, sigD80)
         while not stop:
             rnda = rnda - (0.1 * rndaStart * signDelta)
             meanD80, sigD80 = run(rnda)
             newSignDelta = np.sign(
-                meanD80 - workflow.get_configuration_parameter('psf_measurement_containment_mean'))
+                meanD80 - workflow.get_configuration_parameter("psf_measurement_containment_mean")
+            )
             stop = newSignDelta != signDelta
             signDelta = newSignDelta
             collectResults(rnda, meanD80, sigD80)
 
         # Linear interpolation using two last rnda values
-        resultsRnda, resultsMean, resultsSig = gen.sortArrays(
-            resultsRnda, resultsMean, resultsSig
-        )
+        resultsRnda, resultsMean, resultsSig = gen.sortArrays(resultsRnda, resultsMean, resultsSig)
         rndaOpt = np.interp(
-            x=workflow.get_configuration_parameter('psf_measurement_containment_mean'),
-            xp=resultsMean, fp=resultsRnda)
+            x=workflow.get_configuration_parameter("psf_measurement_containment_mean"),
+            xp=resultsMean,
+            fp=resultsRnda,
+        )
 
     meanD80, sigD80 = run(rndaOpt)
 
     print_and_write_results(
-        workflow,
-        rndaStart, rndaOpt,
-        meanD80, sigD80,
-        resultsRnda, resultsMean, resultsSig)
+        workflow, rndaStart, rndaOpt, meanD80, sigD80, resultsRnda, resultsMean, resultsSig
+    )
 
 
 if __name__ == "__main__":

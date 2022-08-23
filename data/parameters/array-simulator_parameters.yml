@@ -5,11 +5,11 @@ dataDirectory:
 primary:
   len: 1
   unit: null
-zenithAngle: 
+zenithAngle:
   len: 1
   unit: !astropy.units.Unit {unit: deg}
   names: ['zenith', 'theta']
-azimuthAngle: 
+azimuthAngle:
   len: 1
   unit: !astropy.units.Unit {unit: deg}
   names: ['azimuth', 'phi']

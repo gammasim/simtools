@@ -1,7 +1,7 @@
 import logging
 import os
-from pathlib import Path
 from copy import copy
+from pathlib import Path
 
 import simtools.config as cfg
 import simtools.io_handler as io
@@ -134,17 +134,11 @@ class CorsikaRunner:
 
         self._simtelSourcePath = Path(cfg.getConfigArg("simtelPath", simtelSourcePath))
         self._filesLocation = cfg.getConfigArg("outputLocation", filesLocation)
-        self._outputDirectory = io.getCorsikaOutputDirectory(
-            self._filesLocation, self.label
-        )
+        self._outputDirectory = io.getCorsikaOutputDirectory(self._filesLocation, self.label)
         self._outputDirectory.mkdir(parents=True, exist_ok=True)
-        self._logger.debug(
-            "Creating output dir {}, if needed,".format(self._outputDirectory)
-        )
+        self._logger.debug("Creating output dir {}, if needed,".format(self._outputDirectory))
 
-        corsikaConfigData = collectDataFromYamlOrDict(
-            corsikaConfigFile, corsikaConfigData
-        )
+        corsikaConfigData = collectDataFromYamlOrDict(corsikaConfigFile, corsikaConfigData)
         self._loadCorsikaConfigData(corsikaConfigData)
 
         self._loadCorsikaDataDirectories()
@@ -152,9 +146,7 @@ class CorsikaRunner:
     def _loadCorsikaConfigData(self, corsikaConfigData):
         """Reads corsikaConfigData, creates corsikaConfig and corsikaInputFile."""
 
-        corsikaDataDirectoryFromConfig = corsikaConfigData.get(
-            "corsikaDataDirectory", None
-        )
+        corsikaDataDirectoryFromConfig = corsikaConfigData.get("corsikaDataDirectory", None)
         if corsikaDataDirectoryFromConfig is None:
             # corsikaDataDirectory not given (or None).
             msg = (
@@ -241,9 +233,7 @@ class CorsikaRunner:
         autoinputsCommand = self._getAutoinputsCommand(runNumber, corsikaInputTmpFile)
 
         extraCommands = self._getExtraCommands(extraCommands)
-        self._logger.debug(
-            "Extra commands to be added to the run script {}".format(extraCommands)
-        )
+        self._logger.debug("Extra commands to be added to the run script {}".format(extraCommands))
 
         with open(scriptFilePath, "w") as file:
             if extraCommands is not None:
@@ -303,9 +293,7 @@ class CorsikaRunner:
         extra = gen.copyAsList(extra) if extra is not None else list()
 
         extraFromConfig = cfg.get("extraCommands")
-        extraFromConfig = (
-            gen.copyAsList(extraFromConfig) if extraFromConfig is not None else list()
-        )
+        extraFromConfig = gen.copyAsList(extraFromConfig) if extraFromConfig is not None else list()
 
         extra.extend(extraFromConfig)
         return extra
@@ -356,9 +344,7 @@ class CorsikaRunner:
         """
         runNumber = self._validateRunNumber(runNumber)
         runDir = self._getRunDirectory(runNumber)
-        return self._corsikaDataDir.joinpath(runDir).joinpath(
-            "run{}.log".format(runNumber)
-        )
+        return self._corsikaDataDir.joinpath(runDir).joinpath("run{}.log".format(runNumber))
 
     def getCorsikaOutputFile(self, runNumber=None):
         """
@@ -399,9 +385,7 @@ class CorsikaRunner:
         if runNumber is None:
             return self.corsikaConfig.getUserParameter("RUNNR")
         elif not float(runNumber).is_integer() or runNumber < 1:
-            msg = "Invalid type of run number ({}) - it must be an uint.".format(
-                runNumber
-            )
+            msg = "Invalid type of run number ({}) - it must be an uint.".format(runNumber)
             self._logger.error(msg)
             raise ValueError(msg)
         else:

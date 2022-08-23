@@ -44,13 +44,12 @@
 
 import logging
 
-import simtools.util.general as gen
-import simtools.util.commandline_parser as argparser
-import simtools.io_handler as io
 import simtools.config as cfg
-from simtools.model.telescope_model import TelescopeModel
+import simtools.io_handler as io
+import simtools.util.commandline_parser as argparser
+import simtools.util.general as gen
 from simtools.camera_efficiency import CameraEfficiency
-
+from simtools.model.telescope_model import TelescopeModel
 
 if __name__ == "__main__":
 

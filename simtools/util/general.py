@@ -1,8 +1,8 @@
-import logging
 import copy
-from collections import namedtuple
-import re
+import logging
 import mmap
+import re
+from collections import namedtuple
 
 import astropy.units as u
 from astropy.io.misc import yaml
@@ -50,14 +50,16 @@ def fileHasText(file, text):
     -------
     bool
     """
-    with open(file, "rb",0) as stringFile, \
-        mmap.mmap(stringFile.fileno(), 0, access=mmap.ACCESS_READ) as textFileInput:
-            re_search_1 = re.compile(f"{text}".encode())
-            searchResult_1 = re_search_1.search(textFileInput)
-            if searchResult_1 is None:
-                return False
-            else:
-                return True
+    with open(file, "rb", 0) as stringFile, mmap.mmap(
+        stringFile.fileno(), 0, access=mmap.ACCESS_READ
+    ) as textFileInput:
+        re_search_1 = re.compile(f"{text}".encode())
+        searchResult_1 = re_search_1.search(textFileInput)
+        if searchResult_1 is None:
+            return False
+        else:
+            return True
+
 
 def validateConfigData(configData, parameters):
     """
@@ -124,9 +126,7 @@ def validateConfigData(configData, parameters):
         if parName in outData.keys():
             continue
         elif "default" in parInfo.keys() and parInfo["default"] is not None:
-            validatedValue = _validateAndConvertValue(
-                parName, parInfo, parInfo["default"]
-            )
+            validatedValue = _validateAndConvertValue(parName, parInfo, parInfo["default"])
             outData[parName] = validatedValue
         elif "default" in parInfo.keys() and parInfo["default"] is None:
             outData[parName] = None
@@ -193,9 +193,7 @@ def _validateAndConvertValue(parName, parInfo, valueIn):
         parUnit = copyAsList(parInfo["unit"])
 
         if undefinedLength and len(parUnit) != 1:
-            msg = "Config entry with undefined length should have a single unit: {}".format(
-                parName
-            )
+            msg = "Config entry with undefined length should have a single unit: {}".format(parName)
             logger.error(msg)
             raise InvalidConfigEntry(msg)
         elif len(parUnit) == 1:
@@ -228,9 +226,7 @@ def _validateAndConvertValue(parName, parInfo, valueIn):
             return {k: v for (k, v) in zip(valueKeys, valueWithUnits)}
         else:
             return (
-                valueWithUnits
-                if len(valueWithUnits) > 1 or undefinedLength
-                else valueWithUnits[0]
+                valueWithUnits if len(valueWithUnits) > 1 or undefinedLength else valueWithUnits[0]
             )
 
 

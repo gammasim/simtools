@@ -87,13 +87,10 @@ import simtools.util.commandline_parser as argparser
 import simtools.util.general as gen
 from simtools.model.array_model import ArrayModel
 
-
 if __name__ == "__main__":
 
     parser = argparser.CommandLineParser(
-        description=(
-            "Example of how to produce sim_telarray config files for a given array."
-        )
+        description=("Example of how to produce sim_telarray config files for a given array.")
     )
     parser.add_argument(
         "-l",

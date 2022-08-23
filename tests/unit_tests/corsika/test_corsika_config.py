@@ -1,14 +1,14 @@
 #!/usr/bin/python3
 
 import logging
-import pytest
 from copy import copy
 
+import pytest
 from astropy import units as u
 
 import simtools.config as cfg
-from simtools import db_handler
 import simtools.io_handler as io
+from simtools import db_handler
 from simtools.corsika.corsika_config import (
     CorsikaConfig,
     InvalidCorsikaInput,
@@ -68,7 +68,7 @@ def test_user_parameters(corsikaConfig):
     assert corsikaConfig.getUserParameter("thetap") == [20, 20]
     assert corsikaConfig.getUserParameter("erange") == [10.0, 10000.0]
     # Testing conversion between AZM (sim_telarray) and PHIP (corsika)
-    assert corsikaConfig.getUserParameter("azm")  == [0.0, 0.0]
+    assert corsikaConfig.getUserParameter("azm") == [0.0, 0.0]
     assert corsikaConfig.getUserParameter("phip") == [180.0, 180.0]
 
     with pytest.raises(KeyError):
@@ -172,16 +172,9 @@ def test_config_data_from_yaml_file(db):
 
     logger.info("test_config_data_from_yaml_file")
     testFileName = "corsikaConfigTest.yml"
-    db.exportFileDB(
-        dbName="test-data",
-        dest=io.getTestModelDirectory(),
-        fileName=testFileName
-    )
+    db.exportFileDB(dbName="test-data", dest=io.getTestModelDirectory(), fileName=testFileName)
 
-    corsikaConfigFile = cfg.findFile(
-        testFileName,
-        io.getTestModelDirectory()
-    )
+    corsikaConfigFile = cfg.findFile(testFileName, io.getTestModelDirectory())
     cc = CorsikaConfig(
         site="Paranal",
         layoutName="4LST",
@@ -191,16 +184,16 @@ def test_config_data_from_yaml_file(db):
     cc.printUserParameters()
 
     test_dict = {
-        'RUNNR': [10],
-        'NSHOW': [100],
-        'PRMPAR': [14],
-        'ERANGE': [0.01, 10.0],
-        'ESLOPE': [-2],
-        'THETAP': [20.0, 20.0],
-        'AZM': [0.0, 0.0],
-        'CSCAT': [10, 150000.0, 0],
-        'VIEWCONE': [0.0, 5.0],
-        'EVTNR': [1],
-        'PHIP': [180.0, 180.0]
+        "RUNNR": [10],
+        "NSHOW": [100],
+        "PRMPAR": [14],
+        "ERANGE": [0.01, 10.0],
+        "ESLOPE": [-2],
+        "THETAP": [20.0, 20.0],
+        "AZM": [0.0, 0.0],
+        "CSCAT": [10, 150000.0, 0],
+        "VIEWCONE": [0.0, 5.0],
+        "EVTNR": [1],
+        "PHIP": [180.0, 180.0],
     }
     assert test_dict == cc._userParameters

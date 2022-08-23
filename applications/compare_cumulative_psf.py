@@ -69,21 +69,21 @@
         * Change default model to default (after this feature is implemented in db_handler)
 """
 
-import yaml
 import logging
-import numpy as np
-import matplotlib.pyplot as plt
 from collections import OrderedDict
 
 import astropy.units as u
+import matplotlib.pyplot as plt
+import numpy as np
+import yaml
 
+import simtools.config as cfg
 import simtools.io_handler as io
 import simtools.util.commandline_parser as argparser
 import simtools.util.general as gen
-import simtools.config as cfg
-from simtools.ray_tracing import RayTracing
-from simtools.model.telescope_model import TelescopeModel
 from simtools import visualize
+from simtools.model.telescope_model import TelescopeModel
+from simtools.ray_tracing import RayTracing
 
 
 def loadData(datafile):
@@ -110,9 +110,7 @@ if __name__ == "__main__":
         type=float,
         default=10,
     )
-    parser.add_argument(
-        "--zenith", help="Zenith angle in deg (default=20)", type=float, default=20
-    )
+    parser.add_argument("--zenith", help="Zenith angle in deg (default=20)", type=float, default=20)
     parser.add_argument(
         "--data", help="Data file name with the measured PSF vs radius [cm]", type=str
     )

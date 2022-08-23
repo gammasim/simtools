@@ -1,33 +1,24 @@
 #!/usr/bin/python3
 
 import logging
-import yaml
 from pathlib import Path
-import astropy.units as u
 
-import simtools.util.general as gen
+import astropy.units as u
+import yaml
+
 import simtools.io_handler as io
+import simtools.util.general as gen
 
 logging.getLogger().setLevel(logging.DEBUG)
 
 
 def test_collect_dict_data(cfg_setup):
     inDict = {"k1": 2, "k2": "bla"}
-    dictForYaml = {
-        "k3": {
-          "kk3": 4,
-          "kk4": 3.
-        },
-        "k4": ["bla", 2]
-    }
+    dictForYaml = {"k3": {"kk3": 4, "kk4": 3.0}, "k4": ["bla", 2]}
     inYaml = io.getTestOutputFile("test_collect_dict_data.yml")
     if not Path(inYaml).exists():
         with open(inYaml, "w") as output:
-            yaml.safe_dump(
-                dictForYaml,
-                output,
-                sort_keys=False
-            )
+            yaml.safe_dump(dictForYaml, output, sort_keys=False)
 
     d1 = gen.collectDataFromYamlOrDict(None, inDict)
     assert "k2" in d1.keys()
@@ -43,7 +34,7 @@ def test_collect_dict_data(cfg_setup):
 
 def test_validate_config_data(cfg_setup):
 
-    parameterFile = io.getTestDataFile('test_parameters.yml')
+    parameterFile = io.getTestDataFile("test_parameters.yml")
     parameters = gen.collectDataFromYamlOrDict(parameterFile, None)
 
     configData = {

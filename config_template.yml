@@ -2,7 +2,7 @@
 # gammasim-tools requires one configuration file in yaml format.
 # This file should be named config.yml and it should be located at
 # the local directory. Alternativelly one can use the funtion
-# config.setConfigFileName to set an alternative file. 
+# config.setConfigFileName to set an alternative file.
 
 # Flag to turn on MongoDB. If False, the older yaml files will be used to access the Model Parameters.
 useMongoDB: True
@@ -13,7 +13,7 @@ mongoDBConfigFile: ./dbDetails.yml
 # required for most of the applications and can be found  in
 # https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/verification/data-from-instrument-teams
 # The location of the directory with the yaml files for the model parameters and the sim_telarray
-# config files are required in case useMongoDB is set to False. They can be found 
+# config files are required in case useMongoDB is set to False. They can be found
 # https://gitlab.cta-observatory.org/cta-consortium/aswg/simulations/simulation-model/simulation-model-description/-/tree/master/configReports
 # and https://gitlab.cta-observatory.org/cta-consortium/aswg/simulations/simulation-model/simulation-model-description/-/tree/master/datFiles.
 # The files will always be searched recursively within all the subdirectories inside the directory given by the location.
@@ -37,5 +37,3 @@ submissionCommand: 'qsub '
 # List of xtra commands to be added in the run scripts for submmission.
 # Ex. extraCommands = ['export PATH=/afs/ifh.de/group/cta/cta/software/zstd/:${PATH}']
 extraCommands: []
-
-

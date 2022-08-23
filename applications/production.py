@@ -48,11 +48,11 @@ from copy import copy
 
 from astropy.io.misc import yaml
 
-import simtools.util.commandline_parser as argparser
 import simtools.config as cfg
+import simtools.util.commandline_parser as argparser
 import simtools.util.general as gen
-from simtools.shower_simulator import ShowerSimulator
 from simtools.array_simulator import ArraySimulator
+from simtools.shower_simulator import ShowerSimulator
 
 
 def proccessConfigFile(configFile, primaryConfig):
@@ -178,9 +178,7 @@ if __name__ == "__main__":
                 shower.submit(submitCommand=submitCommand)
 
             elif args.task == "list":
-                print(
-                    "Printing ShowerSimulator file lists for primary {}".format(primary)
-                )
+                print("Printing ShowerSimulator file lists for primary {}".format(primary))
                 raise NotImplementedError()
 
     # ArraySimulators
@@ -199,14 +197,10 @@ if __name__ == "__main__":
                 array.submit(inputFileList=inputList, submitCommand=submitCommand)
 
             elif args.task == "lists":
-                print(
-                    "Printing ArraySimulator file lists for primary {}".format(primary)
-                )
+                print("Printing ArraySimulator file lists for primary {}".format(primary))
                 raise NotImplementedError()
 
             elif args.task == "inspect":
-                print(
-                    "Plotting ArraySimulator histograms for primary {}".format(primary)
-                )
+                print("Plotting ArraySimulator histograms for primary {}".format(primary))
                 file = array.printHistograms(inputList)
                 print("Histograms file {}".format(file))

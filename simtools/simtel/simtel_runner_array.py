@@ -3,8 +3,8 @@ from pathlib import Path
 
 import simtools.io_handler as io
 import simtools.util.general as gen
+from simtools.simtel.simtel_runner import InvalidOutputFile, SimtelRunner
 from simtools.util import names
-from simtools.simtel.simtel_runner import SimtelRunner, InvalidOutputFile
 
 __all__ = ["SimtelRunnerArray"]
 
@@ -89,15 +89,11 @@ class SimtelRunnerArray(SimtelRunner):
         self.label = label if label is not None else self.arrayModel.label
 
         # File location
-        self._baseDirectory = io.getArraySimulatorOutputDirectory(
-            self._filesLocation, self.label
-        )
+        self._baseDirectory = io.getArraySimulatorOutputDirectory(self._filesLocation, self.label)
 
         # Loading configData
         _configDataIn = gen.collectDataFromYamlOrDict(configFile, configData)
-        _parameterFile = io.getDataFile(
-            "parameters", "simtel-runner-array_parameters.yml"
-        )
+        _parameterFile = io.getDataFile("parameters", "simtel-runner-array_parameters.yml")
         _parameters = gen.collectDataFromYamlOrDict(_parameterFile, None)
         self.config = gen.validateConfigData(_configDataIn, _parameters)
 
@@ -204,6 +200,4 @@ class SimtelRunnerArray(SimtelRunner):
             self._logger.error(msg)
             raise InvalidOutputFile(msg)
         else:
-            self._logger.debug(
-                "Everything looks fine with the sim_telarray output file."
-            )
+            self._logger.debug("Everything looks fine with the sim_telarray output file.")

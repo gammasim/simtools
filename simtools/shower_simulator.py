@@ -1,8 +1,9 @@
 import logging
 import os
-import numpy as np
-from pathlib import Path
 from copy import copy
+from pathlib import Path
+
+import numpy as np
 
 import simtools.config as cfg
 import simtools.io_handler as io
@@ -101,14 +102,10 @@ class ShowerSimulator:
 
         self._simtelSourcePath = Path(cfg.getConfigArg("simtelPath", simtelSourcePath))
         self._filesLocation = cfg.getConfigArg("outputLocation", filesLocation)
-        self._outputDirectory = io.getCorsikaOutputDirectory(
-            self._filesLocation, self.label
-        )
+        self._outputDirectory = io.getCorsikaOutputDirectory(self._filesLocation, self.label)
         self._outputDirectory.mkdir(parents=True, exist_ok=True)
         self._logger.debug(
-            "Output directory {} - creating it, if needed.".format(
-                self._outputDirectory
-            )
+            "Output directory {} - creating it, if needed.".format(self._outputDirectory)
         )
 
         showerConfigData = collectDataFromYamlOrDict(showerConfigFile, showerConfigData)
@@ -127,9 +124,7 @@ class ShowerSimulator:
         # Storing site and layoutName entries in attributes.
         try:
             self.site = names.validateSiteName(showerConfigData["site"])
-            self.layoutName = names.validateLayoutArrayName(
-                showerConfigData["layoutName"]
-            )
+            self.layoutName = names.validateLayoutArrayName(showerConfigData["layoutName"])
             self._corsikaConfigData.pop("site")
             self._corsikaConfigData.pop("layoutName")
             dataDir = self._corsikaConfigData.pop("dataDirectory", None)
@@ -150,9 +145,7 @@ class ShowerSimulator:
         self._corsikaConfigData.pop("runRange", None)
 
         # Searching for corsikaParametersFile in showerConfig
-        self._corsikaParametersFile = showerConfigData.get(
-            "corsikaParametersFile", None
-        )
+        self._corsikaParametersFile = showerConfigData.get("corsikaParametersFile", None)
         self._corsikaConfigData.pop("corsikaParametersFile", None)
 
     def _setCorsikaRunner(self):
@@ -192,9 +185,7 @@ class ShowerSimulator:
             self._logger.info("Run {} - Running script {}".format(run, runScript))
             os.system(runScript)
 
-    def submit(
-        self, runList=None, runRange=None, submitCommand=None, extraCommands=None
-    ):
+    def submit(self, runList=None, runRange=None, submitCommand=None, extraCommands=None):
         """
         Submit a run script as a job. The submit command can be given by \
         submitCommand or it will be taken from the config.yml file.
@@ -212,15 +203,11 @@ class ShowerSimulator:
             If runs in runList or runRange are invalid.
         """
 
-        subCmd = (
-            submitCommand if submitCommand is not None else cfg.get("submissionCommand")
-        )
+        subCmd = submitCommand if submitCommand is not None else cfg.get("submissionCommand")
         self._logger.info("Submission command: {}".format(subCmd))
 
         runsToSimulate = self._getRunsToSimulate(runList, runRange)
-        self._logger.info(
-            "Submitting run scripts for {} runs".format(len(runsToSimulate))
-        )
+        self._logger.info("Submitting run scripts for {} runs".format(len(runsToSimulate)))
 
         self._logger.info("Starting submission")
         for run in runsToSimulate:
