@@ -238,7 +238,7 @@ class ShowerSimulator:
                 runNumber=run, extraCommands=extraCommands
             )
 
-            job_manager = JobManager(submitCommand=subCmd)
+            job_manager = JobManager(submitCommand=subCmd, test=test)
             job_manager.submit(
                 run_script=runScript,
                 run_out_file=self._corsikaRunner.getSubLogFile(
