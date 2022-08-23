@@ -1,23 +1,22 @@
 import logging
 
 __all__ = [
-    "validateModelVersionName",
-    "validateSimtelModeName",
-    "validateSiteName",
-    "validateLayoutArrayName",
-    "validateTelescopeModelName",
-    "validateCameraName",
-    "validateSubSystemName",
-    "validateTelescopeIDName",
-    "convertTelescopeModelNameToYaml",
-    "splitTelescopeModelName",
-    "getSiteFromTelescopeName",
-    "rayTracingFileName",
-    "simtelTelescopeConfigFileName",
-    "simtelArrayConfigFileName",
-    "simtelSingleMirrorListFileName",
-    "corsikaConfigFileName",
-    "corsikaOutputFileName",
+    'validateModelVersionName',
+    'validateSimtelModeName',
+    'validateSiteName',
+    'validateLayoutArrayName',
+    'validateTelescopeModelName',
+    'validateCameraName',
+    'convertTelescopeModelNameToYaml',
+    'splitTelescopeModelName',
+    'getSiteFromTelescopeName',
+    'rayTracingFileName',
+    'simtelTelescopeConfigFileName',
+    'simtelArrayConfigFileName',
+    'simtelSingleMirrorListFileName',
+    'corsikaConfigFileName',
+    'corsikaOutputFileName',
+    'corsikaSubLogFileName'
 ]
 
 
@@ -896,9 +895,9 @@ def corsikaRunScriptFileName(arrayName, site, primary, run, label=None):
     return name
 
 
-def corsikaRunLogFileName(arrayName, site, run, label=None):
+def corsikaRunLogFileName(arrayName, site, primary, run, label=None):
     """
-    Corsika script file path.
+    Corsika script file name.
 
     Parameters
     ----------
@@ -906,6 +905,8 @@ def corsikaRunLogFileName(arrayName, site, run, label=None):
         Array name.
     site: str
         Paranal or LaPalma.
+    primary: str
+        Primary particle name.
     run: int
         RUn number.
     label: str
@@ -916,9 +917,39 @@ def corsikaRunLogFileName(arrayName, site, run, label=None):
     str
         File path.
     """
-    name = "log-corsika-run{}-{}-{}".format(run, arrayName, site)
-    name += "_{}".format(label) if label is not None else ""
-    name += ".log"
+    name = 'log-corsika-run{}-{}-{}-{}'.format(run, arrayName, site, primary)
+    name += '_{}'.format(label) if label is not None else ''
+    name += '.log'
+    return name
+
+
+def corsikaSubLogFileName(arrayName, site, primary, run, mode, label=None):
+    """
+    Corsika submission file name.
+
+    Parameters
+    ----------
+    arrayName: str
+        Array name.
+    site: str
+        Paranal or LaPalma.
+    primary: str
+        Primary particle name.
+    run: int
+        RUn number.
+    mode: str
+        out or err.
+    label: str
+        Instance label.
+
+    Returns
+    -------
+    str
+        File path.
+    """
+    name = 'log-sub-corsika-run{}-{}-{}-{}'.format(run, arrayName, site, primary)
+    name += '_{}'.format(label) if label is not None else ''
+    name += '-' + mode + '.log'
     return name
 
 
@@ -1027,4 +1058,42 @@ def simtelLogFileName(run, primary, arrayName, site, zenith, azimuth, label=None
     )
     name += "_{}".format(label) if label is not None else ""
     name += ".log"
+    return name
+
+def simtelSubLogFileName(run, primary, arrayName, site, zenith, azimuth, mode, label=None):
+    """
+    sim_telarray submission log file name.
+
+    Parameters
+    ----------
+    arrayName: str
+        Array name.
+    site: str
+        Paranal or LaPalma.
+    zenith: float
+        Zenith angle (deg).
+    viewCone: list of float
+        View cone limits (len = 2).
+    run: int
+        Run number.
+    mode: str
+        out or err
+    label: str
+        Instance label.
+
+    Returns
+    -------
+    str
+        File name.
+    """
+    name = 'log-sub-run{}_{}_za{:d}deg_azm{:d}deg-{}-{}'.format(
+        run,
+        primary,
+        int(zenith),
+        int(azimuth),
+        site,
+        arrayName
+    )
+    name += '_{}'.format(label) if label is not None else ''
+    name += '-' + mode + '.log'
     return name
