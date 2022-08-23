@@ -227,14 +227,83 @@ class ShowerSimulator:
             runScript = self._corsikaRunner.getRunScriptFile(
                 runNumber=run, extraCommands=extraCommands
             )
-            self._logger.info("Run {} - Submitting script {}".format(run, runScript))
 
-            shellCommand = subCmd + " " + str(runScript)
+            thisSubCmd = copy(subCmd)
+
+            # Checking for log files in sub command and replacing them
+            if 'log_out' in subCmd:
+                logOutFile = self._corsikaRunner.getSubLogFile(runNumber=run, mode='out')
+                thisSubCmd = thisSubCmd.replace('log_out', str(logOutFile))
+
+            if 'log_err' in subCmd:
+                logErrFile = self._corsikaRunner.getSubLogFile(runNumber=run, mode='err')
+                thisSubCmd = thisSubCmd.replace('log_err', str(logErrFile))
+
+            self._logger.info('Run {} - Submitting script {}'.format(run, runScript))
+
+            shellCommand = thisSubCmd + ' ' + str(runScript)
             self._logger.debug(shellCommand)
             os.system(shellCommand)
 
+    def makeResourcesReport(self):
+        """
+        Prepare a simple report on computing resources used
+        (includes run time per run only at this point)
+
+
+        Returns
+        -------
+        dict
+           Dictionary with reports on computing resources
+
+        """
+
+        runtime = list()
+        nEvents = None
+        for run in self.runs:
+            if self._corsikaRunner.hasSubLogFile(runNumber=run):
+                nEvents, thisRuntime = self._corsikaRunner.getResources(runNumber=run)
+                runtime.append(thisRuntime)
+
+        meanRuntime = np.mean(runtime)
+
+        resources = dict()
+        resources['#events/run'] = nEvents
+        resources['Runtime/run [sec]'] = meanRuntime
+        resources['Runtime/1000 events [sec]'] = meanRuntime * 1000 / nEvents
+        return resources
+
+    def printResourcesReport(self):
+        """
+        Print a simple report on computing resources used
+        (includes run time per run only at this point)
+
+        """
+
+        resources = self.makeResourcesReport()
+        print('-----------------------------')
+        print('Computing Resources Report - Showers')
+        for key, value in resources.items():
+            print('{} = {:.2f}'.format(key, value))
+        print('-----------------------------')
+
     def _getRunsToSimulate(self, runList, runRange):
-        """Process runList and runRange and return the validated list of runs."""
+        """
+        Process runList and runRange and return the validated list of runs.
+
+        Attributes
+        ----------
+        runList: list
+            list of runs (integers)
+        runRange:list
+            min and max of range of runs to be simulated (two list entries)
+
+        Returns
+        -------
+        list
+            list of unique run numbers (integers)
+
+        """
         if runList is None and runRange is None:
             if self.runs is None:
                 msg = (
@@ -252,6 +321,19 @@ class ShowerSimulator:
         """
         Validate runList and runRange and return the list of runs. \
         If both arguments are given, they will be merged into a single list.
+
+        Attributes
+        ----------
+        runList: list
+            list of runs (integers)
+        runRange:list
+            min and max of range of runs to be simulated (two list entries)
+
+        Returns
+        -------
+        list
+            list of unique run numbers (integers)
+
         """
         if runList is None and runRange is None:
             self._logger.debug("Nothing to validate - runList and runRange not given.")

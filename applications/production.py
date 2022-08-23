@@ -9,13 +9,13 @@
     Shower simulations are performed with CORSIKA and array simulations \
     with sim_telarray.
 
-    A configuration file is required. See data/test-data/prodConfigTest.yml \
+    A configuration file is required. See tests/resources/prodConfigTest.yml \
     for an example.
 
     Command line arguments
     ----------------------
-    config (str, required)
-        Path to the configuration file.
+    productionconfig (str, required)
+        Path to the simulation configuration file.
     primary (str)
         Name of the primary to be selected from the configuration file. In case it \
         is not given, all the primaries listed in the configuration file will be simulated.
@@ -40,7 +40,7 @@
 
     .. code-block:: console
 
-        python applications/production.py -c data/test-data/prodConfigTest.yml --test
+        python applications/production.py -t simulate -p tests/resources/prodConfigTest.yml --test
 """
 
 import logging
@@ -55,10 +55,107 @@ from simtools.shower_simulator import ShowerSimulator
 from simtools.array_simulator import ArraySimulator
 
 
-def proccessConfigFile(configFile, primaryConfig):
+def parse(description=None):
+    """
+    Parse command line configuration
 
-    with open(configFile) as file:
-        configData = yaml.load(file)
+    Parameters
+    ----------
+    description: str
+        description of application.
+
+    Returns
+    -------
+    CommandLineParser
+        command line parser object
+
+    """
+
+    parser = argparser.CommandLineParser(description=description)
+    parser.add_argument(
+        "-p",
+        "--productionconfig",
+        help="Simulation configuration file",
+        type=str,
+        required=True,
+    )
+    parser.add_argument(
+        "-t",
+        "--task",
+        help=(
+            'What task to execute. Options: '
+            + 'simulate (perform simulations),'
+            + 'lists (print list of output files),'
+            + 'inspect (plot sim_telarray histograms for quick inspection),'
+            + 'resources (print report of computing resources)'
+        ),
+        type=str,
+        required=True,
+        choices=['simulate', 'lists', 'inspect', 'resources']
+    )
+    parser.add_argument(
+        "--primary",
+        help="Primary to be selected from the simulation configuration file.",
+        type=str,
+        required=False,
+        choices=[
+            "gamma",
+            "electron",
+            "proton",
+            "helium",
+            "nitrogen",
+            "silicon",
+            "iron",
+        ],
+    )
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument(
+        "--array_only",
+        help="Simulates only array detection, no showers",
+        action="store_true",
+    )
+    group.add_argument(
+        "--showers_only",
+        help="Simulates only showers, no array detection",
+        action="store_true",
+    )
+    parser.initialize_default_arguments(
+        add_workflow_config=False)
+    return parser.parse_args()
+
+
+def proccessSimulationConfigFile(configFile, primaryConfig, logger):
+    """
+    Read simulation configuration file with details on shower
+    and array simulations
+
+    Attributes
+    ----------
+    configFile: str
+        Name of simulation configuration file
+    primaryConfig: str
+        Name of the primary selected from the configuration file.
+
+    Returns
+    -------
+    str
+        label of simulation configuration
+    dict
+        configuration of shower simulations
+    dict
+        configuration of array simulations
+
+    """
+
+    try:
+        with open(configFile) as file:
+            configData = yaml.load(file)
+    except FileNotFoundError:
+        logger.error(
+            "Error loading simulation configuration file from {}".format(
+                configFile)
+        )
+        raise
 
     label = configData.pop("label", dict())
     defaultData = configData.pop("default", dict())
@@ -102,72 +199,22 @@ def proccessConfigFile(configFile, primaryConfig):
 
 if __name__ == "__main__":
 
-    parser = argparser.CommandLineParser(
-        description=("Simulate showers to be used for trigger rate calculations")
-    )
-    parser.add_argument(
-        "-c",
-        "--config",
-        help="Name of the array (e.g. 1MST, 4LST ...)",
-        type=str,
-        required=True,
-    )
-    parser.add_argument(
-        "-t",
-        "--task",
-        help=(
-            "What task to execute. Options: "
-            + "simulate (perform simulations),"
-            + "lists (print list of output files)"
-            + "inspect (plot sim_telarray histograms for quick inspection)"
-        ),
-        type=str,
-        required=True,
-        choices=["simulate", "lists", "inspect"],
-    )
-    parser.add_argument(
-        "--primary",
-        help="Primary to be selected from the config file.",
-        type=str,
-        required=False,
-        choices=[
-            "gamma",
-            "electron",
-            "proton",
-            "helium",
-            "nitrogen",
-            "silicon",
-            "iron",
-        ],
-    )
-    group = parser.add_mutually_exclusive_group()
-    group.add_argument(
-        "--array_only",
-        help="Simulates only array detection, no showers",
-        action="store_true",
-    )
-    group.add_argument(
-        "--showers_only",
-        help="Simulates only showers, no array detection",
-        action="store_true",
-    )
-    parser.initialize_default_arguments(add_workflow_config=False)
+    args = parse(description=("Air shower and array simulations"))
 
-    args = parser.parse_args()
     cfg.setConfigFileName(args.configFile)
 
     logger = logging.getLogger()
     logger.setLevel(gen.getLogLevelFromUser(args.logLevel))
 
-    label, showerConfigs, arrayConfigs = proccessConfigFile(args.config, args.primary)
+    label, showerConfigs, arrayConfigs = proccessSimulationConfigFile(
+        args.productionconfig, args.primary, logger)
 
     submitCommand = "more " if args.test else None
 
     # ShowerSimulators
     showerSimulators = dict()
     for primary, configData in showerConfigs.items():
-        ss = ShowerSimulator(label=label, showerConfigData=configData)
-        showerSimulators[primary] = ss
+        showerSimulators[primary] = ShowerSimulator(label=label, showerConfigData=configData)
 
     if not args.array_only:
         # Running Showers
@@ -182,6 +229,10 @@ if __name__ == "__main__":
                     "Printing ShowerSimulator file lists for primary {}".format(primary)
                 )
                 raise NotImplementedError()
+
+            elif args.task == 'resources':
+                print('Printing computing resources report for primary {}'.format(primary))
+                shower.printResourcesReport()
 
     # ArraySimulators
     arraySimulators = dict()
@@ -209,4 +260,8 @@ if __name__ == "__main__":
                     "Plotting ArraySimulator histograms for primary {}".format(primary)
                 )
                 file = array.printHistograms(inputList)
-                print("Histograms file {}".format(file))
+                print('Histograms file {}'.format(file))
+
+            elif args.task == 'resources':
+                print('Printing computing resources report for primary {}'.format(primary))
+                array.printResourcesReport(inputList)

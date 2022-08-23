@@ -161,7 +161,7 @@ APP_LIST = {
     ],
     "production": [
         [
-            "-c", "./tests/resources/prodConfigTest.yml",
+            "-p", "./tests/resources/prodConfigTest.yml",
             "-t", "simulate",
             "--test"
         ]
