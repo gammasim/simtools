@@ -50,7 +50,8 @@ import simtools.util.general as gen
 from simtools.model.camera import Camera
 from simtools.model.telescope_model import TelescopeModel
 
-if __name__ == "__main__":
+
+def main():
 
     parser = argparser.CommandLineParser(
         description=(
@@ -102,3 +103,7 @@ if __name__ == "__main__":
         fig.savefig(str(plotFile) + "." + f, format=f, bbox_inches="tight")
     print("\nPlotted camera in {}\n".format(plotFile))
     fig.clf()
+
+
+if __name__ == "__main__":
+    main()

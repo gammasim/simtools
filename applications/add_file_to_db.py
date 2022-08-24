@@ -59,7 +59,7 @@ def userConfirm():
     return answer == "y"
 
 
-if __name__ == "__main__":
+def main():
 
     db = db_handler.DatabaseHandler()
 
@@ -138,3 +138,7 @@ if __name__ == "__main__":
         logger.info(
             "Aborted, did not insert the file{} to the {} DB".format(plural, args.dbToInsertTo)
         )
+
+
+if __name__ == "__main__":
+    main()

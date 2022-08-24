@@ -71,7 +71,7 @@ def parse(label):
     return parser.parse_args()
 
 
-if __name__ == "__main__":
+def main():
 
     label = os.path.basename(__file__).split(".")[0]
     args = parse(label)
@@ -87,3 +87,7 @@ if __name__ == "__main__":
     file_writer = writer.ModelDataWriter(workflow)
     file_writer.write_metadata()
     file_writer.write_data(data_validator.transform())
+
+
+if __name__ == "__main__":
+    main()
