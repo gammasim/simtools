@@ -369,9 +369,12 @@ class CorsikaRunner:
         runNumber = self._validateRunNumber(runNumber)
         subLogFile = self.getSubLogFile(runNumber=runNumber, mode='out')
 
+        self._logger.info("Reading resources from {}".format(
+            subLogFile))
+
         runtime = None
         with open(subLogFile, 'r') as file:
-            for line in file:
+            for line in reversed(list(file)):
                 if 'RUNTIME' in line:
                     runtime = int(line.split()[1])
                     break
