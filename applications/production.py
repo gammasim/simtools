@@ -244,8 +244,7 @@ def main():
     if not args.showers_only:
         arraySimulators = dict()
         for primary, configData in arrayConfigs.items():
-            aa = ArraySimulator(label=label, configData=configData)
-            arraySimulators[primary] = aa
+            arraySimulators[primary] = ArraySimulator(label=label, configData=configData)
         # Running Arrays
         for primary, array in arraySimulators.items():
 
