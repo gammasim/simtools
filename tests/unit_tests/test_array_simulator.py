@@ -59,6 +59,12 @@ def test_guess_run(array_simulator):
     run = array_simulator._guessRunFromFile("run1test2_bla_ble")
     assert run == 1
 
+    run = array_simulator._guessRunFromFile("abc-run12345_bla_ble")
+    assert run == 12345
+
+    run = array_simulator._guessRunFromFile("abc-ran12345_bla_ble")
+    assert run == 1
+
 
 def test_invalid_array_data(cfg_setup,
                             arrayConfigData,
@@ -88,7 +94,7 @@ def test_run(array_simulator, corsikaFile):
 def test_submitting(array_simulator, corsikaFile):
 
     array_simulator.submit(
-        inputFileList=corsikaFile, submitCommand="more "
+        inputFileList=corsikaFile, submitCommand="local"
     )
     # TODO - add a test here
 
@@ -96,7 +102,7 @@ def test_submitting(array_simulator, corsikaFile):
 def test_list_of_files(array_simulator, corsikaFile):
 
     array_simulator.submit(
-        inputFileList=corsikaFile, submitCommand="more ", test=True
+        inputFileList=corsikaFile, submitCommand="local", test=True
     )
 
     array_simulator.printListOfOutputFiles()
