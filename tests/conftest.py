@@ -156,6 +156,7 @@ def set_simtools(db_connection, simtelpath, tmp_test_directory, configuration_pa
     config_dict['simtelPath'] = str(simtelpath)
     config_dict['useMongoDB'] = True
     config_dict['mongoDBConfigFile'] = str(db_connection)
+    config_dict['submissionCommand'] = 'local'
 
     write_configuration_test_file(config_file, config_dict)
     cfg.setConfigFileName(config_file)

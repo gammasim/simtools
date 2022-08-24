@@ -7,10 +7,16 @@
 
     The simulations are split into two stages: showers and array.
     Shower simulations are performed with CORSIKA and array simulations \
-    with sim_telarray.
+    with sim_telarray. Note that either shower or array simulations are \
+    submitted (so typically you first run shower simulations, and then the \
+    array simulations).
 
     A configuration file is required. See tests/resources/prodConfigTest.yml \
     for an example.
+
+    The workload management system used is given in the configuration file. \
+    Allowed systems are qsub (using gridengine), condor_submit \
+    (using HTcondor), and local (running the script locally).
 
     Command line arguments
     ----------------------
@@ -41,6 +47,8 @@
     .. code-block:: console
 
         python applications/production.py -t simulate -p tests/resources/prodConfigTest.yml --test
+
+    Running shower simulations.
 """
 
 import logging
@@ -108,7 +116,7 @@ def parse(description=None):
             "iron",
         ],
     )
-    group = parser.add_mutually_exclusive_group()
+    group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument(
         "--array_only",
         help="Simulates only array detection, no showers",
@@ -197,7 +205,7 @@ def proccessSimulationConfigFile(configFile, primaryConfig, logger):
     return label, configShowers, configArrays
 
 
-if __name__ == "__main__":
+def main():
 
     args = parse(description=("Air shower and array simulations"))
 
@@ -208,8 +216,6 @@ if __name__ == "__main__":
 
     label, showerConfigs, arrayConfigs = proccessSimulationConfigFile(
         args.productionconfig, args.primary, logger)
-
-    submitCommand = "more " if args.test else None
 
     # ShowerSimulators
     showerSimulators = dict()
@@ -222,7 +228,7 @@ if __name__ == "__main__":
 
             if args.task == "simulate":
                 print("Running ShowerSimulator for primary {}".format(primary))
-                shower.submit(submitCommand=submitCommand)
+                shower.submit(test=args.test)
 
             elif args.task == "list":
                 print(
@@ -235,19 +241,17 @@ if __name__ == "__main__":
                 shower.printResourcesReport()
 
     # ArraySimulators
-    arraySimulators = dict()
-    for primary, configData in arrayConfigs.items():
-        aa = ArraySimulator(label=label, configData=configData)
-        arraySimulators[primary] = aa
-
     if not args.showers_only:
+        arraySimulators = dict()
+        for primary, configData in arrayConfigs.items():
+            arraySimulators[primary] = ArraySimulator(label=label, configData=configData)
         # Running Arrays
         for primary, array in arraySimulators.items():
 
             inputList = showerSimulators[primary].getListOfOutputFiles()
             if args.task == "simulate":
                 print("Running ArraySimulator for primary {}".format(primary))
-                array.submit(inputFileList=inputList, submitCommand=submitCommand)
+                array.submit(inputFileList=inputList, test=args.test)
 
             elif args.task == "lists":
                 print(
@@ -265,3 +269,7 @@ if __name__ == "__main__":
             elif args.task == 'resources':
                 print('Printing computing resources report for primary {}'.format(primary))
                 array.printResourcesReport(inputList)
+
+
+if __name__ == "__main__":
+    main()

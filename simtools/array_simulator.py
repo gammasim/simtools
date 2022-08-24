@@ -14,6 +14,7 @@ import simtools.util.general as gen
 from simtools.model.array_model import ArrayModel
 from simtools.simtel.simtel_histograms import SimtelHistograms
 from simtools.simtel.simtel_runner_array import SimtelRunnerArray
+from simtools.job_submission.job_manager import JobManager
 
 
 __all__ = ["ArraySimulator"]
@@ -233,7 +234,13 @@ class ArraySimulator:
 
             self._fillResults(file, run)
 
-    def submit(self, inputFileList, submitCommand=None, extraCommands=None, test=False):
+    def submit(
+            self,
+            inputFileList,
+            submitCommand=None,
+            extraCommands=None,
+            test=False
+    ):
         """
         Submit a run script as a job. The submit command can be given by \
         submitCommand or it will be taken from the config.yml file.
@@ -248,6 +255,7 @@ class ArraySimulator:
             Extra commands to be added to the run script before the run command,
         test: bool
             If True, job is not submitted.
+
         """
 
         subCmd = (
@@ -256,6 +264,9 @@ class ArraySimulator:
         self._logger.info("Submission command: {}".format(subCmd))
 
         inputFileList = self._makeInputList(inputFileList)
+        self._logger.info(
+            "Submitting run scripts for {} runs".format(len(inputFileList))
+        )
 
         self._logger.info("Starting submission")
         for file in inputFileList:
@@ -264,23 +275,13 @@ class ArraySimulator:
             runScript = self._simtelRunner.getRunScript(
                 run=run, inputFile=file, extraCommands=extraCommands
             )
-            thisSubCmd = copy(subCmd)
 
-            # Checking for log files in sub command and replacing them
-            if 'log_out' in subCmd:
-                logOutFile = self._simtelRunner.getSubLogFile(run=run, mode='out')
-                thisSubCmd = thisSubCmd.replace('log_out', str(logOutFile))
-
-            if 'log_err' in subCmd:
-                logErrFile = self._simtelRunner.getSubLogFile(run=run, mode='err')
-                thisSubCmd = thisSubCmd.replace('log_err', str(logErrFile))
-
-            self._logger.info('Run {} - Submitting script {}'.format(run, runScript))
-
-            shellCommand = thisSubCmd + ' ' + str(runScript)
-            self._logger.debug(shellCommand)
-            if not test:
-                os.system(shellCommand)
+            job_manager = JobManager(submitCommand=subCmd, test=test)
+            job_manager.submit(
+                run_script=runScript,
+                run_out_file=self._simtelRunner.getSubLogFile(
+                    run=run, mode='')
+            )
 
             self._fillResults(file, run)
 
