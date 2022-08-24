@@ -142,6 +142,40 @@ class SimtelRunnerArray(SimtelRunner):
         )
         return self._simtelLogDir.joinpath(fileName)
 
+    def getSubLogFile(self, run, mode='out'):
+        """
+        Get the full path of the submission log file.
+
+        Parameters
+        ----------
+        runNumber: int
+            Run number.
+        mode: str
+            out or err
+
+        Raises
+        ------
+        ValueError
+            If runNumber is not valid (not an unsigned int).
+
+        Returns
+        -------
+        Path:
+            Full path of the run log file.
+        """
+
+        fileName = names.simtelSubLogFileName(
+            run=run,
+            primary=self.config.primary,
+            arrayName=self.arrayModel.layoutName,
+            site=self.arrayModel.site,
+            zenith=self.config.zenithAngle,
+            azimuth=self.config.azimuthAngle,
+            label=self.label,
+            mode=mode
+        )
+        return self._simtelLogDir.joinpath(fileName)
+
     def getHistogramFile(self, run):
         """Get full path of the simtel histogram file for a given run."""
         fileName = names.simtelHistogramFileName(
@@ -168,12 +202,65 @@ class SimtelRunnerArray(SimtelRunner):
         )
         return self._simtelDataDir.joinpath(fileName)
 
+    def hasSubLogFile(self, run, mode='out'):
+        """
+        Checks that the sub run log file for this run number
+        is a valid file on disk
+
+        Parameters
+        ----------
+        runNumber: int
+            Run number.
+
+        """
+
+        runSubFile = self.getSubLogFile(run=run, mode=mode)
+        return Path(runSubFile).is_file()
+
+    def getResources(self, run):
+        """
+        Reading run time from last line of submission log file.
+
+        Parameters
+        ----------
+        runNumber: int
+            Run number.
+
+        """
+
+        subLogFile = self.getSubLogFile(run=run, mode='out')
+
+        self._logger.info('Reading resources from {}'.format(
+            subLogFile))
+
+        runtime = None
+        with open(subLogFile, 'r') as file:
+            for line in reversed(list(file)):
+                if 'RUNTIME' in line:
+                    runtime = int(line.split()[1])
+                    break
+
+        if runtime is None:
+            self._logger.debug('RUNTIME was not found in run log file')
+
+        return runtime
+
     def _shallRun(self, run=None):
         """Tells if simulations should be run again based on the existence of output files."""
         return not self.getOutputFile(run).exists()
 
     def _makeRunCommand(self, inputFile, run=1):
-        """Builds and returns the command to run simtel_array."""
+        """
+        Builds and returns the command to run simtel_array.
+
+        Attributes
+        ----------
+        inputFile: str
+            Full path of the input CORSIKA file
+        run: int
+            run number
+
+        """
 
         self._logFile = self.getLogFile(run)
         histogramFile = self.getHistogramFile(run)
