@@ -68,7 +68,7 @@ autodoc_mock_imports = [
     "gridfs",
     "scipy",
     "cycler",
-    "eventio"
+    "eventio",
 ]
 
 # Change the look of autodoc classes
@@ -174,9 +174,7 @@ latex_documents = [
 
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
-man_pages = [
-    (master_doc, "gammasim-tools", "gammasim-tools Documentation", [author], 1)
-]
+man_pages = [(master_doc, "gammasim-tools", "gammasim-tools Documentation", [author], 1)]
 
 
 # -- Options for Texinfo output ----------------------------------------------

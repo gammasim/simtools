@@ -1,13 +1,12 @@
 #!/usr/bin/python3
 
-import pytest
 import logging
 
 import astropy.units as u
+import pytest
 
-from simtools.simtel.simtel_runner_ray_tracing import SimtelRunnerRayTracing
 from simtools.model.telescope_model import TelescopeModel
-
+from simtools.simtel.simtel_runner_ray_tracing import SimtelRunnerRayTracing
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)

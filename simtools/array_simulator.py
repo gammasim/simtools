@@ -1,21 +1,20 @@
 import logging
 import os
 import re
-import numpy as np
+from collections import defaultdict
 from copy import copy
 from pathlib import Path
-from collections import defaultdict
 
 import astropy.units as u
+import numpy as np
 
 import simtools.config as cfg
 import simtools.io_handler as io
 import simtools.util.general as gen
+from simtools.job_submission.job_manager import JobManager
 from simtools.model.array_model import ArrayModel
 from simtools.simtel.simtel_histograms import SimtelHistograms
 from simtools.simtel.simtel_runner_array import SimtelRunnerArray
-from simtools.job_submission.job_manager import JobManager
-
 
 __all__ = ["ArraySimulator"]
 
@@ -118,9 +117,7 @@ class ArraySimulator:
         self._filesLocation = cfg.getConfigArg("outputLocation", filesLocation)
 
         # File location
-        self._baseDirectory = io.getArraySimulatorOutputDirectory(
-            self._filesLocation, self.label
-        )
+        self._baseDirectory = io.getArraySimulatorOutputDirectory(self._filesLocation, self.label)
 
         configData = gen.collectDataFromYamlOrDict(configFile, configData)
         self._loadArrayConfigData(configData)
@@ -146,9 +143,7 @@ class ArraySimulator:
         _parameters = gen.collectDataFromYamlOrDict(_parameterFile, None)
         self.config = gen.validateConfigData(_restConfig, _parameters)
 
-        self.arrayModel = ArrayModel(
-            label=self.label, arrayConfigData=_arrayModelConfig
-        )
+        self.arrayModel = ArrayModel(label=self.label, arrayConfigData=_arrayModelConfig)
 
     def _collectArrayModelParameters(self, configData):
         """
@@ -234,13 +229,7 @@ class ArraySimulator:
 
             self._fillResults(file, run)
 
-    def submit(
-            self,
-            inputFileList,
-            submitCommand=None,
-            extraCommands=None,
-            test=False
-    ):
+    def submit(self, inputFileList, submitCommand=None, extraCommands=None, test=False):
         """
         Submit a run script as a job. The submit command can be given by \
         submitCommand or it will be taken from the config.yml file.
@@ -258,15 +247,11 @@ class ArraySimulator:
 
         """
 
-        subCmd = (
-            submitCommand if submitCommand is not None else cfg.get("submissionCommand")
-        )
+        subCmd = submitCommand if submitCommand is not None else cfg.get("submissionCommand")
         self._logger.info("Submission command: {}".format(subCmd))
 
         inputFileList = self._makeInputList(inputFileList)
-        self._logger.info(
-            "Submitting run scripts for {} runs".format(len(inputFileList))
-        )
+        self._logger.info("Submitting run scripts for {} runs".format(len(inputFileList)))
 
         self._logger.info("Starting submission")
         for file in inputFileList:
@@ -279,8 +264,7 @@ class ArraySimulator:
             job_manager = JobManager(submitCommand=subCmd, test=test)
             job_manager.submit(
                 run_script=runScript,
-                run_out_file=self._simtelRunner.getSubLogFile(
-                    run=run, mode='')
+                run_out_file=self._simtelRunner.getSubLogFile(run=run, mode=""),
             )
 
             self._fillResults(file, run)
@@ -309,12 +293,11 @@ class ArraySimulator:
         fileName = str(Path(file).name)
 
         try:
-            runStr = re.search('run[0-9]*', fileName).group()
+            runStr = re.search("run[0-9]*", fileName).group()
             runNumber = int(runStr[3:])
             return runNumber
         except (ValueError, AttributeError):
-            msg = "Run number could not be guessed from {} using run = 1".format(
-                fileName)
+            msg = "Run number could not be guessed from {} using run = 1".format(fileName)
             self._logger.warning(msg)
             return 1
 
@@ -330,11 +313,11 @@ class ArraySimulator:
             run number
 
         """
-        self._results['input'].append(str(file))
-        self._results['output'].append(str(self._simtelRunner.getOutputFile(run)))
-        self._results['hist'].append(str(self._simtelRunner.getHistogramFile(run)))
-        self._results['log'].append(str(self._simtelRunner.getLogFile(run)))
-        self._results['sub_out'].append(str(self._simtelRunner.getSubLogFile(run, mode='out')))
+        self._results["input"].append(str(file))
+        self._results["output"].append(str(self._simtelRunner.getOutputFile(run)))
+        self._results["hist"].append(str(self._simtelRunner.getHistogramFile(run)))
+        self._results["log"].append(str(self._simtelRunner.getLogFile(run)))
+        self._results["sub_out"].append(str(self._simtelRunner.getSubLogFile(run, mode="out")))
 
     def printHistograms(self, inputFileList=None):
         """
@@ -450,20 +433,19 @@ class ArraySimulator:
 
         """
 
-        if len(self._results['sub_out']) == 0 and inputFileList is not None:
+        if len(self._results["sub_out"]) == 0 and inputFileList is not None:
             self._fillResultsWithoutRun(inputFileList)
 
         runtime = list()
-        for file in self._results['sub_out']:
+        for file in self._results["sub_out"]:
             if Path(file).is_file():
-                thisRuntime = self._simtelRunner.getResources(
-                    run=self._guessRunFromFile(file))
+                thisRuntime = self._simtelRunner.getResources(run=self._guessRunFromFile(file))
                 runtime.append(thisRuntime)
 
         meanRuntime = np.mean(runtime)
 
         resources = dict()
-        resources['Runtime/run [sec]'] = meanRuntime
+        resources["Runtime/run [sec]"] = meanRuntime
         return resources
 
     def printResourcesReport(self, inputFileList):
@@ -478,8 +460,8 @@ class ArraySimulator:
 
         """
         resources = self.makeResourcesReport(inputFileList)
-        print('-----------------------------')
-        print('Computing Resources Report - Array Simulations')
+        print("-----------------------------")
+        print("Computing Resources Report - Array Simulations")
         for key, value in resources.items():
-            print('{} = {:.2f}'.format(key, value))
-        print('-----------------------------')
+            print("{} = {:.2f}".format(key, value))
+        print("-----------------------------")

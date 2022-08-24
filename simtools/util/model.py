@@ -6,7 +6,6 @@ import math
 from simtools.model.model_parameters import MODEL_PARS
 from simtools.util import names
 
-
 __all__ = [
     "computeTelescopeTransmission",
     "getTelescopeClass",

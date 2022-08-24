@@ -1,16 +1,15 @@
 #!/usr/bin/python3
 
 import logging
-import pytest
 
-import numpy as np
 import astropy.units as u
+import numpy as np
+import pytest
 from astropy.io import ascii
 
-from simtools import visualize
-import simtools.io_handler as io
-from simtools import db_handler
 import simtools.config as cfg
+import simtools.io_handler as io
+from simtools import db_handler, visualize
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -33,14 +32,9 @@ def test_plot_1D(db):
 
     testFileName = "ref_200_1100_190211a.dat"
     db.exportFileDB(
-        dbName=db.DB_CTA_SIMULATION_MODEL,
-        dest=io.getTestModelDirectory(),
-        fileName=testFileName
+        dbName=db.DB_CTA_SIMULATION_MODEL, dest=io.getTestModelDirectory(), fileName=testFileName
     )
-    testDataFile = cfg.findFile(
-        testFileName,
-        io.getTestModelDirectory()
-    )
+    testDataFile = cfg.findFile(testFileName, io.getTestModelDirectory())
     dataIn = np.loadtxt(testDataFile, usecols=(0, 1), dtype=headersType)
 
     # Change y-axis to percent
@@ -73,15 +67,8 @@ def test_plot_table(db):
     title = "Test plot table"
 
     testFileName = "Transmission_Spectrum_PlexiGlass.dat"
-    db.exportFileDB(
-        dbName="test-data",
-        dest=io.getTestModelDirectory(),
-        fileName=testFileName
-    )
-    tableFile = cfg.findFile(
-        testFileName,
-        io.getTestModelDirectory()
-    )
+    db.exportFileDB(dbName="test-data", dest=io.getTestModelDirectory(), fileName=testFileName)
+    tableFile = cfg.findFile(testFileName, io.getTestModelDirectory())
     table = ascii.read(tableFile)
 
     plt = visualize.plotTable(table, yTitle="Transmission", title=title, noMarkers=True)
