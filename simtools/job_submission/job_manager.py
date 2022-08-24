@@ -104,7 +104,7 @@ class JobManager:
 
         """
         self.run_script = str(run_script)
-        self.run_out_file = str(run_out_file).replace(".log", "-log")
+        self.run_out_file = str(run_out_file).replace(".log", "")
 
         self._logger.info(
             'Submitting script {}'.format(self.run_script))
