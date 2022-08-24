@@ -68,3 +68,11 @@ def test_validate_config_data(cfg_setup):
 
     # Testing dict par
     assert validatedData.dictPar["bleh"] == 500
+
+
+def test_program_is_executable():
+
+    # (assumpe 'ls' exist on any system the test is running)
+    assert gen.program_is_executable('ls') is not None
+    assert gen.program_is_executable(
+        'this_program_probably_does_not_exist') is None

@@ -94,7 +94,7 @@ def test_run(array_simulator, corsikaFile):
 def test_submitting(array_simulator, corsikaFile):
 
     array_simulator.submit(
-        inputFileList=corsikaFile, submitCommand="more "
+        inputFileList=corsikaFile, submitCommand="local"
     )
     # TODO - add a test here
 
@@ -102,7 +102,7 @@ def test_submitting(array_simulator, corsikaFile):
 def test_list_of_files(array_simulator, corsikaFile):
 
     array_simulator.submit(
-        inputFileList=corsikaFile, submitCommand="more ", test=True
+        inputFileList=corsikaFile, submitCommand="local", test=True
     )
 
     array_simulator.printListOfOutputFiles()

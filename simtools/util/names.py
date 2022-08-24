@@ -949,7 +949,10 @@ def corsikaSubLogFileName(arrayName, site, primary, run, mode, label=None):
     """
     name = 'log-sub-corsika-run{}-{}-{}-{}'.format(run, arrayName, site, primary)
     name += '_{}'.format(label) if label is not None else ''
-    name += '-' + mode + '.log'
+    if len(mode) > 0:
+        name += "." + mode
+    else:
+        name += '.log'
     return name
 
 
@@ -1095,5 +1098,8 @@ def simtelSubLogFileName(run, primary, arrayName, site, zenith, azimuth, mode, l
         arrayName
     )
     name += '_{}'.format(label) if label is not None else ''
-    name += '-' + mode + '.log'
+    if len(mode) > 0:
+        name += "." + mode
+    else:
+        name += '.log'
     return name

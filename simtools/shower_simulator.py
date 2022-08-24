@@ -9,6 +9,7 @@ import simtools.io_handler as io
 from simtools.corsika.corsika_runner import CorsikaRunner
 from simtools.util import names
 from simtools.util.general import collectDataFromYamlOrDict
+from simtools.job_submission.job_manager import JobManager
 
 __all__ = ["ShowerSimulator"]
 
@@ -118,7 +119,10 @@ class ShowerSimulator:
     # End of init
 
     def _loadShowerConfigData(self, showerConfigData):
-        """Validate showerConfigData and store the relevant data in variables."""
+        """
+        Validate showerConfigData and store the relevant data in variables.
+
+        """
 
         # Copying showerConfigData to corsikaConfigData
         # Few keys will be removed before passing it to CorsikaRunner
@@ -193,7 +197,11 @@ class ShowerSimulator:
             os.system(runScript)
 
     def submit(
-        self, runList=None, runRange=None, submitCommand=None, extraCommands=None
+            self, runList=None,
+            runRange=None,
+            submitCommand=None,
+            extraCommands=None,
+            test=False
     ):
         """
         Submit a run script as a job. The submit command can be given by \
@@ -205,11 +213,13 @@ class ShowerSimulator:
             List of run numbers to be simulated.
         runRange: list
             List of len 2 with the limits of the range for runs to be simulated.
+        submitCommand: str
+            Command to be used before the script name.
+        extraCommands: str or list of str
+            Extra commands to be added to the run script before the run command,
+        test: bool
+            If True, job is not submitted.
 
-        Raises
-        ------
-        InvalidRunsToSimulate
-            If runs in runList or runRange are invalid.
         """
 
         subCmd = (
@@ -228,22 +238,12 @@ class ShowerSimulator:
                 runNumber=run, extraCommands=extraCommands
             )
 
-            thisSubCmd = copy(subCmd)
-
-            # Checking for log files in sub command and replacing them
-            if 'log_out' in subCmd:
-                logOutFile = self._corsikaRunner.getSubLogFile(runNumber=run, mode='out')
-                thisSubCmd = thisSubCmd.replace('log_out', str(logOutFile))
-
-            if 'log_err' in subCmd:
-                logErrFile = self._corsikaRunner.getSubLogFile(runNumber=run, mode='err')
-                thisSubCmd = thisSubCmd.replace('log_err', str(logErrFile))
-
-            self._logger.info('Run {} - Submitting script {}'.format(run, runScript))
-
-            shellCommand = thisSubCmd + ' ' + str(runScript)
-            self._logger.debug(shellCommand)
-            os.system(shellCommand)
+            job_manager = JobManager(submitCommand=subCmd, test=test)
+            job_manager.submit(
+                run_script=runScript,
+                run_out_file=self._corsikaRunner.getSubLogFile(
+                    runNumber=run, mode='')
+            )
 
     def makeResourcesReport(self):
         """
@@ -261,9 +261,9 @@ class ShowerSimulator:
         runtime = list()
         nEvents = None
         for run in self.runs:
-            if self._corsikaRunner.hasSubLogFile(runNumber=run):
-                nEvents, thisRuntime = self._corsikaRunner.getResources(runNumber=run)
-                runtime.append(thisRuntime)
+           if self._corsikaRunner.hasSubLogFile(runNumber=run):
+               nEvents, thisRuntime = self._corsikaRunner.getResources(runNumber=run)
+               runtime.append(thisRuntime)
 
         meanRuntime = np.mean(runtime)
 
