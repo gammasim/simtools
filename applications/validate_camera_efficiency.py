@@ -52,7 +52,8 @@ import simtools.util.general as gen
 from simtools.camera_efficiency import CameraEfficiency
 from simtools.model.telescope_model import TelescopeModel
 
-if __name__ == "__main__":
+
+def main():
 
     parser = argparser.CommandLineParser(
         description=(
@@ -106,3 +107,7 @@ if __name__ == "__main__":
         fig.savefig(str(nsbPlotFile) + "." + f, format=f, bbox_inches="tight")
     logger.info("Plotted NSB efficiency in {}".format(nsbPlotFile))
     fig.clf()
+
+
+if __name__ == "__main__":
+    main()
