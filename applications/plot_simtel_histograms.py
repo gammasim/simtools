@@ -36,7 +36,8 @@ import simtools.util.commandline_parser as argparser
 import simtools.util.general as gen
 from simtools.simtel.simtel_histograms import SimtelHistograms
 
-if __name__ == "__main__":
+
+def main():
 
     parser = argparser.CommandLineParser(description=("Plots sim_telarray histograms."))
     parser.add_argument(
@@ -110,3 +111,7 @@ if __name__ == "__main__":
 
     plt.close()
     pdfPages.close()
+
+
+if __name__ == "__main__":
+    main()

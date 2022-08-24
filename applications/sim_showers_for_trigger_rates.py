@@ -62,7 +62,8 @@ import simtools.util.commandline_parser as argparser
 import simtools.util.general as gen
 from simtools.shower_simulator import ShowerSimulator
 
-if __name__ == "__main__":
+
+def main():
 
     parser = argparser.CommandLineParser(
         description=("Simulate showers to be used for trigger rate calculations")
@@ -142,3 +143,7 @@ if __name__ == "__main__":
     printListIntoFile(showerSimulator.getListOfOutputFiles(), outputFileList)
     logger.info("List of log files exported to {}".format(logFileList))
     printListIntoFile(showerSimulator.getListOfLogFiles(), logFileList)
+
+
+if __name__ == "__main__":
+    main()

@@ -91,7 +91,7 @@ def loadData(datafile):
     return data
 
 
-if __name__ == "__main__":
+def main():
 
     parser = argparser.CommandLineParser(
         description=(
@@ -305,3 +305,7 @@ if __name__ == "__main__":
     print("Best parameters:")
     for par, value in best_pars.items():
         print("{} = {}".format(par, value))
+
+
+if __name__ == "__main__":
+    main()
