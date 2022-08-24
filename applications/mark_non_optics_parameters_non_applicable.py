@@ -12,13 +12,14 @@
 
 """
 
-import logging
 import argparse
+import logging
+
 import yaml
 
-from simtools import db_handler
 import simtools.config as cfg
 import simtools.util.general as gen
+from simtools import db_handler
 
 if __name__ == "__main__":
 
@@ -61,7 +62,13 @@ if __name__ == "__main__":
     with open(args.sections, "r") as stream:
         parameterCatogeries = yaml.load(stream, Loader=yaml.FullLoader)
 
-    nonOpticCatagories = ["Readout electronics", "Trigger", "Photon conversion", "Camera", "Unnecessary"]
+    nonOpticCatagories = [
+        "Readout electronics",
+        "Trigger",
+        "Photon conversion",
+        "Camera",
+        "Unnecessary",
+    ]
     nonOpticParameters = list()
     for category in nonOpticCatagories:
         for parNow in parameterCatogeries[category]:
@@ -93,7 +100,7 @@ if __name__ == "__main__":
                     version=versionNow,
                     parameter=parNow,
                     field="Applicable",
-                    newValue=False
+                    newValue=False,
                 )
             pars = db.readMongoDB(
                 dbName=db.DB_CTA_SIMULATION_MODEL,
@@ -101,7 +108,7 @@ if __name__ == "__main__":
                 modelVersion=versionNow,
                 runLocation="",
                 writeFiles=False,
-                onlyApplicable=False
+                onlyApplicable=False,
             )
             for parNow in nonOpticParameters:
                 if parNow in pars:

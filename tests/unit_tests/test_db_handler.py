@@ -1,8 +1,9 @@
 #!/usr/bin/python3
 
-import pytest
 import logging
 import uuid
+
+import pytest
 
 import simtools.config as cfg
 import simtools.io_handler as io
@@ -85,14 +86,14 @@ def test_copy_telescope_db(db, random_id, db_cleanup):
         newTelName="North-LST-Test",
         collectionName="telescopes",
         dbToCopyTo="sandbox",
-        collectionToCopyTo="telescopes_" + random_id
+        collectionToCopyTo="telescopes_" + random_id,
     )
     db.copyDocuments(
         dbName=db.DB_CTA_SIMULATION_MODEL,
         collection="metadata",
         query={"Entry": "Simulation-Model-Tags"},
         dbToCopyTo="sandbox",
-        collectionToCopyTo="metadata_" + random_id
+        collectionToCopyTo="metadata_" + random_id,
     )
     pars = db.readMongoDB(
         dbName="sandbox",
@@ -104,9 +105,7 @@ def test_copy_telescope_db(db, random_id, db_cleanup):
     )
     assert pars["camera_pixels"]["Value"] == 1855
 
-    logger.info(
-        "Testing deleting a query (a whole telescope in this case and metadata)"
-    )
+    logger.info("Testing deleting a query (a whole telescope in this case and metadata)")
     query = {"Telescope": "North-LST-Test"}
     db.deleteQuery("sandbox", "telescopes_" + random_id, query)
     query = {"Entry": "Simulation-Model-Tags"}
@@ -135,7 +134,7 @@ def test_adding_parameter_version_db(db, random_id, db_cleanup):
         newTelName="North-LST-Test",
         collectionName="telescopes",
         dbToCopyTo="sandbox",
-        collectionToCopyTo="telescopes_" + random_id
+        collectionToCopyTo="telescopes_" + random_id,
     )
     db.addParameter(
         dbName="sandbox",
@@ -143,7 +142,7 @@ def test_adding_parameter_version_db(db, random_id, db_cleanup):
         parameter="camera_config_version",
         newVersion="test",
         newValue=42,
-        collectionName="telescopes_" + random_id
+        collectionName="telescopes_" + random_id,
     )
     pars = db.readMongoDB(
         dbName="sandbox",
@@ -166,7 +165,7 @@ def test_update_parameter_db(db, random_id, db_cleanup):
         newTelName="North-LST-Test",
         collectionName="telescopes",
         dbToCopyTo="sandbox",
-        collectionToCopyTo="telescopes_" + random_id
+        collectionToCopyTo="telescopes_" + random_id,
     )
     db.addParameter(
         dbName="sandbox",
@@ -174,7 +173,7 @@ def test_update_parameter_db(db, random_id, db_cleanup):
         parameter="camera_config_version",
         newVersion="test",
         newValue=42,
-        collectionName="telescopes_" + random_id
+        collectionName="telescopes_" + random_id,
     )
     db.updateParameter(
         dbName="sandbox",
@@ -182,7 +181,7 @@ def test_update_parameter_db(db, random_id, db_cleanup):
         version="test",
         parameter="camera_config_version",
         newValue=999,
-        collectionName="telescopes_" + random_id
+        collectionName="telescopes_" + random_id,
     )
     pars = db.readMongoDB(
         dbName="sandbox",
@@ -205,7 +204,7 @@ def test_adding_new_parameter_db(db, random_id, db_cleanup):
         newTelName="North-LST-Test",
         collectionName="telescopes",
         dbToCopyTo="sandbox",
-        collectionToCopyTo="telescopes_" + random_id
+        collectionToCopyTo="telescopes_" + random_id,
     )
     db.addNewParameter(
         dbName="sandbox",
@@ -213,7 +212,7 @@ def test_adding_new_parameter_db(db, random_id, db_cleanup):
         version="test",
         parameter="camera_config_version_test",
         value=999,
-        collectionName="telescopes_" + random_id
+        collectionName="telescopes_" + random_id,
     )
     pars = db.readMongoDB(
         dbName="sandbox",
@@ -236,14 +235,14 @@ def test_update_parameter_field_db(db, random_id, db_cleanup):
         newTelName="North-LST-Test",
         collectionName="telescopes",
         dbToCopyTo="sandbox",
-        collectionToCopyTo="telescopes_" + random_id
+        collectionToCopyTo="telescopes_" + random_id,
     )
     db.copyDocuments(
         dbName=db.DB_CTA_SIMULATION_MODEL,
         collection="metadata",
         query={"Entry": "Simulation-Model-Tags"},
         dbToCopyTo="sandbox",
-        collectionToCopyTo="metadata_" + random_id
+        collectionToCopyTo="metadata_" + random_id,
     )
     db.updateParameterField(
         dbName="sandbox",
@@ -252,7 +251,7 @@ def test_update_parameter_field_db(db, random_id, db_cleanup):
         parameter="camera_pixels",
         field="Applicable",
         newValue=False,
-        collectionName="telescopes_" + random_id
+        collectionName="telescopes_" + random_id,
     )
     pars = db.readMongoDB(
         dbName="sandbox",
@@ -300,9 +299,7 @@ def test_separating_get_and_write(db):
 def test_insert_files_db(db):
 
     logger.info("----Testing inserting files to the DB-----")
-    logger.info(
-        "Creating a temporary file in {}".format(io.getTestOutputDirectory())
-    )
+    logger.info("Creating a temporary file in {}".format(io.getTestOutputDirectory()))
     fileName = io.getTestOutputDirectory() / "test_file.dat"
     with open(fileName, "w") as f:
         f.write("# This is a test file")

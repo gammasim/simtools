@@ -1,14 +1,14 @@
 #!/usr/bin/python3
 
 import logging
-import matplotlib.pyplot as plt
-import matplotlib.gridspec as gridspec
-from cycler import cycler
-from collections import OrderedDict
 import re
+from collections import OrderedDict
 
 import astropy.units as u
+import matplotlib.gridspec as gridspec
+import matplotlib.pyplot as plt
 from astropy.table import QTable
+from cycler import cycler
 
 __all__ = ["setStyle", "plot1D", "plotTable"]
 
@@ -183,9 +183,7 @@ def setStyle(palette="default", bigPlot=False):
     plt.rc(
         "axes",
         prop_cycle=(
-            cycler(color=COLORS[palette])
-            + cycler(linestyle=LINES)
-            + cycler(marker=MARKERS)
+            cycler(color=COLORS[palette]) + cycler(linestyle=LINES) + cycler(marker=MARKERS)
         ),
     )
     plt.rc(
@@ -347,18 +345,11 @@ def plot1D(data, **kwargs):
     ax1 = plt.gca()
 
     for label, dataNow in dataDict.items():
-        assert (
-            len(dataNow.dtype.names) == 2
-        ), "Input array must have two columns with titles."
+        assert len(dataNow.dtype.names) == 2, "Input array must have two columns with titles."
         xTitle, yTitle = dataNow.dtype.names[0], dataNow.dtype.names[1]
         xTitleUnit = _addUnit(xTitle, dataNow[xTitle])
         yTitleUnit = _addUnit(yTitle, dataNow[yTitle])
-        plt.plot(
-            dataNow[xTitle],
-            dataNow[yTitle],
-            label=label,
-            **kwargs
-        )
+        plt.plot(dataNow[xTitle], dataNow[yTitle], label=label, **kwargs)
 
     if plotRatio or plotDifference:
         gs.update(hspace=0.02)
@@ -396,11 +387,7 @@ def plot1D(data, **kwargs):
                     yValues = dataNow[yTitle] / dataDict[dataRefName][yTitle]
                 else:
                     yValues = dataNow[yTitle] - dataDict[dataRefName][yTitle]
-                plt.plot(
-                    dataNow[xTitle],
-                    yValues,
-                    **kwargs
-                )
+                plt.plot(dataNow[xTitle], yValues, **kwargs)
 
         plt.xlabel(xTitleUnit)
         yTitleRatio = "Ratio to {}".format(dataRefName)

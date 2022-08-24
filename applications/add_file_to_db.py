@@ -38,9 +38,9 @@ import logging
 from pathlib import Path
 
 import simtools.config as cfg
-from simtools import db_handler
 import simtools.util.commandline_parser as argparser
 import simtools.util.general as gen
+from simtools import db_handler
 
 
 def userConfirm():
@@ -114,9 +114,7 @@ if __name__ == "__main__":
             else:
                 logger.warning(
                     "The file {} will not be uploaded to the DB because its extension is not "
-                    "in the allowed extension list: {}".format(
-                        fileNow, db.ALLOWED_FILE_EXTENSIONS
-                    )
+                    "in the allowed extension list: {}".format(fileNow, db.ALLOWED_FILE_EXTENSIONS)
                 )
     else:
         for extNow in db.ALLOWED_FILE_EXTENSIONS:
@@ -130,11 +128,7 @@ if __name__ == "__main__":
     else:
         pass
 
-    print(
-        "Should I insert the following file{} to the {} DB?:\n".format(
-            plural, args.dbToInsertTo
-        )
-    )
+    print("Should I insert the following file{} to the {} DB?:\n".format(plural, args.dbToInsertTo))
     print(*filesToInsert, sep="\n")
     print()
     if userConfirm():
@@ -142,7 +136,5 @@ if __name__ == "__main__":
         logger.info("File{} inserted to {} DB".format(plural, args.dbToInsertTo))
     else:
         logger.info(
-            "Aborted, did not insert the file{} to the {} DB".format(
-                plural, args.dbToInsertTo
-            )
+            "Aborted, did not insert the file{} to the {} DB".format(plural, args.dbToInsertTo)
         )

@@ -1,4 +1,5 @@
 import logging
+
 import yaml
 
 
@@ -37,8 +38,7 @@ class ModelDataWriter:
         self._product_data_filename = None
         self.workflow_config = workflow_config
 
-    def write_data(self,
-                   product_data):
+    def write_data(self, product_data):
         """
         Write model data consisting of metadata and data files
 
@@ -53,12 +53,10 @@ class ModelDataWriter:
         try:
             self._logger.info("Writing data to {}".format(_file))
             product_data.write(
-                _file,
-                format=self.workflow_config.product_data_file_format(),
-                overwrite=True)
+                _file, format=self.workflow_config.product_data_file_format(), overwrite=True
+            )
         except FileNotFoundError:
-            self._logger.error("Error writing model data to {}".format(
-                _file))
+            self._logger.error("Error writing model data to {}".format(_file))
             raise
 
     def write_metadata(self, ymlfile=None):
@@ -75,17 +73,12 @@ class ModelDataWriter:
 
         try:
             if not ymlfile:
-                ymlfile = self.workflow_config.product_data_file_name('.yml')
-            self._logger.info(
-                "Writing metadata to {}".format(ymlfile))
-            with open(ymlfile, 'w', encoding='UTF-8') as file:
-                yaml.safe_dump(
-                    self.workflow_config.top_level_meta,
-                    file,
-                    sort_keys=False)
+                ymlfile = self.workflow_config.product_data_file_name(".yml")
+            self._logger.info("Writing metadata to {}".format(ymlfile))
+            with open(ymlfile, "w", encoding="UTF-8") as file:
+                yaml.safe_dump(self.workflow_config.top_level_meta, file, sort_keys=False)
         except FileNotFoundError:
-            self._logger.error("Error writing model data to {}".format(
-                ymlfile))
+            self._logger.error("Error writing model data to {}".format(ymlfile))
             raise
         except AttributeError:
             self._logger.error("No metadata defined for writing")

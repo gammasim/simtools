@@ -56,11 +56,11 @@ from copy import copy
 
 from astropy.io.misc import yaml
 
-import simtools.util.commandline_parser as argparser
 import simtools.config as cfg
+import simtools.util.commandline_parser as argparser
 import simtools.util.general as gen
-from simtools.shower_simulator import ShowerSimulator
 from simtools.array_simulator import ArraySimulator
+from simtools.shower_simulator import ShowerSimulator
 
 
 def parse(description=None):
@@ -91,15 +91,15 @@ def parse(description=None):
         "-t",
         "--task",
         help=(
-            'What task to execute. Options: '
-            + 'simulate (perform simulations),'
-            + 'lists (print list of output files),'
-            + 'inspect (plot sim_telarray histograms for quick inspection),'
-            + 'resources (print report of computing resources)'
+            "What task to execute. Options: "
+            + "simulate (perform simulations),"
+            + "lists (print list of output files),"
+            + "inspect (plot sim_telarray histograms for quick inspection),"
+            + "resources (print report of computing resources)"
         ),
         type=str,
         required=True,
-        choices=['simulate', 'lists', 'inspect', 'resources']
+        choices=["simulate", "lists", "inspect", "resources"],
     )
     parser.add_argument(
         "--primary",
@@ -127,8 +127,7 @@ def parse(description=None):
         help="Simulates only showers, no array detection",
         action="store_true",
     )
-    parser.initialize_default_arguments(
-        add_workflow_config=False)
+    parser.initialize_default_arguments(add_workflow_config=False)
     return parser.parse_args()
 
 
@@ -159,10 +158,7 @@ def proccessSimulationConfigFile(configFile, primaryConfig, logger):
         with open(configFile) as file:
             configData = yaml.load(file)
     except FileNotFoundError:
-        logger.error(
-            "Error loading simulation configuration file from {}".format(
-                configFile)
-        )
+        logger.error("Error loading simulation configuration file from {}".format(configFile))
         raise
 
     label = configData.pop("label", dict())
@@ -215,7 +211,8 @@ def main():
     logger.setLevel(gen.getLogLevelFromUser(args.logLevel))
 
     label, showerConfigs, arrayConfigs = proccessSimulationConfigFile(
-        args.productionconfig, args.primary, logger)
+        args.productionconfig, args.primary, logger
+    )
 
     # ShowerSimulators
     showerSimulators = dict()
@@ -231,13 +228,11 @@ def main():
                 shower.submit(test=args.test)
 
             elif args.task == "list":
-                print(
-                    "Printing ShowerSimulator file lists for primary {}".format(primary)
-                )
+                print("Printing ShowerSimulator file lists for primary {}".format(primary))
                 raise NotImplementedError()
 
-            elif args.task == 'resources':
-                print('Printing computing resources report for primary {}'.format(primary))
+            elif args.task == "resources":
+                print("Printing computing resources report for primary {}".format(primary))
                 shower.printResourcesReport()
 
     # ArraySimulators
@@ -254,20 +249,16 @@ def main():
                 array.submit(inputFileList=inputList, test=args.test)
 
             elif args.task == "lists":
-                print(
-                    "Printing ArraySimulator file lists for primary {}".format(primary)
-                )
+                print("Printing ArraySimulator file lists for primary {}".format(primary))
                 raise NotImplementedError()
 
             elif args.task == "inspect":
-                print(
-                    "Plotting ArraySimulator histograms for primary {}".format(primary)
-                )
+                print("Plotting ArraySimulator histograms for primary {}".format(primary))
                 file = array.printHistograms(inputList)
-                print('Histograms file {}'.format(file))
+                print("Histograms file {}".format(file))
 
-            elif args.task == 'resources':
-                print('Printing computing resources report for primary {}'.format(primary))
+            elif args.task == "resources":
+                print("Printing computing resources report for primary {}".format(primary))
                 array.printResourcesReport(inputList)
 
 
