@@ -21,7 +21,8 @@ import simtools.config as cfg
 import simtools.util.general as gen
 from simtools import db_handler
 
-if __name__ == "__main__":
+
+def main():
 
     parser = argparse.ArgumentParser(
         description=(
@@ -113,3 +114,7 @@ if __name__ == "__main__":
             for parNow in nonOpticParameters:
                 if parNow in pars:
                     assert pars[parNow]["Applicable"] is False
+
+
+if __name__ == "__main__":
+    main()

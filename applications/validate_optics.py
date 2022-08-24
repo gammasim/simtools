@@ -76,7 +76,7 @@ from simtools.ray_tracing import RayTracing
 # setStyle()
 
 
-if __name__ == "__main__":
+def main():
 
     parser = argparser.CommandLineParser(
         description=(
@@ -182,3 +182,7 @@ if __name__ == "__main__":
             plt.clf()
         plt.close()
         pdfPages.close()
+
+
+if __name__ == "__main__":
+    main()

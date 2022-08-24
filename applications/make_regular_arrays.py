@@ -34,7 +34,8 @@ import simtools.util.general as gen
 from simtools import db_handler
 from simtools.layout.layout_array import LayoutArray
 
-if __name__ == "__main__":
+
+def main():
 
     parser = argparser.CommandLineParser(
         description=(
@@ -147,3 +148,7 @@ if __name__ == "__main__":
             layout.convertCoordinates()
             layout.printTelescopeList()
             layout.exportTelescopeList()
+
+
+if __name__ == "__main__":
+    main()

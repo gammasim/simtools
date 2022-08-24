@@ -8,7 +8,8 @@ import simtools.util.commandline_parser as argparser
 import simtools.util.general as gen
 from simtools import db_handler
 
-if __name__ == "__main__":
+
+def main():
 
     parser = argparser.CommandLineParser(
         description=(
@@ -41,3 +42,7 @@ if __name__ == "__main__":
     print()
     pprint(pars[args.parameter])
     print()
+
+
+if __name__ == "__main__":
+    main()

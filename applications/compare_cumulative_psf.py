@@ -96,7 +96,7 @@ def loadData(datafile):
     return data
 
 
-if __name__ == "__main__":
+def main():
 
     parser = argparser.CommandLineParser(
         description=(
@@ -190,3 +190,7 @@ if __name__ == "__main__":
     for f in ["pdf", "png"]:
         fig.savefig(str(plotFile) + "." + f, format=f, bbox_inches="tight")
     fig.clf()
+
+
+if __name__ == "__main__":
+    main()
