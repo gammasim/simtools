@@ -512,10 +512,10 @@ class CameraEfficiency:
         Calculate the NSB rate.
         '''
 
-        n4Sum = np.sum(self._results['N4'])
-        pixActiveSolidAngle = self._telescopeModel.camera.getPixelActiveSolidAngle()
-        onAxisEffOpticalArea = self._telescopeModel.camera.getOnAxisEffOpticalArea()
-        nsbPePerNs = n4Sum * pixActiveSolidAngle * onAxisEffOpticalArea
+        nsbPePerNs = (np.sum(self._results['N4'])
+                      * self._telescopeModel.camera.getPixelActiveSolidAngle()
+                      * self._telescopeModel.derived.getOnAxisEffOpticalArea()  # TODO - I am here, need to write this!
+                      )
 
         # NSB input spectrum is from Benn&Ellison
         # (integral is in ph./(cm² ns sr) ) from 300 - 650 nm:
@@ -528,7 +528,10 @@ class CameraEfficiency:
         ]
         n1IntegralEdgesSum = np.sum(n1IntegralEdges)
         nsbIntegral = 0.0001*(n1Sum - 0.5*n1IntegralEdgesSum)
-        nsbRate = nsbPePerNs*extraInfo['nsbRefValue']/nsbIntegral
+        nsbRate = (nsbPePerNs
+                   * self._telescopeModel._referenceData["nsb_reference_value"]["Value"]
+                   / nsbIntegral
+                   )
         return nsbRate, n1Sum
 
     def plot(self, key, **kwargs):

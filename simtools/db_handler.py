@@ -57,6 +57,7 @@ class DatabaseHandler:
     DB_TABULATED_DATA = "CTA-Simulation-Model"
     DB_CTA_SIMULATION_MODEL = "CTA-Simulation-Model"
     DB_CTA_SIMULATION_MODEL_DESCRIPTIONS = "CTA-Simulation-Model-Descriptions"
+    DB_REFERENCE_DATA = "CTA-Reference-Data"
 
     ALLOWED_FILE_EXTENSIONS = [".dat", ".txt", ".lis", ".cfg", ".yml", ".ecsv"]
 
@@ -574,6 +575,58 @@ class DatabaseHandler:
         """
 
         collection = DatabaseHandler.dbClient[dbName].sites
+        _parameters = dict()
+
+        _modelVersion = self._convertVersionToTagged(
+            modelVersion, DatabaseHandler.DB_CTA_SIMULATION_MODEL
+        )
+
+        query = {
+            "Site": site,
+            "Version": _modelVersion,
+        }
+        if onlyApplicable:
+            query["Applicable"] = onlyApplicable
+        if collection.count_documents(query) < 1:
+            raise ValueError(
+                "The following query returned zero results! Check the input data and rerun.\n",
+                query,
+            )
+        for post in collection.find(query):
+            parNow = post["Parameter"]
+            _parameters[parNow] = post
+            _parameters[parNow].pop("Parameter", None)
+            _parameters[parNow].pop("Site", None)
+            _parameters[parNow]["entryDate"] = ObjectId(post["_id"]).generation_time
+
+        return _parameters
+
+    def getReferenceData(
+        self,
+        site,
+        modelVersion,
+        onlyApplicable=False
+    ):
+        """
+        Get parameters from MongoDB for a specific telescope.
+
+        Parameters
+        ----------
+        dbName: str
+            The name of the DB.
+        site: str
+            South or North.
+        modelVersion: str
+            Version of the model.
+        onlyApplicable: bool
+            If True, only applicable parameters will be read.
+
+        Returns
+        -------
+        dict containing the parameters
+        """
+
+        collection = DatabaseHandler.dbClient[DatabaseHandler.DB_REFERENCE_DATA].reference_values
         _parameters = dict()
 
         _modelVersion = self._convertVersionToTagged(

@@ -137,6 +137,12 @@ class TelescopeModel:
         return self._camera
 
     @property
+    def referenceData(self):
+        if not hasattr(self, "_referenceData"):
+            self._loadReferenceData()
+        return self._referenceData
+
+    @property
     def extraLabel(self):
         return self._extraLabel if self._extraLabel is not None else ""
 
@@ -638,6 +644,15 @@ class TelescopeModel:
                 "Using the one found in the modelFilesLocations"
             )
         self._mirrors = Mirrors(mirrorListFile)
+
+    def _loadReferenceData(self):
+        """Load the reference data for this telescope from the DB."""
+        self._logger.debug("Reading reference data from DB")
+        self._referenceData = db.getReferenceData(
+            self.site,
+            self.modelVersion,
+            onlyApplicable=True
+        )
 
     def _loadCamera(self):
         """Loading camera attribute by creating a Camera object with the camera config file."""
