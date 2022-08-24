@@ -135,7 +135,7 @@ if __name__ == "__main__":
     else:
         logger.info("Test flag is on - it will not submit any job.")
         logger.info("This is an example of the run script:")
-        showerSimulator.submit(runList=[1], submitCommand="more ")
+        showerSimulator.submit(runList=[1], test=args.test)
 
     # Exporting the list of output/log/input files into the application folder
     outputFileList = outputDir.joinpath("outputFiles_{}.list".format(args.primary))
