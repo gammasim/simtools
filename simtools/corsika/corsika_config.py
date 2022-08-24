@@ -1,6 +1,6 @@
+import copy
 import logging
 import random
-import copy
 
 import astropy.units as u
 from astropy.io.misc import yaml
@@ -8,8 +8,8 @@ from astropy.io.misc import yaml
 import simtools.config as cfg
 import simtools.io_handler as io
 import simtools.util.general as gen
-from simtools.util import names
 from simtools.layout.layout_array import LayoutArray
+from simtools.util import names
 from simtools.util.general import collectDataFromYamlOrDict
 
 __all__ = [
@@ -134,9 +134,7 @@ class CorsikaConfig:
         # Load parameters
         self._loadCorsikaParametersFile(corsikaParametersFile)
 
-        corsikaConfigData = collectDataFromYamlOrDict(
-            corsikaConfigFile, corsikaConfigData
-        )
+        corsikaConfigData = collectDataFromYamlOrDict(corsikaConfigFile, corsikaConfigData)
         self.setUserParameters(corsikaConfigData)
         self._isFileUpdated = False
 
@@ -157,13 +155,9 @@ class CorsikaConfig:
             self._corsikaParametersFile = filename
         else:
             # Default file from data directory.
-            self._corsikaParametersFile = io.getDataFile(
-                "corsika", "corsika_parameters.yml"
-            )
+            self._corsikaParametersFile = io.getDataFile("corsika", "corsika_parameters.yml")
         self._logger.debug(
-            "Loading CORSIKA parameters from file {}".format(
-                self._corsikaParametersFile
-            )
+            "Loading CORSIKA parameters from file {}".format(self._corsikaParametersFile)
         )
         with open(self._corsikaParametersFile, "r") as f:
             self._corsikaParameters = yaml.load(f)
@@ -209,15 +203,10 @@ class CorsikaConfig:
             # Looping over USER_PARAMETERS and searching for a match
             isIdentified = False
             for parName, parInfo in userPars.items():
-                if (
-                    keyArgs.upper() != parName
-                    and keyArgs.upper() not in parInfo["names"]
-                ):
+                if keyArgs.upper() != parName and keyArgs.upper() not in parInfo["names"]:
                     continue
                 # Matched parameter
-                validatedValueArgs = self._validateAndConvertArgument(
-                    parName, parInfo, valueArgs
-                )
+                validatedValueArgs = self._validateAndConvertArgument(parName, parInfo, valueArgs)
                 self._userParameters[parName] = validatedValueArgs
                 isIdentified = True
 
@@ -238,11 +227,7 @@ class CorsikaConfig:
                 )
                 self._userParameters[parName] = validatedValue
             else:
-                msg = (
-                    "Required parameters {} was not given (there may be more).".format(
-                        parName
-                    )
-                )
+                msg = "Required parameters {} was not given (there may be more).".format(parName)
                 self._logger.error(msg)
                 raise MissingRequiredInputInCorsikaConfigData(msg)
 
@@ -399,9 +384,7 @@ class CorsikaConfig:
     def exportInputFile(self):
         """Create and export CORSIKA input file."""
         self._setOutputFileAndDirectory()
-        self._logger.debug(
-            "Exporting CORSIKA input file to {}".format(self._configFilePath)
-        )
+        self._logger.debug("Exporting CORSIKA input file to {}".format(self._configFilePath))
 
         def _getTextSingleLine(pars):
             text = ""
@@ -438,12 +421,8 @@ class CorsikaConfig:
             # Defining the IACT variables for the output file name
             file.write("\n")
             file.write("IACT setenv PRMNAME {}\n".format(self.primary))
-            file.write(
-                "IACT setenv ZA {}\n".format(int(self._userParameters["THETAP"][0]))
-            )
-            file.write(
-                "IACT setenv AZM {}\n".format(int(self._userParameters["AZM"][0]))
-            )
+            file.write("IACT setenv ZA {}\n".format(int(self._userParameters["THETAP"][0])))
+            file.write("IACT setenv AZM {}\n".format(int(self._userParameters["AZM"][0])))
 
             file.write("\n* [ SEEDS ]\n")
             self._writeSeeds(file)
@@ -453,9 +432,7 @@ class CorsikaConfig:
             file.write(telescopeListText)
 
             file.write("\n* [ INTERACTION FLAGS ]\n")
-            textInteractionFlags = _getTextSingleLine(
-                self._corsikaParameters["INTERACTION_FLAGS"]
-            )
+            textInteractionFlags = _getTextSingleLine(self._corsikaParameters["INTERACTION_FLAGS"])
             file.write(textInteractionFlags)
 
             file.write("\n* [ CHERENKOV EMISSION PARAMETERS ]\n")
@@ -474,9 +451,7 @@ class CorsikaConfig:
             file.write("TELFIL {}\n".format(self._outputGenericFileName))
 
             file.write("\n* [ IACT TUNING PARAMETERS ]\n")
-            textIact = _getTextMultipleLines(
-                self._corsikaParameters["IACT_TUNING_PARAMETERS"]
-            )
+            textIact = _getTextMultipleLines(self._corsikaParameters["IACT_TUNING_PARAMETERS"])
             file.write(textIact)
 
             file.write("\nEXIT")
@@ -514,9 +489,7 @@ class CorsikaConfig:
         file: stream
             File where the telescope positions will be written.
         """
-        randomSeed = (
-            self._userParameters["PRMPAR"][0] + self._userParameters["RUNNR"][0]
-        )
+        randomSeed = self._userParameters["PRMPAR"][0] + self._userParameters["RUNNR"][0]
         random.seed(randomSeed)
         corsikaSeeds = [int(random.uniform(0, 1e7)) for i in range(4)]
 

@@ -54,7 +54,8 @@
         L-01: '1'  # Model of L-01 in the LaPalma site.
         M-05:
             name: NectarCam-D
-            fadc_pulse_shape: Pulse_template_nectarCam_17042020-noshift.dat  # Parameters to be changed
+            # Parameters to be changed
+            fadc_pulse_shape: Pulse_template_nectarCam_17042020-noshift.dat
             discriminator_pulse_shape: Pulse_template_nectarCam_17042020-noshift.dat
 
     Command line arguments
@@ -74,7 +75,8 @@
 
     .. code-block:: console
 
-        python applications/produce_array_config.py --label test --array_config data/test-data/arrayConfigTest.yml -v DEBUG
+        python applications/produce_array_config.py --label test \
+            --array_config data/test-data/arrayConfigTest.yml -v DEBUG
 
     All the produced model files can be found in simtools-output/test/model/
 
@@ -87,13 +89,10 @@ import simtools.util.commandline_parser as argparser
 import simtools.util.general as gen
 from simtools.model.array_model import ArrayModel
 
-
 if __name__ == "__main__":
 
     parser = argparser.CommandLineParser(
-        description=(
-            "Example of how to produce sim_telarray config files for a given array."
-        )
+        description=("Example of how to produce sim_telarray config files for a given array.")
     )
     parser.add_argument(
         "-l",

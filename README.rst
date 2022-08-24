@@ -3,10 +3,10 @@ gammasim-tools
 
 .. image:: https://zenodo.org/badge/195011575.svg
    :target: https://zenodo.org/badge/latestdoi/195011575
-   
+
 .. image:: https://github.com/gammasim/gammasim-tools/actions/workflows/CI-tests.yml/badge.svg
    :target: https://github.com/gammasim/gammasim-tools/actions/workflows/CI-tests.yml
-  
+
 .. image:: https://github.com/gammasim/gammasim-tools/actions/workflows/CI-docs.yml/badge.svg
    :target: https://github.com/gammasim/gammasim-tools/actions/workflows/CI-docs.yml
 
@@ -30,7 +30,7 @@ gammasim-tools makes extensive use of the `CORSIKA <https://www.iap.kit.edu/cors
 
 AUTHORS:
 --------
-    
+
 * Raul R Prado (raul.prado@desy.de)
 * Orel Gueta (orel.gueta@desy.de)
 * Gernot Maier (gernot.maier@desy.de)
@@ -49,7 +49,7 @@ Create a conda environment (only once):
 Each time you want to use the package, just activate the conda environment:
 
 ``conda activate gammasim-tools-dev``
- 
+
 STYLE GUIDELINES:
 -----------------
 
@@ -57,4 +57,3 @@ STYLE GUIDELINES:
 * Keep it clean!
 * Sphinx for docs with docstrings in `Numpy style <https://numpydoc.readthedocs.io/en/latest/format.html#id4>`_
 * Pep8 is required.
-

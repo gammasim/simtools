@@ -1,11 +1,11 @@
 import copy
 import logging
-import numpy as np
-import matplotlib.pyplot as plt
-from matplotlib.backends.backend_pdf import PdfPages
 
+import matplotlib.pyplot as plt
+import numpy as np
 from eventio import EventIOFile, Histograms
 from eventio.search_utils import yield_toplevel_of_type
+from matplotlib.backends.backend_pdf import PdfPages
 
 __all__ = ["SimtelHistograms"]
 
@@ -155,9 +155,7 @@ class SimtelHistograms:
                 )
                 continue
 
-            self._logger.debug(
-                "Processing: {}".format(self.combinedHists[iHist]["title"])
-            )
+            self._logger.debug("Processing: {}".format(self.combinedHists[iHist]["title"]))
 
             fig = plt.figure(figsize=(8, 6))
             ax = plt.gca()

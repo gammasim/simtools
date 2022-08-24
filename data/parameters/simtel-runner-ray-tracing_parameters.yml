@@ -1,11 +1,11 @@
-zenithAngle: 
+zenithAngle:
   len: 1
   unit: !astropy.units.Unit {unit: deg}
   default: !astropy.units.Quantity
     value: 20
     unit: !astropy.units.Unit {unit: deg}
   names: ['zenith', 'theta']
-offAxisAngle: 
+offAxisAngle:
   len: 1
   unit: !astropy.units.Unit {unit: deg}
   default: !astropy.units.Quantity
