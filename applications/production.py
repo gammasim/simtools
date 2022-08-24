@@ -228,7 +228,7 @@ def main():
 
             if args.task == "simulate":
                 print("Running ShowerSimulator for primary {}".format(primary))
-                shower.submit()
+                shower.submit(test=args.test)
 
             elif args.task == "list":
                 print(
@@ -251,7 +251,7 @@ def main():
             inputList = showerSimulators[primary].getListOfOutputFiles()
             if args.task == "simulate":
                 print("Running ArraySimulator for primary {}".format(primary))
-                array.submit(inputFileList=inputList)
+                array.submit(inputFileList=inputList, test=args.test)
 
             elif args.task == "lists":
                 print(
