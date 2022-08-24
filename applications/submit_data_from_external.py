@@ -39,11 +39,11 @@
 import logging
 import os
 
-import simtools.util.general as gen
-import simtools.util.validate_data as ds
 import simtools.util.commandline_parser as argparser
-import simtools.util.workflow_description as workflow_config
+import simtools.util.general as gen
 import simtools.util.model_data_writer as writer
+import simtools.util.validate_data as ds
+import simtools.util.workflow_description as workflow_config
 
 
 def parse(label):
@@ -67,14 +67,13 @@ def parse(label):
         type=str,
         required=True,
     )
-    parser.initialize_default_arguments(
-        add_workflow_config=True)
+    parser.initialize_default_arguments(add_workflow_config=True)
     return parser.parse_args()
 
 
 if __name__ == "__main__":
 
-    label = os.path.basename(__file__).split('.')[0]
+    label = os.path.basename(__file__).split(".")[0]
     args = parse(label)
 
     logger = logging.getLogger()

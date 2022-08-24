@@ -1,15 +1,16 @@
 import logging
 import os
-import numpy as np
-from pathlib import Path
 from copy import copy
+from pathlib import Path
+
+import numpy as np
 
 import simtools.config as cfg
 import simtools.io_handler as io
 from simtools.corsika.corsika_runner import CorsikaRunner
+from simtools.job_submission.job_manager import JobManager
 from simtools.util import names
 from simtools.util.general import collectDataFromYamlOrDict
-from simtools.job_submission.job_manager import JobManager
 
 __all__ = ["ShowerSimulator"]
 
@@ -102,14 +103,10 @@ class ShowerSimulator:
 
         self._simtelSourcePath = Path(cfg.getConfigArg("simtelPath", simtelSourcePath))
         self._filesLocation = cfg.getConfigArg("outputLocation", filesLocation)
-        self._outputDirectory = io.getCorsikaOutputDirectory(
-            self._filesLocation, self.label
-        )
+        self._outputDirectory = io.getCorsikaOutputDirectory(self._filesLocation, self.label)
         self._outputDirectory.mkdir(parents=True, exist_ok=True)
         self._logger.debug(
-            "Output directory {} - creating it, if needed.".format(
-                self._outputDirectory
-            )
+            "Output directory {} - creating it, if needed.".format(self._outputDirectory)
         )
 
         showerConfigData = collectDataFromYamlOrDict(showerConfigFile, showerConfigData)
@@ -131,9 +128,7 @@ class ShowerSimulator:
         # Storing site and layoutName entries in attributes.
         try:
             self.site = names.validateSiteName(showerConfigData["site"])
-            self.layoutName = names.validateLayoutArrayName(
-                showerConfigData["layoutName"]
-            )
+            self.layoutName = names.validateLayoutArrayName(showerConfigData["layoutName"])
             self._corsikaConfigData.pop("site")
             self._corsikaConfigData.pop("layoutName")
             dataDir = self._corsikaConfigData.pop("dataDirectory", None)
@@ -154,9 +149,7 @@ class ShowerSimulator:
         self._corsikaConfigData.pop("runRange", None)
 
         # Searching for corsikaParametersFile in showerConfig
-        self._corsikaParametersFile = showerConfigData.get(
-            "corsikaParametersFile", None
-        )
+        self._corsikaParametersFile = showerConfigData.get("corsikaParametersFile", None)
         self._corsikaConfigData.pop("corsikaParametersFile", None)
 
     def _setCorsikaRunner(self):
@@ -197,11 +190,7 @@ class ShowerSimulator:
             os.system(runScript)
 
     def submit(
-            self, runList=None,
-            runRange=None,
-            submitCommand=None,
-            extraCommands=None,
-            test=False
+        self, runList=None, runRange=None, submitCommand=None, extraCommands=None, test=False
     ):
         """
         Submit a run script as a job. The submit command can be given by \
@@ -222,15 +211,11 @@ class ShowerSimulator:
 
         """
 
-        subCmd = (
-            submitCommand if submitCommand is not None else cfg.get("submissionCommand")
-        )
+        subCmd = submitCommand if submitCommand is not None else cfg.get("submissionCommand")
         self._logger.info("Submission command: {}".format(subCmd))
 
         runsToSimulate = self._getRunsToSimulate(runList, runRange)
-        self._logger.info(
-            "Submitting run scripts for {} runs".format(len(runsToSimulate))
-        )
+        self._logger.info("Submitting run scripts for {} runs".format(len(runsToSimulate)))
 
         self._logger.info("Starting submission")
         for run in runsToSimulate:
@@ -241,8 +226,7 @@ class ShowerSimulator:
             job_manager = JobManager(submitCommand=subCmd, test=test)
             job_manager.submit(
                 run_script=runScript,
-                run_out_file=self._corsikaRunner.getSubLogFile(
-                    runNumber=run, mode='')
+                run_out_file=self._corsikaRunner.getSubLogFile(runNumber=run, mode=""),
             )
 
     def makeResourcesReport(self):
@@ -261,16 +245,16 @@ class ShowerSimulator:
         runtime = list()
         nEvents = None
         for run in self.runs:
-           if self._corsikaRunner.hasSubLogFile(runNumber=run):
-               nEvents, thisRuntime = self._corsikaRunner.getResources(runNumber=run)
-               runtime.append(thisRuntime)
+            if self._corsikaRunner.hasSubLogFile(runNumber=run):
+                nEvents, thisRuntime = self._corsikaRunner.getResources(runNumber=run)
+                runtime.append(thisRuntime)
 
         meanRuntime = np.mean(runtime)
 
         resources = dict()
-        resources['#events/run'] = nEvents
-        resources['Runtime/run [sec]'] = meanRuntime
-        resources['Runtime/1000 events [sec]'] = meanRuntime * 1000 / nEvents
+        resources["#events/run"] = nEvents
+        resources["Runtime/run [sec]"] = meanRuntime
+        resources["Runtime/1000 events [sec]"] = meanRuntime * 1000 / nEvents
         return resources
 
     def printResourcesReport(self):
@@ -281,11 +265,11 @@ class ShowerSimulator:
         """
 
         resources = self.makeResourcesReport()
-        print('-----------------------------')
-        print('Computing Resources Report - Showers')
+        print("-----------------------------")
+        print("Computing Resources Report - Showers")
         for key, value in resources.items():
-            print('{} = {:.2f}'.format(key, value))
-        print('-----------------------------')
+            print("{} = {:.2f}".format(key, value))
+        print("-----------------------------")
 
     def _getRunsToSimulate(self, runList, runRange):
         """

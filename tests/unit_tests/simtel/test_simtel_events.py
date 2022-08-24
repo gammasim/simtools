@@ -1,9 +1,9 @@
 #!/usr/bin/python3
 
 import logging
-import pytest
 
 import astropy.units as u
+import pytest
 
 import simtools.io_handler as io
 from simtools.simtel.simtel_events import SimtelEvents
@@ -62,17 +62,12 @@ def test_units(testFiles):
 
     # coreMax without units
     with pytest.raises(TypeError):
-        simtel_events.countSimulatedEvents(
-            energyRange=[0.3 * u.TeV, 300 * u.TeV], coreMax=1500)
+        simtel_events.countSimulatedEvents(energyRange=[0.3 * u.TeV, 300 * u.TeV], coreMax=1500)
 
     # energyRange without units
     with pytest.raises(TypeError):
-        simtel_events.countSimulatedEvents(
-            energyRange=[0.3, 300], coreMax=1500 * u.m)
+        simtel_events.countSimulatedEvents(energyRange=[0.3, 300], coreMax=1500 * u.m)
 
     # energyRange with wrong units
     with pytest.raises(TypeError):
-        simtel_events.countSimulatedEvents(
-            energyRange=[0.3 * u.m, 300 * u.m],
-            coreMax=1500 * u.m
-        )
+        simtel_events.countSimulatedEvents(energyRange=[0.3 * u.m, 300 * u.m], coreMax=1500 * u.m)

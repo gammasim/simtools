@@ -4,8 +4,8 @@ from pathlib import Path
 
 import simtools.config as cfg
 import simtools.util.general as gen
-from simtools.model.telescope_model import TelescopeModel
 from simtools.model.array_model import ArrayModel
+from simtools.model.telescope_model import TelescopeModel
 
 __all__ = ["SimtelRunner"]
 
@@ -121,9 +121,7 @@ class SimtelRunner:
         self._logger.debug("Run bash script - {}".format(self._scriptFile))
 
         extraCommands = self._getExtraCommands(extraCommands)
-        self._logger.debug(
-            "Extra commands to be added to the run script {}".format(extraCommands)
-        )
+        self._logger.debug("Extra commands to be added to the run script {}".format(extraCommands))
 
         command = self._makeRunCommand(inputFile=inputFile, run=run)
         with self._scriptFile.open("w") as file:
@@ -131,7 +129,7 @@ class SimtelRunner:
             file.write("#!/usr/bin/bash\n\n")
 
             # Setting SECONDS variable to measure runtime
-            file.write('\nSECONDS=0\n')
+            file.write("\nSECONDS=0\n")
 
             if extraCommands is not None:
                 file.write("# Writing extras\n")
@@ -146,7 +144,7 @@ class SimtelRunner:
             # Printing out runtime
             file.write('\necho "RUNTIME: $SECONDS"\n')
 
-        os.system('chmod ug+x {}'.format(self._scriptFile))
+        os.system("chmod ug+x {}".format(self._scriptFile))
         return self._scriptFile
 
     def run(self, test=False, force=False, inputFile=None, run=None):
@@ -229,9 +227,7 @@ class SimtelRunner:
         extra = gen.copyAsList(extra) if extra is not None else list()
 
         extraFromConfig = cfg.get("extraCommands")
-        extraFromConfig = (
-            gen.copyAsList(extraFromConfig) if extraFromConfig is not None else list()
-        )
+        extraFromConfig = gen.copyAsList(extraFromConfig) if extraFromConfig is not None else list()
 
         extra.extend(extraFromConfig)
         return extra

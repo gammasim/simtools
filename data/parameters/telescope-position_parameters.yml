@@ -1,14 +1,14 @@
-posX: 
+posX:
   len: 1
   unit: !astropy.units.Unit {unit: m}
   names: ['x']
   default: null
-posY: 
+posY:
   len: 1
   unit: !astropy.units.Unit {unit: m}
   names: ['y']
   default: null
-posZ: 
+posZ:
   len: 1
   unit: !astropy.units.Unit {unit: m}
   names: ['z']

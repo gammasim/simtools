@@ -1,12 +1,12 @@
 #!/usr/bin/python3
 
 import logging
-import pytest
 
 import astropy.units as u
+import pytest
 
-from simtools.corsika.corsika_runner import CorsikaRunner
 import simtools.util.general as gen
+from simtools.corsika.corsika_runner import CorsikaRunner
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
@@ -25,6 +25,7 @@ def corsikaConfigData():
         "viewcone": 0 * u.deg,
         "cscat": [10, 1500 * u.m, 0],
     }
+
 
 @pytest.fixture
 def corsikaRunner(corsikaConfigData, cfg_setup):
