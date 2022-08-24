@@ -103,6 +103,8 @@ class SimtelRunner:
             Full path of the input CORSIKA file.
         run: int
             Run number.
+        extraCommands: str
+            Additional commands for running simulations given in config.yml
 
         Returns
         -------
@@ -128,6 +130,9 @@ class SimtelRunner:
             # TODO: header
             file.write("#!/usr/bin/bash\n\n")
 
+            # Setting SECONDS variable to measure runtime
+            file.write('\nSECONDS=0\n')
+
             if extraCommands is not None:
                 file.write("# Writing extras\n")
                 for line in extraCommands:
@@ -138,7 +143,10 @@ class SimtelRunner:
             for _ in range(N):
                 file.write("{}\n\n".format(command))
 
-        os.system("chmod ug+x {}".format(self._scriptFile))
+            # Printing out runtime
+            file.write('\necho "RUNTIME: $SECONDS"\n')
+
+        os.system('chmod ug+x {}'.format(self._scriptFile))
         return self._scriptFile
 
     def run(self, test=False, force=False, inputFile=None, run=None):
@@ -167,11 +175,9 @@ class SimtelRunner:
 
         if test:
             self._logger.info("Running (test) with command:{}".format(command))
-            # sysOutput = os.system(command)
             os.system(command)
         else:
             self._logger.info("Running ({}x) with command:{}".format(self.RUNS_PER_SET, command))
-            # sysOutput = os.system(command)
             os.system(command)
 
             for _ in range(self.RUNS_PER_SET - 1):

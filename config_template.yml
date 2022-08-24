@@ -33,7 +33,8 @@ dataLocation: './data/'
 simtelPath: None
 
 # Command used to submit jobs to a batch system.
-submissionCommand: 'qsub '
+# Use log_out and log_err keywords for std out and std err  
+submissionCommand: 'qsub -o log_out -e log_err '
 # List of xtra commands to be added in the run scripts for submmission.
 # Ex. extraCommands = ['export PATH=/afs/ifh.de/group/cta/cta/software/zstd/:${PATH}']
 extraCommands: []

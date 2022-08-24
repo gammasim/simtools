@@ -113,7 +113,7 @@ def test_no_corsika_data(cfg_setup, showerConfigData, label):
 
 def test_submitting(showerSimulator):
 
-    showerSimulator.submit(runList=[2], submitCommand="more ")
+    showerSimulator.submit(runList=[2], submitCommand="local")
 
     run_script = showerSimulator._corsikaRunner.getRunScriptFile(runNumber=2)
 
@@ -122,7 +122,7 @@ def test_submitting(showerSimulator):
 
 def test_runs_range(showerSimulator):
 
-    showerSimulator.submit(runRange=[4, 8], submitCommand="more ")
+    showerSimulator.submit(runRange=[4, 8], submitCommand="local")
 
     run_range = np.arange(4, 8)
     for run in run_range:
