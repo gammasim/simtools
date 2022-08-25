@@ -31,17 +31,19 @@ class TelescopeModel:
     site: str
         North or South.
     name: str
-        Telescope name for the base set of parameters (ex. LST-1, ...).
+        Telescope name for the base set of parameters (e.g., LST-1, ...).
     modelVersion: str
-        Version of the model (ex. prod4).
+        Version of the model (e.g., prod5).
     label: str
         Instance label.
     mirrors: Mirrors
         Mirrors object created from the mirror list of the model.
     camera: Camera
         Camera object created from the camera config file of the model.
+    referenceData: Reference data
+        Dictionary with reference data parameters (e.g., NSB reference value)
     extraLabel: str
-        Extra label to be used in case of multiple telescope configurations (e.g. by ArrayModel).
+        Extra label to be used in case of multiple telescope configurations (e.g., by ArrayModel).
 
     Methods
     -------
@@ -648,6 +650,7 @@ class TelescopeModel:
     def _loadReferenceData(self):
         """Load the reference data for this telescope from the DB."""
         self._logger.debug("Reading reference data from DB")
+        db = db_handler.DatabaseHandler()
         self._referenceData = db.getReferenceData(
             self.site,
             self.modelVersion,
