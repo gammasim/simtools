@@ -181,3 +181,10 @@ def test_updating_export_model_files(set_db):
         "is a file was changed."
     )
     assert False is tel._isExportedModelFilesUpToDate
+
+
+def test_load_reference_data(telescope_model):
+
+    telModel = telescope_model
+
+    assert telModel.referenceData["nsb_reference_value"]["Value"] == 0.24

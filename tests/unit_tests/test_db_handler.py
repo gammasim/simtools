@@ -75,6 +75,13 @@ def test_reading_db_sst(db):
         assert pars["camera_pixels"] == 2048
 
 
+def test_get_reference_data(db):
+
+    logger.info("----Testing reading reference data-----")
+    pars = db.getReferenceData("south", "Current")
+    assert pars["nsb_reference_value"]["Value"] == pytest.approx(0.24)
+
+
 def test_copy_telescope_db(db, random_id, db_cleanup):
 
     logger.info("----Testing copying a whole telescope-----")
