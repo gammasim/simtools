@@ -50,6 +50,18 @@ Each time you want to use the package, just activate the conda environment:
 
 ``conda activate gammasim-tools-dev``
 
+Developers can make use of the pre-commit functionality, which tests or apply python style fixes using black and flakes8. To use pre-commit, run the following command after cloning the repository:
+
+``pre-commit --install``
+
+For testing, pre-commit can be applied locally without commit:
+
+``pre-commit run --all-files``
+
+In rare cases, one might want to skip pre-commit checks with
+
+``git commit --no-verify``
+
 STYLE GUIDELINES:
 -----------------
 
