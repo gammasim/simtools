@@ -526,8 +526,6 @@ class TelescopeModel:
         if not self._isExportedModelFilesUpToDate:
             self.exportModelFiles()
 
-        self.printParameters()
-
         # Using SimtelConfigWriter to write the config file.
         self._loadSimtelConfigWriter()
         self.simtelConfigWriter.writeTelescopeConfigFile(
