@@ -529,7 +529,7 @@ class CameraEfficiency:
         n1IntegralEdgesSum = np.sum(n1IntegralEdges)
         nsbIntegral = 0.0001*(n1Sum - 0.5*n1IntegralEdgesSum)
         nsbRate = (nsbPePerNs
-                   * self._telescopeModel._referenceData["nsb_reference_value"]["Value"]
+                   * self._telescopeModel.referenceData["nsb_reference_value"]["Value"]
                    / nsbIntegral
                    )
         return nsbRate, n1Sum

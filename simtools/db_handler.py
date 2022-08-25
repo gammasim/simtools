@@ -339,7 +339,8 @@ class DatabaseHandler:
         dict containing the parameters
         """
 
-        _telNameDB = self._getTelescopeModelNameForDB(site, telescopeModelName)
+        _siteValidated = names.validateSiteName(site)
+        _telNameDB = self._getTelescopeModelNameForDB(_siteValidated, telescopeModelName)
         _telClass = getTelescopeClass(telescopeModelName)
 
         self._logger.debug("TelNameDB: {}".format(_telNameDB))
@@ -347,12 +348,12 @@ class DatabaseHandler:
 
         if _telClass == "MST":
             # MST-FlashCam or MST-NectarCam
-            _whichTelLabels = ['{}-MST-Structure-D'.format(site), _telNameDB]
+            _whichTelLabels = ['{}-MST-Structure-D'.format(_siteValidated), _telNameDB]
         elif _telClass == "SST":
             # SST = SST-Camera + SST-Structure
             _whichTelLabels = [
-                "{}-SST-Camera-D".format(site),
-                "{}-SST-Structure-D".format(site),
+                "{}-SST-Camera-D".format(_siteValidated),
+                "{}-SST-Structure-D".format(_siteValidated),
             ]
         else:
             _whichTelLabels = [_telNameDB]
@@ -367,8 +368,8 @@ class DatabaseHandler:
             _selectOnlyApplicable = onlyApplicable or (
                 _tel
                 in [
-                    "{}-MST-Structure-D".format(site),
-                    "{}-SST-Structure-D".format(site),
+                    "{}-MST-Structure-D".format(_siteValidated),
+                    "{}-SST-Structure-D".format(_siteValidated),
                 ]
             )
 
@@ -403,8 +404,6 @@ class DatabaseHandler:
         ----------
         dbName: str
             the name of the DB
-        site: str
-            South or North.
         telescopeModelNameDB: str
             Name of the telescope model (e.g. MST-FlashCam-D ...)
         modelVersion: str
@@ -574,6 +573,7 @@ class DatabaseHandler:
         dict containing the parameters
         """
 
+        _siteValidated = names.validateSiteName(site)
         collection = DatabaseHandler.dbClient[dbName].sites
         _parameters = dict()
 
@@ -582,7 +582,7 @@ class DatabaseHandler:
         )
 
         query = {
-            "Site": site,
+            "Site": _siteValidated,
             "Version": _modelVersion,
         }
         if onlyApplicable:
@@ -626,6 +626,7 @@ class DatabaseHandler:
         dict containing the parameters
         """
 
+        _siteValidated = names.validateSiteName(site)
         collection = DatabaseHandler.dbClient[DatabaseHandler.DB_REFERENCE_DATA].reference_values
         _parameters = dict()
 
@@ -634,7 +635,7 @@ class DatabaseHandler:
         )
 
         query = {
-            "Site": site,
+            "Site": _siteValidated,
             "Version": _modelVersion,
         }
         if onlyApplicable:
