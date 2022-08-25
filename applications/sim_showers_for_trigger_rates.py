@@ -56,14 +56,14 @@ import logging
 
 import astropy.units as u
 
-import simtools.util.commandline_parser as argparser
-import simtools.io_handler as io
 import simtools.config as cfg
+import simtools.io_handler as io
+import simtools.util.commandline_parser as argparser
 import simtools.util.general as gen
 from simtools.shower_simulator import ShowerSimulator
 
 
-if __name__ == "__main__":
+def main():
 
     parser = argparser.CommandLineParser(
         description=("Simulate showers to be used for trigger rate calculations")
@@ -75,26 +75,19 @@ if __name__ == "__main__":
         type=str,
         required=True,
     )
-    parser.initialize_telescope_model_arguments(
-        add_model_version=False, add_telescope=False)
+    parser.initialize_telescope_model_arguments(add_model_version=False, add_telescope=False)
     parser.add_argument(
         "--primary",
         help="Name of the primary particle (e.g. proton, helium ...)",
         type=str,
         required=True,
     )
-    parser.add_argument(
-        "--nruns", help="Number of runs (default=100)", type=int, default=100
-    )
+    parser.add_argument("--nruns", help="Number of runs (default=100)", type=int, default=100)
     parser.add_argument(
         "--nevents", help="Number of events/run (default=100)", type=int, default=100000
     )
-    parser.add_argument(
-        "--zenith", help="Zenith angle in deg (default=20)", type=float, default=20
-    )
-    parser.add_argument(
-        "--azimuth", help="Azimuth angle in deg (default=0)", type=float, default=0
-    )
+    parser.add_argument("--zenith", help="Zenith angle in deg (default=20)", type=float, default=20)
+    parser.add_argument("--azimuth", help="Azimuth angle in deg (default=0)", type=float, default=0)
     parser.add_argument(
         "--output",
         help="Path of the output directory where the simulations will be saved.",
@@ -150,3 +143,7 @@ if __name__ == "__main__":
     printListIntoFile(showerSimulator.getListOfOutputFiles(), outputFileList)
     logger.info("List of log files exported to {}".format(logFileList))
     printListIntoFile(showerSimulator.getListOfLogFiles(), logFileList)
+
+
+if __name__ == "__main__":
+    main()

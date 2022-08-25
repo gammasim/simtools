@@ -1,9 +1,9 @@
 #!/usr/bin/python3
 
 import logging
-import pytest
 
 import astropy.units as u
+import pytest
 
 import simtools.config as cfg
 import simtools.io_handler as io
@@ -36,23 +36,15 @@ def db(set_db):
 @pytest.fixture
 def telescopeTestFile(db):
     testFileName = "telescope_positions_prod5_north.ecsv"
-    db.exportFileDB(
-        dbName="test-data",
-        dest=io.getTestModelDirectory(),
-        fileName=testFileName
-    )
+    db.exportFileDB(dbName="test-data", dest=io.getTestModelDirectory(), fileName=testFileName)
 
-    cfgFile = cfg.findFile(
-        testFileName,
-        io.getTestModelDirectory()
-    )
+    cfgFile = cfg.findFile(testFileName, io.getTestModelDirectory())
     return cfgFile
 
 
 def test_read_tel_list(cfg_setup, configData, telescopeTestFile):
 
-    layout = LayoutArray(name="testLayout",
-                         configData=configData)
+    layout = LayoutArray(name="testLayout", configData=configData)
     layout.readTelescopeListFile(telescopeTestFile)
     layout.convertCoordinates()
 
@@ -61,13 +53,11 @@ def test_read_tel_list(cfg_setup, configData, telescopeTestFile):
 
 def test_dict_input(cfg_setup):
 
-    configData = {
-        "corsikaSphereRadius": {"LST": 1 * u.m, "MST": 1 * u.m, "SST": 1 * u.m}
-    }
+    configData = {"corsikaSphereRadius": {"LST": 1 * u.m, "MST": 1 * u.m, "SST": 1 * u.m}}
     layout = LayoutArray(name="testLayout", configData=configData)
     layout.printTelescopeList()
 
-    for tel, sphere in configData['corsikaSphereRadius'].items():
+    for tel, sphere in configData["corsikaSphereRadius"].items():
         assert sphere.value == layout._corsikaSphereRadius[tel]
 
 
@@ -76,9 +66,7 @@ def test_add_tel(cfg_setup, telescopeTestFile):
     layout = LayoutArray(name="testLayout")
     layout.readTelescopeListFile(telescopeTestFile)
     ntel_before = layout.getNumberOfTelescopes()
-    layout.addTelescope(
-        telescopeName="L-05", posX=100 * u.m, posY=100 * u.m, posZ=100 * u.m
-    )
+    layout.addTelescope(telescopeName="L-05", posX=100 * u.m, posY=100 * u.m, posZ=100 * u.m)
     ntel_after = layout.getNumberOfTelescopes()
 
     layout.printTelescopeList()
@@ -103,18 +91,10 @@ def test_build_layout(cfg_setup):
     layout = LayoutArray(label="test_layout", name="LST4", configData=configData)
 
     # Adding 4 LST on a regular grid
-    layout.addTelescope(
-        telescopeName="L-01", posX=57.5 * u.m, posY=57.5 * u.m, posZ=0 * u.m
-    )
-    layout.addTelescope(
-        telescopeName="L-02", posX=-57.5 * u.m, posY=57.5 * u.m, posZ=0 * u.m
-    )
-    layout.addTelescope(
-        telescopeName="L-03", posX=57.5 * u.m, posY=-57.5 * u.m, posZ=0 * u.m
-    )
-    layout.addTelescope(
-        telescopeName="L-04", posX=-57.5 * u.m, posY=-57.5 * u.m, posZ=0 * u.m
-    )
+    layout.addTelescope(telescopeName="L-01", posX=57.5 * u.m, posY=57.5 * u.m, posZ=0 * u.m)
+    layout.addTelescope(telescopeName="L-02", posX=-57.5 * u.m, posY=57.5 * u.m, posZ=0 * u.m)
+    layout.addTelescope(telescopeName="L-03", posX=57.5 * u.m, posY=-57.5 * u.m, posZ=0 * u.m)
+    layout.addTelescope(telescopeName="L-04", posX=-57.5 * u.m, posY=-57.5 * u.m, posZ=0 * u.m)
 
     layout.convertCoordinates()
     layout.printTelescopeList()
@@ -150,5 +130,5 @@ def test_converting_center_coordinates(cfg_setup, configData):
     assert layout._centerEasting == pytest.approx(217609.23)
     assert layout._centerLongitude == pytest.approx(-17.8920302)
     assert layout._centerLatitude == pytest.approx(28.7621661)
-    assert layout._corsikaObsLevel == pytest.approx(2158.)
-    assert layout._centerAltitude == pytest.approx(2177.)
+    assert layout._corsikaObsLevel == pytest.approx(2158.0)
+    assert layout._centerAltitude == pytest.approx(2177.0)

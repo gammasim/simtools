@@ -1,12 +1,13 @@
 #!/usr/bin/python3
 
 import logging
+
 import pytest
 
-import simtools.io_handler as io
-from simtools.model.mirrors import Mirrors
-from simtools import db_handler
 import simtools.config as cfg
+import simtools.io_handler as io
+from simtools import db_handler
+from simtools.model.mirrors import Mirrors
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
@@ -22,14 +23,9 @@ def test_read_list(db):
 
     testFileName = "mirror_CTA-LST-flen_grouped.dat"
     db.exportFileDB(
-        dbName=db.DB_CTA_SIMULATION_MODEL,
-        dest=io.getTestModelDirectory(),
-        fileName=testFileName
+        dbName=db.DB_CTA_SIMULATION_MODEL, dest=io.getTestModelDirectory(), fileName=testFileName
     )
-    mirrorListFile = cfg.findFile(
-        testFileName,
-        io.getTestModelDirectory()
-    )
+    mirrorListFile = cfg.findFile(testFileName, io.getTestModelDirectory())
     logger.info("Using mirror list {}".format(mirrorListFile))
     mirrors = Mirrors(mirrorListFile)
     assert 198 == mirrors.numberOfMirrors

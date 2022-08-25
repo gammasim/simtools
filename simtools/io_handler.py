@@ -183,9 +183,7 @@ def getDataFile(parentDir, fileName):
     -------
     Path
     """
-    return (
-        Path(cfg.get("dataLocation")).joinpath(parentDir).joinpath(fileName).absolute()
-    )
+    return Path(cfg.get("dataLocation")).joinpath(parentDir).joinpath(fileName).absolute()
 
 
 def getTestDataDirectory():

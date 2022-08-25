@@ -62,28 +62,29 @@
 
     .. code-block:: console
 
-        python applications/compare_cumulative_psf.py --site North --telescope LST-1 --model_version prod4 --pars lst_pars.yml --data PSFcurve_data_v2.txt
+        python applications/compare_cumulative_psf.py --site North --telescope LST-1 \
+            --model_version prod4 --pars lst_pars.yml --data PSFcurve_data_v2.txt
 
     .. todo::
 
         * Change default model to default (after this feature is implemented in db_handler)
 """
 
-import yaml
 import logging
-import numpy as np
-import matplotlib.pyplot as plt
 from collections import OrderedDict
 
 import astropy.units as u
+import matplotlib.pyplot as plt
+import numpy as np
+import yaml
 
+import simtools.config as cfg
 import simtools.io_handler as io
 import simtools.util.commandline_parser as argparser
 import simtools.util.general as gen
-import simtools.config as cfg
-from simtools.ray_tracing import RayTracing
-from simtools.model.telescope_model import TelescopeModel
 from simtools import visualize
+from simtools.model.telescope_model import TelescopeModel
+from simtools.ray_tracing import RayTracing
 
 
 def loadData(datafile):
@@ -95,7 +96,7 @@ def loadData(datafile):
     return data
 
 
-if __name__ == "__main__":
+def main():
 
     parser = argparser.CommandLineParser(
         description=(
@@ -110,9 +111,7 @@ if __name__ == "__main__":
         type=float,
         default=10,
     )
-    parser.add_argument(
-        "--zenith", help="Zenith angle in deg (default=20)", type=float, default=20
-    )
+    parser.add_argument("--zenith", help="Zenith angle in deg (default=20)", type=float, default=20)
     parser.add_argument(
         "--data", help="Data file name with the measured PSF vs radius [cm]", type=str
     )
@@ -191,3 +190,7 @@ if __name__ == "__main__":
     for f in ["pdf", "png"]:
         fig.savefig(str(plotFile) + "." + f, format=f, bbox_inches="tight")
     fig.clf()
+
+
+if __name__ == "__main__":
+    main()

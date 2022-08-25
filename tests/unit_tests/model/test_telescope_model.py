@@ -1,14 +1,14 @@
 #!/usr/bin/python3
 
 import filecmp
-import pytest
 import logging
 
-import simtools.config as cfg
-from simtools import db_handler
-import simtools.io_handler as io
-from simtools.model.telescope_model import TelescopeModel, InvalidParameter
+import pytest
 
+import simtools.config as cfg
+import simtools.io_handler as io
+from simtools import db_handler
+from simtools.model.telescope_model import InvalidParameter, TelescopeModel
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
@@ -23,16 +23,9 @@ def db(set_db):
 @pytest.fixture
 def lst_config_file(db):
     testFileName = "CTA-North-LST-1-Current_test-telescope-model.cfg"
-    db.exportFileDB(
-        dbName="test-data",
-        dest=io.getTestModelDirectory(),
-        fileName=testFileName
-    )
+    db.exportFileDB(dbName="test-data", dest=io.getTestModelDirectory(), fileName=testFileName)
 
-    cfgFile = cfg.findFile(
-        testFileName,
-        io.getTestModelDirectory()
-    )
+    cfgFile = cfg.findFile(testFileName, io.getTestModelDirectory())
     return cfgFile
 
 
@@ -78,9 +71,7 @@ def test_flen_type(telescope_model):
 
     telModel = telescope_model
     flenInfo = telModel.getParameter("focal_length")
-    logger.info(
-        "Focal Length = {}, type = {}".format(flenInfo["Value"], flenInfo["Type"])
-    )
+    logger.info("Focal Length = {}, type = {}".format(flenInfo["Value"], flenInfo["Type"]))
 
     assert isinstance(flenInfo["Value"], float)
 
@@ -129,23 +120,17 @@ def test_updating_export_model_files(set_db):
     )
 
     logger.debug(
-        "tel._isExportedModelFiles should be False because exportConfigFile"
-        " was not called yet."
+        "tel._isExportedModelFiles should be False because exportConfigFile" " was not called yet."
     )
     assert False is tel._isExportedModelFilesUpToDate
 
     # Exporting config file
     tel.exportConfigFile()
-    logger.debug(
-        "tel._isExportedModelFiles should be True because exportConfigFile"
-        " was called."
-    )
+    logger.debug("tel._isExportedModelFiles should be True because exportConfigFile" " was called.")
     assert tel._isExportedModelFilesUpToDate
 
     # Changing a non-file parameter
-    logger.info(
-        "Changing a parameter that IS NOT a file - mirror_reflection_random_angle"
-    )
+    logger.info("Changing a parameter that IS NOT a file - mirror_reflection_random_angle")
     tel.changeParameter("mirror_reflection_random_angle", "0.0080 0 0")
     logger.debug(
         "tel._isExportedModelFiles should still be True because the changed "
@@ -158,13 +143,8 @@ def test_updating_export_model_files(set_db):
     tel.exportConfigFile()
 
     # Changing a parameter that is a file
-    logger.debug(
-        "Changing a parameter that IS a file - camera_config_file"
-    )
-    tel.changeParameter(
-        "camera_config_file",
-        tel.getParameterValue("camera_config_file")
-    )
+    logger.debug("Changing a parameter that IS a file - camera_config_file")
+    tel.changeParameter("camera_config_file", tel.getParameterValue("camera_config_file"))
     logger.debug(
         "tel._isExportedModelFiles should be False because a parameter that "
         "is a file was changed."

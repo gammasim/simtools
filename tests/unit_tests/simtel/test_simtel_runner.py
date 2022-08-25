@@ -1,9 +1,10 @@
 #!/usr/bin/python3
 
 import logging
+
 import pytest
 
-from simtools.simtel.simtel_runner import SimtelRunner, SimtelExecutionError
+from simtools.simtel.simtel_runner import SimtelExecutionError, SimtelRunner
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
