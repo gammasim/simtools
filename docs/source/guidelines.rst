@@ -106,17 +106,17 @@ reads it accordingly, returning a dictionary. It also raises an exception in cas
 given and not allowEmpty.
 
 The validation of the input is done by the function gen.validateConfigData, which
-receives the dictionary with the collected input and a parameter dictionary. The parameter 
+receives the dictionary with the collected input and a parameter dictionary. The parameter
 dictionary is read from a parameter yaml file in the data/parameters directory.
 The file is read through the function io.getDataFile("parameters", filename)
-(see data files section). 
+(see data files section).
 
 The parameter yaml file contains the list of parameters to be validated and its
 properties. See an example below:
 
 .. code-block:: yaml
 
-  zenithAngle: 
+  zenithAngle:
     len: 1
     unit: !astropy.units.Unit {unit: deg}
     default: !astropy.units.Quantity
@@ -189,7 +189,7 @@ Integration with CORSIKA and sim_telarray
 
 CORSIKA and sim_telarray are external tools to simtools. Their integration should be
 minimally coupled with the rest of the package. The modules that depend directly on these
-tools should be connected to the rest of the package through interfaces. This way, it 
+tools should be connected to the rest of the package through interfaces. This way, it
 will be easier to replace these tools in the future.
 
 One example of this approach is shower_simulator module, that is an interface module that

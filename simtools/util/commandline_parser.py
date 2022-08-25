@@ -1,7 +1,7 @@
 import argparse
 
-import simtools.version
 import simtools.util.names as names
+import simtools.version
 
 
 class CommandLineParser(argparse.ArgumentParser):
@@ -55,15 +55,10 @@ class CommandLineParser(argparse.ArgumentParser):
             required=False,
         )
         self.add_argument(
-            '-V',
-            '--version',
-            action='version',
-            version=f'%(prog)s {simtools.version.__version__}'
+            "-V", "--version", action="version", version=f"%(prog)s {simtools.version.__version__}"
         )
 
-    def initialize_telescope_model_arguments(self,
-                                             add_model_version=True,
-                                             add_telescope=True):
+    def initialize_telescope_model_arguments(self, add_model_version=True, add_telescope=True):
         """
         Initialize default arguments for site and telescope model
         definition
@@ -71,11 +66,7 @@ class CommandLineParser(argparse.ArgumentParser):
         """
 
         self.add_argument(
-            "-s",
-            "--site",
-            help="CTAO site (e.g. North, South)",
-            type=self.site,
-            required=True
+            "-s", "--site", help="CTAO site (e.g. North, South)", type=self.site, required=True
         )
         if add_telescope:
             self.add_argument(
@@ -115,8 +106,7 @@ class CommandLineParser(argparse.ArgumentParser):
         fsite = str(value)
 
         if not names.validateSiteName(fsite):
-            raise argparse.ArgumentTypeError(
-                "{} is an invalid site".format(fsite))
+            raise argparse.ArgumentTypeError("{} is an invalid site".format(fsite))
 
         return fsite
 
@@ -139,8 +129,7 @@ class CommandLineParser(argparse.ArgumentParser):
 
         """
         fvalue = float(value)
-        if fvalue < 0. or fvalue > 1.:
-            raise argparse.ArgumentTypeError(
-                "{} outside of allowed [0,1] interval".format(value))
+        if fvalue < 0.0 or fvalue > 1.0:
+            raise argparse.ArgumentTypeError("{} outside of allowed [0,1] interval".format(value))
 
         return fvalue

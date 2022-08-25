@@ -2,7 +2,6 @@
 
 import logging
 
-
 __all__ = ["SimtelConfigWriter"]
 
 
@@ -79,9 +78,7 @@ class SimtelConfigWriter:
         "sum_after_peak": 4,
     }
 
-    def __init__(
-        self, site, modelVersion, layoutName=None, telescopeModelName=None, label=None
-    ):
+    def __init__(self, site, modelVersion, layoutName=None, telescopeModelName=None, label=None):
         """
         SimtelConfigWriter.
 
@@ -134,9 +131,7 @@ class SimtelConfigWriter:
                 value = parameters[par]["Value"]
                 file.write("{} = {}\n".format(par, value))
 
-    def writeArrayConfigFile(
-        self, configFilePath, layout, telescopeModel, siteParameters
-    ):
+    def writeArrayConfigFile(self, configFilePath, layout, telescopeModel, siteParameters):
         """
         Writes the sim_telarray config file for an array of telescopes.
 
@@ -174,9 +169,7 @@ class SimtelConfigWriter:
             self._writeCommonParameters(file)
 
             # Maximum telescopes
-            file.write(
-                self.TAB + "maximum_telescopes = {}\n\n".format(len(telescopeModel))
-            )
+            file.write(self.TAB + "maximum_telescopes = {}\n\n".format(len(telescopeModel)))
 
             # Default telescope - 0th tel in telescope list
             telConfigFile = telescopeModel[0].getConfigFile(noExport=True).name
@@ -257,9 +250,7 @@ class SimtelConfigWriter:
             else ""
         )
         header += (
-            "{} Label: {}\n".format(commentChar, self._label)
-            if self._label is not None
-            else ""
+            "{} Label: {}\n".format(commentChar, self._label) if self._label is not None else ""
         )
         header += "{}{}\n".format(commentChar, 50 * "=")
         header += "{}\n".format(commentChar)

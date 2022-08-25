@@ -58,16 +58,16 @@
 """
 
 import logging
-import numpy as np
-import matplotlib.pyplot as plt
-from matplotlib.backends.backend_pdf import PdfPages
 
 import astropy.units as u
+import matplotlib.pyplot as plt
+import numpy as np
+from matplotlib.backends.backend_pdf import PdfPages
 
 import simtools.config as cfg
-import simtools.util.general as gen
-import simtools.util.commandline_parser as argparser
 import simtools.io_handler as io
+import simtools.util.commandline_parser as argparser
+import simtools.util.general as gen
 from simtools.model.telescope_model import TelescopeModel
 from simtools.ray_tracing import RayTracing
 
@@ -76,7 +76,7 @@ from simtools.ray_tracing import RayTracing
 # setStyle()
 
 
-if __name__ == "__main__":
+def main():
 
     parser = argparser.CommandLineParser(
         description=(
@@ -91,9 +91,7 @@ if __name__ == "__main__":
         type=float,
         default=10,
     )
-    parser.add_argument(
-        "--zenith", help="Zenith angle in deg (default=20)", type=float, default=20
-    )
+    parser.add_argument("--zenith", help="Zenith angle in deg (default=20)", type=float, default=20)
     parser.add_argument(
         "--max_offset",
         help="Maximum offset angle in deg (default=4)",
@@ -171,9 +169,7 @@ if __name__ == "__main__":
 
     # Plotting images
     if args.plot_images:
-        plotFileName = "_".join((
-            label, telModel.name, "images.pdf"
-        ))
+        plotFileName = "_".join((label, telModel.name, "images.pdf"))
         plotFile = outputDir.joinpath(plotFileName)
         pdfPages = PdfPages(plotFile)
 
@@ -186,3 +182,7 @@ if __name__ == "__main__":
             plt.clf()
         plt.close()
         pdfPages.close()
+
+
+if __name__ == "__main__":
+    main()
