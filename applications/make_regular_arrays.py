@@ -35,7 +35,7 @@ from simtools import db_handler
 from simtools.layout.layout_array import LayoutArray
 
 
-if __name__ == "__main__":
+def main():
 
     parser = argparser.CommandLineParser(
         description=(
@@ -84,29 +84,17 @@ if __name__ == "__main__":
     siteParsDB = dict()
     sitePars = dict()
     for site in ["North", "South"]:
-        siteParsDB[site] = db.getSiteParameters(
-            site=site, modelVersion="prod3_compatible"
-        )
+        siteParsDB[site] = db.getSiteParameters(site=site, modelVersion="prod3_compatible")
 
         sitePars[site] = dict()
-        sitePars[site]["centerLatitude"] = (
-            float(siteParsDB[site]["ref_lat"]["Value"]) * u.deg
-        )
-        sitePars[site]["centerLongitude"] = (
-            float(siteParsDB[site]["ref_long"]["Value"]) * u.deg
-        )
-        sitePars[site]["centerAltitude"] = (
-            float(siteParsDB[site]["altitude"]["Value"]) * u.m
-        )
+        sitePars[site]["centerLatitude"] = float(siteParsDB[site]["ref_lat"]["Value"]) * u.deg
+        sitePars[site]["centerLongitude"] = float(siteParsDB[site]["ref_long"]["Value"]) * u.deg
+        sitePars[site]["centerAltitude"] = float(siteParsDB[site]["altitude"]["Value"]) * u.m
 
         sitePars[site]["epsg"] = hardcodedPars[site]["epsg"]
         sitePars[site]["corsikaObsLevel"] = hardcodedPars[site]["corsikaObsLevel"]
-        sitePars[site]["corsikaSphereCenter"] = hardcodedPars[site][
-            "corsikaSphereCenter"
-        ]
-        sitePars[site]["corsikaSphereRadius"] = hardcodedPars[site][
-            "corsikaSphereRadius"
-        ]
+        sitePars[site]["corsikaSphereCenter"] = hardcodedPars[site]["corsikaSphereCenter"]
+        sitePars[site]["corsikaSphereRadius"] = hardcodedPars[site]["corsikaSphereRadius"]
 
     # Telescope distances for 4 tel square arrays
     # !HARDCODED
@@ -160,3 +148,7 @@ if __name__ == "__main__":
             layout.convertCoordinates()
             layout.printTelescopeList()
             layout.exportTelescopeList()
+
+
+if __name__ == "__main__":
+    main()

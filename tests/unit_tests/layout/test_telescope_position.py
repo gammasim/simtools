@@ -2,10 +2,10 @@
 
 import logging
 import math
-import pytest
-import astropy.units as u
 
+import astropy.units as u
 import pyproj
+import pytest
 
 from simtools.layout.telescope_position import TelescopePosition
 
@@ -70,8 +70,8 @@ def test_coordinate_transformations(cfg_setup):
 
     tel._posX = None
     tel.convertUtmToLocal(crsUtm=crsUtm, crsLocal=crsLocal)
-    assert math.isclose(tel._posX, configData['posX'].value, abs_tol=0.000001)
-    assert math.isclose(tel._posY, configData['posY'].value, abs_tol=0.000001)
+    assert math.isclose(tel._posX, configData["posX"].value, abs_tol=0.000001)
+    assert math.isclose(tel._posY, configData["posY"].value, abs_tol=0.000001)
 
 
 def test_corsika_transformations(cfg_setup):
@@ -124,7 +124,7 @@ def test_convert_all(cfg_setup):
     )
 
     assert 2185.0 == pytest.approx(tel._altitude, 0.01)
-    assert 28.7621 == pytest.approx(tel._latitude, 1.e-4)
-    assert -17.8920302 == pytest.approx(tel._longitude, 1.e-7)
-    assert 3185067.2783240844 == pytest.approx(tel._utmNorth, 1.e-9)
-    assert 217609.2270142641 == pytest.approx(tel._utmEast, 1.e-9)
+    assert 28.7621 == pytest.approx(tel._latitude, 1.0e-4)
+    assert -17.8920302 == pytest.approx(tel._longitude, 1.0e-7)
+    assert 3185067.2783240844 == pytest.approx(tel._utmNorth, 1.0e-9)
+    assert 217609.2270142641 == pytest.approx(tel._utmEast, 1.0e-9)

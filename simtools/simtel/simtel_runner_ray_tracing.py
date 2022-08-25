@@ -4,8 +4,8 @@ import astropy.units as u
 
 import simtools.io_handler as io
 import simtools.util.general as gen
-from simtools.util import names
 from simtools.simtel.simtel_runner import SimtelRunner
+from simtools.util import names
 
 __all__ = ["SimtelRunnerRayTracing"]
 
@@ -96,9 +96,7 @@ class SimtelRunnerRayTracing(SimtelRunner):
         self.label = label if label is not None else self.telescopeModel.label
 
         # File location
-        self._baseDirectory = io.getRayTracingOutputDirectory(
-            self._filesLocation, self.label
-        )
+        self._baseDirectory = io.getRayTracingOutputDirectory(self._filesLocation, self.label)
         self._baseDirectory.mkdir(parents=True, exist_ok=True)
 
         self._singleMirrorMode = singleMirrorMode
@@ -110,9 +108,7 @@ class SimtelRunnerRayTracing(SimtelRunner):
 
         # Loading configData
         _configDataIn = gen.collectDataFromYamlOrDict(configFile, configData)
-        _parameterFile = io.getDataFile(
-            "parameters", "simtel-runner-ray-tracing_parameters.yml"
-        )
+        _parameterFile = io.getDataFile("parameters", "simtel-runner-ray-tracing_parameters.yml")
         _parameters = gen.collectDataFromYamlOrDict(_parameterFile, None)
         self.config = gen.validateConfigData(_configDataIn, _parameters)
 
@@ -150,14 +146,10 @@ class SimtelRunnerRayTracing(SimtelRunner):
             file.write("#{}\n".format(50 * "="))
             file.write("# List of photons for RayTracing simulations\n")
             file.write("#{}\n".format(50 * "="))
-            file.write(
-                "# configFile = {}\n".format(self.telescopeModel.getConfigFile())
-            )
+            file.write("# configFile = {}\n".format(self.telescopeModel.getConfigFile()))
             file.write("# zenithAngle [deg] = {}\n".format(self.config.zenithAngle))
             file.write("# offAxisAngle [deg] = {}\n".format(self.config.offAxisAngle))
-            file.write(
-                "# sourceDistance [km] = {}\n".format(self.config.sourceDistance)
-            )
+            file.write("# sourceDistance [km] = {}\n".format(self.config.sourceDistance))
             if self._singleMirrorMode:
                 file.write("# mirrorNumber = {}\n\n".format(self.config.mirrorNumber))
 
@@ -169,9 +161,7 @@ class SimtelRunnerRayTracing(SimtelRunner):
         # - distance of light source
         with self._starsFile.open("w") as file:
             file.write(
-                "0. {} 1.0 {}\n".format(
-                    90.0 - self.config.zenithAngle, self.config.sourceDistance
-                )
+                "0. {} 1.0 {}\n".format(90.0 - self.config.zenithAngle, self.config.sourceDistance)
             )
 
     def _shallRun(self, run=None):
@@ -182,9 +172,7 @@ class SimtelRunnerRayTracing(SimtelRunner):
         """Return the command to run simtel_array."""
 
         if self._singleMirrorMode:
-            _mirrorFocalLength = float(
-                self.telescopeModel.getParameterValue("mirror_focal_length")
-            )
+            _mirrorFocalLength = float(self.telescopeModel.getParameterValue("mirror_focal_length"))
 
         # RayTracing
         command = str(self._simtelSourcePath.joinpath("sim_telarray/bin/sim_telarray"))
@@ -212,9 +200,7 @@ class SimtelRunnerRayTracing(SimtelRunner):
         command += super()._configOption("camera_filter", "none")
         if self._singleMirrorMode:
             command += super()._configOption("focus_offset", "all:0.")
-            command += super()._configOption(
-                "camera_config_file", "single_pixel_camera.dat"
-            )
+            command += super()._configOption("camera_config_file", "single_pixel_camera.dat")
             command += super()._configOption("camera_pixels", "1")
             command += super()._configOption("trigger_pixels", "1")
             command += super()._configOption("camera_body_diameter", "0")
@@ -232,9 +218,7 @@ class SimtelRunnerRayTracing(SimtelRunner):
             command += super()._configOption("parabolic_dish", "0")
             # command += super()._configOption('random_focal_length', '0.')
             command += super()._configOption("mirror_align_random_distance", "0.")
-            command += super()._configOption(
-                "mirror_align_random_vertical", "0.,28.,0.,0."
-            )
+            command += super()._configOption("mirror_align_random_vertical", "0.,28.,0.,0.")
         command += " " + str(self._corsikaFile)
         command += " 2>&1 > " + str(self._logFile) + " 2>&1"
 

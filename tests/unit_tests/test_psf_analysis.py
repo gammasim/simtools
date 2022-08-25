@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 import logging
+
 import pytest
 
 import simtools.io_handler as io

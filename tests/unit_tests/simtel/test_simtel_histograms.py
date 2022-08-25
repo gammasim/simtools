@@ -12,14 +12,10 @@ logger.setLevel(logging.DEBUG)
 def test_histograms(cfg_setup):
     histogram_files = list()
     histogram_files.append(
-        io.getTestDataFile(
-            "run1_gamma_za20deg_azm0deg-North-Prod5_test-production-5.hdata.zst"
-        )
+        io.getTestDataFile("run1_gamma_za20deg_azm0deg-North-Prod5_test-production-5.hdata.zst")
     )
     histogram_files.append(
-        io.getTestDataFile(
-            "run2_gamma_za20deg_azm0deg-North-Prod5_test-production-5.hdata.zst"
-        )
+        io.getTestDataFile("run2_gamma_za20deg_azm0deg-North-Prod5_test-production-5.hdata.zst")
     )
 
     hists = SimtelHistograms(histogramFiles=histogram_files, test=True)

@@ -1,9 +1,10 @@
 #!/usr/bin/python3
 #
 
-import os
-import pytest
 import logging
+import os
+
+import pytest
 
 import simtools.config as cfg
 import simtools.io_handler as io
@@ -23,21 +24,31 @@ APP_LIST = {
     # Optics
     "tune_psf": [
         [
-            "-s", "North",
-            "-t", "LST-1",
-            "--model_version", "prod4",
-            "--data", "TESTMODELDIR/PSFcurve_data_v2.txt",
-            "--zenith", "20",
+            "-s",
+            "North",
+            "-t",
+            "LST-1",
+            "--model_version",
+            "prod4",
+            "--data",
+            "TESTMODELDIR/PSFcurve_data_v2.txt",
+            "--zenith",
+            "20",
             "--test",
         ]
     ],
     "compare_cumulative_psf": [
         [
-            "-s", "North",
-            "-t", "LST-1",
-            "--model_version", "prod4",
-            "--data", "TESTMODELDIR/PSFcurve_data_v2.txt",
-            "--zenith", "20",
+            "-s",
+            "North",
+            "-t",
+            "LST-1",
+            "--model_version",
+            "prod4",
+            "--data",
+            "TESTMODELDIR/PSFcurve_data_v2.txt",
+            "--zenith",
+            "20",
             "--test",
         ]
     ],
@@ -50,8 +61,10 @@ APP_LIST = {
         [
             "--workflow_config_file",
             "tests/resources/set_MST_mirror_2f_measurements_from_external.config.yml",
-            "--input_meta_file", "TESTMODELDIR/MLTdata-preproduction.usermeta.yml",
-            "--input_data_file", "TESTMODELDIR/MLTdata-preproduction.ecsv",
+            "--input_meta_file",
+            "TESTMODELDIR/MLTdata-preproduction.usermeta.yml",
+            "--input_data_file",
+            "TESTMODELDIR/MLTdata-preproduction.ecsv",
             " --test",
         ]
     ],
@@ -62,72 +75,91 @@ APP_LIST = {
     ],
     "derive_mirror_rnda::psf_random_flen": [
         [
-            "-s", "North",
-            "-t", "MST-FlashCam-D",
-            "--containment_fraction", "0.8",
-            "--psf_measurement_containment_mean", "1.4",
+            "-s",
+            "North",
+            "-t",
+            "MST-FlashCam-D",
+            "--containment_fraction",
+            "0.8",
+            "--psf_measurement_containment_mean",
+            "1.4",
             "--use_random_flen",
-            "--rnda", "0.0063",
+            "--rnda",
+            "0.0063",
             " --test",
         ]
     ],
     "derive_mirror_rnda::psf_notuning": [
         [
-            "-s", "North",
-            "-t", "MST-FlashCam-D",
-            "--containment_fraction", "0.8",
-            "--mirror_list", "TESTMODELDIR/MLTdata-preproduction.ecsv",
-            "--psf_measurement", "TESTMODELDIR/MLTdata-preproduction.ecsv",
-            "--rnda", "0.0063",
+            "-s",
+            "North",
+            "-t",
+            "MST-FlashCam-D",
+            "--containment_fraction",
+            "0.8",
+            "--mirror_list",
+            "TESTMODELDIR/MLTdata-preproduction.ecsv",
+            "--psf_measurement",
+            "TESTMODELDIR/MLTdata-preproduction.ecsv",
+            "--rnda",
+            "0.0063",
             " --test",
         ]
     ],
     "derive_mirror_rnda::psf_measurement": [
         [
-            "-s", "North",
-            "-t", "MST-FlashCam-D",
-            "--containment_fraction", "0.8",
-            "--mirror_list", "TESTMODELDIR/MLTdata-preproduction.ecsv",
-            "--psf_measurement", "TESTMODELDIR/MLTdata-preproduction.ecsv",
-            "--rnda", "0.0063",
+            "-s",
+            "North",
+            "-t",
+            "MST-FlashCam-D",
+            "--containment_fraction",
+            "0.8",
+            "--mirror_list",
+            "TESTMODELDIR/MLTdata-preproduction.ecsv",
+            "--psf_measurement",
+            "TESTMODELDIR/MLTdata-preproduction.ecsv",
+            "--rnda",
+            "0.0063",
             " --test",
         ]
     ],
     "derive_mirror_rnda::psf_mean": [
         [
-            "-s", "North",
-            "-t", "MST-FlashCam-D",
-            "--containment_fraction", "0.8",
-            "--mirror_list", "TESTMODELDIR/MLTdata-preproduction.ecsv",
-            "--psf_measurement_containment_mean", "1.4",
-            "--rnda", "0.0063",
+            "-s",
+            "North",
+            "-t",
+            "MST-FlashCam-D",
+            "--containment_fraction",
+            "0.8",
+            "--mirror_list",
+            "TESTMODELDIR/MLTdata-preproduction.ecsv",
+            "--psf_measurement_containment_mean",
+            "1.4",
+            "--rnda",
+            "0.0063",
             " --test",
         ]
     ],
     "validate_optics": [
         [
-            "-s", "North",
-            "-t", "LST-1",
-            "--max_offset", "1.0",
-            "--src_distance", "11",
-            "--zenith", "20",
-            "--test", ]
+            "-s",
+            "North",
+            "-t",
+            "LST-1",
+            "--max_offset",
+            "1.0",
+            "--src_distance",
+            "11",
+            "--zenith",
+            "20",
+            "--test",
+        ]
     ],
     # Camera
     "validate_camera_efficiency": [
-        [
-            "-s", "North",
-            "-t", "MST-NectarCam-D",
-            "--model_version", "prod4"
-        ]
+        ["-s", "North", "-t", "MST-NectarCam-D", "--model_version", "prod4"]
     ],
-    "validate_camera_fov": [
-        [
-            "-s", "North",
-            "-t", "MST-NectarCam-D",
-            "--model_version", "prod4"
-        ]
-    ],
+    "validate_camera_fov": [["-s", "North", "-t", "MST-NectarCam-D", "--model_version", "prod4"]],
     "plot_simtel_histograms::help": [
         [
             "--help",
@@ -136,44 +168,32 @@ APP_LIST = {
     # Layout
     "make_regular_arrays": [[]],
     # Production
-    "produce_array_config": [
-        ["--array_config", "./tests/resources/arrayConfigTest.yml"]
-    ],
+    "produce_array_config": [["--array_config", "./tests/resources/arrayConfigTest.yml"]],
     # Trigger
     "sim_showers_for_trigger_rates": [
         [
-            "-a", "4LST",
-            "-s", "North",
-            "--primary", "proton",
-            "--nruns", "2",
-            "--nevents", "10000",
+            "-a",
+            "4LST",
+            "-s",
+            "North",
+            "--primary",
+            "proton",
+            "--nruns",
+            "2",
+            "--nevents",
+            "10000",
             "--test",
         ]
     ],
     # Database
     "get_parameter": [
-        [
-            "-s", "North",
-            "-t", "LST-1",
-            "-p", "mirror_list",
-            "--model_version", "prod4"
-        ]
+        ["-s", "North", "-t", "LST-1", "-p", "mirror_list", "--model_version", "prod4"]
     ],
     "production::showers_only": [
-        [
-            "-p", "./tests/resources/prodConfigTest.yml",
-            "-t", "simulate",
-            "--showers_only",
-            "--test"
-        ]
+        ["-p", "./tests/resources/prodConfigTest.yml", "-t", "simulate", "--showers_only", "--test"]
     ],
     "production::array_only": [
-        [
-            "-p", "./tests/resources/prodConfigTest.yml",
-            "-t", "simulate",
-            "--array_only",
-            "--test"
-        ]
+        ["-p", "./tests/resources/prodConfigTest.yml", "-t", "simulate", "--array_only", "--test"]
     ],
 }
 
@@ -183,11 +203,7 @@ def test_applications(set_simtools, application):
     logger.info("Testing {}".format(application))
 
     def prepare_one_file(fileName):
-        db.exportFileDB(
-            dbName="test-data",
-            dest=io.getTestModelDirectory(),
-            fileName=fileName
-        )
+        db.exportFileDB(dbName="test-data", dest=io.getTestModelDirectory(), fileName=fileName)
 
     db = db_handler.DatabaseHandler()
     prepare_one_file("PSFcurve_data_v2.txt")

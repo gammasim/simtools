@@ -1,42 +1,42 @@
-epsg: 
+epsg:
   len: 1
   names: []
   default: null
-centerLongitude: 
+centerLongitude:
   len: 1
   unit: !astropy.units.Unit {unit: deg}
   names: ['longitude', 'long', 'center_longitude']
   default: null
-centerLatitude: 
+centerLatitude:
   len: 1
   unit: !astropy.units.Unit {unit: deg}
   names: ['latitude', 'lat', 'center_latitude']
   default: null
-centerNorthing: 
+centerNorthing:
   len: 1
   unit: !astropy.units.Unit {unit: m}
   names: ['northing', 'north', center_northing']
   default: null
-centerEasting: 
+centerEasting:
   len: 1
   unit: !astropy.units.Unit {unit: m}
   names: ['easting', 'east', center_easting']
   default: null
-centerAltitude: 
+centerAltitude:
   len: 1
   unit: !astropy.units.Unit {unit: m}
   names: ['altitude', 'centeralt']
   default: null
-corsikaObsLevel: 
+corsikaObsLevel:
   len: 1
   unit: !astropy.units.Unit {unit: m}
   names: ['obslevel']
   default: null
-corsikaSphereCenter: 
+corsikaSphereCenter:
   len: 3
   unit: [!astropy.units.Unit {unit: m}, !astropy.units.Unit {unit: m}, !astropy.units.Unit {unit: m}]
   names: ['spherecenter']
-  default: 
+  default:
     LST: !astropy.units.Quantity
       unit: !astropy.units.Unit {unit: m}
       value: 16.0
@@ -46,7 +46,7 @@ corsikaSphereCenter:
     SST: !astropy.units.Quantity
       unit: !astropy.units.Unit {unit: m}
       value: 3.25
-corsikaSphereRadius: 
+corsikaSphereRadius:
   len: 3
   unit: [!astropy.units.Unit {unit: m}, !astropy.units.Unit {unit: m}, !astropy.units.Unit {unit: m}]
   names: ['sphereradius']
@@ -60,4 +60,3 @@ corsikaSphereRadius:
     SST: !astropy.units.Quantity
       unit: !astropy.units.Unit {unit: m}
       value: 3.5
-

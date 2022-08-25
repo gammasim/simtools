@@ -24,7 +24,7 @@ is a config parameter and *label* is the name of the application. The plots prod
 are stored in the sub-directory *application-plots*. The high-level data produced intermediately (e.g PSF tables)
 can be found in the sub-directories relative to the specific type of application (e.g *ray-tracing* for optics
 related applications, *camera-efficiency* for camera efficiency applications etc). All files related to the
-model (e.g sim_telarray config files) are stored in the sub-directory *model*.    
+model (e.g sim_telarray config files) are stored in the sub-directory *model*.
 
 Below you find the list of the currently available applications and their respective documentation.
 

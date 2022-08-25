@@ -18,7 +18,7 @@
 # will be returned.
 #
 # A default value can be given by the key 'default'.
-# Parameters without default key will raise error when missing. 
+# Parameters without default key will raise error when missing.
 #
 # Dict can be given similarly to lists, with the proper len.
 #

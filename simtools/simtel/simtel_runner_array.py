@@ -3,8 +3,8 @@ from pathlib import Path
 
 import simtools.io_handler as io
 import simtools.util.general as gen
+from simtools.simtel.simtel_runner import InvalidOutputFile, SimtelRunner
 from simtools.util import names
-from simtools.simtel.simtel_runner import SimtelRunner, InvalidOutputFile
 
 __all__ = ["SimtelRunnerArray"]
 
@@ -89,15 +89,11 @@ class SimtelRunnerArray(SimtelRunner):
         self.label = label if label is not None else self.arrayModel.label
 
         # File location
-        self._baseDirectory = io.getArraySimulatorOutputDirectory(
-            self._filesLocation, self.label
-        )
+        self._baseDirectory = io.getArraySimulatorOutputDirectory(self._filesLocation, self.label)
 
         # Loading configData
         _configDataIn = gen.collectDataFromYamlOrDict(configFile, configData)
-        _parameterFile = io.getDataFile(
-            "parameters", "simtel-runner-array_parameters.yml"
-        )
+        _parameterFile = io.getDataFile("parameters", "simtel-runner-array_parameters.yml")
         _parameters = gen.collectDataFromYamlOrDict(_parameterFile, None)
         self.config = gen.validateConfigData(_configDataIn, _parameters)
 
@@ -142,7 +138,7 @@ class SimtelRunnerArray(SimtelRunner):
         )
         return self._simtelLogDir.joinpath(fileName)
 
-    def getSubLogFile(self, run, mode='out'):
+    def getSubLogFile(self, run, mode="out"):
         """
         Get the full path of the submission log file.
 
@@ -172,7 +168,7 @@ class SimtelRunnerArray(SimtelRunner):
             zenith=self.config.zenithAngle,
             azimuth=self.config.azimuthAngle,
             label=self.label,
-            mode=mode
+            mode=mode,
         )
         return self._simtelLogDir.joinpath(fileName)
 
@@ -202,7 +198,7 @@ class SimtelRunnerArray(SimtelRunner):
         )
         return self._simtelDataDir.joinpath(fileName)
 
-    def hasSubLogFile(self, run, mode='out'):
+    def hasSubLogFile(self, run, mode="out"):
         """
         Checks that the sub run log file for this run number
         is a valid file on disk
@@ -228,20 +224,19 @@ class SimtelRunnerArray(SimtelRunner):
 
         """
 
-        subLogFile = self.getSubLogFile(run=run, mode='out')
+        subLogFile = self.getSubLogFile(run=run, mode="out")
 
-        self._logger.info('Reading resources from {}'.format(
-            subLogFile))
+        self._logger.info("Reading resources from {}".format(subLogFile))
 
         runtime = None
-        with open(subLogFile, 'r') as file:
+        with open(subLogFile, "r") as file:
             for line in reversed(list(file)):
-                if 'RUNTIME' in line:
+                if "RUNTIME" in line:
                     runtime = int(line.split()[1])
                     break
 
         if runtime is None:
-            self._logger.debug('RUNTIME was not found in run log file')
+            self._logger.debug("RUNTIME was not found in run log file")
 
         return runtime
 
@@ -291,6 +286,4 @@ class SimtelRunnerArray(SimtelRunner):
             self._logger.error(msg)
             raise InvalidOutputFile(msg)
         else:
-            self._logger.debug(
-                "Everything looks fine with the sim_telarray output file."
-            )
+            self._logger.debug("Everything looks fine with the sim_telarray output file.")
