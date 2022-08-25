@@ -3,10 +3,10 @@ gammasim-tools
 
 .. image:: https://zenodo.org/badge/195011575.svg
    :target: https://zenodo.org/badge/latestdoi/195011575
-   
+
 .. image:: https://github.com/gammasim/gammasim-tools/actions/workflows/CI-tests.yml/badge.svg
    :target: https://github.com/gammasim/gammasim-tools/actions/workflows/CI-tests.yml
-  
+
 .. image:: https://github.com/gammasim/gammasim-tools/actions/workflows/CI-docs.yml/badge.svg
    :target: https://github.com/gammasim/gammasim-tools/actions/workflows/CI-docs.yml
 
@@ -30,7 +30,7 @@ gammasim-tools makes extensive use of the `CORSIKA <https://www.iap.kit.edu/cors
 
 AUTHORS:
 --------
-    
+
 * Raul R Prado (raul.prado@desy.de)
 * Orel Gueta (orel.gueta@desy.de)
 * Victor B. Martins (victor.barbosa.martins@desy.de)  
@@ -50,7 +50,19 @@ Create a conda environment (only once):
 Each time you want to use the package, just activate the conda environment:
 
 ``conda activate gammasim-tools-dev``
- 
+
+Developers can make use of the pre-commit functionality, which tests or apply python style fixes using black and flakes8. To use pre-commit, run the following command after cloning the repository:
+
+``pre-commit --install``
+
+For testing, pre-commit can be applied locally without commit:
+
+``pre-commit run --all-files``
+
+In rare cases, one might want to skip pre-commit checks with
+
+``git commit --no-verify``
+
 STYLE GUIDELINES:
 -----------------
 
@@ -58,4 +70,3 @@ STYLE GUIDELINES:
 * Keep it clean!
 * Sphinx for docs with docstrings in `Numpy style <https://numpydoc.readthedocs.io/en/latest/format.html#id4>`_
 * Pep8 is required.
-

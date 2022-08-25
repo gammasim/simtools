@@ -4,8 +4,8 @@ from copy import copy
 import simtools.config as cfg
 import simtools.io_handler as io
 from simtools import db_handler
-from simtools.model.telescope_model import TelescopeModel
 from simtools.layout.layout_array import LayoutArray
+from simtools.model.telescope_model import TelescopeModel
 from simtools.simtel.simtel_config_writer import SimtelConfigWriter
 from simtools.util import names
 from simtools.util.general import collectDataFromYamlOrDict
@@ -91,9 +91,7 @@ class ArrayModel:
         self.layoutName = None
         self.modelVersion = None
 
-        self._modelFilesLocations = cfg.getConfigArg(
-            "modelFilesLocations", modelFilesLocations
-        )
+        self._modelFilesLocations = cfg.getConfigArg("modelFilesLocations", modelFilesLocations)
         self._filesLocation = cfg.getConfigArg("outputLocation", filesLocation)
 
         arrayConfigData = collectDataFromYamlOrDict(arrayConfigFile, arrayConfigData)
@@ -133,18 +131,11 @@ class ArrayModel:
         )
 
         # Model version
-        if (
-            "modelVersion" not in arrayConfigData.keys()
-            or arrayConfigData["modelVersion"] is None
-        ):
-            self._logger.warning(
-                "modelVersion not given in arrayConfigData - using current"
-            )
+        if "modelVersion" not in arrayConfigData.keys() or arrayConfigData["modelVersion"] is None:
+            self._logger.warning("modelVersion not given in arrayConfigData - using current")
             self.modelVersion = "current"
         else:
-            self.modelVersion = names.validateModelVersionName(
-                arrayConfigData["modelVersion"]
-            )
+            self.modelVersion = names.validateModelVersionName(arrayConfigData["modelVersion"])
 
         # Removing keys that were stored in attributes and keeping the remaining as a dict
         self._arrayConfigData = {
@@ -179,9 +170,7 @@ class ArrayModel:
 
     def _setConfigFileDirectory(self):
         """Define the variable _configFileDirectory and create directories, if needed"""
-        self._configFileDirectory = io.getModelOutputDirectory(
-            self._filesLocation, self.label
-        )
+        self._configFileDirectory = io.getModelOutputDirectory(self._filesLocation, self.label)
         if not self._configFileDirectory.exists():
             self._configFileDirectory.mkdir(parents=True, exist_ok=True)
             self._logger.info("Creating directory {}".format(self._configFileDirectory))
@@ -350,17 +339,13 @@ class ArrayModel:
         """
         exportedModels = list()
         for telModel in self._telescopeModel:
-            name = telModel.name + (
-                "_" + telModel.extraLabel if telModel.extraLabel != "" else ""
-            )
+            name = telModel.name + ("_" + telModel.extraLabel if telModel.extraLabel != "" else "")
             if name not in exportedModels:
                 self._logger.debug("Exporting config file for tel {}".format(name))
                 telModel.exportConfigFile()
                 exportedModels.append(name)
             else:
-                self._logger.debug(
-                    "Config file for tel {} already exists - skipping".format(name)
-                )
+                self._logger.debug("Config file for tel {} already exists - skipping".format(name))
 
         self._telescopeModelFilesExported = True
 
@@ -377,9 +362,7 @@ class ArrayModel:
         self._configFilePath = self._configFileDirectory.joinpath(configFileName)
 
         # Writing parameters to the file
-        self._logger.info(
-            "Writing array config file into {}".format(self._configFilePath)
-        )
+        self._logger.info("Writing array config file into {}".format(self._configFilePath))
         simtelWriter = SimtelConfigWriter(
             site=self.site,
             layoutName=self.layoutName,

@@ -1,24 +1,24 @@
 import logging
 import subprocess
-import matplotlib.pyplot as plt
 from copy import copy
-from pathlib import Path
 from math import pi, tan
+from pathlib import Path
 
-import numpy as np
 import astropy.units as u
+import matplotlib.pyplot as plt
+import numpy as np
 from astropy.io import ascii
 from astropy.table import QTable
 
 import simtools.config as cfg
 import simtools.io_handler as io
 import simtools.util.general as gen
+from simtools import visualize
+from simtools.model.telescope_model import TelescopeModel
 from simtools.psf_analysis import PSFImage
+from simtools.simtel.simtel_runner_ray_tracing import SimtelRunnerRayTracing
 from simtools.util import names
 from simtools.util.model import computeTelescopeTransmission
-from simtools.model.telescope_model import TelescopeModel
-from simtools.simtel.simtel_runner_ray_tracing import SimtelRunnerRayTracing
-from simtools import visualize
 
 __all__ = ["RayTracing"]
 
@@ -129,9 +129,7 @@ class RayTracing:
 
         self.label = label if label is not None else self._telescopeModel.label
 
-        self._outputDirectory = io.getRayTracingOutputDirectory(
-            self._filesLocation, self.label
-        )
+        self._outputDirectory = io.getRayTracingOutputDirectory(self._filesLocation, self.label)
         self._outputDirectory.mkdir(parents=True, exist_ok=True)
 
         # Loading relevant attributes in case of single mirror mode.
@@ -145,9 +143,7 @@ class RayTracing:
 
             # Setting mirror numbers.
             if self.config.mirrorNumbers[0] == "all":
-                self._mirrorNumbers = list(
-                    range(0, self._telescopeModel.mirrors.numberOfMirrors)
-                )
+                self._mirrorNumbers = list(range(0, self._telescopeModel.mirrors.numberOfMirrors))
             else:
                 self._mirrorNumbers = self.config.mirrorNumbers
         else:
@@ -164,9 +160,7 @@ class RayTracing:
             self.label,
         )
         self._outputDirectory.joinpath("results").mkdir(parents=True, exist_ok=True)
-        self._fileResults = self._outputDirectory.joinpath("results").joinpath(
-            fileNameResults
-        )
+        self._fileResults = self._outputDirectory.joinpath("results").joinpath(fileNameResults)
 
     # END of init
 
@@ -246,12 +240,14 @@ class RayTracing:
 
     # END of simulate
 
-    def analyze(self,
-                export=True,
-                force=False,
-                useRX=False,
-                noTelTransmission=False,
-                containment_fraction=0.8):
+    def analyze(
+        self,
+        export=True,
+        force=False,
+        useRX=False,
+        noTelTransmission=False,
+        containment_fraction=0.8,
+    ):
         """
         Analyze RayTracing, meaning read simtel files, compute psfs and eff areas and store the
         results in _results.
@@ -293,9 +289,7 @@ class RayTracing:
         allMirrors = self._mirrorNumbers if self.config.singleMirrorMode else [0]
         for thisOffAxis in self.config.offAxisAngle:
             for thisMirror in allMirrors:
-                self._logger.debug(
-                    "Analyzing RayTracing for offAxis={}".format(thisOffAxis)
-                )
+                self._logger.debug("Analyzing RayTracing for offAxis={}".format(thisOffAxis))
                 if self.config.singleMirrorMode:
                     self._logger.debug("mirrorNumber={}".format(thisMirror))
 
@@ -311,9 +305,7 @@ class RayTracing:
                 )
 
                 photonsFile = self._outputDirectory.joinpath(photonsFileName)
-                telTransmission = computeTelescopeTransmission(
-                    telTransmissionPars, thisOffAxis
-                )
+                telTransmission = computeTelescopeTransmission(telTransmissionPars, thisOffAxis)
                 image = PSFImage(focalLength, None)
                 image.readPhotonListFromSimtelFile(photonsFile)
                 self._psfImages[thisOffAxis] = copy(image)
@@ -322,11 +314,11 @@ class RayTracing:
                     continue
 
                 if useRX:
-                    containment_diameter_cm, centroidX, centroidY, effArea = \
-                        self._processRX(photonsFile)
+                    containment_diameter_cm, centroidX, centroidY, effArea = self._processRX(
+                        photonsFile
+                    )
                     containment_diameter_deg = containment_diameter_cm * cmToDeg
-                    image.setPSF(containment_diameter_cm,
-                                 fraction=containment_fraction, unit="cm")
+                    image.setPSF(containment_diameter_cm, fraction=containment_fraction, unit="cm")
                     image.centroidX = centroidX
                     image.centroidY = centroidY
                     image.setEffectiveArea(effArea * telTransmission)
@@ -337,11 +329,7 @@ class RayTracing:
                     centroidY = image.centroidY
                     effArea = image.getEffectiveArea() * telTransmission
 
-                effFlen = (
-                    np.nan
-                    if thisOffAxis == 0
-                    else centroidX / tan(thisOffAxis * pi / 180.0)
-                )
+                effFlen = np.nan if thisOffAxis == 0 else centroidX / tan(thisOffAxis * pi / 180.0)
                 _currentResults = (
                     thisOffAxis * u.deg,
                     containment_diameter_cm * u.cm,
@@ -438,10 +426,7 @@ class RayTracing:
         self._logger.info("Plotting {} vs off-axis angle".format(key))
 
         plt = visualize.plotTable(
-            self._results["Off-axis angle", key],
-            self.YLABEL[key],
-            noLegend=True,
-            **kwargs
+            self._results["Off-axis angle", key], self.YLABEL[key], noLegend=True, **kwargs
         )
 
         if save:

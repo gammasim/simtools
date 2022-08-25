@@ -1,15 +1,15 @@
 #!/usr/bin/python3
 
-import pytest
 import logging
-import matplotlib.pyplot as plt
 from copy import copy
 
 import astropy.units as u
+import matplotlib.pyplot as plt
+import pytest
 
 import simtools.io_handler as io
-from simtools.ray_tracing import RayTracing
 from simtools.model.telescope_model import TelescopeModel
+from simtools.ray_tracing import RayTracing
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
@@ -37,7 +37,7 @@ def test_ssts(set_simtools, telescopeModelName):
 
 
 # TODO: issue #258
-@pytest.mark.skip(reason='ignore temporarily rx method')
+@pytest.mark.skip(reason="ignore temporarily rx method")
 def test_rx(set_simtelarray):
     version = "current"
     label = "test-lst"

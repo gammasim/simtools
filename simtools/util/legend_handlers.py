@@ -1,6 +1,6 @@
-import numpy as np
-import matplotlib.patches as mpatches
 import matplotlib.colors as mcolors
+import matplotlib.patches as mpatches
+import numpy as np
 
 
 class pixelObject(object):
@@ -61,8 +61,8 @@ class hexEdgePixelHandler(object):
     @staticmethod
     def legend_artist(legend, orig_handle, fontsize, handlebox):
         x0, y0 = (
-          handlebox.xdescent + handlebox.width / 3,
-          handlebox.ydescent + handlebox.height / 3
+            handlebox.xdescent + handlebox.width / 3,
+            handlebox.ydescent + handlebox.height / 3,
         )
         # width = height = handlebox.height
         patch = mpatches.RegularPolygon(
