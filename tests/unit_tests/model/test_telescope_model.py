@@ -202,4 +202,4 @@ def test_get_on_axis_eff_optical_area(telescope_model):
 
     telModel = telescope_model
 
-    assert telModel.getOnAxisEffOpticalArea().value == pytest.approx(365.48310154491)
+    assert telModel.getOnAxisEffOpticalArea().value == pytest.approx(365.48310154491)  # Value for LST -1
