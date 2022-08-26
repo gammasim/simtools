@@ -60,12 +60,12 @@ class Camera:
         Parameters
         ----------
         telescopeModelName: string
-                    As provided by the telescope model method TelescopeModel (ex South-LST-1).
+            As provided by the telescope model method TelescopeModel (ex South-LST-1).
         cameraConfigFile: string
-                    The sim_telarray file name.
+            The sim_telarray file name.
         focalLength: float
-                    The focal length of the camera in (preferably the effective focal length),
-                    assumed to be in the same unit as the pixel positions in the cameraConfigFile.
+            The focal length of the camera in (preferably the effective focal length),
+            assumed to be in the same unit as the pixel positions in the cameraConfigFile.
         """
 
         self._logger = logging.getLogger(__name__)
