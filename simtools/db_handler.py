@@ -58,6 +58,7 @@ class DatabaseHandler:
     DB_CTA_SIMULATION_MODEL = "CTA-Simulation-Model"
     DB_CTA_SIMULATION_MODEL_DESCRIPTIONS = "CTA-Simulation-Model-Descriptions"
     DB_REFERENCE_DATA = "CTA-Reference-Data"
+    DB_DERIVED_VALUES = "CTA-Simulation-Model-Derived-Values"
 
     ALLOWED_FILE_EXTENSIONS = [".dat", ".txt", ".lis", ".cfg", ".yml", ".ecsv"]
 
@@ -653,6 +654,43 @@ class DatabaseHandler:
             _parameters[parNow]["entryDate"] = ObjectId(post["_id"]).generation_time
 
         return _parameters
+
+    def getDerivedValues(
+        self, site, telescopeModelName, modelVersion
+    ):
+        """
+        Get a derived value from the DB for a specific telescope.
+
+        Parameters
+        ----------
+        site: str
+            South or North.
+        telescopeModelName: str
+            Name of the telescope model (e.g. MST-FlashCam-D ...)
+        modelVersion: str
+            Version of the model.
+
+        Returns
+        -------
+        dict containing the parameters
+        """
+
+        _siteValidated = names.validateSiteName(site)
+        _telModelNameValidated = names.validateTelescopeModelName(telescopeModelName)
+        _telNameDB = self._getTelescopeModelNameForDB(_siteValidated, _telModelNameValidated)
+
+        self._logger.debug('Getting derived values for {} from the DB'.format(_telNameDB))
+
+        _pars = self.readMongoDB(
+                    DatabaseHandler.DB_DERIVED_VALUES,
+                    _telNameDB,
+                    modelVersion,
+                    runLocation=None,
+                    collectionName="derived_values",
+                    writeFiles=False,
+                )
+
+        return _pars
 
     @staticmethod
     def _getFileMongoDB(dbName, fileName):
