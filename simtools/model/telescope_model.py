@@ -295,7 +295,7 @@ class TelescopeModel:
         -------
         bool
         """
-        return parName in self._parameters.keys()
+        return parName in self._parameters
 
     def getParameter(self, parName):
         """
@@ -364,7 +364,7 @@ class TelescopeModel:
         InvalidParameter
             If an existing parameter is tried to be added.
         """
-        if parName in self._parameters.keys():
+        if parName in self._parameters:
             msg = "Parameter {} already in the model, use changeParameter instead".format(parName)
             self._logger.error(msg)
             raise InvalidParameter(msg)
@@ -397,7 +397,7 @@ class TelescopeModel:
         InvalidParameter
             If the parameter to be changed does not exist in this model.
         """
-        if parName not in self._parameters.keys():
+        if parName not in self._parameters:
             msg = "Parameter {} not in the model, use addParameters instead".format(parName)
             self._logger.error(msg)
             raise InvalidParameter(msg)
@@ -430,7 +430,7 @@ class TelescopeModel:
             If at least one of the parameters to be changed does not exist in this model.
         """
         for par, value in kwargs.items():
-            if par in self._parameters.keys():
+            if par in self._parameters:
                 self.changeParameter(par, value)
             else:
                 self.addParameter(par, value)

@@ -340,7 +340,7 @@ def convertTelescopeModelNameToYaml(name):
         "LST-1": "LST",
     }
 
-    if newName not in oldNames.keys():
+    if newName not in oldNames:
         raise ValueError("Telescope name {} could not be converted to yml names".format(name))
     else:
         return oldNames[newName]

@@ -210,7 +210,7 @@ class PSFImage:
         if unit == "deg" and not self._hasFocalLength:
             self._logger.error("PSF cannot be computed in deg because focal length is not set")
             return None
-        if fraction not in self._storedPSF.keys():
+        if fraction not in self._storedPSF:
             self._computePSF(fraction)
         unitFactor = 1 if unit == "cm" else self._cmToDeg
         return self._storedPSF[fraction] * unitFactor
