@@ -383,23 +383,21 @@ class CameraEfficiency:
 
         print("\33[40;37;1m")
         self._logger.info(
-            "Spectrum weighted reflectivity: {}".format(self.calcReflectivity())
+            f"Spectrum weighted reflectivity: {self.calcReflectivity():.4f}"
         )
         self._logger.info(
-            "Camera nominal efficiency with gaps (B-TEL-1170): {}".format(
-                self.calcCameraEfficiency()
-            )
+            f"Camera nominal efficiency with gaps (B-TEL-1170): {self.calcCameraEfficiency():.4f}"
         )
         self._logger.info(
-            "Telescope total efficiency with gaps (was A-PERF-2020): {}".format(
-                self.calcTelEfficiency()
-            )
+            f"Telescope total efficiency with gaps (was A-PERF-2020): {self.calcTelEfficiency():.4f}"
         )
         self._logger.info(
-            "Total telescope Cherenkov light eff./sqrt(NSB total eff.) "
-            "(A-PERF-2025/B-TEL-0090): {}".format(
-                self.calcTotEfficiency(self.calcTelEfficiency())
-            )
+            (f"Telescope total Cherenkov light efficiency / sqrt(total NSB efficency) "
+             f"(A-PERF-2025/B-TEL-0090): {self.calcTotEfficiency(self.calcTelEfficiency()):.4f}"
+             )
+        )
+        self._logger.info(
+            f"Expected NSB pixel rate for the reference NSB:{self.calcNsbRate()[0]:.4f} [p.e./ns]"
         )
         print("\033[0m")
 
@@ -514,17 +512,17 @@ class CameraEfficiency:
 
         nsbPePerNs = (np.sum(self._results['N4'])
                       * self._telescopeModel.camera.getPixelActiveSolidAngle()
-                      * self._telescopeModel.derived.getOnAxisEffOpticalArea().to("m2").value
+                      * self._telescopeModel.getOnAxisEffOpticalArea().to("m2").value
                       )
 
         # NSB input spectrum is from Benn&Ellison
         # (integral is in ph./(cm² ns sr) ) from 300 - 650 nm:
-        n1ReducedWL = extraColums['n1'][
-            [wlNow > 299 and wlNow < 651 for wlNow in table['W.l.']]
+        n1ReducedWL = self._results['N1'][
+            [wlNow > 299 and wlNow < 651 for wlNow in self._results["wl"]]
         ]
         n1Sum = np.sum(n1ReducedWL)
-        n1IntegralEdges = extraColums['n1'][
-            [wlNow == 300 or wlNow == 650 for wlNow in table['W.l.']]
+        n1IntegralEdges = self._results['N1'][
+            [wlNow == 300 or wlNow == 650 for wlNow in self._results["wl"]]
         ]
         n1IntegralEdgesSum = np.sum(n1IntegralEdges)
         nsbIntegral = 0.0001*(n1Sum - 0.5*n1IntegralEdgesSum)
