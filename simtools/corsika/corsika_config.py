@@ -219,7 +219,7 @@ class CorsikaConfig:
         # Checking for parameters with default option
         # If it is not given, filling it with the default value
         for parName, parInfo in userPars.items():
-            if parName in self._userParameters.keys():
+            if parName in self._userParameters:
                 continue
             elif "default" in parInfo.keys():
                 validatedValue = self._validateAndConvertArgument(

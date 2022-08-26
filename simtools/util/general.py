@@ -124,7 +124,7 @@ def validateConfigData(configData, parameters):
     # Checking for parameters with default option.
     # If it is not given, filling it with the default value.
     for parName, parInfo in parameters.items():
-        if parName in outData.keys():
+        if parName in outData:
             continue
         elif "default" in parInfo.keys() and parInfo["default"] is not None:
             validatedValue = _validateAndConvertValue(parName, parInfo, parInfo["default"])
