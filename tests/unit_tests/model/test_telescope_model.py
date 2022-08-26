@@ -187,4 +187,19 @@ def test_load_reference_data(telescope_model):
 
     telModel = telescope_model
 
-    assert telModel.referenceData["nsb_reference_value"]["Value"] == 0.24
+    assert telModel.referenceData["nsb_reference_value"]["Value"] == pytest.approx(0.24)
+
+
+def test_export_derived_files(telescope_model):
+
+    telModel = telescope_model
+
+    telModel.exportDerivedFiles("ray-tracing-North-LST-1-d10.0-za20.0_validate_optics.ecsv")
+    assert telModel.getDerivedDirectory().joinpath("ray-tracing-North-LST-1-d10.0-za20.0_validate_optics.ecsv").exists()
+
+
+def test_get_on_axis_eff_optical_area(telescope_model):
+
+    telModel = telescope_model
+
+    assert telModel.getOnAxisEffOpticalArea().value == pytest.approx(365.48310154491)
