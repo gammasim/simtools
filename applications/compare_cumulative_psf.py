@@ -140,7 +140,7 @@ def main():
     # New parameters
     if args.pars is not None:
         with open(args.pars) as file:
-            newPars = yaml.load(file, Loader=yaml.FullLoader)
+            newPars = yaml.safe_load(file)
         telModel.changeMultipleParameters(**newPars)
 
     ray = RayTracing.fromKwargs(
