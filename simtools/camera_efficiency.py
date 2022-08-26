@@ -4,9 +4,9 @@ import re
 from collections import defaultdict
 from pathlib import Path
 
+import astropy.io.ascii
 import matplotlib.pyplot as plt
 import numpy as np
-from astropy.io import ascii
 from astropy.table import Table
 
 import simtools.config as cfg
@@ -384,11 +384,11 @@ class CameraEfficiency:
             self._logger.error("Cannot export results because they do not exist")
         else:
             self._logger.info("Exporting results to {}".format(self._fileResults))
-            ascii.write(self._results, self._fileResults, format="basic", overwrite=True)
+            astropy.io.ascii.write(self._results, self._fileResults, format="basic", overwrite=True)
 
     def _readResults(self):
         """Read existing results file and store it in _results."""
-        table = ascii.read(self._fileResults, format="basic")
+        table = astropy.io.ascii.read(self._fileResults, format="basic")
         self._results = table
         self._hasResults = True
 
