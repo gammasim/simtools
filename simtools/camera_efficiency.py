@@ -532,7 +532,7 @@ class CameraEfficiency:
                    )
         return nsbRate, n1Sum
 
-    def plot(self, key, **kwargs):
+    def plot(self, key, **kwargs):  #FIXME - remove this function, probably not needed
         """
         Plot key vs wavelength.
 
