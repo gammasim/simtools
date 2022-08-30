@@ -80,6 +80,9 @@ if __name__ == "__main__":
         label=label,
     )
 
+    # For debugging purposes
+    telModel.exportConfigFile()
+
     logger.info("Validating the camera efficiency of {}".format(telModel.name))
 
     ce = CameraEfficiency(telescopeModel=telModel)
