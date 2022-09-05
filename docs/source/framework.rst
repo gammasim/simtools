@@ -20,7 +20,7 @@ Configuration file
 
 gammasim-tools requires one configuration file in yaml format. This file should be named
 config.yml and it should be located at the local directory. Alternatively one can use
-the function config.setConfigFileName to set an alternative file. 
+the function config.setConfigFileName to set an alternative file.
 
 The configuration file must contain the following entries:
 

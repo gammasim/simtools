@@ -7,14 +7,13 @@ Author: Raul R Prado
 """
 
 import logging
-import numpy as np
-import matplotlib.pyplot as plt
-from math import sqrt, fabs, pi
+from math import fabs, pi, sqrt
 
 import astropy.units as u
+import matplotlib.pyplot as plt
+import numpy as np
 
 from simtools.util.general import collectKwargs, setDefaultKwargs
-
 
 __all__ = ["PSFImage"]
 
@@ -110,9 +109,7 @@ class PSFImage:
         self.centroidX = np.mean(self.photonPosX)
         self.centroidY = np.mean(self.photonPosY)
         self._numberOfDetectedPhotons = len(self.photonPosX)
-        self._effectiveArea = (
-            self._numberOfDetectedPhotons * self._totalArea / self._totalPhotons
-        )
+        self._effectiveArea = self._numberOfDetectedPhotons * self._totalArea / self._totalPhotons
         self.photonR = np.sort(
             np.sqrt(
                 (self.photonPosX - self.centroidX) ** 2 + (self.photonPosY - self.centroidY) ** 2
@@ -211,9 +208,7 @@ class PSFImage:
 
         """
         if unit == "deg" and not self._hasFocalLength:
-            self._logger.error(
-                "PSF cannot be computed in deg because focal length is not set"
-            )
+            self._logger.error("PSF cannot be computed in deg because focal length is not set")
             return None
         if fraction not in self._storedPSF.keys():
             self._computePSF(fraction)
@@ -234,9 +229,7 @@ class PSFImage:
             'cm' or 'deg'. 'deg' will not work if focal length was not set.
         """
         if unit == "deg" and not self._hasFocalLength:
-            self._logger.error(
-                "PSF cannot be set in deg because focal length is not set"
-            )
+            self._logger.error("PSF cannot be set in deg because focal length is not set")
             return
         unitFactor = 1 if unit == "cm" else 1.0 / self._cmToDeg
         self._storedPSF[fraction] = value * unitFactor
@@ -443,9 +436,7 @@ class PSFImage:
 
         intensity = list()
         for rad in radiusAll:
-            intensity.append(
-                self._sumPhotonsInRadius(rad) / self._numberOfDetectedPhotons
-            )
+            intensity.append(self._sumPhotonsInRadius(rad) / self._numberOfDetectedPhotons)
         dType = {
             "names": ("Radius [cm]", "Cumulative PSF"),
             "formats": ("f8", "f8"),

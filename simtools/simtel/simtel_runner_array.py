@@ -3,8 +3,8 @@ from pathlib import Path
 
 import simtools.io_handler as io
 import simtools.util.general as gen
+from simtools.simtel.simtel_runner import InvalidOutputFile, SimtelRunner
 from simtools.util import names
-from simtools.simtel.simtel_runner import SimtelRunner, InvalidOutputFile
 
 __all__ = ["SimtelRunnerArray"]
 
@@ -89,15 +89,11 @@ class SimtelRunnerArray(SimtelRunner):
         self.label = label if label is not None else self.arrayModel.label
 
         # File location
-        self._baseDirectory = io.getArraySimulatorOutputDirectory(
-            self._filesLocation, self.label
-        )
+        self._baseDirectory = io.getArraySimulatorOutputDirectory(self._filesLocation, self.label)
 
         # Loading configData
         _configDataIn = gen.collectDataFromYamlOrDict(configFile, configData)
-        _parameterFile = io.getDataFile(
-            "parameters", "simtel-runner-array_parameters.yml"
-        )
+        _parameterFile = io.getDataFile("parameters", "simtel-runner-array_parameters.yml")
         _parameters = gen.collectDataFromYamlOrDict(_parameterFile, None)
         self.config = gen.validateConfigData(_configDataIn, _parameters)
 
@@ -142,6 +138,40 @@ class SimtelRunnerArray(SimtelRunner):
         )
         return self._simtelLogDir.joinpath(fileName)
 
+    def getSubLogFile(self, run, mode="out"):
+        """
+        Get the full path of the submission log file.
+
+        Parameters
+        ----------
+        runNumber: int
+            Run number.
+        mode: str
+            out or err
+
+        Raises
+        ------
+        ValueError
+            If runNumber is not valid (not an unsigned int).
+
+        Returns
+        -------
+        Path:
+            Full path of the run log file.
+        """
+
+        fileName = names.simtelSubLogFileName(
+            run=run,
+            primary=self.config.primary,
+            arrayName=self.arrayModel.layoutName,
+            site=self.arrayModel.site,
+            zenith=self.config.zenithAngle,
+            azimuth=self.config.azimuthAngle,
+            label=self.label,
+            mode=mode,
+        )
+        return self._simtelLogDir.joinpath(fileName)
+
     def getHistogramFile(self, run):
         """Get full path of the simtel histogram file for a given run."""
         fileName = names.simtelHistogramFileName(
@@ -168,12 +198,64 @@ class SimtelRunnerArray(SimtelRunner):
         )
         return self._simtelDataDir.joinpath(fileName)
 
+    def hasSubLogFile(self, run, mode="out"):
+        """
+        Checks that the sub run log file for this run number
+        is a valid file on disk
+
+        Parameters
+        ----------
+        runNumber: int
+            Run number.
+
+        """
+
+        runSubFile = self.getSubLogFile(run=run, mode=mode)
+        return Path(runSubFile).is_file()
+
+    def getResources(self, run):
+        """
+        Reading run time from last line of submission log file.
+
+        Parameters
+        ----------
+        runNumber: int
+            Run number.
+
+        """
+
+        subLogFile = self.getSubLogFile(run=run, mode="out")
+
+        self._logger.info("Reading resources from {}".format(subLogFile))
+
+        runtime = None
+        with open(subLogFile, "r") as file:
+            for line in reversed(list(file)):
+                if "RUNTIME" in line:
+                    runtime = int(line.split()[1])
+                    break
+
+        if runtime is None:
+            self._logger.debug("RUNTIME was not found in run log file")
+
+        return runtime
+
     def _shallRun(self, run=None):
         """Tells if simulations should be run again based on the existence of output files."""
         return not self.getOutputFile(run).exists()
 
     def _makeRunCommand(self, inputFile, run=1):
-        """Builds and returns the command to run simtel_array."""
+        """
+        Builds and returns the command to run simtel_array.
+
+        Attributes
+        ----------
+        inputFile: str
+            Full path of the input CORSIKA file
+        run: int
+            run number
+
+        """
 
         self._logFile = self.getLogFile(run)
         histogramFile = self.getHistogramFile(run)
@@ -204,6 +286,4 @@ class SimtelRunnerArray(SimtelRunner):
             self._logger.error(msg)
             raise InvalidOutputFile(msg)
         else:
-            self._logger.debug(
-                "Everything looks fine with the sim_telarray output file."
-            )
+            self._logger.debug("Everything looks fine with the sim_telarray output file.")

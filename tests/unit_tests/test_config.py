@@ -1,12 +1,12 @@
 #!/usr/bin/python3
 
-import pytest
 import logging
 from pathlib import Path
 
+import pytest
+
 import simtools.config as cfg
 from simtools.config import ParameterNotFoundInConfigFile
-
 
 logging.getLogger().setLevel(logging.DEBUG)
 
@@ -20,8 +20,7 @@ def test_get_parameters(cfg_setup, configuration_parameters):
 def test_get_non_existing_parameter(cfg_setup):
 
     message = "Configuration file does not contain an entry for the parameter NonExistingEntry"
-    with pytest.raises(ParameterNotFoundInConfigFile,
-                       match=message):
+    with pytest.raises(ParameterNotFoundInConfigFile, match=message):
         cfg.get("NonExistingEntry")
 
 
