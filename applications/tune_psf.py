@@ -61,24 +61,25 @@
 
     .. code-block:: console
 
-        python applications/tune_psf.py --site North --telescope LST-1 --model_version prod5 --data PSFcurve_data_v2.txt --plot_all
+        python applications/tune_psf.py --site North --telescope LST-1 \
+            --model_version prod5 --data PSFcurve_data_v2.txt --plot_all
 """
 
 import logging
-import numpy as np
-import matplotlib.pyplot as plt
 from collections import OrderedDict
-from matplotlib.backends.backend_pdf import PdfPages
 
 import astropy.units as u
+import matplotlib.pyplot as plt
+import numpy as np
+from matplotlib.backends.backend_pdf import PdfPages
 
-import simtools.util.commandline_parser as argparser
-import simtools.io_handler as io
-import simtools.util.general as gen
 import simtools.config as cfg
-from simtools.ray_tracing import RayTracing
-from simtools.model.telescope_model import TelescopeModel
+import simtools.io_handler as io
+import simtools.util.commandline_parser as argparser
+import simtools.util.general as gen
 from simtools import visualize
+from simtools.model.telescope_model import TelescopeModel
+from simtools.ray_tracing import RayTracing
 from simtools.util.model import splitSimtelParameter
 
 
@@ -90,7 +91,7 @@ def loadData(datafile):
     return data
 
 
-if __name__ == "__main__":
+def main():
 
     parser = argparser.CommandLineParser(
         description=(
@@ -105,9 +106,7 @@ if __name__ == "__main__":
         type=float,
         default=10,
     )
-    parser.add_argument(
-        "--zenith", help="Zenith angle in deg (default=20)", type=float, default=20
-    )
+    parser.add_argument("--zenith", help="Zenith angle in deg (default=20)", type=float, default=20)
     parser.add_argument(
         "--data", help="Data file name with the measured PSF vs radius [cm]", type=str
     )
@@ -121,9 +120,7 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--fixed",
-        help=(
-            "Keep the first entry of mirror_reflection_random_angle fixed."
-        ),
+        help=("Keep the first entry of mirror_reflection_random_angle fixed."),
         action="store_true",
     )
     parser.initialize_default_arguments(add_workflow_config=False)
@@ -156,10 +153,7 @@ if __name__ == "__main__":
     allParameters = list()
 
     def addParameters(
-        mirror_reflection,
-        mirror_align,
-        mirror_reflection_fraction=0.15,
-        mirror_reflection_2=0.035
+        mirror_reflection, mirror_align, mirror_reflection_fraction=0.15, mirror_reflection_2=0.035
     ):
         """
         Transform the parameters to the proper format and add a new set of
@@ -167,9 +161,7 @@ if __name__ == "__main__":
         """
         pars = dict()
         mrra = "{:.4f},{:.2f},{:.4f}".format(
-            mirror_reflection,
-            mirror_reflection_fraction,
-            mirror_reflection_2
+            mirror_reflection, mirror_reflection_fraction, mirror_reflection_2
         )
         pars["mirror_reflection_random_angle"] = mrra
         mar = "{:.4f},28.,0.,0.".format(mirror_align)
@@ -202,9 +194,7 @@ if __name__ == "__main__":
     )
 
     if args.fixed:
-        logger.debug(
-            "fixed=True - First entry of mirror_reflection_random_angle is kept fixed."
-        )
+        logger.debug("fixed=True - First entry of mirror_reflection_random_angle is kept fixed.")
 
     # Drawing parameters randonly
     # Range around the previous values are hardcoded
@@ -229,9 +219,7 @@ if __name__ == "__main__":
         radius = dataToPlot["measured"]["Radius [cm]"]
 
     # Preparing figure name
-    plotFileName = "_".join((
-        label, telModel.name + ".pdf"
-    ))
+    plotFileName = "_".join((label, telModel.name + ".pdf"))
     plotFile = outputDir.joinpath(plotFileName)
     pdfPages = PdfPages(plotFile)
 
@@ -240,7 +228,7 @@ if __name__ == "__main__":
         Calculates the Root Mean Squared Deviation to be used
         as metric to find the best parameters.
         """
-        return np.sqrt(np.mean((data - sim)**2))
+        return np.sqrt(np.mean((data - sim) ** 2))
 
     def runPars(pars, plot=True):
         """
@@ -267,8 +255,7 @@ if __name__ == "__main__":
         dataToPlot["simulated"] = im.getCumulativeData(radius * u.cm)
 
         rmsd = calculateRMSD(
-            dataToPlot["measured"]["Cumulative PSF"],
-            dataToPlot["simulated"]["Cumulative PSF"]
+            dataToPlot["measured"]["Cumulative PSF"], dataToPlot["simulated"]["Cumulative PSF"]
         )
 
         if plot:
@@ -279,10 +266,11 @@ if __name__ == "__main__":
             )
             ax = fig.get_axes()[0]
             ax.set_ylim(0, 1.05)
-            ax.set_title("refl_rnd={}, align_rnd={}".format(
-                pars["mirror_reflection_random_angle"],
-                pars["mirror_align_random_vertical"]
-            ))
+            ax.set_title(
+                "refl_rnd={}, align_rnd={}".format(
+                    pars["mirror_reflection_random_angle"], pars["mirror_align_random_vertical"]
+                )
+            )
 
             ax.text(
                 0.8,
@@ -314,6 +302,10 @@ if __name__ == "__main__":
     pdfPages.close()
 
     # Printing the results
-    print('Best parameters:')
+    print("Best parameters:")
     for par, value in best_pars.items():
         print("{} = {}".format(par, value))
+
+
+if __name__ == "__main__":
+    main()

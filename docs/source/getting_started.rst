@@ -20,12 +20,13 @@ You can create and activate the environment by:
 
     $ conda activate gammasim-tools-dev
 
+    $ pip install -e .
 
-You will also find in the repository a bash script to add the simtools library
-to your python path. 
+
+Each time you want to use the package, just activate the conda environment:
 
 .. code-block:: console
 
-    $ source set_simtools.sh
+    $ conda activate gammasim-tools-dev
 
 You are all set now =)

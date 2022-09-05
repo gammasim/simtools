@@ -1,12 +1,10 @@
-import math
 import logging
-import numpy as np
+import math
 from copy import copy
 
 import astropy.units as u
-
+import numpy as np
 from eventio.simtel import SimTelFile
-
 
 __all__ = ["SimtelEvents"]
 
@@ -124,15 +122,11 @@ class SimtelEvents:
 
                 if isFirstFile:
                     # First file - grabbing parameters
-                    self._mcHeader.update(
-                        {k: copy(f.mc_run_headers[0][k]) for k in keysToGrab}
-                    )
+                    self._mcHeader.update({k: copy(f.mc_run_headers[0][k]) for k in keysToGrab})
                 else:
                     # Remaining files - Checking whether the parameters are consistent
                     if not _areHeadersConsistent(self._mcHeader, f.mc_run_headers[0]):
-                        msg = (
-                            "MC header pamameters from different files are inconsistent"
-                        )
+                        msg = "MC header pamameters from different files are inconsistent"
                         self._logger.error(msg)
                         raise InconsistentInputFile(msg)
 
@@ -247,9 +241,7 @@ class SimtelEvents:
         energy_factor = integral(energyRange) / integral(self._mcHeader["E_range"])
 
         # core factor
-        core_factor = math.pow(coreMax, 2) / math.pow(
-            self._mcHeader["core_range"][1], 2
-        )
+        core_factor = math.pow(coreMax, 2) / math.pow(self._mcHeader["core_range"][1], 2)
 
         return self._mcHeader["n_events"] * energy_factor * core_factor
 
@@ -261,9 +253,7 @@ class SimtelEvents:
         if energyRange is None:
             return self._mcHeader["E_range"]
 
-        if not isinstance(energyRange[0], u.Quantity) or not isinstance(
-            energyRange[1], u.Quantity
-        ):
+        if not isinstance(energyRange[0], u.Quantity) or not isinstance(energyRange[1], u.Quantity):
             msg = "energyRange must be given as u.Quantity in units of energy"
             self._logger.error(msg)
             raise TypeError(msg)
@@ -280,8 +270,4 @@ class SimtelEvents:
         Returns the default coreMAx from mcHeader in case coreMax=None.
         Checks units, convert it to m and return it in the right format, otherwise.
         """
-        return (
-            self._mcHeader["core_range"][1]
-            if coreMax is None
-            else coreMax.to(u.m).value
-        )
+        return self._mcHeader["core_range"][1] if coreMax is None else coreMax.to(u.m).value

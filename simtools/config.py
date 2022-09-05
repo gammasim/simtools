@@ -1,10 +1,11 @@
 """ Module to deal with the interface with the global config information."""
 
-import logging
-import yaml
 import copy
+import logging
 import os
 from pathlib import Path
+
+import yaml
 
 __all__ = ["setConfigFileName", "loadConfig", "get", "findFile", "change"]
 
@@ -97,10 +98,7 @@ def get(par, useGlobals=True):
 
     config = loadConfig(useGlobals=useGlobals)
     if par not in config.keys():
-        msg = (
-            "Configuration file does not contain an entry for the parameter "
-            "{}".format(par)
-        )
+        msg = "Configuration file does not contain an entry for the parameter " "{}".format(par)
         _logger.error(msg)
         raise ParameterNotFoundInConfigFile(msg)
     else:
@@ -173,9 +171,7 @@ def findFile(name, loc=None):
         allLocations = get(par="modelFilesLocations")
     else:
         allLocations = copy.copy(loc)
-    allLocations = (
-        [allLocations] if not isinstance(allLocations, list) else allLocations
-    )
+    allLocations = [allLocations] if not isinstance(allLocations, list) else allLocations
 
     def _searchDirectory(directory, filename, rec=False):
         if not Path(directory).exists():
@@ -230,7 +226,7 @@ def createDummyConfigFile(filename="config.yml", **kwargs):
         "modelFilesLocations": ".",
         "simtelPath": ".",
         "outputLocation": ".",
-        "extraCommands": []
+        "extraCommands": [],
     }
 
     # # Overwritting parameters with kwargs
@@ -238,7 +234,7 @@ def createDummyConfigFile(filename="config.yml", **kwargs):
         for key, value in kwargs.items():
             config[key] = value
 
-    with open(filename, 'w') as outfile:
+    with open(filename, "w") as outfile:
         yaml.dump(config, outfile)
 
 
@@ -258,12 +254,12 @@ def createDummyDbDetails(filename="dbDetails.yml", **kwargs):
         "mongodbServer": None,
         "userDB": None,
         "passDB": None,
-        "authenticationDatabase": "admin"
+        "authenticationDatabase": "admin",
     }
 
     if len(kwargs) > 0:
         for key, value in kwargs.items():
             pars[key] = int(value) if key == "dbPort" else str(value)
 
-    with open(filename, 'w') as outfile:
+    with open(filename, "w") as outfile:
         yaml.dump(pars, outfile)
