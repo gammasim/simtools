@@ -4,8 +4,8 @@ from pathlib import Path
 
 import simtools.config as cfg
 import simtools.util.general as gen
-from simtools.model.telescope_model import TelescopeModel
 from simtools.model.array_model import ArrayModel
+from simtools.model.telescope_model import TelescopeModel
 
 __all__ = ["SimtelRunner"]
 
@@ -103,6 +103,8 @@ class SimtelRunner:
             Full path of the input CORSIKA file.
         run: int
             Run number.
+        extraCommands: str
+            Additional commands for running simulations given in config.yml
 
         Returns
         -------
@@ -119,14 +121,15 @@ class SimtelRunner:
         self._logger.debug("Run bash script - {}".format(self._scriptFile))
 
         extraCommands = self._getExtraCommands(extraCommands)
-        self._logger.debug(
-            "Extra commands to be added to the run script {}".format(extraCommands)
-        )
+        self._logger.debug("Extra commands to be added to the run script {}".format(extraCommands))
 
         command = self._makeRunCommand(inputFile=inputFile, run=run)
         with self._scriptFile.open("w") as file:
             # TODO: header
             file.write("#!/usr/bin/bash\n\n")
+
+            # Setting SECONDS variable to measure runtime
+            file.write("\nSECONDS=0\n")
 
             if extraCommands is not None:
                 file.write("# Writing extras\n")
@@ -137,6 +140,9 @@ class SimtelRunner:
             N = 1 if test else self.RUNS_PER_SET
             for _ in range(N):
                 file.write("{}\n\n".format(command))
+
+            # Printing out runtime
+            file.write('\necho "RUNTIME: $SECONDS"\n')
 
         os.system("chmod ug+x {}".format(self._scriptFile))
         return self._scriptFile
@@ -167,11 +173,9 @@ class SimtelRunner:
 
         if test:
             self._logger.info("Running (test) with command:{}".format(command))
-            # sysOutput = os.system(command)
             os.system(command)
         else:
             self._logger.info("Running ({}x) with command:{}".format(self.RUNS_PER_SET, command))
-            # sysOutput = os.system(command)
             os.system(command)
 
             for _ in range(self.RUNS_PER_SET - 1):
@@ -223,9 +227,7 @@ class SimtelRunner:
         extra = gen.copyAsList(extra) if extra is not None else list()
 
         extraFromConfig = cfg.get("extraCommands")
-        extraFromConfig = (
-            gen.copyAsList(extraFromConfig) if extraFromConfig is not None else list()
-        )
+        extraFromConfig = gen.copyAsList(extraFromConfig) if extraFromConfig is not None else list()
 
         extra.extend(extraFromConfig)
         return extra

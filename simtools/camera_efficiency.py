@@ -1,11 +1,11 @@
 import logging
-import numpy as np
-import matplotlib.pyplot as plt
 import os
 import re
-from pathlib import Path
 from collections import defaultdict
+from pathlib import Path
 
+import matplotlib.pyplot as plt
+import numpy as np
 from astropy.io import ascii
 from astropy.table import Table
 
@@ -13,10 +13,10 @@ import simtools.config as cfg
 import simtools.io_handler as io
 import simtools.util.general as gen
 from simtools import visualize
+from simtools.model.model_parameters import CAMERA_RADIUS_CURV
+from simtools.model.telescope_model import TelescopeModel
 from simtools.util import names
 from simtools.util.model import getCameraName
-from simtools.model.telescope_model import TelescopeModel
-from simtools.model.model_parameters import CAMERA_RADIUS_CURV
 
 __all__ = ["CameraEfficiency"]
 
@@ -83,19 +83,13 @@ class CameraEfficiency:
         self._telescopeModel = self._validateTelescopeModel(telescopeModel)
         self.label = label if label is not None else self._telescopeModel.label
 
-        self._baseDirectory = io.getCameraEfficiencyOutputDirectory(
-            self._filesLocation, self.label
-        )
+        self._baseDirectory = io.getCameraEfficiencyOutputDirectory(self._filesLocation, self.label)
         self._baseDirectory.mkdir(parents=True, exist_ok=True)
 
         self._hasResults = False
 
-        _configDataIn = gen.collectDataFromYamlOrDict(
-            configFile, configData, allowEmpty=True
-        )
-        _parameterFile = io.getDataFile(
-            "parameters", "camera-efficiency_parameters.yml"
-        )
+        _configDataIn = gen.collectDataFromYamlOrDict(configFile, configData, allowEmpty=True)
+        _parameterFile = io.getDataFile("parameters", "camera-efficiency_parameters.yml")
         _parameters = gen.collectDataFromYamlOrDict(_parameterFile, None)
         self.config = gen.validateConfigData(_configDataIn, _parameters)
 
@@ -189,9 +183,7 @@ class CameraEfficiency:
         self._logger.info("Simulating CameraEfficiency")
 
         if self._fileSimtel.exists() and not force:
-            self._logger.info(
-                "Simtel file exists and force=False - skipping simulation"
-            )
+            self._logger.info("Simtel file exists and force=False - skipping simulation")
             return
 
         # Processing camera pixel features
@@ -202,9 +194,7 @@ class CameraEfficiency:
         # Processing focal length
         focalLength = self._telescopeModel.getParameterValue("effective_focal_length")
         if focalLength == 0.0:
-            self._logger.warning(
-                "Using focal_length because effective_focal_length is 0"
-            )
+            self._logger.warning("Using focal_length because effective_focal_length is 0")
             focalLength = self._telescopeModel.getParameterValue("focal_length")
 
         # Processing mirror class
@@ -215,17 +205,13 @@ class CameraEfficiency:
         # Processing camera transmission
         cameraTransmission = 1
         if self._telescopeModel.hasParameter("camera_transmission"):
-            cameraTransmission = self._telescopeModel.getParameterValue(
-                "camera_transmission"
-            )
+            cameraTransmission = self._telescopeModel.getParameterValue("camera_transmission")
 
         # Processing camera filter
         # A special case is needed for recent ASTRI models because testeff does not
         # support 2D camera filters
         cameraFilterFile = self._telescopeModel.getParameterValue("camera_filter")
-        if self._telescopeModel.isASTRI() and self._telescopeModel.isFile2D(
-            "camera_filter"
-        ):
+        if self._telescopeModel.isASTRI() and self._telescopeModel.isFile2D("camera_filter"):
             self._logger.warning(
                 "Camera filter file is being replaced by transmission_astri_window_average.dat"
                 " because testeff does not support 2D camera filters."
@@ -235,12 +221,8 @@ class CameraEfficiency:
         # Processing mirror reflectivity
         # A special case is needed for recent ASTRI models because testeff does not
         # support 2D mirror reflectivity
-        mirrorReflectivity = self._telescopeModel.getParameterValue(
-            "mirror_reflectivity"
-        )
-        if self._telescopeModel.isASTRI() and self._telescopeModel.isFile2D(
-            "mirror_reflectivity"
-        ):
+        mirrorReflectivity = self._telescopeModel.getParameterValue("mirror_reflectivity")
+        if self._telescopeModel.isASTRI() and self._telescopeModel.isFile2D("mirror_reflectivity"):
             self._logger.warning(
                 "Mirror reflectivity (and secondary) file is being replaced by"
                 " ref_astri_2017-06_T0.dat because testeff does not support 2D files."
@@ -261,15 +243,11 @@ class CameraEfficiency:
         cmd += " -fcur {}".format(CAMERA_RADIUS_CURV[cameraName])
         cmd += " {} {}".format(pixelShapeCmd, pixelDiameter)
         if mirrorClass == 1:
-            cmd += " -fmir {}".format(
-                self._telescopeModel.getParameterValue("mirror_list")
-            )
+            cmd += " -fmir {}".format(self._telescopeModel.getParameterValue("mirror_list"))
         cmd += " -fref {}".format(mirrorReflectivity)
         if mirrorClass == 2:
             cmd += " -m2"
-        cmd += " -teltrans {}".format(
-            self._telescopeModel.getTelescopeTransmissionParameters()[0]
-        )
+        cmd += " -teltrans {}".format(self._telescopeModel.getTelescopeTransmissionParameters()[0])
         cmd += " -camtrans {}".format(cameraTransmission)
         cmd += " -fflt {}".format(cameraFilterFile)
         cmd += " -fang {}".format(
@@ -278,13 +256,9 @@ class CameraEfficiency:
         cmd += " -fwl {}".format(
             self._telescopeModel.camera.getLightguideEfficiencyWavelengthFileName()
         )
-        cmd += " -fqe {}".format(
-            self._telescopeModel.getParameterValue("quantum_efficiency")
-        )
+        cmd += " -fqe {}".format(self._telescopeModel.getParameterValue("quantum_efficiency"))
         cmd += " {} {}".format(200, 1000)  # lmin and lmax
-        cmd += " {} 1 {}".format(
-            300, self.config.zenithAngle
-        )  # Xmax, ioatm, zenith angle
+        cmd += " {} 1 {}".format(300, self.config.zenithAngle)  # Xmax, ioatm, zenith angle
         cmd += " 2>{}".format(self._fileLog)
         cmd += " >{}".format(self._fileSimtel)
 
@@ -412,9 +386,7 @@ class CameraEfficiency:
             self._logger.error("Cannot export results because they do not exist")
         else:
             self._logger.info("Exporting results to {}".format(self._fileResults))
-            ascii.write(
-                self._results, self._fileResults, format="basic", overwrite=True
-            )
+            ascii.write(self._results, self._fileResults, format="basic", overwrite=True)
 
     def _readResults(self):
         """Read existing results file and store it in _results."""
@@ -622,9 +594,7 @@ class CameraEfficiency:
         plt = visualize.plotTable(
             tableToPlot,
             yTitle="Nightsky background light efficiency",
-            title="{} response to nightsky background light".format(
-                self._telescopeModel.name
-            ),
+            title="{} response to nightsky background light".format(self._telescopeModel.name),
             noMarkers=True,
         )
 

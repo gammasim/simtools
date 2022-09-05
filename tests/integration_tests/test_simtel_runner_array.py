@@ -1,14 +1,13 @@
 #!/usr/bin/python3
 
-import pytest
 import logging
 
 import astropy.units as u
+import pytest
 
 import simtools.io_handler as io
-from simtools.simtel.simtel_runner_array import SimtelRunnerArray
 from simtools.model.array_model import ArrayModel
-
+from simtools.simtel.simtel_runner_array import SimtelRunnerArray
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
@@ -26,9 +25,7 @@ def arrayConfigData():
 
 @pytest.fixture
 def arrayModel(arrayConfigData, set_simtools):
-    arrayModel = ArrayModel(
-        label="test-lst-array", arrayConfigData=arrayConfigData
-    )
+    arrayModel = ArrayModel(label="test-lst-array", arrayConfigData=arrayConfigData)
     return arrayModel
 
 

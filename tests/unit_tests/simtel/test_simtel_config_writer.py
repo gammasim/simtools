@@ -1,14 +1,14 @@
 #!/usr/bin/python3
 
-import pytest
 import logging
 
-import simtools.io_handler as io
-from simtools.util.general import fileHasText
-from simtools.simtel.simtel_config_writer import SimtelConfigWriter
-from simtools.model.telescope_model import TelescopeModel
-from simtools.layout.layout_array import LayoutArray
+import pytest
 
+import simtools.io_handler as io
+from simtools.layout.layout_array import LayoutArray
+from simtools.model.telescope_model import TelescopeModel
+from simtools.simtel.simtel_config_writer import SimtelConfigWriter
+from simtools.util.general import fileHasText
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)

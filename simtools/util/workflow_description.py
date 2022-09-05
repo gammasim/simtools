@@ -1,16 +1,16 @@
 import datetime
 import logging
 import os
-from pathlib import Path
 import uuid
+from pathlib import Path
 
 import simtools.config as cfg
 import simtools.io_handler as io
 import simtools.util.data_model as data_model
 import simtools.util.general as gen
 import simtools.util.validate_schema as vs
-from simtools.util import names
 import simtools.version
+from simtools.util import names
 
 
 class WorkflowDescription:
@@ -48,9 +48,7 @@ class WorkflowDescription:
 
     """
 
-    def __init__(self,
-                 label=None,
-                 args=None):
+    def __init__(self, label=None, args=None):
         """
         Initialize workflow configuration class
 
@@ -67,8 +65,8 @@ class WorkflowDescription:
 
         self.args = args
         self.workflow_config = self._default_workflow_config()
-        self.workflow_config['ACTIVITY']['NAME'] = label
-        self.workflow_config['ACTIVITY']['ID'] = str(uuid.uuid4())
+        self.workflow_config["ACTIVITY"]["NAME"] = label
+        self.workflow_config["ACTIVITY"]["ID"] = str(uuid.uuid4())
 
         if self.args:
             self.collect_workflow_configuration()
@@ -91,24 +89,21 @@ class WorkflowDescription:
 
         """
 
-        self._read_workflow_configuration(
-            self._from_args('workflow_config_file'))
+        self._read_workflow_configuration(self._from_args("workflow_config_file"))
 
-        self.workflow_config['INPUT']['METAFILE'] = \
-            self._from_args(
-                'input_meta_file',
-                self.workflow_config['INPUT']['METAFILE'])
+        self.workflow_config["INPUT"]["METAFILE"] = self._from_args(
+            "input_meta_file", self.workflow_config["INPUT"]["METAFILE"]
+        )
 
-        self.workflow_config['INPUT']['DATAFILE'] = \
-            self._from_args(
-                'input_data_file',
-                self.workflow_config['INPUT']['DATAFILE'])
+        self.workflow_config["INPUT"]["DATAFILE"] = self._from_args(
+            "input_data_file", self.workflow_config["INPUT"]["DATAFILE"]
+        )
 
         for arg in vars(self.args):
-            self.workflow_config['CONFIGURATION'][str(arg)] = getattr(self.args, arg)
+            self.workflow_config["CONFIGURATION"][str(arg)] = getattr(self.args, arg)
 
-        if self.workflow_config['CONFIGURATION']['configFile']:
-            cfg.setConfigFileName(self.workflow_config['CONFIGURATION']['configFile'])
+        if self.workflow_config["CONFIGURATION"]["configFile"]:
+            cfg.setConfigFileName(self.workflow_config["CONFIGURATION"]["configFile"])
 
     def collect_product_meta_data(self):
         """
@@ -119,7 +114,7 @@ class WorkflowDescription:
 
         self._fill_top_level_meta_from_args()
 
-        if self.workflow_config['INPUT']['METAFILE']:
+        if self.workflow_config["INPUT"]["METAFILE"]:
             self._fill_top_level_meta_from_file()
 
         self._fill_product_meta()
@@ -138,7 +133,7 @@ class WorkflowDescription:
 
         """
 
-        return self.workflow_config['ACTIVITY']['NAME']
+        return self.workflow_config["ACTIVITY"]["NAME"]
 
     def set_configuration_parameter(self, key, value):
         """
@@ -151,7 +146,7 @@ class WorkflowDescription:
 
         """
         try:
-            self.workflow_config['CONFIGURATION'][key] = value
+            self.workflow_config["CONFIGURATION"][key] = value
         except KeyError:
             self._logger.error("Missing key {} in CONFIGURATION".format(key))
             raise
@@ -173,7 +168,7 @@ class WorkflowDescription:
         """
 
         try:
-            return self.workflow_config['CONFIGURATION'][key]
+            return self.workflow_config["CONFIGURATION"][key]
         except KeyError:
             self._logger.error("Missing key {} in CONFIGURATION".format(key))
             raise
@@ -199,8 +194,7 @@ class WorkflowDescription:
         try:
             return self.workflow_config["DATA_COLUMNS"]
         except KeyError:
-            self._logger.error(
-                "Missing DATA_COLUMNS entry in workflow configuration")
+            self._logger.error("Missing DATA_COLUMNS entry in workflow configuration")
             raise
 
     def product_data_file_name(self, suffix=None):
@@ -235,14 +229,14 @@ class WorkflowDescription:
 
         _directory = self.product_data_directory()
         try:
-            if self.workflow_config['CONFIGURATION']['test']:
-                _filename = 'TEST'
+            if self.workflow_config["CONFIGURATION"]["test"]:
+                _filename = "TEST"
             else:
-                _filename = self.workflow_config['ACTIVITY']['ID']
-            if self.workflow_config['PRODUCT']['FILENAME']:
-                _filename += '-' + self.workflow_config['PRODUCT']['FILENAME']
+                _filename = self.workflow_config["ACTIVITY"]["ID"]
+            if self.workflow_config["PRODUCT"]["FILENAME"]:
+                _filename += "-" + self.workflow_config["PRODUCT"]["FILENAME"]
             else:
-                _filename += '-' + self.workflow_config['ACTIVITY']['NAME']
+                _filename += "-" + self.workflow_config["ACTIVITY"]["NAME"]
         except KeyError:
             self._logger.error("Missing CTA:PRODUCT:ID in metadata")
             raise
@@ -251,9 +245,9 @@ class WorkflowDescription:
             raise
 
         if not suffix:
-            suffix = '.' + self.product_data_file_format(suffix=True)
+            suffix = "." + self.product_data_file_format(suffix=True)
 
-        return Path(_directory).joinpath(_filename+suffix)
+        return Path(_directory).joinpath(_filename + suffix)
 
     def product_data_file_format(self, suffix=False):
         """
@@ -280,10 +274,9 @@ class WorkflowDescription:
 
         _file_format = "ascii.ecsv"
         try:
-            _file_format = self.workflow_config['PRODUCT']['FORMAT']
+            _file_format = self.workflow_config["PRODUCT"]["FORMAT"]
         except KeyError:
-            self._logger.info(
-                "Using default file format for model file: ascii.ecsv")
+            self._logger.info("Using default file format for model file: ascii.ecsv")
 
         if suffix and _file_format == "ascii.ecsv":
             _file_format = "ecsv"
@@ -313,17 +306,16 @@ class WorkflowDescription:
 
         """
 
-        _output_label = self.workflow_config['ACTIVITY']['NAME']
+        _output_label = self.workflow_config["ACTIVITY"]["NAME"]
 
-        if self.workflow_config['PRODUCT']['DIRECTORY']:
-            path = Path(self.workflow_config['PRODUCT']['DIRECTORY'])
+        if self.workflow_config["PRODUCT"]["DIRECTORY"]:
+            path = Path(self.workflow_config["PRODUCT"]["DIRECTORY"])
             path.mkdir(parents=True, exist_ok=True)
             _output_dir = path.absolute()
         else:
             _output_dir = cfg.get("outputLocation")
 
-        _output_dir = io.getApplicationOutputDirectory(
-            _output_dir, _output_label)
+        _output_dir = io.getApplicationOutputDirectory(_output_dir, _output_label)
 
         self._logger.info("Outputdirectory {}".format(_output_dir))
         return _output_dir
@@ -355,18 +347,17 @@ class WorkflowDescription:
 
         try:
             _association = {}
-            _association['SITE'] = self.args.site
+            _association["SITE"] = self.args.site
             _split_telescope_name = self.args.telescope.split("-")
-            _association['CLASS'] = _split_telescope_name[0]
-            _association['TYPE'] = _split_telescope_name[1]
-            _association['SUBTYPE'] = _split_telescope_name[2]
-            self.top_level_meta['CTA']['CONTEXT']['SIM']['ASSOCIATION'][0] = _association
+            _association["CLASS"] = _split_telescope_name[0]
+            _association["TYPE"] = _split_telescope_name[1]
+            _association["SUBTYPE"] = _split_telescope_name[2]
+            self.top_level_meta["CTA"]["CONTEXT"]["SIM"]["ASSOCIATION"][0] = _association
         except KeyError:
             self._logger.error("Error reading user input meta data from args")
             raise
         except AttributeError as e:
-            self._logger.debug(
-                'Missing parameter on command line, use defaults ({})'.format(e))
+            self._logger.debug("Missing parameter on command line, use defaults ({})".format(e))
 
     def _fill_top_level_meta_from_file(self):
         """
@@ -383,28 +374,35 @@ class WorkflowDescription:
 
         _schema_validator = vs.SchemaValidator()
         _user_meta = _schema_validator.validate_and_transform(
-            self.workflow_config['INPUT']['METAFILE'])
+            self.workflow_config["INPUT"]["METAFILE"]
+        )
 
         try:
-            self.top_level_meta['CTA']['CONTACT'] = _user_meta['CONTACT']
-            self.top_level_meta['CTA']['INSTRUMENT'] = _user_meta['INSTRUMENT']
-            self.top_level_meta['CTA']['PRODUCT']['DESCRIPTION'] = \
-                _user_meta['PRODUCT']['DESCRIPTION']
-            self.top_level_meta['CTA']['PRODUCT']['CREATION_TIME'] = \
-                _user_meta['PRODUCT']['CREATION_TIME']
-            if 'VALID' in _user_meta['PRODUCT']:
-                if 'START' in _user_meta['PRODUCT']['VALID']:
-                    self.top_level_meta['CTA']['PRODUCT']['VALID']['START'] = \
-                        _user_meta['PRODUCT']['VALID']['START']
-                if 'END' in _user_meta['PRODUCT']['VALID']:
-                    self.top_level_meta['CTA']['PRODUCT']['VALID']['END'] = \
-                        _user_meta['PRODUCT']['VALID']['END']
-            self.top_level_meta['CTA']['PROCESS'] = _user_meta['PROCESS']
-            self.top_level_meta['CTA']['CONTEXT']['SIM']['ASSOCIATION'] = \
-                _user_meta['PRODUCT']['ASSOCIATION']
+            self.top_level_meta["CTA"]["CONTACT"] = _user_meta["CONTACT"]
+            self.top_level_meta["CTA"]["INSTRUMENT"] = _user_meta["INSTRUMENT"]
+            self.top_level_meta["CTA"]["PRODUCT"]["DESCRIPTION"] = _user_meta["PRODUCT"][
+                "DESCRIPTION"
+            ]
+            self.top_level_meta["CTA"]["PRODUCT"]["CREATION_TIME"] = _user_meta["PRODUCT"][
+                "CREATION_TIME"
+            ]
+            if "VALID" in _user_meta["PRODUCT"]:
+                if "START" in _user_meta["PRODUCT"]["VALID"]:
+                    self.top_level_meta["CTA"]["PRODUCT"]["VALID"]["START"] = _user_meta["PRODUCT"][
+                        "VALID"
+                    ]["START"]
+                if "END" in _user_meta["PRODUCT"]["VALID"]:
+                    self.top_level_meta["CTA"]["PRODUCT"]["VALID"]["END"] = _user_meta["PRODUCT"][
+                        "VALID"
+                    ]["END"]
+            self.top_level_meta["CTA"]["PROCESS"] = _user_meta["PROCESS"]
+            self.top_level_meta["CTA"]["CONTEXT"]["SIM"]["ASSOCIATION"] = _user_meta["PRODUCT"][
+                "ASSOCIATION"
+            ]
             try:
-                self.top_level_meta['CTA']['CONTEXT']['SIM']['DOCUMENT'] = \
-                    _user_meta['CONTEXT']['DOCUMENT']
+                self.top_level_meta["CTA"]["CONTEXT"]["SIM"]["DOCUMENT"] = _user_meta["CONTEXT"][
+                    "DOCUMENT"
+                ]
             except KeyError:
                 pass
         except KeyError:
@@ -412,8 +410,9 @@ class WorkflowDescription:
             raise
 
         try:
-            self.workflow_config['PRODUCT']['FILENAME'] = os.path.splitext(
-                _user_meta['PRODUCT']['DATA'])[0]
+            self.workflow_config["PRODUCT"]["FILENAME"] = os.path.splitext(
+                _user_meta["PRODUCT"]["DATA"]
+            )[0]
         except KeyError:
             pass
 
@@ -429,14 +428,13 @@ class WorkflowDescription:
 
         """
 
-        self.top_level_meta['CTA']['PRODUCT']['ID'] = \
-            self.workflow_config['ACTIVITY']['ID']
-        self._logger.debug("Assigned ACTIVITE UUID {}".format(
-            self.top_level_meta['CTA']['PRODUCT']['ID']))
+        self.top_level_meta["CTA"]["PRODUCT"]["ID"] = self.workflow_config["ACTIVITY"]["ID"]
+        self._logger.debug(
+            "Assigned ACTIVITE UUID {}".format(self.top_level_meta["CTA"]["PRODUCT"]["ID"])
+        )
 
         try:
-            self.top_level_meta['CTA']['PRODUCT']['FORMAT'] = \
-                self.product_data_file_format()
+            self.top_level_meta["CTA"]["PRODUCT"]["FORMAT"] = self.product_data_file_format()
         except KeyError:
             self._logger.error("Missing CTA:PRODUCT:FORMAT key in user input meta data")
             raise
@@ -453,14 +451,15 @@ class WorkflowDescription:
         """
 
         try:
-            for association in self.top_level_meta['CTA']['CONTEXT']['SIM']['ASSOCIATION']:
-                association['ID'] = names.simtoolsInstrumentName(
-                    association['SITE'],
-                    association['CLASS'],
-                    association['TYPE'],
-                    association['SUBTYPE'])
+            for association in self.top_level_meta["CTA"]["CONTEXT"]["SIM"]["ASSOCIATION"]:
+                association["ID"] = names.simtoolsInstrumentName(
+                    association["SITE"],
+                    association["CLASS"],
+                    association["TYPE"],
+                    association["SUBTYPE"],
+                )
         except KeyError:
-            self._logger.error('Error reading CONTEXT:SIM:ASSOCIATION')
+            self._logger.error("Error reading CONTEXT:SIM:ASSOCIATION")
             raise
 
     def _fill_activity_meta(self):
@@ -475,14 +474,18 @@ class WorkflowDescription:
 
         """
         try:
-            self.top_level_meta['CTA']['ACTIVITY']['NAME'] = \
-                self.workflow_config['ACTIVITY']['NAME']
-            self.top_level_meta['CTA']['ACTIVITY']['START'] = \
-                datetime.datetime.now().isoformat(timespec='seconds')
-            self.top_level_meta['CTA']['ACTIVITY']['END'] = \
-                self.top_level_meta['CTA']['ACTIVITY']['START']
-            self.top_level_meta['CTA']['ACTIVITY']['SOFTWARE']['VERSION'] = \
-                simtools.version.__version__
+            self.top_level_meta["CTA"]["ACTIVITY"]["NAME"] = self.workflow_config["ACTIVITY"][
+                "NAME"
+            ]
+            self.top_level_meta["CTA"]["ACTIVITY"]["START"] = datetime.datetime.now().isoformat(
+                timespec="seconds"
+            )
+            self.top_level_meta["CTA"]["ACTIVITY"]["END"] = self.top_level_meta["CTA"]["ACTIVITY"][
+                "START"
+            ]
+            self.top_level_meta["CTA"]["ACTIVITY"]["SOFTWARE"][
+                "VERSION"
+            ] = simtools.version.__version__
         except KeyError:
             self._logger.error("Error ACTIVITY meta from user input meta data")
             raise
@@ -506,10 +509,12 @@ class WorkflowDescription:
 
         if workflow_config_file:
             try:
-                _workflow_from_file = gen.collectDataFromYamlOrDict(
-                    workflow_config_file, None)['CTASIMPIPE']
-                self._logger.debug("Reading workflow configuration from {}".format(
-                    workflow_config_file))
+                _workflow_from_file = gen.collectDataFromYamlOrDict(workflow_config_file, None)[
+                    "CTASIMPIPE"
+                ]
+                self._logger.debug(
+                    "Reading workflow configuration from {}".format(workflow_config_file)
+                )
             except KeyError:
                 self._logger.debug("Error reading CTASIMPIPE workflow configuration")
 
@@ -530,8 +535,11 @@ class WorkflowDescription:
                 elif dict_high[k] is None:
                     dict_high[k] = dict_low[k]
                 elif dict_high[k] != dict_low[k] and dict_low[k] is not None:
-                    self._logger.debug("Conflicting entries between dict: {} vs {}".format(
-                        dict_high[k], dict_low[k]))
+                    self._logger.debug(
+                        "Conflicting entries between dict: {} vs {}".format(
+                            dict_high[k], dict_low[k]
+                        )
+                    )
             else:
                 dict_high[k] = dict_low[k]
 
@@ -542,7 +550,7 @@ class WorkflowDescription:
         """
 
         try:
-            return self.workflow_config['INPUT']['DATAFILE']
+            return self.workflow_config["INPUT"]["DATAFILE"]
         except KeyError:
             self._logger.error("Missing description of INPUT:DATAFILE")
             raise
@@ -557,28 +565,26 @@ class WorkflowDescription:
         """
 
         return {
-            'REFERENCE': {
-                'VERSION': '0.1.0'
+            "REFERENCE": {"VERSION": "0.1.0"},
+            "ACTIVITY": {
+                "NAME": None,
+                "ID": None,
+                "DESCRIPTION": None,
             },
-            'ACTIVITY': {
-                'NAME': None,
-                'ID': None,
-                'DESCRIPTION': None,
+            "DATAMODEL": {
+                "USERINPUTSCHEMA": None,
             },
-            'DATAMODEL': {
-                'USERINPUTSCHEMA': None,
+            "INPUT": {
+                "METAFILE": None,
+                "DATAFILE": None,
             },
-            'INPUT': {
-                'METAFILE': None,
-                'DATAFILE': None,
+            "PRODUCT": {
+                "DIRECTORY": None,
+                "FILENAME": None,
             },
-            'PRODUCT': {
-                'DIRECTORY': None,
-                'FILENAME': None,
+            "CONFIGURATION": {
+                "configFile": "./config.yml",
+                "logLevel": "INFO",
+                "test": False,
             },
-            'CONFIGURATION': {
-                'configFile': './config.yml',
-                'logLevel': 'INFO',
-                'test': False,
-            }
         }

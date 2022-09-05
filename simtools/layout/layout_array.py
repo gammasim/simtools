@@ -1,14 +1,14 @@
 import logging
 
-import pyproj
 import astropy.units as u
+import pyproj
 from astropy.table import Table
 
 import simtools.config as cfg
 import simtools.io_handler as io
 import simtools.util.general as gen
-from simtools.util import names
 from simtools.layout.telescope_position import TelescopePosition
+from simtools.util import names
 
 
 class InvalidTelescopeListFile(Exception):
@@ -121,9 +121,7 @@ class LayoutArray:
         self._telescopeList = []
 
         # Loading configData
-        _configDataIn = gen.collectDataFromYamlOrDict(
-            configFile, configData, allowEmpty=True
-        )
+        _configDataIn = gen.collectDataFromYamlOrDict(configFile, configData, allowEmpty=True)
         _parameterFile = io.getDataFile("parameters", "layout-array_parameters.yml")
         _parameters = gen.collectDataFromYamlOrDict(_parameterFile, None)
         self.config = gen.validateConfigData(_configDataIn, _parameters)
@@ -136,9 +134,7 @@ class LayoutArray:
 
         # Output directory
         self._filesLocation = cfg.getConfigArg("outputLocation", filesLocation)
-        self._outputDirectory = io.getLayoutOutputDirectory(
-            self._filesLocation, self.label
-        )
+        self._outputDirectory = io.getLayoutOutputDirectory(self._filesLocation, self.label)
         self._outputDirectory.mkdir(parents=True, exist_ok=True)
 
     @classmethod
@@ -186,9 +182,7 @@ class LayoutArray:
         arrayName = names.validateLayoutArrayName(spl[1])
         validLayoutArrayName = siteName + "-" + arrayName
 
-        layout = cls(
-            name=validLayoutArrayName, label=label, filesLocation=filesLocation
-        )
+        layout = cls(name=validLayoutArrayName, label=label, filesLocation=filesLocation)
 
         telescopeListFile = io.getDataFile(
             "layout", "telescope_positions-{}.ecsv".format(validLayoutArrayName)
@@ -247,11 +241,7 @@ class LayoutArray:
         tel = TelescopePosition()
         tel.name = row["telescope_name"]
 
-        if (
-            "pos_x" in table.colnames
-            and "pos_y" in table.colnames
-            and "pos_z" in table.colnames
-        ):
+        if "pos_x" in table.colnames and "pos_y" in table.colnames and "pos_z" in table.colnames:
             tel.setLocalCoordinates(
                 posX=row["pos_x"] * table["pos_x"].unit,
                 posY=row["pos_y"] * table["pos_y"].unit,
@@ -307,9 +297,7 @@ class LayoutArray:
         if "EPSG" in table.meta:
             self._epsg = table.meta["EPSG"]
         if "center_northing" in table.meta and "center_easting" in table.meta:
-            self._centerNorthing = (
-                u.Quantity(table.meta["center_northing"]).to(u.m).value
-            )
+            self._centerNorthing = u.Quantity(table.meta["center_northing"]).to(u.m).value
             self._centerEasting = u.Quantity(table.meta["center_easting"]).to(u.m).value
         if "center_lon" in table.meta and "center_lat" in table.meta:
             self._centerLongitude = u.Quantity(table.meta["center_lon"]).to(u.deg).value
@@ -331,9 +319,7 @@ class LayoutArray:
 
         # Initialise telescope lists from productions
         # (require column names include 'prod' string)
-        prodList = [
-            row_name for row_name in table.colnames if row_name.find("prod") >= 0
-        ]
+        prodList = [row_name for row_name in table.colnames if row_name.find("prod") >= 0]
 
         for row in table:
             self._appendTelescope(row, table, prodList)
@@ -545,9 +531,7 @@ class LayoutArray:
                 corsikaObsLevel = None
 
             if self._corsikaSphereCenter is not None:
-                corsikaSphereCenter = (
-                    self._corsikaSphereCenter[tel.getTelescopeSize()] * u.m
-                )
+                corsikaSphereCenter = self._corsikaSphereCenter[tel.getTelescopeSize()] * u.m
             else:
                 corsikaSphereCenter = None
 
@@ -566,18 +550,14 @@ class LayoutArray:
         if self._centerLongitude is not None and self._centerLatitude is not None:
             proj4_string = (
                 "+proj=tmerc +ellps=WGS84 +datum=WGS84"
-                + " +lon_0={} +lat_0={}".format(
-                    self._centerLongitude, self._centerLatitude
-                )
+                + " +lon_0={} +lat_0={}".format(self._centerLongitude, self._centerLatitude)
                 + " +axis=nwu +units=m +k_0=1.0"
             )
             crs_local = pyproj.CRS.from_proj4(proj4_string)
             self._logger.info("Local Mercator projection: {}".format(crs_local))
             return crs_local
         else:
-            self._logger.warning(
-                "crs_local cannot be built because center lon and lat are missing"
-            )
+            self._logger.warning("crs_local cannot be built because center lon and lat are missing")
             return None
 
     def _getCrsUtm(self):
@@ -587,9 +567,7 @@ class LayoutArray:
             self._logger.info("UTM system: {}".format(crs_utm))
             return crs_utm
         else:
-            self._logger.warning(
-                "crs_utm cannot be built because center lon and lat are missing"
-            )
+            self._logger.warning("crs_utm cannot be built because center lon and lat are missing")
             return None
 
     @staticmethod
