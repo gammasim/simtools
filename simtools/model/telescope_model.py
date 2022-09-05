@@ -7,12 +7,11 @@ import numpy as np
 import simtools.config as cfg
 import simtools.io_handler as io
 from simtools import db_handler
+from simtools.model.camera import Camera
+from simtools.model.mirrors import Mirrors
+from simtools.simtel.simtel_config_writer import SimtelConfigWriter
 from simtools.util import names
 from simtools.util.model import validateModelParameter
-from simtools.model.mirrors import Mirrors
-from simtools.model.camera import Camera
-from simtools.simtel.simtel_config_writer import SimtelConfigWriter
-
 
 __all__ = ["TelescopeModel"]
 
@@ -114,9 +113,7 @@ class TelescopeModel:
         self.label = label
         self._extraLabel = None
 
-        self._modelFilesLocations = cfg.getConfigArg(
-            "modelFilesLocations", modelFilesLocations
-        )
+        self._modelFilesLocations = cfg.getConfigArg("modelFilesLocations", modelFilesLocations)
         self._filesLocation = cfg.getConfigArg("outputLocation", filesLocation)
 
         self._parameters = dict()
@@ -273,14 +270,10 @@ class TelescopeModel:
 
     def _setConfigFileDirectoryAndName(self):
         """Define the variable _configFileDirectory and create directories, if needed"""
-        self._configFileDirectory = io.getModelOutputDirectory(
-            self._filesLocation, self.label
-        )
+        self._configFileDirectory = io.getModelOutputDirectory(self._filesLocation, self.label)
         if not self._configFileDirectory.exists():
             self._configFileDirectory.mkdir(parents=True, exist_ok=True)
-            self._logger.debug(
-                "Creating directory {}".format(self._configFileDirectory)
-            )
+            self._logger.debug("Creating directory {}".format(self._configFileDirectory))
 
         # Setting file name and the location
         configFileName = names.simtelTelescopeConfigFileName(
@@ -300,10 +293,9 @@ class TelescopeModel:
         )
 
         self._logger.debug("Reading site parameters from DB")
-        _sitePars = db.getSiteParameters(
-            self.site, self.modelVersion, onlyApplicable=True
-        )
+        _sitePars = db.getSiteParameters(self.site, self.modelVersion, onlyApplicable=True)
         self._parameters.update(_sitePars)
+
     # END _loadParametersFromDB
 
     def hasParameter(self, parName):
@@ -389,11 +381,7 @@ class TelescopeModel:
             If an existing parameter is tried to be added.
         """
         if parName in self._parameters.keys():
-            msg = (
-                "Parameter {} already in the model, use changeParameter instead".format(
-                    parName
-                )
-            )
+            msg = "Parameter {} already in the model, use changeParameter instead".format(parName)
             self._logger.error(msg)
             raise InvalidParameter(msg)
         else:
@@ -426,9 +414,7 @@ class TelescopeModel:
             If the parameter to be changed does not exist in this model.
         """
         if parName not in self._parameters.keys():
-            msg = "Parameter {} not in the model, use addParameters instead".format(
-                parName
-            )
+            msg = "Parameter {} not in the model, use addParameters instead".format(parName)
             self._logger.error(msg)
             raise InvalidParameter(msg)
         else:
@@ -486,9 +472,7 @@ class TelescopeModel:
                 self._logger.info("Removing parameter {}".format(par))
                 del self._parameters[par]
             else:
-                msg = "Could not remove parameter {} because it does not exist".format(
-                    par
-                )
+                msg = "Could not remove parameter {} because it does not exist".format(par)
                 self._logger.error(msg)
                 raise InvalidParameter(msg)
         self._isConfigFileUpToDate = False
@@ -523,9 +507,9 @@ class TelescopeModel:
         self._isExportedModelFilesUpToDate = True
 
     def printParameters(self):
-        ''' Print parameters and their values for debugging purposes. '''
+        """Print parameters and their values for debugging purposes."""
         for par, info in self._parameters.items():
-            print('{} = {}'.format(par, info['Value']))
+            print("{} = {}".format(par, info["Value"]))
 
     def exportConfigFile(self):
         """Export the config file used by sim_telarray."""
@@ -613,9 +597,7 @@ class TelescopeModel:
 
         telescopeTransmission = self.getParameterValue("telescope_transmission")
         if isinstance(telescopeTransmission, str):
-            return [
-                float(v) for v in self.getParameterValue("telescope_transmission").split()
-            ]
+            return [float(v) for v in self.getParameterValue("telescope_transmission").split()]
         else:
             return [float(telescopeTransmission), 0, 0, 0]
 
@@ -639,9 +621,7 @@ class TelescopeModel:
         )
         if not hasattr(self, "_singleMirrorListFilePath"):
             self._singleMirrorListFilePaths = dict()
-        self._singleMirrorListFilePaths[
-            mirrorNumber
-        ] = self._configFileDirectory.joinpath(fileName)
+        self._singleMirrorListFilePaths[mirrorNumber] = self._configFileDirectory.joinpath(fileName)
 
         # Using SimtelConfigWriter
         self._loadSimtelConfigWriter()
@@ -711,22 +691,16 @@ class TelescopeModel:
         cameraConfigFile = self.getParameterValue("camera_config_file")
         focalLength = self.getParameterValue("effective_focal_length")
         if focalLength == 0.0:
-            self._logger.warning(
-                "Using focal_length because effective_focal_length is 0."
-            )
+            self._logger.warning("Using focal_length because effective_focal_length is 0.")
             focalLength = self.getParameterValue("focal_length")
         try:
-            cameraConfigFilePath = cfg.findFile(
-                cameraConfigFile, self._configFileDirectory
-            )
+            cameraConfigFilePath = cfg.findFile(cameraConfigFile, self._configFileDirectory)
         except FileNotFoundError:
             self._logger.warning(
                 "CameraConfigFile was not found in the config directory - "
                 "Using the one found in the modelFilesLocations"
             )
-            cameraConfigFilePath = cfg.findFile(
-                cameraConfigFile, self._modelFilesLocations
-            )
+            cameraConfigFilePath = cfg.findFile(cameraConfigFile, self._modelFilesLocations)
 
         self._camera = Camera(
             telescopeModelName=self.name,

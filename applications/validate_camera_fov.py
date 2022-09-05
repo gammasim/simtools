@@ -32,7 +32,8 @@
 
     .. code-block:: console
 
-        python applications/validate_camera_fov.py --site North --telescope LST-1 --model_version prod4
+        python applications/validate_camera_fov.py --site North \
+            --telescope LST-1 --model_version prod4
 
     .. todo::
 
@@ -42,15 +43,15 @@
 
 import logging
 
-import simtools.util.commandline_parser as argparser
 import simtools.config as cfg
 import simtools.io_handler as io
+import simtools.util.commandline_parser as argparser
 import simtools.util.general as gen
-from simtools.model.telescope_model import TelescopeModel
 from simtools.model.camera import Camera
+from simtools.model.telescope_model import TelescopeModel
 
 
-if __name__ == "__main__":
+def main():
 
     parser = argparser.CommandLineParser(
         description=(
@@ -102,3 +103,7 @@ if __name__ == "__main__":
         fig.savefig(str(plotFile) + "." + f, format=f, bbox_inches="tight")
     print("\nPlotted camera in {}\n".format(plotFile))
     fig.clf()
+
+
+if __name__ == "__main__":
+    main()

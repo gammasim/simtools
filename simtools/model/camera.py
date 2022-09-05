@@ -1,16 +1,17 @@
 import logging
-import numpy as np
+
 import matplotlib as mlp
-import matplotlib.pyplot as plt
-import matplotlib.patches as mpatches
 import matplotlib.colors as mcolors
+import matplotlib.patches as mpatches
+import matplotlib.pyplot as plt
+import numpy as np
+from matplotlib.collections import PatchCollection
 from scipy.spatial import cKDTree as KDTree
 from scipy.spatial import distance
-from matplotlib.collections import PatchCollection
 
 import simtools.util.legend_handlers as legH
 from simtools.model.model_parameters import CAMERA_ROTATE_ANGLE
-from simtools.util.model import getCameraName, isTwoMirrorTelescope, getTelescopeClass
+from simtools.util.model import getCameraName, getTelescopeClass, isTwoMirrorTelescope
 
 __all__ = ["Camera"]
 
@@ -118,9 +119,7 @@ class Camera:
         pixels["pixel_spacing"] = 9999
         pixels["lightguide_efficiency_angle_file"] = "none"
         pixels["lightguide_efficiency_wavelength_file"] = "none"
-        pixels[
-            "rotateAngle"
-        ] = 0  # The LST and MST-NectarCam cameras need to be rotated
+        pixels["rotateAngle"] = 0  # The LST and MST-NectarCam cameras need to be rotated
         pixels["x"] = list()
         pixels["y"] = list()
         pixels["pixID"] = list()
@@ -130,9 +129,7 @@ class Camera:
             if line.startswith("PixType"):
                 pixels["pixel_shape"] = int(pixInfo[5].strip())
                 pixels["pixel_diameter"] = float(pixInfo[6].strip())
-                pixels["lightguide_efficiency_angle_file"] = (
-                    pixInfo[8].strip().replace('"', "")
-                )
+                pixels["lightguide_efficiency_angle_file"] = pixInfo[8].strip().replace('"', "")
                 if len(pixInfo) > 9:
                     pixels["lightguide_efficiency_wavelength_file"] = (
                         pixInfo[9].strip().replace('"', "")
@@ -153,13 +150,11 @@ class Camera:
 
         if pixels["pixel_diameter"] == 9999:
             raise ValueError(
-                "Could not read the pixel diameter"
-                " from {} file".format(cameraConfigFile)
+                "Could not read the pixel diameter" " from {} file".format(cameraConfigFile)
             )
         if pixels["pixel_shape"] not in [1, 2, 3]:
             raise ValueError(
-                "Pixel shape in {} unrecognized "
-                "(has to be 1, 2 or 3)".format(cameraConfigFile)
+                "Pixel shape in {} unrecognized " "(has to be 1, 2 or 3)".format(cameraConfigFile)
             )
 
         return pixels
@@ -202,12 +197,12 @@ class Camera:
 
         if rotateAngle != 0:
             for i_pix, xyPixPos in enumerate(zip(pixels["x"], pixels["y"])):
-                pixels["x"][i_pix] = xyPixPos[0] * np.cos(rotateAngle) - xyPixPos[
-                    1
-                ] * np.sin(rotateAngle)
-                pixels["y"][i_pix] = xyPixPos[0] * np.sin(rotateAngle) + xyPixPos[
-                    1
-                ] * np.cos(rotateAngle)
+                pixels["x"][i_pix] = xyPixPos[0] * np.cos(rotateAngle) - xyPixPos[1] * np.sin(
+                    rotateAngle
+                )
+                pixels["y"][i_pix] = xyPixPos[0] * np.sin(rotateAngle) + xyPixPos[1] * np.cos(
+                    rotateAngle
+                )
 
         pixels["orientation"] = 0
         if pixels["pixel_shape"] == 1 or pixels["pixel_shape"] == 3:
@@ -420,8 +415,7 @@ class Camera:
                     # nor at any pixels already in the neighbours list
                     if j_pix != i_pix and j_pix not in nn:
                         dist = np.sqrt(
-                            (xPos[i_pix] - xPos[j_pix]) ** 2
-                            + (yPos[i_pix] - yPos[j_pix]) ** 2
+                            (xPos[i_pix] - xPos[j_pix]) ** 2 + (yPos[i_pix] - yPos[j_pix]) ** 2
                         )
                         # Check if this pixel is in the same row or column
                         # and allow it to be ~1.68*diameter away (1.4*1.2 = 1.68)
@@ -761,9 +755,7 @@ class Camera:
                 )
 
         ax.add_collection(
-            PatchCollection(
-                onPixels, facecolor="none", edgecolor="black", linewidth=0.2
-            )
+            PatchCollection(onPixels, facecolor="none", edgecolor="black", linewidth=0.2)
         )
         ax.add_collection(
             PatchCollection(
@@ -774,9 +766,7 @@ class Camera:
             )
         )
         ax.add_collection(
-            PatchCollection(
-                offPixels, facecolor="black", edgecolor="black", linewidth=0.2
-            )
+            PatchCollection(offPixels, facecolor="black", edgecolor="black", linewidth=0.2)
         )
 
         legendObjects = [legH.pixelObject(), legH.edgePixelObject()]

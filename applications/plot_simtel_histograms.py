@@ -22,20 +22,22 @@
     -------
     .. code-block:: console
 
-        python applications/plot_simtel_histograms.py -l list_test1.txt list_test2.txt -o histograms_comparison
+        python applications/plot_simtel_histograms.py \
+            -l list_test1.txt list_test2.txt -o histograms_comparison
 """
 
 import logging
+
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 
-import simtools.util.commandline_parser as argparser
 import simtools.config as cfg
+import simtools.util.commandline_parser as argparser
 import simtools.util.general as gen
 from simtools.simtel.simtel_histograms import SimtelHistograms
 
 
-if __name__ == "__main__":
+def main():
 
     parser = argparser.CommandLineParser(description=("Plots sim_telarray histograms."))
     parser.add_argument(
@@ -86,9 +88,7 @@ if __name__ == "__main__":
     # Plotting
 
     # Checking if it is needed to add the pdf extension to the file name
-    figName = (
-        args.output if args.output.split(".")[-1] == "pdf" else args.output + ".pdf"
-    )
+    figName = args.output if args.output.split(".")[-1] == "pdf" else args.output + ".pdf"
     pdfPages = PdfPages(figName)
     for iHist in range(numberOfHists[0]):
 
@@ -111,3 +111,7 @@ if __name__ == "__main__":
 
     plt.close()
     pdfPages.close()
+
+
+if __name__ == "__main__":
+    main()
