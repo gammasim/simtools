@@ -580,7 +580,7 @@ class TelescopeModel:
 
         Returns
         -------
-        Path where all the files with derived values for are written to.
+        Path where all the files with derived values are written to.
         """
         return self._configFileDirectory.parents[0].joinpath("derived")
 
