@@ -54,7 +54,7 @@
 
     .. code-block:: console
 
-        python applications/validate_optics.py --site North --telescope LST-1 --max_offset 5.0
+        python applications/validate_optics.py --site North --telescope LST-1 --max_offset 3.0
 """
 
 import logging
