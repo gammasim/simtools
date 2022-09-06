@@ -673,7 +673,7 @@ class TelescopeModel:
 
     def _loadDerivedValues(self):
         """Load the derived values for this telescope from the DB."""
-        self._logger.debug("Reading reference data from DB")
+        self._logger.debug("Reading derived data from DB")
         db = db_handler.DatabaseHandler()
         self._derived = db.getDerivedValues(
             self.site,
