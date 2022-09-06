@@ -658,13 +658,16 @@ class DatabaseHandler:
         _siteValidated = names.validateSiteName(site)
         _telModelNameValidated = names.validateTelescopeModelName(telescopeModelName)
         _telNameDB = self._getTelescopeModelNameForDB(_siteValidated, _telModelNameValidated)
+        _modelVersion = self._convertVersionToTagged(
+            modelVersion, DatabaseHandler.DB_CTA_SIMULATION_MODEL
+        )
 
         self._logger.debug("Getting derived values for {} from the DB".format(_telNameDB))
 
         _pars = self.readMongoDB(
             DatabaseHandler.DB_DERIVED_VALUES,
             _telNameDB,
-            modelVersion,
+            _modelVersion,
             runLocation=None,
             collectionName="derived_values",
             writeFiles=False,
