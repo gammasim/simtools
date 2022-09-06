@@ -120,7 +120,7 @@ class CameraEfficiency:
                 "simtelSourcePath",
                 "filesLocation",
             ],
-            **kwargs
+            **kwargs,
         )
         return cls(**args, configData=configData)
 
@@ -356,19 +356,19 @@ class CameraEfficiency:
         self._hasResults = True
 
         print("\33[40;37;1m")
-        self._logger.info(
-            f"Spectrum weighted reflectivity: {self.calcReflectivity():.4f}"
-        )
+        self._logger.info(f"Spectrum weighted reflectivity: {self.calcReflectivity():.4f}")
         self._logger.info(
             f"Camera nominal efficiency with gaps (B-TEL-1170): {self.calcCameraEfficiency():.4f}"
         )
         self._logger.info(
-            f"Telescope total efficiency with gaps (was A-PERF-2020): {self.calcTelEfficiency():.4f}"
+            "Telescope total efficiency"
+            f" with gaps (was A-PERF-2020): {self.calcTelEfficiency():.4f}"
         )
         self._logger.info(
-            (f"Telescope total Cherenkov light efficiency / sqrt(total NSB efficency) "
-             f"(A-PERF-2025/B-TEL-0090): {self.calcTotEfficiency(self.calcTelEfficiency()):.4f}"
-             )
+            (
+                f"Telescope total Cherenkov light efficiency / sqrt(total NSB efficency) "
+                f"(A-PERF-2025/B-TEL-0090): {self.calcTotEfficiency(self.calcTelEfficiency()):.4f}"
+            )
         )
         self._logger.info(
             f"Expected NSB pixel rate for the reference NSB:{self.calcNsbRate()[0]:.4f} [p.e./ns]"
@@ -475,36 +475,38 @@ class CameraEfficiency:
         ]
         c2Sum = np.sum(c2ReducedWL)
 
-        return c2Sum / c1Sum / self._results['masts'][0]
+        return c2Sum / c1Sum / self._results["masts"][0]
 
     def calcNsbRate(self):
-        '''
+        """
         Calculate the NSB rate.
-        '''
+        """
 
-        nsbPePerNs = (np.sum(self._results['N4'])
-                      * self._telescopeModel.camera.getPixelActiveSolidAngle()
-                      * self._telescopeModel.getOnAxisEffOpticalArea().to("m2").value
-                      )
+        nsbPePerNs = (
+            np.sum(self._results["N4"])
+            * self._telescopeModel.camera.getPixelActiveSolidAngle()
+            * self._telescopeModel.getOnAxisEffOpticalArea().to("m2").value
+        )
 
         # NSB input spectrum is from Benn&Ellison
         # (integral is in ph./(cm² ns sr) ) from 300 - 650 nm:
-        n1ReducedWL = self._results['N1'][
+        n1ReducedWL = self._results["N1"][
             [wlNow > 299 and wlNow < 651 for wlNow in self._results["wl"]]
         ]
         n1Sum = np.sum(n1ReducedWL)
-        n1IntegralEdges = self._results['N1'][
+        n1IntegralEdges = self._results["N1"][
             [wlNow == 300 or wlNow == 650 for wlNow in self._results["wl"]]
         ]
         n1IntegralEdgesSum = np.sum(n1IntegralEdges)
-        nsbIntegral = 0.0001*(n1Sum - 0.5*n1IntegralEdgesSum)
-        nsbRate = (nsbPePerNs
-                   * self._telescopeModel.referenceData["nsb_reference_value"]["Value"]
-                   / nsbIntegral
-                   )
+        nsbIntegral = 0.0001 * (n1Sum - 0.5 * n1IntegralEdgesSum)
+        nsbRate = (
+            nsbPePerNs
+            * self._telescopeModel.referenceData["nsb_reference_value"]["Value"]
+            / nsbIntegral
+        )
         return nsbRate, n1Sum
 
-    def plot(self, key, **kwargs):  #FIXME - remove this function, probably not needed
+    def plot(self, key, **kwargs):  # FIXME - remove this function, probably not needed
         """
         Plot key vs wavelength.
 
@@ -532,7 +534,7 @@ class CameraEfficiency:
                 self._results["wl"],
                 self._results[firstLetter + par],
                 label=firstLetter + par,
-                **kwargs
+                **kwargs,
             )
 
     def plotCherenkovEfficiency(self):

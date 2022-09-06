@@ -1,11 +1,9 @@
 #!/usr/bin/python3
 
-import pytest
 import logging
 
-import simtools.config as cfg
-from simtools import db_handler
-import simtools.io_handler as io
+import pytest
+
 from simtools.model.telescope_model import TelescopeModel
 
 logger = logging.getLogger()
@@ -28,8 +26,6 @@ def test_pixel_solid_angle(telescope_model):
 
     telModel = telescope_model
     pixSolidAngle = telModel.camera.getPixelActiveSolidAngle()
-    logger.debug(
-        f"Pixel solid angle is {pixSolidAngle}"
-    )
+    logger.debug(f"Pixel solid angle is {pixSolidAngle}")
 
     assert pixSolidAngle * 1e6 == pytest.approx(2.43, 0.01)  # Value for LST

@@ -33,7 +33,7 @@ AUTHORS:
 
 * Raul R Prado (raul.prado@desy.de)
 * Orel Gueta (orel.gueta@desy.de)
-* Victor B. Martins (victor.barbosa.martins@desy.de)  
+* Victor B. Martins (victor.barbosa.martins@desy.de)
 * Gernot Maier (gernot.maier@desy.de)
 
 INSTALLATION:

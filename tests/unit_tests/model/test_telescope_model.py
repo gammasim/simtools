@@ -175,11 +175,17 @@ def test_export_derived_files(telescope_model):
     telModel = telescope_model
 
     telModel.exportDerivedFiles("ray-tracing-North-LST-1-d10.0-za20.0_validate_optics.ecsv")
-    assert telModel.getDerivedDirectory().joinpath("ray-tracing-North-LST-1-d10.0-za20.0_validate_optics.ecsv").exists()
+    assert (
+        telModel.getDerivedDirectory()
+        .joinpath("ray-tracing-North-LST-1-d10.0-za20.0_validate_optics.ecsv")
+        .exists()
+    )
 
 
 def test_get_on_axis_eff_optical_area(telescope_model):
 
     telModel = telescope_model
 
-    assert telModel.getOnAxisEffOpticalArea().value == pytest.approx(365.48310154491)  # Value for LST -1
+    assert telModel.getOnAxisEffOpticalArea().value == pytest.approx(
+        365.48310154491
+    )  # Value for LST -1
