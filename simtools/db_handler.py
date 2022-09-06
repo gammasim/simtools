@@ -339,7 +339,7 @@ class DatabaseHandler:
 
         if _telClass == "MST":
             # MST-FlashCam or MST-NectarCam
-            _whichTelLabels = ['{}-MST-Structure-D'.format(_siteValidated), _telNameDB]
+            _whichTelLabels = ["{}-MST-Structure-D".format(_siteValidated), _telNameDB]
         elif _telClass == "SST":
             # SST = SST-Camera + SST-Structure
             _whichTelLabels = [
@@ -589,12 +589,7 @@ class DatabaseHandler:
 
         return _parameters
 
-    def getReferenceData(
-        self,
-        site,
-        modelVersion,
-        onlyApplicable=False
-    ):
+    def getReferenceData(self, site, modelVersion, onlyApplicable=False):
         """
         Get parameters from MongoDB for a specific telescope.
 
@@ -642,9 +637,7 @@ class DatabaseHandler:
 
         return _parameters
 
-    def getDerivedValues(
-        self, site, telescopeModelName, modelVersion
-    ):
+    def getDerivedValues(self, site, telescopeModelName, modelVersion):
         """
         Get a derived value from the DB for a specific telescope.
 
@@ -666,16 +659,16 @@ class DatabaseHandler:
         _telModelNameValidated = names.validateTelescopeModelName(telescopeModelName)
         _telNameDB = self._getTelescopeModelNameForDB(_siteValidated, _telModelNameValidated)
 
-        self._logger.debug('Getting derived values for {} from the DB'.format(_telNameDB))
+        self._logger.debug("Getting derived values for {} from the DB".format(_telNameDB))
 
         _pars = self.readMongoDB(
-                    DatabaseHandler.DB_DERIVED_VALUES,
-                    _telNameDB,
-                    modelVersion,
-                    runLocation=None,
-                    collectionName="derived_values",
-                    writeFiles=False,
-                )
+            DatabaseHandler.DB_DERIVED_VALUES,
+            _telNameDB,
+            modelVersion,
+            runLocation=None,
+            collectionName="derived_values",
+            writeFiles=False,
+        )
 
         return _pars
 

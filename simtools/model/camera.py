@@ -231,8 +231,8 @@ class Camera:
         pixelArea = self.getPixelDiameter() ** 2
         # In case we have hexagonal pixels:
         if self.getPixelShape() == 1 or self.getPixelShape() == 3:
-            pixelArea *= np.sqrt(3)/2
-        return pixelArea / (self._focalLength ** 2)
+            pixelArea *= np.sqrt(3) / 2
+        return pixelArea / (self._focalLength**2)
 
     def getPixelShape(self):
         """
