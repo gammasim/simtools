@@ -1,8 +1,9 @@
 import logging
 import shutil
 from copy import copy
-from astropy.io import ascii
+
 import numpy as np
+from astropy.io import ascii as asc
 
 import simtools.config as cfg
 import simtools.io_handler as io
@@ -544,7 +545,7 @@ class TelescopeModel:
             db.exportFileDB(
                 dbName=db.DB_DERIVED_VALUES,
                 dest=io.getDerivedOutputDirectory(self._filesLocation, self.label),
-                fileName=fileNameNow
+                fileName=fileNameNow,
             )
 
     def getConfigFile(self, noExport=False):
@@ -670,11 +671,7 @@ class TelescopeModel:
         """Load the reference data for this telescope from the DB."""
         self._logger.debug("Reading reference data from DB")
         db = db_handler.DatabaseHandler()
-        self._referenceData = db.getReferenceData(
-            self.site,
-            self.modelVersion,
-            onlyApplicable=True
-        )
+        self._referenceData = db.getReferenceData(self.site, self.modelVersion, onlyApplicable=True)
 
     def _loadDerivedValues(self):
         """Load the derived values for this telescope from the DB."""
@@ -758,8 +755,13 @@ class TelescopeModel:
         """
 
         self.exportDerivedFiles(self.derived["ray_tracing"]["Value"])
-        rayTracingData = ascii.read(self.getDerivedDirectory().joinpath(self.derived["ray_tracing"]["Value"]))
+        rayTracingData = asc.read(
+            self.getDerivedDirectory().joinpath(self.derived["ray_tracing"]["Value"])
+        )
         if not np.isclose(rayTracingData["Off-axis angle"][0], 0):
-            _logger.error(f"No value for the on-axis effective optical area exists. The minumum off-axis angle is {rayTracingData['Off-axis angle'][0]}")
+            self._logger.error(
+                f"No value for the on-axis effective optical area exists."
+                f" The minumum off-axis angle is {rayTracingData['Off-axis angle'][0]}"
+            )
             raise ValueError
         return rayTracingData["eff_area"][0]

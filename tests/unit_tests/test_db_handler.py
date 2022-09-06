@@ -87,7 +87,9 @@ def test_get_derived_values(db):
 
     logger.info("----Testing reading derived values-----")
     pars = db.getDerivedValues("north", "lst-1", "Current")
-    assert pars["ray_tracing"]["Value"] == "ray-tracing-North-LST-1-d10.0-za20.0_validate_optics.ecsv"
+    assert (
+        pars["ray_tracing"]["Value"] == "ray-tracing-North-LST-1-d10.0-za20.0_validate_optics.ecsv"
+    )
 
 
 def test_copy_telescope_db(db, random_id, db_cleanup):
