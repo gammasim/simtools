@@ -531,8 +531,6 @@ class TelescopeModel:
 
         Parameters
         ----------
-        dest: str or Path
-            Location where to write the file to.
         fileNames: str or list of strings
             Name of the file to get or list of names.
         """
