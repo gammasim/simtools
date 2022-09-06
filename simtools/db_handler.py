@@ -427,7 +427,7 @@ class DatabaseHandler:
 
         self._logger.debug("Trying the following query: {}".format(query))
         if onlyApplicable:
-            query["Applicable"] = onlyApplicable
+            query["Applicable"] = True
         if collection.count_documents(query) < 1:
             raise ValueError(
                 "The following query returned zero results! Check the input data and rerun.\n",
@@ -574,7 +574,7 @@ class DatabaseHandler:
             "Version": _modelVersion,
         }
         if onlyApplicable:
-            query["Applicable"] = onlyApplicable
+            query["Applicable"] = True
         if collection.count_documents(query) < 1:
             raise ValueError(
                 "The following query returned zero results! Check the input data and rerun.\n",
@@ -622,7 +622,7 @@ class DatabaseHandler:
             "Version": _modelVersion,
         }
         if onlyApplicable:
-            query["Applicable"] = onlyApplicable
+            query["Applicable"] = True
         if collection.count_documents(query) < 1:
             raise ValueError(
                 "The following query returned zero results! Check the input data and rerun.\n",
