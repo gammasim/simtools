@@ -531,8 +531,6 @@ class TelescopeModel:
 
         Parameters
         ----------
-        dest: str or Path
-            Location where to write the file to.
         fileNames: str or list of strings
             Name of the file to get or list of names.
         """
@@ -582,7 +580,7 @@ class TelescopeModel:
 
         Returns
         -------
-        Path where all the files with derived values for are written to.
+        Path where all the files with derived values are written to.
         """
         return self._configFileDirectory.parents[0].joinpath("derived")
 
@@ -675,7 +673,7 @@ class TelescopeModel:
 
     def _loadDerivedValues(self):
         """Load the derived values for this telescope from the DB."""
-        self._logger.debug("Reading reference data from DB")
+        self._logger.debug("Reading derived data from DB")
         db = db_handler.DatabaseHandler()
         self._derived = db.getDerivedValues(
             self.site,
