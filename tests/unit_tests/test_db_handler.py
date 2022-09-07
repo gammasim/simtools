@@ -79,14 +79,14 @@ def test_reading_db_sst(db):
 def test_get_reference_data(db):
 
     logger.info("----Testing reading reference data-----")
-    pars = db.getReferenceData("south", "Current")
+    pars = db.getReferenceData("south", "Prod5")
     assert pars["nsb_reference_value"]["Value"] == pytest.approx(0.24)
 
 
 def test_get_derived_values(db):
 
     logger.info("----Testing reading derived values-----")
-    pars = db.getDerivedValues("north", "lst-1", "Current")
+    pars = db.getDerivedValues("north", "lst-1", "Prod5")
     assert (
         pars["ray_tracing"]["Value"] == "ray-tracing-North-LST-1-d10.0-za20.0_validate_optics.ecsv"
     )
