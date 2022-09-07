@@ -168,6 +168,24 @@ def getArraySimulatorOutputDirectory(filesLocation, label):
     return _getOutputDirectory(filesLocation, label, "array-simulator")
 
 
+def getDerivedOutputDirectory(filesLocation, label):
+    """
+    Get output directory for derived values files.
+
+    Parameters
+    ----------
+    filesLocation: str, or Path
+        Main location of the output files.
+    label: str
+        Instance label.
+
+    Returns
+    -------
+    Path
+    """
+    return _getOutputDirectory(filesLocation, label, "derived")
+
+
 def getDataFile(parentDir, fileName):
     """
     Get path of a data file, using the dataLocation taken from the config file.
@@ -274,6 +292,21 @@ def getTestModelFile(fileName):
     """
     directory = getTestModelDirectory()
     return directory.joinpath(fileName)
+
+
+def getTestDerivedDirectory():
+    """
+    Get path of a test derived values directory,
+    using the outputLocation taken from the config file.
+    Path is created, if it doesn't exist.
+
+    Returns
+    -------
+    Path
+    """
+    path = Path(cfg.get("outputLocation")).joinpath("derived")
+    path.mkdir(parents=True, exist_ok=True)
+    return path.absolute()
 
 
 def getTestPlotFile(fileName):
