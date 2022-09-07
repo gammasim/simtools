@@ -427,7 +427,7 @@ class DatabaseHandler:
 
         self._logger.debug("Trying the following query: {}".format(query))
         if onlyApplicable:
-            query["Applicable"] = onlyApplicable
+            query["Applicable"] = True
         if collection.count_documents(query) < 1:
             raise ValueError(
                 "The following query returned zero results! Check the input data and rerun.\n",
@@ -574,7 +574,7 @@ class DatabaseHandler:
             "Version": _modelVersion,
         }
         if onlyApplicable:
-            query["Applicable"] = onlyApplicable
+            query["Applicable"] = True
         if collection.count_documents(query) < 1:
             raise ValueError(
                 "The following query returned zero results! Check the input data and rerun.\n",
@@ -614,7 +614,7 @@ class DatabaseHandler:
         _parameters = dict()
 
         _modelVersion = self._convertVersionToTagged(
-            modelVersion, DatabaseHandler.DB_CTA_SIMULATION_MODEL
+            names.validateModelVersionName(modelVersion), DatabaseHandler.DB_CTA_SIMULATION_MODEL
         )
 
         query = {
@@ -622,7 +622,7 @@ class DatabaseHandler:
             "Version": _modelVersion,
         }
         if onlyApplicable:
-            query["Applicable"] = onlyApplicable
+            query["Applicable"] = True
         if collection.count_documents(query) < 1:
             raise ValueError(
                 "The following query returned zero results! Check the input data and rerun.\n",
@@ -659,7 +659,7 @@ class DatabaseHandler:
         _telModelNameValidated = names.validateTelescopeModelName(telescopeModelName)
         _telNameDB = self._getTelescopeModelNameForDB(_siteValidated, _telModelNameValidated)
         _modelVersion = self._convertVersionToTagged(
-            modelVersion, DatabaseHandler.DB_CTA_SIMULATION_MODEL
+            names.validateModelVersionName(modelVersion), DatabaseHandler.DB_CTA_SIMULATION_MODEL
         )
 
         self._logger.debug("Getting derived values for {} from the DB".format(_telNameDB))
