@@ -44,7 +44,7 @@ class SimtelRunnerArray(SimtelRunner):
     getRunScript(self, test=False, inputFile=None, runNumber=None)
         Builds and returns the full path of the bash run script containing
         the sim_telarray command.
-    run(test=False, force=False, inputFile=None, run=None)
+    run(test=False, force=False, inputFile=None, runNumber=None)
         Run sim_telarray. test=True will make it faster and force=True will remove existing files
         and run again.
     """
@@ -125,10 +125,10 @@ class SimtelRunnerArray(SimtelRunner):
         self._simtelLogDir = simtelBaseDir.joinpath("log")
         self._simtelLogDir.mkdir(parents=True, exist_ok=True)
 
-    def getLogFile(self, run):
+    def getLogFile(self, runNumber):
         """Get full path of the simtel log file for a given run."""
         fileName = names.simtelLogFileName(
-            run=run,
+            run=runNumber,
             primary=self.config.primary,
             arrayName=self.arrayModel.layoutName,
             site=self.arrayModel.site,
@@ -138,7 +138,7 @@ class SimtelRunnerArray(SimtelRunner):
         )
         return self._simtelLogDir.joinpath(fileName)
 
-    def getSubLogFile(self, run, mode="out"):
+    def getSubLogFile(self, runNumber, mode="out"):
         """
         Get the full path of the submission log file.
 
@@ -161,7 +161,7 @@ class SimtelRunnerArray(SimtelRunner):
         """
 
         fileName = names.simtelSubLogFileName(
-            run=run,
+            run=runNumber,
             primary=self.config.primary,
             arrayName=self.arrayModel.layoutName,
             site=self.arrayModel.site,
@@ -172,10 +172,10 @@ class SimtelRunnerArray(SimtelRunner):
         )
         return self._simtelLogDir.joinpath(fileName)
 
-    def getHistogramFile(self, run):
+    def getHistogramFile(self, runNumber):
         """Get full path of the simtel histogram file for a given run."""
         fileName = names.simtelHistogramFileName(
-            run=run,
+            run=runNumber,
             primary=self.config.primary,
             arrayName=self.arrayModel.layoutName,
             site=self.arrayModel.site,
@@ -185,10 +185,10 @@ class SimtelRunnerArray(SimtelRunner):
         )
         return self._simtelDataDir.joinpath(fileName)
 
-    def getOutputFile(self, run):
+    def getOutputFile(self, runNumber):
         """Get full path of the simtel output file for a given run."""
         fileName = names.simtelOutputFileName(
-            run=run,
+            run=runNumber,
             primary=self.config.primary,
             arrayName=self.arrayModel.layoutName,
             site=self.arrayModel.site,
@@ -198,7 +198,7 @@ class SimtelRunnerArray(SimtelRunner):
         )
         return self._simtelDataDir.joinpath(fileName)
 
-    def hasSubLogFile(self, run, mode="out"):
+    def hasSubLogFile(self, runNumber, mode="out"):
         """
         Checks that the sub run log file for this run number
         is a valid file on disk
@@ -210,7 +210,7 @@ class SimtelRunnerArray(SimtelRunner):
 
         """
 
-        runSubFile = self.getSubLogFile(run=run, mode=mode)
+        runSubFile = self.getSubLogFile(runNumber=runNumber, mode=mode)
         return Path(runSubFile).is_file()
 
     def getResources(self, runNumber):
@@ -224,9 +224,9 @@ class SimtelRunnerArray(SimtelRunner):
 
         """
 
-        subLogFile = self.getSubLogFile(run=runNumber, mode="out")
+        subLogFile = self.getSubLogFile(runNumber=runNumber, mode="out")
 
-        self._logger.info("Reading resources from {}".format(subLogFile))
+        self._logger.debug("Reading resources from {}".format(subLogFile))
 
         runtime = None
         with open(subLogFile, "r") as file:
@@ -240,11 +240,11 @@ class SimtelRunnerArray(SimtelRunner):
 
         return None, runtime
 
-    def _shallRun(self, run=None):
+    def _shallRun(self, runNumber=None):
         """Tells if simulations should be run again based on the existence of output files."""
-        return not self.getOutputFile(run).exists()
+        return not self.getOutputFile(runNumber).exists()
 
-    def _makeRunCommand(self, inputFile, run=1):
+    def _makeRunCommand(self, inputFile, runNumber=1):
         """
         Builds and returns the command to run simtel_array.
 
@@ -252,14 +252,14 @@ class SimtelRunnerArray(SimtelRunner):
         ----------
         inputFile: str
             Full path of the input CORSIKA file
-        run: int
+        runNumber: int
             run number
 
         """
 
-        self._logFile = self.getLogFile(run)
-        histogramFile = self.getHistogramFile(run)
-        outputFile = self.getOutputFile(run)
+        self._logFile = self.getLogFile(runNumber)
+        histogramFile = self.getHistogramFile(runNumber)
+        outputFile = self.getOutputFile(runNumber)
 
         # Array
         command = str(self._simtelSourcePath.joinpath("sim_telarray/bin/sim_telarray"))
@@ -279,9 +279,9 @@ class SimtelRunnerArray(SimtelRunner):
 
     # END of makeRunCommand
 
-    def _checkRunResult(self, run):
+    def _checkRunResult(self, runNumber):
         # Checking run
-        if not self.getOutputFile(run).exists():
+        if not self.getOutputFile(runNumber).exists():
             msg = "sim_telarray output file does not exist."
             self._logger.error(msg)
             raise InvalidOutputFile(msg)

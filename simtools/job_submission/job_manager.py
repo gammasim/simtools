@@ -174,3 +174,4 @@ class JobManager:
             os.system(shellCommand)
         else:
             self._logger.info("Testing (gridengine)")
+            self._logger.info(shellCommand)
