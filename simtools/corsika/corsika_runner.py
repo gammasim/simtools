@@ -197,14 +197,18 @@ class CorsikaRunner:
         self._corsikaLogDir = corsikaBaseDir.joinpath("log")
         self._corsikaLogDir.mkdir(parents=True, exist_ok=True)
 
-    def getRunScriptFile(self, runNumber=None, extraCommands=None):
+    def getRunScript(self, inputFile=None, runNumber=None, extraCommands=None):
         """
         Get the full path of the run script file for a given run number.
 
         Parameters
         ----------
+        inputFile: str or Path
+            currently not used (kept for symmetry with simtel_runner)
         runNumber: int
             Run number.
+        extraCommands: str
+            Additional commands for running simulations given in config.yml
 
         Returns
         -------
