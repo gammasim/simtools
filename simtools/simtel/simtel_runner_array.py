@@ -238,7 +238,7 @@ class SimtelRunnerArray(SimtelRunner):
         if runtime is None:
             self._logger.debug("RUNTIME was not found in run log file")
 
-        return _, runtime
+        return None, runtime
 
     def _shallRun(self, run=None):
         """Tells if simulations should be run again based on the existence of output files."""
