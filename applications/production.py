@@ -59,8 +59,7 @@ from astropy.io.misc import yaml
 import simtools.config as cfg
 import simtools.util.commandline_parser as argparser
 import simtools.util.general as gen
-from simtools.array_simulator import ArraySimulator
-from simtools.shower_simulator import ShowerSimulator
+from simtools.simulator import Simulator
 
 
 def parse(description=None):
@@ -217,7 +216,8 @@ def main():
     # ShowerSimulators
     showerSimulators = dict()
     for primary, configData in showerConfigs.items():
-        showerSimulators[primary] = ShowerSimulator(label=label, showerConfigData=configData)
+        showerSimulators[primary] = Simulator(
+            label=label, simulator="corsika", configData=configData)
 
     if not args.array_only:
         # Running Showers
@@ -239,7 +239,8 @@ def main():
     if not args.showers_only:
         arraySimulators = dict()
         for primary, configData in arrayConfigs.items():
-            arraySimulators[primary] = ArraySimulator(label=label, configData=configData)
+            arraySimulators[primary] = Simulator(
+                label=label, simulator="simtel", configData=configData)
         # Running Arrays
         for primary, array in arraySimulators.items():
 
