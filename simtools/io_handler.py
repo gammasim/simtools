@@ -1,6 +1,7 @@
 """ Module to handle input and output conventions. """
 
 import datetime
+import logging
 from pathlib import Path
 
 import simtools.config as cfg
@@ -33,12 +34,20 @@ def _getOutputDirectory(filesLocation, label, mode=None):
     -------
     Path
     """
+    _logger = logging.getLogger(__name__)
+
     today = datetime.date.today()
     labelDir = label if label is not None else "d-" + str(today)
     path = Path(filesLocation).joinpath("simtools-output").joinpath(labelDir)
     if mode is not None:
         path = path.joinpath(mode)
-    path.mkdir(parents=True, exist_ok=True)
+    try:
+        path.mkdir(parents=True, exist_ok=True)
+    except FileNotFoundError:
+        _logger.error("Error creating directory {}".format(
+            str(path)))
+        raise
+
     return path.absolute()
 
 
