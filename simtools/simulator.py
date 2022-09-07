@@ -161,8 +161,13 @@ class Simulator:
 
         self._simtelSourcePath = Path(cfg.getConfigArg("simtelPath", simtelSourcePath))
         self._filesLocation = cfg.getConfigArg("outputLocation", filesLocation)
-        self._outputDirectory = io._getOutputDirectory(
-                self._filesLocation, self.label, self.simulator)
+        try:
+            self._outputDirectory = io._getOutputDirectory(
+                    self._filesLocation, self.label, self.simulator)
+        except FileNotFoundError:
+            self._logger.error("Error creating output directory".format(
+                self._outputDirectory))
+            raise
 
         self._logger.debug(
             "Output directory {} - creating it, if needed.".format(self._outputDirectory))
@@ -181,7 +186,7 @@ class Simulator:
 
         """
         configData = gen.collectDataFromYamlOrDict(configFile, configData)
-        if self.simulator is 'simtel':
+        if self.simulator == 'simtel':
             self._loadSimTelConfig(configData)
         else:
             self._loadCorsikaConfig(configData)
@@ -319,7 +324,7 @@ class Simulator:
         Set simulation runners
 
         """
-        if self.simulator is 'simtel':
+        if self.simulator == 'simtel':
             self._setSimtelRunner()
         else:
             self._setCorsikaRunner()
@@ -441,7 +446,7 @@ class Simulator:
 
         _runs_and_files = {}
 
-        if self.simulator is 'simtel':
+        if self.simulator == 'simtel':
             _file_list = self._makeInputList(inputFileList)
             for file in _file_list:
                 _runs_and_files[self._guessRunFromFile(file)] = file
