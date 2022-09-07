@@ -36,7 +36,7 @@ class CorsikaRunner:
     .. code-block:: python
 
     corsikaConfigData = {
-        'corsikaDataDirectory': .
+        'dataDirectory': .
         'primary': 'proton',
         'nshow': 10000,
         'nrun': 1,
@@ -52,13 +52,13 @@ class CorsikaRunner:
     corsikaParametersFile. When not given, corsikaParameters will be loaded \
     from data/corsika/corsika_parameters.yml.
 
-    The CORSIKA output directory must be set by the corsikaDataDirectory entry. \
+    The CORSIKA output directory must be set by the dataDirectory entry. \
     The following directories will be created to store the output data, logs and input \
     file:
 
-    {corsikaDataDirectory}/$site/$primary/data
-    {corsikaDataDirectory}/$site/$primary/log
-    {corsikaDataDirectory}/$site/$primary/inputs
+    {dataDirectory}/$site/$primary/data
+    {dataDirectory}/$site/$primary/log
+    {dataDirectory}/$site/$primary/inputs
 
     Attributes
     ----------
@@ -75,11 +75,11 @@ class CorsikaRunner:
     -------
     getRunScriptFile(runNumber)
         Get the full path of the run script file for a given run number.
-    getRunLogFile(runNumber)
+    getLogFile(runNumber)
         Get the full path of the run log file.
     getCorsikaLogFile(runNumber)
         Get the full path of the CORSIKA log file.
-    getCorsikaOutputFile(runNumber)
+    getOutputFile(runNumber)
         Get the full path of the CORSIKA output file.
     """
 
@@ -146,11 +146,11 @@ class CorsikaRunner:
     def _loadCorsikaConfigData(self, corsikaConfigData):
         """Reads corsikaConfigData, creates corsikaConfig and corsikaInputFile."""
 
-        corsikaDataDirectoryFromConfig = corsikaConfigData.get("corsikaDataDirectory", None)
+        corsikaDataDirectoryFromConfig = corsikaConfigData.get("dataDirectory", None)
         if corsikaDataDirectoryFromConfig is None:
             # corsikaDataDirectory not given (or None).
             msg = (
-                "corsikaDataDirectory not given in corsikaConfig "
+                "dataDirectory not given in corsikaConfig "
                 "- default output directory will be set."
             )
             self._logger.warning(msg)
@@ -164,7 +164,7 @@ class CorsikaRunner:
         # Copying corsikaConfigData and removing corsikaDataDirectory
         # (it does not go to CorsikaConfig)
         self._corsikaConfigData = copy(corsikaConfigData)
-        self._corsikaConfigData.pop("corsikaDataDirectory", None)
+        self._corsikaConfigData.pop("dataDirectory", None)
 
         # Creating corsikaConfig - this will also validate the input given
         # in corsikaConfigData
@@ -282,7 +282,7 @@ class CorsikaRunner:
         """Get autoinputs command."""
         corsikaBinPath = self._simtelSourcePath.joinpath("corsika-run/corsika")
 
-        logFile = self.getRunLogFile(runNumber)
+        logFile = self.getLogFile(runNumber)
 
         cmd = self._simtelSourcePath.joinpath("sim_telarray/bin/corsika_autoinputs")
         cmd = str(cmd) + " --run {}".format(corsikaBinPath)
@@ -321,7 +321,7 @@ class CorsikaRunner:
         """
 
         runNumber = self._validateRunNumber(runNumber)
-        runLogFile = self.getRunLogFile(runNumber=runNumber)
+        runLogFile = self.getLogFile(runNumber=runNumber)
         return Path(runLogFile).is_file()
 
     def hasSubLogFile(self, runNumber=None, mode="out"):
@@ -361,7 +361,7 @@ class CorsikaRunner:
         runNumber = self._validateRunNumber(runNumber)
         subLogFile = self.getSubLogFile(runNumber=runNumber, mode="out")
 
-        self._logger.info("Reading resources from {}".format(subLogFile))
+        self._logger.debug("Reading resources from {}".format(subLogFile))
 
         runtime = None
         with open(subLogFile, "r") as file:
@@ -378,7 +378,7 @@ class CorsikaRunner:
 
         return nEvents, runtime
 
-    def getRunLogFile(self, runNumber=None):
+    def getLogFile(self, runNumber=None):
         """
         Get the full path of the run log file.
 
@@ -465,7 +465,7 @@ class CorsikaRunner:
         runDir = self._getRunDirectory(runNumber)
         return self._corsikaDataDir.joinpath(runDir).joinpath("run{}.log".format(runNumber))
 
-    def getCorsikaOutputFile(self, runNumber=None):
+    def getOutputFile(self, runNumber=None):
         """
         Get the full path of the CORSIKA output file.
 
