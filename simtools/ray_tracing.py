@@ -127,6 +127,10 @@ class RayTracing:
         _parameters = gen.collectDataFromYamlOrDict(_parameterFile, None)
         self.config = gen.validateConfigData(_configDataIn, _parameters)
 
+        # Due to float representation, round the off-axis angles so the values in results table
+        # are the same as provided.
+        self.config = self.config._replace(offAxisAngle=np.around(self.config.offAxisAngle, 5))
+
         self.label = label if label is not None else self._telescopeModel.label
 
         self._outputDirectory = io.getRayTracingOutputDirectory(self._filesLocation, self.label)
