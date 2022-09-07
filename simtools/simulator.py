@@ -1,0 +1,710 @@
+import logging
+import re
+from collections import defaultdict
+from copy import copy
+from pathlib import Path
+
+import astropy.units as u
+import numpy as np
+
+import simtools.config as cfg
+import simtools.io_handler as io
+import simtools.util.general as gen
+from simtools.job_submission.job_manager import JobManager
+from simtools.model.array_model import ArrayModel
+from simtools.simtel.simtel_histograms import SimtelHistograms
+from simtools.corsika.corsika_runner import CorsikaRunner
+from simtools.simtel.simtel_runner_array import SimtelRunnerArray
+from simtools.util import names
+
+__all__ = ["Simulator"]
+
+
+class Simulator:
+    """
+    Simulator is responsible for managing simulation of showers and array of telescopes. \
+    It interfaces with simulation software-specific packages, like CORSIKA or sim_telarray.
+
+    The configuration is set as a dict configData or a yaml \
+    file configFile.
+
+    Example of configData for shower simulations:
+
+        TODO: understand differences shower / array simulations.
+        e.g. layoutName, modelVersion
+
+    .. code-block:: python
+
+        self.configData = {
+            'dataDirectory': '.',
+            'site': 'South',
+            'layoutName': 'Prod5',
+            'runRange': [1, 100],
+            'nshow': 10,
+            'primary': 'gamma',
+            'erange': [100 * u.GeV, 1 * u.TeV],
+            'eslope': -2,
+            'zenith': 20 * u.deg,
+            'azimuth': 0 * u.deg,
+            'viewcone': 0 * u.deg,
+            'cscat': [10, 1500 * u.m, 0]
+        }
+
+
+    Example of configData for array simulations:
+
+    .. code-block:: python
+
+    configData = {
+        'dataDirectory': '(..)/data',
+        'primary': 'gamma',
+        'zenith': 20 * u.deg,
+        'azimuth': 0 * u.deg,
+        'viewcone': 0 * u.deg,
+        # ArrayModel
+        'site': 'North',
+        'layoutName': '1LST',
+        'modelVersion': 'Prod5',
+        'default': {
+            'LST': '1'
+        },
+        'M-01': 'FlashCam-D'
+    }
+
+    Attributes
+    ----------
+    label: str
+        Instance label.
+    config: NamedTuple
+        Configurable parameters.
+    arrayModel: ArrayModel
+        Instance of ArrayModel.
+
+    Methods
+    -------
+    run(inputFileList):
+        Run simulation.
+    submit(inputFileList, submitCommand=None, extraCommands=None, test=False):
+        Submit a run script as a job. The submit command can be given by submitCommand \
+        or it will be taken from the config.yml file.
+    printHistograms():
+        Print histograms and save a pdf file.
+    getListOfOutputFiles():
+        Get list of output files.
+    getListOfInputFiles():
+        Get list of input files.
+    getListOfLogFiles():
+        Get list of log files.
+    printListOfOutputFiles():
+        Print list of output files.
+    printListOfInputFiles():
+        Print list of output files.
+    printListOfLogFiles():
+        Print list of log files.
+    """
+
+    def __init__(
+        self,
+        label=None,
+        simulator=None,
+        filesLocation=None,
+        simtelSourcePath=None,
+        configData=None,
+        configFile=None,
+    ):
+        """
+        Simulator init.
+
+        Parameters
+        ----------
+        label: str
+            Instance label.
+        simulator: str
+            Type of simulator called (implemented is simtel and corsika).
+        filesLocation: str or Path.
+            Location of the output files. If not given, it will be set from \
+            the config.yml file.
+        simtelSourcePath: str or Path
+            Location of source of the sim_telarray/CORSIKA package.
+        configData: dict
+            Dict with shower or array model configuration data.
+        configFile: str or Path
+            Path to yaml file containing configurable data.
+        """
+        self._logger = logging.getLogger(__name__)
+        self._logger.debug("Init Simulator {}".format(simulator))
+
+        self.label = label
+        self.simulator = simulator.lower()
+
+        self._set_file_locations(filesLocation, simtelSourcePath)
+        self._loadConfigData(configData, configFile)
+
+        self._setSimulationRunner()
+
+        # Storing list of files
+        self._results = defaultdict(list)
+
+    def _set_file_locations(self, filesLocation=None, simtelSourcePath=None):
+        """
+        Set file locations, input and output directories
+
+        Parameters
+        ----------
+        filesLocation: str or Path.
+            Location of the output files. If not given, it will be set from \
+            the config.yml file.
+        simtelSourcePath: str or Path
+            Location of source of the sim_telarray/CORSIKA package.
+
+        """
+
+        self._simtelSourcePath = Path(cfg.getConfigArg("simtelPath", simtelSourcePath))
+        self._filesLocation = cfg.getConfigArg("outputLocation", filesLocation)
+        self._outputDirectory = io._getOutputDirectory(
+                self._filesLocation, self.label, self.simulator)
+
+        self._logger.debug(
+            "Output directory {} - creating it, if needed.".format(self._outputDirectory))
+
+
+    def _loadConfigData(self, configData=None, configFile=None):
+        """
+        Load configuration data
+
+        Parameters
+        ----------
+        configData: dict
+            Dict with simulator configuration data.
+        configFile: str or Path
+            Path to yaml file containing configurable data.
+
+        """
+        configData = gen.collectDataFromYamlOrDict(configFile, configData)
+        if self.simulator is 'simtel':
+            self._loadSimTelConfig(configData)
+        else:
+            self._loadCorsikaConfig(configData)
+
+
+    def _loadCorsikaConfig(self, configData):
+        """
+        Validate configuration data for CORSIKA shower simulation and
+        remove entries need needed for CorsikaRunner
+
+        Parameters
+        ----------
+        configData: dict
+            Dict with simulator configuration data.
+
+        """
+
+        self._corsikaConfigData = copy(configData)
+
+        try:
+            self.site = names.validateSiteName(self._corsikaConfigData.pop("site"))
+            self.layoutName = names.validateLayoutArrayName(
+                self._corsikaConfigData.pop("layoutName"))
+            # TMPTMP check if one could rename corsikaDataDirectory
+            self._corsikaConfigData["corsikaDataDirectory"] = \
+                self._corsikaConfigData.pop("dataDirectory", None)
+        except KeyError:
+            self._logger.error("Missing parameter in simulation configuration data")
+            raise
+
+        self.runs = self._validateRunListAndRange(
+            self._corsikaConfigData.pop("runList", None),
+            self._corsikaConfigData.pop("runRange", None)
+        )
+
+        self._corsikaParametersFile = self._corsikaConfigData.pop("corsikaParametersFile", None)
+
+    def _loadSimTelConfig(self, configData):
+        """
+        Load array model and configuration paramters for array simulations
+
+        Parameters
+        ----------
+        configData: dict
+            Dict with simulator configuration data.
+
+        """
+        _arrayModelConfig, _restConfig = self._collectArrayModelParameters(configData)
+
+        _parameterFile = io.getDataFile("parameters", "array-simulator_parameters.yml")
+        _parameters = gen.collectDataFromYamlOrDict(_parameterFile, None)
+        self.config = gen.validateConfigData(_restConfig, _parameters)
+
+        self.arrayModel = ArrayModel(label=self.label, arrayConfigData=_arrayModelConfig)
+
+    def _validateRunListAndRange(self, runList, runRange):
+        """
+        Prepares list of run numbers from a list or from a range.
+        If both arguments are given, they will be merged into a single list.
+
+        Attributes
+        ----------
+        runList: list
+            list of runs (integers)
+        runRange:list
+            min and max of range of runs to be simulated (two list entries)
+
+        Returns
+        -------
+        list
+            list of unique run numbers (integers)
+
+        """
+        if runList is None and runRange is None:
+            self._logger.debug("Nothing to validate - runList and runRange not given.")
+            return None
+
+        validatedRuns = list()
+        if runList is not None:
+            if not all(isinstance(r, int) for r in runList):
+                msg = "runList must contain only integers."
+                self._logger.error(msg)
+                raise
+            else:
+                self._logger.debug("runList: {}".format(runList))
+                validatedRuns = list(runList)
+
+        if runRange is not None:
+            if not all(isinstance(r, int) for r in runRange) or len(runRange) != 2:
+                msg = "runRange must contain two integers only."
+                self._logger.error(msg)
+                raise
+            else:
+                runRange = np.arange(runRange[0], runRange[1] + 1)
+                self._logger.debug("runRange: {}".format(runRange))
+                validatedRuns.extend(list(runRange))
+
+        validatedRunsUnique = set(validatedRuns)
+        return list(validatedRunsUnique)
+
+
+    def _collectArrayModelParameters(self, configData):
+        """
+        Separate configuration and model parameters from configuration data.
+
+        Parameters
+        ----------
+        configData: dict
+            Dict with configuration data.
+
+        """
+        _arrayModelData = dict()
+        _restData = copy(configData)
+
+        try:
+            # TMPTMP _arrayModelData could probably be used in corsika config
+            # data
+            _arrayModelData["site"] = _restData.pop("site")
+            _arrayModelData["layoutName"] = _restData.pop("layoutName")
+            _arrayModelData["modelVersion"] = _restData.pop("modelVersion")
+            _arrayModelData["default"] = _restData.pop("default")
+        except KeyError:
+            self._logger.error("Missing parameter in simulation configuration data")
+            raise
+
+        # Reading telescope keys
+        telKeys = [k for k in _restData.keys() if k[0:2] in ["L-", "M-", "S-"]]
+        for key in telKeys:
+            _arrayModelData[key] = _restData.pop(key)
+
+        return _arrayModelData, _restData
+
+    def _setSimulationRunner(self):
+        """
+        Set simulation runners
+
+        """
+        if self.simulator is 'simtel':
+            self._setSimtelRunner()
+        else:
+            self._setCorsikaRunner()
+
+    def _setCorsikaRunner(self):
+        """
+        Creating CorsikaRunner and setting it to self._simulationRunner.
+
+        """
+        self._simulationRunner = CorsikaRunner(
+            site=self.site,
+            layoutName=self.layoutName,
+            label=self.label,
+            filesLocation=self._filesLocation,
+            simtelSourcePath=self._simtelSourcePath,
+            corsikaParametersFile=self._corsikaParametersFile,
+            corsikaConfigData=self._corsikaConfigData,
+        )
+
+
+    def _setSimtelRunner(self):
+        """
+        Creating a SimtelRunnerArray.
+
+        """
+        self._simulationRunner = SimtelRunnerArray(
+            label=self.label,
+            arrayModel=self.arrayModel,
+            simtelSourcePath=self._simtelSourcePath,
+            filesLocation=self._filesLocation,
+            configData={
+                "simtelDataDirectory": self.config.dataDirectory,
+                "primary": self.config.primary,
+                "zenithAngle": self.config.zenithAngle * u.deg,
+                "azimuthAngle": self.config.azimuthAngle * u.deg,
+            },
+        )
+
+    def _fillResultsWithoutRun(self, inputFileList):
+        """
+        Fill in the results dict without calling run or submit.
+
+        Parameters
+        ----------
+        inputFileList: str or list of str
+            Single file or list of files of shower simulations.
+        """
+        inputFileList = self._makeInputList(inputFileList)
+
+        for file in inputFileList:
+            run = self._guessRunFromFile(file)
+            self._fillResults(file, run)
+
+    def submit(self, inputFileList, submitCommand=None, extraCommands=None, test=False):
+        """
+        Submit a run script as a job. The submit command can be given by \
+        submitCommand or it will be taken from the config.yml file.
+
+        Parameters
+        ----------
+        inputFileList: str or list of str
+            Single file or list of files of shower simulations.
+        submitCommand: str
+            Command to be used before the script name.
+        extraCommands: str or list of str
+            Extra commands to be added to the run script before the run command,
+        test: bool
+            If True, job is not submitted.
+
+        """
+
+        subCmd = submitCommand if submitCommand is not None else cfg.get("submissionCommand")
+        self._logger.info("Submission command: {}".format(subCmd))
+
+        runs_and_files_to_submit = self._get_runs_and_files_to_submit(
+            inputFileList=inputFileList)
+        self._logger.info("Starting submission for {} runs".format(
+            len(runs_and_files_to_submit)))
+
+        for run, file in runs_and_files_to_submit.items():
+
+            runScript = self._simulationRunner.getRunScript(
+                runNumber=run, inputFile=file, extraCommands=extraCommands
+            )
+
+            job_manager = JobManager(submitCommand=subCmd, test=test)
+            job_manager.submit(
+                run_script=runScript,
+                run_out_file=self._simulationRunner.getSubLogFile(runNumber=run, mode=""),
+            )
+
+            self._fillResults(file, run)
+
+    def _get_runs_and_files_to_submit(self,
+                             inputFileList=None,
+                             runList=None,
+                             runRange=None
+                             ):
+        """
+        Return a dictionary with run numbers and (if applicable) simulation
+        files. The latter are expected to be given for the simtel simulator.
+
+        Parameters
+        ----------
+        inputFileList: str or list of str
+            Single file or list of files of shower simulations.
+        runList: list
+            List of run numbers to be simulated.
+        runRange: list
+            List of len 2 with the limits of the range for runs to be simulated.
+
+        Returns
+        -------
+        runs_and_files: dict
+            dictionary with runnumber as key and (if availble) simulation
+            file name as value
+
+        """
+
+        _runs_and_files = {}
+
+        if self.simulator is 'simtel':
+            _file_list = self._makeInputList(inputFileList)
+            for file in _file_list:
+                _runs_and_files[self._guessRunFromFile(file)] = file
+        else:
+            _run_list = self._getRunsToSimulate(runList, runRange)
+            for run in _run_list:
+                _runs_and_files[run] = None
+
+        return _runs_and_files
+
+    @staticmethod
+    def _makeInputList(inputFileList):
+        """Enforce the input list to be a list."""
+        if not isinstance(inputFileList, list):
+            return [inputFileList]
+        else:
+            return inputFileList
+
+    def _guessRunFromFile(self, file):
+        """
+        Finds the run number for a given input file name.
+        Input file names can follow any pattern with the
+        string 'run' followed by the run number.
+        If not found, returns 1.
+
+        Parameters
+        ----------
+        file: Path
+            Simulation file name
+
+        """
+        fileName = str(Path(file).name)
+
+        try:
+            runStr = re.search("run[0-9]*", fileName).group()
+            return int(runStr[3:])
+        except (ValueError, AttributeError):
+            msg = "Run number could not be guessed from {} using run = 1".format(fileName)
+            self._logger.warning(msg)
+            return 1
+
+    def _fillResults(self, file, run):
+        """
+        Fill the results dict with input, output and log files.
+
+        Parameters
+        ----------
+        file: str
+            input file name
+        run: int
+            run number
+
+        """
+        # TMPTMP synchronize methods names between corsika and simtel runners
+        if self.simulator == 'simtel':
+            self._results["input"].append(str(file))
+            self._results["output"].append(str(self._simulationRunner.getOutputFile(run)))
+            self._results["hist"].append(str(self._simulationRunner.getHistogramFile(run)))
+            self._results["log"].append(str(self._simulationRunner.getLogFile(run)))
+        else:
+            self._results["input"].append(None)
+            self._results["output"].append(str(self._simulationRunner.getCorsikaOutputFile(run)))
+            self._results["hist"].append(None)
+            self._results["log"].append(str(self._simulationRunner.getRunLogFile(run)))
+        self._results["sub_out"].append(str(self._simulationRunner.getSubLogFile(run, mode="out")))
+
+    def printHistograms(self, inputFileList=None):
+        """
+        Print histograms and save a pdf file.
+
+        Parameters
+        ----------
+        inputFileList: str or list of str
+            Single file or list of files of shower simulations.
+
+        Returns
+        -------
+        path
+            Path of the pdf file.
+        """
+
+        figName = None
+
+        if self.simulator == 'simtel':
+            if len(self._results["hist"]) == 0 and inputFileList is not None:
+                self._fillResultsWithoutRun(inputFileList)
+
+            figName = self._outputDirectory.joinpath("histograms.pdf")
+            histFileList = self.getListOfHistogramFiles()
+            simtelHistograms = SimtelHistograms(histFileList)
+            simtelHistograms.plotAndSaveFigures(figName)
+
+        return figName
+
+    def getListOfOutputFiles(self):
+        """
+        Get list of output files.
+
+        Returns
+        -------
+        list
+            List with the full path of all the output files.
+        """
+        self._logger.info("Getting list of output files")
+        return self._results["output"]
+
+    def getListOfHistogramFiles(self):
+        """
+        Get list of histogram files.
+        (not applicable to all simulation types)
+
+        Returns
+        -------
+        list
+            List with the full path of all the histogram files.
+        """
+        self._logger.info("Getting list of histogram files")
+        return self._results["hist"]
+
+    def getListOfInputFiles(self):
+        """
+        Get list of input files.
+
+        Returns
+        -------
+        list
+            List with the full path of all the input files.
+        """
+        self._logger.info("Getting list of input files")
+        return self._results["input"]
+
+    def getListOfLogFiles(self):
+        """
+        Get list of log files.
+
+        Returns
+        -------
+        list
+            List with the full path of all the log files.
+        """
+        self._logger.info("Getting list of log files")
+        return self._results["log"]
+
+    def printListOfOutputFiles(self):
+        """Print list of output files."""
+        self._logger.info("Printing list of output files")
+        self._printListOfFiles(which="output")
+
+    def printListOfHistogramFiles(self):
+        """Print list of histogram files."""
+        self._logger.info("Printing list of histogram files")
+        self._printListOfFiles(which="hist")
+
+    def printListOfInputFiles(self):
+        """Print list of output files."""
+        self._logger.info("Printing list of input files")
+        self._printListOfFiles(which="input")
+
+    def printListOfLogFiles(self):
+        """Print list of log files."""
+        self._logger.info("Printing list of log files")
+        self._printListOfFiles(which="log")
+
+    def makeResourcesReport(self, inputFileList):
+        """
+        Prepare a simple report on computing resources used
+        (includes run time per run only at this point)
+
+        Parameters
+        ----------
+        inputFileList: str or list of str
+            Single file or list of files of shower simulations.
+
+        Returns
+        -------
+        dict
+           Dictionary with reports on computing resources
+
+        """
+
+        if len(self._results["sub_out"]) == 0 and inputFileList is not None:
+            self._fillResultsWithoutRun(inputFileList)
+
+        runtime = list()
+        nEvents = None
+
+        for file in self._results["sub_out"]:
+            if Path(file).is_file():
+                nEvents, thisRuntime = self._simulationRunner.getResources(
+                    runNumber=self._guessRunFromFile(file))
+                runtime.append(thisRuntime)
+
+        meanRuntime = np.mean(runtime)
+
+        resources = dict()
+        resources["Runtime/run [sec]"] = meanRuntime
+        if nEvents and nEvents > 0:
+            resources["#events/run"] = nEvents
+            resources["Runtime/1000 events [sec]"] = meanRuntime * 1000 / nEvents
+
+        return resources
+
+    def printResourcesReport(self, inputFileList=None):
+        """
+        Print a simple report on computing resources used
+        (includes run time per run only at this point)
+
+        Parameters
+        ----------
+        inputFileList: str or list of str
+            Single file or list of files of shower simulations.
+
+        """
+        resources = self.makeResourcesReport(inputFileList)
+        print("-----------------------------")
+        print("Computing Resources Report - {} Simulations".format(self.simulator))
+        for key, value in resources.items():
+            print("{} = {:.2f}".format(key, value))
+        print("-----------------------------")
+
+    def _getRunsToSimulate(self, runList, runRange):
+        """
+        Process runList and runRange and return the validated list of runs.
+
+        Attributes
+        ----------
+        runList: list
+            list of runs (integers)
+        runRange:list
+            min and max of range of runs to be simulated (two list entries)
+
+        Returns
+        -------
+        list
+            list of unique run numbers (integers)
+
+        """
+        if runList is None and runRange is None:
+            if self.runs is None:
+                msg = (
+                    "Runs to simulate were not given as arguments nor "
+                    + "in configData - aborting"
+                )
+                self._logger.error(msg)
+                raise
+            else:
+                return self.runs
+        else:
+            return self._validateRunListAndRange(runList, runRange)
+
+    def _printListOfFiles(self, which):
+        """
+        Print list of files of a certain type
+
+        Parameters
+        ----------
+        which str
+            file type (e.g., log)
+
+        """
+
+        try:
+            for f in self._results[which]:
+                print(f)
+        except:
+            pass
