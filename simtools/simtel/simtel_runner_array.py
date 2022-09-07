@@ -41,7 +41,7 @@ class SimtelRunnerArray(SimtelRunner):
 
     Methods
     -------
-    getRunScript(self, test=False, inputFile=None, run=None)
+    getRunScript(self, test=False, inputFile=None, runNumber=None)
         Builds and returns the full path of the bash run script containing
         the sim_telarray command.
     run(test=False, force=False, inputFile=None, run=None)
@@ -213,7 +213,7 @@ class SimtelRunnerArray(SimtelRunner):
         runSubFile = self.getSubLogFile(run=run, mode=mode)
         return Path(runSubFile).is_file()
 
-    def getResources(self, run):
+    def getResources(self, runNumber):
         """
         Reading run time from last line of submission log file.
 
@@ -224,7 +224,7 @@ class SimtelRunnerArray(SimtelRunner):
 
         """
 
-        subLogFile = self.getSubLogFile(run=run, mode="out")
+        subLogFile = self.getSubLogFile(run=runNumber, mode="out")
 
         self._logger.info("Reading resources from {}".format(subLogFile))
 
@@ -238,7 +238,7 @@ class SimtelRunnerArray(SimtelRunner):
         if runtime is None:
             self._logger.debug("RUNTIME was not found in run log file")
 
-        return runtime
+        return _, runtime
 
     def _shallRun(self, run=None):
         """Tells if simulations should be run again based on the existence of output files."""
