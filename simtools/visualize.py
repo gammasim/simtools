@@ -170,7 +170,7 @@ def setStyle(palette="default", bigPlot=False):
     KeyError if provided palette does not exist.
     """
 
-    if palette not in COLORS.keys():
+    if palette not in COLORS:
         raise KeyError("palette must be one of {}".format(", ".join(COLORS)))
 
     fontsize = {"default": 17, "bigPlot": 30}
@@ -220,7 +220,7 @@ def getColors(palette="default"):
     list: colour list
     """
 
-    if palette not in COLORS.keys():
+    if palette not in COLORS:
         raise KeyError("palette must be one of {}".format(", ".join(COLORS)))
 
     return COLORS[palette]
