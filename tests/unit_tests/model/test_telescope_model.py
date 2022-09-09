@@ -30,7 +30,18 @@ def lst_config_file(db):
 
 
 @pytest.fixture
-def telescope_model(cfg_setup, lst_config_file):
+def telescope_model(set_simtools):
+    telescopeModel = TelescopeModel(
+        site="North",
+        telescopeModelName="LST-1",
+        modelVersion="Prod5",
+        label="test-telescope-model",
+    )
+    return telescopeModel
+
+
+@pytest.fixture
+def telescope_model_from_config_file(cfg_setup, lst_config_file):
 
     label = "test-telescope-model"
     telModel = TelescopeModel.fromConfigFile(
@@ -76,9 +87,9 @@ def test_flen_type(telescope_model):
     assert isinstance(flenInfo["Value"], float)
 
 
-def test_cfg_file(telescope_model, lst_config_file):
+def test_cfg_file(telescope_model_from_config_file, lst_config_file):
 
-    telModel = telescope_model
+    telModel = telescope_model_from_config_file
 
     telModel.exportConfigFile()
 
@@ -150,3 +161,31 @@ def test_updating_export_model_files(set_db):
         "is a file was changed."
     )
     assert False is tel._isExportedModelFilesUpToDate
+
+
+def test_load_reference_data(telescope_model):
+
+    telModel = telescope_model
+
+    assert telModel.referenceData["nsb_reference_value"]["Value"] == pytest.approx(0.24)
+
+
+def test_export_derived_files(telescope_model):
+
+    telModel = telescope_model
+
+    telModel.exportDerivedFiles("ray-tracing-North-LST-1-d10.0-za20.0_validate_optics.ecsv")
+    assert (
+        telModel.getDerivedDirectory()
+        .joinpath("ray-tracing-North-LST-1-d10.0-za20.0_validate_optics.ecsv")
+        .exists()
+    )
+
+
+def test_get_on_axis_eff_optical_area(telescope_model):
+
+    telModel = telescope_model
+
+    assert telModel.getOnAxisEffOpticalArea().value == pytest.approx(
+        365.48310154491
+    )  # Value for LST -1

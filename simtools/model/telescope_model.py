@@ -2,6 +2,9 @@ import logging
 import shutil
 from copy import copy
 
+import numpy as np
+from astropy.io import ascii as asc
+
 import simtools.config as cfg
 import simtools.io_handler as io
 from simtools import db_handler
@@ -30,17 +33,19 @@ class TelescopeModel:
     site: str
         North or South.
     name: str
-        Telescope name for the base set of parameters (ex. LST-1, ...).
+        Telescope name for the base set of parameters (e.g., LST-1, ...).
     modelVersion: str
-        Version of the model (ex. prod4).
+        Version of the model (e.g., prod5).
     label: str
         Instance label.
     mirrors: Mirrors
         Mirrors object created from the mirror list of the model.
     camera: Camera
         Camera object created from the camera config file of the model.
+    referenceData: Reference data
+        Dictionary with reference data parameters (e.g., NSB reference value)
     extraLabel: str
-        Extra label to be used in case of multiple telescope configurations (e.g. by ArrayModel).
+        Extra label to be used in case of multiple telescope configurations (e.g., by ArrayModel).
 
     Methods
     -------
@@ -132,6 +137,18 @@ class TelescopeModel:
         if not hasattr(self, "_camera"):
             self._loadCamera()
         return self._camera
+
+    @property
+    def referenceData(self):
+        if not hasattr(self, "_referenceData"):
+            self._loadReferenceData()
+        return self._referenceData
+
+    @property
+    def derived(self):
+        if not hasattr(self, "_derived"):
+            self._loadDerivedValues()
+        return self._derived
 
     @property
     def extraLabel(self):
@@ -502,13 +519,32 @@ class TelescopeModel:
         if not self._isExportedModelFilesUpToDate:
             self.exportModelFiles()
 
-        self.printParameters()
-
         # Using SimtelConfigWriter to write the config file.
         self._loadSimtelConfigWriter()
         self.simtelConfigWriter.writeTelescopeConfigFile(
             configFilePath=self._configFilePath, parameters=self._parameters
         )
+
+    def exportDerivedFiles(self, fileNames):
+        """
+        Write to disk a file from the derived values DB.
+
+        Parameters
+        ----------
+        fileNames: str or list of strings
+            Name of the file to get or list of names.
+        """
+
+        if not isinstance(fileNames, list):
+            fileNames = [fileNames]
+
+        db = db_handler.DatabaseHandler()
+        for fileNameNow in fileNames:
+            db.exportFileDB(
+                dbName=db.DB_DERIVED_VALUES,
+                dest=io.getDerivedOutputDirectory(self._filesLocation, self.label),
+                fileName=fileNameNow,
+            )
 
     def getConfigFile(self, noExport=False):
         """
@@ -537,6 +573,16 @@ class TelescopeModel:
         Path where all the configuration files for sim_telarray are written to.
         """
         return self._configFileDirectory
+
+    def getDerivedDirectory(self):
+        """
+        Get the path where all the files with derived values for are written to.
+
+        Returns
+        -------
+        Path where all the files with derived values are written to.
+        """
+        return self._configFileDirectory.parents[0].joinpath("derived")
 
     def getTelescopeTransmissionParameters(self):
         """
@@ -619,6 +665,22 @@ class TelescopeModel:
             )
         self._mirrors = Mirrors(mirrorListFile)
 
+    def _loadReferenceData(self):
+        """Load the reference data for this telescope from the DB."""
+        self._logger.debug("Reading reference data from DB")
+        db = db_handler.DatabaseHandler()
+        self._referenceData = db.getReferenceData(self.site, self.modelVersion, onlyApplicable=True)
+
+    def _loadDerivedValues(self):
+        """Load the derived values for this telescope from the DB."""
+        self._logger.debug("Reading derived data from DB")
+        db = db_handler.DatabaseHandler()
+        self._derived = db.getDerivedValues(
+            self.site,
+            self.name,
+            self.modelVersion,
+        )
+
     def _loadCamera(self):
         """Loading camera attribute by creating a Camera object with the camera config file."""
         cameraConfigFile = self.getParameterValue("camera_config_file")
@@ -684,3 +746,20 @@ class TelescopeModel:
         with open(file, "r") as f:
             is2D = "@RPOL@" in f.read()
         return is2D
+
+    def getOnAxisEffOpticalArea(self):
+        """
+        Return the on-axis effective optical area (derived previously for this telescope).
+        """
+
+        self.exportDerivedFiles(self.derived["ray_tracing"]["Value"])
+        rayTracingData = asc.read(
+            self.getDerivedDirectory().joinpath(self.derived["ray_tracing"]["Value"])
+        )
+        if not np.isclose(rayTracingData["Off-axis angle"][0], 0):
+            self._logger.error(
+                f"No value for the on-axis effective optical area exists."
+                f" The minumum off-axis angle is {rayTracingData['Off-axis angle'][0]}"
+            )
+            raise ValueError
+        return rayTracingData["eff_area"][0]
