@@ -11,7 +11,7 @@ logger.setLevel(logging.DEBUG)
 
 
 @pytest.fixture
-def telescope_model(set_simtools):
+def telescope_model(set_db):
     telescopeModel = TelescopeModel(
         site="North",
         telescopeModelName="LST-1",
