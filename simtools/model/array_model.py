@@ -240,7 +240,7 @@ class ArrayModel:
         # Changing parameters, if there are any in allParsToChange
         if len(_allParsToChange) > 0:
             for telData, telModel in zip(self.layout, self._telescopeModel):
-                if telData.name not in _allParsToChange.keys():
+                if telData.name not in _allParsToChange:
                     continue
                 self._logger.debug(
                     "Changing {} pars of a {}: {}, ...".format(
