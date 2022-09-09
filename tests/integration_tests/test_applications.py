@@ -29,7 +29,7 @@ APP_LIST = {
             "-t",
             "LST-1",
             "--model_version",
-            "prod4",
+            "prod5",
             "--data",
             "TESTMODELDIR/PSFcurve_data_v2.txt",
             "--zenith",
@@ -44,7 +44,7 @@ APP_LIST = {
             "-t",
             "LST-1",
             "--model_version",
-            "prod4",
+            "prod5",
             "--data",
             "TESTMODELDIR/PSFcurve_data_v2.txt",
             "--zenith",
@@ -157,9 +157,9 @@ APP_LIST = {
     ],
     # Camera
     "validate_camera_efficiency": [
-        ["-s", "North", "-t", "MST-NectarCam-D", "--model_version", "prod4"]
+        ["-s", "North", "-t", "MST-NectarCam-D", "--model_version", "prod5"]
     ],
-    "validate_camera_fov": [["-s", "North", "-t", "MST-NectarCam-D", "--model_version", "prod4"]],
+    "validate_camera_fov": [["-s", "North", "-t", "MST-NectarCam-D", "--model_version", "prod5"]],
     "plot_simtel_histograms::help": [
         [
             "--help",
@@ -187,7 +187,7 @@ APP_LIST = {
     ],
     # Database
     "get_parameter": [
-        ["-s", "North", "-t", "LST-1", "-p", "mirror_list", "--model_version", "prod4"]
+        ["-s", "North", "-t", "LST-1", "-p", "mirror_list", "--model_version", "prod5"]
     ],
     "production::showers_only": [
         ["-p", "./tests/resources/prodConfigTest.yml", "-t", "simulate", "--showers_only", "--test"]

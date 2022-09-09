@@ -19,7 +19,7 @@ def db(set_db):
 def test_config_data_from_dict(set_db):
 
     label = "test-config-data"
-    version = "prod4"
+    version = "prod5"
 
     configData = {
         "sourceDistance": 10 * u.km,
