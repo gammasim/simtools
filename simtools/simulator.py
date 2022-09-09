@@ -142,7 +142,7 @@ class Simulator:
         self._results = defaultdict(list)
 
         self._set_file_locations(filesLocation, simulatorSourcePath)
-        self._loadConfigData(configData, configFile)
+        self._load_configuration_and_simulation_model(configData, configFile)
 
         self._setSimulationRunner()
 
@@ -161,9 +161,9 @@ class Simulator:
 
         """
 
-        self.simulator = simulator.lower()
-        if self.simulator not in ["simtel", "corsika"]:
+        if simulator not in ["simtel", "corsika"]:
             raise gen.InvalidConfigData
+        self.simulator = simulator.lower()
 
     def _set_file_locations(self, filesLocation=None, simulatorSourcePath=None):
         """
@@ -189,9 +189,9 @@ class Simulator:
             "Output directory {} - creating it, if needed.".format(self._outputDirectory)
         )
 
-    def _loadConfigData(self, configData=None, configFile=None):
+    def _load_configuration_and_simulation_model(self, configData=None, configFile=None):
         """
-        Load configuration data
+        Load configuration data and initialize simulation models.
 
         Parameters
         ----------
@@ -203,14 +203,14 @@ class Simulator:
         """
         configData = gen.collectDataFromYamlOrDict(configFile, configData)
         if self.simulator == "simtel":
-            self._loadSimTelConfig(configData)
+            self._loadSimTelConfigAndModel(configData)
         elif self.simulator == "corsika":
-            self._loadCorsikaConfig(configData)
+            self._loadCorsikaConfigAndModel(configData)
 
-    def _loadCorsikaConfig(self, configData):
+    def _loadCorsikaConfigAndModel(self, configData):
         """
         Validate configuration data for CORSIKA shower simulation and
-        remove entries need needed for CorsikaRunner
+        remove entries need needed for CorsikaRunner.
 
         Parameters
         ----------
@@ -237,9 +237,9 @@ class Simulator:
 
         self._corsikaParametersFile = self._corsikaConfigData.pop("corsikaParametersFile", None)
 
-    def _loadSimTelConfig(self, configData):
+    def _loadSimTelConfigAndModel(self, configData):
         """
-        Load array model and configuration paramters for array simulations
+        Load array model and configuration parameters for array simulations
 
         Parameters
         ----------
@@ -453,7 +453,7 @@ class Simulator:
             _file_list = self._enforceListType(inputFileList)
             for file in _file_list:
                 _runs_and_files[self._guessRunFromFile(file)] = file
-        else:
+        elif self.simulator == "corsika":
             _run_list = self._getRunsToSimulate()
             for run in _run_list:
                 _runs_and_files[run] = None
@@ -633,7 +633,7 @@ class Simulator:
     def _makeResourcesReport(self, inputFileList):
         """
         Prepare a simple report on computing resources used
-        (includes run time per run only at this point)
+        (includes wall clock time per run only at this point)
 
         Parameters
         ----------
@@ -661,10 +661,10 @@ class Simulator:
         meanRuntime = np.mean(runtime)
 
         resource_summary = dict()
-        resource_summary["Runtime/run [sec]"] = meanRuntime
+        resource_summary["Walltime/run [sec]"] = meanRuntime
         if "nEvents" in _resources and _resources["nEvents"] > 0:
             resource_summary["#events/run"] = _resources["nEvents"]
-            resource_summary["Runtime/1000 events [sec]"] = (
+            resource_summary["Walltime/1000 events [sec]"] = (
                 meanRuntime * 1000 / _resources["nEvents"]
             )
 
