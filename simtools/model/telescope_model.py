@@ -753,7 +753,7 @@ class TelescopeModel:
         """
 
         self.exportDerivedFiles(self.derived["ray_tracing"]["Value"])
-        rayTracingData = astropy.io.ascii..read(
+        rayTracingData = astropy.io.ascii.read(
             self.getDerivedDirectory().joinpath(self.derived["ray_tracing"]["Value"])
         )
         if not np.isclose(rayTracingData["Off-axis angle"][0], 0):
