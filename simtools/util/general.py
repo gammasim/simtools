@@ -164,7 +164,7 @@ def _validateAndConvertValue_without_units(value, valueKeys, parName, parInfo):
     """
     logger = logging.getLogger(__name__)
 
-    valueLength, undefinedLength = _checkValueEntryLength(value, parName, parInfo)
+    _, undefinedLength = _checkValueEntryLength(value, parName, parInfo)
 
     # Checking if values have unit and raising error, if so.
     if all([isinstance(v, str) for v in value]):
