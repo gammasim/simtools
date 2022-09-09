@@ -29,7 +29,7 @@ class SimtelRunner:
 
     Methods
     -------
-    getRunScript(self, test=False, inputFile=None, run=None)
+    getRunScript(self, test=False, inputFile=None, runNumber=None)
         Builds and returns the full path of the bash run script containing
         the sim_telarray command.
     run(test=False, force=False, input=None)
