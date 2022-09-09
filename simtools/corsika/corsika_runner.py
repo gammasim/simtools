@@ -25,7 +25,7 @@ class CorsikaRunner:
     CorsikaRunner is responsible for running the CORSIKA, through the
     corsika_autoinputs program provided by the sim_telarray package. \
     It provides shell scripts to be run externally or by \
-    the module shower_simulator. Same instance can be used to \
+    the module simulator. Same instance can be used to \
     generate scripts for any given run number.
 
     It uses CorsikaConfig to manage the CORSIKA configuration. \
