@@ -73,7 +73,7 @@ class CorsikaRunner:
 
     Methods
     -------
-    getRunScriptFile(runNumber)
+    getRunScript(runNumber)
         Get the full path of the run script file for a given run number.
     getLogFile(runNumber)
         Get the full path of the run log file.
@@ -268,8 +268,6 @@ class CorsikaRunner:
         os.system("chmod ug+x {}".format(scriptFilePath))
 
         return scriptFilePath
-
-    # End of getRunScriptFile
 
     def _getPfpCommand(self, runNumber, inputTmpFile):
         """Get pfp pre-processor command."""
