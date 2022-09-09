@@ -1,19 +1,18 @@
 #!/usr/bin/python3
 
 import logging
+import math
 from copy import copy
 from pathlib import Path
-import math
 
 import astropy.units as u
 import pytest
 
 import simtools.util.general as gen
-from simtools.model.array_model import ArrayModel
-from simtools.simulator import Simulator
 from simtools.corsika.corsika_runner import CorsikaRunner
+from simtools.model.array_model import ArrayModel
 from simtools.simtel.simtel_runner_array import SimtelRunnerArray
-from simtools.simulator import InvalidRunsToSimulate
+from simtools.simulator import InvalidRunsToSimulate, Simulator
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
@@ -43,7 +42,7 @@ def arrayConfigData(tmp_test_directory):
 
 @pytest.fixture
 def input_file_list():
-    return ['run1', 'abc_run22', 'def_run02_and']
+    return ["run1", "abc_run22", "def_run02_and"]
 
 
 @pytest.fixture
@@ -73,16 +72,14 @@ def corsikaFile():
 @pytest.fixture
 def array_simulator(set_db, label, arrayConfigData):
 
-    arraySimulator = Simulator(
-        label=label, simulator='simtel', configData=arrayConfigData)
+    arraySimulator = Simulator(label=label, simulator="simtel", configData=arrayConfigData)
     return arraySimulator
 
 
 @pytest.fixture
 def shower_simulator(set_db, label, showerConfigData):
 
-    showerSimulator = Simulator(
-        label=label, simulator='corsika', configData=showerConfigData)
+    showerSimulator = Simulator(label=label, simulator="corsika", configData=showerConfigData)
     return showerSimulator
 
 
@@ -116,14 +113,14 @@ def test_guess_run_from_file(array_simulator):
 
 def test_set_simulator(array_simulator, shower_simulator):
 
-    array_simulator._set_simulator('simtel')
-    assert array_simulator.simulator == 'simtel'
+    array_simulator._set_simulator("simtel")
+    assert array_simulator.simulator == "simtel"
 
-    shower_simulator._set_simulator('corsika')
-    assert shower_simulator.simulator == 'corsika'
+    shower_simulator._set_simulator("corsika")
+    assert shower_simulator.simulator == "corsika"
 
     with pytest.raises(gen.InvalidConfigData):
-        shower_simulator._set_simulator('this_simulator_is_not_there')
+        shower_simulator._set_simulator("this_simulator_is_not_there")
 
 
 def test_loadConfigData(array_simulator):
@@ -159,42 +156,41 @@ def test_validateRunListAndRange(shower_simulator):
 
     run_list = [1, 24, 3]
 
-    assert shower_simulator._validateRunListAndRange(
-        runList=run_list, runRange=None) == list(set(run_list))
+    assert shower_simulator._validateRunListAndRange(runList=run_list, runRange=None) == list(
+        set(run_list)
+    )
 
     with pytest.raises(InvalidRunsToSimulate):
-        shower_simulator._validateRunListAndRange(
-            runList=[1, 'a', 4], runRange=None)
+        shower_simulator._validateRunListAndRange(runList=[1, "a", 4], runRange=None)
 
-    assert shower_simulator._validateRunListAndRange(
-        runList=None, runRange=[3, 6]) == list(set([3,4,5,6]))
+    assert shower_simulator._validateRunListAndRange(runList=None, runRange=[3, 6]) == list(
+        set([3, 4, 5, 6])
+    )
 
-    assert shower_simulator._validateRunListAndRange(
-        runList=None, runRange=[6, 3]) == []
-
-    with pytest.raises(InvalidRunsToSimulate):
-        shower_simulator._validateRunListAndRange(
-            runList=None, runRange=[3, 'b'])
+    assert shower_simulator._validateRunListAndRange(runList=None, runRange=[6, 3]) == []
 
     with pytest.raises(InvalidRunsToSimulate):
-        shower_simulator._validateRunListAndRange(
-            runList=None, runRange=[3, 4, 5])
+        shower_simulator._validateRunListAndRange(runList=None, runRange=[3, "b"])
+
+    with pytest.raises(InvalidRunsToSimulate):
+        shower_simulator._validateRunListAndRange(runList=None, runRange=[3, 4, 5])
+
 
 def test_collectArrayModelParameters(array_simulator, arrayConfigData):
 
     _arrayModelData, _restData = array_simulator._collectArrayModelParameters(
-        configData=arrayConfigData)
+        configData=arrayConfigData
+    )
 
     assert isinstance(_arrayModelData, dict)
     assert isinstance(_restData, dict)
-    assert _arrayModelData['site'] == "North"
-    assert _arrayModelData['M-01'] == "FlashCam-D"
+    assert _arrayModelData["site"] == "North"
+    assert _arrayModelData["M-01"] == "FlashCam-D"
     newArrayConfigData = copy(arrayConfigData)
     newArrayConfigData.pop("site")
 
     with pytest.raises(KeyError):
-        _, _ = array_simulator._collectArrayModelParameters(
-            configData=newArrayConfigData)
+        _, _ = array_simulator._collectArrayModelParameters(configData=newArrayConfigData)
 
 
 def test_setSimulationRunner(array_simulator, shower_simulator):
@@ -221,8 +217,7 @@ def test_submitting(shower_simulator, array_simulator, corsikaFile):
 
     assert Path(run_script).exists()
 
-    array_simulator.submit(
-        inputFileList=corsikaFile, submitCommand="local", test=True)
+    array_simulator.submit(inputFileList=corsikaFile, submitCommand="local", test=True)
 
     array_simulator.printListOfOutputFiles()
     array_simulator.printListOfLogFiles()
@@ -234,22 +229,23 @@ def test_submitting(shower_simulator, array_simulator, corsikaFile):
 
 def test_get_runs_and_files_to_submit(array_simulator, shower_simulator, input_file_list):
 
-    assert array_simulator._get_runs_and_files_to_submit(
-        inputFileList=None) == dict()
+    assert array_simulator._get_runs_and_files_to_submit(inputFileList=None) == dict()
 
-    assert array_simulator._get_runs_and_files_to_submit(
-        inputFileList=input_file_list) == \
-        {
-            1: 'run1',
-            2: 'def_run02_and',
-            22: 'abc_run22',
-        }
+    assert array_simulator._get_runs_and_files_to_submit(inputFileList=input_file_list) == {
+        1: "run1",
+        2: "def_run02_and",
+        22: "abc_run22",
+    }
 
-    assert shower_simulator._get_runs_and_files_to_submit(
-        inputFileList=None) == \
-        {
-            3: None, 4: None, 6: None, 7: None, 8: None, 9: None, 10: None
-        }
+    assert shower_simulator._get_runs_and_files_to_submit(inputFileList=None) == {
+        3: None,
+        4: None,
+        6: None,
+        7: None,
+        8: None,
+        9: None,
+        10: None,
+    }
 
 
 def test_enforceListType(array_simulator):
@@ -265,22 +261,21 @@ def test_fillResults(array_simulator, shower_simulator, input_file_list):
 
     array_simulator._fillResultsWithoutRun(input_file_list)
 
-    assert len(array_simulator._results['output']) == 3
-    assert len(array_simulator._results['sub_out']) == 3
-    assert len(array_simulator._results['log']) == 3
-    assert len(array_simulator._results['input']) == 3
-    assert len(array_simulator._results['hist']) == 3
-    assert array_simulator._results['input'][1] == 'abc_run22'
+    assert len(array_simulator._results["output"]) == 3
+    assert len(array_simulator._results["sub_out"]) == 3
+    assert len(array_simulator._results["log"]) == 3
+    assert len(array_simulator._results["input"]) == 3
+    assert len(array_simulator._results["hist"]) == 3
+    assert array_simulator._results["input"][1] == "abc_run22"
 
     shower_simulator._fillResultsWithoutRun(input_file_list)
-    assert len(shower_simulator._results['output']) == 3
-    assert shower_simulator._results['hist'][1] is None
+    assert len(shower_simulator._results["output"]) == 3
+    assert shower_simulator._results["hist"][1] is None
 
 
 def test_printHistograms(arrayConfigData, shower_simulator, input_file_list):
 
-    _arraySimulator = Simulator(
-        label='simtel_test', simulator='simtel', configData=arrayConfigData)
+    _arraySimulator = Simulator(label="simtel_test", simulator="simtel", configData=arrayConfigData)
 
     assert len(str(_arraySimulator.printHistograms())) > 0
 
@@ -304,8 +299,7 @@ def test_no_corsika_data(cfg_setup, showerConfigData, label):
 
     newShowerConfigData = copy(showerConfigData)
     newShowerConfigData.pop("dataDirectory", None)
-    newShowerSimulator = Simulator(
-        label=label, simulator='corsika', configData=newShowerConfigData)
+    newShowerSimulator = Simulator(label=label, simulator="corsika", configData=newShowerConfigData)
     files = newShowerSimulator.getListOfOutputFiles(runList=[3])
 
     assert "/" + label + "/" in files[0]
@@ -314,7 +308,7 @@ def test_no_corsika_data(cfg_setup, showerConfigData, label):
 def test_makeResourcesReport(array_simulator, input_file_list):
 
     _resources_1 = array_simulator._makeResourcesReport(inputFileList=None)
-    assert math.isnan(_resources_1['Runtime/run [sec]'])
+    assert math.isnan(_resources_1["Runtime/run [sec]"])
 
     with pytest.raises(FileNotFoundError):
         array_simulator._makeResourcesReport(input_file_list)
@@ -323,9 +317,11 @@ def test_makeResourcesReport(array_simulator, input_file_list):
 def test_getRunsToSimulate(showerConfigData):
 
     showerSimulator = Simulator(
-        label='corsika-test', simulator='corsika', configData=showerConfigData)
-    assert len(showerSimulator.runs) == \
-        len(showerSimulator._getRunsToSimulate(runList=None, runRange=None))
+        label="corsika-test", simulator="corsika", configData=showerConfigData
+    )
+    assert len(showerSimulator.runs) == len(
+        showerSimulator._getRunsToSimulate(runList=None, runRange=None)
+    )
 
     assert 3 == len(showerSimulator._getRunsToSimulate(runList=[2, 5, 7]))
 

@@ -217,7 +217,8 @@ def main():
     showerSimulators = dict()
     for primary, configData in showerConfigs.items():
         showerSimulators[primary] = Simulator(
-            label=label, simulator="corsika", configData=configData)
+            label=label, simulator="corsika", configData=configData
+        )
 
     if not args.array_only:
         # Running Showers
@@ -240,7 +241,8 @@ def main():
         arraySimulators = dict()
         for primary, configData in arrayConfigs.items():
             arraySimulators[primary] = Simulator(
-                label=label, simulator="simtel", configData=configData)
+                label=label, simulator="simtel", configData=configData
+            )
         # Running Arrays
         for primary, array in arraySimulators.items():
 
