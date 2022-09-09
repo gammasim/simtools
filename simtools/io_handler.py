@@ -44,8 +44,7 @@ def getOutputDirectory(filesLocation, label, mode=None):
     try:
         path.mkdir(parents=True, exist_ok=True)
     except FileNotFoundError:
-        _logger.error("Error creating directory {}".format(
-            str(path)))
+        _logger.error("Error creating directory {}".format(str(path)))
         raise
 
     return path.absolute()
@@ -192,7 +191,7 @@ def getDerivedOutputDirectory(filesLocation, label):
     -------
     Path
     """
-    return _getOutputDirectory(filesLocation, label, "derived")
+    return getOutputDirectory(filesLocation, label, "derived")
 
 
 def getDataFile(parentDir, fileName):
