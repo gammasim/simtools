@@ -2,8 +2,8 @@ import logging
 import shutil
 from copy import copy
 
-import numpy as np
 import astropy.io.ascii
+import numpy as np
 
 import simtools.config as cfg
 import simtools.io_handler as io
