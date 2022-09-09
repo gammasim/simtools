@@ -93,7 +93,7 @@ def set_db(db_connection, tmp_test_directory, configuration_parameters):
     """
 
     if len(str(db_connection)) == 0:
-        pytest.skip("Test requires database (DB) connection")
+        pytest.skip(reason="Test requires database (DB) connection")
 
     config_file = tmp_test_directory / "config-db-test.yml"
     config_dict = dict(configuration_parameters)
@@ -124,7 +124,7 @@ def set_simtelarray(simtelpath, tmp_test_directory, configuration_parameters):
     """
 
     if len(str(simtelpath)) == 0:
-        pytest.skip("sim_telarray not found in {}".format(simtelpath))
+        pytest.skip(reason="sim_telarray not found in {}".format(simtelpath))
 
     config_file = tmp_test_directory / "config-simtelarray-test.yml"
     config_dict = dict(configuration_parameters)
@@ -144,9 +144,9 @@ def set_simtools(db_connection, simtelpath, tmp_test_directory, configuration_pa
     """
 
     if len(str(simtelpath)) == 0:
-        pytest.skip("sim_telarray not found in {}".format(simtelpath))
+        pytest.skip(reason="sim_telarray not found in {}".format(simtelpath))
     if len(str(db_connection)) == 0:
-        pytest.skip("Test requires database (DB) connection")
+        pytest.skip(reason="Test requires database (DB) connection")
 
     config_file = tmp_test_directory / "config-simtools-test.yml"
     config_dict = dict(configuration_parameters)
