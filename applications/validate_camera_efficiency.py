@@ -87,7 +87,7 @@ def main():
     logger.info("Validating the camera efficiency of {}".format(telModel.name))
 
     ce = CameraEfficiency(telescopeModel=telModel)
-    ce.simulate(force=False)
+    ce.simulate(force=True)
     ce.analyze(force=True)
 
     # Plotting the camera efficiency for Cherenkov light
