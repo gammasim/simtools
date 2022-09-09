@@ -224,7 +224,7 @@ class SimtelRunnerArray(SimtelRunner):
 
         Returns
         -------
-        runtime: int
+        dict
             run time of job in seconds
 
         """
@@ -233,17 +233,19 @@ class SimtelRunnerArray(SimtelRunner):
 
         self._logger.debug("Reading resources from {}".format(subLogFile))
 
-        runtime = None
+        _resources = {}
+
+        _resources["runtime"] = None
         with open(subLogFile, "r") as file:
             for line in reversed(list(file)):
                 if "RUNTIME" in line:
-                    runtime = int(line.split()[1])
+                    _resources["runtime"] = int(line.split()[1])
                     break
 
-        if runtime is None:
+        if _resources["runtime"] is None:
             self._logger.debug("RUNTIME was not found in run log file")
 
-        return None, runtime
+        return _resources["runtime"]
 
     def _shallRun(self, runNumber=None):
         """Tells if simulations should be run again based on the existence of output files."""
