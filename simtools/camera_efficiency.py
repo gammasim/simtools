@@ -588,7 +588,7 @@ class CameraEfficiency:
             "N4x": r"N4x: N1 $\times$ filter $\times$ lightguide $\times$ q.e.",
         }
 
-        tableToPlot = Table([self._results[colNow] for colNow in columnTitles.keys()])
+        tableToPlot = Table([self._results[colNow] for colNow in columnTitles])
 
         for columnNow, columnTitle in columnTitles.items():
             tableToPlot.rename_column(columnNow, columnTitle)
