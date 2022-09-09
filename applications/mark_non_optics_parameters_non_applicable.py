@@ -61,7 +61,7 @@ def main():
     logger.setLevel(gen.getLogLevelFromUser(args.logLevel))
 
     with open(args.sections, "r") as stream:
-        parameterCatogeries = yaml.load(stream, Loader=yaml.FullLoader)
+        parameterCatogeries = yaml.safe_load(stream)
 
     nonOpticCatagories = [
         "Readout electronics",

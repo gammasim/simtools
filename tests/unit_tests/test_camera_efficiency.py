@@ -64,7 +64,7 @@ def test_from_kwargs(telescope_model):
     assert ce.config.zenithAngle == 30
 
 
-def test_validate_telescope_model():
+def test_validate_telescope_model(cfg_setup):
 
     with pytest.raises(ValueError):
         CameraEfficiency(

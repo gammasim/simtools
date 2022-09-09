@@ -64,7 +64,7 @@ def loadConfig(fileName=None, useGlobals=True):
         thisFileName = "config.yml"
 
     with open(thisFileName, "r") as stream:
-        config = yaml.load(stream, Loader=yaml.FullLoader)
+        config = yaml.safe_load(stream)
 
     # Running over the parameters set for change
     if useGlobals and "CONFIG_CHANGED_PARS" in globals():

@@ -93,7 +93,7 @@ class DatabaseHandler:
         dbDetails = dict()
         dbDetailsFile = cfg.get("mongoDBConfigFile")
         with open(dbDetailsFile, "r") as stream:
-            dbDetails = yaml.load(stream, Loader=yaml.FullLoader)
+            dbDetails = yaml.safe_load(stream)
 
         return dbDetails
 
@@ -465,7 +465,7 @@ class DatabaseHandler:
         _yamlFile = cfg.findFile(_fileNameDB, cfg.get("modelFilesLocations"))
         self._logger.debug("Reading DB file {}".format(_yamlFile))
         with open(_yamlFile, "r") as stream:
-            _allPars = yaml.load(stream, Loader=yaml.FullLoader)
+            _allPars = yaml.safe_load(stream)
         return _allPars
 
     def getSiteParameters(
@@ -527,7 +527,7 @@ class DatabaseHandler:
         yamlFile = cfg.findFile("parValues-Sites.yml", cfg.get("modelFilesLocations"))
         self._logger.info("Reading DB file {}".format(yamlFile))
         with open(yamlFile, "r") as stream:
-            _allParsVersions = yaml.load(stream, Loader=yaml.FullLoader)
+            _allParsVersions = yaml.safe_load(stream)
 
         _pars = dict()
         for parName, parInfo in _allParsVersions.items():

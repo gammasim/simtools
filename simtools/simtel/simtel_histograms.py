@@ -146,16 +146,14 @@ class SimtelHistograms:
         """
 
         pdfPages = PdfPages(figName)
-        for iHist in range(len(self.combinedHists)):
+        for iHist, histo in enumerate(self.combinedHists):
 
             # Test case: processing only 1/5 of the histograms
             if self._isTest and iHist % 5 != 0:
-                self._logger.debug(
-                    "Skipping (test=True): {}".format(self.combinedHists[iHist]["title"])
-                )
+                self._logger.debug("Skipping (test=True): {}".format(histo["title"]))
                 continue
 
-            self._logger.debug("Processing: {}".format(self.combinedHists[iHist]["title"]))
+            self._logger.debug("Processing: {}".format(histo["title"]))
 
             fig = plt.figure(figsize=(8, 6))
             ax = plt.gca()

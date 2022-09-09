@@ -2,8 +2,8 @@ import logging
 import shutil
 from copy import copy
 
+import astropy.io.ascii
 import numpy as np
-from astropy.io import ascii as asc
 
 import simtools.config as cfg
 import simtools.io_handler as io
@@ -312,7 +312,7 @@ class TelescopeModel:
         -------
         bool
         """
-        return parName in self._parameters.keys()
+        return parName in self._parameters
 
     def getParameter(self, parName):
         """
@@ -381,7 +381,7 @@ class TelescopeModel:
         InvalidParameter
             If an existing parameter is tried to be added.
         """
-        if parName in self._parameters.keys():
+        if parName in self._parameters:
             msg = "Parameter {} already in the model, use changeParameter instead".format(parName)
             self._logger.error(msg)
             raise InvalidParameter(msg)
@@ -414,7 +414,7 @@ class TelescopeModel:
         InvalidParameter
             If the parameter to be changed does not exist in this model.
         """
-        if parName not in self._parameters.keys():
+        if parName not in self._parameters:
             msg = "Parameter {} not in the model, use addParameters instead".format(parName)
             self._logger.error(msg)
             raise InvalidParameter(msg)
@@ -447,7 +447,7 @@ class TelescopeModel:
             If at least one of the parameters to be changed does not exist in this model.
         """
         for par, value in kwargs.items():
-            if par in self._parameters.keys():
+            if par in self._parameters:
                 self.changeParameter(par, value)
             else:
                 self.addParameter(par, value)
@@ -469,7 +469,7 @@ class TelescopeModel:
             If at least one of the parameter to be removed is not in this model.
         """
         for par in args:
-            if par in self._parameters.keys():
+            if par in self._parameters:
                 self._logger.info("Removing parameter {}".format(par))
                 del self._parameters[par]
             else:
@@ -753,7 +753,7 @@ class TelescopeModel:
         """
 
         self.exportDerivedFiles(self.derived["ray_tracing"]["Value"])
-        rayTracingData = asc.read(
+        rayTracingData = astropy.io.ascii.read(
             self.getDerivedDirectory().joinpath(self.derived["ray_tracing"]["Value"])
         )
         if not np.isclose(rayTracingData["Off-axis angle"][0], 0):
