@@ -107,7 +107,7 @@ def main():
     outputDir = io.getApplicationOutputDirectory(cfg.get("outputLocation"), label)
 
     showerConfigData = {
-        "corsikaDataDirectory": args.output,
+        "dataDirectory": args.output,
         "site": args.site,
         "layoutName": args.array,
         "runRange": [1, args.nruns + 1],
@@ -122,7 +122,7 @@ def main():
     }
 
     showerSimulator = Simulator(
-        label=label, simulator='corsika', showerConfigData=showerConfigData)
+        label=label, simulator='corsika', configData=showerConfigData)
 
     if not args.test:
         showerSimulator.submit()
