@@ -85,11 +85,11 @@ def shower_simulator(set_db, label, showerConfigData):
 
 def test_set_file_locations(array_simulator, shower_simulator):
 
-    assert Path.exists(array_simulator._simtelSourcePath)
+    assert Path.exists(array_simulator._simulatorSourcePath)
     assert Path.exists(array_simulator._filesLocation)
     assert Path.exists(array_simulator._outputDirectory)
 
-    assert Path.exists(shower_simulator._simtelSourcePath)
+    assert Path.exists(shower_simulator._simulatorSourcePath)
     assert Path.exists(shower_simulator._filesLocation)
     assert Path.exists(shower_simulator._outputDirectory)
 
@@ -123,15 +123,15 @@ def test_set_simulator(array_simulator, shower_simulator):
         shower_simulator._set_simulator("this_simulator_is_not_there")
 
 
-def test_loadConfigData(array_simulator):
+def test_load_configuration_and_simulation_model(array_simulator):
 
     with pytest.raises(gen.InvalidConfigData):
-        array_simulator._loadConfigData()
+        array_simulator._load_configuration_and_simulation_model()
 
 
-def test_loadCorsikaConfig(shower_simulator, showerConfigData):
+def test_loadCorsikaConfigAndModel(shower_simulator, showerConfigData):
 
-    shower_simulator._loadCorsikaConfig(configData=showerConfigData)
+    shower_simulator._loadCorsikaConfigAndModel(configData=showerConfigData)
 
     assert shower_simulator.site == "South"
 
@@ -140,12 +140,12 @@ def test_loadCorsikaConfig(shower_simulator, showerConfigData):
     _temp_shower_data = copy(showerConfigData)
     _temp_shower_data.pop("site")
     with pytest.raises(KeyError):
-        shower_simulator._loadCorsikaConfig(configData=_temp_shower_data)
+        shower_simulator._loadCorsikaConfigAndModel(configData=_temp_shower_data)
 
 
-def test_loadSimTelConfig(array_simulator, arrayConfigData):
+def test_loadSimTelConfigAndModel(array_simulator, arrayConfigData):
 
-    array_simulator._loadSimTelConfig(arrayConfigData)
+    array_simulator._loadSimTelConfigAndModel(arrayConfigData)
 
     assert isinstance(array_simulator.arrayModel, ArrayModel)
 
@@ -308,7 +308,7 @@ def test_no_corsika_data(cfg_setup, showerConfigData, label):
 def test_makeResourcesReport(array_simulator, input_file_list):
 
     _resources_1 = array_simulator._makeResourcesReport(inputFileList=None)
-    assert math.isnan(_resources_1["Runtime/run [sec]"])
+    assert math.isnan(_resources_1["Walltime/run [sec]"])
 
     with pytest.raises(FileNotFoundError):
         array_simulator._makeResourcesReport(input_file_list)
