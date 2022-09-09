@@ -490,7 +490,7 @@ class RayTracing:
         KeyError
             If key is not among the valid options.
         """
-        if key not in self.YLABEL.keys():
+        if key not in self.YLABEL:
             msg = "Invalid key to plot"
             self._logger.error(msg)
             raise KeyError(msg)
