@@ -121,8 +121,7 @@ def main():
         "cscat": [20, 1500 * u.m, 0],
     }
 
-    showerSimulator = Simulator(
-        label=label, simulator='corsika', configData=showerConfigData)
+    showerSimulator = Simulator(label=label, simulator="corsika", configData=showerConfigData)
 
     if not args.test:
         showerSimulator.submit()
