@@ -215,7 +215,6 @@ class CorsikaRunner:
         """
         kwargs = {
             "runNumber": None,
-            **kwargs,
             "extraCommands": None,
             **kwargs,
         }
