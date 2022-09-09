@@ -109,7 +109,7 @@ class Simulator:
         label=None,
         simulator=None,
         filesLocation=None,
-        simtelSourcePath=None,
+        simulatorSourcePath=None,
         configData=None,
         configFile=None,
     ):
@@ -120,13 +120,14 @@ class Simulator:
         ----------
         label: str
             Instance label.
-        simulator: str
-            Type of simulator called (implemented is simtel and corsika).
+        simulator: choices: [simtel, corsika]
+            implemented are sim_telarray and CORSIKA
         filesLocation: str or Path.
             Location of the output files. If not given, it will be set from \
             the config.yml file.
-        simtelSourcePath: str or Path
-            Location of source of the sim_telarray/CORSIKA package.
+        simulatorSourcePath: str or Path
+            Location of exectutables for simulation software \
+                (e.g. path with CORSIKA or sim_telarray)
         configData: dict
             Dict with shower or array model configuration data.
         configFile: str or Path
@@ -140,7 +141,7 @@ class Simulator:
         self.runs = list()
         self._results = defaultdict(list)
 
-        self._set_file_locations(filesLocation, simtelSourcePath)
+        self._set_file_locations(filesLocation, simulatorSourcePath)
         self._loadConfigData(configData, configFile)
 
         self._setSimulationRunner()
@@ -151,8 +152,8 @@ class Simulator:
 
         Parameters
         ----------
-        simulator: str
-            ype of simulator called (implemented is simtel and corsika).
+        simulator: choices: [simtel, corsika]
+            implemented are sim_telarray and CORSIKA
 
         Raises
         ------
@@ -164,7 +165,7 @@ class Simulator:
         if self.simulator not in ["simtel", "corsika"]:
             raise gen.InvalidConfigData
 
-    def _set_file_locations(self, filesLocation=None, simtelSourcePath=None):
+    def _set_file_locations(self, filesLocation=None, simulatorSourcePath=None):
         """
         Set file locations, input and output directories
 
@@ -173,20 +174,16 @@ class Simulator:
         filesLocation: str or Path.
             Location of the output files. If not given, it will be set from \
             the config.yml file.
-        simtelSourcePath: str or Path
+        simulatorSourcePath: str or Path
             Location of source of the sim_telarray/CORSIKA package.
 
         """
 
-        self._simtelSourcePath = Path(cfg.getConfigArg("simtelPath", simtelSourcePath))
+        self._simulatorSourcePath = Path(cfg.getConfigArg("simtelPath", simulatorSourcePath))
         self._filesLocation = Path(cfg.getConfigArg("outputLocation", filesLocation))
-        try:
-            self._outputDirectory = io.getOutputDirectory(
-                self._filesLocation, self.label, self.simulator
-            )
-        except FileNotFoundError:
-            self._logger.error("Error creating output directory {}".format(self._outputDirectory))
-            raise
+        self._outputDirectory = io.getOutputDirectory(
+            self._filesLocation, self.label, self.simulator
+        )
 
         self._logger.debug(
             "Output directory {} - creating it, if needed.".format(self._outputDirectory)
@@ -354,7 +351,7 @@ class Simulator:
             site=self.site,
             layoutName=self.layoutName,
             filesLocation=self._filesLocation,
-            simtelSourcePath=self._simtelSourcePath,
+            simtelSourcePath=self._simulatorSourcePath,
             corsikaParametersFile=self._corsikaParametersFile,
             corsikaConfigData=self._corsikaConfigData,
         )
@@ -367,7 +364,7 @@ class Simulator:
         self._simulationRunner = SimtelRunnerArray(
             label=self.label,
             arrayModel=self.arrayModel,
-            simtelSourcePath=self._simtelSourcePath,
+            simtelSourcePath=self._simulatorSourcePath,
             filesLocation=self._filesLocation,
             configData={
                 "simtelDataDirectory": self.config.dataDirectory,
@@ -654,22 +651,24 @@ class Simulator:
             self._fillResultsWithoutRun(inputFileList)
 
         runtime = list()
-        nEvents = None
 
+        _resources = {}
         for run in self.runs:
-            nEvents, thisRuntime = self._simulationRunner.getResources(runNumber=run)
-            if thisRuntime:
-                runtime.append(thisRuntime)
+            _resources = self._simulationRunner.getResources(runNumber=run)
+            if "runtime" in _resources and _resources["runtime"]:
+                runtime.append(_resources["runtime"])
 
         meanRuntime = np.mean(runtime)
 
-        resources = dict()
-        resources["Runtime/run [sec]"] = meanRuntime
-        if nEvents and nEvents > 0:
-            resources["#events/run"] = nEvents
-            resources["Runtime/1000 events [sec]"] = meanRuntime * 1000 / nEvents
+        resource_summary = dict()
+        resource_summary["Runtime/run [sec]"] = meanRuntime
+        if "nEvents" in _resources and _resources["nEvents"] > 0:
+            resource_summary["#events/run"] = _resources["nEvents"]
+            resource_summary["Runtime/1000 events [sec]"] = (
+                meanRuntime * 1000 / _resources["nEvents"]
+            )
 
-        return resources
+        return resource_summary
 
     def printResourcesReport(self, inputFileList=None):
         """
