@@ -184,7 +184,7 @@ class Simulator:
             self._outputDirectory = io.getOutputDirectory(
                     self._filesLocation, self.label, self.simulator)
         except FileNotFoundError:
-            self._logger.error("Error creating output directory".format(
+            self._logger.error("Error creating output directory {}".format(
                 self._outputDirectory))
             raise
 
