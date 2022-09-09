@@ -48,7 +48,7 @@ def test_get_run_script(corsikaRunner):
 
     # Run number is given
     runNumber = 3
-    script = corsikaRunner.getRunScript(runNumber)
+    script = corsikaRunner.getRunScript(runNumber=runNumber)
 
     assert script.exists()
 
