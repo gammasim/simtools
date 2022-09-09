@@ -15,7 +15,7 @@ logger.setLevel(logging.DEBUG)
 @pytest.fixture
 def corsikaConfigData():
     return {
-        "corsikaDataDirectory": "./corsika-data",
+        "dataDirectory": "./corsika-data",
         "nshow": 10,
         "primary": "gamma",
         "erange": [100 * u.GeV, 1 * u.TeV],
@@ -42,13 +42,13 @@ def corsikaRunner(corsikaConfigData, cfg_setup):
 def test_get_run_script(corsikaRunner):
     # No run number is given
 
-    script = corsikaRunner.getRunScriptFile()
+    script = corsikaRunner.getRunScript()
 
     assert script.exists()
 
     # Run number is given
     runNumber = 3
-    script = corsikaRunner.getRunScriptFile(runNumber)
+    script = corsikaRunner.getRunScript(runNumber)
 
     assert script.exists()
 
@@ -56,12 +56,12 @@ def test_get_run_script(corsikaRunner):
 def test_get_run_script_with_invalid_run(corsikaRunner):
     for run in [-2, "test"]:
         with pytest.raises(ValueError):
-            _ = corsikaRunner.getRunScriptFile(run)
+            _ = corsikaRunner.getRunScript(runNumber=run)
 
 
 def test_run_script_with_extra(corsikaRunner):
 
     extra = ["testing", "testing-extra-2"]
-    script = corsikaRunner.getRunScriptFile(runNumber=3, extraCommands=extra)
+    script = corsikaRunner.getRunScript(runNumber=3, extraCommands=extra)
 
     assert gen.fileHasText(script, "testing-extra-2")
