@@ -469,7 +469,7 @@ class TelescopeModel:
             If at least one of the parameter to be removed is not in this model.
         """
         for par in args:
-            if par in self._parameters.keys():
+            if par in self._parameters:
                 self._logger.info("Removing parameter {}".format(par))
                 del self._parameters[par]
             else:
