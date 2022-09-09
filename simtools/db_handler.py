@@ -57,6 +57,8 @@ class DatabaseHandler:
     DB_TABULATED_DATA = "CTA-Simulation-Model"
     DB_CTA_SIMULATION_MODEL = "CTA-Simulation-Model"
     DB_CTA_SIMULATION_MODEL_DESCRIPTIONS = "CTA-Simulation-Model-Descriptions"
+    DB_REFERENCE_DATA = "CTA-Reference-Data"
+    DB_DERIVED_VALUES = "CTA-Simulation-Model-Derived-Values"
 
     ALLOWED_FILE_EXTENSIONS = [".dat", ".txt", ".lis", ".cfg", ".yml", ".ecsv"]
 
@@ -328,7 +330,8 @@ class DatabaseHandler:
         dict containing the parameters
         """
 
-        _telNameDB = self._getTelescopeModelNameForDB(site, telescopeModelName)
+        _siteValidated = names.validateSiteName(site)
+        _telNameDB = self._getTelescopeModelNameForDB(_siteValidated, telescopeModelName)
         _telClass = getTelescopeClass(telescopeModelName)
 
         self._logger.debug("TelNameDB: {}".format(_telNameDB))
@@ -336,12 +339,12 @@ class DatabaseHandler:
 
         if _telClass == "MST":
             # MST-FlashCam or MST-NectarCam
-            _whichTelLabels = ["{}-MST-Structure-D".format(site), _telNameDB]
+            _whichTelLabels = ["{}-MST-Structure-D".format(_siteValidated), _telNameDB]
         elif _telClass == "SST":
             # SST = SST-Camera + SST-Structure
             _whichTelLabels = [
-                "{}-SST-Camera-D".format(site),
-                "{}-SST-Structure-D".format(site),
+                "{}-SST-Camera-D".format(_siteValidated),
+                "{}-SST-Structure-D".format(_siteValidated),
             ]
         else:
             _whichTelLabels = [_telNameDB]
@@ -356,8 +359,8 @@ class DatabaseHandler:
             _selectOnlyApplicable = onlyApplicable or (
                 _tel
                 in [
-                    "{}-MST-Structure-D".format(site),
-                    "{}-SST-Structure-D".format(site),
+                    "{}-MST-Structure-D".format(_siteValidated),
+                    "{}-SST-Structure-D".format(_siteValidated),
                 ]
             )
 
@@ -392,8 +395,6 @@ class DatabaseHandler:
         ----------
         dbName: str
             the name of the DB
-        site: str
-            South or North.
         telescopeModelNameDB: str
             Name of the telescope model (e.g. MST-FlashCam-D ...)
         modelVersion: str
@@ -426,7 +427,7 @@ class DatabaseHandler:
 
         self._logger.debug("Trying the following query: {}".format(query))
         if onlyApplicable:
-            query["Applicable"] = onlyApplicable
+            query["Applicable"] = True
         if collection.count_documents(query) < 1:
             raise ValueError(
                 "The following query returned zero results! Check the input data and rerun.\n",
@@ -560,6 +561,7 @@ class DatabaseHandler:
         dict containing the parameters
         """
 
+        _siteValidated = names.validateSiteName(site)
         collection = DatabaseHandler.dbClient[dbName].sites
         _parameters = dict()
 
@@ -568,11 +570,11 @@ class DatabaseHandler:
         )
 
         query = {
-            "Site": site,
+            "Site": _siteValidated,
             "Version": _modelVersion,
         }
         if onlyApplicable:
-            query["Applicable"] = onlyApplicable
+            query["Applicable"] = True
         if collection.count_documents(query) < 1:
             raise ValueError(
                 "The following query returned zero results! Check the input data and rerun.\n",
@@ -586,6 +588,92 @@ class DatabaseHandler:
             _parameters[parNow]["entryDate"] = ObjectId(post["_id"]).generation_time
 
         return _parameters
+
+    def getReferenceData(self, site, modelVersion, onlyApplicable=False):
+        """
+        Get parameters from MongoDB for a specific telescope.
+
+        Parameters
+        ----------
+        dbName: str
+            The name of the DB.
+        site: str
+            South or North.
+        modelVersion: str
+            Version of the model.
+        onlyApplicable: bool
+            If True, only applicable parameters will be read.
+
+        Returns
+        -------
+        dict containing the parameters
+        """
+
+        _siteValidated = names.validateSiteName(site)
+        collection = DatabaseHandler.dbClient[DatabaseHandler.DB_REFERENCE_DATA].reference_values
+        _parameters = dict()
+
+        _modelVersion = self._convertVersionToTagged(
+            names.validateModelVersionName(modelVersion), DatabaseHandler.DB_CTA_SIMULATION_MODEL
+        )
+
+        query = {
+            "Site": _siteValidated,
+            "Version": _modelVersion,
+        }
+        if onlyApplicable:
+            query["Applicable"] = True
+        if collection.count_documents(query) < 1:
+            raise ValueError(
+                "The following query returned zero results! Check the input data and rerun.\n",
+                query,
+            )
+        for post in collection.find(query):
+            parNow = post["Parameter"]
+            _parameters[parNow] = post
+            _parameters[parNow].pop("Parameter", None)
+            _parameters[parNow].pop("Site", None)
+            _parameters[parNow]["entryDate"] = ObjectId(post["_id"]).generation_time
+
+        return _parameters
+
+    def getDerivedValues(self, site, telescopeModelName, modelVersion):
+        """
+        Get a derived value from the DB for a specific telescope.
+
+        Parameters
+        ----------
+        site: str
+            South or North.
+        telescopeModelName: str
+            Name of the telescope model (e.g. MST-FlashCam-D ...)
+        modelVersion: str
+            Version of the model.
+
+        Returns
+        -------
+        dict containing the parameters
+        """
+
+        _siteValidated = names.validateSiteName(site)
+        _telModelNameValidated = names.validateTelescopeModelName(telescopeModelName)
+        _telNameDB = self._getTelescopeModelNameForDB(_siteValidated, _telModelNameValidated)
+        _modelVersion = self._convertVersionToTagged(
+            names.validateModelVersionName(modelVersion), DatabaseHandler.DB_CTA_SIMULATION_MODEL
+        )
+
+        self._logger.debug("Getting derived values for {} from the DB".format(_telNameDB))
+
+        _pars = self.readMongoDB(
+            DatabaseHandler.DB_DERIVED_VALUES,
+            _telNameDB,
+            _modelVersion,
+            runLocation=None,
+            collectionName="derived_values",
+            writeFiles=False,
+        )
+
+        return _pars
 
     @staticmethod
     def _getFileMongoDB(dbName, fileName):

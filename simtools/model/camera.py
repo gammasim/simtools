@@ -61,12 +61,12 @@ class Camera:
         Parameters
         ----------
         telescopeModelName: string
-                    As provided by the telescope model method TelescopeModel (ex South-LST-1).
+            As provided by the telescope model method TelescopeModel (ex South-LST-1).
         cameraConfigFile: string
-                    The sim_telarray file name.
+            The sim_telarray file name.
         focalLength: float
-                    The focal length of the camera in (preferably the effective focal length),
-                    assumed to be in the same unit as the pixel positions in the cameraConfigFile.
+            The focal length of the camera in (preferably the effective focal length),
+            assumed to be in the same unit as the pixel positions in the cameraConfigFile.
         """
 
         self._logger = logging.getLogger(__name__)
@@ -222,6 +222,17 @@ class Camera:
         diameter: float
         """
         return self._pixels["pixel_diameter"]
+
+    def getPixelActiveSolidAngle(self):
+        """
+        Get the active solid angle of a pixel in sr.
+        """
+
+        pixelArea = self.getPixelDiameter() ** 2
+        # In case we have hexagonal pixels:
+        if self.getPixelShape() == 1 or self.getPixelShape() == 3:
+            pixelArea *= np.sqrt(3) / 2
+        return pixelArea / (self._focalLength**2)
 
     def getPixelShape(self):
         """

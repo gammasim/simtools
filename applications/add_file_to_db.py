@@ -92,7 +92,13 @@ def main():
         dest="dbToInsertTo",
         type=str,
         default=db.DB_TABULATED_DATA,
-        choices=[db.DB_TABULATED_DATA, "sandbox", "test-data"],
+        choices=[
+            db.DB_TABULATED_DATA,
+            db.DB_DERIVED_VALUES,
+            db.DB_REFERENCE_DATA,
+            "sandbox",
+            "test-data",
+        ],
         help=(
             "The DB to insert the files to. "
             'The choices are {0} or "sandbox", '
