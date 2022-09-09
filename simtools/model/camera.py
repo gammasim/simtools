@@ -771,13 +771,13 @@ class Camera:
 
         legendObjects = [legH.pixelObject(), legH.edgePixelObject()]
         legendLabels = ["Pixel", "Edge pixel"]
-        if type(onPixels[0]) == mlp.patches.RegularPolygon:
+        if isinstance(onPixels[0], mlp.patches.RegularPolygon):
             legendHandlerMap = {
                 legH.pixelObject: legH.hexPixelHandler(),
                 legH.edgePixelObject: legH.hexEdgePixelHandler(),
                 legH.offPixelObject: legH.hexOffPixelHandler(),
             }
-        elif type(onPixels[0]) == mlp.patches.Rectangle:
+        elif isinstance(onPixels[0], mlp.patches.Rectangle):
             legendHandlerMap = {
                 legH.pixelObject: legH.squarePixelHandler(),
                 legH.edgePixelObject: legH.squareEdgePixelHandler(),
