@@ -20,6 +20,10 @@ from simtools.util import names
 __all__ = ["Simulator"]
 
 
+class InvalidRunsToSimulate(Exception):
+    pass
+
+
 class Simulator:
     """
     Simulator is responsible for managing simulation of showers and array of telescopes. \
@@ -132,7 +136,7 @@ class Simulator:
         self._logger.debug("Init Simulator {}".format(simulator))
 
         self.label = label
-        self.simulator = simulator.lower()
+        self._set_simulator(simulator)
         self.runs = list()
         self._results = defaultdict(list)
 
@@ -140,6 +144,25 @@ class Simulator:
         self._loadConfigData(configData, configFile)
 
         self._setSimulationRunner()
+
+    def _set_simulator(self, simulator):
+        """
+        Set and test simulator type
+
+        Parameters
+        ----------
+        simulator: str
+            ype of simulator called (implemented is simtel and corsika).
+
+        Raises
+        ------
+        gen.InvalidConfigData
+
+        """
+
+        self.simulator = simulator.lower()
+        if self.simulator not in ['simtel', 'corsika']:
+            raise gen.InvalidConfigData
 
     def _set_file_locations(self, filesLocation=None, simtelSourcePath=None):
         """
@@ -156,9 +179,9 @@ class Simulator:
         """
 
         self._simtelSourcePath = Path(cfg.getConfigArg("simtelPath", simtelSourcePath))
-        self._filesLocation = cfg.getConfigArg("outputLocation", filesLocation)
+        self._filesLocation = Path(cfg.getConfigArg("outputLocation", filesLocation))
         try:
-            self._outputDirectory = io._getOutputDirectory(
+            self._outputDirectory = io.getOutputDirectory(
                     self._filesLocation, self.label, self.simulator)
         except FileNotFoundError:
             self._logger.error("Error creating output directory".format(
@@ -185,9 +208,6 @@ class Simulator:
             self._loadSimTelConfig(configData)
         elif self.simulator == 'corsika':
             self._loadCorsikaConfig(configData)
-        else:
-            self._logger.error("Unknown simulator: {}".format(self.simulator))
-            raise
 
     def _loadCorsikaConfig(self, configData):
         """
@@ -263,7 +283,7 @@ class Simulator:
             if not all(isinstance(r, int) for r in runList):
                 msg = "runList must contain only integers."
                 self._logger.error(msg)
-                raise
+                raise InvalidRunsToSimulate
             else:
                 self._logger.debug("runList: {}".format(runList))
                 validatedRuns = list(runList)
@@ -272,7 +292,7 @@ class Simulator:
             if not all(isinstance(r, int) for r in runRange) or len(runRange) != 2:
                 msg = "runRange must contain two integers only."
                 self._logger.error(msg)
-                raise
+                raise InvalidRunsToSimulate
             else:
                 runRange = np.arange(runRange[0], runRange[1] + 1)
                 self._logger.debug("runRange: {}".format(runRange))
@@ -318,7 +338,7 @@ class Simulator:
         """
         if self.simulator == 'simtel':
             self._setSimtelRunner()
-        else:
+        elif self.simulator == 'corsika':
             self._setCorsikaRunner()
 
     def _setCorsikaRunner(self):
@@ -335,7 +355,6 @@ class Simulator:
             corsikaParametersFile=self._corsikaParametersFile,
             corsikaConfigData=self._corsikaConfigData,
         )
-
 
     def _setSimtelRunner(self):
         """
@@ -450,10 +469,12 @@ class Simulator:
     @staticmethod
     def _enforceListType(inputFileList):
         """Enforce the input list to be a list."""
-        if not isinstance(inputFileList, list):
+        if not inputFileList:
+            return list()
+        elif not isinstance(inputFileList, list):
             return [inputFileList]
-        else:
-            return inputFileList
+
+        return inputFileList
 
     def _guessRunFromFile(self, file):
         """
@@ -695,7 +716,7 @@ class Simulator:
                     + "in configData - aborting"
                 )
                 self._logger.error(msg)
-                raise
+                return list()
             else:
                 return self.runs
         else:
@@ -712,8 +733,8 @@ class Simulator:
 
         """
 
-        try:
-            for f in self._results[which]:
-                print(f)
-        except:
-            pass
+        if which not in self._results:
+            self._logger.error("Invalid file type {}".format(which))
+            raise KeyError
+        for f in self._results[which]:
+            print(f)
