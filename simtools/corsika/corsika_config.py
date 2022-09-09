@@ -1,8 +1,8 @@
 import copy
 import logging
-import random
 
 import astropy.units as u
+import numpy as np
 from astropy.io.misc import yaml
 
 import simtools.config as cfg
@@ -219,7 +219,7 @@ class CorsikaConfig:
         # Checking for parameters with default option
         # If it is not given, filling it with the default value
         for parName, parInfo in userPars.items():
-            if parName in self._userParameters.keys():
+            if parName in self._userParameters:
                 continue
             elif "default" in parInfo.keys():
                 validatedValue = self._validateAndConvertArgument(
@@ -490,8 +490,8 @@ class CorsikaConfig:
             File where the telescope positions will be written.
         """
         randomSeed = self._userParameters["PRMPAR"][0] + self._userParameters["RUNNR"][0]
-        random.seed(randomSeed)
-        corsikaSeeds = [int(random.uniform(0, 1e7)) for i in range(4)]
+        rng = np.random.default_rng(randomSeed)
+        corsikaSeeds = [int(rng.uniform(0, 1e7)) for i in range(4)]
 
         for s in corsikaSeeds:
             file.write("SEED {} 0 0\n".format(s))
