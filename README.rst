@@ -33,7 +33,7 @@ AUTHORS:
 
 * Raul R Prado (raul.prado@desy.de)
 * Orel Gueta (orel.gueta@desy.de)
-* Victor B. Martins (victor.barbosa.martins@desy.de)  
+* Victor B. Martins (victor.barbosa.martins@desy.de)
 * Gernot Maier (gernot.maier@desy.de)
 
 INSTALLATION:
@@ -53,7 +53,7 @@ Each time you want to use the package, just activate the conda environment:
 
 Developers can make use of the pre-commit functionality, which tests or apply python style fixes using black and flakes8. To use pre-commit, run the following command after cloning the repository:
 
-``pre-commit --install``
+``pre-commit install``
 
 For testing, pre-commit can be applied locally without commit:
 
