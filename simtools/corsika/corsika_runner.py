@@ -353,10 +353,8 @@ class CorsikaRunner:
 
         Returns
         -------
-        nEvents: int
-            number of simulated events
-        runtime: int
-            run time of job in seconds
+        dict
+            run time and number of simulated events
 
         """
 
@@ -365,20 +363,22 @@ class CorsikaRunner:
 
         self._logger.debug("Reading resources from {}".format(subLogFile))
 
-        runtime = None
+        _resources = {}
+
+        _resources["runtime"] = None
         with open(subLogFile, "r") as file:
             for line in reversed(list(file)):
                 if "RUNTIME" in line:
-                    runtime = int(line.split()[1])
+                    _resources["runtime"] = int(line.split()[1])
                     break
 
-        if runtime is None:
+        if _resources["runtime"] is None:
             self._logger.debug("RUNTIME was not found in run log file")
 
         # Calculating number of events
-        nEvents = int(self.corsikaConfig.getUserParameter("NSHOW"))
+        _resources["nEvents"] = int(self.corsikaConfig.getUserParameter("NSHOW"))
 
-        return nEvents, runtime
+        return _resources
 
     def getLogFile(self, runNumber=None):
         """
