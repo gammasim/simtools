@@ -153,7 +153,7 @@ def _validateAndConvertValue_without_units(value, valueKeys, parName, parInfo):
        list of user input values
     valueKeys: list
        list of keys if user input was a dict; otherwise None
-    parnName: str
+    parName: str
        name of parameter
 
     Returns
