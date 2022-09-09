@@ -10,10 +10,10 @@ import numpy as np
 import simtools.config as cfg
 import simtools.io_handler as io
 import simtools.util.general as gen
+from simtools.corsika.corsika_runner import CorsikaRunner
 from simtools.job_submission.job_manager import JobManager
 from simtools.model.array_model import ArrayModel
 from simtools.simtel.simtel_histograms import SimtelHistograms
-from simtools.corsika.corsika_runner import CorsikaRunner
 from simtools.simtel.simtel_runner_array import SimtelRunnerArray
 from simtools.util import names
 
@@ -161,7 +161,7 @@ class Simulator:
         """
 
         self.simulator = simulator.lower()
-        if self.simulator not in ['simtel', 'corsika']:
+        if self.simulator not in ["simtel", "corsika"]:
             raise gen.InvalidConfigData
 
     def _set_file_locations(self, filesLocation=None, simtelSourcePath=None):
@@ -182,14 +182,15 @@ class Simulator:
         self._filesLocation = Path(cfg.getConfigArg("outputLocation", filesLocation))
         try:
             self._outputDirectory = io.getOutputDirectory(
-                    self._filesLocation, self.label, self.simulator)
+                self._filesLocation, self.label, self.simulator
+            )
         except FileNotFoundError:
-            self._logger.error("Error creating output directory {}".format(
-                self._outputDirectory))
+            self._logger.error("Error creating output directory {}".format(self._outputDirectory))
             raise
 
         self._logger.debug(
-            "Output directory {} - creating it, if needed.".format(self._outputDirectory))
+            "Output directory {} - creating it, if needed.".format(self._outputDirectory)
+        )
 
     def _loadConfigData(self, configData=None, configFile=None):
         """
@@ -204,9 +205,9 @@ class Simulator:
 
         """
         configData = gen.collectDataFromYamlOrDict(configFile, configData)
-        if self.simulator == 'simtel':
+        if self.simulator == "simtel":
             self._loadSimTelConfig(configData)
-        elif self.simulator == 'corsika':
+        elif self.simulator == "corsika":
             self._loadCorsikaConfig(configData)
 
     def _loadCorsikaConfig(self, configData):
@@ -226,14 +227,15 @@ class Simulator:
         try:
             self.site = names.validateSiteName(self._corsikaConfigData.pop("site"))
             self.layoutName = names.validateLayoutArrayName(
-                self._corsikaConfigData.pop("layoutName"))
+                self._corsikaConfigData.pop("layoutName")
+            )
         except KeyError:
             self._logger.error("Missing parameter in simulation configuration data")
             raise
 
         self.runs = self._validateRunListAndRange(
             self._corsikaConfigData.pop("runList", None),
-            self._corsikaConfigData.pop("runRange", None)
+            self._corsikaConfigData.pop("runRange", None),
         )
 
         self._corsikaParametersFile = self._corsikaConfigData.pop("corsikaParametersFile", None)
@@ -315,9 +317,10 @@ class Simulator:
         _restData = copy(configData)
 
         try:
-            _arrayModelData["site"] =  names.validateSiteName(_restData.pop("site"))
+            _arrayModelData["site"] = names.validateSiteName(_restData.pop("site"))
             _arrayModelData["layoutName"] = names.validateLayoutArrayName(
-                _restData.pop("layoutName"))
+                _restData.pop("layoutName")
+            )
             _arrayModelData["modelVersion"] = _restData.pop("modelVersion")
             _arrayModelData["default"] = _restData.pop("default")
         except KeyError:
@@ -336,9 +339,9 @@ class Simulator:
         Set simulation runners
 
         """
-        if self.simulator == 'simtel':
+        if self.simulator == "simtel":
             self._setSimtelRunner()
-        elif self.simulator == 'corsika':
+        elif self.simulator == "corsika":
             self._setCorsikaRunner()
 
     def _setCorsikaRunner(self):
@@ -391,11 +394,7 @@ class Simulator:
             self._fillResults(file, run)
             self.runs.append(run)
 
-    def submit(self,
-               inputFileList=None,
-               submitCommand=None,
-               extraCommands=None,
-               test=False):
+    def submit(self, inputFileList=None, submitCommand=None, extraCommands=None, test=False):
         """
         Submit a run script as a job. The submit command can be given by \
         submitCommand or it will be taken from the config.yml file.
@@ -416,10 +415,8 @@ class Simulator:
         subCmd = submitCommand if submitCommand is not None else cfg.get("submissionCommand")
         self._logger.info("Submission command: {}".format(subCmd))
 
-        runs_and_files_to_submit = self._get_runs_and_files_to_submit(
-            inputFileList=inputFileList)
-        self._logger.info("Starting submission for {} runs".format(
-            len(runs_and_files_to_submit)))
+        runs_and_files_to_submit = self._get_runs_and_files_to_submit(inputFileList=inputFileList)
+        self._logger.info("Starting submission for {} runs".format(len(runs_and_files_to_submit)))
 
         for run, file in runs_and_files_to_submit.items():
 
@@ -455,7 +452,7 @@ class Simulator:
 
         _runs_and_files = {}
 
-        if self.simulator == 'simtel':
+        if self.simulator == "simtel":
             _file_list = self._enforceListType(inputFileList)
             for file in _file_list:
                 _runs_and_files[self._guessRunFromFile(file)] = file
@@ -515,7 +512,7 @@ class Simulator:
         self._results["output"].append(str(self._simulationRunner.getOutputFile(run)))
         self._results["sub_out"].append(str(self._simulationRunner.getSubLogFile(run, mode="out")))
         self._results["log"].append(str(self._simulationRunner.getLogFile(run)))
-        if self.simulator == 'simtel':
+        if self.simulator == "simtel":
             self._results["input"].append(str(file))
             self._results["hist"].append(str(self._simulationRunner.getHistogramFile(run)))
         else:
@@ -539,7 +536,7 @@ class Simulator:
 
         figName = None
 
-        if self.simulator == 'simtel':
+        if self.simulator == "simtel":
             if len(self._results["hist"]) == 0 and inputFileList is not None:
                 self._fillResultsWithoutRun(inputFileList)
 
@@ -573,8 +570,9 @@ class Simulator:
             runsToList = self._getRunsToSimulate(runList=runList, runRange=runRange)
 
             for run in runsToList:
-                self._results["output"].append(str(
-                    self._simulationRunner.getOutputFile(runNumber=run)))
+                self._results["output"].append(
+                    str(self._simulationRunner.getOutputFile(runNumber=run))
+                )
 
         return self._results["output"]
 
@@ -659,8 +657,7 @@ class Simulator:
         nEvents = None
 
         for run in self.runs:
-            nEvents, thisRuntime = self._simulationRunner.getResources(
-                runNumber=run)
+            nEvents, thisRuntime = self._simulationRunner.getResources(runNumber=run)
             if thisRuntime:
                 runtime.append(thisRuntime)
 
@@ -712,8 +709,7 @@ class Simulator:
         if runList is None and runRange is None:
             if self.runs is None:
                 msg = (
-                    "Runs to simulate were not given as arguments nor "
-                    + "in configData - aborting"
+                    "Runs to simulate were not given as arguments nor " + "in configData - aborting"
                 )
                 self._logger.error(msg)
                 return list()
