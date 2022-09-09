@@ -297,7 +297,6 @@ def _validateAndConvertValue(parName, parInfo, valueIn):
         valueKeys = None
 
     if "unit" not in parInfo.keys():
-        print("NOOOOOUNITS")
         return _validateAndConvertValue_without_units(value, valueKeys, parName, parInfo)
 
     return _validateAndConvertValue_with_units(value, valueKeys, parName, parInfo)
