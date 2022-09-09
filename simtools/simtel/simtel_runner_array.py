@@ -222,6 +222,11 @@ class SimtelRunnerArray(SimtelRunner):
         runNumber: int
             Run number.
 
+        Returns
+        -------
+        runtime: int
+            run time of job in seconds
+
         """
 
         subLogFile = self.getSubLogFile(runNumber=runNumber, mode="out")
