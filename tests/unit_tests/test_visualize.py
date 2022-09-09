@@ -2,10 +2,10 @@
 
 import logging
 
+import astropy.io.ascii
 import astropy.units as u
 import numpy as np
 import pytest
-from astropy.io import ascii
 
 import simtools.config as cfg
 import simtools.io_handler as io
@@ -69,7 +69,7 @@ def test_plot_table(db):
     testFileName = "Transmission_Spectrum_PlexiGlass.dat"
     db.exportFileDB(dbName="test-data", dest=io.getTestModelDirectory(), fileName=testFileName)
     tableFile = cfg.findFile(testFileName, io.getTestModelDirectory())
-    table = ascii.read(tableFile)
+    table = astropy.io.ascii.read(tableFile)
 
     plt = visualize.plotTable(table, yTitle="Transmission", title=title, noMarkers=True)
 

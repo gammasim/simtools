@@ -4,10 +4,10 @@ from copy import copy
 from math import pi, tan
 from pathlib import Path
 
+import astropy.io.ascii
 import astropy.units as u
 import matplotlib.pyplot as plt
 import numpy as np
-from astropy.io import ascii
 from astropy.table import QTable
 
 import simtools.config as cfg
@@ -397,11 +397,11 @@ class RayTracing:
             self._logger.error("Cannot export results because it does not exist")
         else:
             self._logger.info("Exporting results to {}".format(self._fileResults))
-            ascii.write(self._results, self._fileResults, format="ecsv", overwrite=True)
+            astropy.io.ascii.write(self._results, self._fileResults, format="ecsv", overwrite=True)
 
     def _readResults(self):
         """Read existing results file and store it in _results."""
-        self._results = ascii.read(self._fileResults, format="ecsv")
+        self._results = astropy.io.ascii.read(self._fileResults, format="ecsv")
         self._hasResults = True
 
     def plot(self, key, save=False, **kwargs):
@@ -422,7 +422,7 @@ class RayTracing:
         KeyError
             If key is not among the valid options.
         """
-        if key not in self.YLABEL.keys():
+        if key not in self.YLABEL:
             msg = "Invalid key to plot"
             self._logger.error(msg)
             raise KeyError(msg)
@@ -463,7 +463,7 @@ class RayTracing:
         KeyError
             If key is not among the valid options.
         """
-        if key not in self.YLABEL.keys():
+        if key not in self.YLABEL:
             msg = "Invalid key to plot"
             self._logger.error(msg)
             raise KeyError(msg)
@@ -490,7 +490,7 @@ class RayTracing:
         KeyError
             If key is not among the valid options.
         """
-        if key not in self.YLABEL.keys():
+        if key not in self.YLABEL:
             msg = "Invalid key to plot"
             self._logger.error(msg)
             raise KeyError(msg)
@@ -515,7 +515,7 @@ class RayTracing:
         KeyError
             If key is not among the valid options.
         """
-        if key not in self.YLABEL.keys():
+        if key not in self.YLABEL:
             msg = "Invalid key to plot"
             self._logger.error(msg)
             raise KeyError(msg)
@@ -531,7 +531,7 @@ class RayTracing:
         """
         images = list()
         for thisOffAxis in self.config.offAxisAngle:
-            if thisOffAxis in self._psfImages.keys():
+            if thisOffAxis in self._psfImages:
                 images.append(self._psfImages[thisOffAxis])
         if len(images) == 0:
             self._logger.error("No image found")
