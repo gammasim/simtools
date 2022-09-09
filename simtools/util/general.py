@@ -124,7 +124,7 @@ def validateConfigData(configData, parameters):
     # Checking for parameters with default option.
     # If it is not given, filling it with the default value.
     for parName, parInfo in parameters.items():
-        if parName in outData.keys():
+        if parName in outData:
             continue
         elif "default" in parInfo.keys() and parInfo["default"] is not None:
             validatedValue = _validateAndConvertValue(parName, parInfo, parInfo["default"])
@@ -143,92 +143,163 @@ def validateConfigData(configData, parameters):
     return ConfigData(**outData)
 
 
+def _validateAndConvertValue_without_units(value, valueKeys, parName, parInfo):
+    """
+    Validate input user parameter for input values without units.
+
+    Parameters
+    ----------
+    value: list
+       list of user input values
+    valueKeys: list
+       list of keys if user input was a dict; otherwise None
+    parName: str
+       name of parameter
+
+    Returns
+    -------
+    list, dict
+        validated and converted input data
+
+    """
+    logger = logging.getLogger(__name__)
+
+    _, undefinedLength = _checkValueEntryLength(value, parName, parInfo)
+
+    # Checking if values have unit and raising error, if so.
+    if all([isinstance(v, str) for v in value]):
+        # In case values are string, e.g. mirrorNumbers = 'all'
+        # This is needed otherwise the elif condition will break
+        pass
+    elif any([u.Quantity(v).unit != u.dimensionless_unscaled for v in value]):
+        msg = "Config entry {} should not have units".format(parName)
+        logger.error(msg)
+        raise InvalidConfigEntry(msg)
+
+    if valueKeys:
+        return {k: v for (k, v) in zip(valueKeys, value)}
+    return value if len(value) > 1 or undefinedLength else value[0]
+
+
+def _checkValueEntryLength(value, parName, parInfo):
+    """
+    Validate length of user input parmeters
+
+    Parameters
+    ----------
+    value: list
+        list of user input values
+    parName: str
+        name of parameter
+    parInfo: dict
+        dictionary with parameter info
+
+    Returns
+    -------
+    valueLength: int
+        length of input list
+    undefinedLength: bool
+        state of input list
+
+    """
+    logger = logging.getLogger(__name__)
+
+    # Checking the entry length
+    valueLength = len(value)
+    logger.debug("Value len of {}: {}".format(parName, valueLength))
+    undefinedLength = False
+    try:
+        if parInfo["len"] is None:
+            undefinedLength = True
+        elif valueLength != parInfo["len"]:
+            msg = "Config entry with wrong len: {}".format(parName)
+            logger.error(msg)
+            raise InvalidConfigEntry(msg)
+    except KeyError:
+        logger.error("Missing len entry in parInfo")
+        raise
+
+    return valueLength, undefinedLength
+
+
+def _validateAndConvertValue_with_units(value, valueKeys, parName, parInfo):
+    """
+    Validate input user parameter for input values with units.
+
+    Parameters
+    ----------
+    value: list
+       list of user input values
+    valueKeys: list
+       list of keys if user input was a dict; otherwise None
+    parnName: str
+       name of parameter
+
+    Returns
+    -------
+    list, dict
+        validated and converted input data
+
+    """
+    logger = logging.getLogger(__name__)
+
+    valueLength, undefinedLength = _checkValueEntryLength(value, parName, parInfo)
+
+    parUnit = copyAsList(parInfo["unit"])
+
+    if undefinedLength and len(parUnit) != 1:
+        msg = "Config entry with undefined length should have a single unit: {}".format(parName)
+        logger.error(msg)
+        raise InvalidConfigEntry(msg)
+    elif len(parUnit) == 1:
+        parUnit *= valueLength
+
+    # Checking units and converting them, if needed.
+    valueWithUnits = list()
+    for arg, unit in zip(value, parUnit):
+        # In case a entry is None, None should be returned.
+        if unit is None or arg is None:
+            valueWithUnits.append(arg)
+            continue
+
+        # Converting strings to Quantity
+        if isinstance(arg, str):
+            arg = u.quantity.Quantity(arg)
+
+        if not isinstance(arg, u.quantity.Quantity):
+            msg = "Config entry given without unit: {}".format(parName)
+            logger.error(msg)
+            raise InvalidConfigEntry(msg)
+        elif not arg.unit.is_equivalent(unit):
+            msg = "Config entry given with wrong unit: {}".format(parName)
+            logger.error(msg)
+            raise InvalidConfigEntry(msg)
+        else:
+            valueWithUnits.append(arg.to(unit).value)
+
+    if valueKeys:
+        return {k: v for (k, v) in zip(valueKeys, valueWithUnits)}
+
+    return valueWithUnits if len(valueWithUnits) > 1 or undefinedLength else valueWithUnits[0]
+
+
 def _validateAndConvertValue(parName, parInfo, valueIn):
     """
     Validate input user parameter and convert it to the right units, if needed.
     Returns the validated arguments in a list.
     """
 
-    logger = logging.getLogger(__name__)
-
-    # Turning value into a list, if it is not.
     if isinstance(valueIn, dict):
-        valueIsDict = True
         value = [d for (k, d) in valueIn.items()]
         valueKeys = [k for (k, d) in valueIn.items()]
     else:
-        valueIsDict = False
         value = copyAsList(valueIn)
+        valueKeys = None
 
-    # Checking the entry length
-    valueLength = len(value)
-    logger.debug("Value len of {}: {}".format(parName, valueLength))
-    undefinedLength = False
-    if parInfo["len"] is None:
-        undefinedLength = True
-    elif valueLength != parInfo["len"]:
-        msg = "Config entry with wrong len: {}".format(parName)
-        logger.error(msg)
-        raise InvalidConfigEntry(msg)
-
-    # Checking unit
     if "unit" not in parInfo.keys():
+        return _validateAndConvertValue_without_units(value, valueKeys, parName, parInfo)
 
-        # Checking if values have unit and raising error, if so.
-        if all([isinstance(v, str) for v in value]):
-            # In case values are string, e.g. mirrorNumbers = 'all'
-            # This is needed otherwise the elif condition will break
-            pass
-        elif any([u.Quantity(v).unit != u.dimensionless_unscaled for v in value]):
-            msg = "Config entry {} should not have units".format(parName)
-            logger.error(msg)
-            raise InvalidConfigEntry(msg)
-
-        if valueIsDict:
-            return {k: v for (k, v) in zip(valueKeys, value)}
-        else:
-            return value if len(value) > 1 or undefinedLength else value[0]
-
-    else:
-        # Turning parInfo['unit'] into a list, if it is not.
-        parUnit = copyAsList(parInfo["unit"])
-
-        if undefinedLength and len(parUnit) != 1:
-            msg = "Config entry with undefined length should have a single unit: {}".format(parName)
-            logger.error(msg)
-            raise InvalidConfigEntry(msg)
-        elif len(parUnit) == 1:
-            parUnit *= valueLength
-
-        # Checking units and converting them, if needed.
-        valueWithUnits = list()
-        for arg, unit in zip(value, parUnit):
-            # In case a entry is None, None should be returned.
-            if unit is None or arg is None:
-                valueWithUnits.append(arg)
-                continue
-
-            # Converting strings to Quantity
-            if isinstance(arg, str):
-                arg = u.quantity.Quantity(arg)
-
-            if not isinstance(arg, u.quantity.Quantity):
-                msg = "Config entry given without unit: {}".format(parName)
-                logger.error(msg)
-                raise InvalidConfigEntry(msg)
-            elif not arg.unit.is_equivalent(unit):
-                msg = "Config entry given with wrong unit: {}".format(parName)
-                logger.error(msg)
-                raise InvalidConfigEntry(msg)
-            else:
-                valueWithUnits.append(arg.to(unit).value)
-
-        if valueIsDict:
-            return {k: v for (k, v) in zip(valueKeys, valueWithUnits)}
-        else:
-            return (
-                valueWithUnits if len(valueWithUnits) > 1 or undefinedLength else valueWithUnits[0]
-            )
+    return _validateAndConvertValue_with_units(value, valueKeys, parName, parInfo)
 
 
 def collectDataFromYamlOrDict(inYaml, inDict, allowEmpty=False):

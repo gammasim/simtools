@@ -4,10 +4,12 @@ import logging
 from pathlib import Path
 
 import astropy.units as u
+import pytest
 import yaml
 
 import simtools.io_handler as io
 import simtools.util.general as gen
+from simtools.util.general import InvalidConfigEntry
 
 logging.getLogger().setLevel(logging.DEBUG)
 
@@ -59,6 +61,72 @@ def test_validate_config_data(cfg_setup):
 
     # Testing dict par
     assert validatedData.dictPar["bleh"] == 500
+
+
+def test_checkValueEntryLength():
+
+    _par_info = {}
+    _par_info["len"] = 2
+    assert gen._checkValueEntryLength([1, 4], "test_1", _par_info) == (2, False)
+    _par_info["len"] = None
+    assert gen._checkValueEntryLength([1, 4], "test_1", _par_info) == (2, True)
+    _par_info["len"] = 3
+    with pytest.raises(InvalidConfigEntry):
+        gen._checkValueEntryLength([1, 4], "test_1", _par_info)
+    _par_info.pop("len")
+    with pytest.raises(KeyError):
+        gen._checkValueEntryLength([1, 4], "test_1", _par_info)
+
+
+def test_validateAndConvertValue_with_units():
+
+    _parname = "cscat"
+    _parinfo = {"len": 4, "unit": [None, u.Unit("m"), u.Unit("m"), None], "names": ["scat"]}
+    _value = [0, 10 * u.m, 3 * u.km, None]
+    _value_keys = ["a", "b", "c", "d"]
+
+    assert gen._validateAndConvertValue_with_units(_value, None, _parname, _parinfo) == [
+        0,
+        10.0,
+        3000.0,
+        None,
+    ]
+
+    assert gen._validateAndConvertValue_with_units(_value, _value_keys, _parname, _parinfo) == {
+        "a": 0,
+        "b": 10.0,
+        "c": 3000.0,
+        "d": None,
+    }
+
+    _parinfo = {"len": None, "unit": [None, u.Unit("m"), u.Unit("m"), None], "names": ["scat"]}
+    with pytest.raises(InvalidConfigEntry):
+        gen._validateAndConvertValue_with_units(_value, None, _parname, _parinfo)
+    _parinfo = {"len": 4, "unit": [None, u.Unit("kg"), u.Unit("m"), None], "names": ["scat"]}
+    with pytest.raises(InvalidConfigEntry):
+        gen._validateAndConvertValue_with_units(_value, None, _parname, _parinfo)
+
+
+def test_validateAndConvertValue_without_units():
+
+    _parname = "cscat"
+    _parinfo = {"len": 3, "names": ["scat"]}
+    _value = [0, 10.0, 3.0]
+    _value_keys = ["a", "b", "c"]
+
+    assert gen._validateAndConvertValue_without_units(_value, None, _parname, _parinfo) == [
+        0.0,
+        10.0,
+        3.0,
+    ]
+    assert gen._validateAndConvertValue_without_units(_value, _value_keys, _parname, _parinfo) == {
+        "a": 0,
+        "b": 10.0,
+        "c": 3.0,
+    }
+    _value = [0, 10.0 * u.m, 3.0]
+    with pytest.raises(InvalidConfigEntry):
+        gen._validateAndConvertValue_without_units(_value, None, _parname, _parinfo)
 
 
 def test_program_is_executable():
