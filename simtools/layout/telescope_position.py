@@ -608,7 +608,7 @@ class TelescopePosition:
         if corsikaObsLevel is None or corsikaSphereCenter is None:
             self._logger.warning(
                 "Warning: telescope height might be incorrect du to "
-                "incomplete CORSIKA observation ({})"
+                "incomplete CORSIKA observation ({}) "
                 "or sphere centre information ({})".format(corsikaObsLevel, corsikaSphereCenter)
             )
         elif self.hasLocalCoordinates() and not self.hasAltitude():
