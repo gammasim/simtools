@@ -17,7 +17,10 @@ from simtools.simtel.simtel_histograms import SimtelHistograms
 from simtools.simtel.simtel_runner_array import SimtelRunnerArray
 from simtools.util import names
 
-__all__ = ["Simulator"]
+__all__ = [
+    "Simulator",
+    "InvalidRunsToSimulate",
+]
 
 
 class InvalidRunsToSimulate(Exception):
@@ -36,7 +39,7 @@ class Simulator:
 
     .. code-block:: python
 
-        self.configData = {
+        configData = {
             'dataDirectory': '.',
             'site': 'South',
             'layoutName': 'Prod5',
@@ -51,34 +54,33 @@ class Simulator:
             'cscat': [10, 1500 * u.m, 0]
         }
 
-
     Example of configData for array simulations:
 
     .. code-block:: python
 
-    configData = {
-        'dataDirectory': '(..)/data',
-        'primary': 'gamma',
-        'zenith': 20 * u.deg,
-        'azimuth': 0 * u.deg,
-        'viewcone': 0 * u.deg,
-        # ArrayModel
-        'site': 'North',
-        'layoutName': '1LST',
-        'modelVersion': 'Prod5',
-        'default': {
-            'LST': '1'
-        },
-        'M-01': 'FlashCam-D'
-    }
+        configData = {
+            'dataDirectory': '(..)/data',
+            'primary': 'gamma',
+            'zenith': 20 * u.deg,
+            'azimuth': 0 * u.deg,
+            'viewcone': 0 * u.deg,
+            # ArrayModel
+            'site': 'North',
+            'layoutName': '1LST',
+            'modelVersion': 'Prod5',
+            'default': {
+                'LST': '1'
+            },
+            'M-01': 'FlashCam-D'
+        }
 
     Attributes
     ----------
-    label: str
+    label : str
         Instance label.
-    config: NamedTuple
+    config : NamedTuple
         Configurable parameters.
-    arrayModel: ArrayModel
+    arrayModel : ArrayModel
         Instance of ArrayModel.
 
     Methods
