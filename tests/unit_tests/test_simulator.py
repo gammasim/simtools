@@ -83,7 +83,7 @@ def shower_simulator(set_db, label, showerConfigData):
     return showerSimulator
 
 
-def test_set_file_locations(array_simulator, shower_simulator):
+def test_setFileLocations(array_simulator, shower_simulator):
 
     assert Path.exists(array_simulator._simulatorSourcePath)
     assert Path.exists(array_simulator._filesLocation)
@@ -111,22 +111,22 @@ def test_guess_run_from_file(array_simulator):
     # (not sure how to test a failed mkdir
 
 
-def test_set_simulator(array_simulator, shower_simulator):
+def test_setSimulator(array_simulator, shower_simulator):
 
-    array_simulator._set_simulator("simtel")
+    array_simulator._setSimulator("simtel")
     assert array_simulator.simulator == "simtel"
 
-    shower_simulator._set_simulator("corsika")
+    shower_simulator._setSimulator("corsika")
     assert shower_simulator.simulator == "corsika"
 
     with pytest.raises(gen.InvalidConfigData):
-        shower_simulator._set_simulator("this_simulator_is_not_there")
+        shower_simulator._setSimulator("this_simulator_is_not_there")
 
 
-def test_load_configuration_and_simulation_model(array_simulator):
+def test_loadConfigurationAndSimulationModel(array_simulator):
 
     with pytest.raises(gen.InvalidConfigData):
-        array_simulator._load_configuration_and_simulation_model()
+        array_simulator._loadConfigurationAndSimulationModel()
 
 
 def test_loadCorsikaConfigAndModel(shower_simulator, showerConfigData):
@@ -225,17 +225,17 @@ def test_submitting(shower_simulator, array_simulator, corsikaFile):
     assert str(inputFiles[0]) == str(corsikaFile)
 
 
-def test_get_runs_and_files_to_submit(array_simulator, shower_simulator, input_file_list):
+def test_getRunsAndFilesToSubmit(array_simulator, shower_simulator, input_file_list):
 
-    assert array_simulator._get_runs_and_files_to_submit(inputFileList=None) == dict()
+    assert array_simulator._getRunsAndFilesToSubmit(inputFileList=None) == dict()
 
-    assert array_simulator._get_runs_and_files_to_submit(inputFileList=input_file_list) == {
+    assert array_simulator._getRunsAndFilesToSubmit(inputFileList=input_file_list) == {
         1: "run1",
         2: "def_run02_and",
         22: "abc_run22",
     }
 
-    assert shower_simulator._get_runs_and_files_to_submit(inputFileList=None) == {
+    assert shower_simulator._getRunsAndFilesToSubmit(inputFileList=None) == {
         3: None,
         4: None,
         6: None,

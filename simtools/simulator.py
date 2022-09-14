@@ -137,16 +137,16 @@ class Simulator:
         self._logger.debug("Init Simulator {}".format(simulator))
 
         self.label = label
-        self._set_simulator(simulator)
+        self._setSimulator(simulator)
         self.runs = list()
         self._results = defaultdict(list)
 
-        self._set_file_locations(filesLocation, simulatorSourcePath)
-        self._load_configuration_and_simulation_model(configData, configFile)
+        self._setFileLocations(filesLocation, simulatorSourcePath)
+        self._loadConfigurationAndSimulationModel(configData, configFile)
 
         self._setSimulationRunner()
 
-    def _set_simulator(self, simulator):
+    def _setSimulator(self, simulator):
         """
         Set and test simulator type
 
@@ -165,7 +165,7 @@ class Simulator:
             raise gen.InvalidConfigData
         self.simulator = simulator.lower()
 
-    def _set_file_locations(self, filesLocation=None, simulatorSourcePath=None):
+    def _setFileLocations(self, filesLocation=None, simulatorSourcePath=None):
         """
         Set file locations, input and output directories
 
@@ -189,7 +189,7 @@ class Simulator:
             "Output directory {} - creating it, if needed.".format(self._outputDirectory)
         )
 
-    def _load_configuration_and_simulation_model(self, configData=None, configFile=None):
+    def _loadConfigurationAndSimulationModel(self, configData=None, configFile=None):
         """
         Load configuration data and initialize simulation models.
 
@@ -412,7 +412,7 @@ class Simulator:
         subCmd = submitCommand if submitCommand is not None else cfg.get("submissionCommand")
         self._logger.info("Submission command: {}".format(subCmd))
 
-        runs_and_files_to_submit = self._get_runs_and_files_to_submit(inputFileList=inputFileList)
+        runs_and_files_to_submit = self._getRunsAndFilesToSubmit(inputFileList=inputFileList)
         self._logger.info("Starting submission for {} runs".format(len(runs_and_files_to_submit)))
 
         for run, file in runs_and_files_to_submit.items():
@@ -429,7 +429,7 @@ class Simulator:
 
             self._fillResults(file, run)
 
-    def _get_runs_and_files_to_submit(self, inputFileList=None):
+    def _getRunsAndFilesToSubmit(self, inputFileList=None):
         """
         Return a dictionary with run numbers and (if applicable) simulation
         files. The latter are expected to be given for the simtel simulator.
