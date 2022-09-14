@@ -554,20 +554,20 @@ class LayoutArray:
                 + " +axis=nwu +units=m +k_0=1.0"
             )
             crs_local = pyproj.CRS.from_proj4(proj4_string)
-            self._logger.info("Local Mercator projection: {}".format(crs_local))
+            self._logger.debug("Local Mercator projection: {}".format(crs_local))
             return crs_local
         else:
-            self._logger.warning("crs_local cannot be built because center lon and lat are missing")
+            self._logger.debug("crs_local cannot be built because center lon and lat are missing")
             return None
 
     def _getCrsUtm(self):
         """Get crs_utm"""
         if self._epsg is not None:
             crs_utm = pyproj.CRS.from_user_input(self._epsg)
-            self._logger.info("UTM system: {}".format(crs_utm))
+            self._logger.debug("UTM system: {}".format(crs_utm))
             return crs_utm
         else:
-            self._logger.warning("crs_utm cannot be built because center lon and lat are missing")
+            self._logger.debug("crs_utm cannot be built because EPSG definition is missing")
             return None
 
     @staticmethod
