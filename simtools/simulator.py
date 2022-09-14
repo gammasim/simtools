@@ -32,24 +32,24 @@ class Simulator:
     The configuration is set as a dict configData or a yaml \
     file configFile.
 
-    Example of configData for shower simulations:
+    Example of configData for shower simulations
 
     .. code-block:: python
 
-        self.configData = {
-            'dataDirectory': '.',
-            'site': 'South',
-            'layoutName': 'Prod5',
-            'runRange': [1, 100],
-            'nshow': 10,
-            'primary': 'gamma',
-            'erange': [100 * u.GeV, 1 * u.TeV],
-            'eslope': -2,
-            'zenith': 20 * u.deg,
-            'azimuth': 0 * u.deg,
-            'viewcone': 0 * u.deg,
-            'cscat': [10, 1500 * u.m, 0]
-        }
+    configData = {
+        'dataDirectory': '.',
+        'site': 'South',
+        'layoutName': 'Prod5',
+        'runRange': [1, 100],
+        'nshow': 10,
+        'primary': 'gamma',
+        'erange': [100 * u.GeV, 1 * u.TeV],
+        'eslope': -2,
+        'zenith': 20 * u.deg,
+        'azimuth': 0 * u.deg,
+        'viewcone': 0 * u.deg,
+        'cscat': [10, 1500 * u.m, 0]
+    }
 
 
     Example of configData for array simulations:
