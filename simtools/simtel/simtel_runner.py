@@ -29,7 +29,7 @@ class SimtelRunner:
 
     Methods
     -------
-    getRunScript(self, test=False, inputFile=None, run=None)
+    getRunScript(self, test=False, inputFile=None, runNumber=None)
         Builds and returns the full path of the bash run script containing
         the sim_telarray command.
     run(test=False, force=False, input=None)
@@ -90,7 +90,7 @@ class SimtelRunner:
             self._logger.error(msg)
             raise ValueError(msg)
 
-    def getRunScript(self, test=False, inputFile=None, run=None, extraCommands=None):
+    def getRunScript(self, test=False, inputFile=None, runNumber=None, extraCommands=None):
         """
         Builds and returns the full path of the bash run script containing
         the sim_telarray command.
@@ -101,7 +101,7 @@ class SimtelRunner:
             Test flag for faster execution.
         inputFile: str or Path
             Full path of the input CORSIKA file.
-        run: int
+        runNumber: int
             Run number.
         extraCommands: str
             Additional commands for running simulations given in config.yml
@@ -116,14 +116,14 @@ class SimtelRunner:
         self._scriptDir = self._baseDirectory.joinpath("scripts")
         self._scriptDir.mkdir(parents=True, exist_ok=True)
         self._scriptFile = self._scriptDir.joinpath(
-            "run{}-simtel".format(run if run is not None else "")
+            "run{}-simtel".format(runNumber if runNumber is not None else "")
         )
         self._logger.debug("Run bash script - {}".format(self._scriptFile))
 
         extraCommands = self._getExtraCommands(extraCommands)
         self._logger.debug("Extra commands to be added to the run script {}".format(extraCommands))
 
-        command = self._makeRunCommand(inputFile=inputFile, run=run)
+        command = self._makeRunCommand(inputFile=inputFile, runNumber=runNumber)
         with self._scriptFile.open("w") as file:
             # TODO: header
             file.write("#!/usr/bin/bash\n\n")
@@ -147,7 +147,7 @@ class SimtelRunner:
         os.system("chmod ug+x {}".format(self._scriptFile))
         return self._scriptFile
 
-    def run(self, test=False, force=False, inputFile=None, run=None):
+    def run(self, test=False, force=False, inputFile=None, runNumber=None):
         """
         Basic sim_telarray run method.
 
@@ -165,11 +165,11 @@ class SimtelRunner:
             self._logger.error(msg)
             raise RuntimeError(msg)
 
-        if not self._shallRun(run) and not force:
+        if not self._shallRun(runNumber) and not force:
             self._logger.debug("Skipping because output exists and force = False")
             return
 
-        command = self._makeRunCommand(inputFile=inputFile, run=run)
+        command = self._makeRunCommand(inputFile=inputFile, runNumber=runNumber)
 
         if test:
             self._logger.info("Running (test) with command:{}".format(command))
@@ -186,7 +186,7 @@ class SimtelRunner:
         # if self._simtelFailed(sysOutput):
         #     self._raiseSimtelError()
 
-        self._checkRunResult(run=run)
+        self._checkRunResult(runNumber=runNumber)
 
     @staticmethod
     def _simtelFailed(sysOutput):
@@ -211,7 +211,7 @@ class SimtelRunner:
         self._logger.error(msg)
         raise SimtelExecutionError(msg)
 
-    def _shallRun(self, run=None):
+    def _shallRun(self, runNumber=None):
         self._logger.debug(
             "shallRun is being called from the base class - returning False -"
             + "it should be implemented in the sub class"
