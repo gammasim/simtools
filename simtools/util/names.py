@@ -734,7 +734,7 @@ def cameraEfficiencyLogFileName(site, telescopeModelName, zenithAngle, label):
 
 def corsikaConfigFileName(arrayName, site, primary, zenith, viewCone, label=None):
     """
-    Corsika config file name.
+    CORSIKA config file name.
 
     Parameters
     ----------
@@ -768,7 +768,7 @@ def corsikaConfigFileName(arrayName, site, primary, zenith, viewCone, label=None
 
 def corsikaConfigTmpFileName(arrayName, site, primary, zenith, viewCone, run, label=None):
     """
-    Corsika config file name.
+    CORSIKA config file name.
 
     Parameters
     ----------
@@ -805,7 +805,7 @@ def corsikaConfigTmpFileName(arrayName, site, primary, zenith, viewCone, run, la
 
 def corsikaOutputFileName(run, primary, arrayName, site, zenith, azimuth, label=None):
     """
-    Corsika output file name.
+    CORSIKA output file name.
 
     Warnings
     --------
@@ -849,7 +849,7 @@ def corsikaOutputGenericFileName(arrayName, site, label=None):
 
 def corsikaRunScriptFileName(arrayName, site, primary, run, label=None):
     """
-    Corsika script file path.
+    CORSIKA script file path.
 
     Parameters
     ----------
@@ -875,7 +875,7 @@ def corsikaRunScriptFileName(arrayName, site, primary, run, label=None):
 
 def corsikaRunLogFileName(arrayName, site, primary, run, label=None):
     """
-    Corsika script file name.
+    CORSIKA script file name.
 
     Parameters
     ----------
@@ -903,7 +903,7 @@ def corsikaRunLogFileName(arrayName, site, primary, run, label=None):
 
 def corsikaSubLogFileName(arrayName, site, primary, run, mode, label=None):
     """
-    Corsika submission file name.
+    CORSIKA submission file name.
 
     Parameters
     ----------
