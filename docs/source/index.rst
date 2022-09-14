@@ -9,7 +9,7 @@ What is gammasim-tools?
 =======================
 
 gammasim-tools is a prototype of a software package that provides tools and
-the framework for the Simulation System of the `CTA Observatory <www.cta-observatory.org>`_
+the framework for the Simulation System of the `CTA Observatory <https://www.cta-observatory.org/>`_
 
 Among the main functionalities of gammasim-tools, there are:
 

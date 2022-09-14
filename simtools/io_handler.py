@@ -106,7 +106,7 @@ def getRayTracingOutputDirectory(filesLocation, label):
 
 def getCorsikaOutputDirectory(filesLocation, label):
     """
-    Get output directory for corsika related files.
+    Get output directory for CORSIKA related files.
 
     Parameters
     ----------
