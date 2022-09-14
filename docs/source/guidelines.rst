@@ -5,6 +5,31 @@ Guidelines for Developers
 
 This section is meant for developers.
 
+Documentation
+=============
+
+Sphinx is used to create this documentation automatically with each merge into the master branch, see the `Github Action workflow CI-docs <https://github.com/gammasim/gammasim-tools/blob/master/.github/workflows/CI-docs.yml>`_.
+
+For testing of Sphinx:
+
+.. code-block::
+
+    cd docs
+    make html
+
+The documentation can be viewed in a browser starting from the file ./docs/build/html/index.html
+
+
+Docstrings
+----------
+
+Docstrings following the Numpy style must be added to any public function, class or method.
+It is also recommended to add docstrings-like comments on private ones for the sake of organization.
+
+In the application, the modules should contain docstrings with a general description, command line
+parameters, examples etc.
+
+For a reference of the numpydoc names, see https://numpydoc.readthedocs.io/en/latest/format.html
 
 Conventions
 ===========
@@ -137,18 +162,6 @@ Applications
 Applications are simple command lines tools that should be build off of the simtools library.
 It is recommended to avoid implementing complex algorithm in the applications. Instead, that
 should be done at some module in the library.
-
-
-Docstrings
-==========
-
-Docstrings following the Numpy style must be added to any public function, class or method.
-It is also recommended to add docstrings-like comments on private ones for the sake of organization.
-
-In the application, the modules should contain docstrings with a general description, command line
-parameters, examples etc.
-
-For a reference of the numpydoc names, see https://numpydoc.readthedocs.io/en/latest/format.html
 
 
 Layout arrays
