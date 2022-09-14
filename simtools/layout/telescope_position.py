@@ -120,7 +120,6 @@ class TelescopePosition:
         """
 
         self._logger = logging.getLogger(__name__)
-        self._logger.debug("Init TelescopePosition")
 
         self.name = name
         self._prodId = prodId
@@ -580,13 +579,11 @@ class TelescopePosition:
         """
 
         if crsLocal is None:
-            self._logger.warning("crsLocal is None - conversions will be impacted")
+            self._logger.debug("crsLocal is None - conversions will be impacted")
         if crsUtm is None:
-            self._logger.warning("crsUtm is None - conversions will be impacted")
+            self._logger.debug("crsUtm is None - conversions will be impacted")
         if wgs84 is None:
-            self._logger.warning("wgs84 is None - conversions will be impacted")
-
-        # Starting by local <-> UTM <-> Mercator
+            self._logger.debug("wgs84 is None - conversions will be impacted")
 
         if (
             self.hasLocalCoordinates()
@@ -604,9 +601,8 @@ class TelescopePosition:
         if self.hasUtmCoordinates() and not self.hasMercatorCoordinates() and crsUtm is not None:
             self.convertUtmToMercator(crsUtm, wgs84)
 
-        # Dealing with altitude <-> posZ
         if corsikaObsLevel is None or corsikaSphereCenter is None:
-            self._logger.warning(
+            self._logger.debug(
                 "Warning: telescope height might be incorrect du to "
                 "incomplete CORSIKA observation ({}) "
                 "or sphere centre information ({})".format(corsikaObsLevel, corsikaSphereCenter)
@@ -615,8 +611,3 @@ class TelescopePosition:
             self.convertCorsikaToAsl(corsikaObsLevel, corsikaSphereCenter)
         elif self.hasAltitude() and not self.hasLocalCoordinates():
             self.convertAslToCorsika(corsikaObsLevel, corsikaSphereCenter)
-        else:
-            # Nothing to be converted
-            pass
-
-    # End of convertAll
