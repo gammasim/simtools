@@ -297,7 +297,7 @@ class Simulator:
                 self._logger.debug("runRange: {}".format(runRange))
                 validatedRuns.extend(list(runRange))
 
-        validatedRunsUnique = set(validatedRuns)
+        validatedRunsUnique = sorted(set(validatedRuns))
         return list(validatedRunsUnique)
 
     def _collectArrayModelParameters(self, configData):
