@@ -1,6 +1,7 @@
 """ Module to handle input and output conventions. """
 
 import datetime
+import logging
 from pathlib import Path
 
 import simtools.config as cfg
@@ -16,7 +17,7 @@ __all__ = [
 ]
 
 
-def _getOutputDirectory(filesLocation, label, mode=None):
+def getOutputDirectory(filesLocation, label, mode=None):
     """
     Get main output directory for a generic mode
 
@@ -33,12 +34,19 @@ def _getOutputDirectory(filesLocation, label, mode=None):
     -------
     Path
     """
+    _logger = logging.getLogger(__name__)
+
     today = datetime.date.today()
     labelDir = label if label is not None else "d-" + str(today)
     path = Path(filesLocation).joinpath("simtools-output").joinpath(labelDir)
     if mode is not None:
         path = path.joinpath(mode)
-    path.mkdir(parents=True, exist_ok=True)
+    try:
+        path.mkdir(parents=True, exist_ok=True)
+    except FileNotFoundError:
+        _logger.error("Error creating directory {}".format(str(path)))
+        raise
+
     return path.absolute()
 
 
@@ -57,7 +65,7 @@ def getModelOutputDirectory(filesLocation, label):
     -------
     Path
     """
-    return _getOutputDirectory(filesLocation, label, "model")
+    return getOutputDirectory(filesLocation, label, "model")
 
 
 def getLayoutOutputDirectory(filesLocation, label):
@@ -75,7 +83,7 @@ def getLayoutOutputDirectory(filesLocation, label):
     -------
     Path
     """
-    return _getOutputDirectory(filesLocation, label, "layout")
+    return getOutputDirectory(filesLocation, label, "layout")
 
 
 def getRayTracingOutputDirectory(filesLocation, label):
@@ -93,7 +101,7 @@ def getRayTracingOutputDirectory(filesLocation, label):
     -------
     Path
     """
-    return _getOutputDirectory(filesLocation, label, "ray-tracing")
+    return getOutputDirectory(filesLocation, label, "ray-tracing")
 
 
 def getCorsikaOutputDirectory(filesLocation, label):
@@ -111,7 +119,7 @@ def getCorsikaOutputDirectory(filesLocation, label):
     -------
     Path
     """
-    return _getOutputDirectory(filesLocation, label, "corsika")
+    return getOutputDirectory(filesLocation, label, "corsika")
 
 
 def getCameraEfficiencyOutputDirectory(filesLocation, label):
@@ -129,7 +137,7 @@ def getCameraEfficiencyOutputDirectory(filesLocation, label):
     -------
     Path
     """
-    return _getOutputDirectory(filesLocation, label, "camera-efficiency")
+    return getOutputDirectory(filesLocation, label, "camera-efficiency")
 
 
 def getApplicationOutputDirectory(filesLocation, label):
@@ -147,7 +155,7 @@ def getApplicationOutputDirectory(filesLocation, label):
     -------
     Path
     """
-    return _getOutputDirectory(filesLocation, label, "application-plots")
+    return getOutputDirectory(filesLocation, label, "application-plots")
 
 
 def getArraySimulatorOutputDirectory(filesLocation, label):
@@ -165,7 +173,7 @@ def getArraySimulatorOutputDirectory(filesLocation, label):
     -------
     Path
     """
-    return _getOutputDirectory(filesLocation, label, "array-simulator")
+    return getOutputDirectory(filesLocation, label, "array-simulator")
 
 
 def getDerivedOutputDirectory(filesLocation, label):
@@ -183,7 +191,7 @@ def getDerivedOutputDirectory(filesLocation, label):
     -------
     Path
     """
-    return _getOutputDirectory(filesLocation, label, "derived")
+    return getOutputDirectory(filesLocation, label, "derived")
 
 
 def getDataFile(parentDir, fileName):
