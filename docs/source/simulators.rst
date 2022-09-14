@@ -3,13 +3,7 @@
 Simulators
 ==========
 
-* `shower_simulator`_
+.. _simulatormodule:
 
-
-.. _shower_simulator:
-
-shower_simulator
-----------------
-
-.. automodule:: shower_simulator
+.. automodule:: simulator
    :members:
