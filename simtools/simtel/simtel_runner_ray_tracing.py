@@ -45,7 +45,7 @@ class SimtelRunnerRayTracing(SimtelRunner):
 
     Methods
     -------
-    getRunScript(self, test=False, inputFile=None, run=None)
+    getRunScript(self, test=False, inputFile=None, runNumber=None)
         Builds and returns the full path of the bash run script containing
         the sim_telarray command.
     run(test=False, force=False)
@@ -164,11 +164,11 @@ class SimtelRunnerRayTracing(SimtelRunner):
                 "0. {} 1.0 {}\n".format(90.0 - self.config.zenithAngle, self.config.sourceDistance)
             )
 
-    def _shallRun(self, run=None):
+    def _shallRun(self, runNumber=None):
         """Tells if simulations should be run again based on the existence of output files."""
         return not self._isPhotonListFileOK()
 
-    def _makeRunCommand(self, inputFile, run=None):
+    def _makeRunCommand(self, inputFile, runNumber=None):
         """Return the command to run simtel_array."""
 
         if self._singleMirrorMode:
@@ -226,7 +226,7 @@ class SimtelRunnerRayTracing(SimtelRunner):
 
     # END of makeRunCommand
 
-    def _checkRunResult(self, run=None):
+    def _checkRunResult(self, runNumber=None):
         # Checking run
         if not self._isPhotonListFileOK():
             self._logger.error("Photon list is empty.")

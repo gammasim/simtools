@@ -34,7 +34,3 @@ def simtelRunner(telescopeModel):
         },
     )
     return simtelRunner
-
-
-def test_run(simtelRunner):
-    simtelRunner.run(test=True, force=True)

@@ -60,7 +60,7 @@ import simtools.config as cfg
 import simtools.io_handler as io
 import simtools.util.commandline_parser as argparser
 import simtools.util.general as gen
-from simtools.shower_simulator import ShowerSimulator
+from simtools.simulator import Simulator
 
 
 def main():
@@ -107,7 +107,7 @@ def main():
     outputDir = io.getApplicationOutputDirectory(cfg.get("outputLocation"), label)
 
     showerConfigData = {
-        "corsikaDataDirectory": args.output,
+        "dataDirectory": args.output,
         "site": args.site,
         "layoutName": args.array,
         "runRange": [1, args.nruns + 1],
@@ -121,14 +121,14 @@ def main():
         "cscat": [20, 1500 * u.m, 0],
     }
 
-    showerSimulator = ShowerSimulator(label=label, showerConfigData=showerConfigData)
+    showerSimulator = Simulator(label=label, simulator="corsika", configData=showerConfigData)
 
     if not args.test:
         showerSimulator.submit()
     else:
         logger.info("Test flag is on - it will not submit any job.")
         logger.info("This is an example of the run script:")
-        showerSimulator.submit(runList=[1], test=args.test)
+        showerSimulator.submit(test=args.test)
 
     # Exporting the list of output/log/input files into the application folder
     outputFileList = outputDir.joinpath("outputFiles_{}.list".format(args.primary))
