@@ -156,14 +156,12 @@ def test_validateRunListAndRange(shower_simulator):
 
     run_list = [1, 24, 3]
 
-    assert shower_simulator._validateRunListAndRange(runList=run_list, runRange=None) == \
-        [1, 3, 24]
+    assert shower_simulator._validateRunListAndRange(runList=run_list, runRange=None) == [1, 3, 24]
 
     with pytest.raises(InvalidRunsToSimulate):
         shower_simulator._validateRunListAndRange(runList=[1, "a", 4], runRange=None)
 
-    assert shower_simulator._validateRunListAndRange(runList=None, runRange=[3, 6]) == \
-        [3, 4, 5, 6]
+    assert shower_simulator._validateRunListAndRange(runList=None, runRange=[3, 6]) == [3, 4, 5, 6]
 
     assert shower_simulator._validateRunListAndRange(runList=None, runRange=[6, 3]) == []
 
