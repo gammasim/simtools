@@ -12,11 +12,12 @@ These applications will be used as building blocks for the Simulation System Wor
 
 The application scripts can be found in gammasim-tools/applications.
 
-The applications expect a config file named config.yml in your running directory. Please,
+The applications expect a config file named config.yml in your gammasim-tools directory (unless specified differently
+using the function function config.setConfigFileName) . Please,
 follow the instructions in :ref:`Configuration` to setup your config file.
 
 Some applications require one or multiple file names as input in the command line. The system will
-first search on your local directory for these files, and in case it is not found, it will search
+first search on main gammasim-tools directory for these files, and in case it is not found, it will search
 into the directories given by the config parameter *modelFilesLocation*.
 
 The output files from the applications will be written to $outputLocation/$label, where *outputLocation*
