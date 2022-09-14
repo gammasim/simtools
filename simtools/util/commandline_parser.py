@@ -35,13 +35,13 @@ class CommandLineParser(argparse.ArgumentParser):
             self.add_argument(
                 "-c",
                 "--workflow_config_file",
-                help="Workflow configuration file",
+                help="workflow configuration file",
                 type=str,
                 required=False,
             )
         self.add_argument(
             "--test",
-            help="Test option for faster execution during development",
+            help="test option for faster execution during development",
             action="store_true",
             required=False,
         )
@@ -51,7 +51,7 @@ class CommandLineParser(argparse.ArgumentParser):
             dest="logLevel",
             action="store",
             default="info",
-            help="Log level to print (default is INFO)",
+            help="log level to print (default is INFO)",
             required=False,
         )
         self.add_argument(
@@ -72,7 +72,7 @@ class CommandLineParser(argparse.ArgumentParser):
             self.add_argument(
                 "-t",
                 "--telescope",
-                help="Telescope model name (e.g. LST-1, SST-D, ...)",
+                help="telescope model name (e.g. LST-1, SST-D, ...)",
                 type=str,
                 required=True,
             )
@@ -80,7 +80,7 @@ class CommandLineParser(argparse.ArgumentParser):
             self.add_argument(
                 "-m",
                 "--model_version",
-                help="Model version (default=Current)",
+                help="model version (default=Current)",
                 type=str,
                 default="Current",
             )
