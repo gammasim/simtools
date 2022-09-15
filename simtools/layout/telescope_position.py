@@ -17,7 +17,7 @@ class MissingInputForConvertion(Exception):
 
 class TelescopePosition:
     """
-    Store and perform coordinate transformations with single telescope positions.
+    Store and perform coordinate transformations for a single telescope position.
 
     Configurable parameters:
         posX:
@@ -103,7 +103,7 @@ class TelescopePosition:
         Perform all the necessary conversions in order to fill all the coordinate variables.
     """
 
-    def __init__(self, name=None, prodId=None, configData=None, configFile=None):
+    def __init__(self, name=None, configData=None, configFile=None):
         """
         TelescopePosition init.
 
@@ -111,8 +111,6 @@ class TelescopePosition:
         ----------
         name: str
             Name of the telescope (e.g L-01, S-05, ...)
-        prodId: dict
-            ...
         configData: dict.
             Dict containing the configurable parameters.
         configFile: str or Path
@@ -122,8 +120,8 @@ class TelescopePosition:
         self._logger = logging.getLogger(__name__)
 
         self.name = name
-        self._prodId = prodId
 
+        # TODO replace by hardwired dict
         # Loading configData
         _configDataIn = gen.collectDataFromYamlOrDict(configFile, configData, allowEmpty=True)
         _parameterFile = io.getDataFile("parameters", "telescope-position_parameters.yml")
@@ -150,7 +148,7 @@ class TelescopePosition:
         -------
         Instance of this class.
         """
-        args, configData = gen.separateArgsAndConfigData(expectedArgs=["name", "prodId"], **kwargs)
+        args, configData = gen.separateArgsAndConfigData(expectedArgs=["name"], **kwargs)
         return cls(**args, configData=configData)
 
     def __repr__(self):
@@ -170,11 +168,10 @@ class TelescopePosition:
         if self.hasAltitude():
             telstr += "\t Alt: {:0.2f}".format(self._altitude)
 
-        if self._prodId and len(self._prodId) > 0:
-            telstr += "\t", self._prodId
         return telstr
 
     def getTelescopeSize(self):
+        # TODO revisit if this is the right approach
         # Guessing the tel size from the name
         if self.name[0] == "L":
             return "LST"
@@ -252,7 +249,9 @@ class TelescopePosition:
         -------
         (latitude [u.deg], longitude [u.deg])
         """
-        return self._latitude * u.deg, self._longitude * u.deg
+        if self._latitude and self._longitude:
+            return self._latitude * u.deg, self._longitude * u.deg
+        return None, None
 
     @u.quantity_input(latitude=u.deg, longitude=u.deg)
     def setMercatorCoordinates(self, latitude, longitude):

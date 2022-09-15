@@ -29,7 +29,7 @@
 
 import logging
 
-# import simtools.layout.layout_array as layout_array
+import simtools.layout.layout_array as layout_array
 import simtools.util.commandline_parser as argparser
 import simtools.util.general as gen
 
@@ -52,7 +52,9 @@ def parse(description=None):
 
     parser = argparser.CommandLineParser(description=description)
 
-    parser.add_argument("--array_elements", help="list of array element positions (ecsv format)")
+    parser.add_argument(
+        "--array_element_list", help="list of array element positions (ecsv format)"
+    )
     #    parser.add_argument("--layout_list", help="list of layouts")
     #    parser.add_argument("--layout_name", help="layout to be used", default="baseline")
     parser.add_argument(
@@ -77,10 +79,13 @@ def main():
     _logger = logging.getLogger()
     _logger.setLevel(gen.getLogLevelFromUser(args.logLevel))
 
+    layout = layout_array.LayoutArray()
+    layout.readTelescopeListFile(args.array_element_list)
 
-#    layout = layout_array.ArrayData()
-#    if layout.read_telescope_list(args.telescope_list):
-#        layout.convert_coordinates()
+    layout.convertCoordinates()
+    layout.printTelescopeList()
+
+
 #        layout.print_array_center()
 #        layout.print_corsika_parameters()
 #        layout.read_layout(args.layout_list, args.layout_name)
