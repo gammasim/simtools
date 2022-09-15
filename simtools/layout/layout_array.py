@@ -4,7 +4,6 @@ import astropy.units as u
 import pyproj
 from astropy.table import Table
 
-import simtools.config as cfg
 import simtools.io_handler as io
 import simtools.util.general as gen
 from simtools.layout.telescope_position import TelescopePosition
@@ -119,23 +118,10 @@ class LayoutArray:
 
         self.name = name
         self._telescopeList = []
-
-        # Loading configData
-        _configDataIn = gen.collectDataFromYamlOrDict(configFile, configData, allowEmpty=True)
-        _parameterFile = io.getDataFile("parameters", "layout-array_parameters.yml")
-        _parameters = gen.collectDataFromYamlOrDict(_parameterFile, None)
-        self.config = gen.validateConfigData(_configDataIn, _parameters)
-
-        # Making config entries into attributes
-        for par, value in zip(self.config._fields, self.config):
-            self.__dict__["_" + par] = value
-
-        self._loadArrayCenter()
-
-        # Output directory
-        self._filesLocation = cfg.getConfigArg("outputLocation", filesLocation)
-        self._outputDirectory = io.getLayoutOutputDirectory(self._filesLocation, self.label)
-        self._outputDirectory.mkdir(parents=True, exist_ok=True)
+        self._epsg = None
+        self._initalizeCoordinateSystems(self._layoutCenterDefaults())
+        self._corsikaTelescope = {}
+        self._initializeCorsikaTelescope(self._corsikaTelescopeDefault())
 
     @classmethod
     def fromKwargs(cls, **kwargs):
@@ -153,9 +139,7 @@ class LayoutArray:
         -------
         Instance of this class.
         """
-        args, configData = gen.separateArgsAndConfigData(
-            expectedArgs=["name", "label", "filesLocation"], **kwargs
-        )
+        args, configData = gen.separateArgsAndConfigData(expectedArgs=["name", "label"], **kwargs)
         return cls(**args, configData=configData)
 
     @classmethod
@@ -198,74 +182,107 @@ class LayoutArray:
     def __getitem__(self, i):
         return self._telescopeList[i]
 
-    def _loadArrayCenter(self):
-        """Load the array center and make conversions if needed."""
+    def _initializeCorsikaTelescope(self, corsika_dict):
+        """
+        Initialize CORSIKA telescope parameters
+
+        Parameters
+        ----------
+        corsika_dict dict
+            dictionary with coordinates of CORSIKA telescope
+
+        """
+
+        try:
+            if corsika_dict["corsika_obs_level"]:
+                self._corsikaTelescope["corsika_obs_level"] = u.Quantity(
+                    corsika_dict["corsika_obs_level"]
+                )
+            else:
+                self._corsikaTelescope["corsika_obs_level"] = None
+            self._corsikaTelescope["corsika_sphere_center"] = {}
+            for key, value in corsika_dict["corsika_sphere_center"].items():
+                self._corsikaTelescope["corsika_sphere_center"][key] = u.Quantity(value)
+            self._corsikaTelescope["corsika_sphere_radius"] = {}
+            for key, value in corsika_dict["corsika_sphere_radius"].items():
+                self._corsikaTelescope["corsika_sphere_radius"][key] = u.Quantity(value)
+
+            print("AAAAAAAAAAAA", self._corsikaTelescope["corsika_sphere_center"])
+        except KeyError:
+            pass
+
+    def _initalizeCoordinateSystems(self, center_dict):
+        """
+        Initialize array center and coordinate systems
+
+        Parameters
+        ----------
+        center_dict dict
+            dictionary with coordinates of array center
+
+        """
 
         self._arrayCenter = TelescopePosition()
         self._arrayCenter.name = "array_center"
+        self._epsg = center_dict["EPSG"]
 
         self._arrayCenter.setLocalCoordinates(0 * u.m, 0 * u.m, 0 * u.m)
-        if self._centerLatitude is not None and self._centerLongitude is not None:
+        try:
             self._arrayCenter.setMercatorCoordinates(
-                self._centerLatitude * u.deg, self._centerLongitude * u.deg
+                u.Quantity(center_dict["center_lat"]), u.Quantity(center_dict["center_lon"])
             )
-        if self._centerEasting is not None and self._centerNorthing is not None:
             self._arrayCenter.setUtmCoordinates(
-                self._centerEasting * u.m, self._centerNorthing * u.m
+                u.Quantity(center_dict["center_easting"]),
+                u.Quantity(center_dict["center_northing"]),
             )
-        if self._centerAltitude is not None:
-            self._arrayCenter.setAltitude(self._centerAltitude * u.m)
+            self._arrayCenter.setAltitude(u.Quantity(center_dict["center_alt"]))
+        except TypeError:
+            pass
 
-        # Converting
-        wgs84 = self._getWgs84()
-        crs_local = self._getCrsLocal()
-        crs_utm = self._getCrsUtm()
-        self._arrayCenter.convertAll(crsLocal=crs_local, wgs84=wgs84, crsUtm=crs_utm)
+        self._arrayCenter.convertAll(
+            crsLocal=self._getCrsLocal(), wgs84=self._getCrsWgs84(), crsUtm=self._getCrsUtm()
+        )
 
-        # Filling in center UTM coordinates if needed
-        if (
-            self._centerNorthing is None or self._centerEasting is None
-        ) and self._arrayCenter.hasUtmCoordinates():
-            (
-                centerNorthingWithUnit,
-                centerEastingWithUnit,
-            ) = self._arrayCenter.getUtmCoordinates()
-            self._centerNorthing = centerNorthingWithUnit.to(u.m).value
-            self._centerEasting = centerEastingWithUnit.to(u.m).value
+    def _loadTelescopeList(self, table):
+        """
+        Load list of telescope from an astropy table
 
-    # End of _loadArrayCenter
+        Parameters
+        ----------
+        table: astropy.table
+            data table with array element coordinates
 
-    def _appendTelescope(self, row, table, prodList):
-        """Append a new telescope from table row to list of telescopes."""
 
-        tel = TelescopePosition()
-        tel.name = row["telescope_name"]
+        """
 
-        if "pos_x" in table.colnames and "pos_y" in table.colnames and "pos_z" in table.colnames:
-            tel.setLocalCoordinates(
-                posX=row["pos_x"] * table["pos_x"].unit,
-                posY=row["pos_y"] * table["pos_y"].unit,
-                posZ=row["pos_z"] * table["pos_z"].unit,
-            )
+        for row in table:
+            tel = TelescopePosition()
+            try:
+                tel.name = row["telescope_name"]
+            except KeyError:
+                msg = "Missing required row with telescope_name"
+                self._logger.error(msg)
+                raise InvalidTelescopeListFile(msg)
 
-        if "utm_east" in table.colnames and "utm_north" in table.colnames:
-            tel.setUtmCoordinates(
-                utmEast=row["utm_east"] * table["utm_east"].unit,
-                utmNorth=row["utm_north"] * table["utm_north"].unit,
-            )
+            try:
+                tel.setLocalCoordinates(
+                    posX=row["pos_x"] * table["pos_x"].unit,
+                    posY=row["pos_y"] * table["pos_y"].unit,
+                    posZ=row["pos_z"] * table["pos_z"].unit,
+                )
+                tel.setUtmCoordinates(
+                    utmEast=row["utm_east"] * table["utm_east"].unit,
+                    utmNorth=row["utm_north"] * table["utm_north"].unit,
+                )
+                tel.setMercatorCoordinates(
+                    latitude=row["lat"] * table["lat"].unit,
+                    longitude=row["lon"] * table["lon"].unit,
+                )
+                tel.setAltitude(altitude=row["alt"] * table["alt"].unit)
+            except KeyError:
+                pass
 
-        if "lat" in table.colnames and "lon" in table.colnames:
-            tel.setMercatorCoordinates(
-                latitude=row["lat"] * table["lat"].unit,
-                longitude=row["lon"] * table["lon"].unit,
-            )
-
-        if "alt" in table.colnames:
-            tel.setAltitude(altitude=row["alt"] * table["alt"].unit)
-
-        for prod in prodList:
-            tel.prodId[prod] = row[prod]
-        self._telescopeList.append(tel)
+            self._telescopeList.append(tel)
 
     def readTelescopeListFile(self, telescopeListFile):
         """
@@ -283,46 +300,17 @@ class LayoutArray:
             telescope_name key.
 
         """
-        table = Table.read(telescopeListFile, format="ascii.ecsv")
+        try:
+            table = Table.read(telescopeListFile, format="ascii.ecsv")
+        except FileNotFoundError:
+            logging.error("Error reading list of array elements from {}".format(telescopeListFile))
+            raise
 
-        self._logger.info("Reading telescope list from {}".format(telescopeListFile))
+        self._logger.info("Reading array elements from {}".format(telescopeListFile))
 
-        # Require telescope_name in telescope lists
-        if "telescope_name" not in table.colnames:
-            msg = "Error reading telescope names from {}".format(telescopeListFile)
-            self._logger.error(msg)
-            raise InvalidTelescopeListFile(msg)
-
-        # Reference coordinate system
-        if "EPSG" in table.meta:
-            self._epsg = table.meta["EPSG"]
-        if "center_northing" in table.meta and "center_easting" in table.meta:
-            self._centerNorthing = u.Quantity(table.meta["center_northing"]).to(u.m).value
-            self._centerEasting = u.Quantity(table.meta["center_easting"]).to(u.m).value
-        if "center_lon" in table.meta and "center_lat" in table.meta:
-            self._centerLongitude = u.Quantity(table.meta["center_lon"]).to(u.deg).value
-            self._centerLatitude = u.Quantity(table.meta["center_lat"]).to(u.deg).value
-        if "center_alt" in table.meta:
-            self._centerAltitude = u.Quantity(table.meta["center_alt"]).to(u.m).value
-
-        # CORSIKA parameters
-        if "corsika_obs_level" in table.meta:
-            self._corsikaObsLevel = u.Quantity(table.meta["corsika_obs_level"]).value
-        if "corsika_sphere_center" in table.meta:
-            self._corsikaSphereCenter = dict()
-            for key, value in table.meta["corsika_sphere_center"].items():
-                self._corsikaSphereCenter[key] = u.Quantity(value).to(u.m).value
-        if "corsika_sphere_radius" in table.meta:
-            self._corsikaSphereRadius = dict()
-            for key, value in table.meta["corsika_sphere_radius"].items():
-                self._corsikaSphereRadius[key] = u.Quantity(value).to(u.m).value
-
-        # Initialise telescope lists from productions
-        # (require column names include 'prod' string)
-        prodList = [row_name for row_name in table.colnames if row_name.find("prod") >= 0]
-
-        for row in table:
-            self._appendTelescope(row, table, prodList)
+        self._initializeCorsikaTelescope(table.meta)
+        self._initalizeCoordinateSystems(table.meta)
+        self._loadTelescopeList(table)
 
     @u.quantity_input(
         posX=u.m,
@@ -498,7 +486,11 @@ class LayoutArray:
         return corsikaList
 
     def printTelescopeList(self):
-        """Print list of telescopes in current layout for inspection."""
+        """
+        Print list of telescopes in current layout for inspection.
+
+        """
+
         print("LayoutArray: {}".format(self.name))
         print("ArrayCenter")
         print(self._arrayCenter)
@@ -511,66 +503,87 @@ class LayoutArray:
 
         self._logger.info("Converting telescope coordinates")
 
-        # 1: setup reference coordinate systems
-
-        # Mercator WGS84
-        wgs84 = self._getWgs84()
-
-        # Local transverse Mercator projection
+        wgs84 = self._getCrsWgs84()
         crs_local = self._getCrsLocal()
-
-        # UTM system
         crs_utm = self._getCrsUtm()
 
-        # 2. convert coordinates
         for tel in self._telescopeList:
-
-            if self._corsikaObsLevel is not None:
-                corsikaObsLevel = self._corsikaObsLevel * u.m
-            else:
-                corsikaObsLevel = None
-
-            if self._corsikaSphereCenter is not None:
-                corsikaSphereCenter = self._corsikaSphereCenter[tel.getTelescopeSize()] * u.m
-            else:
-                corsikaSphereCenter = None
-
             tel.convertAll(
                 crsLocal=crs_local,
                 wgs84=wgs84,
                 crsUtm=crs_utm,
-                corsikaObsLevel=corsikaObsLevel,
-                corsikaSphereCenter=corsikaSphereCenter,
+                corsikaObsLevel=self._corsikaTelescope["corsika_obs_level"],
+                corsikaSphereCenter=self._corsikaTelescope["corsika_sphere_center"][
+                    tel.getTelescopeSize()
+                ],
             )
-
-    # End of convertCoordinates
 
     def _getCrsLocal(self):
         """Get the crs_local"""
-        if self._centerLongitude is not None and self._centerLatitude is not None:
-            proj4_string = (
-                "+proj=tmerc +ellps=WGS84 +datum=WGS84"
-                + " +lon_0={} +lat_0={}".format(self._centerLongitude, self._centerLatitude)
-                + " +axis=nwu +units=m +k_0=1.0"
-            )
-            crs_local = pyproj.CRS.from_proj4(proj4_string)
-            self._logger.debug("Local Mercator projection: {}".format(crs_local))
-            return crs_local
-        else:
-            self._logger.debug("crs_local cannot be built because center lon and lat are missing")
-            return None
+        if self._arrayCenter:
+            _centerLatitude, _centerLongitude = self._arrayCenter.getMercatorCoordinates()
+            if _centerLongitude and _centerLatitude:
+                proj4_string = (
+                    "+proj=tmerc +ellps=WGS84 +datum=WGS84"
+                    + " +lon_0={} +lat_0={}".format(_centerLongitude, _centerLatitude)
+                    + " +axis=nwu +units=m +k_0=1.0"
+                )
+                crs_local = pyproj.CRS.from_proj4(proj4_string)
+                self._logger.debug("Local Mercator projection: {}".format(crs_local))
+                return crs_local
+
+        self._logger.debug("crs_local cannot be built because center lon and lat are missing")
+        return None
 
     def _getCrsUtm(self):
         """Get crs_utm"""
-        if self._epsg is not None:
+        if self._epsg:
             crs_utm = pyproj.CRS.from_user_input(self._epsg)
             self._logger.debug("UTM system: {}".format(crs_utm))
             return crs_utm
         else:
             self._logger.debug("crs_utm cannot be built because EPSG definition is missing")
-            return None
 
     @staticmethod
-    def _getWgs84():
+    def _getCrsWgs84():
         """Get wgs84"""
         return pyproj.CRS("EPSG:4326")
+
+    @staticmethod
+    def _layoutCenterDefaults():
+        """
+        Default values for array center dict
+
+        Returns
+        -------
+        dict
+            array center default values
+
+        """
+        return {
+            "EPSG": None,
+            "center_lon": None,
+            "center_lat": None,
+            "center_northing": None,
+            "center_easting": None,
+            "center_alt": None,
+        }
+
+    @staticmethod
+    def _corsikaTelescopeDefault():
+        """
+        Default values for CORSIKA telescope dict
+
+        Returns
+        -------
+        dict
+            corsika telescope default values
+
+        TODO: discuss hardwired corsika parameters
+
+        """
+        return {
+            "corsika_obs_level": None,
+            "corsika_sphere_center": {"LST": 16.0 * u.m, "MST": 9.0 * u.m, "SST": 3.25 * u.m},
+            "corsika_sphere_radius": {"LST": 12.5 * u.m, "MST": 9.6 * u.m, "SST": 3.5 * u.m},
+        }
