@@ -68,6 +68,14 @@ def parse(description=None):
             "mercator",
         ],
     )
+    parser.add_argument(
+        "--export",
+        help="export array element list to file",
+        default=False,
+        required=False,
+        action="store_true",
+    )
+
     parser.initialize_default_arguments(add_workflow_config=False)
     return parser.parse_args()
 
@@ -84,6 +92,8 @@ def main():
 
     layout.convertCoordinates()
     layout.printTelescopeList()
+    if args.export:
+        layout.exportTelescopeList()
 
 
 #        layout.print_array_center()
