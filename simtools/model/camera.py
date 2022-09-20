@@ -204,6 +204,16 @@ class Camera:
 
         return pixels
 
+    def getNumberOfPixels(self):
+        """
+        Get the number of pixels in the camera (all pixels, including those defined as "off".
+
+        Returns
+        -------
+        number of pixels: int
+        """
+        return len(self._pixels["x"])
+
     def getPixelDiameter(self):
         """
         Get pixel diameter contained in _pixels
@@ -682,7 +692,7 @@ class Camera:
 
         return
 
-    def plotPixelLayout(self, cameraInSkyCoor=False):
+    def plotPixelLayout(self, cameraInSkyCoor=False, pixelsIdToPrint=50):
         """
         Plot the pixel layout for an observer facing the camera.
         Including in the plot edge pixels, off pixels, pixel ID for the first 50 pixels,
@@ -736,7 +746,7 @@ class Camera:
                 else:
                     offPixels.append(square)
 
-            if self._pixels["pixID"][i_pix] < 51:
+            if self._pixels["pixID"][i_pix] < pixelsIdToPrint + 1:
                 fontSize = 4
                 if getTelescopeClass(self._telescopeModelName) == "SCT":
                     fontSize = 2
