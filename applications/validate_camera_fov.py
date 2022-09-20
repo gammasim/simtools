@@ -61,6 +61,15 @@ def main():
     )
     parser.initialize_telescope_model_arguments()
     parser.initialize_default_arguments(add_workflow_config=False)
+    parser.add_argument(
+        "--cameraInSkyCoor",
+        help=(
+            "Plot the camera layout in sky coordinates "
+            "(akin to looking at it from behind for single mirror telesecopes)"
+        ),
+        action="store_true",
+        default=False,
+    )
 
     args = parser.parse_args()
     label = "validate_camera_fov"
@@ -96,12 +105,12 @@ def main():
     print("Avg. edge radius = {0:.3f} cm\n".format(rEdgeAvg))
 
     # Now plot the camera as well
-    fig = camera.plotPixelLayout()
-    plotFileName = label + "_" + telModel.name + "_pixelLayout"
-    plotFile = outputDir.joinpath(plotFileName)
-    for f in ["pdf", "png"]:
-        fig.savefig(str(plotFile) + "." + f, format=f, bbox_inches="tight")
-    print("\nPlotted camera in {}\n".format(plotFile))
+    fig = camera.plotPixelLayout(args.cameraInSkyCoor)
+    plotFilePrefix = outputDir.joinpath(f"{label}_{telModel.name}_pixelLayout")
+    for suffix in ["pdf", "png"]:
+        fileName = f"{str(plotFilePrefix)}.{suffix}"
+        fig.savefig(fileName, format=suffix, bbox_inches="tight")
+        print("\nSaved camera plot in {}\n".format(fileName))
     fig.clf()
 
 
