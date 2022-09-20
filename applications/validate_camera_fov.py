@@ -70,6 +70,15 @@ def main():
         action="store_true",
         default=False,
     )
+    parser.add_argument(
+        "--printPixelsID",
+        help=(
+            "Up to which pixel ID to print (default: 50). "
+            "To suppress printing of pixel IDs, set to zero (--printPixelsID 0)."
+            "To print all pixels, set to 'All'."
+        ),
+        default=50,
+    )
 
     args = parser.parse_args()
     label = "validate_camera_fov"
@@ -105,7 +114,19 @@ def main():
     print("Avg. edge radius = {0:.3f} cm\n".format(rEdgeAvg))
 
     # Now plot the camera as well
-    fig = camera.plotPixelLayout(args.cameraInSkyCoor)
+    try:
+        pixelIDsToPrint = int(args.printPixelsID)
+        if pixelIDsToPrint == 0:
+            pixelIDsToPrint = -1  # so not print the zero pixel
+    except ValueError:
+        if args.printPixelsID.lower() == "all":
+            pixelIDsToPrint = camera.getNumberOfPixels()
+        else:
+            raise ValueError(
+                f"The value provided to --printPixelsID ({args.printPixelsID}) "
+                "should be an integer or All"
+            )
+    fig = camera.plotPixelLayout(args.cameraInSkyCoor, pixelIDsToPrint)
     plotFilePrefix = outputDir.joinpath(f"{label}_{telModel.name}_pixelLayout")
     for suffix in ["pdf", "png"]:
         fileName = f"{str(plotFilePrefix)}.{suffix}"
