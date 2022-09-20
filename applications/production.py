@@ -91,10 +91,10 @@ def parse(description=None):
         "--task",
         help=(
             "What task to execute. Options: "
-            + "simulate (perform simulations),"
-            + "lists (print list of output files),"
-            + "inspect (plot sim_telarray histograms for quick inspection),"
-            + "resources (print report of computing resources)"
+            "simulate (perform simulations),"
+            "lists (print list of output files),"
+            "inspect (plot sim_telarray histograms for quick inspection),"
+            "resources (print report of computing resources)"
         ),
         type=str,
         required=True,
