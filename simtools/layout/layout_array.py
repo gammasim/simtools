@@ -86,10 +86,10 @@ class LayoutArray:
             self._initalizeCoordinateSystems(layoutCenterData)
         else:
             self._initalizeCoordinateSystems(self._layoutCenterDefaults())
+        self._corsikaTelescope = {}
         if corsikaTelescopeData:
             self._initializeCorsikaTelescope(corsikaTelescopeData)
         else:
-            self._corsikaTelescope = {}
             self._initializeCorsikaTelescope(self._corsikaTelescopeDefault())
 
     @classmethod
@@ -167,18 +167,25 @@ class LayoutArray:
 
         self._arrayCenter = TelescopePosition()
         self._arrayCenter.name = "array_center"
-        self._epsg = center_dict["EPSG"]
 
+        # TODO correct to assume that the center is always at 0,0?
         self._arrayCenter.setLocalCoordinates(0 * u.m, 0 * u.m, 0 * u.m)
         try:
             self._arrayCenter.setMercatorCoordinates(
                 u.Quantity(center_dict["center_lat"]),
                 u.Quantity(center_dict["center_lon"]),
             )
+        except TypeError:
+            pass
+        try:
+            self._epsg = center_dict["EPSG"]
             self._arrayCenter.setUtmCoordinates(
                 u.Quantity(center_dict["center_easting"]),
                 u.Quantity(center_dict["center_northing"]),
             )
+        except TypeError:
+            pass
+        try:
             self._arrayCenter.setAltitude(u.Quantity(center_dict["center_alt"]))
         except TypeError:
             pass
