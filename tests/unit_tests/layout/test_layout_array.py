@@ -10,7 +10,6 @@ import simtools.config as cfg
 import simtools.io_handler as io
 from simtools import db_handler
 from simtools.layout.layout_array import LayoutArray
-from simtools.layout.telescope_position import MissingInputForConvertion
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
@@ -62,10 +61,7 @@ def test_fromLayoutArrayName(cfg_setup):
 def test_initalizeCoordinateSystems(layoutCenterDataDict):
 
     layout = LayoutArray(name="testLayout")
-    with pytest.raises(MissingInputForConvertion):
-        layout._initalizeCoordinateSystems(None, False)
-
-    layout._initalizeCoordinateSystems(None, True)
+    layout._initalizeCoordinateSystems(None)
     _x, _y, _z = layout._arrayCenter.getCoordinates("corsika")
     assert _x == 0.0 * u.m and _y == 0.0 * u.m and _z == 0.0 * u.m
     _lat, _lon, _z = layout._arrayCenter.getCoordinates("mercator")
