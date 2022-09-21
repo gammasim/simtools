@@ -7,7 +7,6 @@ from pathlib import Path
 import simtools.config as cfg
 
 __all__ = [
-    "getTestOutputFile",
     "getTestPlotFile",
 ]
 
@@ -97,69 +96,6 @@ def getDataFile(parentDir=None, fileName=None, test=False):
     else:
         filePrefix = Path(cfg.get("dataLocation")).joinpath(parentDir)
     return filePrefix.joinpath(fileName).absolute()
-
-
-def getTestOutputFile(fileName):
-    """
-    Get path of a test file, using the outputLocation taken from the config file.
-
-    Parameters
-    ----------
-    filesName: str
-        File name
-
-    Returns
-    -------
-    Path
-    """
-    directory = getOutputDirectory(test=True)
-    return directory.joinpath(fileName)
-
-
-def getTestModelDirectory():
-    """
-    Get path of a test model directory, using the outputLocation taken from the config file.
-    Path is created, if it doesn't exist.
-
-    Returns
-    -------
-    Path
-    """
-    path = Path(cfg.get("outputLocation")).joinpath("model")
-    path.mkdir(parents=True, exist_ok=True)
-    return path.absolute()
-
-
-def getTestModelFile(fileName):
-    """
-    Get path of a model test file, using the outputLocation taken from the config file.
-
-    Parameters
-    ----------
-    filesName: str
-        File name
-
-    Returns
-    -------
-    Path
-    """
-    directory = getTestModelDirectory()
-    return directory.joinpath(fileName)
-
-
-def getTestDerivedDirectory():
-    """
-    Get path of a test derived values directory,
-    using the outputLocation taken from the config file.
-    Path is created, if it doesn't exist.
-
-    Returns
-    -------
-    Path
-    """
-    path = Path(cfg.get("outputLocation")).joinpath("derived")
-    path.mkdir(parents=True, exist_ok=True)
-    return path.absolute()
 
 
 def getTestPlotFile(fileName):
