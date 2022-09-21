@@ -96,7 +96,7 @@ class SimtelRunnerRayTracing(SimtelRunner):
         self.label = label if label is not None else self.telescopeModel.label
 
         # File location
-        self._baseDirectory = io.getRayTracingOutputDirectory(self._filesLocation, self.label)
+        self._baseDirectory = io.getOutputDirectory(self._filesLocation, self.label, "ray-tracing")
         self._baseDirectory.mkdir(parents=True, exist_ok=True)
 
         self._singleMirrorMode = singleMirrorMode
