@@ -133,7 +133,9 @@ class RayTracing:
 
         self.label = label if label is not None else self._telescopeModel.label
 
-        self._outputDirectory = io.getRayTracingOutputDirectory(self._filesLocation, self.label)
+        self._outputDirectory = io.getOutputDirectory(
+            self._filesLocation, self.label, "ray-tracing"
+        )
         self._outputDirectory.mkdir(parents=True, exist_ok=True)
 
         # Loading relevant attributes in case of single mirror mode.
