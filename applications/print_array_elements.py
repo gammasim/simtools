@@ -91,7 +91,7 @@ def main():
     layout.readTelescopeListFile(args.array_element_list)
 
     layout.convertCoordinates()
-    layout.printTelescopeList()
+    layout.printTelescopeList(compact_printing=args.compact)
     if args.export:
         layout.exportTelescopeList()
 
