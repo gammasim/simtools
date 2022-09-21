@@ -97,13 +97,13 @@ def main():
 
     layout = layout_array.LayoutArray()
     layout.readTelescopeListFile(args.array_element_list)
-
     layout.convertCoordinates()
-    layout.printTelescopeList(
-        compact_printing=args.compact, corsikaZ=args.use_corsika_telescope_height
-    )
     if args.export is not None:
         layout.exportTelescopeList(args.export, corsikaZ=args.use_corsika_telescope_height)
+    else:
+        layout.printTelescopeList(
+            compact_printing=args.compact, corsikaZ=args.use_corsika_telescope_height
+        )
 
 
 if __name__ == "__main__":
