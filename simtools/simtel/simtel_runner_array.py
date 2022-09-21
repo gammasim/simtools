@@ -89,7 +89,9 @@ class SimtelRunnerArray(SimtelRunner):
         self.label = label if label is not None else self.arrayModel.label
 
         # File location
-        self._baseDirectory = io.getArraySimulatorOutputDirectory(self._filesLocation, self.label)
+        self._baseDirectory = io.getOutputDirectory(
+            self._filesLocation, self.label, "array-simulator"
+        )
 
         # Loading configData
         _configDataIn = gen.collectDataFromYamlOrDict(configFile, configData)

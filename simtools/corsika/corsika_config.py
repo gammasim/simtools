@@ -469,7 +469,7 @@ class CorsikaConfig:
             viewCone=self._userParameters["VIEWCONE"],
             label=self.label,
         )
-        fileDirectory = io.getCorsikaOutputDirectory(self._filesLocation, self.label)
+        fileDirectory = io.getOutputDirectory(self._filesLocation, self.label, "corsika")
         fileDirectory.mkdir(parents=True, exist_ok=True)
         self._logger.info("Creating directory {}, if needed.".format(fileDirectory))
         self._configFilePath = fileDirectory.joinpath(configFileName)

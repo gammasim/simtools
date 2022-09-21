@@ -7,7 +7,6 @@ from pathlib import Path
 import simtools.config as cfg
 
 __all__ = [
-    "getCorsikaOutputDirectory",
     "getTestDataFile",
     "getTestDataDirectory",
     "getTestOutputFile",
@@ -46,114 +45,6 @@ def getOutputDirectory(filesLocation, label, dirType=None):
         raise
 
     return path.absolute()
-
-
-def getRayTracingOutputDirectory(filesLocation, label):
-    """
-    Get output directory for ray tracing related files.
-
-    Parameters
-    ----------
-    filesLocation: str, or Path
-        Main location of the output files.
-    label: str
-        Instance label.
-
-    Returns
-    -------
-    Path
-    """
-    return getOutputDirectory(filesLocation, label, "ray-tracing")
-
-
-def getCorsikaOutputDirectory(filesLocation, label):
-    """
-    Get output directory for CORSIKA related files.
-
-    Parameters
-    ----------
-    filesLocation: str, or Path
-        Main location of the output files.
-    label: str
-        Instance label.
-
-    Returns
-    -------
-    Path
-    """
-    return getOutputDirectory(filesLocation, label, "corsika")
-
-
-def getCameraEfficiencyOutputDirectory(filesLocation, label):
-    """
-    Get output directory for camera efficiency related files.
-
-    Parameters
-    ----------
-    filesLocation: str, or Path
-        Main location of the output files.
-    label: str
-        Instance label.
-
-    Returns
-    -------
-    Path
-    """
-    return getOutputDirectory(filesLocation, label, "camera-efficiency")
-
-
-def getApplicationOutputDirectory(filesLocation, label):
-    """
-    Get output directory for applications related files.
-
-    Parameters
-    ----------
-    filesLocation: str, or Path
-        Main location of the output files.
-    label: str
-        Instance label.
-
-    Returns
-    -------
-    Path
-    """
-    return getOutputDirectory(filesLocation, label, "application-plots")
-
-
-def getArraySimulatorOutputDirectory(filesLocation, label):
-    """
-    Get output directory for array-simulator related files.
-
-    Parameters
-    ----------
-    filesLocation: str, or Path
-        Main location of the output files.
-    label: str
-        Instance label.
-
-    Returns
-    -------
-    Path
-    """
-    return getOutputDirectory(filesLocation, label, "array-simulator")
-
-
-def getDerivedOutputDirectory(filesLocation, label):
-    """
-    Get output directory for derived values files.
-
-    Parameters
-    ----------
-    filesLocation: str, or Path
-        Main location of the output files.
-    label: str
-        Instance label.
-
-    Returns
-    -------
-    Path
-    """
-    return getOutputDirectory(filesLocation, label, "derived")
 
 
 def getDataFile(parentDir, fileName):
