@@ -61,9 +61,12 @@ class TelescopePosition:
         self._logger = logging.getLogger(__name__)
 
         self.name = name
+        self.asset_code = None
+        self.sequence_number = None
+        self.geo_code = None
         self.crs = self._default_coordinate_system_definition()
 
-    def __repr__(self):
+    def __str__(self):
         telstr = self.name
         if self.hasCoordinates("corsika"):
             telstr += "\t CORSIKA x(->North): {0:0.2f} y(->West): {1:0.2f}".format(
@@ -83,6 +86,45 @@ class TelescopePosition:
                 break
 
         return telstr
+
+    def printCompactFormat(self, crs_name, print_header=False):
+        """
+        Print array element coordinates in compact format.
+
+        Parameters
+        ----------
+        crs_name: str
+            name of coordinate system
+
+        Raises
+        ------
+        InvalidCoordSystem
+           if coordinate system is not defined
+
+        """
+        try:
+            telstr = "{0} {1:10.2f} {2:10.2f} {3:10.2f}".format(
+                self.name,
+                self.crs[crs_name]["xx"]["value"],
+                self.crs[crs_name]["yy"]["value"],
+                self.crs[crs_name]["zz"]["value"],
+            )
+            headerstr = "{0} {1} {2} {3}".format(
+                "telescope_name",
+                self.crs[crs_name]["xx"]["name"],
+                self.crs[crs_name]["yy"]["name"],
+                self.crs[crs_name]["zz"]["name"],
+            )
+
+            if self.geo_code is not None:
+                telstr += "  {0}".format(self.geo_code)
+                headerstr += "  geo_code"
+            if print_header:
+                print(headerstr)
+            print(telstr)
+        except KeyError:
+            self._logger.error("Invalid coordinate system ({})".format(crs_name))
+            raise InvalidCoordSystem
 
     def getCoordinates(self, crs_name):
         """
@@ -199,7 +241,8 @@ class TelescopePosition:
 
     def _convert(self, crs_from, crs_to, xx, yy):
         """
-        Coordinate transformation of telescope positions
+        Coordinate transformation of telescope positions.
+        Returns np.nan for failed transformations (and not inf, as pyproj does)
 
         Parameters
         ----------
@@ -232,7 +275,10 @@ class TelescopePosition:
             raise
         if xx is None or yy is None:
             return np.nan, np.nan
-        return transformer.transform(xx=xx, yy=yy)
+        _to_x, _to_y = transformer.transform(xx=xx, yy=yy)
+        if np.isinf(_to_x) or np.isinf(_to_y):
+            return np.nan, np.nan
+        return _to_x, _to_y
 
     def _get_reference_system_from(self):
         """
