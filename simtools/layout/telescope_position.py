@@ -87,14 +87,22 @@ class TelescopePosition:
 
         return telstr
 
-    def printCompactFormat(self, crs_name, print_header=False):
+    def printCompactFormat(
+        self, crs_name, print_header=False, corsika_obs_level=None, corsika_sphere_center=None
+    ):
         """
         Print array element coordinates in compact format.
 
         Parameters
         ----------
         crs_name: str
-            name of coordinate system
+            Name of coordinate system to be used for printing.
+        print_header: bool
+            Print table header.
+        corsika_obs_level: astropy.Quantity
+            CORSIKA observation level in equivalent units of meter.
+        corsika_sphere_center: astropy.Quantity
+            CORSIKA sphere center in equivalent units of meter.
 
         Raises
         ------
@@ -103,17 +111,28 @@ class TelescopePosition:
 
         """
         try:
+            _zz = self.crs[crs_name]["zz"]["value"]
+            _zz_header = self.crs[crs_name]["zz"]["name"]
+            if (
+                crs_name == "corsika"
+                and corsika_obs_level is not None
+                and corsika_sphere_center is not None
+            ):
+                _zz = self.convertTelescopeAltitudeToCorsikaSystem(
+                    _zz * u.Unit(self.crs[crs_name]["zz"]["unit"]),
+                    corsika_obs_level,
+                    corsika_sphere_center,
+                )
+                _zz_header = "posZ"
+
             telstr = "{0} {1:10.2f} {2:10.2f} {3:10.2f}".format(
-                self.name,
-                self.crs[crs_name]["xx"]["value"],
-                self.crs[crs_name]["yy"]["value"],
-                self.crs[crs_name]["zz"]["value"],
+                self.name, self.crs[crs_name]["xx"]["value"], self.crs[crs_name]["yy"]["value"], _zz
             )
             headerstr = "{0} {1} {2} {3}".format(
                 "telescope_name",
                 self.crs[crs_name]["xx"]["name"],
                 self.crs[crs_name]["yy"]["name"],
-                self.crs[crs_name]["zz"]["name"],
+                _zz_header,
             )
 
             if self.geo_code is not None:
@@ -126,18 +145,21 @@ class TelescopePosition:
             self._logger.error("Invalid coordinate system ({})".format(crs_name))
             raise InvalidCoordSystem
 
-    def getCoordinates(self, crs_name):
+    def getCoordinates(self, crs_name, coordinate_field=None):
         """
-        Get coordinates in a given coordinate system
+        Get coordinates in a given coordinate system.
 
         Attributes
         ----------
         crs_name: str
             name of coordinate system
+        coordinate_field: str
+            return specified filed of coordinate descriptor
+            (default: None, return value x unit)
 
         Returns
         -------
-        x, y, z coordinate including corresponding unit
+        x, y, z coordinate including corresponding unit (or coordinate field)
 
         Raises
         ------
@@ -145,16 +167,30 @@ class TelescopePosition:
            if coordinate system is not defined
 
         """
-
-        try:
-            return (
-                self.crs[crs_name]["xx"]["value"] * self.crs[crs_name]["xx"]["unit"],
-                self.crs[crs_name]["yy"]["value"] * self.crs[crs_name]["yy"]["unit"],
-                self.crs[crs_name]["zz"]["value"] * self.crs[crs_name]["zz"]["unit"],
-            )
-        except KeyError:
-            self._logger.error("Invalid coordinate system ({})".format(crs_name))
-            raise InvalidCoordSystem
+        if coordinate_field is None:
+            try:
+                return (
+                    self.crs[crs_name]["xx"]["value"] * self.crs[crs_name]["xx"]["unit"],
+                    self.crs[crs_name]["yy"]["value"] * self.crs[crs_name]["yy"]["unit"],
+                    self.crs[crs_name]["zz"]["value"] * self.crs[crs_name]["zz"]["unit"],
+                )
+            except KeyError:
+                self._logger.error("Invalid coordinate system ({})".format(crs_name))
+                raise InvalidCoordSystem
+        else:
+            try:
+                return (
+                    self.crs[crs_name]["xx"][coordinate_field],
+                    self.crs[crs_name]["yy"][coordinate_field],
+                    self.crs[crs_name]["zz"][coordinate_field],
+                )
+            except KeyError:
+                self._logger.error(
+                    "Invalid coordinate system ({}) or coordinate field ({})".format(
+                        crs_name, coordinate_field
+                    )
+                )
+                raise InvalidCoordSystem
 
     def _getCoordinateValue(self, value, unit):
         """
@@ -495,7 +531,7 @@ class TelescopePosition:
                 "crs": None,
                 "xx": {"name": "posX", "value": np.nan, "unit": u.Unit("m")},
                 "yy": {"name": "posY", "value": np.nan, "unit": u.Unit("m")},
-                "zz": {"name": "posZ", "value": np.nan, "unit": u.Unit("m")},
+                "zz": {"name": "altitude", "value": np.nan, "unit": u.Unit("m")},
             },
             "mercator": {
                 "crs": None,

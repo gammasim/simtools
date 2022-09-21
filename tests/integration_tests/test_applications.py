@@ -195,6 +195,18 @@ APP_LIST = {
     "production::array_only": [
         ["-p", "./tests/resources/prodConfigTest.yml", "-t", "simulate", "--array_only", "--test"]
     ],
+    # print_array
+    "print_array_elements::print_all": [
+        ["--array_element_list", "tests/resources/telescope_positions-South-4MST.ecsv"],
+    ],
+    "print_array_elements::print_compact": [
+        [
+            "--array_element_list",
+            "tests/resources/telescope_positions-South-4MST.ecsv",
+            "--compact",
+            "corsika",
+        ],
+    ],
 }
 
 

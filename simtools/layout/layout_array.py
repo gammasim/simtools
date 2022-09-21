@@ -203,6 +203,36 @@ class LayoutArray:
                 crsLocal=self._getCrsLocal(), crsWgs84=self._getCrsWgs84(), crsUtm=self._getCrsUtm()
             )
 
+    def _altitudeFromCorsikaZ(self, pos_z, tel_name):
+        """
+        Calculate altitude from CORSIKA z-coordinate.
+
+        Parameters
+        ----------
+        pos_z
+            CORSIKA z-coordinate of telescope
+        tel_name: str
+            Telescope Name
+
+        Returns
+        -------
+        astropy.Quantity
+            Altitude (np.nan in case of ill-defined value)
+
+        """
+        if self.getTelescopeType(tel_name) is None:
+            return np.nan
+
+        try:
+            return TelescopePosition.convertTelescopeAltitudeFromCorsikaSystem(
+                pos_z,
+                self._corsikaTelescope["corsika_obs_level"],
+                self._corsikaTelescope["corsika_sphere_center"][self.getTelescopeType(tel_name)],
+            )
+        except KeyError:
+            self._logger.error("Missing definition of CORSIKA sphere center")
+            raise
+
     def _loadTelescopeList(self, table):
         """
         Load list of telescope from an astropy table
@@ -216,6 +246,7 @@ class LayoutArray:
 
         for row in table:
             tel = TelescopePosition()
+
             try:
                 tel.name = row["telescope_name"]
                 if "asset_code" not in row:
@@ -237,8 +268,6 @@ class LayoutArray:
                 tel.geo_code = row["geo_code"]
             except KeyError:
                 pass
-
-            # TODO: read it in correctly Z-Corsika position
 
             try:
                 tel.name = row["telescope_name"]
@@ -262,6 +291,12 @@ class LayoutArray:
                     "mercator",
                     row["lat"] * table["lat"].unit,
                     row["lon"] * table["lon"].unit,
+                )
+            except KeyError:
+                pass
+            try:
+                tel.setAltitude(
+                    self._altitudeFromCorsikaZ(row["pos_z"] * table["pos_z"].unit, tel.name)
                 )
             except KeyError:
                 pass
@@ -316,7 +351,7 @@ class LayoutArray:
         ----------
         telescopeName: str
             Name of the telescope starting with L, M or S (e.g. L-01, M-06 ...)
-        crsName:
+        crsName: str
             Name of coordinate system
         xx: astropy.units.quantity.Quantity
             x-coordination for the given coordinate system
@@ -334,26 +369,19 @@ class LayoutArray:
         if altitude is not None:
             tel.setAltitude(altitude)
         elif telCorsikaZ is not None:
-            try:
-                tel.setAltitude(
-                    tel.convertTelescopeAltitudeFromCorsikaSystem(
-                        telCorsikaZ,
-                        self._corsikaTelescope["corsika_obs_level"],
-                        self._corsikaTelescope["corsika_sphere_center"][
-                            self.getTelescopeType(tel.name)
-                        ],
-                    )
-                )
-            except KeyError:
-                self._logger.error("Missing definition of CORSIKA sphere center")
-                raise
+            tel.setAltitude(self._altitudeFromCorsikaZ(telCorsikaZ, tel.name))
         self._telescopeList.append(tel)
 
-    def _get_export_metadata(self):
+    def _get_export_metadata(self, export_corsika_meta=False):
         """
         File metadata for export of array element list to file.
         Included array center definiton, CORSIKA telescope parameters,
         and EPSG centre
+
+        Parameters
+        ----------
+        export_corsika_meta: bool
+            write CORSIKA metadata
 
         Returns
         -------
@@ -364,30 +392,34 @@ class LayoutArray:
 
         _meta = {}
 
-        _lat = None
-        _lon = None
-        _east = None
-        _north = None
+        _meta["center_lon"] = None
+        _meta["center_lat"] = None
+        _meta["center_northing"] = None
+        _meta["center_easting"] = None
+        _meta["center_alt"] = None
         if self._arrayCenter:
-            _lat, _lon, _ = self._arrayCenter.getCoordinates("mercator")
-            _north, _east, _alt = self._arrayCenter.getCoordinates("utm")
-
-        _meta["center_lon"] = _lon
-        _meta["center_lat"] = _lat
-        _meta["center_northing"] = _north
-        _meta["center_easting"] = _east
-        _meta["center_alt"] = _alt
-        _meta.update(self._corsikaTelescope)
+            _meta["center_lat"], _meta["center_lon"], _ = self._arrayCenter.getCoordinates(
+                "mercator"
+            )
+            (
+                _meta["center_easting"],
+                _meta["center_northing"],
+                _meta["center_alt"],
+            ) = self._arrayCenter.getCoordinates("utm")
+        if export_corsika_meta:
+            _meta.update(self._corsikaTelescope)
         _meta["EPSG"] = self._epsg
 
         return _meta
 
-    def exportTelescopeList(self, filesLocation=None):
+    def exportTelescopeList(self, crsName, filesLocation=None):
         """
         Export array elements positions to ECSV file
 
         Parameters
         ----------
+        crsName: str
+            Name of coordinate system to be used for export.
         filesLocation: str (or Path), optional
             Directory for output. If not given, taken from config file.
 
@@ -400,71 +432,44 @@ class LayoutArray:
         self._outputDirectory.mkdir(parents=True, exist_ok=True)
         self.telescopeListFile = self._outputDirectory.joinpath(fileName)
 
-        self._logger.debug(
-            "Exporting telescope list to ECSV file {}".format(self.telescopeListFile)
-        )
+        self._logger.info("Exporting telescope list to ECSV file {}".format(self.telescopeListFile))
 
-        metaData = self._get_export_metadata()
+        metaData = self._get_export_metadata(crsName == "corsika")
 
         table = Table(meta=metaData)
 
         tel_names = list()
         pos_x, pos_y, pos_z = list(), list(), list()
-        utm_east, utm_north = list(), list()
-        longitude, latitude = list(), list()
-        altitude = list()
         for tel in self._telescopeList:
             tel_names.append(tel.name)
-
-            if tel.hasCoordinates("corsika"):
-                x, y, z = tel.getCoordinates("corsika")
-                pos_x.append(x)
-                pos_y.append(y)
-                try:
-                    pos_z.append(
-                        tel.convertTelescopeAltitudeToCorsikaSystem(
-                            z,
-                            self._corsikaTelescope["corsika_obs_level"],
-                            self._corsikaTelescope["corsika_sphere_center"][
-                                self.getTelescopeType(tel.name)
-                            ],
-                        )
-                    )
-                except KeyError:
-                    self._logger.error("Missing definition of CORSIKA sphere center")
-                    raise
-
-                if tel.hasCoordinates("mercator"):
-                    lat, lon, _ = tel.getCoordinates("mercator")
-                    latitude.append(lat)
-                    longitude.append(lon)
-
-                if tel.hasCoordinates("utm"):
-                    un, ue, _ = tel.getCoordinates("utm")
-                utm_east.append(ue)
-                utm_north.append(un)
-
-            if tel.hasAltitude():
-                alt = tel.getAltitude()
-                altitude.append(alt)
+            x, y, z = tel.getCoordinates(crsName)
+            pos_x.append(x)
+            pos_y.append(y)
+            pos_z.append(z)
+        # TODO
+        #            try:
+        #                pos_z.append(
+        #                    tel.convertTelescopeAltitudeToCorsikaSystem(
+        #                        z,
+        #                        self._corsikaTelescope["corsika_obs_level"],
+        #                        self._corsikaTelescope["corsika_sphere_center"][
+        #                            self.getTelescopeType(tel.name)
+        #                        ],
+        #                    )
+        #                )
+        #            except KeyError:
+        #                self._logger.error("Missing definition of CORSIKA sphere center")
+        #                raise
 
         table["telescope_name"] = tel_names
 
-        if len(pos_x) > 0:
-            table["pos_x"] = pos_x
-            table["pos_y"] = pos_x
-            table["pos_z"] = pos_x
-
-        if len(latitude) > 0:
-            table["lat"] = latitude
-            table["lon"] = longitude
-
-        if len(utm_east) > 0:
-            table["utm_east"] = utm_east
-            table["utm_north"] = utm_north
-
-        if len(altitude) > 0:
-            table["alt"] = altitude * u.m
+        if len(self._telescopeList) > 0:
+            _nameX, _nameY, _nameZ = self._telescopeList[0].getCoordinates(
+                crs_name=crsName, coordinate_field="name"
+            )
+            table[_nameX] = pos_x
+            table[_nameY] = pos_y
+            table[_nameZ] = pos_z
 
         table.write(self.telescopeListFile, format="ascii.ecsv", overwrite=True)
 
@@ -520,24 +525,75 @@ class LayoutArray:
 
         return corsikaList
 
-    def printTelescopeList(self, compact_printing=""):
-        """
-        Print list of telescopes in current layout for inspection.
+    def _printAll(self):
+        """ "
+        Print all columns.
 
         """
 
+        print("LayoutArray: {}".format(self.name))
+        print("ArrayCenter")
+        print(self._arrayCenter)
+        print("Telescopes")
+        for tel in self._telescopeList:
+            print(tel)
+
+    def _printCompact(self, compact_printing, corsikaZ):
+        """
+        Compact printing of list of telescopes
+
+
+        Parameters
+        ----------
+        compact_printing: str
+            Compact printout for a single coordinate system
+        corsikaZ: bool
+            Print telescope height in CORSIKA coordinates (for CORSIKA system)
+
+        """
+
+        for tel in self._telescopeList:
+            if corsikaZ:
+                try:
+                    _corsika_obs_level = self._corsikaTelescope["corsika_obs_level"]
+                    if self.getTelescopeType(tel.name) is None:
+                        _corsika_sphere_center = 0.0 * u.m
+                    else:
+                        _corsika_sphere_center = self._corsikaTelescope["corsika_sphere_center"][
+                            self.getTelescopeType(tel.name)
+                        ]
+                except KeyError:
+                    self._logger.error(
+                        "Missing CORSIKA parameters for telescope height calculation"
+                    )
+                    raise
+            else:
+                _corsika_obs_level = None
+                _corsika_sphere_center = None
+
+            tel.printCompactFormat(
+                crs_name=compact_printing,
+                print_header=(tel == self._telescopeList[0]),
+                corsika_obs_level=_corsika_obs_level,
+                corsika_sphere_center=_corsika_sphere_center,
+            )
+
+    def printTelescopeList(self, compact_printing="", corsikaZ=False):
+        """
+        Print list of telescopes in current layout.
+
+        Parameters
+        ----------
+        compact_printing: str
+            Compact printout for a single coordinate system
+        corsikaZ: bool
+            Print telescope height in CORSIKA coordinates (for CORSIKA system)
+
+        """
         if len(compact_printing) == 0:
-            print("LayoutArray: {}".format(self.name))
-            print("ArrayCenter")
-            print(self._arrayCenter)
-            print("Telescopes")
-            for tel in self._telescopeList:
-                print(tel)
+            self._printAll()
         else:
-            for tel in self._telescopeList:
-                tel.printCompactFormat(
-                    crs_name=compact_printing, print_header=(tel == self._telescopeList[0])
-                )
+            self._printCompact(compact_printing, corsikaZ)
 
     def convertCoordinates(self):
         """Perform all the possible conversions the coordinates of the tel positions."""
@@ -639,7 +695,7 @@ class LayoutArray:
         dict
             corsika telescope default values
 
-        TODO: discuss hardwired corsika parameters
+        TODO: this should go
 
         """
         return {
@@ -661,17 +717,22 @@ class LayoutArray:
         """
         Guess telescope type from name
 
-        TODO: this is definitely not the right way to go
+        This does not work consistently, as array elements (non-telescopes)
+        might have asset names starting with L,M,S
+
+        TODO: this should go
 
         """
 
         _class, _ = names.splitTelescopeModelName(telescope_name)
         try:
-            if _class[0] == "L":
+            if _class[0:3] in ("LST", "MST", "SST"):
+                return _class[0:3]
+            if telescope_name[0:2] == "L-":
                 return "LST"
-            if _class[0] == "M":
+            if telescope_name[0:2] == "M-":
                 return "MST"
-            if _class[0] == "S":
+            if telescope_name[0:2] == "S-":
                 return "SST"
         except IndexError:
             pass
