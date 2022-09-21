@@ -103,7 +103,7 @@ def main():
         compact_printing=args.compact, corsikaZ=args.use_corsika_telescope_height
     )
     if args.export is not None:
-        layout.exportTelescopeList(args.export)
+        layout.exportTelescopeList(args.export, corsikaZ=args.use_corsika_telescope_height)
 
 
 if __name__ == "__main__":
