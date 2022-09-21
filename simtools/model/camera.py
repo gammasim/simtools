@@ -10,7 +10,6 @@ from scipy.spatial import cKDTree as KDTree
 from scipy.spatial import distance
 
 import simtools.util.legend_handlers as legH
-from simtools.model.model_parameters import CAMERA_ROTATE_ANGLE
 from simtools.util.model import getCameraName, getTelescopeClass, isTwoMirrorTelescope
 
 __all__ = ["Camera"]
@@ -177,21 +176,18 @@ class Camera:
             The pixels dictionary with rotated pixels.
             The pixels orientation for plotting is added to the dictionary in pixels['orientation'].
             The orientation is determined by the pixel shape (see readPixelList for details).
-
-        Notes
-        -----
-        The additional rotation angle to get to the camera view of an observer facing the camera
-        is saved in the const dictionary CAMERA_ROTATE_ANGLE.
-        In the case of dual mirror telescopes, the axis is flipped in order to keep the same
-        axis definition as for single mirror telescopes.
-        One can check if the telescope is a two mirror one with isTwoMirrorTelescope.
         """
 
-        if isTwoMirrorTelescope(self._telescopeModelName):
-            pixels["y"] = [(-1) * yVal for yVal in pixels["y"]]
-
         rotateAngle = pixels["rotateAngle"]  # So not to change the original angle
-        rotateAngle += np.deg2rad(CAMERA_ROTATE_ANGLE[self._cameraName])
+        # The original pixel list is given such that
+        # x -> North, y -> West, z -> Up in the ground system.
+        # At azimuth=0, zenith angle=0 all coordinate systems are aligned.
+        # When the telescope turns the "normal" way towards
+        # the horizon, the x-axis points downwards, the y-axis points right
+        # (when looking from the camera onto the dish),
+        # and the z-axis points in any case from (primary) dish towards camera.
+        # To get the camera for an observer facing the camera, need to rotate by 90 degrees.
+        rotateAngle += np.deg2rad(90)
 
         self._logger.debug("Rotating pixels by {}".format(np.rad2deg(rotateAngle)))
 
@@ -212,6 +208,16 @@ class Camera:
                 pixels["orientation"] += np.rad2deg(rotateAngle)
 
         return pixels
+
+    def getNumberOfPixels(self):
+        """
+        Get the number of pixels in the camera (all pixels, including those defined as "off".
+
+        Returns
+        -------
+        number of pixels: int
+        """
+        return len(self._pixels["x"])
 
     def getPixelDiameter(self):
         """
@@ -448,7 +454,7 @@ class Camera:
         self._logger.debug("Searching for neighbour pixels")
 
         if pixels["pixel_shape"] == 1 or pixels["pixel_shape"] == 3:
-            neighbours = self._findNeighbours(
+            self._neighbours = self._findNeighbours(
                 pixels["x"],
                 pixels["y"],
                 self.PMT_NEIGHBOR_RADIUS_FACTOR * pixels["pixel_diameter"],
@@ -458,14 +464,14 @@ class Camera:
             # Pixels in the same row/column can be 20% shifted from one another
             # Inside find_adjacent_neighbour_pixels the distance is increased
             # further for pixels in the same row/column to 1.68*diameter.
-            neighbours = self._findAdjacentNeighbourPixels(
+            self._neighbours = self._findAdjacentNeighbourPixels(
                 pixels["x"],
                 pixels["y"],
                 self.SIPM_NEIGHBOR_RADIUS_FACTOR * pixels["pixel_diameter"],
                 self.SIPM_ROW_COLUMN_DIST_FACTOR * pixels["pixel_diameter"],
             )
 
-        return neighbours
+        return self._neighbours
 
     def getNeighbourPixels(self, pixels=None):
         """
@@ -691,7 +697,7 @@ class Camera:
 
         return
 
-    def plotPixelLayout(self):
+    def plotPixelLayout(self, cameraInSkyCoor=False, pixelsIdToPrint=50):
         """
         Plot the pixel layout for an observer facing the camera.
         Including in the plot edge pixels, off pixels, pixel ID for the first 50 pixels,
@@ -706,6 +712,10 @@ class Camera:
 
         fig, ax = plt.subplots()
         plt.gcf().set_size_inches(8, 8)
+
+        if not isTwoMirrorTelescope(self._telescopeModelName):
+            if not cameraInSkyCoor:
+                self._pixels["y"] = [(-1) * yVal for yVal in self._pixels["y"]]
 
         onPixels, edgePixels, offPixels = list(), list(), list()
 
@@ -741,7 +751,7 @@ class Camera:
                 else:
                     offPixels.append(square)
 
-            if self._pixels["pixID"][i_pix] < 51:
+            if self._pixels["pixID"][i_pix] < pixelsIdToPrint + 1:
                 fontSize = 4
                 if getTelescopeClass(self._telescopeModelName) == "SCT":
                     fontSize = 2
@@ -809,10 +819,15 @@ class Camera:
         plt.tick_params(axis="both", which="major", labelsize=15)
 
         self._plotAxesDef(plt, self._pixels["rotateAngle"])
+        description = "For an observer facing the camera"
+        if cameraInSkyCoor and not isTwoMirrorTelescope(self._telescopeModelName):
+            description = "For an observer behind the camera looking through"
+        if isTwoMirrorTelescope(self._telescopeModelName):
+            description = "For an observer looking from secondary to camera"
         ax.text(
             0.02,
             0.02,
-            "For an observer facing the camera",
+            description,
             transform=ax.transAxes,
             color="black",
             fontsize=12,
