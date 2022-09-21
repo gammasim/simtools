@@ -6,9 +6,7 @@ from pathlib import Path
 
 import simtools.config as cfg
 
-__all__ = [
-    "getTestPlotFile",
-]
+__all__ = ["getOutputDirectory", "getOutputFile", "getDataFile"]
 
 
 def getOutputDirectory(filesLocation=None, label=None, dirType=None, test=False):
@@ -96,23 +94,3 @@ def getDataFile(parentDir=None, fileName=None, test=False):
     else:
         filePrefix = Path(cfg.get("dataLocation")).joinpath(parentDir)
     return filePrefix.joinpath(fileName).absolute()
-
-
-def getTestPlotFile(fileName):
-    """
-    Get path of a test plot file, using the testDataLocation taken from the config file.
-    Path is created, if it doesn't exist.
-
-    Parameters
-    ----------
-    filesName: str
-        File name
-
-    Returns
-    -------
-    Path
-    """
-
-    path = Path(cfg.get("outputLocation")).joinpath("test-plots")
-    path.mkdir(parents=True, exist_ok=True)
-    return path.joinpath(fileName).absolute()
