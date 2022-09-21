@@ -92,7 +92,6 @@ class CameraEfficiency:
             dirType="camera-efficiency",
             test=test,
         )
-        # self._baseDirectory.mkdir(parents=True, exist_ok=True)
 
         self._hasResults = False
 
