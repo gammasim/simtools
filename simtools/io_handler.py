@@ -7,8 +7,6 @@ from pathlib import Path
 import simtools.config as cfg
 
 __all__ = [
-    "getModelOutputDirectory",
-    "getRayTracingOutputDirectory",
     "getCorsikaOutputDirectory",
     "getTestDataFile",
     "getTestDataDirectory",
@@ -17,9 +15,9 @@ __all__ = [
 ]
 
 
-def getOutputDirectory(filesLocation, label, mode=None):
+def getOutputDirectory(filesLocation, label, dirType=None):
     """
-    Get main output directory for a generic mode
+    Get the output directory for the directory type dirType
 
     Parameters
     ----------
@@ -27,7 +25,7 @@ def getOutputDirectory(filesLocation, label, mode=None):
         Main location of the output files.
     label: str
         Instance label.
-    mode: str
+    dirType: str
         Name of the subdirectory (ray-tracing, model etc)
 
     Returns
@@ -39,8 +37,8 @@ def getOutputDirectory(filesLocation, label, mode=None):
     today = datetime.date.today()
     labelDir = label if label is not None else "d-" + str(today)
     path = Path(filesLocation).joinpath("simtools-output").joinpath(labelDir)
-    if mode is not None:
-        path = path.joinpath(mode)
+    if dirType is not None:
+        path = path.joinpath(dirType)
     try:
         path.mkdir(parents=True, exist_ok=True)
     except FileNotFoundError:
@@ -48,42 +46,6 @@ def getOutputDirectory(filesLocation, label, mode=None):
         raise
 
     return path.absolute()
-
-
-def getModelOutputDirectory(filesLocation, label):
-    """
-    Get output directory for model related files.
-
-    Parameters
-    ----------
-    filesLocation: str, or Path
-        Main location of the output files.
-    label: str
-        Instance label.
-
-    Returns
-    -------
-    Path
-    """
-    return getOutputDirectory(filesLocation, label, "model")
-
-
-def getLayoutOutputDirectory(filesLocation, label):
-    """
-    Get output directory for layout related files.
-
-    Parameters
-    ----------
-    filesLocation: str, or Path
-        Main location of the output files.
-    label: str
-        Instance label.
-
-    Returns
-    -------
-    Path
-    """
-    return getOutputDirectory(filesLocation, label, "layout")
 
 
 def getRayTracingOutputDirectory(filesLocation, label):

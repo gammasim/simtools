@@ -134,7 +134,7 @@ class LayoutArray:
 
         # Output directory
         self._filesLocation = cfg.getConfigArg("outputLocation", filesLocation)
-        self._outputDirectory = io.getLayoutOutputDirectory(self._filesLocation, self.label)
+        self._outputDirectory = io.getOutputDirectory(self._filesLocation, self.label, "layout")
         self._outputDirectory.mkdir(parents=True, exist_ok=True)
 
     @classmethod
