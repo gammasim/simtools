@@ -27,14 +27,11 @@ class LayoutArray:
         Read list of telescopes from a ecsv file.
     addTelescope(
         telescopeName,
-        posX=None,
-        posY=None,
-        posZ=None,
-        longitude=None,
-        latitude=None,
-        utmEast=None,
-        utmNorth=None,
+        crsName,
+        xx,
+        yy,
         altitude=None
+        telCorsikaZ=None
     )
         Add an individual telescope to the telescope list.
     exportTelescopeList(filesLocation)
@@ -185,7 +182,7 @@ class LayoutArray:
                 u.Quantity(center_dict["center_lat"]),
                 u.Quantity(center_dict["center_lon"]),
             )
-        except TypeError:
+        except (TypeError, KeyError):
             pass
         try:
             self._epsg = center_dict["EPSG"]
@@ -194,11 +191,11 @@ class LayoutArray:
                 u.Quantity(center_dict["center_easting"]),
                 u.Quantity(center_dict["center_northing"]),
             )
-        except TypeError:
+        except (TypeError, KeyError):
             pass
         try:
             self._arrayCenter.setAltitude(u.Quantity(center_dict["center_alt"]))
-        except TypeError:
+        except (TypeError, KeyError):
             pass
 
         if not defaults_init:
