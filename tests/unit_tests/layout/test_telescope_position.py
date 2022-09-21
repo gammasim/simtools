@@ -226,6 +226,7 @@ def test_hasAltitude():
         tel.hasAltitude("not_a_system")
 
     assert not tel.hasAltitude("utm")
+    assert not tel.hasAltitude()
 
     tel.setCoordinates("utm", 217611 * u.m, 3185066 * u.m, 1.0 * u.km)
     assert tel.hasAltitude("utm")
@@ -237,6 +238,7 @@ def test_hasAltitude():
     assert tel.hasAltitude("utm")
     assert tel.hasAltitude("corsika")
     assert tel.hasAltitude("mercator")
+    assert tel.hasAltitude()
 
 
 def test_setCoordinateSystem(crs_wgs84):
