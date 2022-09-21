@@ -179,8 +179,13 @@ class Camera:
         """
 
         rotateAngle = pixels["rotateAngle"]  # So not to change the original angle
-        # The original pixel list is given such that x -> North, y -> West,
-        # i.e., x points down and y points to the right (for single-mirror telescopes).
+        # The original pixel list is given such that
+        # x -> North, y -> West, z -> Up in the ground system.
+        # At azimuth=0, zenith angle=0 all coordinate systems are aligned.
+        # When the telescope turns the "normal" way towards
+        # the horizon, the x-axis points downwards, the y-axis points right
+        # (when looking from the camera onto the dish),
+        # and the z-axis points in any case from (primary) dish towards camera.
         # To get the camera for an observer facing the camera, need to rotate by 90 degrees.
         rotateAngle += np.deg2rad(90)
 
