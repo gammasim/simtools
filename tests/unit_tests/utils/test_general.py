@@ -17,20 +17,20 @@ logging.getLogger().setLevel(logging.DEBUG)
 def test_collect_dict_data(cfg_setup):
     inDict = {"k1": 2, "k2": "bla"}
     dictForYaml = {"k3": {"kk3": 4, "kk4": 3.0}, "k4": ["bla", 2]}
-    inYaml = io.getTestOutputFile("test_collect_dict_data.yml")
-    if not Path(inYaml).exists():
-        with open(inYaml, "w") as output:
+    testYamlFile = io.getOutputFile(fileName="test_collect_dict_data.yml", test=True)
+    if not Path(testYamlFile).exists():
+        with open(testYamlFile, "w") as output:
             yaml.safe_dump(dictForYaml, output, sort_keys=False)
 
     d1 = gen.collectDataFromYamlOrDict(None, inDict)
     assert "k2" in d1.keys()
     assert d1["k1"] == 2
 
-    d2 = gen.collectDataFromYamlOrDict(inYaml, None)
+    d2 = gen.collectDataFromYamlOrDict(testYamlFile, None)
     assert "k3" in d2.keys()
     assert d2["k4"] == ["bla", 2]
 
-    d3 = gen.collectDataFromYamlOrDict(inYaml, inDict)
+    d3 = gen.collectDataFromYamlOrDict(testYamlFile, inDict)
     assert d3 == d2
 
 
