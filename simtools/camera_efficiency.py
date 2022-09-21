@@ -83,7 +83,9 @@ class CameraEfficiency:
         self._telescopeModel = self._validateTelescopeModel(telescopeModel)
         self.label = label if label is not None else self._telescopeModel.label
 
-        self._baseDirectory = io.getCameraEfficiencyOutputDirectory(self._filesLocation, self.label)
+        self._baseDirectory = io.getOutputDirectory(
+            self._filesLocation, self.label, "camera-efficiency"
+        )
         self._baseDirectory.mkdir(parents=True, exist_ok=True)
 
         self._hasResults = False
