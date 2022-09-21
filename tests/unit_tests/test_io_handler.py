@@ -12,6 +12,53 @@ logger.setLevel(logging.DEBUG)
 
 def test_get_output_directory(cfg_setup):
 
-    assert io.getOutputDirectory(
-        filesLocation=cfg.get("outputLocation"), label="test-derived"
-    ) == Path(f"{cfg.get('outputLocation')}/simtools-output/test-derived/")
+    assert io.getOutputDirectory(label="test-io-handler") == Path(
+        f"{cfg.get('outputLocation')}/simtools-output/test-io-handler/"
+    )
+
+    assert io.getOutputDirectory(label="test-io-handler", test=True) == Path(
+        f"{cfg.get('outputLocation')}/test-output/test-io-handler/"
+    )
+
+    assert io.getOutputDirectory(label="test-io-handler", dirType="model") == Path(
+        f"{cfg.get('outputLocation')}/simtools-output/test-io-handler/model"
+    )
+
+    assert io.getOutputDirectory(label="test-io-handler", dirType="model", test=True) == Path(
+        f"{cfg.get('outputLocation')}/test-output/test-io-handler/model"
+    )
+
+
+def test_get_output_file(cfg_setup):
+
+    assert io.getOutputFile(fileName="test-file.txt", label="test-io-handler") == Path(
+        f"{cfg.get('outputLocation')}/simtools-output/test-io-handler/test-file.txt"
+    )
+
+    assert io.getOutputFile(fileName="test-file.txt", label="test-io-handler", test=True) == Path(
+        f"{cfg.get('outputLocation')}/test-output/test-io-handler/test-file.txt"
+    )
+
+    assert io.getOutputFile(
+        fileName="test-file.txt", label="test-io-handler", dirType="model"
+    ) == Path(f"{cfg.get('outputLocation')}/simtools-output/test-io-handler/model/test-file.txt")
+
+    assert io.getOutputFile(
+        fileName="test-file.txt", label="test-io-handler", dirType="model", test=True
+    ) == Path(f"{cfg.get('outputLocation')}/test-output/test-io-handler/model/test-file.txt")
+
+
+def test_get_data_file(cfg_setup):
+
+    assert (
+        io.getDataFile(
+            parentDir="test-io-handler",
+            fileName="test-file.txt",
+        )
+        == Path(f"{cfg.get('dataLocation')}/test-io-handler/test-file.txt").absolute()
+    )
+
+    assert (
+        io.getDataFile(fileName="test-file.txt", test=True)
+        == Path("tests/resources/test-file.txt").absolute()
+    )
