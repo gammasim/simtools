@@ -7,14 +7,12 @@ from pathlib import Path
 import simtools.config as cfg
 
 __all__ = [
-    "getTestDataFile",
-    "getTestDataDirectory",
     "getTestOutputFile",
     "getTestPlotFile",
 ]
 
 
-def getOutputDirectory(filesLocation, label, dirType=None):
+def getOutputDirectory(filesLocation=None, label=None, dirType=None, test=False):
     """
     Get the output directory for the directory type dirType
 
@@ -26,6 +24,8 @@ def getOutputDirectory(filesLocation, label, dirType=None):
         Instance label.
     dirType: str
         Name of the subdirectory (ray-tracing, model etc)
+    test: bool
+        If true, return test output location
 
     Returns
     -------
@@ -33,9 +33,14 @@ def getOutputDirectory(filesLocation, label, dirType=None):
     """
     _logger = logging.getLogger(__name__)
 
+    if test:
+        outputDirectoryPrefix = Path(cfg.get("outputLocation")).joinpath("test-output")
+    else:
+        outputDirectoryPrefix = Path(filesLocation).joinpath("simtools-output")
+
     today = datetime.date.today()
     labelDir = label if label is not None else "d-" + str(today)
-    path = Path(filesLocation).joinpath("simtools-output").joinpath(labelDir)
+    path = outputDirectoryPrefix.joinpath(labelDir)
     if dirType is not None:
         path = path.joinpath(dirType)
     try:
@@ -47,7 +52,29 @@ def getOutputDirectory(filesLocation, label, dirType=None):
     return path.absolute()
 
 
-def getDataFile(parentDir, fileName):
+def getOutputFile(fileName, label=None, dirType=None, test=False):
+    """
+    Get path of an output file.
+
+    Parameters
+    ----------
+    filesName: str
+        File name.
+    label: str
+        Instance label.
+    dirType: str
+        Name of the subdirectory (ray-tracing, model etc)
+    test: bool
+        If true, return test output location
+
+    Returns
+    -------
+    Path
+    """
+    return getOutputDirectory(label=label, dirType=dirType, test=test).joinpath(fileName).absolute()
+
+
+def getDataFile(parentDir=None, fileName=None, test=False):
     """
     Get path of a data file, using the dataLocation taken from the config file.
 
@@ -57,54 +84,19 @@ def getDataFile(parentDir, fileName):
         Parent directory of the file.
     filesName: str
         File name.
+    test: bool
+        If true, return test resources location
 
     Returns
     -------
     Path
     """
-    return Path(cfg.get("dataLocation")).joinpath(parentDir).joinpath(fileName).absolute()
 
-
-def getTestDataDirectory():
-    """
-    Get path of a test file directory, using the testDataLocation taken from the config file.
-
-    Returns
-    -------
-    Path
-    """
-    return Path("tests/resources/")
-
-
-def getTestDataFile(fileName):
-    """
-    Get path of a test file, using the testDataLocation taken from the config file.
-
-    Parameters
-    ----------
-    filesName: str
-        File name
-
-    Returns
-    -------
-    Path
-    """
-    directory = getTestDataDirectory()
-    return directory.joinpath(fileName)
-
-
-def getTestOutputDirectory():
-    """
-    Get path of a test directory, using the outputLocation taken from the config file.
-    Path is created, if it doesn't exist.
-
-    Returns
-    -------
-    Path
-    """
-    path = Path(cfg.get("outputLocation")).joinpath("test-output")
-    path.mkdir(parents=True, exist_ok=True)
-    return path.absolute()
+    if test:
+        filePrefix = Path("tests/resources/")
+    else:
+        filePrefix = Path(cfg.get("dataLocation")).joinpath(parentDir)
+    return filePrefix.joinpath(fileName).absolute()
 
 
 def getTestOutputFile(fileName):
@@ -120,7 +112,7 @@ def getTestOutputFile(fileName):
     -------
     Path
     """
-    directory = getTestOutputDirectory()
+    directory = getOutputDirectory(test=True)
     return directory.joinpath(fileName)
 
 

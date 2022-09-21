@@ -36,7 +36,7 @@ def test_collect_dict_data(cfg_setup):
 
 def test_validate_config_data(cfg_setup):
 
-    parameterFile = io.getTestDataFile("test_parameters.yml")
+    parameterFile = io.getDataFile(fileName="test_parameters.yml", test=True)
     parameters = gen.collectDataFromYamlOrDict(parameterFile, None)
 
     configData = {
