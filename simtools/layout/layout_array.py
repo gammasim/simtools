@@ -1,6 +1,7 @@
 import logging
 
 import astropy.units as u
+import numpy as np
 import pyproj
 from astropy.table import Table
 
@@ -85,7 +86,7 @@ class LayoutArray:
         if layoutCenterData:
             self._initalizeCoordinateSystems(layoutCenterData)
         else:
-            self._initalizeCoordinateSystems(self._layoutCenterDefaults())
+            self._initalizeCoordinateSystems(self._layoutCenterDefaults(), defaults_init=True)
         self._corsikaTelescope = {}
         if corsikaTelescopeData:
             self._initializeCorsikaTelescope(corsikaTelescopeData)
@@ -108,6 +109,7 @@ class LayoutArray:
         -------
         Instance of the LayoutArray class.
         """
+
         spl = layoutArrayName.split("-")
         siteName = names.validateSiteName(spl[0])
         arrayName = names.validateLayoutArrayName(spl[1])
@@ -154,24 +156,32 @@ class LayoutArray:
         except KeyError:
             pass
 
-    def _initalizeCoordinateSystems(self, center_dict):
+    def _initalizeCoordinateSystems(self, center_dict, defaults_init=False):
         """
-        Initialize array center and coordinate systems
+        Initialize array center and coordinate systems.
 
         Parameters
         ----------
-        center_dict dict
-            dictionary with coordinates of array center
+        center_dict: dict
+            dictionary with coordinates of array center.
+        defaults_init: bool
+            default initialisation without transformation in all available projections.
+
+        Raises
+        ------
+        TypeError
+            invalid array center definition
 
         """
 
         self._arrayCenter = TelescopePosition()
         self._arrayCenter.name = "array_center"
 
-        # TODO correct to assume that the center is always at 0,0?
-        self._arrayCenter.setLocalCoordinates(0 * u.m, 0 * u.m, 0 * u.m)
+        self._arrayCenter.setCoordinates("corsika", 0 * u.m, 0 * u.m, 0.0 * u.m)
+
         try:
-            self._arrayCenter.setMercatorCoordinates(
+            self._arrayCenter.setCoordinates(
+                "mercator",
                 u.Quantity(center_dict["center_lat"]),
                 u.Quantity(center_dict["center_lon"]),
             )
@@ -179,7 +189,8 @@ class LayoutArray:
             pass
         try:
             self._epsg = center_dict["EPSG"]
-            self._arrayCenter.setUtmCoordinates(
+            self._arrayCenter.setCoordinates(
+                "utm",
                 u.Quantity(center_dict["center_easting"]),
                 u.Quantity(center_dict["center_northing"]),
             )
@@ -190,11 +201,10 @@ class LayoutArray:
         except TypeError:
             pass
 
-        self._arrayCenter.convertAll(
-            crsLocal=self._getCrsLocal(),
-            wgs84=self._getCrsWgs84(),
-            crsUtm=self._getCrsUtm(),
-        )
+        if not defaults_init:
+            self._arrayCenter.convertAll(
+                crsLocal=self._getCrsLocal(), crsWgs84=self._getCrsWgs84(), crsUtm=self._getCrsUtm()
+            )
 
     def _loadTelescopeList(self, table):
         """
@@ -216,22 +226,26 @@ class LayoutArray:
                 self._logger.error(msg)
                 raise InvalidTelescopeListFile(msg)
 
+            # TODO: read it in correctly Z-Corsika position
+
             try:
                 tel.name = row["telescope_name"]
-                tel.setLocalCoordinates(
-                    posX=row["pos_x"] * table["pos_x"].unit,
-                    posY=row["pos_y"] * table["pos_y"].unit,
-                    posZ=row["pos_z"] * table["pos_z"].unit,
+                tel.setCoordinates(
+                    "corsika",
+                    row["pos_x"] * table["pos_x"].unit,
+                    row["pos_y"] * table["pos_y"].unit,
                 )
-                tel.setUtmCoordinates(
-                    utmEast=row["utm_east"] * table["utm_east"].unit,
-                    utmNorth=row["utm_north"] * table["utm_north"].unit,
+                tel.setCoordinates(
+                    "utm",
+                    row["utm_east"] * table["utm_east"].unit,
+                    row["utm_north"] * table["utm_north"].unit,
                 )
-                tel.setMercatorCoordinates(
-                    latitude=row["lat"] * table["lat"].unit,
-                    longitude=row["lon"] * table["lon"].unit,
+                tel.setCoordinates(
+                    "mercator",
+                    row["lat"] * table["lat"].unit,
+                    row["lon"] * table["lon"].unit,
                 )
-                tel.setAltitude(altitude=row["alt"] * table["alt"].unit)
+                tel.setAltitude(row["alt"] * table["alt"].unit)
             except KeyError:
                 pass
 
@@ -265,27 +279,14 @@ class LayoutArray:
         self._initalizeCoordinateSystems(table.meta)
         self._loadTelescopeList(table)
 
-    @u.quantity_input(
-        posX=u.m,
-        posY=u.m,
-        posZ=u.m,
-        longitude=u.deg,
-        latitude=u.deg,
-        utmEast=u.m,
-        utmNorth=u.m,
-        altitude=u.m,
-    )
     def addTelescope(
         self,
         telescopeName,
-        posX=None,
-        posY=None,
-        posZ=None,
-        longitude=None,
-        latitude=None,
-        utmEast=None,
-        utmNorth=None,
+        crsName,
+        xx,
+        yy,
         altitude=None,
+        telCorsikaZ=None,
     ):
         """
         Add an individual telescope to the telescope list.
@@ -294,36 +295,38 @@ class LayoutArray:
         ----------
         telescopeName: str
             Name of the telescope starting with L, M or S (e.g. L-01, M-06 ...)
-        posX: astropy.units.quantity.Quantity
-            X coordinate in equivalent units of u.m.
-        posY: astropy.units.quantity.Quantity
-            Y coordinate in equivalent units of u.m.
-        posZ: astropy.units.quantity.Quantity
-            Z coordinate in equivalent units of u.m.
-        longitude: astropy.units.quantity.Quantity
-            Longitude coordinate in equivalent units of u.deg.
-        latitude: astropy.units.quantity.Quantity
-            Latitude coordinate in equivalent units of u.deg.
-        utmEast: astropy.units.quantity.Quantity
-            UTM east coordinate in equivalent units of u.deg.
-        utmNorth: astropy.units.quantity.Quantity
-            UTM north coordinate in equivalent units of u.deg.
+        crsName:
+            Name of coordinate system
+        xx: astropy.units.quantity.Quantity
+            x-coordination for the given coordinate system
+        yy: astropy.units.quantity.Quantity
+            y-coordination for the given coordinate system
         altitude: astropy.units.quantity.Quantity
             Altitude coordinate in equivalent units of u.m.
+        telCorsikaZ: astropy.units.quantity.Quantity
+            CORSIKA z-position (requires setting of CORSIKA observation level and telescope
+            sphere center).
         """
 
-        configData = {
-            "posX": posX,
-            "posY": posY,
-            "posZ": posZ,
-            "longitude": longitude,
-            "latitude": latitude,
-            "utmEast": utmEast,
-            "utmNorth": utmNorth,
-            "altitude": altitude,
-        }
+        tel = TelescopePosition(name=telescopeName)
+        tel.setCoordinates(crsName, xx, yy)
+        if altitude is not None:
+            tel.setAltitude(altitude)
+        elif telCorsikaZ is not None:
+            try:
+                tel.setAltitude(
+                    tel.convertTelescopeAltitudeFromCorsikaSystem(
+                        telCorsikaZ,
+                        self._corsikaTelescope["corsika_obs_level"],
+                        self._corsikaTelescope["corsika_sphere_center"][
+                            self._getTelescopeType(tel.name)
+                        ],
+                    )
+                )
+            except KeyError:
+                self._logger.error("Missing definition of CORSIKA sphere center")
+                raise
 
-        tel = TelescopePosition(name=telescopeName, configData=configData)
         self._telescopeList.append(tel)
 
     def _get_export_metadata(self):
@@ -346,13 +349,14 @@ class LayoutArray:
         _east = None
         _north = None
         if self._arrayCenter:
-            _lat, _lon = self._arrayCenter.getMercatorCoordinates()
-            _north, _east = self._arrayCenter.getUtmCoordinates()
+            _lat, _lon, _ = self._arrayCenter.getCoordinates("mercator")
+            _north, _east, _alt = self._arrayCenter.getCoordinates("utm")
 
         _meta["center_lon"] = _lon
         _meta["center_lat"] = _lat
         _meta["center_northing"] = _north
         _meta["center_easting"] = _east
+        _meta["center_alt"] = _alt
         _meta.update(self._corsikaTelescope)
         _meta["EPSG"] = self._epsg
 
@@ -392,19 +396,31 @@ class LayoutArray:
         for tel in self._telescopeList:
             tel_names.append(tel.name)
 
-            if tel.hasLocalCoordinates():
-                x, y, z = tel.getLocalCoordinates()
+            if tel.hasCoordinates("corsika"):
+                x, y, z = tel.getCoordinates("corsika")
                 pos_x.append(x)
                 pos_y.append(y)
-                pos_z.append(z)
+                try:
+                    pos_z.append(
+                        tel.convertTelescopeAltitudeToCorsikaSystem(
+                            z,
+                            self._corsikaTelescope["corsika_obs_level"],
+                            self._corsikaTelescope["corsika_sphere_center"][
+                                self._getTelescopeType(tel.name)
+                            ],
+                        )
+                    )
+                except KeyError:
+                    self._logger.error("Missing definition of CORSIKA sphere center")
+                    raise
 
-            if tel.hasMercatorCoordinates():
-                lat, lon = tel.getMercatorCoordinates()
-                latitude.append(lat)
-                longitude.append(lon)
+                if tel.hasCoordinates("mercator"):
+                    lat, lon, _ = tel.getCoordinates("mercator")
+                    latitude.append(lat)
+                    longitude.append(lon)
 
-            if tel.hasUtmCoordinates():
-                un, ue = tel.getUtmCoordinates()
+                if tel.hasCoordinates("utm"):
+                    un, ue, _ = tel.getCoordinates("utm")
                 utm_east.append(ue)
                 utm_north.append(un)
 
@@ -415,17 +431,17 @@ class LayoutArray:
         table["telescope_name"] = tel_names
 
         if len(pos_x) > 0:
-            table["pos_x"] = pos_x * u.m
-            table["pos_y"] = pos_x * u.m
-            table["pos_z"] = pos_x * u.m
+            table["pos_x"] = pos_x
+            table["pos_y"] = pos_x
+            table["pos_z"] = pos_x
 
         if len(latitude) > 0:
-            table["lat"] = latitude * u.deg
-            table["lon"] = longitude * u.deg
+            table["lat"] = latitude
+            table["lon"] = longitude
 
         if len(utm_east) > 0:
-            table["utm_east"] = utm_east * u.m
-            table["utm_north"] = utm_north * u.m
+            table["utm_east"] = utm_east
+            table["utm_north"] = utm_north
 
         if len(altitude) > 0:
             table["alt"] = altitude * u.m
@@ -455,13 +471,24 @@ class LayoutArray:
         """
         corsikaList = ""
         for tel in self._telescopeList:
-            posX, posY, posZ = tel.getLocalCoordinates()
+            posX, posY, posZ = tel.getCoordinates("corsika")
             try:
                 sphereRadius = self._corsikaTelescope["corsika_sphere_radius"][
-                    tel.getTelescopeSize()
+                    self._getTelescopeType(tel.name)
                 ]
             except KeyError:
                 self._logger.error("Missing definition of CORSIKA sphere radius")
+                raise
+            try:
+                posZ = tel.convertTelescopeAltitudeToCorsikaSystem(
+                    posZ,
+                    self._corsikaTelescope["corsika_obs_level"],
+                    self._corsikaTelescope["corsika_sphere_center"][
+                        self._getTelescopeType(tel.name)
+                    ],
+                )
+            except KeyError:
+                self._logger.error("Missing definition of CORSIKA sphere center")
                 raise
 
             corsikaList += "TELESCOPE"
@@ -498,12 +525,8 @@ class LayoutArray:
         for tel in self._telescopeList:
             tel.convertAll(
                 crsLocal=crs_local,
-                wgs84=wgs84,
+                crsWgs84=wgs84,
                 crsUtm=crs_utm,
-                corsikaObsLevel=self._corsikaTelescope["corsika_obs_level"],
-                corsikaSphereCenter=self._corsikaTelescope["corsika_sphere_center"][
-                    tel.getTelescopeSize()
-                ],
             )
 
     def _getCrsLocal(self):
@@ -517,11 +540,11 @@ class LayoutArray:
 
         """
         if self._arrayCenter:
-            _centerLat, _centerLong = self._arrayCenter.getMercatorCoordinates()
-            if _centerLong and _centerLat:
+            _centerLat, _centerLon, _ = self._arrayCenter.getCoordinates("mercator")
+            if not np.isnan(_centerLat.value) and not np.isnan(_centerLon.value):
                 proj4_string = (
                     "+proj=tmerc +ellps=WGS84 +datum=WGS84"
-                    + " +lon_0={} +lat_0={}".format(_centerLong, _centerLat)
+                    + " +lon_0={} +lat_0={}".format(_centerLon, _centerLat)
                     + " +axis=nwu +units=m +k_0=1.0"
                 )
                 crs_local = pyproj.CRS.from_proj4(proj4_string)
@@ -606,3 +629,23 @@ class LayoutArray:
                 "SST": 3.5 * u.m,
             },
         }
+
+    @staticmethod
+    def _getTelescopeType(telescope_name):
+        """
+        Guess telescope type from name
+
+        TODO: this is definitely not the right way to go
+
+        """
+
+        _class, _ = names.splitTelescopeModelName(telescope_name)
+        try:
+            if _class[0] == "L":
+                return "LST"
+            if _class[0] == "M":
+                return "MST"
+            if _class[0] == "S":
+                return "SST"
+        except IndexError:
+            pass

@@ -168,6 +168,20 @@ class TelescopePosition:
             self._logger.error("Invalid coordinate system ({})".format(crs_name))
             raise InvalidCoordSystem
 
+    def getAltitude(self):
+        """ "
+        Get altitude of an array element
+
+        Returns
+        -------
+        astropy.Quantity
+            telescope altitidue
+
+        """
+        for _crs in self.crs.values():
+            if _crs["zz"]["value"]:
+                return _crs["zz"]["value"] * u.Unit(_crs["zz"]["unit"])
+
     def setAltitude(self, telAltitude):
         """
         Set altitude of an array element.
@@ -274,14 +288,15 @@ class TelescopePosition:
             and self.crs[crs_name]["yy"]["value"] is not None
         )
 
-    def hasAltitude(self, crs_name):
+    def hasAltitude(self, crs_name=None):
         """
         Return True if array element has altitude defined.
 
         Attributes
         ----------
         crs_name: str
-            Name of coordinate system
+            Name of coordinate system to be checked for altitude.
+            If none: check if altitude is define for any system.
 
         Returns
         -------
@@ -294,6 +309,12 @@ class TelescopePosition:
             If coordinate system is not known
 
         """
+        if crs_name is None:
+            for _crs_name in self.crs:
+                if self.hasAltitude(_crs_name):
+                    return True
+            return False
+
         try:
             return (
                 self.crs[crs_name]["zz"]["value"] is not np.nan
