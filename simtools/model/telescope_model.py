@@ -542,7 +542,7 @@ class TelescopeModel:
         for fileNameNow in fileNames:
             db.exportFileDB(
                 dbName=db.DB_DERIVED_VALUES,
-                dest=io.getDerivedOutputDirectory(self._filesLocation, self.label),
+                dest=io.getOutputDirectory(self._filesLocation, self.label, "derived"),
                 fileName=fileNameNow,
             )
 
