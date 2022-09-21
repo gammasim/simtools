@@ -157,3 +157,19 @@ def test_converting_center_coordinates(cfg_setup, layoutCenterDataDict, corsikaT
     assert _east.value == pytest.approx(217609.23)
 
     assert layout._arrayCenter.getAltitude().value == pytest.approx(2177.0)
+
+
+def test_getCorsikaInputList(layoutCenterDataDict, corsikaTelescopeDataDict, telescopeTestFile):
+
+    layout = LayoutArray(
+        label="test_layout",
+        name="LST4",
+        layoutCenterData=layoutCenterDataDict,
+        corsikaTelescopeData=corsikaTelescopeDataDict,
+    )
+    layout.addTelescope(
+        telescopeName="L-01", crsName="corsika", xx=57.5 * u.m, yy=57.5 * u.m, telCorsikaZ=0 * u.m
+    )
+    corsikaInputList = layout.getCorsikaInputList()
+
+    assert corsikaInputList == "TELESCOPE\t 57.500E2\t 57.500E2\t 0.000E2\t 12.500E2\t # L-01\n"
