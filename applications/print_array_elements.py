@@ -55,8 +55,6 @@ def parse(description=None):
     parser.add_argument(
         "--array_element_list", help="list of array element positions (ecsv format)"
     )
-    #    parser.add_argument("--layout_list", help="list of layouts")
-    #    parser.add_argument("--layout_name", help="layout to be used", default="baseline")
     parser.add_argument(
         "--compact",
         help="compact output (in requested coordinate system)",
@@ -71,11 +69,21 @@ def parse(description=None):
     parser.add_argument(
         "--export",
         help="export array element list to file",
-        default=False,
         required=False,
+        default=None,
+        choices=[
+            "corsika",
+            "utm",
+            "mercator",
+        ],
+    )
+    parser.add_argument(
+        "--use_corsika_telescope_height",
+        help="Use CORSIKA coordinates for telescope height (requires CORSIKA observeration level)",
+        required=False,
+        default=False,
         action="store_true",
     )
-
     parser.initialize_default_arguments(add_workflow_config=False)
     return parser.parse_args()
 
@@ -91,15 +99,11 @@ def main():
     layout.readTelescopeListFile(args.array_element_list)
 
     layout.convertCoordinates()
-    layout.printTelescopeList(compact_printing=args.compact)
-    if args.export:
-        layout.exportTelescopeList()
-
-
-#        layout.print_array_center()
-#        layout.print_corsika_parameters()
-#        layout.read_layout(args.layout_list, args.layout_name)
-#        layout.print_telescope_list(args.compact)
+    layout.printTelescopeList(
+        compact_printing=args.compact, corsikaZ=args.use_corsika_telescope_height
+    )
+    if args.export is not None:
+        layout.exportTelescopeList(args.export)
 
 
 if __name__ == "__main__":
