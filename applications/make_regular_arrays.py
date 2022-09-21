@@ -161,7 +161,7 @@ def main():
 
             layout.convertCoordinates()
             layout.printTelescopeList()
-            layout.exportTelescopeList()
+            layout.exportTelescopeList(crsName="corsika")
 
 
 if __name__ == "__main__":

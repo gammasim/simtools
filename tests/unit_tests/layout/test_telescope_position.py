@@ -52,23 +52,23 @@ def position_for_testing():
     }
 
 
-def test_repr(crs_wgs84, crs_local, crs_utm):
+def test_str(crs_wgs84, crs_local, crs_utm):
 
     tel = TelescopePosition(name="L-01")
 
-    _tcors = tel.__repr__()
+    _tcors = tel.__str__()
     assert _tcors == "L-01"
 
     tel.setCoordinates("corsika", 50, -25.0, 2158.0 * u.m)
-    _tcors = tel.__repr__()
+    _tcors = tel.__str__()
     _test_string = "L-01\t CORSIKA x(->North): 50.00 y(->West): -25.00"
     assert _tcors == (_test_string + "\t Alt: 2158.00")
     tel.convertAll(crsLocal=crs_local, crsWgs84=crs_wgs84)
-    _tcors = tel.__repr__()
+    _tcors = tel.__str__()
     _test_string += "\t Longitude: 28.76262 Latitude: -17.89177"
     assert _tcors == (_test_string + "\t Alt: 2158.00")
     tel.convertAll(crsLocal=crs_local, crsWgs84=crs_wgs84, crsUtm=crs_utm)
-    _tcors = tel.__repr__()
+    _tcors = tel.__str__()
     _test_string = "L-01\t CORSIKA x(->North): 50.00 y(->West): -25.00"
     _test_string += "\t UTM East: 217635.45 UTM North: 3185116.68"
     _test_string += "\t Longitude: 28.76262 Latitude: -17.89177"
