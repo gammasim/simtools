@@ -123,7 +123,7 @@ class TelescopePosition:
                     corsika_obs_level,
                     corsika_sphere_center,
                 )
-                _zz_header = "posZ"
+                _zz_header = "pos_z"
 
             telstr = "{0} {1:10.2f} {2:10.2f} {3:10.2f}".format(
                 self.name, self.crs[crs_name]["xx"]["value"], self.crs[crs_name]["yy"]["value"], _zz
@@ -529,8 +529,8 @@ class TelescopePosition:
         return {
             "corsika": {
                 "crs": None,
-                "xx": {"name": "posX", "value": np.nan, "unit": u.Unit("m")},
-                "yy": {"name": "posY", "value": np.nan, "unit": u.Unit("m")},
+                "xx": {"name": "pos_x", "value": np.nan, "unit": u.Unit("m")},
+                "yy": {"name": "pos_y", "value": np.nan, "unit": u.Unit("m")},
                 "zz": {"name": "altitude", "value": np.nan, "unit": u.Unit("m")},
             },
             "mercator": {
