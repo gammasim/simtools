@@ -22,6 +22,11 @@ def telescope_model(set_db):
     return telescopeModel
 
 
+def test_get_number_of_pixels(telescope_model):
+
+    assert telescope_model.camera.getNumberOfPixels() == 1855  # Value for LST
+
+
 def test_pixel_solid_angle(telescope_model):
 
     telModel = telescope_model
