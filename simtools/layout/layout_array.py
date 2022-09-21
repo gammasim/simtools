@@ -218,10 +218,25 @@ class LayoutArray:
             tel = TelescopePosition()
             try:
                 tel.name = row["telescope_name"]
+                if "asset_code" not in row:
+                    tel.asset_code = self.getTelescopeType(tel.name)
             except KeyError:
-                msg = "Missing required row with telescope_name"
+                pass
+            try:
+                tel.name = row["asset_code"] + "-" + row["sequence_number"]
+                tel.asset_code = row["asset_code"]
+                tel.sequence_number = row["sequence_number"]
+            except KeyError:
+                pass
+            if tel.name is None:
+                msg = "Missing required row with telescope_name or asset_code/sequence_number"
                 self._logger.error(msg)
                 raise InvalidTelescopeListFile(msg)
+
+            try:
+                tel.geo_code = row["geo_code"]
+            except KeyError:
+                pass
 
             # TODO: read it in correctly Z-Corsika position
 
@@ -232,16 +247,25 @@ class LayoutArray:
                     row["pos_x"] * table["pos_x"].unit,
                     row["pos_y"] * table["pos_y"].unit,
                 )
+            except KeyError:
+                pass
+            try:
                 tel.setCoordinates(
                     "utm",
                     row["utm_east"] * table["utm_east"].unit,
                     row["utm_north"] * table["utm_north"].unit,
                 )
+            except KeyError:
+                pass
+            try:
                 tel.setCoordinates(
                     "mercator",
                     row["lat"] * table["lat"].unit,
                     row["lon"] * table["lon"].unit,
                 )
+            except KeyError:
+                pass
+            try:
                 tel.setAltitude(row["alt"] * table["alt"].unit)
             except KeyError:
                 pass
@@ -323,7 +347,6 @@ class LayoutArray:
             except KeyError:
                 self._logger.error("Missing definition of CORSIKA sphere center")
                 raise
-
         self._telescopeList.append(tel)
 
     def _get_export_metadata(self):
@@ -497,18 +520,24 @@ class LayoutArray:
 
         return corsikaList
 
-    def printTelescopeList(self):
+    def printTelescopeList(self, compact_printing=""):
         """
         Print list of telescopes in current layout for inspection.
 
         """
 
-        print("LayoutArray: {}".format(self.name))
-        print("ArrayCenter")
-        print(self._arrayCenter)
-        print("Telescopes")
-        for tel in self._telescopeList:
-            print(tel)
+        if len(compact_printing) == 0:
+            print("LayoutArray: {}".format(self.name))
+            print("ArrayCenter")
+            print(self._arrayCenter)
+            print("Telescopes")
+            for tel in self._telescopeList:
+                print(tel)
+        else:
+            for tel in self._telescopeList:
+                tel.printCompactFormat(
+                    crs_name=compact_printing, print_header=(tel == self._telescopeList[0])
+                )
 
     def convertCoordinates(self):
         """Perform all the possible conversions the coordinates of the tel positions."""
