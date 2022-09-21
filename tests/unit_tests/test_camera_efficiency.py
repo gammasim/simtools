@@ -35,7 +35,7 @@ def telescope_model(set_db):
 
 @pytest.fixture
 def camera_efficiency(telescope_model):
-    camera_efficiency = CameraEfficiency(telescopeModel=telescope_model)
+    camera_efficiency = CameraEfficiency(telescopeModel=telescope_model, test=True)
     return camera_efficiency
 
 
@@ -44,14 +44,20 @@ def results_file(db):
     testFileName = "camera-efficiency-North-LST-1-za20.0_validate_camera_efficiency.ecsv"
     db.exportFileDB(
         dbName="test-data",
-        dest=io.getCameraEfficiencyOutputDirectory(
-            cfg.get("outputLocation"), "validate_camera_efficiency"
+        dest=io.getOutputDirectory(
+            filesLocation=cfg.get("outputLocation"),
+            label="validate_camera_efficiency",
+            dirType="camera-efficiency",
+            test=True,
         ),
         fileName=testFileName,
     )
 
-    return io.getCameraEfficiencyOutputDirectory(
-        cfg.get("outputLocation"), "validate_camera_efficiency"
+    return io.getOutputDirectory(
+        filesLocation=cfg.get("outputLocation"),
+        label="validate_camera_efficiency",
+        dirType="camera-efficiency",
+        test=True,
     ).joinpath("camera-efficiency-North-LST-1-za20.0_validate_camera_efficiency.ecsv")
 
 
@@ -60,7 +66,9 @@ def test_from_kwargs(telescope_model):
     telModel = telescope_model
     label = "test-from-kwargs"
     zenithAngle = 30 * u.deg
-    ce = CameraEfficiency.fromKwargs(telescopeModel=telModel, label=label, zenithAngle=zenithAngle)
+    ce = CameraEfficiency.fromKwargs(
+        telescopeModel=telModel, label=label, zenithAngle=zenithAngle, test=True
+    )
     assert ce.config.zenithAngle == 30
 
 
