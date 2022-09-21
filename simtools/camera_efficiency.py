@@ -55,6 +55,7 @@ class CameraEfficiency:
         filesLocation=None,
         configData=None,
         configFile=None,
+        test=False,
     ):
         """
         CameraEfficiency init.
@@ -75,6 +76,8 @@ class CameraEfficiency:
             Dict containing the configurable parameters.
         configFile: str or Path
             Path of the yaml file containing the configurable parameters.
+        test: bool
+            Is it a test instance (at the moment only affects the location of files).
         """
         self._logger = logging.getLogger(__name__)
 
@@ -84,9 +87,12 @@ class CameraEfficiency:
         self.label = label if label is not None else self._telescopeModel.label
 
         self._baseDirectory = io.getOutputDirectory(
-            self._filesLocation, self.label, "camera-efficiency"
+            filesLocation=self._filesLocation,
+            label=self.label,
+            dirType="camera-efficiency",
+            test=test,
         )
-        self._baseDirectory.mkdir(parents=True, exist_ok=True)
+        # self._baseDirectory.mkdir(parents=True, exist_ok=True)
 
         self._hasResults = False
 
@@ -121,6 +127,7 @@ class CameraEfficiency:
                 "label",
                 "simtelSourcePath",
                 "filesLocation",
+                "test",
             ],
             **kwargs,
         )
