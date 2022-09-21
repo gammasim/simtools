@@ -319,7 +319,7 @@ class LayoutArray:
                         telCorsikaZ,
                         self._corsikaTelescope["corsika_obs_level"],
                         self._corsikaTelescope["corsika_sphere_center"][
-                            self._getTelescopeType(tel.name)
+                            self.getTelescopeType(tel.name)
                         ],
                     )
                 )
@@ -406,7 +406,7 @@ class LayoutArray:
                             z,
                             self._corsikaTelescope["corsika_obs_level"],
                             self._corsikaTelescope["corsika_sphere_center"][
-                                self._getTelescopeType(tel.name)
+                                self.getTelescopeType(tel.name)
                             ],
                         )
                     )
@@ -474,7 +474,7 @@ class LayoutArray:
             posX, posY, posZ = tel.getCoordinates("corsika")
             try:
                 sphereRadius = self._corsikaTelescope["corsika_sphere_radius"][
-                    self._getTelescopeType(tel.name)
+                    self.getTelescopeType(tel.name)
                 ]
             except KeyError:
                 self._logger.error("Missing definition of CORSIKA sphere radius")
@@ -484,7 +484,7 @@ class LayoutArray:
                     posZ,
                     self._corsikaTelescope["corsika_obs_level"],
                     self._corsikaTelescope["corsika_sphere_center"][
-                        self._getTelescopeType(tel.name)
+                        self.getTelescopeType(tel.name)
                     ],
                 )
             except KeyError:
@@ -631,7 +631,7 @@ class LayoutArray:
         }
 
     @staticmethod
-    def _getTelescopeType(telescope_name):
+    def getTelescopeType(telescope_name):
         """
         Guess telescope type from name
 

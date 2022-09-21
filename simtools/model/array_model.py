@@ -193,7 +193,7 @@ class ArrayModel:
         _allTelescopeModelNames = list()  # List of telescope names without repetition
         _allParsToChange = dict()
         for tel in self.layout:
-            telSize = tel.getTelescopeSize()
+            telSize = self.layout.getTelescopeType(tel.name)
 
             # Collecting telescope name and pars to change from arrayConfigData
             telModelName, parsToChange = self._getSingleTelescopeInfoFromArrayConfig(
