@@ -24,7 +24,7 @@ def test_histograms(cfg_setup):
 
     hists = SimtelHistograms(histogramFiles=histogram_files, test=True)
 
-    figName = io.getTestPlotFile("simtelHistograms.pdf")
+    figName = io.getOutputFile(fileName="simtelHistograms.pdf", dirType="plots", test=True)
     hists.plotAndSaveFigures(figName=figName)
 
-    assert io.getTestPlotFile("simtelHistograms.pdf").exists()
+    assert figName.exists()

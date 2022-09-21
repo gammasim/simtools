@@ -52,7 +52,7 @@ def test_plot_1D(db):
 
     plt = visualize.plot1D(data, title=title, palette="autumn")
 
-    plotFile = io.getTestPlotFile("plot_1D.pdf")
+    plotFile = io.getOutputFile(fileName="plot_1D.pdf", dirType="plots", test=True)
     if plotFile.exists():
         plotFile.unlink()
     plt.savefig(plotFile)
@@ -79,7 +79,7 @@ def test_plot_table(db):
 
     plt = visualize.plotTable(table, yTitle="Transmission", title=title, noMarkers=True)
 
-    plotFile = io.getTestPlotFile("plot_table.pdf")
+    plotFile = io.getOutputFile(fileName="plot_table.pdf", dirType="plots", test=True)
     if plotFile.exists():
         plotFile.unlink()
     plt.savefig(plotFile)
