@@ -33,6 +33,8 @@ def getOutputDirectory(filesLocation=None, label=None, dirType=None, test=False)
     if test:
         outputDirectoryPrefix = Path(cfg.get("outputLocation")).joinpath("test-output")
     else:
+        if filesLocation is None:
+            filesLocation = cfg.get("outputLocation")
         outputDirectoryPrefix = Path(filesLocation).joinpath("simtools-output")
 
     today = datetime.date.today()
