@@ -82,19 +82,25 @@ def main():
     db = db_handler.DatabaseHandler()
 
     siteParsDB = dict()
-    sitePars = dict()
+    layoutCenterData = dict()
+    corsikaTelescopeData = dict()
     for site in ["North", "South"]:
         siteParsDB[site] = db.getSiteParameters(site=site, modelVersion="prod3_compatible")
 
-        sitePars[site] = dict()
-        sitePars[site]["centerLatitude"] = float(siteParsDB[site]["ref_lat"]["Value"]) * u.deg
-        sitePars[site]["centerLongitude"] = float(siteParsDB[site]["ref_long"]["Value"]) * u.deg
-        sitePars[site]["centerAltitude"] = float(siteParsDB[site]["altitude"]["Value"]) * u.m
+        layoutCenterData[site] = dict()
+        layoutCenterData[site]["center_lat"] = float(siteParsDB[site]["ref_lat"]["Value"]) * u.deg
+        layoutCenterData[site]["center_lon"] = float(siteParsDB[site]["ref_long"]["Value"]) * u.deg
+        layoutCenterData[site]["center_alt"] = float(siteParsDB[site]["altitude"]["Value"]) * u.m
+        layoutCenterData[site]["EPSG"] = hardcodedPars[site]["epsg"]
 
-        sitePars[site]["epsg"] = hardcodedPars[site]["epsg"]
-        sitePars[site]["corsikaObsLevel"] = hardcodedPars[site]["corsikaObsLevel"]
-        sitePars[site]["corsikaSphereCenter"] = hardcodedPars[site]["corsikaSphereCenter"]
-        sitePars[site]["corsikaSphereRadius"] = hardcodedPars[site]["corsikaSphereRadius"]
+        corsikaTelescopeData[site] = dict()
+        corsikaTelescopeData[site]["corsika_obs_level"] = hardcodedPars[site]["corsikaObsLevel"]
+        corsikaTelescopeData[site]["corsika_sphere_center"] = hardcodedPars[site][
+            "corsikaSphereCenter"
+        ]
+        corsikaTelescopeData[site]["corsika_sphere_radius"] = hardcodedPars[site][
+            "corsikaSphereRadius"
+        ]
 
     # Telescope distances for 4 tel square arrays
     # !HARDCODED
@@ -103,8 +109,11 @@ def main():
     for site in ["South", "North"]:
         for arrayName in ["1SST", "4SST", "1MST", "4MST", "1LST", "4LST"]:
             logger.info("Processing array {}".format(arrayName))
-            layout = LayoutArray.fromKwargs(
-                label=label, name=site + "-" + arrayName, **sitePars[site]
+            layout = LayoutArray(
+                label=label,
+                name=site + "-" + arrayName,
+                layoutCenterData=layoutCenterData[site],
+                corsikaTelescopeData=corsikaTelescopeData[site],
             )
 
             telNameRoot = arrayName[1]
@@ -114,35 +123,40 @@ def main():
             if arrayName[0] == "1":
                 layout.addTelescope(
                     telescopeName=telNameRoot + "-01",
-                    posX=0 * u.m,
-                    posY=0 * u.m,
-                    posZ=0 * u.m,
+                    crsName="corsika",
+                    xx=0 * u.m,
+                    yy=0 * u.m,
+                    telCorsikaZ=0 * u.m,
                 )
             # 4 telescopes in a regular square grid
             else:
                 layout.addTelescope(
                     telescopeName=telNameRoot + "-01",
-                    posX=telescopeDistance[telSize],
-                    posY=telescopeDistance[telSize],
-                    posZ=0 * u.m,
+                    crsName="corsika",
+                    xx=telescopeDistance[telSize],
+                    yy=telescopeDistance[telSize],
+                    telCorsikaZ=0 * u.m,
                 )
                 layout.addTelescope(
                     telescopeName=telNameRoot + "-02",
-                    posX=-telescopeDistance[telSize],
-                    posY=telescopeDistance[telSize],
-                    posZ=0 * u.m,
+                    crsName="corsika",
+                    xx=-telescopeDistance[telSize],
+                    yy=telescopeDistance[telSize],
+                    telCorsikaZ=0 * u.m,
                 )
                 layout.addTelescope(
                     telescopeName=telNameRoot + "-03",
-                    posX=telescopeDistance[telSize],
-                    posY=-telescopeDistance[telSize],
-                    posZ=0 * u.m,
+                    crsName="corsika",
+                    xx=telescopeDistance[telSize],
+                    yy=-telescopeDistance[telSize],
+                    telCorsikaZ=0 * u.m,
                 )
                 layout.addTelescope(
                     telescopeName=telNameRoot + "-04",
-                    posX=-telescopeDistance[telSize],
-                    posY=-telescopeDistance[telSize],
-                    posZ=0 * u.m,
+                    crsName="corsika",
+                    xx=-telescopeDistance[telSize],
+                    yy=-telescopeDistance[telSize],
+                    telCorsikaZ=0 * u.m,
                 )
 
             layout.convertCoordinates()
