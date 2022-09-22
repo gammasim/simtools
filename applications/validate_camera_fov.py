@@ -88,7 +88,7 @@ def main():
     logger.setLevel(gen.getLogLevelFromUser(args.logLevel))
 
     # Output directory to save files related directly to this app
-    outputDir = io.getApplicationOutputDirectory(cfg.get("outputLocation"), label)
+    outputDir = io.getOutputDirectory(cfg.get("outputLocation"), label, dirType="application-plots")
 
     telModel = TelescopeModel(
         site=args.site,

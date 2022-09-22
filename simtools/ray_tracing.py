@@ -123,7 +123,7 @@ class RayTracing:
 
         # Loading configData
         _configDataIn = gen.collectDataFromYamlOrDict(configFile, configData)
-        _parameterFile = io.getDataFile("parameters", "ray-tracing_parameters.yml")
+        _parameterFile = io.getInputDataFile("parameters", "ray-tracing_parameters.yml")
         _parameters = gen.collectDataFromYamlOrDict(_parameterFile, None)
         self.config = gen.validateConfigData(_configDataIn, _parameters)
 
@@ -133,7 +133,9 @@ class RayTracing:
 
         self.label = label if label is not None else self._telescopeModel.label
 
-        self._outputDirectory = io.getRayTracingOutputDirectory(self._filesLocation, self.label)
+        self._outputDirectory = io.getOutputDirectory(
+            self._filesLocation, self.label, "ray-tracing"
+        )
         self._outputDirectory.mkdir(parents=True, exist_ok=True)
 
         # Loading relevant attributes in case of single mirror mode.

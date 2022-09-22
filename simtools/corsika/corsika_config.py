@@ -155,7 +155,7 @@ class CorsikaConfig:
             self._corsikaParametersFile = filename
         else:
             # Default file from data directory.
-            self._corsikaParametersFile = io.getDataFile("corsika", "corsika_parameters.yml")
+            self._corsikaParametersFile = io.getInputDataFile("corsika", "corsika_parameters.yml")
         self._logger.debug(
             "Loading CORSIKA parameters from file {}".format(self._corsikaParametersFile)
         )
@@ -469,7 +469,7 @@ class CorsikaConfig:
             viewCone=self._userParameters["VIEWCONE"],
             label=self.label,
         )
-        fileDirectory = io.getCorsikaOutputDirectory(self._filesLocation, self.label)
+        fileDirectory = io.getOutputDirectory(self._filesLocation, self.label, "corsika")
         fileDirectory.mkdir(parents=True, exist_ok=True)
         self._logger.info("Creating directory {}, if needed.".format(fileDirectory))
         self._configFilePath = fileDirectory.joinpath(configFileName)
