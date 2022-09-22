@@ -251,7 +251,7 @@ class Simulator:
         """
         _arrayModelConfig, _restConfig = self._collectArrayModelParameters(configData)
 
-        _parameterFile = io.getDataFile("parameters", "array-simulator_parameters.yml")
+        _parameterFile = io.getInputDataFile("parameters", "array-simulator_parameters.yml")
         _parameters = gen.collectDataFromYamlOrDict(_parameterFile, None)
         self.config = gen.validateConfigData(_restConfig, _parameters)
 

@@ -122,7 +122,7 @@ class LayoutArray:
 
         # Loading configData
         _configDataIn = gen.collectDataFromYamlOrDict(configFile, configData, allowEmpty=True)
-        _parameterFile = io.getDataFile("parameters", "layout-array_parameters.yml")
+        _parameterFile = io.getInputDataFile("parameters", "layout-array_parameters.yml")
         _parameters = gen.collectDataFromYamlOrDict(_parameterFile, None)
         self.config = gen.validateConfigData(_configDataIn, _parameters)
 
@@ -134,7 +134,7 @@ class LayoutArray:
 
         # Output directory
         self._filesLocation = cfg.getConfigArg("outputLocation", filesLocation)
-        self._outputDirectory = io.getLayoutOutputDirectory(self._filesLocation, self.label)
+        self._outputDirectory = io.getOutputDirectory(self._filesLocation, self.label, "layout")
         self._outputDirectory.mkdir(parents=True, exist_ok=True)
 
     @classmethod
@@ -184,7 +184,7 @@ class LayoutArray:
 
         layout = cls(name=validLayoutArrayName, label=label, filesLocation=filesLocation)
 
-        telescopeListFile = io.getDataFile(
+        telescopeListFile = io.getInputDataFile(
             "layout", "telescope_positions-{}.ecsv".format(validLayoutArrayName)
         )
         layout.readTelescopeListFile(telescopeListFile)

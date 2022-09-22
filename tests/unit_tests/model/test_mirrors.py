@@ -23,9 +23,11 @@ def test_read_list(db):
 
     testFileName = "mirror_CTA-LST-flen_grouped.dat"
     db.exportFileDB(
-        dbName=db.DB_CTA_SIMULATION_MODEL, dest=io.getTestModelDirectory(), fileName=testFileName
+        dbName=db.DB_CTA_SIMULATION_MODEL,
+        dest=io.getOutputDirectory(dirType="model", test=True),
+        fileName=testFileName,
     )
-    mirrorListFile = cfg.findFile(testFileName, io.getTestModelDirectory())
+    mirrorListFile = cfg.findFile(testFileName, io.getOutputDirectory(dirType="model", test=True))
     logger.info("Using mirror list {}".format(mirrorListFile))
     mirrors = Mirrors(mirrorListFile)
     assert 198 == mirrors.numberOfMirrors

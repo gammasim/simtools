@@ -23,9 +23,13 @@ def db(set_db):
 @pytest.fixture
 def lst_config_file(db):
     testFileName = "CTA-North-LST-1-Current_test-telescope-model.cfg"
-    db.exportFileDB(dbName="test-data", dest=io.getTestModelDirectory(), fileName=testFileName)
+    db.exportFileDB(
+        dbName="test-data",
+        dest=io.getOutputDirectory(dirType="model", test=True),
+        fileName=testFileName,
+    )
 
-    cfgFile = cfg.findFile(testFileName, io.getTestModelDirectory())
+    cfgFile = cfg.findFile(testFileName, io.getOutputDirectory(dirType="model", test=True))
     return cfgFile
 
 
