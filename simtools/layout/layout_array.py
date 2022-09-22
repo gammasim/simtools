@@ -488,9 +488,13 @@ class LayoutArray:
 
         table = Table(meta=self._get_export_metadata(crsName == "corsika"))
 
-        tel_names, pos_x, pos_y, pos_z = list(), list(), list(), list()
+        tel_names, asset_code, sequence_number, geo_code = list(), list(), list(), list()
+        pos_x, pos_y, pos_z = list(), list(), list()
         for tel in self._telescopeList:
             tel_names.append(tel.name)
+            asset_code.append(tel.asset_code)
+            sequence_number.append(tel.sequence_number)
+            geo_code.append(tel.geo_code)
             x, y, z = tel.getCoordinates(crsName)
             if corsikaZ:
                 z = self._altitudeFromCorsikaZ(altitude=z, tel_name=tel.name)
@@ -498,7 +502,14 @@ class LayoutArray:
             pos_y.append(y)
             pos_z.append(z)
 
-        table["telescope_name"] = tel_names
+        # prefer asset_code / sequence_number of telescope_name
+        if all(v is not None for v in asset_code) and all(v is not None for v in sequence_number):
+            table["asset_code"] = asset_code
+            table["sequence_number"] = sequence_number
+        else:
+            table["telescope_name"] = tel_names
+        if any(v is not None for v in geo_code):
+            table["geo_code"] = geo_code
 
         if len(self._telescopeList) > 0:
             _nameX, _nameY, _nameZ = self._telescopeList[0].getCoordinates(
