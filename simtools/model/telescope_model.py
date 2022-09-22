@@ -271,7 +271,7 @@ class TelescopeModel:
 
     def _setConfigFileDirectoryAndName(self):
         """Define the variable _configFileDirectory and create directories, if needed"""
-        self._configFileDirectory = io.getModelOutputDirectory(self._filesLocation, self.label)
+        self._configFileDirectory = io.getOutputDirectory(self._filesLocation, self.label, "model")
         if not self._configFileDirectory.exists():
             self._configFileDirectory.mkdir(parents=True, exist_ok=True)
             self._logger.debug("Creating directory {}".format(self._configFileDirectory))
@@ -542,7 +542,7 @@ class TelescopeModel:
         for fileNameNow in fileNames:
             db.exportFileDB(
                 dbName=db.DB_DERIVED_VALUES,
-                dest=io.getDerivedOutputDirectory(self._filesLocation, self.label),
+                dest=io.getOutputDirectory(self._filesLocation, self.label, "derived"),
                 fileName=fileNameNow,
             )
 
