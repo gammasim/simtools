@@ -172,9 +172,15 @@ def test_config_data_from_yaml_file(db):
 
     logger.info("test_config_data_from_yaml_file")
     testFileName = "corsikaConfigTest.yml"
-    db.exportFileDB(dbName="test-data", dest=io.getTestModelDirectory(), fileName=testFileName)
+    db.exportFileDB(
+        dbName="test-data",
+        dest=io.getOutputDirectory(dirType="model", test=True),
+        fileName=testFileName,
+    )
 
-    corsikaConfigFile = cfg.findFile(testFileName, io.getTestModelDirectory())
+    corsikaConfigFile = cfg.findFile(
+        testFileName, io.getOutputDirectory(dirType="model", test=True)
+    )
     cc = CorsikaConfig(
         site="Paranal",
         layoutName="4LST",

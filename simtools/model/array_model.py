@@ -170,7 +170,7 @@ class ArrayModel:
 
     def _setConfigFileDirectory(self):
         """Define the variable _configFileDirectory and create directories, if needed"""
-        self._configFileDirectory = io.getModelOutputDirectory(self._filesLocation, self.label)
+        self._configFileDirectory = io.getOutputDirectory(self._filesLocation, self.label, "model")
         if not self._configFileDirectory.exists():
             self._configFileDirectory.mkdir(parents=True, exist_ok=True)
             self._logger.info("Creating directory {}".format(self._configFileDirectory))
