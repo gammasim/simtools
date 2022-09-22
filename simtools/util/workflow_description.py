@@ -315,7 +315,7 @@ class WorkflowDescription:
         else:
             _output_dir = cfg.get("outputLocation")
 
-        _output_dir = io.getApplicationOutputDirectory(_output_dir, _output_label)
+        _output_dir = io.getOutputDirectory(_output_dir, _output_label, "application-plots")
 
         self._logger.info("Outputdirectory {}".format(_output_dir))
         return _output_dir

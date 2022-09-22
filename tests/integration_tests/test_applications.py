@@ -215,7 +215,11 @@ def test_applications(set_simtools, application):
     logger.info("Testing {}".format(application))
 
     def prepare_one_file(fileName):
-        db.exportFileDB(dbName="test-data", dest=io.getTestModelDirectory(), fileName=fileName)
+        db.exportFileDB(
+            dbName="test-data",
+            dest=io.getOutputDirectory(dirType="model", test=True),
+            fileName=fileName,
+        )
 
     db = db_handler.DatabaseHandler()
     prepare_one_file("PSFcurve_data_v2.txt")
@@ -225,7 +229,7 @@ def test_applications(set_simtools, application):
     def makeCommand(app, args):
         cmd = "python applications/" + app + ".py"
         for aa in args:
-            aa = aa.replace("TESTMODELDIR", str(io.getTestModelDirectory()))
+            aa = aa.replace("TESTMODELDIR", str(io.getOutputDirectory(dirType="model", test=True)))
             cmd += " " + aa
         cmd += " --configFile " + str(cfg.CONFIG_FILE_NAME)
         return cmd

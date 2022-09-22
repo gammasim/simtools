@@ -103,7 +103,7 @@ class LayoutArray:
 
         layout = cls(name=validLayoutArrayName, label=label)
 
-        telescopeListFile = io.getDataFile(
+        telescopeListFile = io.getInputDataFile(
             "layout", "telescope_positions-{}.ecsv".format(validLayoutArrayName)
         )
         layout.readTelescopeListFile(telescopeListFile)
@@ -463,8 +463,8 @@ class LayoutArray:
 
         """
 
-        _outputDirectory = io.getLayoutOutputDirectory(
-            cfg.getConfigArg("outputLocation", filesLocation), self.label
+        _outputDirectory = io.getOutputDirectory(
+            cfg.getConfigArg("outputLocation", filesLocation), self.label, "layout"
         )
         _outputDirectory.mkdir(parents=True, exist_ok=True)
         self.telescopeListFile = _outputDirectory.joinpath(

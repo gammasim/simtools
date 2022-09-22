@@ -134,7 +134,7 @@ class CorsikaRunner:
 
         self._simtelSourcePath = Path(cfg.getConfigArg("simtelPath", simtelSourcePath))
         self._filesLocation = cfg.getConfigArg("outputLocation", filesLocation)
-        self._outputDirectory = io.getCorsikaOutputDirectory(self._filesLocation, self.label)
+        self._outputDirectory = io.getOutputDirectory(self._filesLocation, self.label, "corsika")
         self._outputDirectory.mkdir(parents=True, exist_ok=True)
         self._logger.debug("Creating output dir {}, if needed,".format(self._outputDirectory))
 
