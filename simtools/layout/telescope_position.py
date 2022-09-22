@@ -125,9 +125,20 @@ class TelescopePosition:
                 )
                 _zz_header = "pos_z"
 
-            telstr = "{0} {1:10.2f} {2:10.2f} {3:10.2f}".format(
-                self.name, self.crs[crs_name]["xx"]["value"], self.crs[crs_name]["yy"]["value"], _zz
-            )
+            if crs_name == "mercator":
+                telstr = "{0} {1:10.8f} {2:10.8f} {3:10.2f}".format(
+                    self.name,
+                    self.crs[crs_name]["xx"]["value"],
+                    self.crs[crs_name]["yy"]["value"],
+                    _zz,
+                )
+            else:
+                telstr = "{0} {1:10.2f} {2:10.2f} {3:10.2f}".format(
+                    self.name,
+                    self.crs[crs_name]["xx"]["value"],
+                    self.crs[crs_name]["yy"]["value"],
+                    _zz,
+                )
             headerstr = "{0} {1} {2} {3}".format(
                 "telescope_name",
                 self.crs[crs_name]["xx"]["name"],
