@@ -12,12 +12,12 @@ logger.setLevel(logging.DEBUG)
 def test_histograms(cfg_setup):
     histogram_files = list()
     histogram_files.append(
-        io.getDataFile(
+        io.getInputDataFile(
             fileName="run1_gamma_za20deg_azm0deg-North-Prod5_test-production-5.hdata.zst", test=True
         )
     )
     histogram_files.append(
-        io.getDataFile(
+        io.getInputDataFile(
             fileName="run2_gamma_za20deg_azm0deg-North-Prod5_test-production-5.hdata.zst", test=True
         )
     )
