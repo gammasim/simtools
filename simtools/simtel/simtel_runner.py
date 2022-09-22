@@ -166,7 +166,7 @@ class SimtelRunner:
             raise RuntimeError(msg)
 
         if not self._shallRun(runNumber) and not force:
-            self._logger.debug("Skipping because output exists and force = False")
+            self._logger.info("Skipping because output exists and force = False")
             return
 
         command = self._makeRunCommand(inputFile=inputFile, runNumber=runNumber)
