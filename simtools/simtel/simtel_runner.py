@@ -173,16 +173,13 @@ class SimtelRunner:
 
         if test:
             self._logger.info("Running (test) with command:{}".format(command))
-            os.system(command)
+            self._runSimtelAndCheckOutput(command)
         else:
             self._logger.info("Running ({}x) with command:{}".format(self.RUNS_PER_SET, command))
-            os.system(command)
+            self._runSimtelAndCheckOutput(command)
 
             for _ in range(self.RUNS_PER_SET - 1):
-                sysOutput = os.system(command)
-
-        if self._simtelFailed(sysOutput):
-            self._raiseSimtelError()
+                self._runSimtelAndCheckOutput(command)
 
         self._checkRunResult(runNumber=runNumber)
 
@@ -208,6 +205,14 @@ class SimtelRunner:
 
         self._logger.error(msg)
         raise SimtelExecutionError(msg)
+
+    def _runSimtelAndCheckOutput(self, command):
+        """
+        Run the sim_telarray command and check the exit code.
+        """
+        sysOutput = os.system(command)
+        if self._simtelFailed(sysOutput):
+            self._raiseSimtelError()
 
     def _shallRun(self, runNumber=None):
         self._logger.debug(
