@@ -185,7 +185,7 @@ class SimtelRunner:
 
     @staticmethod
     def _simtelFailed(sysOutput):
-        return sysOutput != "0"
+        return sysOutput != 0
 
     def _raiseSimtelError(self):
         """
@@ -193,7 +193,7 @@ class SimtelRunner:
         are collected and printed.
         """
         if hasattr(self, "_logFile"):
-            logLines = gen.collectFinalLines(self._logFile, 10)
+            logLines = gen.collectFinalLines(self._logFile, 30)
             msg = (
                 "Simtel Error - See below the relevant part of the simtel log file.\n"
                 + "===== from simtel log file ======\n"
