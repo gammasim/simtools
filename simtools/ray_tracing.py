@@ -241,6 +241,7 @@ class RayTracing:
                         "useRandomFocalLength": self.config.useRandomFocalLength,
                     },
                     singleMirrorMode=self.config.singleMirrorMode,
+                    forceSimulate=force,
                 )
                 simtel.run(test=test, force=force)
 
