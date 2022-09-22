@@ -97,7 +97,6 @@ class SimtelRunnerRayTracing(SimtelRunner):
 
         # File location
         self._baseDirectory = io.getOutputDirectory(self._filesLocation, self.label, "ray-tracing")
-        self._baseDirectory.mkdir(parents=True, exist_ok=True)
 
         self._singleMirrorMode = singleMirrorMode
 
