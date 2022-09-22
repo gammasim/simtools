@@ -115,7 +115,7 @@ def test_copy_telescope_db(db, random_id, db_cleanup):
         dbName="sandbox",
         telescopeModelNameDB="North-LST-Test",
         modelVersion="Current",
-        runLocation=io.getTestOutputDirectory(),
+        runLocation=io.getOutputDirectory(dirType="model", test=True),
         collectionName="telescopes_" + random_id,
         writeFiles=False,
     )
@@ -134,7 +134,7 @@ def test_copy_telescope_db(db, random_id, db_cleanup):
             dbName="sandbox",
             telescopeModelNameDB="North-LST-Test",
             modelVersion="Current",
-            runLocation=io.getTestOutputDirectory(),
+            runLocation=io.getOutputDirectory(dirType="model", test=True),
             collectionName="telescopes_" + random_id,
             writeFiles=False,
         )
@@ -164,7 +164,7 @@ def test_adding_parameter_version_db(db, random_id, db_cleanup):
         dbName="sandbox",
         telescopeModelNameDB="North-LST-Test",
         modelVersion="test",
-        runLocation=io.getTestOutputDirectory(),
+        runLocation=io.getOutputDirectory(dirType="model", test=True),
         collectionName="telescopes_" + random_id,
         writeFiles=False,
     )
@@ -203,7 +203,7 @@ def test_update_parameter_db(db, random_id, db_cleanup):
         dbName="sandbox",
         telescopeModelNameDB="North-LST-Test",
         modelVersion="test",
-        runLocation=io.getTestOutputDirectory(),
+        runLocation=io.getOutputDirectory(dirType="model", test=True),
         collectionName="telescopes_" + random_id,
         writeFiles=False,
     )
@@ -234,7 +234,7 @@ def test_adding_new_parameter_db(db, random_id, db_cleanup):
         dbName="sandbox",
         telescopeModelNameDB="North-LST-Test",
         modelVersion="test",
-        runLocation=io.getTestOutputDirectory(),
+        runLocation=io.getOutputDirectory(dirType="model", test=True),
         collectionName="telescopes_" + random_id,
         writeFiles=False,
     )
@@ -273,7 +273,7 @@ def test_update_parameter_field_db(db, random_id, db_cleanup):
         dbName="sandbox",
         telescopeModelNameDB="North-LST-Test",
         modelVersion="Current",
-        runLocation=io.getTestOutputDirectory(),
+        runLocation=io.getOutputDirectory(dirType="model", test=True),
         collectionName="telescopes_" + random_id,
         writeFiles=False,
     )
@@ -306,17 +306,23 @@ def test_separating_get_and_write(db):
     for parNow in pars.values():
         if parNow["File"]:
             fileList.append(parNow["Value"])
-    db.exportModelFiles(pars, io.getTestOutputDirectory())
-    logger.debug("Checking files were written to {}".format(io.getTestOutputDirectory()))
+    db.exportModelFiles(pars, io.getOutputDirectory(dirType="model", test=True))
+    logger.debug(
+        "Checking files were written to {}".format(
+            io.getOutputDirectory(dirType="model", test=True)
+        )
+    )
     for fileNow in fileList:
-        assert (io.getTestOutputDirectory() / fileNow).exists()
+        assert io.getOutputFile(fileNow, dirType="model", test=True).exists()
 
 
 def test_insert_files_db(db):
 
     logger.info("----Testing inserting files to the DB-----")
-    logger.info("Creating a temporary file in {}".format(io.getTestOutputDirectory()))
-    fileName = io.getTestOutputDirectory() / "test_file.dat"
+    logger.info(
+        "Creating a temporary file in {}".format(io.getOutputDirectory(dirType="model", test=True))
+    )
+    fileName = io.getOutputDirectory(dirType="model", test=True) / "test_file.dat"
     with open(fileName, "w") as f:
         f.write("# This is a test file")
 

@@ -49,9 +49,13 @@ def test_from_kwargs(db):
     offAxisAngle = [0, 2] * u.deg
 
     testFileName = "CTA-North-LST-1-Current_test-telescope-model.cfg"
-    db.exportFileDB(dbName="test-data", dest=io.getTestModelDirectory(), fileName=testFileName)
+    db.exportFileDB(
+        dbName="test-data",
+        dest=io.getOutputDirectory(dirType="model", test=True),
+        fileName=testFileName,
+    )
 
-    cfgFile = cfg.findFile(testFileName, io.getTestModelDirectory())
+    cfgFile = cfg.findFile(testFileName, io.getOutputDirectory(dirType="model", test=True))
 
     tel = TelescopeModel.fromConfigFile(
         site="north",

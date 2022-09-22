@@ -69,7 +69,7 @@ def test_rx(set_simtelarray):
     ray.plot("d80_deg", marker="o", linestyle=":")
     ray_rx.plot("d80_deg", marker="s", linestyle="--")
 
-    plotFilePSF = io.getTestPlotFile("d80_test_rx.pdf")
+    plotFilePSF = io.getOutputFile(fileName="d80_test_rx.pdf", dirType="plots", test=True)
     plt.savefig(plotFilePSF)
 
     # Plotting effArea
@@ -81,7 +81,7 @@ def test_rx(set_simtelarray):
     ray.plot("eff_area", marker="o", linestyle=":")
     ray_rx.plot("d80_deg", marker="s", linestyle="--")
 
-    plotFileArea = io.getTestPlotFile("effArea_test_rx.pdf")
+    plotFileArea = io.getOutputFile(fileName="effArea_test_rx.pdf", dirType="plots", test=True)
     plt.savefig(plotFileArea)
 
 
@@ -110,7 +110,9 @@ def test_plot_image(set_simtools):
         ax.set_xlabel("X [cm]")
         ax.set_ylabel("Y [cm]")
         image.plotImage(psf_color="b")
-        plotFile = io.getTestPlotFile("test_plot_image_{}.pdf".format(ii))
+        plotFile = io.getOutputFile(
+            fileName="test_plot_image_{}.pdf".format(ii), dirType="plots", test=True
+        )
         plt.savefig(plotFile)
 
 
@@ -137,7 +139,7 @@ def test_single_mirror(set_simtools, plot=False):
     ax.set_xlabel("d80")
 
     ray.plotHistogram("d80_cm", color="r", bins=10)
-    plotFile = io.getTestPlotFile("d80_hist_test.pdf")
+    plotFile = io.getOutputFile(fileName="d80_hist_test.pdf", dirType="plots", test=True)
     plt.savefig(plotFile)
 
 
@@ -170,5 +172,5 @@ def test_integral_curve(set_simtools):
     ax.set_ylabel("relative intensity")
     for im in ray.images():
         im.plotCumulative(color="b")
-    plotFile = io.getTestPlotFile("test_cumulative_psf.pdf")
+    plotFile = io.getOutputFile(fileName="test_cumulative_psf.pdf", dirType="plots", test=True)
     plt.savefig(plotFile)
