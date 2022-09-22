@@ -45,8 +45,8 @@ def simtelRunner(arrayModel):
 
 @pytest.fixture
 def corsikaFile():
-    corsikaFile = io.getTestDataFile(
-        "run1_proton_za20deg_azm0deg-North-1LST_trigger_rates.corsika.zst"
+    corsikaFile = io.getInputDataFile(
+        fileName="run1_proton_za20deg_azm0deg-North-1LST_trigger_rates.corsika.zst", test=True
     )
     return corsikaFile
 
