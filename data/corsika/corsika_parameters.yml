@@ -103,13 +103,24 @@ IACT_TUNING_PARAMETERS:
     ['MAX_BUNCHES', '1000000']
   ]
 
-# Telescopes info
-TELESCOPE_Z: # Z coordinate in m
-  LST: 16.
-  MST: 10.
-  SST: 5.
+corsika_sphere_center:
+  LST:
+    value: 16
+    unit: "m"
+  MST:
+    value: 9
+    unit: "m"
+  SST:
+    value: 3.25
+    unit: "m"
 
-TELESCOPE_SPHERE_RADIUS:  # Radius of the sphere in m
-  LST: 12.5
-  MST: 7.
-  SST: 3.5
+corsika_sphere_radius:
+  LST:
+    value: 12.5
+    unit: "m"
+  MST:
+    value: 9.15
+    unit: "m"
+  SST:
+    value: 3.
+    unit: "m"
