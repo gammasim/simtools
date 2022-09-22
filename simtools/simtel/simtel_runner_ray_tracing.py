@@ -62,6 +62,7 @@ class SimtelRunnerRayTracing(SimtelRunner):
         configData=None,
         configFile=None,
         singleMirrorMode=False,
+        forceSimulate=False,
     ):
         """
         SimtelRunner.
@@ -84,6 +85,8 @@ class SimtelRunnerRayTracing(SimtelRunner):
             Path of the yaml file containing the configurable parameters.
         singleMirrorMode: bool
             True for single mirror simulations.
+        forceSimulate: bool
+            Remove existing files and force re-running of the ray-tracing simulation
         """
         self._logger = logging.getLogger(__name__)
         self._logger.debug("Init SimtelRunnerRayTracing")
@@ -111,9 +114,9 @@ class SimtelRunnerRayTracing(SimtelRunner):
         _parameters = gen.collectDataFromYamlOrDict(_parameterFile, None)
         self.config = gen.validateConfigData(_configDataIn, _parameters)
 
-        self._loadRequiredFiles()
+        self._loadRequiredFiles(forceSimulate)
 
-    def _loadRequiredFiles(self):
+    def _loadRequiredFiles(self, forceSimulate):
         """
         Which file are required for running depends on the mode.
         Here we define and write some information into these files. Log files are always required.
@@ -135,33 +138,36 @@ class SimtelRunnerRayTracing(SimtelRunner):
                 baseName,
             )
             file = self._baseDirectory.joinpath(fileName)
-            if file.exists():
+            if file.exists() and forceSimulate:
                 file.unlink()
             # Defining the file name variable as an class attribute.
             self.__dict__["_" + baseName + "File"] = file
 
-        # Adding header to photon list file.
-        with self._photonsFile.open("w") as file:
-            file.write("#{}\n".format(50 * "="))
-            file.write("# List of photons for RayTracing simulations\n")
-            file.write("#{}\n".format(50 * "="))
-            file.write("# configFile = {}\n".format(self.telescopeModel.getConfigFile()))
-            file.write("# zenithAngle [deg] = {}\n".format(self.config.zenithAngle))
-            file.write("# offAxisAngle [deg] = {}\n".format(self.config.offAxisAngle))
-            file.write("# sourceDistance [km] = {}\n".format(self.config.sourceDistance))
-            if self._singleMirrorMode:
-                file.write("# mirrorNumber = {}\n\n".format(self.config.mirrorNumber))
+        if not file.exists() or forceSimulate:
+            # Adding header to photon list file.
+            with self._photonsFile.open("w") as file:
+                file.write("#{}\n".format(50 * "="))
+                file.write("# List of photons for RayTracing simulations\n")
+                file.write("#{}\n".format(50 * "="))
+                file.write("# configFile = {}\n".format(self.telescopeModel.getConfigFile()))
+                file.write("# zenithAngle [deg] = {}\n".format(self.config.zenithAngle))
+                file.write("# offAxisAngle [deg] = {}\n".format(self.config.offAxisAngle))
+                file.write("# sourceDistance [km] = {}\n".format(self.config.sourceDistance))
+                if self._singleMirrorMode:
+                    file.write("# mirrorNumber = {}\n\n".format(self.config.mirrorNumber))
 
-        # Filling in star file with a single light source.
-        # Parameters defining light source:
-        # - azimuth
-        # - elevation
-        # - flux
-        # - distance of light source
-        with self._starsFile.open("w") as file:
-            file.write(
-                "0. {} 1.0 {}\n".format(90.0 - self.config.zenithAngle, self.config.sourceDistance)
-            )
+            # Filling in star file with a single light source.
+            # Parameters defining light source:
+            # - azimuth
+            # - elevation
+            # - flux
+            # - distance of light source
+            with self._starsFile.open("w") as file:
+                file.write(
+                    "0. {} 1.0 {}\n".format(
+                        90.0 - self.config.zenithAngle, self.config.sourceDistance
+                    )
+                )
 
     def _shallRun(self, runNumber=None):
         """Tells if simulations should be run again based on the existence of output files."""
@@ -234,7 +240,11 @@ class SimtelRunnerRayTracing(SimtelRunner):
 
     def _isPhotonListFileOK(self):
         """Check if the photon list is valid,"""
+        nLines = 0
         with open(self._photonsFile, "r") as ff:
-            nLines = len(ff.readlines())
+            for line in ff:
+                nLines += 1
+                if nLines > 100:
+                    break
 
         return nLines > 100
