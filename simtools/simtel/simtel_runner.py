@@ -181,8 +181,6 @@ class SimtelRunner:
             for _ in range(self.RUNS_PER_SET - 1):
                 sysOutput = os.system(command)
 
-        # TODO: fix the fact any ray tracing simulations are failing and
-        # uncomment this
         if self._simtelFailed(sysOutput):
             self._raiseSimtelError()
 
