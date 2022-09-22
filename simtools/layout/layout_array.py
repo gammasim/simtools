@@ -204,7 +204,6 @@ class LayoutArray:
             )
         except (TypeError, KeyError):
             self._corsikaTelescope["corsika_obs_level"] = np.nan * u.m
-            pass
 
         self._corsikaTelescope["corsika_sphere_center"] = self._initializeSphereParameters(
             corsikaDict["corsika_sphere_center"]
