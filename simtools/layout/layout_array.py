@@ -9,6 +9,7 @@ import simtools.config as cfg
 import simtools.io_handler as io
 from simtools.layout.telescope_position import TelescopePosition
 from simtools.util import names
+from simtools.util.general import collectDataFromYamlOrDict
 
 
 class InvalidTelescopeListFile(Exception):
@@ -116,33 +117,101 @@ class LayoutArray:
     def __getitem__(self, i):
         return self._telescopeList[i]
 
-    def _initializeCorsikaTelescope(self, corsika_dict):
+    def _initializeCorsikaTelescope(self, corsikaDict=None):
         """
-        Initialize CORSIKA telescope parameters.
+        Initialize Dictionary for CORSIKA telescope parameters.
+        Allow input from different sources (dictionary, yaml, ecsv header), which
+        results in complexity in handling units correctly.
 
         Parameters
         ----------
-        corsika_dict dict
+        corsikaDict dict
             dictionary with CORSIKA telescope parameters
 
         """
-        self._logger.debug("Initialize CORSIKA telescope parameters: {}".format(corsika_dict))
-        self._corsikaTelescope = self._corsikaTelescopeDefault()
+        self._corsikaTelescope = {}
+
+        if corsikaDict:
+            self._logger.debug(
+                "Initialize CORSIKA telescope parameters from dict: {}".format(corsikaDict)
+            )
+            self._initializeCorsikaTelescopeFromDict(corsikaDict)
+        else:
+            self._logger.debug("Initialize CORSIKA telescope parameters from file")
+            self._initializeCorsikaTelescopeFromFile()
+
+    def _initializeCorsikaTelescopeFromFile(self):
+        """
+        Initialize CORSIKA telescope parameters from file.
+
+        Parameters
+        ----------
+        corsikaDict dict
+            dictionary with CORSIKA telescope parameters
+
+        """
+
+        self._initializeCorsikaTelescopeFromDict(
+            collectDataFromYamlOrDict(
+                io.getInputDataFile("corsika", "corsika_parameters.yml"), None
+            )
+        )
+
+    @staticmethod
+    def _initializeSphereParameters(sphere_dict):
+        """
+        Set CORSIKA sphere parameters from dictionary.
+        Type of input varies and depend on data source for these parameters.
+
+        Parameters
+        ----------
+        sphere_dict: dict
+            dictionary with sphere parameters
+
+        Returns
+        -------
+        dict
+            dictionary with sphere parameters with well defined units and type.
+
+        """
+
+        _sphere_dict_cleaned = {}
         try:
-            if corsika_dict["corsika_obs_level"] is not None:
-                self._corsikaTelescope["corsika_obs_level"] = u.Quantity(
-                    corsika_dict["corsika_obs_level"]
-                )
-
-            self._corsikaTelescope["corsika_sphere_center"] = {}
-            for key, value in corsika_dict["corsika_sphere_center"].items():
-                self._corsikaTelescope["corsika_sphere_center"][key] = u.Quantity(value)
-
-            self._corsikaTelescope["corsika_sphere_radius"] = {}
-            for key, value in corsika_dict["corsika_sphere_radius"].items():
-                self._corsikaTelescope["corsika_sphere_radius"][key] = u.Quantity(value)
+            for key, value in sphere_dict.items():
+                if isinstance(value, u.Quantity) or isinstance(value, str):
+                    _sphere_dict_cleaned[key] = u.Quantity(value)
+                else:
+                    _sphere_dict_cleaned[key] = value["value"] * u.Unit(value["unit"])
         except (TypeError, KeyError):
             pass
+
+        return _sphere_dict_cleaned
+
+    def _initializeCorsikaTelescopeFromDict(self, corsikaDict):
+        """
+        Initialize CORSIKA telescope parameters from a dictionary.
+
+        Parameters
+        ----------
+        corsikaDict dict
+            dictionary with CORSIKA telescope parameters
+
+        """
+
+        try:
+            self._corsikaTelescope["corsika_obs_level"] = u.Quantity(
+                corsikaDict["corsika_obs_level"]
+            )
+        except (TypeError, KeyError):
+            self._corsikaTelescope["corsika_obs_level"] = np.nan * u.m
+            pass
+
+        self._corsikaTelescope["corsika_sphere_center"] = self._initializeSphereParameters(
+            corsikaDict["corsika_sphere_center"]
+        )
+        self._corsikaTelescope["corsika_sphere_radius"] = self._initializeSphereParameters(
+            corsikaDict["corsika_sphere_radius"]
+        )
 
     def _initalizeCoordinateSystems(self, center_dict, defaults_init=False):
         """
@@ -220,7 +289,7 @@ class LayoutArray:
         Raises
         ------
         KeyError
-            In case corsika_obs_level or corsika_sphere_center is not given
+            In case CORSIKA_OBS_LEVEL or TELESCOPE_SPHERE_CENTER is not given
 
         """
 
@@ -243,6 +312,8 @@ class LayoutArray:
                 )
         except KeyError:
             self._logger.error("Missing definition of CORSIKA sphere center")
+            self._logger.error(self._corsikaTelescope)
+            self._logger.error(_telType)
             raise
 
     def _loadTelescopeNames(self, row):
@@ -736,33 +807,6 @@ class LayoutArray:
             "center_northing": None,
             "center_easting": None,
             "center_alt": None,
-        }
-
-    @staticmethod
-    def _corsikaTelescopeDefault():
-        """
-        Default values for CORSIKA telescope dict
-
-        Returns
-        -------
-        dict
-            corsika telescope default values
-
-        TODO: this should go
-
-        """
-        return {
-            "corsika_obs_level": None,
-            "corsika_sphere_center": {
-                "LST": 16.0 * u.m,
-                "MST": 9.0 * u.m,
-                "SST": 3.25 * u.m,
-            },
-            "corsika_sphere_radius": {
-                "LST": 12.5 * u.m,
-                "MST": 9.6 * u.m,
-                "SST": 3.5 * u.m,
-            },
         }
 
     @staticmethod

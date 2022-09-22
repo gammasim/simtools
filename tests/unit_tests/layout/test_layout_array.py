@@ -30,7 +30,7 @@ def layoutCenterDataDict():
 @pytest.fixture
 def corsikaTelescopeDataDict():
     return {
-        "corsika_sphere_radius": {"LST": 12.5 * u.m, "MST": 9.6 * u.m, "SST": 3 * u.m},
+        "corsika_sphere_radius": {"LST": 12.5 * u.m, "MST": 9.15 * u.m, "SST": 3.0 * u.m},
         "corsika_sphere_center": {"LST": 16 * u.m, "MST": 9 * u.m, "SST": 3.25 * u.m},
         "corsika_obs_level": 2158 * u.m,
     }
@@ -80,6 +80,17 @@ def test_initalizeCoordinateSystems(layoutCenterDataDict):
     _E, _N, _z = layout._arrayCenter.getCoordinates("utm")
     assert _E.value == pytest.approx(217609.0, 1.0)
     assert _N.value == pytest.approx(3185067.0, 1.0)
+
+
+def test_initializeCorsikaTelescopeFromFile(corsikaTelescopeDataDict):
+
+    layout = LayoutArray(name="testLayout")
+    layout._initializeCorsikaTelescopeFromFile()
+
+    for key, value in corsikaTelescopeDataDict["corsika_sphere_radius"].items():
+        assert value == layout._corsikaTelescope["corsika_sphere_radius"][key]
+    for key, value in corsikaTelescopeDataDict["corsika_sphere_center"].items():
+        assert value == layout._corsikaTelescope["corsika_sphere_center"][key]
 
 
 def test_read_tel_list(cfg_setup, telescopeTestFile):
