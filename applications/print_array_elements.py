@@ -29,6 +29,7 @@
 
 import logging
 
+import simtools.config as cfg
 import simtools.layout.layout_array as layout_array
 import simtools.util.commandline_parser as argparser
 import simtools.util.general as gen
@@ -94,6 +95,8 @@ def main():
 
     _logger = logging.getLogger()
     _logger.setLevel(gen.getLogLevelFromUser(args.logLevel))
+
+    cfg.setConfigFileName(args.configFile)
 
     layout = layout_array.LayoutArray()
     layout.readTelescopeListFile(args.array_element_list)

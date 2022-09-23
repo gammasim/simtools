@@ -207,6 +207,23 @@ APP_LIST = {
             "corsika",
         ],
     ],
+    "print_array_elements::export_utm": [
+        [
+            "--array_element_list",
+            "tests/resources/telescope_positions-South-4MST.ecsv",
+            "--export",
+            "utm",
+        ],
+    ],
+    "print_array_elements::export_corsika": [
+        [
+            "--array_element_list",
+            "tests/resources/telescope_positions-South-4MST.ecsv",
+            "--export",
+            "corsika",
+            "--use_corsika_telescope_height",
+        ],
+    ],
 }
 
 
