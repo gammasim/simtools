@@ -266,7 +266,7 @@ class ArrayModel:
         Parameters
         ----------
         telName: str
-            Name of the telescope at the layout level (L-01, M-05, ...).
+            Name of the telescope at the layout level (LST-01, MST-05, ...).
         telSize: str
             LST, MST or SST.
         """
