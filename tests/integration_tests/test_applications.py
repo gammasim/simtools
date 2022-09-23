@@ -224,6 +224,23 @@ APP_LIST = {
             "--use_corsika_telescope_height",
         ],
     ],
+    # files without corsika_spheres definition
+    "print_array_elements::print_compact_nocors_utm": [
+        [
+            "--array_element_list",
+            "tests/resources/telescope_positions-North-utm.ecsv",
+            "--compact",
+            "utm",
+        ],
+    ],
+    "print_array_elements::print_compact_nocors_corsika": [
+        [
+            "--array_element_list",
+            "tests/resources/telescope_positions-North-utm.ecsv",
+            "--compact",
+            "corsika",
+        ],
+    ],
 }
 
 
