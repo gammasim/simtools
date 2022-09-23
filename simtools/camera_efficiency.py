@@ -13,10 +13,8 @@ import simtools.config as cfg
 import simtools.io_handler as io
 import simtools.util.general as gen
 from simtools import visualize
-from simtools.model.model_parameters import CAMERA_RADIUS_CURV
 from simtools.model.telescope_model import TelescopeModel
 from simtools.util import names
-from simtools.util.model import getCameraName
 
 __all__ = ["CameraEfficiency"]
 
@@ -237,16 +235,12 @@ class CameraEfficiency:
             )
             mirrorReflectivity = "ref_astri_2017-06_T0.dat"
 
-        # Camera name
-        cameraName = getCameraName(self._telescopeModel.name)
-
         # cmd -> Command to be run at the shell
         cmd = str(self._simtelSourcePath.joinpath("sim_telarray/bin/testeff"))
         cmd += " -nm -nsb-extra"
         cmd += f" -alt {self._telescopeModel.getParameterValue('altitude')}"
         cmd += f" -fatm {self._telescopeModel.getParameterValue('atmospheric_transmission')}"
         cmd += f" -flen {focalLength * 0.01}"  # focal length in meters
-        cmd += " -fcur {}".format(CAMERA_RADIUS_CURV[cameraName])
         cmd += f" {pixelShapeCmd} {pixelDiameter}"
         if mirrorClass == 1:
             cmd += f" -fmir {self._telescopeModel.getParameterValue('mirror_list')}"
@@ -489,6 +483,7 @@ class CameraEfficiency:
             np.sum(self._results["N4"])
             * self._telescopeModel.camera.getPixelActiveSolidAngle()
             * self._telescopeModel.getOnAxisEffOpticalArea().to("m2").value
+            / self._telescopeModel.getTelescopeTransmissionParameters()[0]
         )
 
         print(self._telescopeModel.getOnAxisEffOpticalArea().to("m2").value)
