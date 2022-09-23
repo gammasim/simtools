@@ -292,28 +292,26 @@ class LayoutArray:
 
         """
 
-        _telType = self.getTelescopeType(tel_name)
-        if _telType is None:
-            return np.nan * u.m
+        _sphere_center = 0.0 * u.m
+        if self.getTelescopeType(tel_name) is not None:
+            try:
+                _sphere_center = self._corsikaTelescope["corsika_sphere_center"][
+                    self.getTelescopeType(tel_name)
+                ]
+            except KeyError:
+                self._logger.error(
+                    "Missing definition of CORSIKA sphere center ({})".format(tel_name)
+                )
+                raise
 
-        try:
-            if pos_z is not None:
-                return TelescopePosition.convertTelescopeAltitudeFromCorsikaSystem(
-                    pos_z,
-                    self._corsikaTelescope["corsika_obs_level"],
-                    self._corsikaTelescope["corsika_sphere_center"][_telType],
-                )
-            if altitude is not None:
-                return TelescopePosition.convertTelescopeAltitudeToCorsikaSystem(
-                    altitude,
-                    self._corsikaTelescope["corsika_obs_level"],
-                    self._corsikaTelescope["corsika_sphere_center"][_telType],
-                )
-        except KeyError:
-            self._logger.error("Missing definition of CORSIKA sphere center")
-            self._logger.error(self._corsikaTelescope)
-            self._logger.error(_telType)
-            raise
+        if pos_z is not None:
+            return TelescopePosition.convertTelescopeAltitudeFromCorsikaSystem(
+                pos_z, self._corsikaTelescope["corsika_obs_level"], _sphere_center
+            )
+        if altitude is not None:
+            return TelescopePosition.convertTelescopeAltitudeToCorsikaSystem(
+                altitude, self._corsikaTelescope["corsika_obs_level"], _sphere_center
+            )
 
     def _loadTelescopeNames(self, row):
         """
@@ -455,7 +453,7 @@ class LayoutArray:
         Parameters
         ----------
         telescopeName: str
-            Name of the telescope starting with L, M or S (e.g. L-01, M-06 ...)
+            Name of the telescope starting with L, M or S (e.g. LST-01, MST-06 ...)
         crsName: str
             Name of coordinate system
         xx: astropy.units.quantity.Quantity
@@ -813,16 +811,11 @@ class LayoutArray:
         """
         Guess telescope type from name
 
-        This does not work consistently, as array elements (non-telescopes)
-        might have asset names starting with L,M,S
-
-        TODO: this should go
-
         """
 
         _class, _ = names.splitTelescopeModelName(telescope_name)
         try:
-            if _class[0:3] in ("LST", "MST", "SST"):
+            if _class[0:3] in ("LST", "MST", "SST", "SCT"):
                 return _class[0:3]
             if telescope_name[0:2] == "L-":
                 return "LST"
@@ -830,5 +823,6 @@ class LayoutArray:
                 return "MST"
             if telescope_name[0:2] == "S-":
                 return "SST"
+
         except IndexError:
             pass
