@@ -94,7 +94,7 @@ class CameraEfficiency:
         self._hasResults = False
 
         _configDataIn = gen.collectDataFromYamlOrDict(configFile, configData, allowEmpty=True)
-        _parameterFile = io.getDataFile("parameters", "camera-efficiency_parameters.yml")
+        _parameterFile = io.getInputDataFile("parameters", "camera-efficiency_parameters.yml")
         _parameters = gen.collectDataFromYamlOrDict(_parameterFile, None)
         self.config = gen.validateConfigData(_configDataIn, _parameters)
 
@@ -238,36 +238,31 @@ class CameraEfficiency:
         # cmd -> Command to be run at the shell
         cmd = str(self._simtelSourcePath.joinpath("sim_telarray/bin/testeff"))
         cmd += " -nm -nsb-extra"
-        cmd += " -alt {}".format(self._telescopeModel.getParameterValue("altitude"))
-        cmd += " -fatm {}".format(
-            self._telescopeModel.getParameterValue("atmospheric_transmission")
-        )
-        cmd += " -flen {}".format(focalLength * 0.01)  # focal length in meters
-        cmd += " {} {}".format(pixelShapeCmd, pixelDiameter)
+        cmd += f" -alt {self._telescopeModel.getParameterValue('altitude')}"
+        cmd += f" -fatm {self._telescopeModel.getParameterValue('atmospheric_transmission')}"
+        cmd += f" -flen {focalLength * 0.01}"  # focal length in meters
+        cmd += f" {pixelShapeCmd} {pixelDiameter}"
         if mirrorClass == 1:
-            cmd += " -fmir {}".format(self._telescopeModel.getParameterValue("mirror_list"))
-        cmd += " -fref {}".format(mirrorReflectivity)
+            cmd += f" -fmir {self._telescopeModel.getParameterValue('mirror_list')}"
+        cmd += f" -fref {mirrorReflectivity}"
         if mirrorClass == 2:
             cmd += " -m2"
-        cmd += " -teltrans {}".format(self._telescopeModel.getTelescopeTransmissionParameters()[0])
-        cmd += " -camtrans {}".format(cameraTransmission)
-        cmd += " -fflt {}".format(cameraFilterFile)
-        cmd += " -fang {}".format(
-            self._telescopeModel.camera.getLightguideEfficiencyAngleFileName()
-        )
-        cmd += " -fwl {}".format(
-            self._telescopeModel.camera.getLightguideEfficiencyWavelengthFileName()
-        )
-        cmd += " -fqe {}".format(self._telescopeModel.getParameterValue("quantum_efficiency"))
-        cmd += " {} {}".format(200, 1000)  # lmin and lmax
-        cmd += " {} 1 {}".format(300, self.config.zenithAngle)  # Xmax, ioatm, zenith angle
-        cmd += " 2>{}".format(self._fileLog)
-        cmd += " >{}".format(self._fileSimtel)
+        cmd += f" -teltrans {self._telescopeModel.getTelescopeTransmissionParameters()[0]}"
+        cmd += f" -camtrans {cameraTransmission}"
+        cmd += f" -fflt {cameraFilterFile}"
+        cmd += f" -fang {self._telescopeModel.camera.getLightguideEfficiencyAngleFileName()}"
+        cmd += f" -fwl {self._telescopeModel.camera.getLightguideEfficiencyWavelengthFileName()}"
+        cmd += f" -fqe {self._telescopeModel.getParameterValue('quantum_efficiency')}"
+        cmd += " 200 1000"  # lmin and lmax
+        cmd += " 300 26"  # Xmax, ioatm (Konrad always uses 26)
+        cmd += f" {self.config.zenithAngle}"
+        cmd += f" 2>{self._fileLog}"
+        cmd += f" >{self._fileSimtel}"
 
         # Moving to sim_telarray directory before running
-        cmd = "cd {} && {}".format(self._simtelSourcePath.joinpath("sim_telarray"), cmd)
+        cmd = f"cd {self._simtelSourcePath.joinpath('sim_telarray')} && {cmd}"
 
-        self._logger.info("Running sim_telarray with cmd: {}".format(cmd))
+        self._logger.info(f"Running sim_telarray with cmd: {cmd}")
         os.system(cmd)
         return
 
@@ -373,7 +368,7 @@ class CameraEfficiency:
             )
         )
         self._logger.info(
-            f"Expected NSB pixel rate for the reference NSB:{self.calcNsbRate()[0]:.4f} [p.e./ns]"
+            f"Expected NSB pixel rate for the reference NSB: {self.calcNsbRate()[0]:.4f} [p.e./ns]"
         )
         print("\033[0m")
 
@@ -490,6 +485,8 @@ class CameraEfficiency:
             * self._telescopeModel.getOnAxisEffOpticalArea().to("m2").value
             / self._telescopeModel.getTelescopeTransmissionParameters()[0]
         )
+
+        print(self._telescopeModel.getOnAxisEffOpticalArea().to("m2").value)
 
         # NSB input spectrum is from Benn&Ellison
         # (integral is in ph./(cm² ns sr) ) from 300 - 650 nm:

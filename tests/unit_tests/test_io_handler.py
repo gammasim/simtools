@@ -51,7 +51,7 @@ def test_get_output_file(cfg_setup):
 def test_get_data_file(cfg_setup):
 
     assert (
-        io.getDataFile(
+        io.getInputDataFile(
             parentDir="test-io-handler",
             fileName="test-file.txt",
         )
@@ -59,6 +59,6 @@ def test_get_data_file(cfg_setup):
     )
 
     assert (
-        io.getDataFile(fileName="test-file.txt", test=True)
+        io.getInputDataFile(fileName="test-file.txt", test=True)
         == Path("tests/resources/test-file.txt").absolute()
     )
