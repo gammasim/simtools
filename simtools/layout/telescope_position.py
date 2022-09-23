@@ -24,7 +24,7 @@ class TelescopePosition:
     Attributes
     ----------
     name: str
-        Name of the array element (e.g L-01, S-05, ...).
+        Name of the array element (e.g LST-01, SST-05, ...).
 
     Methods
     -------
@@ -55,7 +55,7 @@ class TelescopePosition:
         Parameters
         ----------
         name: str
-            Name of the telescope (e.g L-01, S-05, ...)
+            Name of the telescope (e.g LST-01, SST-05, ...)
         """
 
         self._logger = logging.getLogger(__name__)
@@ -118,11 +118,13 @@ class TelescopePosition:
                 and corsika_obs_level is not None
                 and corsika_sphere_center is not None
             ):
-                _zz = self.convertTelescopeAltitudeToCorsikaSystem(
-                    _zz * u.Unit(self.crs[crs_name]["zz"]["unit"]),
-                    corsika_obs_level,
-                    corsika_sphere_center,
-                )
+                _zz = (
+                    self.convertTelescopeAltitudeToCorsikaSystem(
+                        _zz * u.Unit(self.crs[crs_name]["zz"]["unit"]),
+                        corsika_obs_level,
+                        corsika_sphere_center,
+                    )
+                ).value
                 _zz_header = "pos_z"
 
             if crs_name == "mercator":
