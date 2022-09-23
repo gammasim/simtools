@@ -16,13 +16,13 @@ logger.setLevel(logging.DEBUG)
 def testFiles():
     testFiles = list()
     testFiles.append(
-        io.getDataFile(
+        io.getInputDataFile(
             fileName="run201_proton_za20deg_azm0deg-North-Prod5_test-production-5-mini.simtel.zst",
             test=True,
         )
     )
     testFiles.append(
-        io.getDataFile(
+        io.getInputDataFile(
             fileName="run202_proton_za20deg_azm0deg-North-Prod5_test-production-5-mini.simtel.zst",
             test=True,
         )

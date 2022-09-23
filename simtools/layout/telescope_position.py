@@ -126,7 +126,7 @@ class TelescopePosition:
 
         # Loading configData
         _configDataIn = gen.collectDataFromYamlOrDict(configFile, configData, allowEmpty=True)
-        _parameterFile = io.getDataFile("parameters", "telescope-position_parameters.yml")
+        _parameterFile = io.getInputDataFile("parameters", "telescope-position_parameters.yml")
         _parameters = gen.collectDataFromYamlOrDict(_parameterFile, None)
         self.config = gen.validateConfigData(_configDataIn, _parameters)
 

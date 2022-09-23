@@ -110,7 +110,9 @@ class SimtelRunnerRayTracing(SimtelRunner):
 
         # Loading configData
         _configDataIn = gen.collectDataFromYamlOrDict(configFile, configData)
-        _parameterFile = io.getDataFile("parameters", "simtel-runner-ray-tracing_parameters.yml")
+        _parameterFile = io.getInputDataFile(
+            "parameters", "simtel-runner-ray-tracing_parameters.yml"
+        )
         _parameters = gen.collectDataFromYamlOrDict(_parameterFile, None)
         self.config = gen.validateConfigData(_configDataIn, _parameters)
 

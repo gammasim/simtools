@@ -155,7 +155,7 @@ class CorsikaConfig:
             self._corsikaParametersFile = filename
         else:
             # Default file from data directory.
-            self._corsikaParametersFile = io.getDataFile("corsika", "corsika_parameters.yml")
+            self._corsikaParametersFile = io.getInputDataFile("corsika", "corsika_parameters.yml")
         self._logger.debug(
             "Loading CORSIKA parameters from file {}".format(self._corsikaParametersFile)
         )
