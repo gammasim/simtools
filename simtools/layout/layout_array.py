@@ -205,12 +205,19 @@ class LayoutArray:
         except (TypeError, KeyError):
             self._corsikaTelescope["corsika_obs_level"] = np.nan * u.m
 
-        self._corsikaTelescope["corsika_sphere_center"] = self._initializeSphereParameters(
-            corsikaDict["corsika_sphere_center"]
-        )
-        self._corsikaTelescope["corsika_sphere_radius"] = self._initializeSphereParameters(
-            corsikaDict["corsika_sphere_radius"]
-        )
+        try:
+            self._corsikaTelescope["corsika_sphere_center"] = self._initializeSphereParameters(
+                corsikaDict["corsika_sphere_center"]
+            )
+        except (TypeError, KeyError):
+            pass
+
+        try:
+            self._corsikaTelescope["corsika_sphere_radius"] = self._initializeSphereParameters(
+                corsikaDict["corsika_sphere_radius"]
+            )
+        except (TypeError, KeyError):
+            pass
 
     def _initalizeCoordinateSystems(self, center_dict, defaults_init=False):
         """
