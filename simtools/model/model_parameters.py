@@ -41,14 +41,3 @@ MODEL_PARS = {
     "min_photoelectrons": {"type": int, "names": []},
     "parabolic_dish": {"type": int, "names": []},
 }
-
-CAMERA_RADIUS_CURV = {
-    "SST": 4.566,
-    "1M": 5.6,
-    "ASTRI": 4.3,
-    "GCT": 4.566,
-    "FlashCam": 19.2,
-    "NectarCam": 19.2,
-    "SCT": 11.16,
-    "LST": 56,
-}
