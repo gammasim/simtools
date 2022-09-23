@@ -138,5 +138,5 @@ def test_calc_nsb_rate(telescope_model, camera_efficiency, results_file):
     camera_efficiency._readResults()
     telescope_model.exportModelFiles()
     assert camera_efficiency.calcNsbRate()[0] == pytest.approx(
-        0.2366432742
+        0.24421390533203186
     )  # Value for Prod5 LST-1
