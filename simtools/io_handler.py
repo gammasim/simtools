@@ -6,7 +6,7 @@ from pathlib import Path
 
 import simtools.config as cfg
 
-__all__ = ["getOutputDirectory", "getOutputFile", "getDataFile"]
+__all__ = ["getOutputDirectory", "getOutputFile", "getInputDataFile"]
 
 
 def getOutputDirectory(filesLocation=None, label=None, dirType=None, test=False):
@@ -73,7 +73,7 @@ def getOutputFile(fileName, label=None, dirType=None, test=False):
     return getOutputDirectory(label=label, dirType=dirType, test=test).joinpath(fileName).absolute()
 
 
-def getDataFile(parentDir=None, fileName=None, test=False):
+def getInputDataFile(parentDir=None, fileName=None, test=False):
     """
     Get path of a data file, using the dataLocation taken from the config file.
 

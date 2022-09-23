@@ -13,7 +13,7 @@ logger.setLevel(logging.DEBUG)
 
 def test_reading_simtel_file(cfg_setup):
 
-    testFile = io.getDataFile(
+    testFile = io.getInputDataFile(
         fileName="photons-LST-d12.0-za20.0-off0.000_lst_integral.lis", test=True
     )
     image = PSFImage(focalLength=2800.0)
