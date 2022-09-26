@@ -784,6 +784,7 @@ class LayoutArray:
         try:
             if _class[0:3] in ("LST", "MST", "SST", "SCT"):
                 return _class[0:3]
+            # PRELIMINARY: no correct return for SCT
             if telescope_name[0:2] == "L-":
                 return "LST"
             if telescope_name[0:2] == "M-":
