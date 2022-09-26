@@ -35,7 +35,7 @@
     .. code-block:: console
 
         python applications/validate_camera_efficiency.py --site North \
-            --telescope MST-NectarCam-D --model_version prod4
+            --telescope MST-NectarCam-D --model_version prod5
 
     .. todo::
 
