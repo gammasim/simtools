@@ -102,7 +102,7 @@ def test_getCoordinates(crs_wgs84, crs_local, crs_utm):
     assert _z.unit == "m"
 
 
-def test_setCoordinateVariable():
+def test_getCoordinateVariable():
 
     tel = TelescopePosition(name="L-01")
 
@@ -112,6 +112,8 @@ def test_setCoordinateVariable():
     assert tel._getCoordinateValue(5.0 * u.m, u.Unit("m")) == pytest.approx(5.0, 1.0e-6)
     # quantity should become value (plus unit conversion)
     assert tel._getCoordinateValue(5.0 * u.km, u.Unit("m")) == pytest.approx(5.0e3, 1.0e-6)
+    # nan should be isnan
+    assert np.isnan(tel._getCoordinateValue(np.nan * u.km, u.m))
     # some units can't be converted
     with pytest.raises(u.UnitsError):
         tel._getCoordinateValue(5.0 * u.deg, u.Unit("m"))
