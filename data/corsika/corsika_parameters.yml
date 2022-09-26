@@ -110,6 +110,9 @@ corsika_sphere_center:
   MST:
     value: 9
     unit: "m"
+  SCT:
+    value: 6.1
+    unit: "m"
   SST:
     value: 3.25
     unit: "m"
@@ -120,6 +123,9 @@ corsika_sphere_radius:
     unit: "m"
   MST:
     value: 9.15
+    unit: "m"
+  SCT:
+    value: 7.15
     unit: "m"
   SST:
     value: 3.
