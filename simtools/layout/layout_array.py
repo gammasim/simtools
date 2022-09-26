@@ -205,7 +205,7 @@ class LayoutArray:
         except (TypeError, KeyError):
             pass
 
-    def _initalizeCoordinateSystems(self, center_dict={}, defaults_init=False):
+    def _initalizeCoordinateSystems(self, center_dict=None, defaults_init=False):
         """
         Initialize array center and coordinate systems.
 
@@ -577,7 +577,7 @@ class LayoutArray:
         if any(v is not None for v in geo_code):
             table["geo_code"] = geo_code
 
-        if len(self._telescopeList) > 0:
+        try:
             _nameX, _nameY, _nameZ = self._telescopeList[0].getCoordinates(
                 crs_name=crsName, coordinate_field="name"
             )
@@ -587,6 +587,8 @@ class LayoutArray:
                 table["pos_z"] = pos_z
             else:
                 table[_nameZ] = pos_z
+        except IndexError:
+            pass
 
         self._setTelescopeListFile(filesLocation)
         self._logger.info("Exporting telescope list to {}".format(self.telescopeListFile))
