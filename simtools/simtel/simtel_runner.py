@@ -166,31 +166,26 @@ class SimtelRunner:
             raise RuntimeError(msg)
 
         if not self._shallRun(runNumber) and not force:
-            self._logger.debug("Skipping because output exists and force = False")
+            self._logger.info("Skipping because output exists and force = False")
             return
 
         command = self._makeRunCommand(inputFile=inputFile, runNumber=runNumber)
 
         if test:
             self._logger.info("Running (test) with command:{}".format(command))
-            os.system(command)
+            self._runSimtelAndCheckOutput(command)
         else:
             self._logger.info("Running ({}x) with command:{}".format(self.RUNS_PER_SET, command))
-            os.system(command)
+            self._runSimtelAndCheckOutput(command)
 
             for _ in range(self.RUNS_PER_SET - 1):
-                os.system(command)
-
-        # TODO: fix the fact any ray tracing simulations are failing and
-        # uncomment this
-        # if self._simtelFailed(sysOutput):
-        #     self._raiseSimtelError()
+                self._runSimtelAndCheckOutput(command)
 
         self._checkRunResult(runNumber=runNumber)
 
     @staticmethod
     def _simtelFailed(sysOutput):
-        return sysOutput != "0"
+        return sysOutput != 0
 
     def _raiseSimtelError(self):
         """
@@ -198,7 +193,7 @@ class SimtelRunner:
         are collected and printed.
         """
         if hasattr(self, "_logFile"):
-            logLines = gen.collectFinalLines(self._logFile, 10)
+            logLines = gen.collectFinalLines(self._logFile, 30)
             msg = (
                 "Simtel Error - See below the relevant part of the simtel log file.\n"
                 + "===== from simtel log file ======\n"
@@ -210,6 +205,14 @@ class SimtelRunner:
 
         self._logger.error(msg)
         raise SimtelExecutionError(msg)
+
+    def _runSimtelAndCheckOutput(self, command):
+        """
+        Run the sim_telarray command and check the exit code.
+        """
+        sysOutput = os.system(command)
+        if self._simtelFailed(sysOutput):
+            self._raiseSimtelError()
 
     def _shallRun(self, runNumber=None):
         self._logger.debug(
