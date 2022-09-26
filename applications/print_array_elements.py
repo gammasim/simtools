@@ -5,17 +5,14 @@
     Print a list of array element positions in different CTAO coordinate \
     systems.
 
-    Coordinate systems are:
+    Available coordinate systems are:
     1. UTM system
     2. CORSIKA coordinates
     3. Mercator system
 
-    Command line arguments
-    ----------------------
     Example
     -------
-    Printing a list of array elements using a list of telescope positions \
-    in UTM coordinates.
+    Print a list of array elements using a list of telescope positions in UTM coordinates.
 
     Example:
 
@@ -30,9 +27,9 @@
 import logging
 
 import simtools.config as cfg
-import simtools.layout.layout_array as layout_array
 import simtools.util.commandline_parser as argparser
 import simtools.util.general as gen
+from simtools.layout import layout_array
 
 
 def parse(description=None):
@@ -69,7 +66,7 @@ def parse(description=None):
     )
     parser.add_argument(
         "--export",
-        help="export array element list to file",
+        help="export array element list to file (in requested coordinate system)",
         required=False,
         default=None,
         choices=[
@@ -80,7 +77,7 @@ def parse(description=None):
     )
     parser.add_argument(
         "--use_corsika_telescope_height",
-        help="Use CORSIKA coordinates for telescope height (requires CORSIKA observeration level)",
+        help="Use CORSIKA coordinates for telescope heights (requires CORSIKA observeration level)",
         required=False,
         default=False,
         action="store_true",
