@@ -167,7 +167,7 @@ class TelescopePosition:
         crs_name: str
             name of coordinate system
         coordinate_field: str
-            return specified filed of coordinate descriptor
+            return specified field of coordinate descriptor
             (default: None, return value x unit)
 
         Returns
@@ -391,7 +391,7 @@ class TelescopePosition:
         ----------
         crs_name: str
             Name of coordinate system to be checked for altitude.
-            If none: check if altitude is define for any system.
+            If None: check if altitude is define for any system.
 
         Returns
         -------
