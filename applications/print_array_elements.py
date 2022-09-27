@@ -19,7 +19,7 @@
     .. code-block:: console
 
         python applications/print_array_elements.py \
-            --array_elements NorthArray-utm.ecsv \
+            --array_element_list NorthArray-utm.ecsv \
             --compact corsika
 
 """
