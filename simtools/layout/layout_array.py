@@ -532,7 +532,6 @@ class LayoutArray:
         _outputDirectory = io.getOutputDirectory(
             cfg.getConfigArg("outputLocation", filesLocation), self.label, "layout"
         )
-        _outputDirectory.mkdir(parents=True, exist_ok=True)
         self.telescopeListFile = _outputDirectory.joinpath(
             names.layoutTelescopeListFileName(self.name, None)
         )
