@@ -92,6 +92,8 @@ class Simulator:
         or it will be taken from the config.yml file.
     printHistograms():
         Print histograms and save a pdf file.
+    printOutputFiles():
+        Print list of output files of simulation run.
     getListOfOutputFiles():
         Get list of output files.
     getListOfInputFiles():
@@ -430,6 +432,25 @@ class Simulator:
             )
 
             self._fillResults(file, run)
+
+    def printOutputFiles(self, inputFileList=None):
+        """
+        Print output files obtained with simulation run
+
+        Parameters
+        ----------
+        inputFileList: str or list of str
+            Single file or list of files of shower simulations.
+
+        """
+
+        runs_and_files_to_submit = self._getRunsAndFilesToSubmit(inputFileList=inputFileList)
+
+        for run, _ in runs_and_files_to_submit.items():
+            print("{} (file exists: {})".format(
+                str(self._simulationRunner.getOutputFile(run)),
+                Path.exists(self._simulationRunner.getOutputFile(run)))
+            )
 
     def _getRunsAndFilesToSubmit(self, inputFileList=None):
         """
