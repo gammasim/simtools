@@ -54,6 +54,7 @@ class LayoutArray:
         name=None,
         layoutCenterData=None,
         corsikaTelescopeData=None,
+        telescopeListFile=None,
     ):
         """
         LayoutArray init.
@@ -68,6 +69,8 @@ class LayoutArray:
             Dict describing array center coordinates.
         corsikaTelescopeData: dict
             Dict describing CORSIKA telescope parameters.
+        telescopeListFile: str (or Path)
+            Path to the telescope list file.
 
         """
         self._logger = logging.getLogger(__name__)
@@ -77,8 +80,11 @@ class LayoutArray:
         self.name = name
         self._telescopeList = []
         self._epsg = None
-        self._initalizeCoordinateSystems(layoutCenterData)
-        self._initializeCorsikaTelescope(corsikaTelescopeData)
+        if telescopeListFile is None:
+            self._initalizeCoordinateSystems(layoutCenterData)
+            self._initializeCorsikaTelescope(corsikaTelescopeData)
+        else:
+            self.readTelescopeListFile(telescopeListFile)
 
     @classmethod
     def fromLayoutArrayName(cls, layoutArrayName, label=None):
