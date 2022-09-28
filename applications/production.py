@@ -117,13 +117,13 @@ def parse(description=None):
     )
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument(
-        "--array_only",
-        help="Simulates only array detection, no showers",
+        "--showers_only",
+        help="Simulates only showers, no array detection",
         action="store_true",
     )
     group.add_argument(
-        "--showers_only",
-        help="Simulates only showers, no array detection",
+        "--array_only",
+        help="Simulates only array detection, no showers",
         action="store_true",
     )
     parser.initialize_default_arguments(add_workflow_config=False)
