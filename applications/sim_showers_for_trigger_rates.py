@@ -121,14 +121,16 @@ def main():
         "cscat": [20, 1500 * u.m, 0],
     }
 
-    showerSimulator = Simulator(label=label, simulator="corsika", configData=showerConfigData)
+    showerSimulator = Simulator(
+        label=label, simulator="corsika", configData=showerConfigData, test=args.test
+    )
 
     if not args.test:
-        showerSimulator.submit()
+        showerSimulator.simulate()
     else:
         logger.info("Test flag is on - it will not submit any job.")
         logger.info("This is an example of the run script:")
-        showerSimulator.submit(test=args.test)
+        showerSimulator.simulate()
 
     # Exporting the list of output/log/input files into the application folder
     outputFileList = outputDir.joinpath("outputFiles_{}.list".format(args.primary))
