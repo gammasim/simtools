@@ -447,9 +447,11 @@ class Simulator:
         runs_and_files_to_submit = self._getRunsAndFilesToSubmit(inputFileList=inputFileList)
 
         for run, _ in runs_and_files_to_submit.items():
-            print("{} (file exists: {})".format(
-                str(self._simulationRunner.getOutputFile(run)),
-                Path.exists(self._simulationRunner.getOutputFile(run)))
+            print(
+                "{} (file exists: {})".format(
+                    str(self._simulationRunner.getOutputFile(run)),
+                    Path.exists(self._simulationRunner.getOutputFile(run)),
+                )
             )
 
     def _getRunsAndFilesToSubmit(self, inputFileList=None):
