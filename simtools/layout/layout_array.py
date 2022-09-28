@@ -226,7 +226,7 @@ class LayoutArray:
 
         self._arrayCenter = TelescopePosition()
         self._arrayCenter.name = "array_center"
-        self._arrayCenter.setCoordinates("corsika", 0 * u.m, 0 * u.m, 0.0 * u.m)
+        self._arrayCenter.setCoordinates("corsika", 0.0 * u.m, 0.0 * u.m, 0.0 * u.m)
 
         center_dict = {} if center_dict is None else center_dict
         try:
