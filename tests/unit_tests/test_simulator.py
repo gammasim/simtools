@@ -207,13 +207,14 @@ def test_fillResultsWithoutRun(array_simulator, input_file_list):
 
 def test_submitting(shower_simulator, array_simulator, corsikaFile):
 
-    shower_simulator.submit(submitCommand="local")
+    shower_simulator.test = True
+    shower_simulator.simulate(submitCommand="local")
 
     run_script = shower_simulator._simulationRunner.getRunScript(runNumber=2)
 
     assert Path(run_script).exists()
 
-    array_simulator.submit(inputFileList=corsikaFile, submitCommand="local", test=True)
+    array_simulator.simulate(inputFileList=corsikaFile, submitCommand="local")
 
     array_simulator.printListOfOutputFiles()
     array_simulator.printListOfLogFiles()
