@@ -9,6 +9,7 @@
 # - {name: geo_code, datatype: string, description: Geographical Position Code}
 # meta: !!omap
 # - data_type: positionfile
+# - array_name: "North-ArrayElements"
 # - description: "CTAO Northern Array Element Coordinates"
 # - center_lon: "-17.8920302 deg"
 # - center_lat: "28.7621661 deg"
