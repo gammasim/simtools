@@ -87,7 +87,7 @@ class Simulator:
     -------
     run(inputFileList):
         Run simulation.
-    submit(inputFileList, submitCommand=None, extraCommands=None, test=False):
+    simulate(inputFileList, submitCommand=None, extraCommands=None, test=False):
         Submit a run script as a job. The submit command can be given by submitCommand \
         or it will be taken from the config.yml file.
     printHistograms():
@@ -116,6 +116,7 @@ class Simulator:
         simulatorSourcePath=None,
         configData=None,
         configFile=None,
+        test=False,
     ):
         """
         Simulator init.
@@ -136,6 +137,8 @@ class Simulator:
             Dict with shower or array model configuration data.
         configFile: str or Path
             Path to yaml file containing configurable data.
+        test: bool
+            If True, no jobs are submitted; only run scripts are prepared
         """
         self._logger = logging.getLogger(__name__)
         self._logger.debug("Init Simulator {}".format(simulator))
@@ -144,6 +147,7 @@ class Simulator:
         self._setSimulator(simulator)
         self.runs = list()
         self._results = defaultdict(list)
+        self.test = test
 
         self._setFileLocations(filesLocation, simulatorSourcePath)
         self._loadConfigurationAndSimulationModel(configData, configFile)
@@ -395,7 +399,7 @@ class Simulator:
             self._fillResults(file, run)
             self.runs.append(run)
 
-    def submit(self, inputFileList=None, submitCommand=None, extraCommands=None, test=False):
+    def simulate(self, inputFileList=None, submitCommand=None, extraCommands=None):
         """
         Submit a run script as a job. The submit command can be given by \
         submitCommand or it will be taken from the config.yml file.
@@ -408,8 +412,6 @@ class Simulator:
             Command to be used before the script name.
         extraCommands: str or list of str
             Extra commands to be added to the run script before the run command,
-        test: bool
-            If True, job is not submitted.
 
         """
 
@@ -425,7 +427,7 @@ class Simulator:
                 runNumber=run, inputFile=file, extraCommands=extraCommands
             )
 
-            job_manager = JobManager(submitCommand=subCmd, test=test)
+            job_manager = JobManager(submitCommand=subCmd, test=self.test)
             job_manager.submit(
                 run_script=runScript,
                 run_out_file=self._simulationRunner.getSubLogFile(runNumber=run, mode=""),
@@ -433,9 +435,9 @@ class Simulator:
 
             self._fillResults(file, run)
 
-    def printOutputFiles(self, inputFileList=None):
+    def filelist(self, inputFileList=None):
         """
-        Print output files obtained with simulation run
+        List output files obtained with simulation run
 
         Parameters
         ----------
@@ -695,7 +697,7 @@ class Simulator:
 
         return resource_summary
 
-    def printResourcesReport(self, inputFileList=None):
+    def resources(self, inputFileList=None):
         """
         Print a simple report on computing resources used
         (includes run time per run only at this point)
