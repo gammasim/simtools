@@ -29,7 +29,7 @@
         What task to execute. Options:
             simulate (perform simulations),
             lists (print list of output files)
-            inspect (plot sim_telarray histograms for quick inspection) [NOT IMPLEMENTED]
+            inspect (plot sim_telarray histograms for quick inspection)
             resources (print quicklook into used computational resources)
     array_only (activation mode)
         Simulates only array detector (no showers).
@@ -232,6 +232,9 @@ def main():
             elif args.task == "lists":
                 print("Printing ShowerSimulator file lists for primary {}".format(primary))
                 shower.printOutputFiles()
+
+            elif args.task == "inspect":
+                print("No inspection of CORSIKA results implemented")
 
             elif args.task == "resources":
                 print("Printing computing resources report for primary {}".format(primary))
