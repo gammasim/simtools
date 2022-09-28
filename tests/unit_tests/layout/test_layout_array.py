@@ -62,16 +62,16 @@ def test_fromLayoutArrayName(cfg_setup):
     assert 99 == layout.getNumberOfTelescopes()
 
 
-def test_initalizeCoordinateSystems(layoutCenterDataDict):
+def test_initializeCoordinateSystems(layoutCenterDataDict):
 
     layout = LayoutArray(name="testLayout")
-    layout._initalizeCoordinateSystems()
+    layout._initializeCoordinateSystems()
     _x, _y, _z = layout._arrayCenter.getCoordinates("corsika")
     assert _x == 0.0 * u.m and _y == 0.0 * u.m and _z == 0.0 * u.m
     _lat, _lon, _z = layout._arrayCenter.getCoordinates("mercator")
     assert np.isnan(_lat) and np.isnan(_lon)
 
-    layout._initalizeCoordinateSystems(layoutCenterDataDict, False)
+    layout._initializeCoordinateSystems(layoutCenterDataDict, False)
     _x, _y, _z = layout._arrayCenter.getCoordinates("corsika")
     assert _x == 0.0 * u.m and _y == 0.0 * u.m and _z == layoutCenterDataDict["center_alt"]
     _lat, _lon, _z = layout._arrayCenter.getCoordinates("mercator")
