@@ -51,7 +51,9 @@ def parse(description=None):
     parser = argparser.CommandLineParser(description=description)
 
     parser.add_argument(
-        "--array_element_list", help="list of array element positions (ecsv format)"
+        "--array_element_list",
+        help="list of array element positions (ecsv format)",
+        required=True,
     )
     parser.add_argument(
         "--compact",
