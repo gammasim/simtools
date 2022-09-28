@@ -100,6 +100,10 @@ def test_read_tel_list(cfg_setup, telescopeTestFile):
     layout.convertCoordinates()
     assert 19 == layout.getNumberOfTelescopes()
 
+    layout_2 = LayoutArray(name="testLayout", telescopeListFile=telescopeTestFile)
+    layout_2.convertCoordinates()
+    assert 19 == layout_2.getNumberOfTelescopes()
+
 
 def test_add_tel(cfg_setup, telescopeTestFile):
 
