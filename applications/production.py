@@ -28,8 +28,9 @@
     task (str)
         What task to execute. Options:
             simulate (perform simulations),
-            lists (print list of output files) [NOT IMPLEMENTED]
+            lists (print list of output files)
             inspect (plot sim_telarray histograms for quick inspection) [NOT IMPLEMENTED]
+            resources (print quicklook into used computational resources)
     array_only (activation mode)
         Simulates only array detector (no showers).
     showers_only (activation mode)
@@ -228,9 +229,9 @@ def main():
                 print("Running ShowerSimulator for primary {}".format(primary))
                 shower.submit(test=args.test)
 
-            elif args.task == "list":
+            elif args.task == "lists":
                 print("Printing ShowerSimulator file lists for primary {}".format(primary))
-                raise NotImplementedError()
+                shower.printOutputFiles()
 
             elif args.task == "resources":
                 print("Printing computing resources report for primary {}".format(primary))
@@ -253,7 +254,7 @@ def main():
 
             elif args.task == "lists":
                 print("Printing ArraySimulator file lists for primary {}".format(primary))
-                raise NotImplementedError()
+                array.printOutputFiles(inputFileList=inputList)
 
             elif args.task == "inspect":
                 print("Plotting ArraySimulator histograms for primary {}".format(primary))
