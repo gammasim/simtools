@@ -256,6 +256,11 @@ class LayoutArray:
             self._arrayCenter.setAltitude(u.Quantity(center_dict.get("center_alt", 0.0 * u.m)))
         except TypeError:
             pass
+        try:
+            _name = center_dict.get("array_name")
+            self.name = _name if _name is not None else self.name
+        except KeyError:
+            pass
 
         self._arrayCenter.convertAll(
             crsLocal=self._getCrsLocal(), crsWgs84=self._getCrsWgs84(), crsUtm=self._getCrsUtm()
@@ -516,6 +521,7 @@ class LayoutArray:
         if export_corsika_meta:
             _meta.update(self._corsikaTelescope)
         _meta["EPSG"] = self._epsg
+        _meta["array_name"] = self.name
 
         return _meta
 
