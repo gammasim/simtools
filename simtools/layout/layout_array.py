@@ -81,7 +81,7 @@ class LayoutArray:
         self._telescopeList = []
         self._epsg = None
         if telescopeListFile is None:
-            self._initalizeCoordinateSystems(layoutCenterData)
+            self._initializeCoordinateSystems(layoutCenterData)
             self._initializeCorsikaTelescope(corsikaTelescopeData)
         else:
             self.readTelescopeListFile(telescopeListFile)
@@ -211,7 +211,7 @@ class LayoutArray:
         except (TypeError, KeyError):
             pass
 
-    def _initalizeCoordinateSystems(self, center_dict=None, defaults_init=False):
+    def _initializeCoordinateSystems(self, center_dict=None, defaults_init=False):
         """
         Initialize array center and coordinate systems.
 
@@ -444,7 +444,7 @@ class LayoutArray:
         self._logger.info("Reading array elements from {}".format(telescopeListFile))
 
         self._initializeCorsikaTelescope(table.meta)
-        self._initalizeCoordinateSystems(table.meta)
+        self._initializeCoordinateSystems(table.meta)
         self._loadTelescopeList(table)
 
     def addTelescope(
