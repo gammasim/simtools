@@ -513,7 +513,7 @@ class LayoutArray:
 
         return _meta
 
-    def _setTelescopeListFile(self, filesLocation):
+    def _setTelescopeListFile(self, filesLocation, crsName):
         """
         Set file location for writing of telescope list
 
@@ -521,6 +521,8 @@ class LayoutArray:
         ----------
         filesLocation: str (or Path), optional
             Directory for output. If not given, taken from config file.
+        crsName: str
+            Name of coordinate system to be used for export.
 
         Returns
         -------
@@ -532,8 +534,9 @@ class LayoutArray:
         _outputDirectory = io.getOutputDirectory(
             cfg.getConfigArg("outputLocation", filesLocation), self.label, "layout"
         )
+        _name = crsName if self.name is None else self.name + "-" + crsName
         self.telescopeListFile = _outputDirectory.joinpath(
-            names.layoutTelescopeListFileName(self.name, None)
+            names.layoutTelescopeListFileName(_name, None)
         )
 
     def exportTelescopeList(self, crsName, corsikaZ=False, filesLocation=None):
@@ -589,7 +592,7 @@ class LayoutArray:
         except IndexError:
             pass
 
-        self._setTelescopeListFile(filesLocation)
+        self._setTelescopeListFile(filesLocation, crsName)
         self._logger.info("Exporting telescope list to {}".format(self.telescopeListFile))
         table.write(self.telescopeListFile, format="ascii.ecsv", overwrite=True)
 
