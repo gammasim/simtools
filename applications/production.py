@@ -233,7 +233,7 @@ def main():
             )
         for primary, array in arraySimulators.items():
             inputList = showerSimulators[primary].getListOfOutputFiles()
-            _taskFunction = getattr(shower, args.task)
+            _taskFunction = getattr(array, args.task)
             _taskFunction(inputFileList=inputList)
 
 
