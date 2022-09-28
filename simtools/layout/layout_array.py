@@ -287,13 +287,13 @@ class LayoutArray:
 
         """
 
-        if pos_z is not None:
+        if pos_z is not None and altitude is None:
             return TelescopePosition.convertTelescopeAltitudeFromCorsikaSystem(
                 pos_z,
                 self._corsikaTelescope["corsika_obs_level"],
                 self._getCORSIKASphereCenter(tel_name),
             )
-        if altitude is not None:
+        if altitude is not None and pos_z is None:
             return TelescopePosition.convertTelescopeAltitudeToCorsikaSystem(
                 altitude,
                 self._corsikaTelescope["corsika_obs_level"],
