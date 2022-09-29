@@ -29,6 +29,7 @@ import logging
 import astropy.units as u
 
 import simtools.config as cfg
+import simtools.io_handler as io
 import simtools.util.commandline_parser as argparser
 import simtools.util.general as gen
 from simtools import db_handler
@@ -53,30 +54,9 @@ def main():
     logger = logging.getLogger()
     logger.setLevel(gen.getLogLevelFromUser(args.logLevel))
 
-    # Hardcoded parameters - should go to DB
-    logger.warning("These hardcoded parameters should go into the DB")
-    hardcodedPars = {
-        "North": {
-            "epsg": 32628,
-            "corsikaObsLevel": 2158 * u.m,
-            "corsikaSphereRadius": {
-                "LST": 12.5 * u.m,
-                "MST": 9.6 * u.m,
-                "SST": 3.0 * u.m,
-            },
-            "corsikaSphereCenter": {"LST": 16 * u.m, "MST": 9 * u.m, "SST": 3.25 * u.m},
-        },
-        "South": {
-            "epsg": 32719,
-            "corsikaObsLevel": 2147 * u.m,
-            "corsikaSphereRadius": {
-                "LST": 12.5 * u.m,
-                "MST": 9.6 * u.m,
-                "SST": 3.0 * u.m,
-            },
-            "corsikaSphereCenter": {"LST": 16 * u.m, "MST": 9 * u.m, "SST": 3.25 * u.m},
-        },
-    }  # hadcodedPars
+    corsikaPars = gen.collectDataFromYamlOrDict(
+        io.getInputDataFile("corsika", "corsika_parameters.yml"), None
+    )
 
     # Reading site parameters from DB
     db = db_handler.DatabaseHandler()
@@ -85,22 +65,18 @@ def main():
     layoutCenterData = dict()
     corsikaTelescopeData = dict()
     for site in ["North", "South"]:
-        siteParsDB[site] = db.getSiteParameters(site=site, modelVersion="prod3_compatible")
+        siteParsDB[site] = db.getSiteParameters(site=site, modelVersion="prod5")
 
         layoutCenterData[site] = dict()
         layoutCenterData[site]["center_lat"] = float(siteParsDB[site]["ref_lat"]["Value"]) * u.deg
         layoutCenterData[site]["center_lon"] = float(siteParsDB[site]["ref_long"]["Value"]) * u.deg
         layoutCenterData[site]["center_alt"] = float(siteParsDB[site]["altitude"]["Value"]) * u.m
-        layoutCenterData[site]["EPSG"] = hardcodedPars[site]["epsg"]
-
+        # TEMPORARY TODO should go into DB
+        layoutCenterData[site]["EPSG"] = corsikaPars["SITE_PARAMETERS"][site]["EPSG"]
         corsikaTelescopeData[site] = dict()
-        corsikaTelescopeData[site]["corsika_obs_level"] = hardcodedPars[site]["corsikaObsLevel"]
-        corsikaTelescopeData[site]["corsika_sphere_center"] = hardcodedPars[site][
-            "corsikaSphereCenter"
-        ]
-        corsikaTelescopeData[site]["corsika_sphere_radius"] = hardcodedPars[site][
-            "corsikaSphereRadius"
-        ]
+        corsikaTelescopeData[site]["corsika_obs_level"] = layoutCenterData[site]["center_alt"]
+        corsikaTelescopeData[site]["corsika_sphere_center"] = corsikaPars["corsika_sphere_center"]
+        corsikaTelescopeData[site]["corsika_sphere_radius"] = corsikaPars["corsika_sphere_radius"]
 
     # Telescope distances for 4 tel square arrays
     # !HARDCODED
