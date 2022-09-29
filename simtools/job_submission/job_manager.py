@@ -58,7 +58,7 @@ class JobManager:
 
     def test_submission_system(self):
         """
-        Check that the requested workload manager exist on the
+        Check that the requested workload manager exist on the \
         system this script is executed
 
         Raises
