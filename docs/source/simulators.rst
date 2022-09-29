@@ -23,7 +23,7 @@ Implemented are productions using CORSIKA and sim_telarray.
 
 .. _job_manager:
 
-.. automodule:: job_submission.job_manager 
+.. automodule:: job_submission.job_manager
    :members:
 
 
@@ -35,12 +35,12 @@ Support modules for running CORSIKA
 
 .. _corsika_runner:
 
-.. automodule:: corsika.corsika_runner 
+.. automodule:: corsika.corsika_runner
    :members:
 
 .. _corsika_config:
 
-.. automodule:: corsika.corsika_config 
+.. automodule:: corsika.corsika_config
    :members:
 
 
@@ -63,7 +63,7 @@ and also the PSF image plotting.
 
 .. _simtel_runner:
 
-.. automodule:: simtel.simtel_runner 
+.. automodule:: simtel.simtel_runner
    :members:
 
 .. _simtel_runner_array:
@@ -73,7 +73,7 @@ and also the PSF image plotting.
 
 .. _simtel_runner_ray_tracing:
 
-.. automodule:: simtel.simtel_runner_ray_tracing 
+.. automodule:: simtel.simtel_runner_ray_tracing
    :members:
 
 .. _simtel_config_writer:
