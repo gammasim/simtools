@@ -15,7 +15,7 @@ def test_input_validation(set_db):
         "layoutName": "Prod5",
         "modelVersion": "Prod5",
         "default": {"LST": "1", "MST": "FlashCam-D"},
-        "M-05": "NectarCam-D",
+        "MST-05": "NectarCam-D",
     }
     am = ArrayModel(label="test", arrayConfigData=arrayConfigData)
 
@@ -30,7 +30,7 @@ def test_exporting_config_files(set_db):
         "layoutName": "Prod5",
         "modelVersion": "Prod5",
         "default": {"LST": "1", "MST": "FlashCam-D"},
-        "M-05": {
+        "MST-05": {
             "name": "NectarCam-D",
             "camera_config_name": "NectarCam-test",
         },
@@ -46,7 +46,7 @@ def test_exporting_config_files(set_db):
         "CTA-MST_lightguide_FC_weighted_average.dat",
         "CTA-North-LST-1-2020-06-28_test.cfg",
         "CTA-North-MST-FlashCam-D-2020-06-28_test.cfg",
-        "CTA-North-MST-NectarCam-D-2020-06-28_test_M-05.cfg",
+        "CTA-North-MST-NectarCam-D-2020-06-28_test_MST-05.cfg",
         "CTA-Prod5-North-2020-06-28_test.cfg",
         "CTA-ULTRA6-dsum-shaping-FlashCam-2a-int.dat",
         "LaPalma_coords.lis",
