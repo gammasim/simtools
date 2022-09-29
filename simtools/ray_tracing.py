@@ -1,4 +1,5 @@
 import logging
+import shlex
 import subprocess
 from copy import copy
 from math import pi, tan
@@ -379,15 +380,28 @@ class RayTracing:
         Returns
         -------
         (containment_diameter_cm, xMean, yMean, effArea)
+
         """
-        # Use -n to disable the cog optimization
-        rxOutput = subprocess.check_output(
-            "{}/sim_telarray/bin/rx -f {:.2f} -v < {}".format(
-                self._simtelSourcePath, containment_fraction, file
-            ),
-            shell=True,
-        )
-        rxOutput = rxOutput.split()
+
+        try:
+            with open(file) as _stdin:
+                rxOutput = subprocess.Popen(
+                    shlex.split(
+                        "{}/sim_telarray/bin/rx -f {:.2f} -v".format(
+                            self._simtelSourcePath, containment_fraction
+                        )
+                    ),
+                    stdin=_stdin,
+                    stdout=subprocess.PIPE,
+                ).communicate()[0]
+        except FileNotFoundError:
+            self._logger.error("Photon list file not found: {}".format(file))
+            raise
+        try:
+            rxOutput = rxOutput.splitlines()[-1:][0].split()
+        except IndexError:
+            self._logger.error("Invalid output from rx: {}".format(rxOutput))
+            raise
         containment_diameter_cm = 2 * float(rxOutput[0])
         xMean = float(rxOutput[1])
         yMean = float(rxOutput[2])
