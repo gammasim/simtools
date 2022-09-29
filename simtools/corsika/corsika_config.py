@@ -36,17 +36,17 @@ class CorsikaConfig:
 
     .. code-block:: python
 
-    corsikaConfigData = {
-        'primary': 'proton',
-        'nshow': 10000,
-        'nrun': 1,
-        'zenith': 20 * u.deg,
-        'viewcone': 5 * u.deg,
-        'erange': [10 * u.GeV, 100 * u.TeV],
-        'eslope': -2,
-        'phi': 0 * u.deg,
-        'cscat': [10, 1500 * u.m, 0]
-    }
+        corsikaConfigData = {
+            'primary': 'proton',
+            'nshow': 10000,
+            'nrun': 1,
+            'zenith': 20 * u.deg,
+            'viewcone': 5 * u.deg,
+            'erange': [10 * u.GeV, 100 * u.TeV],
+            'eslope': -2,
+            'phi': 0 * u.deg,
+            'cscat': [10, 1500 * u.m, 0]
+        }
 
     The remaining CORSIKA parameters can be set as a yaml file, using the argument \
     corsikaParametersFile. When not given, corsikaParameters will be loaded \
