@@ -182,8 +182,6 @@ class CorsikaRunner:
             self._logger.error(msg)
             raise
 
-    # End of _loadcorsikaConfigData
-
     def _loadCorsikaDataDirectories(self):
         """Create CORSIKA directories for data, log and input."""
         corsikaBaseDir = self._corsikaDataDirectory.joinpath(self.site)
