@@ -154,7 +154,7 @@ class JobManager:
         if not self.test:
             os.system(shellCommand)
         else:
-            self._logger.info("Testing (HTcondor")
+            self._logger.info("Testing (HTcondor)")
 
     def _submit_gridengine(self):
         """
