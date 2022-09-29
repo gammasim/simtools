@@ -205,5 +205,5 @@ def test_altitudeFromCorsikaZ(cfg_setup, layoutCenterDataDict, corsikaTelescopeD
 
     assert layout._altitudeFromCorsikaZ(5.0 * u.m, None, "L-01").value == pytest.approx(2147.0)
     assert layout._altitudeFromCorsikaZ(None, 8848.0 * u.m, "L-01").value == pytest.approx(6706.0)
-    with pytest.raises(u.UnitConversionError):
+    with pytest.raises(TypeError):
         layout._altitudeFromCorsikaZ(5.0, None, "L-01")
