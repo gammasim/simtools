@@ -10,6 +10,19 @@
     2. CORSIKA coordinates
     3. Mercator system
 
+    Command line arguments
+    ----------------------
+    array_element_list (str)
+        List of array element positions (ecsv format)
+    compact (str)
+        Compact output (in requested coordinate system; possible are corsika,utm,mercator)
+    export (str)
+        Export array element list to file (in requested coordinate system; \
+            possible are corsika,utm,mercator)
+    use_corsika_telescope_height (bool)
+        Use CORSIKA coordinates for telescope heights (requires CORSIKA observeration level)
+
+
     Example
     -------
     Print a list of array elements using a list of telescope positions in UTM coordinates.
@@ -32,7 +45,7 @@ import simtools.util.general as gen
 from simtools.layout import layout_array
 
 
-def parse(description=None):
+def _parse(description=None):
     """
     Parse command line configuration
 
@@ -90,7 +103,7 @@ def parse(description=None):
 
 def main():
 
-    args = parse(description=("Print a list of array element positions"))
+    args = _parse(description=("Print a list of array element positions"))
 
     _logger = logging.getLogger()
     _logger.setLevel(gen.getLogLevelFromUser(args.logLevel))

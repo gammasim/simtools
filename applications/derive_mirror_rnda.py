@@ -132,7 +132,7 @@ from simtools.model.telescope_model import TelescopeModel
 from simtools.ray_tracing import RayTracing
 
 
-def parse(label):
+def _parse(label):
     """
     Parse command line configuration
 
@@ -208,7 +208,7 @@ def parse(label):
     return parser.parse_args()
 
 
-def define_telescope_model(workflow):
+def _define_telescope_model(workflow):
     """
     Define telescope model and update configuration
     with mirror list and/or random focal length given
@@ -244,7 +244,7 @@ def define_telescope_model(workflow):
     return tel
 
 
-def print_and_write_results(
+def _print_and_write_results(
     workflow, rndaStart, rndaOpt, meanD80, sigD80, resultsRnda, resultsMean, resultsSig
 ):
     """
@@ -303,7 +303,7 @@ def print_and_write_results(
     file_writer.write_data(result_table)
 
 
-def get_psf_containment(logger, workflow):
+def _get_psf_containment(logger, workflow):
     """
     Read measured single-mirror point-spread function (containment)
     from file and return mean and sigma
@@ -341,17 +341,17 @@ def get_psf_containment(logger, workflow):
 def main():
 
     label = os.path.basename(__file__).split(".")[0]
-    args = parse(label)
+    args = _parse(label)
 
     logger = logging.getLogger()
     logger.setLevel(gen.getLogLevelFromUser(args.logLevel))
 
     workflow = workflow_config.WorkflowDescription(label=label, args=args)
 
-    tel = define_telescope_model(workflow)
+    tel = _define_telescope_model(workflow)
 
     if workflow.get_configuration_parameter("psf_measurement"):
-        get_psf_containment(logger, workflow)
+        _get_psf_containment(logger, workflow)
     if not workflow.get_configuration_parameter("psf_measurement_containment_mean"):
         logger.error("Missing PSF measurement")
         raise ValueError
@@ -424,7 +424,7 @@ def main():
 
     meanD80, sigD80 = run(rndaOpt)
 
-    print_and_write_results(
+    _print_and_write_results(
         workflow, rndaStart, rndaOpt, meanD80, sigD80, resultsRnda, resultsMean, resultsSig
     )
 

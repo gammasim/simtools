@@ -63,7 +63,7 @@ import simtools.util.general as gen
 from simtools.simulator import Simulator
 
 
-def parse(description=None):
+def _parse(description=None):
     """
     Parse command line configuration
 
@@ -131,7 +131,7 @@ def parse(description=None):
     return parser.parse_args()
 
 
-def proccessSimulationConfigFile(configFile, primaryConfig, logger):
+def _proccessSimulationConfigFile(configFile, primaryConfig, logger):
     """
     Read simulation configuration file with details on shower
     and array simulations
@@ -203,14 +203,14 @@ def proccessSimulationConfigFile(configFile, primaryConfig, logger):
 
 def main():
 
-    args = parse(description=("Air shower and array simulations"))
+    args = _parse(description=("Air shower and array simulations"))
 
     cfg.setConfigFileName(args.configFile)
 
     logger = logging.getLogger()
     logger.setLevel(gen.getLogLevelFromUser(args.logLevel))
 
-    label, showerConfigs, arrayConfigs = proccessSimulationConfigFile(
+    label, showerConfigs, arrayConfigs = _proccessSimulationConfigFile(
         args.productionconfig, args.primary, logger
     )
 
