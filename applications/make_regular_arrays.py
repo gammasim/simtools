@@ -72,7 +72,7 @@ def main():
         layoutCenterData[site]["center_lon"] = float(siteParsDB[site]["ref_long"]["Value"]) * u.deg
         layoutCenterData[site]["center_alt"] = float(siteParsDB[site]["altitude"]["Value"]) * u.m
         # TEMPORARY TODO should go into DB
-        layoutCenterData[site]["EPSG"] = corsikaPars["SITE_PARAMETERS"][site]["EPSG"]
+        layoutCenterData[site]["EPSG"] = corsikaPars["SITE_PARAMETERS"][site]["EPSG"][0]
         corsikaTelescopeData[site] = dict()
         corsikaTelescopeData[site]["corsika_obs_level"] = layoutCenterData[site]["center_alt"]
         corsikaTelescopeData[site]["corsika_sphere_center"] = corsikaPars["corsika_sphere_center"]
