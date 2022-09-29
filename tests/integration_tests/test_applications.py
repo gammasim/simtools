@@ -195,6 +195,52 @@ APP_LIST = {
     "production::array_only": [
         ["-p", "./tests/resources/prodConfigTest.yml", "-t", "simulate", "--array_only", "--test"]
     ],
+    # print_array
+    "print_array_elements::print_all": [
+        ["--array_element_list", "tests/resources/telescope_positions-South-4MST.ecsv"],
+    ],
+    "print_array_elements::print_compact": [
+        [
+            "--array_element_list",
+            "tests/resources/telescope_positions-South-4MST.ecsv",
+            "--compact",
+            "corsika",
+        ],
+    ],
+    "print_array_elements::export_utm": [
+        [
+            "--array_element_list",
+            "tests/resources/telescope_positions-South-4MST.ecsv",
+            "--export",
+            "utm",
+        ],
+    ],
+    "print_array_elements::export_corsika": [
+        [
+            "--array_element_list",
+            "tests/resources/telescope_positions-South-4MST.ecsv",
+            "--export",
+            "corsika",
+            "--use_corsika_telescope_height",
+        ],
+    ],
+    # files without corsika_spheres definition
+    "print_array_elements::print_compact_nocors_utm": [
+        [
+            "--array_element_list",
+            "tests/resources/telescope_positions-North-utm.ecsv",
+            "--compact",
+            "utm",
+        ],
+    ],
+    "print_array_elements::print_compact_nocors_corsika": [
+        [
+            "--array_element_list",
+            "tests/resources/telescope_positions-North-utm.ecsv",
+            "--compact",
+            "corsika",
+        ],
+    ],
 }
 
 
