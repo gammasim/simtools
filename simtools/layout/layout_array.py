@@ -673,13 +673,14 @@ class LayoutArray:
 
     def _printCompact(self, compact_printing, corsikaZ=False):
         """
-        Compact printing of list of telescopes
+        Compact printing of list of telescopes.
 
 
         Parameters
         ----------
         compact_printing: str
-            Compact printout for a single coordinate system
+            Compact printout for a single coordinate system.
+            Coordinates in all systems are printed, if compact_printing is None.
         corsikaZ: bool
             Print telescope height in CORSIKA coordinates (for CORSIKA system)
 
