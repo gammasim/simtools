@@ -209,7 +209,7 @@ class TelescopePosition:
         """
         Return a value of a coordinate variable
         i) converted to the given unit, if input value has a unit
-        ii) multiplied by the default unit, if input value has no unit assigned
+        ii) return input value without change, if no unit is given
 
         """
 
