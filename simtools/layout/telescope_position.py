@@ -465,7 +465,7 @@ class TelescopePosition:
         return (telAltitude - corsikaObsLevel + corsikaSphereCenter).to(u.m)
 
     @staticmethod
-    @u.quantity_input(corsikaObsLevel=u.m, corsikaSphereCenter=u.m)
+    @u.quantity_input(telCorsikaZ=u.m, corsikaObsLevel=u.m, corsikaSphereCenter=u.m)
     def convertTelescopeAltitudeFromCorsikaSystem(
         telCorsikaZ, corsikaObsLevel=None, corsikaSphereCenter=None
     ):
