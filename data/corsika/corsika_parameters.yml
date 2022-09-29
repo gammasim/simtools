@@ -68,7 +68,7 @@ SITE_PARAMETERS:
     # ARRANG: [-3.433]
     ARRANG: [0]
     # TEMPORARY - should be in DB
-    EPSG: 32719
+    EPSG: [32719]
   North:
     OBSLEV: [2158.e2]
     ATMOSPHERE: [36, 'Y']
@@ -76,7 +76,7 @@ SITE_PARAMETERS:
     # ARRANG: [-5.3195]
     ARRANG: [0]
     # TEMPORARY - should be in DB
-    EPSG: 32628
+    EPSG: [32628]
 
 INTERACTION_FLAGS:
   FIXHEI: [0., 0]
