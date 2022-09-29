@@ -40,8 +40,10 @@ def main():
 
     parser = argparser.CommandLineParser(
         description=(
-            "Calculate and plot the PSF and eff. mirror area as a function of off-axis angle "
-            "of the telescope requested."
+            "This application creates the layout array files (ECSV) of regular arrays "
+            "with one telescope at the center of the array and with 4 telescopes "
+            "in a square grid. These arrays are used for trigger rate simulations. "
+            "The array layout files created should be available at the data/layout directory."
         )
     )
     parser.initialize_default_arguments()
