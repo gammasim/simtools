@@ -71,7 +71,7 @@ class Simulator:
             'default': {
                 'LST': '1'
             },
-            'M-01': 'FlashCam-D'
+            'MST-01': 'FlashCam-D'
         }
 
     Attributes
@@ -333,7 +333,7 @@ class Simulator:
             raise
 
         # Reading telescope keys
-        telKeys = [k for k in _restData.keys() if k[0:2] in ["L-", "M-", "S-"]]
+        telKeys = [k for k in _restData.keys() if k[1:4] in ["ST-", "SC-"]]
         for key in telKeys:
             _arrayModelData[key] = _restData.pop(key)
 
