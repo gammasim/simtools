@@ -951,7 +951,15 @@ class DatabaseHandler:
         return
 
     def updateParameterField(
-        self, dbName, telescope, version, parameter, field, newValue, collectionName="telescopes"
+        self,
+        dbName,
+        version,
+        parameter,
+        field,
+        newValue,
+        telescope=None,
+        site=None,
+        collectionName="telescopes",
     ):
         """
         Update a parameter field value for a specific telescope/version.
@@ -965,25 +973,26 @@ class DatabaseHandler:
         ----------
         dbName: str
             the name of the DB
-        telescope: str
-            Which telescope to update
         version: str
             Which version to update
         parameter: str
             Which parameter to update
         field: str
             Field to update (only options are Applicable, units, Type, items, minimum, maximum).
+            If the field does not exist, it will be added.
         newValue: type identical to the original field type
             The new value to set to the field given in "field".
+        telescope: str
+            Which telescope to update, if None then update a site parameter
+        site: str, North or South
+            Update a site parameter (the telescope argument must be None)
         collectionName: str
             The name of the collection in which to update the parameter (default is "telescopes")
         """
 
         allowed_fields = ["Applicable", "units", "Type", "items", "minimum", "maximum"]
         if field not in allowed_fields:
-            raise ValueError(
-                "The field to change must be one of {}".format(", ".join(allowed_fields))
-            )
+            raise ValueError(f"The field to change must be one of {', '.join(allowed_fields)}")
 
         collection = DatabaseHandler.dbClient[dbName][collectionName]
 
@@ -992,10 +1001,15 @@ class DatabaseHandler:
         )
 
         query = {
-            "Telescope": telescope,
             "Version": _modelVersion,
             "Parameter": parameter,
         }
+        if telescope is not None:
+            query["Telescope"] = telescope
+        elif site is not None and site in ["North", "South"]:
+            query["Site"] = site
+        else:
+            raise ValueError("You need to specifiy if to update a telescope or a site.")
 
         parEntry = collection.find_one(query)
         if parEntry is None:
@@ -1006,21 +1020,24 @@ class DatabaseHandler:
             )
             return
 
-        oldFieldValue = parEntry[field]
+        if field in parEntry:
+            oldFieldValue = parEntry[field]
 
-        if oldFieldValue == newValue:
-            self._logger.warning(
-                "The value of the field {} is already {}. No changes are necessary".format(
-                    field, newValue
+            if oldFieldValue == newValue:
+                self._logger.warning(
+                    f"The value of the field {field} is already {newValue}. No changes necessary"
                 )
+                return
+            else:
+                self._logger.info(
+                    f"For tel {telescope}, version {_modelVersion}, parameter {parameter},\n"
+                    f"replacing field {field} value from {oldFieldValue} to {newValue}"
+                )
+        else:
+            self._logger.info(
+                f"For tel {telescope}, version {_modelVersion}, parameter {parameter},\n"
+                f"the field {field} does not exist, adding it"
             )
-            return
-
-        self._logger.info(
-            "For tel {}, version {}, parameter {},\nreplacing field {} value from {} to {}".format(
-                telescope, _modelVersion, parameter, field, oldFieldValue, newValue
-            )
-        )
 
         queryUpdate = {"$set": {field: newValue}}
 
