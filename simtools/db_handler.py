@@ -1281,3 +1281,54 @@ class DatabaseHandler:
             self.insertFileToDB(fileNow, dbName, **kwargs)
 
         return
+
+    def getAllVersions(
+        self,
+        dbName,
+        parameter,
+        telescope=None,
+        site=None,
+        collectionName="telescopes",
+    ):
+        """
+        Get all version entries in the DB of a telescope or site for a specific parameter.
+
+        Parameters
+        ----------
+        dbName: str
+            the name of the DB
+        parameter: str
+            Which parameter to get the versions of
+        telescope: str
+            Which telescope to get the versions of, if None then a site should be provided
+        site: str, North or South
+            Which site parameter get the versions of (the telescope argument must be None)
+        collectionName: str
+            The name of the collection in which to update the parameter (default is "telescopes")
+
+        Returns
+        -------
+        allVersions: list
+            List of all versions found
+        """
+
+        collection = DatabaseHandler.dbClient[dbName][collectionName]
+
+        query = {
+            "Parameter": parameter,
+        }
+        if telescope is not None:
+            query["Telescope"] = telescope
+        elif site is not None and site in ["North", "South"]:
+            query["Site"] = site
+        else:
+            raise ValueError("You need to specifiy if to update a telescope or a site.")
+
+        _allVersions = list()
+        for post in collection.find(query):
+            _allVersions.append(post["Version"])
+
+        if len(_allVersions) == 0:
+            self._logger.warning(f"The query {query} did not return any results. No versions found")
+
+        return _allVersions
