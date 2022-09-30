@@ -369,6 +369,11 @@ allStructureNames = {"Structure": ["Structure", "structure"]}
 allSiteNames = {"South": ["paranal", "south"], "North": ["lapalma", "north"]}
 
 allModelVersionNames = {
+    "2015-07-21": [""],
+    "2015-10-20-p1": [""],
+    "prod4-v0.0": [""],
+    "prod4-v0.1": [""],
+    "2018-02-16": [""],
     "prod3_compatible": ["p3", "prod3", "prod3b"],
     "prod4": ["p4"],
     "post_prod3_updates": [""],
