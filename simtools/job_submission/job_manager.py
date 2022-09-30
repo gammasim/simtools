@@ -25,7 +25,7 @@ class JobManager:
 
     Methods
     -------
-    test_submission_system
+    test_submission_system()
        Check that the requested workload manager exist
     submit(run_script, run_out_file)
        Submit a job described by a shell script
@@ -58,7 +58,7 @@ class JobManager:
 
     def test_submission_system(self):
         """
-        Check that the requested workload manager exist on the
+        Check that the requested workload manager exist on the \
         system this script is executed
 
         Raises

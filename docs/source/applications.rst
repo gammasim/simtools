@@ -32,18 +32,27 @@ Below you find the list of the currently available applications and their respec
 List of Applications
 ====================
 
-* `derive_mirror_rnda`_
-* `validate_optics`_
+* `add_file_to_db`_
 * `compare_cumulative_psf`_
+* `derive_mirror_rnda`_
+* `get_parameter`_
+* `make_regular_arrays`_
+* `print_array_elements`_
+* `produce_array_config`_
+* `production`_
+* `sim_showers_for_trigger_rates`_
+* `submit_data_from_external`_
 * `tune_psf`_
 * `validate_camera_efficiency`_
 * `validate_camera_fov`_
-* `make_regular_arrays`_
-* `produce_array_config`_
-* `sim_showers_for_trigger_rates`_
-* `production`_
-* `add_file_to_db`_
-* `get_parameter`_
+* `validate_optics`_
+
+
+add_file_to_db
+==============
+
+.. automodule:: add_file_to_db
+   :members:
 
 
 derive_mirror_rnda
@@ -53,17 +62,59 @@ derive_mirror_rnda
    :members:
 
 
-validate_optics
-===============
-
-.. automodule:: validate_optics
-   :members:
-
-
 compare_cumulative_psf
 ======================
 
 .. automodule:: compare_cumulative_psf
+   :members:
+
+
+get_parameter
+=============
+
+.. automodule:: get_parameter
+   :members:
+
+
+make_regular_arrays
+===================
+
+.. automodule:: make_regular_arrays
+   :members:
+
+
+print_array_elements
+====================
+
+.. automodule:: print_array_elements
+   :members:
+
+
+produce_array_config
+====================
+
+.. automodule:: produce_array_config
+   :members:
+
+
+production
+==========
+
+.. automodule:: production
+   :members:
+
+
+submit_data_from_external
+=========================
+
+.. automodule:: submit_data_from_external
+   :members:
+
+
+sim_showers_for_trigger_rates
+=============================
+
+.. automodule:: sim_showers_for_trigger_rates
    :members:
 
 
@@ -88,39 +139,8 @@ validate_camera_fov
    :members:
 
 
-make_regular_arrays
-===================
+validate_optics
+===============
 
-.. automodule:: make_regular_arrays
-   :members:
-
-
-produce_array_config
-====================
-
-.. automodule:: produce_array_config
-   :members:
-
-sim_showers_for_trigger_rates
-=============================
-
-.. automodule:: sim_showers_for_trigger_rates
-   :members:
-
-production
-==========
-
-.. automodule:: production
-   :members:
-
-add_file_to_db
-==============
-
-.. automodule:: add_file_to_db
-   :members:
-
-get_parameter
-=============
-
-.. automodule:: get_parameter
+.. automodule:: validate_optics
    :members:
