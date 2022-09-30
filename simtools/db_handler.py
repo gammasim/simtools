@@ -1126,6 +1126,7 @@ class DatabaseHandler:
         version,
         parameter,
         value,
+        site=None,
         collectionName="telescopes",
         filePrefix=None,
         **kwargs,
@@ -1141,13 +1142,14 @@ class DatabaseHandler:
             the name of the DB
         telescope: str
             The name of the telescope to add a parameter to.
-            Assumed to be a valid name!
         parameter: str
             Which parameter to add
         version: str
             The version of the new parameter value
         value: can be any type, preferably given in kwargs
             The value to set for the new parameter
+        site: str
+           South or North, ignored if collectionName is "telescopes".
         collectionName: str
             The name of the collection to add a parameter to (default is "telescopes")
         filePrefix: str or Path
@@ -1159,7 +1161,13 @@ class DatabaseHandler:
         collection = DatabaseHandler.dbClient[dbName][collectionName]
 
         dbEntry = dict()
-        dbEntry["Telescope"] = telescope
+        if "telescopes" in collectionName:
+            dbEntry["Telescope"] = names.validateTelescopeNameDB(telescope)
+        elif "sites" in collectionName:
+            dbEntry["Site"] = names.validateSiteName(site)
+        else:
+            raise ValueError("Can only add new parameters to the sites or telescopes collections")
+
         dbEntry["Version"] = version
         dbEntry["Parameter"] = parameter
         dbEntry["Value"] = value
