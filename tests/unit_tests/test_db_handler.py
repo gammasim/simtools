@@ -332,3 +332,31 @@ def test_insert_files_db(db):
     logger.info("Dropping the temporary files in the sandbox")
     db.dbClient["sandbox"]["fs.chunks"].drop()
     db.dbClient["sandbox"]["fs.files"].drop()
+
+
+def test_get_all_versions(db):
+
+    allVersions = db.getAllVersions(
+        dbName=db.DB_CTA_SIMULATION_MODEL,
+        telescopeModelName="LST-1",
+        site="North",
+        parameter="camera_config_file",
+        collectionName="telescopes",
+    )
+
+    # Check only a sebset of the versions so that this test doesn't fail when we add more versions.
+    assert all(
+        _v in allVersions for _v in ["2018-11-07", "prod3_compatible", "prod4", "2020-06-28"]
+    )
+
+    allVersions = db.getAllVersions(
+        dbName=db.DB_CTA_SIMULATION_MODEL,
+        site="North",
+        parameter="altitude",
+        collectionName="sites",
+    )
+
+    # Check only a sebset of the versions so that this test doesn't fail when we add more versions.
+    assert all(
+        _v in allVersions for _v in ["2015-07-21", "prod3_compatible", "prod4", "2020-06-28"]
+    )
