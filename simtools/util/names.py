@@ -372,6 +372,7 @@ allModelVersionNames = {
     "prod3_compatible": ["p3", "prod3", "prod3b"],
     "prod4": ["p4"],
     "post_prod3_updates": [""],
+    "2016-12-20": [""],
     "2018-11-07": [""],
     "2019-02-22": [""],
     "2019-05-13": [""],
