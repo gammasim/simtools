@@ -51,6 +51,8 @@ class DatabaseHandler:
         Insert a list of files to the DB.
     exportFileDB()
         Get a file from the DB and write it to disk.
+    getAllVersions()
+        Get all version entries in the DB of a telescope or site for a specific parameter.
     """
 
     # TODO move into config file?
