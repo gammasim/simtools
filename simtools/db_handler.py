@@ -1286,7 +1286,7 @@ class DatabaseHandler:
         self,
         dbName,
         parameter,
-        telescope=None,
+        telescopeModelName=None,
         site=None,
         collectionName="telescopes",
     ):
@@ -1299,10 +1299,12 @@ class DatabaseHandler:
             the name of the DB
         parameter: str
             Which parameter to get the versions of
-        telescope: str
-            Which telescope to get the versions of, if None then a site should be provided
+        telescopeModelName: str
+            Which telescope to get the versions of (in case "collectionName" is "telescopes")
         site: str, North or South
-            Which site parameter get the versions of (the telescope argument must be None)
+            In case "collectionName" is "telescopes", the site is used to build the telescope name.
+            In case "collectionName" is "sites",
+            this argument sets which site parameter get the versions of
         collectionName: str
             The name of the collection in which to update the parameter (default is "telescopes")
 
@@ -1317,12 +1319,16 @@ class DatabaseHandler:
         query = {
             "Parameter": parameter,
         }
-        if telescope is not None:
-            query["Telescope"] = telescope
-        elif site is not None and site in ["North", "South"]:
-            query["Site"] = site
+
+        _siteValidated = names.validateSiteName(site)
+        if collectionName == "telescopes":
+            _telModelNameValidated = names.validateTelescopeModelName(telescopeModelName)
+            _telNameDB = self._getTelescopeModelNameForDB(_siteValidated, _telModelNameValidated)
+            query["Telescope"] = _telNameDB
+        elif collectionName == "sites":
+            query["Site"] = _siteValidated
         else:
-            raise ValueError("You need to specifiy if to update a telescope or a site.")
+            raise ValueError("Can only get versions of the telescopes and sites collections.")
 
         _allVersions = list()
         for post in collection.find(query):
