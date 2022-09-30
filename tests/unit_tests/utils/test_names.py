@@ -9,7 +9,7 @@ from simtools.util import names
 logging.getLogger().setLevel(logging.DEBUG)
 
 
-def test_validate_telescope_names():
+def test_validate_telescope_name():
 
     telescopes = {"sst-d": "SST-D", "mst-flashcam-d": "MST-FlashCam-D", "sct-d": "SCT-D"}
 
@@ -19,6 +19,33 @@ def test_validate_telescope_names():
         logging.getLogger().info("New name {}".format(newName))
 
         assert value == newName
+
+
+def test_validate_telescope_name_db():
+
+    telescopes = {
+        "south-sst-d": "South-SST-D",
+        "north-mst-nectarcam-d": "North-MST-NectarCam-D",
+        "north-lst-1": "North-LST-1",
+    }
+
+    for key, value in telescopes.items():
+        logging.getLogger().info("Validating {}".format(key))
+        newName = names.validateTelescopeNameDB(key)
+        logging.getLogger().info("New name {}".format(newName))
+
+        assert value == newName
+
+    telescopes = {
+        "ssss-sst-d": "SSSS-SST-D",
+        "no-rth-mst-nectarcam-d": "No-rth-MST-NectarCam-D",
+        "north-ls-1": "North-LS-1",
+    }
+
+    for key, value in telescopes.items():
+        logging.getLogger().info("Validating {}".format(key))
+        with pytest.raises(ValueError):
+            names.validateTelescopeNameDB(key)
 
 
 def test_validate_other_names():
