@@ -1006,8 +1006,10 @@ class DatabaseHandler:
         }
         if telescope is not None:
             query["Telescope"] = telescope
+            loggerInfo = f"telescope {telescope}"
         elif site is not None and site in ["North", "South"]:
             query["Site"] = site
+            loggerInfo = f"site {site}"
         else:
             raise ValueError("You need to specifiy if to update a telescope or a site.")
 
@@ -1030,12 +1032,12 @@ class DatabaseHandler:
                 return
             else:
                 self._logger.info(
-                    f"For tel {telescope}, version {_modelVersion}, parameter {parameter},\n"
+                    f"For {loggerInfo}, version {_modelVersion}, parameter {parameter}, "
                     f"replacing field {field} value from {oldFieldValue} to {newValue}"
                 )
         else:
             self._logger.info(
-                f"For tel {telescope}, version {_modelVersion}, parameter {parameter},\n"
+                f"For {loggerInfo}, version {_modelVersion}, parameter {parameter}, "
                 f"the field {field} does not exist, adding it"
             )
 
