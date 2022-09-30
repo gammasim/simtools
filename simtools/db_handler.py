@@ -1122,10 +1122,10 @@ class DatabaseHandler:
     def addNewParameter(
         self,
         dbName,
-        telescope,
         version,
         parameter,
         value,
+        telescope=None,
         site=None,
         collectionName="telescopes",
         filePrefix=None,
@@ -1140,14 +1140,15 @@ class DatabaseHandler:
         ----------
         dbName: str
             the name of the DB
-        telescope: str
-            The name of the telescope to add a parameter to.
         parameter: str
             Which parameter to add
         version: str
             The version of the new parameter value
         value: can be any type, preferably given in kwargs
             The value to set for the new parameter
+        telescope: str
+            The name of the telescope to add a parameter to
+            (only used if collectionName is "telescopes").
         site: str
            South or North, ignored if collectionName is "telescopes".
         collectionName: str
