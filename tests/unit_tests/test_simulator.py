@@ -36,7 +36,7 @@ def arrayConfigData(tmp_test_directory):
         "layoutName": "1LST",
         "modelVersion": "Prod5",
         "default": {"LST": "1"},
-        "M-01": "FlashCam-D",
+        "MST-01": "FlashCam-D",
     }
 
 
@@ -181,7 +181,7 @@ def test_collectArrayModelParameters(array_simulator, arrayConfigData):
     assert isinstance(_arrayModelData, dict)
     assert isinstance(_restData, dict)
     assert _arrayModelData["site"] == "North"
-    assert _arrayModelData["M-01"] == "FlashCam-D"
+    assert _arrayModelData["MST-01"] == "FlashCam-D"
     newArrayConfigData = copy(arrayConfigData)
     newArrayConfigData.pop("site")
 
