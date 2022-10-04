@@ -344,7 +344,7 @@ def test_get_all_versions(db):
         collectionName="telescopes",
     )
 
-    # Check only a sebset of the versions so that this test doesn't fail when we add more versions.
+    # Check only a subset of the versions so that this test doesn't fail when we add more versions.
     assert all(
         _v in allVersions for _v in ["2018-11-07", "prod3_compatible", "prod4", "2020-06-28"]
     )
@@ -356,7 +356,7 @@ def test_get_all_versions(db):
         collectionName="sites",
     )
 
-    # Check only a sebset of the versions so that this test doesn't fail when we add more versions.
+    # Check only a subset of the versions so that this test doesn't fail when we add more versions.
     assert all(
         _v in allVersions for _v in ["2015-07-21", "prod3_compatible", "prod4", "2020-06-28"]
     )
