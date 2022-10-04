@@ -51,6 +51,8 @@ class DatabaseHandler:
         Insert a list of files to the DB.
     exportFileDB()
         Get a file from the DB and write it to disk.
+    getAllVersions()
+        Get all version entries in the DB of a telescope or site for a specific parameter.
     """
 
     # TODO move into config file?
@@ -1339,9 +1341,7 @@ class DatabaseHandler:
         else:
             raise ValueError("Can only get versions of the telescopes and sites collections.")
 
-        _allVersions = list()
-        for post in collection.find(query):
-            _allVersions.append(post["Version"])
+        _allVersions = [post["Version"] for post in collection.find(query)]
 
         if len(_allVersions) == 0:
             self._logger.warning(f"The query {query} did not return any results. No versions found")
