@@ -360,3 +360,14 @@ def test_get_all_versions(db):
     assert all(
         _v in allVersions for _v in ["2015-07-21", "prod3_compatible", "prod4", "2020-06-28"]
     )
+
+
+def test_get_descriptions(db):
+
+    descriptions = db.getDescriptions()
+
+    assert (
+        descriptions["quantum_efficiency"]["description"]
+        == "File name for the quantum efficiency curve."
+    )
+    assert descriptions["camera_pixels"]["description"] == "Number of pixels per camera."
