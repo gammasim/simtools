@@ -22,12 +22,12 @@
 
     As optional data, specific telescope models can be assigned to individual telescopes. \
     This is done by the entries with the name of the telescope (as used by the layout \
-    definition, ex. L-01, M-05, S-10).
+    definition, ex. LST-01, MST-05, SST-10).
 
     Each telescope model can be set in two ways.
 
     a) A single str with the name of telescope model.
-    Ex. 'M-05': 'NectarCam-D'
+    Ex. 'MST-05': 'NectarCam-D'
 
     b) A dict containing a 'name' key with the name of the telescope model and further keys \
     with model parameters to be changed from the original model.
@@ -35,7 +35,7 @@
 
     .. code-block:: python
 
-        'M-05': {
+        'MST-05': {
                 'name': 'NectarCam-D',
                 'fadc_pulse_shape': 'Pulse_template_nectarCam_17042020-noshift.dat',
                 'discriminator_pulse_shape': 'Pulse_template_nectarCam_17042020-noshift.dat'
@@ -51,8 +51,8 @@
         default:
             LST: 'D234'  # Design model for the LSTs
             MST: FlashCam-D  # Design model for the MST-FlashCam
-        L-01: '1'  # Model of L-01 in the LaPalma site.
-        M-05:
+        LST-01: '1'  # Model of LST-01 in the LaPalma site.
+        MST-05:
             name: NectarCam-D
             # Parameters to be changed
             fadc_pulse_shape: Pulse_template_nectarCam_17042020-noshift.dat
