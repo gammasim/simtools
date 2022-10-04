@@ -45,6 +45,7 @@ class SimtelConfigWriter:
         "array_coordinates",
         "atmospheric_profile",
         "magnetic_field",
+        "EPSG",
     ]
     COMMON_PARS = {
         "array_trigger": "none",
