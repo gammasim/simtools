@@ -333,7 +333,7 @@ class Simulator:
             raise
 
         # Reading telescope keys
-        telKeys = [k for k in _restData.keys() if k[1:4] in ["ST-", "SC-"]]
+        telKeys = [k for k in _restData.keys() if k[1:4] in ["ST-", "CT-"]]
         for key in telKeys:
             _arrayModelData[key] = _restData.pop(key)
 
