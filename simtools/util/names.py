@@ -307,9 +307,31 @@ def getSiteFromTelescopeName(name):
     str
         Site name (South or North).
     """
-    nameParts = name.split("-")
-    thisSite = validateSiteName(nameParts[0])
-    return thisSite
+    return validateSiteName(name.split("-")[0])
+
+
+def validateTelescopeNameDB(name):
+    """
+    Validate a telescope DB name.
+
+    Raises
+    ------
+    ValueError
+        If name is not valid.
+
+    Parameters
+    ----------
+    name: str
+
+    Returns
+    -------
+    str
+        Validated name.
+    """
+    site = getSiteFromTelescopeName(name)
+    telModelName = "-".join(name.split("-")[1:])
+
+    return f"{validateSiteName(site)}-{validateTelescopeModelName(telModelName)}"
 
 
 def convertTelescopeModelNameToYaml(name):
