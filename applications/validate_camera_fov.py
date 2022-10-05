@@ -9,7 +9,7 @@
     An example of the camera plot can be found below.
 
     .. _camera_fov_plot:
-    .. image:: images/validate_camera_fov_North-LST-1_pixelLayout.png
+    .. image:: docs/source/images/validate_camera_fov_North-LST-1_pixelLayout.png
       :width: 50 %
 
 
@@ -20,13 +20,13 @@
     telescope (str, required)
         Telescope model name (e.g. LST-1, SST-D, ...)
     model_version (str, optional)
-        Model version (default=prod4)
+        Model version (default='Current')
     verbosity (str, optional)
         Log level to print (default=INFO).
 
     Example
     -------
-    LST - Prod4
+    LST - Prod5
 
     Runtime 1 min
 

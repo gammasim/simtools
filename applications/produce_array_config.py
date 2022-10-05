@@ -61,7 +61,7 @@
     Command line arguments
     ----------------------
     label (str, optional)
-        Label to identify the output files/directories.
+        Label to identify the output files and directories.
     array_config (str, required)
         Path to a yaml file with the array config data.
     verbosity (str, optional)
@@ -76,7 +76,7 @@
     .. code-block:: console
 
         python applications/produce_array_config.py --label test \
-            --array_config data/test-data/arrayConfigTest.yml -v DEBUG
+            --array_config tests/resources/arrayConfigTest.yml -v DEBUG
 
     All the produced model files can be found in simtools-output/test/model/
 
