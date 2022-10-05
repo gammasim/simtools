@@ -591,6 +591,36 @@ class DatabaseHandler:
 
         return _parameters
 
+    @staticmethod
+    def getDescriptions(dbName=DB_CTA_SIMULATION_MODEL_DESCRIPTIONS, collectionName="telescopes"):
+        """
+        Get parameter descriptions from MongoDB
+
+        Parameters
+        ----------
+        dbName: str
+            The name of the DB (default is DB_CTA_SIMULATION_MODEL_DESCRIPTIONS).
+        collectionName: str
+            The name of the collection to read from (default is "telescopes")
+
+        Returns
+        -------
+        dict containing the parameters with their descriptions
+        """
+
+        collection = DatabaseHandler.dbClient[dbName][collectionName]
+
+        _parameters = dict()
+
+        emptyQuery = {}
+        for post in collection.find(emptyQuery):
+            parNow = post["Parameter"]
+            _parameters[parNow] = post
+            _parameters[parNow].pop("Parameter", None)
+            _parameters[parNow]["entryDate"] = ObjectId(post["_id"]).generation_time
+
+        return _parameters
+
     def getReferenceData(self, site, modelVersion, onlyApplicable=False):
         """
         Get parameters from MongoDB for a specific telescope.
