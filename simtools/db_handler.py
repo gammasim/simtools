@@ -612,8 +612,8 @@ class DatabaseHandler:
 
         _parameters = dict()
 
-        query = {}
-        for post in collection.find(query):
+        emptyQuery = {}
+        for post in collection.find(emptyQuery):
             parNow = post["Parameter"]
             _parameters[parNow] = post
             _parameters[parNow].pop("Parameter", None)
