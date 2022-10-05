@@ -108,7 +108,8 @@ class squarePixelHandler(object):
     Legend handler class to plot a square "on" pixel.
     """
 
-    def legend_artist(self, legend, orig_handle, fontsize, handlebox):
+    @staticmethod
+    def legend_artist(legend, orig_handle, fontsize, handlebox):
         x0, y0 = handlebox.xdescent, handlebox.ydescent
         width = height = handlebox.height
         patch = mpatches.Rectangle(
@@ -128,7 +129,8 @@ class squareEdgePixelHandler(object):
     Legend handler class to plot a square "edge" pixel.
     """
 
-    def legend_artist(self, legend, orig_handle, fontsize, handlebox):
+    @staticmethod
+    def legend_artist(legend, orig_handle, fontsize, handlebox):
         x0, y0 = handlebox.xdescent, handlebox.ydescent
         width = height = handlebox.height
         patch = mpatches.Rectangle(
@@ -148,7 +150,8 @@ class squareOffPixelHandler(object):
     Legend handler class to plot a square "off" pixel.
     """
 
-    def legend_artist(self, legend, orig_handle, fontsize, handlebox):
+    @staticmethod
+    def legend_artist(legend, orig_handle, fontsize, handlebox):
         x0, y0 = handlebox.xdescent, handlebox.ydescent
         width = height = handlebox.height
         patch = mpatches.Rectangle(
@@ -168,7 +171,8 @@ class lstHandler(object):
     Legend handler class to plot a representation of an LST in an array layout.
     """
 
-    def legend_artist(self, legend, orig_handle, fontsize, handlebox):
+    @staticmethod
+    def legend_artist(legend, orig_handle, fontsize, handlebox):
         center = (
             handlebox.xdescent + 0.3 * handlebox.width,
             handlebox.ydescent + 0.5 * handlebox.height,
@@ -190,7 +194,8 @@ class mstHandler(object):
     Legend handler class to plot a representation of an MST in an array layout.
     """
 
-    def legend_artist(self, legend, orig_handle, fontsize, handlebox):
+    @staticmethod
+    def legend_artist(legend, orig_handle, fontsize, handlebox):
         x0, y0 = handlebox.xdescent + 0.1 * handlebox.width, handlebox.ydescent
         width = height = handlebox.height
         patch = mpatches.Rectangle(
@@ -210,7 +215,8 @@ class sstHandler(object):
     Legend handler class to plot a representation of an SST in an array layout.
     """
 
-    def legend_artist(self, legend, orig_handle, fontsize, handlebox):
+    @staticmethod
+    def legend_artist(legend, orig_handle, fontsize, handlebox):
         center = (
             handlebox.xdescent + 0.25 * handlebox.width,
             handlebox.ydescent + 0.5 * handlebox.height,
@@ -232,7 +238,8 @@ class meanRadiusOuterEdgeHandler(object):
     Legend handler class to plot a the mean radius outer edge of the dish.
     """
 
-    def legend_artist(self, legend, orig_handle, fontsize, handlebox):
+    @staticmethod
+    def legend_artist(legend, orig_handle, fontsize, handlebox):
         center = (
             handlebox.xdescent + 0.25 * handlebox.width,
             handlebox.ydescent + 0.25 * handlebox.height,
