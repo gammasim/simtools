@@ -33,7 +33,7 @@
     .. code-block:: console
 
         python applications/validate_camera_fov.py --site North \
-            --telescope LST-1 --model_version prod4
+            --telescope LST-1 --model_version prod5
 
     .. todo::
 
