@@ -591,9 +591,8 @@ class DatabaseHandler:
 
         return _parameters
 
-    def getDescriptions(
-        self, dbName=DB_CTA_SIMULATION_MODEL_DESCRIPTIONS, collectionName="telescopes"
-    ):
+    @staticmethod
+    def getDescriptions(dbName=DB_CTA_SIMULATION_MODEL_DESCRIPTIONS, collectionName="telescopes"):
         """
         Get parameter descriptions from MongoDB
 
