@@ -14,14 +14,14 @@
     area (left) and the effective focal length (right) vs off-axis angle are shown.
 
     .. _validate_optics_plot:
-    .. image::  images/validate_optics_North-LST-1_d80_cm.png
+    .. image::  docs/source/images/validate_optics_North-LST-1_d80_cm.png
       :width: 49 %
-    .. image::  images/validate_optics_North-LST-1_d80_deg.png
+    .. image::  docs/source/images/validate_optics_North-LST-1_d80_deg.png
       :width: 49 %
 
-    .. image::  images/validate_optics_North-LST-1_eff_area.png
+    .. image::  docs/source/images/validate_optics_North-LST-1_eff_area.png
       :width: 49 %
-    .. image::  images/validate_optics_North-LST-1_eff_flen.png
+    .. image::  docs/source/images/validate_optics_North-LST-1_eff_flen.png
       :width: 49 %
 
 
@@ -32,7 +32,7 @@
     telescope (str, required)
         Telescope model name (e.g. LST-1, SST-D, ...).
     model_version (str, optional)
-        Model version (default=prod4).
+        Model version (default='Current').
     src_distance (float, optional)
         Source distance in km (default=10).
     zenith (float, optional)
