@@ -270,8 +270,6 @@ def test_applications(set_simtools, application):
 
     for args in APP_LIST[application]:
         app_name = application.partition("::")[0]
-        if app_name == "validate_camera_fov":
-            pytest.skip(reason="requires issue fixing")
         logger.info("Running with args: {}".format(args))
         cmd = makeCommand(app_name, args)
         logger.info("Running command: {}".format(cmd))
