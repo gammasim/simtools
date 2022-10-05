@@ -27,7 +27,7 @@ class CommandLineParser(argparse.ArgumentParser):
         """
 
         self.add_argument(
-            "--configFile",
+            "--config_file",
             help="gammasim-tools configuration file",
             required=False,
         )
@@ -35,23 +35,56 @@ class CommandLineParser(argparse.ArgumentParser):
             self.add_argument(
                 "-c",
                 "--workflow_config_file",
-                help="Workflow configuration file",
+                help="workflow configuration file",
                 type=str,
                 required=False,
             )
         self.add_argument(
+            "--data_path",
+            help="path pointing towards data directory",
+            type=str,
+            default="./data/",
+            required=False,
+        )
+        self.add_argument(
+            "--output_path",
+            help="path pointing towards output directory",
+            type=str,
+            default="./",
+            required=False,
+        )
+        self.add_argument(
+            "--model_path",
+            help="path pointing towards model file directory (temporary - will go in future)",
+            type=str,
+            default="./",
+            required=False,
+        )
+        self.add_argument(
+            "--mongodb_config_file",
+            help="configuration file for Mongo DB",
+            type=str,
+            default="dbDetails.yml",
+            required=False,
+        )
+        self.add_argument(
+            "--simtelpath",
+            help="path pointing to sim_telarray installation",
+            type=str,
+            required=False,
+        )
+        self.add_argument(
             "--test",
-            help="Test option for faster execution during development",
+            help="test option for faster execution during development",
             action="store_true",
             required=False,
         )
         self.add_argument(
             "-v",
-            "--verbosity",
-            dest="logLevel",
+            "--log_level",
             action="store",
             default="info",
-            help="Log level to print (default is INFO)",
+            help="log level to print (default is INFO)",
             required=False,
         )
         self.add_argument(
@@ -72,7 +105,7 @@ class CommandLineParser(argparse.ArgumentParser):
             self.add_argument(
                 "-t",
                 "--telescope",
-                help="Telescope model name (e.g. LST-1, SST-D, ...)",
+                help="telescope model name (e.g. LST-1, SST-D, ...)",
                 type=str,
                 required=True,
             )
@@ -80,7 +113,7 @@ class CommandLineParser(argparse.ArgumentParser):
             self.add_argument(
                 "-m",
                 "--model_version",
-                help="Model version (default=Current)",
+                help="model version (default=Current)",
                 type=str,
                 default="Current",
             )
