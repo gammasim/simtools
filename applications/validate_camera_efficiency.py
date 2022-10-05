@@ -6,13 +6,13 @@
     This application validate the camera efficiency by simulating it using \
     the testeff program provided by sim_telarray.
 
-    The results of camera efficiency for Cherenkov (left) and NSB (right) light as a function\
+    The results of camera efficiency for Cherenkov (left) and NSB light (right) as a function\
     of wavelength are plotted. See examples below.
 
     .. _validate_camera_eff_plot:
-    .. image:: images/validate_camera_efficiency_North-MST-NectarCam-D_cherenkov.png
+    .. image:: docs/source/images/validate_camera_efficiency_North-MST-NectarCam-D_cherenkov.png
       :width: 49 %
-    .. image:: images/validate_camera_efficiency_North-MST-NectarCam-D_nsb.png
+    .. image:: docs/source/images/validate_camera_efficiency_North-MST-NectarCam-D_nsb.png
       :width: 49 %
 
     Command line arguments
@@ -22,13 +22,13 @@
     telescope (str, required)
         Telescope model name (e.g. LST-1, SST-D, ...)
     model_version (str, optional)
-        Model version (default=prod4)
+        Model version (default='Current')
     verbosity (str, optional)
         Log level to print (default=INFO).
 
     Example
     -------
-    MST-NectarCam - Prod4
+    MST-NectarCam - Prod5
 
     Runtime < 1 min.
 
