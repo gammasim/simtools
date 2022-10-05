@@ -47,7 +47,6 @@ import simtools.config as cfg
 import simtools.io_handler as io
 import simtools.util.commandline_parser as argparser
 import simtools.util.general as gen
-from simtools.model.camera import Camera
 from simtools.model.telescope_model import TelescopeModel
 
 
@@ -96,16 +95,12 @@ def main():
         modelVersion=args.model_version,
         label=label,
     )
+    telModel.exportModelFiles()
 
     print("\nValidating the camera FoV of {}\n".format(telModel.name))
 
-    cameraConfigFile = telModel.getParameterValue("camera_config_file")
     focalLength = float(telModel.getParameterValue("effective_focal_length"))
-    camera = Camera(
-        telescopeModelName=telModel.name,
-        cameraConfigFile=cfg.findFile(cameraConfigFile),
-        focalLength=focalLength,
-    )
+    camera = telModel.camera
 
     fov, rEdgeAvg = camera.calcFOV()
 
