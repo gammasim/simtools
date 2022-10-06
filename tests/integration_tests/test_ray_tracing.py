@@ -36,9 +36,7 @@ def test_ssts(set_simtools, telescopeModelName):
     ray.analyze(force=True)
 
 
-# TODO: issue #258
-@pytest.mark.skip(reason="ignore temporarily rx method")
-def test_rx(set_simtelarray):
+def test_rx(set_simtelarray, set_simtools):
     version = "current"
     label = "test-lst"
 
