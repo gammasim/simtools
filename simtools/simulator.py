@@ -71,7 +71,7 @@ class Simulator:
             'default': {
                 'LST': '1'
             },
-            'M-01': 'FlashCam-D'
+            'MST-01': 'FlashCam-D'
         }
 
     Attributes
@@ -87,11 +87,13 @@ class Simulator:
     -------
     run(inputFileList):
         Run simulation.
-    submit(inputFileList, submitCommand=None, extraCommands=None, test=False):
+    simulate(inputFileList, submitCommand=None, extraCommands=None, test=False):
         Submit a run script as a job. The submit command can be given by submitCommand \
         or it will be taken from the config.yml file.
     printHistograms():
         Print histograms and save a pdf file.
+    printOutputFiles():
+        Print list of output files of simulation run.
     getListOfOutputFiles():
         Get list of output files.
     getListOfInputFiles():
@@ -114,6 +116,7 @@ class Simulator:
         simulatorSourcePath=None,
         configData=None,
         configFile=None,
+        test=False,
     ):
         """
         Simulator init.
@@ -134,6 +137,8 @@ class Simulator:
             Dict with shower or array model configuration data.
         configFile: str or Path
             Path to yaml file containing configurable data.
+        test: bool
+            If True, no jobs are submitted; only run scripts are prepared
         """
         self._logger = logging.getLogger(__name__)
         self._logger.debug("Init Simulator {}".format(simulator))
@@ -142,6 +147,7 @@ class Simulator:
         self._setSimulator(simulator)
         self.runs = list()
         self._results = defaultdict(list)
+        self.test = test
 
         self._setFileLocations(filesLocation, simulatorSourcePath)
         self._loadConfigurationAndSimulationModel(configData, configFile)
@@ -327,7 +333,7 @@ class Simulator:
             raise
 
         # Reading telescope keys
-        telKeys = [k for k in _restData.keys() if k[0:2] in ["L-", "M-", "S-"]]
+        telKeys = [k for k in _restData.keys() if k[1:4] in ["ST-", "CT-"]]
         for key in telKeys:
             _arrayModelData[key] = _restData.pop(key)
 
@@ -393,7 +399,7 @@ class Simulator:
             self._fillResults(file, run)
             self.runs.append(run)
 
-    def submit(self, inputFileList=None, submitCommand=None, extraCommands=None, test=False):
+    def simulate(self, inputFileList=None, submitCommand=None, extraCommands=None):
         """
         Submit a run script as a job. The submit command can be given by \
         submitCommand or it will be taken from the config.yml file.
@@ -406,8 +412,6 @@ class Simulator:
             Command to be used before the script name.
         extraCommands: str or list of str
             Extra commands to be added to the run script before the run command,
-        test: bool
-            If True, job is not submitted.
 
         """
 
@@ -423,13 +427,34 @@ class Simulator:
                 runNumber=run, inputFile=file, extraCommands=extraCommands
             )
 
-            job_manager = JobManager(submitCommand=subCmd, test=test)
+            job_manager = JobManager(submitCommand=subCmd, test=self.test)
             job_manager.submit(
                 run_script=runScript,
                 run_out_file=self._simulationRunner.getSubLogFile(runNumber=run, mode=""),
             )
 
             self._fillResults(file, run)
+
+    def filelist(self, inputFileList=None):
+        """
+        List output files obtained with simulation run
+
+        Parameters
+        ----------
+        inputFileList: str or list of str
+            Single file or list of files of shower simulations.
+
+        """
+
+        runs_and_files_to_submit = self._getRunsAndFilesToSubmit(inputFileList=inputFileList)
+
+        for run, _ in runs_and_files_to_submit.items():
+            print(
+                "{} (file exists: {})".format(
+                    str(self._simulationRunner.getOutputFile(run)),
+                    Path.exists(self._simulationRunner.getOutputFile(run)),
+                )
+            )
 
     def _getRunsAndFilesToSubmit(self, inputFileList=None):
         """
@@ -672,7 +697,7 @@ class Simulator:
 
         return resource_summary
 
-    def printResourcesReport(self, inputFileList=None):
+    def resources(self, inputFileList=None):
         """
         Print a simple report on computing resources used
         (includes run time per run only at this point)

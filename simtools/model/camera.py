@@ -205,7 +205,7 @@ class Camera:
             if pixels["pixel_shape"] == 3:
                 pixels["orientation"] = 30
             if rotateAngle > 0:
-                pixels["orientation"] += np.rad2deg(rotateAngle)
+                pixels["orientation"] -= np.rad2deg(rotateAngle)
 
         return pixels
 

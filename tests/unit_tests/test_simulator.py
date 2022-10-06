@@ -36,7 +36,7 @@ def arrayConfigData(tmp_test_directory):
         "layoutName": "1LST",
         "modelVersion": "Prod5",
         "default": {"LST": "1"},
-        "M-01": "FlashCam-D",
+        "MST-01": "FlashCam-D",
     }
 
 
@@ -156,14 +156,12 @@ def test_validateRunListAndRange(shower_simulator):
 
     run_list = [1, 24, 3]
 
-    assert shower_simulator._validateRunListAndRange(runList=run_list, runRange=None) == \
-        [1, 3, 24]
+    assert shower_simulator._validateRunListAndRange(runList=run_list, runRange=None) == [1, 3, 24]
 
     with pytest.raises(InvalidRunsToSimulate):
         shower_simulator._validateRunListAndRange(runList=[1, "a", 4], runRange=None)
 
-    assert shower_simulator._validateRunListAndRange(runList=None, runRange=[3, 6]) == \
-        [3, 4, 5, 6]
+    assert shower_simulator._validateRunListAndRange(runList=None, runRange=[3, 6]) == [3, 4, 5, 6]
 
     assert shower_simulator._validateRunListAndRange(runList=None, runRange=[6, 3]) == []
 
@@ -183,7 +181,7 @@ def test_collectArrayModelParameters(array_simulator, arrayConfigData):
     assert isinstance(_arrayModelData, dict)
     assert isinstance(_restData, dict)
     assert _arrayModelData["site"] == "North"
-    assert _arrayModelData["M-01"] == "FlashCam-D"
+    assert _arrayModelData["MST-01"] == "FlashCam-D"
     newArrayConfigData = copy(arrayConfigData)
     newArrayConfigData.pop("site")
 
@@ -209,13 +207,14 @@ def test_fillResultsWithoutRun(array_simulator, input_file_list):
 
 def test_submitting(shower_simulator, array_simulator, corsikaFile):
 
-    shower_simulator.submit(submitCommand="local")
+    shower_simulator.test = True
+    shower_simulator.simulate(submitCommand="local")
 
     run_script = shower_simulator._simulationRunner.getRunScript(runNumber=2)
 
     assert Path(run_script).exists()
 
-    array_simulator.submit(inputFileList=corsikaFile, submitCommand="local", test=True)
+    array_simulator.simulate(inputFileList=corsikaFile, submitCommand="local")
 
     array_simulator.printListOfOutputFiles()
     array_simulator.printListOfLogFiles()

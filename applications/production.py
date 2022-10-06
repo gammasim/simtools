@@ -28,8 +28,9 @@
     task (str)
         What task to execute. Options:
             simulate (perform simulations),
-            lists (print list of output files) [NOT IMPLEMENTED]
-            inspect (plot sim_telarray histograms for quick inspection) [NOT IMPLEMENTED]
+            filelist (print list of output files)
+            inspect (plot sim_telarray histograms for quick inspection)
+            resources (print quicklook into used computational resources)
     array_only (activation mode)
         Simulates only array detector (no showers).
     showers_only (activation mode)
@@ -62,7 +63,7 @@ import simtools.util.general as gen
 from simtools.simulator import Simulator
 
 
-def parse(description=None):
+def _parse(description=None):
     """
     Parse command line configuration
 
@@ -92,13 +93,13 @@ def parse(description=None):
         help=(
             "What task to execute. Options: "
             "simulate (perform simulations),"
-            "lists (print list of output files),"
+            "filelist (print list of output files),"
             "inspect (plot sim_telarray histograms for quick inspection),"
             "resources (print report of computing resources)"
         ),
         type=str,
         required=True,
-        choices=["simulate", "lists", "inspect", "resources"],
+        choices=["simulate", "filelist", "inspect", "resources"],
     )
     parser.add_argument(
         "--primary",
@@ -117,20 +118,20 @@ def parse(description=None):
     )
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument(
-        "--array_only",
-        help="Simulates only array detection, no showers",
+        "--showers_only",
+        help="Simulates only showers, no array detection",
         action="store_true",
     )
     group.add_argument(
-        "--showers_only",
-        help="Simulates only showers, no array detection",
+        "--array_only",
+        help="Simulates only array detection, no showers",
         action="store_true",
     )
     parser.initialize_default_arguments(add_workflow_config=False)
     return parser.parse_args()
 
 
-def proccessSimulationConfigFile(configFile, primaryConfig, logger):
+def _proccessSimulationConfigFile(configFile, primaryConfig, logger):
     """
     Read simulation configuration file with details on shower
     and array simulations
@@ -202,67 +203,38 @@ def proccessSimulationConfigFile(configFile, primaryConfig, logger):
 
 def main():
 
-    args = parse(description=("Air shower and array simulations"))
+    args = _parse(description=("Air shower and array simulations"))
 
     cfg.setConfigFileName(args.configFile)
 
     logger = logging.getLogger()
     logger.setLevel(gen.getLogLevelFromUser(args.logLevel))
 
-    label, showerConfigs, arrayConfigs = proccessSimulationConfigFile(
+    label, showerConfigs, arrayConfigs = _proccessSimulationConfigFile(
         args.productionconfig, args.primary, logger
     )
 
-    # ShowerSimulators
     showerSimulators = dict()
     for primary, configData in showerConfigs.items():
         showerSimulators[primary] = Simulator(
-            label=label, simulator="corsika", configData=configData
+            label=label, simulator="corsika", configData=configData, test=args.test
         )
 
-    if not args.array_only:
-        # Running Showers
+    if args.showers_only:
         for primary, shower in showerSimulators.items():
+            _taskFunction = getattr(shower, args.task)
+            _taskFunction()
 
-            if args.task == "simulate":
-                print("Running ShowerSimulator for primary {}".format(primary))
-                shower.submit(test=args.test)
-
-            elif args.task == "list":
-                print("Printing ShowerSimulator file lists for primary {}".format(primary))
-                raise NotImplementedError()
-
-            elif args.task == "resources":
-                print("Printing computing resources report for primary {}".format(primary))
-                shower.printResourcesReport()
-
-    # ArraySimulators
-    if not args.showers_only:
+    if args.array_only:
         arraySimulators = dict()
         for primary, configData in arrayConfigs.items():
             arraySimulators[primary] = Simulator(
                 label=label, simulator="simtel", configData=configData
             )
-        # Running Arrays
         for primary, array in arraySimulators.items():
-
             inputList = showerSimulators[primary].getListOfOutputFiles()
-            if args.task == "simulate":
-                print("Running ArraySimulator for primary {}".format(primary))
-                array.submit(inputFileList=inputList, test=args.test)
-
-            elif args.task == "lists":
-                print("Printing ArraySimulator file lists for primary {}".format(primary))
-                raise NotImplementedError()
-
-            elif args.task == "inspect":
-                print("Plotting ArraySimulator histograms for primary {}".format(primary))
-                file = array.printHistograms(inputList)
-                print("Histograms file {}".format(file))
-
-            elif args.task == "resources":
-                print("Printing computing resources report for primary {}".format(primary))
-                array.printResourcesReport(inputList)
+            _taskFunction = getattr(array, args.task)
+            _taskFunction(inputFileList=inputList)
 
 
 if __name__ == "__main__":

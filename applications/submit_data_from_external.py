@@ -46,7 +46,7 @@ import simtools.util.validate_data as ds
 import simtools.util.workflow_description as workflow_config
 
 
-def parse(label):
+def _parse(label):
     """
     Parse command line configuration
 
@@ -74,7 +74,7 @@ def parse(label):
 def main():
 
     label = os.path.basename(__file__).split(".")[0]
-    args = parse(label)
+    args = _parse(label)
 
     logger = logging.getLogger()
     logger.setLevel(gen.getLogLevelFromUser(args.logLevel))
