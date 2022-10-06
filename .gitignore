@@ -13,3 +13,5 @@ dbDetails.yml
 
 # Mac users
 .DS_Store
+
+telarray_rand.conf*

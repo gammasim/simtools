@@ -51,6 +51,8 @@ class DatabaseHandler:
         Insert a list of files to the DB.
     exportFileDB()
         Get a file from the DB and write it to disk.
+    getAllVersions()
+        Get all version entries in the DB of a telescope or site for a specific parameter.
     """
 
     # TODO move into config file?
@@ -589,6 +591,36 @@ class DatabaseHandler:
 
         return _parameters
 
+    @staticmethod
+    def getDescriptions(dbName=DB_CTA_SIMULATION_MODEL_DESCRIPTIONS, collectionName="telescopes"):
+        """
+        Get parameter descriptions from MongoDB
+
+        Parameters
+        ----------
+        dbName: str
+            The name of the DB (default is DB_CTA_SIMULATION_MODEL_DESCRIPTIONS).
+        collectionName: str
+            The name of the collection to read from (default is "telescopes")
+
+        Returns
+        -------
+        dict containing the parameters with their descriptions
+        """
+
+        collection = DatabaseHandler.dbClient[dbName][collectionName]
+
+        _parameters = dict()
+
+        emptyQuery = {}
+        for post in collection.find(emptyQuery):
+            parNow = post["Parameter"]
+            _parameters[parNow] = post
+            _parameters[parNow].pop("Parameter", None)
+            _parameters[parNow]["entryDate"] = ObjectId(post["_id"]).generation_time
+
+        return _parameters
+
     def getReferenceData(self, site, modelVersion, onlyApplicable=False):
         """
         Get parameters from MongoDB for a specific telescope.
@@ -951,7 +983,15 @@ class DatabaseHandler:
         return
 
     def updateParameterField(
-        self, dbName, telescope, version, parameter, field, newValue, collectionName="telescopes"
+        self,
+        dbName,
+        version,
+        parameter,
+        field,
+        newValue,
+        telescope=None,
+        site=None,
+        collectionName="telescopes",
     ):
         """
         Update a parameter field value for a specific telescope/version.
@@ -965,25 +1005,26 @@ class DatabaseHandler:
         ----------
         dbName: str
             the name of the DB
-        telescope: str
-            Which telescope to update
         version: str
             Which version to update
         parameter: str
             Which parameter to update
         field: str
             Field to update (only options are Applicable, units, Type, items, minimum, maximum).
+            If the field does not exist, it will be added.
         newValue: type identical to the original field type
             The new value to set to the field given in "field".
+        telescope: str
+            Which telescope to update, if None then update a site parameter
+        site: str, North or South
+            Update a site parameter (the telescope argument must be None)
         collectionName: str
             The name of the collection in which to update the parameter (default is "telescopes")
         """
 
         allowed_fields = ["Applicable", "units", "Type", "items", "minimum", "maximum"]
         if field not in allowed_fields:
-            raise ValueError(
-                "The field to change must be one of {}".format(", ".join(allowed_fields))
-            )
+            raise ValueError(f"The field to change must be one of {', '.join(allowed_fields)}")
 
         collection = DatabaseHandler.dbClient[dbName][collectionName]
 
@@ -992,10 +1033,17 @@ class DatabaseHandler:
         )
 
         query = {
-            "Telescope": telescope,
             "Version": _modelVersion,
             "Parameter": parameter,
         }
+        if telescope is not None:
+            query["Telescope"] = telescope
+            loggerInfo = f"telescope {telescope}"
+        elif site is not None and site in ["North", "South"]:
+            query["Site"] = site
+            loggerInfo = f"site {site}"
+        else:
+            raise ValueError("You need to specifiy if to update a telescope or a site.")
 
         parEntry = collection.find_one(query)
         if parEntry is None:
@@ -1006,21 +1054,24 @@ class DatabaseHandler:
             )
             return
 
-        oldFieldValue = parEntry[field]
+        if field in parEntry:
+            oldFieldValue = parEntry[field]
 
-        if oldFieldValue == newValue:
-            self._logger.warning(
-                "The value of the field {} is already {}. No changes are necessary".format(
-                    field, newValue
+            if oldFieldValue == newValue:
+                self._logger.warning(
+                    f"The value of the field {field} is already {newValue}. No changes necessary"
                 )
+                return
+            else:
+                self._logger.info(
+                    f"For {loggerInfo}, version {_modelVersion}, parameter {parameter}, "
+                    f"replacing field {field} value from {oldFieldValue} to {newValue}"
+                )
+        else:
+            self._logger.info(
+                f"For {loggerInfo}, version {_modelVersion}, parameter {parameter}, "
+                f"the field {field} does not exist, adding it"
             )
-            return
-
-        self._logger.info(
-            "For tel {}, version {}, parameter {},\nreplacing field {} value from {} to {}".format(
-                telescope, _modelVersion, parameter, field, oldFieldValue, newValue
-            )
-        )
 
         queryUpdate = {"$set": {field: newValue}}
 
@@ -1103,10 +1154,11 @@ class DatabaseHandler:
     def addNewParameter(
         self,
         dbName,
-        telescope,
         version,
         parameter,
         value,
+        telescope=None,
+        site=None,
         collectionName="telescopes",
         filePrefix=None,
         **kwargs,
@@ -1120,15 +1172,17 @@ class DatabaseHandler:
         ----------
         dbName: str
             the name of the DB
-        telescope: str
-            The name of the telescope to add a parameter to.
-            Assumed to be a valid name!
         parameter: str
             Which parameter to add
         version: str
             The version of the new parameter value
         value: can be any type, preferably given in kwargs
             The value to set for the new parameter
+        telescope: str
+            The name of the telescope to add a parameter to
+            (only used if collectionName is "telescopes").
+        site: str
+           South or North, ignored if collectionName is "telescopes".
         collectionName: str
             The name of the collection to add a parameter to (default is "telescopes")
         filePrefix: str or Path
@@ -1140,7 +1194,13 @@ class DatabaseHandler:
         collection = DatabaseHandler.dbClient[dbName][collectionName]
 
         dbEntry = dict()
-        dbEntry["Telescope"] = telescope
+        if "telescopes" in collectionName:
+            dbEntry["Telescope"] = names.validateTelescopeNameDB(telescope)
+        elif "sites" in collectionName:
+            dbEntry["Site"] = names.validateSiteName(site)
+        else:
+            raise ValueError("Can only add new parameters to the sites or telescopes collections")
+
         dbEntry["Version"] = version
         dbEntry["Parameter"] = parameter
         dbEntry["Value"] = value
@@ -1262,3 +1322,58 @@ class DatabaseHandler:
             self.insertFileToDB(fileNow, dbName, **kwargs)
 
         return
+
+    def getAllVersions(
+        self,
+        dbName,
+        parameter,
+        telescopeModelName=None,
+        site=None,
+        collectionName="telescopes",
+    ):
+        """
+        Get all version entries in the DB of a telescope or site for a specific parameter.
+
+        Parameters
+        ----------
+        dbName: str
+            the name of the DB
+        parameter: str
+            Which parameter to get the versions of
+        telescopeModelName: str
+            Which telescope to get the versions of (in case "collectionName" is "telescopes")
+        site: str, North or South
+            In case "collectionName" is "telescopes", the site is used to build the telescope name.
+            In case "collectionName" is "sites",
+            this argument sets which site parameter get the versions of
+        collectionName: str
+            The name of the collection in which to update the parameter (default is "telescopes")
+
+        Returns
+        -------
+        allVersions: list
+            List of all versions found
+        """
+
+        collection = DatabaseHandler.dbClient[dbName][collectionName]
+
+        query = {
+            "Parameter": parameter,
+        }
+
+        _siteValidated = names.validateSiteName(site)
+        if collectionName == "telescopes":
+            _telModelNameValidated = names.validateTelescopeModelName(telescopeModelName)
+            _telNameDB = self._getTelescopeModelNameForDB(_siteValidated, _telModelNameValidated)
+            query["Telescope"] = _telNameDB
+        elif collectionName == "sites":
+            query["Site"] = _siteValidated
+        else:
+            raise ValueError("Can only get versions of the telescopes and sites collections.")
+
+        _allVersions = [post["Version"] for post in collection.find(query)]
+
+        if len(_allVersions) == 0:
+            self._logger.warning(f"The query {query} did not return any results. No versions found")
+
+        return _allVersions

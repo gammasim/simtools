@@ -183,7 +183,7 @@ Testing
 =======
 
 pytest framework is used for unit testing.
-The test modules are located in simtools/test.
+The test modules are located in simtools/test (note the differences between unit and integration tests).
 Every module should have its respective test module and
 ideally all functions should be covered by tests.
 

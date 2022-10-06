@@ -8,10 +8,10 @@ gammasim-tools
 What is gammasim-tools?
 =======================
 
-gammasim-tools is a prototype of a software package that provides tools and
+gammasim-tools is a prototype software package that provides tools and
 the framework for the Simulation System of the `CTA Observatory <https://www.cta-observatory.org/>`_
 
-Among the main functionalities of gammasim-tools, there are:
+Among the main functionalities of gammasim-tools are:
 
 * simulation model DB interface and management;
 * simulation model parameter derivation and validation.
@@ -27,6 +27,7 @@ Contact
 
 * Raul R Prado (raul.prado@desy.de)
 * Orel Gueta (orel.gueta@desy.de)
+* Victor B. Martins (victor.barbosa.martins@desy.de)
 * Gernot Maier (gernot.maier@desy.de)
 
 

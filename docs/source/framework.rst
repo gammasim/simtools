@@ -5,7 +5,6 @@ Framework
 
 * `Configuration`_
 * `IO`_
-* `TestUnits`_
 
 
 .. _Configuration:
@@ -80,11 +79,3 @@ io_handler
 
 .. automodule:: io_handler
    :members:
-
-
-.. _TestUnits:
-
-Test Units
-----------
-
-Every library module must have a test unit associated at simtools/tests.
