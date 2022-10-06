@@ -43,7 +43,7 @@ import simtools.util.general as gen
 from simtools import db_handler
 
 
-def userConfirm():
+def _userConfirm():
     """
     Ask the user to enter y or n (case-insensitive).
 
@@ -137,7 +137,7 @@ def main():
     print("Should I insert the following file{} to the {} DB?:\n".format(plural, args.dbToInsertTo))
     print(*filesToInsert, sep="\n")
     print()
-    if userConfirm():
+    if _userConfirm():
         db.insertFilesToDB(filesToInsert, args.dbToInsertTo)
         logger.info("File{} inserted to {} DB".format(plural, args.dbToInsertTo))
     else:
