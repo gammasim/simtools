@@ -50,7 +50,7 @@ def showerConfigData():
     return {
         "dataDirectory": ".",
         "site": "South",
-        "layoutName": "Prod5",
+        "layoutName": "test-layout",
         "runList": [3, 4],
         "runRange": [6, 10],
         "nshow": 10,

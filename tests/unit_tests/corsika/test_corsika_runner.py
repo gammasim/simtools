@@ -32,7 +32,7 @@ def corsikaRunner(corsikaConfigData, cfg_setup):
 
     corsikaRunner = CorsikaRunner(
         site="south",
-        layoutName="Prod5",
+        layoutName="test-layout",
         label="test-corsika-runner",
         corsikaConfigData=corsikaConfigData,
     )
