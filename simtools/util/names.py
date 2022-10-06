@@ -431,6 +431,7 @@ allLayoutArrayNames = {
     "4SST": ["4-sst", "4sst"],
     "1SST": ["1-sst", "sst"],
     "Prod5": ["prod5", "p5"],
+    "TestLayout": ["test-layout"],
 }
 
 
