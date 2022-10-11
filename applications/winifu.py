@@ -37,8 +37,6 @@ def parse(label):
 
     return config.initialize(add_workflow_config=False)
 
-    return config.initialize(add_workflow_config=False)
-
 
 def main():
 
