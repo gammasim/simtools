@@ -12,6 +12,7 @@ from pymongo import MongoClient
 from pymongo.errors import BulkWriteError
 
 import simtools.config as cfg
+import simtools.util.general as gen
 from simtools.util import names
 from simtools.util.model import getTelescopeClass
 
@@ -245,7 +246,7 @@ class DatabaseHandler:
 
         destFile = Path(destDir).joinpath(fileName)
         try:
-            file = cfg.findFile(fileName, cfg.get("modelFilesLocations"))
+            file = gen.findFile(fileName, cfg.get("modelFilesLocations"))
         except FileNotFoundError:
             if noFileOk:
                 self._logger.debug("File {} not found but noFileOk".format(fileName))
@@ -464,7 +465,7 @@ class DatabaseHandler:
         """
 
         _fileNameDB = "parValues-{}.yml".format(telescopeNameYaml)
-        _yamlFile = cfg.findFile(_fileNameDB, cfg.get("modelFilesLocations"))
+        _yamlFile = gen.findFile(_fileNameDB, cfg.get("modelFilesLocations"))
         self._logger.debug("Reading DB file {}".format(_yamlFile))
         with open(_yamlFile, "r") as stream:
             _allPars = yaml.safe_load(stream)
@@ -526,7 +527,7 @@ class DatabaseHandler:
 
         siteYaml = "lapalma" if site == "North" else "paranal"
 
-        yamlFile = cfg.findFile("parValues-Sites.yml", cfg.get("modelFilesLocations"))
+        yamlFile = gen.findFile("parValues-Sites.yml", cfg.get("modelFilesLocations"))
         self._logger.info("Reading DB file {}".format(yamlFile))
         with open(yamlFile, "r") as stream:
             _allParsVersions = yaml.safe_load(stream)
