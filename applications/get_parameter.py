@@ -24,10 +24,10 @@ def main():
     parser.initialize_default_arguments()
 
     args = parser.parse_args()
-    cfg.setConfigFileName(args.configFile)
+    cfg.setConfigFileName(args.config_file)
 
     logger = logging.getLogger()
-    logger.setLevel(gen.getLogLevelFromUser(args.logLevel))
+    logger.setLevel(gen.getLogLevelFromUser(args.log_level))
 
     if not cfg.get("useMongoDB"):
         raise ValueError("This application works only with MongoDB and you asked not to use it")

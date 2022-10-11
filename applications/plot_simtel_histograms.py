@@ -54,10 +54,10 @@ def main():
     parser.initialize_default_arguments(add_workflow_config=False)
 
     args = parser.parse_args()
-    cfg.setConfigFileName(args.configFile)
+    cfg.setConfigFileName(args.config_file)
 
     logger = logging.getLogger()
-    logger.setLevel(gen.getLogLevelFromUser(args.logLevel))
+    logger.setLevel(gen.getLogLevelFromUser(args.log_level))
 
     nLists = len(args.file_lists)
     simtelHistograms = list()
