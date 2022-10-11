@@ -113,10 +113,10 @@ def main():
 
     args = parser.parse_args()
     label = "validate_optics"
-    cfg.setConfigFileName(args.configFile)
+    cfg.setConfigFileName(args.config_file)
 
     logger = logging.getLogger()
-    logger.setLevel(gen.getLogLevelFromUser(args.logLevel))
+    logger.setLevel(gen.getLogLevelFromUser(args.log_level))
 
     # Output directory to save files related directly to this app
     outputDir = io.getOutputDirectory(cfg.get("outputLocation"), label, dirType="application-plots")
