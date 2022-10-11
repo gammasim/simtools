@@ -70,8 +70,8 @@ class Configurator:
     @staticmethod
     def _arglistFromConfig(input_dict):
         """
-        Convert input dict to list of strings; add argument double dashes; \
-        handle boolean parameters.
+        Convert input dict to list of strings as needed by argparse. \
+        Add argument double dashes and handle boolean parameters.
 
         Parameters
         ----------
