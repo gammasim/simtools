@@ -214,7 +214,7 @@ def main():
     # Loading measured cumulative PSF
     dataToPlot = OrderedDict()
     if args.data is not None:
-        dataFile = cfg.findFile(args.data)
+        dataFile = gen.findFile(args.data, cfg.get(par="modelFilesLocations"))
         dataToPlot["measured"] = loadData(dataFile)
         radius = dataToPlot["measured"]["Radius [cm]"]
 
