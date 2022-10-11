@@ -1,13 +1,11 @@
 """ Module to deal with the interface with the global config information."""
 
-import copy
 import logging
 import os
-from pathlib import Path
 
 import yaml
 
-__all__ = ["setConfigFileName", "loadConfig", "get", "findFile", "change"]
+__all__ = ["setConfigFileName", "loadConfig", "get", "change"]
 
 
 class ConfigEnvironmentalVariableNotSet(Exception):
@@ -143,69 +141,6 @@ def getConfigArg(name, value):
         Path of the desired parameter.
     """
     return value if value is not None else get(name)
-
-
-def findFile(name, loc=None):
-    """
-    Search for model files inside of given directories, recursively, and return its full path.
-
-    Parameters
-    ----------
-    name: str
-        File name to be searched for.
-    loc: Path, optional
-        Location of where to search for the file. If not given, config information will be used.
-
-    Returns
-    -------
-    Full path of the file to be found if existing. Otherwise, None
-
-    Raises
-    ------
-    FileNotFoundError
-        If the desired file is not found.
-    """
-    _logger = logging.getLogger(__name__)
-
-    if loc is None:
-        allLocations = get(par="modelFilesLocations")
-    else:
-        allLocations = copy.copy(loc)
-    allLocations = [allLocations] if not isinstance(allLocations, list) else allLocations
-
-    def _searchDirectory(directory, filename, rec=False):
-        if not Path(directory).exists():
-            msg = "Directory {} does not exist".format(directory)
-            _logger.debug(msg)
-            return None
-
-        f = Path(directory).joinpath(filename)
-        if f.exists():
-            _logger.debug("File {} found in {}".format(filename, directory))
-            return f
-        if not rec:  # Not recursively
-            return None
-
-        for subdir in Path(directory).iterdir():
-            if not subdir.is_dir():
-                continue
-            f = _searchDirectory(subdir, filename, True)
-            if f is not None:
-                return f
-        return None
-
-    # Searching file locally
-    ff = _searchDirectory(".", name)
-    if ff is not None:
-        return ff
-    # Searching file in given locations
-    for ll in allLocations:
-        ff = _searchDirectory(ll, name, True)
-        if ff is not None:
-            return ff
-    msg = "File {} could not be found in {}".format(name, allLocations)
-    _logger.error(msg)
-    raise FileNotFoundError(msg)
 
 
 def createDummyConfigFile(filename="config.yml", **kwargs):

@@ -6,8 +6,8 @@ from copy import copy
 import pytest
 from astropy import units as u
 
-import simtools.config as cfg
 import simtools.io_handler as io
+import simtools.util.general as gen
 from simtools import db_handler
 from simtools.corsika.corsika_config import (
     CorsikaConfig,
@@ -178,7 +178,7 @@ def test_config_data_from_yaml_file(db):
         fileName=testFileName,
     )
 
-    corsikaConfigFile = cfg.findFile(
+    corsikaConfigFile = gen.findFile(
         testFileName, io.getOutputDirectory(dirType="model", test=True)
     )
     cc = CorsikaConfig(

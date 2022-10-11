@@ -49,12 +49,12 @@ def main():
     parser.initialize_default_arguments()
 
     args = parser.parse_args()
-    cfg.setConfigFileName(args.configFile)
+    cfg.setConfigFileName(args.config_file)
 
     label = "make_regular_arrays"
 
     logger = logging.getLogger()
-    logger.setLevel(gen.getLogLevelFromUser(args.logLevel))
+    logger.setLevel(gen.getLogLevelFromUser(args.log_level))
 
     corsikaPars = gen.collectDataFromYamlOrDict(
         io.getInputDataFile("corsika", "corsika_parameters.yml"), None
