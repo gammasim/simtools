@@ -10,6 +10,33 @@ import simtools.config as cfg
 logger = logging.getLogger()
 
 
+def write_dummy_dbdetails_file(filename="dbDetails.yml", **kwargs):
+    """
+    Create a dummy dbDetails.yml file to be used in test enviroments only.
+
+    Parameters
+    ----------
+    filename: str
+        Name of the dummy dbDetails file (default=dbDetails.yml)
+    **kwargs
+        The default parameters can be overwritten using kwargs.
+    """
+    pars = {
+        "dbPort": None,
+        "mongodbServer": None,
+        "userDB": None,
+        "passDB": None,
+        "authenticationDatabase": "admin",
+    }
+
+    if len(kwargs) > 0:
+        for key, value in kwargs.items():
+            pars[key] = int(value) if key == "dbPort" else str(value)
+
+    with open(filename, "w") as outfile:
+        yaml.dump(pars, outfile)
+
+
 def write_configuration_test_file(config_file, config_dict):
     """
     Write a simtools configuration file
@@ -76,7 +103,7 @@ def db_connection(tmp_test_directory):
                 found_env = False
         if found_env:
             dbDetailsFileName = tmp_test_directory / "dbDetails.yml"
-            cfg.createDummyDbDetails(filename=dbDetailsFileName, **parsToDbDetails)
+            write_dummy_dbdetails_file(filename=dbDetailsFileName, **parsToDbDetails)
             return dbDetailsFileName
 
         return ""
