@@ -3,8 +3,8 @@
 import astropy.units as u
 import pytest
 
-import simtools.config as cfg
 import simtools.io_handler as io
+import simtools.util.general as gen
 from simtools import db_handler
 from simtools.model.telescope_model import TelescopeModel
 from simtools.ray_tracing import RayTracing
@@ -55,7 +55,7 @@ def test_from_kwargs(db):
         fileName=testFileName,
     )
 
-    cfgFile = cfg.findFile(testFileName, io.getOutputDirectory(dirType="model", test=True))
+    cfgFile = gen.findFile(testFileName, io.getOutputDirectory(dirType="model", test=True))
 
     tel = TelescopeModel.fromConfigFile(
         site="north",

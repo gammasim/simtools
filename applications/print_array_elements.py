@@ -106,9 +106,9 @@ def main():
     args = _parse(description=("Print a list of array element positions"))
 
     _logger = logging.getLogger()
-    _logger.setLevel(gen.getLogLevelFromUser(args.logLevel))
+    _logger.setLevel(gen.getLogLevelFromUser(args.log_level))
 
-    cfg.setConfigFileName(args.configFile)
+    cfg.setConfigFileName(args.config_file)
 
     layout = layout_array.LayoutArray()
     layout.readTelescopeListFile(args.array_element_list)
