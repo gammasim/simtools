@@ -7,8 +7,8 @@ import astropy.units as u
 import numpy as np
 import pytest
 
-import simtools.config as cfg
 import simtools.io_handler as io
+import simtools.util.general as gen
 from simtools import db_handler, visualize
 
 logger = logging.getLogger(__name__)
@@ -36,7 +36,7 @@ def test_plot_1D(db):
         dest=io.getOutputDirectory(dirType="model", test=True),
         fileName=testFileName,
     )
-    testDataFile = cfg.findFile(testFileName, io.getOutputDirectory(dirType="model", test=True))
+    testDataFile = gen.findFile(testFileName, io.getOutputDirectory(dirType="model", test=True))
     dataIn = np.loadtxt(testDataFile, usecols=(0, 1), dtype=headersType)
 
     # Change y-axis to percent
@@ -74,7 +74,7 @@ def test_plot_table(db):
         dest=io.getOutputDirectory(dirType="model", test=True),
         fileName=testFileName,
     )
-    tableFile = cfg.findFile(testFileName, io.getOutputDirectory(dirType="model", test=True))
+    tableFile = gen.findFile(testFileName, io.getOutputDirectory(dirType="model", test=True))
     table = astropy.io.ascii.read(tableFile)
 
     plt = visualize.plotTable(table, yTitle="Transmission", title=title, noMarkers=True)
