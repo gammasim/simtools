@@ -77,7 +77,7 @@ def main():
     args = _parse(label)
 
     logger = logging.getLogger()
-    logger.setLevel(gen.getLogLevelFromUser(args.logLevel))
+    logger.setLevel(gen.getLogLevelFromUser(args.log_level))
 
     workflow = workflow_config.WorkflowDescription(label=label, args=args)
 

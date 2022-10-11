@@ -6,6 +6,7 @@ from pathlib import Path
 import pytest
 
 import simtools.config as cfg
+import simtools.util.general as gen
 from simtools.config import ParameterNotFoundInConfigFile
 
 logging.getLogger().setLevel(logging.DEBUG)
@@ -38,4 +39,4 @@ def test_find_file(cfg_setup, tmp_test_directory):
     Path(tmp_par_values).touch()
     files = ("mirror_MST_D80.dat", "parValues-LST.yml")
     for file in files:
-        cfg.findFile(file)
+        gen.findFile(file, cfg.get(par="modelFilesLocations"))

@@ -205,10 +205,10 @@ def main():
 
     args = _parse(description=("Air shower and array simulations"))
 
-    cfg.setConfigFileName(args.configFile)
+    cfg.setConfigFileName(args.config_file)
 
     logger = logging.getLogger()
-    logger.setLevel(gen.getLogLevelFromUser(args.logLevel))
+    logger.setLevel(gen.getLogLevelFromUser(args.log_level))
 
     label, showerConfigs, arrayConfigs = _proccessSimulationConfigFile(
         args.productionconfig, args.primary, logger
