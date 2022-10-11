@@ -9,6 +9,8 @@ class CommandLineParser(argparse.ArgumentParser):
     Command line parser for application and workflows
     Wrapper around standard python argparse.ArgumentParser
 
+    Command line arguments should be given in snake_case, e.g. `config_file`.
+
     Methods
     -------
     initialize_default_arguments:
