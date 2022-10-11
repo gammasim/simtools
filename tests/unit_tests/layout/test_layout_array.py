@@ -44,7 +44,7 @@ def db(set_db):
 
 @pytest.fixture
 def telescopeTestFile(db):
-    testFileName = "telescope_positions_prod5_north.ecsv"
+    testFileName = "telescope_positions-North-TestLayout.ecsv"
     db.exportFileDB(
         dbName="test-data",
         dest=io.getOutputDirectory(dirType="model", test=True),
@@ -57,7 +57,7 @@ def telescopeTestFile(db):
 
 def test_fromLayoutArrayName(cfg_setup):
 
-    layout = LayoutArray.fromLayoutArrayName("south-Prod5")
+    layout = LayoutArray.fromLayoutArrayName("south-TestLayout")
 
     assert 99 == layout.getNumberOfTelescopes()
 
