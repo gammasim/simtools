@@ -2,7 +2,7 @@ label: 'test-production'
 
 default:
   site: North
-  layoutName: Prod5
+  layoutName: test-layout
   dataDirectory: Null
   array:
     modelVersion: Prod5
