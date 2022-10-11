@@ -47,37 +47,6 @@ class SimtelConfigWriter:
         "magnetic_field",
         "EPSG",
     ]
-    COMMON_PARS = {
-        "array_trigger": "none",
-        "trigger_telescopes": 2,
-        "only_triggered_telescopes": 1,
-        "array_window": 1000,
-        "output_format": 1,
-        "mirror_list": "none",
-        "telescope_random_angle": 0.0,
-        "telescope_random_error": 0.0,
-        "convergent_depth": 0,
-        "iobuf_maximum": 1000000000,
-        "iobuf_output_maximum": 400000000,
-        "multiplicity_offset": -0.5,
-        "discriminator_pulse_shape": "none",
-        "discriminator_amplitude": 0.0,
-        "discriminator_threshold": 99999.0,
-        "fadc_noise": 0.0,
-        "asum_threshold": 0.0,
-        "asum_shaping_file": "none",
-        "asum_offset": 0.0,
-        "dsum_threshold": 0,
-        "fadc_pulse_shape": "none",
-        "fadc_amplitude": 0.0,
-        "fadc_pedestal": 100.0,
-        "fadc_max_signal": 4095,
-        "fadc_max_sum": 16777215,
-        "store_photoelectrons": 30,
-        "pulse_analysis": -30,
-        "sum_before_peak": 3,
-        "sum_after_peak": 4,
-    }
 
     def __init__(self, site, modelVersion, layoutName=None, telescopeModelName=None, label=None):
         """
@@ -165,9 +134,6 @@ class SimtelConfigWriter:
 
             # Writing site parameters
             self._writeSiteParameters(file, siteParameters)
-
-            # Writing common parameters
-            self._writeCommonParameters(file)
 
             # Maximum telescopes
             file.write(self.TAB + "maximum_telescopes = {}\n\n".format(len(telescopeModel)))
@@ -266,12 +232,5 @@ class SimtelConfigWriter:
             value = siteParameters[par]["Value"]
             file.write(self.TAB + "{} = {}\n".format(par, value))
         file.write("\n")
-
-    def _writeCommonParameters(self, file):
-        # Common parameters taken from CTA-PROD4-common.cfg
-        # TODO: Store these somewhere else
-        self._logger.warning("Common parameters are hardcoded!")
-        for par, value in self.COMMON_PARS.items():
-            file.write("   {} = {}\n".format(par, value))
 
     # End of writeCommonParameters

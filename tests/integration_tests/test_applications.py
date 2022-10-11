@@ -22,21 +22,6 @@ logger.setLevel(logging.DEBUG)
 
 APP_LIST = {
     # Optics
-    "tune_psf": [
-        [
-            "-s",
-            "North",
-            "-t",
-            "LST-1",
-            "--model_version",
-            "prod5",
-            "--data",
-            "TESTMODELDIR/PSFcurve_data_v2.txt",
-            "--zenith",
-            "20",
-            "--test",
-        ]
-    ],
     "compare_cumulative_psf": [
         [
             "-s",
@@ -150,6 +135,21 @@ APP_LIST = {
             "1.0",
             "--src_distance",
             "11",
+            "--zenith",
+            "20",
+            "--test",
+        ]
+    ],
+    "tune_psf": [
+        [
+            "-s",
+            "North",
+            "-t",
+            "LST-1",
+            "--model_version",
+            "prod5",
+            "--data",
+            "TESTMODELDIR/PSFcurve_data_v2.txt",
             "--zenith",
             "20",
             "--test",
