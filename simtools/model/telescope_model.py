@@ -7,6 +7,7 @@ import numpy as np
 
 import simtools.config as cfg
 import simtools.io_handler as io
+import simtools.util.general as gen
 from simtools import db_handler
 from simtools.model.camera import Camera
 from simtools.model.mirrors import Mirrors
@@ -656,9 +657,9 @@ class TelescopeModel:
         """Load the attribute mirrors by creating a Mirrors object with the mirror list file."""
         mirrorListFileName = self._parameters["mirror_list"]["Value"]
         try:
-            mirrorListFile = cfg.findFile(mirrorListFileName, self._configFileDirectory)
+            mirrorListFile = gen.findFile(mirrorListFileName, self._configFileDirectory)
         except FileNotFoundError:
-            mirrorListFile = cfg.findFile(mirrorListFileName, self._modelFilesLocations)
+            mirrorListFile = gen.findFile(mirrorListFileName, self._modelFilesLocations)
             self._logger.warning(
                 "MirrorListFile was not found in the config directory - "
                 "Using the one found in the modelFilesLocations"
@@ -689,13 +690,13 @@ class TelescopeModel:
             self._logger.warning("Using focal_length because effective_focal_length is 0.")
             focalLength = self.getParameterValue("focal_length")
         try:
-            cameraConfigFilePath = cfg.findFile(cameraConfigFile, self._configFileDirectory)
+            cameraConfigFilePath = gen.findFile(cameraConfigFile, self._configFileDirectory)
         except FileNotFoundError:
             self._logger.warning(
                 "CameraConfigFile was not found in the config directory - "
                 "Using the one found in the modelFilesLocations"
             )
-            cameraConfigFilePath = cfg.findFile(cameraConfigFile, self._modelFilesLocations)
+            cameraConfigFilePath = gen.findFile(cameraConfigFile, self._modelFilesLocations)
 
         self._camera = Camera(
             telescopeModelName=self.name,
@@ -742,7 +743,7 @@ class TelescopeModel:
             return False
 
         fileName = self.getParameterValue(par)
-        file = cfg.findFile(fileName)
+        file = gen.findFile(fileName, cfg.get(par="modelFilesLocations"))
         with open(file, "r") as f:
             is2D = "@RPOL@" in f.read()
         return is2D

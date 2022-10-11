@@ -123,7 +123,6 @@ import astropy.units as u
 import numpy as np
 from astropy.table import QTable, Table
 
-import simtools.config as cfg
 import simtools.util.commandline_parser as argparser
 import simtools.util.general as gen
 import simtools.util.model_data_writer as writer
@@ -233,7 +232,7 @@ def _define_telescope_model(workflow):
         label=workflow.label(),
     )
     if workflow.get_configuration_parameter("mirror_list") is not None:
-        mirrorListFile = cfg.findFile(name=workflow.get_configuration_parameter("mirror_list"))
+        mirrorListFile = gen.findFile(name=workflow.get_configuration_parameter("mirror_list"))
         tel.changeParameter("mirror_list", workflow.get_configuration_parameter("mirror_list"))
         tel.addParameterFile("mirror_list", mirrorListFile)
     if workflow.get_configuration_parameter("random_flen") is not None:

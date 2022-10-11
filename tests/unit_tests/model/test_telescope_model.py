@@ -5,8 +5,8 @@ import logging
 
 import pytest
 
-import simtools.config as cfg
 import simtools.io_handler as io
+import simtools.util.general as gen
 from simtools import db_handler
 from simtools.model.telescope_model import InvalidParameter, TelescopeModel
 
@@ -29,7 +29,7 @@ def lst_config_file(db):
         fileName=testFileName,
     )
 
-    cfgFile = cfg.findFile(testFileName, io.getOutputDirectory(dirType="model", test=True))
+    cfgFile = gen.findFile(testFileName, io.getOutputDirectory(dirType="model", test=True))
     return cfgFile
 
 
