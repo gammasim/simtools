@@ -12,7 +12,7 @@ logger.setLevel(logging.DEBUG)
 def test_input_validation(set_db):
     arrayConfigData = {
         "site": "North",
-        "layoutName": "Prod5",
+        "layoutName": "test-layout",
         "modelVersion": "Prod5",
         "default": {"LST": "1", "MST": "FlashCam-D"},
         "MST-05": "NectarCam-D",
@@ -27,7 +27,7 @@ def test_input_validation(set_db):
 def test_exporting_config_files(set_db):
     arrayConfigData = {
         "site": "North",
-        "layoutName": "Prod5",
+        "layoutName": "test-layout",
         "modelVersion": "Prod5",
         "default": {"LST": "1", "MST": "FlashCam-D"},
         "MST-05": {
@@ -47,7 +47,7 @@ def test_exporting_config_files(set_db):
         "CTA-North-LST-1-2020-06-28_test.cfg",
         "CTA-North-MST-FlashCam-D-2020-06-28_test.cfg",
         "CTA-North-MST-NectarCam-D-2020-06-28_test_MST-05.cfg",
-        "CTA-Prod5-North-2020-06-28_test.cfg",
+        "CTA-TestLayout-North-2020-06-28_test.cfg",
         "CTA-ULTRA6-dsum-shaping-FlashCam-2a-int.dat",
         "LaPalma_coords.lis",
         "NectarCAM_lightguide_efficiency_POP_131019.dat",
