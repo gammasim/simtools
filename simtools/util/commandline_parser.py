@@ -22,9 +22,12 @@ class CommandLineParser(argparse.ArgumentParser):
 
     def initialize_default_arguments(self, add_workflow_config=True):
         """
-        Initialize default arguments used by all applications
-        (e.g., verbosity or test flag)
+        Initialize default arguments used by all applications (e.g., verbosity or test flag).
 
+        Parameters
+        ----------
+        add_workflow_config: bool
+           Add workflow configuration file to list of args.
 
         """
 
@@ -135,11 +138,9 @@ class CommandLineParser(argparse.ArgumentParser):
         argparse.ArgumentTypeError
             for invalid sites
 
-
         """
 
         fsite = str(value)
-
         if not names.validateSiteName(fsite):
             raise argparse.ArgumentTypeError("{} is an invalid site".format(fsite))
 
