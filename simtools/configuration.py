@@ -7,6 +7,10 @@ import yaml
 import simtools.util.commandline_parser as argparser
 
 
+class InvalidConfigurationParameter(Exception):
+    pass
+
+
 class Configurator:
     """
     Configuration handling application configuration.
@@ -17,38 +21,128 @@ class Configurator:
     - environmental variables
     - configuration dict when calling the class
 
+    Methods
+    -------
+    initialize()
+       Initialize configuration from command line, configuration file, class config, or env.
+
     """
 
     def __init__(self, config=None, label=None):
+        """
+        Configurator init.
+
+        Parameters
+        ----------
+        config: dict
+           Configuration parameters as dict.
+        label: str
+           Class label.
+
+        """
 
         self._logger = logging.getLogger(__name__)
         self._logger.debug("Init Configuration")
 
-        self.config = config
+        self.configClassInit = config
+        self.config = {}
         self.parser = argparser.CommandLineParser(label)
 
     def initialize(self, add_workflow_config=False):
         """
-        Parse args, check environmental variables, and return configuration.
+        Initialize configuration from command line, configuration file, class config, or env.
+
+        Parameters
+        ----------
+        add_workflow_config: bool
+            Add workflow configuration file to list of args.
 
         Returns
         -------
         dict
-            Configuration arguments
+            Configuration parameters as dict.
 
         """
 
         self.parser.initialize_default_arguments(add_workflow_config=add_workflow_config)
 
-        _list_args = sys.argv[1:]
-        _list_args += self._arglistFromConfig(self.config)
-
-        self.config = vars(self.parser.parse_args(_list_args))
-
-        self._fillFromEnvironmentalVariables()
+        # sequence of calls defines reverse (!) priorities in parameter settings.
+        # 1. command line; 2. yaml file; 3. class init; 4. env variables.
+        self._fillFromCommandLine()
         self._fillFromConfigFile()
+        self._fillFromConfigDict(self.configClassInit)
+        self._fillFromEnvironmentalVariables()
 
         return self.config
+
+    def _fillFromCommandLine(self):
+        """
+        Fill configuration parameters from command line arguments.
+
+        """
+
+        self.config = vars(
+            self.parser.parse_args(
+                self._arglistFromConfig(self.config) + self._arglistFromConfig(sys.argv[1:])
+            )
+        )
+
+    def _fillFromConfigDict(self, _input_dict):
+        """
+        Fill configuration parameters from dictionary.
+
+        Parameters
+        ----------
+        _input_dict: dict
+           dictionary with configuration parameters
+
+        """
+        _tmp_config = {}
+        try:
+            for key, value in _input_dict.items():
+                self._check_parameter_configuration_status(key, value)
+                _tmp_config[key] = value
+        except AttributeError:
+            pass
+
+        self.config = vars(
+            self.parser.parse_args(
+                self._arglistFromConfig(self.config) + self._arglistFromConfig(_tmp_config)
+            )
+        )
+        for key, value in self.config.items():
+            self.config[key] = None if value == "None" else value
+
+    def _check_parameter_configuration_status(self, key, value):
+        """
+        Check if a parameter is already configured and not a default value.
+        Allow configuration of None values.
+
+        Parameters
+        ----------
+        key, value
+           parameter key, value to be checked
+
+
+        Raises
+        ------
+        InvalidConfigurationParameter
+           if parameter has already been defined with a different value.
+
+
+        """
+
+        if self.parser.get_default(key) == value or self.config[key] is None:
+            return
+
+        if key in self.config and self.config[key] != value:
+            self._logger.error(
+                "Inconsistent configuration parameter ({}) definition ({} vs {})".format(
+                    key, self.config[key], value
+                )
+            )
+            raise InvalidConfigurationParameter
+        self.config[key] = value
 
     def _fillFromConfigFile(self):
         """
@@ -57,47 +151,12 @@ class Configurator:
 
         """
 
-        if "config_file" not in self.config:
-            return
-
-        with open(self.config["config_file"], "r") as stream:
-            _config = yaml.safe_load(stream)
-
-        _list_args = self._arglistFromConfig(self.config) + self._arglistFromConfig(_config)
-
-        self.config = vars(self.parser.parse_args(_list_args))
-
-    @staticmethod
-    def _arglistFromConfig(input_dict):
-        """
-        Convert input dict to list of strings as needed by argparse. \
-        Add argument double dashes and handle boolean parameters.
-
-        Parameters
-        ----------
-        input_dict: dict
-           Dictionary of commands to convert to list.
-
-        Returns
-        -------
-        list
-            Dict keys and values as dict.
-
-        """
-
-        _list_args = []
-
-        if input_dict is None:
-            return _list_args
-
-        for key, value in input_dict.items():
-            if not isinstance(value, bool):
-                _list_args.append("--" + key)
-                _list_args.append(str(value))
-            elif value:
-                _list_args.append("--" + key)
-
-        return _list_args
+        try:
+            with open(self.config["config_file"], "r") as stream:
+                _config_dict = yaml.safe_load(stream)
+            self._fillFromConfigDict(_config_dict)
+        except TypeError:
+            pass
 
     def _fillFromEnvironmentalVariables(self):
         """
@@ -106,6 +165,45 @@ class Configurator:
 
         """
 
-        for key, value in self.config.items():
-            if value is None:
-                self.config[key] = os.environ.get(key.upper())
+        _env_dict = {}
+        try:
+            for key, value in self.config.items():
+                if value is None:
+                    _env_dict[key] = os.environ.get(key.upper())
+        except AttributeError:
+            pass
+
+        self._fillFromConfigDict(_env_dict)
+
+    @staticmethod
+    def _arglistFromConfig(input_var):
+        """
+        Convert input list of strings as needed by argparse. \
+        Add argument double dashes and handle boolean parameters.
+
+        Parameters
+        ----------
+        input_var: dict, list, None
+           Dictionary/list of commands to convert to list.
+
+        Returns
+        -------
+        list
+            Dict keys and values as dict.
+
+        """
+
+        if isinstance(input_var, dict):
+            _list_args = []
+            for key, value in input_var.items():
+                if not isinstance(value, bool):
+                    _list_args.append("--" + key)
+                    _list_args.append(str(value))
+                elif value:
+                    _list_args.append("--" + key)
+            return _list_args
+
+        try:
+            return list(input_var)
+        except TypeError:
+            return []
