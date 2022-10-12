@@ -13,7 +13,7 @@ These applications will be used as building blocks for the Simulation System Wor
 The application scripts can be found in gammasim-tools/applications.
 
 The applications expect a config file named config.yml in your gammasim-tools directory (unless specified differently
-using the function config.setConfigFileName) . Please,
+using the function function config.setConfigFileName) . Please,
 follow the instructions in :ref:`Configuration` to setup your config file.
 
 Some applications require one or multiple file names as input in the command line. The system will
@@ -55,17 +55,17 @@ add_file_to_db
    :members:
 
 
-compare_cumulative_psf
-======================
-
-.. automodule:: compare_cumulative_psf
-   :members:
-
-
 derive_mirror_rnda
 ==================
 
 .. automodule:: derive_mirror_rnda
+   :members:
+
+
+compare_cumulative_psf
+======================
+
+.. automodule:: compare_cumulative_psf
    :members:
 
 
@@ -80,20 +80,6 @@ make_regular_arrays
 ===================
 
 .. automodule:: make_regular_arrays
-   :members:
-
-
-mark_non_optics_parameter_non_applicable
-========================================
-
-.. automodule:: mark_non_optics_parameter_non_applicable
-   :members:
-
-
-plot_simtel_histograms
-======================
-
-.. automodule:: plot_simtel_histograms
    :members:
 
 
@@ -118,16 +104,17 @@ production
    :members:
 
 
-sim_showers_for_trigger_rates
-=============================
-.. automodule:: sim_showers_for_trigger_rates
-   :members:
-
-
 submit_data_from_external
 =========================
 
 .. automodule:: submit_data_from_external
+   :members:
+
+
+sim_showers_for_trigger_rates
+=============================
+
+.. automodule:: sim_showers_for_trigger_rates
    :members:
 
 
