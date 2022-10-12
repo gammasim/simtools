@@ -20,7 +20,7 @@ class ParameterNotFoundInConfigFile(Exception):
 
 def setConfigFileName(fileName):
     """
-    Redefines the config file name by resetting the a global variable.
+    Redefines the config file name by resetting a global variable.
 
     Parameters
     ----------
