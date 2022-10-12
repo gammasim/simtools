@@ -13,7 +13,7 @@
     Command line arguments
     ----------------------
     array_element_list (str)
-        List of array element positions (ecsv format)
+        File name with list of array element positions (ecsv format)
     compact (str)
         Compact output (in requested coordinate system; possible are corsika,utm,mercator)
     export (str)
