@@ -50,7 +50,15 @@ class Configurator:
 
     def initialize(self, add_workflow_config=False):
         """
-        Initialize configuration from command line, configuration file, class config, or env.
+        Initialize configuration from command line, configuration file, class config, \
+        or environmental variable.
+
+        Priorities in parameter settings.
+        1. command line; 2. yaml file; 3. class init; 4. env variables.
+
+        Conflicting configuration settings raise an Exception, with the exception of settings \
+        from environmental variables, which are only done when the configuration parameter \
+        is None.
 
         Parameters
         ----------
@@ -62,12 +70,15 @@ class Configurator:
         dict
             Configuration parameters as dict.
 
+        Raises
+        ------
+        InvalidConfigurationParameter
+           if parameter has already been defined with a different value.
+
         """
 
         self.parser.initialize_default_arguments(add_workflow_config=add_workflow_config)
 
-        # sequence of calls defines reverse (!) priorities in parameter settings.
-        # 1. command line; 2. yaml file; 3. class init; 4. env variables.
         self._fillFromCommandLine()
         self._fillFromConfigFile()
         self._fillFromConfigDict(self.configClassInit)
@@ -75,17 +86,16 @@ class Configurator:
 
         return self.config
 
-    def _fillFromCommandLine(self):
+    def _fillFromCommandLine(self, arg_list=None):
         """
         Fill configuration parameters from command line arguments.
 
         """
 
-        self.config = vars(
-            self.parser.parse_args(
-                self._arglistFromConfig(self.config) + self._arglistFromConfig(sys.argv[1:])
-            )
-        )
+        if arg_list is None:
+            arg_list = sys.argv[1:]
+
+        self._fillConfig(arg_list)
 
     def _fillFromConfigDict(self, _input_dict):
         """
@@ -105,17 +115,11 @@ class Configurator:
         except AttributeError:
             pass
 
-        self.config = vars(
-            self.parser.parse_args(
-                self._arglistFromConfig(self.config) + self._arglistFromConfig(_tmp_config)
-            )
-        )
-        for key, value in self.config.items():
-            self.config[key] = None if value == "None" else value
+        self._fillConfig(_tmp_config)
 
     def _check_parameter_configuration_status(self, key, value):
         """
-        Check if a parameter is already configured and not a default value.
+        Check if a parameter is already configured and not still set to the default value.
         Allow configuration of None values.
 
         Parameters
@@ -132,9 +136,11 @@ class Configurator:
 
         """
 
-        if self.parser.get_default(key) == value or self.config[key] is None:
+        # parameter not changed or None
+        if self.parser.get_default(key) == self.config[key] or self.config[key] is None:
             return
 
+        # parameter already set
         if key in self.config and self.config[key] != value:
             self._logger.error(
                 "Inconsistent configuration parameter ({}) definition ({} vs {})".format(
@@ -142,21 +148,30 @@ class Configurator:
                 )
             )
             raise InvalidConfigurationParameter
-        self.config[key] = value
 
     def _fillFromConfigFile(self):
         """
         Read and fill configuration parameters from yaml file.
-        Use argparse config parameter checker (parse all config parameters again)
+
+        Raises
+        ------
+        FileNotFoundError
+           if configuration file has not been found.
 
         """
 
         try:
+            print("AAAAA", self.config["config_file"])
             with open(self.config["config_file"], "r") as stream:
                 _config_dict = yaml.safe_load(stream)
             self._fillFromConfigDict(_config_dict)
         except TypeError:
             pass
+        except FileNotFoundError:
+            self._logger.error(
+                "Configuration file not found: {}".format(self.config["config_file"])
+            )
+            raise
 
     def _fillFromEnvironmentalVariables(self):
         """
@@ -204,6 +219,44 @@ class Configurator:
             return _list_args
 
         try:
-            return list(input_var)
+            return [str(value) for value in list(input_var)]
         except TypeError:
             return []
+
+    @staticmethod
+    def _convert_stringnone_to_none(input_dict):
+        """
+        Convert string type 'None' to type None.
+
+        TODO check for a better solution here; argparse returns None as str.
+
+        Parameters
+        ----------
+        input_dict
+            Dictionary with values to be converted.
+
+        """
+
+        for key, value in input_dict.items():
+            input_dict[key] = None if value == "None" else value
+
+        return input_dict
+
+    def _fillConfig(self, input_container):
+        """
+        Fill configuration dictionary.
+
+        Parameters
+        ----------
+        input_container
+            List or dictionary with configuration updates.
+
+        """
+
+        self.config = self._convert_stringnone_to_none(
+            vars(
+                self.parser.parse_args(
+                    self._arglistFromConfig(self.config) + self._arglistFromConfig(input_container)
+                )
+            )
+        )
