@@ -39,8 +39,7 @@
 
 import logging
 
-import simtools.config as cfg
-import simtools.util.commandline_parser as argparser
+import simtools.configuration as configurator
 import simtools.util.general as gen
 from simtools.layout import layout_array
 
@@ -61,14 +60,14 @@ def _parse(description=None):
 
     """
 
-    parser = argparser.CommandLineParser(description=description)
+    config = configurator.Configurator(description=description)
 
-    parser.add_argument(
+    config.parser.add_argument(
         "--array_element_list",
         help="list of array element positions (ecsv format)",
         required=True,
     )
-    parser.add_argument(
+    config.parser.add_argument(
         "--compact",
         help="compact output (in requested coordinate system)",
         required=False,
@@ -79,7 +78,7 @@ def _parse(description=None):
             "mercator",
         ],
     )
-    parser.add_argument(
+    config.parser.add_argument(
         "--export",
         help="export array element list to file (in requested coordinate system)",
         required=False,
@@ -90,34 +89,34 @@ def _parse(description=None):
             "mercator",
         ],
     )
-    parser.add_argument(
+    config.parser.add_argument(
         "--use_corsika_telescope_height",
         help="Use CORSIKA coordinates for telescope heights (requires CORSIKA observeration level)",
         required=False,
         default=False,
         action="store_true",
     )
-    parser.initialize_default_arguments(add_workflow_config=False)
-    return parser.parse_args()
+    return config.initialize(add_workflow_config=False)
 
 
 def main():
 
-    args = _parse(description=("Print a list of array element positions"))
+    args_dict = _parse(description=("Print a list of array element positions"))
 
     _logger = logging.getLogger()
-    _logger.setLevel(gen.getLogLevelFromUser(args.log_level))
+    _logger.setLevel(gen.getLogLevelFromUser(args_dict["log_level"]))
 
-    cfg.setConfigFileName(args.config_file)
-
-    layout = layout_array.LayoutArray()
-    layout.readTelescopeListFile(args.array_element_list)
+    layout = layout_array.LayoutArray(args_dict=args_dict)
+    layout.readTelescopeListFile(args_dict["array_element_list"])
     layout.convertCoordinates()
-    if args.export is not None:
-        layout.exportTelescopeList(args.export, corsikaZ=args.use_corsika_telescope_height)
+    if args_dict["export"] is not None:
+        layout.exportTelescopeList(
+            args_dict["export"], corsikaZ=args_dict["use_corsika_telescope_height"]
+        )
     else:
         layout.printTelescopeList(
-            compact_printing=args.compact, corsikaZ=args.use_corsika_telescope_height
+            compact_printing=args_dict["compact"],
+            corsikaZ=args_dict["use_corsika_telescope_height"],
         )
 
 
