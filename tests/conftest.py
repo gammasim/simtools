@@ -199,3 +199,4 @@ def cfg_setup(tmp_test_directory, configuration_parameters):
     config_file = tmp_test_directory / "config-test.yml"
     write_configuration_test_file(config_file, dict(configuration_parameters))
     cfg.setConfigFileName(config_file)
+    return config_file
