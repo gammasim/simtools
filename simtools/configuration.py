@@ -192,8 +192,13 @@ class Configurator:
     @staticmethod
     def _arglistFromConfig(input_var):
         """
-        Convert input list of strings as needed by argparse. \
-        Add argument double dashes and handle boolean parameters.
+        Convert input list of strings as needed by argparse.
+
+        Special cases:
+        - boolean are expected to be handled as action="store_true" or "store_false"
+        - None values or zero length values are ignored (this means setting a parameter \
+            to none or "" is not allowed.
+
 
         Ignore values which are None or of zero length.
 
@@ -220,7 +225,7 @@ class Configurator:
             return _list_args
 
         try:
-            return [str(value) for value in list(input_var)]
+            return [str(value) for value in list(input_var) if value != "None"]
         except TypeError:
             return []
 
