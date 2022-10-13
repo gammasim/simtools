@@ -28,7 +28,7 @@ class Configurator:
 
     """
 
-    def __init__(self, config=None, label=None):
+    def __init__(self, config=None, label=None, description=None):
         """
         Configurator init.
 
@@ -46,7 +46,7 @@ class Configurator:
 
         self.configClassInit = config
         self.config = {}
-        self.parser = argparser.CommandLineParser(label)
+        self.parser = argparser.CommandLineParser(label, description)
 
     def initialize(self, add_workflow_config=False):
         """
@@ -161,7 +161,6 @@ class Configurator:
         """
 
         try:
-            print("AAAAA", self.config["config_file"])
             with open(self.config["config_file"], "r") as stream:
                 _config_dict = yaml.safe_load(stream)
             self._fillFromConfigDict(_config_dict)
@@ -196,6 +195,8 @@ class Configurator:
         Convert input list of strings as needed by argparse. \
         Add argument double dashes and handle boolean parameters.
 
+        Ignore values which are None or of zero length.
+
         Parameters
         ----------
         input_var: dict, list, None
@@ -211,7 +212,7 @@ class Configurator:
         if isinstance(input_var, dict):
             _list_args = []
             for key, value in input_var.items():
-                if not isinstance(value, bool):
+                if not isinstance(value, bool) and value is not None and len(str(value)) > 0:
                     _list_args.append("--" + key)
                     _list_args.append(str(value))
                 elif value:
