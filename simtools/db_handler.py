@@ -67,14 +67,16 @@ class DatabaseHandler:
 
     dbClient = None
 
-    def __init__(self):
+    def __init__(self, useMongoDB=True):
         """
         Initialize the DatabaseHandler class.
         """
         self._logger = logging.getLogger(__name__)
         self._logger.debug("Initialize DatabaseHandler")
 
-        if cfg.get("useMongoDB"):
+        self.useMongoDB = useMongoDB
+
+        if self.useMongoDB:
             if DatabaseHandler.dbClient is None:
                 with Lock():
                     self.dbDetails = self._readDetailsMongoDB()
@@ -155,7 +157,7 @@ class DatabaseHandler:
         _siteValidated = names.validateSiteName(site)
         _telModelNameValidated = names.validateTelescopeModelName(telescopeModelName)
 
-        if cfg.get("useMongoDB"):
+        if self.useMongoDB:
 
             # Only MongoDB supports tagged version
             _modelVersion = self._convertVersionToTagged(
@@ -211,7 +213,7 @@ class DatabaseHandler:
             Location where to write the files to.
         """
 
-        if cfg.get("useMongoDB"):
+        if self.useMongoDB:
             self._logger.debug("Exporting model files from MongoDB")
             for info in parameters.values():
                 if not info["File"]:
@@ -496,7 +498,7 @@ class DatabaseHandler:
         _site = names.validateSiteName(site)
         _modelVersion = names.validateModelVersionName(modelVersion)
 
-        if cfg.get("useMongoDB"):
+        if self.useMongoDB:
             _pars = self._getSiteParametersMongoDB(
                 DatabaseHandler.DB_CTA_SIMULATION_MODEL,
                 _site,
