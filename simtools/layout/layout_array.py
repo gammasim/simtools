@@ -86,7 +86,7 @@ class LayoutArray:
             self.readTelescopeListFile(telescopeListFile)
 
     @classmethod
-    def fromLayoutArrayName(cls, layoutArrayName, label=None):
+    def fromLayoutArrayName(cls, layoutArrayName, dataLocation, label=None):
         """
         Read telescope list from file for given layout name (e.g. South-4LST, North-Prod5, ...).
         Layout definitions are given in the `dataLocation//layout` path.
@@ -111,7 +111,7 @@ class LayoutArray:
         layout = cls(name=validLayoutArrayName, label=label)
 
         telescopeListFile = io.getInputDataFile(
-            "layout", "telescope_positions-{}.ecsv".format(validLayoutArrayName)
+            dataLocation, "layout", "telescope_positions-{}.ecsv".format(validLayoutArrayName)
         )
         layout.readTelescopeListFile(telescopeListFile)
 
@@ -123,7 +123,7 @@ class LayoutArray:
     def __getitem__(self, i):
         return self._telescopeList[i]
 
-    def _initializeCorsikaTelescope(self, corsikaDict=None):
+    def _initializeCorsikaTelescope(self, corsikaDict=None, dataLocation=None):
         """
         Initialize Dictionary for CORSIKA telescope parameters.
         Allow input from different sources (dictionary, yaml, ecsv header), which
@@ -137,16 +137,16 @@ class LayoutArray:
         """
         self._corsikaTelescope = {}
 
-        if corsikaDict:
+        if corsikaDict is not None:
             self._logger.debug(
                 "Initialize CORSIKA telescope parameters from dict: {}".format(corsikaDict)
             )
             self._initializeCorsikaTelescopeFromDict(corsikaDict)
-        else:
+        elif dataLocation is not None:
             self._logger.debug("Initialize CORSIKA telescope parameters from file")
             self._initializeCorsikaTelescopeFromDict(
                 collectDataFromYamlOrDict(
-                    io.getInputDataFile("corsika", "corsika_parameters.yml"), None
+                    io.getInputDataFile(dataLocation, "corsika", "corsika_parameters.yml"), None
                 )
             )
 

@@ -36,7 +36,7 @@ def test_ssts(set_simtools, telescopeModelName):
     ray.analyze(force=True)
 
 
-def test_rx(set_simtelarray, set_simtools):
+def test_rx(set_simtools):
     version = "current"
     label = "test-lst"
 

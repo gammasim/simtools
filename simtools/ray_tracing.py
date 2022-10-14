@@ -3,7 +3,6 @@ import shlex
 import subprocess
 from copy import copy
 from math import pi, tan
-from pathlib import Path
 
 import astropy.io.ascii
 import astropy.units as u
@@ -11,7 +10,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 from astropy.table import QTable
 
-import simtools.config as cfg
 import simtools.io_handler as io
 import simtools.util.general as gen
 from simtools import visualize
@@ -89,9 +87,10 @@ class RayTracing:
     def __init__(
         self,
         telescopeModel,
+        simtelSourcePath,
+        filesLocation,
+        dataLocation,
         label=None,
-        simtelSourcePath=None,
-        filesLocation=None,
         configData=None,
         configFile=None,
     ):
@@ -104,12 +103,12 @@ class RayTracing:
             Instance of the TelescopeModel class.
         label: str
             Instance label.
-        simtelSourcePath: str (or Path), optional
-            Location of sim_telarray installation. If not given, it will be taken from the
-            config.yml file.
-        filesLocation: str (or Path), optional
-            Parent location of the output files created by this class. If not given, it will be
-            taken from the config.yml file.
+        simtelSourcePath: str (or Path)
+            Location of sim_telarray installation.
+        filesLocation: str (or Path)
+            Parent location of the output files created by this class.
+        dataLocation: str (or Path)
+            Parent location of the data files.
         configData: dict.
             Dict containing the configurable parameters.
         configFile: str or Path
@@ -117,14 +116,16 @@ class RayTracing:
         """
         self._logger = logging.getLogger(__name__)
 
-        self._simtelSourcePath = Path(cfg.getConfigArg("simtelPath", simtelSourcePath))
-        self._filesLocation = cfg.getConfigArg("outputLocation", filesLocation)
+        self._simtelSourcePath = simtelSourcePath
+        self._filesLocation = filesLocation
 
         self._telescopeModel = self._validateTelescopeModel(telescopeModel)
 
         # Loading configData
         _configDataIn = gen.collectDataFromYamlOrDict(configFile, configData)
-        _parameterFile = io.getInputDataFile("parameters", "ray-tracing_parameters.yml")
+        _parameterFile = io.getInputDataFile(
+            dataLocation=dataLocation, parentDir="parameters", fileName="ray-tracing_parameters.yml"
+        )
         _parameters = gen.collectDataFromYamlOrDict(_parameterFile, None)
         self.config = gen.validateConfigData(_configDataIn, _parameters)
 
@@ -193,6 +194,7 @@ class RayTracing:
                 "label",
                 "simtelSourcePath",
                 "filesLocation",
+                "dataLocation",
             ],
             **kwargs
         )

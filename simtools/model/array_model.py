@@ -1,7 +1,6 @@
 import logging
 from copy import copy
 
-import simtools.config as cfg
 import simtools.io_handler as io
 from simtools import db_handler
 from simtools.layout.layout_array import LayoutArray
@@ -58,11 +57,13 @@ class ArrayModel:
 
     def __init__(
         self,
+        modelFilesLocations,
+        filesLocation,
+        dataFilesLocation,
         label=None,
+        mongoDBConfigFile=None,
         arrayConfigFile=None,
         arrayConfigData=None,
-        modelFilesLocations=None,
-        filesLocation=None,
     ):
         """
         ArrayModel.
@@ -75,12 +76,13 @@ class ArrayModel:
             Dict with the array config data.
         label: str, optional
             Instance label. Important for output file naming.
-        modelFilesLocation: str (or Path), optional
-            Location of the MC model files. If not given, it will be taken from the
-            config.yml file.
-        filesLocation: str (or Path), optional
-            Parent location of the output files created by this class. If not given, it will be
-            taken from the config.yml file.
+        modelFilesLocation: str (or Path)
+            Location of the MC model files.
+        filesLocation: str (or Path)
+            Parent location of the output files created by this class.
+        dataFilesLocation : str (or Path)
+            Parent location of the datafiles.
+
         """
         self._logger = logging.getLogger(__name__)
         self._logger.debug("Init ArrayModel")
@@ -91,19 +93,19 @@ class ArrayModel:
         self.layoutName = None
         self.modelVersion = None
 
-        self._modelFilesLocations = cfg.getConfigArg("modelFilesLocations", modelFilesLocations)
-        self._filesLocation = cfg.getConfigArg("outputLocation", filesLocation)
+        self._modelFilesLocations = modelFilesLocations
+        self._filesLocation = filesLocation
+        self._dataFilesLocation = dataFilesLocation
 
         arrayConfigData = collectDataFromYamlOrDict(arrayConfigFile, arrayConfigData)
         self._loadArrayData(arrayConfigData)
 
         self._setConfigFileDirectory()
 
-        self._buildArrayModel()
+        self._buildArrayModel(mongoDBConfigFile)
 
         self._telescopeModelFilesExported = False
         self._arrayModelFileExported = False
-        # End of init
 
     @property
     def numberOfTelescopes(self):
@@ -127,7 +129,9 @@ class ArrayModel:
         # Grabbing layout name and building LayoutArray
         self.layoutName = names.validateLayoutArrayName(arrayConfigData["layoutName"])
         self.layout = LayoutArray.fromLayoutArrayName(
-            self.site + "-" + self.layoutName, label=self.label
+            self.site + "-" + self.layoutName,
+            dataLocation=self._dataFilesLocation,
+            label=self.label,
         )
 
         # Model version
@@ -176,14 +180,20 @@ class ArrayModel:
             self._logger.info("Creating directory {}".format(self._configFileDirectory))
         return
 
-    def _buildArrayModel(self):
+    def _buildArrayModel(self, mongoDBConfigFile):
         """
         Build the site parameters and the list of telescope models,
         including reading the parameters from the DB.
+
+        Parameters
+        ----------
+        mongoDBConfigFile: str
+            MongoDB configuration file
+
         """
 
         # Getting site parameters from DB
-        db = db_handler.DatabaseHandler()
+        db = db_handler.DatabaseHandler(mongoDBConfigFile=mongoDBConfigFile)
         self._siteParameters = db.getSiteParameters(
             self.site, self.modelVersion, onlyApplicable=True
         )
@@ -251,8 +261,6 @@ class ArrayModel:
                 )
                 telModel.changeMultipleParameters(**_allParsToChange[telData.name])
                 telModel.setExtraLabel(telData.name)
-
-    # End of _buildArrayModel
 
     def _getSingleTelescopeInfoFromArrayConfig(self, telName, telSize):
         """

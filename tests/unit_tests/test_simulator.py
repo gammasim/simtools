@@ -70,16 +70,32 @@ def corsikaFile():
 
 
 @pytest.fixture
-def array_simulator(set_db, label, arrayConfigData):
+def array_simulator(label, arrayConfigData, args_dict):
 
-    arraySimulator = Simulator(label=label, simulator="simtel", configData=arrayConfigData)
+    arraySimulator = Simulator(
+        label=label,
+        simulator="simtel",
+        simulatorSourcePath=args_dict["simtelpath"],
+        dataFilesLocation=args_dict["data_path"],
+        modelFilesLocations=args_dict["model_path"],
+        filesLocation=args_dict["output_path"],
+        configData=arrayConfigData,
+    )
     return arraySimulator
 
 
 @pytest.fixture
-def shower_simulator(set_db, label, showerConfigData):
+def shower_simulator(label, showerConfigData, args_dict):
 
-    showerSimulator = Simulator(label=label, simulator="corsika", configData=showerConfigData)
+    showerSimulator = Simulator(
+        label=label,
+        simulator="corsika",
+        simulatorSourcePath=args_dict["simtelpath"],
+        dataFilesLocation=args_dict["data_path"],
+        modelFilesLocations=args_dict["model_path"],
+        filesLocation=args_dict["output_path"],
+        configData=showerConfigData,
+    )
     return showerSimulator
 
 

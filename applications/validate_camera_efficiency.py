@@ -45,39 +45,47 @@
 
 import logging
 
-import simtools.config as cfg
+import simtools.configuration as configurator
 import simtools.io_handler as io
-import simtools.util.commandline_parser as argparser
 import simtools.util.general as gen
 from simtools.camera_efficiency import CameraEfficiency
 from simtools.model.telescope_model import TelescopeModel
 
 
-def main():
+def _parse():
+    """
+    Parse command line configuratio
 
-    parser = argparser.CommandLineParser(
+    """
+    config = configurator.Configurator(
         description=(
             "Calculate the camera efficiency of the telescope requested. "
             "Plot the camera efficiency vs wavelength for cherenkov and NSB light."
         )
     )
-    parser.initialize_telescope_model_arguments()
-    parser.initialize_default_arguments(add_workflow_config=False)
+    config.parser.initialize_telescope_model_arguments()
+    config.parser.initialize_default_arguments(add_workflow_config=False)
 
-    args = parser.parse_args()
+    return config.initialize(add_workflow_config=False)
+
+
+def main():
+
+    args_dict = _parse()
     label = "validate_camera_efficiency"
-    cfg.setConfigFileName(args.config_file)
 
     logger = logging.getLogger()
-    logger.setLevel(gen.getLogLevelFromUser(args.log_level))
+    logger.setLevel(gen.getLogLevelFromUser(args_dict["log_level"]))
 
     # Output directory to save files related directly to this app
-    outputDir = io.getOutputDirectory(cfg.get("outputLocation"), label, dirType="application-plots")
+    outputDir = io.getOutputDirectory(args_dict["output_path"], label, dirType="application-plots")
 
     telModel = TelescopeModel(
-        site=args.site,
-        telescopeModelName=args.telescope,
-        modelVersion=args.model_version,
+        site=args_dict["site"],
+        modelFilesLocations=args_dict["model_path"],
+        filesLocation=args_dict["output_path"],
+        telescopeModelName=args_dict["telescope"],
+        modelVersion=args_dict["model_version"],
         label=label,
     )
 
@@ -86,7 +94,12 @@ def main():
 
     logger.info("Validating the camera efficiency of {}".format(telModel.name))
 
-    ce = CameraEfficiency(telescopeModel=telModel)
+    ce = CameraEfficiency(
+        telescopeModel=telModel,
+        simtelSourcePath=args_dict["simtelpath"],
+        filesLocation=args_dict["output_path"],
+        dataLocation=args_dict["data_path"],
+    )
     ce.simulate(force=True)
     ce.analyze(force=True)
 
