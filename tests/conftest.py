@@ -6,8 +6,23 @@ import pytest
 import yaml
 
 import simtools.config as cfg
+from simtools.configuration import Configurator
 
 logger = logging.getLogger()
+
+
+@pytest.fixture
+def args_dict(tmp_test_directory):
+
+    return Configurator().default_config(("output_path", str(tmp_test_directory)))
+
+
+@pytest.fixture
+def configurator(tmp_test_directory):
+
+    config = Configurator()
+    config.default_config(("output_path", str(tmp_test_directory)))
+    return config
 
 
 def write_dummy_dbdetails_file(filename="dbDetails.yml", **kwargs):
@@ -116,7 +131,7 @@ def set_db(db_connection, tmp_test_directory, configuration_parameters):
     - with database
     - without sim_telarray
 
-    (some code duplication with cfg_setup, set_simtelarray, set_simtools, set_db)
+    (some code duplication with set_simtools, set_db)
     """
 
     if len(str(db_connection)) == 0:
@@ -141,33 +156,13 @@ def simtelpath():
 
 
 @pytest.fixture
-def set_simtelarray(simtelpath, tmp_test_directory, configuration_parameters):
-    """
-    Configuration file for using simtools
-    - without database
-    - with sim_telarray
-
-    (some code duplication with cfg_setup, set_simtelarray, set_simtools, set_db)
-    """
-
-    if len(str(simtelpath)) == 0:
-        pytest.skip(reason="sim_telarray not found in {}".format(simtelpath))
-
-    config_file = tmp_test_directory / "config-simtelarray-test.yml"
-    config_dict = dict(configuration_parameters)
-    config_dict["simtelPath"] = str(simtelpath)
-    write_configuration_test_file(config_file, config_dict)
-    cfg.setConfigFileName(config_file)
-
-
-@pytest.fixture
 def set_simtools(db_connection, simtelpath, tmp_test_directory, configuration_parameters):
     """
     Configuration file for using simtools
     - with database
     - with sim_telarray
 
-    (some code duplication with cfg_setup, set_simtelarray, set_simtools, set_db)
+    (some code duplication with set_simtools, set_db)
     """
 
     if len(str(simtelpath)) == 0:
@@ -186,6 +181,11 @@ def set_simtools(db_connection, simtelpath, tmp_test_directory, configuration_pa
     cfg.setConfigFileName(config_file)
 
 
+############################################################################
+############################################################################
+# TODO remove things below
+
+
 @pytest.fixture
 def cfg_setup(tmp_test_directory, configuration_parameters):
     """
@@ -193,8 +193,10 @@ def cfg_setup(tmp_test_directory, configuration_parameters):
     - without database
     - without sim_telarray
 
-    (some code duplication with cfg_setup, set_simtelarray, set_simtools, set_db)
+    (some code duplication with set_simtools, set_db)
     """
+
+    logger.warning("Using depreciated cfg_setup")
 
     config_file = tmp_test_directory / "config-test.yml"
     write_configuration_test_file(config_file, dict(configuration_parameters))
