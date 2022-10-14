@@ -14,14 +14,14 @@ logger = logging.getLogger()
 @pytest.fixture
 def args_dict(tmp_test_directory):
 
-    return Configurator().default_config(("output_path", str(tmp_test_directory)))
+    return Configurator().default_config(("--output_path", str(tmp_test_directory)))
 
 
 @pytest.fixture
 def configurator(tmp_test_directory):
 
     config = Configurator()
-    config.default_config(("output_path", str(tmp_test_directory)))
+    config.default_config(("--output_path", str(tmp_test_directory)))
     return config
 
 
