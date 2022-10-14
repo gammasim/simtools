@@ -4,12 +4,10 @@ import datetime
 import logging
 from pathlib import Path
 
-import simtools.config as cfg
-
 __all__ = ["getOutputDirectory", "getOutputFile", "getInputDataFile"]
 
 
-def getOutputDirectory(filesLocation=None, label=None, dirType=None, test=False):
+def getOutputDirectory(filesLocation, label=None, dirType=None, test=False):
     """
     Get the output directory for the directory type dirType
 
@@ -31,10 +29,8 @@ def getOutputDirectory(filesLocation=None, label=None, dirType=None, test=False)
     _logger = logging.getLogger(__name__)
 
     if test:
-        outputDirectoryPrefix = Path(cfg.get("outputLocation")).joinpath("test-output")
+        outputDirectoryPrefix = Path(filesLocation).joinpath("test-output")
     else:
-        if filesLocation is None:
-            filesLocation = cfg.get("outputLocation")
         outputDirectoryPrefix = Path(filesLocation).joinpath("simtools-output")
 
     today = datetime.date.today()
@@ -51,7 +47,7 @@ def getOutputDirectory(filesLocation=None, label=None, dirType=None, test=False)
     return path.absolute()
 
 
-def getOutputFile(fileName, label=None, dirType=None, test=False):
+def getOutputFile(fileName, filesLocation, label=None, dirType=None, test=False):
     """
     Get path of an output file.
 
@@ -59,6 +55,8 @@ def getOutputFile(fileName, label=None, dirType=None, test=False):
     ----------
     filesName: str
         File name.
+    filesLocation: str, or Path
+        Main location of the output files.
     label: str
         Instance label.
     dirType: str
@@ -70,10 +68,14 @@ def getOutputFile(fileName, label=None, dirType=None, test=False):
     -------
     Path
     """
-    return getOutputDirectory(label=label, dirType=dirType, test=test).joinpath(fileName).absolute()
+    return (
+        getOutputDirectory(label=label, filesLocation=filesLocation, dirType=dirType, test=test)
+        .joinpath(fileName)
+        .absolute()
+    )
 
 
-def getInputDataFile(parentDir=None, fileName=None, test=False):
+def getInputDataFile(dataLocation, parentDir=None, fileName=None, test=False):
     """
     Get path of a data file, using the dataLocation taken from the config file.
 
@@ -81,6 +83,8 @@ def getInputDataFile(parentDir=None, fileName=None, test=False):
     ----------
     parentDir: str
         Parent directory of the file.
+    dataLocation: str, or Path
+        Main location of the data files.
     filesName: str
         File name.
     test: bool
@@ -94,5 +98,5 @@ def getInputDataFile(parentDir=None, fileName=None, test=False):
     if test:
         filePrefix = Path("tests/resources/")
     else:
-        filePrefix = Path(cfg.get("dataLocation")).joinpath(parentDir)
+        filePrefix = Path(dataLocation).joinpath(parentDir)
     return filePrefix.joinpath(fileName).absolute()
