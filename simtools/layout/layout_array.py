@@ -51,7 +51,6 @@ class LayoutArray:
         self,
         label=None,
         name=None,
-        args_dict=None,
         layoutCenterData=None,
         corsikaTelescopeData=None,
         telescopeListFile=None,
@@ -65,8 +64,6 @@ class LayoutArray:
             Name of the layout.
         label: str
             Instance label.
-        args_dict: dict
-            Dictionary with configuration parameters.
         layoutCenterData: dict
             Dict describing array center coordinates.
         corsikaTelescopeData: dict
@@ -80,7 +77,6 @@ class LayoutArray:
 
         self.label = label
         self.name = name
-        self.args_dict = args_dict
         self._telescopeList = []
         self._epsg = None
         if telescopeListFile is None:
@@ -528,7 +524,7 @@ class LayoutArray:
 
         return _meta
 
-    def _setTelescopeListFile(self, crsName):
+    def _setTelescopeListFile(self, crsName, outputPath):
         """
         Set file location for writing of telescope list
 
@@ -536,6 +532,8 @@ class LayoutArray:
         ----------
         crsName: str
             Name of coordinate system to be used for export.
+        outputPath: str or Path
+            Name of output path for file list.
 
         Returns
         -------
@@ -544,16 +542,14 @@ class LayoutArray:
 
         """
 
-        _outputDirectory = io.getOutputDirectory(
-            self.args_dict.get(["output_path"]), self.label, "layout"
-        )
+        _outputDirectory = io.getOutputDirectory(outputPath, self.label, "layout")
 
         _name = crsName if self.name is None else self.name + "-" + crsName
         self.telescopeListFile = _outputDirectory.joinpath(
             names.layoutTelescopeListFileName(_name, None)
         )
 
-    def exportTelescopeList(self, crsName, corsikaZ=False):
+    def exportTelescopeList(self, crsName, outputPath, corsikaZ=False):
         """
         Export array elements positions to ECSV file
 
@@ -561,6 +557,8 @@ class LayoutArray:
         ----------
         crsName: str
             Name of coordinate system to be used for export.
+        outputPath: str or Path
+            Name of output path for file list.
         corsikaZ: bool
             Write telescope height in CORSIKA coordinates (for CORSIKA system)
 
@@ -604,7 +602,7 @@ class LayoutArray:
         except IndexError:
             pass
 
-        self._setTelescopeListFile(crsName)
+        self._setTelescopeListFile(crsName, outputPath)
         self._logger.info("Exporting telescope list to {}".format(self.telescopeListFile))
         table.write(self.telescopeListFile, format="ascii.ecsv", overwrite=True)
 
