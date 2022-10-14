@@ -5,7 +5,6 @@ import uuid
 
 import pytest
 
-import simtools.config as cfg
 import simtools.io_handler as io
 from simtools import db_handler
 
@@ -37,8 +36,9 @@ def db_cleanup(db, random_id):
 def test_reading_db_lst(db):
 
     logger.info("----Testing reading LST-----")
+    assert 1 == 1
     pars = db.getModelParameters("north", "lst-1", "Current")
-    if cfg.get("useMongoDB"):
+    if db.useMongoDB:
         assert pars["parabolic_dish"]["Value"] == 1
         assert pars["camera_pixels"]["Value"] == 1855
     else:
@@ -50,7 +50,7 @@ def test_reading_db_mst_nc(db):
 
     logger.info("----Testing reading MST-NectarCam-----")
     pars = db.getModelParameters("north", "mst-NectarCam-D", "Current")
-    if cfg.get("useMongoDB"):
+    if db.useMongoDB:
         assert pars["camera_pixels"]["Value"] == 1855
     else:
         assert pars["camera_pixels"] == 1855
@@ -60,7 +60,7 @@ def test_reading_db_mst_fc(db):
 
     logger.info("----Testing reading MST-FlashCam-----")
     pars = db.getModelParameters("north", "mst-FlashCam-D", "Current")
-    if cfg.get("useMongoDB"):
+    if db.useMongoDB:
         assert pars["camera_pixels"]["Value"] == 1764
     else:
         assert pars["camera_pixels"] == 1764
@@ -70,7 +70,7 @@ def test_reading_db_sst(db):
 
     logger.info("----Testing reading SST-----")
     pars = db.getModelParameters("south", "sst-D", "Current")
-    if cfg.get("useMongoDB"):
+    if db.useMongoDB:
         assert pars["camera_pixels"]["Value"] == 2048
     else:
         assert pars["camera_pixels"] == 2048
@@ -284,14 +284,14 @@ def test_reading_db_sites(db):
 
     logger.info("----Testing reading La Palma parameters-----")
     pars = db.getSiteParameters("North", "Current")
-    if cfg.get("useMongoDB"):
+    if db.useMongoDB:
         assert pars["altitude"]["Value"] == 2158
     else:
         assert pars["altitude"] == 2158
 
     logger.info("----Testing reading Paranal parameters-----")
     pars = db.getSiteParameters("South", "Current")
-    if cfg.get("useMongoDB"):
+    if db.useMongoDB:
         assert pars["altitude"]["Value"] == 2147
     else:
         assert pars["altitude"] == 2147
