@@ -7,7 +7,6 @@ from pathlib import Path
 import astropy.units as u
 import numpy as np
 
-import simtools.config as cfg
 import simtools.io_handler as io
 import simtools.util.general as gen
 from simtools.corsika.corsika_runner import CorsikaRunner
@@ -110,10 +109,12 @@ class Simulator:
 
     def __init__(
         self,
+        simulator,
+        simulatorSourcePath,
+        filesLocation,
+        dataFilesLocation,
+        modelFilesLocations,
         label=None,
-        simulator=None,
-        filesLocation=None,
-        simulatorSourcePath=None,
         configData=None,
         configFile=None,
         test=False,
@@ -127,12 +128,15 @@ class Simulator:
             Instance label.
         simulator: choices: [simtel, corsika]
             implemented are sim_telarray and CORSIKA
-        filesLocation: str or Path.
-            Location of the output files. If not given, it will be set from \
-            the config.yml file.
         simulatorSourcePath: str or Path
             Location of exectutables for simulation software \
                 (e.g. path with CORSIKA or sim_telarray)
+        dataFilesLocation: str or Path.
+            Location of the data files.
+        modelFilesLocation: str or Path.
+            Location of the MC model files.
+        filesLocation: str (or Path)
+            Parent location of the output files created by this class.
         configData: dict
             Dict with shower or array model configuration data.
         configFile: str or Path
@@ -149,7 +153,9 @@ class Simulator:
         self._results = defaultdict(list)
         self.test = test
 
-        self._setFileLocations(filesLocation, simulatorSourcePath)
+        self._setFileLocations(
+            filesLocation, dataFilesLocation, modelFilesLocations, simulatorSourcePath
+        )
         self._loadConfigurationAndSimulationModel(configData, configFile)
 
         self._setSimulationRunner()
@@ -173,22 +179,29 @@ class Simulator:
             raise gen.InvalidConfigData
         self.simulator = simulator.lower()
 
-    def _setFileLocations(self, filesLocation=None, simulatorSourcePath=None):
+    def _setFileLocations(
+        self, filesLocation, dataFilesLocation, modelFilesLocations, simulatorSourcePath
+    ):
         """
         Set file locations, input and output directories
 
         Parameters
         ----------
         filesLocation: str or Path.
-            Location of the output files. If not given, it will be set from \
-            the config.yml file.
+            Location of the output files.
+        dataFilesLocations: str or Path.
+            Location of the data files.
+        modelFilesLocations: str or Path.
+            Location of the model data files.
         simulatorSourcePath: str or Path
             Location of source of the sim_telarray/CORSIKA package.
 
         """
 
-        self._simulatorSourcePath = Path(cfg.getConfigArg("simtelPath", simulatorSourcePath))
-        self._filesLocation = Path(cfg.getConfigArg("outputLocation", filesLocation))
+        self._simulatorSourcePath = Path(simulatorSourcePath)
+        self._filesLocation = Path(filesLocation)
+        self._dataFilesLocation = Path(dataFilesLocation)
+        self._modelFilesLocations = Path(modelFilesLocations)
         self._outputDirectory = io.getOutputDirectory(
             self._filesLocation, self.label, self.simulator
         )
@@ -257,11 +270,19 @@ class Simulator:
         """
         _arrayModelConfig, _restConfig = self._collectArrayModelParameters(configData)
 
-        _parameterFile = io.getInputDataFile("parameters", "array-simulator_parameters.yml")
+        _parameterFile = io.getInputDataFile(
+            self._dataFilesLocation, "parameters", "array-simulator_parameters.yml"
+        )
         _parameters = gen.collectDataFromYamlOrDict(_parameterFile, None)
         self.config = gen.validateConfigData(_restConfig, _parameters)
 
-        self.arrayModel = ArrayModel(label=self.label, arrayConfigData=_arrayModelConfig)
+        self.arrayModel = ArrayModel(
+            modelFilesLocations=self._modelFilesLocations,
+            dataFilesLocation=self._dataFilesLocation,
+            filesLocation=self._filesLocation,
+            label=self.label,
+            arrayConfigData=_arrayModelConfig,
+        )
 
     def _validateRunListAndRange(self, runList, runRange):
         """
@@ -399,7 +420,7 @@ class Simulator:
             self._fillResults(file, run)
             self.runs.append(run)
 
-    def simulate(self, inputFileList=None, submitCommand=None, extraCommands=None):
+    def simulate(self, inputFileList, submitCommand, extraCommands=None):
         """
         Submit a run script as a job. The submit command can be given by \
         submitCommand or it will be taken from the config.yml file.
@@ -415,8 +436,7 @@ class Simulator:
 
         """
 
-        subCmd = submitCommand if submitCommand is not None else cfg.get("submissionCommand")
-        self._logger.info("Submission command: {}".format(subCmd))
+        self._logger.info("Submission command: {}".format(submitCommand))
 
         runs_and_files_to_submit = self._getRunsAndFilesToSubmit(inputFileList=inputFileList)
         self._logger.info("Starting submission for {} runs".format(len(runs_and_files_to_submit)))
@@ -427,7 +447,7 @@ class Simulator:
                 runNumber=run, inputFile=file, extraCommands=extraCommands
             )
 
-            job_manager = JobManager(submitCommand=subCmd, test=self.test)
+            job_manager = JobManager(submitCommand=submitCommand, test=self.test)
             job_manager.submit(
                 run_script=runScript,
                 run_out_file=self._simulationRunner.getSubLogFile(runNumber=run, mode=""),

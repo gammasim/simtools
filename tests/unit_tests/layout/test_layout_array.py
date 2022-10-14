@@ -37,27 +37,32 @@ def corsikaTelescopeDataDict():
 
 
 @pytest.fixture
-def db(set_db):
-    db = db_handler.DatabaseHandler()
+def db(db_connection):
+    db = db_handler.DatabaseHandler(mongoDBConfigFile=str(db_connection))
     return db
 
 
 @pytest.fixture
-def telescopeTestFile(db):
+def telescopeTestFile(db, args_dict):
     testFileName = "telescope_positions-North-TestLayout.ecsv"
     db.exportFileDB(
         dbName="test-data",
-        dest=io.getOutputDirectory(dirType="model", test=True),
+        dest=io.getOutputDirectory(
+            filesLocation=args_dict["output_path"], dirType="model", test=True
+        ),
         fileName=testFileName,
     )
 
-    cfgFile = gen.findFile(testFileName, io.getOutputDirectory(dirType="model", test=True))
+    cfgFile = gen.findFile(
+        testFileName,
+        io.getOutputDirectory(filesLocation=args_dict["output_path"], dirType="model", test=True),
+    )
     return cfgFile
 
 
-def test_fromLayoutArrayName():
+def test_fromLayoutArrayName(args_dict):
 
-    layout = LayoutArray.fromLayoutArrayName("south-TestLayout")
+    layout = LayoutArray.fromLayoutArrayName("south-TestLayout", args_dict["data_path"])
 
     assert 99 == layout.getNumberOfTelescopes()
 
@@ -82,10 +87,10 @@ def test_initializeCoordinateSystems(layoutCenterDataDict):
     assert _N.value == pytest.approx(3185067.0, 1.0)
 
 
-def test_initializeCorsikaTelescopeFromFile(corsikaTelescopeDataDict):
+def test_initializeCorsikaTelescopeFromFile(corsikaTelescopeDataDict, args_dict):
 
     layout = LayoutArray(name="testLayout")
-    layout._initializeCorsikaTelescope()
+    layout._initializeCorsikaTelescope(dataLocation=args_dict["data_path"])
 
     for key, value in corsikaTelescopeDataDict["corsika_sphere_radius"].items():
         assert value == layout._corsikaTelescope["corsika_sphere_radius"][key]

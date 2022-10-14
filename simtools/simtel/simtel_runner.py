@@ -1,8 +1,6 @@
 import logging
 import os
-from pathlib import Path
 
-import simtools.config as cfg
 import simtools.util.general as gen
 from simtools.model.array_model import ArrayModel
 from simtools.model.telescope_model import TelescopeModel
@@ -39,9 +37,9 @@ class SimtelRunner:
 
     def __init__(
         self,
+        simtelSourcePath,
+        filesLocation,
         label=None,
-        simtelSourcePath=None,
-        filesLocation=None,
     ):
         """
         SimtelRunner.
@@ -59,11 +57,11 @@ class SimtelRunner:
         """
         self._logger = logging.getLogger(__name__)
 
-        self._simtelSourcePath = Path(cfg.getConfigArg("simtelPath", simtelSourcePath))
+        self._simtelSourcePath = simtelSourcePath
         self.label = label
 
         # File location
-        self._filesLocation = cfg.getConfigArg("outputLocation", filesLocation)
+        self._filesLocation = filesLocation
 
         self.RUNS_PER_SET = 1
 
@@ -228,11 +226,6 @@ class SimtelRunner:
         what is given in config.yml
         """
         extra = gen.copyAsList(extra) if extra is not None else list()
-
-        extraFromConfig = cfg.get("extraCommands")
-        extraFromConfig = gen.copyAsList(extraFromConfig) if extraFromConfig is not None else list()
-
-        extra.extend(extraFromConfig)
         return extra
 
     @staticmethod
