@@ -3,7 +3,6 @@ import os
 from copy import copy
 from pathlib import Path
 
-import simtools.config as cfg
 import simtools.io_handler as io
 import simtools.util.general as gen
 from simtools.corsika.corsika_config import (
@@ -87,10 +86,10 @@ class CorsikaRunner:
         self,
         site,
         layoutName,
+        simtelSourcePath,
+        filesLocation,
         label=None,
         keepSeeds=False,
-        filesLocation=None,
-        simtelSourcePath=None,
         corsikaParametersFile=None,
         corsikaConfigData=None,
         corsikaConfigFile=None,
@@ -132,8 +131,8 @@ class CorsikaRunner:
 
         self._keepSeeds = keepSeeds
 
-        self._simtelSourcePath = Path(cfg.getConfigArg("simtelPath", simtelSourcePath))
-        self._filesLocation = cfg.getConfigArg("outputLocation", filesLocation)
+        self._simtelSourcePath = simtelSourcePath
+        self._filesLocation = filesLocation
         self._outputDirectory = io.getOutputDirectory(self._filesLocation, self.label, "corsika")
         self._outputDirectory.mkdir(parents=True, exist_ok=True)
         self._logger.debug("Creating output dir {}, if needed,".format(self._outputDirectory))
@@ -300,11 +299,6 @@ class CorsikaRunner:
         what is given in config.yml
         """
         extra = gen.copyAsList(extra) if extra is not None else list()
-
-        extraFromConfig = cfg.get("extraCommands")
-        extraFromConfig = gen.copyAsList(extraFromConfig) if extraFromConfig is not None else list()
-
-        extra.extend(extraFromConfig)
         return extra
 
     def hasRunLogFile(self, runNumber=None):

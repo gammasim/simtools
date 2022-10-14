@@ -5,7 +5,6 @@ import astropy.units as u
 import numpy as np
 from astropy.io.misc import yaml
 
-import simtools.config as cfg
 import simtools.io_handler as io
 import simtools.util.general as gen
 from simtools.layout.layout_array import LayoutArray
@@ -88,8 +87,8 @@ class CorsikaConfig:
         self,
         site,
         layoutName,
+        filesLocation,
         label=None,
-        filesLocation=None,
         corsikaConfigData=None,
         corsikaConfigFile=None,
         corsikaParametersFile=None,
@@ -123,7 +122,7 @@ class CorsikaConfig:
         self.label = label
         self.site = names.validateSiteName(site)
 
-        self._filesLocation = cfg.getConfigArg("outputLocation", filesLocation)
+        self._filesLocation = filesLocation
 
         # Grabbing layout name and building LayoutArray
         self.layoutName = names.validateLayoutArrayName(layoutName)

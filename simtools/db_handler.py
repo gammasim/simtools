@@ -11,7 +11,6 @@ from bson.objectid import ObjectId
 from pymongo import MongoClient
 from pymongo.errors import BulkWriteError
 
-import simtools.config as cfg
 import simtools.util.general as gen
 from simtools.util import names
 from simtools.util.model import getTelescopeClass
@@ -67,7 +66,7 @@ class DatabaseHandler:
 
     dbClient = None
 
-    def __init__(self, useMongoDB=True):
+    def __init__(self, useMongoDB=True, mongoDBConfigFile=None, modelFilesLocations=None):
         """
         Initialize the DatabaseHandler class.
         """
@@ -75,6 +74,8 @@ class DatabaseHandler:
         self._logger.debug("Initialize DatabaseHandler")
 
         self.useMongoDB = useMongoDB
+        self.mongoDBConfigFile = mongoDBConfigFile
+        self.modelFilesLocations = modelFilesLocations
 
         if self.useMongoDB:
             if DatabaseHandler.dbClient is None:
@@ -82,10 +83,7 @@ class DatabaseHandler:
                     self.dbDetails = self._readDetailsMongoDB()
                     DatabaseHandler.dbClient = self._openMongoDB()
 
-    # END of _init_
-
-    @staticmethod
-    def _readDetailsMongoDB():
+    def _readDetailsMongoDB(self):
         """
         Read the MongoDB details (server, user, pass, etc.) from an external file.
 
@@ -96,10 +94,8 @@ class DatabaseHandler:
         """
 
         dbDetails = dict()
-        dbDetailsFile = cfg.get("mongoDBConfigFile")
-        with open(dbDetailsFile, "r") as stream:
+        with open(self.mongoDBConfigFile, "r") as stream:
             dbDetails = yaml.safe_load(stream)
-
         return dbDetails
 
     def _openMongoDB(self):
@@ -248,7 +244,7 @@ class DatabaseHandler:
 
         destFile = Path(destDir).joinpath(fileName)
         try:
-            file = gen.findFile(fileName, cfg.get("modelFilesLocations"))
+            file = gen.findFile(fileName, self.modelFilesLocations)
         except FileNotFoundError:
             if noFileOk:
                 self._logger.debug("File {} not found but noFileOk".format(fileName))
@@ -467,7 +463,7 @@ class DatabaseHandler:
         """
 
         _fileNameDB = "parValues-{}.yml".format(telescopeNameYaml)
-        _yamlFile = gen.findFile(_fileNameDB, cfg.get("modelFilesLocations"))
+        _yamlFile = gen.findFile(_fileNameDB, self.modelFilesLocations)
         self._logger.debug("Reading DB file {}".format(_yamlFile))
         with open(_yamlFile, "r") as stream:
             _allPars = yaml.safe_load(stream)
@@ -529,7 +525,7 @@ class DatabaseHandler:
 
         siteYaml = "lapalma" if site == "North" else "paranal"
 
-        yamlFile = gen.findFile("parValues-Sites.yml", cfg.get("modelFilesLocations"))
+        yamlFile = gen.findFile("parValues-Sites.yml", self.modelFilesLocations)
         self._logger.info("Reading DB file {}".format(yamlFile))
         with open(yamlFile, "r") as stream:
             _allParsVersions = yaml.safe_load(stream)

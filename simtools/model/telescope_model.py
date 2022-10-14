@@ -5,7 +5,6 @@ from copy import copy
 import astropy.io.ascii
 import numpy as np
 
-import simtools.config as cfg
 import simtools.io_handler as io
 import simtools.util.general as gen
 from simtools import db_handler
@@ -78,11 +77,11 @@ class TelescopeModel:
         self,
         site,
         telescopeModelName,
+        modelFilesLocations,
+        filesLocation,
+        mongoDBConfigFile=None,
         modelVersion="Current",
         label=None,
-        modelFilesLocations=None,
-        filesLocation=None,
-        readFromDB=True,
     ):
         """
         TelescopeModel.
@@ -103,8 +102,6 @@ class TelescopeModel:
         filesLocation: str (or Path), optional
             Parent location of the output files created by this class. If not given, it will be \
             taken from the config.yml file.
-        readFromDB: bool, optional
-            If True, parameters will be loaded from the DB at the init level. (default=True).
         """
         self._logger = logging.getLogger(__name__)
         self._logger.debug("Init TelescopeModel")
@@ -115,13 +112,12 @@ class TelescopeModel:
         self.label = label
         self._extraLabel = None
 
-        self._modelFilesLocations = cfg.getConfigArg("modelFilesLocations", modelFilesLocations)
-        self._filesLocation = cfg.getConfigArg("outputLocation", filesLocation)
+        self._modelFilesLocations = modelFilesLocations
+        self._filesLocation = filesLocation
 
         self._parameters = dict()
 
-        if readFromDB:
-            self._loadParametersFromDB()
+        self._loadParametersFromDB(mongoDBConfigFile)
 
         self._setConfigFileDirectoryAndName()
         self._isConfigFileUpToDate = False
@@ -201,7 +197,6 @@ class TelescopeModel:
             label=label,
             modelFilesLocations=modelFilesLocations,
             filesLocation=filesLocation,
-            readFromDB=False,
         )
 
         def _processLine(words):
@@ -283,13 +278,16 @@ class TelescopeModel:
         )
         self._configFilePath = self._configFileDirectory.joinpath(configFileName)
 
-    def _loadParametersFromDB(self):
+    def _loadParametersFromDB(self, mongoDBConfigFile):
         """Read parameters from DB and store them in _parameters."""
+
+        if mongoDBConfigFile is None:
+            return
 
         self._logger.debug("Reading telescope parameters from DB")
 
         self._setConfigFileDirectoryAndName()
-        db = db_handler.DatabaseHandler()
+        db = db_handler.DatabaseHandler(mongoDBConfigFile=mongoDBConfigFile)
         self._parameters = db.getModelParameters(
             self.site, self.name, self.modelVersion, onlyApplicable=True
         )
@@ -743,7 +741,7 @@ class TelescopeModel:
             return False
 
         fileName = self.getParameterValue(par)
-        file = gen.findFile(fileName, cfg.get(par="modelFilesLocations"))
+        file = gen.findFile(fileName, self._modelFilesLocations)
         with open(file, "r") as f:
             is2D = "@RPOL@" in f.read()
         return is2D

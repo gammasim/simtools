@@ -5,23 +5,26 @@ from pathlib import Path
 import pytest
 import yaml
 
-import simtools.config as cfg
 from simtools.configuration import Configurator
 
 logger = logging.getLogger()
 
 
 @pytest.fixture
-def args_dict(tmp_test_directory):
+def args_dict(tmp_test_directory, simtelpath):
 
-    return Configurator().default_config(("--output_path", str(tmp_test_directory)))
+    return Configurator().default_config(
+        ("--output_path", str(tmp_test_directory), "--simtelpath", str(simtelpath))
+    )
 
 
 @pytest.fixture
 def configurator(tmp_test_directory):
 
     config = Configurator()
-    config.default_config(("--output_path", str(tmp_test_directory)))
+    config.default_config(
+        ("--output_path", str(tmp_test_directory), "--simtelpath", str(simtelpath))
+    )
     return config
 
 
@@ -125,28 +128,6 @@ def db_connection(tmp_test_directory):
 
 
 @pytest.fixture
-def set_db(db_connection, tmp_test_directory, configuration_parameters):
-    """
-    Configuration file for using simtools
-    - with database
-    - without sim_telarray
-
-    (some code duplication with set_simtools, set_db)
-    """
-
-    if len(str(db_connection)) == 0:
-        pytest.skip(reason="Test requires database (DB) connection")
-
-    config_file = tmp_test_directory / "config-db-test.yml"
-    config_dict = dict(configuration_parameters)
-    config_dict["useMongoDB"] = True
-    config_dict["mongoDBConfigFile"] = str(db_connection)
-
-    write_configuration_test_file(config_file, config_dict)
-    cfg.setConfigFileName(config_file)
-
-
-@pytest.fixture
 def simtelpath():
     simtelpath = Path(os.path.expandvars("$SIMTELPATH"))
     if simtelpath.exists():
@@ -162,7 +143,6 @@ def set_simtools(db_connection, simtelpath, tmp_test_directory, configuration_pa
     - with database
     - with sim_telarray
 
-    (some code duplication with set_simtools, set_db)
     """
 
     if len(str(simtelpath)) == 0:
@@ -178,27 +158,3 @@ def set_simtools(db_connection, simtelpath, tmp_test_directory, configuration_pa
     config_dict["submissionCommand"] = "local"
 
     write_configuration_test_file(config_file, config_dict)
-    cfg.setConfigFileName(config_file)
-
-
-############################################################################
-############################################################################
-# TODO remove things below
-
-
-@pytest.fixture
-def cfg_setup(tmp_test_directory, configuration_parameters):
-    """
-    Configuration file for using simtools
-    - without database
-    - without sim_telarray
-
-    (some code duplication with set_simtools, set_db)
-    """
-
-    logger.warning("Using depreciated cfg_setup")
-
-    config_file = tmp_test_directory / "config-test.yml"
-    write_configuration_test_file(config_file, dict(configuration_parameters))
-    cfg.setConfigFileName(config_file)
-    return config_file
