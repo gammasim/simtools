@@ -287,7 +287,7 @@ def test_altitude_transformations():
         )
 
 
-def test_convert_all(cfg_setup, crs_wgs84, crs_local, crs_utm):
+def test_convert_all(crs_wgs84, crs_local, crs_utm):
 
     tel = TelescopePosition(name="LST-01")
 
