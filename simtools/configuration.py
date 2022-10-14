@@ -48,6 +48,14 @@ class Configurator:
         self.config = {}
         self.parser = argparser.CommandLineParser(label, description)
 
+    def default_config(self):
+        """
+        Returns dictionary of default configuration
+
+        """
+        self.parser.initialize_default_arguments()
+        return vars(self.parser.parse_args([]))
+
     def initialize(self, add_workflow_config=False):
         """
         Initialize configuration from command line, configuration file, class config, \

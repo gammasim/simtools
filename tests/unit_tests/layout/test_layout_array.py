@@ -55,7 +55,7 @@ def telescopeTestFile(db):
     return cfgFile
 
 
-def test_fromLayoutArrayName(cfg_setup):
+def test_fromLayoutArrayName():
 
     layout = LayoutArray.fromLayoutArrayName("south-TestLayout")
 
@@ -93,7 +93,7 @@ def test_initializeCorsikaTelescopeFromFile(corsikaTelescopeDataDict):
         assert value == layout._corsikaTelescope["corsika_sphere_center"][key]
 
 
-def test_read_tel_list(cfg_setup, telescopeTestFile):
+def test_read_tel_list(telescopeTestFile):
 
     layout = LayoutArray(name="testLayout")
     layout.readTelescopeListFile(telescopeTestFile)
@@ -105,7 +105,7 @@ def test_read_tel_list(cfg_setup, telescopeTestFile):
     assert 19 == layout_2.getNumberOfTelescopes()
 
 
-def test_add_tel(cfg_setup, telescopeTestFile):
+def test_add_tel(telescopeTestFile):
 
     layout = LayoutArray(name="testLayout")
     layout.readTelescopeListFile(telescopeTestFile)
@@ -118,7 +118,7 @@ def test_add_tel(cfg_setup, telescopeTestFile):
     assert layout._telescopeList[-1].getAltitude().value == pytest.approx(2192.0)
 
 
-def test_build_layout(cfg_setup, layoutCenterDataDict, corsikaTelescopeDataDict):
+def test_build_layout(layoutCenterDataDict, corsikaTelescopeDataDict, tmp_test_directory):
 
     layout = LayoutArray(
         label="test_layout",
@@ -154,7 +154,7 @@ def test_build_layout(cfg_setup, layoutCenterDataDict, corsikaTelescopeDataDict)
 
     layout.convertCoordinates()
     layout.printTelescopeList()
-    layout.exportTelescopeList("corsika")
+    layout.exportTelescopeList("corsika", outputPath=str(tmp_test_directory + "/output/"))
 
     # Building a second layout from the file exported by the first one
     layout_2 = LayoutArray("test_layout_2")
@@ -166,7 +166,7 @@ def test_build_layout(cfg_setup, layoutCenterDataDict, corsikaTelescopeDataDict)
     )
 
 
-def test_converting_center_coordinates(cfg_setup, layoutCenterDataDict, corsikaTelescopeDataDict):
+def test_converting_center_coordinates(layoutCenterDataDict, corsikaTelescopeDataDict):
 
     layout = LayoutArray(
         label="test_layout",
@@ -202,7 +202,7 @@ def test_getCorsikaInputList(layoutCenterDataDict, corsikaTelescopeDataDict, tel
     assert corsikaInputList == "TELESCOPE\t 57.500E2\t 57.500E2\t 0.000E2\t 12.500E2\t # LST-01\n"
 
 
-def test_altitudeFromCorsikaZ(cfg_setup, layoutCenterDataDict, corsikaTelescopeDataDict):
+def test_altitudeFromCorsikaZ(layoutCenterDataDict, corsikaTelescopeDataDict):
 
     layout = LayoutArray(
         label="test_layout",
