@@ -15,7 +15,7 @@ logger.setLevel(logging.DEBUG)
 
 
 # This module perform tests on the application by running them with a set
-# of arguments. Each applications to be tested correspond to an key in
+# of arguments. Each application to be tested corresponds to a key in
 # APP_LIST, that contains a list of list of arguments to be tested, so that
 # the same application can be tested with a number of different set of arguments.
 
