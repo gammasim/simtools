@@ -316,22 +316,36 @@ def test_separating_get_and_write(db):
         assert io.getOutputFile(fileNow, dirType="model", test=True).exists()
 
 
-def test_insert_files_db(db):
+def test_insert_and_get_files_db(db):
 
     logger.info("----Testing inserting files to the DB-----")
     logger.info(
         "Creating a temporary file in {}".format(io.getOutputDirectory(dirType="model", test=True))
     )
-    fileName = io.getOutputDirectory(dirType="model", test=True) / "test_file.dat"
-    with open(fileName, "w") as f:
-        f.write("# This is a test file")
+    outputDir = io.getOutputDirectory(dirType="model", test=True)
+    fileNames = ["test_file.dat", "test_file2.dat"]
+    for file in fileNames:
+        with open(outputDir / file, "w") as f:
+            f.write("# This is a test file")
+        file_id = db.insertFileToDB(outputDir / file, "sandbox")
+        assert file_id == db._getFileMongoDB("sandbox", file)._id
 
-    file_id = db.insertFileToDB(fileName, "sandbox")
-    assert file_id == db._getFileMongoDB("sandbox", "test_file.dat")._id
+    logger.debug("Getting files from DB to {}".format(outputDir))
+    db.exportFilesDB("sandbox", outputDir, fileNames)
+
+    logger.debug("Checking if files were written to {}".format(outputDir))
+    for file in fileNames:
+        assert io.getOutputFile(outputDir / file, dirType="model", test=True).exists()
 
     logger.info("Dropping the temporary files in the sandbox")
     db.dbClient["sandbox"]["fs.chunks"].drop()
     db.dbClient["sandbox"]["fs.files"].drop()
+
+    logger.info("Dropping the temporary files in the output directory")
+    io.deleteOutputFiles([outputDir / fileNames[step] for step in range(len(fileNames))])
+
+    for file in fileNames:
+        assert (outputDir / file).exists() == False
 
 
 def test_get_all_versions(db):
