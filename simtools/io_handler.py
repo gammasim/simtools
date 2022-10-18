@@ -110,7 +110,6 @@ def deleteOutputFile(fileName=None):
     Returns
     -------
     """
-    _logger = logging.getLogger(__name__)
     if fileName is not None:
         file_to_rem = Path(fileName)
         file_to_rem.unlink()
