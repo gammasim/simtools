@@ -198,6 +198,22 @@ class DatabaseHandler:
         file = self._getFileMongoDB(dbName, fileName)
         self._writeFileFromMongoToDisk(dbName, dest, file)
 
+    def exportFilesDB(self, dbName, dest, fileNames):
+        """
+        Get a list of files from the DB and write it to disk.
+
+        Parameters
+        ----------
+        dbName: str
+            Name of the DB to search in.
+        dest: str or Path
+            Location where to write the file to.
+        fileNames: list
+            List with the file names to download.
+        """
+        for fileName in fileNames:
+            self.exportFileDB(dbName, dest, fileName)
+
     def exportModelFiles(self, parameters, dest):
         """
         Export all the files in a model from the DB (Mongo or yaml) and write them to disk.

@@ -3,7 +3,7 @@
 """
     Summary
     -------
-    This application retrieves a file from the DB.
+    This application gets a file from the DB.
 
     The name and location of the file are required.
     This application should complement the ones for getting parameters \
@@ -11,14 +11,14 @@
 
     Command line arguments
     ----------------------
-    fileName (str, required)
-        Name of the file to retrieve including the full path. \
-        i.e., python applications/retrieve_file_from_db.py -f file_1.dat.
+    fileNames (str or list of str, required)
+        Name of the file(s) to get including the full path. \
+        i.e., python applications/get_file_from_db.py -f file_1.dat.
     outputFolder (str)
         Name of the local output directory where to save the files. \
         If it does not exist, it will be created.
     db (str)
-        The DB to retrieve the files from. \
+        The DB to get the files from. \
         The choices are either the default CTA simulation DB or a sandbox for testing.
     verbosity (str, optional)
         Log level to print (default=INFO).
@@ -29,7 +29,7 @@
 
     .. code-block:: console
 
-        python applications/retrieve_file_from_db.py -f data/data-to-download/test-data.dat
+        python applications/get_file_from_db.py -f test-data.dat
 """
 
 import logging
@@ -45,13 +45,13 @@ def main():
 
     db = db_handler.DatabaseHandler()
 
-    parser = argparser.CommandLineParser(description=("Retrieve a file or files from the DB."))
+    parser = argparser.CommandLineParser(description=("Get a file or files from the DB."))
     parser.add_argument(
         "-f",
-        "--fileName",
+        "--fileNames",
         help=(
-            "The file name to download. "
-            "i.e., python applications/retrieve_file_from_db.py -f file_1.dat"
+            "The file name(s) to download. "
+            "i.e., python applications/get_file_from_db.py -f file_1.dat"
         ),
         type=str,
         nargs="+",
@@ -67,7 +67,7 @@ def main():
     )
     parser.add_argument(
         "-db",
-        dest="dbToRetrieveFrom",
+        dest="dbToGetFrom",
         type=str,
         default=db.DB_TABULATED_DATA,
         choices=[
@@ -78,7 +78,7 @@ def main():
             "test-data",
         ],
         help=(
-            "The DB to retrieve the files from. "
+            "The DB to get the files from. "
             'The choices are {0} or "sandbox", '
             "the default is {0}".format(db.DB_TABULATED_DATA)
         ),
@@ -95,21 +95,16 @@ def main():
         print("Folder{} does not exist" "It will be created now".format(args.outputFolder))
         output_path.mkdir(parents=True, exist_ok=True)
 
-    if args.fileName is not None:
-        print(
-            "File{} is going to be downloaded from {} DB and saved to {}".format(
-                args.fileName, args.dbToRetrieveFrom, args.outputFolder
-            )
-        )
-        db.exportFileDB(args.dbToRetrieveFrom, args.outputFolder, args.fileName)
-        if output_path.joinpath(args.fileName).exists():
-            logger.info(
-                "File{} was downloaded from {} DB".format(args.fileName, args.dbToRetrieveFrom)
-            )
+    if args.fileNames is not None:
+        if len(args.fileNames) > 0:
+            db.exportFilesDB(args.dbToGetFrom, args.outputFolder, args.fileNames)
+        elif len(args.fileNames) == 0:
+            db.exportFileDB(args.dbToGetFrom, args.outputFolder, args.fileNames)
         else:
-            logger.info(
-                "File{} was not downloaded from the {} DB".format(args.fileName, args.dbToInsertTo)
+            print(
+                "Aborted, {} invalid. Valid formats are: str or list of str.".format(args.fileNames)
             )
+
     else:
         raise ValueError("No files were provided to download")
 
