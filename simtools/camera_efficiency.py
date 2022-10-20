@@ -217,12 +217,29 @@ class CameraEfficiency:
         # A special case is needed for recent ASTRI models because testeff does not
         # support 2D camera filters
         cameraFilterFile = self._telescopeModel.getParameterValue("camera_filter")
-        if self._telescopeModel.isASTRI() and self._telescopeModel.isFile2D("camera_filter"):
-            self._logger.warning(
-                "Camera filter file is being replaced by transmission_astri_window_average.dat"
-                " because testeff does not support 2D camera filters."
+        if self._telescopeModel.isFile2D("camera_filter"):
+            incidenceAngleDistribution = self._telescopeModel.readAverageIncidenceAngle(
+                self._telescopeModel.getParameterValue("camera_filter_incidence_angle")
             )
-            cameraFilterFile = "transmission_astri_window_average.dat"
+            self._logger.warning(
+                "The camera filter distribution is a 2D one which testeff does not support. "
+                "Instead of using the 2D distribution, the two dimensional distribution "
+                "will averaged, using the incidence angle distribution as weights. "
+                "The incidence angle distribution is taken "
+                f"from the file - {incidenceAngleDistribution})."
+            )
+            twoDimCameraFilter = self._telescopeModel.readTwoDimCameraFilter(
+                self._telescopeModel.getParameterValue("camera_filter")
+            )
+            distributionToExport = self._telescopeModel.calcAverageCurve(
+                twoDimCameraFilter, incidenceAngleDistribution
+            )
+            newFileName = (
+                f"weighted_average_1D_{self._telescopeModel.getParameterValue('camera_filter')}"
+            )
+            cameraFilterFile = self._telescopeModel.exportTableToModelDirectory(
+                newFileName, distributionToExport
+            )
 
         # Processing mirror reflectivity
         # A special case is needed for recent ASTRI models because testeff does not
