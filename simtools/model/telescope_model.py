@@ -4,6 +4,8 @@ from copy import copy
 
 import astropy.io.ascii
 import numpy as np
+from astropy.table import Table
+from scipy import interpolate
 
 import simtools.config as cfg
 import simtools.io_handler as io
@@ -272,9 +274,6 @@ class TelescopeModel:
     def _setConfigFileDirectoryAndName(self):
         """Define the variable _configFileDirectory and create directories, if needed"""
         self._configFileDirectory = io.getOutputDirectory(self._filesLocation, self.label, "model")
-        if not self._configFileDirectory.exists():
-            self._configFileDirectory.mkdir(parents=True, exist_ok=True)
-            self._logger.debug("Creating directory {}".format(self._configFileDirectory))
 
         # Setting file name and the location
         configFileName = names.simtelTelescopeConfigFileName(
@@ -747,6 +746,37 @@ class TelescopeModel:
             is2D = "@RPOL@" in f.read()
         return is2D
 
+    def readTwoDimCameraFilter(self, fileName):
+        """
+        Read a two dimensional distribution of the camera filter transmission from fileName.
+        Return an Astropy Table with the columns x = wavelength, y = degrees, z = transmission
+
+        Parameters
+        ----------
+        fileName: str or Path
+            File assumed to be in the model directory
+
+        Returns
+        -------
+        dict:
+            dict of three arrays, wavelength, degrees, transmission
+        """
+
+        _file = self._configFileDirectory.joinpath(fileName)
+        with open(_file, "r") as f:
+            for i_line, line in enumerate(f):
+                if line.startswith("ANGLE"):
+                    degrees = np.array(line.strip().split("=")[1].split(), dtype=np.float16)
+                    break  # The rest can be read with np.loadtxt
+
+        _data = np.loadtxt(_file, skiprows=i_line + 1)
+
+        return {
+            "Wavelength": _data[:, 0],
+            "Angle": degrees,
+            "Transmission": np.array(_data[:, 1:], dtype=np.float16).T,
+        }
+
     def getOnAxisEffOpticalArea(self):
         """
         Return the on-axis effective optical area (derived previously for this telescope).
@@ -763,3 +793,148 @@ class TelescopeModel:
             )
             raise ValueError
         return rayTracingData["eff_area"][0]
+
+    def readAverageIncidenceAngle(self, incidenceAngleDistFile):
+        """
+        Read the incidence angle distrubution from a file
+
+        Parameters
+        ----------
+        incidenceAngleDistFile: str
+            File name of the incidence angle distribution
+
+        Returns
+        -------
+        float:
+            Average incidence angle.
+        """
+
+        incidenceAngleDist = astropy.io.ascii.read(
+            self._configFileDirectory.joinpath(incidenceAngleDistFile)
+        )
+        return incidenceAngleDist
+
+    def calcAverageIncidenceAngle(self, incidenceAngleDist):
+        """
+        Calculate the average incidence angle from the incidence angle distrubution.
+
+        Parameters
+        ----------
+        incidenceAngleDist: Astropy table
+            Astropy table with the incidence angle distribution
+            The assumed columns are "Incidence angle" and "Fraction".
+
+        Returns
+        -------
+        float:
+            Average incidence angle.
+        """
+
+        return np.average(
+            incidenceAngleDist["Incidence angle"], weights=incidenceAngleDist["Fraction"]
+        )
+
+    def interpolateThreeDimDist(self, data, precision={}, kind="linear"):
+        """
+        Interpolate the x/y dimensions of the table to the precision requested
+
+        Parameters
+        ----------
+        data: dict
+            dict of with 3 "columns", where the order of the columns is assumed to be x, y, z
+        precision: dict
+            A dict of the shape {"x": float, "y": float},
+            where the float is the step size to interpolate to.
+            An empty entry would leave that axis unchanged.
+        kind: {‘linear’, ‘cubic’, ‘quintic’}, optional
+            The kind of spline interpolation to use (see scipy interp2d). Default is ‘linear’.
+
+        Returns
+        -------
+        dict:
+            The interpolated dict
+        """
+
+        def _getInterpolatedAxis(axis, column, precision):
+            if axis in precision:
+                nSteps = (np.max(column) - np.min(column)) / precision[axis]
+                intArray = np.linspace(np.min(column), np.max(column), int(nSteps))
+                if precision[axis].is_integer():
+                    digitsToRound = -len(str(precision[axis]).split(".")[0])
+                else:
+                    digitsToRound = len(str(precision[axis]).split(".")[1])
+                return np.around(intArray, digitsToRound)
+            else:
+                return column
+
+        xInterpolated = _getInterpolatedAxis("x", list(data.values())[0], precision)
+        yInterpolated = _getInterpolatedAxis("y", list(data.values())[1], precision)
+
+        f = interpolate.interp2d(
+            list(data.values())[0], list(data.values())[1], list(data.values())[2], kind=kind
+        )
+        zInterpolated = f(xInterpolated, yInterpolated)
+
+        interpolatedDict = dict()
+        interpolatedDict[list(data)[0]] = xInterpolated
+        interpolatedDict[list(data)[1]] = yInterpolated
+        interpolatedDict[list(data)[2]] = zInterpolated
+
+        return interpolatedDict
+
+    def calcAverageCurve(self, curves, incidenceAngleDist):
+        """
+        Interpolate the x/y dimensions of the table to the precision requested
+
+        Parameters
+        ----------
+        data: dict
+            dict of with 3 "columns", where the order of the columns is assumed to be x, y, z
+        precision: dict
+            A dict of the shape {"x": float, "y": float},
+            where the float is the step size to interpolate to.
+            An empty entry would leave that axis unchanged.
+        kind: {‘linear’, ‘cubic’, ‘quintic’}, optional
+            The kind of spline interpolation to use (see scipy interp2d). Default is ‘linear’.
+
+        Returns
+        -------
+        dict:
+            The interpolated dict
+        """
+
+        weights = list()
+        for angleNow in curves["Angle"]:
+            weights.append(
+                incidenceAngleDist["Fraction"][
+                    np.nanargmin(np.abs(angleNow - incidenceAngleDist["Incidence angle"].value))
+                ]
+            )
+
+        averageCurve = Table(
+            [curves["Wavelength"], np.average(curves["Transmission"], weights=weights, axis=0)],
+            names=("Wavelength", "Transmission"),
+        )
+
+        return averageCurve
+
+    def exportTableToModelDirectory(self, fileName, table):
+        """
+        Write out a file with the provided table to the model directory.
+
+        Parameters
+        ----------
+        fileName: str
+            File name to write to
+        table: Astropy Table
+            Table with the values to write to the file
+
+        Returns
+        -------
+        Path:
+            Path to the file exported.
+        """
+
+        fileToWriteTo = self._configFileDirectory.joinpath(fileName)
+        table.write(fileToWriteTo, format="ascii.commented_header", overwrite=True)
+        return fileToWriteTo.absolute()
