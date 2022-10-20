@@ -11,11 +11,12 @@
 
     Command line arguments
     ----------------------
-    file_name (str or list of str, required)
-        Name of the file(s) to get. \
+    fileNames (str or list of str, required)
+        Name of the file(s) to get including the full path. \
         i.e., python applications/get_file_from_db.py -f file_1.dat.
-    output_directory (str)
+    outputFolder (str)
         Name of the local output directory where to save the files. \
+        If it does not exist, it will be created.
     db (str)
         The DB to get the files from. \
         The choices are either the default CTA simulation DB or a sandbox for testing.
@@ -28,7 +29,7 @@
 
     .. code-block:: console
 
-        python applications/get_file_from_db.py -f mirror_CTA-N-LST1_v2019-03-31.dat
+        python applications/get_file_from_db.py -f test-data.dat
 """
 
 import logging
@@ -47,7 +48,7 @@ def main():
     parser = argparser.CommandLineParser(description=("Get a file or files from the DB."))
     parser.add_argument(
         "-f",
-        "--file_name",
+        "--fileNames",
         help=(
             "The file name(s) to download. "
             "i.e., python applications/get_file_from_db.py -f file_1.dat"
@@ -57,7 +58,7 @@ def main():
     )
     parser.add_argument(
         "-out",
-        dest="output_directory",
+        dest="outputFolder",
         type=str,
         default=".",
         help=(
@@ -89,15 +90,20 @@ def main():
     logger = logging.getLogger()
     logger.setLevel(gen.getLogLevelFromUser(args.logLevel))
 
-    output_directory = Path(args.output_directory)
-    if output_directory.exists() == False:
-        print("Aborted, path{} does not exist".format(args.output_directory))
+    output_path = Path(args.outputFolder)
+    if output_path.exists() == False:
+        print("Folder{} does not exist" "It will be created now".format(args.outputFolder))
+        output_path.mkdir(parents=True, exist_ok=True)
 
-    if args.file_name is not None:
-        if len(args.file_name) > 1:
-            db.exportFilesDB(args.dbToGetFrom, args.output_directory, args.file_name)
-        elif len(args.file_name) == 1:
-            db.exportFileDB(args.dbToGetFrom, args.output_directory, args.file_name)
+    if args.fileNames is not None:
+        if len(args.fileNames) > 0:
+            db.exportFilesDB(args.dbToGetFrom, args.outputFolder, args.fileNames)
+        elif len(args.fileNames) == 0:
+            db.exportFileDB(args.dbToGetFrom, args.outputFolder, args.fileNames)
+        else:
+            print(
+                "Aborted, {} invalid. Valid formats are: str or list of str.".format(args.fileNames)
+            )
 
     else:
         raise ValueError("No files were provided to download")
