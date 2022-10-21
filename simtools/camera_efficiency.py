@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from astropy.table import Table
 
-import simtools.io_handler as io
+import simtools.io_handler as io_handler
 import simtools.util.general as gen
 from simtools import visualize
 from simtools.model.telescope_model import TelescopeModel
@@ -47,8 +47,6 @@ class CameraEfficiency:
         self,
         telescopeModel,
         simtelSourcePath,
-        filesLocation,
-        dataLocation,
         label=None,
         configData=None,
         configFile=None,
@@ -63,10 +61,6 @@ class CameraEfficiency:
             Instance of the TelescopeModel class.
         simtelSourcePath: str (or Path)
             Location of sim_telarray installation.
-        filesLocation: str (or Path)
-            Parent location of the output files created by this class.
-        dataLocation: str (or Path)
-            Parent location of the data files.
         label: str
             Instance label, optional.
         configData: dict.
@@ -79,12 +73,11 @@ class CameraEfficiency:
         self._logger = logging.getLogger(__name__)
 
         self._simtelSourcePath = simtelSourcePath
-        self._filesLocation = filesLocation
         self._telescopeModel = self._validateTelescopeModel(telescopeModel)
         self.label = label if label is not None else self._telescopeModel.label
 
-        self._baseDirectory = io.getOutputDirectory(
-            filesLocation=self._filesLocation,
+        self.io_handler = io_handler.IOHandler()
+        self._baseDirectory = self.io_handler.getOutputDirectory(
             label=self.label,
             dirType="camera-efficiency",
             test=test,
@@ -93,8 +86,8 @@ class CameraEfficiency:
         self._hasResults = False
 
         _configDataIn = gen.collectDataFromYamlOrDict(configFile, configData, allowEmpty=True)
-        _parameterFile = io.getInputDataFile(
-            dataLocation, "parameters", "camera-efficiency_parameters.yml"
+        _parameterFile = self.io_handler.getInputDataFile(
+            "parameters", "camera-efficiency_parameters.yml"
         )
         _parameters = gen.collectDataFromYamlOrDict(_parameterFile, None)
         self.config = gen.validateConfigData(_configDataIn, _parameters)
@@ -122,8 +115,6 @@ class CameraEfficiency:
                 "telescopeModel",
                 "label",
                 "simtelSourcePath",
-                "filesLocation",
-                "dataLocation",
                 "test",
             ],
             **kwargs,

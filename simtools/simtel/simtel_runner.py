@@ -38,7 +38,6 @@ class SimtelRunner:
     def __init__(
         self,
         simtelSourcePath,
-        filesLocation,
         label=None,
     ):
         """
@@ -51,17 +50,11 @@ class SimtelRunner:
         simtelSourcePath: str (or Path), optional
             Location of sim_telarray installation. If not given, it will be taken from the
             config.yml file.
-        filesLocation: str (or Path), optional
-            Parent location of the output files created by this class. If not given, it will be
-            taken from the config.yml file.
         """
         self._logger = logging.getLogger(__name__)
 
         self._simtelSourcePath = simtelSourcePath
         self.label = label
-
-        # File location
-        self._filesLocation = filesLocation
 
         self.RUNS_PER_SET = 1
 

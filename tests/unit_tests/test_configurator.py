@@ -1,9 +1,8 @@
 #!/usr/bin/python3
 
 import logging
-import os
 from copy import copy
-from unittest import mock
+from pathlib import Path
 
 import pytest
 import yaml
@@ -19,13 +18,13 @@ def test_fillFromCommandLine(configurator, args_dict):
     configurator._fillFromCommandLine(arg_list=[])
     assert args_dict == configurator.config
 
-    configurator._fillFromCommandLine(arg_list=["--data_path", "abc"])
+    configurator._fillFromCommandLine(arg_list=["--data_path", Path("abc")])
     _tmp_config = copy(dict(args_dict))
-    _tmp_config["data_path"] = "abc"
+    _tmp_config["data_path"] = Path("abc")
     assert _tmp_config == configurator.config
 
     with pytest.raises(SystemExit):
-        configurator._fillFromCommandLine(arg_list=["--data_pth", "abc"])
+        configurator._fillFromCommandLine(arg_list=["--data_pth", Path("abc")])
 
 
 def test_fillFromConfigDict(configurator, args_dict):
@@ -44,19 +43,12 @@ def test_fillFromConfigDict(configurator, args_dict):
     assert _tmp_config == configurator.config
 
 
-@mock.patch.dict(os.environ, {"SIMTELPATH": "./a_path/", "DATA_PATH": "./b_path"}, clear=True)
 def test_fillFromEnvironmentalVariables(configurator, args_dict):
 
     # _fillFromEnvironmentalVariables() is always called after _fillFromCommandLine()
     configurator._fillFromCommandLine(arg_list=[])
-
-    # expect here:
-    # - simtelpath is None in default config; value is set from environmental variable
-    # - data_path is set in default config; value is not set from environemtal variable
     configurator._fillFromEnvironmentalVariables()
-    _tmp_config = copy(dict(args_dict))
-    _tmp_config["simtelpath"] = "./a_path/"
-    assert _tmp_config == configurator.config
+    assert args_dict == configurator.config
 
 
 def test_fillFromConfigFile_not_existing_file(configurator):
@@ -81,25 +73,24 @@ def test_fillFromConfigFile(configurator, args_dict, tmp_test_directory):
     with open(_config_file, "w") as output:
         yaml.safe_dump(_tmp_dict, output, sort_keys=False)
 
-    configurator.config["config_file"] = _config_file
-    # need to reset output path to the default value
-    # (otherwise _check_parameter_configuration_status will complain
-    #  about a conflicting change)
-    configurator.config["output_path"] = "./"
-    _tmp_config["config_file"] = _config_file
+    configurator.config["config_file"] = str(_config_file)
+    _tmp_config["config_file"] = str(_config_file)
+    configurator.config["output_path"] = None
+    configurator._fillFromConfigFile()
     for key, value in _tmp_dict.items():
         # none values are explicitely not set in Configurator._arglistFromConfig()
         if value is not None:
-            _tmp_config[key] = value
-
-    configurator._fillFromConfigFile()
+            if "_path" in key:
+                _tmp_config[key] = Path(value)
+            else:
+                _tmp_config[key] = value
     assert _tmp_config == configurator.config
 
 
 def test_check_parameter_configuration_status(configurator, args_dict, tmp_test_directory):
 
     configurator._fillFromCommandLine(arg_list=[])
-    configurator.config["output_path"] = str(tmp_test_directory)
+    configurator.config["output_path"] = Path(tmp_test_directory)
 
     # default value (no change)
     configurator._check_parameter_configuration_status("data_path", args_dict["data_path"])

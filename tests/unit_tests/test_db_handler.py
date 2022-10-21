@@ -5,9 +5,6 @@ import uuid
 
 import pytest
 
-import simtools.io_handler as io
-from simtools import db_handler
-
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
@@ -16,12 +13,6 @@ logger.setLevel(logging.DEBUG)
 def random_id():
     random_id = uuid.uuid4().hex
     return random_id
-
-
-@pytest.fixture
-def db(db_connection):
-    db = db_handler.DatabaseHandler(mongoDBConfigFile=str(db_connection))
-    return db
 
 
 @pytest.fixture()
@@ -92,7 +83,7 @@ def test_get_derived_values(db):
     )
 
 
-def test_copy_telescope_db(db, random_id, db_cleanup, args_dict):
+def test_copy_telescope_db(db, random_id, db_cleanup, io_handler):
 
     logger.info("----Testing copying a whole telescope-----")
     db.copyTelescope(
@@ -115,9 +106,7 @@ def test_copy_telescope_db(db, random_id, db_cleanup, args_dict):
         dbName="sandbox",
         telescopeModelNameDB="North-LST-Test",
         modelVersion="Current",
-        runLocation=io.getOutputDirectory(
-            filesLocation=args_dict["output_path"], dirType="model", test=True
-        ),
+        runLocation=io_handler.getOutputDirectory(dirType="model", test=True),
         collectionName="telescopes_" + random_id,
         writeFiles=False,
     )
@@ -136,15 +125,13 @@ def test_copy_telescope_db(db, random_id, db_cleanup, args_dict):
             dbName="sandbox",
             telescopeModelNameDB="North-LST-Test",
             modelVersion="Current",
-            runLocation=io.getOutputDirectory(
-                filesLocation=args_dict["output_path"], dirType="model", test=True
-            ),
+            runLocation=io_handler.getOutputDirectory(dirType="model", test=True),
             collectionName="telescopes_" + random_id,
             writeFiles=False,
         )
 
 
-def test_adding_parameter_version_db(db, random_id, db_cleanup, args_dict):
+def test_adding_parameter_version_db(db, random_id, db_cleanup, io_handler):
 
     logger.info("----Testing adding a new version of a parameter-----")
     db.copyTelescope(
@@ -168,16 +155,14 @@ def test_adding_parameter_version_db(db, random_id, db_cleanup, args_dict):
         dbName="sandbox",
         telescopeModelNameDB="North-LST-Test",
         modelVersion="test",
-        runLocation=io.getOutputDirectory(
-            filesLocation=args_dict["output_path"], dirType="model", test=True
-        ),
+        runLocation=io_handler.getOutputDirectory(dirType="model", test=True),
         collectionName="telescopes_" + random_id,
         writeFiles=False,
     )
     assert pars["camera_config_version"]["Value"] == 42
 
 
-def test_update_parameter_db(db, random_id, db_cleanup, args_dict):
+def test_update_parameter_db(db, random_id, db_cleanup, io_handler):
 
     logger.info("----Testing updating a parameter-----")
     db.copyTelescope(
@@ -209,16 +194,14 @@ def test_update_parameter_db(db, random_id, db_cleanup, args_dict):
         dbName="sandbox",
         telescopeModelNameDB="North-LST-Test",
         modelVersion="test",
-        runLocation=io.getOutputDirectory(
-            filesLocation=args_dict["output_path"], dirType="model", test=True
-        ),
+        runLocation=io_handler.getOutputDirectory(dirType="model", test=True),
         collectionName="telescopes_" + random_id,
         writeFiles=False,
     )
     assert pars["camera_config_version"]["Value"] == 999
 
 
-def test_adding_new_parameter_db(db, random_id, db_cleanup, args_dict):
+def test_adding_new_parameter_db(db, random_id, db_cleanup, io_handler):
 
     logger.info("----Testing adding a new parameter-----")
     db.copyTelescope(
@@ -242,16 +225,14 @@ def test_adding_new_parameter_db(db, random_id, db_cleanup, args_dict):
         dbName="sandbox",
         telescopeModelNameDB="North-LST-Test",
         modelVersion="test",
-        runLocation=io.getOutputDirectory(
-            filesLocation=args_dict["output_path"], dirType="model", test=True
-        ),
+        runLocation=io_handler.getOutputDirectory(dirType="model", test=True),
         collectionName="telescopes_" + random_id,
         writeFiles=False,
     )
     assert pars["camera_config_version_test"]["Value"] == 999
 
 
-def test_update_parameter_field_db(db, random_id, db_cleanup, args_dict):
+def test_update_parameter_field_db(db, random_id, db_cleanup, io_handler):
 
     logger.info("----Testing modifying a field of a parameter-----")
     db.copyTelescope(
@@ -283,9 +264,7 @@ def test_update_parameter_field_db(db, random_id, db_cleanup, args_dict):
         dbName="sandbox",
         telescopeModelNameDB="North-LST-Test",
         modelVersion="Current",
-        runLocation=io.getOutputDirectory(
-            filesLocation=args_dict["output_path"], dirType="model", test=True
-        ),
+        runLocation=io_handler.getOutputDirectory(dirType="model", test=True),
         collectionName="telescopes_" + random_id,
         writeFiles=False,
     )
@@ -309,7 +288,7 @@ def test_reading_db_sites(db):
         assert pars["altitude"] == 2147
 
 
-def test_separating_get_and_write(db, args_dict):
+def test_separating_get_and_write(db, io_handler):
 
     logger.info("----Testing getting parameters and exporting model files-----")
     pars = db.getModelParameters("north", "lst-1", "Current")
@@ -320,35 +299,26 @@ def test_separating_get_and_write(db, args_dict):
             fileList.append(parNow["Value"])
     db.exportModelFiles(
         pars,
-        io.getOutputDirectory(filesLocation=args_dict["output_path"], dirType="model", test=True),
+        io_handler.getOutputDirectory(dirType="model", test=True),
     )
     logger.debug(
         "Checking files were written to {}".format(
-            io.getOutputDirectory(
-                filesLocation=args_dict["output_path"], dirType="model", test=True
-            )
+            io_handler.getOutputDirectory(dirType="model", test=True)
         )
     )
     for fileNow in fileList:
-        assert io.getOutputFile(
-            fileNow, filesLocation=args_dict["output_path"], dirType="model", test=True
-        ).exists()
+        assert io_handler.getOutputFile(fileNow, dirType="model", test=True).exists()
 
 
-def test_insert_files_db(db, args_dict):
+def test_insert_files_db(db, io_handler):
 
     logger.info("----Testing inserting files to the DB-----")
     logger.info(
         "Creating a temporary file in {}".format(
-            io.getOutputDirectory(
-                filesLocation=args_dict["output_path"], dirType="model", test=True
-            )
+            io_handler.getOutputDirectory(dirType="model", test=True)
         )
     )
-    fileName = (
-        io.getOutputDirectory(filesLocation=args_dict["output_path"], dirType="model", test=True)
-        / "test_file.dat"
-    )
+    fileName = io_handler.getOutputDirectory(dirType="model", test=True) / "test_file.dat"
     with open(fileName, "w") as f:
         f.write("# This is a test file")
 

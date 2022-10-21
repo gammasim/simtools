@@ -46,7 +46,7 @@
 import logging
 
 import simtools.configuration as configurator
-import simtools.io_handler as io
+import simtools.io_handler as io_handler
 import simtools.util.general as gen
 from simtools.camera_efficiency import CameraEfficiency
 from simtools.model.telescope_model import TelescopeModel
@@ -64,7 +64,6 @@ def _parse():
         )
     )
     config.parser.initialize_telescope_model_arguments()
-    config.parser.initialize_default_arguments(add_workflow_config=False)
 
     return config.initialize(add_workflow_config=False)
 
@@ -78,13 +77,13 @@ def main():
     logger.setLevel(gen.getLogLevelFromUser(args_dict["log_level"]))
 
     # Output directory to save files related directly to this app
-    outputDir = io.getOutputDirectory(args_dict["output_path"], label, dirType="application-plots")
+    _io_handler = io_handler.IOHandler()
+    outputDir = _io_handler.getOutputDirectory(label, dirType="application-plots")
 
     telModel = TelescopeModel(
         site=args_dict["site"],
-        modelFilesLocations=args_dict["model_path"],
-        filesLocation=args_dict["output_path"],
         telescopeModelName=args_dict["telescope"],
+        mongoDBConfigFile=args_dict.get("mongodb_config_file", None),
         modelVersion=args_dict["model_version"],
         label=label,
     )
@@ -97,8 +96,6 @@ def main():
     ce = CameraEfficiency(
         telescopeModel=telModel,
         simtelSourcePath=args_dict["simtelpath"],
-        filesLocation=args_dict["output_path"],
-        dataLocation=args_dict["data_path"],
     )
     ce.simulate(force=True)
     ce.analyze(force=True)

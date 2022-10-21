@@ -4,6 +4,7 @@ import sys
 
 import yaml
 
+import simtools.io_handler as io_handler
 import simtools.util.commandline_parser as argparser
 
 
@@ -54,6 +55,8 @@ class Configurator:
 
         """
         self.parser.initialize_default_arguments()
+        if "--site" in arg_list:
+            self.parser.initialize_telescope_model_arguments(True, "--telescope" in arg_list)
         self._fillConfig(arg_list)
         return self.config
 
@@ -92,6 +95,7 @@ class Configurator:
         self._fillFromConfigFile()
         self._fillFromConfigDict(self.configClassInit)
         self._fillFromEnvironmentalVariables()
+        self._initializeIOHandler()
 
         return self.config
 
@@ -170,6 +174,7 @@ class Configurator:
         """
 
         try:
+            self._logger.debug("Reading configuration from {}".format(self.config["config_file"]))
             with open(self.config["config_file"], "r") as stream:
                 _config_dict = yaml.safe_load(stream)
             self._fillFromConfigDict(_config_dict)
@@ -197,6 +202,18 @@ class Configurator:
             pass
 
         self._fillFromConfigDict(_env_dict)
+
+    def _initializeIOHandler(self):
+        """
+        Initialize IOHandler with input and output paths.
+
+        """
+        _io_handler = io_handler.IOHandler()
+        _io_handler.setPaths(
+            output_path=self.config["output_path"],
+            data_path=self.config["data_path"],
+            model_path=self.config["model_path"],
+        )
 
     @staticmethod
     def _arglistFromConfig(input_var):
