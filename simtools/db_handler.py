@@ -11,6 +11,7 @@ from bson.objectid import ObjectId
 from pymongo import MongoClient
 from pymongo.errors import BulkWriteError
 
+import simtools.io_handler as io_handler
 import simtools.util.general as gen
 from simtools.util import names
 from simtools.util.model import getTelescopeClass
@@ -66,7 +67,7 @@ class DatabaseHandler:
 
     dbClient = None
 
-    def __init__(self, useMongoDB=True, mongoDBConfigFile=None, modelFilesLocations=None):
+    def __init__(self, useMongoDB=True, mongoDBConfigFile=None):
         """
         Initialize the DatabaseHandler class.
         """
@@ -75,7 +76,7 @@ class DatabaseHandler:
 
         self.useMongoDB = useMongoDB
         self.mongoDBConfigFile = mongoDBConfigFile
-        self.modelFilesLocations = modelFilesLocations
+        self.io_handler = io_handler.IOHandler()
 
         if self.useMongoDB:
             if DatabaseHandler.dbClient is None:
@@ -244,7 +245,7 @@ class DatabaseHandler:
 
         destFile = Path(destDir).joinpath(fileName)
         try:
-            file = gen.findFile(fileName, self.modelFilesLocations)
+            file = gen.findFile(fileName, self.io_handler.model_path)
         except FileNotFoundError:
             if noFileOk:
                 self._logger.debug("File {} not found but noFileOk".format(fileName))
@@ -463,7 +464,7 @@ class DatabaseHandler:
         """
 
         _fileNameDB = "parValues-{}.yml".format(telescopeNameYaml)
-        _yamlFile = gen.findFile(_fileNameDB, self.modelFilesLocations)
+        _yamlFile = gen.findFile(_fileNameDB, self.io_handler.model_path)
         self._logger.debug("Reading DB file {}".format(_yamlFile))
         with open(_yamlFile, "r") as stream:
             _allPars = yaml.safe_load(stream)
@@ -525,7 +526,7 @@ class DatabaseHandler:
 
         siteYaml = "lapalma" if site == "North" else "paranal"
 
-        yamlFile = gen.findFile("parValues-Sites.yml", self.modelFilesLocations)
+        yamlFile = gen.findFile("parValues-Sites.yml", self.io_handler.model_path)
         self._logger.info("Reading DB file {}".format(yamlFile))
         with open(yamlFile, "r") as stream:
             _allParsVersions = yaml.safe_load(stream)

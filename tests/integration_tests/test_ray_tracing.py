@@ -7,7 +7,6 @@ import astropy.units as u
 import matplotlib.pyplot as plt
 import pytest
 
-import simtools.io_handler as io
 from simtools.model.telescope_model import TelescopeModel
 from simtools.ray_tracing import RayTracing
 
@@ -16,7 +15,7 @@ logger.setLevel(logging.DEBUG)
 
 
 @pytest.mark.parametrize("telescopeModelName", ["sst-1M", "sst-ASTRI", "sst-GCT"])
-def test_ssts(set_simtools, telescopeModelName):
+def test_ssts(telescopeModelName, db_connection, simtelpath_no_mock, io_handler):
     # Test with 3 SSTs
     version = "prod3"
     configData = {
@@ -29,14 +28,15 @@ def test_ssts(set_simtools, telescopeModelName):
         telescopeModelName=telescopeModelName,
         modelVersion=version,
         label="test-sst",
+        mongoDBConfigFile=str(db_connection),
     )
 
-    ray = RayTracing(telescopeModel=tel, configData=configData)
+    ray = RayTracing(telescopeModel=tel, simtelSourcePath=simtelpath_no_mock, configData=configData)
     ray.simulate(test=True, force=True)
     ray.analyze(force=True)
 
 
-def test_rx(set_simtools):
+def test_rx(db_connection, simtelpath_no_mock, io_handler):
     version = "current"
     label = "test-lst"
 
@@ -47,10 +47,14 @@ def test_rx(set_simtools):
     }
 
     tel = TelescopeModel(
-        site="north", telescopeModelName="lst-1", modelVersion=version, label=label
+        site="north",
+        telescopeModelName="lst-1",
+        modelVersion=version,
+        label=label,
+        mongoDBConfigFile=str(db_connection),
     )
 
-    ray = RayTracing(telescopeModel=tel, configData=configData)
+    ray = RayTracing(telescopeModel=tel, simtelSourcePath=simtelpath_no_mock, configData=configData)
 
     ray.simulate(test=True, force=True)
     ray_rx = copy(ray)
@@ -67,7 +71,7 @@ def test_rx(set_simtools):
     ray.plot("d80_deg", marker="o", linestyle=":")
     ray_rx.plot("d80_deg", marker="s", linestyle="--")
 
-    plotFilePSF = io.getOutputFile(fileName="d80_test_rx.pdf", dirType="plots", test=True)
+    plotFilePSF = io_handler.getOutputFile(fileName="d80_test_rx.pdf", dirType="plots", test=True)
     plt.savefig(plotFilePSF)
 
     # Plotting effArea
@@ -79,11 +83,13 @@ def test_rx(set_simtools):
     ray.plot("eff_area", marker="o", linestyle=":")
     ray_rx.plot("d80_deg", marker="s", linestyle="--")
 
-    plotFileArea = io.getOutputFile(fileName="effArea_test_rx.pdf", dirType="plots", test=True)
+    plotFileArea = io_handler.getOutputFile(
+        fileName="effArea_test_rx.pdf", dirType="plots", test=True
+    )
     plt.savefig(plotFileArea)
 
 
-def test_plot_image(set_simtools):
+def test_plot_image(db_connection, simtelpath_no_mock, io_handler):
     version = "prod3"
     label = "test-astri"
     configData = {
@@ -93,10 +99,14 @@ def test_plot_image(set_simtools):
     }
 
     tel = TelescopeModel(
-        site="south", telescopeModelName="sst-D", modelVersion=version, label=label
+        site="south",
+        telescopeModelName="sst-D",
+        modelVersion=version,
+        label=label,
+        mongoDBConfigFile=str(db_connection),
     )
 
-    ray = RayTracing(telescopeModel=tel, configData=configData)
+    ray = RayTracing(telescopeModel=tel, simtelSourcePath=simtelpath_no_mock, configData=configData)
 
     ray.simulate(test=True, force=True)
     ray.analyze(force=True)
@@ -108,13 +118,13 @@ def test_plot_image(set_simtools):
         ax.set_xlabel("X [cm]")
         ax.set_ylabel("Y [cm]")
         image.plotImage(psf_color="b")
-        plotFile = io.getOutputFile(
+        plotFile = io_handler.getOutputFile(
             fileName="test_plot_image_{}.pdf".format(ii), dirType="plots", test=True
         )
         plt.savefig(plotFile)
 
 
-def test_single_mirror(set_simtools, plot=False):
+def test_single_mirror(db_connection, simtelpath_no_mock, io_handler, plot=False):
 
     # Test MST, single mirror PSF simulation
     version = "prod3"
@@ -125,9 +135,10 @@ def test_single_mirror(set_simtools, plot=False):
         telescopeModelName="mst-FlashCam-D",
         modelVersion=version,
         label="test-mst",
+        mongoDBConfigFile=str(db_connection),
     )
 
-    ray = RayTracing(telescopeModel=tel, configData=configData)
+    ray = RayTracing(telescopeModel=tel, simtelSourcePath=simtelpath_no_mock, configData=configData)
     ray.simulate(test=True, force=True)
     ray.analyze(force=True)
 
@@ -137,11 +148,11 @@ def test_single_mirror(set_simtools, plot=False):
     ax.set_xlabel("d80")
 
     ray.plotHistogram("d80_cm", color="r", bins=10)
-    plotFile = io.getOutputFile(fileName="d80_hist_test.pdf", dirType="plots", test=True)
+    plotFile = io_handler.getOutputFile(fileName="d80_hist_test.pdf", dirType="plots", test=True)
     plt.savefig(plotFile)
 
 
-def test_integral_curve(set_simtools):
+def test_integral_curve(db_connection, simtelpath_no_mock, io_handler):
     version = "prod4"
     label = "lst_integral"
 
@@ -156,9 +167,10 @@ def test_integral_curve(set_simtools):
         telescopeModelName="mst-FlashCam-D",
         modelVersion=version,
         label=label,
+        mongoDBConfigFile=str(db_connection),
     )
 
-    ray = RayTracing(telescopeModel=tel, configData=configData)
+    ray = RayTracing(telescopeModel=tel, simtelSourcePath=simtelpath_no_mock, configData=configData)
 
     ray.simulate(test=True, force=True)
     ray.analyze(force=True)
@@ -170,5 +182,7 @@ def test_integral_curve(set_simtools):
     ax.set_ylabel("relative intensity")
     for im in ray.images():
         im.plotCumulative(color="b")
-    plotFile = io.getOutputFile(fileName="test_cumulative_psf.pdf", dirType="plots", test=True)
+    plotFile = io_handler.getOutputFile(
+        fileName="test_cumulative_psf.pdf", dirType="plots", test=True
+    )
     plt.savefig(plotFile)

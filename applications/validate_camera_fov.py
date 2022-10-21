@@ -43,24 +43,22 @@
 
 import logging
 
-import simtools.config as cfg
-import simtools.io_handler as io
-import simtools.util.commandline_parser as argparser
+import simtools.configuration as configurator
+import simtools.io_handler as io_handler
 import simtools.util.general as gen
 from simtools.model.telescope_model import TelescopeModel
 
 
 def main():
 
-    parser = argparser.CommandLineParser(
+    config = configurator.Configurator(
         description=(
             "Calculate the camera FoV of the telescope requested. "
             "Plot the camera as well, as seen for an observer facing the camera."
         )
     )
-    parser.initialize_telescope_model_arguments()
-    parser.initialize_default_arguments(add_workflow_config=False)
-    parser.add_argument(
+    config.parser.initialize_telescope_model_arguments()
+    config.parser.add_argument(
         "--cameraInSkyCoor",
         help=(
             "Plot the camera layout in sky coordinates "
@@ -69,7 +67,7 @@ def main():
         action="store_true",
         default=False,
     )
-    parser.add_argument(
+    config.parser.add_argument(
         "--printPixelsID",
         help=(
             "Up to which pixel ID to print (default: 50). "
@@ -79,20 +77,21 @@ def main():
         default=50,
     )
 
-    args = parser.parse_args()
+    args_dict = config.initialize()
     label = "validate_camera_fov"
-    cfg.setConfigFileName(args.config_file)
 
     logger = logging.getLogger()
-    logger.setLevel(gen.getLogLevelFromUser(args.log_level))
+    logger.setLevel(gen.getLogLevelFromUser(args_dict["log_level"]))
 
     # Output directory to save files related directly to this app
-    outputDir = io.getOutputDirectory(cfg.get("outputLocation"), label, dirType="application-plots")
+    _io_handler = io_handler.IOHandler()
+    outputDir = _io_handler.getOutputDirectory(label, dirType="application-plots")
 
     telModel = TelescopeModel(
-        site=args.site,
-        telescopeModelName=args.telescope,
-        modelVersion=args.model_version,
+        site=args_dict["site"],
+        telescopeModelName=args_dict["telescope"],
+        mongoDBConfigFile=args_dict.get("mongodb_config_file", None),
+        modelVersion=args_dict["model_version"],
         label=label,
     )
     telModel.exportModelFiles()
@@ -110,18 +109,18 @@ def main():
 
     # Now plot the camera as well
     try:
-        pixelIDsToPrint = int(args.printPixelsID)
+        pixelIDsToPrint = int(args_dict["printPixelsID"])
         if pixelIDsToPrint == 0:
             pixelIDsToPrint = -1  # so not print the zero pixel
     except ValueError:
-        if args.printPixelsID.lower() == "all":
+        if args_dict["printPixelsID"].lower() == "all":
             pixelIDsToPrint = camera.getNumberOfPixels()
         else:
             raise ValueError(
-                f"The value provided to --printPixelsID ({args.printPixelsID}) "
+                f"The value provided to --printPixelsID ({args_dict['printPixelsID']}) "
                 "should be an integer or All"
             )
-    fig = camera.plotPixelLayout(args.cameraInSkyCoor, pixelIDsToPrint)
+    fig = camera.plotPixelLayout(args_dict["cameraInSkyCoor"], pixelIDsToPrint)
     plotFilePrefix = outputDir.joinpath(f"{label}_{telModel.name}_pixelLayout")
     for suffix in ["pdf", "png"]:
         fileName = f"{str(plotFilePrefix)}.{suffix}"
