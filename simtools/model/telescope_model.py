@@ -5,7 +5,6 @@ from copy import copy
 import astropy.io.ascii
 import numpy as np
 from astropy.table import Table
-from scipy import interpolate
 
 import simtools.config as cfg
 import simtools.io_handler as io
@@ -744,10 +743,11 @@ class TelescopeModel:
             is2D = "@RPOL@" in f.read()
         return is2D
 
-    def readTwoDimCameraFilter(self, fileName):
+    def readTwoDimWavelengthAngle(self, fileName):
         """
-        Read a two dimensional distribution of the camera filter transmission from fileName.
-        Return an Astropy Table with the columns x = wavelength, y = degrees, z = transmission
+        Read a two dimensional distribution of wavelngth and angle (z-axis can be anything).
+        Return a dictionary with three arrays,
+        wavelength, angles, z (can be transmission, reflecitivty, etc.)
 
         Parameters
         ----------
@@ -757,7 +757,7 @@ class TelescopeModel:
         Returns
         -------
         dict:
-            dict of three arrays, wavelength, degrees, transmission
+            dict of three arrays, wavelength, degrees, z
         """
 
         _file = self._configFileDirectory.joinpath(fileName)
@@ -772,7 +772,7 @@ class TelescopeModel:
         return {
             "Wavelength": _data[:, 0],
             "Angle": degrees,
-            "Transmission": np.array(_data[:, 1:], dtype=np.float16).T,
+            "z": np.array(_data[:, 1:], dtype=np.float16).T,
         }
 
     def getOnAxisEffOpticalArea(self):
@@ -811,93 +811,25 @@ class TelescopeModel:
         )
         return incidenceAngleDist
 
-    def calcAverageIncidenceAngle(self, incidenceAngleDist):
+    def calcAverageCurve(self, curves, incidenceAngleDist):
         """
-        Calculate the average incidence angle from the incidence angle distrubution.
+        Calculate an average curve from a set of cuvres, using as weights
+        the distribution of incidence angles provided in incidenceAngleDist
 
         Parameters
         ----------
+        curves: dict
+            dict of with 3 "columns", Wavelength, Angle and z
+            The dictionary represents a two dimensional distribution of wavelengths and angles
+            with the z value being e.g., reflecitivity, transmission, etc.
         incidenceAngleDist: Astropy table
             Astropy table with the incidence angle distribution
             The assumed columns are "Incidence angle" and "Fraction".
 
         Returns
         -------
-        float:
-            Average incidence angle.
-        """
-
-        return np.average(
-            incidenceAngleDist["Incidence angle"], weights=incidenceAngleDist["Fraction"]
-        )
-
-    def interpolateThreeDimDist(self, data, precision={}, kind="linear"):
-        """
-        Interpolate the x/y dimensions of the table to the precision requested
-
-        Parameters
-        ----------
-        data: dict
-            dict of with 3 "columns", where the order of the columns is assumed to be x, y, z
-        precision: dict
-            A dict of the shape {"x": float, "y": float},
-            where the float is the step size to interpolate to.
-            An empty entry would leave that axis unchanged.
-        kind: {‘linear’, ‘cubic’, ‘quintic’}, optional
-            The kind of spline interpolation to use (see scipy interp2d). Default is ‘linear’.
-
-        Returns
-        -------
-        dict:
-            The interpolated dict
-        """
-
-        def _getInterpolatedAxis(axis, column, precision):
-            if axis in precision:
-                nSteps = (np.max(column) - np.min(column)) / precision[axis]
-                intArray = np.linspace(np.min(column), np.max(column), int(nSteps))
-                if precision[axis].is_integer():
-                    digitsToRound = -len(str(precision[axis]).split(".")[0])
-                else:
-                    digitsToRound = len(str(precision[axis]).split(".")[1])
-                return np.around(intArray, digitsToRound)
-            else:
-                return column
-
-        xInterpolated = _getInterpolatedAxis("x", list(data.values())[0], precision)
-        yInterpolated = _getInterpolatedAxis("y", list(data.values())[1], precision)
-
-        f = interpolate.interp2d(
-            list(data.values())[0], list(data.values())[1], list(data.values())[2], kind=kind
-        )
-        zInterpolated = f(xInterpolated, yInterpolated)
-
-        interpolatedDict = dict()
-        interpolatedDict[list(data)[0]] = xInterpolated
-        interpolatedDict[list(data)[1]] = yInterpolated
-        interpolatedDict[list(data)[2]] = zInterpolated
-
-        return interpolatedDict
-
-    def calcAverageCurve(self, curves, incidenceAngleDist):
-        """
-        Interpolate the x/y dimensions of the table to the precision requested
-
-        Parameters
-        ----------
-        data: dict
-            dict of with 3 "columns", where the order of the columns is assumed to be x, y, z
-        precision: dict
-            A dict of the shape {"x": float, "y": float},
-            where the float is the step size to interpolate to.
-            An empty entry would leave that axis unchanged.
-        kind: {‘linear’, ‘cubic’, ‘quintic’}, optional
-            The kind of spline interpolation to use (see scipy interp2d). Default is ‘linear’.
-
-        Returns
-        -------
-        dict:
-            The interpolated dict
+        averageCurve: Astropy Table
+            Table with the averaged curve
         """
 
         weights = list()
@@ -909,8 +841,8 @@ class TelescopeModel:
             )
 
         averageCurve = Table(
-            [curves["Wavelength"], np.average(curves["Transmission"], weights=weights, axis=0)],
-            names=("Wavelength", "Transmission"),
+            [curves["Wavelength"], np.average(curves["z"], weights=weights, axis=0)],
+            names=("Wavelength", "z"),
         )
 
         return averageCurve
