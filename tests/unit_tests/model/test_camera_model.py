@@ -11,12 +11,13 @@ logger.setLevel(logging.DEBUG)
 
 
 @pytest.fixture
-def telescope_model(set_db):
+def telescope_model(io_handler, db_connection):
     telescopeModel = TelescopeModel(
         site="North",
         telescopeModelName="LST-1",
         modelVersion="Prod5",
         label="test-telescope-model",
+        mongoDBConfigFile=str(db_connection),
     )
     telescopeModel.exportModelFiles()
     return telescopeModel

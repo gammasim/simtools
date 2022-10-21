@@ -5,10 +5,6 @@ import uuid
 
 import pytest
 
-import simtools.config as cfg
-import simtools.io_handler as io
-from simtools import db_handler
-
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
@@ -17,12 +13,6 @@ logger.setLevel(logging.DEBUG)
 def random_id():
     random_id = uuid.uuid4().hex
     return random_id
-
-
-@pytest.fixture
-def db(set_db):
-    db = db_handler.DatabaseHandler()
-    return db
 
 
 @pytest.fixture()
@@ -37,8 +27,9 @@ def db_cleanup(db, random_id):
 def test_reading_db_lst(db):
 
     logger.info("----Testing reading LST-----")
+    assert 1 == 1
     pars = db.getModelParameters("north", "lst-1", "Current")
-    if cfg.get("useMongoDB"):
+    if db.useMongoDB:
         assert pars["parabolic_dish"]["Value"] == 1
         assert pars["camera_pixels"]["Value"] == 1855
     else:
@@ -50,7 +41,7 @@ def test_reading_db_mst_nc(db):
 
     logger.info("----Testing reading MST-NectarCam-----")
     pars = db.getModelParameters("north", "mst-NectarCam-D", "Current")
-    if cfg.get("useMongoDB"):
+    if db.useMongoDB:
         assert pars["camera_pixels"]["Value"] == 1855
     else:
         assert pars["camera_pixels"] == 1855
@@ -60,7 +51,7 @@ def test_reading_db_mst_fc(db):
 
     logger.info("----Testing reading MST-FlashCam-----")
     pars = db.getModelParameters("north", "mst-FlashCam-D", "Current")
-    if cfg.get("useMongoDB"):
+    if db.useMongoDB:
         assert pars["camera_pixels"]["Value"] == 1764
     else:
         assert pars["camera_pixels"] == 1764
@@ -70,7 +61,7 @@ def test_reading_db_sst(db):
 
     logger.info("----Testing reading SST-----")
     pars = db.getModelParameters("south", "sst-D", "Current")
-    if cfg.get("useMongoDB"):
+    if db.useMongoDB:
         assert pars["camera_pixels"]["Value"] == 2048
     else:
         assert pars["camera_pixels"] == 2048
@@ -92,7 +83,7 @@ def test_get_derived_values(db):
     )
 
 
-def test_copy_telescope_db(db, random_id, db_cleanup):
+def test_copy_telescope_db(db, random_id, db_cleanup, io_handler):
 
     logger.info("----Testing copying a whole telescope-----")
     db.copyTelescope(
@@ -115,7 +106,7 @@ def test_copy_telescope_db(db, random_id, db_cleanup):
         dbName="sandbox",
         telescopeModelNameDB="North-LST-Test",
         modelVersion="Current",
-        runLocation=io.getOutputDirectory(dirType="model", test=True),
+        runLocation=io_handler.getOutputDirectory(dirType="model", test=True),
         collectionName="telescopes_" + random_id,
         writeFiles=False,
     )
@@ -134,13 +125,13 @@ def test_copy_telescope_db(db, random_id, db_cleanup):
             dbName="sandbox",
             telescopeModelNameDB="North-LST-Test",
             modelVersion="Current",
-            runLocation=io.getOutputDirectory(dirType="model", test=True),
+            runLocation=io_handler.getOutputDirectory(dirType="model", test=True),
             collectionName="telescopes_" + random_id,
             writeFiles=False,
         )
 
 
-def test_adding_parameter_version_db(db, random_id, db_cleanup):
+def test_adding_parameter_version_db(db, random_id, db_cleanup, io_handler):
 
     logger.info("----Testing adding a new version of a parameter-----")
     db.copyTelescope(
@@ -164,14 +155,14 @@ def test_adding_parameter_version_db(db, random_id, db_cleanup):
         dbName="sandbox",
         telescopeModelNameDB="North-LST-Test",
         modelVersion="test",
-        runLocation=io.getOutputDirectory(dirType="model", test=True),
+        runLocation=io_handler.getOutputDirectory(dirType="model", test=True),
         collectionName="telescopes_" + random_id,
         writeFiles=False,
     )
     assert pars["camera_config_version"]["Value"] == 42
 
 
-def test_update_parameter_db(db, random_id, db_cleanup):
+def test_update_parameter_db(db, random_id, db_cleanup, io_handler):
 
     logger.info("----Testing updating a parameter-----")
     db.copyTelescope(
@@ -203,14 +194,14 @@ def test_update_parameter_db(db, random_id, db_cleanup):
         dbName="sandbox",
         telescopeModelNameDB="North-LST-Test",
         modelVersion="test",
-        runLocation=io.getOutputDirectory(dirType="model", test=True),
+        runLocation=io_handler.getOutputDirectory(dirType="model", test=True),
         collectionName="telescopes_" + random_id,
         writeFiles=False,
     )
     assert pars["camera_config_version"]["Value"] == 999
 
 
-def test_adding_new_parameter_db(db, random_id, db_cleanup):
+def test_adding_new_parameter_db(db, random_id, db_cleanup, io_handler):
 
     logger.info("----Testing adding a new parameter-----")
     db.copyTelescope(
@@ -234,14 +225,14 @@ def test_adding_new_parameter_db(db, random_id, db_cleanup):
         dbName="sandbox",
         telescopeModelNameDB="North-LST-Test",
         modelVersion="test",
-        runLocation=io.getOutputDirectory(dirType="model", test=True),
+        runLocation=io_handler.getOutputDirectory(dirType="model", test=True),
         collectionName="telescopes_" + random_id,
         writeFiles=False,
     )
     assert pars["camera_config_version_test"]["Value"] == 999
 
 
-def test_update_parameter_field_db(db, random_id, db_cleanup):
+def test_update_parameter_field_db(db, random_id, db_cleanup, io_handler):
 
     logger.info("----Testing modifying a field of a parameter-----")
     db.copyTelescope(
@@ -273,7 +264,7 @@ def test_update_parameter_field_db(db, random_id, db_cleanup):
         dbName="sandbox",
         telescopeModelNameDB="North-LST-Test",
         modelVersion="Current",
-        runLocation=io.getOutputDirectory(dirType="model", test=True),
+        runLocation=io_handler.getOutputDirectory(dirType="model", test=True),
         collectionName="telescopes_" + random_id,
         writeFiles=False,
     )
@@ -284,20 +275,20 @@ def test_reading_db_sites(db):
 
     logger.info("----Testing reading La Palma parameters-----")
     pars = db.getSiteParameters("North", "Current")
-    if cfg.get("useMongoDB"):
+    if db.useMongoDB:
         assert pars["altitude"]["Value"] == 2158
     else:
         assert pars["altitude"] == 2158
 
     logger.info("----Testing reading Paranal parameters-----")
     pars = db.getSiteParameters("South", "Current")
-    if cfg.get("useMongoDB"):
+    if db.useMongoDB:
         assert pars["altitude"]["Value"] == 2147
     else:
         assert pars["altitude"] == 2147
 
 
-def test_separating_get_and_write(db):
+def test_separating_get_and_write(db, io_handler):
 
     logger.info("----Testing getting parameters and exporting model files-----")
     pars = db.getModelParameters("north", "lst-1", "Current")
@@ -306,23 +297,28 @@ def test_separating_get_and_write(db):
     for parNow in pars.values():
         if parNow["File"]:
             fileList.append(parNow["Value"])
-    db.exportModelFiles(pars, io.getOutputDirectory(dirType="model", test=True))
+    db.exportModelFiles(
+        pars,
+        io_handler.getOutputDirectory(dirType="model", test=True),
+    )
     logger.debug(
         "Checking files were written to {}".format(
-            io.getOutputDirectory(dirType="model", test=True)
+            io_handler.getOutputDirectory(dirType="model", test=True)
         )
     )
     for fileNow in fileList:
-        assert io.getOutputFile(fileNow, dirType="model", test=True).exists()
+        assert io_handler.getOutputFile(fileNow, dirType="model", test=True).exists()
 
 
-def test_insert_files_db(db):
+def test_insert_files_db(db, io_handler):
 
     logger.info("----Testing inserting files to the DB-----")
     logger.info(
-        "Creating a temporary file in {}".format(io.getOutputDirectory(dirType="model", test=True))
+        "Creating a temporary file in {}".format(
+            io_handler.getOutputDirectory(dirType="model", test=True)
+        )
     )
-    fileName = io.getOutputDirectory(dirType="model", test=True) / "test_file.dat"
+    fileName = io_handler.getOutputDirectory(dirType="model", test=True) / "test_file.dat"
     with open(fileName, "w") as f:
         f.write("# This is a test file")
 

@@ -70,28 +70,28 @@ def corsikaFile():
 
 
 @pytest.fixture
-def array_simulator(set_db, label, arrayConfigData):
+def array_simulator(label, arrayConfigData, io_handler, db_connection, simtelpath):
 
-    arraySimulator = Simulator(label=label, simulator="simtel", configData=arrayConfigData)
+    arraySimulator = Simulator(
+        label=label,
+        simulator="simtel",
+        simulatorSourcePath=simtelpath,
+        configData=arrayConfigData,
+        mongoDBConfigFile=db_connection,
+    )
     return arraySimulator
 
 
 @pytest.fixture
-def shower_simulator(set_db, label, showerConfigData):
+def shower_simulator(label, showerConfigData, io_handler, db_connection, simtelpath):
 
-    showerSimulator = Simulator(label=label, simulator="corsika", configData=showerConfigData)
+    showerSimulator = Simulator(
+        label=label,
+        simulator="corsika",
+        simulatorSourcePath=simtelpath,
+        configData=showerConfigData,
+    )
     return showerSimulator
-
-
-def test_setFileLocations(array_simulator, shower_simulator):
-
-    assert Path.exists(array_simulator._simulatorSourcePath)
-    assert Path.exists(array_simulator._filesLocation)
-    assert Path.exists(array_simulator._outputDirectory)
-
-    assert Path.exists(shower_simulator._simulatorSourcePath)
-    assert Path.exists(shower_simulator._filesLocation)
-    assert Path.exists(shower_simulator._outputDirectory)
 
 
 def test_guess_run_from_file(array_simulator):
@@ -208,13 +208,15 @@ def test_fillResultsWithoutRun(array_simulator, input_file_list):
 def test_submitting(shower_simulator, array_simulator, corsikaFile):
 
     shower_simulator.test = True
-    shower_simulator.simulate(submitCommand="local")
+    shower_simulator._submitCommand = "local"
+    shower_simulator.simulate()
 
     run_script = shower_simulator._simulationRunner.getRunScript(runNumber=2)
 
     assert Path(run_script).exists()
 
-    array_simulator.simulate(inputFileList=corsikaFile, submitCommand="local")
+    array_simulator._submitCommand = "local"
+    array_simulator.simulate(inputFileList=corsikaFile)
 
     array_simulator.printListOfOutputFiles()
     array_simulator.printListOfLogFiles()
@@ -270,9 +272,17 @@ def test_fillResults(array_simulator, shower_simulator, input_file_list):
     assert shower_simulator._results["hist"][1] is None
 
 
-def test_printHistograms(arrayConfigData, shower_simulator, input_file_list):
+def test_printHistograms(
+    arrayConfigData, shower_simulator, input_file_list, simtelpath, db_connection
+):
 
-    _arraySimulator = Simulator(label="simtel_test", simulator="simtel", configData=arrayConfigData)
+    _arraySimulator = Simulator(
+        label="simtel_test",
+        simulator="simtel",
+        simulatorSourcePath=simtelpath,
+        configData=arrayConfigData,
+        mongoDBConfigFile=db_connection,
+    )
 
     assert len(str(_arraySimulator.printHistograms())) > 0
 
@@ -292,11 +302,16 @@ def test_get_list_of_files(shower_simulator):
     assert len(shower_simulator.getListOfOutputFiles(runRange=[1, 4])) == 14
 
 
-def test_no_corsika_data(cfg_setup, showerConfigData, label):
+def test_no_corsika_data(showerConfigData, label, simtelpath, io_handler):
 
     newShowerConfigData = copy(showerConfigData)
     newShowerConfigData.pop("dataDirectory", None)
-    newShowerSimulator = Simulator(label=label, simulator="corsika", configData=newShowerConfigData)
+    newShowerSimulator = Simulator(
+        label=label,
+        simulator="corsika",
+        configData=newShowerConfigData,
+        simulatorSourcePath=simtelpath,
+    )
     files = newShowerSimulator.getListOfOutputFiles(runList=[3])
 
     assert "/" + label + "/" in files[0]
@@ -311,10 +326,13 @@ def test_makeResourcesReport(array_simulator, input_file_list):
         array_simulator._makeResourcesReport(input_file_list)
 
 
-def test_getRunsToSimulate(showerConfigData):
+def test_getRunsToSimulate(showerConfigData, simtelpath, io_handler):
 
     showerSimulator = Simulator(
-        label="corsika-test", simulator="corsika", configData=showerConfigData
+        label="corsika-test",
+        simulator="corsika",
+        configData=showerConfigData,
+        simulatorSourcePath=simtelpath,
     )
     assert len(showerSimulator.runs) == len(
         showerSimulator._getRunsToSimulate(runList=None, runRange=None)

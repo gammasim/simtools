@@ -28,9 +28,8 @@ import logging
 
 import astropy.units as u
 
-import simtools.config as cfg
-import simtools.io_handler as io
-import simtools.util.commandline_parser as argparser
+import simtools.configuration as configurator
+import simtools.io_handler as io_handler
 import simtools.util.general as gen
 from simtools import db_handler
 from simtools.layout.layout_array import LayoutArray
@@ -38,7 +37,7 @@ from simtools.layout.layout_array import LayoutArray
 
 def main():
 
-    parser = argparser.CommandLineParser(
+    config = configurator.Configurator(
         description=(
             "This application creates the layout array files (ECSV) of regular arrays "
             "with one telescope at the center of the array and with 4 telescopes "
@@ -46,22 +45,21 @@ def main():
             "The array layout files created should be available at the data/layout directory."
         )
     )
-    parser.initialize_default_arguments()
-
-    args = parser.parse_args()
-    cfg.setConfigFileName(args.config_file)
+    args_dict = config.initialize()
 
     label = "make_regular_arrays"
 
     logger = logging.getLogger()
-    logger.setLevel(gen.getLogLevelFromUser(args.log_level))
+    logger.setLevel(gen.getLogLevelFromUser(args_dict["log_level"]))
+
+    _io_handler = io_handler.IOHandler()
 
     corsikaPars = gen.collectDataFromYamlOrDict(
-        io.getInputDataFile("corsika", "corsika_parameters.yml"), None
+        _io_handler.getInputDataFile("corsika", "corsika_parameters.yml"), None
     )
 
     # Reading site parameters from DB
-    db = db_handler.DatabaseHandler()
+    db = db_handler.DatabaseHandler(mongoDBConfigFile=args_dict.get("mongodb_config_file"))
 
     siteParsDB = dict()
     layoutCenterData = dict()
@@ -139,7 +137,9 @@ def main():
 
             layout.convertCoordinates()
             layout.printTelescopeList()
-            layout.exportTelescopeList(crsName="corsika")
+            layout.exportTelescopeList(
+                crsName="corsika", outputPath=args_dict.get("output_path", None)
+            )
 
 
 if __name__ == "__main__":

@@ -73,9 +73,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.backends.backend_pdf import PdfPages
 
-import simtools.config as cfg
-import simtools.io_handler as io
-import simtools.util.commandline_parser as argparser
+import simtools.configuration as configurator
+import simtools.io_handler as io_handler
 import simtools.util.general as gen
 from simtools import visualize
 from simtools.model.telescope_model import TelescopeModel
@@ -93,24 +92,26 @@ def loadData(datafile):
 
 def main():
 
-    parser = argparser.CommandLineParser(
+    config = configurator.Configurator(
         description=(
             "Tune mirror_reflection_random_angle, mirror_align_random_horizontal "
             "and mirror_align_random_vertical using cumulative PSF measurement."
         )
     )
-    parser.initialize_telescope_model_arguments()
-    parser.add_argument(
+    config.parser.initialize_telescope_model_arguments()
+    config.parser.add_argument(
         "--src_distance",
         help="Source distance in km (default=10)",
         type=float,
         default=10,
     )
-    parser.add_argument("--zenith", help="Zenith angle in deg (default=20)", type=float, default=20)
-    parser.add_argument(
+    config.parser.add_argument(
+        "--zenith", help="Zenith angle in deg (default=20)", type=float, default=20
+    )
+    config.parser.add_argument(
         "--data", help="Data file name with the measured PSF vs radius [cm]", type=str
     )
-    parser.add_argument(
+    config.parser.add_argument(
         "--plot_all",
         help=(
             "On: plot cumulative PSF for all tested combinations, "
@@ -118,27 +119,27 @@ def main():
         ),
         action="store_true",
     )
-    parser.add_argument(
+    config.parser.add_argument(
         "--fixed",
         help=("Keep the first entry of mirror_reflection_random_angle fixed."),
         action="store_true",
     )
-    parser.initialize_default_arguments(add_workflow_config=False)
 
-    args = parser.parse_args()
+    args_dict = config.initialize()
     label = "tune_psf"
-    cfg.setConfigFileName(args.config_file)
 
     logger = logging.getLogger()
-    logger.setLevel(gen.getLogLevelFromUser(args.log_level))
+    logger.setLevel(gen.getLogLevelFromUser(args_dict["log_level"]))
 
     # Output directory to save files related directly to this app
-    outputDir = io.getOutputDirectory(cfg.get("outputLocation"), label, dirType="application-plots")
+    _io_handler = io_handler.IOHandler()
+    outputDir = _io_handler.getOutputDirectory(label, dirType="application-plots")
 
     telModel = TelescopeModel(
-        site=args.site,
-        telescopeModelName=args.telescope,
-        modelVersion=args.model_version,
+        site=args_dict["site"],
+        telescopeModelName=args_dict["telescope"],
+        mongoDBConfigFile=args_dict.get("mongodb_config_file", None),
+        modelVersion=args_dict["model_version"],
         label=label,
     )
     # If we want to start from values different than the ones currently in the model:
@@ -193,7 +194,7 @@ def main():
         "MAR = " + str(mar_0) + "\n"
     )
 
-    if args.fixed:
+    if args_dict["fixed"]:
         logger.debug("fixed=True - First entry of mirror_reflection_random_angle is kept fixed.")
 
     # Drawing parameters randonly
@@ -201,7 +202,7 @@ def main():
     # Number of runs is hardcoded
     N_RUNS = 50
     for _ in range(N_RUNS):
-        mrra_range = 0.004 if not args.fixed else 0
+        mrra_range = 0.004 if not args_dict["fixed"] else 0
         mrf_range = 0.1
         mrra2_range = 0.03
         mar_range = 0.005
@@ -213,8 +214,8 @@ def main():
 
     # Loading measured cumulative PSF
     dataToPlot = OrderedDict()
-    if args.data is not None:
-        dataFile = gen.findFile(args.data, cfg.get(par="modelFilesLocations"))
+    if args_dict["data"] is not None:
+        dataFile = gen.findFile(args_dict["data"], args_dict["model_path"])
         dataToPlot["measured"] = loadData(dataFile)
         radius = dataToPlot["measured"]["Radius [cm]"]
 
@@ -239,12 +240,13 @@ def main():
 
         ray = RayTracing.fromKwargs(
             telescopeModel=telModel,
-            sourceDistance=args.src_distance * u.km,
-            zenithAngle=args.zenith * u.deg,
+            simtelSourcePath=args_dict["simtelpath"],
+            sourceDistance=args_dict["src_distance"] * u.km,
+            zenithAngle=args_dict["zenith"] * u.deg,
             offAxisAngle=[0.0 * u.deg],
         )
 
-        ray.simulate(test=args.test, force=True)
+        ray.simulate(test=args_dict["test"], force=True)
         ray.analyze(force=True, useRX=False)
 
         # Plotting cumulative PSF
@@ -290,7 +292,7 @@ def main():
     # and storing the best parameters in best_pars
     min_rmsd = 100
     for pars in allParameters:
-        _, rmsd = runPars(pars, plot=args.plot_all)
+        _, rmsd = runPars(pars, plot=args_dict["plot_all"])
         if rmsd < min_rmsd:
             min_rmsd = rmsd
             best_pars = pars

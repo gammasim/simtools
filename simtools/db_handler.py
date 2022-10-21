@@ -11,7 +11,7 @@ from bson.objectid import ObjectId
 from pymongo import MongoClient
 from pymongo.errors import BulkWriteError
 
-import simtools.config as cfg
+import simtools.io_handler as io_handler
 import simtools.util.general as gen
 from simtools.util import names
 from simtools.util.model import getTelescopeClass
@@ -67,23 +67,24 @@ class DatabaseHandler:
 
     dbClient = None
 
-    def __init__(self):
+    def __init__(self, useMongoDB=True, mongoDBConfigFile=None):
         """
         Initialize the DatabaseHandler class.
         """
         self._logger = logging.getLogger(__name__)
         self._logger.debug("Initialize DatabaseHandler")
 
-        if cfg.get("useMongoDB"):
+        self.useMongoDB = useMongoDB
+        self.mongoDBConfigFile = mongoDBConfigFile
+        self.io_handler = io_handler.IOHandler()
+
+        if self.useMongoDB:
             if DatabaseHandler.dbClient is None:
                 with Lock():
                     self.dbDetails = self._readDetailsMongoDB()
                     DatabaseHandler.dbClient = self._openMongoDB()
 
-    # END of _init_
-
-    @staticmethod
-    def _readDetailsMongoDB():
+    def _readDetailsMongoDB(self):
         """
         Read the MongoDB details (server, user, pass, etc.) from an external file.
 
@@ -94,10 +95,8 @@ class DatabaseHandler:
         """
 
         dbDetails = dict()
-        dbDetailsFile = cfg.get("mongoDBConfigFile")
-        with open(dbDetailsFile, "r") as stream:
+        with open(self.mongoDBConfigFile, "r") as stream:
             dbDetails = yaml.safe_load(stream)
-
         return dbDetails
 
     def _openMongoDB(self):
@@ -155,7 +154,7 @@ class DatabaseHandler:
         _siteValidated = names.validateSiteName(site)
         _telModelNameValidated = names.validateTelescopeModelName(telescopeModelName)
 
-        if cfg.get("useMongoDB"):
+        if self.useMongoDB:
 
             # Only MongoDB supports tagged version
             _modelVersion = self._convertVersionToTagged(
@@ -211,7 +210,7 @@ class DatabaseHandler:
             Location where to write the files to.
         """
 
-        if cfg.get("useMongoDB"):
+        if self.useMongoDB:
             self._logger.debug("Exporting model files from MongoDB")
             for info in parameters.values():
                 if not info["File"]:
@@ -246,7 +245,7 @@ class DatabaseHandler:
 
         destFile = Path(destDir).joinpath(fileName)
         try:
-            file = gen.findFile(fileName, cfg.get("modelFilesLocations"))
+            file = gen.findFile(fileName, self.io_handler.model_path)
         except FileNotFoundError:
             if noFileOk:
                 self._logger.debug("File {} not found but noFileOk".format(fileName))
@@ -465,7 +464,7 @@ class DatabaseHandler:
         """
 
         _fileNameDB = "parValues-{}.yml".format(telescopeNameYaml)
-        _yamlFile = gen.findFile(_fileNameDB, cfg.get("modelFilesLocations"))
+        _yamlFile = gen.findFile(_fileNameDB, self.io_handler.model_path)
         self._logger.debug("Reading DB file {}".format(_yamlFile))
         with open(_yamlFile, "r") as stream:
             _allPars = yaml.safe_load(stream)
@@ -496,7 +495,7 @@ class DatabaseHandler:
         _site = names.validateSiteName(site)
         _modelVersion = names.validateModelVersionName(modelVersion)
 
-        if cfg.get("useMongoDB"):
+        if self.useMongoDB:
             _pars = self._getSiteParametersMongoDB(
                 DatabaseHandler.DB_CTA_SIMULATION_MODEL,
                 _site,
@@ -527,7 +526,7 @@ class DatabaseHandler:
 
         siteYaml = "lapalma" if site == "North" else "paranal"
 
-        yamlFile = gen.findFile("parValues-Sites.yml", cfg.get("modelFilesLocations"))
+        yamlFile = gen.findFile("parValues-Sites.yml", self.io_handler.model_path)
         self._logger.info("Reading DB file {}".format(yamlFile))
         with open(yamlFile, "r") as stream:
             _allParsVersions = yaml.safe_load(stream)

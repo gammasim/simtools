@@ -38,7 +38,7 @@ import logging
 from pathlib import Path
 
 import simtools.config as cfg
-import simtools.util.commandline_parser as argparser
+import simtools.configuration as configurator
 import simtools.util.general as gen
 from simtools import db_handler
 
@@ -63,8 +63,8 @@ def main():
 
     db = db_handler.DatabaseHandler()
 
-    parser = argparser.CommandLineParser(description=("Add a file or files to the DB."))
-    group = parser.add_mutually_exclusive_group(required=True)
+    config = configurator.Configurator(description=("Add a file or files to the DB."))
+    group = config.parser.add_mutually_exclusive_group(required=True)
     group.add_argument(
         "-f",
         "--fileName",
@@ -87,7 +87,7 @@ def main():
         ),
         type=str,
     )
-    parser.add_argument(
+    config.parser.add_argument(
         "-db",
         dest="dbToInsertTo",
         type=str,
@@ -105,16 +105,15 @@ def main():
             "the default is {0}".format(db.DB_TABULATED_DATA)
         ),
     )
-    parser.initialize_default_arguments()
-    args = parser.parse_args()
-    cfg.setConfigFileName(args.config_file)
+    args_dict = config.initialize()
+    cfg.setConfigFileName(args_dict["config_file"])
 
     logger = logging.getLogger()
-    logger.setLevel(gen.getLogLevelFromUser(args.log_level))
+    logger.setLevel(gen.getLogLevelFromUser(args_dict["log_level"]))
 
     filesToInsert = list()
-    if args.fileName is not None:
-        for fileNow in args.fileName:
+    if args_dict["fileName"] is not None:
+        for fileNow in args_dict["fileName"]:
             if Path(fileNow).suffix in db.ALLOWED_FILE_EXTENSIONS:
                 filesToInsert.append(fileNow)
             else:
@@ -124,7 +123,7 @@ def main():
                 )
     else:
         for extNow in db.ALLOWED_FILE_EXTENSIONS:
-            filesToInsert.extend(Path(args.directory).glob("*{}".format(extNow)))
+            filesToInsert.extend(Path(args_dict["directory"]).glob("*{}".format(extNow)))
 
     plural = "s"
     if len(filesToInsert) < 1:
@@ -134,15 +133,21 @@ def main():
     else:
         pass
 
-    print("Should I insert the following file{} to the {} DB?:\n".format(plural, args.dbToInsertTo))
+    print(
+        "Should I insert the following file{} to the {} DB?:\n".format(
+            plural, args_dict["dbToInsertTo"]
+        )
+    )
     print(*filesToInsert, sep="\n")
     print()
     if _userConfirm():
-        db.insertFilesToDB(filesToInsert, args.dbToInsertTo)
-        logger.info("File{} inserted to {} DB".format(plural, args.dbToInsertTo))
+        db.insertFilesToDB(filesToInsert, args_dict["dbToInsertTo"])
+        logger.info("File{} inserted to {} DB".format(plural, args_dict["dbToInsertTo"]))
     else:
         logger.info(
-            "Aborted, did not insert the file{} to the {} DB".format(plural, args.dbToInsertTo)
+            "Aborted, did not insert the file{} to the {} DB".format(
+                plural, args_dict["dbToInsertTo"]
+            )
         )
 
 
