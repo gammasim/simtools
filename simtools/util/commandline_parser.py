@@ -1,4 +1,5 @@
 import argparse
+from pathlib import Path
 
 import simtools.util.names as names
 import simtools.version
@@ -34,11 +35,12 @@ class CommandLineParser(argparse.ArgumentParser):
         self.add_argument(
             "--config_file",
             help="gammasim-tools configuration file",
+            default=None,
+            type=str,
             required=False,
         )
         if add_workflow_config:
             self.add_argument(
-                "-c",
                 "--workflow_config_file",
                 help="workflow configuration file",
                 type=str,
@@ -47,21 +49,21 @@ class CommandLineParser(argparse.ArgumentParser):
         self.add_argument(
             "--data_path",
             help="path pointing towards data directory",
-            type=str,
+            type=Path,
             default="./data/",
             required=False,
         )
         self.add_argument(
             "--output_path",
             help="path pointing towards output directory",
-            type=str,
+            type=Path,
             default="./",
             required=False,
         )
         self.add_argument(
             "--model_path",
             help="path pointing towards model file directory (temporary - will go in future)",
-            type=str,
+            type=Path,
             default="./",
             required=False,
         )
@@ -75,7 +77,7 @@ class CommandLineParser(argparse.ArgumentParser):
         self.add_argument(
             "--simtelpath",
             help="path pointing to sim_telarray installation",
-            type=str,
+            type=Path,
             required=False,
         )
         self.add_argument(
@@ -96,6 +98,30 @@ class CommandLineParser(argparse.ArgumentParser):
             "-V", "--version", action="version", version=f"%(prog)s {simtools.version.__version__}"
         )
 
+    def initialize_job_submission_arguments(self):
+        """
+        Initialize job submission arguments for simulator.
+
+        """
+
+        self.add_argument(
+            "--submit_command",
+            help="Job submission command",
+            type=str,
+            required=True,
+            choices=[
+                "qsub",
+                "condor_submit",
+                "local",
+            ],
+        )
+        self.add_argument(
+            "--extra_submit_options",
+            help="Additional options for submission command",
+            type=str,
+            required=False,
+        )
+
     def initialize_telescope_model_arguments(self, add_model_version=True, add_telescope=True):
         """
         Initialize default arguments for site and telescope model
@@ -104,11 +130,10 @@ class CommandLineParser(argparse.ArgumentParser):
         """
 
         self.add_argument(
-            "-s", "--site", help="CTAO site (e.g. North, South)", type=self.site, required=True
+            "--site", help="CTAO site (e.g. North, South)", type=self.site, required=True
         )
         if add_telescope:
             self.add_argument(
-                "-t",
                 "--telescope",
                 help="telescope model name (e.g. LST-1, SST-D, ...)",
                 type=str,
@@ -116,7 +141,6 @@ class CommandLineParser(argparse.ArgumentParser):
             )
         if add_model_version:
             self.add_argument(
-                "-m",
                 "--model_version",
                 help="model version (default=Current)",
                 type=str,
