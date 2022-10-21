@@ -150,6 +150,7 @@ class TelescopeModel:
     def derived(self):
         if not hasattr(self, "_derived"):
             self._loadDerivedValues()
+            self.exportDerivedFiles()
         return self._derived
 
     @property
@@ -315,7 +316,7 @@ class TelescopeModel:
 
     def getParameter(self, parName):
         """
-        Get an existing parameter of the model.
+        Get an existing parameter of the model, including derived parameters.
 
         Parameters
         ----------
@@ -334,7 +335,11 @@ class TelescopeModel:
         try:
             return self._parameters[parName]
         except KeyError:
-            msg = "Parameter {} was not found in the model".format(parName)
+            pass  # search in the derived parameters
+        try:
+            return self.derived[parName]
+        except KeyError:
+            msg = f"Parameter {parName} was not found in the model"
             self._logger.error(msg)
             raise InvalidParameter(msg)
 
@@ -524,26 +529,19 @@ class TelescopeModel:
             configFilePath=self._configFilePath, parameters=self._parameters
         )
 
-    def exportDerivedFiles(self, fileNames):
+    def exportDerivedFiles(self):
         """
         Write to disk a file from the derived values DB.
-
-        Parameters
-        ----------
-        fileNames: str or list of strings
-            Name of the file to get or list of names.
         """
 
-        if not isinstance(fileNames, list):
-            fileNames = [fileNames]
-
         db = db_handler.DatabaseHandler()
-        for fileNameNow in fileNames:
-            db.exportFileDB(
-                dbName=db.DB_DERIVED_VALUES,
-                dest=io.getOutputDirectory(self._filesLocation, self.label, "derived"),
-                fileName=fileNameNow,
-            )
+        for parNow in self.derived:
+            if self.derived[parNow]["File"]:
+                db.exportFileDB(
+                    dbName=db.DB_DERIVED_VALUES,
+                    dest=io.getOutputDirectory(self._filesLocation, self.label, "derived"),
+                    fileName=self.derived[parNow]["Value"],
+                )
 
     def getConfigFile(self, noExport=False):
         """
@@ -782,7 +780,6 @@ class TelescopeModel:
         Return the on-axis effective optical area (derived previously for this telescope).
         """
 
-        self.exportDerivedFiles(self.derived["ray_tracing"]["Value"])
         rayTracingData = astropy.io.ascii.read(
             self.getDerivedDirectory().joinpath(self.derived["ray_tracing"]["Value"])
         )
@@ -794,7 +791,7 @@ class TelescopeModel:
             raise ValueError
         return rayTracingData["eff_area"][0]
 
-    def readAverageIncidenceAngle(self, incidenceAngleDistFile):
+    def readIncidenceAngleDistribution(self, incidenceAngleDistFile):
         """
         Read the incidence angle distrubution from a file
 
@@ -805,12 +802,12 @@ class TelescopeModel:
 
         Returns
         -------
-        float:
-            Average incidence angle.
+        incidenceAngleDist: Astropy table
+            Astropy table with the incidence angle distribution
         """
 
         incidenceAngleDist = astropy.io.ascii.read(
-            self._configFileDirectory.joinpath(incidenceAngleDistFile)
+            self.getDerivedDirectory.joinpath(incidenceAngleDistFile)
         )
         return incidenceAngleDist
 
