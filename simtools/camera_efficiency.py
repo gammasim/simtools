@@ -218,7 +218,7 @@ class CameraEfficiency:
         # support 2D camera filters
         cameraFilterFile = self._telescopeModel.getParameterValue("camera_filter")
         if self._telescopeModel.isFile2D("camera_filter"):
-            incidenceAngleDistribution = self._telescopeModel.readAverageIncidenceAngle(
+            incidenceAngleDistribution = self._telescopeModel.readIncidenceAngleDistribution(
                 self._telescopeModel.getParameterValue("camera_filter_incidence_angle")
             )
             self._logger.warning(
