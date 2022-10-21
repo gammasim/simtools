@@ -772,7 +772,7 @@ class TelescopeModel:
         return {
             "Wavelength": _data[:, 0],
             "Angle": degrees,
-            "z": np.array(_data[:, 1:], dtype=np.float16).T,
+            "z": np.array(_data[:, 1:]).T,
         }
 
     def getOnAxisEffOpticalArea(self):
