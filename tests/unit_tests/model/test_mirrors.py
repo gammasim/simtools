@@ -4,30 +4,24 @@ import logging
 
 import pytest
 
-import simtools.io_handler as io
 import simtools.util.general as gen
-from simtools import db_handler
 from simtools.model.mirrors import Mirrors
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 
-@pytest.fixture
-def db(set_db):
-    db = db_handler.DatabaseHandler()
-    return db
-
-
-def test_read_list(db):
+def test_read_list(db, io_handler):
 
     testFileName = "mirror_CTA-LST-flen_grouped.dat"
     db.exportFileDB(
         dbName=db.DB_CTA_SIMULATION_MODEL,
-        dest=io.getOutputDirectory(dirType="model", test=True),
+        dest=io_handler.getOutputDirectory(dirType="model", test=True),
         fileName=testFileName,
     )
-    mirrorListFile = gen.findFile(testFileName, io.getOutputDirectory(dirType="model", test=True))
+    mirrorListFile = gen.findFile(
+        testFileName, io_handler.getOutputDirectory(dirType="model", test=True)
+    )
     logger.info("Using mirror list {}".format(mirrorListFile))
     mirrors = Mirrors(mirrorListFile)
     assert 198 == mirrors.numberOfMirrors

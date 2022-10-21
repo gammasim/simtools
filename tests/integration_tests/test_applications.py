@@ -6,10 +6,6 @@ import os
 
 import pytest
 
-import simtools.config as cfg
-import simtools.io_handler as io
-from simtools import db_handler
-
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
@@ -24,9 +20,9 @@ APP_LIST = {
     # Optics
     "compare_cumulative_psf": [
         [
-            "-s",
+            "--site",
             "North",
-            "-t",
+            "--telescope",
             "LST-1",
             "--model_version",
             "prod5",
@@ -60,9 +56,9 @@ APP_LIST = {
     ],
     "derive_mirror_rnda::psf_random_flen": [
         [
-            "-s",
+            "--site",
             "North",
-            "-t",
+            "--telescope",
             "MST-FlashCam-D",
             "--containment_fraction",
             "0.8",
@@ -76,9 +72,9 @@ APP_LIST = {
     ],
     "derive_mirror_rnda::psf_notuning": [
         [
-            "-s",
+            "--site",
             "North",
-            "-t",
+            "--telescope",
             "MST-FlashCam-D",
             "--containment_fraction",
             "0.8",
@@ -93,9 +89,9 @@ APP_LIST = {
     ],
     "derive_mirror_rnda::psf_measurement": [
         [
-            "-s",
+            "--site",
             "North",
-            "-t",
+            "--telescope",
             "MST-FlashCam-D",
             "--containment_fraction",
             "0.8",
@@ -110,9 +106,9 @@ APP_LIST = {
     ],
     "derive_mirror_rnda::psf_mean": [
         [
-            "-s",
+            "--site",
             "North",
-            "-t",
+            "--telescope",
             "MST-FlashCam-D",
             "--containment_fraction",
             "0.8",
@@ -127,9 +123,9 @@ APP_LIST = {
     ],
     "validate_optics": [
         [
-            "-s",
+            "--site",
             "North",
-            "-t",
+            "--telescope",
             "LST-1",
             "--max_offset",
             "1.0",
@@ -142,9 +138,9 @@ APP_LIST = {
     ],
     "tune_psf": [
         [
-            "-s",
+            "--site",
             "North",
-            "-t",
+            "--telescope",
             "LST-1",
             "--model_version",
             "prod5",
@@ -157,9 +153,11 @@ APP_LIST = {
     ],
     # Camera
     "validate_camera_efficiency": [
-        ["-s", "North", "-t", "MST-NectarCam-D", "--model_version", "prod5"]
+        ["--site", "North", "--telescope", "MST-NectarCam-D", "--model_version", "prod5"]
     ],
-    "validate_camera_fov": [["-s", "North", "-t", "MST-NectarCam-D", "--model_version", "prod5"]],
+    "validate_camera_fov": [
+        ["--site", "North", "--telescope", "MST-NectarCam-D", "--model_version", "prod5"]
+    ],
     "plot_simtel_histograms::help": [
         [
             "--help",
@@ -172,9 +170,9 @@ APP_LIST = {
     # Trigger
     "sim_showers_for_trigger_rates": [
         [
-            "-a",
+            "--array",
             "4LST",
-            "-s",
+            "--site",
             "North",
             "--primary",
             "proton",
@@ -183,17 +181,47 @@ APP_LIST = {
             "--nevents",
             "10000",
             "--test",
+            "--submit_command",
+            "local",
         ]
     ],
     # Database
     "get_parameter": [
-        ["-s", "North", "-t", "LST-1", "-p", "mirror_list", "--model_version", "prod5"]
+        [
+            "--site",
+            "North",
+            "--telescope",
+            "LST-1",
+            "--parameter",
+            "mirror_list",
+            "--model_version",
+            "prod5",
+        ]
     ],
+    # Production
     "production::showers_only": [
-        ["-p", "./tests/resources/prodConfigTest.yml", "-t", "simulate", "--showers_only", "--test"]
+        [
+            "--productionconfig",
+            "./tests/resources/prodConfigTest.yml",
+            "--task",
+            "simulate",
+            "--showers_only",
+            "--test",
+            "--submit_command",
+            "local",
+        ]
     ],
     "production::array_only": [
-        ["-p", "./tests/resources/prodConfigTest.yml", "-t", "simulate", "--array_only", "--test"]
+        [
+            "--productionconfig",
+            "./tests/resources/prodConfigTest.yml",
+            "--task",
+            "simulate",
+            "--array_only",
+            "--test",
+            "--submit_command",
+            "local",
+        ]
     ],
     # print_array
     "print_array_elements::print_all": [
@@ -245,17 +273,16 @@ APP_LIST = {
 
 
 @pytest.mark.parametrize("application", APP_LIST.keys())
-def test_applications(set_simtools, application):
+def test_applications(application, io_handler, db, db_connection):
     logger.info("Testing {}".format(application))
 
     def prepare_one_file(fileName):
         db.exportFileDB(
             dbName="test-data",
-            dest=io.getOutputDirectory(dirType="model", test=True),
+            dest=io_handler.getOutputDirectory(dirType="model", test=True),
             fileName=fileName,
         )
 
-    db = db_handler.DatabaseHandler()
     prepare_one_file("PSFcurve_data_v2.txt")
     prepare_one_file("MLTdata-preproduction.usermeta.yml")
     prepare_one_file("MLTdata-preproduction.ecsv")
@@ -263,9 +290,11 @@ def test_applications(set_simtools, application):
     def makeCommand(app, args):
         cmd = "python applications/" + app + ".py"
         for aa in args:
-            aa = aa.replace("TESTMODELDIR", str(io.getOutputDirectory(dirType="model", test=True)))
+            aa = aa.replace(
+                "TESTMODELDIR", str(io_handler.getOutputDirectory(dirType="model", test=True))
+            )
             cmd += " " + aa
-        cmd += " --config_file " + str(cfg.CONFIG_FILE_NAME)
+        cmd += " --mongodb_config_file " + str(db_connection)
         return cmd
 
     for args in APP_LIST[application]:

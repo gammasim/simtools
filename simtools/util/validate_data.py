@@ -12,7 +12,7 @@ class DataValidator:
 
     Attributes
     ----------
-    workflow_config: WorkflowDescription
+    workflow: WorkflowDescription
         workflow configuration
 
     Methods

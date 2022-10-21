@@ -11,9 +11,9 @@ logger.setLevel(logging.DEBUG)
 
 
 @pytest.fixture
-def simtelRunner(cfg_setup):
+def simtelRunner(simtelpath):
 
-    simtelRunner = SimtelRunner()
+    simtelRunner = SimtelRunner(simtelSourcePath=simtelpath)
     return simtelRunner
 
 
