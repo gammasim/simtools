@@ -178,7 +178,7 @@ def test_export_derived_files(telescope_model):
 
     telModel = telescope_model
 
-    telModel.exportDerivedFiles("ray-tracing-North-LST-1-d10.0-za20.0_validate_optics.ecsv")
+    _ = telModel.derived
     assert (
         telModel.getDerivedDirectory()
         .joinpath("ray-tracing-North-LST-1-d10.0-za20.0_validate_optics.ecsv")
