@@ -218,15 +218,18 @@ class CameraEfficiency:
         # support 2D camera filters
         cameraFilterFile = self._telescopeModel.getParameterValue("camera_filter")
         if self._telescopeModel.isFile2D("camera_filter"):
+            incidenceAngleDistributionFile = self._telescopeModel.getParameterValue(
+                "camera_filter_incidence_angle"
+            )
             incidenceAngleDistribution = self._telescopeModel.readIncidenceAngleDistribution(
-                self._telescopeModel.getParameterValue("camera_filter_incidence_angle")
+                incidenceAngleDistributionFile
             )
             self._logger.warning(
                 "The camera filter distribution is a 2D one which testeff does not support. "
                 "Instead of using the 2D distribution, the two dimensional distribution "
                 "will averaged, using the incidence angle distribution as weights. "
                 "The incidence angle distribution is taken "
-                f"from the file - {incidenceAngleDistribution})."
+                f"from the file - {incidenceAngleDistributionFile})."
             )
             twoDimCameraFilter = self._telescopeModel.readTwoDimCameraFilter(
                 self._telescopeModel.getParameterValue("camera_filter")
@@ -251,6 +254,7 @@ class CameraEfficiency:
                 " ref_astri_2017-06_T0.dat because testeff does not support 2D files."
             )
             mirrorReflectivity = "ref_astri_2017-06_T0.dat"
+            mirrorReflectivitySecondary = "ref_astri_2017-06_T0.dat"
 
         # cmd -> Command to be run at the shell
         cmd = str(self._simtelSourcePath.joinpath("sim_telarray/bin/testeff"))
@@ -264,6 +268,7 @@ class CameraEfficiency:
         cmd += f" -fref {mirrorReflectivity}"
         if mirrorClass == 2:
             cmd += " -m2"
+            cmd += f" -fref2 {mirrorReflectivitySecondary}"
         cmd += f" -teltrans {self._telescopeModel.getTelescopeTransmissionParameters()[0]}"
         cmd += f" -camtrans {cameraTransmission}"
         cmd += f" -fflt {cameraFilterFile}"
