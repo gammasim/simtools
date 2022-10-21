@@ -34,9 +34,26 @@ def telescope_model(set_db):
 
 
 @pytest.fixture
+def telescope_model_sst(set_db):
+    telescopeModelSST = TelescopeModel(
+        site="South",
+        telescopeModelName="SST-D",
+        modelVersion="Prod5",
+        label="test-telescope-model-sst",
+    )
+    return telescopeModelSST
+
+
+@pytest.fixture
 def camera_efficiency(telescope_model):
     camera_efficiency = CameraEfficiency(telescopeModel=telescope_model, test=True)
     return camera_efficiency
+
+
+@pytest.fixture
+def camera_efficiency_sst(telescope_model_sst):
+    camera_efficiency_sst = CameraEfficiency(telescopeModel=telescope_model_sst, test=True)
+    return camera_efficiency_sst
 
 
 @pytest.fixture
@@ -140,3 +157,12 @@ def test_calc_nsb_rate(telescope_model, camera_efficiency, results_file):
     assert camera_efficiency.calcNsbRate()[0] == pytest.approx(
         0.24421390533203186
     )  # Value for Prod5 LST-1
+
+
+def test_get_one_dim_distribution(telescope_model_sst, camera_efficiency_sst):
+
+    telescope_model_sst.exportModelFiles()
+    cameraFilterFile = camera_efficiency_sst._getOneDimDistribution(
+        "camera_filter", "camera_filter_incidence_angle"
+    )
+    assert cameraFilterFile.exists()
