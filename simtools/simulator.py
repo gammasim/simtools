@@ -7,7 +7,7 @@ from pathlib import Path
 import astropy.units as u
 import numpy as np
 
-import simtools.io_handler as io
+import simtools.io_handler as io_handler
 import simtools.util.general as gen
 from simtools.corsika.corsika_runner import CorsikaRunner
 from simtools.job_submission.job_manager import JobManager
@@ -87,8 +87,7 @@ class Simulator:
     run(inputFileList):
         Run simulation.
     simulate(inputFileList, submitCommand=None, extraCommands=None, test=False):
-        Submit a run script as a job. The submit command can be given by submitCommand \
-        or it will be taken from the config.yml file.
+        Submit a run script as a job.
     printHistograms():
         Print histograms and save a pdf file.
     printOutputFiles():
@@ -111,12 +110,12 @@ class Simulator:
         self,
         simulator,
         simulatorSourcePath,
-        filesLocation,
-        dataFilesLocation,
-        modelFilesLocations,
         label=None,
         configData=None,
         configFile=None,
+        submitCommand=None,
+        extraCommands=None,
+        mongoDBConfigFile=None,
         test=False,
     ):
         """
@@ -131,16 +130,16 @@ class Simulator:
         simulatorSourcePath: str or Path
             Location of exectutables for simulation software \
                 (e.g. path with CORSIKA or sim_telarray)
-        dataFilesLocation: str or Path.
-            Location of the data files.
-        modelFilesLocation: str or Path.
-            Location of the MC model files.
-        filesLocation: str (or Path)
-            Parent location of the output files created by this class.
         configData: dict
             Dict with shower or array model configuration data.
         configFile: str or Path
             Path to yaml file containing configurable data.
+        submitCommand: str
+            Job submission command.
+        extraCommands: str or list of str
+            Extra commands to be added to the run script before the run command,
+        mongoDBConfigFile: str
+            MongoDB configuration file.
         test: bool
             If True, no jobs are submitted; only run scripts are prepared
         """
@@ -153,9 +152,13 @@ class Simulator:
         self._results = defaultdict(list)
         self.test = test
 
-        self._setFileLocations(
-            filesLocation, dataFilesLocation, modelFilesLocations, simulatorSourcePath
-        )
+        self.io_handler = io_handler.IOHandler()
+        self._outputDirectory = self.io_handler.getOutputDirectory(self.label, self.simulator)
+        self._simulatorSourcePath = Path(simulatorSourcePath)
+        self._submitCommand = submitCommand
+        self._extraCommands = extraCommands
+        self._mongoDBConfigFile = mongoDBConfigFile
+
         self._loadConfigurationAndSimulationModel(configData, configFile)
 
         self._setSimulationRunner()
@@ -178,37 +181,6 @@ class Simulator:
         if simulator not in ["simtel", "corsika"]:
             raise gen.InvalidConfigData
         self.simulator = simulator.lower()
-
-    def _setFileLocations(
-        self, filesLocation, dataFilesLocation, modelFilesLocations, simulatorSourcePath
-    ):
-        """
-        Set file locations, input and output directories
-
-        Parameters
-        ----------
-        filesLocation: str or Path.
-            Location of the output files.
-        dataFilesLocations: str or Path.
-            Location of the data files.
-        modelFilesLocations: str or Path.
-            Location of the model data files.
-        simulatorSourcePath: str or Path
-            Location of source of the sim_telarray/CORSIKA package.
-
-        """
-
-        self._simulatorSourcePath = Path(simulatorSourcePath)
-        self._filesLocation = Path(filesLocation)
-        self._dataFilesLocation = Path(dataFilesLocation)
-        self._modelFilesLocations = Path(modelFilesLocations)
-        self._outputDirectory = io.getOutputDirectory(
-            self._filesLocation, self.label, self.simulator
-        )
-
-        self._logger.debug(
-            "Output directory {} - creating it, if needed.".format(self._outputDirectory)
-        )
 
     def _loadConfigurationAndSimulationModel(self, configData=None, configFile=None):
         """
@@ -270,18 +242,16 @@ class Simulator:
         """
         _arrayModelConfig, _restConfig = self._collectArrayModelParameters(configData)
 
-        _parameterFile = io.getInputDataFile(
-            self._dataFilesLocation, "parameters", "array-simulator_parameters.yml"
+        _parameterFile = self.io_handler.getInputDataFile(
+            "parameters", "array-simulator_parameters.yml"
         )
         _parameters = gen.collectDataFromYamlOrDict(_parameterFile, None)
         self.config = gen.validateConfigData(_restConfig, _parameters)
 
         self.arrayModel = ArrayModel(
-            modelFilesLocations=self._modelFilesLocations,
-            dataFilesLocation=self._dataFilesLocation,
-            filesLocation=self._filesLocation,
             label=self.label,
             arrayConfigData=_arrayModelConfig,
+            mongoDBConfigFile=self._mongoDBConfigFile,
         )
 
     def _validateRunListAndRange(self, runList, runRange):
@@ -379,7 +349,6 @@ class Simulator:
             label=self.label,
             site=self.site,
             layoutName=self.layoutName,
-            filesLocation=self._filesLocation,
             simtelSourcePath=self._simulatorSourcePath,
             corsikaParametersFile=self._corsikaParametersFile,
             corsikaConfigData=self._corsikaConfigData,
@@ -394,7 +363,6 @@ class Simulator:
             label=self.label,
             arrayModel=self.arrayModel,
             simtelSourcePath=self._simulatorSourcePath,
-            filesLocation=self._filesLocation,
             configData={
                 "simtelDataDirectory": self.config.dataDirectory,
                 "primary": self.config.primary,
@@ -420,23 +388,18 @@ class Simulator:
             self._fillResults(file, run)
             self.runs.append(run)
 
-    def simulate(self, inputFileList, submitCommand, extraCommands=None):
+    def simulate(self, inputFileList=None):
         """
-        Submit a run script as a job. The submit command can be given by \
-        submitCommand or it will be taken from the config.yml file.
+        Submit a run script as a job.
 
         Parameters
         ----------
         inputFileList: str or list of str
             Single file or list of files of shower simulations.
-        submitCommand: str
-            Command to be used before the script name.
-        extraCommands: str or list of str
-            Extra commands to be added to the run script before the run command,
 
         """
 
-        self._logger.info("Submission command: {}".format(submitCommand))
+        self._logger.info("Submission command: {}".format(self._submitCommand))
 
         runs_and_files_to_submit = self._getRunsAndFilesToSubmit(inputFileList=inputFileList)
         self._logger.info("Starting submission for {} runs".format(len(runs_and_files_to_submit)))
@@ -444,10 +407,10 @@ class Simulator:
         for run, file in runs_and_files_to_submit.items():
 
             runScript = self._simulationRunner.getRunScript(
-                runNumber=run, inputFile=file, extraCommands=extraCommands
+                runNumber=run, inputFile=file, extraCommands=self._extraCommands
             )
 
-            job_manager = JobManager(submitCommand=submitCommand, test=self.test)
+            job_manager = JobManager(submitCommand=self._submitCommand, test=self.test)
             job_manager.submit(
                 run_script=runScript,
                 run_out_file=self._simulationRunner.getSubLogFile(runNumber=run, mode=""),

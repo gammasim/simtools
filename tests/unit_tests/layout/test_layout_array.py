@@ -6,9 +6,7 @@ import astropy.units as u
 import numpy as np
 import pytest
 
-import simtools.io_handler as io
 import simtools.util.general as gen
-from simtools import db_handler
 from simtools.layout.layout_array import LayoutArray
 
 logger = logging.getLogger()
@@ -36,33 +34,31 @@ def corsikaTelescopeDataDict():
     }
 
 
-@pytest.fixture
-def db(db_connection):
-    db = db_handler.DatabaseHandler(mongoDBConfigFile=str(db_connection))
-    return db
+# @pytest.fixture
+# def db(db_connection):
+#    db = db_handler.DatabaseHandler(mongoDBConfigFile=str(db_connection))
+#    return db
 
 
 @pytest.fixture
-def telescopeTestFile(db, args_dict):
+def telescopeTestFile(db, args_dict, io_handler):
     testFileName = "telescope_positions-North-TestLayout.ecsv"
     db.exportFileDB(
         dbName="test-data",
-        dest=io.getOutputDirectory(
-            filesLocation=args_dict["output_path"], dirType="model", test=True
-        ),
+        dest=io_handler.getOutputDirectory(dirType="model", test=True),
         fileName=testFileName,
     )
 
     cfgFile = gen.findFile(
         testFileName,
-        io.getOutputDirectory(filesLocation=args_dict["output_path"], dirType="model", test=True),
+        io_handler.getOutputDirectory(dirType="model", test=True),
     )
     return cfgFile
 
 
-def test_fromLayoutArrayName(args_dict):
+def test_fromLayoutArrayName(io_handler):
 
-    layout = LayoutArray.fromLayoutArrayName("south-TestLayout", args_dict["data_path"])
+    layout = LayoutArray.fromLayoutArrayName("south-TestLayout")
 
     assert 99 == layout.getNumberOfTelescopes()
 

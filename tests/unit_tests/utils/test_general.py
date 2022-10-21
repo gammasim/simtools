@@ -7,17 +7,16 @@ import astropy.units as u
 import pytest
 import yaml
 
-import simtools.io_handler as io
 import simtools.util.general as gen
 from simtools.util.general import InvalidConfigEntry
 
 logging.getLogger().setLevel(logging.DEBUG)
 
 
-def test_collect_dict_data(cfg_setup):
+def test_collect_dict_data(args_dict, io_handler):
     inDict = {"k1": 2, "k2": "bla"}
     dictForYaml = {"k3": {"kk3": 4, "kk4": 3.0}, "k4": ["bla", 2]}
-    testYamlFile = io.getOutputFile(fileName="test_collect_dict_data.yml", test=True)
+    testYamlFile = io_handler.getOutputFile(fileName="test_collect_dict_data.yml", test=True)
     if not Path(testYamlFile).exists():
         with open(testYamlFile, "w") as output:
             yaml.safe_dump(dictForYaml, output, sort_keys=False)
@@ -34,9 +33,9 @@ def test_collect_dict_data(cfg_setup):
     assert d3 == d2
 
 
-def test_validate_config_data(cfg_setup):
+def test_validate_config_data(args_dict, io_handler):
 
-    parameterFile = io.getInputDataFile(fileName="test_parameters.yml", test=True)
+    parameterFile = io_handler.getInputDataFile(fileName="test_parameters.yml", test=True)
     parameters = gen.collectDataFromYamlOrDict(parameterFile, None)
 
     configData = {
@@ -131,6 +130,6 @@ def test_validateAndConvertValue_without_units():
 
 def test_program_is_executable():
 
-    # (assumpe 'ls' exist on any system the test is running)
+    # (assume 'ls' exist on any system the test is running)
     assert gen.program_is_executable("ls") is not None
     assert gen.program_is_executable("this_program_probably_does_not_exist") is None

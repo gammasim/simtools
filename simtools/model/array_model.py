@@ -1,7 +1,7 @@
 import logging
 from copy import copy
 
-import simtools.io_handler as io
+import simtools.io_handler as io_handler
 from simtools import db_handler
 from simtools.layout.layout_array import LayoutArray
 from simtools.model.telescope_model import TelescopeModel
@@ -57,11 +57,8 @@ class ArrayModel:
 
     def __init__(
         self,
-        modelFilesLocations,
-        filesLocation,
-        dataFilesLocation,
+        mongoDBConfigFile,
         label=None,
-        mongoDBConfigFile=None,
         arrayConfigFile=None,
         arrayConfigData=None,
     ):
@@ -70,18 +67,14 @@ class ArrayModel:
 
         Parameters
         ----------
+        mongoDBConfigFile: str
+            MongoDB configuration file.
         arrayConfigFile: str
             Path to a yaml file with the array config data.
         arrayConfigData: dict
             Dict with the array config data.
         label: str, optional
             Instance label. Important for output file naming.
-        modelFilesLocation: str (or Path)
-            Location of the MC model files.
-        filesLocation: str (or Path)
-            Parent location of the output files created by this class.
-        dataFilesLocation : str (or Path)
-            Parent location of the datafiles.
 
         """
         self._logger = logging.getLogger(__name__)
@@ -93,9 +86,7 @@ class ArrayModel:
         self.layoutName = None
         self.modelVersion = None
 
-        self._modelFilesLocations = modelFilesLocations
-        self._filesLocation = filesLocation
-        self._dataFilesLocation = dataFilesLocation
+        self.io_handler = io_handler.IOHandler()
 
         arrayConfigData = collectDataFromYamlOrDict(arrayConfigFile, arrayConfigData)
         self._loadArrayData(arrayConfigData)
@@ -130,7 +121,6 @@ class ArrayModel:
         self.layoutName = names.validateLayoutArrayName(arrayConfigData["layoutName"])
         self.layout = LayoutArray.fromLayoutArrayName(
             self.site + "-" + self.layoutName,
-            dataLocation=self._dataFilesLocation,
             label=self.label,
         )
 
@@ -147,8 +137,6 @@ class ArrayModel:
             for (k, v) in arrayConfigData.items()
             if k not in ["site", "layoutName", "modelVersion"]
         }
-
-    # End of _loadArrayData
 
     def _validateArrayData(self, arrayConfigData):
         """
@@ -170,11 +158,10 @@ class ArrayModel:
                     raise InvalidArrayConfigData(msg)
 
         runOverPars(["site", "layoutName", "default"], arrayConfigData)
-        # End of _validateArrayData
 
     def _setConfigFileDirectory(self):
         """Define the variable _configFileDirectory and create directories, if needed"""
-        self._configFileDirectory = io.getOutputDirectory(self._filesLocation, self.label, "model")
+        self._configFileDirectory = self.io_handler.getOutputDirectory(self.label, "model")
         if not self._configFileDirectory.exists():
             self._configFileDirectory.mkdir(parents=True, exist_ok=True)
             self._logger.info("Creating directory {}".format(self._configFileDirectory))
@@ -223,8 +210,7 @@ class ArrayModel:
                     telescopeModelName=telModelName,
                     modelVersion=self.modelVersion,
                     label=self.label,
-                    modelFilesLocations=self._modelFilesLocations,
-                    filesLocation=self._filesLocation,
+                    mongoDBConfigFile=mongoDBConfigFile,
                 )
             else:
                 # Telescope name already exists.
@@ -310,8 +296,6 @@ class ArrayModel:
                 self._logger.error(msg)
                 raise InvalidArrayConfigData(msg)
 
-        # End of _proccessData
-
         if telName in self._arrayConfigData.keys():
             # Specific info for this telescope
             return _proccessSingleTelescope(self._arrayConfigData[telName])
@@ -332,8 +316,6 @@ class ArrayModel:
 
             # Grabbing the default option
             return _proccessSingleTelescope(self._arrayConfigData["default"][telSize])
-
-    # End of _getSingleTelescopeInfoFromArrayConfig
 
     def printTelescopeList(self):
         """Print out the list of telescopes for quick inspection."""
@@ -384,8 +366,6 @@ class ArrayModel:
             siteParameters=self._siteParameters,
         )
         self._arrayModelFileExported = True
-
-    # END exportSimtelArrayConfigFile
 
     def exportAllSimtelConfigFiles(self):
         """

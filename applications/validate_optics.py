@@ -65,7 +65,7 @@ import numpy as np
 from matplotlib.backends.backend_pdf import PdfPages
 
 import simtools.configuration as configurator
-import simtools.io_handler as io
+import simtools.io_handler as io_handler
 import simtools.util.general as gen
 from simtools.model.telescope_model import TelescopeModel
 from simtools.ray_tracing import RayTracing
@@ -126,15 +126,15 @@ def main():
     logger = logging.getLogger()
     logger.setLevel(gen.getLogLevelFromUser(args_dict["log_level"]))
 
-    # Output directory to save files related directly to this app
-    outputDir = io.getOutputDirectory(args_dict["output_path"], label, dirType="application-plots")
+    _io_handler = io_handler.IOHandler()
+    outputDir = _io_handler.getOutputDirectory(label, dirType="application-plots")
 
     telModel = TelescopeModel(
         site=args_dict["site"],
         telescopeModelName=args_dict["telescope"],
         modelVersion=args_dict["model_version"],
         label=label,
-        readFromDB=True,
+        mongoDBConfigFile=args_dict["mongodb_config_file"],
     )
 
     ######################################################################
@@ -153,8 +153,9 @@ def main():
         " for {}\n".format(telModel.name)
     )
 
-    ray = RayTracing.fromKwargs_dict(
+    ray = RayTracing.fromKwargs(
         telescopeModel=telModel,
+        simtelSourcePath=args_dict["simtelpath"],
         sourceDistance=args_dict["src_distance"] * u.km,
         zenithAngle=args_dict["zenith"] * u.deg,
         offAxisAngle=np.linspace(
