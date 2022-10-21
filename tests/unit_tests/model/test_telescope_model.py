@@ -3,6 +3,7 @@
 import filecmp
 import logging
 
+import numpy as np
 import pytest
 
 import simtools.config as cfg
@@ -42,6 +43,17 @@ def telescope_model(set_db):
         label="test-telescope-model",
     )
     return telescopeModel
+
+
+@pytest.fixture
+def telescope_model_sst(set_db):
+    telescopeModelSST = TelescopeModel(
+        site="South",
+        telescopeModelName="SST-D",
+        modelVersion="Prod5",
+        label="test-telescope-model-sst",
+    )
+    return telescopeModelSST
 
 
 @pytest.fixture
@@ -193,3 +205,65 @@ def test_get_on_axis_eff_optical_area(telescope_model):
     assert telModel.getOnAxisEffOpticalArea().value == pytest.approx(
         365.48310154491
     )  # Value for LST -1
+
+
+def test_read_two_dim_wavelength_angle(telescope_model_sst):
+
+    telModel = telescope_model_sst
+    telModel.exportConfigFile()
+
+    twoDimFile = telModel.getParameterValue("camera_filter")
+    assert telModel.getConfigDirectory().joinpath(twoDimFile).exists()
+    twoDimDist = telModel.readTwoDimWavelengthAngle(twoDimFile)
+    assert len(twoDimDist["Wavelength"]) > 0
+    assert len(twoDimDist["Angle"]) > 0
+    assert len(twoDimDist["z"]) > 0
+    assert twoDimDist["Wavelength"][4] == pytest.approx(300)
+    assert twoDimDist["Angle"][4] == pytest.approx(28)
+    assert twoDimDist["z"][4][4] == pytest.approx(0.985199988)
+
+
+def test_read_incidence_angle_distribution(telescope_model_sst):
+
+    telModel = telescope_model_sst
+
+    _ = telModel.derived
+    incidenceAngleFile = telModel.getParameterValue("camera_filter_incidence_angle")
+    assert telModel.getDerivedDirectory().joinpath(incidenceAngleFile).exists()
+    incidenceAngleDist = telModel.readIncidenceAngleDistribution(incidenceAngleFile)
+    assert len(incidenceAngleDist["Incidence angle"]) > 0
+    assert len(incidenceAngleDist["Fraction"]) > 0
+    assert incidenceAngleDist["Fraction"][
+        np.nanargmin(np.abs(33.05 - incidenceAngleDist["Incidence angle"].value))
+    ].value == pytest.approx(0.027980644661989726)
+
+
+def test_calc_average_curve(telescope_model_sst):
+
+    telModel = telescope_model_sst
+    telModel.exportConfigFile()
+    _ = telModel.derived
+
+    twoDimFile = telModel.getParameterValue("camera_filter")
+    twoDimDist = telModel.readTwoDimWavelengthAngle(twoDimFile)
+    incidenceAngleFile = telModel.getParameterValue("camera_filter_incidence_angle")
+    incidenceAngleDist = telModel.readIncidenceAngleDistribution(incidenceAngleFile)
+    averageDist = telModel.calcAverageCurve(twoDimDist, incidenceAngleDist)
+    assert averageDist["z"][np.nanargmin(np.abs(300 - averageDist["Wavelength"]))] == pytest.approx(
+        0.9398265298920796
+    )
+
+
+def test_export_table_to_model_directory(telescope_model_sst):
+
+    telModel = telescope_model_sst
+    telModel.exportConfigFile()
+    _ = telModel.derived
+
+    twoDimFile = telModel.getParameterValue("camera_filter")
+    twoDimDist = telModel.readTwoDimWavelengthAngle(twoDimFile)
+    incidenceAngleFile = telModel.getParameterValue("camera_filter_incidence_angle")
+    incidenceAngleDist = telModel.readIncidenceAngleDistribution(incidenceAngleFile)
+    averageDist = telModel.calcAverageCurve(twoDimDist, incidenceAngleDist)
+    oneDimFile = telModel.exportTableToModelDirectory("test_average_curve.dat", averageDist)
+    assert oneDimFile.exists()
