@@ -708,17 +708,6 @@ class TelescopeModel:
                 label=self.label,
             )
 
-    def isASTRI(self):
-        """
-        Check if telescope is an ASTRI type.
-
-        Returns
-        -------
-        bool:
-            True if telescope  is a ASTRI, False otherwise.
-        """
-        return self.name in ["SST-2M-ASTRI", "SST", "SST-D"]
-
     def isFile2D(self, par):
         """
         Check if the file referenced by par is a 2D table.
@@ -738,7 +727,7 @@ class TelescopeModel:
             return False
 
         fileName = self.getParameterValue(par)
-        file = cfg.findFile(fileName)
+        file = self.getConfigDirectory().joinpath(fileName)
         with open(file, "r") as f:
             is2D = "@RPOL@" in f.read()
         return is2D
@@ -760,7 +749,7 @@ class TelescopeModel:
             dict of three arrays, wavelength, degrees, z
         """
 
-        _file = self._configFileDirectory.joinpath(fileName)
+        _file = self.getConfigDirectory().joinpath(fileName)
         with open(_file, "r") as f:
             for i_line, line in enumerate(f):
                 if line.startswith("ANGLE"):
