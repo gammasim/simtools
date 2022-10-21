@@ -6,9 +6,7 @@ from copy import copy
 import pytest
 from astropy import units as u
 
-import simtools.io_handler as io
 import simtools.util.general as gen
-from simtools import db_handler
 from simtools.corsika.corsika_config import (
     CorsikaConfig,
     InvalidCorsikaInput,
@@ -17,12 +15,6 @@ from simtools.corsika.corsika_config import (
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
-
-
-@pytest.fixture
-def db(set_db):
-    db = db_handler.DatabaseHandler()
-    return db
 
 
 @pytest.fixture
@@ -41,7 +33,7 @@ def corsikaConfigData():
 
 
 @pytest.fixture
-def corsikaConfig(corsikaConfigData, cfg_setup):
+def corsikaConfig(io_handler, corsikaConfigData):
 
     corsikaConfig = CorsikaConfig(
         site="Paranal",
@@ -83,7 +75,7 @@ def test_export_input_file(corsikaConfig):
     assert inputFile.exists()
 
 
-def test_wrong_par_in_config_data(cfg_setup, corsikaConfigData):
+def test_wrong_par_in_config_data(corsikaConfigData):
 
     logger.info("test_wrong_primary_name")
     newConfigData = copy(corsikaConfigData)
@@ -98,7 +90,7 @@ def test_wrong_par_in_config_data(cfg_setup, corsikaConfigData):
         corsika_test_Config.printUserParameters()
 
 
-def test_units_of_config_data(cfg_setup, corsikaConfigData):
+def test_units_of_config_data(corsikaConfigData):
 
     logger.info("test_units_of_config_data")
     newConfigData = copy(corsikaConfigData)
@@ -113,7 +105,7 @@ def test_units_of_config_data(cfg_setup, corsikaConfigData):
         corsika_test_Config.printUserParameters()
 
 
-def test_len_of_config_data(cfg_setup, corsikaConfigData):
+def test_len_of_config_data(corsikaConfigData):
 
     logger.info("test_len_of_config_data")
     newConfigData = copy(corsikaConfigData)
@@ -128,7 +120,7 @@ def test_len_of_config_data(cfg_setup, corsikaConfigData):
         corsika_test_Config.printUserParameters()
 
 
-def test_wrong_primary_name(cfg_setup, corsikaConfigData):
+def test_wrong_primary_name(corsikaConfigData):
 
     logger.info("test_wrong_primary_name")
     newConfigData = copy(corsikaConfigData)
@@ -143,7 +135,7 @@ def test_wrong_primary_name(cfg_setup, corsikaConfigData):
         corsika_test_Config.printUserParameters()
 
 
-def test_missing_input(cfg_setup, corsikaConfigData):
+def test_missing_input(corsikaConfigData):
 
     logger.info("test_missing_input")
     newConfigData = copy(corsikaConfigData)
@@ -168,18 +160,18 @@ def test_set_user_parameters(corsikaConfigData, corsikaConfig):
     assert newCorsikaConfig.getUserParameter("thetap") == [0, 0]
 
 
-def test_config_data_from_yaml_file(db):
+def test_config_data_from_yaml_file(db, io_handler):
 
     logger.info("test_config_data_from_yaml_file")
     testFileName = "corsikaConfigTest.yml"
     db.exportFileDB(
         dbName="test-data",
-        dest=io.getOutputDirectory(dirType="model", test=True),
+        dest=io_handler.getOutputDirectory(dirType="model", test=True),
         fileName=testFileName,
     )
 
     corsikaConfigFile = gen.findFile(
-        testFileName, io.getOutputDirectory(dirType="model", test=True)
+        testFileName, io_handler.getOutputDirectory(dirType="model", test=True)
     )
     cc = CorsikaConfig(
         site="Paranal",

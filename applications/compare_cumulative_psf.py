@@ -78,9 +78,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import yaml
 
-import simtools.config as cfg
-import simtools.io_handler as io
-import simtools.util.commandline_parser as argparser
+import simtools.configuration as configurator
+import simtools.io_handler as io_handler
 import simtools.util.general as gen
 from simtools import visualize
 from simtools.model.telescope_model import TelescopeModel
@@ -98,59 +97,62 @@ def loadData(datafile):
 
 def main():
 
-    parser = argparser.CommandLineParser(
+    config = configurator.Configurator(
         description=(
             "Calculate and plot the PSF and eff. mirror area as a function of off-axis angle "
             "of the telescope requested."
         )
     )
-    parser.initialize_telescope_model_arguments()
-    parser.add_argument(
+    config.parser.initialize_telescope_model_arguments()
+    config.parser.add_argument(
         "--src_distance",
         help="Source distance in km (default=10)",
         type=float,
         default=10,
     )
-    parser.add_argument("--zenith", help="Zenith angle in deg (default=20)", type=float, default=20)
-    parser.add_argument(
+    config.parser.add_argument(
+        "--zenith", help="Zenith angle in deg (default=20)", type=float, default=20
+    )
+    config.parser.add_argument(
         "--data", help="Data file name with the measured PSF vs radius [cm]", type=str
     )
-    parser.add_argument(
+    config.parser.add_argument(
         "--pars", help="Yaml file with the model parameters to be replaced", type=str
     )
-    parser.initialize_default_arguments()
 
-    args = parser.parse_args()
+    args_dict = config.initialize()
     label = "compare_cumulative_psf"
-    cfg.setConfigFileName(args.config_file)
 
     logger = logging.getLogger()
-    logger.setLevel(gen.getLogLevelFromUser(args.log_level))
+    logger.setLevel(gen.getLogLevelFromUser(args_dict["log_level"]))
 
     # Output directory to save files related directly to this app
-    outputDir = io.getOutputDirectory(cfg.get("outputLocation"), label, dirType="application-plots")
+    _io_handler = io_handler.IOHandler()
+    outputDir = _io_handler.getOutputDirectory(label, dirType="application-plots")
 
     telModel = TelescopeModel(
-        site=args.site,
-        telescopeModelName=args.telescope,
-        modelVersion=args.model_version,
+        site=args_dict["site"],
+        telescopeModelName=args_dict["telescope"],
+        mongoDBConfigFile=args_dict.get("mongodb_config_file", None),
+        modelVersion=args_dict["model_version"],
         label=label,
     )
 
     # New parameters
-    if args.pars is not None:
-        with open(args.pars) as file:
+    if args_dict["pars"] is not None:
+        with open(args_dict["pars"]) as file:
             newPars = yaml.safe_load(file)
         telModel.changeMultipleParameters(**newPars)
 
     ray = RayTracing.fromKwargs(
         telescopeModel=telModel,
-        sourceDistance=args.src_distance * u.km,
-        zenithAngle=args.zenith * u.deg,
+        simtelSourcePath=args_dict["simtelpath"],
+        sourceDistance=args_dict["src_distance"] * u.km,
+        zenithAngle=args_dict["zenith"] * u.deg,
         offAxisAngle=[0.0 * u.deg],
     )
 
-    ray.simulate(test=args.test, force=False)
+    ray.simulate(test=args_dict["test"], force=False)
     ray.analyze(force=False)
 
     # Plotting cumulative PSF
@@ -161,8 +163,8 @@ def main():
     # Plotting cumulative PSF
     # Measured cumulative PSF
     dataToPlot = OrderedDict()
-    if args.data is not None:
-        dataFile = gen.findFile(args.data, cfg.get(par="modelFilesLocations"))
+    if args_dict["data"] is not None:
+        dataFile = gen.findFile(args_dict["data"], args_dict["model_path"])
         dataToPlot["measured"] = loadData(dataFile)
         radius = dataToPlot["measured"]["Radius [cm]"]
 

@@ -248,5 +248,3 @@ class SimtelHistograms:
             ax.hist(centers, bins=x_bins, weights=hist["data"])
             ax.set_xlim(xlim)
         return
-
-    # End of plotOneHistogram

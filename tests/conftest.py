@@ -1,25 +1,114 @@
 import logging
 import os
 from pathlib import Path
+from unittest import mock
 
 import pytest
 import yaml
 
+import simtools.io_handler
+from simtools import db_handler
 from simtools.configuration import Configurator
 
 logger = logging.getLogger()
 
 
 @pytest.fixture
+def tmp_test_directory(tmpdir_factory):
+    """
+    Sets test directories.
+
+    Some tests depend on this structure.
+
+    """
+
+    tmp_test_dir = tmpdir_factory.mktemp("test-data")
+    tmp_sub_dirs = ["resources", "output", "simtel", "model", "application-plots"]
+    for sub_dir in tmp_sub_dirs:
+        tmp_sub_dir = tmp_test_dir / sub_dir
+        tmp_sub_dir.mkdir()
+
+    return tmp_test_dir
+
+
+@pytest.fixture
+def io_handler(tmp_test_directory):
+
+    tmp_io_handler = simtools.io_handler.IOHandler()
+    tmp_io_handler.setPaths(
+        output_path=str(tmp_test_directory) + "/output",
+        # TODO confirm that tests are always run from the gammasim-tools directory
+        data_path="./data/",
+        model_path=str(tmp_test_directory) + "/model",
+    )
+    return tmp_io_handler
+
+
+@pytest.fixture
+def mock_settings_env_vars(tmp_test_directory):
+    """
+    Removes all environment variable from the test system.
+    Explicitely sets those needed.
+
+    """
+    with mock.patch.dict(
+        os.environ, {"SIMTELPATH": str(tmp_test_directory) + "/simtel"}, clear=True
+    ):
+        yield
+
+
+@pytest.fixture
+def simtelpath(mock_settings_env_vars):
+    simtelpath = Path(os.path.expandvars("$SIMTELPATH"))
+    if simtelpath.exists():
+        return simtelpath
+    return ""
+
+
+@pytest.fixture
+def simtelpath_no_mock():
+    simtelpath = Path(os.path.expandvars("$SIMTELPATH"))
+    if simtelpath.exists():
+        return simtelpath
+    return ""
+
+
+@pytest.fixture
 def args_dict(tmp_test_directory, simtelpath):
 
     return Configurator().default_config(
-        ("--output_path", str(tmp_test_directory), "--simtelpath", str(simtelpath))
+        (
+            "--output_path",
+            str(tmp_test_directory),
+            "--data_path",
+            "./data/",
+            "--simtelpath",
+            str(simtelpath),
+        )
     )
 
 
 @pytest.fixture
-def configurator(tmp_test_directory):
+def args_dict_site(tmp_test_directory, simtelpath):
+
+    return Configurator().default_config(
+        (
+            "--output_path",
+            str(tmp_test_directory),
+            "--data_path",
+            "./data/",
+            "--simtelpath",
+            str(simtelpath),
+            "--site",
+            "South",
+            "--telescope",
+            "MST-NectarCam-D",
+        )
+    )
+
+
+@pytest.fixture
+def configurator(tmp_test_directory, simtelpath):
 
     config = Configurator()
     config.default_config(
@@ -68,17 +157,6 @@ def write_configuration_test_file(config_file, config_dict):
 
 
 @pytest.fixture
-def tmp_test_directory(tmpdir_factory):
-    tmp_test_dir = tmpdir_factory.mktemp("test-data")
-    tmp_sub_dirs = ["resources", "output", "simtel"]
-    for sub_dir in tmp_sub_dirs:
-        tmp_sub_dir = tmp_test_dir / sub_dir
-        tmp_sub_dir.mkdir()
-
-    return tmp_test_dir
-
-
-@pytest.fixture
 def configuration_parameters(tmp_test_directory):
 
     return {
@@ -93,6 +171,12 @@ def configuration_parameters(tmp_test_directory):
         "mongoDBConfigFile": None,
         "extraCommands": [""],
     }
+
+
+@pytest.fixture
+def db(db_connection):
+    db = db_handler.DatabaseHandler(mongoDBConfigFile=str(db_connection))
+    return db
 
 
 @pytest.fixture
@@ -125,36 +209,3 @@ def db_connection(tmp_test_directory):
             return dbDetailsFileName
 
         return ""
-
-
-@pytest.fixture
-def simtelpath():
-    simtelpath = Path(os.path.expandvars("$SIMTELPATH"))
-    if simtelpath.exists():
-        return simtelpath
-
-    return ""
-
-
-@pytest.fixture
-def set_simtools(db_connection, simtelpath, tmp_test_directory, configuration_parameters):
-    """
-    Configuration file for using simtools
-    - with database
-    - with sim_telarray
-
-    """
-
-    if len(str(simtelpath)) == 0:
-        pytest.skip(reason="sim_telarray not found in {}".format(simtelpath))
-    if len(str(db_connection)) == 0:
-        pytest.skip(reason="Test requires database (DB) connection")
-
-    config_file = tmp_test_directory / "config-simtools-test.yml"
-    config_dict = dict(configuration_parameters)
-    config_dict["simtelPath"] = str(simtelpath)
-    config_dict["useMongoDB"] = True
-    config_dict["mongoDBConfigFile"] = str(db_connection)
-    config_dict["submissionCommand"] = "local"
-
-    write_configuration_test_file(config_file, config_dict)

@@ -5,7 +5,7 @@ import numpy as np
 import pyproj
 from astropy.table import Table
 
-import simtools.io_handler as io
+import simtools.io_handler as io_handler
 from simtools.layout.telescope_position import TelescopePosition
 from simtools.util import names
 from simtools.util.general import collectDataFromYamlOrDict
@@ -77,6 +77,8 @@ class LayoutArray:
 
         self.label = label
         self.name = name
+        self.io_handler = io_handler.IOHandler()
+
         self._telescopeList = []
         self._epsg = None
         if telescopeListFile is None:
@@ -86,7 +88,7 @@ class LayoutArray:
             self.readTelescopeListFile(telescopeListFile)
 
     @classmethod
-    def fromLayoutArrayName(cls, layoutArrayName, dataLocation, label=None):
+    def fromLayoutArrayName(cls, layoutArrayName, label=None):
         """
         Read telescope list from file for given layout name (e.g. South-4LST, North-Prod5, ...).
         Layout definitions are given in the `dataLocation//layout` path.
@@ -110,8 +112,8 @@ class LayoutArray:
 
         layout = cls(name=validLayoutArrayName, label=label)
 
-        telescopeListFile = io.getInputDataFile(
-            dataLocation, "layout", "telescope_positions-{}.ecsv".format(validLayoutArrayName)
+        telescopeListFile = layout.io_handler.getInputDataFile(
+            "layout", "telescope_positions-{}.ecsv".format(validLayoutArrayName)
         )
         layout.readTelescopeListFile(telescopeListFile)
 
@@ -146,7 +148,7 @@ class LayoutArray:
             self._logger.debug("Initialize CORSIKA telescope parameters from file")
             self._initializeCorsikaTelescopeFromDict(
                 collectDataFromYamlOrDict(
-                    io.getInputDataFile(dataLocation, "corsika", "corsika_parameters.yml"), None
+                    self.io_handler.getInputDataFile("corsika", "corsika_parameters.yml"), None
                 )
             )
 
@@ -542,7 +544,7 @@ class LayoutArray:
 
         """
 
-        _outputDirectory = io.getOutputDirectory(outputPath, self.label, "layout")
+        _outputDirectory = self.io_handler.getOutputDirectory(self.label, "layout")
 
         _name = crsName if self.name is None else self.name + "-" + crsName
         self.telescopeListFile = _outputDirectory.joinpath(
