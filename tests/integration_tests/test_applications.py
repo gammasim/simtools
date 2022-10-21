@@ -156,8 +156,11 @@ APP_LIST = {
         ]
     ],
     # Camera
-    "validate_camera_efficiency": [
+    "validate_camera_efficiency::MST-NectarCam-D": [
         ["-s", "North", "-t", "MST-NectarCam-D", "--model_version", "prod5"]
+    ],
+    "validate_camera_efficiency::SST-D": [
+        ["-s", "South", "-t", "SST-D", "--model_version", "prod5"]
     ],
     "validate_camera_fov": [["-s", "North", "-t", "MST-NectarCam-D", "--model_version", "prod5"]],
     "plot_simtel_histograms::help": [
