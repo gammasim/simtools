@@ -5,8 +5,7 @@ import astropy.units as u
 import numpy as np
 from astropy.io.misc import yaml
 
-import simtools.config as cfg
-import simtools.io_handler as io
+import simtools.io_handler as io_handler
 import simtools.util.general as gen
 from simtools.layout.layout_array import LayoutArray
 from simtools.util import names
@@ -89,7 +88,6 @@ class CorsikaConfig:
         site,
         layoutName,
         label=None,
-        filesLocation=None,
         corsikaConfigData=None,
         corsikaConfigFile=None,
         corsikaParametersFile=None,
@@ -107,8 +105,6 @@ class CorsikaConfig:
             Instance of LayoutArray.
         label: str
             Instance label.
-        filesLocation: str or Path.
-            Main location of the output files.
         corsikaConfigData: dict
             Dict with CORSIKA config data.
         corsikaConfigFile: str or Path
@@ -123,7 +119,7 @@ class CorsikaConfig:
         self.label = label
         self.site = names.validateSiteName(site)
 
-        self._filesLocation = cfg.getConfigArg("outputLocation", filesLocation)
+        self.io_handler = io_handler.IOHandler()
 
         # Grabbing layout name and building LayoutArray
         self.layoutName = names.validateLayoutArrayName(layoutName)
@@ -155,7 +151,9 @@ class CorsikaConfig:
             self._corsikaParametersFile = filename
         else:
             # Default file from data directory.
-            self._corsikaParametersFile = io.getInputDataFile("corsika", "corsika_parameters.yml")
+            self._corsikaParametersFile = self.io_handler.getInputDataFile(
+                "corsika", "corsika_parameters.yml"
+            )
         self._logger.debug(
             "Loading CORSIKA parameters from file {}".format(self._corsikaParametersFile)
         )
@@ -239,8 +237,6 @@ class CorsikaConfig:
 
         self._isFileUpdated = False
 
-    # End of setUserParameters
-
     def _validateAndConvertArgument(self, parName, parInfo, valueArgsIn):
         """
         Validate input user parameter and convert it to the right units, if needed.
@@ -294,8 +290,6 @@ class CorsikaConfig:
                     valueArgsWithUnits.append(arg.to(unit).value)
 
             return valueArgsWithUnits
-
-    # End of _validateAndConvertArgument
 
     def _convertPrimaryInputAndStorePrimaryName(self, value):
         """
@@ -458,8 +452,6 @@ class CorsikaConfig:
 
         self._isFileUpdated = True
 
-    # End of exportInputFile
-
     def _setOutputFileAndDirectory(self):
         configFileName = names.corsikaConfigFileName(
             arrayName=self.layoutName,
@@ -469,7 +461,7 @@ class CorsikaConfig:
             viewCone=self._userParameters["VIEWCONE"],
             label=self.label,
         )
-        fileDirectory = io.getOutputDirectory(self._filesLocation, self.label, "corsika")
+        fileDirectory = self.io_handler.getOutputDirectory(label=self.label, dirType="corsika")
         fileDirectory.mkdir(parents=True, exist_ok=True)
         self._logger.info("Creating directory {}, if needed.".format(fileDirectory))
         self._configFilePath = fileDirectory.joinpath(configFileName)
@@ -477,8 +469,6 @@ class CorsikaConfig:
         self._outputGenericFileName = names.corsikaOutputGenericFileName(
             arrayName=self.layoutName, site=self.site, label=self.label
         )
-
-    # End of setOutputFileAndDirectory
 
     def _writeSeeds(self, file):
         """

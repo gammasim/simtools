@@ -1,22 +1,13 @@
 #!/usr/bin/python3
 
 import astropy.units as u
-import pytest
 
-import simtools.io_handler as io
 import simtools.util.general as gen
-from simtools import db_handler
 from simtools.model.telescope_model import TelescopeModel
 from simtools.ray_tracing import RayTracing
 
 
-@pytest.fixture
-def db(set_db):
-    db = db_handler.DatabaseHandler()
-    return db
-
-
-def test_config_data_from_dict(set_db):
+def test_config_data_from_dict(db_connection, simtelpath, io_handler):
 
     label = "test-config-data"
     version = "prod5"
@@ -32,15 +23,20 @@ def test_config_data_from_dict(set_db):
         telescopeModelName="mst-FlashCam-D",
         modelVersion=version,
         label=label,
+        mongoDBConfigFile=str(db_connection),
     )
 
-    ray = RayTracing(telescopeModel=tel, configData=configData)
+    ray = RayTracing(
+        telescopeModel=tel,
+        simtelSourcePath=simtelpath,
+        configData=configData,
+    )
 
     assert ray.config.zenithAngle == 30
     assert len(ray.config.offAxisAngle) == 2
 
 
-def test_from_kwargs(db):
+def test_from_kwargs(db, io_handler, simtelpath):
 
     label = "test-from-kwargs"
 
@@ -51,11 +47,11 @@ def test_from_kwargs(db):
     testFileName = "CTA-North-LST-1-Current_test-telescope-model.cfg"
     db.exportFileDB(
         dbName="test-data",
-        dest=io.getOutputDirectory(dirType="model", test=True),
+        dest=io_handler.getOutputDirectory(dirType="model", test=True),
         fileName=testFileName,
     )
 
-    cfgFile = gen.findFile(testFileName, io.getOutputDirectory(dirType="model", test=True))
+    cfgFile = gen.findFile(testFileName, io_handler.getOutputDirectory(dirType="model", test=True))
 
     tel = TelescopeModel.fromConfigFile(
         site="north",
@@ -66,6 +62,7 @@ def test_from_kwargs(db):
 
     ray = RayTracing.fromKwargs(
         telescopeModel=tel,
+        simtelSourcePath=simtelpath,
         sourceDistance=sourceDistance,
         zenithAngle=zenithAngle,
         offAxisAngle=offAxisAngle,

@@ -11,8 +11,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from astropy.table import QTable
 
-import simtools.config as cfg
-import simtools.io_handler as io
+import simtools.io_handler as io_handler
 import simtools.util.general as gen
 from simtools import visualize
 from simtools.model.telescope_model import TelescopeModel
@@ -89,9 +88,8 @@ class RayTracing:
     def __init__(
         self,
         telescopeModel,
+        simtelSourcePath,
         label=None,
-        simtelSourcePath=None,
-        filesLocation=None,
         configData=None,
         configFile=None,
     ):
@@ -104,12 +102,8 @@ class RayTracing:
             Instance of the TelescopeModel class.
         label: str
             Instance label.
-        simtelSourcePath: str (or Path), optional
-            Location of sim_telarray installation. If not given, it will be taken from the
-            config.yml file.
-        filesLocation: str (or Path), optional
-            Parent location of the output files created by this class. If not given, it will be
-            taken from the config.yml file.
+        simtelSourcePath: str (or Path)
+            Location of sim_telarray installation.
         configData: dict.
             Dict containing the configurable parameters.
         configFile: str or Path
@@ -117,14 +111,15 @@ class RayTracing:
         """
         self._logger = logging.getLogger(__name__)
 
-        self._simtelSourcePath = Path(cfg.getConfigArg("simtelPath", simtelSourcePath))
-        self._filesLocation = cfg.getConfigArg("outputLocation", filesLocation)
+        self._simtelSourcePath = Path(simtelSourcePath)
+        self._io_handler = io_handler.IOHandler()
 
         self._telescopeModel = self._validateTelescopeModel(telescopeModel)
 
-        # Loading configData
         _configDataIn = gen.collectDataFromYamlOrDict(configFile, configData)
-        _parameterFile = io.getInputDataFile("parameters", "ray-tracing_parameters.yml")
+        _parameterFile = self._io_handler.getInputDataFile(
+            parentDir="parameters", fileName="ray-tracing_parameters.yml"
+        )
         _parameters = gen.collectDataFromYamlOrDict(_parameterFile, None)
         self.config = gen.validateConfigData(_configDataIn, _parameters)
 
@@ -134,10 +129,7 @@ class RayTracing:
 
         self.label = label if label is not None else self._telescopeModel.label
 
-        self._outputDirectory = io.getOutputDirectory(
-            self._filesLocation, self.label, "ray-tracing"
-        )
-        self._outputDirectory.mkdir(parents=True, exist_ok=True)
+        self._outputDirectory = self._io_handler.getOutputDirectory(self.label, "ray-tracing")
 
         # Loading relevant attributes in case of single mirror mode.
         if self.config.singleMirrorMode:
@@ -169,8 +161,6 @@ class RayTracing:
         self._outputDirectory.joinpath("results").mkdir(parents=True, exist_ok=True)
         self._fileResults = self._outputDirectory.joinpath("results").joinpath(fileNameResults)
 
-    # END of init
-
     @classmethod
     def fromKwargs(cls, **kwargs):
         """
@@ -192,7 +182,6 @@ class RayTracing:
                 "telescopeModel",
                 "label",
                 "simtelSourcePath",
-                "filesLocation",
             ],
             **kwargs
         )
@@ -232,7 +221,6 @@ class RayTracing:
                 )
                 simtel = SimtelRunnerRayTracing(
                     simtelSourcePath=self._simtelSourcePath,
-                    filesLocation=self._filesLocation,
                     telescopeModel=self._telescopeModel,
                     configData={
                         "zenithAngle": self.config.zenithAngle * u.deg,
@@ -245,8 +233,6 @@ class RayTracing:
                     forceSimulate=force,
                 )
                 simtel.run(test=test, force=force)
-
-    # END of simulate
 
     def analyze(
         self,
@@ -348,7 +334,6 @@ class RayTracing:
                 if self.config.singleMirrorMode:
                     _currentResults += (thisMirror,)
                 _rows.append(_currentResults)
-        # END for offAxis, mirrorNumber
 
         if doAnalyze:
             _columns = ["Off-axis angle"]
@@ -358,11 +343,8 @@ class RayTracing:
             self._results = QTable(rows=_rows, names=_columns)
 
         self._hasResults = True
-        # Exporting
         if export:
             self.exportResults()
-
-    # END of analyze
 
     def _processRX(self, file, containment_fraction=0.8):
         """
@@ -554,6 +536,3 @@ class RayTracing:
             self._logger.error("No image found")
             return None
         return images
-
-
-# END of RayTracing
