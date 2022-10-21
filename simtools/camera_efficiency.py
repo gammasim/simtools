@@ -224,6 +224,8 @@ class CameraEfficiency:
         # Processing mirror reflectivity
         # A special case is testeff does not support 2D distributions
         mirrorReflectivity = self._telescopeModel.getParameterValue("mirror_reflectivity")
+        if mirrorClass == 2:
+            mirrorReflectivitySecondary = mirrorReflectivity
         if self._telescopeModel.isFile2D("mirror_reflectivity"):
             mirrorReflectivity = self._getOneDimDistribution(
                 "mirror_reflectivity", "primary_mirror_incidence_angle"
