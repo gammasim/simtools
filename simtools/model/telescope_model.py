@@ -807,7 +807,7 @@ class TelescopeModel:
         """
 
         incidenceAngleDist = astropy.io.ascii.read(
-            self.getDerivedDirectory.joinpath(incidenceAngleDistFile)
+            self.getDerivedDirectory().joinpath(incidenceAngleDistFile)
         )
         return incidenceAngleDist
 
