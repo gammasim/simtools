@@ -49,13 +49,13 @@ class Configurator:
         self.config = {}
         self.parser = argparser.CommandLineParser(label, description)
 
-    def default_config(self, arg_list=[]):
+    def default_config(self, arg_list=None):
         """
         Returns dictionary of default configuration
 
         """
         self.parser.initialize_default_arguments()
-        if "--site" in arg_list:
+        if arg_list and "--site" in arg_list:
             self.parser.initialize_telescope_model_arguments(True, "--telescope" in arg_list)
         self._fillConfig(arg_list)
         return self.config
