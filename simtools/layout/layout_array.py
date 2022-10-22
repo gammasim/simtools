@@ -91,7 +91,7 @@ class LayoutArray:
     def fromLayoutArrayName(cls, layoutArrayName, label=None):
         """
         Read telescope list from file for given layout name (e.g. South-4LST, North-Prod5, ...).
-        Layout definitions are given in the `dataLocation//layout` path.
+        Layout definitions are given in the `data/layout` path.
 
         Parameters
         ----------
@@ -125,7 +125,7 @@ class LayoutArray:
     def __getitem__(self, i):
         return self._telescopeList[i]
 
-    def _initializeCorsikaTelescope(self, corsikaDict=None, dataLocation=None):
+    def _initializeCorsikaTelescope(self, corsikaDict=None, data_path=None):
         """
         Initialize Dictionary for CORSIKA telescope parameters.
         Allow input from different sources (dictionary, yaml, ecsv header), which
@@ -144,7 +144,7 @@ class LayoutArray:
                 "Initialize CORSIKA telescope parameters from dict: {}".format(corsikaDict)
             )
             self._initializeCorsikaTelescopeFromDict(corsikaDict)
-        elif dataLocation is not None:
+        elif data_path is not None:
             self._logger.debug("Initialize CORSIKA telescope parameters from file")
             self._initializeCorsikaTelescopeFromDict(
                 collectDataFromYamlOrDict(
