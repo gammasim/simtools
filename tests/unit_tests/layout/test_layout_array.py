@@ -77,10 +77,10 @@ def test_initializeCoordinateSystems(layoutCenterDataDict):
     assert _N.value == pytest.approx(3185067.0, 1.0)
 
 
-def test_initializeCorsikaTelescopeFromFile(corsikaTelescopeDataDict, args_dict):
+def test_initializeCorsikaTelescopeFromFile(corsikaTelescopeDataDict, args_dict, io_handler):
 
     layout = LayoutArray(name="testLayout")
-    layout._initializeCorsikaTelescope(data_path=args_dict["data_path"])
+    layout._initializeCorsikaTelescope()
 
     for key, value in corsikaTelescopeDataDict["corsika_sphere_radius"].items():
         assert value == layout._corsikaTelescope["corsika_sphere_radius"][key]
@@ -113,7 +113,9 @@ def test_add_tel(telescopeTestFile):
     assert layout._telescopeList[-1].getAltitude().value == pytest.approx(2192.0)
 
 
-def test_build_layout(layoutCenterDataDict, corsikaTelescopeDataDict, tmp_test_directory):
+def test_build_layout(
+    layoutCenterDataDict, corsikaTelescopeDataDict, tmp_test_directory, io_handler
+):
 
     layout = LayoutArray(
         label="test_layout",
@@ -149,7 +151,7 @@ def test_build_layout(layoutCenterDataDict, corsikaTelescopeDataDict, tmp_test_d
 
     layout.convertCoordinates()
     layout.printTelescopeList()
-    layout.exportTelescopeList("corsika", outputPath=str(tmp_test_directory + "/output/"))
+    layout.exportTelescopeList("corsika")
 
     # Building a second layout from the file exported by the first one
     layout_2 = LayoutArray("test_layout_2")
