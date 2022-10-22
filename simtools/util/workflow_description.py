@@ -583,7 +583,7 @@ class WorkflowDescription:
                 "FILENAME": None,
             },
             "CONFIGURATION": {
-                "configFile": "./config.yml",
+                "configFile": "config_file.yml",
                 "logLevel": "INFO",
                 "test": False,
             },

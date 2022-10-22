@@ -48,8 +48,7 @@ class SimtelRunner:
         label: str, optional
             Instance label. Important for output file naming.
         simtelSourcePath: str (or Path), optional
-            Location of sim_telarray installation. If not given, it will be taken from the
-            config.yml file.
+            Location of sim_telarray installation.
         """
         self._logger = logging.getLogger(__name__)
 
@@ -215,7 +214,7 @@ class SimtelRunner:
     def _getExtraCommands(extra):
         """
         Get extra commands by combining the one given as argument and
-        what is given in config.yml
+        what is given in the configuration.
         """
         extra = gen.copyAsList(extra) if extra is not None else list()
         return extra

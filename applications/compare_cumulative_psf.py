@@ -110,7 +110,7 @@ def main():
         default=10,
     )
     config.parser.add_argument(
-        "--zenith", help="Zenith angle in deg (default=20)", type=float, default=20
+        "--zenith", help="Zenith angle in deg (default=20)", type=float, default=20.0
     )
     config.parser.add_argument(
         "--data", help="Data file name with the measured PSF vs radius [cm]", type=str
@@ -138,7 +138,7 @@ def main():
     )
 
     # New parameters
-    if args_dict["pars"] is not None:
+    if args_dict.get("pars", None):
         with open(args_dict["pars"]) as file:
             newPars = yaml.safe_load(file)
         telModel.changeMultipleParameters(**newPars)
@@ -162,7 +162,7 @@ def main():
     # Plotting cumulative PSF
     # Measured cumulative PSF
     dataToPlot = OrderedDict()
-    if args_dict["data"] is not None:
+    if args_dict.get("data", None):
         dataFile = gen.findFile(args_dict["data"], args_dict["model_path"])
         dataToPlot["measured"] = loadData(dataFile)
         radius = dataToPlot["measured"]["Radius [cm]"]

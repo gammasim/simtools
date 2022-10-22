@@ -15,7 +15,7 @@
 
     At the moment, the shower simulations are performed by CORSIKA, which requires \
     the zstd package. Please, make sure that the command to set your zstd path is \
-    properly set by the extraCommands in config.yml.
+    properly set by the extraCommands in the command line configuration.
 
     Command line arguments
     ----------------------
