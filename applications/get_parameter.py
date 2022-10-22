@@ -18,15 +18,13 @@ def main():
             "If no version is provided, the entries of the last 5 versions are printed."
         )
     )
-    config.parser.initialize_telescope_model_arguments()
     config.parser.add_argument("--parameter", help="Parameter name", type=str, required=True)
-
-    args_dict = config.initialize()
+    args_dict, db_config = config.initialize(db_config=True, telescope_model=True)
 
     logger = logging.getLogger()
     logger.setLevel(gen.getLogLevelFromUser(args_dict["log_level"]))
 
-    db = db_handler.DatabaseHandler(mongoDBConfigFile=args_dict.get("mongodb_config_file", None))
+    db = db_handler.DatabaseHandler(mongoDBConfig=db_config)
 
     if args_dict["model_version"] == "all":
         raise NotImplementedError("Printing last 5 versions is not implemented yet.")

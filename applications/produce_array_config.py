@@ -107,7 +107,7 @@ def main():
         required=True,
     )
 
-    args_dict = config.initialize()
+    args_dict, db_config = config.initialize(db_config=True)
 
     label = "produce_array_config" if args_dict["label"] is None else args_dict["label"]
 
@@ -116,7 +116,7 @@ def main():
 
     arrayModel = ArrayModel(
         label=label,
-        mongoDBConfigFile=args_dict.get("mongodb_config_file"),
+        mongoDBConfig=db_config,
         arrayConfigFile=args_dict["array_config"],
     )
 

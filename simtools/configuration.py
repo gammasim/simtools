@@ -49,7 +49,7 @@ class Configurator:
         self.config = {}
         self.parser = argparser.CommandLineParser(label, description)
 
-    def default_config(self, arg_list=None):
+    def default_config(self, arg_list=None, add_db_config=False):
         """
         Returns dictionary of default configuration
 
@@ -57,10 +57,15 @@ class Configurator:
         self.parser.initialize_default_arguments()
         if arg_list and "--site" in arg_list:
             self.parser.initialize_telescope_model_arguments(True, "--telescope" in arg_list)
+        if add_db_config:
+            self.parser.initialize_db_config_arguments()
+
         self._fillConfig(arg_list)
         return self.config
 
-    def initialize(self, add_workflow_config=False):
+    def initialize(
+        self, telescope_model=False, workflow_config=False, db_config=False, job_submission=False
+    ):
         """
         Initialize configuration from command line, configuration file, class config, \
         or environmental variable.
@@ -74,8 +79,14 @@ class Configurator:
 
         Parameters
         ----------
-        add_workflow_config: bool
-            Add workflow configuration file to list of args.
+        telescope_model: bool
+            Add telescope model configuration to list of args.
+        workflow_config: bool
+            Add workflow configuration to list of args.
+        db_config: bool
+            Add database configuration parameters to list of args.
+        job_submission: bool
+            Add job submission configuration to list of args.
 
         Returns
         -------
@@ -89,15 +100,21 @@ class Configurator:
 
         """
 
-        self.parser.initialize_default_arguments(add_workflow_config=add_workflow_config)
+        self.parser.initialize_default_arguments(
+            telescope_model=telescope_model,
+            workflow_config=workflow_config,
+            db_config=db_config,
+            job_submission=job_submission,
+        )
 
         self._fillFromCommandLine()
         self._fillFromConfigFile()
         self._fillFromConfigDict(self.configClassInit)
         self._fillFromEnvironmentalVariables()
         self._initializeIOHandler()
+        _db_dict = self._getDBParameters()
 
-        return self.config
+        return self.config, _db_dict
 
     def _fillFromCommandLine(self, arg_list=None):
         """
@@ -292,3 +309,25 @@ class Configurator:
                 )
             )
         )
+
+    def _getDBParameters(self):
+        """
+        Return parameters for DB configuration
+
+        Parameters
+        ----------
+        dict
+            Dictionary with DB parameters
+
+
+        """
+
+        _db_dict = {}
+        _db_para = ("db_api_user", "db_api_pw", "db_api_port", "db_api_name")
+        try:
+            for _para in _db_para:
+                _db_dict[_para] = self.config[_para]
+        except KeyError:
+            pass
+
+        return _db_dict

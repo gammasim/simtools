@@ -21,72 +21,105 @@ class CommandLineParser(argparse.ArgumentParser):
 
     """
 
-    def initialize_default_arguments(self, add_workflow_config=True):
+    def initialize_default_arguments(
+        self, telescope_model=False, workflow_config=False, db_config=False, job_submission=False
+    ):
         """
         Initialize default arguments used by all applications (e.g., verbosity or test flag).
 
         Parameters
         ----------
-        add_workflow_config: bool
-           Add workflow configuration file to list of args.
+        telescope_model: bool
+           Add telescope model configuration to list of args.
+        workflow_config: bool
+           Add workflow configuration to list of args.
+        db_config: bool
+            Add database configuration parameters to list of args.
+        job_submission: bool
+            Add job submission configuration parameters to list of args.
 
         """
 
-        self.add_argument(
+        if telescope_model:
+            self.initialize_telescope_model_arguments()
+
+        if job_submission:
+            self.initialize_job_submission_arguments()
+        if db_config:
+            self.initialize_db_config_arguments()
+
+        self.initialize_path_arguments()
+        self.initialize_config_files(workflow_config)
+        self.initialize_application_execution_arguments()
+
+    def initialize_config_files(self, workflow_config):
+        """
+        Initialize configuration and workflow files.
+
+        """
+        _job_group = self.add_argument_group("configuration")
+        _job_group.add_argument(
             "--config_file",
             help="gammasim-tools configuration file",
             default=None,
             type=str,
             required=False,
         )
-        if add_workflow_config:
-            self.add_argument(
+        if workflow_config:
+            _job_group.add_argument(
                 "--workflow_config_file",
                 help="workflow configuration file",
                 type=str,
                 required=False,
             )
-        self.add_argument(
+
+    def initialize_path_arguments(self):
+        """
+        Initialize paths.
+
+        """
+        _job_group = self.add_argument_group("paths")
+        _job_group.add_argument(
             "--data_path",
             help="path pointing towards data directory",
             type=Path,
             default="./data/",
             required=False,
         )
-        self.add_argument(
+        _job_group.add_argument(
             "--output_path",
             help="path pointing towards output directory",
             type=Path,
             default="./",
             required=False,
         )
-        self.add_argument(
+        _job_group.add_argument(
             "--model_path",
-            help="path pointing towards model file directory (temporary - will go in future)",
+            help="path pointing towards simulation model file directory",
             type=Path,
             default="./",
             required=False,
         )
-        self.add_argument(
-            "--mongodb_config_file",
-            help="configuration file for Mongo DB",
-            type=str,
-            default="dbDetails.yml",
-            required=False,
-        )
-        self.add_argument(
+        _job_group.add_argument(
             "--simtelpath",
             help="path pointing to sim_telarray installation",
             type=Path,
             required=False,
         )
-        self.add_argument(
+
+    def initialize_application_execution_arguments(self):
+        """
+        Initialize application execution arguments.
+
+        """
+        _job_group = self.add_argument_group("execution")
+        _job_group.add_argument(
             "--test",
             help="test option for faster execution during development",
             action="store_true",
             required=False,
         )
-        self.add_argument(
+        _job_group.add_argument(
             "-v",
             "--log_level",
             action="store",
@@ -94,17 +127,28 @@ class CommandLineParser(argparse.ArgumentParser):
             help="log level to print (default is INFO)",
             required=False,
         )
-        self.add_argument(
+        _job_group.add_argument(
             "-V", "--version", action="version", version=f"%(prog)s {simtools.version.__version__}"
         )
+
+    def initialize_db_config_arguments(self):
+        """
+        Initialize DB configuration parameters.
+
+        """
+        _job_group = self.add_argument_group("MongoDB configuration")
+        _job_group.add_argument("--db_api_user", help="database user", type=str, required=False)
+        _job_group.add_argument("--db_api_pw", help="database password", type=str, required=False)
+        _job_group.add_argument("--db_api_port", help="database port", type=int, required=False)
+        _job_group.add_argument("--db_api_name", help="database name", type=str, required=False)
 
     def initialize_job_submission_arguments(self):
         """
         Initialize job submission arguments for simulator.
 
         """
-
-        self.add_argument(
+        _job_group = self.add_argument_group("job submission")
+        _job_group.add_argument(
             "--submit_command",
             help="Job submission command",
             type=str,
@@ -115,7 +159,7 @@ class CommandLineParser(argparse.ArgumentParser):
                 "local",
             ],
         )
-        self.add_argument(
+        _job_group.add_argument(
             "--extra_submit_options",
             help="Additional options for submission command",
             type=str,
@@ -129,18 +173,19 @@ class CommandLineParser(argparse.ArgumentParser):
 
         """
 
-        self.add_argument(
+        _job_group = self.add_argument_group("telescope model")
+        _job_group.add_argument(
             "--site", help="CTAO site (e.g. North, South)", type=self.site, required=True
         )
         if add_telescope:
-            self.add_argument(
+            _job_group.add_argument(
                 "--telescope",
                 help="telescope model name (e.g. LST-1, SST-D, ...)",
                 type=str,
                 required=True,
             )
         if add_model_version:
-            self.add_argument(
+            _job_group.add_argument(
                 "--model_version",
                 help="model version (default=Current)",
                 type=str,

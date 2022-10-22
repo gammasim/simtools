@@ -7,7 +7,7 @@ from simtools.model.telescope_model import TelescopeModel
 from simtools.ray_tracing import RayTracing
 
 
-def test_config_data_from_dict(db_connection, simtelpath, io_handler):
+def test_config_data_from_dict(db_config, simtelpath, io_handler):
 
     label = "test-config-data"
     version = "prod5"
@@ -23,7 +23,7 @@ def test_config_data_from_dict(db_connection, simtelpath, io_handler):
         telescopeModelName="mst-FlashCam-D",
         modelVersion=version,
         label=label,
-        mongoDBConfigFile=str(db_connection),
+        mongoDBConfig=db_config,
     )
 
     ray = RayTracing(

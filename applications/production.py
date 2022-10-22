@@ -124,8 +124,7 @@ def _parse(description=None):
         help="Simulates only array detection, no showers",
         action="store_true",
     )
-    config.parser.initialize_job_submission_arguments()
-    return config.initialize(add_workflow_config=False)
+    return config.initialize(db_config=True, job_submission=True)
 
 
 def _proccessSimulationConfigFile(configFile, primaryConfig, logger):
@@ -200,7 +199,7 @@ def _proccessSimulationConfigFile(configFile, primaryConfig, logger):
 
 def main():
 
-    args_dict = _parse(description=("Air shower and array simulations"))
+    args_dict, db_config = _parse(description=("Air shower and array simulations"))
 
     logger = logging.getLogger()
     logger.setLevel(gen.getLogLevelFromUser(args_dict["log_level"]))
@@ -234,7 +233,7 @@ def main():
                 simulatorSourcePath=args_dict["simtelpath"],
                 configData=configData,
                 submitCommand=args_dict["submit_command"],
-                mongoDBConfigFile=args_dict["mongodb_config_file"],
+                mongoDBConfig=db_config,
             )
         for primary, array in arraySimulators.items():
             inputList = showerSimulators[primary].getListOfOutputFiles()

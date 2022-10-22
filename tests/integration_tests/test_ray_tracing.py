@@ -15,7 +15,7 @@ logger.setLevel(logging.DEBUG)
 
 
 @pytest.mark.parametrize("telescopeModelName", ["sst-1M", "sst-ASTRI", "sst-GCT"])
-def test_ssts(telescopeModelName, db_connection, simtelpath_no_mock, io_handler):
+def test_ssts(telescopeModelName, db_config, simtelpath_no_mock, io_handler):
     # Test with 3 SSTs
     version = "prod3"
     configData = {
@@ -28,7 +28,7 @@ def test_ssts(telescopeModelName, db_connection, simtelpath_no_mock, io_handler)
         telescopeModelName=telescopeModelName,
         modelVersion=version,
         label="test-sst",
-        mongoDBConfigFile=str(db_connection),
+        mongoDBConfig=db_config,
     )
 
     ray = RayTracing(telescopeModel=tel, simtelSourcePath=simtelpath_no_mock, configData=configData)
@@ -36,7 +36,7 @@ def test_ssts(telescopeModelName, db_connection, simtelpath_no_mock, io_handler)
     ray.analyze(force=True)
 
 
-def test_rx(db_connection, simtelpath_no_mock, io_handler):
+def test_rx(db_config, simtelpath_no_mock, io_handler):
     version = "current"
     label = "test-lst"
 
@@ -51,7 +51,7 @@ def test_rx(db_connection, simtelpath_no_mock, io_handler):
         telescopeModelName="lst-1",
         modelVersion=version,
         label=label,
-        mongoDBConfigFile=str(db_connection),
+        mongoDBConfig=db_config,
     )
 
     ray = RayTracing(telescopeModel=tel, simtelSourcePath=simtelpath_no_mock, configData=configData)
@@ -89,7 +89,7 @@ def test_rx(db_connection, simtelpath_no_mock, io_handler):
     plt.savefig(plotFileArea)
 
 
-def test_plot_image(db_connection, simtelpath_no_mock, io_handler):
+def test_plot_image(db_config, simtelpath_no_mock, io_handler):
     version = "prod3"
     label = "test-astri"
     configData = {
@@ -103,7 +103,7 @@ def test_plot_image(db_connection, simtelpath_no_mock, io_handler):
         telescopeModelName="sst-D",
         modelVersion=version,
         label=label,
-        mongoDBConfigFile=str(db_connection),
+        mongoDBConfig=db_config,
     )
 
     ray = RayTracing(telescopeModel=tel, simtelSourcePath=simtelpath_no_mock, configData=configData)
@@ -124,7 +124,7 @@ def test_plot_image(db_connection, simtelpath_no_mock, io_handler):
         plt.savefig(plotFile)
 
 
-def test_single_mirror(db_connection, simtelpath_no_mock, io_handler, plot=False):
+def test_single_mirror(db_config, simtelpath_no_mock, io_handler, plot=False):
 
     # Test MST, single mirror PSF simulation
     version = "prod3"
@@ -135,7 +135,7 @@ def test_single_mirror(db_connection, simtelpath_no_mock, io_handler, plot=False
         telescopeModelName="mst-FlashCam-D",
         modelVersion=version,
         label="test-mst",
-        mongoDBConfigFile=str(db_connection),
+        mongoDBConfig=db_config,
     )
 
     ray = RayTracing(telescopeModel=tel, simtelSourcePath=simtelpath_no_mock, configData=configData)
@@ -152,7 +152,7 @@ def test_single_mirror(db_connection, simtelpath_no_mock, io_handler, plot=False
     plt.savefig(plotFile)
 
 
-def test_integral_curve(db_connection, simtelpath_no_mock, io_handler):
+def test_integral_curve(db_config, simtelpath_no_mock, io_handler):
     version = "prod4"
     label = "lst_integral"
 
@@ -167,7 +167,7 @@ def test_integral_curve(db_connection, simtelpath_no_mock, io_handler):
         telescopeModelName="mst-FlashCam-D",
         modelVersion=version,
         label=label,
-        mongoDBConfigFile=str(db_connection),
+        mongoDBConfig=db_config,
     )
 
     ray = RayTracing(telescopeModel=tel, simtelSourcePath=simtelpath_no_mock, configData=configData)

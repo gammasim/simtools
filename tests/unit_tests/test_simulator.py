@@ -70,20 +70,20 @@ def corsikaFile():
 
 
 @pytest.fixture
-def array_simulator(label, arrayConfigData, io_handler, db_connection, simtelpath):
+def array_simulator(label, arrayConfigData, io_handler, db_config, simtelpath):
 
     arraySimulator = Simulator(
         label=label,
         simulator="simtel",
         simulatorSourcePath=simtelpath,
         configData=arrayConfigData,
-        mongoDBConfigFile=db_connection,
+        mongoDBConfig=db_config,
     )
     return arraySimulator
 
 
 @pytest.fixture
-def shower_simulator(label, showerConfigData, io_handler, db_connection, simtelpath):
+def shower_simulator(label, showerConfigData, io_handler, simtelpath):
 
     showerSimulator = Simulator(
         label=label,
@@ -272,16 +272,14 @@ def test_fillResults(array_simulator, shower_simulator, input_file_list):
     assert shower_simulator._results["hist"][1] is None
 
 
-def test_printHistograms(
-    arrayConfigData, shower_simulator, input_file_list, simtelpath, db_connection
-):
+def test_printHistograms(arrayConfigData, shower_simulator, input_file_list, db_config, simtelpath):
 
     _arraySimulator = Simulator(
         label="simtel_test",
         simulator="simtel",
         simulatorSourcePath=simtelpath,
         configData=arrayConfigData,
-        mongoDBConfigFile=db_connection,
+        mongoDBConfig=db_config,
     )
 
     assert len(str(_arraySimulator.printHistograms())) > 0
