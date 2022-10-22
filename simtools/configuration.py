@@ -275,9 +275,7 @@ class Configurator:
     @staticmethod
     def _convert_stringnone_to_none(input_dict):
         """
-        Convert string type 'None' to type None.
-
-        TODO check for a better solution here; argparse returns None as str.
+        Convert string type 'None' to type None (argparse returns None as str).
 
         Parameters
         ----------

@@ -288,7 +288,8 @@ class WorkflowDescription:
 
         Parameters
         ----------
-        TODO
+        output_path: str or Path
+            Path under which product output directories are located.
 
         Returns
         -------
