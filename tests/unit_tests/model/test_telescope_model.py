@@ -26,13 +26,13 @@ def lst_config_file(db, io_handler):
 
 
 @pytest.fixture
-def telescope_model(db_connection, io_handler):
+def telescope_model(db_config, io_handler):
     telescopeModel = TelescopeModel(
         site="North",
         telescopeModelName="LST-1",
         modelVersion="Prod5",
         label="test-telescope-model",
-        mongoDBConfigFile=str(db_connection),
+        mongoDBConfig=db_config,
     )
     return telescopeModel
 
@@ -110,7 +110,7 @@ def test_cfg_file(telescope_model_from_config_file, lst_config_file):
     assert False is filecmp.cmp(lst_config_file, tel.getConfigFile())
 
 
-def test_updating_export_model_files(db_connection, io_handler):
+def test_updating_export_model_files(db_config, io_handler):
     """
     It was found in derive_mirror_rnda_angle that the DB was being
     accessed each time the model was changed, because the model
@@ -125,7 +125,7 @@ def test_updating_export_model_files(db_connection, io_handler):
         telescopeModelName="LST-1",
         modelVersion="prod4",
         label="test-telescope-model-2",
-        mongoDBConfigFile=str(db_connection),
+        mongoDBConfig=db_config,
     )
 
     logger.debug(

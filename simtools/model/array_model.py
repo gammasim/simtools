@@ -57,7 +57,7 @@ class ArrayModel:
 
     def __init__(
         self,
-        mongoDBConfigFile,
+        mongoDBConfig,
         label=None,
         arrayConfigFile=None,
         arrayConfigData=None,
@@ -67,8 +67,8 @@ class ArrayModel:
 
         Parameters
         ----------
-        mongoDBConfigFile: str
-            MongoDB configuration file.
+        mongoDBConfig: dict
+            MongoDB configuration.
         arrayConfigFile: str
             Path to a yaml file with the array config data.
         arrayConfigData: dict
@@ -93,7 +93,7 @@ class ArrayModel:
 
         self._setConfigFileDirectory()
 
-        self._buildArrayModel(mongoDBConfigFile)
+        self._buildArrayModel(mongoDBConfig)
 
         self._telescopeModelFilesExported = False
         self._arrayModelFileExported = False
@@ -167,20 +167,20 @@ class ArrayModel:
             self._logger.info("Creating directory {}".format(self._configFileDirectory))
         return
 
-    def _buildArrayModel(self, mongoDBConfigFile):
+    def _buildArrayModel(self, mongoDBConfig):
         """
         Build the site parameters and the list of telescope models,
         including reading the parameters from the DB.
 
         Parameters
         ----------
-        mongoDBConfigFile: str
-            MongoDB configuration file
+        mongoDBConfig: str
+            MongoDB configuration.
 
         """
 
         # Getting site parameters from DB
-        db = db_handler.DatabaseHandler(mongoDBConfigFile=mongoDBConfigFile)
+        db = db_handler.DatabaseHandler(mongoDBConfig=mongoDBConfig)
         self._siteParameters = db.getSiteParameters(
             self.site, self.modelVersion, onlyApplicable=True
         )
@@ -210,7 +210,7 @@ class ArrayModel:
                     telescopeModelName=telModelName,
                     modelVersion=self.modelVersion,
                     label=self.label,
-                    mongoDBConfigFile=mongoDBConfigFile,
+                    mongoDBConfig=mongoDBConfig,
                 )
             else:
                 # Telescope name already exists.

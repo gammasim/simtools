@@ -141,3 +141,17 @@ def test_convert_stringnone_to_none():
     _tmp_none["d"] = None
 
     assert _tmp_none == Configurator._convert_stringnone_to_none(_tmp_dict)
+
+
+def test_getDBParameters(configurator, args_dict):
+
+    configurator.parser.initialize_db_config_arguments()
+    configurator._fillFromCommandLine(arg_list=[])
+    configurator._fillFromEnvironmentalVariables()
+
+    args_dict["db_api_user"] = "db_user"
+    args_dict["db_api_pw"] = "12345"
+    args_dict["db_api_port"] = 42
+    args_dict["db_api_name"] = "abc@def.de"
+
+    assert configurator.config == args_dict

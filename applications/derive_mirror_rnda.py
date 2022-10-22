@@ -139,7 +139,6 @@ def _parse(label):
     """
 
     config = configurator.Configurator(label)
-    config.parser.initialize_telescope_model_arguments()
     psf_group = config.parser.add_mutually_exclusive_group()
     psf_group.add_argument(
         "--psf_measurement_containment_mean",
@@ -204,10 +203,10 @@ def _parse(label):
         action="store_true",
         required=False,
     )
-    return config.initialize()
+    return config.initialize(db_config=True, telescope_model=True)
 
 
-def _define_telescope_model(workflow, args_dict):
+def _define_telescope_model(workflow, args_dict, db_config):
     """
     Define telescope model and update configuration
     with mirror list and/or random focal length given
@@ -229,7 +228,7 @@ def _define_telescope_model(workflow, args_dict):
         site=workflow.get_configuration_parameter("site"),
         telescopeModelName=workflow.get_configuration_parameter("telescope"),
         modelVersion=workflow.get_configuration_parameter("model_version"),
-        mongoDBConfigFile=args_dict.get("mongodb_config_file", None),
+        mongoDBConfig=db_config,
         label=workflow.label(),
     )
     if workflow.get_configuration_parameter("mirror_list") is not None:
@@ -343,14 +342,14 @@ def _get_psf_containment(logger, workflow):
 def main():
 
     label = os.path.basename(__file__).split(".")[0]
-    args_dict = _parse(label)
+    args_dict, db_config = _parse(label)
 
     logger = logging.getLogger()
     logger.setLevel(gen.getLogLevelFromUser(args_dict["log_level"]))
 
     workflow = workflow_config.WorkflowDescription(label=label, args_dict=args_dict)
 
-    tel = _define_telescope_model(workflow, args_dict)
+    tel = _define_telescope_model(workflow, args_dict, db_config)
 
     if workflow.get_configuration_parameter("psf_measurement"):
         _get_psf_containment(logger, workflow)

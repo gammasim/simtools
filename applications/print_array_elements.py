@@ -96,12 +96,12 @@ def _parse(description=None):
         default=False,
         action="store_true",
     )
-    return config.initialize(add_workflow_config=False)
+    return config.initialize()
 
 
 def main():
 
-    args_dict = _parse(description=("Print a list of array element positions"))
+    args_dict, _ = _parse(description=("Print a list of array element positions"))
 
     _logger = logging.getLogger()
     _logger.setLevel(gen.getLogLevelFromUser(args_dict["log_level"]))

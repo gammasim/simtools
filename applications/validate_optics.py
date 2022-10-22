@@ -83,12 +83,11 @@ def _parse():
 
     config = configurator.Configurator(
         description=(
-            "Calculate and plot the PSF and eff. mirror area as a function of off-axis angle "
+            "Calculate and plot the PSF and effective mirror area as a function of off-axis angle "
             "of the telescope requested."
         )
     )
 
-    config.parser.initialize_telescope_model_arguments()
     config.parser.add_argument(
         "--src_distance",
         help="Source distance in km (default=10)",
@@ -115,12 +114,12 @@ def _parse():
         help="Produce a multiple pages pdf file with the image plots.",
         action="store_true",
     )
-    return config.initialize(add_workflow_config=False)
+    return config.initialize(db_config=True, telescope_model=True)
 
 
 def main():
 
-    args_dict = _parse()
+    args_dict, db_config = _parse()
     label = "validate_optics"
 
     logger = logging.getLogger()
@@ -134,7 +133,7 @@ def main():
         telescopeModelName=args_dict["telescope"],
         modelVersion=args_dict["model_version"],
         label=label,
-        mongoDBConfigFile=args_dict["mongodb_config_file"],
+        mongoDBConfig=db_config,
     )
 
     ######################################################################

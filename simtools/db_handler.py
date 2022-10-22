@@ -67,37 +67,21 @@ class DatabaseHandler:
 
     dbClient = None
 
-    def __init__(self, useMongoDB=True, mongoDBConfigFile=None):
+    def __init__(self, mongoDBConfig=None):
         """
         Initialize the DatabaseHandler class.
         """
         self._logger = logging.getLogger(__name__)
         self._logger.debug("Initialize DatabaseHandler")
 
-        self.useMongoDB = useMongoDB
-        self.mongoDBConfigFile = mongoDBConfigFile
+        self.dbDetails = mongoDBConfig
+        self._logger.debug("DB configuration: {}".format(self.dbDetails))
         self.io_handler = io_handler.IOHandler()
 
-        if self.useMongoDB:
+        if self.dbDetails:
             if DatabaseHandler.dbClient is None:
                 with Lock():
-                    self.dbDetails = self._readDetailsMongoDB()
                     DatabaseHandler.dbClient = self._openMongoDB()
-
-    def _readDetailsMongoDB(self):
-        """
-        Read the MongoDB details (server, user, pass, etc.) from an external file.
-
-        Returns
-        -------
-        dbDetails: dict
-            Dictionary containing the DB details.
-        """
-
-        dbDetails = dict()
-        with open(self.mongoDBConfigFile, "r") as stream:
-            dbDetails = yaml.safe_load(stream)
-        return dbDetails
 
     def _openMongoDB(self):
         """
@@ -107,16 +91,20 @@ class DatabaseHandler:
         -------
         A PyMongo DB client
         """
-        _dbClient = MongoClient(
-            self.dbDetails["mongodbServer"],
-            port=self.dbDetails["dbPort"],
-            username=self.dbDetails["userDB"],
-            password=self.dbDetails["passDB"],
-            authSource=self.dbDetails["authenticationDatabase"],
-            ssl=True,
-            tlsallowinvalidhostnames=True,
-            tlsallowinvalidcertificates=True,
-        )
+        try:
+            _dbClient = MongoClient(
+                self.dbDetails["db_api_name"],
+                port=self.dbDetails["db_api_port"],
+                username=self.dbDetails["db_api_user"],
+                password=self.dbDetails["db_api_pw"],
+                authSource=self.dbDetails.get("db_api_authenticationdatabase", "admin"),
+                ssl=True,
+                tlsallowinvalidhostnames=True,
+                tlsallowinvalidcertificates=True,
+            )
+        except KeyError:
+            self._logger.error("Invalid setting of DB configuration")
+            raise
 
         return _dbClient
 
@@ -154,8 +142,7 @@ class DatabaseHandler:
         _siteValidated = names.validateSiteName(site)
         _telModelNameValidated = names.validateTelescopeModelName(telescopeModelName)
 
-        if self.useMongoDB:
-
+        if self.dbDetails:
             # Only MongoDB supports tagged version
             _modelVersion = self._convertVersionToTagged(
                 modelVersion, DatabaseHandler.DB_CTA_SIMULATION_MODEL
@@ -210,7 +197,7 @@ class DatabaseHandler:
             Location where to write the files to.
         """
 
-        if self.useMongoDB:
+        if self.dbDetails:
             self._logger.debug("Exporting model files from MongoDB")
             for info in parameters.values():
                 if not info["File"]:
@@ -495,7 +482,7 @@ class DatabaseHandler:
         _site = names.validateSiteName(site)
         _modelVersion = names.validateModelVersionName(modelVersion)
 
-        if self.useMongoDB:
+        if self.dbDetails:
             _pars = self._getSiteParametersMongoDB(
                 DatabaseHandler.DB_CTA_SIMULATION_MODEL,
                 _site,
