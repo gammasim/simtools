@@ -800,7 +800,8 @@ class TelescopeModel:
         )
         return incidenceAngleDist
 
-    def calcAverageCurve(self, curves, incidenceAngleDist):
+    @staticmethod
+    def calcAverageCurve(curves, incidenceAngleDist):
         """
         Calculate an average curve from a set of cuvres, using as weights
         the distribution of incidence angles provided in incidenceAngleDist
