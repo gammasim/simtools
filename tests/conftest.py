@@ -36,7 +36,6 @@ def io_handler(tmp_test_directory):
     tmp_io_handler = simtools.io_handler.IOHandler()
     tmp_io_handler.setPaths(
         output_path=str(tmp_test_directory) + "/output",
-        # TODO confirm that tests are always run from the gammasim-tools directory
         data_path="./data/",
         model_path=str(tmp_test_directory) + "/model",
     )
