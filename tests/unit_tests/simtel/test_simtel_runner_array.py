@@ -24,11 +24,9 @@ def arrayConfigData():
 
 
 @pytest.fixture
-def arrayModel(arrayConfigData, io_handler, db_connection):
+def arrayModel(arrayConfigData, io_handler, db_config):
     arrayModel = ArrayModel(
-        label="test-lst-array",
-        arrayConfigData=arrayConfigData,
-        mongoDBConfigFile=str(db_connection),
+        label="test-lst-array", arrayConfigData=arrayConfigData, mongoDBConfig=db_config
     )
     return arrayModel
 

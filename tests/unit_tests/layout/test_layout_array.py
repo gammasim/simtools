@@ -34,12 +34,6 @@ def corsikaTelescopeDataDict():
     }
 
 
-# @pytest.fixture
-# def db(db_connection):
-#    db = db_handler.DatabaseHandler(mongoDBConfigFile=str(db_connection))
-#    return db
-
-
 @pytest.fixture
 def telescopeTestFile(db, args_dict, io_handler):
     testFileName = "telescope_positions-North-TestLayout.ecsv"

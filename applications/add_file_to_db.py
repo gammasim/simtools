@@ -37,7 +37,6 @@
 import logging
 from pathlib import Path
 
-import simtools.config as cfg
 import simtools.configuration as configurator
 import simtools.util.general as gen
 from simtools import db_handler
@@ -61,8 +60,8 @@ def _userConfirm():
 
 def main():
 
-    db = db_handler.DatabaseHandler()
-
+    # temporary solution; class values in db_handler
+    _tmp_db_config = db_handler.DatabaseHandler()
     config = configurator.Configurator(description=("Add a file or files to the DB."))
     group = config.parser.add_mutually_exclusive_group(required=True)
     group.add_argument(
@@ -83,7 +82,7 @@ def main():
         help=(
             "A directory with files to upload to the DB. "
             "All files in the directory with the following extensions "
-            "will be uploaded: {}".format(", ".join(db.ALLOWED_FILE_EXTENSIONS))
+            "will be uploaded: {}".format(", ".join(_tmp_db_config.ALLOWED_FILE_EXTENSIONS))
         ),
         type=str,
     )
@@ -91,22 +90,23 @@ def main():
         "-db",
         dest="dbToInsertTo",
         type=str,
-        default=db.DB_TABULATED_DATA,
+        default=_tmp_db_config.DB_TABULATED_DATA,
         choices=[
-            db.DB_TABULATED_DATA,
-            db.DB_DERIVED_VALUES,
-            db.DB_REFERENCE_DATA,
+            _tmp_db_config.DB_TABULATED_DATA,
+            _tmp_db_config.DB_DERIVED_VALUES,
+            _tmp_db_config.DB_REFERENCE_DATA,
             "sandbox",
             "test-data",
         ],
         help=(
             "The DB to insert the files to. "
             'The choices are {0} or "sandbox", '
-            "the default is {0}".format(db.DB_TABULATED_DATA)
+            "the default is {0}".format(_tmp_db_config.DB_TABULATED_DATA)
         ),
     )
-    args_dict = config.initialize()
-    cfg.setConfigFileName(args_dict["config_file"])
+    args_dict, db_config = config.initialize(db_config=True)
+
+    db = db_handler.DatabaseHandler(mongoDBConfig=db_config)
 
     logger = logging.getLogger()
     logger.setLevel(gen.getLogLevelFromUser(args_dict["log_level"]))

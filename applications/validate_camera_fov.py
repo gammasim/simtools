@@ -54,10 +54,9 @@ def main():
     config = configurator.Configurator(
         description=(
             "Calculate the camera FoV of the telescope requested. "
-            "Plot the camera as well, as seen for an observer facing the camera."
+            "Plot the camera, as seen for an observer facing the camera."
         )
     )
-    config.parser.initialize_telescope_model_arguments()
     config.parser.add_argument(
         "--cameraInSkyCoor",
         help=(
@@ -71,13 +70,13 @@ def main():
         "--printPixelsID",
         help=(
             "Up to which pixel ID to print (default: 50). "
-            "To suppress printing of pixel IDs, set to zero (--printPixelsID 0)."
+            "To suppress printing of pixel IDs, set to zero (--printPixelsID 0). "
             "To print all pixels, set to 'All'."
         ),
         default=50,
     )
 
-    args_dict = config.initialize()
+    args_dict, db_config = config.initialize(db_config=True, telescope_model=True)
     label = "validate_camera_fov"
 
     logger = logging.getLogger()
@@ -90,7 +89,7 @@ def main():
     telModel = TelescopeModel(
         site=args_dict["site"],
         telescopeModelName=args_dict["telescope"],
-        mongoDBConfigFile=args_dict.get("mongodb_config_file", None),
+        mongoDBConfig=db_config,
         modelVersion=args_dict["model_version"],
         label=label,
     )

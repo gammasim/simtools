@@ -63,14 +63,12 @@ def _parse():
             "Plot the camera efficiency vs wavelength for cherenkov and NSB light."
         )
     )
-    config.parser.initialize_telescope_model_arguments()
-
-    return config.initialize(add_workflow_config=False)
+    return config.initialize(db_config=True, telescope_model=True)
 
 
 def main():
 
-    args_dict = _parse()
+    args_dict, _db_config = _parse()
     label = "validate_camera_efficiency"
 
     logger = logging.getLogger()
@@ -83,7 +81,7 @@ def main():
     telModel = TelescopeModel(
         site=args_dict["site"],
         telescopeModelName=args_dict["telescope"],
-        mongoDBConfigFile=args_dict.get("mongodb_config_file", None),
+        mongoDBConfig=_db_config,
         modelVersion=args_dict["model_version"],
         label=label,
     )

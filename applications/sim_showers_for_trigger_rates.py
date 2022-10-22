@@ -85,7 +85,6 @@ def _parse(description=None):
         type=str,
         required=True,
     )
-    config.parser.initialize_telescope_model_arguments(add_model_version=False, add_telescope=False)
     config.parser.add_argument(
         "--primary",
         help="Name of the primary particle (e.g. proton, helium ...)",
@@ -111,13 +110,12 @@ def _parse(description=None):
         type=str,
         default=None,
     )
-    config.parser.initialize_job_submission_arguments()
-    return config.initialize(add_workflow_config=False)
+    return config.initialize(telescope_model=True, job_submission=True)
 
 
 def main():
 
-    args_dict = _parse("Simulate showers to be used for trigger rate calculations")
+    args_dict, _ = _parse("Simulate showers to be used for trigger rate calculations")
     label = "trigger_rates"
 
     logger = logging.getLogger()

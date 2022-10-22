@@ -4,7 +4,6 @@ from pathlib import Path
 from unittest import mock
 
 import pytest
-import yaml
 
 import simtools.io_handler
 from simtools import db_handler
@@ -52,7 +51,15 @@ def mock_settings_env_vars(tmp_test_directory):
 
     """
     with mock.patch.dict(
-        os.environ, {"SIMTELPATH": str(tmp_test_directory) + "/simtel"}, clear=True
+        os.environ,
+        {
+            "SIMTELPATH": str(tmp_test_directory) + "/simtel",
+            "DB_API_USER": "db_user",
+            "DB_API_PW": "12345",
+            "DB_API_PORT": "42",
+            "DB_API_NAME": "abc@def.de",
+        },
+        clear=True,
     ):
         yield
 
@@ -84,7 +91,7 @@ def args_dict(tmp_test_directory, simtelpath):
             "./data/",
             "--simtelpath",
             str(simtelpath),
-        )
+        ),
     )
 
 
@@ -117,95 +124,22 @@ def configurator(tmp_test_directory, simtelpath):
     return config
 
 
-def write_dummy_dbdetails_file(filename="dbDetails.yml", **kwargs):
+@pytest.fixture
+def db_config():
     """
-    Create a dummy dbDetails.yml file to be used in test enviroments only.
+    Read DB configuration from tests from environmental variables
 
-    Parameters
-    ----------
-    filename: str
-        Name of the dummy dbDetails file (default=dbDetails.yml)
-    **kwargs
-        The default parameters can be overwritten using kwargs.
     """
-    pars = {
-        "dbPort": None,
-        "mongodbServer": None,
-        "userDB": None,
-        "passDB": None,
-        "authenticationDatabase": "admin",
-    }
-
-    if len(kwargs) > 0:
-        for key, value in kwargs.items():
-            pars[key] = int(value) if key == "dbPort" else str(value)
-
-    with open(filename, "w") as outfile:
-        yaml.dump(pars, outfile)
-
-
-def write_configuration_test_file(config_file, config_dict):
-    """
-    Write a simtools configuration file
-
-    Do not overwrite existing files
-    """
-
-    if not Path(config_file).exists():
-        with open(config_file, "w") as output:
-            yaml.safe_dump(config_dict, output, sort_keys=False)
+    mongoDBConfig = {}
+    _db_para = ("db_api_user", "db_api_pw", "db_api_port", "db_api_name")
+    for _para in _db_para:
+        mongoDBConfig[_para] = os.environ.get(_para.upper())
+    if mongoDBConfig["db_api_port"] is not None:
+        mongoDBConfig["db_api_port"] = int(mongoDBConfig["db_api_port"])
+    return mongoDBConfig
 
 
 @pytest.fixture
-def configuration_parameters(tmp_test_directory):
-
-    return {
-        "modelFilesLocations": [
-            str(tmp_test_directory / "resources/"),
-            str(tmp_test_directory / "tests/resources"),
-        ],
-        "dataLocation": "./data/",
-        "outputLocation": str(tmp_test_directory / "output"),
-        "simtelPath": str(tmp_test_directory / "simtel"),
-        "useMongoDB": False,
-        "mongoDBConfigFile": None,
-        "extraCommands": [""],
-    }
-
-
-@pytest.fixture
-def db(db_connection):
-    db = db_handler.DatabaseHandler(mongoDBConfigFile=str(db_connection))
+def db(db_config):
+    db = db_handler.DatabaseHandler(mongoDBConfig=db_config)
     return db
-
-
-@pytest.fixture
-def db_connection(tmp_test_directory):
-    # prefer local dbDetails.yml file for testing
-    try:
-        dbDetailsFile = "dbDetails.yml"
-        with open(dbDetailsFile, "r") as stream:
-            yaml.safe_load(stream)
-        return dbDetailsFile
-    # try if DB details are defined in environment
-    # (e.g., as secrets in github actions)
-    except FileNotFoundError:
-        parsToDbDetails = {}
-        environVariblesToCheck = {
-            "mongodbServer": "DB_API_NAME",
-            "userDB": "DB_API_USER",
-            "passDB": "DB_API_PW",
-            "dbPort": "DB_API_PORT",
-        }
-        found_env = True
-        for par, env in environVariblesToCheck.items():
-            if env in os.environ:
-                parsToDbDetails[par] = os.environ[env]
-            else:
-                found_env = False
-        if found_env:
-            dbDetailsFileName = tmp_test_directory / "dbDetails.yml"
-            write_dummy_dbdetails_file(filename=dbDetailsFileName, **parsToDbDetails)
-            return dbDetailsFileName
-
-        return ""
