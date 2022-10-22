@@ -6,7 +6,6 @@ import astropy.units as u
 import pytest
 from astropy.table import Table
 
-from simtools import db_handler
 from simtools.camera_efficiency import CameraEfficiency
 from simtools.model.telescope_model import TelescopeModel
 
@@ -15,19 +14,13 @@ logger.setLevel(logging.DEBUG)
 
 
 @pytest.fixture
-def db(db_connection):
-    db = db_handler.DatabaseHandler(mongoDBConfigFile=str(db_connection))
-    return db
-
-
-@pytest.fixture
-def telescope_model(db_connection, io_handler):
+def telescope_model(db_config, io_handler):
     telescopeModel = TelescopeModel(
         site="North",
         telescopeModelName="LST-1",
         modelVersion="Prod5",
         label="validate_camera_efficiency",
-        mongoDBConfigFile=str(db_connection),
+        mongoDBConfig=db_config,
     )
     return telescopeModel
 

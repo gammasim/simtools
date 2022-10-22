@@ -71,13 +71,13 @@ def _parse(label):
         type=str,
         required=True,
     )
-    return config.initialize(add_workflow_config=True)
+    return config.initialize(workflow_config=True)
 
 
 def main():
 
     label = os.path.basename(__file__).split(".")[0]
-    args_dict = _parse(label)
+    args_dict, _ = _parse(label)
 
     logger = logging.getLogger()
     logger.setLevel(gen.getLogLevelFromUser(args_dict["log_level"]))

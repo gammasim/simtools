@@ -51,7 +51,7 @@ def main():
         "--output", help="File name for the pdf output.", type=str, required=True
     )
 
-    args_dict = config.initialize()
+    args_dict, _ = config.initialize()
 
     logger = logging.getLogger()
     logger.setLevel(gen.getLogLevelFromUser(args_dict["log_level"]))

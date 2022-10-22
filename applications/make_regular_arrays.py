@@ -45,7 +45,7 @@ def main():
             "The array layout files created should be available at the data/layout directory."
         )
     )
-    args_dict = config.initialize()
+    args_dict, db_config = config.initialize(db_config=True)
 
     label = "make_regular_arrays"
 
@@ -59,7 +59,7 @@ def main():
     )
 
     # Reading site parameters from DB
-    db = db_handler.DatabaseHandler(mongoDBConfigFile=args_dict.get("mongodb_config_file"))
+    db = db_handler.DatabaseHandler(mongoDBConfig=db_config)
 
     siteParsDB = dict()
     layoutCenterData = dict()

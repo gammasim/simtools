@@ -77,7 +77,7 @@ class TelescopeModel:
         self,
         site,
         telescopeModelName,
-        mongoDBConfigFile,
+        mongoDBConfig,
         modelVersion="Current",
         label=None,
     ):
@@ -90,8 +90,8 @@ class TelescopeModel:
             South or North.
         telescopeModelName: str
             Telescope name (ex. LST-1, ...).
-        mongoDBConfigFile: str
-            MongoDB configuration file.
+        mongoDBConfig: dict
+            MongoDB configuration.
         modelVersion: str, optional
             Version of the model (ex. prod4) (default='Current').
         label: str, optional
@@ -108,10 +108,11 @@ class TelescopeModel:
         self._extraLabel = None
 
         self.io_handler = io_handler.IOHandler()
+        self.mongoDBConfig = mongoDBConfig
 
         self._parameters = dict()
 
-        self._loadParametersFromDB(mongoDBConfigFile)
+        self._loadParametersFromDB()
 
         self._setConfigFileDirectoryAndName()
         self._isConfigFileUpToDate = False
@@ -180,7 +181,7 @@ class TelescopeModel:
         tel = cls(
             site=site,
             telescopeModelName=telescopeModelName,
-            mongoDBConfigFile=None,
+            mongoDBConfig=None,
             label=label,
         )
 
@@ -261,16 +262,16 @@ class TelescopeModel:
         )
         self._configFilePath = self._configFileDirectory.joinpath(configFileName)
 
-    def _loadParametersFromDB(self, mongoDBConfigFile):
+    def _loadParametersFromDB(self):
         """Read parameters from DB and store them in _parameters."""
 
-        if mongoDBConfigFile is None:
+        if self.mongoDBConfig is None:
             return
 
         self._logger.debug("Reading telescope parameters from DB")
 
         self._setConfigFileDirectoryAndName()
-        db = db_handler.DatabaseHandler(mongoDBConfigFile=mongoDBConfigFile)
+        db = db_handler.DatabaseHandler(mongoDBConfig=self.mongoDBConfig)
         self._parameters = db.getModelParameters(
             self.site, self.name, self.modelVersion, onlyApplicable=True
         )
@@ -476,7 +477,7 @@ class TelescopeModel:
 
     def exportModelFiles(self):
         """Exports the model files into the config file directory."""
-        db = db_handler.DatabaseHandler()
+        db = db_handler.DatabaseHandler(mongoDBConfig=self.mongoDBConfig)
 
         # Removing parameter files added manually (which are not in DB)
         parsFromDB = copy(self._parameters)
@@ -518,7 +519,7 @@ class TelescopeModel:
         if not isinstance(fileNames, list):
             fileNames = [fileNames]
 
-        db = db_handler.DatabaseHandler()
+        db = db_handler.DatabaseHandler(mongoDBConfig=self.mongoDBConfig)
         for fileNameNow in fileNames:
             db.exportFileDB(
                 dbName=db.DB_DERIVED_VALUES,
@@ -648,13 +649,13 @@ class TelescopeModel:
     def _loadReferenceData(self):
         """Load the reference data for this telescope from the DB."""
         self._logger.debug("Reading reference data from DB")
-        db = db_handler.DatabaseHandler()
+        db = db_handler.DatabaseHandler(mongoDBConfig=self.mongoDBConfig)
         self._referenceData = db.getReferenceData(self.site, self.modelVersion, onlyApplicable=True)
 
     def _loadDerivedValues(self):
         """Load the derived values for this telescope from the DB."""
         self._logger.debug("Reading derived data from DB")
-        db = db_handler.DatabaseHandler()
+        db = db_handler.DatabaseHandler(mongoDBConfig=self.mongoDBConfig)
         self._derived = db.getDerivedValues(
             self.site,
             self.name,

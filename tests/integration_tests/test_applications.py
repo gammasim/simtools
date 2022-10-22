@@ -273,7 +273,7 @@ APP_LIST = {
 
 
 @pytest.mark.parametrize("application", APP_LIST.keys())
-def test_applications(application, io_handler, db, db_connection):
+def test_applications(application, io_handler, db, simtelpath_no_mock):
     logger.info("Testing {}".format(application))
 
     def prepare_one_file(fileName):
@@ -294,7 +294,6 @@ def test_applications(application, io_handler, db, db_connection):
                 "TESTMODELDIR", str(io_handler.getOutputDirectory(dirType="model", test=True))
             )
             cmd += " " + aa
-        cmd += " --mongodb_config_file " + str(db_connection)
         return cmd
 
     for args in APP_LIST[application]:
