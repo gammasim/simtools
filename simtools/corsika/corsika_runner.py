@@ -198,7 +198,7 @@ class CorsikaRunner:
         runNumber: int
             Run number.
         extraCommands: str
-            Additional commands for running simulations given in config.yml
+            Additional commands for running simulations.
 
         Returns
         -------
@@ -291,7 +291,7 @@ class CorsikaRunner:
     def _getExtraCommands(extra):
         """
         Get extra commands by combining the one given as argument and
-        what is given in config.yml
+        what is given in the configuration.
         """
         extra = gen.copyAsList(extra) if extra is not None else list()
         return extra

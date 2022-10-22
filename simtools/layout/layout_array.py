@@ -125,7 +125,7 @@ class LayoutArray:
     def __getitem__(self, i):
         return self._telescopeList[i]
 
-    def _initializeCorsikaTelescope(self, corsikaDict=None, data_path=None):
+    def _initializeCorsikaTelescope(self, corsikaDict=None):
         """
         Initialize Dictionary for CORSIKA telescope parameters.
         Allow input from different sources (dictionary, yaml, ecsv header), which
@@ -144,7 +144,7 @@ class LayoutArray:
                 "Initialize CORSIKA telescope parameters from dict: {}".format(corsikaDict)
             )
             self._initializeCorsikaTelescopeFromDict(corsikaDict)
-        elif data_path is not None:
+        else:
             self._logger.debug("Initialize CORSIKA telescope parameters from file")
             self._initializeCorsikaTelescopeFromDict(
                 collectDataFromYamlOrDict(
@@ -526,7 +526,7 @@ class LayoutArray:
 
         return _meta
 
-    def _setTelescopeListFile(self, crsName, outputPath):
+    def _setTelescopeListFile(self, crsName):
         """
         Set file location for writing of telescope list
 
@@ -534,8 +534,6 @@ class LayoutArray:
         ----------
         crsName: str
             Name of coordinate system to be used for export.
-        outputPath: str or Path
-            Name of output path for file list.
 
         Returns
         -------
@@ -551,7 +549,7 @@ class LayoutArray:
             names.layoutTelescopeListFileName(_name, None)
         )
 
-    def exportTelescopeList(self, crsName, outputPath, corsikaZ=False):
+    def exportTelescopeList(self, crsName, corsikaZ=False):
         """
         Export array elements positions to ECSV file
 
@@ -559,8 +557,6 @@ class LayoutArray:
         ----------
         crsName: str
             Name of coordinate system to be used for export.
-        outputPath: str or Path
-            Name of output path for file list.
         corsikaZ: bool
             Write telescope height in CORSIKA coordinates (for CORSIKA system)
 
@@ -604,7 +600,7 @@ class LayoutArray:
         except IndexError:
             pass
 
-        self._setTelescopeListFile(crsName, outputPath)
+        self._setTelescopeListFile(crsName)
         self._logger.info("Exporting telescope list to {}".format(self.telescopeListFile))
         table.write(self.telescopeListFile, format="ascii.ecsv", overwrite=True)
 
