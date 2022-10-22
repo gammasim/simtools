@@ -116,14 +116,12 @@ class IOHandler(metaclass=IOHandlerSingleton):
 
     def getInputDataFile(self, parentDir=None, fileName=None, test=False):
         """
-        Get path of a data file, using the dataLocation taken from the config file.
+        Get path of a data file, using data_path
 
         Parameters
         ----------
         parentDir: str
             Parent directory of the file.
-        dataLocation: str, or Path
-            Main location of the data files.
         filesName: str
             File name.
         test: bool

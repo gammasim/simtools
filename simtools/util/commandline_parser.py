@@ -182,7 +182,6 @@ class CommandLineParser(argparse.ArgumentParser):
                 "--telescope",
                 help="telescope model name (e.g. LST-1, SST-D, ...)",
                 type=str,
-                required=True,
             )
         if add_model_version:
             _job_group.add_argument(

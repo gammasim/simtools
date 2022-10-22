@@ -66,7 +66,6 @@ def test_fillFromConfigFile(configurator, args_dict, tmp_test_directory):
     _tmp_config = copy(dict(args_dict))
     _tmp_dict = {
         "output_path": "./abc/",
-        "mongodb_config_file": None,
         "test": True,
     }
     _config_file = tmp_test_directory / "configuration-test.yml"

@@ -80,7 +80,7 @@ def test_initializeCoordinateSystems(layoutCenterDataDict):
 def test_initializeCorsikaTelescopeFromFile(corsikaTelescopeDataDict, args_dict):
 
     layout = LayoutArray(name="testLayout")
-    layout._initializeCorsikaTelescope(dataLocation=args_dict["data_path"])
+    layout._initializeCorsikaTelescope(data_path=args_dict["data_path"])
 
     for key, value in corsikaTelescopeDataDict["corsika_sphere_radius"].items():
         assert value == layout._corsikaTelescope["corsika_sphere_radius"][key]
