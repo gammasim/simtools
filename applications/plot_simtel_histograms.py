@@ -13,7 +13,7 @@
     file_lists (str, required)
         Text file containing the list of sim_telarray histogram files to be plotted. \
         Multiple text files can be given.
-    output (str, required)
+    figure_name (str, required)
         File name for the pdf output (without extension).
     verbosity (str, optional)
         Log level to print (default=INFO).
@@ -46,9 +46,8 @@ def main():
         type=str,
         required=True,
     )
-    # TODO confusing command line with output_path
     config.parser.add_argument(
-        "--output", help="File name for the pdf output.", type=str, required=True
+        "--figure_name", help="File name for the pdf output.", type=str, required=True
     )
 
     args_dict, _ = config.initialize()
@@ -85,10 +84,10 @@ def main():
     # Plotting
 
     # Checking if it is needed to add the pdf extension to the file name
-    if args_dict["output"].split(".")[-1] == "pdf":
-        figName = args_dict["output"]
+    if args_dict["figure_name"].split(".")[-1] == "pdf":
+        figName = args_dict["figure_name"]
     else:
-        figName = args_dict["output"] + ".pdf"
+        figName = args_dict["figure_name"] + ".pdf"
 
     pdfPages = PdfPages(figName)
     for iHist in range(numberOfHists[0]):

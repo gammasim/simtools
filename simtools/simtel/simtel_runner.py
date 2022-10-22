@@ -116,7 +116,6 @@ class SimtelRunner:
 
         command = self._makeRunCommand(inputFile=inputFile, runNumber=runNumber)
         with self._scriptFile.open("w") as file:
-            # TODO: header
             file.write("#!/usr/bin/bash\n\n")
 
             # Setting SECONDS variable to measure runtime
