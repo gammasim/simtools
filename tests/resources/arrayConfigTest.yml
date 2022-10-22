@@ -1,5 +1,5 @@
 site: North
-layoutName: Prod5
+layoutName: test-layout
 modelVersion: Prod5
 default:
     LST: '1'
