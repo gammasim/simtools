@@ -105,14 +105,13 @@ def main():
         ),
     )
     args_dict, db_config = config.initialize(db_config=True)
-
-    db = db_handler.DatabaseHandler(mongoDBConfig=db_config)
-
     logger = logging.getLogger()
     logger.setLevel(gen.getLogLevelFromUser(args_dict["log_level"]))
 
+    db = db_handler.DatabaseHandler(mongoDBConfig=db_config)
+
     filesToInsert = list()
-    if args_dict["fileName"] is not None:
+    if args_dict.get("fileName", None) is not None:
         for fileNow in args_dict["fileName"]:
             if Path(fileNow).suffix in db.ALLOWED_FILE_EXTENSIONS:
                 filesToInsert.append(fileNow)
