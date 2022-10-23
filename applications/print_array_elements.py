@@ -111,8 +111,7 @@ def main():
     layout.convertCoordinates()
     if args_dict["export"] is not None:
         layout.exportTelescopeList(
-            args_dict["export"],
-            args_dict["output_path"],
+            crsName=args_dict["export"],
             corsikaZ=args_dict["use_corsika_telescope_height"],
         )
     else:
