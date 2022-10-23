@@ -46,7 +46,6 @@ class SimtelConfigWriter:
         "atmospheric_profile",
         "magnetic_field",
         "EPSG",
-        "camera_filter_incidence_angle",
     ]
 
     def __init__(self, site, modelVersion, layoutName=None, telescopeModelName=None, label=None):
