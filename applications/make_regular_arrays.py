@@ -137,9 +137,7 @@ def main():
 
             layout.convertCoordinates()
             layout.printTelescopeList()
-            layout.exportTelescopeList(
-                crsName="corsika", outputPath=args_dict.get("output_path", None)
-            )
+            layout.exportTelescopeList(crsName="corsika", corsikaZ=None)
 
 
 if __name__ == "__main__":

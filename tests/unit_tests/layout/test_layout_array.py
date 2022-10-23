@@ -151,7 +151,7 @@ def test_build_layout(
 
     layout.convertCoordinates()
     layout.printTelescopeList()
-    layout.exportTelescopeList("corsika")
+    layout.exportTelescopeList(crsName="corsika")
 
     # Building a second layout from the file exported by the first one
     layout_2 = LayoutArray("test_layout_2")
