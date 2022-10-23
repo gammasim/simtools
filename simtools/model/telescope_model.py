@@ -736,7 +736,7 @@ class TelescopeModel:
         """
         Read a two dimensional distribution of wavelngth and angle (z-axis can be anything).
         Return a dictionary with three arrays,
-        wavelength, angles, z (can be transmission, reflecitivty, etc.)
+        wavelength, angles, z (can be transmission, reflectivity, etc.)
 
         Parameters
         ----------
