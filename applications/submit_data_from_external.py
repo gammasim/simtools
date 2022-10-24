@@ -44,7 +44,7 @@ import simtools.util.validate_data as ds
 import simtools.util.workflow_description as workflow_config
 
 
-def _parse(label):
+def _parse(label, description):
     """
     Parse command line configuration
 
@@ -55,19 +55,19 @@ def _parse(label):
 
     """
 
-    config = configurator.Configurator(label=label)
+    config = configurator.Configurator(label=label, description=description)
 
     config.parser.add_argument(
         "-m",
         "--input_meta_file",
-        help="User-provided meta data file (yml)",
+        help="Meta data file describing input data (yml)",
         type=str,
         required=True,
     )
     config.parser.add_argument(
         "-d",
         "--input_data_file",
-        help="User-provided data file (ecsv)",
+        help="Input data file (ecsv)",
         type=str,
         required=True,
     )
@@ -77,7 +77,9 @@ def _parse(label):
 def main():
 
     label = os.path.basename(__file__).split(".")[0]
-    args_dict, _ = _parse(label)
+    args_dict, _ = _parse(
+        label, description="Submit model parameter (value, table) through an external interface."
+    )
 
     logger = logging.getLogger()
     logger.setLevel(gen.getLogLevelFromUser(args_dict["log_level"]))
