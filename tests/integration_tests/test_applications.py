@@ -156,7 +156,7 @@ APP_LIST = {
         ["--site", "North", "--telescope", "MST-NectarCam-D", "--model_version", "prod5"]
     ],
     "validate_camera_efficiency::SST-D": [
-        ["-site", "South", "-telescope", "SST-D", "--model_version", "prod5"]
+        ["--site", "South", "--telescope", "SST-D", "--model_version", "prod5"]
     ],
     "validate_camera_fov": [
         ["--site", "North", "--telescope", "MST-NectarCam-D", "--model_version", "prod5"]
