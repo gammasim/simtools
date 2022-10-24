@@ -6,6 +6,7 @@ import pytest
 import yaml
 
 import simtools.config as cfg
+from simtools.model.telescope_model import TelescopeModel
 
 logger = logging.getLogger()
 
@@ -172,3 +173,25 @@ def cfg_setup(tmp_test_directory, configuration_parameters):
     config_file = tmp_test_directory / "config-test.yml"
     write_configuration_test_file(config_file, dict(configuration_parameters))
     cfg.setConfigFileName(config_file)
+
+
+@pytest.fixture
+def telescope_model_lst(set_db):
+    telescopeModelLST = TelescopeModel(
+        site="North",
+        telescopeModelName="LST-1",
+        modelVersion="Prod5",
+        label="validate_camera_efficiency",
+    )
+    return telescopeModelLST
+
+
+@pytest.fixture
+def telescope_model_sst(set_db):
+    telescopeModelSST = TelescopeModel(
+        site="South",
+        telescopeModelName="SST-D",
+        modelVersion="Prod5",
+        label="test-telescope-model-sst",
+    )
+    return telescopeModelSST
