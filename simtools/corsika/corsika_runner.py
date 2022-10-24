@@ -4,7 +4,6 @@ from copy import copy
 from pathlib import Path
 
 import simtools.io_handler as io_handler
-import simtools.util.general as gen
 from simtools.corsika.corsika_config import (
     CorsikaConfig,
     MissingRequiredInputInCorsikaConfigData,
@@ -231,7 +230,7 @@ class CorsikaRunner:
         pfpCommand = self._getPfpCommand(runNumber, corsikaInputTmpFile)
         autoinputsCommand = self._getAutoinputsCommand(runNumber, corsikaInputTmpFile)
 
-        extraCommands = self._getExtraCommands(kwargs["extraCommands"])
+        extraCommands = kwargs["extraCommands"]
         self._logger.debug("Extra commands to be added to the run script {}".format(extraCommands))
 
         with open(scriptFilePath, "w") as file:
@@ -243,8 +242,7 @@ class CorsikaRunner:
 
             if extraCommands is not None:
                 file.write("\n# Writing extras\n")
-                for line in extraCommands:
-                    file.write("{}\n".format(line))
+                file.write("{}\n".format(extraCommands))
                 file.write("# End of extras\n\n")
 
             file.write("export CORSIKA_DATA={}\n".format(self._corsikaDataDir))
@@ -286,15 +284,6 @@ class CorsikaRunner:
         cmd += " {} > {} 2>&1".format(inputTmpFile, logFile)
         cmd += " || exit 1\n"
         return cmd
-
-    @staticmethod
-    def _getExtraCommands(extra):
-        """
-        Get extra commands by combining the one given as argument and
-        what is given in the configuration.
-        """
-        extra = gen.copyAsList(extra) if extra is not None else list()
-        return extra
 
     def hasRunLogFile(self, runNumber=None):
         """
