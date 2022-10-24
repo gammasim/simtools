@@ -13,14 +13,18 @@ logger.setLevel(logging.DEBUG)
 
 
 @pytest.fixture
-def camera_efficiency_lst(telescope_model_lst):
-    camera_efficiency_lst = CameraEfficiency(telescopeModel=telescope_model_lst, test=True)
+def camera_efficiency_lst(telescope_model_lst, simtelpath):
+    camera_efficiency_lst = CameraEfficiency(
+        telescopeModel=telescope_model_lst, simtelSourcePath=simtelpath, test=True
+    )
     return camera_efficiency_lst
 
 
 @pytest.fixture
-def camera_efficiency_sst(telescope_model_sst):
-    camera_efficiency_sst = CameraEfficiency(telescopeModel=telescope_model_sst, test=True)
+def camera_efficiency_sst(telescope_model_sst, simtelpath):
+    camera_efficiency_sst = CameraEfficiency(
+        telescopeModel=telescope_model_sst, simtelSourcePath=simtelpath, test=True
+    )
     return camera_efficiency_sst
 
 

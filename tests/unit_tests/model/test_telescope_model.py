@@ -26,6 +26,7 @@ def lst_config_file(db, io_handler):
     return cfgFile
 
 
+@pytest.fixture
 def telescope_model_from_config_file(lst_config_file):
 
     label = "test-telescope-model"
