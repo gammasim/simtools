@@ -736,7 +736,7 @@ class TelescopeModel:
         """
         Read a two dimensional distribution of wavelngth and angle (z-axis can be anything).
         Return a dictionary with three arrays,
-        wavelength, angles, z (can be transmission, reflecitivty, etc.)
+        wavelength, angles, z (can be transmission, reflectivity, etc.)
 
         Parameters
         ----------
@@ -803,7 +803,7 @@ class TelescopeModel:
     @staticmethod
     def calcAverageCurve(curves, incidenceAngleDist):
         """
-        Calculate an average curve from a set of cuvres, using as weights
+        Calculate an average curve from a set of curves, using as weights
         the distribution of incidence angles provided in incidenceAngleDist
 
         Parameters
@@ -811,7 +811,7 @@ class TelescopeModel:
         curves: dict
             dict of with 3 "columns", Wavelength, Angle and z
             The dictionary represents a two dimensional distribution of wavelengths and angles
-            with the z value being e.g., reflecitivity, transmission, etc.
+            with the z value being e.g., reflectivity, transmission, etc.
         incidenceAngleDist: Astropy table
             Astropy table with the incidence angle distribution
             The assumed columns are "Incidence angle" and "Fraction".
