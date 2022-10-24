@@ -1,7 +1,6 @@
 def top_level_reference_schema():
     """
-    Return datamodel reference schema
-    derived from CTA Top-Level Data Model
+    Reference schema for CTA Top-Level Data Model
 
     Returns
     -------
@@ -57,8 +56,7 @@ def top_level_reference_schema():
 
 def user_input_reference_schema():
     """
-    Return datamodel reference schema
-    for user input
+    Reference data model scheme for user input.
 
     Returns
     -------
