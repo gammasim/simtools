@@ -63,10 +63,7 @@ def main():
                     Applicable=True,
                     Type=str(str),
                     File=True,
-                    filePrefix=(
-                        "/Users/ogueta/work/cta/aswg/simulations/simulation-model/verification/"
-                        "data-from-instrument-teams/SST-Structure/incidence-angle-focal-plane/"
-                    ),
+                    filePrefix="./",
                 )
                 pars = db.readMongoDB(
                     dbName=db.DB_CTA_SIMULATION_MODEL,
