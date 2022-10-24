@@ -34,6 +34,15 @@ def db_cleanup(db, random_id):
     db.dbClient["sandbox"]["metadata_" + random_id].drop()
 
 
+@pytest.fixture()
+def db_cleanup_file_sandbox(db):
+    yield
+    # Cleanup
+    logger.info("Dropping the temporary files in the sandbox")
+    db.dbClient["sandbox"]["fs.chunks"].drop()
+    db.dbClient["sandbox"]["fs.files"].drop()
+
+
 def test_reading_db_lst(db):
 
     logger.info("----Testing reading LST-----")
@@ -316,7 +325,7 @@ def test_separating_get_and_write(db):
         assert io.getOutputFile(fileNow, dirType="model", test=True).exists()
 
 
-def test_insert_files_db(db):
+def test_insert_files_db(db, db_cleanup_file_sandbox):
 
     logger.info("----Testing inserting files to the DB-----")
     logger.info(
@@ -328,10 +337,6 @@ def test_insert_files_db(db):
 
     file_id = db.insertFileToDB(fileName, "sandbox")
     assert file_id == db._getFileMongoDB("sandbox", "test_file.dat")._id
-
-    logger.info("Dropping the temporary files in the sandbox")
-    db.dbClient["sandbox"]["fs.chunks"].drop()
-    db.dbClient["sandbox"]["fs.files"].drop()
 
 
 def test_get_all_versions(db):
