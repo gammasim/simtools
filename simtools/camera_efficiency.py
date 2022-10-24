@@ -628,7 +628,7 @@ class CameraEfficiency:
             f"The {' '.join(twoDimParameter.split('_'))} distribution "
             "is a 2D one which testeff does not support. "
             "Instead of using the 2D distribution, the two dimensional distribution "
-            "will averaged, using the incidence angle distribution as weights. "
+            "will be averaged, using the photon incidence angle distribution as weights. "
             "The incidence angle distribution is taken "
             f"from the file - {incidenceAngleDistributionFile})."
         )
