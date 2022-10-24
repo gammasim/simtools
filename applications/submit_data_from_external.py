@@ -2,7 +2,7 @@
 """
     Summary
     -------
-    Set workflow for a model parameter (value, table) through an external interface.
+    Submit model parameter (value, table) through an external interface.
 
     Prototype implementation allowing to submit metadata and
     data through the command line.
