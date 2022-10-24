@@ -113,7 +113,6 @@ def args_dict_site(tmp_test_directory, simtelpath):
         )
     )
 
-<<<<<<< HEAD
 
 @pytest.fixture
 def configurator(tmp_test_directory, simtelpath):
@@ -147,22 +146,24 @@ def db(db_config):
 
 
 @pytest.fixture
-def telescope_model_lst(db):
+def telescope_model_lst(db, db_config, io_handler):
     telescopeModelLST = TelescopeModel(
         site="North",
         telescopeModelName="LST-1",
         modelVersion="Prod5",
+        mongoDBConfig=db_config,
         label="validate_camera_efficiency",
     )
     return telescopeModelLST
 
 
 @pytest.fixture
-def telescope_model_sst(db):
+def telescope_model_sst(db, db_config, io_handler):
     telescopeModelSST = TelescopeModel(
         site="South",
         telescopeModelName="SST-D",
         modelVersion="Prod5",
+        mongoDBConfig=db_config,
         label="test-telescope-model-sst",
     )
     return telescopeModelSST
