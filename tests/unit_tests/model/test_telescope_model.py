@@ -35,28 +35,6 @@ def lst_config_file(db):
 
 
 @pytest.fixture
-def telescope_model(set_db):
-    telescopeModel = TelescopeModel(
-        site="North",
-        telescopeModelName="LST-1",
-        modelVersion="Prod5",
-        label="test-telescope-model",
-    )
-    return telescopeModel
-
-
-@pytest.fixture
-def telescope_model_sst(set_db):
-    telescopeModelSST = TelescopeModel(
-        site="South",
-        telescopeModelName="SST-D",
-        modelVersion="Prod5",
-        label="test-telescope-model-sst",
-    )
-    return telescopeModelSST
-
-
-@pytest.fixture
 def telescope_model_from_config_file(cfg_setup, lst_config_file):
 
     label = "test-telescope-model"
@@ -69,9 +47,9 @@ def telescope_model_from_config_file(cfg_setup, lst_config_file):
     return telModel
 
 
-def test_handling_parameters(telescope_model):
+def test_handling_parameters(telescope_model_lst):
 
-    telModel = telescope_model
+    telModel = telescope_model_lst
 
     logger.info(
         "Old mirror_reflection_random_angle:{}".format(
@@ -94,9 +72,9 @@ def test_handling_parameters(telescope_model):
         telModel.getParameter("bla_bla")
 
 
-def test_flen_type(telescope_model):
+def test_flen_type(telescope_model_lst):
 
-    telModel = telescope_model
+    telModel = telescope_model_lst
     flenInfo = telModel.getParameter("focal_length")
     logger.info("Focal Length = {}, type = {}".format(flenInfo["Value"], flenInfo["Type"]))
 
@@ -179,16 +157,16 @@ def test_updating_export_model_files(set_db):
     assert False is tel._isExportedModelFilesUpToDate
 
 
-def test_load_reference_data(telescope_model):
+def test_load_reference_data(telescope_model_lst):
 
-    telModel = telescope_model
+    telModel = telescope_model_lst
 
     assert telModel.referenceData["nsb_reference_value"]["Value"] == pytest.approx(0.24)
 
 
-def test_export_derived_files(telescope_model):
+def test_export_derived_files(telescope_model_lst):
 
-    telModel = telescope_model
+    telModel = telescope_model_lst
 
     _ = telModel.derived
     assert (
@@ -198,9 +176,9 @@ def test_export_derived_files(telescope_model):
     )
 
 
-def test_get_on_axis_eff_optical_area(telescope_model):
+def test_get_on_axis_eff_optical_area(telescope_model_lst):
 
-    telModel = telescope_model
+    telModel = telescope_model_lst
 
     assert telModel.getOnAxisEffOpticalArea().value == pytest.approx(
         365.48310154491
