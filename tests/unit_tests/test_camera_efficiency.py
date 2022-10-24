@@ -10,7 +10,6 @@ import simtools.config as cfg
 import simtools.io_handler as io
 from simtools import db_handler
 from simtools.camera_efficiency import CameraEfficiency
-from simtools.model.telescope_model import TelescopeModel
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
@@ -23,31 +22,9 @@ def db(set_db):
 
 
 @pytest.fixture
-def telescope_model(set_db):
-    telescopeModel = TelescopeModel(
-        site="North",
-        telescopeModelName="LST-1",
-        modelVersion="Prod5",
-        label="validate_camera_efficiency",
-    )
-    return telescopeModel
-
-
-@pytest.fixture
-def telescope_model_sst(set_db):
-    telescopeModelSST = TelescopeModel(
-        site="South",
-        telescopeModelName="SST-D",
-        modelVersion="Prod5",
-        label="test-telescope-model-sst",
-    )
-    return telescopeModelSST
-
-
-@pytest.fixture
-def camera_efficiency(telescope_model):
-    camera_efficiency = CameraEfficiency(telescopeModel=telescope_model, test=True)
-    return camera_efficiency
+def camera_efficiency_lst(telescope_model_lst):
+    camera_efficiency_lst = CameraEfficiency(telescopeModel=telescope_model_lst, test=True)
+    return camera_efficiency_lst
 
 
 @pytest.fixture
@@ -78,9 +55,9 @@ def results_file(db):
     ).joinpath("camera-efficiency-North-LST-1-za20.0_validate_camera_efficiency.ecsv")
 
 
-def test_from_kwargs(telescope_model):
+def test_from_kwargs(telescope_model_lst):
 
-    telModel = telescope_model
+    telModel = telescope_model_lst
     label = "test-from-kwargs"
     zenithAngle = 30 * u.deg
     ce = CameraEfficiency.fromKwargs(
@@ -97,64 +74,64 @@ def test_validate_telescope_model(cfg_setup):
         )
 
 
-def test_load_files(camera_efficiency):
+def test_load_files(camera_efficiency_lst):
     assert (
-        camera_efficiency._fileResults.name
+        camera_efficiency_lst._fileResults.name
         == "camera-efficiency-North-LST-1-za20.0_validate_camera_efficiency.ecsv"
     )
     assert (
-        camera_efficiency._fileSimtel.name
+        camera_efficiency_lst._fileSimtel.name
         == "camera-efficiency-North-LST-1-za20.0_validate_camera_efficiency.dat"
     )
     assert (
-        camera_efficiency._fileLog.name
+        camera_efficiency_lst._fileLog.name
         == "camera-efficiency-North-LST-1-za20.0_validate_camera_efficiency.log"
     )
 
 
-def test_read_results(camera_efficiency, results_file):
-    camera_efficiency._readResults()
-    assert isinstance(camera_efficiency._results, Table)
-    assert camera_efficiency._hasResults is True
+def test_read_results(camera_efficiency_lst, results_file):
+    camera_efficiency_lst._readResults()
+    assert isinstance(camera_efficiency_lst._results, Table)
+    assert camera_efficiency_lst._hasResults is True
 
 
-def test_calc_camera_efficiency(telescope_model, camera_efficiency, results_file):
-    camera_efficiency._readResults()
-    telescope_model.exportModelFiles()
-    assert camera_efficiency.calcCameraEfficiency() == pytest.approx(
+def test_calc_camera_efficiency(telescope_model_lst, camera_efficiency_lst, results_file):
+    camera_efficiency_lst._readResults()
+    telescope_model_lst.exportModelFiles()
+    assert camera_efficiency_lst.calcCameraEfficiency() == pytest.approx(
         0.24468117923810984
     )  # Value for Prod5 LST-1
 
 
-def test_calc_tel_efficiency(telescope_model, camera_efficiency, results_file):
-    camera_efficiency._readResults()
-    telescope_model.exportModelFiles()
-    assert camera_efficiency.calcTelEfficiency() == pytest.approx(
+def test_calc_tel_efficiency(telescope_model_lst, camera_efficiency_lst, results_file):
+    camera_efficiency_lst._readResults()
+    telescope_model_lst.exportModelFiles()
+    assert camera_efficiency_lst.calcTelEfficiency() == pytest.approx(
         0.23988884493787524
     )  # Value for Prod5 LST-1
 
 
-def test_calc_tot_efficiency(telescope_model, camera_efficiency, results_file):
-    camera_efficiency._readResults()
-    telescope_model.exportModelFiles()
-    assert camera_efficiency.calcTotEfficiency(
-        camera_efficiency.calcTelEfficiency()
+def test_calc_tot_efficiency(telescope_model_lst, camera_efficiency_lst, results_file):
+    camera_efficiency_lst._readResults()
+    telescope_model_lst.exportModelFiles()
+    assert camera_efficiency_lst.calcTotEfficiency(
+        camera_efficiency_lst.calcTelEfficiency()
     ) == pytest.approx(
         0.48018680628175714
     )  # Value for Prod5 LST-1
 
 
-def test_calc_reflectivity(camera_efficiency, results_file):
-    camera_efficiency._readResults()
-    assert camera_efficiency.calcReflectivity() == pytest.approx(
+def test_calc_reflectivity(camera_efficiency_lst, results_file):
+    camera_efficiency_lst._readResults()
+    assert camera_efficiency_lst.calcReflectivity() == pytest.approx(
         0.9167918392938349
     )  # Value for Prod5 LST-1
 
 
-def test_calc_nsb_rate(telescope_model, camera_efficiency, results_file):
-    camera_efficiency._readResults()
-    telescope_model.exportModelFiles()
-    assert camera_efficiency.calcNsbRate()[0] == pytest.approx(
+def test_calc_nsb_rate(telescope_model_lst, camera_efficiency_lst, results_file):
+    camera_efficiency_lst._readResults()
+    telescope_model_lst.exportModelFiles()
+    assert camera_efficiency_lst.calcNsbRate()[0] == pytest.approx(
         0.24421390533203186
     )  # Value for Prod5 LST-1
 
