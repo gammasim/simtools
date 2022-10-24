@@ -8,6 +8,7 @@ import pytest
 import simtools.io_handler
 from simtools import db_handler
 from simtools.configuration import Configurator
+from simtools.model.telescope_model import TelescopeModel
 
 logger = logging.getLogger()
 
@@ -142,3 +143,27 @@ def db_config():
 def db(db_config):
     db = db_handler.DatabaseHandler(mongoDBConfig=db_config)
     return db
+
+
+@pytest.fixture
+def telescope_model_lst(db, db_config, io_handler):
+    telescopeModelLST = TelescopeModel(
+        site="North",
+        telescopeModelName="LST-1",
+        modelVersion="Prod5",
+        mongoDBConfig=db_config,
+        label="validate_camera_efficiency",
+    )
+    return telescopeModelLST
+
+
+@pytest.fixture
+def telescope_model_sst(db, db_config, io_handler):
+    telescopeModelSST = TelescopeModel(
+        site="South",
+        telescopeModelName="SST-D",
+        modelVersion="Prod5",
+        mongoDBConfig=db_config,
+        label="test-telescope-model-sst",
+    )
+    return telescopeModelSST
