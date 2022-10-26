@@ -336,20 +336,22 @@ def test_insert_and_get_file_db(db, db_cleanup_file_sandbox, caplog):
         f.write("# This is a test file")
     logger.info("Inserting a temporary file {} into {}".format(fileToInsert, db))
     fileId = db.insertFileToDB(fileToInsert, "sandbox")
-    logger.info("Testing inserting the same file again and getting a warning")
-    with caplog.at_level(logging.WARNING):
-        fileId = db.insertFileToDB(fileName, "sandbox")
-    assert "exists in the DB. Returning its ID" in caplog.text
     logger.info("Removing the local temporary file")
     fileToInsert.unlink()
     assert fileToInsert.exists() is False
-    logger.info("Getting file from DB and checking consistency")
+    logger.info("Getting file from DB")
     fileId2 = db.exportFileDB("sandbox", outputDir, fileName)
+    logger.info("Checking if the file was downloaded from DB")
+    assert fileToInsert.exists()
+    logger.info("Checking consistency of the files")
     logger.info("fileId {}".format((fileId)))
     logger.info("fileId2 {}".format((fileId2)))
     assert fileId == fileId2
-    logger.info("Checking if the file was downloaded from DB")
-    assert fileToInsert.exists()
+    logger.info("Testing inserting the same file again, getting a warning and the same ID")
+    with caplog.at_level(logging.WARNING):
+        fileId = db.insertFileToDB(fileName, "sandbox")
+    assert fileId == fileId2
+    assert "exists in the DB. Returning its ID" in caplog.text
     logger.info("Removing the local temporary file")
     fileToInsert.unlink()
     assert fileToInsert.exists() is False
