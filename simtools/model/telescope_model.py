@@ -4,6 +4,7 @@ from copy import copy
 
 import astropy.io.ascii
 import numpy as np
+from astropy.table import Table
 
 import simtools.config as cfg
 import simtools.io_handler as io
@@ -148,6 +149,7 @@ class TelescopeModel:
     def derived(self):
         if not hasattr(self, "_derived"):
             self._loadDerivedValues()
+            self.exportDerivedFiles()
         return self._derived
 
     @property
@@ -272,9 +274,6 @@ class TelescopeModel:
     def _setConfigFileDirectoryAndName(self):
         """Define the variable _configFileDirectory and create directories, if needed"""
         self._configFileDirectory = io.getOutputDirectory(self._filesLocation, self.label, "model")
-        if not self._configFileDirectory.exists():
-            self._configFileDirectory.mkdir(parents=True, exist_ok=True)
-            self._logger.debug("Creating directory {}".format(self._configFileDirectory))
 
         # Setting file name and the location
         configFileName = names.simtelTelescopeConfigFileName(
@@ -316,7 +315,7 @@ class TelescopeModel:
 
     def getParameter(self, parName):
         """
-        Get an existing parameter of the model.
+        Get an existing parameter of the model, including derived parameters.
 
         Parameters
         ----------
@@ -335,7 +334,11 @@ class TelescopeModel:
         try:
             return self._parameters[parName]
         except KeyError:
-            msg = "Parameter {} was not found in the model".format(parName)
+            pass  # search in the derived parameters
+        try:
+            return self.derived[parName]
+        except KeyError:
+            msg = f"Parameter {parName} was not found in the model"
             self._logger.error(msg)
             raise InvalidParameter(msg)
 
@@ -525,26 +528,19 @@ class TelescopeModel:
             configFilePath=self._configFilePath, parameters=self._parameters
         )
 
-    def exportDerivedFiles(self, fileNames):
+    def exportDerivedFiles(self):
         """
         Write to disk a file from the derived values DB.
-
-        Parameters
-        ----------
-        fileNames: str or list of strings
-            Name of the file to get or list of names.
         """
 
-        if not isinstance(fileNames, list):
-            fileNames = [fileNames]
-
         db = db_handler.DatabaseHandler()
-        for fileNameNow in fileNames:
-            db.exportFileDB(
-                dbName=db.DB_DERIVED_VALUES,
-                dest=io.getOutputDirectory(self._filesLocation, self.label, "derived"),
-                fileName=fileNameNow,
-            )
+        for parNow in self.derived:
+            if self.derived[parNow]["File"]:
+                db.exportFileDB(
+                    dbName=db.DB_DERIVED_VALUES,
+                    dest=io.getOutputDirectory(self._filesLocation, self.label, "derived"),
+                    fileName=self.derived[parNow]["Value"],
+                )
 
     def getConfigFile(self, noExport=False):
         """
@@ -712,17 +708,6 @@ class TelescopeModel:
                 label=self.label,
             )
 
-    def isASTRI(self):
-        """
-        Check if telescope is an ASTRI type.
-
-        Returns
-        -------
-        bool:
-            True if telescope  is a ASTRI, False otherwise.
-        """
-        return self.name in ["SST-2M-ASTRI", "SST", "SST-D"]
-
     def isFile2D(self, par):
         """
         Check if the file referenced by par is a 2D table.
@@ -742,17 +727,48 @@ class TelescopeModel:
             return False
 
         fileName = self.getParameterValue(par)
-        file = cfg.findFile(fileName)
+        file = self.getConfigDirectory().joinpath(fileName)
         with open(file, "r") as f:
             is2D = "@RPOL@" in f.read()
         return is2D
+
+    def readTwoDimWavelengthAngle(self, fileName):
+        """
+        Read a two dimensional distribution of wavelngth and angle (z-axis can be anything).
+        Return a dictionary with three arrays,
+        wavelength, angles, z (can be transmission, reflectivity, etc.)
+
+        Parameters
+        ----------
+        fileName: str or Path
+            File assumed to be in the model directory
+
+        Returns
+        -------
+        dict:
+            dict of three arrays, wavelength, degrees, z
+        """
+
+        _file = self.getConfigDirectory().joinpath(fileName)
+        with open(_file, "r") as f:
+            for i_line, line in enumerate(f):
+                if line.startswith("ANGLE"):
+                    degrees = np.array(line.strip().split("=")[1].split(), dtype=np.float16)
+                    break  # The rest can be read with np.loadtxt
+
+        _data = np.loadtxt(_file, skiprows=i_line + 1)
+
+        return {
+            "Wavelength": _data[:, 0],
+            "Angle": degrees,
+            "z": np.array(_data[:, 1:]).T,
+        }
 
     def getOnAxisEffOpticalArea(self):
         """
         Return the on-axis effective optical area (derived previously for this telescope).
         """
 
-        self.exportDerivedFiles(self.derived["ray_tracing"]["Value"])
         rayTracingData = astropy.io.ascii.read(
             self.getDerivedDirectory().joinpath(self.derived["ray_tracing"]["Value"])
         )
@@ -763,3 +779,81 @@ class TelescopeModel:
             )
             raise ValueError
         return rayTracingData["eff_area"][0]
+
+    def readIncidenceAngleDistribution(self, incidenceAngleDistFile):
+        """
+        Read the incidence angle distrubution from a file
+
+        Parameters
+        ----------
+        incidenceAngleDistFile: str
+            File name of the incidence angle distribution
+
+        Returns
+        -------
+        incidenceAngleDist: Astropy table
+            Astropy table with the incidence angle distribution
+        """
+
+        incidenceAngleDist = astropy.io.ascii.read(
+            self.getDerivedDirectory().joinpath(incidenceAngleDistFile)
+        )
+        return incidenceAngleDist
+
+    @staticmethod
+    def calcAverageCurve(curves, incidenceAngleDist):
+        """
+        Calculate an average curve from a set of curves, using as weights
+        the distribution of incidence angles provided in incidenceAngleDist
+
+        Parameters
+        ----------
+        curves: dict
+            dict of with 3 "columns", Wavelength, Angle and z
+            The dictionary represents a two dimensional distribution of wavelengths and angles
+            with the z value being e.g., reflectivity, transmission, etc.
+        incidenceAngleDist: Astropy table
+            Astropy table with the incidence angle distribution
+            The assumed columns are "Incidence angle" and "Fraction".
+
+        Returns
+        -------
+        averageCurve: Astropy Table
+            Table with the averaged curve
+        """
+
+        weights = list()
+        for angleNow in curves["Angle"]:
+            weights.append(
+                incidenceAngleDist["Fraction"][
+                    np.nanargmin(np.abs(angleNow - incidenceAngleDist["Incidence angle"].value))
+                ]
+            )
+
+        averageCurve = Table(
+            [curves["Wavelength"], np.average(curves["z"], weights=weights, axis=0)],
+            names=("Wavelength", "z"),
+        )
+
+        return averageCurve
+
+    def exportTableToModelDirectory(self, fileName, table):
+        """
+        Write out a file with the provided table to the model directory.
+
+        Parameters
+        ----------
+        fileName: str
+            File name to write to
+        table: Astropy Table
+            Table with the values to write to the file
+
+        Returns
+        -------
+        Path:
+            Path to the file exported.
+        """
+
+        fileToWriteTo = self._configFileDirectory.joinpath(fileName)
+        table.write(fileToWriteTo, format="ascii.commented_header", overwrite=True)
+        return fileToWriteTo.absolute()
