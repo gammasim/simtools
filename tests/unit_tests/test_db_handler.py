@@ -325,33 +325,27 @@ def test_separating_get_and_write(db):
         assert io.getOutputFile(fileNow, dirType="model", test=True).exists()
 
 
-def test_insert_and_get_files_db(db, db_cleanup_file_sandbox):
+def test_insert_and_get_file_db(db, db_cleanup_file_sandbox):
 
-    logger.info("----Testing inserting/downloading files to/from the DB-----")
+    logger.info("----Testing inserting/downloading file to/from the DB-----")
     outputDir = io.getOutputDirectory(dirType="model", test=True)
     fileName = "test_file.dat"
     fileToInsert = outputDir / fileName
-    testInsertArgs = [fileToInsert, [fileToInsert]]
-    testExportArgs = [fileName, [fileName]]
-    for step in range(2):
-        logger.info("Creating a temporary file in {}".format(outputDir))
-        with open(fileToInsert, "w") as f:
-            f.write("# This is a test file")
-        logger.info("Inserting a temporary file {} into {}".format(testInsertArgs[step], db))
-        fileIdList = db.insertFileToDB(testInsertArgs[step], "sandbox")
-        logger.info("Removing the local temporary file")
-        fileToInsert.unlink()
-        assert fileToInsert.exists() is False
-        logger.info("Getting file from DB and checking consistency")
-        fileId2List = db.exportFileDB("sandbox", outputDir, testExportArgs[step])
-        for fileCounter in range(len(fileIdList)):
-            fileId = fileIdList[fileCounter]
-            fileId2 = fileId2List[fileCounter]
-            logger.info("fileId {}".format((fileId)))
-            logger.info("fileId2 {}".format((fileId2)))
-            assert fileId == fileId2
-            logger.info("Checking if the file was downloaded from DB")
-            assert fileToInsert.exists()
+    logger.info("Creating a temporary file in {}".format(outputDir))
+    with open(fileToInsert, "w") as f:
+        f.write("# This is a test file")
+    logger.info("Inserting a temporary file {} into {}".format(fileToInsert, db))
+    fileId = db.insertFileToDB(fileToInsert, "sandbox")
+    logger.info("Removing the local temporary file")
+    fileToInsert.unlink()
+    assert fileToInsert.exists() is False
+    logger.info("Getting file from DB and checking consistency")
+    fileId2 = db.exportFileDB("sandbox", outputDir, fileName)
+    logger.info("fileId {}".format((fileId)))
+    logger.info("fileId2 {}".format((fileId2)))
+    assert fileId == fileId2
+    logger.info("Checking if the file was downloaded from DB")
+    assert fileToInsert.exists()
 
 
 def test_get_all_versions(db):
