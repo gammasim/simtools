@@ -24,7 +24,7 @@ def test_write_metadata(args_dict_site, io_handler, tmp_test_directory):
     assert Path(yml_file).exists()
 
     with pytest.raises(FileNotFoundError):
-        w_1.write_metadata(ymlfile="./this_directory_is_not_theta/tmp.yml")
+        w_1.write_metadata(ymlfile="./this_directory_is_not_theta/test_file.yml")
 
 
 def test_initialize():
