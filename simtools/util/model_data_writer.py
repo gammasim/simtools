@@ -71,6 +71,11 @@ class ModelDataWriter:
         ymlfile str
             name of output file (default=None)
 
+        Returns
+        -------
+        str
+            name of output file
+
         """
 
         try:
@@ -79,6 +84,7 @@ class ModelDataWriter:
             self._logger.info("Writing metadata to {}".format(ymlfile))
             with open(ymlfile, "w", encoding="UTF-8") as file:
                 yaml.safe_dump(self.workflow_config.top_level_meta, file, sort_keys=False)
+            return ymlfile
         except FileNotFoundError:
             self._logger.error("Error writing model data to {}".format(ymlfile))
             raise
