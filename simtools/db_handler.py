@@ -1254,8 +1254,7 @@ class DatabaseHandler:
 
         return tags["Tags"][version]["Value"]
 
-    @staticmethod
-    def insertFileToDB(file, dbName=DB_CTA_SIMULATION_MODEL, **kwargs):
+    def insertFileToDB(self, file, dbName=DB_CTA_SIMULATION_MODEL, **kwargs):
         """
         Insert a file to the DB.
 
@@ -1285,7 +1284,10 @@ class DatabaseHandler:
             kwargs["filename"] = Path(file).name
 
         if fileSystem.exists({"filename": kwargs["filename"]}):
-            return fileSystem.find_one({"filename": kwargs["filename"]})
+            self._logger.warning(
+                f"The file {kwargs['filename']} exists in the DB. Returning its ID"
+            )
+            return fileSystem.find_one({"filename": kwargs["filename"]})._id
 
         with open(file, "rb") as dataFile:
             file_id = fileSystem.put(dataFile, **kwargs)

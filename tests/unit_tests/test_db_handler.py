@@ -319,7 +319,7 @@ def test_separating_get_and_write(db, io_handler):
         assert io_handler.getOutputFile(fileNow, dirType="model", test=True).exists()
 
 
-def test_insert_files_db(db, io_handler, db_cleanup_file_sandbox):
+def test_insert_files_db(db, io_handler, db_cleanup_file_sandbox, caplog):
 
     logger.info("----Testing inserting files to the DB-----")
     logger.info(
@@ -332,6 +332,12 @@ def test_insert_files_db(db, io_handler, db_cleanup_file_sandbox):
         f.write("# This is a test file")
 
     file_id = db.insertFileToDB(fileName, "sandbox")
+    assert file_id == db._getFileMongoDB("sandbox", "test_file.dat")._id
+
+    # Now test inserting the same file again, this time expect a warning
+    with caplog.at_level(logging.WARNING):
+        file_id = db.insertFileToDB(fileName, "sandbox")
+    assert "exists in the DB. Returning its ID" in caplog.text
     assert file_id == db._getFileMongoDB("sandbox", "test_file.dat")._id
 
 
