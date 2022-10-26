@@ -2,12 +2,12 @@ import logging
 
 import yaml
 
+from simtools.util import workflow_description
+
 
 class ModelDataWriter:
     """
-    Simulation model data writer
-
-    Includes writing of metadata and model data.
+    Writer for simulation model data and metadata.
 
     Attributes
     ----------
@@ -23,20 +23,22 @@ class ModelDataWriter:
 
     """
 
-    def __init__(self, workflow_config=None):
+    def __init__(self, workflow_config=None, args_dict=None):
         """
         Initialize model data
 
         Parameters
         ----------
         workflow_config: WorkflowDescription
-            workflow configuration
+            Workflow configuration
+        args_dict: Dictionary
+            Dictionary with configuration parameters.
 
         """
 
         self._logger = logging.getLogger(__name__)
         self._product_data_filename = None
-        self.workflow_config = workflow_config
+        self.workflow_config = self._get_workflow_config(workflow_config, args_dict)
 
     def write_data(self, product_data):
         """
@@ -83,3 +85,26 @@ class ModelDataWriter:
         except AttributeError:
             self._logger.error("No metadata defined for writing")
             raise
+
+    @staticmethod
+    def _get_workflow_config(workflow_config=None, args_dict=None):
+        """
+        Return workflow config, if needed from command line parameter dictionary.
+
+        Parameters
+        ----------
+        workflow_config: WorkflowDescription
+            Workflow configuration
+        args_dict: Dictionary
+            Dictionary with configuration parameters.
+
+        Returns
+        -------
+        WorkflowDescription
+            Workflow configuration
+
+        """
+        if workflow_config:
+            return workflow_config
+
+        return workflow_description.WorkflowDescription(args_dict=args_dict)
