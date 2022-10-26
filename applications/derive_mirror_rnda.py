@@ -124,10 +124,8 @@ import numpy as np
 from astropy.table import QTable, Table
 
 import simtools.configuration as configurator
-import simtools.util.commandline_parser as argparser
 import simtools.util.general as gen
 import simtools.util.model_data_writer as writer
-import simtools.util.workflow_description as workflow_config
 from simtools.model.telescope_model import TelescopeModel
 from simtools.ray_tracing import RayTracing
 
@@ -138,7 +136,7 @@ def _parse(label):
 
     """
 
-    config = configurator.Configurator(label)
+    config = configurator.Configurator(label=label)
     psf_group = config.parser.add_mutually_exclusive_group()
     psf_group.add_argument(
         "--psf_measurement_containment_mean",
@@ -161,7 +159,7 @@ def _parse(label):
     config.parser.add_argument(
         "--containment_fraction",
         help="Containment fraction for diameter calculation (in interval 0,1)",
-        type=argparser.CommandLineParser.efficiency_interval,
+        type=config.parser.efficiency_interval,
         required=False,
         default=0.8,
     )
@@ -206,7 +204,7 @@ def _parse(label):
     return config.initialize(db_config=True, telescope_model=True)
 
 
-def _define_telescope_model(workflow, args_dict, db_config):
+def _define_telescope_model(label, args_dict, db_config):
     """
     Define telescope model and update configuration
     with mirror list and/or random focal length given
@@ -214,8 +212,12 @@ def _define_telescope_model(workflow, args_dict, db_config):
 
     Attributes
     ----------
-    workflow_config: WorkflowDescription
-       workflow configuration
+    label: str
+        Application label.
+    args_dict: dict
+        Dictionary with configuration parameters.
+    db_config:
+        Dictionary with database configuration.
 
     Returns
     -------
@@ -225,28 +227,24 @@ def _define_telescope_model(workflow, args_dict, db_config):
     """
 
     tel = TelescopeModel(
-        site=workflow.get_configuration_parameter("site"),
-        telescopeModelName=workflow.get_configuration_parameter("telescope"),
-        modelVersion=workflow.get_configuration_parameter("model_version"),
+        site=args_dict["site"],
+        telescopeModelName=args_dict["telescope"],
+        modelVersion=args_dict["model_version"],
         mongoDBConfig=db_config,
-        label=workflow.label(),
+        label=label,
     )
-    if workflow.get_configuration_parameter("mirror_list") is not None:
-        mirrorListFile = gen.findFile(
-            name=workflow.get_configuration_parameter("mirror_list"), loc=args_dict["model_path"]
-        )
-        tel.changeParameter("mirror_list", workflow.get_configuration_parameter("mirror_list"))
+    if args_dict["mirror_list"] is not None:
+        mirrorListFile = gen.findFile(name=args_dict["mirror_list"], loc=args_dict["model_path"])
+        tel.changeParameter("mirror_list", args_dict["mirror_list"])
         tel.addParameterFile("mirror_list", mirrorListFile)
-    if workflow.get_configuration_parameter("random_flen") is not None:
-        tel.changeParameter(
-            "random_focal_length", str(workflow.get_configuration_parameter("random_flen"))
-        )
+    if args_dict["random_flen"] is not None:
+        tel.changeParameter("random_focal_length", str(args_dict["random_flen"]))
 
     return tel
 
 
 def _print_and_write_results(
-    workflow, rndaStart, rndaOpt, meanD80, sigD80, resultsRnda, resultsMean, resultsSig
+    args_dict, rndaStart, rndaOpt, meanD80, sigD80, resultsRnda, resultsMean, resultsSig
 ):
     """
     Print results to screen write metadata and data files
@@ -254,25 +252,19 @@ def _print_and_write_results(
 
     """
 
-    containment_fraction_percent = int(
-        workflow.get_configuration_parameter("containment_fraction") * 100
-    )
+    containment_fraction_percent = int(args_dict["containment_fraction"] * 100)
 
     # Printing results to stdout
     print("\nMeasured D{:}:".format(containment_fraction_percent))
-    if workflow.get_configuration_parameter("psf_measurement_containment_sigma") is not None:
+    if args_dict["psf_measurement_containment_sigma"] is not None:
         print(
             "Mean = {:.3f} cm, StdDev = {:.3f} cm".format(
-                workflow.get_configuration_parameter("psf_measurement_containment_mean"),
-                workflow.get_configuration_parameter("psf_measurement_containment_sigma"),
+                args_dict["psf_measurement_containment_mean"],
+                args_dict["psf_measurement_containment_sigma"],
             )
         )
     else:
-        print(
-            "Mean = {:.3f} cm".format(
-                workflow.get_configuration_parameter("psf_measurement_containment_mean")
-            )
-        )
+        print("Mean = {:.3f} cm".format(args_dict["psf_measurement_containment_mean"]))
     print("\nSimulated D{:}:".format(containment_fraction_percent))
     print("Mean = {:.3f} cm, StdDev = {:.3f} cm".format(meanD80, sigD80))
     print("\nmirror_random_reflection_angle")
@@ -299,7 +291,7 @@ def _print_and_write_results(
             f"containment_radius_sigma_D{containment_fraction_percent}",
         ),
     )
-    file_writer = writer.ModelDataWriter(workflow)
+    file_writer = writer.ModelDataWriter(args_dict=args_dict)
     file_writer.write_metadata()
     file_writer.write_data(result_table)
 
@@ -347,13 +339,11 @@ def main():
     logger = logging.getLogger()
     logger.setLevel(gen.getLogLevelFromUser(args_dict["log_level"]))
 
-    workflow = workflow_config.WorkflowDescription(label=label, args_dict=args_dict)
+    tel = _define_telescope_model(label, args_dict, db_config)
 
-    tel = _define_telescope_model(workflow, args_dict, db_config)
-
-    if workflow.get_configuration_parameter("psf_measurement"):
-        _get_psf_containment(logger, workflow)
-    if not workflow.get_configuration_parameter("psf_measurement_containment_mean"):
+    if args_dict["psf_measurement"]:
+        _get_psf_containment(logger, args_dict)
+    if not args_dict["psf_measurement_containment_mean"]:
         logger.error("Missing PSF measurement")
         raise ValueError
 
@@ -363,11 +353,9 @@ def main():
         ray = RayTracing.fromKwargs(
             telescopeModel=tel,
             singleMirrorMode=True,
-            mirrorNumbers=list(range(1, 10))
-            if workflow.get_configuration_parameter("test")
-            else "all",
+            mirrorNumbers=list(range(1, 10)) if args_dict["test"] else "all",
             simtelSourcePath=args_dict.get("simtelpath", None),
-            useRandomFocalLength=workflow.get_configuration_parameter("use_random_flen"),
+            useRandomFocalLength=args_dict["use_random_flen"],
         )
         ray.simulate(test=False, force=True)  # force has to be True, always
         ray.analyze(force=True)
@@ -378,8 +366,8 @@ def main():
         )
 
     # First - rnda from previous model or from command line
-    if workflow.get_configuration_parameter("rnda") != 0:
-        rndaStart = workflow.get_configuration_parameter("rnda")
+    if args_dict["rnda"] != 0:
+        rndaStart = args_dict["rnda"]
     else:
         rndaStart = tel.getParameter("mirror_reflection_random_angle")["Value"]
         if isinstance(rndaStart, str):
@@ -390,7 +378,7 @@ def main():
     resultsRnda = list()
     resultsMean = list()
     resultsSig = list()
-    if workflow.get_configuration_parameter("no_tuning"):
+    if args_dict["no_tuning"]:
         rndaOpt = rndaStart
     else:
 
@@ -402,16 +390,12 @@ def main():
         stop = False
         meanD80, sigD80 = run(rndaStart)
         rnda = rndaStart
-        signDelta = np.sign(
-            meanD80 - workflow.get_configuration_parameter("psf_measurement_containment_mean")
-        )
+        signDelta = np.sign(meanD80 - args_dict["psf_measurement_containment_mean"])
         collectResults(rnda, meanD80, sigD80)
         while not stop:
             rnda = rnda - (0.1 * rndaStart * signDelta)
             meanD80, sigD80 = run(rnda)
-            newSignDelta = np.sign(
-                meanD80 - workflow.get_configuration_parameter("psf_measurement_containment_mean")
-            )
+            newSignDelta = np.sign(meanD80 - args_dict["psf_measurement_containment_mean"])
             stop = newSignDelta != signDelta
             signDelta = newSignDelta
             collectResults(rnda, meanD80, sigD80)
@@ -419,7 +403,7 @@ def main():
         # Linear interpolation using two last rnda values
         resultsRnda, resultsMean, resultsSig = gen.sortArrays(resultsRnda, resultsMean, resultsSig)
         rndaOpt = np.interp(
-            x=workflow.get_configuration_parameter("psf_measurement_containment_mean"),
+            x=args_dict["psf_measurement_containment_mean"],
             xp=resultsMean,
             fp=resultsRnda,
         )
@@ -427,7 +411,7 @@ def main():
     meanD80, sigD80 = run(rndaOpt)
 
     _print_and_write_results(
-        workflow, rndaStart, rndaOpt, meanD80, sigD80, resultsRnda, resultsMean, resultsSig
+        args_dict, rndaStart, rndaOpt, meanD80, sigD80, resultsRnda, resultsMean, resultsSig
     )
 
 
