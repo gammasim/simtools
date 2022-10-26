@@ -109,7 +109,8 @@ class Configurator:
         )
 
         self._fillFromCommandLine()
-        self._fillFromConfigFile()
+        self._fillFromConfigFile(self.config["workflow_config_file"])
+        self._fillFromConfigFile(self.config["config_file"])
         self._fillFromConfigDict(self.configClassInit)
         self._fillFromEnvironmentalVariables()
         self._initializeIOHandler()
@@ -183,9 +184,18 @@ class Configurator:
             )
             raise InvalidConfigurationParameter
 
-    def _fillFromConfigFile(self):
+    def _fillFromConfigFile(self, config_file):
         """
         Read and fill configuration parameters from yaml file.
+        Take into account that this could be a CTASIMPIPE workflow configuration file
+        (CTASIMPIPE:CONFIGURATION is optional, therefore no error raised when this key
+         is not found)
+
+        Parameters
+        ----------
+        config file: str
+            Name of configuration file name
+
 
         Raises
         ------
@@ -195,16 +205,23 @@ class Configurator:
         """
 
         try:
-            self._logger.debug("Reading configuration from {}".format(self.config["config_file"]))
-            with open(self.config["config_file"], "r") as stream:
+            self._logger.debug("Reading configuration from {}".format(config_file))
+            with open(config_file, "r") as stream:
                 _config_dict = yaml.safe_load(stream)
-            self._fillFromConfigDict(_config_dict)
+            if "CTASIMPIPE" in _config_dict:
+                try:
+                    self._fillFromConfigDict(_config_dict["CTASIMPIPE"]["CONFIGURATION"])
+                except KeyError:
+                    self._logger.info(
+                        "Error reading CTASIMPIPE:CONFIGURATION dict from {}".format(config_file)
+                    )
+                    pass
+            else:
+                self._fillFromConfigDict(_config_dict)
         except TypeError:
             pass
         except FileNotFoundError:
-            self._logger.error(
-                "Configuration file not found: {}".format(self.config["config_file"])
-            )
+            self._logger.error("Configuration file not found: {}".format(config_file))
             raise
 
     def _fillFromEnvironmentalVariables(self):
