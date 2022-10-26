@@ -207,6 +207,8 @@ def main():
     label, showerConfigs, arrayConfigs = _proccessSimulationConfigFile(
         args_dict["productionconfig"], args_dict["primary"], logger
     )
+    if args_dict["label"] is None:
+        args_dict["label"] = label
 
     showerSimulators = dict()
     for primary, configData in showerConfigs.items():
