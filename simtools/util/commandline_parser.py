@@ -120,6 +120,11 @@ class CommandLineParser(argparse.ArgumentParser):
             required=False,
         )
         _job_group.add_argument(
+            "--label",
+            help="Job label",
+            required=False,
+        )
+        _job_group.add_argument(
             "-v",
             "--log_level",
             action="store",
