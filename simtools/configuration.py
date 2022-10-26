@@ -46,8 +46,9 @@ class Configurator:
         self._logger.debug("Init Configuration")
 
         self.configClassInit = config
+        self.label = label
         self.config = {}
-        self.parser = argparser.CommandLineParser(label, description)
+        self.parser = argparser.CommandLineParser(self.label, description)
 
     def default_config(self, arg_list=None, add_db_config=False):
         """
@@ -113,6 +114,9 @@ class Configurator:
         self._fillFromEnvironmentalVariables()
         self._initializeIOHandler()
         _db_dict = self._getDBParameters()
+
+        if self.config["label"] is None:
+            self.config["label"] = self.label
 
         return self.config, _db_dict
 
