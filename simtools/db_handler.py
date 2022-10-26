@@ -1213,8 +1213,8 @@ class DatabaseHandler:
             if filePrefix is None:
                 raise FileNotFoundError(
                     "The location of the file to upload, "
-                    "corresponding to the {} parameter, must be provided."
-                ).format(parameter)
+                    f"corresponding to the {parameter} parameter, must be provided."
+                )
             filePath = Path(filePrefix).joinpath(value)
             filesToAddToDB.add("{}".format(filePath))
 
