@@ -325,36 +325,32 @@ def test_separating_get_and_write(db):
         assert io.getOutputFile(fileNow, dirType="model", test=True).exists()
 
 
-def test_insert_and_get_file_db(db, db_cleanup_file_sandbox, caplog):
-
-    logger.info("----Testing inserting/downloading file to/from the DB-----")
+def test_export_file_db(db, db_cleanup_file_sandbox, caplog):
+    logger.info("----Testing exporting files from the DB-----")
     outputDir = io.getOutputDirectory(dirType="model", test=True)
-    fileName = "test_file.dat"
+    fileName = "mirror_CTA-S-LST_v2020-04-07.dat"
     fileToInsert = outputDir / fileName
-    logger.info("Creating a temporary file in {}".format(outputDir))
-    with open(fileToInsert, "w") as f:
-        f.write("# This is a test file")
-    logger.info("Inserting a temporary file {} into {}".format(fileToInsert, db))
-    fileId = db.insertFileToDB(fileToInsert, "sandbox")
-    logger.info("Removing the local temporary file")
-    fileToInsert.unlink()
-    assert fileToInsert.exists() is False
-    logger.info("Getting file from DB")
-    fileId2 = db.exportFileDB("sandbox", outputDir, fileName)
-    logger.info("Checking if the file was downloaded from DB")
+    db.exportFileDB(db.DB_CTA_SIMULATION_MODEL, outputDir, fileName)
     assert fileToInsert.exists()
-    logger.info("Checking consistency of the files")
-    logger.info("fileId {}".format((fileId)))
-    logger.info("fileId2 {}".format((fileId2)))
-    assert fileId == fileId2
-    logger.info("Testing inserting the same file again, getting a warning and the same ID")
+
+
+def test_insert_files_db(db, db_cleanup_file_sandbox, caplog):
+
+    logger.info("----Testing inserting files to the DB-----")
+    logger.info(
+        "Creating a temporary file in {}".format(io.getOutputDirectory(dirType="model", test=True))
+    )
+    fileName = io.getOutputDirectory(dirType="model", test=True) / "test_file.dat"
+    with open(fileName, "w") as f:
+        f.write("# This is a test file")
+
+    fileId = db.insertFileToDB(fileName, "sandbox")
+    assert fileId == db._getFileMongoDB("sandbox", "test_file.dat")._id
+    logger.info("Now test inserting the same file again, this time expect a warning")
     with caplog.at_level(logging.WARNING):
         fileId = db.insertFileToDB(fileName, "sandbox")
-    assert fileId == fileId2
     assert "exists in the DB. Returning its ID" in caplog.text
-    logger.info("Removing the local temporary file")
-    fileToInsert.unlink()
-    assert fileToInsert.exists() is False
+    assert fileId == db._getFileMongoDB("sandbox", "test_file.dat")._id
 
 
 def test_get_all_versions(db):

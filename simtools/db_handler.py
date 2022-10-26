@@ -1151,7 +1151,7 @@ class DatabaseHandler:
         collection.insert_one(parEntry)
         if len(filesToAddToDB) > 0:
             self._logger.info("Will also add the file {} to the DB".format(filePath))
-            self.insertFilesToDB(filesToAddToDB, dbName)
+            self.insertFileToDB(filesToAddToDB, dbName)
 
         return
 
