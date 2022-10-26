@@ -178,34 +178,28 @@ class DatabaseHandler:
                 onlyApplicable,
             )
 
-    def exportFileDB(self, db_name, dest, file_name):
+    def exportFileDB(self, dbName, dest, fileName):
         """
-        Get file(s) from the DB and write to disk.
+        Get file from the DB and write to disk.
 
         Parameters
         ----------
-        db_name: str
+        dbName: str
             Name of the DB to search in.
         dest: str or Path
             Location where to write the file to.
-        file_name: str or list of str
-            Name of the file(s) to get.
+        file_name: str
+            Name of the file to get.
         Returns
         -------
-        List of GridOut
-            A list of :class:`~gridfs.grid_file.GridOut` or ``None`` for files not found
+        GridOut
+            :class:`~gridfs.grid_file.GridOut` or ``None`` if file not found
         """
-        if not isinstance(file_name, list):
-            filesToExport = [file_name]
-        else:
-            filesToExport = file_name
-        fileListFromDB = []
-        for fileNow in filesToExport:
-            self._logger.debug(f"Getting {fileNow} and writing it to {dest}")
-            filePathInstance = self._getFileMongoDB(db_name, fileNow)
-            fileListFromDB.append(filePathInstance._id)
-            self._writeFileFromMongoToDisk(db_name, dest, filePathInstance)
-        return fileListFromDB
+
+        self._logger.debug(f"Getting {fileName} and writing it to {dest}")
+        filePathInstance = self._getFileMongoDB(dbName, fileName)
+        self._writeFileFromMongoToDisk(dbName, dest, filePathInstance)
+        return filePathInstance._id
 
     def exportModelFiles(self, parameters, dest):
         """
@@ -987,7 +981,8 @@ class DatabaseHandler:
         queryUpdate = {"$set": {"Value": newValue, "File": file}}
 
         collection.update_one(query, queryUpdate)
-        self.insertFilesToDB(filesToAddToDB, dbName)
+        for fileNow in filesToAddToDB:
+            self.insertFileToDB(fileNow, dbName)
 
         return
 
@@ -1276,15 +1271,15 @@ class DatabaseHandler:
 
         return tags["Tags"][version]["Value"]
 
-    def insertFileToDB(self, file_name, db_name=DB_CTA_SIMULATION_MODEL, **kwargs):
+    def insertFileToDB(self, fileName, dbName=DB_CTA_SIMULATION_MODEL, **kwargs):
         """
-        Insert files to the DB.
+        Insert file to the DB.
 
         Parameters
         ----------
-        file_name: str or Path or list of str or list of Path
-            The name of the file(s) to insert (full path).
-        db_name: str
+        fileName: str or Path
+            The name of the file to insert (full path).
+        dbName: str
             the name of the DB
         **kwargs (optional): keyword arguments for file creation.
             The full list of arguments can be found in, \
@@ -1294,37 +1289,27 @@ class DatabaseHandler:
 
         Returns
         -------
-        file_id: list of gridfs "_id"
-            If the files exist, returns their "_id", otherwise creates the files and returns their \
-            ids.
+        file_id: gridfs "_id"
+            If the file exist, returns its "_id", otherwise creates the file and returns its id.
         """
 
-        db = DatabaseHandler.dbClient[db_name]
+        db = DatabaseHandler.dbClient[dbName]
         fileSystem = gridfs.GridFS(db)
 
-        kwargsUpdate = kwargs
         if "content_type" not in kwargs:
-            kwargsUpdate["content_type"] = "ascii/dat"
+            kwargs["content_type"] = "ascii/dat"
 
-        if not isinstance(file_name, list):
-            file_name = [file_name]
+        if "filename" not in kwargs:
+            kwargs["filename"] = Path(fileName).name
 
-        idList = []
-        for fileNow in file_name:
-            if "filename" not in kwargs:
-                kwargsUpdate["filename"] = Path(fileNow).name
-
-            if fileSystem.exists({"filename": kwargsUpdate["filename"]}):
-                self._logger.warning(
-                    f"The file {kwargsUpdate['filename']} exists in the DB. \
-                Returning its ID"
-                )
-                idList.append(fileSystem.find_one({"filename": kwargsUpdate["filename"]})._id)
-            else:
-                with open(fileNow, "rb") as dataFile:
-                    idList.append(fileSystem.put(dataFile, **kwargsUpdate))
-
-        return idList
+        if fileSystem.exists({"filename": kwargs["filename"]}):
+            self._logger.warning(
+                f"The file {kwargs['filename']} exists in the DB. \
+            Returning its ID"
+            )
+            return fileSystem.find_one({"filename": kwargs["filename"]})._id
+        with open(fileName, "rb") as dataFile:
+            return fileSystem.put(dataFile, **kwargs)
 
     def getAllVersions(
         self,
