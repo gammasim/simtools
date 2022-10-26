@@ -84,7 +84,7 @@ def main():
     logger = logging.getLogger()
     logger.setLevel(gen.getLogLevelFromUser(args_dict["log_level"]))
 
-    workflow = workflow_config.WorkflowDescription(label=label, args_dict=args_dict)
+    workflow = workflow_config.WorkflowDescription(args_dict=args_dict)
 
     data_validator = ds.DataValidator(workflow)
     data_validator.validate()
