@@ -1,8 +1,8 @@
 import logging
 from pathlib import Path
 
-import simtools.io_handler as io_handler
 import simtools.util.general as gen
+from simtools import io_handler
 from simtools.simtel.simtel_runner import InvalidOutputFile, SimtelRunner
 from simtools.util import names
 

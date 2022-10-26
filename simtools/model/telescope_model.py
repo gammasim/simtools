@@ -6,9 +6,8 @@ import astropy.io.ascii
 import numpy as np
 from astropy.table import Table
 
-import simtools.io_handler as io_handler
 import simtools.util.general as gen
-from simtools import db_handler
+from simtools import db_handler, io_handler
 from simtools.model.camera import Camera
 from simtools.model.mirrors import Mirrors
 from simtools.simtel.simtel_config_writer import SimtelConfigWriter
