@@ -97,12 +97,6 @@ def main():
         description=("Example of how to produce sim_telarray config files for a given array."),
     )
     config.parser.add_argument(
-        "--label",
-        help="Identifier str for the output naming.",
-        type=str,
-        required=False,
-    )
-    config.parser.add_argument(
         "--array_config",
         help="Yaml file with array config data.",
         type=str,
@@ -110,13 +104,11 @@ def main():
     )
     args_dict, db_config = config.initialize(db_config=True)
 
-    label = "produce_array_config" if args_dict["label"] is None else args_dict["label"]
-
     logger = logging.getLogger("simtools")
     logger.setLevel(gen.getLogLevelFromUser(args_dict["log_level"]))
 
     arrayModel = ArrayModel(
-        label=label,
+        label=args_dict["label"],
         mongoDBConfig=db_config,
         arrayConfigFile=args_dict["array_config"],
     )

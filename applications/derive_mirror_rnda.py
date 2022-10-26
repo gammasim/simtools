@@ -296,37 +296,33 @@ def _print_and_write_results(
     file_writer.write_data(result_table)
 
 
-def _get_psf_containment(logger, workflow):
+def _get_psf_containment(logger, args_dict):
     """
     Read measured single-mirror point-spread function (containment)
     from file and return mean and sigma
 
     """
 
-    _psf_list = Table.read(
-        workflow.get_configuration_parameter("psf_measurement"), format="ascii.ecsv"
-    )
+    _psf_list = Table.read(args_dict["psf_measurement"], format="ascii.ecsv")
     try:
-        workflow.set_configuration_parameter(
-            "psf_measurement_containment_mean",
-            np.nanmean(np.array(_psf_list["psf_opt"].to("cm").value)),
+        args_dict["psf_measurement_containment_mean"] = np.nanmean(
+            np.array(_psf_list["psf_opt"].to("cm").value)
         )
-        workflow.set_configuration_parameter(
-            "psf_measurement_containment_sigma",
-            np.nanstd(np.array(_psf_list["psf_opt"].to("cm").value)),
+        args_dict["psf_measurement_containment_sigma"] = np.nanstd(
+            np.array(_psf_list["psf_opt"].to("cm").value)
         )
     except KeyError:
         logger.debug(
             "Missing column for psf measurement (psf_opt) in {}".format(
-                workflow.get_configuration_parameter("psf_measurement")
+                args_dict["psf_measurement"]
             )
         )
         raise
 
     logger.info(
         "Determined PSF containment to {:.4} +- {:.4} cm".format(
-            workflow.get_configuration_parameter("psf_measurement_containment_mean"),
-            workflow.get_configuration_parameter("psf_measurement_containment_sigma"),
+            args_dict["psf_measurement_containment_mean"],
+            args_dict["psf_measurement_containment_sigma"],
         )
     )
 
