@@ -47,7 +47,7 @@ class WorkflowDescription:
 
     """
 
-    def __init__(self, label, args_dict):
+    def __init__(self, args_dict):
         """
         Initialize workflow configuration class
 
@@ -66,7 +66,7 @@ class WorkflowDescription:
 
         self.args_dict = args_dict
         self.workflow_config = self._default_workflow_config()
-        self.workflow_config["ACTIVITY"]["NAME"] = label
+        self.workflow_config["ACTIVITY"]["NAME"] = args_dict["label"]
         self.workflow_config["ACTIVITY"]["ID"] = str(uuid.uuid4())
 
         self.collect_workflow_configuration()
