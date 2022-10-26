@@ -215,7 +215,6 @@ class Configurator:
                     self._logger.info(
                         "Error reading CTASIMPIPE:CONFIGURATION dict from {}".format(config_file)
                     )
-                    pass
             else:
                 self._fillFromConfigDict(_config_dict)
         except TypeError:
