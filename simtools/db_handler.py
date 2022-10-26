@@ -11,8 +11,8 @@ from bson.objectid import ObjectId
 from pymongo import MongoClient
 from pymongo.errors import BulkWriteError
 
-import simtools.io_handler as io_handler
 import simtools.util.general as gen
+from simtools import io_handler
 from simtools.util import names
 from simtools.util.model import getTelescopeClass
 

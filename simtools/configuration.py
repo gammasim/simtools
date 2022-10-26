@@ -4,8 +4,8 @@ import sys
 
 import yaml
 
-import simtools.io_handler as io_handler
 import simtools.util.commandline_parser as argparser
+from simtools import io_handler
 
 
 class InvalidConfigurationParameter(Exception):

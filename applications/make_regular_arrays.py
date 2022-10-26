@@ -29,9 +29,8 @@ import logging
 import astropy.units as u
 
 import simtools.configuration as configurator
-import simtools.io_handler as io_handler
 import simtools.util.general as gen
-from simtools import db_handler
+from simtools import db_handler, io_handler
 from simtools.layout.layout_array import LayoutArray
 
 

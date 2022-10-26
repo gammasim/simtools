@@ -7,8 +7,8 @@ from pathlib import Path
 import astropy.units as u
 import numpy as np
 
-import simtools.io_handler as io_handler
 import simtools.util.general as gen
+from simtools import io_handler
 from simtools.corsika.corsika_runner import CorsikaRunner
 from simtools.job_submission.job_manager import JobManager
 from simtools.model.array_model import ArrayModel
