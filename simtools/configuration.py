@@ -19,8 +19,8 @@ class Configurator:
     Allow to set configuration parameters by
     - command line arguments
     - configuration file (yml file)
-    - environmental variables
     - configuration dict when calling the class
+    - environmental variables
 
     Methods
     -------
