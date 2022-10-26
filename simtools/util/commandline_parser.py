@@ -181,7 +181,7 @@ class CommandLineParser(argparse.ArgumentParser):
             _job_group.add_argument(
                 "--telescope",
                 help="telescope model name (e.g. LST-1, SST-D, ...)",
-                type=str,
+                type=self.telescope,
             )
         if add_model_version:
             _job_group.add_argument(
@@ -211,8 +211,29 @@ class CommandLineParser(argparse.ArgumentParser):
         fsite = str(value)
         if not names.validateSiteName(fsite):
             raise argparse.ArgumentTypeError("{} is an invalid site".format(fsite))
-
         return fsite
+
+    @staticmethod
+    def telescope(value):
+        """
+        Argument parser type to check that a valid telescope name is given
+
+        Parameters
+        ----------
+        value: str
+            telescope name
+
+        Raises
+        ------
+        argparse.ArgumentTypeError
+            for invalid telescope
+
+        """
+
+        ftelescope = str(value)
+        if not names.validateTelescopeModelName(ftelescope):
+            raise argparse.ArgumentTypeError("{} is an invalid telescope name".format(ftelescope))
+        return ftelescope
 
     @staticmethod
     def efficiency_interval(value):
