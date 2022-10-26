@@ -71,6 +71,7 @@
 """
 
 import logging
+import os
 from collections import OrderedDict
 
 import astropy.units as u
@@ -97,11 +98,13 @@ def loadData(datafile):
 
 def main():
 
+    label = os.path.basename(__file__).split(".")[0]
     config = configurator.Configurator(
+        label=label,
         description=(
             "Calculate and plot the PSF and eff. mirror area as a function of off-axis angle "
             "of the telescope requested."
-        )
+        ),
     )
     config.parser.add_argument(
         "--src_distance",
@@ -120,7 +123,6 @@ def main():
     )
 
     args_dict, db_config = config.initialize(db_config=True, telescope_model=True)
-    label = "compare_cumulative_psf"
 
     logger = logging.getLogger()
     logger.setLevel(gen.getLogLevelFromUser(args_dict["log_level"]))
