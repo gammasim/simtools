@@ -53,6 +53,7 @@
 """
 
 import logging
+import os
 
 import astropy.units as u
 
@@ -62,12 +63,14 @@ import simtools.util.general as gen
 from simtools.simulator import Simulator
 
 
-def _parse(description=None):
+def _parse(label=None, description=None):
     """
     Parse command line configuration
 
     Parameters
     ----------
+    label: str
+        application label.
     description: str
         description of application.
 
@@ -78,7 +81,7 @@ def _parse(description=None):
 
     """
 
-    config = configurator.Configurator(description=description)
+    config = configurator.Configurator(label=label, description=description)
     config.parser.add_argument(
         "--array",
         help="Name of the array (e.g. 1MST, 4LST ...)",
@@ -115,8 +118,10 @@ def _parse(description=None):
 
 def main():
 
-    args_dict, _ = _parse("Simulate showers to be used for trigger rate calculations")
-    label = "trigger_rates"
+    label = os.path.basename(__file__).split(".")[0]
+    args_dict, _ = _parse(
+        label=label, description="Simulate showers to be used for trigger rate calculations"
+    )
 
     logger = logging.getLogger()
     logger.setLevel(gen.getLogLevelFromUser(args_dict["log_level"]))
