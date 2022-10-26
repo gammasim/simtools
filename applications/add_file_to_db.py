@@ -133,9 +133,7 @@ def main():
         pass
 
     print(
-        "Should I insert the following file{} to the {} DB?:\n".format(
-            plural, args_dict["dbToInsertTo"]
-        )
+        f"Should the following file{plural} be inserted to the {args_dict['dbToInsertTo']} DB?:\n"
     )
     print(*filesToInsert, sep="\n")
     print()
