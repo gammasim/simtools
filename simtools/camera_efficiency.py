@@ -214,26 +214,25 @@ class CameraEfficiency:
             cameraTransmission = self._telescopeModel.getParameterValue("camera_transmission")
 
         # Processing camera filter
-        # A special case is needed for recent ASTRI models because testeff does not
-        # support 2D camera filters
+        # A special case is testeff does not support 2D distributions
         cameraFilterFile = self._telescopeModel.getParameterValue("camera_filter")
-        if self._telescopeModel.isASTRI() and self._telescopeModel.isFile2D("camera_filter"):
-            self._logger.warning(
-                "Camera filter file is being replaced by transmission_astri_window_average.dat"
-                " because testeff does not support 2D camera filters."
+        if self._telescopeModel.isFile2D("camera_filter"):
+            cameraFilterFile = self._getOneDimDistribution(
+                "camera_filter", "camera_filter_incidence_angle"
             )
-            cameraFilterFile = "transmission_astri_window_average.dat"
 
         # Processing mirror reflectivity
-        # A special case is needed for recent ASTRI models because testeff does not
-        # support 2D mirror reflectivity
+        # A special case is testeff does not support 2D distributions
         mirrorReflectivity = self._telescopeModel.getParameterValue("mirror_reflectivity")
-        if self._telescopeModel.isASTRI() and self._telescopeModel.isFile2D("mirror_reflectivity"):
-            self._logger.warning(
-                "Mirror reflectivity (and secondary) file is being replaced by"
-                " ref_astri_2017-06_T0.dat because testeff does not support 2D files."
+        if mirrorClass == 2:
+            mirrorReflectivitySecondary = mirrorReflectivity
+        if self._telescopeModel.isFile2D("mirror_reflectivity"):
+            mirrorReflectivity = self._getOneDimDistribution(
+                "mirror_reflectivity", "primary_mirror_incidence_angle"
             )
-            mirrorReflectivity = "ref_astri_2017-06_T0.dat"
+            mirrorReflectivitySecondary = self._getOneDimDistribution(
+                "mirror_reflectivity", "secondary_mirror_incidence_angle"
+            )
 
         # cmd -> Command to be run at the shell
         cmd = str(self._simtelSourcePath.joinpath("sim_telarray/bin/testeff"))
@@ -247,6 +246,7 @@ class CameraEfficiency:
         cmd += f" -fref {mirrorReflectivity}"
         if mirrorClass == 2:
             cmd += " -m2"
+            cmd += f" -fref2 {mirrorReflectivitySecondary}"
         cmd += f" -teltrans {self._telescopeModel.getTelescopeTransmissionParameters()[0]}"
         cmd += f" -camtrans {cameraTransmission}"
         cmd += f" -fflt {cameraFilterFile}"
@@ -605,6 +605,47 @@ class CameraEfficiency:
         plt.gca().set_ylim(1e-3, ylim[1])
 
         return plt
+
+    def _getOneDimDistribution(self, twoDimParameter, weightingDistributionParameter):
+        """
+        Calculate an average one-dimensional curve for testeff from the two-dimensional curve.
+        The two-dimensional distribution is provided in twoDimParameter. The distribution
+        of weights to use for averaging the two-dimensional distribution is given in
+        weightingDistributionParameter.
+
+        Returns
+        -------
+        oneDimFile: Path
+            The file path and name with the new one-dimensional distribution
+        """
+        incidenceAngleDistributionFile = self._telescopeModel.getParameterValue(
+            weightingDistributionParameter
+        )
+        incidenceAngleDistribution = self._telescopeModel.readIncidenceAngleDistribution(
+            incidenceAngleDistributionFile
+        )
+        self._logger.warning(
+            f"The {' '.join(twoDimParameter.split('_'))} distribution "
+            "is a 2D one which testeff does not support. "
+            "Instead of using the 2D distribution, the two dimensional distribution "
+            "will be averaged, using the photon incidence angle distribution as weights. "
+            "The incidence angle distribution is taken "
+            f"from the file - {incidenceAngleDistributionFile})."
+        )
+        twoDimDistribution = self._telescopeModel.readTwoDimWavelengthAngle(
+            self._telescopeModel.getParameterValue(twoDimParameter)
+        )
+        distributionToExport = self._telescopeModel.calcAverageCurve(
+            twoDimDistribution, incidenceAngleDistribution
+        )
+        newFileName = (
+            f"weighted_average_1D_{self._telescopeModel.getParameterValue(twoDimParameter)}"
+        )
+        oneDimFile = self._telescopeModel.exportTableToModelDirectory(
+            newFileName, distributionToExport
+        )
+
+        return oneDimFile
 
 
 # END of CameraEfficiency

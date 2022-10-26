@@ -34,6 +34,15 @@ def db_cleanup(db, random_id):
     db.dbClient["sandbox"]["metadata_" + random_id].drop()
 
 
+@pytest.fixture()
+def db_cleanup_file_sandbox(db):
+    yield
+    # Cleanup
+    logger.info("Dropping the temporary files in the sandbox")
+    db.dbClient["sandbox"]["fs.chunks"].drop()
+    db.dbClient["sandbox"]["fs.files"].drop()
+
+
 def test_reading_db_lst(db):
 
     logger.info("----Testing reading LST-----")
@@ -316,34 +325,33 @@ def test_separating_get_and_write(db):
         assert io.getOutputFile(fileNow, dirType="model", test=True).exists()
 
 
-def test_insert_and_get_files_db(db):
+def test_insert_and_get_files_db(db, db_cleanup_file_sandbox):
 
-    logger.info("----Testing inserting files to the DB-----")
-
+    logger.info("----Testing inserting/downloading files to/from the DB-----")
     outputDir = io.getOutputDirectory(dirType="model", test=True)
     fileName = "test_file.dat"
     fileToInsert = outputDir / fileName
-
-    test_args = [fileToInsert, [fileToInsert]]
-    for input_file in test_args:
+    testInsertArgs = [fileToInsert, [fileToInsert]]
+    testExportArgs = [fileName, [fileName]]
+    for step in range(2):
         logger.info("Creating a temporary file in {}".format(outputDir))
         with open(fileToInsert, "w") as f:
             f.write("# This is a test file")
-        logger.info("Inserting a temporary file {} into {}".format(input_file, outputDir))
-        fileId = db.insertFileToDB(fileToInsert, "sandbox")
+        logger.info("Inserting a temporary file {} into {}".format(testInsertArgs[step], db))
+        fileIdList = db.insertFileToDB(testInsertArgs[step], "sandbox")
         logger.info("Removing the local temporary file")
         fileToInsert.unlink()
+        assert fileToInsert.exists() is False
         logger.info("Getting file from DB and checking consistency")
-        fileId2 = db.exportFileDB("sandbox", outputDir, fileName)
-        logger.info("fileId {}".format((fileId)))
-        logger.info("fileId {}".format((fileId2)))
-        assert fileId == fileId2
-        logger.info("Checking if the file was downloaded from DB")
-        assert io.getOutputFile(fileName, dirType="model", test=True).exists()
-
-    logger.info("Dropping the temporary files in the sandbox")
-    db.dbClient["sandbox"]["fs.chunks"].drop()
-    db.dbClient["sandbox"]["fs.files"].drop()
+        fileId2List = db.exportFileDB("sandbox", outputDir, testExportArgs[step])
+        for fileCounter in range(len(fileIdList)):
+            fileId = fileIdList[fileCounter]
+            fileId2 = fileId2List[fileCounter]
+            logger.info("fileId {}".format((fileId)))
+            logger.info("fileId2 {}".format((fileId2)))
+            assert fileId == fileId2
+            logger.info("Checking if the file was downloaded from DB")
+            assert fileToInsert.exists()
 
 
 def test_get_all_versions(db):
