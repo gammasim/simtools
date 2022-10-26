@@ -46,11 +46,9 @@ class DatabaseHandler:
     addNewParamete()
         Add a new parameter for a specific telescope.
     insertFileToDB()
-        Insert a file to the DB.
-    insertFilesToDB()
-        Insert a list of files to the DB.
+        Insert a file or a list of files to the DB.
     exportFileDB()
-        Get a file from the DB and write it to disk.
+        Get a file or a list of files from the DB and write it to disk.
     getAllVersions()
         Get all version entries in the DB of a telescope or site for a specific parameter.
     """
@@ -180,39 +178,37 @@ class DatabaseHandler:
                 onlyApplicable,
             )
 
-    def exportFileDB(self, dbName, dest, fileName):
+    def exportFileDB(self, db_name, dest, file_name):
         """
         Get a file from the DB and write it to disk.
 
         Parameters
         ----------
-        dbName: str
+        db_name: str
             Name of the DB to search in.
         dest: str or Path
             Location where to write the file to.
-        fileName: str
+        file_name: str
             Name of the file to get.
+        Returns
+        -------
+        GridOut
+            A file instance returned by GridFS find_one
         """
-
-        self._logger.debug(f"Getting {fileName} and writing it to {dest}")
-        file = self._getFileMongoDB(dbName, fileName)
-        self._writeFileFromMongoToDisk(dbName, dest, file)
-
-    def exportFilesDB(self, dbName, dest, fileNames):
-        """
-        Get a list of files from the DB and write it to disk.
-
-        Parameters
-        ----------
-        dbName: str
-            Name of the DB to search in.
-        dest: str or Path
-            Location where to write the file to.
-        fileNames: list
-            List with the file names to download.
-        """
-        for fileName in fileNames:
-            self.exportFileDB(dbName, dest, fileName)
+        if not isinstance(file_name, list):
+            filesToExport = [file_name]
+        else:
+            filesToExport = file_name
+        fileFromDB = []
+        for file_now in filesToExport:
+            self._logger.debug(f"Getting {file_name} and writing it to {dest}")
+            filePathInstance = self._getFileMongoDB(db_name, file_now)
+            fileFromDB.append(filePathInstance._id)
+            self._writeFileFromMongoToDisk(db_name, dest, filePathInstance)
+        if isinstance(fileFromDB, list) and len(fileFromDB) == 1:
+            return fileFromDB[0]
+        else:
+            return fileFromDB
 
     def exportModelFiles(self, parameters, dest):
         """
@@ -1284,15 +1280,15 @@ class DatabaseHandler:
         return tags["Tags"][version]["Value"]
 
     @staticmethod
-    def insertFileToDB(file, dbName=DB_CTA_SIMULATION_MODEL, **kwargs):
+    def insertFileToDB(file_name, db_name=DB_CTA_SIMULATION_MODEL, overwrite=True, **kwargs):
         """
         Insert a file to the DB.
 
         Parameters
         ----------
-        dbName: str
+        db_name: str
             the name of the DB
-        file: str or Path
+        file_name: str or Path
             The name of the file to insert (full path).
         **kwargs (optional): keyword arguments for file creation.
             The full list of arguments can be found in, \
@@ -1305,39 +1301,21 @@ class DatabaseHandler:
             If the file exists, returns the "_id" of that one, otherwise creates a new one.
         """
 
-        db = DatabaseHandler.dbClient[dbName]
+        db = DatabaseHandler.dbClient[db_name]
         fileSystem = gridfs.GridFS(db)
 
         if "content_type" not in kwargs:
             kwargs["content_type"] = "ascii/dat"
         if "filename" not in kwargs:
-            kwargs["filename"] = Path(file).name
+            kwargs["filename"] = Path(file_name).name
 
-        if fileSystem.exists({"filename": kwargs["filename"]}):
+        if fileSystem.exists({"filename": kwargs["filename"]}) and overwrite == False:
             return fileSystem.find_one({"filename": kwargs["filename"]})
 
-        with open(file, "rb") as dataFile:
+        with open(file_name, "rb") as dataFile:
             file_id = fileSystem.put(dataFile, **kwargs)
 
         return file_id
-
-    def insertFilesToDB(self, filesToAddToDB, dbName=DB_CTA_SIMULATION_MODEL):
-        """
-        Insert a list of files to the DB.
-
-        Parameters
-        ----------
-        dbName: str
-            the name of the DB
-        filesToAddToDB: list of strings or Paths
-            Each entry in the list is the name of the file to insert (full path).
-        """
-
-        for fileNow in filesToAddToDB:
-            kwargs = {"content_type": "ascii/dat", "filename": Path(fileNow).name}
-            self.insertFileToDB(fileNow, dbName, **kwargs)
-
-        return
 
     def getAllVersions(
         self,

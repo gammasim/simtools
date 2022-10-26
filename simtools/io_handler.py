@@ -6,7 +6,7 @@ from pathlib import Path
 
 import simtools.config as cfg
 
-__all__ = ["getOutputDirectory", "getOutputFile", "getInputDataFile", "deleteOutputFiles"]
+__all__ = ["getOutputDirectory", "getOutputFile", "getInputDataFile"]
 
 
 def getOutputDirectory(filesLocation=None, label=None, dirType=None, test=False):
@@ -96,37 +96,3 @@ def getInputDataFile(parentDir=None, fileName=None, test=False):
     else:
         filePrefix = Path(cfg.get("dataLocation")).joinpath(parentDir)
     return filePrefix.joinpath(fileName).absolute()
-
-
-def deleteOutputFile(fileName=None):
-    """
-    Delete the output file given by fileName
-
-    Parameters
-    ----------
-    fileName: str
-        Output file to be deleted, including its complete path.
-
-    Returns
-    -------
-    """
-    if fileName is not None:
-        file_to_rem = Path(fileName)
-        file_to_rem.unlink()
-
-
-def deleteOutputFiles(fileNames=None):
-    """
-    Delete the output files given by fileNames
-
-    Parameters
-    ----------
-    fileName: list of str
-        Output files to be deleted, including their complete path.
-
-    Returns
-    -------
-    """
-    if fileNames is not None:
-        for fileName in fileNames:
-            deleteOutputFile(fileName)
