@@ -325,7 +325,7 @@ def test_separating_get_and_write(db):
         assert io.getOutputFile(fileNow, dirType="model", test=True).exists()
 
 
-def test_insert_and_get_file_db(db, db_cleanup_file_sandbox):
+def test_insert_and_get_file_db(db, db_cleanup_file_sandbox, caplog):
 
     logger.info("----Testing inserting/downloading file to/from the DB-----")
     outputDir = io.getOutputDirectory(dirType="model", test=True)
@@ -336,6 +336,10 @@ def test_insert_and_get_file_db(db, db_cleanup_file_sandbox):
         f.write("# This is a test file")
     logger.info("Inserting a temporary file {} into {}".format(fileToInsert, db))
     fileId = db.insertFileToDB(fileToInsert, "sandbox")
+    logger.info("Testing inserting the same file again and getting a warning")
+    with caplog.at_level(logging.WARNING):
+        fileId = db.insertFileToDB(fileName, "sandbox")
+    assert "exists in the DB. Returning its ID" in caplog.text
     logger.info("Removing the local temporary file")
     fileToInsert.unlink()
     assert fileToInsert.exists() is False
@@ -346,6 +350,9 @@ def test_insert_and_get_file_db(db, db_cleanup_file_sandbox):
     assert fileId == fileId2
     logger.info("Checking if the file was downloaded from DB")
     assert fileToInsert.exists()
+    logger.info("Removing the local temporary file")
+    fileToInsert.unlink()
+    assert fileToInsert.exists() is False
 
 
 def test_get_all_versions(db):

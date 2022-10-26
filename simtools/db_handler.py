@@ -1304,8 +1304,7 @@ class DatabaseHandler:
 
         if fileSystem.exists({"filename": kwargs["filename"]}):
             self._logger.warning(
-                f"The file {kwargs['filename']} exists in the DB. \
-            Returning its ID"
+                f"The file {kwargs['filename']} exists in the DB. Returning its ID"
             )
             return fileSystem.find_one({"filename": kwargs["filename"]})._id
         with open(fileName, "rb") as dataFile:
