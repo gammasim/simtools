@@ -65,7 +65,6 @@ def main():
     config = configurator.Configurator(description=("Add a file or files to the DB."))
     group = config.parser.add_mutually_exclusive_group(required=True)
     group.add_argument(
-        "-f",
         "--fileName",
         help=(
             "The file name to upload. "
@@ -77,7 +76,6 @@ def main():
         nargs="+",
     )
     group.add_argument(
-        "-d",
         "--directory",
         help=(
             "A directory with files to upload to the DB. "

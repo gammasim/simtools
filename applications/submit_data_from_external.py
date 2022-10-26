@@ -58,14 +58,12 @@ def _parse(label, description):
     config = configurator.Configurator(label=label, description=description)
 
     config.parser.add_argument(
-        "-m",
         "--input_meta_file",
         help="Meta data file describing input data (yml)",
         type=str,
         required=True,
     )
     config.parser.add_argument(
-        "-d",
         "--input_data_file",
         help="Input data file (ecsv)",
         type=str,
