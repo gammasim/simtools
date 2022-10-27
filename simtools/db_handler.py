@@ -193,8 +193,8 @@ class DatabaseHandler:
 
         Returns
         -------
-        GridOut._id
-            :class:`~gridfs.grid_file.GridOut._id`
+        fileID: GridOut._id
+            the database ID the file was assigned when it was inserted to the DB.
 
         Raises
         ------
@@ -1299,10 +1299,9 @@ class DatabaseHandler:
 
         Returns
         -------
-        GridOut._id
-            :class:`~gridfs.grid_file.GridOut._id`
-            If the file exists, return its "_id", otherwise insert the file and return its newly \
-            created DB "_id".
+        fileID: GridOut._id
+            If the file exists, return its GridOut._id, otherwise insert the file and return its"
+            "newly created DB GridOut._id.
         """
 
         db = DatabaseHandler.dbClient[dbName]
