@@ -591,19 +591,23 @@ def findFile(name, loc):
 def change_dict_keys_case(_dict, _lower_case=True):
     """
     Change the keys of a dictionary to lower or upper case.
-    (crawls throught the dictionary and changes all keys)
+    Crawls throught the dictionary and changes all keys.
+    Takes into account also list of dictionaries, as e.g. found in the top level data model.
 
     """
     _return_dict = dict()
     for key in _dict.keys():
-        if isinstance(_dict[key], dict):
-            if _lower_case:
-                _return_dict[key.lower()] = change_dict_keys_case(_dict[key], _lower_case)
-            else:
-                _return_dict[key.upper()] = change_dict_keys_case(_dict[key], _lower_case)
+        if _lower_case:
+            _key_changed = key.lower()
         else:
-            if _lower_case:
-                _return_dict[key.lower()] = _dict[key]
-            else:
-                _return_dict[key.upper()] = _dict[key]
+            _key_changed = key.upper()
+        if isinstance(_dict[key], dict):
+            _return_dict[_key_changed] = change_dict_keys_case(_dict[key], _lower_case)
+        elif isinstance(_dict[key], list):
+            _tmp_list = []
+            for _list_entry in _dict[key]:
+                _tmp_list.append(change_dict_keys_case(_list_entry, _lower_case))
+            _return_dict[_key_changed] = _tmp_list
+        else:
+            _return_dict[_key_changed] = _dict[key]
     return _return_dict
