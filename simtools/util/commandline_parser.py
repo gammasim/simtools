@@ -148,6 +148,7 @@ class CommandLineParser(argparse.ArgumentParser):
             help="DB with user info (optional, default is 'admin')",
             type=str,
             required=False,
+            default="admin",
         )
 
     def initialize_job_submission_arguments(self):
