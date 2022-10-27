@@ -188,7 +188,7 @@ class DatabaseHandler:
             Name of the DB to search in.
         dest: str or Path
             Location where to write the file to.
-        file_name: str
+        fileName: str
             Name of the file to get.
 
         Returns

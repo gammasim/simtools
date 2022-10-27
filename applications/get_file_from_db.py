@@ -11,10 +11,10 @@
 
     Command line arguments
     ----------------------
-    file_name (str or list of str, required)
+    fileName (str or list of str, required)
         Name of the file to get including its full directory. A list of files is also allowed.
         i.e., python applications/get_file_from_db.py -f mirror_CTA-N-LST1_v2019-03-31.dat.
-    output_directory (str)
+    outputDirectory (str)
         Name of the local output directory where to save the files.
         Default it $CWD.
     verbosity (str, optional)
@@ -40,11 +40,13 @@ from simtools import db_handler
 
 def main():
 
-    db = db_handler.DatabaseHandler()
     parser = argparser.CommandLineParser(description=("Get a file or files from the DB."))
+    parser.initialize_default_arguments()
+
+    db = db_handler.DatabaseHandler()
     parser.add_argument(
         "-f",
-        "--file_name",
+        "--fileName",
         help=(
             "The file name to download. "
             "i.e., python applications/get_file_from_db.py -f mirror_CTA-S-LST_v2020-04-07.dat"
@@ -53,7 +55,7 @@ def main():
     )
     parser.add_argument(
         "-out",
-        "--out_dir",
+        "--outputDirectory",
         dest="output_directory",
         type=str,
         default=".",
@@ -62,7 +64,6 @@ def main():
         ),
     )
 
-    parser.initialize_default_arguments()
     args = parser.parse_args()
     cfg.setConfigFileName(args.configFile)
 
@@ -94,10 +95,12 @@ def main():
                 continue
 
         if fileId is None:
-            raise FileNotFoundError
+            raise FileNotFoundError(
+                "The file {} was not found in any of the available DBs."
+            ).format(args.file_name)
 
     else:
-        print("Aborted, directory{} does not exist".format(args.output_directory))
+        print("Aborted, directory {} does not exist".format(args.output_directory))
 
 
 if __name__ == "__main__":

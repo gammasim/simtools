@@ -64,6 +64,9 @@ def main():
     db = db_handler.DatabaseHandler()
 
     parser = argparser.CommandLineParser(description=("Add a file or files to the DB."))
+
+    parser.initialize_default_arguments()
+
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument(
         "-f",
@@ -105,7 +108,7 @@ def main():
             "the default is {0}".format(db.DB_TABULATED_DATA)
         ),
     )
-    parser.initialize_default_arguments()
+
     args = parser.parse_args()
     cfg.setConfigFileName(args.configFile)
 
