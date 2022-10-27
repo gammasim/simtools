@@ -26,10 +26,6 @@ CTASIMPIPE:
     FORMAT: ascii.ecsv
     DIRECTORY: null
 
-  INPUT:
-    METAFILE: null
-    DATAFILE: null
-
   CONFIGURATION:
     logLevel: 'INFO'
     test: false
