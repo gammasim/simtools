@@ -15,7 +15,7 @@ logger.setLevel(logging.DEBUG)
 
 
 # This module perform tests on the application by running them with a set
-# of arguments. Each applications to be tested correspond to an key in
+# of arguments. Each application to be tested corresponds to a key in
 # APP_LIST, that contains a list of list of arguments to be tested, so that
 # the same application can be tested with a number of different set of arguments.
 
@@ -189,6 +189,11 @@ APP_LIST = {
         ]
     ],
     # Database
+    "get_file_from_db::CTA-Simulation-Model": [["-f", "mirror_CTA-S-LST_v2020-04-07.dat"]],
+    "get_file_from_db::test-data": [["-f", "PSFcurve_data_v2.txt"]],
+    "get_file_from_db::CTA-Simulation-Model-Derived-Values": [
+        ["-f", "ray-tracing-North-LST-1-d10.0-za20.0_validate_optics.ecsv"]
+    ],
     "get_parameter": [
         ["-s", "North", "-t", "LST-1", "-p", "mirror_list", "--model_version", "prod5"]
     ],
