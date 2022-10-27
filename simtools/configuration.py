@@ -22,6 +22,8 @@ class Configurator:
     - environmental variables
     - configuration dict when calling the class
 
+    Configuration parameter names are converted allways to lower case.
+
     Methods
     -------
     initialize()
@@ -109,8 +111,11 @@ class Configurator:
         )
 
         self._fillFromCommandLine()
-        self._fillFromConfigFile(self.config["workflow_config_file"])
-        self._fillFromConfigFile(self.config["config_file"])
+        try:
+            self._fillFromConfigFile(self.config["workflow_config"])
+            self._fillFromConfigFile(self.config["config"])
+        except KeyError:
+            pass
         self._fillFromConfigDict(self.configClassInit)
         self._fillFromEnvironmentalVariables()
         self._initializeIOHandler()
@@ -135,18 +140,19 @@ class Configurator:
     def _fillFromConfigDict(self, _input_dict):
         """
         Fill configuration parameters from dictionary.
+        Enforce that configuration parameter names are of lower case.
 
         Parameters
         ----------
         _input_dict: dict
-           dictionary with configuration parameters
+            dictionary with configuration parameters.
 
         """
         _tmp_config = {}
         try:
             for key, value in _input_dict.items():
                 self._check_parameter_configuration_status(key, value)
-                _tmp_config[key] = value
+                _tmp_config[key.lower()] = value
         except AttributeError:
             pass
 
@@ -170,7 +176,6 @@ class Configurator:
 
 
         """
-
         # parameter not changed or None
         if self.parser.get_default(key) == self.config[key] or self.config[key] is None:
             return
@@ -187,7 +192,7 @@ class Configurator:
     def _fillFromConfigFile(self, config_file):
         """
         Read and fill configuration parameters from yaml file.
-        Take into account that this could be a CTASIMPIPE workflow configuration file
+        Take into account that this could be a CTASIMPIPE workflow configuration file.
         (CTASIMPIPE:CONFIGURATION is optional, therefore no error raised when this key
          is not found)
 
