@@ -8,7 +8,7 @@ import simtools.util.general as gen
 
 class SchemaValidator:
     """
-    Validate a dictionary against a reference schema
+    Validate a dictionary against a reference schema.
 
     Attributes
     ----------
@@ -40,10 +40,12 @@ class SchemaValidator:
 
         self._logger = logging.getLogger(__name__)
 
-        self._reference_schema = data_model.user_input_reference_schema()
+        self._reference_schema = gen.change_dict_keys_case(
+            data_model.user_input_reference_schema(), True
+        )
         self.data_dict = data_dict
 
-    def validate_and_transform(self, user_meta_file_name=None):
+    def validate_and_transform(self, user_meta_file_name=None, lower_case=False):
         """
         Schema validation and processing
 
@@ -53,19 +55,25 @@ class SchemaValidator:
             file name for file with user meta data to
             be validated (might also be given as
             dictionary during initialization of the class)
+        lower_case: bool
+            compare schema keys in lower case only (gammasim-tools convention).
 
         Returns
         -------
         dict
-            Complete set of metadata follwoing the CTA
-            top-level defintion
+            Complete set of metadata following the CTA top-level metadata defintion
 
         """
         if user_meta_file_name:
             self._logger.debug("Reading user meta data from {}".format(user_meta_file_name))
             self.data_dict = gen.collectDataFromYamlOrDict(user_meta_file_name, None)
 
-        self._validate_schema(self._reference_schema, self.data_dict)
+        if lower_case:
+            self._validate_schema(
+                self._reference_schema, gen.change_dict_keys_case(self.data_dict, True)
+            )
+        else:
+            self._validate_schema(self._reference_schema, self.data_dict)
 
         self._process_schema()
 
@@ -121,13 +129,13 @@ class SchemaValidator:
         Raises
         ------
         KeyError
-            if data_dict['PRODUCT']['DESCRIPTION'] is not available
+            if data_dict['product']['description'] is not available
 
         """
 
         try:
-            self.data_dict["PRODUCT"]["DESCRIPTION"] = self._remove_line_feed(
-                self.data_dict["PRODUCT"]["DESCRIPTION"]
+            self.data_dict["product"]["description"] = self._remove_line_feed(
+                self.data_dict["product"]["description"]
             )
         except KeyError:
             pass
@@ -242,7 +250,7 @@ class SchemaValidator:
         """
 
         for instrument in instrument_list:
-            self._validate_schema(self._reference_schema["INSTRUMENT"], instrument)
+            self._validate_schema(self._reference_schema["instrument"], instrument)
 
     @staticmethod
     def _field_is_optional(value):
