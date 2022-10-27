@@ -731,7 +731,7 @@ class DatabaseHandler:
         Returns
         -------
         GridOut
-            The database file returned by GridFS find_one
+            A file instance returned by GridFS find_one
 
         Raises
         ------
