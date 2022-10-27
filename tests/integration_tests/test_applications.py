@@ -40,11 +40,11 @@ APP_LIST = {
     ],
     "submit_data_from_external::submit": [
         [
-            "--workflow_config_file",
+            "--workflow_config",
             "tests/resources/set_MST_mirror_2f_measurements_from_external.config.yml",
-            "--input_meta_file",
+            "--input_meta",
             "TESTMODELDIR/MLTdata-preproduction.usermeta.yml",
-            "--input_data_file",
+            "--input_data",
             "TESTMODELDIR/MLTdata-preproduction.ecsv",
             " --test",
         ]
