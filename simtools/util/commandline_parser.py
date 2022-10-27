@@ -140,7 +140,15 @@ class CommandLineParser(argparse.ArgumentParser):
         _job_group.add_argument("--db_api_user", help="database user", type=str, required=False)
         _job_group.add_argument("--db_api_pw", help="database password", type=str, required=False)
         _job_group.add_argument("--db_api_port", help="database port", type=int, required=False)
-        _job_group.add_argument("--db_api_name", help="database name", type=str, required=False)
+        _job_group.add_argument(
+            "--db_server", help="database server address", type=str, required=False
+        )
+        _job_group.add_argument(
+            "--db_api_authentication_database",
+            help="DB with user info (optional, default is 'admin')",
+            type=str,
+            required=False,
+        )
 
     def initialize_job_submission_arguments(self):
         """
