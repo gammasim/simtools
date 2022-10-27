@@ -46,9 +46,7 @@ class DatabaseHandler:
     addNewParamete()
         Add a new parameter for a specific telescope.
     insertFileToDB()
-        Insert a file to the DB.
-    insertFilesToDB()
-        Insert a list of files to the DB.
+        Insert a file or a list of files to the DB.
     exportFileDB()
         Get a file from the DB and write it to disk.
     getAllVersions()
@@ -182,7 +180,7 @@ class DatabaseHandler:
 
     def exportFileDB(self, dbName, dest, fileName):
         """
-        Get a file from the DB and write it to disk.
+        Get file from the DB and write to disk.
 
         Parameters
         ----------
@@ -192,11 +190,22 @@ class DatabaseHandler:
             Location where to write the file to.
         fileName: str
             Name of the file to get.
+
+        Returns
+        -------
+        fileID: GridOut._id
+            the database ID the file was assigned when it was inserted to the DB.
+
+        Raises
+        ------
+        FileNotFoundError
+            If the desired file is not found.
         """
 
-        self._logger.debug(f"Getting {fileName} and writing it to {dest}")
-        file = self._getFileMongoDB(dbName, fileName)
-        self._writeFileFromMongoToDisk(dbName, dest, file)
+        self._logger.debug(f"Getting {fileName} from {dbName} and writing it to {dest}")
+        filePathInstance = self._getFileMongoDB(dbName, fileName)
+        self._writeFileFromMongoToDisk(dbName, dest, filePathInstance)
+        return filePathInstance._id
 
     def exportModelFiles(self, parameters, dest):
         """
@@ -723,6 +732,11 @@ class DatabaseHandler:
         -------
         GridOut
             A file instance returned by GridFS find_one
+
+        Raises
+        ------
+        FileNotFoundError
+            If the desired file is not found.
         """
 
         db = DatabaseHandler.dbClient[dbName]
@@ -978,7 +992,8 @@ class DatabaseHandler:
         queryUpdate = {"$set": {"Value": newValue, "File": file}}
 
         collection.update_one(query, queryUpdate)
-        self.insertFilesToDB(filesToAddToDB, dbName)
+        for fileNow in filesToAddToDB:
+            self.insertFileToDB(fileNow, dbName)
 
         return
 
@@ -1147,7 +1162,7 @@ class DatabaseHandler:
         collection.insert_one(parEntry)
         if len(filesToAddToDB) > 0:
             self._logger.info("Will also add the file {} to the DB".format(filePath))
-            self.insertFilesToDB(filesToAddToDB, dbName)
+            self.insertFileToDB(filesToAddToDB, dbName)
 
         return
 
@@ -1267,16 +1282,16 @@ class DatabaseHandler:
 
         return tags["Tags"][version]["Value"]
 
-    def insertFileToDB(self, file, dbName=DB_CTA_SIMULATION_MODEL, **kwargs):
+    def insertFileToDB(self, fileName, dbName=DB_CTA_SIMULATION_MODEL, **kwargs):
         """
         Insert a file to the DB.
 
         Parameters
         ----------
+        fileName: str or Path
+            The name of the file to insert (full path).
         dbName: str
             the name of the DB
-        file: str or Path
-            The name of the file to insert (full path).
         **kwargs (optional): keyword arguments for file creation.
             The full list of arguments can be found in, \
             https://docs.mongodb.com/manual/core/gridfs/#the-files-collection
@@ -1284,8 +1299,9 @@ class DatabaseHandler:
 
         Returns
         -------
-        file_id: gridfs "_id"
-            If the file exists, returns the "_id" of that one, otherwise creates a new one.
+        fileID: GridOut._id
+            If the file exists, return its GridOut._id, otherwise insert the file and return its"
+            "newly created DB GridOut._id.
         """
 
         db = DatabaseHandler.dbClient[dbName]
@@ -1293,37 +1309,17 @@ class DatabaseHandler:
 
         if "content_type" not in kwargs:
             kwargs["content_type"] = "ascii/dat"
+
         if "filename" not in kwargs:
-            kwargs["filename"] = Path(file).name
+            kwargs["filename"] = Path(fileName).name
 
         if fileSystem.exists({"filename": kwargs["filename"]}):
             self._logger.warning(
                 f"The file {kwargs['filename']} exists in the DB. Returning its ID"
             )
             return fileSystem.find_one({"filename": kwargs["filename"]})._id
-
-        with open(file, "rb") as dataFile:
-            file_id = fileSystem.put(dataFile, **kwargs)
-
-        return file_id
-
-    def insertFilesToDB(self, filesToAddToDB, dbName=DB_CTA_SIMULATION_MODEL):
-        """
-        Insert a list of files to the DB.
-
-        Parameters
-        ----------
-        dbName: str
-            the name of the DB
-        filesToAddToDB: list of strings or Paths
-            Each entry in the list is the name of the file to insert (full path).
-        """
-
-        for fileNow in filesToAddToDB:
-            kwargs = {"content_type": "ascii/dat", "filename": Path(fileNow).name}
-            self.insertFileToDB(fileNow, dbName, **kwargs)
-
-        return
+        with open(fileName, "rb") as dataFile:
+            return fileSystem.put(dataFile, **kwargs)
 
     def getAllVersions(
         self,
