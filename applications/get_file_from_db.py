@@ -41,9 +41,7 @@ from simtools import db_handler
 def main():
 
     parser = argparser.CommandLineParser(description=("Get a file or files from the DB."))
-    parser.initialize_default_arguments()
 
-    db = db_handler.DatabaseHandler()
     parser.add_argument(
         "-f",
         "--fileName",
@@ -56,7 +54,7 @@ def main():
     parser.add_argument(
         "-out",
         "--outputDirectory",
-        dest="output_directory",
+        dest="outputDirectory",
         type=str,
         default=".",
         help=(
@@ -64,12 +62,14 @@ def main():
         ),
     )
 
+    parser.initialize_default_arguments()
     args = parser.parse_args()
     cfg.setConfigFileName(args.configFile)
 
     logger = logging.getLogger()
     logger.setLevel(gen.getLogLevelFromUser(args.logLevel))
 
+    db = db_handler.DatabaseHandler()
     availableDbs = [
         db.DB_TABULATED_DATA,
         db.DB_CTA_SIMULATION_MODEL,
@@ -79,15 +79,15 @@ def main():
         "sandbox",
         "test-data",
     ]
-    outputPath = Path(args.output_directory)
+    outputPath = Path(args.outputDirectory)
     fileId = None
     if outputPath.exists():
         for dbName in availableDbs:
             try:
-                fileId = db.exportFileDB(dbName, args.output_directory, args.file_name)
+                fileId = db.exportFileDB(dbName, args.outputDirectory, args.fileName)
                 print(
                     "Got file {} from DB {} and saved into {}".format(
-                        args.file_name, dbName, args.output_directory
+                        args.fileName, dbName, args.outputDirectory
                     )
                 )
                 break
@@ -97,10 +97,10 @@ def main():
         if fileId is None:
             raise FileNotFoundError(
                 "The file {} was not found in any of the available DBs."
-            ).format(args.file_name)
+            ).format(args.fileName)
 
     else:
-        print("Aborted, directory {} does not exist".format(args.output_directory))
+        print("Aborted, directory {} does not exist".format(args.outputDirectory))
 
 
 if __name__ == "__main__":
