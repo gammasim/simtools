@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 import logging
+from copy import copy
 from pathlib import Path
 
 import astropy.units as u
@@ -133,3 +134,26 @@ def test_program_is_executable():
     # (assume 'ls' exist on any system the test is running)
     assert gen.program_is_executable("ls") is not None
     assert gen.program_is_executable("this_program_probably_does_not_exist") is None
+
+
+def test_change_dict_keys_case():
+
+    _upper_dict = {
+        "REFERENCE": {"VERSION": "0.1.0"},
+        "ACTIVITY": {"NAME": "submit", "ID": "84890304", "DESCRIPTION": "Set data"},
+    }
+    _lower_dict = {
+        "reference": {"version": "0.1.0"},
+        "activity": {"name": "submit", "id": "84890304", "description": "Set data"},
+    }
+    _no_change_dict_upper = gen.change_dict_keys_case(copy(_upper_dict), False)
+    assert _no_change_dict_upper == _upper_dict
+
+    _no_change_dict_lower = gen.change_dict_keys_case(copy(_upper_dict), True)
+    assert _no_change_dict_lower == _lower_dict
+
+    _changed_to_lower = gen.change_dict_keys_case(copy(_upper_dict), True)
+    assert _changed_to_lower == _lower_dict
+
+    _changed_to_upper = gen.change_dict_keys_case(copy(_lower_dict), False)
+    assert _changed_to_upper == _upper_dict
