@@ -152,5 +152,6 @@ def test_getDBParameters(configurator, args_dict):
     args_dict["db_api_pw"] = "12345"
     args_dict["db_api_port"] = 42
     args_dict["db_server"] = "abc@def.de"
+    args_dict["db_api_authentication_database"] = "admin"
 
     assert configurator.config == args_dict
