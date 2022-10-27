@@ -329,9 +329,9 @@ def test_export_file_db(db, db_cleanup_file_sandbox, caplog):
     logger.info("----Testing exporting files from the DB-----")
     outputDir = io.getOutputDirectory(dirType="model", test=True)
     fileName = "mirror_CTA-S-LST_v2020-04-07.dat"
-    fileToInsert = outputDir / fileName
+    fileToExport = outputDir / fileName
     db.exportFileDB(db.DB_CTA_SIMULATION_MODEL, outputDir, fileName)
-    assert fileToInsert.exists()
+    assert fileToExport.exists()
 
 
 def test_insert_files_db(db, db_cleanup_file_sandbox, caplog):

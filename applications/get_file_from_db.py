@@ -46,19 +46,19 @@ def main():
         "-f",
         "--file_name",
         help=(
-            "The file name(s) to download. "
-            "i.e., python applications/get_file_from_db.py -f file_1.dat"
+            "The file name to download. "
+            "i.e., python applications/get_file_from_db.py -f mirror_CTA-S-LST_v2020-04-07.dat"
         ),
         type=str,
-        nargs="+",
     )
     parser.add_argument(
         "-out",
+        "--out_dir",
         dest="output_directory",
         type=str,
         default=".",
         help=(
-            "The local output directory DB to save the files from the DB. " "The default is the CWD"
+            "The local output directory DB to save the files from the DB. The default is the CWD"
         ),
     )
 
@@ -69,25 +69,33 @@ def main():
     logger = logging.getLogger()
     logger.setLevel(gen.getLogLevelFromUser(args.logLevel))
 
-    available_dbs = [
+    availableDbs = [
         db.DB_TABULATED_DATA,
-        db.DB_DERIVED_VALUES,
+        db.DB_CTA_SIMULATION_MODEL,
+        db.DB_CTA_SIMULATION_MODEL_DESCRIPTIONS,
         db.DB_REFERENCE_DATA,
+        db.DB_DERIVED_VALUES,
         "sandbox",
         "test-data",
     ]
-    output_path = Path(args.output_directory)
-    if output_path.exists():
-        for db_name in available_dbs:
+    outputPath = Path(args.output_directory)
+    fileId = None
+    if outputPath.exists():
+        for dbName in availableDbs:
             try:
-                db.exportFileDB(db_name, args.output_directory, args.file_name)
+                fileId = db.exportFileDB(dbName, args.output_directory, args.file_name)
+                print(
+                    "Got file {} from DB {} and saved into {}".format(
+                        args.file_name, dbName, args.output_directory
+                    )
+                )
+                break
             except FileNotFoundError:
                 continue
-            print(
-                "Getting file{} from DB{} and saving into {}".format(
-                    args.file_name, db_name, args.output_directory
-                )
-            )
+
+        if fileId is None:
+            raise FileNotFoundError
+
     else:
         print("Aborted, directory{} does not exist".format(args.output_directory))
 
