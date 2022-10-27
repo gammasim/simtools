@@ -69,12 +69,9 @@ class SchemaValidator:
             self.data_dict = gen.collectDataFromYamlOrDict(user_meta_file_name, None)
 
         if lower_case:
-            self._validate_schema(
-                self._reference_schema, gen.change_dict_keys_case(self.data_dict, True)
-            )
-        else:
-            self._validate_schema(self._reference_schema, self.data_dict)
+            self.data_dict = gen.change_dict_keys_case(self.data_dict, True)
 
+        self._validate_schema(self._reference_schema, self.data_dict)
         self._process_schema()
 
         return self.data_dict
@@ -111,7 +108,7 @@ class SchemaValidator:
                     raise ValueError(msg)
 
             if isinstance(value, dict):
-                if "type" in value:
+                if "type" in value and isinstance(value["type"], str):
                     try:
                         self._validate_data_type(value, key, _this_data)
                     except UnboundLocalError:
@@ -167,13 +164,10 @@ class SchemaValidator:
 
         if schema["type"] == "datetime":
             self._validate_datetime(data_field, self._field_is_optional(schema))
-
         elif schema["type"] == "email":
             self._validate_email(data_field, key)
-
         elif schema["type"] == "instrumentlist":
             self._validate_instrument_list(data_field)
-
         elif type(data_field).__name__ != schema["type"]:
             try:
                 if isinstance(data_field, (int, str)):
