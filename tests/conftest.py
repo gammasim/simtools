@@ -57,7 +57,7 @@ def mock_settings_env_vars(tmp_test_directory):
             "DB_API_USER": "db_user",
             "DB_API_PW": "12345",
             "DB_API_PORT": "42",
-            "DB_API_NAME": "abc@def.de",
+            "DB_SERVER": "abc@def.de",
         },
         clear=True,
     ):
@@ -131,7 +131,7 @@ def db_config():
 
     """
     mongoDBConfig = {}
-    _db_para = ("db_api_user", "db_api_pw", "db_api_port", "db_api_name")
+    _db_para = ("db_api_user", "db_api_pw", "db_api_port", "db_server")
     for _para in _db_para:
         mongoDBConfig[_para] = os.environ.get(_para.upper())
     if mongoDBConfig["db_api_port"] is not None:
