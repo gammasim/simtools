@@ -731,7 +731,7 @@ class DatabaseHandler:
         Returns
         -------
         GridOut
-            :class:`~gridfs.grid_file.GridOut`
+            The database file returned by GridFS find_one
 
         Raises
         ------
