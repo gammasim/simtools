@@ -192,11 +192,7 @@ APP_LIST = {
     "get_file_from_db": [
         ["--file_name", "mirror_CTA-S-LST_v2020-04-07.dat"],
         ["--file_name", "PSFcurve_data_v2.txt"],
-        [
-            "--file_name",
-            "ray-tracing-North-LST-1-d10.0-za20.0_validate_optics\
-                         .ecsv",
-        ],
+        ["--file_name", "ray-tracing-North-LST-1-d10.0-za20.0_validate_optics.ecsv"],
     ],
     "get_parameter": [
         ["-s", "North", "-t", "LST-1", "-p", "mirror_list", "--model_version", "prod5"]

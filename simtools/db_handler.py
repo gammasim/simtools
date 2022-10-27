@@ -48,7 +48,7 @@ class DatabaseHandler:
     insertFileToDB()
         Insert a file or a list of files to the DB.
     exportFileDB()
-        Get a file or a list of files from the DB and write it to disk.
+        Get a file from the DB and write it to disk.
     getAllVersions()
         Get all version entries in the DB of a telescope or site for a specific parameter.
     """
@@ -190,13 +190,19 @@ class DatabaseHandler:
             Location where to write the file to.
         file_name: str
             Name of the file to get.
+
         Returns
         -------
-        GridOut
-            :class:`~gridfs.grid_file.GridOut` or ``None`` if file not found
+        GridOut._id
+            :class:`~gridfs.grid_file.GridOut._id`
+
+        Raises
+        ------
+        FileNotFoundError
+            If the desired file is not found.
         """
 
-        self._logger.debug(f"Getting {fileName} and writing it to {dest}")
+        self._logger.debug(f"Getting {fileName} from {dbName} and writing it to {dest}")
         filePathInstance = self._getFileMongoDB(dbName, fileName)
         self._writeFileFromMongoToDisk(dbName, dest, filePathInstance)
         return filePathInstance._id
@@ -725,7 +731,12 @@ class DatabaseHandler:
         Returns
         -------
         GridOut
-            A file instance returned by GridFS find_one
+            :class:`~gridfs.grid_file.GridOut`
+
+        Raises
+        ------
+        FileNotFoundError
+            If the desired file is not found.
         """
 
         db = DatabaseHandler.dbClient[dbName]
@@ -1273,7 +1284,7 @@ class DatabaseHandler:
 
     def insertFileToDB(self, fileName, dbName=DB_CTA_SIMULATION_MODEL, **kwargs):
         """
-        Insert file to the DB.
+        Insert a file to the DB.
 
         Parameters
         ----------
@@ -1285,12 +1296,13 @@ class DatabaseHandler:
             The full list of arguments can be found in, \
             https://docs.mongodb.com/manual/core/gridfs/#the-files-collection
             mostly these are unnecessary though.
-            kwargs can be used only in case of passing a single file to the function.
 
         Returns
         -------
-        file_id: gridfs "_id"
-            If the file exist, returns its "_id", otherwise creates the file and returns its id.
+        GridOut._id
+            :class:`~gridfs.grid_file.GridOut._id`
+            If the file exists, return its "_id", otherwise insert the file and return its newly \
+            created DB "_id".
         """
 
         db = DatabaseHandler.dbClient[dbName]
