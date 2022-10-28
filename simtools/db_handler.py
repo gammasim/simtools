@@ -1239,9 +1239,9 @@ class DatabaseHandler:
         self._logger.info("Will add the following entry to DB:\n{}".format(dbEntry))
 
         collection.insert_one(dbEntry)
-        if len(filesToAddToDB) > 0:
-            self._logger.info("Will also add the file {} to the DB".format(filePath))
-            self.insertFilesToDB(filesToAddToDB, dbName)
+        for fileToInsertNow in filesToAddToDB:
+            self._logger.info("Will also add the file {} to the DB".format(fileToInsertNow))
+            self.insertFileToDB(fileToInsertNow, dbName)
 
         return
 
