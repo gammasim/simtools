@@ -36,9 +36,9 @@ def test_fillFromConfigDict(configurator, args_dict):
     assert args_dict == configurator.config
 
     _tmp_config = copy(dict(args_dict))
-    _tmp_config["config_file"] = "my_file"
+    _tmp_config["config"] = "my_file"
     _tmp_config["test"] = True
-    configurator._fillFromConfigDict({"config_file": "my_file", "test": True})
+    configurator._fillFromConfigDict({"config": "my_file", "test": True})
 
     assert _tmp_config == configurator.config
 
@@ -71,8 +71,8 @@ def test_fillFromConfigFile(configurator, args_dict, tmp_test_directory):
     with open(_config_file, "w") as output:
         yaml.safe_dump(_tmp_dict, output, sort_keys=False)
 
-    configurator.config["config_file"] = str(_config_file)
-    _tmp_config["config_file"] = str(_config_file)
+    configurator.config["config"] = str(_config_file)
+    _tmp_config["config"] = str(_config_file)
     configurator.config["output_path"] = None
     configurator._fillFromConfigFile(_config_file)
     for key, value in _tmp_dict.items():
@@ -96,8 +96,8 @@ def test_fillFromWorkflowConfigFile(configurator, args_dict, tmp_test_directory)
     _workflow_file = tmp_test_directory / "configuration-test.yml"
     with open(_workflow_file, "w") as output:
         yaml.safe_dump(_tmp_dict_workflow, output, sort_keys=False)
-    configurator.config["config_file"] = str(_workflow_file)
-    _tmp_config["config_file"] = str(_workflow_file)
+    configurator.config["config"] = str(_workflow_file)
+    _tmp_config["config"] = str(_workflow_file)
     configurator.config["output_path"] = None
     configurator._fillFromConfigFile(_workflow_file)
     for key, value in _tmp_dict.items():
@@ -120,14 +120,14 @@ def test_check_parameter_configuration_status(configurator, args_dict, tmp_test_
     assert args_dict == configurator.config
 
     # None value
-    configurator._check_parameter_configuration_status("config_file", None)
+    configurator._check_parameter_configuration_status("config", None)
     assert args_dict == configurator.config
 
     # parameter changed; should raise Exception
-    configurator.config["config_file"] = "non_default_config_file"
+    configurator.config["config"] = "non_default_config_file"
 
     with pytest.raises(InvalidConfigurationParameter):
-        configurator._check_parameter_configuration_status("config_file", "abc")
+        configurator._check_parameter_configuration_status("config", "abc")
 
 
 def test_arglistFromConfig():
