@@ -64,18 +64,19 @@ class DatabaseHandler:
 
     dbClient = None
 
-    def __init__(self):
+    def __init__(self, connect=True):
         """
         Initialize the DatabaseHandler class.
         """
         self._logger = logging.getLogger(__name__)
         self._logger.debug("Initialize DatabaseHandler")
 
-        if cfg.get("useMongoDB"):
-            if DatabaseHandler.dbClient is None:
-                with Lock():
-                    self.dbDetails = self._readDetailsMongoDB()
-                    DatabaseHandler.dbClient = self._openMongoDB()
+        if connect:
+            if cfg.get("useMongoDB"):
+                if DatabaseHandler.dbClient is None:
+                    with Lock():
+                        self.dbDetails = self._readDetailsMongoDB()
+                        DatabaseHandler.dbClient = self._openMongoDB()
 
     # END of _init_
 

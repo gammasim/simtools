@@ -1,19 +1,11 @@
 #!/usr/bin/python3
 
 import astropy.units as u
-import pytest
 
 import simtools.config as cfg
 import simtools.io_handler as io
-from simtools import db_handler
 from simtools.model.telescope_model import TelescopeModel
 from simtools.ray_tracing import RayTracing
-
-
-@pytest.fixture
-def db(set_db):
-    db = db_handler.DatabaseHandler()
-    return db
 
 
 def test_config_data_from_dict(set_db):
