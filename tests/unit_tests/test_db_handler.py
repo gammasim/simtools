@@ -319,6 +319,15 @@ def test_separating_get_and_write(db, io_handler):
         assert io_handler.getOutputFile(fileNow, dirType="model", test=True).exists()
 
 
+def test_export_file_db(db, io_handler, db_cleanup_file_sandbox, caplog):
+    logger.info("----Testing exporting files from the DB-----")
+    outputDir = io_handler.getOutputDirectory(dirType="model", test=True)
+    fileName = "mirror_CTA-S-LST_v2020-04-07.dat"
+    fileToExport = outputDir / fileName
+    db.exportFileDB(db.DB_CTA_SIMULATION_MODEL, outputDir, fileName)
+    assert fileToExport.exists()
+
+
 def test_insert_files_db(db, io_handler, db_cleanup_file_sandbox, caplog):
 
     logger.info("----Testing inserting files to the DB-----")
@@ -331,14 +340,13 @@ def test_insert_files_db(db, io_handler, db_cleanup_file_sandbox, caplog):
     with open(fileName, "w") as f:
         f.write("# This is a test file")
 
-    file_id = db.insertFileToDB(fileName, "sandbox")
-    assert file_id == db._getFileMongoDB("sandbox", "test_file.dat")._id
-
-    # Now test inserting the same file again, this time expect a warning
+    fileId = db.insertFileToDB(fileName, "sandbox")
+    assert fileId == db._getFileMongoDB("sandbox", "test_file.dat")._id
+    logger.info("Now test inserting the same file again, this time expect a warning")
     with caplog.at_level(logging.WARNING):
-        file_id = db.insertFileToDB(fileName, "sandbox")
+        fileId = db.insertFileToDB(fileName, "sandbox")
     assert "exists in the DB. Returning its ID" in caplog.text
-    assert file_id == db._getFileMongoDB("sandbox", "test_file.dat")._id
+    assert fileId == db._getFileMongoDB("sandbox", "test_file.dat")._id
 
 
 def test_get_all_versions(db):
