@@ -6,6 +6,7 @@ import pytest
 import yaml
 
 import simtools.config as cfg
+from simtools import db_handler
 from simtools.model.telescope_model import TelescopeModel
 
 logger = logging.getLogger()
@@ -195,3 +196,18 @@ def telescope_model_sst(set_db):
         label="test-telescope-model-sst",
     )
     return telescopeModelSST
+
+
+@pytest.fixture
+def db(set_db):
+    db = db_handler.DatabaseHandler()
+    return db
+
+
+@pytest.fixture()
+def db_cleanup_file_sandbox(db):
+    yield
+    # Cleanup
+    logger.info("Dropping the temporary files in the sandbox")
+    db.dbClient["sandbox"]["fs.chunks"].drop()
+    db.dbClient["sandbox"]["fs.files"].drop()

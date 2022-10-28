@@ -8,7 +8,6 @@ import pytest
 
 import simtools.config as cfg
 import simtools.io_handler as io
-from simtools import db_handler
 from simtools.layout.layout_array import LayoutArray
 
 logger = logging.getLogger()
@@ -34,12 +33,6 @@ def corsikaTelescopeDataDict():
         "corsika_sphere_center": {"LST": 16 * u.m, "MST": 9 * u.m, "SST": 3.25 * u.m},
         "corsika_obs_level": 2158 * u.m,
     }
-
-
-@pytest.fixture
-def db(set_db):
-    db = db_handler.DatabaseHandler()
-    return db
 
 
 @pytest.fixture
