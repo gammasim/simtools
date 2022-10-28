@@ -8,7 +8,6 @@ from astropy import units as u
 
 import simtools.config as cfg
 import simtools.io_handler as io
-from simtools import db_handler
 from simtools.corsika.corsika_config import (
     CorsikaConfig,
     InvalidCorsikaInput,
@@ -17,12 +16,6 @@ from simtools.corsika.corsika_config import (
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
-
-
-@pytest.fixture
-def db(set_db):
-    db = db_handler.DatabaseHandler()
-    return db
 
 
 @pytest.fixture

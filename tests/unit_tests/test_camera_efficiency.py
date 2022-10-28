@@ -8,17 +8,10 @@ from astropy.table import Table
 
 import simtools.config as cfg
 import simtools.io_handler as io
-from simtools import db_handler
 from simtools.camera_efficiency import CameraEfficiency
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
-
-
-@pytest.fixture
-def db(set_db):
-    db = db_handler.DatabaseHandler()
-    return db
 
 
 @pytest.fixture
