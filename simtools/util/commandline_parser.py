@@ -125,7 +125,6 @@ class CommandLineParser(argparse.ArgumentParser):
             required=False,
         )
         _job_group.add_argument(
-            "-v",
             "--log_level",
             action="store",
             default="info",
@@ -133,7 +132,7 @@ class CommandLineParser(argparse.ArgumentParser):
             required=False,
         )
         _job_group.add_argument(
-            "-V", "--version", action="version", version=f"%(prog)s {simtools.version.__version__}"
+            "--version", action="version", version=f"%(prog)s {simtools.version.__version__}"
         )
 
     def initialize_db_config_arguments(self):
