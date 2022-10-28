@@ -9,13 +9,12 @@ import simtools.util.general as gen
 class SchemaValidator:
     """
     Validate a dictionary against a reference schema.
+    Used e.g., to validate metadata provided through user input.
 
     Attributes
     ----------
-    schema_file: str
-        file nome for user input schema
     data_dict: dict
-        User-provided metadata dict to be validated against
+        Metadata dict to be validated against
         reference schema
 
     Methods
@@ -27,27 +26,25 @@ class SchemaValidator:
 
     def __init__(self, data_dict=None):
         """
-        Initalize validation class and read required
-        reference schema
+        Initalize validation class and load reference schema.
 
         Parameters
         ----------
         data_dict: dict
-            User-provided metadata dict to be validated against
-            reference schema
+            Metadata dict to be validated against reference schema
 
         """
 
         self._logger = logging.getLogger(__name__)
 
         self._reference_schema = gen.change_dict_keys_case(
-            data_model.user_input_reference_schema(), True
+            data_model.user_input_reference_schema(), lower_case=True
         )
         self.data_dict = data_dict
 
     def validate_and_transform(self, user_meta_file_name=None, lower_case=False):
         """
-        Schema validation and processing
+        Schema validation and processing.
 
         Parameters
         ----------
@@ -65,7 +62,7 @@ class SchemaValidator:
 
         """
         if user_meta_file_name:
-            self._logger.debug("Reading user meta data from {}".format(user_meta_file_name))
+            self._logger.debug("Reading meta data from {}".format(user_meta_file_name))
             self.data_dict = gen.collectDataFromYamlOrDict(user_meta_file_name, None)
 
         if lower_case:
@@ -78,7 +75,7 @@ class SchemaValidator:
 
     def _validate_schema(self, ref_schema, data_dict):
         """
-        Validate schema for data types and required fields
+        Validate schema for data types and required fields.
 
         Parameters
         ----------
@@ -103,11 +100,11 @@ class SchemaValidator:
                 if self._field_is_optional(value):
                     self._logger.debug(f"Optional field {key}")
                     continue
-                else:
-                    msg = f"Missing required field {key}"
-                    raise ValueError(msg)
+                msg = f"Missing required field {key}"
+                raise ValueError(msg)
 
             if isinstance(value, dict):
+                # 'type' is used for data types (str) and for telescope types (dict)
                 if "type" in value and isinstance(value["type"], str):
                     try:
                         self._validate_data_type(value, key, _this_data)
@@ -247,14 +244,14 @@ class SchemaValidator:
             self._validate_schema(self._reference_schema["instrument"], instrument)
 
     @staticmethod
-    def _field_is_optional(value):
+    def _field_is_optional(field_dict):
         """
         Check if data field is labeled as not required in
         the reference metadata schema
 
         Parameters
         ----------
-        value: dict
+        field_dict: dict
             required field from reference metadata schema
 
         Returns
@@ -270,12 +267,11 @@ class SchemaValidator:
 
         """
         try:
-            if value["required"]:
+            if field_dict["required"]:
                 return False
-            else:
-                return True
         except KeyError:
             return False
+        return True
 
     @staticmethod
     def _remove_line_feed(string):
