@@ -7,7 +7,6 @@ import pytest
 
 import simtools.config as cfg
 import simtools.io_handler as io
-from simtools import db_handler
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
@@ -19,12 +18,6 @@ def random_id():
     return random_id
 
 
-@pytest.fixture
-def db(set_db):
-    db = db_handler.DatabaseHandler()
-    return db
-
-
 @pytest.fixture()
 def db_cleanup(db, random_id):
     yield
@@ -32,15 +25,6 @@ def db_cleanup(db, random_id):
     logger.info(f"dropping the telescopes_{random_id} and metadata_{random_id} collections")
     db.dbClient["sandbox"]["telescopes_" + random_id].drop()
     db.dbClient["sandbox"]["metadata_" + random_id].drop()
-
-
-@pytest.fixture()
-def db_cleanup_file_sandbox(db):
-    yield
-    # Cleanup
-    logger.info("Dropping the temporary files in the sandbox")
-    db.dbClient["sandbox"]["fs.chunks"].drop()
-    db.dbClient["sandbox"]["fs.files"].drop()
 
 
 def test_reading_db_lst(db):
@@ -325,7 +309,7 @@ def test_separating_get_and_write(db):
         assert io.getOutputFile(fileNow, dirType="model", test=True).exists()
 
 
-def test_export_file_db(db, db_cleanup_file_sandbox, caplog):
+def test_export_file_db(db):
     logger.info("----Testing exporting files from the DB-----")
     outputDir = io.getOutputDirectory(dirType="model", test=True)
     fileName = "mirror_CTA-S-LST_v2020-04-07.dat"
