@@ -23,11 +23,11 @@ CTASIMPIPE:
     DESCRIPTION: "Set data columns for MST mirror 2f measurements"
 
   PRODUCT:
+    DESCRIPTION: "SimPipe workflow configuration"
     FORMAT: ascii.ecsv
-    DIRECTORY: null
 
   CONFIGURATION:
-    logLevel: 'INFO'
+    log_level: 'INFO'
     test: false
 
   DATA_COLUMNS:
