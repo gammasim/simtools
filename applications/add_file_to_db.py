@@ -54,9 +54,11 @@ def _userConfirm():
 
     answer = ""
     while answer not in ["y", "n"]:
-        answer = input("Is this OK? [y/n]").lower()
-
-    return answer == "y"
+        try:
+            answer = input("Is this OK? [y/n]").lower()
+            return answer == "y"
+        except EOFError:
+            return False
 
 
 def main():
@@ -92,6 +94,7 @@ def main():
     )
     parser.add_argument(
         "-db",
+        "--dbToInsertTo",
         dest="dbToInsertTo",
         type=str,
         default=db.DB_TABULATED_DATA,
