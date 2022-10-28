@@ -3,6 +3,7 @@
 
 import logging
 import os
+from io import StringIO
 
 import pytest
 
@@ -197,6 +198,7 @@ APP_LIST = {
     "get_parameter": [
         ["-s", "North", "-t", "LST-1", "-p", "mirror_list", "--model_version", "prod5"]
     ],
+    "add_file_to_db": [["-f", "TESTMODELDIR/MLTdata-preproduction.usermeta.yml", "-db", "sandbox"]],
     "production::showers_only": [
         ["-p", "./tests/resources/prodConfigTest.yml", "-t", "simulate", "--showers_only", "--test"]
     ],
@@ -253,8 +255,13 @@ APP_LIST = {
 
 
 @pytest.mark.parametrize("application", APP_LIST.keys())
-def test_applications(set_simtools, application):
+def test_applications(set_simtools, application, monkeypatch, db_cleanup_file_sandbox):
     logger.info("Testing {}".format(application))
+
+    # The add_file_to_db.py application requires a user confirmation.
+    # With this line we mock the user confirmation to be y for the test
+    # Notice this is done for all tests, so keep in mind if in the future we add tests with input.
+    monkeypatch.setattr("sys.stdin", StringIO("y\n"))
 
     def prepare_one_file(fileName):
         db.exportFileDB(
