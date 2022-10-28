@@ -5,20 +5,13 @@ import logging
 import astropy.io.ascii
 import astropy.units as u
 import numpy as np
-import pytest
 
 import simtools.config as cfg
 import simtools.io_handler as io
-from simtools import db_handler, visualize
+from simtools import visualize
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
-
-
-@pytest.fixture
-def db(set_db):
-    db = db_handler.DatabaseHandler()
-    return db
 
 
 def test_plot_1D(db):
