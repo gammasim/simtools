@@ -62,9 +62,8 @@ def main():
 
     db = db_handler.DatabaseHandler()
 
-    parser = argparser.CommandLineParser(description=("Add a file or files to the DB."))
-    parser.initialize_default_arguments()
-    group = parser.add_mutually_exclusive_group(required=True)
+    config = configurator.Configurator(description=("Add a file or files to the DB."))
+    group = config.parser.add_mutually_exclusive_group(required=True)
     group.add_argument(
         "-f",
         "--fileName",
@@ -83,7 +82,7 @@ def main():
         help=(
             "A directory with files to upload to the DB. "
             "All files in the directory with the following extensions "
-            "will be uploaded: {}".format(", ".join(_tmp_db_config.ALLOWED_FILE_EXTENSIONS))
+            "will be uploaded: {}".format(", ".join(db.ALLOWED_FILE_EXTENSIONS))
         ),
         type=str,
     )
@@ -91,18 +90,18 @@ def main():
         "-db",
         dest="dbToInsertTo",
         type=str,
-        default=_tmp_db_config.DB_TABULATED_DATA,
+        default=db.DB_TABULATED_DATA,
         choices=[
-            _tmp_db_config.DB_TABULATED_DATA,
-            _tmp_db_config.DB_DERIVED_VALUES,
-            _tmp_db_config.DB_REFERENCE_DATA,
+            db.DB_TABULATED_DATA,
+            db.DB_DERIVED_VALUES,
+            db.DB_REFERENCE_DATA,
             "sandbox",
             "test-data",
         ],
         help=(
             "The DB to insert the files to. "
             'The choices are {0} or "sandbox", '
-            "the default is {0}".format(_tmp_db_config.DB_TABULATED_DATA)
+            "the default is {0}".format(db.DB_TABULATED_DATA)
         ),
     )
     args_dict, db_config = config.initialize(db_config=True)
@@ -142,7 +141,9 @@ def main():
     if _userConfirm():
         for fileToInsertNow in filesToInsert:
             db.insertFileToDB(fileToInsertNow, args_dict["dbToInsertTo"])
-            logger.info(f"File {fileToInsertNow} inserted to {args.dbToInsertTo} DB")
+            logger.info(
+                "File {} inserted to {} DB".format(fileToInsertNow, args_dict["dbToInsertTo"])
+            )
     else:
         logger.info(
             "Aborted, did not insert the file{} to the {} DB".format(
