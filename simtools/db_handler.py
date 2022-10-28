@@ -71,10 +71,11 @@ class DatabaseHandler:
         self._logger = logging.getLogger(__name__)
         self._logger.debug("Initialize DatabaseHandler")
 
-        if DatabaseHandler.dbClient is None:
-            with Lock():
-                self.dbDetails = self._readDetailsMongoDB()
-                DatabaseHandler.dbClient = self._openMongoDB()
+        if cfg.get("useMongoDB"):
+            if DatabaseHandler.dbClient is None:
+                with Lock():
+                    self.dbDetails = self._readDetailsMongoDB()
+                    DatabaseHandler.dbClient = self._openMongoDB()
 
     # END of _init_
 
