@@ -60,10 +60,11 @@ def _userConfirm():
 
 def main():
 
-    # temporary solution; class values in db_handler
-    _tmp_db_config = db_handler.DatabaseHandler()
-    config = configurator.Configurator(description=("Add a file or files to the DB."))
-    group = config.parser.add_mutually_exclusive_group(required=True)
+    db = db_handler.DatabaseHandler()
+
+    parser = argparser.CommandLineParser(description=("Add a file or files to the DB."))
+    parser.initialize_default_arguments()
+    group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument(
         "-f",
         "--fileName",
@@ -105,6 +106,7 @@ def main():
         ),
     )
     args_dict, db_config = config.initialize(db_config=True)
+
     logger = logging.getLogger()
     logger.setLevel(gen.getLogLevelFromUser(args_dict["log_level"]))
 
@@ -138,8 +140,9 @@ def main():
     print(*filesToInsert, sep="\n")
     print()
     if _userConfirm():
-        db.insertFilesToDB(filesToInsert, args_dict["dbToInsertTo"])
-        logger.info("File{} inserted to {} DB".format(plural, args_dict["dbToInsertTo"]))
+        for fileToInsertNow in filesToInsert:
+            db.insertFileToDB(fileToInsertNow, args_dict["dbToInsertTo"])
+            logger.info(f"File {fileToInsertNow} inserted to {args.dbToInsertTo} DB")
     else:
         logger.info(
             "Aborted, did not insert the file{} to the {} DB".format(
