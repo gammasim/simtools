@@ -6,6 +6,7 @@ import pytest
 import yaml
 
 import simtools.config as cfg
+from simtools import db_handler
 from simtools.model.telescope_model import TelescopeModel
 
 logger = logging.getLogger()
@@ -195,3 +196,30 @@ def telescope_model_sst(set_db):
         label="test-telescope-model-sst",
     )
     return telescopeModelSST
+
+
+@pytest.fixture
+def db(set_db):
+    db = db_handler.DatabaseHandler()
+    return db
+
+
+@pytest.fixture
+def db_no_config_file(db_connection):
+    """
+    Same as db above, but using just db_connection
+    since we do not want to set the config file as well.
+    Otherwise it creates a conflict between the config file
+    set by set_db and the one set by set_simtools
+    """
+    db = db_handler.DatabaseHandler()
+    return db
+
+
+@pytest.fixture()
+def db_cleanup_file_sandbox(db_no_config_file):
+    yield
+    # Cleanup
+    logger.info("Dropping the temporary files in the sandbox")
+    db_no_config_file.dbClient["sandbox"]["fs.chunks"].drop()
+    db_no_config_file.dbClient["sandbox"]["fs.files"].drop()
