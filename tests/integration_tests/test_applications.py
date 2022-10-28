@@ -38,158 +38,158 @@ APP_LIST = {
             "--test",
         ]
     ],
-    "submit_data_from_external::help": [
-        [
-            "--help",
-        ]
-    ],
-    "submit_data_from_external::submit": [
-        [
-            "--workflow_config_file",
-            "tests/resources/set_MST_mirror_2f_measurements_from_external.config.yml",
-            "--input_meta_file",
-            "TESTMODELDIR/MLTdata-preproduction.usermeta.yml",
-            "--input_data_file",
-            "TESTMODELDIR/MLTdata-preproduction.ecsv",
-            " --test",
-        ]
-    ],
-    "derive_mirror_rnda::help": [
-        [
-            "--help",
-        ]
-    ],
-    "derive_mirror_rnda::psf_random_flen": [
-        [
-            "-s",
-            "North",
-            "-t",
-            "MST-FlashCam-D",
-            "--containment_fraction",
-            "0.8",
-            "--psf_measurement_containment_mean",
-            "1.4",
-            "--use_random_flen",
-            "--rnda",
-            "0.0063",
-            " --test",
-        ]
-    ],
-    "derive_mirror_rnda::psf_notuning": [
-        [
-            "-s",
-            "North",
-            "-t",
-            "MST-FlashCam-D",
-            "--containment_fraction",
-            "0.8",
-            "--mirror_list",
-            "TESTMODELDIR/MLTdata-preproduction.ecsv",
-            "--psf_measurement",
-            "TESTMODELDIR/MLTdata-preproduction.ecsv",
-            "--rnda",
-            "0.0063",
-            " --test",
-        ]
-    ],
-    "derive_mirror_rnda::psf_measurement": [
-        [
-            "-s",
-            "North",
-            "-t",
-            "MST-FlashCam-D",
-            "--containment_fraction",
-            "0.8",
-            "--mirror_list",
-            "TESTMODELDIR/MLTdata-preproduction.ecsv",
-            "--psf_measurement",
-            "TESTMODELDIR/MLTdata-preproduction.ecsv",
-            "--rnda",
-            "0.0063",
-            " --test",
-        ]
-    ],
-    "derive_mirror_rnda::psf_mean": [
-        [
-            "-s",
-            "North",
-            "-t",
-            "MST-FlashCam-D",
-            "--containment_fraction",
-            "0.8",
-            "--mirror_list",
-            "TESTMODELDIR/MLTdata-preproduction.ecsv",
-            "--psf_measurement_containment_mean",
-            "1.4",
-            "--rnda",
-            "0.0063",
-            " --test",
-        ]
-    ],
-    "validate_optics": [
-        [
-            "-s",
-            "North",
-            "-t",
-            "LST-1",
-            "--max_offset",
-            "1.0",
-            "--src_distance",
-            "11",
-            "--zenith",
-            "20",
-            "--test",
-        ]
-    ],
-    "tune_psf": [
-        [
-            "-s",
-            "North",
-            "-t",
-            "LST-1",
-            "--model_version",
-            "prod5",
-            "--data",
-            "TESTMODELDIR/PSFcurve_data_v2.txt",
-            "--zenith",
-            "20",
-            "--test",
-        ]
-    ],
-    # Camera
-    "validate_camera_efficiency::MST-NectarCam-D": [
-        ["-s", "North", "-t", "MST-NectarCam-D", "--model_version", "prod5"]
-    ],
-    "validate_camera_efficiency::SST-D": [
-        ["-s", "South", "-t", "SST-D", "--model_version", "prod5"]
-    ],
-    "validate_camera_fov": [["-s", "North", "-t", "MST-NectarCam-D", "--model_version", "prod5"]],
-    "plot_simtel_histograms::help": [
-        [
-            "--help",
-        ]
-    ],
-    # Layout
-    "make_regular_arrays": [[]],
-    # Production
-    "produce_array_config": [["--array_config", "./tests/resources/arrayConfigTest.yml"]],
-    # Trigger
-    "sim_showers_for_trigger_rates": [
-        [
-            "-a",
-            "4LST",
-            "-s",
-            "North",
-            "--primary",
-            "proton",
-            "--nruns",
-            "2",
-            "--nevents",
-            "10000",
-            "--test",
-        ]
-    ],
-    # Database
+    # "submit_data_from_external::help": [
+    #     [
+    #         "--help",
+    #     ]
+    # ],
+    # "submit_data_from_external::submit": [
+    #     [
+    #         "--workflow_config_file",
+    #         "tests/resources/set_MST_mirror_2f_measurements_from_external.config.yml",
+    #         "--input_meta_file",
+    #         "TESTMODELDIR/MLTdata-preproduction.usermeta.yml",
+    #         "--input_data_file",
+    #         "TESTMODELDIR/MLTdata-preproduction.ecsv",
+    #         " --test",
+    #     ]
+    # ],
+    # "derive_mirror_rnda::help": [
+    #     [
+    #         "--help",
+    #     ]
+    # ],
+    # "derive_mirror_rnda::psf_random_flen": [
+    #     [
+    #         "-s",
+    #         "North",
+    #         "-t",
+    #         "MST-FlashCam-D",
+    #         "--containment_fraction",
+    #         "0.8",
+    #         "--psf_measurement_containment_mean",
+    #         "1.4",
+    #         "--use_random_flen",
+    #         "--rnda",
+    #         "0.0063",
+    #         " --test",
+    #     ]
+    # ],
+    # "derive_mirror_rnda::psf_notuning": [
+    #     [
+    #         "-s",
+    #         "North",
+    #         "-t",
+    #         "MST-FlashCam-D",
+    #         "--containment_fraction",
+    #         "0.8",
+    #         "--mirror_list",
+    #         "TESTMODELDIR/MLTdata-preproduction.ecsv",
+    #         "--psf_measurement",
+    #         "TESTMODELDIR/MLTdata-preproduction.ecsv",
+    #         "--rnda",
+    #         "0.0063",
+    #         " --test",
+    #     ]
+    # ],
+    # "derive_mirror_rnda::psf_measurement": [
+    #     [
+    #         "-s",
+    #         "North",
+    #         "-t",
+    #         "MST-FlashCam-D",
+    #         "--containment_fraction",
+    #         "0.8",
+    #         "--mirror_list",
+    #         "TESTMODELDIR/MLTdata-preproduction.ecsv",
+    #         "--psf_measurement",
+    #         "TESTMODELDIR/MLTdata-preproduction.ecsv",
+    #         "--rnda",
+    #         "0.0063",
+    #         " --test",
+    #     ]
+    # ],
+    # "derive_mirror_rnda::psf_mean": [
+    #     [
+    #         "-s",
+    #         "North",
+    #         "-t",
+    #         "MST-FlashCam-D",
+    #         "--containment_fraction",
+    #         "0.8",
+    #         "--mirror_list",
+    #         "TESTMODELDIR/MLTdata-preproduction.ecsv",
+    #         "--psf_measurement_containment_mean",
+    #         "1.4",
+    #         "--rnda",
+    #         "0.0063",
+    #         " --test",
+    #     ]
+    # ],
+    # "validate_optics": [
+    #     [
+    #         "-s",
+    #         "North",
+    #         "-t",
+    #         "LST-1",
+    #         "--max_offset",
+    #         "1.0",
+    #         "--src_distance",
+    #         "11",
+    #         "--zenith",
+    #         "20",
+    #         "--test",
+    #     ]
+    # ],
+    # "tune_psf": [
+    #     [
+    #         "-s",
+    #         "North",
+    #         "-t",
+    #         "LST-1",
+    #         "--model_version",
+    #         "prod5",
+    #         "--data",
+    #         "TESTMODELDIR/PSFcurve_data_v2.txt",
+    #         "--zenith",
+    #         "20",
+    #         "--test",
+    #     ]
+    # ],
+    # # Camera
+    # "validate_camera_efficiency::MST-NectarCam-D": [
+    #     ["-s", "North", "-t", "MST-NectarCam-D", "--model_version", "prod5"]
+    # ],
+    # "validate_camera_efficiency::SST-D": [
+    #     ["-s", "South", "-t", "SST-D", "--model_version", "prod5"]
+    # ],
+    # "validate_camera_fov": [["-s", "North", "-t", "MST-NectarCam-D", "--model_version", "prod5"]],
+    # "plot_simtel_histograms::help": [
+    #     [
+    #         "--help",
+    #     ]
+    # ],
+    # # Layout
+    # "make_regular_arrays": [[]],
+    # # Production
+    # "produce_array_config": [["--array_config", "./tests/resources/arrayConfigTest.yml"]],
+    # # Trigger
+    # "sim_showers_for_trigger_rates": [
+    #     [
+    #         "-a",
+    #         "4LST",
+    #         "-s",
+    #         "North",
+    #         "--primary",
+    #         "proton",
+    #         "--nruns",
+    #         "2",
+    #         "--nevents",
+    #         "10000",
+    #         "--test",
+    #     ]
+    # ],
+    # # Database
     "get_file_from_db::CTA-Simulation-Model": [["-f", "mirror_CTA-S-LST_v2020-04-07.dat"]],
     "get_file_from_db::test-data": [["-f", "PSFcurve_data_v2.txt"]],
     "get_file_from_db::CTA-Simulation-Model-Derived-Values": [
@@ -202,55 +202,55 @@ APP_LIST = {
     "production::showers_only": [
         ["-p", "./tests/resources/prodConfigTest.yml", "-t", "simulate", "--showers_only", "--test"]
     ],
-    "production::array_only": [
-        ["-p", "./tests/resources/prodConfigTest.yml", "-t", "simulate", "--array_only", "--test"]
-    ],
-    # print_array
-    "print_array_elements::print_all": [
-        ["--array_element_list", "tests/resources/telescope_positions-South-4MST.ecsv"],
-    ],
-    "print_array_elements::print_compact": [
-        [
-            "--array_element_list",
-            "tests/resources/telescope_positions-South-4MST.ecsv",
-            "--compact",
-            "corsika",
-        ],
-    ],
-    "print_array_elements::export_utm": [
-        [
-            "--array_element_list",
-            "tests/resources/telescope_positions-South-4MST.ecsv",
-            "--export",
-            "utm",
-        ],
-    ],
-    "print_array_elements::export_corsika": [
-        [
-            "--array_element_list",
-            "tests/resources/telescope_positions-South-4MST.ecsv",
-            "--export",
-            "corsika",
-            "--use_corsika_telescope_height",
-        ],
-    ],
-    # files without corsika_spheres definition
-    "print_array_elements::print_compact_nocors_utm": [
-        [
-            "--array_element_list",
-            "tests/resources/telescope_positions-North-utm.ecsv",
-            "--compact",
-            "utm",
-        ],
-    ],
-    "print_array_elements::print_compact_nocors_corsika": [
-        [
-            "--array_element_list",
-            "tests/resources/telescope_positions-North-utm.ecsv",
-            "--compact",
-            "corsika",
-        ],
-    ],
+    # "production::array_only": [
+    #     ["-p", "./tests/resources/prodConfigTest.yml", "-t", "simulate", "--array_only", "--test"]
+    # ],
+    # # print_array
+    # "print_array_elements::print_all": [
+    #     ["--array_element_list", "tests/resources/telescope_positions-South-4MST.ecsv"],
+    # ],
+    # "print_array_elements::print_compact": [
+    #     [
+    #         "--array_element_list",
+    #         "tests/resources/telescope_positions-South-4MST.ecsv",
+    #         "--compact",
+    #         "corsika",
+    #     ],
+    # ],
+    # "print_array_elements::export_utm": [
+    #     [
+    #         "--array_element_list",
+    #         "tests/resources/telescope_positions-South-4MST.ecsv",
+    #         "--export",
+    #         "utm",
+    #     ],
+    # ],
+    # "print_array_elements::export_corsika": [
+    #     [
+    #         "--array_element_list",
+    #         "tests/resources/telescope_positions-South-4MST.ecsv",
+    #         "--export",
+    #         "corsika",
+    #         "--use_corsika_telescope_height",
+    #     ],
+    # ],
+    # # files without corsika_spheres definition
+    # "print_array_elements::print_compact_nocors_utm": [
+    #     [
+    #         "--array_element_list",
+    #         "tests/resources/telescope_positions-North-utm.ecsv",
+    #         "--compact",
+    #         "utm",
+    #     ],
+    # ],
+    # "print_array_elements::print_compact_nocors_corsika": [
+    #     [
+    #         "--array_element_list",
+    #         "tests/resources/telescope_positions-North-utm.ecsv",
+    #         "--compact",
+    #         "corsika",
+    #     ],
+    # ],
 }
 
 
