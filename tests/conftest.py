@@ -199,15 +199,27 @@ def telescope_model_sst(set_db):
 
 
 @pytest.fixture
-def db(db_connection):
+def db(set_db):
+    db = db_handler.DatabaseHandler()
+    return db
+
+
+@pytest.fixture
+def db_no_config_file(db_connection):
+    """
+    Same as db above, but using just db_connection
+    since we do not want to set the config file as well.
+    Otherwise it creates a conflict between the config file
+    set by set_db and the one set by set_simtools
+    """
     db = db_handler.DatabaseHandler()
     return db
 
 
 @pytest.fixture()
-def db_cleanup_file_sandbox(db):
+def db_cleanup_file_sandbox(db_no_config_file):
     yield
     # Cleanup
     logger.info("Dropping the temporary files in the sandbox")
-    db.dbClient["sandbox"]["fs.chunks"].drop()
-    db.dbClient["sandbox"]["fs.files"].drop()
+    db_no_config_file.dbClient["sandbox"]["fs.chunks"].drop()
+    db_no_config_file.dbClient["sandbox"]["fs.files"].drop()
