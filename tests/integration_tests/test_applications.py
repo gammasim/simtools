@@ -283,11 +283,8 @@ APP_LIST = {
 
 
 @pytest.mark.parametrize("application", APP_LIST.keys())
-<<<<<<< HEAD
-def test_applications(application, io_handler, db, simtelpath_no_mock):
-=======
-def test_applications(set_simtools, application, monkeypatch, db_cleanup_file_sandbox):
->>>>>>> master
+def test_applications(application, io_handler, monkeypatch, db):
+
     logger.info("Testing {}".format(application))
 
     # The add_file_to_db.py application requires a user confirmation.
