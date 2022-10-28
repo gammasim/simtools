@@ -141,8 +141,9 @@ def main():
     print(*filesToInsert, sep="\n")
     print()
     if _userConfirm():
-        db.insertFilesToDB(filesToInsert, args.dbToInsertTo)
-        logger.info("File{} inserted to {} DB".format(plural, args.dbToInsertTo))
+        for fileToInsertNow in filesToInsert:
+            db.insertFileToDB(fileToInsertNow, args.dbToInsertTo)
+            logger.info(f"File {fileToInsertNow} inserted to {args.dbToInsertTo} DB")
     else:
         logger.info(
             "Aborted, did not insert the file{} to the {} DB".format(plural, args.dbToInsertTo)
