@@ -9,6 +9,8 @@ from astropy.utils.diff import report_diff_values
 class DataValidator:
     """
     Simulation model data transformation for data validation.
+    Validate input data for type and units; converts or transform
+    data if required.
 
     Attributes
     ----------
