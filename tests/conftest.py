@@ -199,7 +199,7 @@ def telescope_model_sst(set_db):
 
 
 @pytest.fixture
-def db(set_db):
+def db(db_connection):
     db = db_handler.DatabaseHandler()
     return db
 
