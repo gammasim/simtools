@@ -53,14 +53,16 @@ def _userConfirm():
 
     answer = ""
     while answer not in ["y", "n"]:
-        answer = input("Is this OK? [y/n]").lower()
-
-    return answer == "y"
+        try:
+            answer = input("Is this OK? [y/n]").lower()
+            return answer == "y"
+        except EOFError:
+            return False
 
 
 def main():
 
-    db = db_handler.DatabaseHandler()
+    _db_tmp = db_handler.DatabaseHandler(mongoDBConfig=None)
 
     config = configurator.Configurator(description=("Add a file or files to the DB."))
     group = config.parser.add_mutually_exclusive_group(required=True)
@@ -82,26 +84,27 @@ def main():
         help=(
             "A directory with files to upload to the DB. "
             "All files in the directory with the following extensions "
-            "will be uploaded: {}".format(", ".join(db.ALLOWED_FILE_EXTENSIONS))
+            "will be uploaded: {}".format(", ".join(_db_tmp.ALLOWED_FILE_EXTENSIONS))
         ),
         type=str,
     )
     config.parser.add_argument(
         "-db",
+        "--dbToInsertTo",
         dest="dbToInsertTo",
         type=str,
-        default=db.DB_TABULATED_DATA,
+        default=_db_tmp.DB_TABULATED_DATA,
         choices=[
-            db.DB_TABULATED_DATA,
-            db.DB_DERIVED_VALUES,
-            db.DB_REFERENCE_DATA,
+            _db_tmp.DB_TABULATED_DATA,
+            _db_tmp.DB_DERIVED_VALUES,
+            _db_tmp.DB_REFERENCE_DATA,
             "sandbox",
             "test-data",
         ],
         help=(
             "The DB to insert the files to. "
             'The choices are {0} or "sandbox", '
-            "the default is {0}".format(db.DB_TABULATED_DATA)
+            "the default is {0}".format(_db_tmp.DB_TABULATED_DATA)
         ),
     )
     args_dict, db_config = config.initialize(db_config=True)
