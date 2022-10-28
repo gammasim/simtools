@@ -63,7 +63,7 @@ def _userConfirm():
 
 def main():
 
-    db = db_handler.DatabaseHandler()
+    _db_tmp = db_handler.DatabaseHandler(connect=False)
 
     parser = argparser.CommandLineParser(description=("Add a file or files to the DB."))
 
@@ -88,7 +88,7 @@ def main():
         help=(
             "A directory with files to upload to the DB. "
             "All files in the directory with the following extensions "
-            "will be uploaded: {}".format(", ".join(db.ALLOWED_FILE_EXTENSIONS))
+            "will be uploaded: {}".format(", ".join(_db_tmp.ALLOWED_FILE_EXTENSIONS))
         ),
         type=str,
     )
@@ -97,23 +97,25 @@ def main():
         "--dbToInsertTo",
         dest="dbToInsertTo",
         type=str,
-        default=db.DB_TABULATED_DATA,
+        default=_db_tmp.DB_TABULATED_DATA,
         choices=[
-            db.DB_TABULATED_DATA,
-            db.DB_DERIVED_VALUES,
-            db.DB_REFERENCE_DATA,
+            _db_tmp.DB_TABULATED_DATA,
+            _db_tmp.DB_DERIVED_VALUES,
+            _db_tmp.DB_REFERENCE_DATA,
             "sandbox",
             "test-data",
         ],
         help=(
             "The DB to insert the files to. "
             'The choices are {0} or "sandbox", '
-            "the default is {0}".format(db.DB_TABULATED_DATA)
+            "the default is {0}".format(_db_tmp.DB_TABULATED_DATA)
         ),
     )
 
     args = parser.parse_args()
     cfg.setConfigFileName(args.configFile)
+
+    db = db_handler.DatabaseHandler()
 
     logger = logging.getLogger()
     logger.setLevel(gen.getLogLevelFromUser(args.logLevel))
