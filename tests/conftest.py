@@ -146,6 +146,27 @@ def db(db_config):
 
 
 @pytest.fixture
+def db_no_config_file():
+    """
+    Same as db above, but without DB variable defined,
+    since we do not want to set the config file as well.
+    Otherwise it creates a conflict between the config file
+    set by set_db and the one set by set_simtools
+    """
+    db = db_handler.DatabaseHandler(mongoDBConfig=None)
+    return db
+
+
+@pytest.fixture()
+def db_cleanup_file_sandbox(db_no_config_file):
+    yield
+    # Cleanup
+    logger.info("Dropping the temporary files in the sandbox")
+    db_no_config_file.dbClient["sandbox"]["fs.chunks"].drop()
+    db_no_config_file.dbClient["sandbox"]["fs.files"].drop()
+
+
+@pytest.fixture
 def telescope_model_lst(db, db_config, io_handler):
     telescopeModelLST = TelescopeModel(
         site="North",
