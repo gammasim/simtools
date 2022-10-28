@@ -10,7 +10,7 @@
 
     Command line arguments
     ----------------------
-    workflow_config_file (str, required)
+    workflow_config (str, required)
         Workflow configuration (yml format)
     input_meta (str, required)
         User-provided meta data file (yml format)
@@ -27,9 +27,9 @@
     .. code-block:: console
 
         python ./set_modelparameter_from_external.py \
-            --workflow_config_file set_quantum_efficiency_from_external.yml \
-            --input_meta_file qe_R12992-100-05b.usermeta.yml \
-            --input_data_file qe_R12992-100-05b.data.ecsv \
+            --workflow_config set_quantum_efficiency_from_external.yml \
+            --input_meta qe_R12992-100-05b.usermeta.yml \
+            --input_data qe_R12992-100-05b.data.ecsv \
 
 
 """
@@ -58,13 +58,13 @@ def _parse(label, description):
     config = configurator.Configurator(label=label, description=description)
 
     config.parser.add_argument(
-        "--input_meta_file",
+        "--input_meta",
         help="Meta data file describing input data (yml)",
         type=str,
         required=True,
     )
     config.parser.add_argument(
-        "--input_data_file",
+        "--input_data",
         help="Input data file (ecsv)",
         type=str,
         required=True,
