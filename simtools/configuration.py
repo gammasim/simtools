@@ -64,7 +64,12 @@ class Configurator:
         return self.config
 
     def initialize(
-        self, telescope_model=False, workflow_config=False, db_config=False, job_submission=False
+        self,
+        paths=True,
+        telescope_model=False,
+        workflow_config=False,
+        db_config=False,
+        job_submission=False,
     ):
         """
         Initialize configuration from command line, configuration file, class config, \
@@ -79,6 +84,8 @@ class Configurator:
 
         Parameters
         ----------
+        paths: bool
+            Add path configuration to list of args.
         telescope_model: bool
             Add telescope model configuration to list of args.
         workflow_config: bool
@@ -101,6 +108,7 @@ class Configurator:
         """
 
         self.parser.initialize_default_arguments(
+            paths=paths,
             telescope_model=telescope_model,
             workflow_config=workflow_config,
             db_config=db_config,
@@ -227,9 +235,9 @@ class Configurator:
         """
         _io_handler = io_handler.IOHandler()
         _io_handler.setPaths(
-            output_path=self.config["output_path"],
-            data_path=self.config["data_path"],
-            model_path=self.config["model_path"],
+            output_path=self.config.get("output_path", None),
+            data_path=self.config.get("data_path", None),
+            model_path=self.config.get("model_path", None),
         )
 
     @staticmethod
@@ -238,6 +246,7 @@ class Configurator:
         Convert input list of strings as needed by argparse.
 
         Special cases:
+        - lists as arguments (using e.g., nargs="+") are expanded
         - boolean are expected to be handled as action="store_true" or "store_false"
         - None values or zero length values are ignored (this means setting a parameter \
             to none or "" is not allowed.
@@ -260,7 +269,10 @@ class Configurator:
         if isinstance(input_var, dict):
             _list_args = []
             for key, value in input_var.items():
-                if not isinstance(value, bool) and value is not None and len(str(value)) > 0:
+                if isinstance(value, list):
+                    _list_args.append("--" + key)
+                    _list_args += value
+                elif not isinstance(value, bool) and value is not None and len(str(value)) > 0:
                     _list_args.append("--" + key)
                     _list_args.append(str(value))
                 elif value:
