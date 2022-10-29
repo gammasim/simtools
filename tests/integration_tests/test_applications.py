@@ -190,10 +190,10 @@ APP_LIST = {
         ]
     ],
     # Database
-    "get_file_from_db::CTA-Simulation-Model": [["-f", "mirror_CTA-S-LST_v2020-04-07.dat"]],
-    "get_file_from_db::test-data": [["-f", "PSFcurve_data_v2.txt"]],
+    "get_file_from_db::CTA-Simulation-Model": [["--file_name", "mirror_CTA-S-LST_v2020-04-07.dat"]],
+    "get_file_from_db::test-data": [["--file_name", "PSFcurve_data_v2.txt"]],
     "get_file_from_db::CTA-Simulation-Model-Derived-Values": [
-        ["-f", "ray-tracing-North-LST-1-d10.0-za20.0_validate_optics.ecsv"]
+        ["--file_name", "ray-tracing-North-LST-1-d10.0-za20.0_validate_optics.ecsv"]
     ],
     "get_parameter": [
         [
@@ -207,7 +207,15 @@ APP_LIST = {
             "prod5",
         ]
     ],
-    "add_file_to_db": [["-f", "TESTMODELDIR/MLTdata-preproduction.usermeta.yml", "-db", "sandbox"]],
+    "add_file_to_db": [
+        [
+            "--file_name",
+            "TESTMODELDIR/MLTdata-preproduction.usermeta.yml",
+            "TESTMODELDIR/MLTdata-preproduction.ecsv",
+            "--db",
+            "sandbox",
+        ]
+    ],
     # Production
     "production::showers_only": [
         [
