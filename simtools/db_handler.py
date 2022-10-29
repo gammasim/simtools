@@ -11,7 +11,8 @@ from bson.objectid import ObjectId
 from pymongo import MongoClient
 from pymongo.errors import BulkWriteError
 
-import simtools.config as cfg
+import simtools.util.general as gen
+from simtools import io_handler
 from simtools.util import names
 from simtools.util.model import getTelescopeClass
 
@@ -64,39 +65,45 @@ class DatabaseHandler:
 
     dbClient = None
 
-    def __init__(self, connect=True):
+    def __init__(self, mongoDBConfig=None):
         """
         Initialize the DatabaseHandler class.
         """
         self._logger = logging.getLogger(__name__)
         self._logger.debug("Initialize DatabaseHandler")
 
-        if connect:
-            if cfg.get("useMongoDB"):
-                if DatabaseHandler.dbClient is None:
-                    with Lock():
-                        self.dbDetails = self._readDetailsMongoDB()
-                        DatabaseHandler.dbClient = self._openMongoDB()
+        self.mongo_db_config = mongoDBConfig
+        self._logger.debug("DB configuration: {}".format(self.mongo_db_config))
+        self.io_handler = io_handler.IOHandler()
 
-    # END of _init_
+        self._set_up_connection()
 
-    @staticmethod
-    def _readDetailsMongoDB():
+    def set_mongo_db_config(self, mongo_db_config):
         """
-        Read the MongoDB details (server, user, pass, etc.) from an external file.
+        Set the MongoDB config and open the connection to the DB.
 
-        Returns
-        -------
-        dbDetails: dict
-            Dictionary containing the DB details.
+        Parameters
+        ----------
+        mongo_db_config: dict
+            Dictionary with the MongoDB configuration with the following entries:
+            "db_server" - DB server address
+            "db_api_port" - Port to use
+            "db_api_user" - API username
+            "db_api_pw" - Password for the API user
+            "db_api_authentication_database" - DB with user info (optional, default is "admin")
         """
 
-        dbDetails = dict()
-        dbDetailsFile = cfg.get("mongoDBConfigFile")
-        with open(dbDetailsFile, "r") as stream:
-            dbDetails = yaml.safe_load(stream)
+        self.mongo_db_config = mongo_db_config
+        self._set_up_connection()
 
-        return dbDetails
+    def _set_up_connection(self):
+        """
+        Open the connection to MongoDB.
+        """
+        if self.mongo_db_config:
+            if DatabaseHandler.dbClient is None:
+                with Lock():
+                    DatabaseHandler.dbClient = self._openMongoDB()
 
     def _openMongoDB(self):
         """
@@ -106,16 +113,20 @@ class DatabaseHandler:
         -------
         A PyMongo DB client
         """
-        _dbClient = MongoClient(
-            self.dbDetails["mongodbServer"],
-            port=self.dbDetails["dbPort"],
-            username=self.dbDetails["userDB"],
-            password=self.dbDetails["passDB"],
-            authSource=self.dbDetails["authenticationDatabase"],
-            ssl=True,
-            tlsallowinvalidhostnames=True,
-            tlsallowinvalidcertificates=True,
-        )
+        try:
+            _dbClient = MongoClient(
+                self.mongo_db_config["db_server"],
+                port=self.mongo_db_config["db_api_port"],
+                username=self.mongo_db_config["db_api_user"],
+                password=self.mongo_db_config["db_api_pw"],
+                authSource=self.mongo_db_config.get("db_api_authentication_database", "admin"),
+                ssl=True,
+                tlsallowinvalidhostnames=True,
+                tlsallowinvalidcertificates=True,
+            )
+        except KeyError:
+            self._logger.error("Invalid setting of DB configuration")
+            raise
 
         return _dbClient
 
@@ -153,8 +164,7 @@ class DatabaseHandler:
         _siteValidated = names.validateSiteName(site)
         _telModelNameValidated = names.validateTelescopeModelName(telescopeModelName)
 
-        if cfg.get("useMongoDB"):
-
+        if self.mongo_db_config:
             # Only MongoDB supports tagged version
             _modelVersion = self._convertVersionToTagged(
                 modelVersion, DatabaseHandler.DB_CTA_SIMULATION_MODEL
@@ -220,7 +230,7 @@ class DatabaseHandler:
             Location where to write the files to.
         """
 
-        if cfg.get("useMongoDB"):
+        if self.mongo_db_config:
             self._logger.debug("Exporting model files from MongoDB")
             for info in parameters.values():
                 if not info["File"]:
@@ -255,7 +265,7 @@ class DatabaseHandler:
 
         destFile = Path(destDir).joinpath(fileName)
         try:
-            file = cfg.findFile(fileName, cfg.get("modelFilesLocations"))
+            file = gen.findFile(fileName, self.io_handler.model_path)
         except FileNotFoundError:
             if noFileOk:
                 self._logger.debug("File {} not found but noFileOk".format(fileName))
@@ -474,7 +484,7 @@ class DatabaseHandler:
         """
 
         _fileNameDB = "parValues-{}.yml".format(telescopeNameYaml)
-        _yamlFile = cfg.findFile(_fileNameDB, cfg.get("modelFilesLocations"))
+        _yamlFile = gen.findFile(_fileNameDB, self.io_handler.model_path)
         self._logger.debug("Reading DB file {}".format(_yamlFile))
         with open(_yamlFile, "r") as stream:
             _allPars = yaml.safe_load(stream)
@@ -505,7 +515,7 @@ class DatabaseHandler:
         _site = names.validateSiteName(site)
         _modelVersion = names.validateModelVersionName(modelVersion)
 
-        if cfg.get("useMongoDB"):
+        if self.mongo_db_config:
             _pars = self._getSiteParametersMongoDB(
                 DatabaseHandler.DB_CTA_SIMULATION_MODEL,
                 _site,
@@ -536,7 +546,7 @@ class DatabaseHandler:
 
         siteYaml = "lapalma" if site == "North" else "paranal"
 
-        yamlFile = cfg.findFile("parValues-Sites.yml", cfg.get("modelFilesLocations"))
+        yamlFile = gen.findFile("parValues-Sites.yml", self.io_handler.model_path)
         self._logger.info("Reading DB file {}".format(yamlFile))
         with open(yamlFile, "r") as stream:
             _allParsVersions = yaml.safe_load(stream)

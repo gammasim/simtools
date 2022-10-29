@@ -4,12 +4,11 @@ import os
 import uuid
 from pathlib import Path
 
-import simtools.config as cfg
-import simtools.io_handler as io
 import simtools.util.data_model as data_model
 import simtools.util.general as gen
 import simtools.util.validate_schema as vs
 import simtools.version
+from simtools import io_handler
 from simtools.util import names
 
 
@@ -21,8 +20,8 @@ class WorkflowDescription:
     ----------
     label: str
         workflow (activity) name
-    args: argparse.Namespace
-        command line parameters
+    args_dict: dict
+        configuration parameters
 
     Methods
     -------
@@ -48,7 +47,7 @@ class WorkflowDescription:
 
     """
 
-    def __init__(self, label=None, args=None):
+    def __init__(self, label, args_dict):
         """
         Initialize workflow configuration class
 
@@ -63,18 +62,16 @@ class WorkflowDescription:
 
         self._logger = logging.getLogger(__name__)
 
-        self.args = args
+        self.io_handler = io_handler.IOHandler()
+
+        self.args_dict = args_dict
         self.workflow_config = self._default_workflow_config()
         self.workflow_config["ACTIVITY"]["NAME"] = label
         self.workflow_config["ACTIVITY"]["ID"] = str(uuid.uuid4())
 
-        if self.args:
-            self.collect_workflow_configuration()
-
+        self.collect_workflow_configuration()
         self.top_level_meta = data_model.top_level_reference_schema()
-
-        if self.args:
-            self.collect_product_meta_data()
+        self.collect_product_meta_data()
 
     def collect_workflow_configuration(self):
         """
@@ -99,11 +96,7 @@ class WorkflowDescription:
             "input_data_file", self.workflow_config["INPUT"]["DATAFILE"]
         )
 
-        for arg in vars(self.args):
-            self.workflow_config["CONFIGURATION"][str(arg)] = getattr(self.args, arg)
-
-        if self.workflow_config["CONFIGURATION"]["configFile"]:
-            cfg.setConfigFileName(self.workflow_config["CONFIGURATION"]["configFile"])
+        self.workflow_config["CONFIGURATION"] = self.args_dict
 
     def collect_product_meta_data(self):
         """
@@ -283,7 +276,7 @@ class WorkflowDescription:
 
         return _file_format
 
-    def product_data_directory(self):
+    def product_data_directory(self, output_path=None):
         """
         Return output directory for data products.
         Create directory if necessary.
@@ -291,7 +284,12 @@ class WorkflowDescription:
         Output directory is determined following this sorted
         list:
         1. PRODUCT:DIRECTORY is set (e.g., through workflow file)
-        2. gammasim-tools output location
+        2. explicity output path given in this function call
+
+        Parameters
+        ----------
+        output_path: str or Path
+            Path under which product output directories are located.
 
         Returns
         -------
@@ -312,23 +310,23 @@ class WorkflowDescription:
             path = Path(self.workflow_config["PRODUCT"]["DIRECTORY"])
             path.mkdir(parents=True, exist_ok=True)
             _output_dir = path.absolute()
-        else:
-            _output_dir = cfg.get("outputLocation")
+        elif output_path is not None:
+            _output_dir = Path(output_path).absolute()
 
-        _output_dir = io.getOutputDirectory(_output_dir, _output_label, "application-plots")
+        _output_dir = self.io_handler.getOutputDirectory(_output_label, "application-plots")
 
         self._logger.info("Outputdirectory {}".format(_output_dir))
         return _output_dir
 
     def _from_args(self, key, default_return=None):
         """
-        Return argparser argument.
+        Return argparser configuration parameter.
         No errors raised if argument does not exist
 
         """
 
         try:
-            return self.args.__dict__[key]
+            return self.args_dict[key]
         except KeyError:
             pass
 
@@ -347,11 +345,13 @@ class WorkflowDescription:
 
         try:
             _association = {}
-            _association["SITE"] = self.args.site
-            _split_telescope_name = self.args.telescope.split("-")
-            _association["CLASS"] = _split_telescope_name[0]
-            _association["TYPE"] = _split_telescope_name[1]
-            _association["SUBTYPE"] = _split_telescope_name[2]
+            if "site" in self.args_dict:
+                _association["SITE"] = self.args_dict["site"]
+            if "telescope" in self.args_dict:
+                _split_telescope_name = self.args_dict["telescope"].split("-")
+                _association["CLASS"] = _split_telescope_name[0]
+                _association["TYPE"] = _split_telescope_name[1]
+                _association["SUBTYPE"] = _split_telescope_name[2]
             self.top_level_meta["CTA"]["CONTEXT"]["SIM"]["ASSOCIATION"][0] = _association
         except KeyError:
             self._logger.error("Error reading user input meta data from args")
@@ -583,7 +583,7 @@ class WorkflowDescription:
                 "FILENAME": None,
             },
             "CONFIGURATION": {
-                "configFile": "./config.yml",
+                "configFile": "config_file.yml",
                 "logLevel": "INFO",
                 "test": False,
             },

@@ -2,8 +2,8 @@ import logging
 
 import astropy.units as u
 
-import simtools.io_handler as io
 import simtools.util.general as gen
+from simtools import io_handler
 from simtools.simtel.simtel_runner import SimtelRunner
 from simtools.util import names
 
@@ -58,7 +58,6 @@ class SimtelRunnerRayTracing(SimtelRunner):
         telescopeModel,
         label=None,
         simtelSourcePath=None,
-        filesLocation=None,
         configData=None,
         configFile=None,
         singleMirrorMode=False,
@@ -73,12 +72,8 @@ class SimtelRunnerRayTracing(SimtelRunner):
             Instance of TelescopeModel class.
         label: str, optional
             Instance label. Important for output file naming.
-        simtelSourcePath: str (or Path), optional
-            Location of sim_telarray installation. If not given, it will be taken from the
-            config.yml file.
-        filesLocation: str (or Path), optional
-            Parent location of the output files created by this class. If not given, it will be
-            taken from the config.yml file.
+        simtelSourcePath: str (or Path)
+            Location of sim_telarray installation.
         configData: dict.
             Dict containing the configurable parameters.
         configFile: str or Path
@@ -91,15 +86,13 @@ class SimtelRunnerRayTracing(SimtelRunner):
         self._logger = logging.getLogger(__name__)
         self._logger.debug("Init SimtelRunnerRayTracing")
 
-        super().__init__(
-            label=label, simtelSourcePath=simtelSourcePath, filesLocation=filesLocation
-        )
+        super().__init__(label=label, simtelSourcePath=simtelSourcePath)
 
         self.telescopeModel = self._validateTelescopeModel(telescopeModel)
         self.label = label if label is not None else self.telescopeModel.label
 
-        # File location
-        self._baseDirectory = io.getOutputDirectory(self._filesLocation, self.label, "ray-tracing")
+        self.io_handler = io_handler.IOHandler()
+        self._baseDirectory = self.io_handler.getOutputDirectory(self.label, "ray-tracing")
 
         self._singleMirrorMode = singleMirrorMode
 
@@ -110,7 +103,7 @@ class SimtelRunnerRayTracing(SimtelRunner):
 
         # Loading configData
         _configDataIn = gen.collectDataFromYamlOrDict(configFile, configData)
-        _parameterFile = io.getInputDataFile(
+        _parameterFile = self.io_handler.getInputDataFile(
             "parameters", "simtel-runner-ray-tracing_parameters.yml"
         )
         _parameters = gen.collectDataFromYamlOrDict(_parameterFile, None)
@@ -230,8 +223,6 @@ class SimtelRunnerRayTracing(SimtelRunner):
         command += " 2>&1 > " + str(self._logFile) + " 2>&1"
 
         return command
-
-    # END of makeRunCommand
 
     def _checkRunResult(self, runNumber=None):
         # Checking run

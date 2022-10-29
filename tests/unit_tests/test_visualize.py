@@ -6,15 +6,14 @@ import astropy.io.ascii
 import astropy.units as u
 import numpy as np
 
-import simtools.config as cfg
-import simtools.io_handler as io
+import simtools.util.general as gen
 from simtools import visualize
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
 
-def test_plot_1D(db):
+def test_plot_1D(db, io_handler):
 
     logger.debug("Testing plot1D")
 
@@ -26,10 +25,12 @@ def test_plot_1D(db):
     testFileName = "ref_200_1100_190211a.dat"
     db.exportFileDB(
         dbName=db.DB_CTA_SIMULATION_MODEL,
-        dest=io.getOutputDirectory(dirType="model", test=True),
+        dest=io_handler.getOutputDirectory(dirType="model", test=True),
         fileName=testFileName,
     )
-    testDataFile = cfg.findFile(testFileName, io.getOutputDirectory(dirType="model", test=True))
+    testDataFile = gen.findFile(
+        testFileName, io_handler.getOutputDirectory(dirType="model", test=True)
+    )
     dataIn = np.loadtxt(testDataFile, usecols=(0, 1), dtype=headersType)
 
     # Change y-axis to percent
@@ -45,7 +46,7 @@ def test_plot_1D(db):
 
     plt = visualize.plot1D(data, title=title, palette="autumn")
 
-    plotFile = io.getOutputFile(fileName="plot_1D.pdf", dirType="plots", test=True)
+    plotFile = io_handler.getOutputFile(fileName="plot_1D.pdf", dirType="plots", test=True)
     if plotFile.exists():
         plotFile.unlink()
     plt.savefig(plotFile)
@@ -55,7 +56,7 @@ def test_plot_1D(db):
     assert plotFile.exists()
 
 
-def test_plot_table(db):
+def test_plot_table(db, io_handler):
 
     logger.debug("Testing plotTable")
 
@@ -64,15 +65,17 @@ def test_plot_table(db):
     testFileName = "Transmission_Spectrum_PlexiGlass.dat"
     db.exportFileDB(
         dbName="test-data",
-        dest=io.getOutputDirectory(dirType="model", test=True),
+        dest=io_handler.getOutputDirectory(dirType="model", test=True),
         fileName=testFileName,
     )
-    tableFile = cfg.findFile(testFileName, io.getOutputDirectory(dirType="model", test=True))
+    tableFile = gen.findFile(
+        testFileName, io_handler.getOutputDirectory(dirType="model", test=True)
+    )
     table = astropy.io.ascii.read(tableFile)
 
     plt = visualize.plotTable(table, yTitle="Transmission", title=title, noMarkers=True)
 
-    plotFile = io.getOutputFile(fileName="plot_table.pdf", dirType="plots", test=True)
+    plotFile = io_handler.getOutputFile(fileName="plot_table.pdf", dirType="plots", test=True)
     if plotFile.exists():
         plotFile.unlink()
     plt.savefig(plotFile)

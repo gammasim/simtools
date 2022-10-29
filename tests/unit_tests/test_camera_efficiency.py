@@ -6,8 +6,6 @@ import astropy.units as u
 import pytest
 from astropy.table import Table
 
-import simtools.config as cfg
-import simtools.io_handler as io
 from simtools.camera_efficiency import CameraEfficiency
 
 logger = logging.getLogger()
@@ -15,24 +13,27 @@ logger.setLevel(logging.DEBUG)
 
 
 @pytest.fixture
-def camera_efficiency_lst(telescope_model_lst):
-    camera_efficiency_lst = CameraEfficiency(telescopeModel=telescope_model_lst, test=True)
+def camera_efficiency_lst(telescope_model_lst, simtelpath):
+    camera_efficiency_lst = CameraEfficiency(
+        telescopeModel=telescope_model_lst, simtelSourcePath=simtelpath, test=True
+    )
     return camera_efficiency_lst
 
 
 @pytest.fixture
-def camera_efficiency_sst(telescope_model_sst):
-    camera_efficiency_sst = CameraEfficiency(telescopeModel=telescope_model_sst, test=True)
+def camera_efficiency_sst(telescope_model_sst, simtelpath):
+    camera_efficiency_sst = CameraEfficiency(
+        telescopeModel=telescope_model_sst, simtelSourcePath=simtelpath, test=True
+    )
     return camera_efficiency_sst
 
 
 @pytest.fixture
-def results_file(db):
+def results_file(db, io_handler):
     testFileName = "camera-efficiency-North-LST-1-za20.0_validate_camera_efficiency.ecsv"
     db.exportFileDB(
         dbName="test-data",
-        dest=io.getOutputDirectory(
-            filesLocation=cfg.get("outputLocation"),
+        dest=io_handler.getOutputDirectory(
             label="validate_camera_efficiency",
             dirType="camera-efficiency",
             test=True,
@@ -40,31 +41,32 @@ def results_file(db):
         fileName=testFileName,
     )
 
-    return io.getOutputDirectory(
-        filesLocation=cfg.get("outputLocation"),
+    return io_handler.getOutputDirectory(
         label="validate_camera_efficiency",
         dirType="camera-efficiency",
         test=True,
     ).joinpath("camera-efficiency-North-LST-1-za20.0_validate_camera_efficiency.ecsv")
 
 
-def test_from_kwargs(telescope_model_lst):
+def test_from_kwargs(telescope_model_lst, simtelpath):
 
     telModel = telescope_model_lst
     label = "test-from-kwargs"
     zenithAngle = 30 * u.deg
     ce = CameraEfficiency.fromKwargs(
-        telescopeModel=telModel, label=label, zenithAngle=zenithAngle, test=True
+        telescopeModel=telModel,
+        simtelSourcePath=simtelpath,
+        label=label,
+        zenithAngle=zenithAngle,
+        test=True,
     )
     assert ce.config.zenithAngle == 30
 
 
-def test_validate_telescope_model(cfg_setup):
+def test_validate_telescope_model(simtelpath):
 
     with pytest.raises(ValueError):
-        CameraEfficiency(
-            telescopeModel="bla_bla",
-        )
+        CameraEfficiency(telescopeModel="bla_bla", simtelSourcePath=simtelpath)
 
 
 def test_load_files(camera_efficiency_lst):

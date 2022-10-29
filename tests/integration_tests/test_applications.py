@@ -7,10 +7,6 @@ from io import StringIO
 
 import pytest
 
-import simtools.config as cfg
-import simtools.io_handler as io
-from simtools import db_handler
-
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
@@ -25,9 +21,9 @@ APP_LIST = {
     # Optics
     "compare_cumulative_psf": [
         [
-            "-s",
+            "--site",
             "North",
-            "-t",
+            "--telescope",
             "LST-1",
             "--model_version",
             "prod5",
@@ -61,9 +57,9 @@ APP_LIST = {
     ],
     "derive_mirror_rnda::psf_random_flen": [
         [
-            "-s",
+            "--site",
             "North",
-            "-t",
+            "--telescope",
             "MST-FlashCam-D",
             "--containment_fraction",
             "0.8",
@@ -77,9 +73,9 @@ APP_LIST = {
     ],
     "derive_mirror_rnda::psf_notuning": [
         [
-            "-s",
+            "--site",
             "North",
-            "-t",
+            "--telescope",
             "MST-FlashCam-D",
             "--containment_fraction",
             "0.8",
@@ -94,9 +90,9 @@ APP_LIST = {
     ],
     "derive_mirror_rnda::psf_measurement": [
         [
-            "-s",
+            "--site",
             "North",
-            "-t",
+            "--telescope",
             "MST-FlashCam-D",
             "--containment_fraction",
             "0.8",
@@ -111,9 +107,9 @@ APP_LIST = {
     ],
     "derive_mirror_rnda::psf_mean": [
         [
-            "-s",
+            "--site",
             "North",
-            "-t",
+            "--telescope",
             "MST-FlashCam-D",
             "--containment_fraction",
             "0.8",
@@ -128,9 +124,9 @@ APP_LIST = {
     ],
     "validate_optics": [
         [
-            "-s",
+            "--site",
             "North",
-            "-t",
+            "--telescope",
             "LST-1",
             "--max_offset",
             "1.0",
@@ -143,9 +139,9 @@ APP_LIST = {
     ],
     "tune_psf": [
         [
-            "-s",
+            "--site",
             "North",
-            "-t",
+            "--telescope",
             "LST-1",
             "--model_version",
             "prod5",
@@ -158,12 +154,14 @@ APP_LIST = {
     ],
     # Camera
     "validate_camera_efficiency::MST-NectarCam-D": [
-        ["-s", "North", "-t", "MST-NectarCam-D", "--model_version", "prod5"]
+        ["--site", "North", "--telescope", "MST-NectarCam-D", "--model_version", "prod5"]
     ],
     "validate_camera_efficiency::SST-D": [
-        ["-s", "South", "-t", "SST-D", "--model_version", "prod5"]
+        ["--site", "South", "--telescope", "SST-D", "--model_version", "prod5"]
     ],
-    "validate_camera_fov": [["-s", "North", "-t", "MST-NectarCam-D", "--model_version", "prod5"]],
+    "validate_camera_fov": [
+        ["--site", "North", "--telescope", "MST-NectarCam-D", "--model_version", "prod5"]
+    ],
     "plot_simtel_histograms::help": [
         [
             "--help",
@@ -176,9 +174,9 @@ APP_LIST = {
     # Trigger
     "sim_showers_for_trigger_rates": [
         [
-            "-a",
+            "--array",
             "4LST",
-            "-s",
+            "--site",
             "North",
             "--primary",
             "proton",
@@ -187,23 +185,61 @@ APP_LIST = {
             "--nevents",
             "10000",
             "--test",
+            "--submit_command",
+            "local",
         ]
     ],
     # Database
-    "get_file_from_db::CTA-Simulation-Model": [["-f", "mirror_CTA-S-LST_v2020-04-07.dat"]],
-    "get_file_from_db::test-data": [["-f", "PSFcurve_data_v2.txt"]],
+    "get_file_from_db::CTA-Simulation-Model": [["--file_name", "mirror_CTA-S-LST_v2020-04-07.dat"]],
+    "get_file_from_db::test-data": [["--file_name", "PSFcurve_data_v2.txt"]],
     "get_file_from_db::CTA-Simulation-Model-Derived-Values": [
-        ["-f", "ray-tracing-North-LST-1-d10.0-za20.0_validate_optics.ecsv"]
+        ["--file_name", "ray-tracing-North-LST-1-d10.0-za20.0_validate_optics.ecsv"]
     ],
     "get_parameter": [
-        ["-s", "North", "-t", "LST-1", "-p", "mirror_list", "--model_version", "prod5"]
+        [
+            "--site",
+            "North",
+            "--telescope",
+            "LST-1",
+            "--parameter",
+            "mirror_list",
+            "--model_version",
+            "prod5",
+        ]
     ],
-    "add_file_to_db": [["-f", "TESTMODELDIR/MLTdata-preproduction.usermeta.yml", "-db", "sandbox"]],
+    "add_file_to_db": [
+        [
+            "--file_name",
+            "TESTMODELDIR/MLTdata-preproduction.usermeta.yml",
+            "TESTMODELDIR/MLTdata-preproduction.ecsv",
+            "--db",
+            "sandbox",
+        ]
+    ],
+    # Production
     "production::showers_only": [
-        ["-p", "./tests/resources/prodConfigTest.yml", "-t", "simulate", "--showers_only", "--test"]
+        [
+            "--productionconfig",
+            "./tests/resources/prodConfigTest.yml",
+            "--task",
+            "simulate",
+            "--showers_only",
+            "--test",
+            "--submit_command",
+            "local",
+        ]
     ],
     "production::array_only": [
-        ["-p", "./tests/resources/prodConfigTest.yml", "-t", "simulate", "--array_only", "--test"]
+        [
+            "--productionconfig",
+            "./tests/resources/prodConfigTest.yml",
+            "--task",
+            "simulate",
+            "--array_only",
+            "--test",
+            "--submit_command",
+            "local",
+        ]
     ],
     # print_array
     "print_array_elements::print_all": [
@@ -255,7 +291,8 @@ APP_LIST = {
 
 
 @pytest.mark.parametrize("application", APP_LIST.keys())
-def test_applications(set_simtools, application, monkeypatch, db_cleanup_file_sandbox):
+def test_applications(application, io_handler, monkeypatch, db):
+
     logger.info("Testing {}".format(application))
 
     # The add_file_to_db.py application requires a user confirmation.
@@ -266,11 +303,10 @@ def test_applications(set_simtools, application, monkeypatch, db_cleanup_file_sa
     def prepare_one_file(fileName):
         db.exportFileDB(
             dbName="test-data",
-            dest=io.getOutputDirectory(dirType="model", test=True),
+            dest=io_handler.getOutputDirectory(dirType="model", test=True),
             fileName=fileName,
         )
 
-    db = db_handler.DatabaseHandler()
     prepare_one_file("PSFcurve_data_v2.txt")
     prepare_one_file("MLTdata-preproduction.usermeta.yml")
     prepare_one_file("MLTdata-preproduction.ecsv")
@@ -278,9 +314,10 @@ def test_applications(set_simtools, application, monkeypatch, db_cleanup_file_sa
     def makeCommand(app, args):
         cmd = "python applications/" + app + ".py"
         for aa in args:
-            aa = aa.replace("TESTMODELDIR", str(io.getOutputDirectory(dirType="model", test=True)))
+            aa = aa.replace(
+                "TESTMODELDIR", str(io_handler.getOutputDirectory(dirType="model", test=True))
+            )
             cmd += " " + aa
-        cmd += " --configFile " + str(cfg.CONFIG_FILE_NAME)
         return cmd
 
     for args in APP_LIST[application]:

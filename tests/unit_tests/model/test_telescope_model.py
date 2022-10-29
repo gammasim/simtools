@@ -6,8 +6,7 @@ import logging
 import numpy as np
 import pytest
 
-import simtools.config as cfg
-import simtools.io_handler as io
+import simtools.util.general as gen
 from simtools.model.telescope_model import InvalidParameter, TelescopeModel
 
 logger = logging.getLogger()
@@ -15,20 +14,20 @@ logger.setLevel(logging.DEBUG)
 
 
 @pytest.fixture
-def lst_config_file(db):
+def lst_config_file(db, io_handler):
     testFileName = "CTA-North-LST-1-Current_test-telescope-model.cfg"
     db.exportFileDB(
         dbName="test-data",
-        dest=io.getOutputDirectory(dirType="model", test=True),
+        dest=io_handler.getOutputDirectory(dirType="model", test=True),
         fileName=testFileName,
     )
 
-    cfgFile = cfg.findFile(testFileName, io.getOutputDirectory(dirType="model", test=True))
+    cfgFile = gen.findFile(testFileName, io_handler.getOutputDirectory(dirType="model", test=True))
     return cfgFile
 
 
 @pytest.fixture
-def telescope_model_from_config_file(cfg_setup, lst_config_file):
+def telescope_model_from_config_file(lst_config_file):
 
     label = "test-telescope-model"
     telModel = TelescopeModel.fromConfigFile(
@@ -100,7 +99,7 @@ def test_cfg_file(telescope_model_from_config_file, lst_config_file):
     assert False is filecmp.cmp(lst_config_file, tel.getConfigFile())
 
 
-def test_updating_export_model_files(set_db):
+def test_updating_export_model_files(db_config, io_handler):
     """
     It was found in derive_mirror_rnda_angle that the DB was being
     accessed each time the model was changed, because the model
@@ -115,6 +114,7 @@ def test_updating_export_model_files(set_db):
         telescopeModelName="LST-1",
         modelVersion="prod4",
         label="test-telescope-model-2",
+        mongoDBConfig=db_config,
     )
 
     logger.debug(
