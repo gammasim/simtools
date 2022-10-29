@@ -24,21 +24,12 @@ def db_cleanup(db, random_id):
     db.dbClient["sandbox"]["metadata_" + random_id].drop()
 
 
-@pytest.fixture()
-def db_cleanup_file_sandbox(db):
-    yield
-    # Cleanup
-    logger.info("Dropping the temporary files in the sandbox")
-    db.dbClient["sandbox"]["fs.chunks"].drop()
-    db.dbClient["sandbox"]["fs.files"].drop()
-
-
 def test_reading_db_lst(db):
 
     logger.info("----Testing reading LST-----")
     assert 1 == 1
     pars = db.getModelParameters("north", "lst-1", "Current")
-    if db.dbDetails:
+    if db.mongo_db_config:
         assert pars["parabolic_dish"]["Value"] == 1
         assert pars["camera_pixels"]["Value"] == 1855
     else:
@@ -50,7 +41,7 @@ def test_reading_db_mst_nc(db):
 
     logger.info("----Testing reading MST-NectarCam-----")
     pars = db.getModelParameters("north", "mst-NectarCam-D", "Current")
-    if db.dbDetails:
+    if db.mongo_db_config:
         assert pars["camera_pixels"]["Value"] == 1855
     else:
         assert pars["camera_pixels"] == 1855
@@ -60,7 +51,7 @@ def test_reading_db_mst_fc(db):
 
     logger.info("----Testing reading MST-FlashCam-----")
     pars = db.getModelParameters("north", "mst-FlashCam-D", "Current")
-    if db.dbDetails:
+    if db.mongo_db_config:
         assert pars["camera_pixels"]["Value"] == 1764
     else:
         assert pars["camera_pixels"] == 1764
@@ -70,7 +61,7 @@ def test_reading_db_sst(db):
 
     logger.info("----Testing reading SST-----")
     pars = db.getModelParameters("south", "sst-D", "Current")
-    if db.dbDetails:
+    if db.mongo_db_config:
         assert pars["camera_pixels"]["Value"] == 2048
     else:
         assert pars["camera_pixels"] == 2048
@@ -284,14 +275,14 @@ def test_reading_db_sites(db):
 
     logger.info("----Testing reading La Palma parameters-----")
     pars = db.getSiteParameters("North", "Current")
-    if db.dbDetails:
+    if db.mongo_db_config:
         assert pars["altitude"]["Value"] == 2158
     else:
         assert pars["altitude"] == 2158
 
     logger.info("----Testing reading Paranal parameters-----")
     pars = db.getSiteParameters("South", "Current")
-    if db.dbDetails:
+    if db.mongo_db_config:
         assert pars["altitude"]["Value"] == 2147
     else:
         assert pars["altitude"] == 2147
@@ -319,7 +310,16 @@ def test_separating_get_and_write(db, io_handler):
         assert io_handler.getOutputFile(fileNow, dirType="model", test=True).exists()
 
 
-def test_insert_files_db(db, io_handler, db_cleanup_file_sandbox):
+def test_export_file_db(db, io_handler):
+    logger.info("----Testing exporting files from the DB-----")
+    outputDir = io_handler.getOutputDirectory(dirType="model", test=True)
+    fileName = "mirror_CTA-S-LST_v2020-04-07.dat"
+    fileToExport = outputDir / fileName
+    db.exportFileDB(db.DB_CTA_SIMULATION_MODEL, outputDir, fileName)
+    assert fileToExport.exists()
+
+
+def test_insert_files_db(db, io_handler, db_cleanup_file_sandbox, caplog):
 
     logger.info("----Testing inserting files to the DB-----")
     logger.info(
@@ -331,8 +331,13 @@ def test_insert_files_db(db, io_handler, db_cleanup_file_sandbox):
     with open(fileName, "w") as f:
         f.write("# This is a test file")
 
-    file_id = db.insertFileToDB(fileName, "sandbox")
-    assert file_id == db._getFileMongoDB("sandbox", "test_file.dat")._id
+    fileId = db.insertFileToDB(fileName, "sandbox")
+    assert fileId == db._getFileMongoDB("sandbox", "test_file.dat")._id
+    logger.info("Now test inserting the same file again, this time expect a warning")
+    with caplog.at_level(logging.WARNING):
+        fileId = db.insertFileToDB(fileName, "sandbox")
+    assert "exists in the DB. Returning its ID" in caplog.text
+    assert fileId == db._getFileMongoDB("sandbox", "test_file.dat")._id
 
 
 def test_get_all_versions(db):

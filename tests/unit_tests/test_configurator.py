@@ -132,13 +132,11 @@ def test_check_parameter_configuration_status(configurator, args_dict, tmp_test_
 
 def test_arglistFromConfig():
 
-    _tmp_dict = {
-        "a": 1.0,
-        "b": None,
-        "c": True,
-    }
+    _tmp_dict = {"a": 1.0, "b": None, "c": True, "d": ["d1", "d2", "d3"]}
 
-    assert ["--a", "1.0", "--c"] == Configurator._arglistFromConfig(_tmp_dict)
+    assert ["--a", "1.0", "--c", "--d", "d1", "d2", "d3"] == Configurator._arglistFromConfig(
+        _tmp_dict
+    )
 
     assert [] == Configurator._arglistFromConfig({})
 
@@ -175,6 +173,7 @@ def test_getDBParameters(configurator, args_dict):
     args_dict["db_api_user"] = "db_user"
     args_dict["db_api_pw"] = "12345"
     args_dict["db_api_port"] = 42
-    args_dict["db_api_name"] = "abc@def.de"
+    args_dict["db_server"] = "abc@def.de"
+    args_dict["db_api_authentication_database"] = "admin"
 
     assert configurator.config == args_dict

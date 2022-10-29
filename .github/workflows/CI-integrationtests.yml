@@ -4,7 +4,7 @@ name: CI-integrationtests
 #
 env:
   SIMTELPATH: ${{ github.workspace }}/
-  DB_API_NAME: ${{ secrets.DB_API_NAME }}
+  DB_SERVER: ${{ secrets.DB_SERVER }}
   DB_API_USER: ${{ secrets.DB_API_USER }}
   DB_API_PW: ${{ secrets.DB_API_PW }}
   DB_API_PORT: ${{ secrets.DB_API_PORT }}
