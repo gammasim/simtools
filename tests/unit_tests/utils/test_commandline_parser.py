@@ -20,6 +20,15 @@ def test_site():
         parser.CommandLineParser.site("East")
 
 
+def test_telescope():
+
+    assert parser.CommandLineParser.telescope("LST-1") == "LST-1"
+    assert parser.CommandLineParser.telescope("MST-FlashCam") == "MST-FlashCam"
+
+    with pytest.raises(ValueError, match=r"Invalid name Whipple"):
+        assert parser.CommandLineParser.telescope("Whipple")
+
+
 def test_efficiency_interval():
 
     assert parser.CommandLineParser.efficiency_interval(0.5) == pytest.approx(0.5)
