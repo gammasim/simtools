@@ -150,8 +150,6 @@ class SimtelConfigWriter:
                 file.write("# include <{}>\n\n".format(telConfigFile))
             file.write("#endif \n\n")
 
-    # END writeSimtelArrayConfigFile
-
     def writeSingleMirrorListFile(
         self, mirrorNumber, mirrors, singleMirrorListFile, setFocalLengthToZero=False
     ):
@@ -195,8 +193,6 @@ class SimtelConfigWriter:
                 )
             )
 
-    # End of writeSingleMirrorListFile
-
     def _writeHeader(self, file, title, commentChar="%"):
         """
         Writes a generic header. commenChar is the character to be used for comments, \
@@ -232,5 +228,3 @@ class SimtelConfigWriter:
             value = siteParameters[par]["Value"]
             file.write(self.TAB + "{} = {}\n".format(par, value))
         file.write("\n")
-
-    # End of writeCommonParameters

@@ -1,33 +1,29 @@
 import logging
 import os
 from pathlib import Path
+from unittest import mock
 
 import pytest
-import yaml
 
-import simtools.config as cfg
+import simtools.io_handler
 from simtools import db_handler
+from simtools.configuration import Configurator
 from simtools.model.telescope_model import TelescopeModel
 
 logger = logging.getLogger()
 
 
-def write_configuration_test_file(config_file, config_dict):
-    """
-    Write a simtools configuration file
-
-    Do not overwrite existing files
-    """
-
-    if not Path(config_file).exists():
-        with open(config_file, "w") as output:
-            yaml.safe_dump(config_dict, output, sort_keys=False)
-
-
 @pytest.fixture
 def tmp_test_directory(tmpdir_factory):
+    """
+    Sets test directories.
+
+    Some tests depend on this structure.
+
+    """
+
     tmp_test_dir = tmpdir_factory.mktemp("test-data")
-    tmp_sub_dirs = ["resources", "output", "simtel"]
+    tmp_sub_dirs = ["resources", "output", "simtel", "model", "application-plots"]
     for sub_dir in tmp_sub_dirs:
         tmp_sub_dir = tmp_test_dir / sub_dir
         tmp_sub_dir.mkdir()
@@ -36,183 +32,128 @@ def tmp_test_directory(tmpdir_factory):
 
 
 @pytest.fixture
-def configuration_parameters(tmp_test_directory):
+def io_handler(tmp_test_directory):
 
-    return {
-        "modelFilesLocations": [
-            str(tmp_test_directory / "resources/"),
-            str(tmp_test_directory / "tests/resources"),
-        ],
-        "dataLocation": "./data/",
-        "outputLocation": str(tmp_test_directory / "output"),
-        "simtelPath": str(tmp_test_directory / "simtel"),
-        "useMongoDB": False,
-        "mongoDBConfigFile": None,
-        "extraCommands": [""],
-    }
+    tmp_io_handler = simtools.io_handler.IOHandler()
+    tmp_io_handler.setPaths(
+        output_path=str(tmp_test_directory) + "/output",
+        data_path="./data/",
+        model_path=str(tmp_test_directory) + "/model",
+    )
+    return tmp_io_handler
 
 
 @pytest.fixture
-def db_connection(tmp_test_directory):
-    # prefer local dbDetails.yml file for testing
-    try:
-        dbDetailsFile = "dbDetails.yml"
-        with open(dbDetailsFile, "r") as stream:
-            yaml.safe_load(stream)
-        return dbDetailsFile
-    # try if DB details are defined in environment
-    # (e.g., as secrets in github actions)
-    except FileNotFoundError:
-        parsToDbDetails = {}
-        environVariblesToCheck = {
-            "mongodbServer": "DB_API_NAME",
-            "userDB": "DB_API_USER",
-            "passDB": "DB_API_PW",
-            "dbPort": "DB_API_PORT",
-        }
-        found_env = True
-        for par, env in environVariblesToCheck.items():
-            if env in os.environ:
-                parsToDbDetails[par] = os.environ[env]
-            else:
-                found_env = False
-        if found_env:
-            dbDetailsFileName = tmp_test_directory / "dbDetails.yml"
-            cfg.createDummyDbDetails(filename=dbDetailsFileName, **parsToDbDetails)
-            return dbDetailsFileName
-
-        return ""
-
-
-@pytest.fixture
-def set_db(db_connection, tmp_test_directory, configuration_parameters):
+def mock_settings_env_vars(tmp_test_directory):
     """
-    Configuration file for using simtools
-    - with database
-    - without sim_telarray
+    Removes all environment variable from the test system.
+    Explicitely sets those needed.
 
-    (some code duplication with cfg_setup, set_simtelarray, set_simtools, set_db)
     """
-
-    if len(str(db_connection)) == 0:
-        pytest.skip(reason="Test requires database (DB) connection")
-
-    config_file = tmp_test_directory / "config-db-test.yml"
-    config_dict = dict(configuration_parameters)
-    config_dict["useMongoDB"] = True
-    config_dict["mongoDBConfigFile"] = str(db_connection)
-
-    write_configuration_test_file(config_file, config_dict)
-    cfg.setConfigFileName(config_file)
+    with mock.patch.dict(
+        os.environ,
+        {
+            "SIMTELPATH": str(tmp_test_directory) + "/simtel",
+            "DB_API_USER": "db_user",
+            "DB_API_PW": "12345",
+            "DB_API_PORT": "42",
+            "DB_SERVER": "abc@def.de",
+        },
+        clear=True,
+    ):
+        yield
 
 
 @pytest.fixture
-def simtelpath():
+def simtelpath(mock_settings_env_vars):
     simtelpath = Path(os.path.expandvars("$SIMTELPATH"))
     if simtelpath.exists():
         return simtelpath
-
     return ""
 
 
 @pytest.fixture
-def set_simtelarray(simtelpath, tmp_test_directory, configuration_parameters):
-    """
-    Configuration file for using simtools
-    - without database
-    - with sim_telarray
-
-    (some code duplication with cfg_setup, set_simtelarray, set_simtools, set_db)
-    """
-
-    if len(str(simtelpath)) == 0:
-        pytest.skip(reason="sim_telarray not found in {}".format(simtelpath))
-
-    config_file = tmp_test_directory / "config-simtelarray-test.yml"
-    config_dict = dict(configuration_parameters)
-    config_dict["simtelPath"] = str(simtelpath)
-    write_configuration_test_file(config_file, config_dict)
-    cfg.setConfigFileName(config_file)
+def simtelpath_no_mock():
+    simtelpath = Path(os.path.expandvars("$SIMTELPATH"))
+    if simtelpath.exists():
+        return simtelpath
+    return ""
 
 
 @pytest.fixture
-def set_simtools(db_connection, simtelpath, tmp_test_directory, configuration_parameters):
-    """
-    Configuration file for using simtools
-    - with database
-    - with sim_telarray
+def args_dict(tmp_test_directory, simtelpath):
 
-    (some code duplication with cfg_setup, set_simtelarray, set_simtools, set_db)
-    """
-
-    if len(str(simtelpath)) == 0:
-        pytest.skip(reason="sim_telarray not found in {}".format(simtelpath))
-    if len(str(db_connection)) == 0:
-        pytest.skip(reason="Test requires database (DB) connection")
-
-    config_file = tmp_test_directory / "config-simtools-test.yml"
-    config_dict = dict(configuration_parameters)
-    config_dict["simtelPath"] = str(simtelpath)
-    config_dict["useMongoDB"] = True
-    config_dict["mongoDBConfigFile"] = str(db_connection)
-    config_dict["submissionCommand"] = "local"
-
-    write_configuration_test_file(config_file, config_dict)
-    cfg.setConfigFileName(config_file)
-
-
-@pytest.fixture
-def cfg_setup(tmp_test_directory, configuration_parameters):
-    """
-    Configuration file for using simtools
-    - without database
-    - without sim_telarray
-
-    (some code duplication with cfg_setup, set_simtelarray, set_simtools, set_db)
-    """
-
-    config_file = tmp_test_directory / "config-test.yml"
-    write_configuration_test_file(config_file, dict(configuration_parameters))
-    cfg.setConfigFileName(config_file)
-
-
-@pytest.fixture
-def telescope_model_lst(set_db):
-    telescopeModelLST = TelescopeModel(
-        site="North",
-        telescopeModelName="LST-1",
-        modelVersion="Prod5",
-        label="validate_camera_efficiency",
+    return Configurator().default_config(
+        (
+            "--output_path",
+            str(tmp_test_directory),
+            "--data_path",
+            "./data/",
+            "--simtelpath",
+            str(simtelpath),
+        ),
     )
-    return telescopeModelLST
 
 
 @pytest.fixture
-def telescope_model_sst(set_db):
-    telescopeModelSST = TelescopeModel(
-        site="South",
-        telescopeModelName="SST-D",
-        modelVersion="Prod5",
-        label="test-telescope-model-sst",
+def args_dict_site(tmp_test_directory, simtelpath):
+
+    return Configurator().default_config(
+        (
+            "--output_path",
+            str(tmp_test_directory),
+            "--data_path",
+            "./data/",
+            "--simtelpath",
+            str(simtelpath),
+            "--site",
+            "South",
+            "--telescope",
+            "MST-NectarCam-D",
+        )
     )
-    return telescopeModelSST
 
 
 @pytest.fixture
-def db(set_db):
-    db = db_handler.DatabaseHandler()
+def configurator(tmp_test_directory, simtelpath):
+
+    config = Configurator()
+    config.default_config(
+        ("--output_path", str(tmp_test_directory), "--simtelpath", str(simtelpath))
+    )
+    return config
+
+
+@pytest.fixture
+def db_config():
+    """
+    Read DB configuration from tests from environmental variables
+
+    """
+    mongoDBConfig = {}
+    _db_para = ("db_api_user", "db_api_pw", "db_api_port", "db_server")
+    for _para in _db_para:
+        mongoDBConfig[_para] = os.environ.get(_para.upper())
+    if mongoDBConfig["db_api_port"] is not None:
+        mongoDBConfig["db_api_port"] = int(mongoDBConfig["db_api_port"])
+    return mongoDBConfig
+
+
+@pytest.fixture
+def db(db_config):
+    db = db_handler.DatabaseHandler(mongoDBConfig=db_config)
     return db
 
 
 @pytest.fixture
-def db_no_config_file(db_connection):
+def db_no_config_file():
     """
-    Same as db above, but using just db_connection
+    Same as db above, but without DB variable defined,
     since we do not want to set the config file as well.
     Otherwise it creates a conflict between the config file
     set by set_db and the one set by set_simtools
     """
-    db = db_handler.DatabaseHandler()
+    db = db_handler.DatabaseHandler(mongoDBConfig=None)
     return db
 
 
@@ -223,3 +164,27 @@ def db_cleanup_file_sandbox(db_no_config_file):
     logger.info("Dropping the temporary files in the sandbox")
     db_no_config_file.dbClient["sandbox"]["fs.chunks"].drop()
     db_no_config_file.dbClient["sandbox"]["fs.files"].drop()
+
+
+@pytest.fixture
+def telescope_model_lst(db, db_config, io_handler):
+    telescopeModelLST = TelescopeModel(
+        site="North",
+        telescopeModelName="LST-1",
+        modelVersion="Prod5",
+        mongoDBConfig=db_config,
+        label="validate_camera_efficiency",
+    )
+    return telescopeModelLST
+
+
+@pytest.fixture
+def telescope_model_sst(db, db_config, io_handler):
+    telescopeModelSST = TelescopeModel(
+        site="South",
+        telescopeModelName="SST-D",
+        modelVersion="Prod5",
+        mongoDBConfig=db_config,
+        label="test-telescope-model-sst",
+    )
+    return telescopeModelSST

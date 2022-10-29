@@ -5,7 +5,6 @@ import logging
 import astropy.units as u
 import pytest
 
-import simtools.io_handler as io
 from simtools.simtel.simtel_events import SimtelEvents
 
 logger = logging.getLogger()
@@ -13,16 +12,16 @@ logger.setLevel(logging.DEBUG)
 
 
 @pytest.fixture
-def testFiles():
+def testFiles(io_handler):
     testFiles = list()
     testFiles.append(
-        io.getInputDataFile(
+        io_handler.getInputDataFile(
             fileName="run201_proton_za20deg_azm0deg-North-Prod5_test-production-5-mini.simtel.zst",
             test=True,
         )
     )
     testFiles.append(
-        io.getInputDataFile(
+        io_handler.getInputDataFile(
             fileName="run202_proton_za20deg_azm0deg-North-Prod5_test-production-5-mini.simtel.zst",
             test=True,
         )

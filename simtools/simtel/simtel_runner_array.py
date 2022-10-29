@@ -1,8 +1,8 @@
 import logging
 from pathlib import Path
 
-import simtools.io_handler as io
 import simtools.util.general as gen
+from simtools import io_handler
 from simtools.simtel.simtel_runner import InvalidOutputFile, SimtelRunner
 from simtools.util import names
 
@@ -54,7 +54,6 @@ class SimtelRunnerArray(SimtelRunner):
         arrayModel,
         label=None,
         simtelSourcePath=None,
-        filesLocation=None,
         configData=None,
         configFile=None,
     ):
@@ -68,11 +67,7 @@ class SimtelRunnerArray(SimtelRunner):
         label: str, optional
             Instance label. Important for output file naming.
         simtelSourcePath: str (or Path), optional
-            Location of sim_telarray installation. If not given, it will be taken from the
-            config.yml file.
-        filesLocation: str (or Path), optional
-            Parent location of the output files created by this class. If not given, it will be
-            taken from the config.yml file.
+            Location of sim_telarray installation.
         configData: dict.
             Dict containing the configurable parameters.
         configFile: str or Path
@@ -81,21 +76,20 @@ class SimtelRunnerArray(SimtelRunner):
         self._logger = logging.getLogger(__name__)
         self._logger.debug("Init SimtelRunnerArray")
 
-        super().__init__(
-            label=label, simtelSourcePath=simtelSourcePath, filesLocation=filesLocation
-        )
+        super().__init__(label=label, simtelSourcePath=simtelSourcePath)
 
         self.arrayModel = self._validateArrayModel(arrayModel)
         self.label = label if label is not None else self.arrayModel.label
 
-        # File location
-        self._baseDirectory = io.getOutputDirectory(
-            self._filesLocation, self.label, "array-simulator"
-        )
+        self.io_handler = io_handler.IOHandler()
+
+        self._baseDirectory = self.io_handler.getOutputDirectory(self.label, "array-simulator")
 
         # Loading configData
         _configDataIn = gen.collectDataFromYamlOrDict(configFile, configData)
-        _parameterFile = io.getInputDataFile("parameters", "simtel-runner-array_parameters.yml")
+        _parameterFile = self.io_handler.getInputDataFile(
+            "parameters", "simtel-runner-array_parameters.yml"
+        )
         _parameters = gen.collectDataFromYamlOrDict(_parameterFile, None)
         self.config = gen.validateConfigData(_configDataIn, _parameters)
 

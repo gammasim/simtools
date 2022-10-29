@@ -3,18 +3,18 @@
 """
     Summary
     -------
-    This application gets a file from the DB.
+    Get a file from the DB.
 
     The name of the file is required.
-    This application should complement the ones for getting parameters, adding entries and files \
+    This application complements the ones for getting parameters, adding entries and files \
     to the DB.
 
     Command line arguments
     ----------------------
-    fileName (str or list of str, required)
+    file_name (str or list of str, required)
         Name of the file to get including its full directory. A list of files is also allowed.
-        i.e., python applications/get_file_from_db.py -f mirror_CTA-N-LST1_v2019-03-31.dat.
-    outputDirectory (str)
+        i.e., python applications/get_file_from_db.py -file_name mirror_CTA-N-LST1_v2019-03-31.dat.
+    output_path (str)
         Name of the local output directory where to save the files.
         Default it $CWD.
     verbosity (str, optional)
@@ -22,54 +22,39 @@
 
     Example
     -------
-    getting a file from DB.
+    getting a file from the DB.
 
     .. code-block:: console
 
-        python applications/get_file_from_db.py -f mirror_CTA-N-LST1_v2019-03-31.dat
+        python applications/get_file_from_db.py ---file_name mirror_CTA-N-LST1_v2019-03-31.dat
 """
 
 import logging
-from pathlib import Path
 
-import simtools.config as cfg
-import simtools.util.commandline_parser as argparser
+import simtools.configuration as configurator
 import simtools.util.general as gen
 from simtools import db_handler
 
 
 def main():
 
-    parser = argparser.CommandLineParser(description=("Get a file or files from the DB."))
-
-    parser.add_argument(
-        "-f",
-        "--fileName",
-        help=(
-            "The file name to download. "
-            "i.e., python applications/get_file_from_db.py -f mirror_CTA-S-LST_v2020-04-07.dat"
-        ),
-        type=str,
-    )
-    parser.add_argument(
-        "-out",
-        "--outputDirectory",
-        dest="outputDirectory",
-        type=str,
-        default=".",
-        help=(
-            "The local output directory DB to save the files from the DB. The default is the CWD"
-        ),
+    config = configurator.Configurator(
+        label="Get file(s) from the DB.",
+        description="python applications/get_file_from_db.py "
+        " --file_name mirror_CTA-S-LST_v2020-04-07.dat",
     )
 
-    parser.initialize_default_arguments()
-    args = parser.parse_args()
-    cfg.setConfigFileName(args.configFile)
+    config.parser.add_argument(
+        "--file_name",
+        help=("The name of the file name to be downloaded."),
+        type=str,
+    )
+    args_dict, db_config = config.initialize(db_config=True)
 
     logger = logging.getLogger()
-    logger.setLevel(gen.getLogLevelFromUser(args.logLevel))
+    logger.setLevel(gen.getLogLevelFromUser(args_dict["log_level"]))
 
-    db = db_handler.DatabaseHandler()
+    db = db_handler.DatabaseHandler(mongoDBConfig=db_config)
     availableDbs = [
         db.DB_TABULATED_DATA,
         db.DB_CTA_SIMULATION_MODEL,
@@ -79,15 +64,14 @@ def main():
         "sandbox",
         "test-data",
     ]
-    outputPath = Path(args.outputDirectory)
     fileId = None
-    if outputPath.exists():
+    if args_dict["output_path"].exists():
         for dbName in availableDbs:
             try:
-                fileId = db.exportFileDB(dbName, args.outputDirectory, args.fileName)
-                print(
+                fileId = db.exportFileDB(dbName, args_dict["output_path"], args_dict["file_name"])
+                logger.info(
                     "Got file {} from DB {} and saved into {}".format(
-                        args.fileName, dbName, args.outputDirectory
+                        args_dict["file_name"], dbName, args_dict["output_path"]
                     )
                 )
                 break
@@ -95,12 +79,14 @@ def main():
                 continue
 
         if fileId is None:
-            raise FileNotFoundError(
-                "The file {} was not found in any of the available DBs."
-            ).format(args.fileName)
-
+            logger.error(
+                "The file {} was not found in any of the available DBs.".format(
+                    args_dict["file_name"]
+                )
+            )
+            raise FileNotFoundError
     else:
-        print("Aborted, directory {} does not exist".format(args.outputDirectory))
+        logger.error("Aborted, directory {} does not exist".format(args_dict["output_path"]))
 
 
 if __name__ == "__main__":

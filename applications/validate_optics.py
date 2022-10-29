@@ -64,10 +64,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.backends.backend_pdf import PdfPages
 
-import simtools.config as cfg
-import simtools.io_handler as io
-import simtools.util.commandline_parser as argparser
+import simtools.configuration as configurator
 import simtools.util.general as gen
+from simtools import io_handler
 from simtools.model.telescope_model import TelescopeModel
 from simtools.ray_tracing import RayTracing
 
@@ -76,57 +75,65 @@ from simtools.ray_tracing import RayTracing
 # setStyle()
 
 
-def main():
+def _parse():
+    """
+    Parse command line configuratio
 
-    parser = argparser.CommandLineParser(
+    """
+
+    config = configurator.Configurator(
         description=(
-            "Calculate and plot the PSF and eff. mirror area as a function of off-axis angle "
+            "Calculate and plot the PSF and effective mirror area as a function of off-axis angle "
             "of the telescope requested."
         )
     )
-    parser.initialize_telescope_model_arguments()
-    parser.add_argument(
+
+    config.parser.add_argument(
         "--src_distance",
         help="Source distance in km (default=10)",
         type=float,
         default=10,
     )
-    parser.add_argument("--zenith", help="Zenith angle in deg (default=20)", type=float, default=20)
-    parser.add_argument(
+    config.parser.add_argument(
+        "--zenith", help="Zenith angle in deg (default=20)", type=float, default=20
+    )
+    config.parser.add_argument(
         "--max_offset",
         help="Maximum offset angle in deg (default=4)",
         type=float,
         default=4,
     )
-    parser.add_argument(
+    config.parser.add_argument(
         "--offset_steps",
         help="Offset angle step size (default=0.25 deg)",
         type=float,
         default=0.25,
     )
-    parser.add_argument(
+    config.parser.add_argument(
         "--plot_images",
         help="Produce a multiple pages pdf file with the image plots.",
         action="store_true",
     )
-    parser.initialize_default_arguments(add_workflow_config=False)
+    return config.initialize(db_config=True, telescope_model=True)
 
-    args = parser.parse_args()
+
+def main():
+
+    args_dict, db_config = _parse()
     label = "validate_optics"
-    cfg.setConfigFileName(args.configFile)
 
     logger = logging.getLogger()
-    logger.setLevel(gen.getLogLevelFromUser(args.logLevel))
+    logger.setLevel(gen.getLogLevelFromUser(args_dict["log_level"]))
 
-    # Output directory to save files related directly to this app
-    outputDir = io.getOutputDirectory(cfg.get("outputLocation"), label, dirType="application-plots")
+    _io_handler = io_handler.IOHandler()
+    outputDir = _io_handler.getOutputDirectory(label, dirType="application-plots")
 
     telModel = TelescopeModel(
-        site=args.site,
-        telescopeModelName=args.telescope,
-        modelVersion=args.model_version,
+        site=args_dict["site"],
+        telescopeModelName=args_dict["telescope"],
+        modelVersion=args_dict["model_version"],
         label=label,
-        readFromDB=True,
+        mongoDBConfig=db_config,
     )
 
     ######################################################################
@@ -147,12 +154,15 @@ def main():
 
     ray = RayTracing.fromKwargs(
         telescopeModel=telModel,
-        sourceDistance=args.src_distance * u.km,
-        zenithAngle=args.zenith * u.deg,
-        offAxisAngle=np.linspace(0, args.max_offset, int(args.max_offset / args.offset_steps) + 1)
+        simtelSourcePath=args_dict["simtelpath"],
+        sourceDistance=args_dict["src_distance"] * u.km,
+        zenithAngle=args_dict["zenith"] * u.deg,
+        offAxisAngle=np.linspace(
+            0, args_dict["max_offset"], int(args_dict["max_offset"] / args_dict["offset_steps"]) + 1
+        )
         * u.deg,
     )
-    ray.simulate(test=args.test, force=False)
+    ray.simulate(test=args_dict["test"], force=False)
     ray.analyze(force=True)
 
     # Plotting
@@ -168,7 +178,7 @@ def main():
         plt.clf()
 
     # Plotting images
-    if args.plot_images:
+    if args_dict["plot_images"]:
         plotFileName = "_".join((label, telModel.name, "images.pdf"))
         plotFile = outputDir.joinpath(plotFileName)
         pdfPages = PdfPages(plotFile)

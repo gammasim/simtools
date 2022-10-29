@@ -123,7 +123,7 @@ import astropy.units as u
 import numpy as np
 from astropy.table import QTable, Table
 
-import simtools.config as cfg
+import simtools.configuration as configurator
 import simtools.util.commandline_parser as argparser
 import simtools.util.general as gen
 import simtools.util.model_data_writer as writer
@@ -138,9 +138,8 @@ def _parse(label):
 
     """
 
-    parser = argparser.CommandLineParser(label)
-    parser.initialize_telescope_model_arguments()
-    psf_group = parser.add_mutually_exclusive_group()
+    config = configurator.Configurator(label)
+    psf_group = config.parser.add_mutually_exclusive_group()
     psf_group.add_argument(
         "--psf_measurement_containment_mean",
         help="Mean of measured PSF containment diameter [cm]",
@@ -153,27 +152,27 @@ def _parse(label):
         type=str,
         required=False,
     )
-    parser.add_argument(
+    config.parser.add_argument(
         "--psf_measurement_containment_sigma",
         help="Std dev of measured PSF containment diameter [cm]",
         type=float,
         required=False,
     )
-    parser.add_argument(
+    config.parser.add_argument(
         "--containment_fraction",
         help="Containment fraction for diameter calculation (in interval 0,1)",
         type=argparser.CommandLineParser.efficiency_interval,
         required=False,
         default=0.8,
     )
-    parser.add_argument(
+    config.parser.add_argument(
         "--rnda",
         help="Starting value of mirror_reflection_random_angle",
         type=float,
         required=False,
         default=0.0,
     )
-    parser.add_argument(
+    config.parser.add_argument(
         "--mirror_list",
         help=(
             "Mirror list file to replace the default one. It should be used if"
@@ -182,7 +181,7 @@ def _parse(label):
         type=str,
         required=False,
     )
-    parser.add_argument(
+    config.parser.add_argument(
         "--use_random_flen",
         help=(
             "Use random focal lengths. Read value for random_focal_length parameter read"
@@ -191,24 +190,23 @@ def _parse(label):
         action="store_true",
         required=False,
     )
-    parser.add_argument(
+    config.parser.add_argument(
         "--random_flen",
         help="Value to replace the default random_focal_length.",
         default=None,
         type=float,
         required=False,
     )
-    parser.add_argument(
+    config.parser.add_argument(
         "--no_tuning",
         help="no tuning of random_reflection_angle (a single case will be simulated).",
         action="store_true",
         required=False,
     )
-    parser.initialize_default_arguments(add_workflow_config=True)
-    return parser.parse_args()
+    return config.initialize(db_config=True, telescope_model=True)
 
 
-def _define_telescope_model(workflow):
+def _define_telescope_model(workflow, args_dict, db_config):
     """
     Define telescope model and update configuration
     with mirror list and/or random focal length given
@@ -230,10 +228,13 @@ def _define_telescope_model(workflow):
         site=workflow.get_configuration_parameter("site"),
         telescopeModelName=workflow.get_configuration_parameter("telescope"),
         modelVersion=workflow.get_configuration_parameter("model_version"),
+        mongoDBConfig=db_config,
         label=workflow.label(),
     )
     if workflow.get_configuration_parameter("mirror_list") is not None:
-        mirrorListFile = cfg.findFile(name=workflow.get_configuration_parameter("mirror_list"))
+        mirrorListFile = gen.findFile(
+            name=workflow.get_configuration_parameter("mirror_list"), loc=args_dict["model_path"]
+        )
         tel.changeParameter("mirror_list", workflow.get_configuration_parameter("mirror_list"))
         tel.addParameterFile("mirror_list", mirrorListFile)
     if workflow.get_configuration_parameter("random_flen") is not None:
@@ -341,14 +342,14 @@ def _get_psf_containment(logger, workflow):
 def main():
 
     label = os.path.basename(__file__).split(".")[0]
-    args = _parse(label)
+    args_dict, db_config = _parse(label)
 
     logger = logging.getLogger()
-    logger.setLevel(gen.getLogLevelFromUser(args.logLevel))
+    logger.setLevel(gen.getLogLevelFromUser(args_dict["log_level"]))
 
-    workflow = workflow_config.WorkflowDescription(label=label, args=args)
+    workflow = workflow_config.WorkflowDescription(label=label, args_dict=args_dict)
 
-    tel = _define_telescope_model(workflow)
+    tel = _define_telescope_model(workflow, args_dict, db_config)
 
     if workflow.get_configuration_parameter("psf_measurement"):
         _get_psf_containment(logger, workflow)
@@ -365,6 +366,7 @@ def main():
             mirrorNumbers=list(range(1, 10))
             if workflow.get_configuration_parameter("test")
             else "all",
+            simtelSourcePath=args_dict.get("simtelpath", None),
             useRandomFocalLength=workflow.get_configuration_parameter("use_random_flen"),
         )
         ray.simulate(test=False, force=True)  # force has to be True, always

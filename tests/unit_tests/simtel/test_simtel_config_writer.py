@@ -4,7 +4,6 @@ import logging
 
 import pytest
 
-import simtools.io_handler as io
 from simtools.layout.layout_array import LayoutArray
 from simtools.model.telescope_model import TelescopeModel
 from simtools.simtel.simtel_config_writer import SimtelConfigWriter
@@ -15,18 +14,19 @@ logger.setLevel(logging.DEBUG)
 
 
 @pytest.fixture
-def telescopeModel():
+def telescopeModel(db_config, io_handler):
     telescopeModel = TelescopeModel(
         site="North",
         telescopeModelName="LST-1",
         modelVersion="Current",
         label="test-telescope-model",
+        mongoDBConfig=db_config,
     )
     return telescopeModel
 
 
 @pytest.fixture
-def simtelConfigWriter(set_db):
+def simtelConfigWriter():
 
     simtelConfigWriter = SimtelConfigWriter(
         site="North",
@@ -38,14 +38,14 @@ def simtelConfigWriter(set_db):
 
 
 @pytest.fixture
-def layout():
+def layout(io_handler):
     layout = LayoutArray.fromLayoutArrayName("South-4LST")
     return layout
 
 
 # @pytest.mark.skip(reason="TODO :test_write_array_config_file - KeyError: 'Current'")
-def test_write_array_config_file(simtelConfigWriter, layout, telescopeModel):
-    file = io.getOutputFile(fileName="simtel-config-writer_array.txt", test=True)
+def test_write_array_config_file(simtelConfigWriter, layout, telescopeModel, io_handler):
+    file = io_handler.getOutputFile(fileName="simtel-config-writer_array.txt", test=True)
     simtelConfigWriter.writeArrayConfigFile(
         configFilePath=file,
         layout=layout,
@@ -55,8 +55,8 @@ def test_write_array_config_file(simtelConfigWriter, layout, telescopeModel):
     assert fileHasText(file, "TELESCOPE == 1")
 
 
-def test_write_tel_config_file(simtelConfigWriter):
-    file = io.getOutputFile(fileName="simtel-config-writer_telescope.txt", test=True)
+def test_write_tel_config_file(simtelConfigWriter, io_handler):
+    file = io_handler.getOutputFile(fileName="simtel-config-writer_telescope.txt", test=True)
     simtelConfigWriter.writeTelescopeConfigFile(
         configFilePath=file, parameters={"par": {"Value": 1}}
     )
