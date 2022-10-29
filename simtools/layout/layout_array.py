@@ -5,7 +5,7 @@ import numpy as np
 import pyproj
 from astropy.table import Table
 
-import simtools.io_handler as io_handler
+from simtools import io_handler
 from simtools.layout.telescope_position import TelescopePosition
 from simtools.util import names
 from simtools.util.general import collectDataFromYamlOrDict
