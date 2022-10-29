@@ -3,7 +3,7 @@ import os
 from copy import copy
 from pathlib import Path
 
-import simtools.io_handler as io_handler
+from simtools import io_handler
 from simtools.corsika.corsika_config import (
     CorsikaConfig,
     MissingRequiredInputInCorsikaConfigData,

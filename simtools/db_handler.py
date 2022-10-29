@@ -11,8 +11,8 @@ from bson.objectid import ObjectId
 from pymongo import MongoClient
 from pymongo.errors import BulkWriteError
 
-import simtools.io_handler as io_handler
 import simtools.util.general as gen
+from simtools import io_handler
 from simtools.util import names
 from simtools.util.model import getTelescopeClass
 
@@ -47,9 +47,7 @@ class DatabaseHandler:
     addNewParamete()
         Add a new parameter for a specific telescope.
     insertFileToDB()
-        Insert a file to the DB.
-    insertFilesToDB()
-        Insert a list of files to the DB.
+        Insert a file or a list of files to the DB.
     exportFileDB()
         Get a file from the DB and write it to disk.
     getAllVersions()
@@ -74,11 +72,35 @@ class DatabaseHandler:
         self._logger = logging.getLogger(__name__)
         self._logger.debug("Initialize DatabaseHandler")
 
-        self.dbDetails = mongoDBConfig
-        self._logger.debug("DB configuration: {}".format(self.dbDetails))
+        self.mongo_db_config = mongoDBConfig
+        self._logger.debug("DB configuration: {}".format(self.mongo_db_config))
         self.io_handler = io_handler.IOHandler()
 
-        if self.dbDetails:
+        self._set_up_connection()
+
+    def set_mongo_db_config(self, mongo_db_config):
+        """
+        Set the MongoDB config and open the connection to the DB.
+
+        Parameters
+        ----------
+        mongo_db_config: dict
+            Dictionary with the MongoDB configuration with the following entries:
+            "db_server" - DB server address
+            "db_api_port" - Port to use
+            "db_api_user" - API username
+            "db_api_pw" - Password for the API user
+            "db_api_authentication_database" - DB with user info (optional, default is "admin")
+        """
+
+        self.mongo_db_config = mongo_db_config
+        self._set_up_connection()
+
+    def _set_up_connection(self):
+        """
+        Open the connection to MongoDB.
+        """
+        if self.mongo_db_config:
             if DatabaseHandler.dbClient is None:
                 with Lock():
                     DatabaseHandler.dbClient = self._openMongoDB()
@@ -93,11 +115,11 @@ class DatabaseHandler:
         """
         try:
             _dbClient = MongoClient(
-                self.dbDetails["db_api_name"],
-                port=self.dbDetails["db_api_port"],
-                username=self.dbDetails["db_api_user"],
-                password=self.dbDetails["db_api_pw"],
-                authSource=self.dbDetails.get("db_api_authenticationdatabase", "admin"),
+                self.mongo_db_config["db_server"],
+                port=self.mongo_db_config["db_api_port"],
+                username=self.mongo_db_config["db_api_user"],
+                password=self.mongo_db_config["db_api_pw"],
+                authSource=self.mongo_db_config.get("db_api_authentication_database", "admin"),
                 ssl=True,
                 tlsallowinvalidhostnames=True,
                 tlsallowinvalidcertificates=True,
@@ -142,7 +164,7 @@ class DatabaseHandler:
         _siteValidated = names.validateSiteName(site)
         _telModelNameValidated = names.validateTelescopeModelName(telescopeModelName)
 
-        if self.dbDetails:
+        if self.mongo_db_config:
             # Only MongoDB supports tagged version
             _modelVersion = self._convertVersionToTagged(
                 modelVersion, DatabaseHandler.DB_CTA_SIMULATION_MODEL
@@ -169,7 +191,7 @@ class DatabaseHandler:
 
     def exportFileDB(self, dbName, dest, fileName):
         """
-        Get a file from the DB and write it to disk.
+        Get file from the DB and write to disk.
 
         Parameters
         ----------
@@ -179,11 +201,22 @@ class DatabaseHandler:
             Location where to write the file to.
         fileName: str
             Name of the file to get.
+
+        Returns
+        -------
+        fileID: GridOut._id
+            the database ID the file was assigned when it was inserted to the DB.
+
+        Raises
+        ------
+        FileNotFoundError
+            If the desired file is not found.
         """
 
-        self._logger.debug(f"Getting {fileName} and writing it to {dest}")
-        file = self._getFileMongoDB(dbName, fileName)
-        self._writeFileFromMongoToDisk(dbName, dest, file)
+        self._logger.debug(f"Getting {fileName} from {dbName} and writing it to {dest}")
+        filePathInstance = self._getFileMongoDB(dbName, fileName)
+        self._writeFileFromMongoToDisk(dbName, dest, filePathInstance)
+        return filePathInstance._id
 
     def exportModelFiles(self, parameters, dest):
         """
@@ -197,7 +230,7 @@ class DatabaseHandler:
             Location where to write the files to.
         """
 
-        if self.dbDetails:
+        if self.mongo_db_config:
             self._logger.debug("Exporting model files from MongoDB")
             for info in parameters.values():
                 if not info["File"]:
@@ -482,7 +515,7 @@ class DatabaseHandler:
         _site = names.validateSiteName(site)
         _modelVersion = names.validateModelVersionName(modelVersion)
 
-        if self.dbDetails:
+        if self.mongo_db_config:
             _pars = self._getSiteParametersMongoDB(
                 DatabaseHandler.DB_CTA_SIMULATION_MODEL,
                 _site,
@@ -710,6 +743,11 @@ class DatabaseHandler:
         -------
         GridOut
             A file instance returned by GridFS find_one
+
+        Raises
+        ------
+        FileNotFoundError
+            If the desired file is not found.
         """
 
         db = DatabaseHandler.dbClient[dbName]
@@ -965,7 +1003,8 @@ class DatabaseHandler:
         queryUpdate = {"$set": {"Value": newValue, "File": file}}
 
         collection.update_one(query, queryUpdate)
-        self.insertFilesToDB(filesToAddToDB, dbName)
+        for fileNow in filesToAddToDB:
+            self.insertFileToDB(fileNow, dbName)
 
         return
 
@@ -1134,7 +1173,7 @@ class DatabaseHandler:
         collection.insert_one(parEntry)
         if len(filesToAddToDB) > 0:
             self._logger.info("Will also add the file {} to the DB".format(filePath))
-            self.insertFilesToDB(filesToAddToDB, dbName)
+            self.insertFileToDB(filesToAddToDB, dbName)
 
         return
 
@@ -1211,9 +1250,9 @@ class DatabaseHandler:
         self._logger.info("Will add the following entry to DB:\n{}".format(dbEntry))
 
         collection.insert_one(dbEntry)
-        if len(filesToAddToDB) > 0:
-            self._logger.info("Will also add the file {} to the DB".format(filePath))
-            self.insertFilesToDB(filesToAddToDB, dbName)
+        for fileToInsertNow in filesToAddToDB:
+            self._logger.info("Will also add the file {} to the DB".format(fileToInsertNow))
+            self.insertFileToDB(fileToInsertNow, dbName)
 
         return
 
@@ -1254,17 +1293,16 @@ class DatabaseHandler:
 
         return tags["Tags"][version]["Value"]
 
-    @staticmethod
-    def insertFileToDB(file, dbName=DB_CTA_SIMULATION_MODEL, **kwargs):
+    def insertFileToDB(self, fileName, dbName=DB_CTA_SIMULATION_MODEL, **kwargs):
         """
         Insert a file to the DB.
 
         Parameters
         ----------
+        fileName: str or Path
+            The name of the file to insert (full path).
         dbName: str
             the name of the DB
-        file: str or Path
-            The name of the file to insert (full path).
         **kwargs (optional): keyword arguments for file creation.
             The full list of arguments can be found in, \
             https://docs.mongodb.com/manual/core/gridfs/#the-files-collection
@@ -1272,8 +1310,9 @@ class DatabaseHandler:
 
         Returns
         -------
-        file_id: gridfs "_id"
-            If the file exists, returns the "_id" of that one, otherwise creates a new one.
+        fileID: GridOut._id
+            If the file exists, return its GridOut._id, otherwise insert the file and return its"
+            "newly created DB GridOut._id.
         """
 
         db = DatabaseHandler.dbClient[dbName]
@@ -1281,34 +1320,17 @@ class DatabaseHandler:
 
         if "content_type" not in kwargs:
             kwargs["content_type"] = "ascii/dat"
+
         if "filename" not in kwargs:
-            kwargs["filename"] = Path(file).name
+            kwargs["filename"] = Path(fileName).name
 
         if fileSystem.exists({"filename": kwargs["filename"]}):
-            return fileSystem.find_one({"filename": kwargs["filename"]})
-
-        with open(file, "rb") as dataFile:
-            file_id = fileSystem.put(dataFile, **kwargs)
-
-        return file_id
-
-    def insertFilesToDB(self, filesToAddToDB, dbName=DB_CTA_SIMULATION_MODEL):
-        """
-        Insert a list of files to the DB.
-
-        Parameters
-        ----------
-        dbName: str
-            the name of the DB
-        filesToAddToDB: list of strings or Paths
-            Each entry in the list is the name of the file to insert (full path).
-        """
-
-        for fileNow in filesToAddToDB:
-            kwargs = {"content_type": "ascii/dat", "filename": Path(fileNow).name}
-            self.insertFileToDB(fileNow, dbName, **kwargs)
-
-        return
+            self._logger.warning(
+                f"The file {kwargs['filename']} exists in the DB. Returning its ID"
+            )
+            return fileSystem.find_one({"filename": kwargs["filename"]})._id
+        with open(fileName, "rb") as dataFile:
+            return fileSystem.put(dataFile, **kwargs)
 
     def getAllVersions(
         self,
