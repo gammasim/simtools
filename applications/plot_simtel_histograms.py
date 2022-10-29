@@ -13,7 +13,7 @@
     file_lists (str, required)
         Text file containing the list of sim_telarray histogram files to be plotted. \
         Multiple text files can be given.
-    output (str, required)
+    figure_name (str, required)
         File name for the pdf output (without extension).
     verbosity (str, optional)
         Log level to print (default=INFO).
@@ -31,37 +31,33 @@ import logging
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 
-import simtools.config as cfg
-import simtools.util.commandline_parser as argparser
+import simtools.configuration as configurator
 import simtools.util.general as gen
 from simtools.simtel.simtel_histograms import SimtelHistograms
 
 
 def main():
 
-    parser = argparser.CommandLineParser(description=("Plots sim_telarray histograms."))
-    parser.add_argument(
-        "-l",
+    config = configurator.Configurator(description=("Plots sim_telarray histograms."))
+    config.parser.add_argument(
         "--file_lists",
         help="File containing the list of histogram files to be plotted.",
         nargs="+",
         type=str,
         required=True,
     )
-    parser.add_argument(
-        "-o", "--output", help="File name for the pdf output.", type=str, required=True
+    config.parser.add_argument(
+        "--figure_name", help="File name for the pdf output.", type=str, required=True
     )
-    parser.initialize_default_arguments(add_workflow_config=False)
 
-    args = parser.parse_args()
-    cfg.setConfigFileName(args.configFile)
+    args_dict, _ = config.initialize()
 
     logger = logging.getLogger()
-    logger.setLevel(gen.getLogLevelFromUser(args.logLevel))
+    logger.setLevel(gen.getLogLevelFromUser(args_dict["log_level"]))
 
-    nLists = len(args.file_lists)
+    nLists = len(args_dict["file_lists"])
     simtelHistograms = list()
-    for thisListOfFiles in args.file_lists:
+    for thisListOfFiles in args_dict["file_lists"]:
         # Collecting hist files
         histogramFiles = list()
         with open(thisListOfFiles) as file:
@@ -88,7 +84,11 @@ def main():
     # Plotting
 
     # Checking if it is needed to add the pdf extension to the file name
-    figName = args.output if args.output.split(".")[-1] == "pdf" else args.output + ".pdf"
+    if args_dict["figure_name"].split(".")[-1] == "pdf":
+        figName = args_dict["figure_name"]
+    else:
+        figName = args_dict["figure_name"] + ".pdf"
+
     pdfPages = PdfPages(figName)
     for iHist in range(numberOfHists[0]):
 

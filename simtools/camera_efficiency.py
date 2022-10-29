@@ -2,17 +2,14 @@ import logging
 import os
 import re
 from collections import defaultdict
-from pathlib import Path
 
 import astropy.io.ascii
 import matplotlib.pyplot as plt
 import numpy as np
 from astropy.table import Table
 
-import simtools.config as cfg
-import simtools.io_handler as io
 import simtools.util.general as gen
-from simtools import visualize
+from simtools import io_handler, visualize
 from simtools.model.telescope_model import TelescopeModel
 from simtools.util import names
 
@@ -48,9 +45,8 @@ class CameraEfficiency:
     def __init__(
         self,
         telescopeModel,
+        simtelSourcePath,
         label=None,
-        simtelSourcePath=None,
-        filesLocation=None,
         configData=None,
         configFile=None,
         test=False,
@@ -62,14 +58,10 @@ class CameraEfficiency:
         ----------
         telescopeModel: TelescopeModel
             Instance of the TelescopeModel class.
+        simtelSourcePath: str (or Path)
+            Location of sim_telarray installation.
         label: str
             Instance label, optional.
-        simtelSourcePath: str (or Path), optional.
-            Location of sim_telarray installation. If not given, it will be taken from the
-            config.yml file.
-        filesLocation: str (or Path), optional.
-            Parent location of the output files created by this class. If not given, it will be
-            taken from the config.yml file.
         configData: dict.
             Dict containing the configurable parameters.
         configFile: str or Path
@@ -79,13 +71,12 @@ class CameraEfficiency:
         """
         self._logger = logging.getLogger(__name__)
 
-        self._simtelSourcePath = Path(cfg.getConfigArg("simtelPath", simtelSourcePath))
-        self._filesLocation = cfg.getConfigArg("outputLocation", filesLocation)
+        self._simtelSourcePath = simtelSourcePath
         self._telescopeModel = self._validateTelescopeModel(telescopeModel)
         self.label = label if label is not None else self._telescopeModel.label
 
-        self._baseDirectory = io.getOutputDirectory(
-            filesLocation=self._filesLocation,
+        self.io_handler = io_handler.IOHandler()
+        self._baseDirectory = self.io_handler.getOutputDirectory(
             label=self.label,
             dirType="camera-efficiency",
             test=test,
@@ -94,13 +85,13 @@ class CameraEfficiency:
         self._hasResults = False
 
         _configDataIn = gen.collectDataFromYamlOrDict(configFile, configData, allowEmpty=True)
-        _parameterFile = io.getInputDataFile("parameters", "camera-efficiency_parameters.yml")
+        _parameterFile = self.io_handler.getInputDataFile(
+            "parameters", "camera-efficiency_parameters.yml"
+        )
         _parameters = gen.collectDataFromYamlOrDict(_parameterFile, None)
         self.config = gen.validateConfigData(_configDataIn, _parameters)
 
         self._loadFiles()
-
-    # END of init
 
     @classmethod
     def fromKwargs(cls, **kwargs):
@@ -123,7 +114,6 @@ class CameraEfficiency:
                 "telescopeModel",
                 "label",
                 "simtelSourcePath",
-                "filesLocation",
                 "test",
             ],
             **kwargs,

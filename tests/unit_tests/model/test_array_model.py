@@ -9,7 +9,7 @@ logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 
-def test_input_validation(set_db):
+def test_input_validation(db_config, io_handler):
     arrayConfigData = {
         "site": "North",
         "layoutName": "test-layout",
@@ -17,14 +17,14 @@ def test_input_validation(set_db):
         "default": {"LST": "1", "MST": "FlashCam-D"},
         "MST-05": "NectarCam-D",
     }
-    am = ArrayModel(label="test", arrayConfigData=arrayConfigData)
+    am = ArrayModel(label="test", arrayConfigData=arrayConfigData, mongoDBConfig=db_config)
 
     am.printTelescopeList()
 
     assert am.numberOfTelescopes == 19
 
 
-def test_exporting_config_files(set_db):
+def test_exporting_config_files(db_config, io_handler):
     arrayConfigData = {
         "site": "North",
         "layoutName": "test-layout",
@@ -35,7 +35,7 @@ def test_exporting_config_files(set_db):
             "camera_config_name": "NectarCam-test",
         },
     }
-    am = ArrayModel(label="test", arrayConfigData=arrayConfigData)
+    am = ArrayModel(label="test", arrayConfigData=arrayConfigData, mongoDBConfig=db_config)
 
     am.exportSimtelTelescopeConfigFiles()
     am.exportSimtelArrayConfigFile()

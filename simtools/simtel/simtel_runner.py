@@ -1,8 +1,6 @@
 import logging
 import os
-from pathlib import Path
 
-import simtools.config as cfg
 import simtools.util.general as gen
 from simtools.model.array_model import ArrayModel
 from simtools.model.telescope_model import TelescopeModel
@@ -39,9 +37,8 @@ class SimtelRunner:
 
     def __init__(
         self,
+        simtelSourcePath,
         label=None,
-        simtelSourcePath=None,
-        filesLocation=None,
     ):
         """
         SimtelRunner.
@@ -51,19 +48,12 @@ class SimtelRunner:
         label: str, optional
             Instance label. Important for output file naming.
         simtelSourcePath: str (or Path), optional
-            Location of sim_telarray installation. If not given, it will be taken from the
-            config.yml file.
-        filesLocation: str (or Path), optional
-            Parent location of the output files created by this class. If not given, it will be
-            taken from the config.yml file.
+            Location of sim_telarray installation.
         """
         self._logger = logging.getLogger(__name__)
 
-        self._simtelSourcePath = Path(cfg.getConfigArg("simtelPath", simtelSourcePath))
+        self._simtelSourcePath = simtelSourcePath
         self.label = label
-
-        # File location
-        self._filesLocation = cfg.getConfigArg("outputLocation", filesLocation)
 
         self.RUNS_PER_SET = 1
 
@@ -125,7 +115,6 @@ class SimtelRunner:
 
         command = self._makeRunCommand(inputFile=inputFile, runNumber=runNumber)
         with self._scriptFile.open("w") as file:
-            # TODO: header
             file.write("#!/usr/bin/bash\n\n")
 
             # Setting SECONDS variable to measure runtime
@@ -225,14 +214,9 @@ class SimtelRunner:
     def _getExtraCommands(extra):
         """
         Get extra commands by combining the one given as argument and
-        what is given in config.yml
+        what is given in the configuration.
         """
         extra = gen.copyAsList(extra) if extra is not None else list()
-
-        extraFromConfig = cfg.get("extraCommands")
-        extraFromConfig = gen.copyAsList(extraFromConfig) if extraFromConfig is not None else list()
-
-        extra.extend(extraFromConfig)
         return extra
 
     @staticmethod

@@ -57,8 +57,7 @@ from copy import copy
 
 from astropy.io.misc import yaml
 
-import simtools.config as cfg
-import simtools.util.commandline_parser as argparser
+import simtools.configuration as configurator
 import simtools.util.general as gen
 from simtools.simulator import Simulator
 
@@ -79,16 +78,14 @@ def _parse(description=None):
 
     """
 
-    parser = argparser.CommandLineParser(description=description)
-    parser.add_argument(
-        "-p",
+    config = configurator.Configurator(description=description)
+    config.parser.add_argument(
         "--productionconfig",
         help="Simulation configuration file",
         type=str,
         required=True,
     )
-    parser.add_argument(
-        "-t",
+    config.parser.add_argument(
         "--task",
         help=(
             "What task to execute. Options: "
@@ -101,7 +98,7 @@ def _parse(description=None):
         required=True,
         choices=["simulate", "filelist", "inspect", "resources"],
     )
-    parser.add_argument(
+    config.parser.add_argument(
         "--primary",
         help="Primary to be selected from the simulation configuration file.",
         type=str,
@@ -116,7 +113,7 @@ def _parse(description=None):
             "iron",
         ],
     )
-    group = parser.add_mutually_exclusive_group(required=True)
+    group = config.parser.add_mutually_exclusive_group(required=True)
     group.add_argument(
         "--showers_only",
         help="Simulates only showers, no array detection",
@@ -127,8 +124,7 @@ def _parse(description=None):
         help="Simulates only array detection, no showers",
         action="store_true",
     )
-    parser.initialize_default_arguments(add_workflow_config=False)
-    return parser.parse_args()
+    return config.initialize(db_config=True, job_submission=True)
 
 
 def _proccessSimulationConfigFile(configFile, primaryConfig, logger):
@@ -203,37 +199,45 @@ def _proccessSimulationConfigFile(configFile, primaryConfig, logger):
 
 def main():
 
-    args = _parse(description=("Air shower and array simulations"))
-
-    cfg.setConfigFileName(args.configFile)
+    args_dict, db_config = _parse(description=("Air shower and array simulations"))
 
     logger = logging.getLogger()
-    logger.setLevel(gen.getLogLevelFromUser(args.logLevel))
+    logger.setLevel(gen.getLogLevelFromUser(args_dict["log_level"]))
 
     label, showerConfigs, arrayConfigs = _proccessSimulationConfigFile(
-        args.productionconfig, args.primary, logger
+        args_dict["productionconfig"], args_dict["primary"], logger
     )
 
     showerSimulators = dict()
     for primary, configData in showerConfigs.items():
         showerSimulators[primary] = Simulator(
-            label=label, simulator="corsika", configData=configData, test=args.test
+            label=label,
+            simulator="corsika",
+            simulatorSourcePath=args_dict["simtelpath"],
+            configData=configData,
+            submitCommand=args_dict["submit_command"],
+            test=args_dict["test"],
         )
 
-    if args.showers_only:
+    if args_dict["showers_only"]:
         for primary, shower in showerSimulators.items():
-            _taskFunction = getattr(shower, args.task)
+            _taskFunction = getattr(shower, args_dict["task"])
             _taskFunction()
 
-    if args.array_only:
+    if args_dict["array_only"]:
         arraySimulators = dict()
         for primary, configData in arrayConfigs.items():
             arraySimulators[primary] = Simulator(
-                label=label, simulator="simtel", configData=configData
+                label=label,
+                simulator="simtel",
+                simulatorSourcePath=args_dict["simtelpath"],
+                configData=configData,
+                submitCommand=args_dict["submit_command"],
+                mongoDBConfig=db_config,
             )
         for primary, array in arraySimulators.items():
             inputList = showerSimulators[primary].getListOfOutputFiles()
-            _taskFunction = getattr(array, args.task)
+            _taskFunction = getattr(array, args_dict["task"])
             _taskFunction(inputFileList=inputList)
 
 

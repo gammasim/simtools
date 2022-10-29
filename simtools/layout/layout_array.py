@@ -5,8 +5,7 @@ import numpy as np
 import pyproj
 from astropy.table import Table
 
-import simtools.config as cfg
-import simtools.io_handler as io
+from simtools import io_handler
 from simtools.layout.telescope_position import TelescopePosition
 from simtools.util import names
 from simtools.util.general import collectDataFromYamlOrDict
@@ -35,7 +34,7 @@ class LayoutArray:
         telCorsikaZ=None
     )
         Add an individual telescope to the telescope list.
-    exportTelescopeList(filesLocation)
+    exportTelescopeList()
         Export a ECSV file with the telescope positions.
     getNumberOfTelescopes()
         Return the number of telescopes in the list.
@@ -78,6 +77,8 @@ class LayoutArray:
 
         self.label = label
         self.name = name
+        self.io_handler = io_handler.IOHandler()
+
         self._telescopeList = []
         self._epsg = None
         if telescopeListFile is None:
@@ -90,7 +91,7 @@ class LayoutArray:
     def fromLayoutArrayName(cls, layoutArrayName, label=None):
         """
         Read telescope list from file for given layout name (e.g. South-4LST, North-Prod5, ...).
-        Layout definitions are given in the `dataLocation//layout` path.
+        Layout definitions are given in the `data/layout` path.
 
         Parameters
         ----------
@@ -111,7 +112,7 @@ class LayoutArray:
 
         layout = cls(name=validLayoutArrayName, label=label)
 
-        telescopeListFile = io.getInputDataFile(
+        telescopeListFile = layout.io_handler.getInputDataFile(
             "layout", "telescope_positions-{}.ecsv".format(validLayoutArrayName)
         )
         layout.readTelescopeListFile(telescopeListFile)
@@ -138,7 +139,7 @@ class LayoutArray:
         """
         self._corsikaTelescope = {}
 
-        if corsikaDict:
+        if corsikaDict is not None:
             self._logger.debug(
                 "Initialize CORSIKA telescope parameters from dict: {}".format(corsikaDict)
             )
@@ -147,7 +148,7 @@ class LayoutArray:
             self._logger.debug("Initialize CORSIKA telescope parameters from file")
             self._initializeCorsikaTelescopeFromDict(
                 collectDataFromYamlOrDict(
-                    io.getInputDataFile("corsika", "corsika_parameters.yml"), None
+                    self.io_handler.getInputDataFile("corsika", "corsika_parameters.yml"), None
                 )
             )
 
@@ -525,14 +526,12 @@ class LayoutArray:
 
         return _meta
 
-    def _setTelescopeListFile(self, filesLocation, crsName):
+    def _setTelescopeListFile(self, crsName):
         """
         Set file location for writing of telescope list
 
         Parameters
         ----------
-        filesLocation: str (or Path), optional
-            Directory for output. If not given, taken from config file.
         crsName: str
             Name of coordinate system to be used for export.
 
@@ -543,15 +542,14 @@ class LayoutArray:
 
         """
 
-        _outputDirectory = io.getOutputDirectory(
-            cfg.getConfigArg("outputLocation", filesLocation), self.label, "layout"
-        )
+        _outputDirectory = self.io_handler.getOutputDirectory(self.label, "layout")
+
         _name = crsName if self.name is None else self.name + "-" + crsName
         self.telescopeListFile = _outputDirectory.joinpath(
             names.layoutTelescopeListFileName(_name, None)
         )
 
-    def exportTelescopeList(self, crsName, corsikaZ=False, filesLocation=None):
+    def exportTelescopeList(self, crsName, corsikaZ=False):
         """
         Export array elements positions to ECSV file
 
@@ -561,8 +559,6 @@ class LayoutArray:
             Name of coordinate system to be used for export.
         corsikaZ: bool
             Write telescope height in CORSIKA coordinates (for CORSIKA system)
-        filesLocation: str (or Path), optional
-            Directory for output.
 
         """
 
@@ -604,7 +600,7 @@ class LayoutArray:
         except IndexError:
             pass
 
-        self._setTelescopeListFile(filesLocation, crsName)
+        self._setTelescopeListFile(crsName)
         self._logger.info("Exporting telescope list to {}".format(self.telescopeListFile))
         table.write(self.telescopeListFile, format="ascii.ecsv", overwrite=True)
 

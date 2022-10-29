@@ -1,10 +1,8 @@
 #!/usr/bin/python3
-
 """
     Summary
     -------
-    Setting workflow for a model parameter (value, table)
-    through an external interface.
+    Set workflow for a model parameter (value, table) through an external interface.
 
     Prototype implementation allowing to submit metadata and
     data through the command line.
@@ -39,7 +37,7 @@
 import logging
 import os
 
-import simtools.util.commandline_parser as argparser
+import simtools.configuration as configurator
 import simtools.util.general as gen
 import simtools.util.model_data_writer as writer
 import simtools.util.validate_data as ds
@@ -50,36 +48,41 @@ def _parse(label):
     """
     Parse command line configuration
 
+    Returns
+    -------
+    CommandLineParser
+        command line parser object
+
     """
 
-    parser = argparser.CommandLineParser(label)
-    parser.add_argument(
+    config = configurator.Configurator(label=label)
+
+    config.parser.add_argument(
         "-m",
         "--input_meta_file",
         help="User-provided meta data file (yml)",
         type=str,
         required=True,
     )
-    parser.add_argument(
+    config.parser.add_argument(
         "-d",
         "--input_data_file",
         help="User-provided data file (ecsv)",
         type=str,
         required=True,
     )
-    parser.initialize_default_arguments(add_workflow_config=True)
-    return parser.parse_args()
+    return config.initialize(workflow_config=True)
 
 
 def main():
 
     label = os.path.basename(__file__).split(".")[0]
-    args = _parse(label)
+    args_dict, _ = _parse(label)
 
     logger = logging.getLogger()
-    logger.setLevel(gen.getLogLevelFromUser(args.logLevel))
+    logger.setLevel(gen.getLogLevelFromUser(args_dict["log_level"]))
 
-    workflow = workflow_config.WorkflowDescription(label=label, args=args)
+    workflow = workflow_config.WorkflowDescription(label=label, args_dict=args_dict)
 
     data_validator = ds.DataValidator(workflow)
     data_validator.validate()
