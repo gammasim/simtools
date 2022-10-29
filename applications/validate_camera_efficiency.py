@@ -47,8 +47,8 @@ import logging
 import os
 
 import simtools.configuration as configurator
-import simtools.io_handler as io_handler
 import simtools.util.general as gen
+from simtools import io_handler
 from simtools.camera_efficiency import CameraEfficiency
 from simtools.model.telescope_model import TelescopeModel
 

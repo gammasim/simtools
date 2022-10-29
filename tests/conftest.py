@@ -57,7 +57,7 @@ def mock_settings_env_vars(tmp_test_directory):
             "DB_API_USER": "db_user",
             "DB_API_PW": "12345",
             "DB_API_PORT": "42",
-            "DB_API_NAME": "abc@def.de",
+            "DB_SERVER": "abc@def.de",
         },
         clear=True,
     ):
@@ -133,7 +133,7 @@ def db_config():
 
     """
     mongoDBConfig = {}
-    _db_para = ("db_api_user", "db_api_pw", "db_api_port", "db_api_name")
+    _db_para = ("db_api_user", "db_api_pw", "db_api_port", "db_server")
     for _para in _db_para:
         mongoDBConfig[_para] = os.environ.get(_para.upper())
     if mongoDBConfig["db_api_port"] is not None:
@@ -145,6 +145,27 @@ def db_config():
 def db(db_config):
     db = db_handler.DatabaseHandler(mongoDBConfig=db_config)
     return db
+
+
+@pytest.fixture
+def db_no_config_file():
+    """
+    Same as db above, but without DB variable defined,
+    since we do not want to set the config file as well.
+    Otherwise it creates a conflict between the config file
+    set by set_db and the one set by set_simtools
+    """
+    db = db_handler.DatabaseHandler(mongoDBConfig=None)
+    return db
+
+
+@pytest.fixture()
+def db_cleanup_file_sandbox(db_no_config_file):
+    yield
+    # Cleanup
+    logger.info("Dropping the temporary files in the sandbox")
+    db_no_config_file.dbClient["sandbox"]["fs.chunks"].drop()
+    db_no_config_file.dbClient["sandbox"]["fs.files"].drop()
 
 
 @pytest.fixture

@@ -1,8 +1,7 @@
 import logging
 from copy import copy
 
-import simtools.io_handler as io_handler
-from simtools import db_handler
+from simtools import db_handler, io_handler
 from simtools.layout.layout_array import LayoutArray
 from simtools.model.telescope_model import TelescopeModel
 from simtools.simtel.simtel_config_writer import SimtelConfigWriter
