@@ -79,9 +79,8 @@ import numpy as np
 import yaml
 
 import simtools.configuration as configurator
-import simtools.io_handler as io_handler
 import simtools.util.general as gen
-from simtools import visualize
+from simtools import io_handler, visualize
 from simtools.model.telescope_model import TelescopeModel
 from simtools.ray_tracing import RayTracing
 

@@ -11,9 +11,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 from astropy.table import QTable
 
-import simtools.io_handler as io_handler
 import simtools.util.general as gen
-from simtools import visualize
+from simtools import io_handler, visualize
 from simtools.model.telescope_model import TelescopeModel
 from simtools.psf_analysis import PSFImage
 from simtools.simtel.simtel_runner_ray_tracing import SimtelRunnerRayTracing
