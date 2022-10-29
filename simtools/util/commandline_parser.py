@@ -22,17 +22,24 @@ class CommandLineParser(argparse.ArgumentParser):
     """
 
     def initialize_default_arguments(
-        self, telescope_model=False, workflow_config=False, db_config=False, job_submission=False
+        self,
+        paths=True,
+        telescope_model=False,
+        workflow_config=False,
+        db_config=False,
+        job_submission=False,
     ):
         """
         Initialize default arguments used by all applications (e.g., verbosity or test flag).
 
         Parameters
         ----------
+        paths: bool
+            Add path configuration to list of args.
         telescope_model: bool
-           Add telescope model configuration to list of args.
+            Add telescope model configuration to list of args.
         workflow_config: bool
-           Add workflow configuration to list of args.
+            Add workflow configuration to list of args.
         db_config: bool
             Add database configuration parameters to list of args.
         job_submission: bool
@@ -42,13 +49,12 @@ class CommandLineParser(argparse.ArgumentParser):
 
         if telescope_model:
             self.initialize_telescope_model_arguments()
-
         if job_submission:
             self.initialize_job_submission_arguments()
         if db_config:
             self.initialize_db_config_arguments()
-
-        self.initialize_path_arguments()
+        if paths:
+            self.initialize_path_arguments()
         self.initialize_config_files(workflow_config)
         self.initialize_application_execution_arguments()
 
@@ -144,7 +150,16 @@ class CommandLineParser(argparse.ArgumentParser):
         _job_group.add_argument("--db_api_user", help="database user", type=str, required=False)
         _job_group.add_argument("--db_api_pw", help="database password", type=str, required=False)
         _job_group.add_argument("--db_api_port", help="database port", type=int, required=False)
-        _job_group.add_argument("--db_api_name", help="database name", type=str, required=False)
+        _job_group.add_argument(
+            "--db_server", help="database server address", type=str, required=False
+        )
+        _job_group.add_argument(
+            "--db_api_authentication_database",
+            help="database  with user info (optional, default is 'admin')",
+            type=str,
+            required=False,
+            default="admin",
+        )
 
     def initialize_job_submission_arguments(self):
         """
@@ -185,7 +200,7 @@ class CommandLineParser(argparse.ArgumentParser):
             _job_group.add_argument(
                 "--telescope",
                 help="telescope model name (e.g. LST-1, SST-D, ...)",
-                type=str,
+                type=self.telescope,
             )
         if add_model_version:
             _job_group.add_argument(
@@ -215,8 +230,29 @@ class CommandLineParser(argparse.ArgumentParser):
         fsite = str(value)
         if not names.validateSiteName(fsite):
             raise argparse.ArgumentTypeError("{} is an invalid site".format(fsite))
-
         return fsite
+
+    @staticmethod
+    def telescope(value):
+        """
+        Argument parser type to check that a valid telescope name is given
+
+        Parameters
+        ----------
+        value: str
+            telescope name
+
+        Raises
+        ------
+        argparse.ArgumentTypeError
+            for invalid telescope
+
+        """
+
+        ftelescope = str(value)
+        if not names.validateTelescopeModelName(ftelescope):
+            raise argparse.ArgumentTypeError("{} is an invalid telescope name".format(ftelescope))
+        return ftelescope
 
     @staticmethod
     def efficiency_interval(value):

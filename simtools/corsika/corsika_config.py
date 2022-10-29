@@ -5,8 +5,8 @@ import astropy.units as u
 import numpy as np
 from astropy.io.misc import yaml
 
-import simtools.io_handler as io_handler
 import simtools.util.general as gen
+from simtools import io_handler
 from simtools.layout.layout_array import LayoutArray
 from simtools.util import names
 from simtools.util.general import collectDataFromYamlOrDict
