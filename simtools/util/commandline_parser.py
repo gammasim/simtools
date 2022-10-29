@@ -22,17 +22,24 @@ class CommandLineParser(argparse.ArgumentParser):
     """
 
     def initialize_default_arguments(
-        self, telescope_model=False, workflow_config=False, db_config=False, job_submission=False
+        self,
+        paths=True,
+        telescope_model=False,
+        workflow_config=False,
+        db_config=False,
+        job_submission=False,
     ):
         """
         Initialize default arguments used by all applications (e.g., verbosity or test flag).
 
         Parameters
         ----------
+        paths: bool
+            Add path configuration to list of args.
         telescope_model: bool
-           Add telescope model configuration to list of args.
+            Add telescope model configuration to list of args.
         workflow_config: bool
-           Add workflow configuration to list of args.
+            Add workflow configuration to list of args.
         db_config: bool
             Add database configuration parameters to list of args.
         job_submission: bool
@@ -42,13 +49,12 @@ class CommandLineParser(argparse.ArgumentParser):
 
         if telescope_model:
             self.initialize_telescope_model_arguments()
-
         if job_submission:
             self.initialize_job_submission_arguments()
         if db_config:
             self.initialize_db_config_arguments()
-
-        self.initialize_path_arguments()
+        if paths:
+            self.initialize_path_arguments()
         self.initialize_config_files(workflow_config)
         self.initialize_application_execution_arguments()
 
@@ -145,7 +151,7 @@ class CommandLineParser(argparse.ArgumentParser):
         )
         _job_group.add_argument(
             "--db_api_authentication_database",
-            help="DB with user info (optional, default is 'admin')",
+            help="database  with user info (optional, default is 'admin')",
             type=str,
             required=False,
             default="admin",
