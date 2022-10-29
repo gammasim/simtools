@@ -4,11 +4,11 @@ import os
 import uuid
 from pathlib import Path
 
-import simtools.io_handler as io_handler
 import simtools.util.data_model as data_model
 import simtools.util.general as gen
 import simtools.util.validate_schema as vs
 import simtools.version
+from simtools import io_handler
 from simtools.util import names
 
 

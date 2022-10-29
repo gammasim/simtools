@@ -8,9 +8,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 from astropy.table import Table
 
-import simtools.io_handler as io_handler
 import simtools.util.general as gen
-from simtools import visualize
+from simtools import io_handler, visualize
 from simtools.model.telescope_model import TelescopeModel
 from simtools.util import names
 

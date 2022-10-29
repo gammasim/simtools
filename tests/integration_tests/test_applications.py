@@ -3,6 +3,7 @@
 
 import logging
 import os
+from io import StringIO
 
 import pytest
 
@@ -11,7 +12,7 @@ logger.setLevel(logging.DEBUG)
 
 
 # This module perform tests on the application by running them with a set
-# of arguments. Each applications to be tested correspond to an key in
+# of arguments. Each application to be tested corresponds to a key in
 # APP_LIST, that contains a list of list of arguments to be tested, so that
 # the same application can be tested with a number of different set of arguments.
 
@@ -189,6 +190,11 @@ APP_LIST = {
         ]
     ],
     # Database
+    "get_file_from_db::CTA-Simulation-Model": [["--file_name", "mirror_CTA-S-LST_v2020-04-07.dat"]],
+    "get_file_from_db::test-data": [["--file_name", "PSFcurve_data_v2.txt"]],
+    "get_file_from_db::CTA-Simulation-Model-Derived-Values": [
+        ["--file_name", "ray-tracing-North-LST-1-d10.0-za20.0_validate_optics.ecsv"]
+    ],
     "get_parameter": [
         [
             "--site",
@@ -199,6 +205,15 @@ APP_LIST = {
             "mirror_list",
             "--model_version",
             "prod5",
+        ]
+    ],
+    "add_file_to_db": [
+        [
+            "--file_name",
+            "TESTMODELDIR/MLTdata-preproduction.usermeta.yml",
+            "TESTMODELDIR/MLTdata-preproduction.ecsv",
+            "--db",
+            "sandbox",
         ]
     ],
     # Production
@@ -276,8 +291,14 @@ APP_LIST = {
 
 
 @pytest.mark.parametrize("application", APP_LIST.keys())
-def test_applications(application, io_handler, db, simtelpath_no_mock):
+def test_applications(application, io_handler, monkeypatch, db):
+
     logger.info("Testing {}".format(application))
+
+    # The add_file_to_db.py application requires a user confirmation.
+    # With this line we mock the user confirmation to be y for the test
+    # Notice this is done for all tests, so keep in mind if in the future we add tests with input.
+    monkeypatch.setattr("sys.stdin", StringIO("y\n"))
 
     def prepare_one_file(fileName):
         db.exportFileDB(
