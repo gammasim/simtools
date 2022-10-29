@@ -15,7 +15,7 @@
 
     At the moment, the shower simulations are performed by CORSIKA, which requires \
     the zstd package. Please, make sure that the command to set your zstd path is \
-    properly set by the extraCommands in config.yml.
+    properly set by the extraCommands in the command line configuration.
 
     Command line arguments
     ----------------------
@@ -56,76 +56,100 @@ import logging
 
 import astropy.units as u
 
-import simtools.config as cfg
-import simtools.io_handler as io
-import simtools.util.commandline_parser as argparser
+import simtools.configuration as configurator
 import simtools.util.general as gen
+from simtools import io_handler
 from simtools.simulator import Simulator
 
 
-def main():
+def _parse(description=None):
+    """
+    Parse command line configuration
 
-    parser = argparser.CommandLineParser(
-        description=("Simulate showers to be used for trigger rate calculations")
-    )
-    parser.add_argument(
-        "-a",
+    Parameters
+    ----------
+    description: str
+        description of application.
+
+    Returns
+    -------
+    CommandLineParser
+        command line parser object
+
+    """
+
+    config = configurator.Configurator(description=description)
+    config.parser.add_argument(
         "--array",
         help="Name of the array (e.g. 1MST, 4LST ...)",
         type=str,
         required=True,
     )
-    parser.initialize_telescope_model_arguments(add_model_version=False, add_telescope=False)
-    parser.add_argument(
+    config.parser.add_argument(
         "--primary",
         help="Name of the primary particle (e.g. proton, helium ...)",
         type=str,
         required=True,
     )
-    parser.add_argument("--nruns", help="Number of runs (default=100)", type=int, default=100)
-    parser.add_argument(
+    config.parser.add_argument(
+        "--nruns", help="Number of runs (default=100)", type=int, default=100
+    )
+    config.parser.add_argument(
         "--nevents", help="Number of events/run (default=100)", type=int, default=100000
     )
-    parser.add_argument("--zenith", help="Zenith angle in deg (default=20)", type=float, default=20)
-    parser.add_argument("--azimuth", help="Azimuth angle in deg (default=0)", type=float, default=0)
-    parser.add_argument(
+    config.parser.add_argument(
+        "--zenith", help="Zenith angle in deg (default=20)", type=float, default=20
+    )
+    config.parser.add_argument(
+        "--azimuth", help="Azimuth angle in deg (default=0)", type=float, default=0
+    )
+    # TODO confusing with output_path?
+    config.parser.add_argument(
         "--output",
         help="Path of the output directory where the simulations will be saved.",
         type=str,
         default=None,
     )
-    parser.initialize_default_arguments(add_workflow_config=False)
+    return config.initialize(telescope_model=True, job_submission=True)
 
-    args = parser.parse_args()
+
+def main():
+
+    args_dict, _ = _parse("Simulate showers to be used for trigger rate calculations")
     label = "trigger_rates"
-    cfg.setConfigFileName(args.configFile)
 
     logger = logging.getLogger()
-    logger.setLevel(gen.getLogLevelFromUser(args.logLevel))
+    logger.setLevel(gen.getLogLevelFromUser(args_dict["log_level"]))
 
     # Output directory to save files related directly to this app
-    outputDir = io.getOutputDirectory(cfg.get("outputLocation"), label, dirType="application-plots")
+    _io_handler = io_handler.IOHandler()
+    outputDir = _io_handler.getOutputDirectory(label, dirType="application-plots")
 
     showerConfigData = {
-        "dataDirectory": args.output,
-        "site": args.site,
-        "layoutName": args.array,
-        "runRange": [1, args.nruns + 1],
-        "nshow": args.nevents,
-        "primary": args.primary,
+        "dataDirectory": args_dict["output"],
+        "site": args_dict["site"],
+        "layoutName": args_dict["array"],
+        "runRange": [1, args_dict["nruns"] + 1],
+        "nshow": args_dict["nevents"],
+        "primary": args_dict["primary"],
         "erange": [10 * u.GeV, 300 * u.TeV],
         "eslope": -2,
-        "zenith": args.zenith * u.deg,
-        "azimuth": args.azimuth * u.deg,
+        "zenith": args_dict["zenith"] * u.deg,
+        "azimuth": args_dict["azimuth"] * u.deg,
         "viewcone": 10 * u.deg,
         "cscat": [20, 1500 * u.m, 0],
     }
 
     showerSimulator = Simulator(
-        label=label, simulator="corsika", configData=showerConfigData, test=args.test
+        label=label,
+        simulator="corsika",
+        simulatorSourcePath=args_dict.get("simtelpath", None),
+        configData=showerConfigData,
+        submitCommand=args_dict.get("submit_command", ""),
+        test=args_dict["test"],
     )
 
-    if not args.test:
+    if not args_dict["test"]:
         showerSimulator.simulate()
     else:
         logger.info("Test flag is on - it will not submit any job.")
@@ -133,8 +157,8 @@ def main():
         showerSimulator.simulate()
 
     # Exporting the list of output/log/input files into the application folder
-    outputFileList = outputDir.joinpath("outputFiles_{}.list".format(args.primary))
-    logFileList = outputDir.joinpath("logFiles_{}.list".format(args.primary))
+    outputFileList = outputDir.joinpath("outputFiles_{}.list".format(args_dict["primary"]))
+    logFileList = outputDir.joinpath("logFiles_{}.list".format(args_dict["primary"]))
 
     def printListIntoFile(listOfFiles, fileName):
         with open(fileName, "w") as f:

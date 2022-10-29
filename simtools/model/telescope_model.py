@@ -6,9 +6,8 @@ import astropy.io.ascii
 import numpy as np
 from astropy.table import Table
 
-import simtools.config as cfg
-import simtools.io_handler as io
-from simtools import db_handler
+import simtools.util.general as gen
+from simtools import db_handler, io_handler
 from simtools.model.camera import Camera
 from simtools.model.mirrors import Mirrors
 from simtools.simtel.simtel_config_writer import SimtelConfigWriter
@@ -50,7 +49,7 @@ class TelescopeModel:
 
     Methods
     -------
-    fromConfigFile(configFileName, telescopeModelName, label=None, filesLocation=None)
+    fromConfigFile(configFileName, telescopeModelName, label=None)
         Create a TelescopeModel from a sim_telarray cfg file.
     setExtraLabel(extraLabel)
         Set an extra label for the name of the config file.
@@ -78,11 +77,9 @@ class TelescopeModel:
         self,
         site,
         telescopeModelName,
+        mongoDBConfig,
         modelVersion="Current",
         label=None,
-        modelFilesLocations=None,
-        filesLocation=None,
-        readFromDB=True,
     ):
         """
         TelescopeModel.
@@ -93,18 +90,13 @@ class TelescopeModel:
             South or North.
         telescopeModelName: str
             Telescope name (ex. LST-1, ...).
+        mongoDBConfig: dict
+            MongoDB configuration.
         modelVersion: str, optional
             Version of the model (ex. prod4) (default='Current').
         label: str, optional
             Instance label. Important for output file naming.
-        modelFilesLocation: str (or Path), optional
-            Location of the MC model files. If not given, it will be taken from the \
-            config.yml file.
-        filesLocation: str (or Path), optional
-            Parent location of the output files created by this class. If not given, it will be \
-            taken from the config.yml file.
-        readFromDB: bool, optional
-            If True, parameters will be loaded from the DB at the init level. (default=True).
+
         """
         self._logger = logging.getLogger(__name__)
         self._logger.debug("Init TelescopeModel")
@@ -115,13 +107,12 @@ class TelescopeModel:
         self.label = label
         self._extraLabel = None
 
-        self._modelFilesLocations = cfg.getConfigArg("modelFilesLocations", modelFilesLocations)
-        self._filesLocation = cfg.getConfigArg("outputLocation", filesLocation)
+        self.io_handler = io_handler.IOHandler()
+        self.mongoDBConfig = mongoDBConfig
 
         self._parameters = dict()
 
-        if readFromDB:
-            self._loadParametersFromDB()
+        self._loadParametersFromDB()
 
         self._setConfigFileDirectoryAndName()
         self._isConfigFileUpToDate = False
@@ -163,8 +154,6 @@ class TelescopeModel:
         site,
         telescopeModelName,
         label=None,
-        modelFilesLocations=None,
-        filesLocation=None,
     ):
         """
         Create a TelescopeModel from a sim_telarray config file.
@@ -184,12 +173,6 @@ class TelescopeModel:
             Telescope model name for the base set of parameters (ex. LST-1, ...).
         label: str, optional
             Instance label. Important for output file naming.
-        modelFilesLocation: str (or Path), optional
-            Location of the MC model files. If not given, it will be taken from the config.yml
-            file.
-        filesLocation: str (or Path), optional
-            Parent location of the output files created by this class. If not given, it will be
-            taken from the config.yml file.
 
         Returns
         -------
@@ -199,10 +182,8 @@ class TelescopeModel:
         tel = cls(
             site=site,
             telescopeModelName=telescopeModelName,
+            mongoDBConfig=None,
             label=label,
-            modelFilesLocations=modelFilesLocations,
-            filesLocation=filesLocation,
-            readFromDB=False,
         )
 
         def _processLine(words):
@@ -251,8 +232,6 @@ class TelescopeModel:
         tel._isExportedModelFilesUpToDate = True
         return tel
 
-    # End of fromConfigFile
-
     def setExtraLabel(self, extraLabel):
         """
         Set an extra label for the name of the config file.
@@ -273,7 +252,8 @@ class TelescopeModel:
 
     def _setConfigFileDirectoryAndName(self):
         """Define the variable _configFileDirectory and create directories, if needed"""
-        self._configFileDirectory = io.getOutputDirectory(self._filesLocation, self.label, "model")
+
+        self._configFileDirectory = self.io_handler.getOutputDirectory(self.label, "model")
 
         # Setting file name and the location
         configFileName = names.simtelTelescopeConfigFileName(
@@ -284,10 +264,13 @@ class TelescopeModel:
     def _loadParametersFromDB(self):
         """Read parameters from DB and store them in _parameters."""
 
+        if self.mongoDBConfig is None:
+            return
+
         self._logger.debug("Reading telescope parameters from DB")
 
         self._setConfigFileDirectoryAndName()
-        db = db_handler.DatabaseHandler()
+        db = db_handler.DatabaseHandler(mongoDBConfig=self.mongoDBConfig)
         self._parameters = db.getModelParameters(
             self.site, self.name, self.modelVersion, onlyApplicable=True
         )
@@ -295,8 +278,6 @@ class TelescopeModel:
         self._logger.debug("Reading site parameters from DB")
         _sitePars = db.getSiteParameters(self.site, self.modelVersion, onlyApplicable=True)
         self._parameters.update(_sitePars)
-
-    # END _loadParametersFromDB
 
     def hasParameter(self, parName):
         """
@@ -499,7 +480,7 @@ class TelescopeModel:
 
     def exportModelFiles(self):
         """Exports the model files into the config file directory."""
-        db = db_handler.DatabaseHandler()
+        db = db_handler.DatabaseHandler(mongoDBConfig=self.mongoDBConfig)
 
         # Removing parameter files added manually (which are not in DB)
         parsFromDB = copy(self._parameters)
@@ -533,12 +514,12 @@ class TelescopeModel:
         Write to disk a file from the derived values DB.
         """
 
-        db = db_handler.DatabaseHandler()
+        db = db_handler.DatabaseHandler(mongoDBConfig=self.mongoDBConfig)
         for parNow in self.derived:
             if self.derived[parNow]["File"]:
                 db.exportFileDB(
                     dbName=db.DB_DERIVED_VALUES,
-                    dest=io.getOutputDirectory(self._filesLocation, self.label, "derived"),
+                    dest=self.io_handler.getOutputDirectory(self.label, "derived"),
                     fileName=self.derived[parNow]["Value"],
                 )
 
@@ -652,25 +633,25 @@ class TelescopeModel:
         """Load the attribute mirrors by creating a Mirrors object with the mirror list file."""
         mirrorListFileName = self._parameters["mirror_list"]["Value"]
         try:
-            mirrorListFile = cfg.findFile(mirrorListFileName, self._configFileDirectory)
+            mirrorListFile = gen.findFile(mirrorListFileName, self._configFileDirectory)
         except FileNotFoundError:
-            mirrorListFile = cfg.findFile(mirrorListFileName, self._modelFilesLocations)
+            mirrorListFile = gen.findFile(mirrorListFileName, self.io_handler.model_path)
             self._logger.warning(
                 "MirrorListFile was not found in the config directory - "
-                "Using the one found in the modelFilesLocations"
+                "Using the one found in the model_path"
             )
         self._mirrors = Mirrors(mirrorListFile)
 
     def _loadReferenceData(self):
         """Load the reference data for this telescope from the DB."""
         self._logger.debug("Reading reference data from DB")
-        db = db_handler.DatabaseHandler()
+        db = db_handler.DatabaseHandler(mongoDBConfig=self.mongoDBConfig)
         self._referenceData = db.getReferenceData(self.site, self.modelVersion, onlyApplicable=True)
 
     def _loadDerivedValues(self):
         """Load the derived values for this telescope from the DB."""
         self._logger.debug("Reading derived data from DB")
-        db = db_handler.DatabaseHandler()
+        db = db_handler.DatabaseHandler(mongoDBConfig=self.mongoDBConfig)
         self._derived = db.getDerivedValues(
             self.site,
             self.name,
@@ -685,13 +666,13 @@ class TelescopeModel:
             self._logger.warning("Using focal_length because effective_focal_length is 0.")
             focalLength = self.getParameterValue("focal_length")
         try:
-            cameraConfigFilePath = cfg.findFile(cameraConfigFile, self._configFileDirectory)
+            cameraConfigFilePath = gen.findFile(cameraConfigFile, self._configFileDirectory)
         except FileNotFoundError:
             self._logger.warning(
                 "CameraConfigFile was not found in the config directory - "
-                "Using the one found in the modelFilesLocations"
+                "Using the one found in the model_path"
             )
-            cameraConfigFilePath = cfg.findFile(cameraConfigFile, self._modelFilesLocations)
+            cameraConfigFilePath = gen.findFile(cameraConfigFile, self.io_handler.model_path)
 
         self._camera = Camera(
             telescopeModelName=self.name,

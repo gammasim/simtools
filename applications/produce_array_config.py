@@ -84,42 +84,41 @@
 
 import logging
 
-import simtools.config as cfg
-import simtools.util.commandline_parser as argparser
+import simtools.configuration as configurator
 import simtools.util.general as gen
 from simtools.model.array_model import ArrayModel
 
 
 def main():
 
-    parser = argparser.CommandLineParser(
+    config = configurator.Configurator(
         description=("Example of how to produce sim_telarray config files for a given array.")
     )
-    parser.add_argument(
-        "-l",
+    config.parser.add_argument(
         "--label",
         help="Identifier str for the output naming.",
         type=str,
         required=False,
     )
-    parser.add_argument(
-        "-a",
+    config.parser.add_argument(
         "--array_config",
         help="Yaml file with array config data.",
         type=str,
         required=True,
     )
-    parser.initialize_default_arguments()
 
-    args = parser.parse_args()
-    cfg.setConfigFileName(args.configFile)
+    args_dict, db_config = config.initialize(db_config=True)
 
-    label = "produce_array_config" if args.label is None else args.label
+    label = "produce_array_config" if args_dict["label"] is None else args_dict["label"]
 
     logger = logging.getLogger("simtools")
-    logger.setLevel(gen.getLogLevelFromUser(args.logLevel))
+    logger.setLevel(gen.getLogLevelFromUser(args_dict["log_level"]))
 
-    arrayModel = ArrayModel(label=label, arrayConfigFile=args.array_config)
+    arrayModel = ArrayModel(
+        label=label,
+        mongoDBConfig=db_config,
+        arrayConfigFile=args_dict["array_config"],
+    )
 
     # Printing list of telescope for quick inspection.
     arrayModel.printTelescopeList()
