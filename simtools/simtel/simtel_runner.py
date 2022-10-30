@@ -110,7 +110,6 @@ class SimtelRunner:
         )
         self._logger.debug("Run bash script - {}".format(self._scriptFile))
 
-        extraCommands = self._getExtraCommands(extraCommands)
         self._logger.debug("Extra commands to be added to the run script {}".format(extraCommands))
 
         command = self._makeRunCommand(inputFile=inputFile, runNumber=runNumber)
@@ -209,15 +208,6 @@ class SimtelRunner:
             + "it should be implemented in the sub class"
         )
         return False
-
-    @staticmethod
-    def _getExtraCommands(extra):
-        """
-        Get extra commands by combining the one given as argument and
-        what is given in the configuration.
-        """
-        extra = gen.copyAsList(extra) if extra is not None else list()
-        return extra
 
     @staticmethod
     def _configOption(par, value=None):
