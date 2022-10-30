@@ -354,7 +354,8 @@ class WorkflowDescription:
         product_dict["format"] = self.product_data_file_format()
         product_dict["filename"] = str(self.product_data_file_name(full_path=False))
 
-    def _fill_association_id(self, association_dict):
+    @staticmethod
+    def _fill_association_id(association_dict):
         """
         Fill association id from site and telescope class, type, subtype.
 
