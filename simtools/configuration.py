@@ -22,7 +22,7 @@ class Configurator:
     - configuration dict when calling the class
     - environmental variables
 
-    Configuration parameter names are converted allways to lower case.
+    Configuration parameter names are converted always to lower case.
 
     Methods
     -------
@@ -148,7 +148,7 @@ class Configurator:
     def _fillFromConfigDict(self, _input_dict):
         """
         Fill configuration parameters from dictionary.
-        Enforce that configuration parameter names are of lower case.
+        Enforce that configuration parameter names are lower case.
 
         Parameters
         ----------
@@ -226,7 +226,7 @@ class Configurator:
                     self._fillFromConfigDict(_config_dict["CTASIMPIPE"]["CONFIGURATION"])
                 except KeyError:
                     self._logger.info(
-                        "Error reading CTASIMPIPE:CONFIGURATION dict from {}".format(config_file)
+                        "No CTASIMPIPE:CONFIGURATION dict found in {}.".format(config_file)
                     )
             else:
                 self._fillFromConfigDict(_config_dict)
