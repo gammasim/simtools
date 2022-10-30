@@ -19,7 +19,7 @@ class SchemaValidator:
 
     Methods
     -------
-    validate_and_transform(user_meta_file_name=None)
+    validate_and_transform(user_meta_file_name=None, lower_case=True)
         validate user meta data
 
     """
@@ -42,7 +42,7 @@ class SchemaValidator:
         )
         self.data_dict = data_dict
 
-    def validate_and_transform(self, user_meta_file_name=None, lower_case=False):
+    def validate_and_transform(self, user_meta_file_name=None, lower_case=True):
         """
         Schema validation and processing.
 
