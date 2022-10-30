@@ -59,13 +59,13 @@ def _parse(label, description):
 
     config.parser.add_argument(
         "--input_meta",
-        help="Meta data file describing input data (yml)",
+        help="Meta data file describing input data",
         type=str,
         required=True,
     )
     config.parser.add_argument(
         "--input_data",
-        help="Input data file (ecsv)",
+        help="Input data file",
         type=str,
         required=True,
     )
