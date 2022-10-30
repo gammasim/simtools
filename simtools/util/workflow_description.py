@@ -283,7 +283,7 @@ class WorkflowDescription:
                 _association["type"] = _split_telescope_name[1]
                 _association["subtype"] = _split_telescope_name[2]
         except KeyError:
-            self._logger.error("Error reading user association meta data from args")
+            self._logger.error("Error reading association meta data from args")
             raise
         except AttributeError as e:
             self._logger.debug("Missing parameter on command line, use defaults ({})".format(e))
@@ -292,8 +292,7 @@ class WorkflowDescription:
 
     def _fill_top_level_meta_from_file(self, top_level_dict):
         """
-        Read and validate user-provided metadata from file.
-        Fill metadata into top-level template.
+        Read and validate metadata from file. Fill metadata into top-level template.
 
         Parameters
         ----------
@@ -304,7 +303,7 @@ class WorkflowDescription:
         ------
         KeyError
             if corresponding fields cannot by accessed in the
-            user top-level or user metadata dictionaries
+            top-level or metadata dictionaries
 
         """
 
