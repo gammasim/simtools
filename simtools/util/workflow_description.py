@@ -309,8 +309,8 @@ class WorkflowDescription:
 
         _schema_validator = vs.SchemaValidator()
         try:
-            _user_meta = _schema_validator.validate_and_transform(
-                user_meta_file_name=self.workflow_config["configuration"]["input_meta"],
+            _input_meta = _schema_validator.validate_and_transform(
+                input_meta_file_name=self.workflow_config["configuration"]["input_meta"],
                 lower_case=True,
             )
         except KeyError:
@@ -318,16 +318,16 @@ class WorkflowDescription:
             return
 
         try:
-            self._merge_config_dicts(top_level_dict, _user_meta)
+            self._merge_config_dicts(top_level_dict, _input_meta)
         except KeyError:
-            self._logger.error("Error reading user input meta data")
+            self._logger.error("Error reading input meta data")
             raise
         # list entry copies
-        for association in _user_meta["product"]["association"]:
+        for association in _input_meta["product"]["association"]:
             self._fill_context_sim_list(
                 top_level_dict["context"]["sim"]["association"], association
             )
-        for document in _user_meta["product"]["document"]:
+        for document in _input_meta["product"]["document"]:
             self._fill_context_sim_list(top_level_dict["context"]["sim"]["document"], document)
 
     def _fill_product_meta(self, product_dict):
@@ -397,7 +397,7 @@ class WorkflowDescription:
             activity_dict["end"] = activity_dict["start"]
             activity_dict["software"]["version"] = simtools.version.__version__
         except KeyError:
-            self._logger.error("Error ACTIVITY meta from user input meta data")
+            self._logger.error("Error ACTIVITY meta from input meta data")
             raise
 
     def _read_workflow_configuration(self, workflow_config_file):
@@ -460,14 +460,14 @@ class WorkflowDescription:
             elif add_new_fields:
                 dict_high[k] = dict_low[k]
 
-    def user_input_data_file_name(self):
+    def input_data_file_name(self):
         """
-        Return user input data file (full path).
+        Return input data file (full path).
 
         Returns
         -------
         str
-            User input data file (full path).
+            Input data file (full path).
         """
 
         try:
