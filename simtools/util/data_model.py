@@ -57,14 +57,14 @@ def top_level_reference_schema():
     }
 
 
-def user_input_reference_schema():
+def metadata_input_reference_schema():
     """
-    Reference data model scheme for user input.
+    Reference data model scheme for input metadata.
     Describes metada provided for input to gammasim-tools applications.
 
     Returns
     -------
-    dict with user input reference schema
+    dict with input reference schema
 
 
     """
@@ -119,7 +119,7 @@ def workflow_configuration_schema():
             "description": None,
         },
         "datamodel": {
-            "userinputschema": None,
+            "inputschema": None,
         },
         "product": {
             "description": None,

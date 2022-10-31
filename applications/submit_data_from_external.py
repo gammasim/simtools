@@ -10,14 +10,12 @@
 
     Command line arguments
     ----------------------
-    workflow_config (str, required)
-        Workflow configuration (yml format)
+    workflow_description (str, required)
+        Workflow description (yml format)
     input_meta (str, required)
-        User-provided meta data file (yml format)
+        input meta data file (yml format)
     input_data (str, required)
-        User-provided data file
-    verbosity (str, optional)
-        Log level to print (default=INFO).
+        input data file
 
     Example
     -------
@@ -26,9 +24,9 @@
 
     .. code-block:: console
 
-        python ./set_modelparameter_from_external.py \
-            --workflow_config set_quantum_efficiency_from_external.yml \
-            --input_meta qe_R12992-100-05b.usermeta.yml \
+        python ./submit_data_from_external.py \
+            --workflow_description set_quantum_efficiency_from_external.yml \
+            --input_meta qe_R12992-100-05b.meta.yml \
             --input_data qe_R12992-100-05b.data.ecsv \
 
 
@@ -37,11 +35,11 @@
 import logging
 import os
 
-import simtools.configuration as configurator
 import simtools.util.general as gen
 import simtools.util.model_data_writer as writer
 import simtools.util.validate_data as ds
-import simtools.util.workflow_description as workflow_config
+from simtools.configuration import Configurator
+from simtools.util.workflow_description import WorkflowDescription
 
 
 def _parse(label, description):
@@ -55,7 +53,7 @@ def _parse(label, description):
 
     """
 
-    config = configurator.Configurator(label=label, description=description)
+    config = Configurator(label=label, description=description)
 
     config.parser.add_argument(
         "--input_meta",
@@ -82,7 +80,7 @@ def main():
     logger = logging.getLogger()
     logger.setLevel(gen.getLogLevelFromUser(args_dict["log_level"]))
 
-    workflow = workflow_config.WorkflowDescription(args_dict=args_dict)
+    workflow = WorkflowDescription(args_dict=args_dict)
 
     data_validator = ds.DataValidator(workflow)
     data_validator.validate()

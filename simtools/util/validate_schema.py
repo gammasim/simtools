@@ -9,7 +9,7 @@ import simtools.util.general as gen
 class SchemaValidator:
     """
     Validate a dictionary against a reference schema.
-    Used e.g., to validate metadata provided through user input.
+    Used e.g., to validate metadata provided as input.
 
     Attributes
     ----------
@@ -19,8 +19,8 @@ class SchemaValidator:
 
     Methods
     -------
-    validate_and_transform(user_meta_file_name=None, lower_case=True)
-        validate user meta data
+    validate_and_transform(meta_file_name=None, lower_case=True)
+        validate meta data provided by file
 
     """
 
@@ -38,18 +38,18 @@ class SchemaValidator:
         self._logger = logging.getLogger(__name__)
 
         self._reference_schema = gen.change_dict_keys_case(
-            data_model.user_input_reference_schema(), lower_case=True
+            data_model.metadata_input_reference_schema(), lower_case=True
         )
         self.data_dict = data_dict
 
-    def validate_and_transform(self, user_meta_file_name=None, lower_case=True):
+    def validate_and_transform(self, meta_file_name=None, lower_case=True):
         """
         Schema validation and processing.
 
         Parameters
         ----------
-        user_meta_file_name
-            file name for file with user meta data to
+        meta_file_name
+            file name for file with meta data to
             be validated (might also be given as
             dictionary during initialization of the class)
         lower_case: bool
@@ -61,9 +61,9 @@ class SchemaValidator:
             Complete set of metadata following the CTA top-level metadata defintion
 
         """
-        if user_meta_file_name:
-            self._logger.debug("Reading meta data from {}".format(user_meta_file_name))
-            self.data_dict = gen.collectDataFromYamlOrDict(user_meta_file_name, None)
+        if meta_file_name:
+            self._logger.debug("Reading meta data from {}".format(meta_file_name))
+            self.data_dict = gen.collectDataFromYamlOrDict(meta_file_name, None)
 
         if lower_case:
             self.data_dict = gen.change_dict_keys_case(self.data_dict, True)
@@ -82,7 +82,7 @@ class SchemaValidator:
         ref_schema: dict
             Reference metadata schema
         data_dict: dict
-            User-provided metadata dict to be validated against
+            input metadata dict to be validated against
             reference schema
 
         Raises
