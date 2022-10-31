@@ -77,9 +77,7 @@ def main():
         label,
         description="Submit model parameter (value, table) through an external interface.",
         usage=" python applications/submit_data_from_external.py "
-        "--workflow_config <workflow configuration file>"
-        "--input_meta <metadata of input data> "
-        "--input_data <input data>",
+        "--workflow_config <workflow configuration file>",
     )
 
     logger = logging.getLogger()
