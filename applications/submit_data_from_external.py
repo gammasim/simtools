@@ -59,13 +59,13 @@ def _parse(label, description, usage):
         "--input_meta",
         help="Meta data file describing input data",
         type=str,
-        required=True,
+        required=False,
     )
     config.parser.add_argument(
         "--input_data",
         help="Input data file",
         type=str,
-        required=True,
+        required=False,
     )
     return config.initialize(workflow_config=True)
 
