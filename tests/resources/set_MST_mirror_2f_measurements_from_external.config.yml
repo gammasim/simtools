@@ -27,8 +27,10 @@ CTASIMPIPE:
     FORMAT: ascii.ecsv
 
   CONFIGURATION:
+    input_meta: './tests/resources/MLTdata-preproduction.meta.yml'
+    input_data: './tests/resources/MLTdata-preproduction.ecsv'
     log_level: 'INFO'
-    test: false
+    test: true
 
   DATA_COLUMNS:
     mirror_panel_id:

@@ -2,6 +2,7 @@ import logging
 
 import yaml
 
+import simtools.util.general as gen
 from simtools.util import workflow_description
 
 
@@ -61,15 +62,16 @@ class ModelDataWriter:
             self._logger.error("Error writing model data to {}".format(_file))
             raise
 
-    def write_metadata(self, ymlfile=None):
+    def write_metadata(self, ymlfile=None, keys_lower_case=False):
         """
-        Write model metadata file
-        (yaml file format)
+        Write model metadata file (yaml file format).
 
         Attributes
         ----------
         ymlfile str
             name of output file (default=None)
+        keys_lower_case: bool
+            write yaml key in lower case
 
         Returns
         -------
@@ -83,7 +85,11 @@ class ModelDataWriter:
                 ymlfile = self.workflow_config.product_data_file_name(".yml")
             self._logger.info("Writing metadata to {}".format(ymlfile))
             with open(ymlfile, "w", encoding="UTF-8") as file:
-                yaml.safe_dump(self.workflow_config.top_level_meta, file, sort_keys=False)
+                yaml.safe_dump(
+                    gen.change_dict_keys_case(self.workflow_config.top_level_meta, keys_lower_case),
+                    file,
+                    sort_keys=False,
+                )
             return ymlfile
         except FileNotFoundError:
             self._logger.error("Error writing model data to {}".format(ymlfile))
