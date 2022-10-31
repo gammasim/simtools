@@ -19,7 +19,7 @@ def test_fill_association_id(args_dict_site):
     workflow_1.top_level_meta = gen.change_dict_keys_case(
         data_model.top_level_reference_schema(), True
     )
-    workflow_1.top_level_meta["cta"]["context"]["sim"]["association"] = get_generic_user_meta()[
+    workflow_1.top_level_meta["cta"]["context"]["sim"]["association"] = get_generic_input_meta()[
         "product"
     ]["association"]
 
@@ -121,16 +121,16 @@ def test_fill_activity_meta(args_dict_site):
 
 def test_fill_context_sim_list(args_dict_site):
 
-    _test_dict_1 = copy.copy(get_generic_user_meta()["product"]["association"])
+    _test_dict_1 = copy.copy(get_generic_input_meta()["product"]["association"])
 
     # empty dict -> return same dict
     workflow.WorkflowDescription._fill_context_sim_list(_test_dict_1, {})
-    assert _test_dict_1 == get_generic_user_meta()["product"]["association"]
+    assert _test_dict_1 == get_generic_input_meta()["product"]["association"]
 
     # add one new entry
     _new_element = {"site": "South", "class": "SCT", "type": "sctcam", "subtype": "7", "id:": None}
     workflow.WorkflowDescription._fill_context_sim_list(_test_dict_1, _new_element)
-    _test_dict_2 = copy.copy(get_generic_user_meta()["product"]["association"])
+    _test_dict_2 = copy.copy(get_generic_input_meta()["product"]["association"])
     _test_dict_2.append(_new_element)
     assert _test_dict_1 == _test_dict_2
 
@@ -148,7 +148,7 @@ def test_fill_context_sim_list(args_dict_site):
     assert _test_none == [_new_element]
 
 
-def get_generic_user_meta():
+def get_generic_input_meta():
 
     return {
         "contact": "my_name",

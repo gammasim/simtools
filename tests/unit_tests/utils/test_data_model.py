@@ -10,10 +10,10 @@ def test_top_level_reference_schema():
     assert len(_top_meta) > 0
 
 
-def test_user_input_reference_schema():
+def test_metadata_input_reference_schema():
     """(very hard to test this)"""
 
-    _top_ref = data_model.user_input_reference_schema()
+    _top_ref = data_model.metadata_input_reference_schema()
 
     assert isinstance(_top_ref, dict)
     assert len(_top_ref) > 0
