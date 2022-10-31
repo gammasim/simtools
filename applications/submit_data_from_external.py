@@ -42,7 +42,7 @@ from simtools.configuration import Configurator
 from simtools.util.workflow_description import WorkflowDescription
 
 
-def _parse(label, description):
+def _parse(label, description, usage):
     """
     Parse command line configuration
 
@@ -53,7 +53,7 @@ def _parse(label, description):
 
     """
 
-    config = Configurator(label=label, description=description)
+    config = Configurator(label=label, description=description, usage=usage)
 
     config.parser.add_argument(
         "--input_meta",
@@ -74,7 +74,12 @@ def main():
 
     label = os.path.basename(__file__).split(".")[0]
     args_dict, _ = _parse(
-        label, description="Submit model parameter (value, table) through an external interface."
+        label,
+        description="Submit model parameter (value, table) through an external interface.",
+        usage=" python applications/submit_data_from_external.py "
+        "--workflow_config <workflow configuration file>"
+        "--input_meta <metadata of input data> "
+        "--input_data <input data>",
     )
 
     logger = logging.getLogger()
