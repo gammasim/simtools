@@ -46,7 +46,7 @@ class DataValidator:
 
         if workflow:
             self._reference_data_columns = workflow.reference_data_columns()
-            self._data_file_name = workflow.user_input_data_file_name()
+            self._data_file_name = workflow.input_data_file_name()
 
         self.data_table = None
 
@@ -98,11 +98,6 @@ class DataValidator:
 
         """
 
-        # TODO
-        # understand how errors should be treated when
-        # opening and reading fails.
-        # FileNotFoundError
-        # astropy.io.ascii.core.InconsistentTableError
         self._logger.info("Reading data from {}".format(self._data_file_name))
         self.data_table = Table.read(self._data_file_name, guess=True, delimiter=r"\s")
 
@@ -279,7 +274,7 @@ class DataValidator:
     def _column_status(self, col_name):
         """
         Check that column is defined in reference schema (additional
-        data columns are allowed in the user input data, but are ignored)
+        data columns are allowed in the input data, but are ignored)
         and that column type is not string (string-type columns ignored
         for range checks)
 
