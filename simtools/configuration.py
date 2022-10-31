@@ -31,16 +31,22 @@ class Configurator:
 
     """
 
-    def __init__(self, config=None, label=None, description=None):
+    def __init__(self, config=None, label=None, usage=None, description=None, epilog=None):
         """
         Configurator init.
 
         Parameters
         ----------
         config: dict
-           Configuration parameters as dict.
+            Configuration parameters as dict.
         label: str
-           Class label.
+            Class label.
+        usage: str
+            Application usage description.
+        description: str
+            Text displayed as description
+        epilog: str
+            Text display after all arguments.
 
         """
 
@@ -50,7 +56,9 @@ class Configurator:
         self.configClassInit = config
         self.label = label
         self.config = {}
-        self.parser = argparser.CommandLineParser(self.label, description)
+        self.parser = argparser.CommandLineParser(
+            prog=self.label, usage=usage, description=description, epilog=epilog
+        )
 
     def default_config(self, arg_list=None, add_db_config=False):
         """
