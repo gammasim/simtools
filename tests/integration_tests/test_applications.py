@@ -303,6 +303,7 @@ def test_applications(application, io_handler, monkeypatch, db):
         )
 
     prepare_one_file("PSFcurve_data_v2.txt")
+    prepare_one_file("MLTdata-preproduction.ecsv")
 
     def makeCommand(app, args):
         cmd = "python applications/" + app + ".py"
