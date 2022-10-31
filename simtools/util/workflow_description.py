@@ -310,7 +310,7 @@ class WorkflowDescription:
         _schema_validator = vs.SchemaValidator()
         try:
             _input_meta = _schema_validator.validate_and_transform(
-                input_meta_file_name=self.workflow_config["configuration"]["input_meta"],
+                meta_file_name=self.workflow_config["configuration"]["input_meta"],
                 lower_case=True,
             )
         except KeyError:

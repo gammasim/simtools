@@ -43,11 +43,6 @@ APP_LIST = {
         [
             "--workflow_config",
             "tests/resources/set_MST_mirror_2f_measurements_from_external.config.yml",
-            "--input_meta",
-            "TESTMODELDIR/MLTdata-preproduction.usermeta.yml",
-            "--input_data",
-            "TESTMODELDIR/MLTdata-preproduction.ecsv",
-            " --test",
         ]
     ],
     "derive_mirror_rnda::help": [
@@ -308,8 +303,6 @@ def test_applications(application, io_handler, monkeypatch, db):
         )
 
     prepare_one_file("PSFcurve_data_v2.txt")
-    prepare_one_file("MLTdata-preproduction.usermeta.yml")
-    prepare_one_file("MLTdata-preproduction.ecsv")
 
     def makeCommand(app, args):
         cmd = "python applications/" + app + ".py"
