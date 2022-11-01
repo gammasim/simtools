@@ -129,6 +129,9 @@ class Configurator:
         self._fillFromCommandLine()
         try:
             self._fillFromConfigFile(self.config["workflow_config"])
+        except KeyError:
+            pass
+        try:
             self._fillFromConfigFile(self.config["config"])
         except KeyError:
             pass
