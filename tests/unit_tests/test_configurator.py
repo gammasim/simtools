@@ -56,8 +56,9 @@ def test_fillFromConfigFile_not_existing_file(configurator):
     # _fillFromConfigFile() is always called after _fillFromCommandLine()
     configurator._fillFromCommandLine(arg_list=[])
 
+    # config_file not found raises FileNotFoundError
     with pytest.raises(FileNotFoundError):
-        configurator._fillFromConfigFile("this_file_does_not_exist")
+        configurator._fillFromConfigFile(config_file="this_file_does_not_exist")
 
 
 def test_fillFromConfigFile(configurator, args_dict, tmp_test_directory):
