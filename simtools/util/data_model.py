@@ -60,7 +60,7 @@ def top_level_reference_schema():
 def metadata_input_reference_schema():
     """
     Reference data model scheme for input metadata.
-    Describes metada provided for input to gammasim-tools applications.
+    Describes metadata provided for input to gammasim-tools applications.
 
     Returns
     -------
