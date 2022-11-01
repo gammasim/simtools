@@ -58,7 +58,7 @@
 """
 
 import logging
-import os
+from pathlib import Path
 
 import astropy.units as u
 import matplotlib.pyplot as plt
@@ -121,7 +121,7 @@ def _parse(label):
 
 def main():
 
-    label = os.path.basename(__file__).split(".")[0]
+    label = Path(__file__).stem
     args_dict, db_config = _parse(label)
 
     logger = logging.getLogger()

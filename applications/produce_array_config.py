@@ -83,7 +83,7 @@
 """
 
 import logging
-import os
+from pathlib import Path
 
 import simtools.configuration as configurator
 import simtools.util.general as gen
@@ -93,7 +93,7 @@ from simtools.model.array_model import ArrayModel
 def main():
 
     config = configurator.Configurator(
-        label=os.path.basename(__file__).split(".")[0],
+        label=Path(__file__).stem,
         description=("Example of how to produce sim_telarray config files for a given array."),
     )
     config.parser.add_argument(
