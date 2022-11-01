@@ -29,7 +29,7 @@ def test_write_metadata(args_dict_site, io_handler, tmp_test_directory):
 
 def test_initialize():
     # test writer with no workflow configuration and no configuration dictionary defined
-    with pytest.raises(TypeError, match=r"\'NoneType\' object is not subscriptable"):
+    with pytest.raises(TypeError, match=re.escape("'NoneType' object is not subscriptable")):
         writer.ModelDataWriter(workflow_config=None, args_dict=None)
 
 
