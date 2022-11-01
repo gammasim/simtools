@@ -44,6 +44,7 @@
 """
 
 import logging
+from pathlib import Path
 
 import simtools.configuration as configurator
 import simtools.util.general as gen
@@ -52,24 +53,25 @@ from simtools.camera_efficiency import CameraEfficiency
 from simtools.model.telescope_model import TelescopeModel
 
 
-def _parse():
+def _parse(label):
     """
-    Parse command line configuratio
+    Parse command line configuration
 
     """
     config = configurator.Configurator(
+        label=label,
         description=(
             "Calculate the camera efficiency of the telescope requested. "
             "Plot the camera efficiency vs wavelength for cherenkov and NSB light."
-        )
+        ),
     )
     return config.initialize(db_config=True, telescope_model=True)
 
 
 def main():
 
-    args_dict, _db_config = _parse()
-    label = "validate_camera_efficiency"
+    label = Path(__file__).stem
+    args_dict, _db_config = _parse(label)
 
     logger = logging.getLogger()
     logger.setLevel(gen.getLogLevelFromUser(args_dict["log_level"]))

@@ -65,7 +65,7 @@ def main():
     _db_tmp = db_handler.DatabaseHandler(mongoDBConfig=None)
 
     config = configurator.Configurator(
-        label="Add file() to the DB.",
+        label="Add file to the DB.",
         description="python applications/add_file_to_db.py --file_name file_1.dat file_2.dat",
     )
     group = config.parser.add_mutually_exclusive_group(required=True)

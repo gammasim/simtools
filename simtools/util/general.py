@@ -586,3 +586,36 @@ def findFile(name, loc):
     msg = "File {} could not be found in {}".format(name, allLocations)
     _logger.error(msg)
     raise FileNotFoundError(msg)
+
+
+def change_dict_keys_case(data_dict, lower_case=True):
+    """
+    Change keys of a dictionary to lower or upper case.
+    Crawls throught the dictionary and changes all keys.
+    Takes into account list of dictionaries, as e.g. found in the top level data model.
+
+    Parameters
+    ----------
+    data_dict: dict
+        Dictionary to be converted.
+    lower_case: bool
+        Change keys to lower (upper) case if True (False)
+
+
+    """
+    _return_dict = {}
+    for key in data_dict.keys():
+        if lower_case:
+            _key_changed = key.lower()
+        else:
+            _key_changed = key.upper()
+        if isinstance(data_dict[key], dict):
+            _return_dict[_key_changed] = change_dict_keys_case(data_dict[key], lower_case)
+        elif isinstance(data_dict[key], list):
+            _tmp_list = []
+            for _list_entry in data_dict[key]:
+                _tmp_list.append(change_dict_keys_case(_list_entry, lower_case))
+            _return_dict[_key_changed] = _tmp_list
+        else:
+            _return_dict[_key_changed] = data_dict[key]
+    return _return_dict

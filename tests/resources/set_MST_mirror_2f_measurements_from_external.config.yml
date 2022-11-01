@@ -23,16 +23,14 @@ CTASIMPIPE:
     DESCRIPTION: "Set data columns for MST mirror 2f measurements"
 
   PRODUCT:
+    DESCRIPTION: "SimPipe workflow configuration"
     FORMAT: ascii.ecsv
-    DIRECTORY: null
-
-  INPUT:
-    METAFILE: null
-    DATAFILE: null
 
   CONFIGURATION:
-    logLevel: 'INFO'
-    test: false
+    input_meta: './tests/resources/MLTdata-preproduction.meta.yml'
+    input_data: './tests/resources/MLTdata-preproduction.ecsv'
+    log_level: 'INFO'
+    test: true
 
   DATA_COLUMNS:
     mirror_panel_id:
