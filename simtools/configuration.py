@@ -241,8 +241,6 @@ class Configurator:
                     )
             else:
                 self._fillFromConfigDict(_config_dict)
-        except TypeError:
-            pass
         except FileNotFoundError:
             self._logger.error("Configuration file not found: {}".format(config_file))
             raise
