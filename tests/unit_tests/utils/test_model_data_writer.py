@@ -20,7 +20,7 @@ def test_write_metadata(args_dict_site, io_handler, tmp_test_directory):
     yml_file = w_1.write_metadata()
     assert Path(yml_file).exists()
 
-    yml_file = w_1.write_metadata(ymlfile=str(tmp_test_directory) + "/test_file.yml")
+    yml_file = w_1.write_metadata(ymlfile=tmp_test_directory.join("test_file.yml"))
     assert Path(yml_file).exists()
 
     with pytest.raises(FileNotFoundError):
