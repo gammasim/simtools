@@ -38,7 +38,7 @@
 """
 
 import logging
-import os
+from pathlib import Path
 
 import simtools.configuration as configurator
 import simtools.util.general as gen
@@ -104,7 +104,7 @@ def _parse(label=None, description=None):
 
 def main():
 
-    label = os.path.basename(__file__).split(".")[0]
+    label = Path(__file__).stem
     args_dict, _ = _parse(label, description=("Print a list of array element positions"))
 
     _logger = logging.getLogger()
