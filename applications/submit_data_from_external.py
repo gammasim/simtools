@@ -2,7 +2,7 @@
 """
     Summary
     -------
-    Set workflow for a model parameter (value, table) through an external interface.
+    Submit model parameter (value, table) through an external interface.
 
     Prototype implementation allowing to submit metadata and
     data through the command line.
@@ -10,14 +10,12 @@
 
     Command line arguments
     ----------------------
-    workflow_config_file (str, required)
-        Workflow configuration (yml format)
+    workflow_description (str, required)
+        Workflow description (yml format)
     input_meta (str, required)
-        User-provided meta data file (yml format)
+        input meta data file (yml format)
     input_data (str, required)
-        User-provided data file
-    verbosity (str, optional)
-        Log level to print (default=INFO).
+        input data file
 
     Example
     -------
@@ -26,25 +24,25 @@
 
     .. code-block:: console
 
-        python ./set_modelparameter_from_external.py \
-            --workflow_config_file set_quantum_efficiency_from_external.yml \
-            --input_meta_file qe_R12992-100-05b.usermeta.yml \
-            --input_data_file qe_R12992-100-05b.data.ecsv \
+        python ./submit_data_from_external.py \
+            --workflow_description set_quantum_efficiency_from_external.yml \
+            --input_meta qe_R12992-100-05b.meta.yml \
+            --input_data qe_R12992-100-05b.data.ecsv \
 
 
 """
 
 import logging
-import os
+from pathlib import Path
 
-import simtools.configuration as configurator
 import simtools.util.general as gen
 import simtools.util.model_data_writer as writer
 import simtools.util.validate_data as ds
-import simtools.util.workflow_description as workflow_config
+from simtools.configuration import Configurator
+from simtools.util.workflow_description import WorkflowDescription
 
 
-def _parse(label):
+def _parse(label, description, usage):
     """
     Parse command line configuration
 
@@ -55,34 +53,37 @@ def _parse(label):
 
     """
 
-    config = configurator.Configurator(label=label)
+    config = Configurator(label=label, description=description, usage=usage)
 
     config.parser.add_argument(
-        "-m",
-        "--input_meta_file",
-        help="User-provided meta data file (yml)",
+        "--input_meta",
+        help="Meta data file describing input data",
         type=str,
-        required=True,
+        required=False,
     )
     config.parser.add_argument(
-        "-d",
-        "--input_data_file",
-        help="User-provided data file (ecsv)",
+        "--input_data",
+        help="Input data file",
         type=str,
-        required=True,
+        required=False,
     )
     return config.initialize(workflow_config=True)
 
 
 def main():
 
-    label = os.path.basename(__file__).split(".")[0]
-    args_dict, _ = _parse(label)
+    label = Path(__file__).stem
+    args_dict, _ = _parse(
+        label,
+        description="Submit model parameter (value, table) through an external interface.",
+        usage=" python applications/submit_data_from_external.py "
+        "--workflow_config <workflow configuration file>",
+    )
 
     logger = logging.getLogger()
     logger.setLevel(gen.getLogLevelFromUser(args_dict["log_level"]))
 
-    workflow = workflow_config.WorkflowDescription(label=label, args_dict=args_dict)
+    workflow = WorkflowDescription(args_dict=args_dict)
 
     data_validator = ds.DataValidator(workflow)
     data_validator.validate()

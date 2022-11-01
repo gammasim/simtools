@@ -10,7 +10,7 @@ class CommandLineParser(argparse.ArgumentParser):
     Command line parser for application and workflows
     Wrapper around standard python argparse.ArgumentParser
 
-    Command line arguments should be given in snake_case, e.g. `config_file`.
+    Command line arguments should be given in snake_case, e.g. `input_meta`.
 
     Methods
     -------
@@ -65,7 +65,7 @@ class CommandLineParser(argparse.ArgumentParser):
         """
         _job_group = self.add_argument_group("configuration")
         _job_group.add_argument(
-            "--config_file",
+            "--config",
             help="gammasim-tools configuration file",
             default=None,
             type=str,
@@ -73,7 +73,7 @@ class CommandLineParser(argparse.ArgumentParser):
         )
         if workflow_config:
             _job_group.add_argument(
-                "--workflow_config_file",
+                "--workflow_config",
                 help="workflow configuration file",
                 type=str,
                 required=False,
@@ -126,7 +126,11 @@ class CommandLineParser(argparse.ArgumentParser):
             required=False,
         )
         _job_group.add_argument(
-            "-v",
+            "--label",
+            help="Job label",
+            required=False,
+        )
+        _job_group.add_argument(
             "--log_level",
             action="store",
             default="info",
@@ -134,7 +138,7 @@ class CommandLineParser(argparse.ArgumentParser):
             required=False,
         )
         _job_group.add_argument(
-            "-V", "--version", action="version", version=f"%(prog)s {simtools.version.__version__}"
+            "--version", action="version", version=f"%(prog)s {simtools.version.__version__}"
         )
 
     def initialize_db_config_arguments(self):

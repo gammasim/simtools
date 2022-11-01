@@ -83,6 +83,7 @@
 """
 
 import logging
+from pathlib import Path
 
 import simtools.configuration as configurator
 import simtools.util.general as gen
@@ -92,13 +93,8 @@ from simtools.model.array_model import ArrayModel
 def main():
 
     config = configurator.Configurator(
-        description=("Example of how to produce sim_telarray config files for a given array.")
-    )
-    config.parser.add_argument(
-        "--label",
-        help="Identifier str for the output naming.",
-        type=str,
-        required=False,
+        label=Path(__file__).stem,
+        description=("Example of how to produce sim_telarray config files for a given array."),
     )
     config.parser.add_argument(
         "--array_config",
@@ -106,16 +102,13 @@ def main():
         type=str,
         required=True,
     )
-
     args_dict, db_config = config.initialize(db_config=True)
-
-    label = "produce_array_config" if args_dict["label"] is None else args_dict["label"]
 
     logger = logging.getLogger("simtools")
     logger.setLevel(gen.getLogLevelFromUser(args_dict["log_level"]))
 
     arrayModel = ArrayModel(
-        label=label,
+        label=args_dict["label"],
         mongoDBConfig=db_config,
         arrayConfigFile=args_dict["array_config"],
     )

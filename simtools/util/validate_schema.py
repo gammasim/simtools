@@ -8,79 +8,81 @@ import simtools.util.general as gen
 
 class SchemaValidator:
     """
-    Validate a dictionary against a reference schema
+    Validate a dictionary against a reference schema.
+    Used e.g., to validate metadata provided as input.
 
     Attributes
     ----------
-    schema_file: str
-        file nome for user input schema
     data_dict: dict
-        User-provided metadata dict to be validated against
+        Metadata dict to be validated against
         reference schema
 
     Methods
     -------
-    validate_and_transform(user_meta_file_name=None)
-        validate user meta data
+    validate_and_transform(meta_file_name=None, lower_case=True)
+        validate meta data provided by file
 
     """
 
     def __init__(self, data_dict=None):
         """
-        Initalize validation class and read required
-        reference schema
+        Initalize validation class and load reference schema.
 
         Parameters
         ----------
         data_dict: dict
-            User-provided metadata dict to be validated against
-            reference schema
+            Metadata dict to be validated against reference schema
 
         """
 
         self._logger = logging.getLogger(__name__)
 
-        self._reference_schema = data_model.user_input_reference_schema()
+        self._reference_schema = gen.change_dict_keys_case(
+            data_model.metadata_input_reference_schema(), lower_case=True
+        )
         self.data_dict = data_dict
 
-    def validate_and_transform(self, user_meta_file_name=None):
+    def validate_and_transform(self, meta_file_name=None, lower_case=True):
         """
-        Schema validation and processing
+        Schema validation and processing.
 
         Parameters
         ----------
-        user_meta_file_name
-            file name for file with user meta data to
+        meta_file_name
+            file name for file with meta data to
             be validated (might also be given as
             dictionary during initialization of the class)
+        lower_case: bool
+            compare schema keys in lower case only (gammasim-tools convention).
 
         Returns
         -------
         dict
-            Complete set of metadata follwoing the CTA
-            top-level defintion
+            Complete set of metadata following the CTA top-level metadata defintion
 
         """
-        if user_meta_file_name:
-            self._logger.debug("Reading user meta data from {}".format(user_meta_file_name))
-            self.data_dict = gen.collectDataFromYamlOrDict(user_meta_file_name, None)
+        if meta_file_name:
+            self._logger.debug("Reading meta data from {}".format(meta_file_name))
+            self.data_dict = gen.collectDataFromYamlOrDict(meta_file_name, None)
+
+        if lower_case:
+            self.data_dict = gen.change_dict_keys_case(self.data_dict, True)
 
         self._validate_schema(self._reference_schema, self.data_dict)
-
         self._process_schema()
 
         return self.data_dict
 
     def _validate_schema(self, ref_schema, data_dict):
         """
-        Validate schema for data types and required fields
+        Validate schema for data types and required fields.
 
         Parameters
         ----------
         ref_schema: dict
             Reference metadata schema
         data_dict: dict
-            User-provided metadata dict to be validated against
+            input metadata dict to be validated against
             reference schema
 
         Raises
@@ -98,12 +100,12 @@ class SchemaValidator:
                 if self._field_is_optional(value):
                     self._logger.debug(f"Optional field {key}")
                     continue
-                else:
-                    msg = f"Missing required field {key}"
-                    raise ValueError(msg)
+                msg = f"Missing required field {key}"
+                raise ValueError(msg)
 
             if isinstance(value, dict):
-                if "type" in value:
+                # "type" is used for data types (str) and for telescope types (dict)
+                if "type" in value and isinstance(value["type"], str):
                     try:
                         self._validate_data_type(value, key, _this_data)
                     except UnboundLocalError:
@@ -121,13 +123,13 @@ class SchemaValidator:
         Raises
         ------
         KeyError
-            if data_dict['PRODUCT']['DESCRIPTION'] is not available
+            if data_dict["product"]["description"] is not available
 
         """
 
         try:
-            self.data_dict["PRODUCT"]["DESCRIPTION"] = self._remove_line_feed(
-                self.data_dict["PRODUCT"]["DESCRIPTION"]
+            self.data_dict["product"]["description"] = self._remove_line_feed(
+                self.data_dict["product"]["description"]
             )
         except KeyError:
             pass
@@ -159,13 +161,10 @@ class SchemaValidator:
 
         if schema["type"] == "datetime":
             self._validate_datetime(data_field, self._field_is_optional(schema))
-
         elif schema["type"] == "email":
             self._validate_email(data_field, key)
-
         elif schema["type"] == "instrumentlist":
             self._validate_instrument_list(data_field)
-
         elif type(data_field).__name__ != schema["type"]:
             try:
                 if isinstance(data_field, (int, str)):
@@ -242,17 +241,17 @@ class SchemaValidator:
         """
 
         for instrument in instrument_list:
-            self._validate_schema(self._reference_schema["INSTRUMENT"], instrument)
+            self._validate_schema(self._reference_schema["instrument"], instrument)
 
     @staticmethod
-    def _field_is_optional(value):
+    def _field_is_optional(field_dict):
         """
         Check if data field is labeled as not required in
         the reference metadata schema
 
         Parameters
         ----------
-        value: dict
+        field_dict: dict
             required field from reference metadata schema
 
         Returns
@@ -268,12 +267,11 @@ class SchemaValidator:
 
         """
         try:
-            if value["required"]:
+            if field_dict["required"]:
                 return False
-            else:
-                return True
         except KeyError:
             return False
+        return True
 
     @staticmethod
     def _remove_line_feed(string):
