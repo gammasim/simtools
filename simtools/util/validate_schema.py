@@ -104,7 +104,7 @@ class SchemaValidator:
                 raise ValueError(msg)
 
             if isinstance(value, dict):
-                # 'type' is used for data types (str) and for telescope types (dict)
+                # "type" is used for data types (str) and for telescope types (dict)
                 if "type" in value and isinstance(value["type"], str):
                     try:
                         self._validate_data_type(value, key, _this_data)
@@ -123,7 +123,7 @@ class SchemaValidator:
         Raises
         ------
         KeyError
-            if data_dict['product']['description'] is not available
+            if data_dict["product"]["description"] is not available
 
         """
 
