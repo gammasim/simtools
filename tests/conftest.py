@@ -35,7 +35,7 @@ def tmp_test_directory(tmpdir_factory):
 def io_handler(tmp_test_directory):
 
     tmp_io_handler = simtools.io_handler.IOHandler()
-    tmp_io_handler.setPaths(
+    tmp_io_handler.set_paths(
         output_path=str(tmp_test_directory) + "/output",
         data_path="./data/",
         model_path=str(tmp_test_directory) + "/model",
@@ -164,8 +164,8 @@ def db_cleanup_file_sandbox(db_no_config_file):
     yield
     # Cleanup
     logger.info("Dropping the temporary files in the sandbox")
-    db_no_config_file.dbClient["sandbox"]["fs.chunks"].drop()
-    db_no_config_file.dbClient["sandbox"]["fs.files"].drop()
+    db_no_config_file.db_client["sandbox"]["fs.chunks"].drop()
+    db_no_config_file.db_client["sandbox"]["fs.files"].drop()
 
 
 @pytest.fixture

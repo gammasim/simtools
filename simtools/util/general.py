@@ -10,14 +10,14 @@ import astropy.units as u
 from astropy.io.misc import yaml
 
 __all__ = [
-    "validateConfigData",
-    "collectDataFromYamlOrDict",
-    "collectKwargs",
-    "setDefaultKwargs",
-    "sortArrays",
-    "collectFinalLines",
-    "getLogLevelFromUser",
-    "separateArgsAndConfigData",
+    "validate_config_data",
+    "collect_data_from_yaml_or_dict",
+    "collect_kwargs",
+    "set_default_kwargs",
+    "sort_arrays",
+    "collect_final_lines",
+    "get_log_level_from_user",
+    "separate_args_and_config_data",
 ]
 
 
@@ -37,7 +37,7 @@ class InvalidConfigData(Exception):
     pass
 
 
-def fileHasText(file, text):
+def file_has_text(file, text):
     """
     Check whether a file contain a certain piece of text.
 
@@ -63,7 +63,7 @@ def fileHasText(file, text):
             return True
 
 
-def validateConfigData(configData, parameters):
+def validate_config_data(configData, parameters):
     """
     Validate a generic configData dict by using the info
     given by the parameters dict. The entries will be validated
@@ -112,7 +112,7 @@ def validateConfigData(configData, parameters):
             if keyData != parName and keyData.lower() not in [n.lower() for n in names]:
                 continue
             # Matched parameter
-            validatedValue = _validateAndConvertValue(parName, parInfo, valueData)
+            validatedValue = _validate_and_convert_value(parName, parInfo, valueData)
             outData[parName] = validatedValue
             isIdentified = True
 
@@ -128,7 +128,7 @@ def validateConfigData(configData, parameters):
         if parName in outData:
             continue
         elif "default" in parInfo.keys() and parInfo["default"] is not None:
-            validatedValue = _validateAndConvertValue(parName, parInfo, parInfo["default"])
+            validatedValue = _validate_and_convert_value(parName, parInfo, parInfo["default"])
             outData[parName] = validatedValue
         elif "default" in parInfo.keys() and parInfo["default"] is None:
             outData[parName] = None
@@ -144,7 +144,7 @@ def validateConfigData(configData, parameters):
     return ConfigData(**outData)
 
 
-def _validateAndConvertValue_without_units(value, valueKeys, parName, parInfo):
+def _validate_and_convert_value_without_units(value, valueKeys, parName, parInfo):
     """
     Validate input user parameter for input values without units.
 
@@ -165,7 +165,7 @@ def _validateAndConvertValue_without_units(value, valueKeys, parName, parInfo):
     """
     logger = logging.getLogger(__name__)
 
-    _, undefinedLength = _checkValueEntryLength(value, parName, parInfo)
+    _, undefinedLength = _check_value_entry_length(value, parName, parInfo)
 
     # Checking if values have unit and raising error, if so.
     if all([isinstance(v, str) for v in value]):
@@ -182,7 +182,7 @@ def _validateAndConvertValue_without_units(value, valueKeys, parName, parInfo):
     return value if len(value) > 1 or undefinedLength else value[0]
 
 
-def _checkValueEntryLength(value, parName, parInfo):
+def _check_value_entry_length(value, parName, parInfo):
     """
     Validate length of user input parmeters
 
@@ -223,7 +223,7 @@ def _checkValueEntryLength(value, parName, parInfo):
     return valueLength, undefinedLength
 
 
-def _validateAndConvertValue_with_units(value, valueKeys, parName, parInfo):
+def _validate_and_convert_value_with_units(value, valueKeys, parName, parInfo):
     """
     Validate input user parameter for input values with units.
 
@@ -244,9 +244,9 @@ def _validateAndConvertValue_with_units(value, valueKeys, parName, parInfo):
     """
     logger = logging.getLogger(__name__)
 
-    valueLength, undefinedLength = _checkValueEntryLength(value, parName, parInfo)
+    valueLength, undefinedLength = _check_value_entry_length(value, parName, parInfo)
 
-    parUnit = copyAsList(parInfo["unit"])
+    parUnit = copy_as_list(parInfo["unit"])
 
     if undefinedLength and len(parUnit) != 1:
         msg = "Config entry with undefined length should have a single unit: {}".format(parName)
@@ -284,7 +284,7 @@ def _validateAndConvertValue_with_units(value, valueKeys, parName, parInfo):
     return valueWithUnits if len(valueWithUnits) > 1 or undefinedLength else valueWithUnits[0]
 
 
-def _validateAndConvertValue(parName, parInfo, valueIn):
+def _validate_and_convert_value(parName, parInfo, valueIn):
     """
     Validate input user parameter and convert it to the right units, if needed.
     Returns the validated arguments in a list.
@@ -294,16 +294,16 @@ def _validateAndConvertValue(parName, parInfo, valueIn):
         value = [d for (k, d) in valueIn.items()]
         valueKeys = [k for (k, d) in valueIn.items()]
     else:
-        value = copyAsList(valueIn)
+        value = copy_as_list(valueIn)
         valueKeys = None
 
     if "unit" not in parInfo.keys():
-        return _validateAndConvertValue_without_units(value, valueKeys, parName, parInfo)
+        return _validate_and_convert_value_without_units(value, valueKeys, parName, parInfo)
 
-    return _validateAndConvertValue_with_units(value, valueKeys, parName, parInfo)
+    return _validate_and_convert_value_with_units(value, valueKeys, parName, parInfo)
 
 
-def collectDataFromYamlOrDict(inYaml, inDict, allowEmpty=False):
+def collect_data_from_yaml_or_dict(inYaml, inDict, allowEmpty=False):
     """
     Collect input data that can be given either as a dict
     or as a yaml file.
@@ -342,7 +342,7 @@ def collectDataFromYamlOrDict(inYaml, inDict, allowEmpty=False):
             raise InvalidConfigData(msg)
 
 
-def collectKwargs(label, inKwargs):
+def collect_kwargs(label, inKwargs):
     """
     Collect kwargs of the type label_* and return them as a dict.
 
@@ -362,7 +362,7 @@ def collectKwargs(label, inKwargs):
     return outKwargs
 
 
-def setDefaultKwargs(inKwargs, **kwargs):
+def set_default_kwargs(inKwargs, **kwargs):
     """
     Fill in a dict with a set of default kwargs and return it.
 
@@ -383,7 +383,7 @@ def setDefaultKwargs(inKwargs, **kwargs):
     return inKwargs
 
 
-def sortArrays(*args):
+def sort_arrays(*args):
     orderArray = copy.copy(args[0])
     newArgs = list()
     for arg in args:
@@ -392,7 +392,7 @@ def sortArrays(*args):
     return newArgs
 
 
-def collectFinalLines(file, nLines):
+def collect_final_lines(file, nLines):
     """
     Parameters
     ----------
@@ -416,7 +416,7 @@ def collectFinalLines(file, nLines):
     return out
 
 
-def getLogLevelFromUser(logLevel):
+def get_log_level_from_user(logLevel):
     """
     Map between logging level from the user to logging levels of the logging module.
 
@@ -450,7 +450,7 @@ def getLogLevelFromUser(logLevel):
         return possibleLevels[logLevelLower]
 
 
-def copyAsList(value):
+def copy_as_list(value):
     """
     Copy value and, if it is not a list, turn it into a list with a single entry.
 
@@ -472,12 +472,12 @@ def copyAsList(value):
             return [value]
 
 
-def separateArgsAndConfigData(expectedArgs, **kwargs):
+def separate_args_and_config_data(expectedArgs, **kwargs):
     """
     Separate kwargs into the arguments expected for instancing a class and
     the dict to be given as configData.
-    This function is specific for methods fromKwargs in classes which use the
-    validateConfigData system.
+    This function is specific for methods from_kwargs in classes which use the
+    validate_config_data system.
 
     Parameters
     ----------
@@ -528,7 +528,7 @@ def program_is_executable(program):
     return None
 
 
-def findFile(name, loc):
+def find_file(name, loc):
     """
     Search for files inside of given directories, recursively, and return its full path.
 

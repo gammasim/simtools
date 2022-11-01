@@ -45,22 +45,24 @@ def test_from_kwargs(db, io_handler, simtelpath):
     offAxisAngle = [0, 2] * u.deg
 
     testFileName = "CTA-North-LST-1-Current_test-telescope-model.cfg"
-    db.exportFileDB(
+    db.export_file_db(
         dbName="test-data",
-        dest=io_handler.getOutputDirectory(dirType="model", test=True),
+        dest=io_handler.get_output_directory(dirType="model", test=True),
         fileName=testFileName,
     )
 
-    cfgFile = gen.findFile(testFileName, io_handler.getOutputDirectory(dirType="model", test=True))
+    cfgFile = gen.find_file(
+        testFileName, io_handler.get_output_directory(dirType="model", test=True)
+    )
 
-    tel = TelescopeModel.fromConfigFile(
+    tel = TelescopeModel.from_config_file(
         site="north",
         telescopeModelName="lst-1",
         configFileName=cfgFile,
         label=label,
     )
 
-    ray = RayTracing.fromKwargs(
+    ray = RayTracing.from_kwargs(
         telescopeModel=tel,
         simtelSourcePath=simtelpath,
         sourceDistance=sourceDistance,

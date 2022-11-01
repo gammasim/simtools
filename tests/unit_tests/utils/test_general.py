@@ -17,27 +17,27 @@ logging.getLogger().setLevel(logging.DEBUG)
 def test_collect_dict_data(args_dict, io_handler):
     inDict = {"k1": 2, "k2": "bla"}
     dictForYaml = {"k3": {"kk3": 4, "kk4": 3.0}, "k4": ["bla", 2]}
-    testYamlFile = io_handler.getOutputFile(fileName="test_collect_dict_data.yml", test=True)
+    testYamlFile = io_handler.get_output_file(fileName="test_collect_dict_data.yml", test=True)
     if not Path(testYamlFile).exists():
         with open(testYamlFile, "w") as output:
             yaml.safe_dump(dictForYaml, output, sort_keys=False)
 
-    d1 = gen.collectDataFromYamlOrDict(None, inDict)
+    d1 = gen.collect_data_from_yaml_or_dict(None, inDict)
     assert "k2" in d1.keys()
     assert d1["k1"] == 2
 
-    d2 = gen.collectDataFromYamlOrDict(testYamlFile, None)
+    d2 = gen.collect_data_from_yaml_or_dict(testYamlFile, None)
     assert "k3" in d2.keys()
     assert d2["k4"] == ["bla", 2]
 
-    d3 = gen.collectDataFromYamlOrDict(testYamlFile, inDict)
+    d3 = gen.collect_data_from_yaml_or_dict(testYamlFile, inDict)
     assert d3 == d2
 
 
 def test_validate_config_data(args_dict, io_handler):
 
-    parameterFile = io_handler.getInputDataFile(fileName="test_parameters.yml", test=True)
-    parameters = gen.collectDataFromYamlOrDict(parameterFile, None)
+    parameterFile = io_handler.get_input_data_file(fileName="test_parameters.yml", test=True)
+    parameters = gen.collect_data_from_yaml_or_dict(parameterFile, None)
 
     configData = {
         "zenith": 0 * u.deg,
@@ -48,7 +48,7 @@ def test_validate_config_data(args_dict, io_handler):
         "dictPar": {"blah": 10, "bleh": 5 * u.m},
     }
 
-    validatedData = gen.validateConfigData(configData=configData, parameters=parameters)
+    validatedData = gen.validate_config_data(configData=configData, parameters=parameters)
 
     # Testing undefined len
     assert len(validatedData.offAxisAngle) == 3
@@ -63,36 +63,36 @@ def test_validate_config_data(args_dict, io_handler):
     assert validatedData.dictPar["bleh"] == 500
 
 
-def test_checkValueEntryLength():
+def test_check_value_entry_length():
 
     _par_info = {}
     _par_info["len"] = 2
-    assert gen._checkValueEntryLength([1, 4], "test_1", _par_info) == (2, False)
+    assert gen._check_value_entry_length([1, 4], "test_1", _par_info) == (2, False)
     _par_info["len"] = None
-    assert gen._checkValueEntryLength([1, 4], "test_1", _par_info) == (2, True)
+    assert gen._check_value_entry_length([1, 4], "test_1", _par_info) == (2, True)
     _par_info["len"] = 3
     with pytest.raises(InvalidConfigEntry):
-        gen._checkValueEntryLength([1, 4], "test_1", _par_info)
+        gen._check_value_entry_length([1, 4], "test_1", _par_info)
     _par_info.pop("len")
     with pytest.raises(KeyError):
-        gen._checkValueEntryLength([1, 4], "test_1", _par_info)
+        gen._check_value_entry_length([1, 4], "test_1", _par_info)
 
 
-def test_validateAndConvertValue_with_units():
+def test_validate_and_convert_value_with_units():
 
     _parname = "cscat"
     _parinfo = {"len": 4, "unit": [None, u.Unit("m"), u.Unit("m"), None], "names": ["scat"]}
     _value = [0, 10 * u.m, 3 * u.km, None]
     _value_keys = ["a", "b", "c", "d"]
 
-    assert gen._validateAndConvertValue_with_units(_value, None, _parname, _parinfo) == [
+    assert gen._validate_and_convert_value_with_units(_value, None, _parname, _parinfo) == [
         0,
         10.0,
         3000.0,
         None,
     ]
 
-    assert gen._validateAndConvertValue_with_units(_value, _value_keys, _parname, _parinfo) == {
+    assert gen._validate_and_convert_value_with_units(_value, _value_keys, _parname, _parinfo) == {
         "a": 0,
         "b": 10.0,
         "c": 3000.0,
@@ -101,32 +101,34 @@ def test_validateAndConvertValue_with_units():
 
     _parinfo = {"len": None, "unit": [None, u.Unit("m"), u.Unit("m"), None], "names": ["scat"]}
     with pytest.raises(InvalidConfigEntry):
-        gen._validateAndConvertValue_with_units(_value, None, _parname, _parinfo)
+        gen._validate_and_convert_value_with_units(_value, None, _parname, _parinfo)
     _parinfo = {"len": 4, "unit": [None, u.Unit("kg"), u.Unit("m"), None], "names": ["scat"]}
     with pytest.raises(InvalidConfigEntry):
-        gen._validateAndConvertValue_with_units(_value, None, _parname, _parinfo)
+        gen._validate_and_convert_value_with_units(_value, None, _parname, _parinfo)
 
 
-def test_validateAndConvertValue_without_units():
+def test_validate_and_convert_value_without_units():
 
     _parname = "cscat"
     _parinfo = {"len": 3, "names": ["scat"]}
     _value = [0, 10.0, 3.0]
     _value_keys = ["a", "b", "c"]
 
-    assert gen._validateAndConvertValue_without_units(_value, None, _parname, _parinfo) == [
+    assert gen._validate_and_convert_value_without_units(_value, None, _parname, _parinfo) == [
         0.0,
         10.0,
         3.0,
     ]
-    assert gen._validateAndConvertValue_without_units(_value, _value_keys, _parname, _parinfo) == {
+    assert gen._validate_and_convert_value_without_units(
+        _value, _value_keys, _parname, _parinfo
+    ) == {
         "a": 0,
         "b": 10.0,
         "c": 3.0,
     }
     _value = [0, 10.0 * u.m, 3.0]
     with pytest.raises(InvalidConfigEntry):
-        gen._validateAndConvertValue_without_units(_value, None, _parname, _parinfo)
+        gen._validate_and_convert_value_without_units(_value, None, _parname, _parinfo)
 
 
 def test_program_is_executable():

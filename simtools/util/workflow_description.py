@@ -250,7 +250,7 @@ class WorkflowDescription:
 
         """
 
-        _output_dir = self.io_handler.getOutputDirectory(
+        _output_dir = self.io_handler.get_output_directory(
             self.workflow_config["activity"]["name"], "product-data"
         )
         self._logger.debug("Outputdirectory {}".format(_output_dir))
@@ -366,7 +366,7 @@ class WorkflowDescription:
         """
         for association in association_dict:
             try:
-                association["id"] = names.simtoolsInstrumentName(
+                association["id"] = names.simtools_instrument_name(
                     association["site"],
                     association["class"],
                     association["type"],
@@ -415,7 +415,8 @@ class WorkflowDescription:
         if workflow_config_file:
             try:
                 _workflow_from_file = gen.change_dict_keys_case(
-                    gen.collectDataFromYamlOrDict(workflow_config_file, None)["CTASIMPIPE"], True
+                    gen.collect_data_from_yaml_or_dict(workflow_config_file, None)["CTASIMPIPE"],
+                    True,
                 )
                 self._logger.debug(
                     "Reading workflow configuration from {}".format(workflow_config_file)

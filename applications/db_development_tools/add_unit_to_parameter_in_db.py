@@ -24,10 +24,10 @@ def main():
     parser.initialize_default_arguments(add_workflow_config=False)
 
     args = parser.parse_args()
-    cfg.setConfigFileName(args.configFile)
+    cfg.set_config_file_name(args.configFile)
 
     logger = logging.getLogger()
-    logger.setLevel(gen.getLogLevelFromUser(args.logLevel))
+    logger.setLevel(gen.get_log_level_from_user(args.logLevel))
 
     # parsToUpdate = ["altitude"]
     parsToUpdate = ["ref_long", "ref_lat"]
@@ -39,14 +39,14 @@ def main():
 
     for site in ["North", "South"]:
         for parNow, unitNow in zip(parsToUpdate, units):
-            allVersions = db.getAllVersions(
+            allVersions = db.get_all_versions(
                 dbName=db.DB_CTA_SIMULATION_MODEL,
                 site=site,
                 parameter=parNow,
                 collectionName="sites",
             )
             for versionNow in allVersions:
-                db.updateParameterField(
+                db.update_parameter_field(
                     dbName=db.DB_CTA_SIMULATION_MODEL,
                     site=site,
                     version=versionNow,
@@ -56,7 +56,7 @@ def main():
                     collectionName="sites",
                 )
 
-                sitePars = db.getSiteParameters(site, versionNow)
+                sitePars = db.get_site_parameters(site, versionNow)
                 assert sitePars[parNow]["units"] == unitNow
 
 

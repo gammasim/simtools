@@ -81,7 +81,7 @@ def main():
     )
 
     logger = logging.getLogger()
-    logger.setLevel(gen.getLogLevelFromUser(args_dict["log_level"]))
+    logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
     workflow = WorkflowDescription(args_dict=args_dict)
 

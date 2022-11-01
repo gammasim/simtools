@@ -296,9 +296,9 @@ def test_applications(application, io_handler, monkeypatch, db):
     monkeypatch.setattr("sys.stdin", StringIO("y\n"))
 
     def prepare_one_file(fileName):
-        db.exportFileDB(
+        db.export_file_db(
             dbName="test-data",
-            dest=io_handler.getOutputDirectory(dirType="model", test=True),
+            dest=io_handler.get_output_directory(dirType="model", test=True),
             fileName=fileName,
         )
 
@@ -309,7 +309,7 @@ def test_applications(application, io_handler, monkeypatch, db):
         cmd = "python applications/" + app + ".py"
         for aa in args:
             aa = aa.replace(
-                "TESTMODELDIR", str(io_handler.getOutputDirectory(dirType="model", test=True))
+                "TESTMODELDIR", str(io_handler.get_output_directory(dirType="model", test=True))
             )
             cmd += " " + aa
         return cmd

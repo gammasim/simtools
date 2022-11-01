@@ -124,11 +124,11 @@ def main():
     args_dict, db_config = config.initialize(db_config=True, telescope_model=True)
 
     logger = logging.getLogger()
-    logger.setLevel(gen.getLogLevelFromUser(args_dict["log_level"]))
+    logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
     # Output directory to save files related directly to this app
     _io_handler = io_handler.IOHandler()
-    outputDir = _io_handler.getOutputDirectory(label, dirType="application-plots")
+    outputDir = _io_handler.get_output_directory(label, dirType="application-plots")
 
     telModel = TelescopeModel(
         site=args_dict["site"],
@@ -142,9 +142,9 @@ def main():
     if args_dict.get("pars", None):
         with open(args_dict["pars"]) as file:
             newPars = yaml.safe_load(file)
-        telModel.changeMultipleParameters(**newPars)
+        telModel.change_multiple_parameters(**newPars)
 
-    ray = RayTracing.fromKwargs(
+    ray = RayTracing.from_kwargs(
         telescopeModel=telModel,
         simtelSourcePath=args_dict["simtelpath"],
         sourceDistance=args_dict["src_distance"] * u.km,
@@ -158,20 +158,20 @@ def main():
     # Plotting cumulative PSF
     im = ray.images()[0]
 
-    print("d80 in cm = {}".format(im.getPSF()))
+    print("d80 in cm = {}".format(im.get_psf()))
 
     # Plotting cumulative PSF
     # Measured cumulative PSF
     dataToPlot = OrderedDict()
     if args_dict.get("data", None):
-        dataFile = gen.findFile(args_dict["data"], args_dict["model_path"])
+        dataFile = gen.find_file(args_dict["data"], args_dict["model_path"])
         dataToPlot["measured"] = loadData(dataFile)
         radius = dataToPlot["measured"]["Radius [cm]"]
 
     # Simulated cumulative PSF
-    dataToPlot[r"sim$\_$telarray"] = im.getCumulativeData(radius * u.cm)
+    dataToPlot[r"sim$\_$telarray"] = im.get_cumulative_data(radius * u.cm)
 
-    fig = visualize.plot1D(dataToPlot)
+    fig = visualize.plot_1D(dataToPlot)
     fig.gca().set_ylim(0, 1.05)
 
     plotFileName = label + "_" + telModel.name + "_cumulativePSF"
@@ -181,9 +181,9 @@ def main():
     fig.clf()
 
     # Plotting image
-    dataToPlot = im.getImageData()
-    fig = visualize.plotHist2D(dataToPlot, bins=80)
-    circle = plt.Circle((0, 0), im.getPSF(0.8) / 2, color="k", fill=False, lw=2, ls="--")
+    dataToPlot = im.get_image_data()
+    fig = visualize.plot_hist_2D(dataToPlot, bins=80)
+    circle = plt.Circle((0, 0), im.get_psf(0.8) / 2, color="k", fill=False, lw=2, ls="--")
     fig.gca().add_artist(circle)
     fig.gca().set_aspect("equal")
 

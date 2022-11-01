@@ -7,15 +7,15 @@ from simtools.model.model_parameters import MODEL_PARS
 from simtools.util import names
 
 __all__ = [
-    "computeTelescopeTransmission",
-    "getTelescopeClass",
-    "getCameraName",
-    "isTwoMirrorTelescope",
-    "splitSimtelParameter",
+    "compute_telescope_transmission",
+    "get_telescope_class",
+    "get_camera_name",
+    "is_two_mirror_telescope",
+    "split_simtel_parameter",
 ]
 
 
-def splitSimtelParameter(value):
+def split_simtel_parameter(value):
     """
     Some array parameters are stored in sim_telarray model as
     string separated by comma or spaces. This functions turns
@@ -37,7 +37,7 @@ def splitSimtelParameter(value):
     return float_values
 
 
-def computeTelescopeTransmission(pars, offAxis):
+def compute_telescope_transmission(pars, offAxis):
     """
     Compute tel. transmission (0 < T < 1) for a given set of parameters
     as defined by the MC model and for a given off-axis angle.
@@ -62,7 +62,7 @@ def computeTelescopeTransmission(pars, offAxis):
         return pars[0] / (1.0 + pars[2] * t ** pars[4])
 
 
-def validateModelParameter(parNameIn, parValueIn):
+def validate_model_parameter(parNameIn, parValueIn):
     """
     Validate model parameter based on the dict MODEL_PARS.
 
@@ -87,7 +87,7 @@ def validateModelParameter(parNameIn, parValueIn):
     return parNameIn, parValueIn
 
 
-def getCameraName(telescopeModelName):
+def get_camera_name(telescopeModelName):
     """
     Get camera name from the telescope name.
 
@@ -103,7 +103,7 @@ def getCameraName(telescopeModelName):
     """
     _logger = logging.getLogger(__name__)
     cameraName = ""
-    telClass, telType = names.splitTelescopeModelName(telescopeModelName)
+    telClass, telType = names.split_telescope_model_name(telescopeModelName)
     if telClass == "LST":
         cameraName = "LST"
     elif telClass == "MST":
@@ -127,12 +127,12 @@ def getCameraName(telescopeModelName):
     else:
         _logger.error("Invalid telescope name - please validate it first")
 
-    cameraName = names.validateCameraName(cameraName)
+    cameraName = names.validate_camera_name(cameraName)
     _logger.debug("Camera name - {}".format(cameraName))
     return cameraName
 
 
-def getTelescopeClass(telescopeModelName):
+def get_telescope_class(telescopeModelName):
     """
     Get telescope class from telescope name.
 
@@ -146,11 +146,11 @@ def getTelescopeClass(telescopeModelName):
     str
         Telescope class (SST, MST, ...)
     """
-    telClass, _ = names.splitTelescopeModelName(telescopeModelName)
+    telClass, _ = names.split_telescope_model_name(telescopeModelName)
     return telClass
 
 
-def isTwoMirrorTelescope(telescopeModelName):
+def is_two_mirror_telescope(telescopeModelName):
     """
     Check if the telescope is a two mirror design.
 
@@ -164,7 +164,7 @@ def isTwoMirrorTelescope(telescopeModelName):
     bool
         True if the telescope is a two mirror one.
     """
-    telClass, telType = names.splitTelescopeModelName(telescopeModelName)
+    telClass, telType = names.split_telescope_model_name(telescopeModelName)
     if telClass == "SST":
         # Only 1M is False
         return False if "1M" in telType else True

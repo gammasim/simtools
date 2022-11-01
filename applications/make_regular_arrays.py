@@ -51,12 +51,12 @@ def main():
     label = "make_regular_arrays"
 
     logger = logging.getLogger()
-    logger.setLevel(gen.getLogLevelFromUser(args_dict["log_level"]))
+    logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
     _io_handler = io_handler.IOHandler()
 
-    corsikaPars = gen.collectDataFromYamlOrDict(
-        _io_handler.getInputDataFile("corsika", "corsika_parameters.yml"), None
+    corsikaPars = gen.collect_data_from_yaml_or_dict(
+        _io_handler.get_input_data_file("corsika", "corsika_parameters.yml"), None
     )
 
     # Reading site parameters from DB
@@ -66,7 +66,7 @@ def main():
     layoutCenterData = dict()
     corsikaTelescopeData = dict()
     for site in ["North", "South"]:
-        siteParsDB[site] = db.getSiteParameters(site=site, modelVersion="prod5")
+        siteParsDB[site] = db.get_site_parameters(site=site, modelVersion="prod5")
 
         layoutCenterData[site] = dict()
         layoutCenterData[site]["center_lat"] = float(siteParsDB[site]["ref_lat"]["Value"]) * u.deg
@@ -98,7 +98,7 @@ def main():
 
             # Single telescope at the center
             if arrayName[0] == "1":
-                layout.addTelescope(
+                layout.add_telescope(
                     telescopeName=telNameRoot + "-01",
                     crsName="corsika",
                     xx=0 * u.m,
@@ -107,28 +107,28 @@ def main():
                 )
             # 4 telescopes in a regular square grid
             else:
-                layout.addTelescope(
+                layout.add_telescope(
                     telescopeName=telNameRoot + "-01",
                     crsName="corsika",
                     xx=telescopeDistance[telSize],
                     yy=telescopeDistance[telSize],
                     telCorsikaZ=0 * u.m,
                 )
-                layout.addTelescope(
+                layout.add_telescope(
                     telescopeName=telNameRoot + "-02",
                     crsName="corsika",
                     xx=-telescopeDistance[telSize],
                     yy=telescopeDistance[telSize],
                     telCorsikaZ=0 * u.m,
                 )
-                layout.addTelescope(
+                layout.add_telescope(
                     telescopeName=telNameRoot + "-03",
                     crsName="corsika",
                     xx=telescopeDistance[telSize],
                     yy=-telescopeDistance[telSize],
                     telCorsikaZ=0 * u.m,
                 )
-                layout.addTelescope(
+                layout.add_telescope(
                     telescopeName=telNameRoot + "-04",
                     crsName="corsika",
                     xx=-telescopeDistance[telSize],
@@ -136,9 +136,9 @@ def main():
                     telCorsikaZ=0 * u.m,
                 )
 
-            layout.convertCoordinates()
-            layout.printTelescopeList()
-            layout.exportTelescopeList(crsName="corsika", corsikaZ=None)
+            layout.convert_coordinates()
+            layout.print_telescope_list()
+            layout.export_telescope_list(crsName="corsika", corsikaZ=None)
 
 
 if __name__ == "__main__":

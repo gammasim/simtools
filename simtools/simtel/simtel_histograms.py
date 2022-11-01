@@ -21,14 +21,14 @@ class SimtelHistograms:
 
     Methods
     -------
-    plotAndSaveFigures(figName)
+    plot_and_save_figures(figName)
         Plot all histograms and save a single pdf file.
-    plotOneHistogram(iHist, ax)
+    plot_one_histogram(iHist, ax)
         Plot a single histogram referent to the index iHist.
 
     Attributes
     ----------
-    numberOfHistograms
+    number_of_histograms
         Number of histograms
     combinedHistograms
         List of histogram data.
@@ -50,7 +50,7 @@ class SimtelHistograms:
         self._histogramFiles = histogramFiles
         self._isTest = test
 
-    def plotAndSaveFigures(self, figName):
+    def plot_and_save_figures(self, figName):
         """
         Plot all histograms and save a single pdf file.
 
@@ -59,17 +59,17 @@ class SimtelHistograms:
         figName: str
             Name of the output figure file.
         """
-        self._combineHistogramFiles()
-        self._plotCombinedHistograms(figName)
+        self._combine_histogram_files()
+        self._plot_combined_histograms(figName)
 
     @property
-    def numberOfHistograms(self):
+    def number_of_histograms(self):
         """Returns number of histograms."""
         if not hasattr(self, "combinedHists"):
-            self._combineHistogramFiles()
+            self._combine_histogram_files()
         return len(self.combinedHists)
 
-    def getHistogramTitle(self, iHist):
+    def get_histogram_title(self, iHist):
         """
         Returns the title of the histogram with index iHist.
 
@@ -83,10 +83,10 @@ class SimtelHistograms:
         str: histogram title
         """
         if not hasattr(self, "combinedHists"):
-            self._combineHistogramFiles()
+            self._combine_histogram_files()
         return self.combinedHists[iHist]["title"]
 
-    def _combineHistogramFiles(self):
+    def _combine_histogram_files(self):
         """Combine histograms from all files into one single list of histograms."""
         # Processing and combining histograms from multiple files
         self.combinedHists = list()
@@ -135,7 +135,7 @@ class SimtelHistograms:
 
         return
 
-    def _plotCombinedHistograms(self, figName):
+    def _plot_combined_histograms(self, figName):
         """
         Plot all histograms into pdf pages and save the figure as a pdf file.
 
@@ -158,7 +158,7 @@ class SimtelHistograms:
             fig = plt.figure(figsize=(8, 6))
             ax = plt.gca()
 
-            self.plotOneHistogram(iHist, ax)
+            self.plot_one_histogram(iHist, ax)
 
             plt.tight_layout()
             pdfPages.savefig(fig)
@@ -166,7 +166,7 @@ class SimtelHistograms:
 
         pdfPages.close()
 
-    def plotOneHistogram(self, iHist, ax):
+    def plot_one_histogram(self, iHist, ax):
         """
         Plot a single histogram referent to the index iHist.
 

@@ -9,36 +9,36 @@ logger.setLevel(logging.DEBUG)
 
 def test_get_output_directory(args_dict, io_handler):
 
-    assert io_handler.getOutputDirectory(label="test-io-handler") == Path(
+    assert io_handler.get_output_directory(label="test-io-handler") == Path(
         f"{args_dict['output_path']}/output/simtools-output/test-io-handler/"
     )
 
-    assert io_handler.getOutputDirectory(label="test-io-handler", test=True) == Path(
+    assert io_handler.get_output_directory(label="test-io-handler", test=True) == Path(
         f"{args_dict['output_path']}/output/test-output/test-io-handler/"
     )
 
-    assert io_handler.getOutputDirectory(label="test-io-handler", dirType="model") == Path(
+    assert io_handler.get_output_directory(label="test-io-handler", dirType="model") == Path(
         f"{args_dict['output_path']}/output/simtools-output/test-io-handler/model"
     )
 
-    assert io_handler.getOutputDirectory(
+    assert io_handler.get_output_directory(
         label="test-io-handler", dirType="model", test=True
     ) == Path(f"{args_dict['output_path']}/output/test-output/test-io-handler/model")
 
 
 def test_get_output_file(args_dict, io_handler):
 
-    assert io_handler.getOutputFile(fileName="test-file.txt", label="test-io-handler") == Path(
+    assert io_handler.get_output_file(fileName="test-file.txt", label="test-io-handler") == Path(
         f"{args_dict['output_path']}/output/simtools-output/test-io-handler/test-file.txt"
     )
 
-    assert io_handler.getOutputFile(
+    assert io_handler.get_output_file(
         fileName="test-file.txt",
         label="test-io-handler",
         test=True,
     ) == Path(f"{args_dict['output_path']}/output/test-output/test-io-handler/test-file.txt")
 
-    assert io_handler.getOutputFile(
+    assert io_handler.get_output_file(
         fileName="test-file.txt",
         label="test-io-handler",
         dirType="model",
@@ -46,7 +46,7 @@ def test_get_output_file(args_dict, io_handler):
         f"{args_dict['output_path']}/output/simtools-output/test-io-handler/model/test-file.txt"
     )
 
-    assert io_handler.getOutputFile(
+    assert io_handler.get_output_file(
         fileName="test-file.txt",
         label="test-io-handler",
         dirType="model",
@@ -57,7 +57,7 @@ def test_get_output_file(args_dict, io_handler):
 def test_get_data_file(args_dict, io_handler):
 
     assert (
-        io_handler.getInputDataFile(
+        io_handler.get_input_data_file(
             parentDir="test-io-handler",
             fileName="test-file.txt",
         )
@@ -65,6 +65,6 @@ def test_get_data_file(args_dict, io_handler):
     )
 
     assert (
-        io_handler.getInputDataFile(fileName="test-file.txt", test=True)
+        io_handler.get_input_data_file(fileName="test-file.txt", test=True)
         == Path("tests/resources/test-file.txt").absolute()
     )

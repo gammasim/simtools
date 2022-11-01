@@ -10,7 +10,11 @@ from scipy.spatial import cKDTree as KDTree
 from scipy.spatial import distance
 
 import simtools.util.legend_handlers as legH
-from simtools.util.model import getCameraName, getTelescopeClass, isTwoMirrorTelescope
+from simtools.util.model import (
+    get_camera_name,
+    get_telescope_class,
+    is_two_mirror_telescope,
+)
 
 __all__ = ["Camera"]
 
@@ -22,26 +26,26 @@ class Camera:
 
     Methods
     -------
-    readPixelList(cameraConfigFile)
+    read_pixel_list(cameraConfigFile)
         Read the pixel layout from the camera config file,
         assumed to be in a sim_telarray format.
-    getPixelDiameter()
+    get_pixel_diameter()
         Get pixel diameter.
-    getPixelShape()
+    get_pixel_shape()
         Get pixel shape.
-    getLightguideEfficiencyAngleFileName()
+    get_lightguide_efficiency_angle_file_name()
         Get the file name of the light guide efficiency as a function of incidence angle.
-    getLightguideEfficiencyWavelengthFileName()
+    get_lightguide_efficiency_wavelength_file_name()
         Get the file name of the light guide efficiency as a function of wavelength.
-    calcFOV()
+    calc_fov()
         Calculate the FOV of the camera in degrees,
         taking into account the focal length (preferably the effective focal length).
-    getNeighbourPixels(pixels)
+    get_neighbour_pixels(pixels)
         Find adjacent neighbour pixels in cameras with hexagonal or square pixels.
         Only directly adjacent neighbours are searched for, no diagonals.
-    getEdgePixels(pixels, neighbours)
+    get_edge_pixels(pixels, neighbours)
         Find the edge pixels of the camera.
-    plotPixelLayout()
+    plot_pixel_layout()
         Plot the pixel layout for an observer facing the camera.
         Including in the plot edge pixels, off pixels, pixel ID for the first 50 pixels,
         coordinate systems, FOV, focal length and the average edge radius.
@@ -71,14 +75,14 @@ class Camera:
         self._logger = logging.getLogger(__name__)
 
         self._telescopeModelName = telescopeModelName
-        self._cameraName = getCameraName(self._telescopeModelName)
+        self._cameraName = get_camera_name(self._telescopeModelName)
         self._cameraConfigFile = cameraConfigFile
         self._focalLength = focalLength
         if self._focalLength <= 0:
             raise ValueError("The focal length must be larger than zero")
-        self._pixels = self.readPixelList(cameraConfigFile)
+        self._pixels = self.read_pixel_list(cameraConfigFile)
 
-        self._pixels = self._rotatePixels(self._pixels)
+        self._pixels = self._rotate_pixels(self._pixels)
 
         # Initialize an empty list of neighbours, to be calculated only when necessary.
         self._neighbours = None
@@ -89,7 +93,7 @@ class Camera:
         return
 
     @staticmethod
-    def readPixelList(cameraConfigFile):
+    def read_pixel_list(cameraConfigFile):
         """
         Read the pixel layout from the camera config file, assumed to be in a sim_telarray format.
 
@@ -158,7 +162,7 @@ class Camera:
 
         return pixels
 
-    def _rotatePixels(self, pixels):
+    def _rotate_pixels(self, pixels):
         """
         Rotate the pixels according to the rotation angle given in pixels['rotateAngle'].
         Additional rotation is added to get to the camera view of an observer facing the camera.
@@ -168,14 +172,14 @@ class Camera:
         Parameters
         ----------
         pixels: dictionary
-            The dictionary produced by the readPixelList method of this class
+            The dictionary produced by the read_pixel_list method of this class
 
         Returns
         -------
         pixels: dict
             The pixels dictionary with rotated pixels.
             The pixels orientation for plotting is added to the dictionary in pixels['orientation'].
-            The orientation is determined by the pixel shape (see readPixelList for details).
+            The orientation is determined by the pixel shape (see read_pixel_list for details).
         """
 
         rotateAngle = pixels["rotateAngle"]  # So not to change the original angle
@@ -209,7 +213,7 @@ class Camera:
 
         return pixels
 
-    def getNumberOfPixels(self):
+    def get_number_of_pixels(self):
         """
         Get the number of pixels in the camera (all pixels, including those defined as "off".
 
@@ -219,7 +223,7 @@ class Camera:
         """
         return len(self._pixels["x"])
 
-    def getPixelDiameter(self):
+    def get_pixel_diameter(self):
         """
         Get pixel diameter contained in _pixels
 
@@ -229,18 +233,18 @@ class Camera:
         """
         return self._pixels["pixel_diameter"]
 
-    def getPixelActiveSolidAngle(self):
+    def get_pixel_active_solid_angle(self):
         """
         Get the active solid angle of a pixel in sr.
         """
 
-        pixelArea = self.getPixelDiameter() ** 2
+        pixelArea = self.get_pixel_diameter() ** 2
         # In case we have hexagonal pixels:
-        if self.getPixelShape() == 1 or self.getPixelShape() == 3:
+        if self.get_pixel_shape() == 1 or self.get_pixel_shape() == 3:
             pixelArea *= np.sqrt(3) / 2
         return pixelArea / (self._focalLength**2)
 
-    def getPixelShape(self):
+    def get_pixel_shape(self):
         """
         Get pixel shape code 1, 2 or 3, where 1 and 3 are hexagonal pixels,
         where one is rotated by 30 degrees with respect to the other.
@@ -252,7 +256,7 @@ class Camera:
         """
         return self._pixels["pixel_shape"]
 
-    def getLightguideEfficiencyAngleFileName(self):
+    def get_lightguide_efficiency_angle_file_name(self):
         """
         Get the file name of the light guide efficiency as a function of incidence angle.
 
@@ -262,7 +266,7 @@ class Camera:
         """
         return self._pixels["lightguide_efficiency_angle_file"]
 
-    def getLightguideEfficiencyWavelengthFileName(self):
+    def get_lightguide_efficiency_wavelength_file_name(self):
         """
         Get the file name of the light guide efficiency as a function of wavelength.
 
@@ -272,7 +276,7 @@ class Camera:
         """
         return self._pixels["lightguide_efficiency_wavelength_file"]
 
-    def getCameraFillFactor(self):
+    def get_camera_fill_factor(self):
         """
         Calculate the fill factor of the camera, defined as (pixel_diameter/pixel_spacing)**2
 
@@ -287,7 +291,7 @@ class Camera:
 
         return (self._pixels["pixel_diameter"] / self._pixels["pixel_spacing"]) ** 2
 
-    def calcFOV(self):
+    def calc_fov(self):
         """
         Calculate the FOV of the camera in degrees, taking into account the focal length.
 
@@ -305,14 +309,14 @@ class Camera:
 
         self._logger.debug("Calculating the FoV")
 
-        return self._calcFOV(
+        return self._calc_fov(
             self._pixels["x"],
             self._pixels["y"],
-            self.getEdgePixels(),
+            self.get_edge_pixels(),
             self._focalLength,
         )
 
-    def _calcFOV(self, xPixel, yPixel, edgePixelIndices, focalLength):
+    def _calc_fov(self, xPixel, yPixel, edgePixelIndices, focalLength):
         """
         Calculate the FOV of the camera in degrees, taking into account the focal length.
 
@@ -352,7 +356,7 @@ class Camera:
         return fov, averageEdgeDistance
 
     @staticmethod
-    def _findNeighbours(xPos, yPos, radius):
+    def _find_neighbours(xPos, yPos, radius):
         """
         use a KD-Tree to quickly find nearest neighbours
         (e.g., of the pixels in a camera or mirror facets)
@@ -383,7 +387,7 @@ class Camera:
 
         return neighbours
 
-    def _findAdjacentNeighbourPixels(self, xPos, yPos, radius, rowColoumnDist):
+    def _find_adjacent_neighbour_pixels(self, xPos, yPos, radius, rowColoumnDist):
         """
         Find adjacent neighbour pixels in cameras with square pixels.
         Only directly adjacent neighbours are allowed, no diagonals.
@@ -410,7 +414,7 @@ class Camera:
 
         # First find the neighbours with the usual method and the original radius
         # which does not allow for diagonal neighbours.
-        neighbours = self._findNeighbours(xPos, yPos, radius)
+        neighbours = self._find_neighbours(xPos, yPos, radius)
         for i_pix, nn in enumerate(neighbours):
             # Find pixels defined as edge pixels now
             if len(nn) < 4:
@@ -435,7 +439,7 @@ class Camera:
 
         return neighbours
 
-    def _calcNeighbourPixels(self, pixels):
+    def _calc_neighbour_pixels(self, pixels):
         """
         Find adjacent neighbour pixels in cameras with hexagonal or square pixels.
         Only directly adjacent neighbours are searched for, no diagonals.
@@ -443,7 +447,7 @@ class Camera:
         Parameters
         ----------
         pixels: dictionary
-            The dictionary produced by the readPixelList method of this class
+            The dictionary produced by the read_pixel_list method of this class
 
         Returns
         -------
@@ -454,7 +458,7 @@ class Camera:
         self._logger.debug("Searching for neighbour pixels")
 
         if pixels["pixel_shape"] == 1 or pixels["pixel_shape"] == 3:
-            self._neighbours = self._findNeighbours(
+            self._neighbours = self._find_neighbours(
                 pixels["x"],
                 pixels["y"],
                 self.PMT_NEIGHBOR_RADIUS_FACTOR * pixels["pixel_diameter"],
@@ -464,7 +468,7 @@ class Camera:
             # Pixels in the same row/column can be 20% shifted from one another
             # Inside find_adjacent_neighbour_pixels the distance is increased
             # further for pixels in the same row/column to 1.68*diameter.
-            self._neighbours = self._findAdjacentNeighbourPixels(
+            self._neighbours = self._find_adjacent_neighbour_pixels(
                 pixels["x"],
                 pixels["y"],
                 self.SIPM_NEIGHBOR_RADIUS_FACTOR * pixels["pixel_diameter"],
@@ -473,7 +477,7 @@ class Camera:
 
         return self._neighbours
 
-    def getNeighbourPixels(self, pixels=None):
+    def get_neighbour_pixels(self, pixels=None):
         """
         Get a list of neighbour pixels by calling calcNeighbourPixels() when necessary.
         The purpose of this function is to ensure
@@ -482,7 +486,7 @@ class Camera:
         Parameters
         ----------
         pixels: dictionary
-            The dictionary produced by the readPixelList method of this class
+            The dictionary produced by the read_pixel_list method of this class
 
         Returns
         -------
@@ -493,18 +497,18 @@ class Camera:
         if self._neighbours is None:
             if pixels is None:
                 pixels = self._pixels
-            return self._calcNeighbourPixels(pixels)
+            return self._calc_neighbour_pixels(pixels)
         else:
             return self._neighbours
 
-    def _calcEdgePixels(self, pixels, neighbours):
+    def _calc_edge_pixels(self, pixels, neighbours):
         """
         Find the edge pixels of the camera.
 
         Parameters
         ----------
         pixels: dictionary
-            The dictionary produced by the readPixelList method of this class
+            The dictionary produced by the read_pixel_list method of this class
         neighbours: array_like
             Array of neighbour indices in a list for each pixel
 
@@ -530,14 +534,14 @@ class Camera:
 
         return edgePixelIndices
 
-    def getEdgePixels(self, pixels=None, neighbours=None):
+    def get_edge_pixels(self, pixels=None, neighbours=None):
         """
         Get the indices of the edge pixels of the camera.
 
         Parameters
         ----------
         pixels: dictionary
-            The dictionary produced by the readPixelList method of this class
+            The dictionary produced by the read_pixel_list method of this class
         neighbours: array_like
             Array of neighbour indices in a list for each pixel
 
@@ -551,12 +555,12 @@ class Camera:
             if pixels is None:
                 pixels = self._pixels
             if neighbours is None:
-                neighbours = self.getNeighbourPixels()
-            return self._calcEdgePixels(pixels, neighbours)
+                neighbours = self.get_neighbour_pixels()
+            return self._calc_edge_pixels(pixels, neighbours)
         else:
             return self._edgePixelIndices
 
-    def _plotAxesDef(self, plt, rotateAngle):
+    def _plot_axes_def(self, plt, rotateAngle):
         """
         Plot three axes definitions on the pyplot.plt instance provided.
         The three axes are Alt/Az, the camera coordinate system and
@@ -572,7 +576,7 @@ class Camera:
 
         invertYaxis = False
         xLeft = 0.7  # Position of the left most axis
-        if not isTwoMirrorTelescope(self._telescopeModelName):
+        if not is_two_mirror_telescope(self._telescopeModelName):
             invertYaxis = True
             xLeft = 0.8
 
@@ -594,7 +598,7 @@ class Camera:
             "ec": "black",
             "invertYaxis": invertYaxis,
         }
-        self._plotOneAxisDef(plt, **kwargs)
+        self._plot_one_axis_def(plt, **kwargs)
 
         xTitle = r"$x_{\!cam}$"
         yTitle = r"$y_{\!cam}$"
@@ -609,7 +613,7 @@ class Camera:
             "ec": "blue",
             "invertYaxis": invertYaxis,
         }
-        self._plotOneAxisDef(plt, **kwargs)
+        self._plot_one_axis_def(plt, **kwargs)
 
         xTitle = "Alt"
         yTitle = "Az"
@@ -624,12 +628,12 @@ class Camera:
             "ec": "red",
             "invertYaxis": invertYaxis,
         }
-        self._plotOneAxisDef(plt, **kwargs)
+        self._plot_one_axis_def(plt, **kwargs)
 
         return
 
     @staticmethod
-    def _plotOneAxisDef(plt, **kwargs):
+    def _plot_one_axis_def(plt, **kwargs):
         """
         Plot an axis on the pyplot.plt instance provided.
 
@@ -697,7 +701,7 @@ class Camera:
 
         return
 
-    def plotPixelLayout(self, cameraInSkyCoor=False, pixelsIdToPrint=50):
+    def plot_pixel_layout(self, cameraInSkyCoor=False, pixelsIdToPrint=50):
         """
         Plot the pixel layout for an observer facing the camera.
         Including in the plot edge pixels, off pixels, pixel ID for the first 50 pixels,
@@ -713,7 +717,7 @@ class Camera:
         fig, ax = plt.subplots()
         plt.gcf().set_size_inches(8, 8)
 
-        if not isTwoMirrorTelescope(self._telescopeModelName):
+        if not is_two_mirror_telescope(self._telescopeModelName):
             if not cameraInSkyCoor:
                 self._pixels["y"] = [(-1) * yVal for yVal in self._pixels["y"]]
 
@@ -728,7 +732,7 @@ class Camera:
                     orientation=np.deg2rad(self._pixels["orientation"]),
                 )
                 if self._pixels["pixOn"][i_pix]:
-                    if len(self.getNeighbourPixels()[i_pix]) < 6:
+                    if len(self.get_neighbour_pixels()[i_pix]) < 6:
                         edgePixels.append(hexagon)
                     else:
                         onPixels.append(hexagon)
@@ -744,7 +748,7 @@ class Camera:
                     height=self._pixels["pixel_diameter"],
                 )
                 if self._pixels["pixOn"][i_pix]:
-                    if len(self.getNeighbourPixels()[i_pix]) < 4:
+                    if len(self.get_neighbour_pixels()[i_pix]) < 4:
                         edgePixels.append(square)
                     else:
                         onPixels.append(square)
@@ -753,7 +757,7 @@ class Camera:
 
             if self._pixels["pixID"][i_pix] < pixelsIdToPrint + 1:
                 fontSize = 4
-                if getTelescopeClass(self._telescopeModelName) == "SCT":
+                if get_telescope_class(self._telescopeModelName) == "SCT":
                     fontSize = 2
                 plt.text(
                     xyPixPos[0],
@@ -779,23 +783,23 @@ class Camera:
             PatchCollection(offPixels, facecolor="black", edgecolor="black", linewidth=0.2)
         )
 
-        legendObjects = [legH.pixelObject(), legH.edgePixelObject()]
+        legendObjects = [legH.PixelObject(), legH.EdgePixelObject()]
         legendLabels = ["Pixel", "Edge pixel"]
         if isinstance(onPixels[0], mlp.patches.RegularPolygon):
             legendHandlerMap = {
-                legH.pixelObject: legH.hexPixelHandler(),
-                legH.edgePixelObject: legH.hexEdgePixelHandler(),
-                legH.offPixelObject: legH.hexOffPixelHandler(),
+                legH.PixelObject: legH.HexPixelHandler(),
+                legH.EdgePixelObject: legH.HexEdgePixelHandler(),
+                legH.OffPixelObject: legH.HexOffPixelHandler(),
             }
         elif isinstance(onPixels[0], mlp.patches.Rectangle):
             legendHandlerMap = {
-                legH.pixelObject: legH.squarePixelHandler(),
-                legH.edgePixelObject: legH.squareEdgePixelHandler(),
-                legH.offPixelObject: legH.squareOffPixelHandler(),
+                legH.PixelObject: legH.SquarePixelHandler(),
+                legH.EdgePixelObject: legH.SquareEdgePixelHandler(),
+                legH.OffPixelObject: legH.SquareOffPixelHandler(),
             }
 
         if len(offPixels) > 0:
-            legendObjects.append(legH.offPixelObject())
+            legendObjects.append(legH.OffPixelObject())
             legendLabels.append("Disabled pixel")
 
         plt.axis("equal")
@@ -818,11 +822,11 @@ class Camera:
         )
         plt.tick_params(axis="both", which="major", labelsize=15)
 
-        self._plotAxesDef(plt, self._pixels["rotateAngle"])
+        self._plot_axes_def(plt, self._pixels["rotateAngle"])
         description = "For an observer facing the camera"
-        if cameraInSkyCoor and not isTwoMirrorTelescope(self._telescopeModelName):
+        if cameraInSkyCoor and not is_two_mirror_telescope(self._telescopeModelName):
             description = "For an observer behind the camera looking through"
-        if isTwoMirrorTelescope(self._telescopeModelName):
+        if is_two_mirror_telescope(self._telescopeModelName):
             description = "For an observer looking from secondary to camera"
         ax.text(
             0.02,
@@ -833,7 +837,7 @@ class Camera:
             fontsize=12,
         )
 
-        fov, rEdgeAvg = self.calcFOV()
+        fov, rEdgeAvg = self.calc_fov()
         ax.text(
             0.02,
             0.96,

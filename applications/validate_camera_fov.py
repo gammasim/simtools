@@ -38,7 +38,7 @@
     .. todo::
 
         * Change default model to default (after this feature is implemented in db_handler)
-        * Fix the setStyle. For some reason, sphinx cannot built docs with it on.
+        * Fix the set_style. For some reason, sphinx cannot built docs with it on.
 """
 
 import logging
@@ -82,11 +82,11 @@ def main():
     label = "validate_camera_fov"
 
     logger = logging.getLogger()
-    logger.setLevel(gen.getLogLevelFromUser(args_dict["log_level"]))
+    logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
     # Output directory to save files related directly to this app
     _io_handler = io_handler.IOHandler()
-    outputDir = _io_handler.getOutputDirectory(label, dirType="application-plots")
+    outputDir = _io_handler.get_output_directory(label, dirType="application-plots")
 
     telModel = TelescopeModel(
         site=args_dict["site"],
@@ -95,14 +95,14 @@ def main():
         modelVersion=args_dict["model_version"],
         label=label,
     )
-    telModel.exportModelFiles()
+    telModel.export_model_files()
 
     print("\nValidating the camera FoV of {}\n".format(telModel.name))
 
-    focalLength = float(telModel.getParameterValue("effective_focal_length"))
+    focalLength = float(telModel.get_parameter_value("effective_focal_length"))
     camera = telModel.camera
 
-    fov, rEdgeAvg = camera.calcFOV()
+    fov, rEdgeAvg = camera.calc_fov()
 
     print("\nEffective focal length = " + "{0:.3f} cm".format(focalLength))
     print("{0} FoV = {1:.3f} deg".format(telModel.name, fov))
@@ -115,13 +115,13 @@ def main():
             pixelIDsToPrint = -1  # so not print the zero pixel
     except ValueError:
         if args_dict["printPixelsID"].lower() == "all":
-            pixelIDsToPrint = camera.getNumberOfPixels()
+            pixelIDsToPrint = camera.get_number_of_pixels()
         else:
             raise ValueError(
                 f"The value provided to --printPixelsID ({args_dict['printPixelsID']}) "
                 "should be an integer or All"
             )
-    fig = camera.plotPixelLayout(args_dict["cameraInSkyCoor"], pixelIDsToPrint)
+    fig = camera.plot_pixel_layout(args_dict["cameraInSkyCoor"], pixelIDsToPrint)
     plotFilePrefix = outputDir.joinpath(f"{label}_{telModel.name}_pixelLayout")
     for suffix in ["pdf", "png"]:
         fileName = f"{str(plotFilePrefix)}.{suffix}"

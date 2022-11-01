@@ -78,7 +78,7 @@ import simtools.util.general as gen
 from simtools import io_handler, visualize
 from simtools.model.telescope_model import TelescopeModel
 from simtools.ray_tracing import RayTracing
-from simtools.util.model import splitSimtelParameter
+from simtools.util.model import split_simtel_parameter
 
 
 def loadData(datafile):
@@ -127,11 +127,11 @@ def main():
     label = "tune_psf"
 
     logger = logging.getLogger()
-    logger.setLevel(gen.getLogLevelFromUser(args_dict["log_level"]))
+    logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
     # Output directory to save files related directly to this app
     _io_handler = io_handler.IOHandler()
-    outputDir = _io_handler.getOutputDirectory(label, dirType="application-plots")
+    outputDir = _io_handler.get_output_directory(label, dirType="application-plots")
 
     telModel = TelescopeModel(
         site=args_dict["site"],
@@ -147,11 +147,11 @@ def main():
     #     'mirror_align_random_horizontal': f'{align} 28 0 0',
     #     'mirror_align_random_vertical': f'{align} 28 0 0',
     # }
-    # telModel.changeMultipleParameters(**parsToChange)
+    # telModel.change_multiple_parameters(**parsToChange)
 
     allParameters = list()
 
-    def addParameters(
+    def add_parameters(
         mirror_reflection, mirror_align, mirror_reflection_fraction=0.15, mirror_reflection_2=0.035
     ):
         """
@@ -175,14 +175,14 @@ def main():
     # mrra2 -> mirror reflection random angle 2 (third entry of mirror_reflection_random_angle)
     # mar -> mirror align random (first entry of mirror_align_random_horizontal/vertical)
 
-    rawPar = telModel.getParameter("mirror_reflection_random_angle")["Value"]
-    splitPar = splitSimtelParameter(rawPar)
+    rawPar = telModel.get_parameter("mirror_reflection_random_angle")["Value"]
+    splitPar = split_simtel_parameter(rawPar)
     mrra_0 = splitPar[0]
     mfr_0 = splitPar[1]
     mrra2_0 = splitPar[2]
 
-    rawPar = telModel.getParameter("mirror_align_random_horizontal")["Value"]
-    mar_0 = splitSimtelParameter(rawPar)[0]
+    rawPar = telModel.get_parameter("mirror_align_random_horizontal")["Value"]
+    mar_0 = split_simtel_parameter(rawPar)[0]
 
     logger.debug(
         "Previous parameter values: \n"
@@ -208,12 +208,12 @@ def main():
         mrf = np.random.uniform(max(mfr_0 - mrf_range, 0), mfr_0 + mrf_range)
         mrra2 = np.random.uniform(max(mrra2_0 - mrra2_range, 0), mrra2_0 + mrra2_range)
         mar = np.random.uniform(max(mar_0 - mar_range, 0), mar_0 + mar_range)
-        addParameters(mrra, mar, mrf, mrra2)
+        add_parameters(mrra, mar, mrf, mrra2)
 
     # Loading measured cumulative PSF
     dataToPlot = OrderedDict()
     if args_dict["data"] is not None:
-        dataFile = gen.findFile(args_dict["data"], args_dict["model_path"])
+        dataFile = gen.find_file(args_dict["data"], args_dict["model_path"])
         dataToPlot["measured"] = loadData(dataFile)
         radius = dataToPlot["measured"]["Radius [cm]"]
 
@@ -234,9 +234,9 @@ def main():
         Runs the tuning for one set of parameters, add a plot to the pdfPages
         (if plot=True) and returns the RMSD and the D80.
         """
-        telModel.changeMultipleParameters(**pars)
+        telModel.change_multiple_parameters(**pars)
 
-        ray = RayTracing.fromKwargs(
+        ray = RayTracing.from_kwargs(
             telescopeModel=telModel,
             simtelSourcePath=args_dict["simtelpath"],
             sourceDistance=args_dict["src_distance"] * u.km,
@@ -249,17 +249,17 @@ def main():
 
         # Plotting cumulative PSF
         im = ray.images()[0]
-        d80 = im.getPSF()
+        d80 = im.get_psf()
 
         # Simulated cumulative PSF
-        dataToPlot["simulated"] = im.getCumulativeData(radius * u.cm)
+        dataToPlot["simulated"] = im.get_cumulative_data(radius * u.cm)
 
         rmsd = calculateRMSD(
             dataToPlot["measured"]["Cumulative PSF"], dataToPlot["simulated"]["Cumulative PSF"]
         )
 
         if plot:
-            fig = visualize.plot1D(
+            fig = visualize.plot_1D(
                 dataToPlot,
                 plotDifference=True,
                 noMarkers=True,

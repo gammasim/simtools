@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 from astropy.table import QTable
 from cycler import cycler
 
-__all__ = ["setStyle", "plot1D", "plotTable"]
+__all__ = ["set_style", "plot_1D", "plot_table"]
 
 COLORS = dict()
 COLORS["classic"] = [
@@ -103,7 +103,7 @@ LINES = [
 ]
 
 
-def _addUnit(title, array):
+def _add_unit(title, array):
     """
     A function to add a unit to "title" (presumably an axis title).
     The unit is extracted from the unit field of the array, in case array is an astropy quantity.
@@ -142,7 +142,7 @@ def _addUnit(title, array):
     return "{}{}".format(title, unit)
 
 
-def setStyle(palette="default", bigPlot=False):
+def set_style(palette="default", bigPlot=False):
     """
     A function to set the plotting style as part of an effort to
     homogenize plot style across the framework.
@@ -202,7 +202,7 @@ def setStyle(palette="default", bigPlot=False):
     return
 
 
-def getColors(palette="default"):
+def get_colors(palette="default"):
     """
     Get the colour list of the palette requested.
     If no palette is provided, the default is returned.
@@ -226,7 +226,7 @@ def getColors(palette="default"):
     return COLORS[palette]
 
 
-def getMarkers():
+def get_markers():
     """
     Get the marker list used in this module.
 
@@ -238,7 +238,7 @@ def getMarkers():
     return MARKERS
 
 
-def getLines():
+def get_lines():
     """
     Get the line style list used in this module.
 
@@ -250,7 +250,7 @@ def getLines():
     return LINES
 
 
-def plot1D(data, **kwargs):
+def plot_1D(data, **kwargs):
     """
     Produce a high contrast one dimensional plot from multiple data sets.
     A ratio plot can be added at the bottom to allow easy comparison.
@@ -267,7 +267,7 @@ def plot1D(data, **kwargs):
           and will be used in the legend.
     **kwargs:
         * palette: string
-          Choose a colour palette (see setStyle for additional information).
+          Choose a colour palette (see set_style for additional information).
         * title: string
           Set a plot title.
         * npLegend: bool
@@ -314,7 +314,7 @@ def plot1D(data, **kwargs):
         kwargs["markerfacecolor"] = "None"
         kwargs.pop("emptyMarkers", None)
 
-    setStyle(palette, bigPlot)
+    set_style(palette, bigPlot)
 
     if not isinstance(data, dict):
         dataDict = dict()
@@ -347,8 +347,8 @@ def plot1D(data, **kwargs):
     for label, dataNow in dataDict.items():
         assert len(dataNow.dtype.names) == 2, "Input array must have two columns with titles."
         xTitle, yTitle = dataNow.dtype.names[0], dataNow.dtype.names[1]
-        xTitleUnit = _addUnit(xTitle, dataNow[xTitle])
-        yTitleUnit = _addUnit(yTitle, dataNow[yTitle])
+        xTitleUnit = _add_unit(xTitle, dataNow[xTitle])
+        yTitleUnit = _add_unit(yTitle, dataNow[yTitle])
         plt.plot(dataNow[xTitle], dataNow[yTitle], label=label, **kwargs)
 
     if plotRatio or plotDifference:
@@ -382,7 +382,7 @@ def plot1D(data, **kwargs):
                 continue
             else:
                 xTitle, yTitle = dataNow.dtype.names[0], dataNow.dtype.names[1]
-                xTitleUnit = _addUnit(xTitle, dataNow[xTitle])
+                xTitleUnit = _add_unit(xTitle, dataNow[xTitle])
                 if plotRatio:
                     yValues = dataNow[yTitle] / dataDict[dataRefName][yTitle]
                 else:
@@ -404,7 +404,7 @@ def plot1D(data, **kwargs):
     return fig
 
 
-def plotTable(table, yTitle, **kwargs):
+def plot_table(table, yTitle, **kwargs):
     """
     Produce a high contrast one dimensional plot from the data in an astropy.Table.
     A ratio plot can be added at the bottom to allow easy comparison.
@@ -422,7 +422,7 @@ def plotTable(table, yTitle, **kwargs):
            The y-axis title.
 
     **kwargs:
-        * palette: choose a colour palette (see setStyle for additional information).
+        * palette: choose a colour palette (see set_style for additional information).
         * title: set a plot title.
         * noLegend: do not print a legend for the plot.
         * bigPlot: increase marker and font sizes (like in a wide light curve).
@@ -452,10 +452,10 @@ def plotTable(table, yTitle, **kwargs):
     for column in table.keys()[1:]:
         dataDict[column] = QTable([table[xAxis], table[column]], names=[xAxis, yTitle])
 
-    return plot1D(dataDict, **kwargs)
+    return plot_1D(dataDict, **kwargs)
 
 
-def plotHist2D(data, **kwargs):
+def plot_hist_2D(data, **kwargs):
     """
     Produce a two dimensional histogram plot.
     Any option that can be changed after plotting (e.g., axes limits, log scale, etc.) should be
@@ -484,7 +484,7 @@ def plotHist2D(data, **kwargs):
         title = ""
 
     # Set default style since the usual options do not affect 2D plots (for now).
-    setStyle()
+    set_style()
 
     gs = gridspec.GridSpec(1, 1)
     fig = plt.figure(figsize=(8, 6))
@@ -496,8 +496,8 @@ def plotHist2D(data, **kwargs):
     plt.subplot(gs[0])
     assert len(data.dtype.names) == 2, "Input array must have two columns with titles."
     xTitle, yTitle = data.dtype.names[0], data.dtype.names[1]
-    xTitleUnit = _addUnit(xTitle, data[xTitle])
-    yTitleUnit = _addUnit(yTitle, data[yTitle])
+    xTitleUnit = _add_unit(xTitle, data[xTitle])
+    yTitleUnit = _add_unit(yTitle, data[yTitle])
     plt.hist2d(data[xTitle], data[yTitle], cmap=cmap, **kwargs)
 
     plt.xlabel(xTitleUnit)

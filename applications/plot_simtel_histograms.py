@@ -57,7 +57,7 @@ def main():
     args_dict, _ = config.initialize()
 
     logger = logging.getLogger()
-    logger.setLevel(gen.getLogLevelFromUser(args_dict["log_level"]))
+    logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
     nLists = len(args_dict["file_lists"])
     simtelHistograms = list()
@@ -74,7 +74,7 @@ def main():
         simtelHistograms.append(sh)
 
     # Checking if number of histograms is consistent
-    numberOfHists = [sh.numberOfHistograms for sh in simtelHistograms]
+    numberOfHists = [sh.number_of_histograms for sh in simtelHistograms]
     # Converting list to set will remove the duplicated entries.
     # If all entries in the list are the same, len(set) will be 1
     if len(set(numberOfHists)) > 1:
@@ -96,7 +96,7 @@ def main():
     pdfPages = PdfPages(figName)
     for iHist in range(numberOfHists[0]):
 
-        title = simtelHistograms[0].getHistogramTitle(iHist)
+        title = simtelHistograms[0].get_histogram_title(iHist)
 
         logger.debug("Processing: {}".format(title))
 
@@ -104,10 +104,10 @@ def main():
 
         if nLists == 1:
             # If only one simulation set, axs is a single axes (not iterable)
-            sh.plotOneHistogram(iHist, axs)
+            sh.plot_one_histogram(iHist, axs)
         else:
             for sh, ax in zip(simtelHistograms, axs):
-                sh.plotOneHistogram(iHist, ax)
+                sh.plot_one_histogram(iHist, ax)
 
         plt.tight_layout()
         pdfPages.savefig(fig)

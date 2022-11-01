@@ -6,7 +6,7 @@ from simtools.layout.layout_array import LayoutArray
 from simtools.model.telescope_model import TelescopeModel
 from simtools.simtel.simtel_config_writer import SimtelConfigWriter
 from simtools.util import names
-from simtools.util.general import collectDataFromYamlOrDict
+from simtools.util.general import collect_data_from_yaml_or_dict
 
 __all__ = ["ArrayModel"]
 
@@ -32,25 +32,25 @@ class ArrayModel:
         Version of the model (ex. prod4).
     label: str
         Instance label.
-    numberOfTelescopes: int
+    number_of_telescopes: int
         Number of telescopes in the ArrayModel.
 
     Methods
     -------
-    printTelescopeList()
+    print_telescope_list()
         Print out the list of telescopes for quick inspection.
-    exportSimtelTelescopeConfigFiles()
+    export_simtel_telescope_config_files()
         Export sim_telarray config files for all the telescopes
         into the output model directory.
-    exportSimtelArrayConfigFile()
+    export_simtel_array_config_file()
         Export sim_telarray config file for the array into the output model
         directory.
-    exportAllSimtelConfigFiles()
+    export_all_simtel_config_files()
         Export sim_telarray config file for the array and for each individual telescope
         into the output model directory.
-    getConfigFile()
+    get_config_file()
         Get the path to the config file for sim_telarray.
-    getConfigDirectory()
+    get_config_directory()
         Get the path of the array config directory for sim_telarray.
     """
 
@@ -87,21 +87,21 @@ class ArrayModel:
 
         self.io_handler = io_handler.IOHandler()
 
-        arrayConfigData = collectDataFromYamlOrDict(arrayConfigFile, arrayConfigData)
-        self._loadArrayData(arrayConfigData)
+        arrayConfigData = collect_data_from_yaml_or_dict(arrayConfigFile, arrayConfigData)
+        self._load_array_data(arrayConfigData)
 
-        self._setConfigFileDirectory()
+        self._set_config_file_directory()
 
-        self._buildArrayModel(mongoDBConfig)
+        self._build_array_model(mongoDBConfig)
 
         self._telescopeModelFilesExported = False
         self._arrayModelFileExported = False
 
     @property
-    def numberOfTelescopes(self):
-        return self.layout.getNumberOfTelescopes()
+    def number_of_telescopes(self):
+        return self.layout.get_number_of_telescopes()
 
-    def _loadArrayData(self, arrayConfigData):
+    def _load_array_data(self, arrayConfigData):
         """Load parameters from arrayData.
 
         Parameters
@@ -111,14 +111,14 @@ class ArrayModel:
         # Validating arrayConfigData
         # Keys 'site', 'layoutName' and 'default' are mandatory.
         # 'default' must have 'LST', 'MST' and 'SST' (for South site) keys.
-        self._validateArrayData(arrayConfigData)
+        self._validate_array_data(arrayConfigData)
 
         # Site
-        self.site = names.validateSiteName(arrayConfigData["site"])
+        self.site = names.validate_site_name(arrayConfigData["site"])
 
         # Grabbing layout name and building LayoutArray
-        self.layoutName = names.validateLayoutArrayName(arrayConfigData["layoutName"])
-        self.layout = LayoutArray.fromLayoutArrayName(
+        self.layoutName = names.validate_layout_array_name(arrayConfigData["layoutName"])
+        self.layout = LayoutArray.from_layout_array_name(
             self.site + "-" + self.layoutName,
             label=self.label,
         )
@@ -128,7 +128,7 @@ class ArrayModel:
             self._logger.warning("modelVersion not given in arrayConfigData - using current")
             self.modelVersion = "current"
         else:
-            self.modelVersion = names.validateModelVersionName(arrayConfigData["modelVersion"])
+            self.modelVersion = names.validate_model_version_name(arrayConfigData["modelVersion"])
 
         # Removing keys that were stored in attributes and keeping the remaining as a dict
         self._arrayConfigData = {
@@ -137,7 +137,7 @@ class ArrayModel:
             if k not in ["site", "layoutName", "modelVersion"]
         }
 
-    def _validateArrayData(self, arrayConfigData):
+    def _validate_array_data(self, arrayConfigData):
         """
         Validate arrayData by checking the existence of the relevant keys.
         Searching for the keys: 'site', 'array' and 'default'.
@@ -158,15 +158,15 @@ class ArrayModel:
 
         runOverPars(["site", "layoutName", "default"], arrayConfigData)
 
-    def _setConfigFileDirectory(self):
+    def _set_config_file_directory(self):
         """Define the variable _configFileDirectory and create directories, if needed"""
-        self._configFileDirectory = self.io_handler.getOutputDirectory(self.label, "model")
+        self._configFileDirectory = self.io_handler.get_output_directory(self.label, "model")
         if not self._configFileDirectory.exists():
             self._configFileDirectory.mkdir(parents=True, exist_ok=True)
             self._logger.info("Creating directory {}".format(self._configFileDirectory))
         return
 
-    def _buildArrayModel(self, mongoDBConfig):
+    def _build_array_model(self, mongoDBConfig):
         """
         Build the site parameters and the list of telescope models,
         including reading the parameters from the DB.
@@ -180,7 +180,7 @@ class ArrayModel:
 
         # Getting site parameters from DB
         db = db_handler.DatabaseHandler(mongoDBConfig=mongoDBConfig)
-        self._siteParameters = db.getSiteParameters(
+        self._siteParameters = db.get_site_parameters(
             self.site, self.modelVersion, onlyApplicable=True
         )
 
@@ -189,10 +189,10 @@ class ArrayModel:
         _allTelescopeModelNames = list()  # List of telescope names without repetition
         _allParsToChange = dict()
         for tel in self.layout:
-            telSize = self.layout.getTelescopeType(tel.name)
+            telSize = self.layout.get_telescope_type(tel.name)
 
             # Collecting telescope name and pars to change from arrayConfigData
-            telModelName, parsToChange = self._getSingleTelescopeInfoFromArrayConfig(
+            telModelName, parsToChange = self._get_single_telescope_info_from_array_config(
                 tel.name, telSize
             )
             if len(parsToChange) > 0:
@@ -244,10 +244,10 @@ class ArrayModel:
                         *_allParsToChange[telData.name]
                     )
                 )
-                telModel.changeMultipleParameters(**_allParsToChange[telData.name])
-                telModel.setExtraLabel(telData.name)
+                telModel.change_multiple_parameters(**_allParsToChange[telData.name])
+                telModel.set_extra_label(telData.name)
 
-    def _getSingleTelescopeInfoFromArrayConfig(self, telName, telSize):
+    def _get_single_telescope_info_from_array_config(self, telName, telSize):
         """
         arrayConfigData contains the default telescope models for each
         telescope size and the list of specific telescopes.
@@ -316,36 +316,38 @@ class ArrayModel:
             # Grabbing the default option
             return _proccessSingleTelescope(self._arrayConfigData["default"][telSize])
 
-    def printTelescopeList(self):
+    def print_telescope_list(self):
         """Print out the list of telescopes for quick inspection."""
         for telData, telModel in zip(self.layout, self._telescopeModel):
             print("Name: {}\t Model: {}".format(telData.name, telModel.name))
 
-    def exportSimtelTelescopeConfigFiles(self):
+    def export_simtel_telescope_config_files(self):
         """
         Export sim_telarray config files for all the telescopes
         into the output model directory.
         """
         exportedModels = list()
         for telModel in self._telescopeModel:
-            name = telModel.name + ("_" + telModel.extraLabel if telModel.extraLabel != "" else "")
+            name = telModel.name + (
+                "_" + telModel.extra_label if telModel.extra_label != "" else ""
+            )
             if name not in exportedModels:
                 self._logger.debug("Exporting config file for tel {}".format(name))
-                telModel.exportConfigFile()
+                telModel.export_config_file()
                 exportedModels.append(name)
             else:
                 self._logger.debug("Config file for tel {} already exists - skipping".format(name))
 
         self._telescopeModelFilesExported = True
 
-    def exportSimtelArrayConfigFile(self):
+    def export_simtel_array_config_file(self):
         """
         Export sim_telarray config file for the array into the output model
         directory.
         """
 
         # Setting file name and the location
-        configFileName = names.simtelArrayConfigFileName(
+        configFileName = names.simtel_array_config_file_name(
             self.layoutName, self.site, self.modelVersion, self.label
         )
         self._configFilePath = self._configFileDirectory.joinpath(configFileName)
@@ -358,7 +360,7 @@ class ArrayModel:
             modelVersion=self.modelVersion,
             label=self.label,
         )
-        simtelWriter.writeArrayConfigFile(
+        simtelWriter.write_array_config_file(
             configFilePath=self._configFilePath,
             layout=self.layout,
             telescopeModel=self._telescopeModel,
@@ -366,17 +368,17 @@ class ArrayModel:
         )
         self._arrayModelFileExported = True
 
-    def exportAllSimtelConfigFiles(self):
+    def export_all_simtel_config_files(self):
         """
         Export sim_telarray config file for the array and for each individual telescope
         into the output model directory.
         """
         if not self._telescopeModelFilesExported:
-            self.exportSimtelTelescopeConfigFiles()
+            self.export_simtel_telescope_config_files()
         if not self._arrayModelFileExported:
-            self.exportSimtelArrayConfigFile()
+            self.export_simtel_array_config_file()
 
-    def getConfigFile(self):
+    def get_config_file(self):
         """
         Get the path of the array config file for sim_telarray.
         The config file is produced if the file is not updated.
@@ -385,10 +387,10 @@ class ArrayModel:
         -------
         Path of the exported config file for sim_telarray.
         """
-        self.exportAllSimtelConfigFiles()
+        self.export_all_simtel_config_files()
         return self._configFilePath
 
-    def getConfigDirectory(self):
+    def get_config_directory(self):
         """
         Get the path of the array config directory for sim_telarray.
 
