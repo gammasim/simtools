@@ -149,7 +149,7 @@ def test_change_dict_keys_case():
     _no_change_dict_upper = gen.change_dict_keys_case(copy(_upper_dict), False)
     assert _no_change_dict_upper == _upper_dict
 
-    _no_change_dict_lower = gen.change_dict_keys_case(copy(_upper_dict), True)
+    _no_change_dict_lower = gen.change_dict_keys_case(copy(_lower_dict), True)
     assert _no_change_dict_lower == _lower_dict
 
     _changed_to_lower = gen.change_dict_keys_case(copy(_upper_dict), True)
