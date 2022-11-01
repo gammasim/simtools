@@ -22,6 +22,8 @@ class Configurator:
     - configuration dict when calling the class
     - environmental variables
 
+    Configuration parameter names are converted always to lower case.
+
     Methods
     -------
     initialize()
@@ -29,16 +31,22 @@ class Configurator:
 
     """
 
-    def __init__(self, config=None, label=None, description=None):
+    def __init__(self, config=None, label=None, usage=None, description=None, epilog=None):
         """
         Configurator init.
 
         Parameters
         ----------
         config: dict
-           Configuration parameters as dict.
+            Configuration parameters as dict.
         label: str
-           Class label.
+            Class label.
+        usage: str
+            Application usage description.
+        description: str
+            Text displayed as description
+        epilog: str
+            Text display after all arguments.
 
         """
 
@@ -46,8 +54,11 @@ class Configurator:
         self._logger.debug("Init Configuration")
 
         self.configClassInit = config
+        self.label = label
         self.config = {}
-        self.parser = argparser.CommandLineParser(label, description)
+        self.parser = argparser.CommandLineParser(
+            prog=self.label, usage=usage, description=description, epilog=epilog
+        )
 
     def default_config(self, arg_list=None, add_db_config=False):
         """
@@ -116,11 +127,21 @@ class Configurator:
         )
 
         self._fillFromCommandLine()
-        self._fillFromConfigFile()
+        try:
+            self._fillFromConfigFile(self.config["workflow_config"])
+        except KeyError:
+            pass
+        try:
+            self._fillFromConfigFile(self.config["config"])
+        except KeyError:
+            pass
         self._fillFromConfigDict(self.configClassInit)
         self._fillFromEnvironmentalVariables()
         self._initializeIOHandler()
         _db_dict = self._getDBParameters()
+
+        if self.config["label"] is None:
+            self.config["label"] = self.label
 
         return self.config, _db_dict
 
@@ -138,18 +159,19 @@ class Configurator:
     def _fillFromConfigDict(self, _input_dict):
         """
         Fill configuration parameters from dictionary.
+        Enforce that configuration parameter names are lower case.
 
         Parameters
         ----------
         _input_dict: dict
-           dictionary with configuration parameters
+            dictionary with configuration parameters.
 
         """
         _tmp_config = {}
         try:
             for key, value in _input_dict.items():
                 self._check_parameter_configuration_status(key, value)
-                _tmp_config[key] = value
+                _tmp_config[key.lower()] = value
         except AttributeError:
             pass
 
@@ -173,7 +195,6 @@ class Configurator:
 
 
         """
-
         # parameter not changed or None
         if self.parser.get_default(key) == self.config[key] or self.config[key] is None:
             return
@@ -187,9 +208,18 @@ class Configurator:
             )
             raise InvalidConfigurationParameter
 
-    def _fillFromConfigFile(self):
+    def _fillFromConfigFile(self, config_file):
         """
         Read and fill configuration parameters from yaml file.
+        Take into account that this could be a CTASIMPIPE workflow configuration file.
+        (CTASIMPIPE:CONFIGURATION is optional, therefore no error raised when this key
+         is not found)
+
+        Parameters
+        ----------
+        config file: str
+            Name of configuration file name
+
 
         Raises
         ------
@@ -199,16 +229,23 @@ class Configurator:
         """
 
         try:
-            self._logger.debug("Reading configuration from {}".format(self.config["config_file"]))
-            with open(self.config["config_file"], "r") as stream:
+            self._logger.debug("Reading configuration from {}".format(config_file))
+            with open(config_file, "r") as stream:
                 _config_dict = yaml.safe_load(stream)
-            self._fillFromConfigDict(_config_dict)
+            if "CTASIMPIPE" in _config_dict:
+                try:
+                    self._fillFromConfigDict(_config_dict["CTASIMPIPE"]["CONFIGURATION"])
+                except KeyError:
+                    self._logger.info(
+                        "No CTASIMPIPE:CONFIGURATION dict found in {}.".format(config_file)
+                    )
+            else:
+                self._fillFromConfigDict(_config_dict)
+        # TypeError is raised for config_file=None
         except TypeError:
             pass
         except FileNotFoundError:
-            self._logger.error(
-                "Configuration file not found: {}".format(self.config["config_file"])
-            )
+            self._logger.error("Configuration file not found: {}".format(config_file))
             raise
 
     def _fillFromEnvironmentalVariables(self):

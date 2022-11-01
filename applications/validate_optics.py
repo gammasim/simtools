@@ -58,6 +58,7 @@
 """
 
 import logging
+from pathlib import Path
 
 import astropy.units as u
 import matplotlib.pyplot as plt
@@ -75,17 +76,18 @@ from simtools.ray_tracing import RayTracing
 # setStyle()
 
 
-def _parse():
+def _parse(label):
     """
     Parse command line configuratio
 
     """
 
     config = configurator.Configurator(
+        label=label,
         description=(
             "Calculate and plot the PSF and effective mirror area as a function of off-axis angle "
             "of the telescope requested."
-        )
+        ),
     )
 
     config.parser.add_argument(
@@ -119,8 +121,8 @@ def _parse():
 
 def main():
 
-    args_dict, db_config = _parse()
-    label = "validate_optics"
+    label = Path(__file__).stem
+    args_dict, db_config = _parse(label)
 
     logger = logging.getLogger()
     logger.setLevel(gen.getLogLevelFromUser(args_dict["log_level"]))

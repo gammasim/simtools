@@ -38,18 +38,21 @@
 """
 
 import logging
+from pathlib import Path
 
 import simtools.configuration as configurator
 import simtools.util.general as gen
 from simtools.layout import layout_array
 
 
-def _parse(description=None):
+def _parse(label=None, description=None):
     """
     Parse command line configuration
 
     Parameters
     ----------
+    label: str
+        label describing application.
     description: str
         description of application.
 
@@ -60,7 +63,7 @@ def _parse(description=None):
 
     """
 
-    config = configurator.Configurator(description=description)
+    config = configurator.Configurator(label=label, description=description)
 
     config.parser.add_argument(
         "--array_element_list",
@@ -101,7 +104,8 @@ def _parse(description=None):
 
 def main():
 
-    args_dict, _ = _parse(description=("Print a list of array element positions"))
+    label = Path(__file__).stem
+    args_dict, _ = _parse(label, description=("Print a list of array element positions"))
 
     _logger = logging.getLogger()
     _logger.setLevel(gen.getLogLevelFromUser(args_dict["log_level"]))
