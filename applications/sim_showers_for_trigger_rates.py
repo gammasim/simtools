@@ -53,7 +53,7 @@
 """
 
 import logging
-import os
+from pathlib import Path
 
 import astropy.units as u
 
@@ -118,7 +118,7 @@ def _parse(label=None, description=None):
 
 def main():
 
-    label = os.path.basename(__file__).split(".")[0]
+    label = Path(__file__).stem
     args_dict, _ = _parse(
         label=label, description="Simulate showers to be used for trigger rate calculations"
     )
