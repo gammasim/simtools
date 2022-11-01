@@ -27,6 +27,7 @@
 """
 
 import logging
+from pathlib import Path
 
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
@@ -38,7 +39,10 @@ from simtools.simtel.simtel_histograms import SimtelHistograms
 
 def main():
 
-    config = configurator.Configurator(description=("Plots sim_telarray histograms."))
+    config = configurator.Configurator(
+        label=Path(__file__).stem,
+        description=("Plots sim_telarray histograms."),
+    )
     config.parser.add_argument(
         "--file_lists",
         help="File containing the list of histogram files to be plotted.",

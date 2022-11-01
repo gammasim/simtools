@@ -1,0 +1,48 @@
+---
+REFERENCE:
+  VERSION: 0.1.0
+ACTIVITY:
+  NAME: set_MST_mirror_2f_measurements_from_external
+# Organisation and person submitting these data
+CONTACT:
+  ORGANIZATION: 'MST Consortium'
+  NAME: 'Mirr Responsible Person'
+  EMAIL: 'a@email.org'
+# Description of instrument which obtained these data
+INSTRUMENT:
+  SITE: 'The 2f teststand'
+  CLASS: mirror-panel
+  TYPE: MLT
+  SUBTYPE: pre-production
+  ID: unique-ID-of-mirror-panel-set
+# Description of the process which generated these data
+PROCESS:
+  TYPE: lab
+  ID: unique-ID-of-measurement-process
+# Description of the submitted data product
+PRODUCT:
+  DESCRIPTION: |-
+    Mirror panel radius and PSF measurements
+    from 2f test stand
+  CREATION_TIME: '2020-03-20 12:00:00'
+  VALID:
+    START: '2020-03-20 12:00:00'
+    END: '2024-03-20 12:00:00'
+  FORMAT: ascii.ecsv
+  ASSOCIATION:
+    - SITE: South
+      CLASS: MST
+      TYPE: FlashCam
+      SUBTYPE: D
+      ID: MSTS
+    - SITE: North
+      CLASS: MST
+      TYPE: NectarCam
+      SUBTYPE: D
+      ID: MSTN
+  DOCUMENT:
+    - TYPE: Issue
+      ID: 22570
+      LINK: https://forge.in2p3.fr/issues/22570
+    - TYPE: Presentation
+      LINK: https://indico.cta-observatory.org/login/?next=%2Fevent%2F2680%2Fcontributions%2F23371%2Fattachments%2F17190%2F22730%2F200320_MST_optics.pdf

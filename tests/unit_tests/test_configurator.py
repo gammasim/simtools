@@ -36,9 +36,9 @@ def test_fillFromConfigDict(configurator, args_dict):
     assert args_dict == configurator.config
 
     _tmp_config = copy(dict(args_dict))
-    _tmp_config["config_file"] = "my_file"
+    _tmp_config["config"] = "my_file"
     _tmp_config["test"] = True
-    configurator._fillFromConfigDict({"config_file": "my_file", "test": True})
+    configurator._fillFromConfigDict({"config": "my_file", "test": True})
 
     assert _tmp_config == configurator.config
 
@@ -55,10 +55,10 @@ def test_fillFromConfigFile_not_existing_file(configurator):
 
     # _fillFromConfigFile() is always called after _fillFromCommandLine()
     configurator._fillFromCommandLine(arg_list=[])
-    configurator.config["config_file"] = "this_file_does_not_exist"
 
+    # config_file not found raises FileNotFoundError
     with pytest.raises(FileNotFoundError):
-        configurator._fillFromConfigFile()
+        configurator._fillFromConfigFile(config_file="this_file_does_not_exist")
 
 
 def test_fillFromConfigFile(configurator, args_dict, tmp_test_directory):
@@ -72,10 +72,35 @@ def test_fillFromConfigFile(configurator, args_dict, tmp_test_directory):
     with open(_config_file, "w") as output:
         yaml.safe_dump(_tmp_dict, output, sort_keys=False)
 
-    configurator.config["config_file"] = str(_config_file)
-    _tmp_config["config_file"] = str(_config_file)
+    configurator.config["config"] = str(_config_file)
+    _tmp_config["config"] = str(_config_file)
     configurator.config["output_path"] = None
-    configurator._fillFromConfigFile()
+    configurator._fillFromConfigFile(_config_file)
+    for key, value in _tmp_dict.items():
+        # none values are explicitely not set in Configurator._arglistFromConfig()
+        if value is not None:
+            if "_path" in key:
+                _tmp_config[key] = Path(value)
+            else:
+                _tmp_config[key] = value
+    assert _tmp_config == configurator.config
+
+
+def test_fillFromWorkflowConfigFile(configurator, args_dict, tmp_test_directory):
+
+    _tmp_config = copy(dict(args_dict))
+    _tmp_dict = {
+        "output_path": "./abc/",
+        "test": True,
+    }
+    _tmp_dict_workflow = {"CTASIMPIPE": {"CONFIGURATION": _tmp_dict}}
+    _workflow_file = tmp_test_directory / "configuration-test.yml"
+    with open(_workflow_file, "w") as output:
+        yaml.safe_dump(_tmp_dict_workflow, output, sort_keys=False)
+    configurator.config["config"] = str(_workflow_file)
+    _tmp_config["config"] = str(_workflow_file)
+    configurator.config["output_path"] = None
+    configurator._fillFromConfigFile(_workflow_file)
     for key, value in _tmp_dict.items():
         # none values are explicitely not set in Configurator._arglistFromConfig()
         if value is not None:
@@ -96,14 +121,14 @@ def test_check_parameter_configuration_status(configurator, args_dict, tmp_test_
     assert args_dict == configurator.config
 
     # None value
-    configurator._check_parameter_configuration_status("config_file", None)
+    configurator._check_parameter_configuration_status("config", None)
     assert args_dict == configurator.config
 
     # parameter changed; should raise Exception
-    configurator.config["config_file"] = "non_default_config_file"
+    configurator.config["config"] = "non_default_config_file"
 
     with pytest.raises(InvalidConfigurationParameter):
-        configurator._check_parameter_configuration_status("config_file", "abc")
+        configurator._check_parameter_configuration_status("config", "abc")
 
 
 def test_arglistFromConfig():

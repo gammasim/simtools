@@ -42,6 +42,7 @@
 """
 
 import logging
+from pathlib import Path
 
 import simtools.configuration as configurator
 import simtools.util.general as gen
@@ -52,10 +53,11 @@ from simtools.model.telescope_model import TelescopeModel
 def main():
 
     config = configurator.Configurator(
+        label=Path(__file__).stem,
         description=(
             "Calculate the camera FoV of the telescope requested. "
             "Plot the camera, as seen for an observer facing the camera."
-        )
+        ),
     )
     config.parser.add_argument(
         "--cameraInSkyCoor",
