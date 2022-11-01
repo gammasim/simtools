@@ -113,7 +113,7 @@
     .. todo::
 
         * Change default model to default (after this feature is implemented in db_handler)
-        * Fix the setStyle. For some reason, sphinx cannot built docs with it on.
+        * Fix the set_style. For some reason, sphinx cannot built docs with it on.
 """
 
 import logging
@@ -234,11 +234,11 @@ def _define_telescope_model(label, args_dict, db_config):
         label=label,
     )
     if args_dict["mirror_list"] is not None:
-        mirrorListFile = gen.findFile(name=args_dict["mirror_list"], loc=args_dict["model_path"])
-        tel.changeParameter("mirror_list", args_dict["mirror_list"])
-        tel.addParameterFile("mirror_list", mirrorListFile)
+        mirrorListFile = gen.find_file(name=args_dict["mirror_list"], loc=args_dict["model_path"])
+        tel.change_parameter("mirror_list", args_dict["mirror_list"])
+        tel.add_parameter_file("mirror_list", mirrorListFile)
     if args_dict["random_flen"] is not None:
-        tel.changeParameter("random_focal_length", str(args_dict["random_flen"]))
+        tel.change_parameter("random_focal_length", str(args_dict["random_flen"]))
 
     return tel
 
@@ -334,7 +334,7 @@ def main():
     args_dict, db_config = _parse(label)
 
     logger = logging.getLogger()
-    logger.setLevel(gen.getLogLevelFromUser(args_dict["log_level"]))
+    logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
     tel = _define_telescope_model(label, args_dict, db_config)
 
@@ -346,8 +346,8 @@ def main():
 
     def run(rnda):
         """Runs the simulations for one given value of rnda"""
-        tel.changeParameter("mirror_reflection_random_angle", str(rnda))
-        ray = RayTracing.fromKwargs(
+        tel.change_parameter("mirror_reflection_random_angle", str(rnda))
+        ray = RayTracing.from_kwargs(
             telescopeModel=tel,
             singleMirrorMode=True,
             mirrorNumbers=list(range(1, 10)) if args_dict["test"] else "all",
@@ -358,15 +358,15 @@ def main():
         ray.analyze(force=True)
 
         return (
-            ray.getMean("d80_cm").to(u.cm).value,
-            ray.getStdDev("d80_cm").to(u.cm).value,
+            ray.get_mean("d80_cm").to(u.cm).value,
+            ray.get_std_dev("d80_cm").to(u.cm).value,
         )
 
     # First - rnda from previous model or from command line
     if args_dict["rnda"] != 0:
         rndaStart = args_dict["rnda"]
     else:
-        rndaStart = tel.getParameter("mirror_reflection_random_angle")["Value"]
+        rndaStart = tel.get_parameter("mirror_reflection_random_angle")["Value"]
         if isinstance(rndaStart, str):
             rndaStart = float(rndaStart.split()[0])
 
@@ -398,7 +398,7 @@ def main():
             collectResults(rnda, meanD80, sigD80)
 
         # Linear interpolation using two last rnda values
-        resultsRnda, resultsMean, resultsSig = gen.sortArrays(resultsRnda, resultsMean, resultsSig)
+        resultsRnda, resultsMean, resultsSig = gen.sort_arrays(resultsRnda, resultsMean, resultsSig)
         rndaOpt = np.interp(
             x=args_dict["psf_measurement_containment_mean"],
             xp=resultsMean,

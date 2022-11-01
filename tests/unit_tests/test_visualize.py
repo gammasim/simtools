@@ -15,7 +15,7 @@ logger.setLevel(logging.DEBUG)
 
 def test_plot_1D(db, io_handler):
 
-    logger.debug("Testing plot1D")
+    logger.debug("Testing plot_1D")
 
     xTitle = "Wavelength [nm]"
     yTitle = "Mirror reflectivity [%]"
@@ -23,13 +23,13 @@ def test_plot_1D(db, io_handler):
     title = "Test 1D plot"
 
     testFileName = "ref_200_1100_190211a.dat"
-    db.exportFileDB(
+    db.export_file_db(
         dbName=db.DB_CTA_SIMULATION_MODEL,
-        dest=io_handler.getOutputDirectory(dirType="model", test=True),
+        dest=io_handler.get_output_directory(dirType="model", test=True),
         fileName=testFileName,
     )
-    testDataFile = gen.findFile(
-        testFileName, io_handler.getOutputDirectory(dirType="model", test=True)
+    testDataFile = gen.find_file(
+        testFileName, io_handler.get_output_directory(dirType="model", test=True)
     )
     dataIn = np.loadtxt(testDataFile, usecols=(0, 1), dtype=headersType)
 
@@ -44,9 +44,9 @@ def test_plot_1D(db, io_handler):
         newData[yTitle] = newData[yTitle] * (1 - 0.1 * (i + 1))
         data["{}%% reflectivity".format(100 * (1 - 0.1 * (i + 1)))] = newData
 
-    plt = visualize.plot1D(data, title=title, palette="autumn")
+    plt = visualize.plot_1D(data, title=title, palette="autumn")
 
-    plotFile = io_handler.getOutputFile(fileName="plot_1D.pdf", dirType="plots", test=True)
+    plotFile = io_handler.get_output_file(fileName="plot_1D.pdf", dirType="plots", test=True)
     if plotFile.exists():
         plotFile.unlink()
     plt.savefig(plotFile)
@@ -58,24 +58,24 @@ def test_plot_1D(db, io_handler):
 
 def test_plot_table(db, io_handler):
 
-    logger.debug("Testing plotTable")
+    logger.debug("Testing plot_table")
 
     title = "Test plot table"
 
     testFileName = "Transmission_Spectrum_PlexiGlass.dat"
-    db.exportFileDB(
+    db.export_file_db(
         dbName="test-data",
-        dest=io_handler.getOutputDirectory(dirType="model", test=True),
+        dest=io_handler.get_output_directory(dirType="model", test=True),
         fileName=testFileName,
     )
-    tableFile = gen.findFile(
-        testFileName, io_handler.getOutputDirectory(dirType="model", test=True)
+    tableFile = gen.find_file(
+        testFileName, io_handler.get_output_directory(dirType="model", test=True)
     )
     table = astropy.io.ascii.read(tableFile)
 
-    plt = visualize.plotTable(table, yTitle="Transmission", title=title, noMarkers=True)
+    plt = visualize.plot_table(table, yTitle="Transmission", title=title, noMarkers=True)
 
-    plotFile = io_handler.getOutputFile(fileName="plot_table.pdf", dirType="plots", test=True)
+    plotFile = io_handler.get_output_file(fileName="plot_table.pdf", dirType="plots", test=True)
     if plotFile.exists():
         plotFile.unlink()
     plt.savefig(plotFile)
@@ -88,6 +88,6 @@ def test_plot_table(db, io_handler):
 def test_add_unit():
 
     valueWithUnit = [30, 40] << u.nm
-    assert visualize._addUnit("Wavelength", valueWithUnit) == "Wavelength [nm]"
+    assert visualize._add_unit("Wavelength", valueWithUnit) == "Wavelength [nm]"
     valueWithoutUnit = [30, 40]
-    assert visualize._addUnit("Wavelength", valueWithoutUnit) == "Wavelength"
+    assert visualize._add_unit("Wavelength", valueWithoutUnit) == "Wavelength"

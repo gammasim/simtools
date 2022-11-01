@@ -19,9 +19,9 @@ def test_input_validation(db_config, io_handler):
     }
     am = ArrayModel(label="test", arrayConfigData=arrayConfigData, mongoDBConfig=db_config)
 
-    am.printTelescopeList()
+    am.print_telescope_list()
 
-    assert am.numberOfTelescopes == 19
+    assert am.number_of_telescopes == 19
 
 
 def test_exporting_config_files(db_config, io_handler):
@@ -37,8 +37,8 @@ def test_exporting_config_files(db_config, io_handler):
     }
     am = ArrayModel(label="test", arrayConfigData=arrayConfigData, mongoDBConfig=db_config)
 
-    am.exportSimtelTelescopeConfigFiles()
-    am.exportSimtelArrayConfigFile()
+    am.export_simtel_telescope_config_files()
+    am.export_simtel_array_config_file()
 
     list_of_export_files = [
         "Aclylite8_tra_v2013ref.dat",
@@ -73,4 +73,4 @@ def test_exporting_config_files(db_config, io_handler):
     ]
 
     for modelfile in list_of_export_files:
-        assert Path(am.getConfigDirectory()).joinpath(modelfile).exists()
+        assert Path(am.get_config_directory()).joinpath(modelfile).exists()

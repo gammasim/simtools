@@ -110,7 +110,7 @@ class JobManager:
         if self.submitCommand.find("qsub") >= 0:
             self._submit_gridengine()
         elif self.submitCommand.find("condor_submit") >= 0:
-            self._submit_HTcondor()
+            self._submit_h_tcondor()
         elif self.submitCommand.find("local") >= 0:
             self._submit_local()
 
@@ -132,7 +132,7 @@ class JobManager:
         else:
             self._logger.info("Testing (local)")
 
-    def _submit_HTcondor(self):
+    def _submit_h_tcondor(self):
         """
         Submit a job described by a shell script to HTcondor
 

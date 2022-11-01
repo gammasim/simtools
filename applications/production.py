@@ -28,7 +28,7 @@
     task (str)
         What task to execute. Options:
             simulate (perform simulations),
-            filelist (print list of output files)
+            file_list (print list of output files)
             inspect (plot sim_telarray histograms for quick inspection)
             resources (print quicklook into used computational resources)
     array_only (activation mode)
@@ -90,13 +90,13 @@ def _parse(description=None):
         help=(
             "What task to execute. Options: "
             "simulate (perform simulations),"
-            "filelist (print list of output files),"
+            "file_list (print list of output files),"
             "inspect (plot sim_telarray histograms for quick inspection),"
             "resources (print report of computing resources)"
         ),
         type=str,
         required=True,
-        choices=["simulate", "filelist", "inspect", "resources"],
+        choices=["simulate", "file_list", "inspect", "resources"],
     )
     config.parser.add_argument(
         "--primary",
@@ -202,7 +202,7 @@ def main():
     args_dict, db_config = _parse(description=("Air shower and array simulations"))
 
     logger = logging.getLogger()
-    logger.setLevel(gen.getLogLevelFromUser(args_dict["log_level"]))
+    logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
     label, showerConfigs, arrayConfigs = _proccessSimulationConfigFile(
         args_dict["productionconfig"], args_dict["primary"], logger
@@ -238,7 +238,7 @@ def main():
                 mongoDBConfig=db_config,
             )
         for primary, array in arraySimulators.items():
-            inputList = showerSimulators[primary].getListOfOutputFiles()
+            inputList = showerSimulators[primary].get_list_of_output_files()
             _taskFunction = getattr(array, args_dict["task"])
             _taskFunction(inputFileList=inputList)
 

@@ -105,7 +105,7 @@ def main():
     args_dict, db_config = config.initialize(paths=False, db_config=True)
 
     logger = logging.getLogger()
-    logger.setLevel(gen.getLogLevelFromUser(args_dict["log_level"]))
+    logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
     db = db_handler.DatabaseHandler(mongoDBConfig=db_config)
 
@@ -136,7 +136,7 @@ def main():
     print()
     if _userConfirm():
         for fileToInsertNow in filesToInsert:
-            db.insertFileToDB(fileToInsertNow, args_dict["db"])
+            db.insert_file_to_db(fileToInsertNow, args_dict["db"])
             logger.info("File {} inserted to {} DB".format(fileToInsertNow, args_dict["db"]))
     else:
         logger.info("Aborted, did not insert file {} to the {} DB".format(plural, args_dict["db"]))

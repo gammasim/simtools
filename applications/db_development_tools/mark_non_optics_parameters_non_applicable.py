@@ -55,10 +55,10 @@ def main():
     )
 
     args = parser.parse_args()
-    cfg.setConfigFileName(args.configFile)
+    cfg.set_config_file_name(args.configFile)
 
     logger = logging.getLogger()
-    logger.setLevel(gen.getLogLevelFromUser(args.logLevel))
+    logger.setLevel(gen.get_log_level_from_user(args.logLevel))
 
     with open(args.sections, "r") as stream:
         parameterCatogeries = yaml.safe_load(stream)
@@ -95,7 +95,7 @@ def main():
     for versionNow in versions:
         for site in ["North", "South"]:
             for parNow in nonOpticParameters:
-                db.updateParameterField(
+                db.update_parameter_field(
                     dbName=db.DB_CTA_SIMULATION_MODEL,
                     telescope="{}-MST-Structure-D".format(site),
                     version=versionNow,
@@ -103,7 +103,7 @@ def main():
                     field="Applicable",
                     newValue=False,
                 )
-            pars = db.readMongoDB(
+            pars = db.read_mongo_db(
                 dbName=db.DB_CTA_SIMULATION_MODEL,
                 telescopeModelNameDB="{}-MST-Structure-D".format(site),
                 modelVersion=versionNow,

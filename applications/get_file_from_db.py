@@ -52,7 +52,7 @@ def main():
     args_dict, db_config = config.initialize(db_config=True)
 
     logger = logging.getLogger()
-    logger.setLevel(gen.getLogLevelFromUser(args_dict["log_level"]))
+    logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
     db = db_handler.DatabaseHandler(mongoDBConfig=db_config)
     availableDbs = [
@@ -68,7 +68,7 @@ def main():
     if args_dict["output_path"].exists():
         for dbName in availableDbs:
             try:
-                fileId = db.exportFileDB(dbName, args_dict["output_path"], args_dict["file_name"])
+                fileId = db.export_file_db(dbName, args_dict["output_path"], args_dict["file_name"])
                 logger.info(
                     "Got file {} from DB {} and saved into {}".format(
                         args_dict["file_name"], dbName, args_dict["output_path"]

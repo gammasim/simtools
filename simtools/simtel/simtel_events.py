@@ -20,7 +20,7 @@ class SimtelEvents:
 
     Methods
     -------
-    plotAndSaveFigures(figName)
+    plot_and_save_figures(figName)
         Plot all histograms and save a single pdf file.
 
 
@@ -42,11 +42,11 @@ class SimtelEvents:
             List of sim_telarray output files (str of Path).
         """
         self._logger = logging.getLogger(__name__)
-        self.loadInputFiles(inputFiles)
-        if self.numberOfFiles > 0:
-            self.loadHeaderAndSummary()
+        self.load_input_files(inputFiles)
+        if self.number_of_files > 0:
+            self.load_header_and_summary()
 
-    def loadInputFiles(self, files=None):
+    def load_input_files(self, files=None):
         """
         Store list of input files into inputFiles attribute.
 
@@ -71,17 +71,17 @@ class SimtelEvents:
         return
 
     @property
-    def numberOfFiles(self):
+    def number_of_files(self):
         """Number of files loaded."""
         return len(self.inputFiles) if hasattr(self, "inputFiles") else 0
 
-    def loadHeaderAndSummary(self):
+    def load_header_and_summary(self):
         """
         Read MC header from sim_telarray files and store it into _mcHeader.
         Also fills summaryEvents with energy and core radius of triggered events.
         """
 
-        self._numberOfFiles = len(self.inputFiles)
+        self._number_of_files = len(self.inputFiles)
         keysToGrab = [
             "obsheight",
             "n_showers",
@@ -139,13 +139,13 @@ class SimtelEvents:
 
         # Calculating number of events
         self._mcHeader["n_events"] = (
-            self._mcHeader["n_use"] * self._mcHeader["n_showers"] * self._numberOfFiles
+            self._mcHeader["n_use"] * self._mcHeader["n_showers"] * self._number_of_files
         )
         self._mcHeader["n_triggered"] = numberOfTriggeredEvents
         return
 
     @u.quantity_input(coreMax=u.m)
-    def countTriggeredEvents(self, energyRange=None, coreMax=None):
+    def count_triggered_events(self, energyRange=None, coreMax=None):
         """
         Count number of triggered events within a certain energy range and core radius.
 
@@ -161,8 +161,8 @@ class SimtelEvents:
         int
             Number of triggered events.
         """
-        energyRange = self._validateEnergyRange(energyRange)
-        coreMax = self._validateCoreMax(coreMax)
+        energyRange = self._validate_energy_range(energyRange)
+        coreMax = self._validate_core_max(coreMax)
 
         isInEnergyRange = list(
             map(
@@ -174,7 +174,7 @@ class SimtelEvents:
         return np.sum(np.array(isInEnergyRange) * np.array(isInCoreRange))
 
     @u.quantity_input(coreMax=u.m)
-    def selectEvents(self, energyRange=None, coreMax=None):
+    def select_events(self, energyRange=None, coreMax=None):
         """
         Select sim_telarray events within a certain energy range and core radius.
 
@@ -190,8 +190,8 @@ class SimtelEvents:
         list
             List of events.
         """
-        energyRange = self._validateEnergyRange(energyRange)
-        coreMax = self._validateCoreMax(coreMax)
+        energyRange = self._validate_energy_range(energyRange)
+        coreMax = self._validate_core_max(coreMax)
 
         selectedEvents = list()
         for file in self.inputFiles:
@@ -212,7 +212,7 @@ class SimtelEvents:
         return selectedEvents
 
     @u.quantity_input(coreMax=u.m)
-    def countSimulatedEvents(self, energyRange=None, coreMax=None):
+    def count_simulated_events(self, energyRange=None, coreMax=None):
         """
         Count (or calculate) number of simulated events within a certain energy range and \
         core radius, based on the simulated power law.
@@ -230,8 +230,8 @@ class SimtelEvents:
         int
             Number of simulated events.
         """
-        energyRange = self._validateEnergyRange(energyRange)
-        coreMax = self._validateCoreMax(coreMax)
+        energyRange = self._validate_energy_range(energyRange)
+        coreMax = self._validate_core_max(coreMax)
 
         # energy factor
         def integral(erange):
@@ -245,7 +245,7 @@ class SimtelEvents:
 
         return self._mcHeader["n_events"] * energy_factor * core_factor
 
-    def _validateEnergyRange(self, energyRange):
+    def _validate_energy_range(self, energyRange):
         """
         Returns the default energy range from mcHeader in case energyRange=None.
         Checks units, convert it to TeV and return it in the right format, otherwise.
@@ -265,7 +265,7 @@ class SimtelEvents:
             self._logger.error(msg)
             raise TypeError(msg)
 
-    def _validateCoreMax(self, coreMax):
+    def _validate_core_max(self, coreMax):
         """
         Returns the default coreMAx from mcHeader in case coreMax=None.
         Checks units, convert it to m and return it in the right format, otherwise.

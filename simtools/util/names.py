@@ -1,26 +1,26 @@
 import logging
 
 __all__ = [
-    "validateModelVersionName",
-    "validateSimtelModeName",
-    "validateSiteName",
-    "validateLayoutArrayName",
-    "validateTelescopeModelName",
-    "validateCameraName",
-    "convertTelescopeModelNameToYaml",
-    "splitTelescopeModelName",
-    "getSiteFromTelescopeName",
-    "rayTracingFileName",
-    "simtelTelescopeConfigFileName",
-    "simtelArrayConfigFileName",
-    "simtelSingleMirrorListFileName",
-    "corsikaConfigFileName",
-    "corsikaOutputFileName",
-    "corsikaSubLogFileName",
+    "validate_model_version_name",
+    "validate_simtel_mode_name",
+    "validate_site_name",
+    "validate_layout_array_name",
+    "validate_telescope_model_name",
+    "validate_camera_name",
+    "convert_telescope_model_name_to_yaml",
+    "split_telescope_model_name",
+    "get_site_from_telescope_name",
+    "ray_tracing_file_name",
+    "simtel_telescope_config_file_name",
+    "simtel_array_config_file_name",
+    "simtel_single_mirror_list_file_name",
+    "corsika_config_file_name",
+    "corsika_output_file_name",
+    "corsika_sub_log_file_name",
 ]
 
 
-def validateSubSystemName(name):
+def validate_sub_system_name(name):
     """
     Validate a sub system name (optics structure or camera)
 
@@ -38,10 +38,10 @@ def validateSubSystemName(name):
     str
         Validated name.
     """
-    return validateName(name, {**allCameraNames, **allStructureNames})
+    return validate_name(name, {**allCameraNames, **allStructureNames})
 
 
-def validateCameraName(name):
+def validate_camera_name(name):
     """
     Validate a camera name.
 
@@ -59,10 +59,10 @@ def validateCameraName(name):
     str
         Validated name.
     """
-    return validateName(name, allCameraNames)
+    return validate_name(name, allCameraNames)
 
 
-def validateTelescopeIDName(name):
+def validate_telescope_id_name(name):
     """
     Validate a telescope ID name
 
@@ -95,7 +95,7 @@ def validateTelescopeIDName(name):
     raise ValueError(msg)
 
 
-def validateModelVersionName(name):
+def validate_model_version_name(name):
     """
     Validate a model version name.
 
@@ -113,10 +113,10 @@ def validateModelVersionName(name):
     str
         Validated name.
     """
-    return validateName(name, allModelVersionNames)
+    return validate_name(name, allModelVersionNames)
 
 
-def validateSimtelModeName(name):
+def validate_simtel_mode_name(name):
     """
     Validate a sim_telarray mode name.
 
@@ -134,10 +134,10 @@ def validateSimtelModeName(name):
     str
         Validated name.
     """
-    return validateName(name, allSimtelModeNames)
+    return validate_name(name, allSimtelModeNames)
 
 
-def validateSiteName(name):
+def validate_site_name(name):
     """
     Validate a site name.
 
@@ -155,10 +155,10 @@ def validateSiteName(name):
     str
         Validated name.
     """
-    return validateName(name, allSiteNames)
+    return validate_name(name, allSiteNames)
 
 
-def validateLayoutArrayName(name):
+def validate_layout_array_name(name):
     """
     Validate a layout array name.
 
@@ -176,10 +176,10 @@ def validateLayoutArrayName(name):
     str
         Validated name.
     """
-    return validateName(name, allLayoutArrayNames)
+    return validate_name(name, allLayoutArrayNames)
 
 
-def validateName(name, allNames):
+def validate_name(name, allNames):
     """
     Validate a name given the allNames options. For each key in allNames, a list of options is
     given. If name is in this list, the key name is returned.
@@ -201,7 +201,7 @@ def validateName(name, allNames):
     """
     _logger = logging.getLogger(__name__)
 
-    if not isValidName(name, allNames):
+    if not is_valid_name(name, allNames):
         msg = "Invalid name {}".format(name)
         _logger.error(msg)
         raise ValueError(msg)
@@ -213,7 +213,7 @@ def validateName(name, allNames):
     return None
 
 
-def isValidName(name, allNames):
+def is_valid_name(name, allNames):
     """
     Parameters
     ----------
@@ -232,7 +232,7 @@ def isValidName(name, allNames):
     return False
 
 
-def validateTelescopeModelName(name):
+def validate_telescope_model_name(name):
     """
     Validate a telescope model name.
 
@@ -250,8 +250,8 @@ def validateTelescopeModelName(name):
     str
         Validated name.
     """
-    telClass, telType = splitTelescopeModelName(name)
-    telClass = validateName(telClass, allTelescopeClassNames)
+    telClass, telType = split_telescope_model_name(name)
+    telClass = validate_name(telClass, allTelescopeClassNames)
     if "flashcam" in telType:
         telType = telType.replace("flashcam", "FlashCam")
     if "nectarcam" in telType:
@@ -268,7 +268,7 @@ def validateTelescopeModelName(name):
     return telClass + "-" + telType
 
 
-def splitTelescopeModelName(name):
+def split_telescope_model_name(name):
     """
     Split a telescope name into class and type.
 
@@ -293,7 +293,7 @@ def splitTelescopeModelName(name):
     return telClass, telType
 
 
-def getSiteFromTelescopeName(name):
+def get_site_from_telescope_name(name):
     """
     Get site name (South or North) from the (validated) telescope name.
 
@@ -307,10 +307,10 @@ def getSiteFromTelescopeName(name):
     str
         Site name (South or North).
     """
-    return validateSiteName(name.split("-")[0])
+    return validate_site_name(name.split("-")[0])
 
 
-def validateTelescopeNameDB(name):
+def validate_telescope_name_db(name):
     """
     Validate a telescope DB name.
 
@@ -328,13 +328,13 @@ def validateTelescopeNameDB(name):
     str
         Validated name.
     """
-    site = getSiteFromTelescopeName(name)
+    site = get_site_from_telescope_name(name)
     telModelName = "-".join(name.split("-")[1:])
 
-    return f"{validateSiteName(site)}-{validateTelescopeModelName(telModelName)}"
+    return f"{validate_site_name(site)}-{validate_telescope_model_name(telModelName)}"
 
 
-def convertTelescopeModelNameToYaml(name):
+def convert_telescope_model_name_to_yaml(name):
     """
     Get telescope name following the old convention (yaml files) from the current telescope name.
 
@@ -348,7 +348,7 @@ def convertTelescopeModelNameToYaml(name):
     str
         Telescope name (old convention).
     """
-    telClass, telType = splitTelescopeModelName(name)
+    telClass, telType = split_telescope_model_name(name)
     newName = telClass + "-" + telType
     oldNames = {
         "SST-D": "SST",
@@ -435,7 +435,7 @@ allLayoutArrayNames = {
 }
 
 
-def simtoolsInstrumentName(site, telescopeClassName, subSystemName, telescopeIDName):
+def simtools_instrument_name(site, telescopeClassName, subSystemName, telescopeIDName):
     """
     Instrument name following gammasim-tools naming convention
 
@@ -459,17 +459,17 @@ def simtoolsInstrumentName(site, telescopeClassName, subSystemName, telescopeIDN
     """
 
     return (
-        validateSiteName(site)
+        validate_site_name(site)
         + "-"
-        + validateName(telescopeClassName, allTelescopeClassNames)
+        + validate_name(telescopeClassName, allTelescopeClassNames)
         + "-"
-        + validateSubSystemName(subSystemName)
+        + validate_sub_system_name(subSystemName)
         + "-"
-        + validateTelescopeIDName(telescopeIDName)
+        + validate_telescope_id_name(telescopeIDName)
     )
 
 
-def simtelTelescopeConfigFileName(site, telescopeModelName, modelVersion, label, extraLabel):
+def simtel_telescope_config_file_name(site, telescopeModelName, modelVersion, label, extra_label):
     """
     sim_telarray config file name for a telescope.
 
@@ -483,7 +483,7 @@ def simtelTelescopeConfigFileName(site, telescopeModelName, modelVersion, label,
         Version of the model.
     label: str
         Instance label.
-    extraLabel: str
+    extra_label: str
         Extra label in case of multiple telescope config files.
 
     Returns
@@ -493,12 +493,12 @@ def simtelTelescopeConfigFileName(site, telescopeModelName, modelVersion, label,
     """
     name = "CTA-{}-{}-{}".format(site, telescopeModelName, modelVersion)
     name += "_{}".format(label) if label is not None else ""
-    name += "_{}".format(extraLabel) if extraLabel is not None else ""
+    name += "_{}".format(extra_label) if extra_label is not None else ""
     name += ".cfg"
     return name
 
 
-def simtelArrayConfigFileName(arrayName, site, version, label):
+def simtel_array_config_file_name(arrayName, site, version, label):
     """
     sim_telarray config file name for an array.
 
@@ -524,7 +524,9 @@ def simtelArrayConfigFileName(arrayName, site, version, label):
     return name
 
 
-def simtelSingleMirrorListFileName(site, telescopeModelName, modelVersion, mirrorNumber, label):
+def simtel_single_mirror_list_file_name(
+    site, telescopeModelName, modelVersion, mirrorNumber, label
+):
     """
     sim_telarray mirror list file with a single mirror.
 
@@ -553,7 +555,7 @@ def simtelSingleMirrorListFileName(site, telescopeModelName, modelVersion, mirro
     return name
 
 
-def layoutTelescopeListFileName(name, label):
+def layout_telescope_list_file_name(name, label):
     """
     File name for files required at the RayTracing class.
 
@@ -575,7 +577,7 @@ def layoutTelescopeListFileName(name, label):
     return fileName
 
 
-def rayTracingFileName(
+def ray_tracing_file_name(
     site,
     telescopeModelName,
     sourceDistance,
@@ -621,7 +623,7 @@ def rayTracingFileName(
     return name
 
 
-def rayTracingResultsFileName(site, telescopeModelName, sourceDistance, zenithAngle, label):
+def ray_tracing_results_file_name(site, telescopeModelName, sourceDistance, zenithAngle, label):
     """
     Ray tracing results file name.
 
@@ -651,7 +653,7 @@ def rayTracingResultsFileName(site, telescopeModelName, sourceDistance, zenithAn
     return name
 
 
-def rayTracingPlotFileName(key, site, telescopeModelName, sourceDistance, zenithAngle, label):
+def ray_tracing_plot_file_name(key, site, telescopeModelName, sourceDistance, zenithAngle, label):
     """
     Ray tracing plot file name.
 
@@ -683,7 +685,7 @@ def rayTracingPlotFileName(key, site, telescopeModelName, sourceDistance, zenith
     return name
 
 
-def cameraEfficiencyResultsFileName(site, telescopeModelName, zenithAngle, label):
+def camera_efficiency_results_file_name(site, telescopeModelName, zenithAngle, label):
     """
     Camera efficiency results file name.
 
@@ -709,7 +711,7 @@ def cameraEfficiencyResultsFileName(site, telescopeModelName, zenithAngle, label
     return name
 
 
-def cameraEfficiencySimtelFileName(site, telescopeModelName, zenithAngle, label):
+def camera_efficiency_simtel_file_name(site, telescopeModelName, zenithAngle, label):
     """
     Camera efficiency simtel output file name.
 
@@ -735,7 +737,7 @@ def cameraEfficiencySimtelFileName(site, telescopeModelName, zenithAngle, label)
     return name
 
 
-def cameraEfficiencyLogFileName(site, telescopeModelName, zenithAngle, label):
+def camera_efficiency_log_file_name(site, telescopeModelName, zenithAngle, label):
     """
     Camera efficiency log file name.
 
@@ -761,7 +763,7 @@ def cameraEfficiencyLogFileName(site, telescopeModelName, zenithAngle, label):
     return name
 
 
-def corsikaConfigFileName(arrayName, site, primary, zenith, viewCone, label=None):
+def corsika_config_file_name(arrayName, site, primary, zenith, viewCone, label=None):
     """
     CORSIKA config file name.
 
@@ -795,7 +797,7 @@ def corsikaConfigFileName(arrayName, site, primary, zenith, viewCone, label=None
     return name
 
 
-def corsikaConfigTmpFileName(arrayName, site, primary, zenith, viewCone, run, label=None):
+def corsika_config_tmp_file_name(arrayName, site, primary, zenith, viewCone, run, label=None):
     """
     CORSIKA config file name.
 
@@ -832,7 +834,7 @@ def corsikaConfigTmpFileName(arrayName, site, primary, zenith, viewCone, run, la
     return name
 
 
-def corsikaOutputFileName(run, primary, arrayName, site, zenith, azimuth, label=None):
+def corsika_output_file_name(run, primary, arrayName, site, zenith, azimuth, label=None):
     """
     CORSIKA output file name.
 
@@ -868,7 +870,7 @@ def corsikaOutputFileName(run, primary, arrayName, site, zenith, azimuth, label=
     return name
 
 
-def corsikaOutputGenericFileName(arrayName, site, label=None):
+def corsika_output_generic_file_name(arrayName, site, label=None):
     name = "run${RUNNR}_${PRMNAME}_za${ZA}deg_azm${AZM}deg"
     name += "-{}-{}".format(site, arrayName)
     name += "_{}".format(label) if label is not None else ""
@@ -876,7 +878,7 @@ def corsikaOutputGenericFileName(arrayName, site, label=None):
     return name
 
 
-def corsikaRunScriptFileName(arrayName, site, primary, run, label=None):
+def corsika_run_script_file_name(arrayName, site, primary, run, label=None):
     """
     CORSIKA script file path.
 
@@ -902,7 +904,7 @@ def corsikaRunScriptFileName(arrayName, site, primary, run, label=None):
     return name
 
 
-def corsikaRunLogFileName(arrayName, site, primary, run, label=None):
+def corsika_run_log_file_name(arrayName, site, primary, run, label=None):
     """
     CORSIKA script file name.
 
@@ -930,7 +932,7 @@ def corsikaRunLogFileName(arrayName, site, primary, run, label=None):
     return name
 
 
-def corsikaSubLogFileName(arrayName, site, primary, run, mode, label=None):
+def corsika_sub_log_file_name(arrayName, site, primary, run, mode, label=None):
     """
     CORSIKA submission file name.
 
@@ -963,7 +965,7 @@ def corsikaSubLogFileName(arrayName, site, primary, run, mode, label=None):
     return name
 
 
-def simtelOutputFileName(run, primary, arrayName, site, zenith, azimuth, label=None):
+def simtel_output_file_name(run, primary, arrayName, site, zenith, azimuth, label=None):
     """
     sim_telarray output file name.
 
@@ -999,7 +1001,7 @@ def simtelOutputFileName(run, primary, arrayName, site, zenith, azimuth, label=N
     return name
 
 
-def simtelHistogramFileName(run, primary, arrayName, site, zenith, azimuth, label=None):
+def simtel_histogram_file_name(run, primary, arrayName, site, zenith, azimuth, label=None):
     """
     sim_telarray histogram file name.
 
@@ -1035,7 +1037,7 @@ def simtelHistogramFileName(run, primary, arrayName, site, zenith, azimuth, labe
     return name
 
 
-def simtelLogFileName(run, primary, arrayName, site, zenith, azimuth, label=None):
+def simtel_log_file_name(run, primary, arrayName, site, zenith, azimuth, label=None):
     """
     sim_telarray histogram file name.
 
@@ -1071,7 +1073,7 @@ def simtelLogFileName(run, primary, arrayName, site, zenith, azimuth, label=None
     return name
 
 
-def simtelSubLogFileName(run, primary, arrayName, site, zenith, azimuth, mode, label=None):
+def simtel_sub_log_file_name(run, primary, arrayName, site, zenith, azimuth, mode, label=None):
     """
     sim_telarray submission log file name.
 
