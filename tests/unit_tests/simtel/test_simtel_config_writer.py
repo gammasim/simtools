@@ -7,7 +7,7 @@ import pytest
 from simtools.layout.layout_array import LayoutArray
 from simtools.model.telescope_model import TelescopeModel
 from simtools.simtel.simtel_config_writer import SimtelConfigWriter
-from simtools.util.general import fileHasText
+from simtools.util.general import file_has_text
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
@@ -39,25 +39,25 @@ def simtelConfigWriter():
 
 @pytest.fixture
 def layout(io_handler):
-    layout = LayoutArray.fromLayoutArrayName("South-4LST")
+    layout = LayoutArray.from_layout_array_name("South-4LST")
     return layout
 
 
 # @pytest.mark.skip(reason="TODO :test_write_array_config_file - KeyError: 'Current'")
 def test_write_array_config_file(simtelConfigWriter, layout, telescopeModel, io_handler):
-    file = io_handler.getOutputFile(fileName="simtel-config-writer_array.txt", test=True)
-    simtelConfigWriter.writeArrayConfigFile(
+    file = io_handler.get_output_file(fileName="simtel-config-writer_array.txt", test=True)
+    simtelConfigWriter.write_array_config_file(
         configFilePath=file,
         layout=layout,
         telescopeModel=[telescopeModel] * 4,
         siteParameters={},
     )
-    assert fileHasText(file, "TELESCOPE == 1")
+    assert file_has_text(file, "TELESCOPE == 1")
 
 
 def test_write_tel_config_file(simtelConfigWriter, io_handler):
-    file = io_handler.getOutputFile(fileName="simtel-config-writer_telescope.txt", test=True)
-    simtelConfigWriter.writeTelescopeConfigFile(
+    file = io_handler.get_output_file(fileName="simtel-config-writer_telescope.txt", test=True)
+    simtelConfigWriter.write_telescope_config_file(
         configFilePath=file, parameters={"par": {"Value": 1}}
     )
-    assert fileHasText(file, "par = 1")
+    assert file_has_text(file, "par = 1")

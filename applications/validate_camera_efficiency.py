@@ -40,7 +40,7 @@
     .. todo::
 
         * Change default model to default (after this feature is implemented in db_handler)
-        * Fix the setStyle. For some reason, sphinx cannot built docs with it on.
+        * Fix the set_style. For some reason, sphinx cannot built docs with it on.
 """
 
 import logging
@@ -74,11 +74,11 @@ def main():
     args_dict, _db_config = _parse(label)
 
     logger = logging.getLogger()
-    logger.setLevel(gen.getLogLevelFromUser(args_dict["log_level"]))
+    logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
     # Output directory to save files related directly to this app
     _io_handler = io_handler.IOHandler()
-    outputDir = _io_handler.getOutputDirectory(label, dirType="application-plots")
+    outputDir = _io_handler.get_output_directory(label, dirType="application-plots")
 
     telModel = TelescopeModel(
         site=args_dict["site"],
@@ -89,7 +89,7 @@ def main():
     )
 
     # For debugging purposes
-    telModel.exportConfigFile()
+    telModel.export_config_file()
 
     logger.info("Validating the camera efficiency of {}".format(telModel.name))
 
@@ -101,7 +101,7 @@ def main():
     ce.analyze(force=True)
 
     # Plotting the camera efficiency for Cherenkov light
-    fig = ce.plotCherenkovEfficiency()
+    fig = ce.plot_cherenkov_efficiency()
     cherenkovPlotFileName = label + "_" + telModel.name + "_cherenkov"
     cherenkovPlotFile = outputDir.joinpath(cherenkovPlotFileName)
     for f in ["pdf", "png"]:
@@ -110,7 +110,7 @@ def main():
     fig.clf()
 
     # Plotting the camera efficiency for NSB light
-    fig = ce.plotNSBEfficiency()
+    fig = ce.plot_nsb_efficiency()
     nsbPlotFileName = label + "_" + telModel.name + "_nsb"
     nsbPlotFile = outputDir.joinpath(nsbPlotFileName)
     for f in ["pdf", "png"]:

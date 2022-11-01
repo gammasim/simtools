@@ -27,10 +27,10 @@ def main():
     parser.initialize_default_arguments(add_workflow_config=False)
 
     args = parser.parse_args()
-    cfg.setConfigFileName(args.configFile)
+    cfg.set_config_file_name(args.configFile)
 
     logger = logging.getLogger()
-    logger.setLevel(gen.getLogLevelFromUser(args.logLevel))
+    logger.setLevel(gen.get_log_level_from_user(args.logLevel))
 
     # epsgs = [32628, 32719]
     parameter = {"camera_filter_incidence_angle": "sst_photon_incidence_angle_camera_window.ecsv"}
@@ -45,15 +45,15 @@ def main():
 
     for telescopeNow in telescopes:
         for parNow, parValue in parameter.items():
-            allVersions = db.getAllVersions(
+            allVersions = db.get_all_versions(
                 dbName=db.DB_CTA_SIMULATION_MODEL,
                 telescopeModelName="-".join(telescopeNow.split("-")[1:]),
-                site=names.getSiteFromTelescopeName(telescopeNow),
+                site=names.get_site_from_telescope_name(telescopeNow),
                 parameter="camera_config_file",  # Just a random parameter to get the versions
                 collectionName="telescopes",
             )
             for versionNow in allVersions:
-                db.addNewParameter(
+                db.add_new_parameter(
                     dbName=db.DB_CTA_SIMULATION_MODEL,
                     telescope=telescopeNow,
                     parameter=parNow,
@@ -65,7 +65,7 @@ def main():
                     File=True,
                     filePrefix="./",
                 )
-                pars = db.readMongoDB(
+                pars = db.read_mongo_db(
                     dbName=db.DB_CTA_SIMULATION_MODEL,
                     telescopeModelNameDB=telescopeNow,
                     modelVersion=versionNow,

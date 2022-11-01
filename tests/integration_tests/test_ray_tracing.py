@@ -71,7 +71,7 @@ def test_rx(db_config, simtelpath_no_mock, io_handler):
     ray.plot("d80_deg", marker="o", linestyle=":")
     ray_rx.plot("d80_deg", marker="s", linestyle="--")
 
-    plotFilePSF = io_handler.getOutputFile(fileName="d80_test_rx.pdf", dirType="plots", test=True)
+    plotFilePSF = io_handler.get_output_file(fileName="d80_test_rx.pdf", dirType="plots", test=True)
     plt.savefig(plotFilePSF)
 
     # Plotting effArea
@@ -83,7 +83,7 @@ def test_rx(db_config, simtelpath_no_mock, io_handler):
     ray.plot("eff_area", marker="o", linestyle=":")
     ray_rx.plot("d80_deg", marker="s", linestyle="--")
 
-    plotFileArea = io_handler.getOutputFile(
+    plotFileArea = io_handler.get_output_file(
         fileName="effArea_test_rx.pdf", dirType="plots", test=True
     )
     plt.savefig(plotFileArea)
@@ -117,8 +117,8 @@ def test_plot_image(db_config, simtelpath_no_mock, io_handler):
         ax = plt.gca()
         ax.set_xlabel("X [cm]")
         ax.set_ylabel("Y [cm]")
-        image.plotImage(psf_color="b")
-        plotFile = io_handler.getOutputFile(
+        image.plot_image(psf_color="b")
+        plotFile = io_handler.get_output_file(
             fileName="test_plot_image_{}.pdf".format(ii), dirType="plots", test=True
         )
         plt.savefig(plotFile)
@@ -147,8 +147,8 @@ def test_single_mirror(db_config, simtelpath_no_mock, io_handler, plot=False):
     ax = plt.gca()
     ax.set_xlabel("d80")
 
-    ray.plotHistogram("d80_cm", color="r", bins=10)
-    plotFile = io_handler.getOutputFile(fileName="d80_hist_test.pdf", dirType="plots", test=True)
+    ray.plot_histogram("d80_cm", color="r", bins=10)
+    plotFile = io_handler.get_output_file(fileName="d80_hist_test.pdf", dirType="plots", test=True)
     plt.savefig(plotFile)
 
 
@@ -181,8 +181,8 @@ def test_integral_curve(db_config, simtelpath_no_mock, io_handler):
     ax.set_xlabel("radius [cm]")
     ax.set_ylabel("relative intensity")
     for im in ray.images():
-        im.plotCumulative(color="b")
-    plotFile = io_handler.getOutputFile(
+        im.plot_cumulative(color="b")
+    plotFile = io_handler.get_output_file(
         fileName="test_cumulative_psf.pdf", dirType="plots", test=True
     )
     plt.savefig(plotFile)

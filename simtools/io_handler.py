@@ -35,7 +35,7 @@ class IOHandler(metaclass=IOHandlerSingleton):
         self.data_path = None
         self.model_path = None
 
-    def setPaths(self, output_path=None, data_path=None, model_path=None):
+    def set_paths(self, output_path=None, data_path=None, model_path=None):
         """
         Set paths for input and output.
 
@@ -53,7 +53,7 @@ class IOHandler(metaclass=IOHandlerSingleton):
         self.data_path = data_path
         self.model_path = model_path
 
-    def getOutputDirectory(self, label=None, dirType=None, test=False):
+    def get_output_directory(self, label=None, dirType=None, test=False):
         """
         Get the output directory for the directory type dirType
 
@@ -89,7 +89,7 @@ class IOHandler(metaclass=IOHandlerSingleton):
 
         return path.absolute()
 
-    def getOutputFile(self, fileName, label=None, dirType=None, test=False):
+    def get_output_file(self, fileName, label=None, dirType=None, test=False):
         """
         Get path of an output file.
 
@@ -109,12 +109,12 @@ class IOHandler(metaclass=IOHandlerSingleton):
         Path
         """
         return (
-            self.getOutputDirectory(label=label, dirType=dirType, test=test)
+            self.get_output_directory(label=label, dirType=dirType, test=test)
             .joinpath(fileName)
             .absolute()
         )
 
-    def getInputDataFile(self, parentDir=None, fileName=None, test=False):
+    def get_input_data_file(self, parentDir=None, fileName=None, test=False):
         """
         Get path of a data file, using data_path
 

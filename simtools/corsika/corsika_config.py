@@ -9,7 +9,7 @@ import simtools.util.general as gen
 from simtools import io_handler
 from simtools.layout.layout_array import LayoutArray
 from simtools.util import names
-from simtools.util.general import collectDataFromYamlOrDict
+from simtools.util.general import collect_data_from_yaml_or_dict
 
 __all__ = [
     "CorsikaConfig",
@@ -66,19 +66,19 @@ class CorsikaConfig:
 
     Methods
     -------
-    setUserParameters(corsikaConfigData)
+    set_user_parameters(corsikaConfigData)
         Set user parameters from a dict.
-    getUserParameter(parName)
+    get_user_parameter(parName)
         Get the value of a user parameter.
-    printUserParameters()
+    print_user_parameters()
         Print user parameters for inspection.
-    getOutputFileName(runNumber)
+    get_output_file_name(runNumber)
         Get the name of the CORSIKA output file for a certain run.
-    exportInputFile()
+    export_input_file()
         Create and export CORSIKA input file.
-    getInputFile()
+    get_input_file()
         Get the full path of the CORSIKA input file.
-    getInputFileNameForRun(runNumber)
+    get_input_file_name_for_run(runNumber)
         Get the CORSIKA input file for one specific run.
         This is the input file after being pre-processed by sim_telarray (pfp).
     """
@@ -117,22 +117,22 @@ class CorsikaConfig:
         self._logger.debug("Init CorsikaConfig")
 
         self.label = label
-        self.site = names.validateSiteName(site)
+        self.site = names.validate_site_name(site)
 
         self.io_handler = io_handler.IOHandler()
 
         # Grabbing layout name and building LayoutArray
-        self.layoutName = names.validateLayoutArrayName(layoutName)
-        self.layout = LayoutArray.fromLayoutArrayName(
+        self.layoutName = names.validate_layout_array_name(layoutName)
+        self.layout = LayoutArray.from_layout_array_name(
             self.site + "-" + self.layoutName, label=self.label
         )
 
         # Load parameters
-        self._loadCorsikaParametersFile(corsikaParametersFile)
+        self._load_corsika_parameters_file(corsikaParametersFile)
 
-        corsikaConfigData = collectDataFromYamlOrDict(corsikaConfigFile, corsikaConfigData)
-        self.setUserParameters(corsikaConfigData)
-        self._isFileUpdated = False
+        corsikaConfigData = collect_data_from_yaml_or_dict(corsikaConfigFile, corsikaConfigData)
+        self.set_user_parameters(corsikaConfigData)
+        self._is_fileUpdated = False
 
     def __repr__(self):
         text = "<class {}> (site={}, layout={}, label={})".format(
@@ -140,7 +140,7 @@ class CorsikaConfig:
         )
         return text
 
-    def _loadCorsikaParametersFile(self, filename):
+    def _load_corsika_parameters_file(self, filename):
         """
         Load CORSIKA parameters from a given file (filename not None),
         or from the default parameter file provided in the
@@ -151,7 +151,7 @@ class CorsikaConfig:
             self._corsikaParametersFile = filename
         else:
             # Default file from data directory.
-            self._corsikaParametersFile = self.io_handler.getInputDataFile(
+            self._corsikaParametersFile = self.io_handler.get_input_data_file(
                 "corsika", "corsika_parameters.yml"
             )
         self._logger.debug(
@@ -160,7 +160,7 @@ class CorsikaConfig:
         with open(self._corsikaParametersFile, "r") as f:
             self._corsikaParameters = yaml.load(f)
 
-    def setUserParameters(self, corsikaConfigData):
+    def set_user_parameters(self, corsikaConfigData):
         """
         Set user parameters from a dict.
 
@@ -204,7 +204,9 @@ class CorsikaConfig:
                 if keyArgs.upper() != parName and keyArgs.upper() not in parInfo["names"]:
                     continue
                 # Matched parameter
-                validatedValueArgs = self._validateAndConvertArgument(parName, parInfo, valueArgs)
+                validatedValueArgs = self._validate_and_convert_argument(
+                    parName, parInfo, valueArgs
+                )
                 self._userParameters[parName] = validatedValueArgs
                 isIdentified = True
 
@@ -220,7 +222,7 @@ class CorsikaConfig:
             if parName in self._userParameters:
                 continue
             elif "default" in parInfo.keys():
-                validatedValue = self._validateAndConvertArgument(
+                validatedValue = self._validate_and_convert_argument(
                     parName, parInfo, parInfo["default"]
                 )
                 self._userParameters[parName] = validatedValue
@@ -235,16 +237,16 @@ class CorsikaConfig:
         phip = phip - 360.0 if phip >= 360.0 else phip
         self._userParameters["PHIP"] = [phip, phip]
 
-        self._isFileUpdated = False
+        self._is_fileUpdated = False
 
-    def _validateAndConvertArgument(self, parName, parInfo, valueArgsIn):
+    def _validate_and_convert_argument(self, parName, parInfo, valueArgsIn):
         """
         Validate input user parameter and convert it to the right units, if needed.
         Returns the validated arguments in a list.
         """
 
         # Turning valueArgs into a list, if it is not.
-        valueArgs = gen.copyAsList(valueArgsIn)
+        valueArgs = gen.copy_as_list(valueArgsIn)
 
         if len(valueArgs) == 1 and parName in ["THETAP", "AZM"]:
             # Fixing single value zenith or azimuth angle.
@@ -255,7 +257,7 @@ class CorsikaConfig:
             # VIEWCONE should be written as a 2 values range in the CORSIKA input file
             valueArgs = [0 * parInfo["unit"][0], valueArgs[0]]
         elif parName == "PRMPAR":
-            valueArgs = self._convertPrimaryInputAndStorePrimaryName(valueArgs)
+            valueArgs = self._convert_primary_input_and_store_primary_name(valueArgs)
 
         if len(valueArgs) != parInfo["len"]:
             msg = "CORSIKA input entry with wrong len: {}".format(parName)
@@ -266,7 +268,7 @@ class CorsikaConfig:
             return valueArgs
         else:
             # Turning parInfo['unit'] into a list, if it is not.
-            parUnit = gen.copyAsList(parInfo["unit"])
+            parUnit = gen.copy_as_list(parInfo["unit"])
 
             # Checking units and converting them, if needed.
             valueArgsWithUnits = list()
@@ -291,7 +293,7 @@ class CorsikaConfig:
 
             return valueArgsWithUnits
 
-    def _convertPrimaryInputAndStorePrimaryName(self, value):
+    def _convert_primary_input_and_store_primary_name(self, value):
         """
         Convert a primary name into the proper CORSIKA particle ID and store \
         its name in self.primary attribute.
@@ -319,7 +321,7 @@ class CorsikaConfig:
         self._logger.error(msg)
         raise InvalidCorsikaInput(msg)
 
-    def getUserParameter(self, parName):
+    def get_user_parameter(self, parName):
         """
         Get the value of a user parameter.
 
@@ -346,12 +348,12 @@ class CorsikaConfig:
 
         return parValue if len(parValue) > 1 else parValue[0]
 
-    def printUserParameters(self):
+    def print_user_parameters(self):
         """Print user parameters for inspection."""
         for par, value in self._userParameters.items():
             print("{} = {}".format(par, value))
 
-    def getOutputFileName(self, runNumber):
+    def get_output_file_name(self, runNumber):
         """
         Get the name of the CORSIKA output file for a certain run.
 
@@ -365,7 +367,7 @@ class CorsikaConfig:
         str:
             Name of the output CORSIKA file.
         """
-        return names.corsikaOutputFileName(
+        return names.corsika_output_file_name(
             runNumber,
             self.primary,
             self.layoutName,
@@ -375,9 +377,9 @@ class CorsikaConfig:
             self.label,
         )
 
-    def exportInputFile(self):
+    def export_input_file(self):
         """Create and export CORSIKA input file."""
-        self._setOutputFileAndDirectory()
+        self._set_output_file_and_directory()
         self._logger.debug("Exporting CORSIKA input file to {}".format(self._configFilePath))
 
         def _getTextSingleLine(pars):
@@ -419,10 +421,10 @@ class CorsikaConfig:
             file.write("IACT setenv AZM {}\n".format(int(self._userParameters["AZM"][0])))
 
             file.write("\n* [ SEEDS ]\n")
-            self._writeSeeds(file)
+            self._write_seeds(file)
 
             file.write("\n* [ TELESCOPES ]\n")
-            telescopeListText = self.layout.getCorsikaInputList()
+            telescopeListText = self.layout.get_corsika_input_list()
             file.write(telescopeListText)
 
             file.write("\n* [ INTERACTION FLAGS ]\n")
@@ -450,10 +452,10 @@ class CorsikaConfig:
 
             file.write("\nEXIT")
 
-        self._isFileUpdated = True
+        self._is_fileUpdated = True
 
-    def _setOutputFileAndDirectory(self):
-        configFileName = names.corsikaConfigFileName(
+    def _set_output_file_and_directory(self):
+        configFileName = names.corsika_config_file_name(
             arrayName=self.layoutName,
             site=self.site,
             primary=self.primary,
@@ -461,16 +463,16 @@ class CorsikaConfig:
             viewCone=self._userParameters["VIEWCONE"],
             label=self.label,
         )
-        fileDirectory = self.io_handler.getOutputDirectory(label=self.label, dirType="corsika")
+        fileDirectory = self.io_handler.get_output_directory(label=self.label, dirType="corsika")
         fileDirectory.mkdir(parents=True, exist_ok=True)
         self._logger.info("Creating directory {}, if needed.".format(fileDirectory))
         self._configFilePath = fileDirectory.joinpath(configFileName)
 
-        self._outputGenericFileName = names.corsikaOutputGenericFileName(
+        self._outputGenericFileName = names.corsika_output_generic_file_name(
             arrayName=self.layoutName, site=self.site, label=self.label
         )
 
-    def _writeSeeds(self, file):
+    def _write_seeds(self, file):
         """
         Generate and write seeds in the CORSIKA input file.
 
@@ -486,7 +488,7 @@ class CorsikaConfig:
         for s in corsikaSeeds:
             file.write("SEED {} 0 0\n".format(s))
 
-    def getInputFile(self):
+    def get_input_file(self):
         """
         Get the full path of the CORSIKA input file.
 
@@ -495,11 +497,11 @@ class CorsikaConfig:
         Path:
             Full path of the CORSIKA input file.
         """
-        if not self._isFileUpdated:
-            self.exportInputFile()
+        if not self._is_fileUpdated:
+            self.export_input_file()
         return self._configFilePath
 
-    def getInputFileNameForRun(self, runNumber):
+    def get_input_file_name_for_run(self, runNumber):
         """
         Get the CORSIKA input file for one specific run.
         This is the input file after being pre-processed by sim_telarray (pfp).
@@ -514,7 +516,7 @@ class CorsikaConfig:
         str:
             Name of the input file.
         """
-        return names.corsikaConfigTmpFileName(
+        return names.corsika_config_tmp_file_name(
             arrayName=self.layoutName,
             site=self.site,
             primary=self.primary,

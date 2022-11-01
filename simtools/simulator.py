@@ -88,21 +88,21 @@ class Simulator:
         Run simulation.
     simulate(inputFileList, submitCommand=None, extraCommands=None, test=False):
         Submit a run script as a job.
-    printHistograms():
+    print_histograms():
         Print histograms and save a pdf file.
     printOutputFiles():
         Print list of output files of simulation run.
-    getListOfOutputFiles():
+    get_list_of_output_files():
         Get list of output files.
-    getListOfInputFiles():
+    get_list_of_input_files():
         Get list of input files.
-    getListOfLogFiles():
+    get_list_of_log_files():
         Get list of log files.
-    printListOfOutputFiles():
+    print_list_of_output_files():
         Print list of output files.
-    printListOfInputFiles():
+    print_list_of_input_files():
         Print list of output files.
-    printListOfLogFiles():
+    print_list_of_log_files():
         Print list of log files.
     """
 
@@ -147,23 +147,23 @@ class Simulator:
         self._logger.debug("Init Simulator {}".format(simulator))
 
         self.label = label
-        self._setSimulator(simulator)
+        self._set_simulator(simulator)
         self.runs = list()
         self._results = defaultdict(list)
         self.test = test
 
         self.io_handler = io_handler.IOHandler()
-        self._outputDirectory = self.io_handler.getOutputDirectory(self.label, self.simulator)
+        self._outputDirectory = self.io_handler.get_output_directory(self.label, self.simulator)
         self._simulatorSourcePath = Path(simulatorSourcePath)
         self._submitCommand = submitCommand
         self._extraCommands = extraCommands
         self._mongoDBConfig = mongoDBConfig
 
-        self._loadConfigurationAndSimulationModel(configData, configFile)
+        self._load_configuration_and_simulation_model(configData, configFile)
 
-        self._setSimulationRunner()
+        self._set_simulation_runner()
 
-    def _setSimulator(self, simulator):
+    def _set_simulator(self, simulator):
         """
         Set and test simulator type
 
@@ -182,7 +182,7 @@ class Simulator:
             raise gen.InvalidConfigData
         self.simulator = simulator.lower()
 
-    def _loadConfigurationAndSimulationModel(self, configData=None, configFile=None):
+    def _load_configuration_and_simulation_model(self, configData=None, configFile=None):
         """
         Load configuration data and initialize simulation models.
 
@@ -194,13 +194,13 @@ class Simulator:
             Path to yaml file containing configurable data.
 
         """
-        configData = gen.collectDataFromYamlOrDict(configFile, configData)
+        configData = gen.collect_data_from_yaml_or_dict(configFile, configData)
         if self.simulator == "simtel":
-            self._loadSimTelConfigAndModel(configData)
+            self._load_sim_tel_config_and_model(configData)
         elif self.simulator == "corsika":
-            self._loadCorsikaConfigAndModel(configData)
+            self._load_corsika_config_and_model(configData)
 
-    def _loadCorsikaConfigAndModel(self, configData):
+    def _load_corsika_config_and_model(self, configData):
         """
         Validate configuration data for CORSIKA shower simulation and
         remove entries need needed for CorsikaRunner.
@@ -215,22 +215,22 @@ class Simulator:
         self._corsikaConfigData = copy(configData)
 
         try:
-            self.site = names.validateSiteName(self._corsikaConfigData.pop("site"))
-            self.layoutName = names.validateLayoutArrayName(
+            self.site = names.validate_site_name(self._corsikaConfigData.pop("site"))
+            self.layoutName = names.validate_layout_array_name(
                 self._corsikaConfigData.pop("layoutName")
             )
         except KeyError:
             self._logger.error("Missing parameter in simulation configuration data")
             raise
 
-        self.runs = self._validateRunListAndRange(
+        self.runs = self._validate_run_list_and_range(
             self._corsikaConfigData.pop("runList", None),
             self._corsikaConfigData.pop("runRange", None),
         )
 
         self._corsikaParametersFile = self._corsikaConfigData.pop("corsikaParametersFile", None)
 
-    def _loadSimTelConfigAndModel(self, configData):
+    def _load_sim_tel_config_and_model(self, configData):
         """
         Load array model and configuration parameters for array simulations
 
@@ -240,13 +240,13 @@ class Simulator:
             Dict with simulator configuration data.
 
         """
-        _arrayModelConfig, _restConfig = self._collectArrayModelParameters(configData)
+        _arrayModelConfig, _restConfig = self._collect_array_model_parameters(configData)
 
-        _parameterFile = self.io_handler.getInputDataFile(
+        _parameterFile = self.io_handler.get_input_data_file(
             "parameters", "array-simulator_parameters.yml"
         )
-        _parameters = gen.collectDataFromYamlOrDict(_parameterFile, None)
-        self.config = gen.validateConfigData(_restConfig, _parameters)
+        _parameters = gen.collect_data_from_yaml_or_dict(_parameterFile, None)
+        self.config = gen.validate_config_data(_restConfig, _parameters)
 
         self.arrayModel = ArrayModel(
             label=self.label,
@@ -254,7 +254,7 @@ class Simulator:
             mongoDBConfig=self._mongoDBConfig,
         )
 
-    def _validateRunListAndRange(self, runList, runRange):
+    def _validate_run_list_and_range(self, runList, runRange):
         """
         Prepares list of run numbers from a list or from a range.
         If both arguments are given, they will be merged into a single list.
@@ -299,7 +299,7 @@ class Simulator:
         validatedRunsUnique = sorted(set(validatedRuns))
         return list(validatedRunsUnique)
 
-    def _collectArrayModelParameters(self, configData):
+    def _collect_array_model_parameters(self, configData):
         """
         Separate configuration and model parameters from configuration data.
 
@@ -313,8 +313,8 @@ class Simulator:
         _restData = copy(configData)
 
         try:
-            _arrayModelData["site"] = names.validateSiteName(_restData.pop("site"))
-            _arrayModelData["layoutName"] = names.validateLayoutArrayName(
+            _arrayModelData["site"] = names.validate_site_name(_restData.pop("site"))
+            _arrayModelData["layoutName"] = names.validate_layout_array_name(
                 _restData.pop("layoutName")
             )
             _arrayModelData["modelVersion"] = _restData.pop("modelVersion")
@@ -330,17 +330,17 @@ class Simulator:
 
         return _arrayModelData, _restData
 
-    def _setSimulationRunner(self):
+    def _set_simulation_runner(self):
         """
         Set simulation runners
 
         """
         if self.simulator == "simtel":
-            self._setSimtelRunner()
+            self._set_simtel_runner()
         elif self.simulator == "corsika":
-            self._setCorsikaRunner()
+            self._set_corsika_runner()
 
-    def _setCorsikaRunner(self):
+    def _set_corsika_runner(self):
         """
         Creating CorsikaRunner.
 
@@ -354,7 +354,7 @@ class Simulator:
             corsikaConfigData=self._corsikaConfigData,
         )
 
-    def _setSimtelRunner(self):
+    def _set_simtel_runner(self):
         """
         Creating a SimtelRunnerArray.
 
@@ -371,7 +371,7 @@ class Simulator:
             },
         )
 
-    def _fillResultsWithoutRun(self, inputFileList):
+    def _fill_results_without_run(self, inputFileList):
         """
         Fill in the results dict without calling submit.
 
@@ -381,11 +381,11 @@ class Simulator:
             Single file or list of files of shower simulations.
 
         """
-        inputFileList = self._enforceListType(inputFileList)
+        inputFileList = self._enforce_list_type(inputFileList)
 
         for file in inputFileList:
-            run = self._guessRunFromFile(file)
-            self._fillResults(file, run)
+            run = self._guess_run_from_file(file)
+            self._fill_results(file, run)
             self.runs.append(run)
 
     def simulate(self, inputFileList=None):
@@ -401,24 +401,24 @@ class Simulator:
 
         self._logger.info("Submission command: {}".format(self._submitCommand))
 
-        runs_and_files_to_submit = self._getRunsAndFilesToSubmit(inputFileList=inputFileList)
+        runs_and_files_to_submit = self._get_runs_and_files_to_submit(inputFileList=inputFileList)
         self._logger.info("Starting submission for {} runs".format(len(runs_and_files_to_submit)))
 
         for run, file in runs_and_files_to_submit.items():
 
-            runScript = self._simulationRunner.getRunScript(
+            runScript = self._simulationRunner.get_run_script(
                 runNumber=run, inputFile=file, extraCommands=self._extraCommands
             )
 
             job_manager = JobManager(submitCommand=self._submitCommand, test=self.test)
             job_manager.submit(
                 run_script=runScript,
-                run_out_file=self._simulationRunner.getSubLogFile(runNumber=run, mode=""),
+                run_out_file=self._simulationRunner.get_sub_log_file(runNumber=run, mode=""),
             )
 
-            self._fillResults(file, run)
+            self._fill_results(file, run)
 
-    def filelist(self, inputFileList=None):
+    def file_list(self, inputFileList=None):
         """
         List output files obtained with simulation run
 
@@ -429,17 +429,17 @@ class Simulator:
 
         """
 
-        runs_and_files_to_submit = self._getRunsAndFilesToSubmit(inputFileList=inputFileList)
+        runs_and_files_to_submit = self._get_runs_and_files_to_submit(inputFileList=inputFileList)
 
         for run, _ in runs_and_files_to_submit.items():
             print(
                 "{} (file exists: {})".format(
-                    str(self._simulationRunner.getOutputFile(run)),
-                    Path.exists(self._simulationRunner.getOutputFile(run)),
+                    str(self._simulationRunner.get_output_file(run)),
+                    Path.exists(self._simulationRunner.get_output_file(run)),
                 )
             )
 
-    def _getRunsAndFilesToSubmit(self, inputFileList=None):
+    def _get_runs_and_files_to_submit(self, inputFileList=None):
         """
         Return a dictionary with run numbers and (if applicable) simulation
         files. The latter are expected to be given for the simtel simulator.
@@ -460,18 +460,18 @@ class Simulator:
         _runs_and_files = {}
 
         if self.simulator == "simtel":
-            _file_list = self._enforceListType(inputFileList)
+            _file_list = self._enforce_list_type(inputFileList)
             for file in _file_list:
-                _runs_and_files[self._guessRunFromFile(file)] = file
+                _runs_and_files[self._guess_run_from_file(file)] = file
         elif self.simulator == "corsika":
-            _run_list = self._getRunsToSimulate()
+            _run_list = self._get_runs_to_simulate()
             for run in _run_list:
                 _runs_and_files[run] = None
 
         return _runs_and_files
 
     @staticmethod
-    def _enforceListType(inputFileList):
+    def _enforce_list_type(inputFileList):
         """Enforce the input list to be a list."""
         if not inputFileList:
             return list()
@@ -480,7 +480,7 @@ class Simulator:
 
         return inputFileList
 
-    def _guessRunFromFile(self, file):
+    def _guess_run_from_file(self, file):
         """
         Finds the run number for a given input file name.
         Input file names can follow any pattern with the
@@ -503,7 +503,7 @@ class Simulator:
             self._logger.warning(msg)
             return 1
 
-    def _fillResults(self, file, run):
+    def _fill_results(self, file, run):
         """
         Fill the results dict with input, output and log files.
 
@@ -516,17 +516,19 @@ class Simulator:
 
         """
 
-        self._results["output"].append(str(self._simulationRunner.getOutputFile(run)))
-        self._results["sub_out"].append(str(self._simulationRunner.getSubLogFile(run, mode="out")))
-        self._results["log"].append(str(self._simulationRunner.getLogFile(run)))
+        self._results["output"].append(str(self._simulationRunner.get_output_file(run)))
+        self._results["sub_out"].append(
+            str(self._simulationRunner.get_sub_log_file(run, mode="out"))
+        )
+        self._results["log"].append(str(self._simulationRunner.get_log_file(run)))
         if self.simulator == "simtel":
             self._results["input"].append(str(file))
-            self._results["hist"].append(str(self._simulationRunner.getHistogramFile(run)))
+            self._results["hist"].append(str(self._simulationRunner.get_histogram_file(run)))
         else:
             self._results["input"].append(None)
             self._results["hist"].append(None)
 
-    def printHistograms(self, inputFileList=None):
+    def print_histograms(self, inputFileList=None):
         """
         Print histograms and save a pdf file.
 
@@ -545,16 +547,16 @@ class Simulator:
 
         if self.simulator == "simtel":
             if len(self._results["hist"]) == 0 and inputFileList is not None:
-                self._fillResultsWithoutRun(inputFileList)
+                self._fill_results_without_run(inputFileList)
 
             figName = self._outputDirectory.joinpath("histograms.pdf")
-            histFileList = self.getListOfHistogramFiles()
+            histFileList = self.get_list_of_histogram_files()
             simtelHistograms = SimtelHistograms(histFileList)
-            simtelHistograms.plotAndSaveFigures(figName)
+            simtelHistograms.plot_and_save_figures(figName)
 
         return figName
 
-    def getListOfOutputFiles(self, runList=None, runRange=None):
+    def get_list_of_output_files(self, runList=None, runRange=None):
         """
         Get list of output files.
 
@@ -574,16 +576,16 @@ class Simulator:
         self._logger.info("Getting list of output files")
 
         if runList or runRange or len(self._results["output"]) == 0:
-            runsToList = self._getRunsToSimulate(runList=runList, runRange=runRange)
+            runsToList = self._get_runs_to_simulate(runList=runList, runRange=runRange)
 
             for run in runsToList:
                 self._results["output"].append(
-                    str(self._simulationRunner.getOutputFile(runNumber=run))
+                    str(self._simulationRunner.get_output_file(runNumber=run))
                 )
 
         return self._results["output"]
 
-    def getListOfHistogramFiles(self):
+    def get_list_of_histogram_files(self):
         """
         Get list of histogram files.
         (not applicable to all simulation types)
@@ -596,7 +598,7 @@ class Simulator:
         self._logger.info("Getting list of histogram files")
         return self._results["hist"]
 
-    def getListOfInputFiles(self):
+    def get_list_of_input_files(self):
         """
         Get list of input files.
 
@@ -608,7 +610,7 @@ class Simulator:
         self._logger.info("Getting list of input files")
         return self._results["input"]
 
-    def getListOfLogFiles(self):
+    def get_list_of_log_files(self):
         """
         Get list of log files.
 
@@ -620,27 +622,27 @@ class Simulator:
         self._logger.info("Getting list of log files")
         return self._results["log"]
 
-    def printListOfOutputFiles(self):
+    def print_list_of_output_files(self):
         """Print list of output files."""
         self._logger.info("Printing list of output files")
-        self._printListOfFiles(which="output")
+        self._print_list_of_files(which="output")
 
-    def printListOfHistogramFiles(self):
+    def print_list_of_histogram_files(self):
         """Print list of histogram files."""
         self._logger.info("Printing list of histogram files")
-        self._printListOfFiles(which="hist")
+        self._print_list_of_files(which="hist")
 
-    def printListOfInputFiles(self):
+    def print_list_of_input_files(self):
         """Print list of output files."""
         self._logger.info("Printing list of input files")
-        self._printListOfFiles(which="input")
+        self._print_list_of_files(which="input")
 
-    def printListOfLogFiles(self):
+    def print_list_of_log_files(self):
         """Print list of log files."""
         self._logger.info("Printing list of log files")
-        self._printListOfFiles(which="log")
+        self._print_list_of_files(which="log")
 
-    def _makeResourcesReport(self, inputFileList):
+    def _make_resources_report(self, inputFileList):
         """
         Prepare a simple report on computing resources used
         (includes wall clock time per run only at this point)
@@ -658,13 +660,13 @@ class Simulator:
         """
 
         if len(self._results["sub_out"]) == 0 and inputFileList is not None:
-            self._fillResultsWithoutRun(inputFileList)
+            self._fill_results_without_run(inputFileList)
 
         runtime = list()
 
         _resources = {}
         for run in self.runs:
-            _resources = self._simulationRunner.getResources(runNumber=run)
+            _resources = self._simulationRunner.get_resources(runNumber=run)
             if "runtime" in _resources and _resources["runtime"]:
                 runtime.append(_resources["runtime"])
 
@@ -691,14 +693,14 @@ class Simulator:
             Single file or list of files of shower simulations.
 
         """
-        resources = self._makeResourcesReport(inputFileList)
+        resources = self._make_resources_report(inputFileList)
         print("-----------------------------")
         print("Computing Resources Report - {} Simulations".format(self.simulator))
         for key, value in resources.items():
             print("{} = {:.2f}".format(key, value))
         print("-----------------------------")
 
-    def _getRunsToSimulate(self, runList=None, runRange=None):
+    def _get_runs_to_simulate(self, runList=None, runRange=None):
         """
         Process runList and runRange and return the validated list of runs.
 
@@ -725,9 +727,9 @@ class Simulator:
             else:
                 return self.runs
         else:
-            return self._validateRunListAndRange(runList, runRange)
+            return self._validate_run_list_and_range(runList, runRange)
 
-    def _printListOfFiles(self, which):
+    def _print_list_of_files(self, which):
         """
         Print list of files of a certain type
 
