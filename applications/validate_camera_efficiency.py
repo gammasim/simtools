@@ -44,7 +44,7 @@
 """
 
 import logging
-import os
+from pathlib import Path
 
 import simtools.configuration as configurator
 import simtools.util.general as gen
@@ -70,7 +70,7 @@ def _parse(label):
 
 def main():
 
-    label = os.path.basename(__file__).split(".")[0]
+    label = Path(__file__).stem
     args_dict, _db_config = _parse(label)
 
     logger = logging.getLogger()

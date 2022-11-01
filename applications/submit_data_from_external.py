@@ -33,7 +33,7 @@
 """
 
 import logging
-import os
+from pathlib import Path
 
 import simtools.util.general as gen
 import simtools.util.model_data_writer as writer
@@ -72,7 +72,7 @@ def _parse(label, description, usage):
 
 def main():
 
-    label = os.path.basename(__file__).split(".")[0]
+    label = Path(__file__).stem
     args_dict, _ = _parse(
         label,
         description="Submit model parameter (value, table) through an external interface.",

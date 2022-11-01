@@ -71,8 +71,8 @@
 """
 
 import logging
-import os
 from collections import OrderedDict
+from pathlib import Path
 
 import astropy.units as u
 import matplotlib.pyplot as plt
@@ -97,7 +97,7 @@ def loadData(datafile):
 
 def main():
 
-    label = os.path.basename(__file__).split(".")[0]
+    label = Path(__file__).stem
     config = configurator.Configurator(
         label=label,
         description=(
