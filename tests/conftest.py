@@ -111,7 +111,7 @@ def args_dict_site(tmp_test_directory, simtelpath):
             "--telescope",
             "MST-NectarCam-D",
             "--label",
-            "integrationtest",
+            "integration_test",
         )
     )
 
