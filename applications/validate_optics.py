@@ -71,9 +71,9 @@ from simtools import io_handler
 from simtools.model.telescope_model import TelescopeModel
 from simtools.ray_tracing import RayTracing
 
-# from simtools.visualize import setStyle
+# from simtools.visualize import set_style
 
-# setStyle()
+# set_style()
 
 
 def _parse(label):
@@ -125,10 +125,10 @@ def main():
     args_dict, db_config = _parse(label)
 
     logger = logging.getLogger()
-    logger.setLevel(gen.getLogLevelFromUser(args_dict["log_level"]))
+    logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
     _io_handler = io_handler.IOHandler()
-    outputDir = _io_handler.getOutputDirectory(label, dirType="application-plots")
+    outputDir = _io_handler.get_output_directory(label, dirType="application-plots")
 
     telModel = TelescopeModel(
         site=args_dict["site"],
@@ -147,14 +147,14 @@ def main():
     #     'camera_body_diameter': 289.7,
     #     'telescope_transmission': 1
     # }
-    # telModel.changeMultipleParameters(**parsToChange)
+    # telModel.change_multiple_parameters(**parsToChange)
 
     print(
         "\nValidating telescope optics with ray tracing simulations"
         " for {}\n".format(telModel.name)
     )
 
-    ray = RayTracing.fromKwargs(
+    ray = RayTracing.from_kwargs(
         telescopeModel=telModel,
         simtelSourcePath=args_dict["simtelpath"],
         sourceDistance=args_dict["src_distance"] * u.km,
@@ -189,7 +189,7 @@ def main():
 
         for image in ray.images():
             fig = plt.figure(figsize=(8, 6), tight_layout=True)
-            image.plotImage()
+            image.plot_image()
             pdfPages.savefig(fig)
             plt.clf()
         plt.close()

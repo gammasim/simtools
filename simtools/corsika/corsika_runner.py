@@ -9,7 +9,7 @@ from simtools.corsika.corsika_config import (
     MissingRequiredInputInCorsikaConfigData,
 )
 from simtools.util import names
-from simtools.util.general import collectDataFromYamlOrDict
+from simtools.util.general import collect_data_from_yaml_or_dict
 
 __all__ = ["CorsikaRunner"]
 
@@ -71,13 +71,13 @@ class CorsikaRunner:
 
     Methods
     -------
-    getRunScript(runNumber)
+    get_run_script(runNumber)
         Get the full path of the run script file for a given run number.
-    getLogFile(runNumber)
+    get_log_file(runNumber)
         Get the full path of the run log file.
-    getCorsikaLogFile(runNumber)
+    get_corsika_log_file(runNumber)
         Get the full path of the CORSIKA log file.
-    getOutputFile(runNumber)
+    get_output_file(runNumber)
         Get the full path of the CORSIKA output file.
     """
 
@@ -121,22 +121,22 @@ class CorsikaRunner:
         self._logger.debug("Init CorsikaRunner")
 
         self.label = label
-        self.site = names.validateSiteName(site)
-        self.layoutName = names.validateLayoutArrayName(layoutName)
+        self.site = names.validate_site_name(site)
+        self.layoutName = names.validate_layout_array_name(layoutName)
 
         self._keepSeeds = keepSeeds
 
         self._simtelSourcePath = simtelSourcePath
         self.io_handler = io_handler.IOHandler()
-        self._outputDirectory = self.io_handler.getOutputDirectory(self.label, "corsika")
+        self._outputDirectory = self.io_handler.get_output_directory(self.label, "corsika")
         self._logger.debug("Creating output dir {}, if needed,".format(self._outputDirectory))
 
-        corsikaConfigData = collectDataFromYamlOrDict(corsikaConfigFile, corsikaConfigData)
-        self._loadCorsikaConfigData(corsikaConfigData)
+        corsikaConfigData = collect_data_from_yaml_or_dict(corsikaConfigFile, corsikaConfigData)
+        self._load_corsika_config_data(corsikaConfigData)
 
-        self._loadCorsikaDataDirectories()
+        self._load_corsika_data_directories()
 
-    def _loadCorsikaConfigData(self, corsikaConfigData):
+    def _load_corsika_config_data(self, corsikaConfigData):
         """Reads corsikaConfigData, creates corsikaConfig and corsikaInputFile."""
 
         corsikaDataDirectoryFromConfig = corsikaConfigData.get("dataDirectory", None)
@@ -169,13 +169,13 @@ class CorsikaRunner:
                 corsikaConfigData=self._corsikaConfigData,
             )
             # CORSIKA input file used as template for all runs
-            self._corsikaInputFile = self.corsikaConfig.getInputFile()
+            self._corsikaInputFile = self.corsikaConfig.get_input_file()
         except MissingRequiredInputInCorsikaConfigData:
             msg = "corsikaConfigData is missing required entries."
             self._logger.error(msg)
             raise
 
-    def _loadCorsikaDataDirectories(self):
+    def _load_corsika_data_directories(self):
         """Create CORSIKA directories for data, log and input."""
         corsikaBaseDir = self._corsikaDataDirectory.joinpath(self.site)
         corsikaBaseDir = corsikaBaseDir.joinpath(self.corsikaConfig.primary)
@@ -188,7 +188,7 @@ class CorsikaRunner:
         self._corsikaLogDir = corsikaBaseDir.joinpath("log")
         self._corsikaLogDir.mkdir(parents=True, exist_ok=True)
 
-    def getRunScript(self, **kwargs):
+    def get_run_script(self, **kwargs):
         """
         Get the full path of the run script file for a given run number.
 
@@ -209,10 +209,10 @@ class CorsikaRunner:
             "extraCommands": None,
             **kwargs,
         }
-        runNumber = self._validateRunNumber(kwargs["runNumber"])
+        runNumber = self._validate_run_number(kwargs["runNumber"])
 
         # Setting script file name
-        scriptFileName = names.corsikaRunScriptFileName(
+        scriptFileName = names.corsika_run_script_file_name(
             arrayName=self.layoutName,
             site=self.site,
             primary=self.corsikaConfig.primary,
@@ -224,11 +224,11 @@ class CorsikaRunner:
         scriptFilePath = scriptFileDir.joinpath(scriptFileName)
 
         # CORSIKA input file for a specific run, created by the preprocessor pfp
-        corsikaInputTmpName = self.corsikaConfig.getInputFileNameForRun(runNumber)
+        corsikaInputTmpName = self.corsikaConfig.get_input_file_name_for_run(runNumber)
         corsikaInputTmpFile = self._corsikaInputDir.joinpath(corsikaInputTmpName)
 
-        pfpCommand = self._getPfpCommand(runNumber, corsikaInputTmpFile)
-        autoinputsCommand = self._getAutoinputsCommand(runNumber, corsikaInputTmpFile)
+        pfpCommand = self._get_pfp_command(runNumber, corsikaInputTmpFile)
+        autoinputsCommand = self._get_autoinputs_command(runNumber, corsikaInputTmpFile)
 
         extraCommands = kwargs["extraCommands"]
         self._logger.debug("Extra commands to be added to the run script {}".format(extraCommands))
@@ -262,18 +262,18 @@ class CorsikaRunner:
 
         return scriptFilePath
 
-    def _getPfpCommand(self, runNumber, inputTmpFile):
+    def _get_pfp_command(self, runNumber, inputTmpFile):
         """Get pfp pre-processor command."""
         cmd = self._simtelSourcePath.joinpath("sim_telarray/bin/pfp")
         cmd = str(cmd) + " -V -DWITHOUT_MULTIPIPE - < {}".format(self._corsikaInputFile)
         cmd += " > {}\n".format(inputTmpFile)
         return cmd
 
-    def _getAutoinputsCommand(self, runNumber, inputTmpFile):
+    def _get_autoinputs_command(self, runNumber, inputTmpFile):
         """Get autoinputs command."""
         corsikaBinPath = self._simtelSourcePath.joinpath("corsika-run/corsika")
 
-        logFile = self.getLogFile(runNumber)
+        logFile = self.get_log_file(runNumber)
 
         cmd = self._simtelSourcePath.joinpath("sim_telarray/bin/corsika_autoinputs")
         cmd = str(cmd) + " --run {}".format(corsikaBinPath)
@@ -285,7 +285,7 @@ class CorsikaRunner:
         cmd += " || exit 1\n"
         return cmd
 
-    def hasRunLogFile(self, runNumber=None):
+    def has_run_log_file(self, runNumber=None):
         """
         Checks that the run log file for this run number
         is a valid file on disk
@@ -297,11 +297,11 @@ class CorsikaRunner:
 
         """
 
-        runNumber = self._validateRunNumber(runNumber)
-        runLogFile = self.getLogFile(runNumber=runNumber)
+        runNumber = self._validate_run_number(runNumber)
+        runLogFile = self.get_log_file(runNumber=runNumber)
         return Path(runLogFile).is_file()
 
-    def hasSubLogFile(self, runNumber=None, mode="out"):
+    def has_sub_log_file(self, runNumber=None, mode="out"):
         """
         Checks that the sub run log file for this run number
         is a valid file on disk
@@ -313,11 +313,11 @@ class CorsikaRunner:
 
         """
 
-        runNumber = self._validateRunNumber(runNumber)
-        runSubFile = self.getSubLogFile(runNumber=runNumber, mode=mode)
+        runNumber = self._validate_run_number(runNumber)
+        runSubFile = self.get_sub_log_file(runNumber=runNumber, mode=mode)
         return Path(runSubFile).is_file()
 
-    def getResources(self, runNumber=None):
+    def get_resources(self, runNumber=None):
         """
         Read run time of job from last line of submission log file.
 
@@ -333,8 +333,8 @@ class CorsikaRunner:
 
         """
 
-        runNumber = self._validateRunNumber(runNumber)
-        subLogFile = self.getSubLogFile(runNumber=runNumber, mode="out")
+        runNumber = self._validate_run_number(runNumber)
+        subLogFile = self.get_sub_log_file(runNumber=runNumber, mode="out")
 
         self._logger.debug("Reading resources from {}".format(subLogFile))
 
@@ -351,11 +351,11 @@ class CorsikaRunner:
             self._logger.debug("RUNTIME was not found in run log file")
 
         # Calculating number of events
-        _resources["nEvents"] = int(self.corsikaConfig.getUserParameter("NSHOW"))
+        _resources["nEvents"] = int(self.corsikaConfig.get_user_parameter("NSHOW"))
 
         return _resources
 
-    def getLogFile(self, runNumber=None):
+    def get_log_file(self, runNumber=None):
         """
         Get the full path of the run log file.
 
@@ -374,8 +374,8 @@ class CorsikaRunner:
         Path:
             Full path of the run log file.
         """
-        runNumber = self._validateRunNumber(runNumber)
-        logFileName = names.corsikaRunLogFileName(
+        runNumber = self._validate_run_number(runNumber)
+        logFileName = names.corsika_run_log_file_name(
             site=self.site,
             run=runNumber,
             primary=self.corsikaConfig.primary,
@@ -384,7 +384,7 @@ class CorsikaRunner:
         )
         return self._corsikaLogDir.joinpath(logFileName)
 
-    def getSubLogFile(self, runNumber=None, mode="out"):
+    def get_sub_log_file(self, runNumber=None, mode="out"):
         """
         Get the full path of the submission log file.
 
@@ -405,8 +405,8 @@ class CorsikaRunner:
         Path:
             Full path of the run log file.
         """
-        runNumber = self._validateRunNumber(runNumber)
-        logFileName = names.corsikaSubLogFileName(
+        runNumber = self._validate_run_number(runNumber)
+        logFileName = names.corsika_sub_log_file_name(
             site=self.site,
             run=runNumber,
             primary=self.corsikaConfig.primary,
@@ -419,7 +419,7 @@ class CorsikaRunner:
         subLogFileDir.mkdir(parents=True, exist_ok=True)
         return subLogFileDir.joinpath(logFileName)
 
-    def getCorsikaLogFile(self, runNumber=None):
+    def get_corsika_log_file(self, runNumber=None):
         """
         Get the full path of the CORSIKA log file.
 
@@ -438,11 +438,11 @@ class CorsikaRunner:
         Path:
             Full path of the CORSIKA log file.
         """
-        runNumber = self._validateRunNumber(runNumber)
-        runDir = self._getRunDirectory(runNumber)
+        runNumber = self._validate_run_number(runNumber)
+        runDir = self._get_run_directory(runNumber)
         return self._corsikaDataDir.joinpath(runDir).joinpath("run{}.log".format(runNumber))
 
-    def getOutputFile(self, runNumber=None):
+    def get_output_file(self, runNumber=None):
         """
         Get the full path of the CORSIKA output file.
 
@@ -461,25 +461,25 @@ class CorsikaRunner:
         Path:
             Full path of the CORSIKA output file.
         """
-        runNumber = self._validateRunNumber(runNumber)
-        corsikaFileName = self.corsikaConfig.getOutputFileName(runNumber)
-        runDir = self._getRunDirectory(runNumber)
+        runNumber = self._validate_run_number(runNumber)
+        corsikaFileName = self.corsikaConfig.get_output_file_name(runNumber)
+        runDir = self._get_run_directory(runNumber)
         return self._corsikaDataDir.joinpath(runDir).joinpath(corsikaFileName)
 
     @staticmethod
-    def _getRunDirectory(runNumber):
+    def _get_run_directory(runNumber):
         """Get run directory created by sim_telarray (ex. run000014)."""
         nn = str(runNumber)
         return "run" + nn.zfill(6)
 
-    def _validateRunNumber(self, runNumber):
+    def _validate_run_number(self, runNumber):
         """
         Returns the run number from corsikaConfig in case runNumber is None,
         Raise ValueError if runNumber is not valid (< 1) or returns runNumber if
         it is a valid value.
         """
         if runNumber is None:
-            return self.corsikaConfig.getUserParameter("RUNNR")
+            return self.corsikaConfig.get_user_parameter("RUNNR")
         elif not float(runNumber).is_integer() or runNumber < 1:
             msg = "Invalid type of run number ({}) - it must be an uint.".format(runNumber)
             self._logger.error(msg)

@@ -12,11 +12,11 @@ class SimtelConfigWriter:
 
     Methods
     -------
-    writeTelescopeConfigFile(configFilePath, parameters)
+    write_telescope_config_file(configFilePath, parameters)
         Writes the sim_telarray config file for a single telescope.
-    writeArrayConfigFile(configFilePath, layout, telescopeModel, siteParameters)
+    write_array_config_file(configFilePath, layout, telescopeModel, siteParameters)
         Writes the sim_telarray config file for an array of telescopes.
-    writeSingleMirrorListFile(
+    write_single_mirror_list_file(
         mirrorNumber,
         mirrors,
         singleMirrorListFile,
@@ -74,7 +74,7 @@ class SimtelConfigWriter:
         self._layoutName = layoutName
         self._telescopeModelName = telescopeModelName
 
-    def writeTelescopeConfigFile(self, configFilePath, parameters):
+    def write_telescope_config_file(self, configFilePath, parameters):
         """
         Writes the sim_telarray config file for a single telescope.
 
@@ -86,7 +86,7 @@ class SimtelConfigWriter:
             Model parameters in the same structure as used by the TelescopeModel class.
         """
         with open(configFilePath, "w") as file:
-            self._writeHeader(file, "TELESCOPE CONFIGURATION FILE")
+            self._write_header(file, "TELESCOPE CONFIGURATION FILE")
 
             file.write("#ifdef TELESCOPE\n")
             file.write(
@@ -101,7 +101,7 @@ class SimtelConfigWriter:
                 value = parameters[par]["Value"]
                 file.write("{} = {}\n".format(par, value))
 
-    def writeArrayConfigFile(self, configFilePath, layout, telescopeModel, siteParameters):
+    def write_array_config_file(self, configFilePath, layout, telescopeModel, siteParameters):
         """
         Writes the sim_telarray config file for an array of telescopes.
 
@@ -117,7 +117,7 @@ class SimtelConfigWriter:
             Site parameters.
         """
         with open(configFilePath, "w") as file:
-            self._writeHeader(file, "ARRAY CONFIGURATION FILE")
+            self._write_header(file, "ARRAY CONFIGURATION FILE")
 
             # Be careful with the formatting - simtel is sensitive
             file.write("#ifndef TELESCOPE\n")
@@ -133,24 +133,24 @@ class SimtelConfigWriter:
             file.write(self.TAB + "echo *****************************\n\n")
 
             # Writing site parameters
-            self._writeSiteParameters(file, siteParameters)
+            self._write_site_parameters(file, siteParameters)
 
             # Maximum telescopes
             file.write(self.TAB + "maximum_telescopes = {}\n\n".format(len(telescopeModel)))
 
             # Default telescope - 0th tel in telescope list
-            telConfigFile = telescopeModel[0].getConfigFile(noExport=True).name
+            telConfigFile = telescopeModel[0].get_config_file(noExport=True).name
             file.write("# include <{}>\n\n".format(telConfigFile))
 
             # Looping over telescopes - from 1 to ...
             for count, telModel in enumerate(telescopeModel):
-                telConfigFile = telModel.getConfigFile(noExport=True).name
+                telConfigFile = telModel.get_config_file(noExport=True).name
                 file.write("%{}\n".format(layout[count].name))
                 file.write("#elif TELESCOPE == {}\n\n".format(count + 1))
                 file.write("# include <{}>\n\n".format(telConfigFile))
             file.write("#endif \n\n")
 
-    def writeSingleMirrorListFile(
+    def write_single_mirror_list_file(
         self, mirrorNumber, mirrors, singleMirrorListFile, setFocalLengthToZero=False
     ):
         """
@@ -167,10 +167,10 @@ class SimtelConfigWriter:
         setFocalLengthToZero: bool
             Flag to set the focal length to zero.
         """
-        __, __, diameter, flen, shape = mirrors.getSingleMirrorParameters(mirrorNumber)
+        __, __, diameter, flen, shape = mirrors.get_single_mirror_parameters(mirrorNumber)
 
         with open(singleMirrorListFile, "w") as file:
-            self._writeHeader(file, "MIRROR LIST FILE", "#")
+            self._write_header(file, "MIRROR LIST FILE", "#")
 
             file.write("# Column 1: X pos. [cm] (North/Down)\n")
             file.write("# Column 2: Y pos. [cm] (West/Right from camera)\n")
@@ -193,7 +193,7 @@ class SimtelConfigWriter:
                 )
             )
 
-    def _writeHeader(self, file, title, commentChar="%"):
+    def _write_header(self, file, title, commentChar="%"):
         """
         Writes a generic header. commenChar is the character to be used for comments, \
         which is differs among ctypes of config files.
@@ -219,7 +219,7 @@ class SimtelConfigWriter:
         header += "{}\n".format(commentChar)
         file.write(header)
 
-    def _writeSiteParameters(self, file, siteParameters):
+    def _write_site_parameters(self, file, siteParameters):
         """Writes site parameters."""
         file.write(self.TAB + "% Site parameters\n")
         for par in siteParameters:

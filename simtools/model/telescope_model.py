@@ -12,7 +12,7 @@ from simtools.model.camera import Camera
 from simtools.model.mirrors import Mirrors
 from simtools.simtel.simtel_config_writer import SimtelConfigWriter
 from simtools.util import names
-from simtools.util.model import validateModelParameter
+from simtools.util.model import validate_model_parameter
 
 __all__ = ["TelescopeModel"]
 
@@ -42,34 +42,34 @@ class TelescopeModel:
         Mirrors object created from the mirror list of the model.
     camera: Camera
         Camera object created from the camera config file of the model.
-    referenceData: Reference data
+    reference_data: Reference data
         Dictionary with reference data parameters (e.g., NSB reference value)
-    extraLabel: str
+    extra_label: str
         Extra label to be used in case of multiple telescope configurations (e.g., by ArrayModel).
 
     Methods
     -------
-    fromConfigFile(configFileName, telescopeModelName, label=None)
+    from_config_file(configFileName, telescopeModelName, label=None)
         Create a TelescopeModel from a sim_telarray cfg file.
-    setExtraLabel(extraLabel)
+    set_extra_label(extra_label)
         Set an extra label for the name of the config file.
-    hasParameter(parName)
+    has_parameter(parName)
         Verify if parameter is in the model.
-    getParameter(parName)
+    get_parameter(parName)
         Get an existing parameter of the model.
-    addParameter(parName, value)
+    add_parameter(parName, value)
         Add new parameters to the model.
-    changeParameter(parName, value)
+    change_parameter(parName, value)
         Change the value of existing parameters to the model.
-    changeMultipleParameters(**pars)
+    change_multiple_parameters(**pars)
         Change the value of existing parameters to the model.
-    removeParameters(*args)
+    remove_parameters(*args)
         Remove parameters from the model.
-    printParameters()
+    print_parameters()
         Print parameters and their values for debugging purposes.
-    exportConfigFile()
+    export_config_file()
         Export config file for sim_telarray.
-    getConfigFile()
+    get_config_file()
         Get the path to the config file for sim_telarray.
     """
 
@@ -101,54 +101,54 @@ class TelescopeModel:
         self._logger = logging.getLogger(__name__)
         self._logger.debug("Init TelescopeModel")
 
-        self.site = names.validateSiteName(site)
-        self.name = names.validateTelescopeModelName(telescopeModelName)
-        self.modelVersion = names.validateModelVersionName(modelVersion)
+        self.site = names.validate_site_name(site)
+        self.name = names.validate_telescope_model_name(telescopeModelName)
+        self.modelVersion = names.validate_model_version_name(modelVersion)
         self.label = label
-        self._extraLabel = None
+        self._extra_label = None
 
         self.io_handler = io_handler.IOHandler()
         self.mongoDBConfig = mongoDBConfig
 
         self._parameters = dict()
 
-        self._loadParametersFromDB()
+        self._load_parameters_from_db()
 
-        self._setConfigFileDirectoryAndName()
+        self._set_config_file_directory_and_name()
         self._isConfigFileUpToDate = False
         self._isExportedModelFilesUpToDate = False
 
     @property
     def mirrors(self):
         if not hasattr(self, "_mirrors"):
-            self._loadMirrors()
+            self._load_mirrors()
         return self._mirrors
 
     @property
     def camera(self):
         if not hasattr(self, "_camera"):
-            self._loadCamera()
+            self._load_camera()
         return self._camera
 
     @property
-    def referenceData(self):
-        if not hasattr(self, "_referenceData"):
-            self._loadReferenceData()
-        return self._referenceData
+    def reference_data(self):
+        if not hasattr(self, "_reference_data"):
+            self._load_reference_data()
+        return self._reference_data
 
     @property
     def derived(self):
         if not hasattr(self, "_derived"):
-            self._loadDerivedValues()
-            self.exportDerivedFiles()
+            self._load_derived_values()
+            self.export_derived_files()
         return self._derived
 
     @property
-    def extraLabel(self):
-        return self._extraLabel if self._extraLabel is not None else ""
+    def extra_label(self):
+        return self._extra_label if self._extra_label is not None else ""
 
     @classmethod
-    def fromConfigFile(
+    def from_config_file(
         cls,
         configFileName,
         site,
@@ -223,16 +223,16 @@ class TelescopeModel:
                     continue
                 elif "#" not in line and len(words) > 0:
                     par, value = _processLine(words)
-                    par, value = validateModelParameter(par, value)
+                    par, value = validate_model_parameter(par, value)
                     parameters[par] = value
 
         for par, value in parameters.items():
-            tel.addParameter(par, value)
+            tel.add_parameter(par, value)
 
         tel._isExportedModelFilesUpToDate = True
         return tel
 
-    def setExtraLabel(self, extraLabel):
+    def set_extra_label(self, extra_label):
         """
         Set an extra label for the name of the config file.
 
@@ -244,24 +244,24 @@ class TelescopeModel:
 
         Parameters
         ----------
-        extraLabel: str
+        extra_label: str
             Extra label to be appended to the original label.
         """
-        self._extraLabel = extraLabel
-        self._setConfigFileDirectoryAndName()
+        self._extra_label = extra_label
+        self._set_config_file_directory_and_name()
 
-    def _setConfigFileDirectoryAndName(self):
+    def _set_config_file_directory_and_name(self):
         """Define the variable _configFileDirectory and create directories, if needed"""
 
-        self._configFileDirectory = self.io_handler.getOutputDirectory(self.label, "model")
+        self._configFileDirectory = self.io_handler.get_output_directory(self.label, "model")
 
         # Setting file name and the location
-        configFileName = names.simtelTelescopeConfigFileName(
-            self.site, self.name, self.modelVersion, self.label, self._extraLabel
+        configFileName = names.simtel_telescope_config_file_name(
+            self.site, self.name, self.modelVersion, self.label, self._extra_label
         )
         self._configFilePath = self._configFileDirectory.joinpath(configFileName)
 
-    def _loadParametersFromDB(self):
+    def _load_parameters_from_db(self):
         """Read parameters from DB and store them in _parameters."""
 
         if self.mongoDBConfig is None:
@@ -269,17 +269,17 @@ class TelescopeModel:
 
         self._logger.debug("Reading telescope parameters from DB")
 
-        self._setConfigFileDirectoryAndName()
+        self._set_config_file_directory_and_name()
         db = db_handler.DatabaseHandler(mongoDBConfig=self.mongoDBConfig)
-        self._parameters = db.getModelParameters(
+        self._parameters = db.get_model_parameters(
             self.site, self.name, self.modelVersion, onlyApplicable=True
         )
 
         self._logger.debug("Reading site parameters from DB")
-        _sitePars = db.getSiteParameters(self.site, self.modelVersion, onlyApplicable=True)
+        _sitePars = db.get_site_parameters(self.site, self.modelVersion, onlyApplicable=True)
         self._parameters.update(_sitePars)
 
-    def hasParameter(self, parName):
+    def has_parameter(self, parName):
         """
         Verify if the parameter is in the model.
 
@@ -294,7 +294,7 @@ class TelescopeModel:
         """
         return parName in self._parameters
 
-    def getParameter(self, parName):
+    def get_parameter(self, parName):
         """
         Get an existing parameter of the model, including derived parameters.
 
@@ -323,7 +323,7 @@ class TelescopeModel:
             self._logger.error(msg)
             raise InvalidParameter(msg)
 
-    def getParameterValue(self, parName):
+    def get_parameter_value(self, parName):
         """
         Get the value of an existing parameter of the model.
 
@@ -341,10 +341,10 @@ class TelescopeModel:
         -------
         Value of the parameter
         """
-        parInfo = self.getParameter(parName)
+        parInfo = self.get_parameter(parName)
         return parInfo["Value"]
 
-    def addParameter(self, parName, value, isFile=False, isAplicable=True):
+    def add_parameter(self, parName, value, isFile=False, isAplicable=True):
         """
         Add a new parameters to the model. \
         This function does not modify the DB, it affects only the current instance.
@@ -366,7 +366,7 @@ class TelescopeModel:
             If an existing parameter is tried to be added.
         """
         if parName in self._parameters:
-            msg = "Parameter {} already in the model, use changeParameter instead".format(parName)
+            msg = "Parameter {} already in the model, use change_parameter instead".format(parName)
             self._logger.error(msg)
             raise InvalidParameter(msg)
         else:
@@ -381,7 +381,7 @@ class TelescopeModel:
         if isFile:
             self._isExportedModelFilesUpToDate = False
 
-    def changeParameter(self, parName, value):
+    def change_parameter(self, parName, value):
         """
         Change the value of an existing parameter to the model. \
         This function does not modify the DB, it affects only the current instance.
@@ -399,7 +399,7 @@ class TelescopeModel:
             If the parameter to be changed does not exist in this model.
         """
         if parName not in self._parameters:
-            msg = "Parameter {} not in the model, use addParameters instead".format(parName)
+            msg = "Parameter {} not in the model, use add_parameters instead".format(parName)
             self._logger.error(msg)
             raise InvalidParameter(msg)
         else:
@@ -415,7 +415,7 @@ class TelescopeModel:
 
         self._isConfigFileUpToDate = False
 
-    def changeMultipleParameters(self, **kwargs):
+    def change_multiple_parameters(self, **kwargs):
         """
         Change the value of multiple existing parameters in the model. \
         This function does not modify the DB, it affects only the current instance.
@@ -432,13 +432,13 @@ class TelescopeModel:
         """
         for par, value in kwargs.items():
             if par in self._parameters:
-                self.changeParameter(par, value)
+                self.change_parameter(par, value)
             else:
-                self.addParameter(par, value)
+                self.add_parameter(par, value)
 
         self._isConfigFileUpToDate = False
 
-    def removeParameters(self, *args):
+    def remove_parameters(self, *args):
         """
         Remove a set of parameters from the model.
 
@@ -462,7 +462,7 @@ class TelescopeModel:
                 raise InvalidParameter(msg)
         self._isConfigFileUpToDate = False
 
-    def addParameterFile(self, parName, filePath):
+    def add_parameter_file(self, parName, filePath):
         """
         Add a file to the config file directory.
 
@@ -478,7 +478,7 @@ class TelescopeModel:
         self._addedParameterFiles.append(parName)
         shutil.copy(filePath, self._configFileDirectory)
 
-    def exportModelFiles(self):
+    def export_model_files(self):
         """Exports the model files into the config file directory."""
         db = db_handler.DatabaseHandler(mongoDBConfig=self.mongoDBConfig)
 
@@ -488,28 +488,28 @@ class TelescopeModel:
             for par in self._addedParameterFiles:
                 parsFromDB.pop(par)
 
-        db.exportModelFiles(parsFromDB, self._configFileDirectory)
+        db.export_model_files(parsFromDB, self._configFileDirectory)
         self._isExportedModelFilesUpToDate = True
 
-    def printParameters(self):
+    def print_parameters(self):
         """Print parameters and their values for debugging purposes."""
         for par, info in self._parameters.items():
             print("{} = {}".format(par, info["Value"]))
 
-    def exportConfigFile(self):
+    def export_config_file(self):
         """Export the config file used by sim_telarray."""
 
         # Exporting model file
         if not self._isExportedModelFilesUpToDate:
-            self.exportModelFiles()
+            self.export_model_files()
 
         # Using SimtelConfigWriter to write the config file.
-        self._loadSimtelConfigWriter()
-        self.simtelConfigWriter.writeTelescopeConfigFile(
+        self._load_simtel_config_writer()
+        self.simtelConfigWriter.write_telescope_config_file(
             configFilePath=self._configFilePath, parameters=self._parameters
         )
 
-    def exportDerivedFiles(self):
+    def export_derived_files(self):
         """
         Write to disk a file from the derived values DB.
         """
@@ -517,13 +517,13 @@ class TelescopeModel:
         db = db_handler.DatabaseHandler(mongoDBConfig=self.mongoDBConfig)
         for parNow in self.derived:
             if self.derived[parNow]["File"]:
-                db.exportFileDB(
+                db.export_file_db(
                     dbName=db.DB_DERIVED_VALUES,
-                    dest=self.io_handler.getOutputDirectory(self.label, "derived"),
+                    dest=self.io_handler.get_output_directory(self.label, "derived"),
                     fileName=self.derived[parNow]["Value"],
                 )
 
-    def getConfigFile(self, noExport=False):
+    def get_config_file(self, noExport=False):
         """
         Get the path of the config file for sim_telarray. \
         The config file is produced if the file is not updated.
@@ -538,10 +538,10 @@ class TelescopeModel:
         Path of the exported config file for sim_telarray.
         """
         if not self._isConfigFileUpToDate and not noExport:
-            self.exportConfigFile()
+            self.export_config_file()
         return self._configFilePath
 
-    def getConfigDirectory(self):
+    def get_config_directory(self):
         """
         Get the path where all the configuration files for sim_telarray are written to.
 
@@ -551,7 +551,7 @@ class TelescopeModel:
         """
         return self._configFileDirectory
 
-    def getDerivedDirectory(self):
+    def get_derived_directory(self):
         """
         Get the path where all the files with derived values for are written to.
 
@@ -561,7 +561,7 @@ class TelescopeModel:
         """
         return self._configFileDirectory.parents[0].joinpath("derived")
 
-    def getTelescopeTransmissionParameters(self):
+    def get_telescope_transmission_parameters(self):
         """
         Get tel. transmission pars as a list of floats.
 
@@ -571,13 +571,13 @@ class TelescopeModel:
             List of 4 parameters that describe the tel. transmission vs off-axis.
         """
 
-        telescopeTransmission = self.getParameterValue("telescope_transmission")
+        telescopeTransmission = self.get_parameter_value("telescope_transmission")
         if isinstance(telescopeTransmission, str):
-            return [float(v) for v in self.getParameterValue("telescope_transmission").split()]
+            return [float(v) for v in self.get_parameter_value("telescope_transmission").split()]
         else:
             return [float(telescopeTransmission), 0, 0, 0]
 
-    def exportSingleMirrorListFile(self, mirrorNumber, setFocalLengthToZero):
+    def export_single_mirror_list_file(self, mirrorNumber, setFocalLengthToZero):
         """
         Export a mirror list file with a single mirror in it.
 
@@ -592,7 +592,7 @@ class TelescopeModel:
             logging.error("mirrorNumber > numberOfMirrors")
             return None
 
-        fileName = names.simtelSingleMirrorListFileName(
+        fileName = names.simtel_single_mirror_list_file_name(
             self.site, self.name, self.modelVersion, mirrorNumber, self.label
         )
         if not hasattr(self, "_singleMirrorListFilePath"):
@@ -600,17 +600,17 @@ class TelescopeModel:
         self._singleMirrorListFilePaths[mirrorNumber] = self._configFileDirectory.joinpath(fileName)
 
         # Using SimtelConfigWriter
-        self._loadSimtelConfigWriter()
-        self.simtelConfigWriter.writeSingleMirrorListFile(
+        self._load_simtel_config_writer()
+        self.simtelConfigWriter.write_single_mirror_list_file(
             mirrorNumber,
             self.mirrors,
             self._singleMirrorListFilePaths[mirrorNumber],
             setFocalLengthToZero,
         )
 
-    # END of exportSingleMirrorListFile
+    # END of export_single_mirror_list_file
 
-    def getSingleMirrorListFile(self, mirrorNumber, setFocalLengthToZero=False):
+    def get_single_mirror_list_file(self, mirrorNumber, setFocalLengthToZero=False):
         """
         Get the path to the single mirror list file.
 
@@ -626,53 +626,55 @@ class TelescopeModel:
         Path
             Path of the single mirror list file.
         """
-        self.exportSingleMirrorListFile(mirrorNumber, setFocalLengthToZero)
+        self.export_single_mirror_list_file(mirrorNumber, setFocalLengthToZero)
         return self._singleMirrorListFilePaths[mirrorNumber]
 
-    def _loadMirrors(self):
+    def _load_mirrors(self):
         """Load the attribute mirrors by creating a Mirrors object with the mirror list file."""
         mirrorListFileName = self._parameters["mirror_list"]["Value"]
         try:
-            mirrorListFile = gen.findFile(mirrorListFileName, self._configFileDirectory)
+            mirrorListFile = gen.find_file(mirrorListFileName, self._configFileDirectory)
         except FileNotFoundError:
-            mirrorListFile = gen.findFile(mirrorListFileName, self.io_handler.model_path)
+            mirrorListFile = gen.find_file(mirrorListFileName, self.io_handler.model_path)
             self._logger.warning(
                 "MirrorListFile was not found in the config directory - "
                 "Using the one found in the model_path"
             )
         self._mirrors = Mirrors(mirrorListFile)
 
-    def _loadReferenceData(self):
+    def _load_reference_data(self):
         """Load the reference data for this telescope from the DB."""
         self._logger.debug("Reading reference data from DB")
         db = db_handler.DatabaseHandler(mongoDBConfig=self.mongoDBConfig)
-        self._referenceData = db.getReferenceData(self.site, self.modelVersion, onlyApplicable=True)
+        self._reference_data = db.get_reference_data(
+            self.site, self.modelVersion, onlyApplicable=True
+        )
 
-    def _loadDerivedValues(self):
+    def _load_derived_values(self):
         """Load the derived values for this telescope from the DB."""
         self._logger.debug("Reading derived data from DB")
         db = db_handler.DatabaseHandler(mongoDBConfig=self.mongoDBConfig)
-        self._derived = db.getDerivedValues(
+        self._derived = db.get_derived_values(
             self.site,
             self.name,
             self.modelVersion,
         )
 
-    def _loadCamera(self):
+    def _load_camera(self):
         """Loading camera attribute by creating a Camera object with the camera config file."""
-        cameraConfigFile = self.getParameterValue("camera_config_file")
-        focalLength = self.getParameterValue("effective_focal_length")
+        cameraConfigFile = self.get_parameter_value("camera_config_file")
+        focalLength = self.get_parameter_value("effective_focal_length")
         if focalLength == 0.0:
             self._logger.warning("Using focal_length because effective_focal_length is 0.")
-            focalLength = self.getParameterValue("focal_length")
+            focalLength = self.get_parameter_value("focal_length")
         try:
-            cameraConfigFilePath = gen.findFile(cameraConfigFile, self._configFileDirectory)
+            cameraConfigFilePath = gen.find_file(cameraConfigFile, self._configFileDirectory)
         except FileNotFoundError:
             self._logger.warning(
                 "CameraConfigFile was not found in the config directory - "
                 "Using the one found in the model_path"
             )
-            cameraConfigFilePath = gen.findFile(cameraConfigFile, self.io_handler.model_path)
+            cameraConfigFilePath = gen.find_file(cameraConfigFile, self.io_handler.model_path)
 
         self._camera = Camera(
             telescopeModelName=self.name,
@@ -680,7 +682,7 @@ class TelescopeModel:
             focalLength=focalLength,
         )
 
-    def _loadSimtelConfigWriter(self):
+    def _load_simtel_config_writer(self):
         if not hasattr(self, "simtelConfigWriter"):
             self.simtelConfigWriter = SimtelConfigWriter(
                 site=self.site,
@@ -689,7 +691,7 @@ class TelescopeModel:
                 label=self.label,
             )
 
-    def isFile2D(self, par):
+    def is_file_2D(self, par):
         """
         Check if the file referenced by par is a 2D table.
 
@@ -703,17 +705,17 @@ class TelescopeModel:
         bool:
             True if the file is a 2D map type, False otherwise.
         """
-        if not self.hasParameter(par):
+        if not self.has_parameter(par):
             logging.error("Parameter {} does not exist".format(par))
             return False
 
-        fileName = self.getParameterValue(par)
-        file = self.getConfigDirectory().joinpath(fileName)
+        fileName = self.get_parameter_value(par)
+        file = self.get_config_directory().joinpath(fileName)
         with open(file, "r") as f:
             is2D = "@RPOL@" in f.read()
         return is2D
 
-    def readTwoDimWavelengthAngle(self, fileName):
+    def read_two_dim_wavelength_angle(self, fileName):
         """
         Read a two dimensional distribution of wavelngth and angle (z-axis can be anything).
         Return a dictionary with three arrays,
@@ -730,7 +732,7 @@ class TelescopeModel:
             dict of three arrays, wavelength, degrees, z
         """
 
-        _file = self.getConfigDirectory().joinpath(fileName)
+        _file = self.get_config_directory().joinpath(fileName)
         with open(_file, "r") as f:
             for i_line, line in enumerate(f):
                 if line.startswith("ANGLE"):
@@ -745,13 +747,13 @@ class TelescopeModel:
             "z": np.array(_data[:, 1:]).T,
         }
 
-    def getOnAxisEffOpticalArea(self):
+    def get_on_axis_eff_optical_area(self):
         """
         Return the on-axis effective optical area (derived previously for this telescope).
         """
 
         rayTracingData = astropy.io.ascii.read(
-            self.getDerivedDirectory().joinpath(self.derived["ray_tracing"]["Value"])
+            self.get_derived_directory().joinpath(self.derived["ray_tracing"]["Value"])
         )
         if not np.isclose(rayTracingData["Off-axis angle"][0], 0):
             self._logger.error(
@@ -761,7 +763,7 @@ class TelescopeModel:
             raise ValueError
         return rayTracingData["eff_area"][0]
 
-    def readIncidenceAngleDistribution(self, incidenceAngleDistFile):
+    def read_incidence_angle_distribution(self, incidenceAngleDistFile):
         """
         Read the incidence angle distrubution from a file
 
@@ -777,12 +779,12 @@ class TelescopeModel:
         """
 
         incidenceAngleDist = astropy.io.ascii.read(
-            self.getDerivedDirectory().joinpath(incidenceAngleDistFile)
+            self.get_derived_directory().joinpath(incidenceAngleDistFile)
         )
         return incidenceAngleDist
 
     @staticmethod
-    def calcAverageCurve(curves, incidenceAngleDist):
+    def calc_average_curve(curves, incidenceAngleDist):
         """
         Calculate an average curve from a set of curves, using as weights
         the distribution of incidence angles provided in incidenceAngleDist
@@ -818,7 +820,7 @@ class TelescopeModel:
 
         return averageCurve
 
-    def exportTableToModelDirectory(self, fileName, table):
+    def export_table_to_model_directory(self, fileName, table):
         """
         Write out a file with the provided table to the model directory.
 

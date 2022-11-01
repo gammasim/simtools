@@ -29,7 +29,7 @@ class Mirrors:
     -------
     readMirrorList(mirrorListFile)
         Read the mirror list and store the data.
-    plotMirrorLayout()
+    plot_mirror_layout()
         Plot the mirror layout (to be implemented).
     """
 
@@ -52,9 +52,9 @@ class Mirrors:
         self.numberOfMirrors = 0
 
         self._mirrorListFile = mirrorListFile
-        self._readMirrorList()
+        self._read_mirror_list()
 
-    def _readMirrorList(self):
+    def _read_mirror_list(self):
         """
         Read the mirror lists from disk and store the data
 
@@ -64,11 +64,11 @@ class Mirrors:
         """
 
         if str(self._mirrorListFile).find("ecsv") > 0:
-            self._readMirrorList_from_ecsv()
+            self._read_mirror_list_from_ecsv()
         else:
-            self._readMirrorList_from_sim_telarray()
+            self._read_mirror_list_from_sim_telarray()
 
-    def _readMirrorList_from_ecsv(self):
+    def _read_mirror_list_from_ecsv(self):
         """
         Read the mirror list in ecsv format and store the data.
 
@@ -105,7 +105,7 @@ class Mirrors:
             self._logger.error(msg)
             raise InvalidMirrorListFile()
 
-    def _readMirrorList_from_sim_telarray(self):
+    def _read_mirror_list_from_sim_telarray(self):
         """
         Read the mirror list in sim_telarray format and store the data.
 
@@ -149,7 +149,7 @@ class Mirrors:
             self._logger.error(msg)
             raise InvalidMirrorListFile()
 
-    def getSingleMirrorParameters(self, number):
+    def get_single_mirror_parameters(self, number):
         """
         Get parameters for a single mirror given by number.
 
@@ -173,7 +173,7 @@ class Mirrors:
             self._mirrors["shape"][number],
         )
 
-    def plotMirrorLayout(self):
+    def plot_mirror_layout(self):
         """
         Plot the mirror layout.
 

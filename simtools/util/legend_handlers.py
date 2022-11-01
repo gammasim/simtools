@@ -3,35 +3,35 @@ import matplotlib.patches as mpatches
 import numpy as np
 
 
-class pixelObject(object):
+class PixelObject(object):
     pass
 
 
-class edgePixelObject(object):
+class EdgePixelObject(object):
     pass
 
 
-class offPixelObject(object):
+class OffPixelObject(object):
     pass
 
 
-class lstObject(object):
+class LSTObject(object):
     pass
 
 
-class mstObject(object):
+class MSTObject(object):
     pass
 
 
-class sstObject(object):
+class SSTObject(object):
     pass
 
 
-class meanRadiusOuterEdgeObject(object):
+class MeanRadiusOuterEdgeObject(object):
     pass
 
 
-class hexPixelHandler(object):
+class HexPixelHandler(object):
     """
     Legend handler class to plot a hexagonal "on" pixel.
     """
@@ -53,7 +53,7 @@ class hexPixelHandler(object):
         return patch
 
 
-class hexEdgePixelHandler(object):
+class HexEdgePixelHandler(object):
     """
     Legend handler class to plot a hexagonal "edge" pixel.
     """
@@ -78,7 +78,7 @@ class hexEdgePixelHandler(object):
         return patch
 
 
-class hexOffPixelHandler(object):
+class HexOffPixelHandler(object):
     """
     Legend handler class to plot a hexagonal "off" pixel.
     """
@@ -103,7 +103,7 @@ class hexOffPixelHandler(object):
         return patch
 
 
-class squarePixelHandler(object):
+class SquarePixelHandler(object):
     """
     Legend handler class to plot a square "on" pixel.
     """
@@ -124,7 +124,7 @@ class squarePixelHandler(object):
         return patch
 
 
-class squareEdgePixelHandler(object):
+class SquareEdgePixelHandler(object):
     """
     Legend handler class to plot a square "edge" pixel.
     """
@@ -145,7 +145,7 @@ class squareEdgePixelHandler(object):
         return patch
 
 
-class squareOffPixelHandler(object):
+class SquareOffPixelHandler(object):
     """
     Legend handler class to plot a square "off" pixel.
     """
@@ -166,7 +166,7 @@ class squareOffPixelHandler(object):
         return patch
 
 
-class lstHandler(object):
+class LSTHandler(object):
     """
     Legend handler class to plot a representation of an LST in an array layout.
     """
@@ -189,7 +189,7 @@ class lstHandler(object):
         return patch
 
 
-class mstHandler(object):
+class MSTHandler(object):
     """
     Legend handler class to plot a representation of an MST in an array layout.
     """
@@ -210,7 +210,7 @@ class mstHandler(object):
         return patch
 
 
-class sstHandler(object):
+class SSTHandler(object):
     """
     Legend handler class to plot a representation of an SST in an array layout.
     """
@@ -233,7 +233,7 @@ class sstHandler(object):
         return patch
 
 
-class meanRadiusOuterEdgeHandler(object):
+class MeanRadiusOuterEdgeHandler(object):
     """
     Legend handler class to plot a the mean radius outer edge of the dish.
     """

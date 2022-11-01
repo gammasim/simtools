@@ -124,11 +124,11 @@ def main():
     )
 
     logger = logging.getLogger()
-    logger.setLevel(gen.getLogLevelFromUser(args_dict["log_level"]))
+    logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
     # Output directory to save files related directly to this app
     _io_handler = io_handler.IOHandler()
-    outputDir = _io_handler.getOutputDirectory(label, dirType="application-plots")
+    outputDir = _io_handler.get_output_directory(label, dirType="application-plots")
 
     showerConfigData = {
         "dataDirectory": args_dict["output"],
@@ -171,9 +171,9 @@ def main():
                 f.write(line + "\n")
 
     logger.info("List of output files exported to {}".format(outputFileList))
-    printListIntoFile(showerSimulator.getListOfOutputFiles(), outputFileList)
+    printListIntoFile(showerSimulator.get_list_of_output_files(), outputFileList)
     logger.info("List of log files exported to {}".format(logFileList))
-    printListIntoFile(showerSimulator.getListOfLogFiles(), logFileList)
+    printListIntoFile(showerSimulator.get_list_of_log_files(), logFileList)
 
 
 if __name__ == "__main__":

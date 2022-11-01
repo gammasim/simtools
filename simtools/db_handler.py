@@ -14,7 +14,7 @@ from pymongo.errors import BulkWriteError
 import simtools.util.general as gen
 from simtools import io_handler
 from simtools.util import names
-from simtools.util.model import getTelescopeClass
+from simtools.util.model import get_telescope_class
 
 __all__ = ["DatabaseHandler"]
 
@@ -30,27 +30,27 @@ class DatabaseHandler:
 
     Methods
     -------
-    getModelParameters()
+    get_model_parameters()
         Get the model parameters of a specific telescope with a specific version.
-    getSiteParameters()
+    get_site_parameters()
         Get the site parameters of a specific version of a site.
-    copyTelescope()
+    copy_telescope()
         Copy a full telescope configuration of a specific version to a new telescope name.
-    deleteQuery()
+    delete_query()
         Delete all entries from the DB which correspond to the provided query.
-    updateParameter()
+    update_parameter()
         Update a parameter value for a specific telescope/version.
-    updateParameterField()
+    update_parameter_field()
         Update a parameter field other than value for a specific telescope/version.
-    addParameter()
+    add_parameter()
         Add a parameter value for a specific telescope.
     addNewParamete()
         Add a new parameter for a specific telescope.
-    insertFileToDB()
+    insert_file_to_db()
         Insert a file or a list of files to the DB.
-    exportFileDB()
+    export_file_db()
         Get a file from the DB and write it to disk.
-    getAllVersions()
+    get_all_versions()
         Get all version entries in the DB of a telescope or site for a specific parameter.
     """
 
@@ -63,7 +63,7 @@ class DatabaseHandler:
 
     ALLOWED_FILE_EXTENSIONS = [".dat", ".txt", ".lis", ".cfg", ".yml", ".ecsv"]
 
-    dbClient = None
+    db_client = None
 
     def __init__(self, mongoDBConfig=None):
         """
@@ -101,11 +101,11 @@ class DatabaseHandler:
         Open the connection to MongoDB.
         """
         if self.mongo_db_config:
-            if DatabaseHandler.dbClient is None:
+            if DatabaseHandler.db_client is None:
                 with Lock():
-                    DatabaseHandler.dbClient = self._openMongoDB()
+                    DatabaseHandler.db_client = self._open_mongo_db()
 
-    def _openMongoDB(self):
+    def _open_mongo_db(self):
         """
         Open a connection to MongoDB and return the client to read/write to the DB with.
 
@@ -114,7 +114,7 @@ class DatabaseHandler:
         A PyMongo DB client
         """
         try:
-            _dbClient = MongoClient(
+            _db_client = MongoClient(
                 self.mongo_db_config["db_server"],
                 port=self.mongo_db_config["db_api_port"],
                 username=self.mongo_db_config["db_api_user"],
@@ -128,14 +128,14 @@ class DatabaseHandler:
             self._logger.error("Invalid setting of DB configuration")
             raise
 
-        return _dbClient
+        return _db_client
 
     @staticmethod
-    def _getTelescopeModelNameForDB(site, telescopeModelName):
+    def _get_telescope_model_name_for_db(site, telescopeModelName):
         """Make telescope name as the DB needs from site and telescopeModelName."""
         return site + "-" + telescopeModelName
 
-    def getModelParameters(
+    def get_model_parameters(
         self,
         site,
         telescopeModelName,
@@ -161,17 +161,17 @@ class DatabaseHandler:
         dict containing the parameters
         """
 
-        _siteValidated = names.validateSiteName(site)
-        _telModelNameValidated = names.validateTelescopeModelName(telescopeModelName)
+        _siteValidated = names.validate_site_name(site)
+        _telModelNameValidated = names.validate_telescope_model_name(telescopeModelName)
 
         if self.mongo_db_config:
             # Only MongoDB supports tagged version
-            _modelVersion = self._convertVersionToTagged(
+            _modelVersion = self._convert_version_to_tagged(
                 modelVersion, DatabaseHandler.DB_CTA_SIMULATION_MODEL
             )
-            _versionValidated = names.validateModelVersionName(_modelVersion)
+            _versionValidated = names.validate_model_version_name(_modelVersion)
 
-            _pars = self._getModelParametersMongoDB(
+            _pars = self._get_model_parameters_mongo_db(
                 DatabaseHandler.DB_CTA_SIMULATION_MODEL,
                 _siteValidated,
                 _telModelNameValidated,
@@ -180,16 +180,16 @@ class DatabaseHandler:
             )
             return _pars
         else:
-            _versionValidated = names.validateModelVersionName(modelVersion)
+            _versionValidated = names.validate_model_version_name(modelVersion)
 
-            return self._getModelParametersYaml(
+            return self._get_model_parameters_yaml(
                 _siteValidated,
                 _telModelNameValidated,
                 _versionValidated,
                 onlyApplicable,
             )
 
-    def exportFileDB(self, dbName, dest, fileName):
+    def export_file_db(self, dbName, dest, fileName):
         """
         Get file from the DB and write to disk.
 
@@ -214,11 +214,11 @@ class DatabaseHandler:
         """
 
         self._logger.debug(f"Getting {fileName} from {dbName} and writing it to {dest}")
-        filePathInstance = self._getFileMongoDB(dbName, fileName)
-        self._writeFileFromMongoToDisk(dbName, dest, filePathInstance)
+        filePathInstance = self._get_file_mongo_db(dbName, fileName)
+        self._write_file_from_mongo_to_disk(dbName, dest, filePathInstance)
         return filePathInstance._id
 
-    def exportModelFiles(self, parameters, dest):
+    def export_model_files(self, parameters, dest):
         """
         Export all the files in a model from the DB (Mongo or yaml) and write them to disk.
 
@@ -235,22 +235,26 @@ class DatabaseHandler:
             for info in parameters.values():
                 if not info["File"]:
                     continue
-                file = self._getFileMongoDB(DatabaseHandler.DB_CTA_SIMULATION_MODEL, info["Value"])
-                self._writeFileFromMongoToDisk(DatabaseHandler.DB_CTA_SIMULATION_MODEL, dest, file)
+                file = self._get_file_mongo_db(
+                    DatabaseHandler.DB_CTA_SIMULATION_MODEL, info["Value"]
+                )
+                self._write_file_from_mongo_to_disk(
+                    DatabaseHandler.DB_CTA_SIMULATION_MODEL, dest, file
+                )
         else:
             self._logger.debug("Exporting model files from local model file directories")
             for value in parameters.values():
 
-                if not self._isFile(value):
+                if not self._is_file(value):
                     continue
-                self._writeModelFileYaml(value, dest, noFileOk=True)
+                self._write_model_file_yaml(value, dest, noFileOk=True)
 
     @staticmethod
-    def _isFile(value):
+    def _is_file(value):
         """Verify if a parameter value is a file name."""
         return any(ext in str(value) for ext in DatabaseHandler.ALLOWED_FILE_EXTENSIONS)
 
-    def _writeModelFileYaml(self, fileName, destDir, noFileOk=False):
+    def _write_model_file_yaml(self, fileName, destDir, noFileOk=False):
         """
         Find the fileName in the model files location and write a copy
         at the destDir directory.
@@ -265,7 +269,7 @@ class DatabaseHandler:
 
         destFile = Path(destDir).joinpath(fileName)
         try:
-            file = gen.findFile(fileName, self.io_handler.model_path)
+            file = gen.find_file(fileName, self.io_handler.model_path)
         except FileNotFoundError:
             if noFileOk:
                 self._logger.debug("File {} not found but noFileOk".format(fileName))
@@ -275,7 +279,9 @@ class DatabaseHandler:
 
         destFile.write_text(file.read_text())
 
-    def _getModelParametersYaml(self, site, telescopeModelName, modelVersion, onlyApplicable=False):
+    def _get_model_parameters_yaml(
+        self, site, telescopeModelName, modelVersion, onlyApplicable=False
+    ):
         """
         Get parameters from DB for one specific type.
 
@@ -295,8 +301,8 @@ class DatabaseHandler:
         dict containing the parameters
         """
 
-        _telClass = getTelescopeClass(telescopeModelName)
-        _telNameConverted = names.convertTelescopeModelNameToYaml(telescopeModelName)
+        _telClass = get_telescope_class(telescopeModelName)
+        _telNameConverted = names.convert_telescope_model_name_to_yaml(telescopeModelName)
 
         if _telClass == "MST":
             # MST-FlashCam or MST-NectarCam
@@ -310,7 +316,7 @@ class DatabaseHandler:
         # Selecting version and applicable (if on)
         _pars = dict()
         for _tel in _whichTelLabels:
-            _allPars = self._getAllModelParametersYaml(_tel)
+            _allPars = self._get_all_model_parameters_yaml(_tel)
 
             # If _tel is a structure, only the applicable parameters will be collected, always.
             # The default ones will be covered by the camera parameters.
@@ -328,7 +334,7 @@ class DatabaseHandler:
 
         return _pars
 
-    def _getModelParametersMongoDB(
+    def _get_model_parameters_mongo_db(
         self, dbName, site, telescopeModelName, modelVersion, onlyApplicable=False
     ):
         """
@@ -352,9 +358,9 @@ class DatabaseHandler:
         dict containing the parameters
         """
 
-        _siteValidated = names.validateSiteName(site)
-        _telNameDB = self._getTelescopeModelNameForDB(_siteValidated, telescopeModelName)
-        _telClass = getTelescopeClass(telescopeModelName)
+        _siteValidated = names.validate_site_name(site)
+        _telNameDB = self._get_telescope_model_name_for_db(_siteValidated, telescopeModelName)
+        _telClass = get_telescope_class(telescopeModelName)
 
         self._logger.debug("TelNameDB: {}".format(_telNameDB))
         self._logger.debug("TelClass: {}".format(_telClass))
@@ -387,7 +393,7 @@ class DatabaseHandler:
             )
 
             _pars.update(
-                self.readMongoDB(
+                self.read_mongo_db(
                     dbName,
                     _tel,
                     modelVersion,
@@ -399,7 +405,7 @@ class DatabaseHandler:
 
         return _pars
 
-    def readMongoDB(
+    def read_mongo_db(
         self,
         dbName,
         telescopeModelNameDB,
@@ -435,10 +441,10 @@ class DatabaseHandler:
         dict containing the parameters
         """
 
-        collection = DatabaseHandler.dbClient[dbName][collectionName]
+        collection = DatabaseHandler.db_client[dbName][collectionName]
         _parameters = dict()
 
-        _modelVersion = self._convertVersionToTagged(
+        _modelVersion = self._convert_version_to_tagged(
             modelVersion, DatabaseHandler.DB_CTA_SIMULATION_MODEL
         )
 
@@ -462,13 +468,13 @@ class DatabaseHandler:
             _parameters[parNow].pop("Telescope", None)
             _parameters[parNow]["entryDate"] = ObjectId(post["_id"]).generation_time
             if _parameters[parNow]["File"] and writeFiles:
-                file = self._getFileMongoDB(dbName, _parameters[parNow]["Value"])
+                file = self._get_file_mongo_db(dbName, _parameters[parNow]["Value"])
 
-                self._writeFileFromMongoToDisk(dbName, runLocation, file)
+                self._write_file_from_mongo_to_disk(dbName, runLocation, file)
 
         return _parameters
 
-    def _getAllModelParametersYaml(self, telescopeNameYaml):
+    def _get_all_model_parameters_yaml(self, telescopeNameYaml):
         """
         Get all parameters from Yaml DB for one specific type.
         No selection is applied.
@@ -484,13 +490,13 @@ class DatabaseHandler:
         """
 
         _fileNameDB = "parValues-{}.yml".format(telescopeNameYaml)
-        _yamlFile = gen.findFile(_fileNameDB, self.io_handler.model_path)
+        _yamlFile = gen.find_file(_fileNameDB, self.io_handler.model_path)
         self._logger.debug("Reading DB file {}".format(_yamlFile))
         with open(_yamlFile, "r") as stream:
             _allPars = yaml.safe_load(stream)
         return _allPars
 
-    def getSiteParameters(
+    def get_site_parameters(
         self,
         site,
         modelVersion,
@@ -512,11 +518,11 @@ class DatabaseHandler:
         -------
         dict containing the parameters
         """
-        _site = names.validateSiteName(site)
-        _modelVersion = names.validateModelVersionName(modelVersion)
+        _site = names.validate_site_name(site)
+        _modelVersion = names.validate_model_version_name(modelVersion)
 
         if self.mongo_db_config:
-            _pars = self._getSiteParametersMongoDB(
+            _pars = self._get_site_parameters_mongo_db(
                 DatabaseHandler.DB_CTA_SIMULATION_MODEL,
                 _site,
                 _modelVersion,
@@ -524,9 +530,9 @@ class DatabaseHandler:
             )
             return _pars
         else:
-            return self._getSiteParametersYaml(_site, _modelVersion, onlyApplicable)
+            return self._get_site_parameters_yaml(_site, _modelVersion, onlyApplicable)
 
-    def _getSiteParametersYaml(self, site, modelVersion, onlyApplicable=False):
+    def _get_site_parameters_yaml(self, site, modelVersion, onlyApplicable=False):
         """
         Get parameters from DB for a specific type.
 
@@ -546,7 +552,7 @@ class DatabaseHandler:
 
         siteYaml = "lapalma" if site == "North" else "paranal"
 
-        yamlFile = gen.findFile("parValues-Sites.yml", self.io_handler.model_path)
+        yamlFile = gen.find_file("parValues-Sites.yml", self.io_handler.model_path)
         self._logger.info("Reading DB file {}".format(yamlFile))
         with open(yamlFile, "r") as stream:
             _allParsVersions = yaml.safe_load(stream)
@@ -563,7 +569,7 @@ class DatabaseHandler:
 
         return _pars
 
-    def _getSiteParametersMongoDB(self, dbName, site, modelVersion, onlyApplicable=False):
+    def _get_site_parameters_mongo_db(self, dbName, site, modelVersion, onlyApplicable=False):
         """
         Get parameters from MongoDB for a specific telescope.
 
@@ -583,11 +589,11 @@ class DatabaseHandler:
         dict containing the parameters
         """
 
-        _siteValidated = names.validateSiteName(site)
-        collection = DatabaseHandler.dbClient[dbName].sites
+        _siteValidated = names.validate_site_name(site)
+        collection = DatabaseHandler.db_client[dbName].sites
         _parameters = dict()
 
-        _modelVersion = self._convertVersionToTagged(
+        _modelVersion = self._convert_version_to_tagged(
             modelVersion, DatabaseHandler.DB_CTA_SIMULATION_MODEL
         )
 
@@ -612,7 +618,7 @@ class DatabaseHandler:
         return _parameters
 
     @staticmethod
-    def getDescriptions(dbName=DB_CTA_SIMULATION_MODEL_DESCRIPTIONS, collectionName="telescopes"):
+    def get_descriptions(dbName=DB_CTA_SIMULATION_MODEL_DESCRIPTIONS, collectionName="telescopes"):
         """
         Get parameter descriptions from MongoDB
 
@@ -628,7 +634,7 @@ class DatabaseHandler:
         dict containing the parameters with their descriptions
         """
 
-        collection = DatabaseHandler.dbClient[dbName][collectionName]
+        collection = DatabaseHandler.db_client[dbName][collectionName]
 
         _parameters = dict()
 
@@ -641,7 +647,7 @@ class DatabaseHandler:
 
         return _parameters
 
-    def getReferenceData(self, site, modelVersion, onlyApplicable=False):
+    def get_reference_data(self, site, modelVersion, onlyApplicable=False):
         """
         Get parameters from MongoDB for a specific telescope.
 
@@ -661,12 +667,12 @@ class DatabaseHandler:
         dict containing the parameters
         """
 
-        _siteValidated = names.validateSiteName(site)
-        collection = DatabaseHandler.dbClient[DatabaseHandler.DB_REFERENCE_DATA].reference_values
+        _siteValidated = names.validate_site_name(site)
+        collection = DatabaseHandler.db_client[DatabaseHandler.DB_REFERENCE_DATA].reference_values
         _parameters = dict()
 
-        _modelVersion = self._convertVersionToTagged(
-            names.validateModelVersionName(modelVersion), DatabaseHandler.DB_CTA_SIMULATION_MODEL
+        _modelVersion = self._convert_version_to_tagged(
+            names.validate_model_version_name(modelVersion), DatabaseHandler.DB_CTA_SIMULATION_MODEL
         )
 
         query = {
@@ -689,7 +695,7 @@ class DatabaseHandler:
 
         return _parameters
 
-    def getDerivedValues(self, site, telescopeModelName, modelVersion):
+    def get_derived_values(self, site, telescopeModelName, modelVersion):
         """
         Get a derived value from the DB for a specific telescope.
 
@@ -707,16 +713,16 @@ class DatabaseHandler:
         dict containing the parameters
         """
 
-        _siteValidated = names.validateSiteName(site)
-        _telModelNameValidated = names.validateTelescopeModelName(telescopeModelName)
-        _telNameDB = self._getTelescopeModelNameForDB(_siteValidated, _telModelNameValidated)
-        _modelVersion = self._convertVersionToTagged(
-            names.validateModelVersionName(modelVersion), DatabaseHandler.DB_CTA_SIMULATION_MODEL
+        _siteValidated = names.validate_site_name(site)
+        _telModelNameValidated = names.validate_telescope_model_name(telescopeModelName)
+        _telNameDB = self._get_telescope_model_name_for_db(_siteValidated, _telModelNameValidated)
+        _modelVersion = self._convert_version_to_tagged(
+            names.validate_model_version_name(modelVersion), DatabaseHandler.DB_CTA_SIMULATION_MODEL
         )
 
         self._logger.debug("Getting derived values for {} from the DB".format(_telNameDB))
 
-        _pars = self.readMongoDB(
+        _pars = self.read_mongo_db(
             DatabaseHandler.DB_DERIVED_VALUES,
             _telNameDB,
             _modelVersion,
@@ -728,7 +734,7 @@ class DatabaseHandler:
         return _pars
 
     @staticmethod
-    def _getFileMongoDB(dbName, fileName):
+    def _get_file_mongo_db(dbName, fileName):
         """
         Extract a file from MongoDB and return GridFS file instance
 
@@ -750,7 +756,7 @@ class DatabaseHandler:
             If the desired file is not found.
         """
 
-        db = DatabaseHandler.dbClient[dbName]
+        db = DatabaseHandler.db_client[dbName]
         fileSystem = gridfs.GridFS(db)
         if fileSystem.exists({"filename": fileName}):
             return fileSystem.find_one({"filename": fileName})
@@ -760,7 +766,7 @@ class DatabaseHandler:
             )
 
     @staticmethod
-    def _writeFileFromMongoToDisk(dbName, path, file):
+    def _write_file_from_mongo_to_disk(dbName, path, file):
         """
         Extract a file from MongoDB and write it to disk
 
@@ -774,14 +780,14 @@ class DatabaseHandler:
             A file instance returned by GridFS find_one
         """
 
-        db = DatabaseHandler.dbClient[dbName]
+        db = DatabaseHandler.db_client[dbName]
         fsOutput = gridfs.GridFSBucket(db)
         with open(Path(path).joinpath(file.filename), "wb") as outputFile:
             fsOutput.download_to_stream_by_name(file.filename, outputFile)
 
         return
 
-    def copyTelescope(
+    def copy_telescope(
         self,
         dbName,
         telToCopy,
@@ -826,10 +832,10 @@ class DatabaseHandler:
             )
         )
 
-        collection = DatabaseHandler.dbClient[dbName][collectionName]
+        collection = DatabaseHandler.db_client[dbName][collectionName]
         dbEntries = list()
 
-        _versionToCopy = self._convertVersionToTagged(
+        _versionToCopy = self._convert_version_to_tagged(
             versionToCopy, DatabaseHandler.DB_CTA_SIMULATION_MODEL
         )
 
@@ -843,7 +849,7 @@ class DatabaseHandler:
             dbEntries.append(post)
 
         self._logger.info("Creating new telescope {}".format(newTelName))
-        collection = DatabaseHandler.dbClient[dbToCopyTo][collectionToCopyTo]
+        collection = DatabaseHandler.db_client[dbToCopyTo][collectionToCopyTo]
         try:
             collection.insert_many(dbEntries)
         except BulkWriteError as exc:
@@ -851,7 +857,7 @@ class DatabaseHandler:
 
         return
 
-    def copyDocuments(self, dbName, collection, query, dbToCopyTo, collectionToCopyTo=None):
+    def copy_documents(self, dbName, collection, query, dbToCopyTo, collectionToCopyTo=None):
         """
         Copy the documents matching to "query" to the DB "dbToCopyTo".
         The documents are copied to the same collection as in "dbName".
@@ -875,7 +881,7 @@ class DatabaseHandler:
             The name of the DB to copy to.
         """
 
-        _collection = DatabaseHandler.dbClient[dbName][collection]
+        _collection = DatabaseHandler.db_client[dbName][collection]
         if collectionToCopyTo is None:
             collectionToCopyTo = collection
         dbEntries = list()
@@ -887,7 +893,7 @@ class DatabaseHandler:
         self._logger.info(
             "Copying documents matching the following query {}\nto {}".format(query, dbToCopyTo)
         )
-        _collection = DatabaseHandler.dbClient[dbToCopyTo][collectionToCopyTo]
+        _collection = DatabaseHandler.db_client[dbToCopyTo][collectionToCopyTo]
         try:
             _collection.insert_many(dbEntries)
         except BulkWriteError as exc:
@@ -895,7 +901,7 @@ class DatabaseHandler:
 
         return
 
-    def deleteQuery(self, dbName, collection, query):
+    def delete_query(self, dbName, collection, query):
         """
         Delete all entries from the DB which correspond to the provided query.
         (This function should be rarely used, if at all.)
@@ -914,10 +920,10 @@ class DatabaseHandler:
             would delete the entire prod4 version from telescope North-LST-1.
         """
 
-        _collection = DatabaseHandler.dbClient[dbName][collection]
+        _collection = DatabaseHandler.db_client[dbName][collection]
 
         if "Version" in query:
-            query["Version"] = self._convertVersionToTagged(
+            query["Version"] = self._convert_version_to_tagged(
                 query["Version"], DatabaseHandler.DB_CTA_SIMULATION_MODEL
             )
 
@@ -932,7 +938,7 @@ class DatabaseHandler:
 
         return
 
-    def updateParameter(
+    def update_parameter(
         self,
         dbName,
         telescope,
@@ -965,9 +971,9 @@ class DatabaseHandler:
             where to find files to upload to the DB
         """
 
-        collection = DatabaseHandler.dbClient[dbName][collectionName]
+        collection = DatabaseHandler.db_client[dbName][collectionName]
 
-        _modelVersion = self._convertVersionToTagged(
+        _modelVersion = self._convert_version_to_tagged(
             version, DatabaseHandler.DB_CTA_SIMULATION_MODEL
         )
 
@@ -987,7 +993,7 @@ class DatabaseHandler:
         )
 
         filesToAddToDB = set()
-        if self._isFile(newValue):
+        if self._is_file(newValue):
             file = True
             if filePrefix is None:
                 raise FileNotFoundError(
@@ -1004,11 +1010,11 @@ class DatabaseHandler:
 
         collection.update_one(query, queryUpdate)
         for fileNow in filesToAddToDB:
-            self.insertFileToDB(fileNow, dbName)
+            self.insert_file_to_db(fileNow, dbName)
 
         return
 
-    def updateParameterField(
+    def update_parameter_field(
         self,
         dbName,
         version,
@@ -1052,9 +1058,9 @@ class DatabaseHandler:
         if field not in allowed_fields:
             raise ValueError(f"The field to change must be one of {', '.join(allowed_fields)}")
 
-        collection = DatabaseHandler.dbClient[dbName][collectionName]
+        collection = DatabaseHandler.db_client[dbName][collectionName]
 
-        _modelVersion = self._convertVersionToTagged(
+        _modelVersion = self._convert_version_to_tagged(
             version, DatabaseHandler.DB_CTA_SIMULATION_MODEL
         )
 
@@ -1105,7 +1111,7 @@ class DatabaseHandler:
 
         return
 
-    def addParameter(
+    def add_parameter(
         self,
         dbName,
         telescope,
@@ -1139,9 +1145,9 @@ class DatabaseHandler:
             where to find files to upload to the DB
         """
 
-        collection = DatabaseHandler.dbClient[dbName][collectionName]
+        collection = DatabaseHandler.db_client[dbName][collectionName]
 
-        _newVersion = self._convertVersionToTagged(
+        _newVersion = self._convert_version_to_tagged(
             newVersion, DatabaseHandler.DB_CTA_SIMULATION_MODEL
         )
 
@@ -1156,7 +1162,7 @@ class DatabaseHandler:
         parEntry.pop("_id", None)
 
         filesToAddToDB = set()
-        if self._isFile(newValue):
+        if self._is_file(newValue):
             parEntry["File"] = True
             if filePrefix is None:
                 raise FileNotFoundError(
@@ -1173,11 +1179,11 @@ class DatabaseHandler:
         collection.insert_one(parEntry)
         if len(filesToAddToDB) > 0:
             self._logger.info("Will also add the file {} to the DB".format(filePath))
-            self.insertFileToDB(filesToAddToDB, dbName)
+            self.insert_file_to_db(filesToAddToDB, dbName)
 
         return
 
-    def addNewParameter(
+    def add_new_parameter(
         self,
         dbName,
         version,
@@ -1217,13 +1223,13 @@ class DatabaseHandler:
             Any additional fields to add to the parameter
         """
 
-        collection = DatabaseHandler.dbClient[dbName][collectionName]
+        collection = DatabaseHandler.db_client[dbName][collectionName]
 
         dbEntry = dict()
         if "telescopes" in collectionName:
-            dbEntry["Telescope"] = names.validateTelescopeNameDB(telescope)
+            dbEntry["Telescope"] = names.validate_telescope_name_db(telescope)
         elif "sites" in collectionName:
-            dbEntry["Site"] = names.validateSiteName(site)
+            dbEntry["Site"] = names.validate_site_name(site)
         else:
             raise ValueError("Can only add new parameters to the sites or telescopes collections")
 
@@ -1234,7 +1240,7 @@ class DatabaseHandler:
 
         filesToAddToDB = set()
         dbEntry["File"] = False
-        if self._isFile(value):
+        if self._is_file(value):
             dbEntry["File"] = True
             if filePrefix is None:
                 raise FileNotFoundError(
@@ -1252,19 +1258,19 @@ class DatabaseHandler:
         collection.insert_one(dbEntry)
         for fileToInsertNow in filesToAddToDB:
             self._logger.info("Will also add the file {} to the DB".format(fileToInsertNow))
-            self.insertFileToDB(fileToInsertNow, dbName)
+            self.insert_file_to_db(fileToInsertNow, dbName)
 
         return
 
-    def _convertVersionToTagged(self, modelVersion, dbName):
+    def _convert_version_to_tagged(self, modelVersion, dbName):
         """Convert to tagged version, if needed."""
         if modelVersion in ["Current", "Latest"]:
-            return self._getTaggedVersion(dbName, modelVersion)
+            return self._get_tagged_version(dbName, modelVersion)
         else:
             return modelVersion
 
     @staticmethod
-    def _getTaggedVersion(dbName, version="Current"):
+    def _get_tagged_version(dbName, version="Current"):
         """
         Get the tag of the "Current" or "Latest" version of the MC Model.
         The "Current" is the latest stable MC Model,
@@ -1286,14 +1292,14 @@ class DatabaseHandler:
         if version not in ["Current", "Latest"]:
             raise ValueError('The only default versions are "Current" or "Latest"')
 
-        collection = DatabaseHandler.dbClient[dbName].metadata
+        collection = DatabaseHandler.db_client[dbName].metadata
         query = {"Entry": "Simulation-Model-Tags"}
 
         tags = collection.find(query).sort("_id", pymongo.DESCENDING)[0]
 
         return tags["Tags"][version]["Value"]
 
-    def insertFileToDB(self, fileName, dbName=DB_CTA_SIMULATION_MODEL, **kwargs):
+    def insert_file_to_db(self, fileName, dbName=DB_CTA_SIMULATION_MODEL, **kwargs):
         """
         Insert a file to the DB.
 
@@ -1315,7 +1321,7 @@ class DatabaseHandler:
             "newly created DB GridOut._id.
         """
 
-        db = DatabaseHandler.dbClient[dbName]
+        db = DatabaseHandler.db_client[dbName]
         fileSystem = gridfs.GridFS(db)
 
         if "content_type" not in kwargs:
@@ -1332,7 +1338,7 @@ class DatabaseHandler:
         with open(fileName, "rb") as dataFile:
             return fileSystem.put(dataFile, **kwargs)
 
-    def getAllVersions(
+    def get_all_versions(
         self,
         dbName,
         parameter,
@@ -1364,16 +1370,18 @@ class DatabaseHandler:
             List of all versions found
         """
 
-        collection = DatabaseHandler.dbClient[dbName][collectionName]
+        collection = DatabaseHandler.db_client[dbName][collectionName]
 
         query = {
             "Parameter": parameter,
         }
 
-        _siteValidated = names.validateSiteName(site)
+        _siteValidated = names.validate_site_name(site)
         if collectionName == "telescopes":
-            _telModelNameValidated = names.validateTelescopeModelName(telescopeModelName)
-            _telNameDB = self._getTelescopeModelNameForDB(_siteValidated, _telModelNameValidated)
+            _telModelNameValidated = names.validate_telescope_model_name(telescopeModelName)
+            _telNameDB = self._get_telescope_model_name_for_db(
+                _siteValidated, _telModelNameValidated
+            )
             query["Telescope"] = _telNameDB
         elif collectionName == "sites":
             query["Site"] = _siteValidated

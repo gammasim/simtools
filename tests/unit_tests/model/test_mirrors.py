@@ -14,13 +14,13 @@ logger.setLevel(logging.DEBUG)
 def test_read_list(db, io_handler):
 
     testFileName = "mirror_CTA-LST-flen_grouped.dat"
-    db.exportFileDB(
+    db.export_file_db(
         dbName=db.DB_CTA_SIMULATION_MODEL,
-        dest=io_handler.getOutputDirectory(dirType="model", test=True),
+        dest=io_handler.get_output_directory(dirType="model", test=True),
         fileName=testFileName,
     )
-    mirrorListFile = gen.findFile(
-        testFileName, io_handler.getOutputDirectory(dirType="model", test=True)
+    mirrorListFile = gen.find_file(
+        testFileName, io_handler.get_output_directory(dirType="model", test=True)
     )
     logger.info("Using mirror list {}".format(mirrorListFile))
     mirrors = Mirrors(mirrorListFile)

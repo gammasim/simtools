@@ -24,4 +24,4 @@ def test_run(simtelRunner):
 
 def test_simtel_execution_error(simtelRunner):
     with pytest.raises(SimtelExecutionError):
-        simtelRunner._raiseSimtelError()
+        simtelRunner._raise_simtel_error()

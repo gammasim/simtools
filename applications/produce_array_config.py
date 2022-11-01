@@ -105,7 +105,7 @@ def main():
     args_dict, db_config = config.initialize(db_config=True)
 
     logger = logging.getLogger("simtools")
-    logger.setLevel(gen.getLogLevelFromUser(args_dict["log_level"]))
+    logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
     arrayModel = ArrayModel(
         label=args_dict["label"],
@@ -114,10 +114,10 @@ def main():
     )
 
     # Printing list of telescope for quick inspection.
-    arrayModel.printTelescopeList()
+    arrayModel.print_telescope_list()
 
     # Exporting config files.
-    arrayModel.exportAllSimtelConfigFiles()
+    arrayModel.export_all_simtel_config_files()
 
 
 if __name__ == "__main__":

@@ -47,12 +47,12 @@ def simtelRunner(arrayModel, simtelpath):
 
 @pytest.fixture
 def corsikaFile(io_handler):
-    corsikaFile = io_handler.getInputDataFile(
+    corsikaFile = io_handler.get_input_data_file(
         fileName="run1_proton_za20deg_azm0deg-North-1LST_trigger_rates.corsika.zst", test=True
     )
     return corsikaFile
 
 
 def test_run_script(simtelRunner, corsikaFile):
-    script = simtelRunner.getRunScript(runNumber=1, inputFile=corsikaFile)
+    script = simtelRunner.get_run_script(runNumber=1, inputFile=corsikaFile)
     assert Path(script).exists()

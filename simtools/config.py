@@ -7,7 +7,7 @@ from pathlib import Path
 
 import yaml
 
-__all__ = ["setConfigFileName", "loadConfig", "get", "findFile", "change"]
+__all__ = ["set_config_file_name", "load_config", "get", "find_file", "change"]
 
 
 class ConfigEnvironmentalVariableNotSet(Exception):
@@ -18,7 +18,7 @@ class ParameterNotFoundInConfigFile(Exception):
     pass
 
 
-def setConfigFileName(fileName):
+def set_config_file_name(fileName):
     """
     Redefines the config file name by resetting a global variable.
 
@@ -36,12 +36,12 @@ def setConfigFileName(fileName):
     CONFIG_FILE_NAME = fileName
 
 
-def loadConfig(fileName=None, useGlobals=True):
+def load_config(fileName=None, useGlobals=True):
     """
     Load config file and return it as a dict.
     3 possible options for the config fileName:
     1st - fileName parameter is given (not None)
-    2nd - CONFIG_FILE_NAME exists (set by setConfigFileName)
+    2nd - CONFIG_FILE_NAME exists (set by set_config_file_name)
     3rd - ./config.yml
 
     Parameters
@@ -96,7 +96,7 @@ def get(par, useGlobals=True):
     """
     _logger = logging.getLogger(__name__)
 
-    config = loadConfig(useGlobals=useGlobals)
+    config = load_config(useGlobals=useGlobals)
     if par not in config.keys():
         msg = "Configuration file does not contain an entry for the parameter " "{}".format(par)
         _logger.error(msg)
@@ -126,7 +126,7 @@ def change(par, value):
     CONFIG_CHANGED_PARS[par] = value
 
 
-def getConfigArg(name, value):
+def get_config_arg(name, value):
     """
     Get a config parameter if value is None. To be used to receive input arguments in classes.
 
@@ -145,7 +145,7 @@ def getConfigArg(name, value):
     return value if value is not None else get(name)
 
 
-def findFile(name, loc=None):
+def find_file(name, loc=None):
     """
     Search for model files inside of given directories, recursively, and return its full path.
 
@@ -208,7 +208,7 @@ def findFile(name, loc=None):
     raise FileNotFoundError(msg)
 
 
-def createDummyConfigFile(filename="config.yml", **kwargs):
+def create_dummy_config_file(filename="config.yml", **kwargs):
     """
     Create a dummy config.yml file to be used in test enviroments only.
 
@@ -238,7 +238,7 @@ def createDummyConfigFile(filename="config.yml", **kwargs):
         yaml.dump(config, outfile)
 
 
-def createDummyDbDetails(filename="dbDetails.yml", **kwargs):
+def create_dummy_db_details(filename="dbDetails.yml", **kwargs):
     """
     Create a dummy dbDetails.yml file to be used in test enviroments only.
 
