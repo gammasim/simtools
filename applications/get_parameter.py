@@ -24,7 +24,7 @@ def main():
     logger = logging.getLogger()
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
-    db = db_handler.DatabaseHandler(mongoDBConfig=db_config)
+    db = db_handler.DatabaseHandler(mongo_db_config=db_config)
 
     if args_dict["model_version"] == "all":
         raise NotImplementedError("Printing last 5 versions is not implemented yet.")
