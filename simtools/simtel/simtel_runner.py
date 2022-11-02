@@ -27,7 +27,7 @@ class SimtelRunner:
 
     Methods
     -------
-    get_run_script(self, test=False, inputFile=None, runNumber=None)
+    get_run_script(self, test=False, input_file=None, run_number=None)
         Builds and returns the full path of the bash run script containing
         the sim_telarray command.
     run(test=False, force=False, input=None)
@@ -37,7 +37,7 @@ class SimtelRunner:
 
     def __init__(
         self,
-        simtelSourcePath,
+        simtel_source_path,
         label=None,
     ):
         """
@@ -47,12 +47,12 @@ class SimtelRunner:
         ----------
         label: str, optional
             Instance label. Important for output file naming.
-        simtelSourcePath: str (or Path), optional
+        simtel_source_path: str (or Path), optional
             Location of sim_telarray installation.
         """
         self._logger = logging.getLogger(__name__)
 
-        self._simtelSourcePath = simtelSourcePath
+        self._simtel_source_path = simtel_source_path
         self.label = label
 
         self.RUNS_PER_SET = 1
@@ -80,7 +80,7 @@ class SimtelRunner:
             self._logger.error(msg)
             raise ValueError(msg)
 
-    def get_run_script(self, test=False, inputFile=None, runNumber=None, extraCommands=None):
+    def get_run_script(self, test=False, input_file=None, run_number=None, extra_commands=None):
         """
         Builds and returns the full path of the bash run script containing
         the sim_telarray command.
@@ -89,11 +89,11 @@ class SimtelRunner:
         ----------
         test: bool
             Test flag for faster execution.
-        inputFile: str or Path
+        input_file: str or Path
             Full path of the input CORSIKA file.
-        runNumber: int
+        run_number: int
             Run number.
-        extraCommands: str
+        extra_commands: str
             Additional commands for running simulations given in config.yml
 
         Returns
@@ -103,25 +103,25 @@ class SimtelRunner:
         """
         self._logger.debug("Creating run bash script")
 
-        self._scriptDir = self._baseDirectory.joinpath("scripts")
-        self._scriptDir.mkdir(parents=True, exist_ok=True)
-        self._scriptFile = self._scriptDir.joinpath(
-            "run{}-simtel".format(runNumber if runNumber is not None else "")
+        self._script_dir = self._base_directory.joinpath("scripts")
+        self._script_dir.mkdir(parents=True, exist_ok=True)
+        self._script_file = self._script_dir.joinpath(
+            "run{}-simtel".format(run_number if run_number is not None else "")
         )
-        self._logger.debug("Run bash script - {}".format(self._scriptFile))
+        self._logger.debug("Run bash script - {}".format(self._script_file))
 
-        self._logger.debug("Extra commands to be added to the run script {}".format(extraCommands))
+        self._logger.debug("Extra commands to be added to the run script {}".format(extra_commands))
 
-        command = self._make_run_command(inputFile=inputFile, runNumber=runNumber)
-        with self._scriptFile.open("w") as file:
+        command = self._make_run_command(input_file=input_file, run_number=run_number)
+        with self._script_file.open("w") as file:
             file.write("#!/usr/bin/bash\n\n")
 
             # Setting SECONDS variable to measure runtime
             file.write("\nSECONDS=0\n")
 
-            if extraCommands is not None:
+            if extra_commands is not None:
                 file.write("# Writing extras\n")
-                for line in extraCommands:
+                for line in extra_commands:
                     file.write("{}\n".format(line))
                 file.write("# End of extras\n\n")
 
@@ -132,10 +132,10 @@ class SimtelRunner:
             # Printing out runtime
             file.write('\necho "RUNTIME: $SECONDS"\n')
 
-        os.system("chmod ug+x {}".format(self._scriptFile))
-        return self._scriptFile
+        os.system("chmod ug+x {}".format(self._script_file))
+        return self._script_file
 
-    def run(self, test=False, force=False, inputFile=None, runNumber=None):
+    def run(self, test=False, force=False, input_file=None, run_number=None):
         """
         Basic sim_telarray run method.
 
@@ -153,11 +153,11 @@ class SimtelRunner:
             self._logger.error(msg)
             raise RuntimeError(msg)
 
-        if not self._shall_run(runNumber) and not force:
+        if not self._shall_run(run_number) and not force:
             self._logger.info("Skipping because output exists and force = False")
             return
 
-        command = self._make_run_command(inputFile=inputFile, runNumber=runNumber)
+        command = self._make_run_command(input_file=input_file, run_number=run_number)
 
         if test:
             self._logger.info("Running (test) with command:{}".format(command))
@@ -169,23 +169,23 @@ class SimtelRunner:
             for _ in range(self.RUNS_PER_SET - 1):
                 self._run_simtel_and_check_output(command)
 
-        self._check_run_result(runNumber=runNumber)
+        self._check_run_result(run_number=run_number)
 
     @staticmethod
-    def _simtel_failed(sysOutput):
-        return sysOutput != 0
+    def _simtel_failed(sys_output):
+        return sys_output != 0
 
     def _raise_simtel_error(self):
         """
-        Raise sim_telarray execution error. Final 10 lines from the log file
+        Raise sim_telarray execution error. Final 30 lines from the log file
         are collected and printed.
         """
-        if hasattr(self, "_logFile"):
-            logLines = gen.collect_final_lines(self._logFile, 30)
+        if hasattr(self, "_log_file"):
+            log_lines = gen.collect_final_lines(self._log_file, 30)
             msg = (
                 "Simtel Error - See below the relevant part of the simtel log file.\n"
                 + "===== from simtel log file ======\n"
-                + logLines
+                + log_lines
                 + "================================="
             )
         else:
@@ -198,13 +198,13 @@ class SimtelRunner:
         """
         Run the sim_telarray command and check the exit code.
         """
-        sysOutput = os.system(command)
-        if self._simtel_failed(sysOutput):
+        sys_output = os.system(command)
+        if self._simtel_failed(sys_output):
             self._raise_simtel_error()
 
-    def _shall_run(self, runNumber=None):
+    def _shall_run(self, run_number=None):
         self._logger.debug(
-            "shallRun is being called from the base class - returning False -"
+            "shall_run is being called from the base class - returning False -"
             + "it should be implemented in the sub class"
         )
         return False
