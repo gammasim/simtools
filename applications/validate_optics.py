@@ -128,38 +128,38 @@ def main():
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
     _io_handler = io_handler.IOHandler()
-    outputDir = _io_handler.get_output_directory(label, dirType="application-plots")
+    output_dir = _io_handler.get_output_directory(label, dir_type="application-plots")
 
-    telModel = TelescopeModel(
+    tel_model = TelescopeModel(
         site=args_dict["site"],
-        telescopeModelName=args_dict["telescope"],
-        modelVersion=args_dict["model_version"],
+        telescope_model_name=args_dict["telescope"],
+        model_version=args_dict["model_version"],
         label=label,
-        mongoDBConfig=db_config,
+        mongo_db_config=db_config,
     )
 
     ######################################################################
     # This is here as an example how to change parameters when necessary.
     ######################################################################
-    # parsToChange = {
+    # pars_to_change = {
     #     'mirror_focal_length': 1608.3,
     #     'mirror_offset': -177.5,
     #     'camera_body_diameter': 289.7,
     #     'telescope_transmission': 1
     # }
-    # telModel.change_multiple_parameters(**parsToChange)
+    # tel_model.change_multiple_parameters(**pars_to_change)
 
     print(
         "\nValidating telescope optics with ray tracing simulations"
-        " for {}\n".format(telModel.name)
+        " for {}\n".format(tel_model.name)
     )
 
     ray = RayTracing.from_kwargs(
-        telescopeModel=telModel,
-        simtelSourcePath=args_dict["simtelpath"],
-        sourceDistance=args_dict["src_distance"] * u.km,
-        zenithAngle=args_dict["zenith"] * u.deg,
-        offAxisAngle=np.linspace(
+        telescope_model=tel_model,
+        simtel_source_path=args_dict["simtelpath"],
+        source_distance=args_dict["src_distance"] * u.km,
+        zenith_angle=args_dict["zenith"] * u.deg,
+        off_axis_angle=np.linspace(
             0, args_dict["max_offset"], int(args_dict["max_offset"] / args_dict["offset_steps"]) + 1
         )
         * u.deg,
@@ -173,27 +173,27 @@ def main():
 
         ray.plot(key, marker="o", linestyle=":", color="k")
 
-        plotFileName = "_".join((label, telModel.name, key))
-        plotFile = outputDir.joinpath(plotFileName)
-        plt.savefig(str(plotFile) + ".pdf", format="pdf", bbox_inches="tight")
-        plt.savefig(str(plotFile) + ".png", format="png", bbox_inches="tight")
+        plot_file_name = "_".join((label, tel_model.name, key))
+        plot_file = output_dir.joinpath(plot_file_name)
+        plt.savefig(str(plot_file) + ".pdf", format="pdf", bbox_inches="tight")
+        plt.savefig(str(plot_file) + ".png", format="png", bbox_inches="tight")
         plt.clf()
 
     # Plotting images
     if args_dict["plot_images"]:
-        plotFileName = "_".join((label, telModel.name, "images.pdf"))
-        plotFile = outputDir.joinpath(plotFileName)
-        pdfPages = PdfPages(plotFile)
+        plot_file_name = "_".join((label, tel_model.name, "images.pdf"))
+        plot_file = output_dir.joinpath(plot_file_name)
+        pdf_pages = PdfPages(plot_file)
 
-        logger.info("Plotting images into {}".format(plotFile))
+        logger.info("Plotting images into {}".format(plot_file))
 
         for image in ray.images():
             fig = plt.figure(figsize=(8, 6), tight_layout=True)
             image.plot_image()
-            pdfPages.savefig(fig)
+            pdf_pages.savefig(fig)
             plt.clf()
         plt.close()
-        pdfPages.close()
+        pdf_pages.close()
 
 
 if __name__ == "__main__":
