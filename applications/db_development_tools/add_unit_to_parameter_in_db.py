@@ -24,13 +24,13 @@ def main():
     parser.initialize_default_arguments(add_workflow_config=False)
 
     args = parser.parse_args()
-    cfg.set_config_file_name(args.configFile)
+    cfg.set_config_file_name(args.config_file)
 
     logger = logging.getLogger()
-    logger.setLevel(gen.get_log_level_from_user(args.logLevel))
+    logger.setLevel(gen.get_log_level_from_user(args.log_level))
 
-    # parsToUpdate = ["altitude"]
-    parsToUpdate = ["ref_long", "ref_lat"]
+    # pars_to_update = ["altitude"]
+    pars_to_update = ["ref_long", "ref_lat"]
 
     # units = ["m"]
     units = ["deg", "deg"]
@@ -38,26 +38,26 @@ def main():
     db = db_handler.DatabaseHandler()
 
     for site in ["North", "South"]:
-        for parNow, unitNow in zip(parsToUpdate, units):
-            allVersions = db.get_all_versions(
-                dbName=db.DB_CTA_SIMULATION_MODEL,
+        for par_now, unit_now in zip(pars_to_update, units):
+            all_versions = db.get_all_versions(
+                db_name=db.DB_CTA_SIMULATION_MODEL,
                 site=site,
-                parameter=parNow,
-                collectionName="sites",
+                parameter=par_now,
+                collection_name="sites",
             )
-            for versionNow in allVersions:
+            for version_now in all_versions:
                 db.update_parameter_field(
-                    dbName=db.DB_CTA_SIMULATION_MODEL,
+                    db_name=db.DB_CTA_SIMULATION_MODEL,
                     site=site,
-                    version=versionNow,
-                    parameter=parNow,
+                    version=version_now,
+                    parameter=par_now,
                     field="units",
-                    newValue=unitNow,
-                    collectionName="sites",
+                    new_value=unit_now,
+                    collection_name="sites",
                 )
 
-                sitePars = db.get_site_parameters(site, versionNow)
-                assert sitePars[parNow]["units"] == unitNow
+                site_pars = db.get_site_parameters(site, version_now)
+                assert site_pars[par_now]["units"] == unit_now
 
 
 if __name__ == "__main__":

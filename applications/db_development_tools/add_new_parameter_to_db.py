@@ -27,10 +27,10 @@ def main():
     parser.initialize_default_arguments(add_workflow_config=False)
 
     args = parser.parse_args()
-    cfg.set_config_file_name(args.configFile)
+    cfg.set_config_file_name(args.config_file)
 
     logger = logging.getLogger()
-    logger.setLevel(gen.get_log_level_from_user(args.logLevel))
+    logger.setLevel(gen.get_log_level_from_user(args.log_level))
 
     # epsgs = [32628, 32719]
     parameter = {"camera_filter_incidence_angle": "sst_photon_incidence_angle_camera_window.ecsv"}
@@ -43,37 +43,37 @@ def main():
         "South-SST-ASTRI-D",
     ]
 
-    for telescopeNow in telescopes:
-        for parNow, parValue in parameter.items():
-            allVersions = db.get_all_versions(
-                dbName=db.DB_CTA_SIMULATION_MODEL,
-                telescopeModelName="-".join(telescopeNow.split("-")[1:]),
-                site=names.get_site_from_telescope_name(telescopeNow),
+    for telescope_now in telescopes:
+        for par_now, par_value in parameter.items():
+            all_versions = db.get_all_versions(
+                db_name=db.DB_CTA_SIMULATION_MODEL,
+                telescope_model_name="-".join(telescope_now.split("-")[1:]),
+                site=names.get_site_from_telescope_name(telescope_now),
                 parameter="camera_config_file",  # Just a random parameter to get the versions
-                collectionName="telescopes",
+                collection_name="telescopes",
             )
-            for versionNow in allVersions:
+            for version_now in all_versions:
                 db.add_new_parameter(
-                    dbName=db.DB_CTA_SIMULATION_MODEL,
-                    telescope=telescopeNow,
-                    parameter=parNow,
-                    version=versionNow,
-                    value=parValue,
-                    collectionName="telescopes",
+                    db_name=db.DB_CTA_SIMULATION_MODEL,
+                    telescope=telescope_now,
+                    parameter=par_now,
+                    version=version_now,
+                    value=par_value,
+                    collection_name="telescopes",
                     Applicable=True,
                     Type=str(str),
                     File=True,
-                    filePrefix="./",
+                    file_prefix="./",
                 )
                 pars = db.read_mongo_db(
-                    dbName=db.DB_CTA_SIMULATION_MODEL,
-                    telescopeModelNameDB=telescopeNow,
-                    modelVersion=versionNow,
-                    runLocation="./",
-                    collectionName="telescopes",
-                    writeFiles=False,
+                    db_name=db.DB_CTA_SIMULATION_MODEL,
+                    telescope_model_name_db=telescope_now,
+                    model_version=version_now,
+                    run_location="./",
+                    collection_name="telescopes",
+                    write_files=False,
                 )
-                assert pars[parNow]["Value"] == parValue
+                assert pars[par_now]["Value"] == par_value
 
 
 if __name__ == "__main__":

@@ -10,12 +10,12 @@
     Simulations are managed by the shower_simulator module.
     Each run is simulated in a job. Each job is submitted by using the submission \
     command from the global config settings (see config_template.yml). \
-    The config entry extraCommands can be used to extra commands to be ran in each job,
+    The config entry extra_commands can be used to extra commands to be ran in each job,
     before the actual simulation.
 
     At the moment, the shower simulations are performed by CORSIKA, which requires \
     the zstd package. Please, make sure that the command to set your zstd path is \
-    properly set by the extraCommands in the command line configuration.
+    properly set by the extra_commands in the command line configuration.
 
     Command line arguments
     ----------------------
@@ -128,13 +128,13 @@ def main():
 
     # Output directory to save files related directly to this app
     _io_handler = io_handler.IOHandler()
-    outputDir = _io_handler.get_output_directory(label, dirType="application-plots")
+    output_dir = _io_handler.get_output_directory(label, dir_type="application-plots")
 
-    showerConfigData = {
-        "dataDirectory": args_dict["output"],
+    shower_config_data = {
+        "data_directory": args_dict["output"],
         "site": args_dict["site"],
-        "layoutName": args_dict["array"],
-        "runRange": [1, args_dict["nruns"] + 1],
+        "layout_name": args_dict["array"],
+        "run_range": [1, args_dict["nruns"] + 1],
         "nshow": args_dict["nevents"],
         "primary": args_dict["primary"],
         "erange": [10 * u.GeV, 300 * u.TeV],
@@ -145,35 +145,35 @@ def main():
         "cscat": [20, 1500 * u.m, 0],
     }
 
-    showerSimulator = Simulator(
+    shower_simulator = Simulator(
         label=label,
         simulator="corsika",
-        simulatorSourcePath=args_dict.get("simtelpath", None),
-        configData=showerConfigData,
-        submitCommand=args_dict.get("submit_command", ""),
+        simulator_source_path=args_dict.get("simtelpath", None),
+        config_data=shower_config_data,
+        submit_command=args_dict.get("submit_command", ""),
         test=args_dict["test"],
     )
 
     if not args_dict["test"]:
-        showerSimulator.simulate()
+        shower_simulator.simulate()
     else:
         logger.info("Test flag is on - it will not submit any job.")
         logger.info("This is an example of the run script:")
-        showerSimulator.simulate()
+        shower_simulator.simulate()
 
     # Exporting the list of output/log/input files into the application folder
-    outputFileList = outputDir.joinpath("outputFiles_{}.list".format(args_dict["primary"]))
-    logFileList = outputDir.joinpath("logFiles_{}.list".format(args_dict["primary"]))
+    output_file_list = output_dir.joinpath("output_files_{}.list".format(args_dict["primary"]))
+    log_file_list = output_dir.joinpath("log_files_{}.list".format(args_dict["primary"]))
 
-    def printListIntoFile(listOfFiles, fileName):
-        with open(fileName, "w") as f:
-            for line in listOfFiles:
+    def print_list_into_file(list_of_files, file_name):
+        with open(file_name, "w") as f:
+            for line in list_of_files:
                 f.write(line + "\n")
 
-    logger.info("List of output files exported to {}".format(outputFileList))
-    printListIntoFile(showerSimulator.get_list_of_output_files(), outputFileList)
-    logger.info("List of log files exported to {}".format(logFileList))
-    printListIntoFile(showerSimulator.get_list_of_log_files(), logFileList)
+    logger.info("List of output files exported to {}".format(output_file_list))
+    print_list_into_file(shower_simulator.get_list_of_output_files(), output_file_list)
+    logger.info("List of log files exported to {}".format(log_file_list))
+    print_list_into_file(shower_simulator.get_list_of_log_files(), log_file_list)
 
 
 if __name__ == "__main__":

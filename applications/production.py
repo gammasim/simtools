@@ -11,7 +11,7 @@
     submitted (so typically you first run shower simulations, and then the \
     array simulations).
 
-    A configuration file is required. See tests/resources/prodConfigTest.yml \
+    A configuration file is required. See tests/resources/prod_config_test.yml \
     for an example.
 
     The workload management system used is given in the configuration file. \
@@ -47,7 +47,7 @@
 
     .. code-block:: console
 
-        python applications/production.py -t simulate -p tests/resources/prodConfigTest.yml --test
+        python applications/production.py -t simulate -p tests/resources/prod_config_test.yml --test
 
     Running shower simulations.
 """
@@ -127,16 +127,16 @@ def _parse(description=None):
     return config.initialize(db_config=True, job_submission=True)
 
 
-def _proccessSimulationConfigFile(configFile, primaryConfig, logger):
+def _proccess_simulation_config_file(config_file, primary_config, logger):
     """
     Read simulation configuration file with details on shower
     and array simulations
 
     Attributes
     ----------
-    configFile: str
+    config_file: str
         Name of simulation configuration file
-    primaryConfig: str
+    primary_config: str
         Name of the primary selected from the configuration file.
 
     Returns
@@ -151,50 +151,50 @@ def _proccessSimulationConfigFile(configFile, primaryConfig, logger):
     """
 
     try:
-        with open(configFile) as file:
-            configData = yaml.load(file)
+        with open(config_file) as file:
+            config_data = yaml.load(file)
     except FileNotFoundError:
-        logger.error("Error loading simulation configuration file from {}".format(configFile))
+        logger.error("Error loading simulation configuration file from {}".format(config_file))
         raise
 
-    label = configData.pop("label", dict())
-    defaultData = configData.pop("default", dict())
-    configShowers = dict()
-    configArrays = dict()
+    label = config_data.pop("label", dict())
+    default_data = config_data.pop("default", dict())
+    config_showers = dict()
+    config_arrays = dict()
 
-    for primary, primaryData in configData.items():
+    for primary, primary_data in config_data.items():
 
-        if primaryConfig is not None and primary != primaryConfig:
+        if primary_config is not None and primary != primary_config:
             continue
 
-        thisDefault = copy(defaultData)
+        this_default = copy(default_data)
 
-        configShowers[primary] = copy(thisDefault.pop("showers", dict()))
-        configArrays[primary] = copy(thisDefault.pop("array", dict()))
+        config_showers[primary] = copy(this_default.pop("showers", dict()))
+        config_arrays[primary] = copy(this_default.pop("array", dict()))
 
         # Grabbing common entries for showers and array
-        for key, value in primaryData.items():
+        for key, value in primary_data.items():
             if key in ["showers", "array"]:
                 continue
-            configShowers[primary][key] = value
-            configArrays[primary][key] = value
+            config_showers[primary][key] = value
+            config_arrays[primary][key] = value
 
         # Grabbing showers entries
-        for key, value in primaryData.get("showers", dict()).items():
-            configShowers[primary][key] = value
-        configShowers[primary]["primary"] = primary
+        for key, value in primary_data.get("showers", dict()).items():
+            config_showers[primary][key] = value
+        config_showers[primary]["primary"] = primary
 
         # Grabbing array entries
-        for key, value in primaryData.get("array", dict()).items():
-            configArrays[primary][key] = value
-        configArrays[primary]["primary"] = primary
+        for key, value in primary_data.get("array", dict()).items():
+            config_arrays[primary][key] = value
+        config_arrays[primary]["primary"] = primary
 
         # Filling in the remaining default keys
-        for key, value in thisDefault.items():
-            configShowers[primary][key] = value
-            configArrays[primary][key] = value
+        for key, value in this_default.items():
+            config_showers[primary][key] = value
+            config_arrays[primary][key] = value
 
-    return label, configShowers, configArrays
+    return label, config_showers, config_arrays
 
 
 def main():
@@ -204,43 +204,43 @@ def main():
     logger = logging.getLogger()
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
-    label, showerConfigs, arrayConfigs = _proccessSimulationConfigFile(
+    label, shower_configs, array_configs = _proccess_simulation_config_file(
         args_dict["productionconfig"], args_dict["primary"], logger
     )
     if args_dict["label"] is None:
         args_dict["label"] = label
 
-    showerSimulators = dict()
-    for primary, configData in showerConfigs.items():
-        showerSimulators[primary] = Simulator(
+    shower_simulators = dict()
+    for primary, config_data in shower_configs.items():
+        shower_simulators[primary] = Simulator(
             label=label,
             simulator="corsika",
-            simulatorSourcePath=args_dict["simtelpath"],
-            configData=configData,
-            submitCommand=args_dict["submit_command"],
+            simulator_source_path=args_dict["simtelpath"],
+            config_data=config_data,
+            submit_command=args_dict["submit_command"],
             test=args_dict["test"],
         )
 
     if args_dict["showers_only"]:
-        for primary, shower in showerSimulators.items():
-            _taskFunction = getattr(shower, args_dict["task"])
-            _taskFunction()
+        for primary, shower in shower_simulators.items():
+            _task_function = getattr(shower, args_dict["task"])
+            _task_function()
 
     if args_dict["array_only"]:
-        arraySimulators = dict()
-        for primary, configData in arrayConfigs.items():
-            arraySimulators[primary] = Simulator(
+        array_simulators = dict()
+        for primary, config_data in array_configs.items():
+            array_simulators[primary] = Simulator(
                 label=label,
                 simulator="simtel",
-                simulatorSourcePath=args_dict["simtelpath"],
-                configData=configData,
-                submitCommand=args_dict["submit_command"],
-                mongoDBConfig=db_config,
+                simulator_source_path=args_dict["simtelpath"],
+                config_data=config_data,
+                submit_command=args_dict["submit_command"],
+                mongo_db_config=db_config,
             )
-        for primary, array in arraySimulators.items():
-            inputList = showerSimulators[primary].get_list_of_output_files()
-            _taskFunction = getattr(array, args_dict["task"])
-            _taskFunction(inputFileList=inputList)
+        for primary, array in array_simulators.items():
+            input_list = shower_simulators[primary].get_list_of_output_files()
+            _task_function = getattr(array, args_dict["task"])
+            _task_function(input_file_list=input_list)
 
 
 if __name__ == "__main__":
