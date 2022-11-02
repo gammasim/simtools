@@ -37,7 +37,7 @@ def split_simtel_parameter(value):
     return float_values
 
 
-def compute_telescope_transmission(pars, offAxis):
+def compute_telescope_transmission(pars, off_axis):
     """
     Compute tel. transmission (0 < T < 1) for a given set of parameters
     as defined by the MC model and for a given off-axis angle.
@@ -46,7 +46,7 @@ def compute_telescope_transmission(pars, offAxis):
     ----------
     pars: list of float
         Parameters of the telescope transmission. Len(pars) should be 4.
-    offAxis: float
+    off_axis: float
         Off-axis angle in deg.
 
     Returns
@@ -54,46 +54,46 @@ def compute_telescope_transmission(pars, offAxis):
     float
         Telescope transmission.
     """
-    _degToRad = math.pi / 180.0
+    _deg_to_rad = math.pi / 180.0
     if pars[1] == 0:
         return pars[0]
     else:
-        t = math.sin(offAxis * _degToRad) / (pars[3] * _degToRad)
+        t = math.sin(off_axis * _deg_to_rad) / (pars[3] * _deg_to_rad)
         return pars[0] / (1.0 + pars[2] * t ** pars[4])
 
 
-def validate_model_parameter(parNameIn, parValueIn):
+def validate_model_parameter(par_name_in, par_value_in):
     """
     Validate model parameter based on the dict MODEL_PARS.
 
     Parameters
     ----------
-    parNameIn: str
+    par_name_in: str
         Name of the parameter to be validated.
-    parValueIn: str
+    par_value_in: str
         Value of the parameter to be validated.
 
     Returns
     -------
-    (parName, parValue) after validated. parValueIn is converted to the proper type if that
+    (par_name, par_value) after validated. par_value_in is converted to the proper type if that
     information is available in MODEL_PARS
     """
     _logger = logging.getLogger(__name__)
-    _logger.debug("Validating parameter {}".format(parNameIn))
-    for parNameModel in MODEL_PARS:
-        if parNameIn == parNameModel or parNameIn in MODEL_PARS[parNameModel]["names"]:
-            parType = MODEL_PARS[parNameModel]["type"]
-            return parNameModel, parType(parValueIn)
-    return parNameIn, parValueIn
+    _logger.debug("Validating parameter {}".format(par_name_in))
+    for par_name_model in MODEL_PARS:
+        if par_name_in == par_name_model or par_name_in in MODEL_PARS[par_name_model]["names"]:
+            par_type = MODEL_PARS[par_name_model]["type"]
+            return par_name_model, par_type(par_value_in)
+    return par_name_in, par_value_in
 
 
-def get_camera_name(telescopeModelName):
+def get_camera_name(telescope_model_name):
     """
     Get camera name from the telescope name.
 
     Parameters
     ----------
-    telescopeModelName: str
+    telescope_model_name: str
         Telescope model name (ex. LST-1)
 
     Returns
@@ -102,43 +102,43 @@ def get_camera_name(telescopeModelName):
         Camera name (validated by util.names)
     """
     _logger = logging.getLogger(__name__)
-    cameraName = ""
-    telClass, telType = names.split_telescope_model_name(telescopeModelName)
-    if telClass == "LST":
-        cameraName = "LST"
-    elif telClass == "MST":
-        if "FlashCam" in telType:
-            cameraName = "FlashCam"
-        elif "NectarCam" in telType:
-            cameraName = "NectarCam"
+    camera_name = ""
+    tel_class, tel_type = names.split_telescope_model_name(telescope_model_name)
+    if tel_class == "LST":
+        camera_name = "LST"
+    elif tel_class == "MST":
+        if "FlashCam" in tel_type:
+            camera_name = "FlashCam"
+        elif "NectarCam" in tel_type:
+            camera_name = "NectarCam"
         else:
             _logger.error("Camera not found for MST class telescope")
-    elif telClass == "SCT":
-        cameraName = "SCT"
-    elif telClass == "SST":
-        if "ASTRI" in telType:
-            cameraName = "ASTRI"
-        elif "GCT" in telType:
-            cameraName = "GCT"
-        elif "1M" in telType:
-            cameraName = "1M"
+    elif tel_class == "SCT":
+        camera_name = "SCT"
+    elif tel_class == "SST":
+        if "ASTRI" in tel_type:
+            camera_name = "ASTRI"
+        elif "GCT" in tel_type:
+            camera_name = "GCT"
+        elif "1M" in tel_type:
+            camera_name = "1M"
         else:
-            cameraName = "SST"
+            camera_name = "SST"
     else:
         _logger.error("Invalid telescope name - please validate it first")
 
-    cameraName = names.validate_camera_name(cameraName)
-    _logger.debug("Camera name - {}".format(cameraName))
-    return cameraName
+    camera_name = names.validate_camera_name(camera_name)
+    _logger.debug("Camera name - {}".format(camera_name))
+    return camera_name
 
 
-def get_telescope_class(telescopeModelName):
+def get_telescope_class(telescope_model_name):
     """
     Get telescope class from telescope name.
 
     Parameters
     ----------
-    telescopeModelName: str
+    telescope_model_name: str
         Telescope model name (ex. LST-1)
 
     Returns
@@ -146,17 +146,17 @@ def get_telescope_class(telescopeModelName):
     str
         Telescope class (SST, MST, ...)
     """
-    telClass, _ = names.split_telescope_model_name(telescopeModelName)
-    return telClass
+    tel_class, _ = names.split_telescope_model_name(telescope_model_name)
+    return tel_class
 
 
-def is_two_mirror_telescope(telescopeModelName):
+def is_two_mirror_telescope(telescope_model_name):
     """
     Check if the telescope is a two mirror design.
 
     Parameters
     ----------
-    telescopeModelName: str
+    telescope_model_name: str
         Telescope model name (ex. LST-1)
 
     Returns
@@ -164,11 +164,11 @@ def is_two_mirror_telescope(telescopeModelName):
     bool
         True if the telescope is a two mirror one.
     """
-    telClass, telType = names.split_telescope_model_name(telescopeModelName)
-    if telClass == "SST":
+    tel_class, tel_type = names.split_telescope_model_name(telescope_model_name)
+    if tel_class == "SST":
         # Only 1M is False
-        return False if "1M" in telType else True
-    elif telClass == "SCT":
+        return False if "1M" in tel_type else True
+    elif tel_class == "SCT":
         # SCT always two mirrors
         return True
     else:
