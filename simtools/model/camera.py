@@ -420,7 +420,7 @@ class Camera:
             if len(nn) < 4:
                 # Go over all other pixels and search for ones which are adjacent
                 # but further than sqrt(2) away
-                for j_pix in range(len(x_pos)):
+                for j_pix, _ in enumerate(x_pos):
                     # No need to look at the pixel itself
                     # nor at any pixels already in the neighbours list
                     if j_pix != i_pix and j_pix not in nn:
@@ -522,7 +522,7 @@ class Camera:
 
         edge_pixel_indices = list()
 
-        for i_pix in range(len(pixels["x"])):
+        for i_pix, _ in enumerate(pixels["x"]):
             if pixels["pixel_shape"] == 1 or pixels["pixel_shape"] == 3:
                 if pixels["pix_on"][i_pix]:
                     if len(neighbours[i_pix]) < 6:
