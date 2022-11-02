@@ -21,80 +21,80 @@ class SimtelHistograms:
 
     Methods
     -------
-    plot_and_save_figures(figName)
+    plot_and_save_figures(fig_name)
         Plot all histograms and save a single pdf file.
-    plot_one_histogram(iHist, ax)
-        Plot a single histogram referent to the index iHist.
+    plot_one_histogram(i_hist, ax)
+        Plot a single histogram referent to the index i_hist.
 
     Attributes
     ----------
     number_of_histograms
         Number of histograms
-    combinedHistograms
+    combined_histograms
         List of histogram data.
     """
 
-    def __init__(self, histogramFiles, test=False):
+    def __init__(self, histogram_files, test=False):
         """
         SimtelHistograms
 
         Parameters
         ----------
-        histogramFiles: list
+        histogram_files: list
             List of sim_telarray histogram files (str of Path).
         test: bool
             If True, only a fraction of the histograms will be processed, leading to \
         a much shorter runtime.
         """
         self._logger = logging.getLogger(__name__)
-        self._histogramFiles = histogramFiles
-        self._isTest = test
+        self._histogram_files = histogram_files
+        self._is_test = test
 
-    def plot_and_save_figures(self, figName):
+    def plot_and_save_figures(self, fig_name):
         """
         Plot all histograms and save a single pdf file.
 
         Parameters
         ----------
-        figName: str
+        fig_name: str
             Name of the output figure file.
         """
         self._combine_histogram_files()
-        self._plot_combined_histograms(figName)
+        self._plot_combined_histograms(fig_name)
 
     @property
     def number_of_histograms(self):
         """Returns number of histograms."""
-        if not hasattr(self, "combinedHists"):
+        if not hasattr(self, "combined_hists"):
             self._combine_histogram_files()
-        return len(self.combinedHists)
+        return len(self.combined_hists)
 
-    def get_histogram_title(self, iHist):
+    def get_histogram_title(self, i_hist):
         """
-        Returns the title of the histogram with index iHist.
+        Returns the title of the histogram with index i_hist.
 
         Parameters
         ----------
-        iHist: int
+        i_hist: int
             Histogram index.
 
         Returns
         -------
         str: histogram title
         """
-        if not hasattr(self, "combinedHists"):
+        if not hasattr(self, "combined_hists"):
             self._combine_histogram_files()
-        return self.combinedHists[iHist]["title"]
+        return self.combined_hists[i_hist]["title"]
 
     def _combine_histogram_files(self):
         """Combine histograms from all files into one single list of histograms."""
         # Processing and combining histograms from multiple files
-        self.combinedHists = list()
+        self.combined_hists = list()
 
-        nFiles = 0
-        for file in self._histogramFiles:
+        n_files = 0
+        for file in self._histogram_files:
 
-            countFile = True
+            count_file = True
             with EventIOFile(file) as f:
 
                 for o in yield_toplevel_of_type(f, Histograms):
@@ -102,16 +102,16 @@ class SimtelHistograms:
                         hists = o.parse()
                     except Exception:
                         self._logger.warning("Problematic file {}".format(file))
-                        countFile = False
+                        count_file = False
                         continue
 
-                    if len(self.combinedHists) == 0:
+                    if len(self.combined_hists) == 0:
                         # First file
-                        self.combinedHists = copy.copy(hists)
+                        self.combined_hists = copy.copy(hists)
 
                     else:
                         # Remaining files
-                        for hist, thisCombinedHist in zip(hists, self.combinedHists):
+                        for hist, this_combined_hist in zip(hists, self.combined_hists):
 
                             # Checking consistency of histograms
                             for key_to_test in [
@@ -120,36 +120,36 @@ class SimtelHistograms:
                                 "n_bins_x",
                                 "title",
                             ]:
-                                if hist[key_to_test] != thisCombinedHist[key_to_test]:
+                                if hist[key_to_test] != this_combined_hist[key_to_test]:
                                     msg = "Trying to add histograms with inconsistent dimensions"
                                     self._logger.error(msg)
                                     raise BadHistogramFormat(msg)
 
-                            thisCombinedHist["data"] = np.add(
-                                thisCombinedHist["data"], hist["data"]
+                            this_combined_hist["data"] = np.add(
+                                this_combined_hist["data"], hist["data"]
                             )
 
-                    nFiles += int(countFile)
+                    n_files += int(count_file)
 
-        self._logger.debug("End of reading {} files".format(nFiles))
+        self._logger.debug("End of reading {} files".format(n_files))
 
         return
 
-    def _plot_combined_histograms(self, figName):
+    def _plot_combined_histograms(self, fig_name):
         """
         Plot all histograms into pdf pages and save the figure as a pdf file.
 
         Parameters
         ----------
-        figName: str
+        fig_name: str
             Name of the output figure file.
         """
 
-        pdfPages = PdfPages(figName)
-        for iHist, histo in enumerate(self.combinedHists):
+        pdf_pages = PdfPages(fig_name)
+        for i_hist, histo in enumerate(self.combined_hists):
 
             # Test case: processing only 1/10 of the histograms
-            if self._isTest and iHist % 10 != 0:
+            if self._is_test and i_hist % 10 != 0:
                 self._logger.debug("Skipping (test=True): {}".format(histo["title"]))
                 continue
 
@@ -158,27 +158,27 @@ class SimtelHistograms:
             fig = plt.figure(figsize=(8, 6))
             ax = plt.gca()
 
-            self.plot_one_histogram(iHist, ax)
+            self.plot_one_histogram(i_hist, ax)
 
             plt.tight_layout()
-            pdfPages.savefig(fig)
+            pdf_pages.savefig(fig)
             plt.close()
 
-        pdfPages.close()
+        pdf_pages.close()
 
-    def plot_one_histogram(self, iHist, ax):
+    def plot_one_histogram(self, i_hist, ax):
         """
-        Plot a single histogram referent to the index iHist.
+        Plot a single histogram referent to the index i_hist.
 
         Parameters
         ----------
-        iHist: int
+        i_hist: int
             Index of the histogram to be plotted.
         ax: matplotlib.axes.Axes
             Axes in which to plot the histogram.
         """
 
-        hist = self.combinedHists[iHist]
+        hist = self.combined_hists[i_hist]
         ax.set_title(hist["title"])
 
         def _get_bins(hist, axis=0):
