@@ -1,15 +1,15 @@
-dataDirectory:
+data_directory:
   len: 1
   unit: null
   default: null
 primary:
   len: 1
   unit: null
-zenithAngle:
+zenith_angle:
   len: 1
   unit: !astropy.units.Unit {unit: deg}
   names: ['zenith', 'theta']
-azimuthAngle:
+azimuth_angle:
   len: 1
   unit: !astropy.units.Unit {unit: deg}
   names: ['azimuth', 'phi']
