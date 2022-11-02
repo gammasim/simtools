@@ -20,43 +20,43 @@ class SimtelEvents:
 
     Methods
     -------
-    plot_and_save_figures(figName)
+    plot_and_save_figures(fig_name)
         Plot all histograms and save a single pdf file.
 
 
     Attributes
     ----------
-    inputFiles: list
+    input_files: list
         List of sim_telarray files.
-    summaryEvents: dict
+    summary_events: dict
         Arrays of energy and core radius of events.
     """
 
-    def __init__(self, inputFiles=None):
+    def __init__(self, input_files=None):
         """
         SimtelEvents
 
         Parameters
         ----------
-        inputFiles: list
+        input_files: list
             List of sim_telarray output files (str of Path).
         """
         self._logger = logging.getLogger(__name__)
-        self.load_input_files(inputFiles)
+        self.load_input_files(input_files)
         if self.number_of_files > 0:
             self.load_header_and_summary()
 
     def load_input_files(self, files=None):
         """
-        Store list of input files into inputFiles attribute.
+        Store list of input files into input_files attribute.
 
         Parameters
         ----------
         files: list
             List of sim_telarray files (str or Path).
         """
-        if not hasattr(self, "inputFiles"):
-            self.inputFiles = list()
+        if not hasattr(self, "input_files"):
+            self.input_files = list()
 
         if files is None:
             msg = "No input file was given"
@@ -67,22 +67,22 @@ class SimtelEvents:
             files = [files]
 
         for file in files:
-            self.inputFiles.append(file)
+            self.input_files.append(file)
         return
 
     @property
     def number_of_files(self):
         """Number of files loaded."""
-        return len(self.inputFiles) if hasattr(self, "inputFiles") else 0
+        return len(self.input_files) if hasattr(self, "input_files") else 0
 
     def load_header_and_summary(self):
         """
-        Read MC header from sim_telarray files and store it into _mcHeader.
-        Also fills summaryEvents with energy and core radius of triggered events.
+        Read MC header from sim_telarray files and store it into _mc_header.
+        Also fills summary_events with energy and core radius of triggered events.
         """
 
-        self._number_of_files = len(self.inputFiles)
-        keysToGrab = [
+        self._number_of_files = len(self.input_files)
+        keys_to_grab = [
             "obsheight",
             "n_showers",
             "n_use",
@@ -93,20 +93,20 @@ class SimtelEvents:
             "spectral_index",
             "B_total",
         ]
-        self._mcHeader = dict()
+        self._mc_header = dict()
 
-        def _areHeadersConsistent(header0, header1):
+        def _are_headers_consistent(header0, header1):
             comparison = dict()
-            for k in keysToGrab:
+            for k in keys_to_grab:
                 value = header0[k] == header1[k]
                 comparison[k] = value if isinstance(value, bool) else all(value)
 
             return all(comparison)
 
-        isFirstFile = True
-        numberOfTriggeredEvents = 0
-        summaryEnergy, summaryRcore = list(), list()
-        for file in self.inputFiles:
+        is_first_file = True
+        number_of_triggered_events = 0
+        summary_energy, summary_rcore = list(), list()
+        for file in self.input_files:
             with SimTelFile(file) as f:
 
                 for event in f:
@@ -116,103 +116,103 @@ class SimtelEvents:
                         + math.pow(event["mc_event"]["ycore"], 2)
                     )
 
-                    summaryEnergy.append(en)
-                    summaryRcore.append(rc)
-                    numberOfTriggeredEvents += 1
+                    summary_energy.append(en)
+                    summary_rcore.append(rc)
+                    number_of_triggered_events += 1
 
-                if isFirstFile:
+                if is_first_file:
                     # First file - grabbing parameters
-                    self._mcHeader.update({k: copy(f.mc_run_headers[0][k]) for k in keysToGrab})
+                    self._mc_header.update({k: copy(f.mc_run_headers[0][k]) for k in keys_to_grab})
                 else:
                     # Remaining files - Checking whether the parameters are consistent
-                    if not _areHeadersConsistent(self._mcHeader, f.mc_run_headers[0]):
+                    if not _are_headers_consistent(self._mc_header, f.mc_run_headers[0]):
                         msg = "MC header pamameters from different files are inconsistent"
                         self._logger.error(msg)
                         raise InconsistentInputFile(msg)
 
-                isFirstFile = False
+                is_first_file = False
 
-        self.summaryEvents = {
-            "energy": np.array(summaryEnergy),
-            "r_core": np.array(summaryRcore),
+        self.summary_events = {
+            "energy": np.array(summary_energy),
+            "r_core": np.array(summary_rcore),
         }
 
         # Calculating number of events
-        self._mcHeader["n_events"] = (
-            self._mcHeader["n_use"] * self._mcHeader["n_showers"] * self._number_of_files
+        self._mc_header["n_events"] = (
+            self._mc_header["n_use"] * self._mc_header["n_showers"] * self._number_of_files
         )
-        self._mcHeader["n_triggered"] = numberOfTriggeredEvents
+        self._mc_header["n_triggered"] = number_of_triggered_events
         return
 
-    @u.quantity_input(coreMax=u.m)
-    def count_triggered_events(self, energyRange=None, coreMax=None):
+    @u.quantity_input(core_max=u.m)
+    def count_triggered_events(self, energy_range=None, core_max=None):
         """
         Count number of triggered events within a certain energy range and core radius.
 
         Parameters
         ----------
-        energyRange: Tuple (len 2)
-            Max and min energy of energy range, e.g. energyRange=(100 * u.GeV, 10 * u.TeV)
-        coreMax: astropy.Quantity (distance)
-            Maximum core radius for selecting showers, e.g. coreMax=1000 * u.m
+        energy_range: Tuple (len 2)
+            Max and min energy of energy range, e.g. energy_range=(100 * u.GeV, 10 * u.TeV)
+        core_max: astropy.Quantity (distance)
+            Maximum core radius for selecting showers, e.g. core_max=1000 * u.m
 
         Returns
         -------
         int
             Number of triggered events.
         """
-        energyRange = self._validate_energy_range(energyRange)
-        coreMax = self._validate_core_max(coreMax)
+        energy_range = self._validate_energy_range(energy_range)
+        core_max = self._validate_core_max(core_max)
 
-        isInEnergyRange = list(
+        is_in_energy_range = list(
             map(
-                lambda e: e > energyRange[0] and e < energyRange[1],
-                self.summaryEvents["energy"],
+                lambda e: e > energy_range[0] and e < energy_range[1],
+                self.summary_events["energy"],
             )
         )
-        isInCoreRange = list(map(lambda r: r < coreMax, self.summaryEvents["r_core"]))
-        return np.sum(np.array(isInEnergyRange) * np.array(isInCoreRange))
+        is_in_core_range = list(map(lambda r: r < core_max, self.summary_events["r_core"]))
+        return np.sum(np.array(is_in_energy_range) * np.array(is_in_core_range))
 
-    @u.quantity_input(coreMax=u.m)
-    def select_events(self, energyRange=None, coreMax=None):
+    @u.quantity_input(core_max=u.m)
+    def select_events(self, energy_range=None, core_max=None):
         """
         Select sim_telarray events within a certain energy range and core radius.
 
         Parameters
         ----------
-        energyRange: Tuple (len 2)
-            Max and min energy of energy range, e.g. energyRange=(100 * u.GeV, 10 * u.TeV)
-        coreMax: astropy.Quantity (distance)
-            Maximum core radius for selecting showers, e.g. coreMax=1000 * u.m
+        energy_range: Tuple (len 2)
+            Max and min energy of energy range, e.g. energy_range=(100 * u.GeV, 10 * u.TeV)
+        core_max: astropy.Quantity (distance)
+            Maximum core radius for selecting showers, e.g. core_max=1000 * u.m
 
         Returns
         -------
         list
             List of events.
         """
-        energyRange = self._validate_energy_range(energyRange)
-        coreMax = self._validate_core_max(coreMax)
+        energy_range = self._validate_energy_range(energy_range)
+        core_max = self._validate_core_max(core_max)
 
-        selectedEvents = list()
-        for file in self.inputFiles:
+        selected_events = list()
+        for file in self.input_files:
             with SimTelFile(file) as f:
 
                 for event in f:
                     energy = event["mc_shower"]["energy"]
-                    if energy < energyRange[0] or energy > energyRange[1]:
+                    if energy < energy_range[0] or energy > energy_range[1]:
                         continue
 
                     x_core = event["mc_event"]["xcore"]
                     y_core = event["mc_event"]["ycore"]
                     r_core = math.sqrt(math.pow(x_core, 2) + math.pow(y_core, 2))
-                    if r_core > coreMax:
+                    if r_core > core_max:
                         continue
 
-                    selectedEvents.append(event)
-        return selectedEvents
+                    selected_events.append(event)
+        return selected_events
 
-    @u.quantity_input(coreMax=u.m)
-    def count_simulated_events(self, energyRange=None, coreMax=None):
+    @u.quantity_input(core_max=u.m)
+    def count_simulated_events(self, energy_range=None, core_max=None):
         """
         Count (or calculate) number of simulated events within a certain energy range and \
         core radius, based on the simulated power law.
@@ -220,54 +220,56 @@ class SimtelEvents:
 
         Parameters
         ----------
-        energyRange: Tuple (len 2)
-            Max and min energy of energy range, e.g. energyRange=(100 * u.GeV, 10 * u.TeV)
-        coreMax: astropy.Quantity (distance)
-            Maximum core radius for selecting showers, e.g. coreMax=1000 * u.m
+        energy_range: Tuple (len 2)
+            Max and min energy of energy range, e.g. energy_range=(100 * u.GeV, 10 * u.TeV)
+        core_max: astropy.Quantity (distance)
+            Maximum core radius for selecting showers, e.g. core_max=1000 * u.m
 
         Returns
         -------
         int
             Number of simulated events.
         """
-        energyRange = self._validate_energy_range(energyRange)
-        coreMax = self._validate_core_max(coreMax)
+        energy_range = self._validate_energy_range(energy_range)
+        core_max = self._validate_core_max(core_max)
 
         # energy factor
         def integral(erange):
-            power = self._mcHeader["spectral_index"] + 1
+            power = self._mc_header["spectral_index"] + 1
             return math.pow(erange[0], power) - math.pow(erange[1], power)
 
-        energy_factor = integral(energyRange) / integral(self._mcHeader["E_range"])
+        energy_factor = integral(energy_range) / integral(self._mc_header["E_range"])
 
         # core factor
-        core_factor = math.pow(coreMax, 2) / math.pow(self._mcHeader["core_range"][1], 2)
+        core_factor = math.pow(core_max, 2) / math.pow(self._mc_header["core_range"][1], 2)
 
-        return self._mcHeader["n_events"] * energy_factor * core_factor
+        return self._mc_header["n_events"] * energy_factor * core_factor
 
-    def _validate_energy_range(self, energyRange):
+    def _validate_energy_range(self, energy_range):
         """
-        Returns the default energy range from mcHeader in case energyRange=None.
+        Returns the default energy range from mc_header in case energy_range=None.
         Checks units, convert it to TeV and return it in the right format, otherwise.
         """
-        if energyRange is None:
-            return self._mcHeader["E_range"]
+        if energy_range is None:
+            return self._mc_header["E_range"]
 
-        if not isinstance(energyRange[0], u.Quantity) or not isinstance(energyRange[1], u.Quantity):
-            msg = "energyRange must be given as u.Quantity in units of energy"
+        if not isinstance(energy_range[0], u.Quantity) or not isinstance(
+            energy_range[1], u.Quantity
+        ):
+            msg = "energy_range must be given as u.Quantity in units of energy"
             self._logger.error(msg)
             raise TypeError(msg)
 
         try:
-            return (energyRange[0].to(u.TeV).value, energyRange[1].to(u.TeV).value)
+            return (energy_range[0].to(u.TeV).value, energy_range[1].to(u.TeV).value)
         except u.core.UnitConversionError:
-            msg = "energyRange must be in units of energy"
+            msg = "energy_range must be in units of energy"
             self._logger.error(msg)
             raise TypeError(msg)
 
-    def _validate_core_max(self, coreMax):
+    def _validate_core_max(self, core_max):
         """
-        Returns the default coreMAx from mcHeader in case coreMax=None.
+        Returns the default core_mAx from mc_header in case core_max=None.
         Checks units, convert it to m and return it in the right format, otherwise.
         """
-        return self._mcHeader["core_range"][1] if coreMax is None else coreMax.to(u.m).value
+        return self._mc_header["core_range"][1] if core_max is None else core_max.to(u.m).value
