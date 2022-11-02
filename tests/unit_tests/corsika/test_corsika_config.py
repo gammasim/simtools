@@ -18,7 +18,7 @@ logger.setLevel(logging.DEBUG)
 
 
 @pytest.fixture
-def corsikaConfigData():
+def corsika_config_data():
     return {
         "nshow": 100,
         "nrun": 10,
@@ -33,151 +33,151 @@ def corsikaConfigData():
 
 
 @pytest.fixture
-def corsikaConfig(io_handler, corsikaConfigData):
+def corsika_config(io_handler, corsika_config_data):
 
-    corsikaConfig = CorsikaConfig(
+    corsika_config = CorsikaConfig(
         site="Paranal",
-        layoutName="4LST",
+        layout_name="4LST",
         label="test-corsika-config",
-        corsikaConfigData=corsikaConfigData,
+        corsika_config_data=corsika_config_data,
     )
-    return corsikaConfig
+    return corsika_config
 
 
-def test_repr(corsikaConfig):
+def test_repr(corsika_config):
 
     logger.info("test_repr")
-    text = repr(corsikaConfig)
+    text = repr(corsika_config)
 
     assert "site" in text
 
 
-def test_user_parameters(corsikaConfig):
+def test_user_parameters(corsika_config):
 
     logger.info("test_user_parameters")
 
-    assert corsikaConfig.get_user_parameter("nshow") == 100
-    assert corsikaConfig.get_user_parameter("thetap") == [20, 20]
-    assert corsikaConfig.get_user_parameter("erange") == [10.0, 10000.0]
+    assert corsika_config.get_user_parameter("nshow") == 100
+    assert corsika_config.get_user_parameter("thetap") == [20, 20]
+    assert corsika_config.get_user_parameter("erange") == [10.0, 10000.0]
     # Testing conversion between AZM (sim_telarray) and PHIP (corsika)
-    assert corsikaConfig.get_user_parameter("azm") == [0.0, 0.0]
-    assert corsikaConfig.get_user_parameter("phip") == [180.0, 180.0]
+    assert corsika_config.get_user_parameter("azm") == [0.0, 0.0]
+    assert corsika_config.get_user_parameter("phip") == [180.0, 180.0]
 
     with pytest.raises(KeyError):
-        corsikaConfig.get_user_parameter("inexistent_par")
+        corsika_config.get_user_parameter("inexistent_par")
 
 
-def test_export_input_file(corsikaConfig):
+def test_export_input_file(corsika_config):
 
     logger.info("test_export_input_file")
-    corsikaConfig.export_input_file()
-    inputFile = corsikaConfig.get_input_file()
-    assert inputFile.exists()
+    corsika_config.export_input_file()
+    input_file = corsika_config.get_input_file()
+    assert input_file.exists()
 
 
-def test_wrong_par_in_config_data(corsikaConfigData):
+def test_wrong_par_in_config_data(corsika_config_data):
 
     logger.info("test_wrong_primary_name")
-    newConfigData = copy(corsikaConfigData)
-    newConfigData["wrong_par"] = 20 * u.m
+    new_config_data = copy(corsika_config_data)
+    new_config_data["wrong_par"] = 20 * u.m
     with pytest.raises(InvalidCorsikaInput):
         corsika_test_Config = CorsikaConfig(
             site="LaPalma",
-            layoutName="1LST",
+            layout_name="1LST",
             label="test-corsika-config",
-            corsikaConfigData=newConfigData,
+            corsika_config_data=new_config_data,
         )
         corsika_test_Config.print_user_parameters()
 
 
-def test_units_of_config_data(corsikaConfigData):
+def test_units_of_config_data(corsika_config_data):
 
     logger.info("test_units_of_config_data")
-    newConfigData = copy(corsikaConfigData)
-    newConfigData["zenith"] = 20 * u.m
+    new_config_data = copy(corsika_config_data)
+    new_config_data["zenith"] = 20 * u.m
     with pytest.raises(InvalidCorsikaInput):
         corsika_test_Config = CorsikaConfig(
             site="LaPalma",
-            layoutName="1LST",
+            layout_name="1LST",
             label="test-corsika-config",
-            corsikaConfigData=newConfigData,
+            corsika_config_data=new_config_data,
         )
         corsika_test_Config.print_user_parameters()
 
 
-def test_len_of_config_data(corsikaConfigData):
+def test_len_of_config_data(corsika_config_data):
 
     logger.info("test_len_of_config_data")
-    newConfigData = copy(corsikaConfigData)
-    newConfigData["erange"] = [20 * u.TeV]
+    new_config_data = copy(corsika_config_data)
+    new_config_data["erange"] = [20 * u.TeV]
     with pytest.raises(InvalidCorsikaInput):
         corsika_test_Config = CorsikaConfig(
             site="LaPalma",
-            layoutName="1LST",
+            layout_name="1LST",
             label="test-corsika-config",
-            corsikaConfigData=newConfigData,
+            corsika_config_data=new_config_data,
         )
         corsika_test_Config.print_user_parameters()
 
 
-def test_wrong_primary_name(corsikaConfigData):
+def test_wrong_primary_name(corsika_config_data):
 
     logger.info("test_wrong_primary_name")
-    newConfigData = copy(corsikaConfigData)
-    newConfigData["primary"] = "rock"
+    new_config_data = copy(corsika_config_data)
+    new_config_data["primary"] = "rock"
     with pytest.raises(InvalidCorsikaInput):
         corsika_test_Config = CorsikaConfig(
             site="LaPalma",
-            layoutName="1LST",
+            layout_name="1LST",
             label="test-corsika-config",
-            corsikaConfigData=newConfigData,
+            corsika_config_data=new_config_data,
         )
         corsika_test_Config.print_user_parameters()
 
 
-def test_missing_input(corsikaConfigData):
+def test_missing_input(corsika_config_data):
 
     logger.info("test_missing_input")
-    newConfigData = copy(corsikaConfigData)
-    newConfigData.pop("primary")
+    new_config_data = copy(corsika_config_data)
+    new_config_data.pop("primary")
     with pytest.raises(MissingRequiredInputInCorsikaConfigData):
         corsika_test_Config = CorsikaConfig(
             site="LaPalma",
-            layoutName="1LST",
+            layout_name="1LST",
             label="test-corsika-config",
-            corsikaConfigData=newConfigData,
+            corsika_config_data=new_config_data,
         )
         corsika_test_Config.print_user_parameters()
 
 
-def test_set_user_parameters(corsikaConfigData, corsikaConfig):
+def test_set_user_parameters(corsika_config_data, corsika_config):
     logger.info("test_set_user_parameters")
-    newConfigData = copy(corsikaConfigData)
-    newConfigData["zenith"] = 0 * u.deg
-    newCorsikaConfig = copy(corsikaConfig)
-    newCorsikaConfig.set_user_parameters(newConfigData)
+    new_config_data = copy(corsika_config_data)
+    new_config_data["zenith"] = 0 * u.deg
+    new_corsika_config = copy(corsika_config)
+    new_corsika_config.set_user_parameters(new_config_data)
 
-    assert newCorsikaConfig.get_user_parameter("thetap") == [0, 0]
+    assert new_corsika_config.get_user_parameter("thetap") == [0, 0]
 
 
 def test_config_data_from_yaml_file(db, io_handler):
 
     logger.info("test_config_data_from_yaml_file")
-    testFileName = "corsikaConfigTest.yml"
+    test_file_name = "corsikaConfigTest.yml"
     db.export_file_db(
-        dbName="test-data",
-        dest=io_handler.get_output_directory(dirType="model", test=True),
-        fileName=testFileName,
+        db_name="test-data",
+        dest=io_handler.get_output_directory(dir_type="model", test=True),
+        file_name=test_file_name,
     )
 
-    corsikaConfigFile = gen.find_file(
-        testFileName, io_handler.get_output_directory(dirType="model", test=True)
+    corsika_config_file = gen.find_file(
+        test_file_name, io_handler.get_output_directory(dir_type="model", test=True)
     )
     cc = CorsikaConfig(
         site="Paranal",
-        layoutName="4LST",
+        layout_name="4LST",
         label="test-corsika-config",
-        corsikaConfigFile=corsikaConfigFile,
+        corsika_config_file=corsika_config_file,
     )
     cc.print_user_parameters()
 
@@ -194,4 +194,4 @@ def test_config_data_from_yaml_file(db, io_handler):
         "EVTNR": [1],
         "PHIP": [180.0, 180.0],
     }
-    assert test_dict == cc._userParameters
+    assert test_dict == cc._user_parameters
