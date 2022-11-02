@@ -86,10 +86,10 @@ from simtools.model.telescope_model import TelescopeModel
 from simtools.ray_tracing import RayTracing
 
 
-def loadData(datafile):
-    dType = {"names": ("Radius [cm]", "Relative intensity"), "formats": ("f8", "f8")}
-    # testDataFile = io.getTestDataFile('PSFcurve_data_v2.txt')
-    data = np.loadtxt(datafile, dtype=dType, usecols=(0, 2))
+def load_data(datafile):
+    d_type = {"names": ("Radius [cm]", "Relative intensity"), "formats": ("f8", "f8")}
+    # test_data_file = io.get_test_data_file('PSFcurve_data_v2.txt')
+    data = np.loadtxt(datafile, dtype=d_type, usecols=(0, 2))
     data["Radius [cm]"] *= 0.1
     data["Relative intensity"] /= np.max(np.abs(data["Relative intensity"]))
     return data
@@ -128,28 +128,28 @@ def main():
 
     # Output directory to save files related directly to this app
     _io_handler = io_handler.IOHandler()
-    outputDir = _io_handler.get_output_directory(label, dirType="application-plots")
+    output_dir = _io_handler.get_output_directory(label, dir_type="application-plots")
 
-    telModel = TelescopeModel(
+    tel_model = TelescopeModel(
         site=args_dict["site"],
-        telescopeModelName=args_dict["telescope"],
-        mongoDBConfig=db_config,
-        modelVersion=args_dict["model_version"],
+        telescope_model_name=args_dict["telescope"],
+        mongo_db_config=db_config,
+        model_version=args_dict["model_version"],
         label=label,
     )
 
     # New parameters
     if args_dict.get("pars", None):
         with open(args_dict["pars"]) as file:
-            newPars = yaml.safe_load(file)
-        telModel.change_multiple_parameters(**newPars)
+            new_pars = yaml.safe_load(file)
+        tel_model.change_multiple_parameters(**new_pars)
 
     ray = RayTracing.from_kwargs(
-        telescopeModel=telModel,
-        simtelSourcePath=args_dict["simtelpath"],
-        sourceDistance=args_dict["src_distance"] * u.km,
-        zenithAngle=args_dict["zenith"] * u.deg,
-        offAxisAngle=[0.0 * u.deg],
+        telescope_model=tel_model,
+        simtel_source_path=args_dict["simtelpath"],
+        source_distance=args_dict["src_distance"] * u.km,
+        zenith_angle=args_dict["zenith"] * u.deg,
+        off_axis_angle=[0.0 * u.deg],
     )
 
     ray.simulate(test=args_dict["test"], force=False)
@@ -162,35 +162,35 @@ def main():
 
     # Plotting cumulative PSF
     # Measured cumulative PSF
-    dataToPlot = OrderedDict()
+    data_to_plot = OrderedDict()
     if args_dict.get("data", None):
-        dataFile = gen.find_file(args_dict["data"], args_dict["model_path"])
-        dataToPlot["measured"] = loadData(dataFile)
-        radius = dataToPlot["measured"]["Radius [cm]"]
+        data_file = gen.find_file(args_dict["data"], args_dict["model_path"])
+        data_to_plot["measured"] = load_data(data_file)
+        radius = data_to_plot["measured"]["Radius [cm]"]
 
     # Simulated cumulative PSF
-    dataToPlot[r"sim$\_$telarray"] = im.get_cumulative_data(radius * u.cm)
+    data_to_plot[r"sim$\_$telarray"] = im.get_cumulative_data(radius * u.cm)
 
-    fig = visualize.plot_1D(dataToPlot)
+    fig = visualize.plot_1D(data_to_plot)
     fig.gca().set_ylim(0, 1.05)
 
-    plotFileName = label + "_" + telModel.name + "_cumulativePSF"
-    plotFile = outputDir.joinpath(plotFileName)
+    plot_file_name = label + "_" + tel_model.name + "_cumulative_PSF"
+    plot_file = output_dir.joinpath(plot_file_name)
     for f in ["pdf", "png"]:
-        plt.savefig(str(plotFile) + "." + f, format=f, bbox_inches="tight")
+        plt.savefig(str(plot_file) + "." + f, format=f, bbox_inches="tight")
     fig.clf()
 
     # Plotting image
-    dataToPlot = im.get_image_data()
-    fig = visualize.plot_hist_2D(dataToPlot, bins=80)
+    data_to_plot = im.get_image_data()
+    fig = visualize.plot_hist_2D(data_to_plot, bins=80)
     circle = plt.Circle((0, 0), im.get_psf(0.8) / 2, color="k", fill=False, lw=2, ls="--")
     fig.gca().add_artist(circle)
     fig.gca().set_aspect("equal")
 
-    plotFileName = label + "_" + telModel.name + "_image"
-    plotFile = outputDir.joinpath(plotFileName)
+    plot_file_name = label + "_" + tel_model.name + "_image"
+    plot_file = output_dir.joinpath(plot_file_name)
     for f in ["pdf", "png"]:
-        fig.savefig(str(plotFile) + "." + f, format=f, bbox_inches="tight")
+        fig.savefig(str(plot_file) + "." + f, format=f, bbox_inches="tight")
     fig.clf()
 
 
