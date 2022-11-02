@@ -136,7 +136,7 @@ class SimtelRunnerRayTracing(SimtelRunner):
             if file.exists() and force_simulate:
                 file.unlink()
             # Defining the file name variable as an class attribute.
-            self.__dict__["_" + base_name + "File"] = file
+            self.__dict__["_" + base_name + "_file"] = file
 
         if not file.exists() or force_simulate:
             # Adding header to photon list file.
