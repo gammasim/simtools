@@ -21,14 +21,14 @@ class CameraEfficiency:
     Class for handling camera efficiency simulations and analysis.
 
     Configurable parameters:
-        zenithAngle: {len: 1, unit: deg, default: 20 deg, names: ['zenith', 'theta']}
+        zenith_angle: {len: 1, unit: deg, default: 20 deg, names: ['zenith', 'theta']}
 
     Attributes
     ----------
     label: str
         Instance label.
     config: namedtuple
-        Contains the configurable parameters (zenithAngle).
+        Contains the configurable parameters (zenith_angle).
 
     Methods
     -------
@@ -44,11 +44,11 @@ class CameraEfficiency:
 
     def __init__(
         self,
-        telescopeModel,
-        simtelSourcePath,
+        telescope_model,
+        simtel_source_path,
         label=None,
-        configData=None,
-        configFile=None,
+        config_data=None,
+        config_file=None,
         test=False,
     ):
         """
@@ -56,40 +56,42 @@ class CameraEfficiency:
 
         Parameters
         ----------
-        telescopeModel: TelescopeModel
+        telescope_model: TelescopeModel
             Instance of the TelescopeModel class.
-        simtelSourcePath: str (or Path)
+        simtel_source_path: str (or Path)
             Location of sim_telarray installation.
         label: str
             Instance label, optional.
-        configData: dict.
+        config_data: dict.
             Dict containing the configurable parameters.
-        configFile: str or Path
+        config_file: str or Path
             Path of the yaml file containing the configurable parameters.
         test: bool
             Is it a test instance (at the moment only affects the location of files).
         """
         self._logger = logging.getLogger(__name__)
 
-        self._simtelSourcePath = simtelSourcePath
-        self._telescopeModel = self._validate_telescope_model(telescopeModel)
-        self.label = label if label is not None else self._telescopeModel.label
+        self._simtel_source_path = simtel_source_path
+        self._telescope_model = self._validate_telescope_model(telescope_model)
+        self.label = label if label is not None else self._telescope_model.label
 
         self.io_handler = io_handler.IOHandler()
-        self._baseDirectory = self.io_handler.get_output_directory(
+        self._base_directory = self.io_handler.get_output_directory(
             label=self.label,
-            dirType="camera-efficiency",
+            dir_type="camera-efficiency",
             test=test,
         )
 
-        self._hasResults = False
+        self._has_results = False
 
-        _configDataIn = gen.collect_data_from_yaml_or_dict(configFile, configData, allowEmpty=True)
-        _parameterFile = self.io_handler.get_input_data_file(
+        _config_data_in = gen.collect_data_from_yaml_or_dict(
+            config_file, config_data, allow_empty=True
+        )
+        _parameter_file = self.io_handler.get_input_data_file(
             "parameters", "camera-efficiency_parameters.yml"
         )
-        _parameters = gen.collect_data_from_yaml_or_dict(_parameterFile, None)
-        self.config = gen.validate_config_data(_configDataIn, _parameters)
+        _parameters = gen.collect_data_from_yaml_or_dict(_parameter_file, None)
+        self.config = gen.validate_config_data(_config_data_in, _parameters)
 
         self._load_files()
 
@@ -98,7 +100,7 @@ class CameraEfficiency:
         """
         Builds a CameraEfficiency object from kwargs only.
         The configurable parameters can be given as kwargs, instead of using the
-        configData or configFile arguments.
+        config_data or config_file arguments.
 
         Parameters
         ----------
@@ -109,16 +111,16 @@ class CameraEfficiency:
         -------
         Instance of this class.
         """
-        args, configData = gen.separate_args_and_config_data(
-            expectedArgs=[
-                "telescopeModel",
+        args, config_data = gen.separate_args_and_config_data(
+            expected_args=[
+                "telescope_model",
                 "label",
-                "simtelSourcePath",
+                "simtel_source_path",
                 "test",
             ],
             **kwargs,
         )
-        return cls(**args, configData=configData)
+        return cls(**args, config_data=config_data)
 
     def __repr__(self):
         return "CameraEfficiency(label={})\n".format(self.label)
@@ -143,29 +145,29 @@ class CameraEfficiency:
     def _load_files(self):
         """Define the variables for the file names, including the results, simtel and log file."""
         # Results file
-        fileNameResults = names.camera_efficiency_results_file_name(
-            self._telescopeModel.site,
-            self._telescopeModel.name,
-            self.config.zenithAngle,
+        file_name_results = names.camera_efficiency_results_file_name(
+            self._telescope_model.site,
+            self._telescope_model.name,
+            self.config.zenith_angle,
             self.label,
         )
-        self._fileResults = self._baseDirectory.joinpath(fileNameResults)
-        # SimtelOutput file
-        fileNameSimtel = names.camera_efficiency_simtel_file_name(
-            self._telescopeModel.site,
-            self._telescopeModel.name,
-            self.config.zenithAngle,
+        self._file_results = self._base_directory.joinpath(file_name_results)
+        # sim_telarray output file
+        file_name_simtel = names.camera_efficiency_simtel_file_name(
+            self._telescope_model.site,
+            self._telescope_model.name,
+            self.config.zenith_angle,
             self.label,
         )
-        self._fileSimtel = self._baseDirectory.joinpath(fileNameSimtel)
+        self._file_simtel = self._base_directory.joinpath(file_name_simtel)
         # Log file
-        fileNameLog = names.camera_efficiency_log_file_name(
-            self._telescopeModel.site,
-            self._telescopeModel.name,
-            self.config.zenithAngle,
+        file_name_log = names.camera_efficiency_log_file_name(
+            self._telescope_model.site,
+            self._telescope_model.name,
+            self.config.zenith_angle,
             self.label,
         )
-        self._fileLog = self._baseDirectory.joinpath(fileNameLog)
+        self._file_log = self._base_directory.joinpath(file_name_log)
 
     def simulate(self, force=False):
         """
@@ -178,81 +180,81 @@ class CameraEfficiency:
         """
         self._logger.info("Simulating CameraEfficiency")
 
-        if self._fileSimtel.exists() and not force:
+        if self._file_simtel.exists() and not force:
             self._logger.info("Simtel file exists and force=False - skipping simulation")
             return
 
         # Processing camera pixel features
-        pixelShape = self._telescopeModel.camera.get_pixel_shape()
-        pixelShapeCmd = "-hpix" if pixelShape in [1, 3] else "-spix"
-        pixelDiameter = self._telescopeModel.camera.get_pixel_diameter()
+        pixel_shape = self._telescope_model.camera.get_pixel_shape()
+        pixel_shape_cmd = "-hpix" if pixel_shape in [1, 3] else "-spix"
+        pixel_diameter = self._telescope_model.camera.get_pixel_diameter()
 
         # Processing focal length
-        focalLength = self._telescopeModel.get_parameter_value("effective_focal_length")
-        if focalLength == 0.0:
+        focal_length = self._telescope_model.get_parameter_value("effective_focal_length")
+        if focal_length == 0.0:
             self._logger.warning("Using focal_length because effective_focal_length is 0")
-            focalLength = self._telescopeModel.get_parameter_value("focal_length")
+            focal_length = self._telescope_model.get_parameter_value("focal_length")
 
         # Processing mirror class
-        mirrorClass = 1
-        if self._telescopeModel.has_parameter("mirror_class"):
-            mirrorClass = self._telescopeModel.get_parameter_value("mirror_class")
+        mirror_class = 1
+        if self._telescope_model.has_parameter("mirror_class"):
+            mirror_class = self._telescope_model.get_parameter_value("mirror_class")
 
         # Processing camera transmission
-        cameraTransmission = 1
-        if self._telescopeModel.has_parameter("camera_transmission"):
-            cameraTransmission = self._telescopeModel.get_parameter_value("camera_transmission")
+        camera_transmission = 1
+        if self._telescope_model.has_parameter("camera_transmission"):
+            camera_transmission = self._telescope_model.get_parameter_value("camera_transmission")
 
         # Processing camera filter
         # A special case is testeff does not support 2D distributions
-        cameraFilterFile = self._telescopeModel.get_parameter_value("camera_filter")
-        if self._telescopeModel.is_file_2D("camera_filter"):
-            cameraFilterFile = self._get_one_dim_distribution(
+        camera_filter_file = self._telescope_model.get_parameter_value("camera_filter")
+        if self._telescope_model.is_file_2D("camera_filter"):
+            camera_filter_file = self._get_one_dim_distribution(
                 "camera_filter", "camera_filter_incidence_angle"
             )
 
         # Processing mirror reflectivity
         # A special case is testeff does not support 2D distributions
-        mirrorReflectivity = self._telescopeModel.get_parameter_value("mirror_reflectivity")
-        if mirrorClass == 2:
-            mirrorReflectivitySecondary = mirrorReflectivity
-        if self._telescopeModel.is_file_2D("mirror_reflectivity"):
-            mirrorReflectivity = self._get_one_dim_distribution(
+        mirror_reflectivity = self._telescope_model.get_parameter_value("mirror_reflectivity")
+        if mirror_class == 2:
+            mirror_reflectivity_secondary = mirror_reflectivity
+        if self._telescope_model.is_file_2D("mirror_reflectivity"):
+            mirror_reflectivity = self._get_one_dim_distribution(
                 "mirror_reflectivity", "primary_mirror_incidence_angle"
             )
-            mirrorReflectivitySecondary = self._get_one_dim_distribution(
+            mirror_reflectivity_secondary = self._get_one_dim_distribution(
                 "mirror_reflectivity", "secondary_mirror_incidence_angle"
             )
 
         # cmd -> Command to be run at the shell
-        cmd = str(self._simtelSourcePath.joinpath("sim_telarray/bin/testeff"))
+        cmd = str(self._simtel_source_path.joinpath("sim_telarray/bin/testeff"))
         cmd += " -nm -nsb-extra"
-        cmd += f" -alt {self._telescopeModel.get_parameter_value('altitude')}"
-        cmd += f" -fatm {self._telescopeModel.get_parameter_value('atmospheric_transmission')}"
-        cmd += f" -flen {focalLength * 0.01}"  # focal length in meters
-        cmd += f" {pixelShapeCmd} {pixelDiameter}"
-        if mirrorClass == 1:
-            cmd += f" -fmir {self._telescopeModel.get_parameter_value('mirror_list')}"
-        cmd += f" -fref {mirrorReflectivity}"
-        if mirrorClass == 2:
+        cmd += f" -alt {self._telescope_model.get_parameter_value('altitude')}"
+        cmd += f" -fatm {self._telescope_model.get_parameter_value('atmospheric_transmission')}"
+        cmd += f" -flen {focal_length * 0.01}"  # focal length in meters
+        cmd += f" {pixel_shape_cmd} {pixel_diameter}"
+        if mirror_class == 1:
+            cmd += f" -fmir {self._telescope_model.get_parameter_value('mirror_list')}"
+        cmd += f" -fref {mirror_reflectivity}"
+        if mirror_class == 2:
             cmd += " -m2"
-            cmd += f" -fref2 {mirrorReflectivitySecondary}"
-        cmd += f" -teltrans {self._telescopeModel.get_telescope_transmission_parameters()[0]}"
-        cmd += f" -camtrans {cameraTransmission}"
-        cmd += f" -fflt {cameraFilterFile}"
-        cmd += f" -fang {self._telescopeModel.camera.get_lightguide_efficiency_angle_file_name()}"
+            cmd += f" -fref2 {mirror_reflectivity_secondary}"
+        cmd += f" -teltrans {self._telescope_model.get_telescope_transmission_parameters()[0]}"
+        cmd += f" -camtrans {camera_transmission}"
+        cmd += f" -fflt {camera_filter_file}"
+        cmd += f" -fang {self._telescope_model.camera.get_lightguide_efficiency_angle_file_name()}"
         cmd += (
-            f" -fwl {self._telescopeModel.camera.get_lightguide_efficiency_wavelength_file_name()}"
+            f" -fwl {self._telescope_model.camera.get_lightguide_efficiency_wavelength_file_name()}"
         )
-        cmd += f" -fqe {self._telescopeModel.get_parameter_value('quantum_efficiency')}"
+        cmd += f" -fqe {self._telescope_model.get_parameter_value('quantum_efficiency')}"
         cmd += " 200 1000"  # lmin and lmax
         cmd += " 300 26"  # Xmax, ioatm (Konrad always uses 26)
-        cmd += f" {self.config.zenithAngle}"
-        cmd += f" 2>{self._fileLog}"
-        cmd += f" >{self._fileSimtel}"
+        cmd += f" {self.config.zenith_angle}"
+        cmd += f" 2>{self._file_log}"
+        cmd += f" >{self._file_simtel}"
 
         # Moving to sim_telarray directory before running
-        cmd = f"cd {self._simtelSourcePath.joinpath('sim_telarray')} && {cmd}"
+        cmd = f"cd {self._simtel_source_path.joinpath('sim_telarray')} && {cmd}"
 
         self._logger.info(f"Running sim_telarray with cmd: {cmd}")
         os.system(cmd)
@@ -274,29 +276,29 @@ class CameraEfficiency:
         """
         self._logger.info("Analyzing CameraEfficiency")
 
-        if self._fileResults.exists() and not force:
+        if self._file_results.exists() and not force:
             self._logger.info("Results file exists and force=False - skipping analyze")
             self._read_results()
             return
 
         # List of parameters to be calculated and stored
-        effPars = [
+        eff_pars = [
             "wl",
             "eff",
-            "effAtm",
+            "eff_atm",
             "qe",
             "ref",
             "masts",
             "filt",
             "pixel",
-            "atmTrans",
+            "atm_trans",
             "cher",
             "nsb",
-            "atmCorr",
-            "nsbSite",
-            "nsbSiteEff",
-            "nsbBe",
-            "nsbBeEff",
+            "atm_corr",
+            "nsb_site",
+            "nsb_site_eff",
+            "nsb_be",
+            "nsb_be_eff",
             "C1",
             "C2",
             "C3",
@@ -313,13 +315,13 @@ class CameraEfficiency:
 
         # Search for at least 5 consecutive numbers to see that we are in the table
         re_table = re.compile("{0}{0}{0}{0}{0}".format(r"[-+]?[0-9]*\.?[0-9]+\s+"))
-        with open(self._fileSimtel, "r") as file:
+        with open(self._file_simtel, "r") as file:
             for line in file:
                 if re_table.match(line):
                     words = line.split()
                     numbers = [float(w) for w in words]
-                    for i in range(len(effPars) - 10):
-                        _results[effPars[i]].append(numbers[i])
+                    for i in range(len(eff_pars) - 10):
+                        _results[eff_pars[i]].append(numbers[i])
                     C1 = numbers[8] * (400 / numbers[0]) ** 2
                     C2 = C1 * numbers[4] * numbers[5]
                     C3 = C2 * numbers[6] * numbers[7]
@@ -342,7 +344,7 @@ class CameraEfficiency:
                     _results["N4x"].append(N4x)
 
         self._results = Table(_results)
-        self._hasResults = True
+        self._has_results = True
 
         print("\33[40;37;1m")
         self._logger.info(f"Spectrum weighted reflectivity: {self.calc_reflectivity():.4f}")
@@ -373,17 +375,19 @@ class CameraEfficiency:
 
     def export_results(self):
         """Export results to a csv file."""
-        if not self._hasResults:
+        if not self._has_results:
             self._logger.error("Cannot export results because they do not exist")
         else:
-            self._logger.info("Exporting results to {}".format(self._fileResults))
-            astropy.io.ascii.write(self._results, self._fileResults, format="basic", overwrite=True)
+            self._logger.info("Exporting results to {}".format(self._file_results))
+            astropy.io.ascii.write(
+                self._results, self._file_results, format="basic", overwrite=True
+            )
 
     def _read_results(self):
         """Read existing results file and store it in _results."""
-        table = astropy.io.ascii.read(self._fileResults, format="basic")
+        table = astropy.io.ascii.read(self._file_results, format="basic")
         self._results = table
-        self._hasResults = True
+        self._has_results = True
 
     def calc_tel_efficiency(self):
         """
@@ -391,18 +395,18 @@ class CameraEfficiency:
         """
 
         # Sum(C1) from 300 - 550 nm:
-        c1ReducedWL = self._results["C1"][
-            [wlNow > 299 and wlNow < 551 for wlNow in self._results["wl"]]
+        c1_reduced_wl = self._results["C1"][
+            [wl_now > 299 and wl_now < 551 for wl_now in self._results["wl"]]
         ]
-        c1Sum = np.sum(c1ReducedWL)
+        c1_sum = np.sum(c1_reduced_wl)
         # Sum(C4) from 200 - 999 nm:
-        c4Sum = np.sum(self._results["C4"])
-        mastsFactor = self._results["masts"][0]
-        fillFactor = self._telescopeModel.camera.get_camera_fill_factor()
+        c4_sum = np.sum(self._results["C4"])
+        masts_factor = self._results["masts"][0]
+        fill_factor = self._telescope_model.camera.get_camera_fill_factor()
 
-        telEffeciency = fillFactor * (c4Sum / (mastsFactor * c1Sum))
+        tel_effeciency = fill_factor * (c4_sum / (masts_factor * c1_sum))
 
-        return telEffeciency
+        return tel_effeciency
 
     def calc_camera_efficiency(self):
         """
@@ -410,45 +414,45 @@ class CameraEfficiency:
         """
 
         # Sum(C1) from 300 - 550 nm:
-        c1ReducedWL = self._results["C1"][
-            [wlNow > 299 and wlNow < 551 for wlNow in self._results["wl"]]
+        c1_reduced_wl = self._results["C1"][
+            [wl_now > 299 and wl_now < 551 for wl_now in self._results["wl"]]
         ]
-        c1Sum = np.sum(c1ReducedWL)
+        c1_sum = np.sum(c1_reduced_wl)
         # Sum(C4x) from 300 - 550 nm:
-        c4xReducedWL = self._results["C4x"][
-            [wlNow > 299 and wlNow < 551 for wlNow in self._results["wl"]]
+        c4x_reduced_wl = self._results["C4x"][
+            [wl_now > 299 and wl_now < 551 for wl_now in self._results["wl"]]
         ]
-        c4xSum = np.sum(c4xReducedWL)
-        fillFactor = self._telescopeModel.camera.get_camera_fill_factor()
+        c4x_sum = np.sum(c4x_reduced_wl)
+        fill_factor = self._telescope_model.camera.get_camera_fill_factor()
 
-        camEffeciencyNoGaps = c4xSum / c1Sum
-        camEffeciency = camEffeciencyNoGaps * fillFactor
+        cam_effeciency_no_gaps = c4x_sum / c1_sum
+        cam_effeciency = cam_effeciency_no_gaps * fill_factor
 
-        return camEffeciency
+        return cam_effeciency
 
-    def calc_tot_efficiency(self, telEffeciency):
+    def calc_tot_efficiency(self, tel_effeciency):
         """
         Calculate the telescope total efficiency including gaps (as defined in A-PERF-2020).
 
         Parameters
         ----------
-        telEffeciency: float
+        tel_effeciency: float
             The telescope efficiency as calculated by calc_tel_efficiency()
         """
 
         # Sum(N1) from 300 - 550 nm:
-        n1ReducedWL = self._results["N1"][
-            [wlNow > 299 and wlNow < 551 for wlNow in self._results["wl"]]
+        n1_reduced_wl = self._results["N1"][
+            [wl_now > 299 and wl_now < 551 for wl_now in self._results["wl"]]
         ]
-        n1Sum = np.sum(n1ReducedWL)
+        n1_sum = np.sum(n1_reduced_wl)
         # Sum(N4) from 200 - 999 nm:
-        n4Sum = np.sum(self._results["N4"])
-        mastsFactor = self._results["masts"][0]
-        fillFactor = self._telescopeModel.camera.get_camera_fill_factor()
+        n4_sum = np.sum(self._results["N4"])
+        masts_factor = self._results["masts"][0]
+        fill_factor = self._telescope_model.camera.get_camera_fill_factor()
 
-        telEffeciencyNSB = fillFactor * (n4Sum / (mastsFactor * n1Sum))
+        tel_effeciency_nsb = fill_factor * (n4_sum / (masts_factor * n1_sum))
 
-        return telEffeciency / np.sqrt(telEffeciencyNSB)
+        return tel_effeciency / np.sqrt(tel_effeciency_nsb)
 
     def calc_reflectivity(self):
         """
@@ -456,49 +460,49 @@ class CameraEfficiency:
         """
 
         # Sum(C1) from 300 - 550 nm:
-        c1ReducedWL = self._results["C1"][
-            [wlNow > 299 and wlNow < 551 for wlNow in self._results["wl"]]
+        c1_reduced_wl = self._results["C1"][
+            [wl_now > 299 and wl_now < 551 for wl_now in self._results["wl"]]
         ]
-        c1Sum = np.sum(c1ReducedWL)
+        c1_sum = np.sum(c1_reduced_wl)
         # Sum(C2) from 300 - 550 nm:
-        c2ReducedWL = self._results["C2"][
-            [wlNow > 299 and wlNow < 551 for wlNow in self._results["wl"]]
+        c2_reduced_wl = self._results["C2"][
+            [wl_now > 299 and wl_now < 551 for wl_now in self._results["wl"]]
         ]
-        c2Sum = np.sum(c2ReducedWL)
+        c2_sum = np.sum(c2_reduced_wl)
 
-        return c2Sum / c1Sum / self._results["masts"][0]
+        return c2_sum / c1_sum / self._results["masts"][0]
 
     def calc_nsb_rate(self):
         """
         Calculate the NSB rate.
         """
 
-        nsbPePerNs = (
+        nsb_pe_per_ns = (
             np.sum(self._results["N4"])
-            * self._telescopeModel.camera.get_pixel_active_solid_angle()
-            * self._telescopeModel.get_on_axis_eff_optical_area().to("m2").value
-            / self._telescopeModel.get_telescope_transmission_parameters()[0]
+            * self._telescope_model.camera.get_pixel_active_solid_angle()
+            * self._telescope_model.get_on_axis_eff_optical_area().to("m2").value
+            / self._telescope_model.get_telescope_transmission_parameters()[0]
         )
 
-        print(self._telescopeModel.get_on_axis_eff_optical_area().to("m2").value)
+        print(self._telescope_model.get_on_axis_eff_optical_area().to("m2").value)
 
         # NSB input spectrum is from Benn&Ellison
         # (integral is in ph./(cm² ns sr) ) from 300 - 650 nm:
-        n1ReducedWL = self._results["N1"][
-            [wlNow > 299 and wlNow < 651 for wlNow in self._results["wl"]]
+        n1_reduced_wl = self._results["N1"][
+            [wl_now > 299 and wl_now < 651 for wl_now in self._results["wl"]]
         ]
-        n1Sum = np.sum(n1ReducedWL)
-        n1IntegralEdges = self._results["N1"][
-            [wlNow == 300 or wlNow == 650 for wlNow in self._results["wl"]]
+        n1_sum = np.sum(n1_reduced_wl)
+        n1_integral_edges = self._results["N1"][
+            [wl_now == 300 or wl_now == 650 for wl_now in self._results["wl"]]
         ]
-        n1IntegralEdgesSum = np.sum(n1IntegralEdges)
-        nsbIntegral = 0.0001 * (n1Sum - 0.5 * n1IntegralEdgesSum)
-        nsbRate = (
-            nsbPePerNs
-            * self._telescopeModel.reference_data["nsb_reference_value"]["Value"]
-            / nsbIntegral
+        n1_integral_edges_sum = np.sum(n1_integral_edges)
+        nsb_integral = 0.0001 * (n1_sum - 0.5 * n1_integral_edges_sum)
+        nsb_rate = (
+            nsb_pe_per_ns
+            * self._telescope_model.reference_data["nsb_reference_value"]["Value"]
+            / nsb_integral
         )
-        return nsbRate, n1Sum
+        return nsb_rate, n1_sum
 
     def plot(self, key, **kwargs):  # FIXME - remove this function, probably not needed
         """
@@ -522,12 +526,12 @@ class CameraEfficiency:
             raise KeyError(msg)
 
         ax = plt.gca()
-        firstLetter = "C" if key == "cherenkov" else "N"
+        first_letter = "C" if key == "cherenkov" else "N"
         for par in ["1", "2", "3", "4", "4x"]:
             ax.plot(
                 self._results["wl"],
-                self._results[firstLetter + par],
-                label=firstLetter + par,
+                self._results[first_letter + par],
+                label=first_letter + par,
                 **kwargs,
             )
 
@@ -541,7 +545,7 @@ class CameraEfficiency:
         """
         self._logger.info("Plotting Cherenkov efficiency vs wavelength")
 
-        columnTitles = {
+        column_titles = {
             "wl": "Wavelength [nm]",
             "C1": r"C1: Cherenkov light on ground",
             "C2": r"C2: C1 $\times$ ref. $\times$ masts",
@@ -550,16 +554,16 @@ class CameraEfficiency:
             "C4x": r"C4x: C1 $\times$ filter $\times$ lightguide $\times$ q.e.",
         }
 
-        tableToPlot = Table([self._results[colNow] for colNow in columnTitles])
+        table_to_plot = Table([self._results[col_now] for col_now in column_titles])
 
-        for columnNow, columnTitle in columnTitles.items():
-            tableToPlot.rename_column(columnNow, columnTitle)
+        for column_now, column_title in column_titles.items():
+            table_to_plot.rename_column(column_now, column_title)
 
         fig = visualize.plot_table(
-            tableToPlot,
-            yTitle="Cherenkov light efficiency",
-            title="{} response to Cherenkov light".format(self._telescopeModel.name),
-            noMarkers=True,
+            table_to_plot,
+            y_title="Cherenkov light efficiency",
+            title="{} response to Cherenkov light".format(self._telescope_model.name),
+            no_markers=True,
         )
 
         return fig
@@ -573,7 +577,7 @@ class CameraEfficiency:
         plt
         """
         self._logger.info("Plotting NSB efficiency vs wavelength")
-        columnTitles = {
+        column_titles = {
             "wl": "Wavelength [nm]",
             "N1": r"N1: NSB light on ground (B\&E)",
             "N2": r"N2: N1 $\times$ ref. $\times$ masts",
@@ -582,16 +586,16 @@ class CameraEfficiency:
             "N4x": r"N4x: N1 $\times$ filter $\times$ lightguide $\times$ q.e.",
         }
 
-        tableToPlot = Table([self._results[colNow] for colNow in columnTitles])
+        table_to_plot = Table([self._results[col_now] for col_now in column_titles])
 
-        for columnNow, columnTitle in columnTitles.items():
-            tableToPlot.rename_column(columnNow, columnTitle)
+        for column_now, column_title in column_titles.items():
+            table_to_plot.rename_column(column_now, column_title)
 
         plt = visualize.plot_table(
-            tableToPlot,
-            yTitle="Nightsky background light efficiency",
-            title="{} response to nightsky background light".format(self._telescopeModel.name),
-            noMarkers=True,
+            table_to_plot,
+            y_title="Nightsky background light efficiency",
+            title="{} response to nightsky background light".format(self._telescope_model.name),
+            no_markers=True,
         )
 
         plt.gca().set_yscale("log")
@@ -600,46 +604,43 @@ class CameraEfficiency:
 
         return plt
 
-    def _get_one_dim_distribution(self, twoDimParameter, weightingDistributionParameter):
+    def _get_one_dim_distribution(self, two_dim_parameter, weighting_distribution_parameter):
         """
         Calculate an average one-dimensional curve for testeff from the two-dimensional curve.
-        The two-dimensional distribution is provided in twoDimParameter. The distribution
+        The two-dimensional distribution is provided in two_dim_parameter. The distribution
         of weights to use for averaging the two-dimensional distribution is given in
-        weightingDistributionParameter.
+        weighting_distribution_parameter.
 
         Returns
         -------
-        oneDimFile: Path
+        one_dim_file: Path
             The file path and name with the new one-dimensional distribution
         """
-        incidenceAngleDistributionFile = self._telescopeModel.get_parameter_value(
-            weightingDistributionParameter
+        incidence_angle_distribution_file = self._telescope_model.get_parameter_value(
+            weighting_distribution_parameter
         )
-        incidenceAngleDistribution = self._telescopeModel.read_incidence_angle_distribution(
-            incidenceAngleDistributionFile
+        incidence_angle_distribution = self._telescope_model.read_incidence_angle_distribution(
+            incidence_angle_distribution_file
         )
         self._logger.warning(
-            f"The {' '.join(twoDimParameter.split('_'))} distribution "
+            f"The {' '.join(two_dim_parameter.split('_'))} distribution "
             "is a 2D one which testeff does not support. "
             "Instead of using the 2D distribution, the two dimensional distribution "
             "will be averaged, using the photon incidence angle distribution as weights. "
             "The incidence angle distribution is taken "
-            f"from the file - {incidenceAngleDistributionFile})."
+            f"from the file - {incidence_angle_distribution_file})."
         )
-        twoDimDistribution = self._telescopeModel.read_two_dim_wavelength_angle(
-            self._telescopeModel.get_parameter_value(twoDimParameter)
+        two_dim_distribution = self._telescope_model.read_two_dim_wavelength_angle(
+            self._telescope_model.get_parameter_value(two_dim_parameter)
         )
-        distributionToExport = self._telescopeModel.calc_average_curve(
-            twoDimDistribution, incidenceAngleDistribution
+        distribution_to_export = self._telescope_model.calc_average_curve(
+            two_dim_distribution, incidence_angle_distribution
         )
-        newFileName = (
-            f"weighted_average_1D_{self._telescopeModel.get_parameter_value(twoDimParameter)}"
+        new_file_name = (
+            f"weighted_average_1D_{self._telescope_model.get_parameter_value(two_dim_parameter)}"
         )
-        oneDimFile = self._telescopeModel.export_table_to_model_directory(
-            newFileName, distributionToExport
+        one_dim_file = self._telescope_model.export_table_to_model_directory(
+            new_file_name, distribution_to_export
         )
 
-        return oneDimFile
-
-
-# END of CameraEfficiency
+        return one_dim_file
