@@ -111,17 +111,17 @@ def main():
     _logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
     layout = layout_array.LayoutArray()
-    layout.read_telescope_list_file(telescopeListFile=args_dict["array_element_list"])
+    layout.read_telescope_list_file(telescope_list_file=args_dict["array_element_list"])
     layout.convert_coordinates()
     if args_dict["export"] is not None:
         layout.export_telescope_list(
-            crsName=args_dict["export"],
-            corsikaZ=args_dict["use_corsika_telescope_height"],
+            crs_name=args_dict["export"],
+            corsika_z=args_dict["use_corsika_telescope_height"],
         )
     else:
         layout.print_telescope_list(
             compact_printing=args_dict["compact"],
-            corsikaZ=args_dict["use_corsika_telescope_height"],
+            corsika_z=args_dict["use_corsika_telescope_height"],
         )
 
 
