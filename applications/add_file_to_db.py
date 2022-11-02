@@ -42,7 +42,7 @@ import simtools.util.general as gen
 from simtools import db_handler
 
 
-def _userConfirm():
+def _user_confirm():
     """
     Ask the user to enter y or n (case-insensitive).
 
@@ -62,7 +62,7 @@ def _userConfirm():
 
 def main():
 
-    _db_tmp = db_handler.DatabaseHandler(mongoDBConfig=None)
+    _db_tmp = db_handler.DatabaseHandler(mongo_db_config=None)
 
     config = configurator.Configurator(
         label="Add file to the DB.",
@@ -107,37 +107,37 @@ def main():
     logger = logging.getLogger()
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
-    db = db_handler.DatabaseHandler(mongoDBConfig=db_config)
+    db = db_handler.DatabaseHandler(mongo_db_config=db_config)
 
-    filesToInsert = list()
+    files_to_insert = list()
     if args_dict.get("file_name", None) is not None:
-        for fileNow in args_dict["file_name"]:
-            if Path(fileNow).suffix in db.ALLOWED_FILE_EXTENSIONS:
-                filesToInsert.append(fileNow)
+        for file_now in args_dict["file_name"]:
+            if Path(file_now).suffix in db.ALLOWED_FILE_EXTENSIONS:
+                files_to_insert.append(file_now)
             else:
                 logger.warning(
                     "The file {} will not be uploaded to the DB because its extension is not "
-                    "in the allowed extension list: {}".format(fileNow, db.ALLOWED_FILE_EXTENSIONS)
+                    "in the allowed extension list: {}".format(file_now, db.ALLOWED_FILE_EXTENSIONS)
                 )
     else:
-        for extNow in db.ALLOWED_FILE_EXTENSIONS:
-            filesToInsert.extend(Path(args_dict["input_path"]).glob("*{}".format(extNow)))
+        for ext_now in db.ALLOWED_FILE_EXTENSIONS:
+            files_to_insert.extend(Path(args_dict["input_path"]).glob("*{}".format(ext_now)))
 
     plural = "s"
-    if len(filesToInsert) < 1:
+    if len(files_to_insert) < 1:
         raise ValueError("No files were provided to upload")
-    elif len(filesToInsert) == 1:
+    elif len(files_to_insert) == 1:
         plural = ""
     else:
         pass
 
     print(f"Should the following file{plural} be inserted to the {args_dict['db']} DB?:\n")
-    print(*filesToInsert, sep="\n")
+    print(*files_to_insert, sep="\n")
     print()
-    if _userConfirm():
-        for fileToInsertNow in filesToInsert:
-            db.insert_file_to_db(fileToInsertNow, args_dict["db"])
-            logger.info("File {} inserted to {} DB".format(fileToInsertNow, args_dict["db"]))
+    if _user_confirm():
+        for file_to_insert_now in files_to_insert:
+            db.insert_file_to_db(file_to_insert_now, args_dict["db"])
+            logger.info("File {} inserted to {} DB".format(file_to_insert_now, args_dict["db"]))
     else:
         logger.info("Aborted, did not insert file {} to the {} DB".format(plural, args_dict["db"]))
 
