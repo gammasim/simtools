@@ -86,7 +86,7 @@ def test_fill_from_config_file(configurator, args_dict, tmp_test_directory):
     assert _tmp_config == configurator.config
 
 
-def test_fillFromWorkflowConfigFile(configurator, args_dict, tmp_test_directory):
+def test_fill_from_workflow_config_file(configurator, args_dict, tmp_test_directory):
 
     _tmp_config = copy(dict(args_dict))
     _tmp_dict = {
