@@ -127,7 +127,7 @@ def workflow_configuration_schema():
             "filename": None,
         },
         "configuration": {
-            "logLevel": "INFO",
+            "log_level": "INFO",
             "test": False,
         },
     }
