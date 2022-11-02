@@ -53,7 +53,7 @@ class Configurator:
         self._logger = logging.getLogger(__name__)
         self._logger.debug("Init Configuration")
 
-        self.configClassInit = config
+        self.config_class_init = config
         self.label = label
         self.config = {}
         self.parser = argparser.CommandLineParser(
@@ -135,7 +135,7 @@ class Configurator:
             self._fill_from_config_file(self.config["config"])
         except KeyError:
             pass
-        self._fill_from_config_dict(self.configClassInit)
+        self._fill_from_config_dict(self.config_class_init)
         self._fill_from_environmental_variables()
         self._initialize_io_handler()
         _db_dict = self._get_db_parameters()
