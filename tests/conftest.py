@@ -132,18 +132,18 @@ def db_config():
     Read DB configuration from tests from environmental variables
 
     """
-    mongoDBConfig = {}
+    mongo_db_config = {}
     _db_para = ("db_api_user", "db_api_pw", "db_api_port", "db_server")
     for _para in _db_para:
-        mongoDBConfig[_para] = os.environ.get(_para.upper())
-    if mongoDBConfig["db_api_port"] is not None:
-        mongoDBConfig["db_api_port"] = int(mongoDBConfig["db_api_port"])
-    return mongoDBConfig
+        mongo_db_config[_para] = os.environ.get(_para.upper())
+    if mongo_db_config["db_api_port"] is not None:
+        mongo_db_config["db_api_port"] = int(mongo_db_config["db_api_port"])
+    return mongo_db_config
 
 
 @pytest.fixture
 def db(db_config):
-    db = db_handler.DatabaseHandler(mongoDBConfig=db_config)
+    db = db_handler.DatabaseHandler(mongo_db_config=db_config)
     return db
 
 
@@ -155,7 +155,7 @@ def db_no_config_file():
     Otherwise it creates a conflict between the config file
     set by set_db and the one set by set_simtools
     """
-    db = db_handler.DatabaseHandler(mongoDBConfig=None)
+    db = db_handler.DatabaseHandler(mongo_db_config=None)
     return db
 
 
@@ -170,23 +170,23 @@ def db_cleanup_file_sandbox(db_no_config_file):
 
 @pytest.fixture
 def telescope_model_lst(db, db_config, io_handler):
-    telescopeModelLST = TelescopeModel(
+    telescope_model_LST = TelescopeModel(
         site="North",
-        telescopeModelName="LST-1",
-        modelVersion="Prod5",
-        mongoDBConfig=db_config,
+        telescope_model_name="LST-1",
+        model_version="Prod5",
+        mongo_db_config=db_config,
         label="validate_camera_efficiency",
     )
-    return telescopeModelLST
+    return telescope_model_LST
 
 
 @pytest.fixture
 def telescope_model_sst(db, db_config, io_handler):
-    telescopeModelSST = TelescopeModel(
+    telescope_model_SST = TelescopeModel(
         site="South",
-        telescopeModelName="SST-D",
-        modelVersion="Prod5",
-        mongoDBConfig=db_config,
+        telescope_model_name="SST-D",
+        model_version="Prod5",
+        mongo_db_config=db_config,
         label="test-telescope-model-sst",
     )
-    return telescopeModelSST
+    return telescope_model_SST
