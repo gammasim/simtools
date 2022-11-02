@@ -53,15 +53,15 @@ class IOHandler(metaclass=IOHandlerSingleton):
         self.data_path = data_path
         self.model_path = model_path
 
-    def get_output_directory(self, label=None, dirType=None, test=False):
+    def get_output_directory(self, label=None, dir_type=None, test=False):
         """
-        Get the output directory for the directory type dirType
+        Get the output directory for the directory type dir_type
 
         Parameters
         ----------
         label: str
             Instance label.
-        dirType: str
+        dir_type: str
             Name of the subdirectory (ray-tracing, model etc)
         test: bool
             If true, return test output location
@@ -72,15 +72,15 @@ class IOHandler(metaclass=IOHandlerSingleton):
         """
 
         if test:
-            outputDirectoryPrefix = Path(self.output_path).joinpath("test-output")
+            output_directory_prefix = Path(self.output_path).joinpath("test-output")
         else:
-            outputDirectoryPrefix = Path(self.output_path).joinpath("simtools-output")
+            output_directory_prefix = Path(self.output_path).joinpath("simtools-output")
 
         today = datetime.date.today()
-        labelDir = label if label is not None else "d-" + str(today)
-        path = outputDirectoryPrefix.joinpath(labelDir)
-        if dirType is not None:
-            path = path.joinpath(dirType)
+        label_dir = label if label is not None else "d-" + str(today)
+        path = output_directory_prefix.joinpath(label_dir)
+        if dir_type is not None:
+            path = path.joinpath(dir_type)
         try:
             path.mkdir(parents=True, exist_ok=True)
         except FileNotFoundError:
@@ -89,17 +89,17 @@ class IOHandler(metaclass=IOHandlerSingleton):
 
         return path.absolute()
 
-    def get_output_file(self, fileName, label=None, dirType=None, test=False):
+    def get_output_file(self, file_name, label=None, dir_type=None, test=False):
         """
         Get path of an output file.
 
         Parameters
         ----------
-        filesName: str
+        files_name: str
             File name.
         label: str
             Instance label.
-        dirType: str
+        dir_type: str
             Name of the subdirectory (ray-tracing, model etc)
         test: bool
             If true, return test output location
@@ -109,20 +109,20 @@ class IOHandler(metaclass=IOHandlerSingleton):
         Path
         """
         return (
-            self.get_output_directory(label=label, dirType=dirType, test=test)
-            .joinpath(fileName)
+            self.get_output_directory(label=label, dir_type=dir_type, test=test)
+            .joinpath(file_name)
             .absolute()
         )
 
-    def get_input_data_file(self, parentDir=None, fileName=None, test=False):
+    def get_input_data_file(self, parent_dir=None, file_name=None, test=False):
         """
         Get path of a data file, using data_path
 
         Parameters
         ----------
-        parentDir: str
+        parent_dir: str
             Parent directory of the file.
-        filesName: str
+        files_name: str
             File name.
         test: bool
             If true, return test resources location
@@ -133,7 +133,7 @@ class IOHandler(metaclass=IOHandlerSingleton):
         """
 
         if test:
-            filePrefix = Path("tests/resources/")
+            file_prefix = Path("tests/resources/")
         else:
-            filePrefix = Path(self.data_path).joinpath(parentDir)
-        return filePrefix.joinpath(fileName).absolute()
+            file_prefix = Path(self.data_path).joinpath(parent_dir)
+        return file_prefix.joinpath(file_name).absolute()
