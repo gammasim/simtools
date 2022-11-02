@@ -42,7 +42,7 @@ cscat: # Parameter with len > 1 and multiple units.
 validated_name:
   len: 1
   unit: null
-  names: ['testname']
+  names: ['test_name']
 dict_par:
   len: 2
   unit: [null, !astropy.units.Unit {unit: cm}]
