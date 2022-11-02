@@ -15,52 +15,52 @@ logging.getLogger().setLevel(logging.DEBUG)
 
 
 def test_collect_dict_data(args_dict, io_handler):
-    inDict = {"k1": 2, "k2": "bla"}
-    dictForYaml = {"k3": {"kk3": 4, "kk4": 3.0}, "k4": ["bla", 2]}
-    testYamlFile = io_handler.get_output_file(fileName="test_collect_dict_data.yml", test=True)
-    if not Path(testYamlFile).exists():
-        with open(testYamlFile, "w") as output:
-            yaml.safe_dump(dictForYaml, output, sort_keys=False)
+    in_dict = {"k1": 2, "k2": "bla"}
+    dict_for_yaml = {"k3": {"kk3": 4, "kk4": 3.0}, "k4": ["bla", 2]}
+    test_yaml_file = io_handler.get_output_file(file_name="test_collect_dict_data.yml", test=True)
+    if not Path(test_yaml_file).exists():
+        with open(test_yaml_file, "w") as output:
+            yaml.safe_dump(dict_for_yaml, output, sort_keys=False)
 
-    d1 = gen.collect_data_from_yaml_or_dict(None, inDict)
+    d1 = gen.collect_data_from_yaml_or_dict(None, in_dict)
     assert "k2" in d1.keys()
     assert d1["k1"] == 2
 
-    d2 = gen.collect_data_from_yaml_or_dict(testYamlFile, None)
+    d2 = gen.collect_data_from_yaml_or_dict(test_yaml_file, None)
     assert "k3" in d2.keys()
     assert d2["k4"] == ["bla", 2]
 
-    d3 = gen.collect_data_from_yaml_or_dict(testYamlFile, inDict)
+    d3 = gen.collect_data_from_yaml_or_dict(test_yaml_file, in_dict)
     assert d3 == d2
 
 
 def test_validate_config_data(args_dict, io_handler):
 
-    parameterFile = io_handler.get_input_data_file(fileName="test_parameters.yml", test=True)
-    parameters = gen.collect_data_from_yaml_or_dict(parameterFile, None)
+    parameter_file = io_handler.get_input_data_file(file_name="test_parameters.yml", test=True)
+    parameters = gen.collect_data_from_yaml_or_dict(parameter_file, None)
 
-    configData = {
+    config_data = {
         "zenith": 0 * u.deg,
         "offaxis": [0 * u.deg, 0.2 * u.rad, 3 * u.deg],
         "cscat": [0, 10 * u.m, 3 * u.km],
-        "sourceDistance": 20000 * u.m,
-        "testName": 10,
-        "dictPar": {"blah": 10, "bleh": 5 * u.m},
+        "source_distance": 20000 * u.m,
+        "test_name": 10,
+        "dict_par": {"blah": 10, "bleh": 5 * u.m},
     }
 
-    validatedData = gen.validate_config_data(configData=configData, parameters=parameters)
+    validated_data = gen.validate_config_data(config_data=config_data, parameters=parameters)
 
     # Testing undefined len
-    assert len(validatedData.offAxisAngle) == 3
+    assert len(validated_data.off_axis_angle) == 3
 
     # Testing name validation
-    assert validatedData.validatedName == 10
+    assert validated_data.validated_name == 10
 
     # Testing unit conversion
-    assert validatedData.sourceDistance == 20
+    assert validated_data.source_distance == 20
 
     # Testing dict par
-    assert validatedData.dictPar["bleh"] == 500
+    assert validated_data.dict_par["bleh"] == 500
 
 
 def test_check_value_entry_length():

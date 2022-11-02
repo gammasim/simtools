@@ -15,10 +15,10 @@ def test_validate_telescope_name():
 
     for key, value in telescopes.items():
         logging.getLogger().info("Validating {}".format(key))
-        newName = names.validate_telescope_model_name(key)
-        logging.getLogger().info("New name {}".format(newName))
+        new_name = names.validate_telescope_model_name(key)
+        logging.getLogger().info("New name {}".format(new_name))
 
-        assert value == newName
+        assert value == new_name
 
 
 def test_validate_telescope_name_db():
@@ -31,10 +31,10 @@ def test_validate_telescope_name_db():
 
     for key, value in telescopes.items():
         logging.getLogger().info("Validating {}".format(key))
-        newName = names.validate_telescope_name_db(key)
-        logging.getLogger().info("New name {}".format(newName))
+        new_name = names.validate_telescope_name_db(key)
+        logging.getLogger().info("New name {}".format(new_name))
 
-        assert value == newName
+        assert value == new_name
 
     telescopes = {
         "ssss-sst-d": "SSSS-SST-D",
@@ -49,10 +49,10 @@ def test_validate_telescope_name_db():
 
 
 def test_validate_other_names():
-    modelVersion = names.validate_model_version_name("p4")
-    logging.getLogger().info(modelVersion)
+    model_version = names.validate_model_version_name("p4")
+    logging.getLogger().info(model_version)
 
-    assert modelVersion == "prod4"
+    assert model_version == "prod4"
 
 
 def test_simtools_instrument_name():
