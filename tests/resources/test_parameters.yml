@@ -22,16 +22,16 @@
 #
 # Dict can be given similarly to lists, with the proper len.
 #
-zenithAngle:
+zenith_angle:
   len: 1
   unit: !astropy.units.Unit {unit: deg}
   default: 20
   names: ['zenith', 'theta']
-offAxisAngle: # Parameter with undefined length
+off_axis_angle: # Parameter with undefined length
   len: null
   unit: !astropy.units.Unit {unit: deg}
   names: ['offaxis', 'offset']
-sourceDistance:
+source_distance:
   len: 1
   unit: !astropy.units.Unit {unit: km}
   default: 10
@@ -39,11 +39,11 @@ cscat: # Parameter with len > 1 and multiple units.
   len: 3
   unit: [null, !astropy.units.Unit {unit: m}, !astropy.units.Unit {unit: m}]
   names: ['scat']
-validatedName:
+validated_name:
   len: 1
   unit: null
   names: ['testname']
-dictPar:
+dict_par:
   len: 2
   unit: [null, !astropy.units.Unit {unit: cm}]
   default:
