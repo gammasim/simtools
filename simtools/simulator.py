@@ -115,7 +115,7 @@ class Simulator:
         config_file=None,
         submit_command=None,
         extra_commands=None,
-        mongo_DB_config=None,
+        mongo_db_config=None,
         test=False,
     ):
         """
@@ -138,7 +138,7 @@ class Simulator:
             Job submission command.
         extra_commands: str or list of str
             Extra commands to be added to the run script before the run command,
-        mongo_DB_config: dict
+        mongo_db_config: dict
             MongoDB configuration.
         test: bool
             If True, no jobs are submitted; only run scripts are prepared
@@ -157,7 +157,7 @@ class Simulator:
         self._simulator_source_path = Path(simulator_source_path)
         self._submit_command = submit_command
         self._extra_commands = extra_commands
-        self._mongo_DB_config = mongo_DB_config
+        self._mongo_db_config = mongo_db_config
 
         self._load_configuration_and_simulation_model(config_data, config_file)
 
@@ -253,7 +253,7 @@ class Simulator:
         self.array_model = ArrayModel(
             label=self.label,
             array_config_data=_array_model_config,
-            mongo_DB_config=self._mongo_DB_config,
+            mongo_db_config=self._mongo_db_config,
         )
 
     def _validate_run_list_and_range(self, run_list, run_range):
