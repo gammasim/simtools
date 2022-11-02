@@ -16,9 +16,9 @@ def test_get_number_of_pixels(telescope_model_lst):
 
 def test_pixel_solid_angle(telescope_model_lst):
 
-    telModel = telescope_model_lst
+    tel_model = telescope_model_lst
     telescope_model_lst.export_model_files()
-    pixSolidAngle = telModel.camera.get_pixel_active_solid_angle()
-    logger.debug(f"Pixel solid angle is {pixSolidAngle}")
+    pix_solid_angle = tel_model.camera.get_pixel_active_solid_angle()
+    logger.debug(f"Pixel solid angle is {pix_solid_angle}")
 
-    assert pixSolidAngle * 1e6 == pytest.approx(2.43, 0.01)  # Value for LST
+    assert pix_solid_angle * 1e6 == pytest.approx(2.43, 0.01)  # Value for LST

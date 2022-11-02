@@ -10,14 +10,14 @@ logger.setLevel(logging.DEBUG)
 
 
 def test_input_validation(db_config, io_handler):
-    arrayConfigData = {
+    array_config_data = {
         "site": "North",
-        "layoutName": "test-layout",
-        "modelVersion": "Prod5",
+        "layout_name": "test-layout",
+        "model_version": "Prod5",
         "default": {"LST": "1", "MST": "FlashCam-D"},
         "MST-05": "NectarCam-D",
     }
-    am = ArrayModel(label="test", arrayConfigData=arrayConfigData, mongoDBConfig=db_config)
+    am = ArrayModel(label="test", array_config_data=array_config_data, mongo_db_config=db_config)
 
     am.print_telescope_list()
 
@@ -25,17 +25,17 @@ def test_input_validation(db_config, io_handler):
 
 
 def test_exporting_config_files(db_config, io_handler):
-    arrayConfigData = {
+    array_config_data = {
         "site": "North",
-        "layoutName": "test-layout",
-        "modelVersion": "Prod5",
+        "layout_name": "test-layout",
+        "model_version": "Prod5",
         "default": {"LST": "1", "MST": "FlashCam-D"},
         "MST-05": {
             "name": "NectarCam-D",
             "camera_config_name": "NectarCam-test",
         },
     }
-    am = ArrayModel(label="test", arrayConfigData=arrayConfigData, mongoDBConfig=db_config)
+    am = ArrayModel(label="test", array_config_data=array_config_data, mongo_db_config=db_config)
 
     am.export_simtel_telescope_config_files()
     am.export_simtel_array_config_file()
