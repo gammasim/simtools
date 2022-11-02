@@ -2,10 +2,10 @@ label: 'test-production'
 
 default:
   site: North
-  layoutName: test-layout
-  dataDirectory: Null
+  layout_name: test-layout
+  data_directory: Null
   array:
-    modelVersion: Prod5
+    model_version: Prod5
     zenith: 20 deg
     phi: 0 deg
     default:
@@ -20,7 +20,7 @@ default:
 proton:
   viewcone: [10 deg, 10 deg]
   showers:
-    runRange: [1, 20]
+    run_range: [1, 20]
     nshow: 10000
     erange: [30 GeV, 600 TeV]
     cscat: [20, 2000.0 m, 0]
@@ -28,7 +28,7 @@ proton:
 gamma:
   viewcone: [0 deg, 0 deg]
   showers:
-    runRange: [1, 10]
+    run_range: [1, 10]
     nshow: 10000
     erange: [10 GeV, 300 TeV]
     cscat: [5, 1500.0 m, 0]
