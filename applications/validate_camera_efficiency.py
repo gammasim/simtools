@@ -78,44 +78,44 @@ def main():
 
     # Output directory to save files related directly to this app
     _io_handler = io_handler.IOHandler()
-    outputDir = _io_handler.get_output_directory(label, dirType="application-plots")
+    output_dir = _io_handler.get_output_directory(label, dir_type="application-plots")
 
-    telModel = TelescopeModel(
+    tel_model = TelescopeModel(
         site=args_dict["site"],
-        telescopeModelName=args_dict["telescope"],
-        mongoDBConfig=_db_config,
-        modelVersion=args_dict["model_version"],
+        telescope_model_name=args_dict["telescope"],
+        mongo_db_config=_db_config,
+        model_version=args_dict["model_version"],
         label=label,
     )
 
     # For debugging purposes
-    telModel.export_config_file()
+    tel_model.export_config_file()
 
-    logger.info("Validating the camera efficiency of {}".format(telModel.name))
+    logger.info("Validating the camera efficiency of {}".format(tel_model.name))
 
     ce = CameraEfficiency(
-        telescopeModel=telModel,
-        simtelSourcePath=args_dict["simtelpath"],
+        telescope_model=tel_model,
+        simtel_source_path=args_dict["simtelpath"],
     )
     ce.simulate(force=True)
     ce.analyze(force=True)
 
     # Plotting the camera efficiency for Cherenkov light
     fig = ce.plot_cherenkov_efficiency()
-    cherenkovPlotFileName = label + "_" + telModel.name + "_cherenkov"
-    cherenkovPlotFile = outputDir.joinpath(cherenkovPlotFileName)
+    cherenkov_plot_file_name = label + "_" + tel_model.name + "_cherenkov"
+    cherenkov_plot_file = output_dir.joinpath(cherenkov_plot_file_name)
     for f in ["pdf", "png"]:
-        fig.savefig(str(cherenkovPlotFile) + "." + f, format=f, bbox_inches="tight")
-    logger.info("Plotted cherenkov efficiency in {}".format(cherenkovPlotFile))
+        fig.savefig(str(cherenkov_plot_file) + "." + f, format=f, bbox_inches="tight")
+    logger.info("Plotted cherenkov efficiency in {}".format(cherenkov_plot_file))
     fig.clf()
 
     # Plotting the camera efficiency for NSB light
     fig = ce.plot_nsb_efficiency()
-    nsbPlotFileName = label + "_" + telModel.name + "_nsb"
-    nsbPlotFile = outputDir.joinpath(nsbPlotFileName)
+    nsb_plot_file_name = label + "_" + tel_model.name + "_nsb"
+    nsb_plot_file = output_dir.joinpath(nsb_plot_file_name)
     for f in ["pdf", "png"]:
-        fig.savefig(str(nsbPlotFile) + "." + f, format=f, bbox_inches="tight")
-    logger.info("Plotted NSB efficiency in {}".format(nsbPlotFile))
+        fig.savefig(str(nsb_plot_file) + "." + f, format=f, bbox_inches="tight")
+    logger.info("Plotted NSB efficiency in {}".format(nsb_plot_file))
     fig.clf()
 
 
