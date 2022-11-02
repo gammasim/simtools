@@ -30,7 +30,7 @@ class TelescopePosition:
     -------
     get_coordinates(self, crs_name)
         Get spatial coordinates (x, y)
-    set_coordinates(self, posX, posY, posZ):
+    set_coordinates(self, pos_x, pos_y, pos_z):
         Set spatial coordinates (x, y) and altitude of element
     has_coordinates(crs_name, crs_check)
         Return True if tel
@@ -40,15 +40,19 @@ class TelescopePosition:
         Set altitude.
     has_altitude(self, crs_name):
         Return True if tel has altitude.
-    convert_telescope_altitude_to_corsika_system(telAltitude, corsikaObsLevel, corsikaSphereCenter)
-        Convert telescope altitude to CORSIKA system (posZ).
+    convert_telescope_altitude_to_corsika_system(
+        tel_altitude,
+        corsika_obs_level,
+        corsika_sphere_center
+    )
+        Convert telescope altitude to CORSIKA system (pos_z).
     convert_telescope_altitude_from_corsika_system(
-        telCorsikaZ,
-        corsikaObsLevel,
-        corsikaSphereCenter
+        tel_corsika_z,
+        corsika_obs_level,
+        corsika_sphere_center
     ):
-        Convert Corsika (posZ) to altitude.
-    convert_all(crsLocal, wgs84, crsUtm)
+        Convert Corsika (pos_z) to altitude.
+    convert_all(crs_local, wgs84, crs_utm)
         Perform conversions and fill coordinate variables.
     """
 
@@ -277,7 +281,7 @@ class TelescopePosition:
             if _crs["zz"]["value"]:
                 return _crs["zz"]["value"] * u.Unit(_crs["zz"]["unit"])
 
-    def set_altitude(self, telAltitude):
+    def set_altitude(self, tel_altitude):
         """
         Set altitude of an array element.
         Assume that all coordinate system have same altitude definition,
@@ -285,12 +289,12 @@ class TelescopePosition:
 
         Attributes
         ----------
-        telAltitude: astropy.Quantity
+        tel_altitude: astropy.Quantity
 
         """
 
         for _crs in self.crs.values():
-            _crs["zz"]["value"] = self._get_coordinate_value(telAltitude, _crs["zz"]["unit"])
+            _crs["zz"]["value"] = self._get_coordinate_value(tel_altitude, _crs["zz"]["unit"])
 
     def _convert(self, crs_from, crs_to, xx, yy):
         """
@@ -447,20 +451,20 @@ class TelescopePosition:
             raise InvalidCoordSystem
 
     @staticmethod
-    @u.quantity_input(telAltitude=u.m, corsikaObsLevel=u.m, corsikaSphereCenter=u.m)
+    @u.quantity_input(tel_altitude=u.m, corsika_obs_level=u.m, corsika_sphere_center=u.m)
     def convert_telescope_altitude_to_corsika_system(
-        telAltitude, corsikaObsLevel, corsikaSphereCenter
+        tel_altitude, corsika_obs_level, corsika_sphere_center
     ):
         """
-        Convert telescope altitude to CORSIKA system (posZ).
+        Convert telescope altitude to CORSIKA system (pos_z).
 
         Attributes
         ----------
-        telAltitude: astropy.Quantity
+        tel_altitude: astropy.Quantity
             Telescope altitude in equivalent units of meter.
-        corsikaObLevel: astropy.Quantity
+        corsika_ob_level: astropy.Quantity
             CORSIKA observation level in equivalent units of meter.
-        corsikaSphereCenter: astropy.Quantity
+        corsika_sphere_center: astropy.Quantity
             CORSIKA sphere center in equivalent units of meter.
 
         Returns
@@ -468,23 +472,23 @@ class TelescopePosition:
         Z-position of a telescope in CORSIKA system
         """
 
-        return (telAltitude - corsikaObsLevel + corsikaSphereCenter).to(u.m)
+        return (tel_altitude - corsika_obs_level + corsika_sphere_center).to(u.m)
 
     @staticmethod
-    @u.quantity_input(telCorsikaZ=u.m, corsikaObsLevel=u.m, corsikaSphereCenter=u.m)
+    @u.quantity_input(tel_corsika_z=u.m, corsika_obs_level=u.m, corsika_sphere_center=u.m)
     def convert_telescope_altitude_from_corsika_system(
-        telCorsikaZ, corsikaObsLevel=None, corsikaSphereCenter=None
+        tel_corsika_z, corsika_obs_level=None, corsika_sphere_center=None
     ):
         """
-        Convert Corsika (posZ) to altitude.
+        Convert Corsika (pos_z) to altitude.
 
         Attributes
         ----------
-        telCorsikaZ: astropy.Quantity
+        tel_corsika_z: astropy.Quantity
             Telescope z-position in CORSIKA system in equivalent units of meter.
-        corsikaObLevel: astropy.Quantity
+        corsika_ob_level: astropy.Quantity
             CORSIKA observation level in equivalent units of meter.
-        corsikaSphereCenter: astropy.Quantity
+        corsika_sphere_center: astropy.Quantity
             CORSIKA sphere center in equivalent units of meter.
 
         Returns
@@ -492,25 +496,25 @@ class TelescopePosition:
         Telescope altitude (above sea level)
         """
 
-        return telCorsikaZ + corsikaObsLevel - corsikaSphereCenter
+        return tel_corsika_z + corsika_obs_level - corsika_sphere_center
 
-    def convert_all(self, crsLocal=None, crsWgs84=None, crsUtm=None):
+    def convert_all(self, crs_local=None, crs_wgs84=None, crs_utm=None):
         """
         Perform conversions and fill coordinate variables.
 
         Parameters
         ----------
-        crsUtm: pyproj.crs.crs.CRS
+        crs_utm: pyproj.crs.crs.CRS
             Pyproj CRS of the utm coordinate system
-        crsLocal: pyproj.crs.crs.CRS
+        crs_local: pyproj.crs.crs.CRS
             Pyproj CRS of the local coordinate system
-        crsWgs84: pyproj.crs.crs.CRS
+        crs_wgs84: pyproj.crs.crs.CRS
             Pyproj CRS of the mercator coordinate system
         """
 
-        self._set_coordinate_system("corsika", crsLocal)
-        self._set_coordinate_system("utm", crsUtm)
-        self._set_coordinate_system("mercator", crsWgs84)
+        self._set_coordinate_system("corsika", crs_local)
+        self._set_coordinate_system("utm", crs_utm)
+        self._set_coordinate_system("mercator", crs_wgs84)
 
         _crs_from_name, _crs_from = self._get_reference_system_from()
 
