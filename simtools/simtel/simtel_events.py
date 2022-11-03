@@ -269,7 +269,7 @@ class SimtelEvents:
 
     def _validate_core_max(self, core_max):
         """
-        Returns the default core_mAx from mc_header in case core_max=None.
+        Returns the default core_max from mc_header in case core_max=None.
         Checks units, convert it to m and return it in the right format, otherwise.
         """
         return self._mc_header["core_range"][1] if core_max is None else core_max.to(u.m).value
