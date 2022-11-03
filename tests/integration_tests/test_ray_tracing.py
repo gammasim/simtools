@@ -64,7 +64,7 @@ def test_rx(db_config, simtelpath_no_mock, io_handler):
     ray_rx = copy(ray)
 
     ray.analyze(force=True)
-    ray_rx.analyze(force=True, use_RX=True)
+    ray_rx.analyze(force=True, use_rx=True)
 
     # Plotting d80
     plt.figure(figsize=(8, 6), tight_layout=True)

@@ -245,7 +245,7 @@ def main():
         )
 
         ray.simulate(test=args_dict["test"], force=True)
-        ray.analyze(force=True, use_RX=False)
+        ray.analyze(force=True, use_rx=False)
 
         # Plotting cumulative PSF
         im = ray.images()[0]
