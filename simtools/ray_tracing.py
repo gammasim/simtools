@@ -60,7 +60,7 @@ class RayTracing:
     -------
     simulate(test=False, force=False)
         Simulate RayTracing using SimtelRunnerRayTracing.
-    analyse(export=True, force=False, use_RX=False, no_tel_transmission=False)
+    analyse(export=True, force=False, use_rx=False, no_tel_transmission=False)
         Analyze RayTracing, meaning read simtel files, compute psfs and eff areas and store the
         results in _results.
     export_results()
@@ -239,7 +239,7 @@ class RayTracing:
         self,
         export=True,
         force=False,
-        use_RX=False,
+        use_rx=False,
         no_tel_transmission=False,
         containment_fraction=0.8,
     ):
@@ -254,7 +254,7 @@ class RayTracing:
             export_results function can be used.
         force: bool
             If True, existing results files will be removed and analysis will be done again.
-        use_RX: bool
+        use_rx: bool
             If True, calculations are done using the rx binary provided by sim_telarray. If False,
             calculations are done internally, by the module psf_analysis.
         no_tel_transmission: bool
@@ -310,7 +310,7 @@ class RayTracing:
                 if not do_analyze:
                     continue
 
-                if use_RX:
+                if use_rx:
                     containment_diameter_cm, centroid_x, centroid_y, eff_area = self._process_rx(
                         photons_file
                     )
