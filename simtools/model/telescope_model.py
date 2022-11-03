@@ -50,7 +50,7 @@ class TelescopeModel:
     Methods
     -------
     from_config_file(config_file_name, telescope_model_name, label=None)
-        Create a Telescope_model from a sim_telarray cfg file.
+        Create a TelescopeModel from a sim_telarray cfg file.
     set_extra_label(extra_label)
         Set an extra label for the name of the config file.
     has_parameter(par_name)
