@@ -140,8 +140,8 @@ def validate_config_data(config_data, parameters):
             logger.error(msg)
             raise MissingRequiredConfigEntry(msg)
 
-    Config_data = namedtuple("Config_data", out_data)
-    return Config_data(**out_data)
+    configuration_data = namedtuple("configuration_data", out_data)
+    return configuration_data(**out_data)
 
 
 def _validate_and_convert_value_without_units(value, value_keys, par_name, par_info):
@@ -233,7 +233,7 @@ def _validate_and_convert_value_with_units(value, value_keys, par_name, par_info
        list of user input values
     value_keys: list
        list of keys if user input was a dict; otherwise None
-    parn_name: str
+    par_name: str
        name of parameter
 
     Returns
