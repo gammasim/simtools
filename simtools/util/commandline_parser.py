@@ -228,7 +228,7 @@ class CommandLineParser(argparse.ArgumentParser):
         """
 
         fsite = str(value)
-        if not names.validateSiteName(fsite):
+        if not names.validate_site_name(fsite):
             raise argparse.ArgumentTypeError("{} is an invalid site".format(fsite))
         return fsite
 
@@ -250,7 +250,7 @@ class CommandLineParser(argparse.ArgumentParser):
         """
 
         ftelescope = str(value)
-        if not names.validateTelescopeModelName(ftelescope):
+        if not names.validate_telescope_model_name(ftelescope):
             raise argparse.ArgumentTypeError("{} is an invalid telescope name".format(ftelescope))
         return ftelescope
 

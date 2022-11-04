@@ -78,12 +78,12 @@ import simtools.util.general as gen
 from simtools import io_handler, visualize
 from simtools.model.telescope_model import TelescopeModel
 from simtools.ray_tracing import RayTracing
-from simtools.util.model import splitSimtelParameter
+from simtools.util.model import split_simtel_parameter
 
 
-def loadData(datafile):
-    dType = {"names": ("Radius [cm]", "Cumulative PSF"), "formats": ("f8", "f8")}
-    data = np.loadtxt(datafile, dtype=dType, usecols=(0, 2))
+def load_data(datafile):
+    d_type = {"names": ("Radius [cm]", "Cumulative PSF"), "formats": ("f8", "f8")}
+    data = np.loadtxt(datafile, dtype=d_type, usecols=(0, 2))
     data["Radius [cm]"] *= 0.1
     data["Cumulative PSF"] /= np.max(np.abs(data["Cumulative PSF"]))
     return data
@@ -127,36 +127,36 @@ def main():
     label = "tune_psf"
 
     logger = logging.getLogger()
-    logger.setLevel(gen.getLogLevelFromUser(args_dict["log_level"]))
+    logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
     # Output directory to save files related directly to this app
     _io_handler = io_handler.IOHandler()
-    outputDir = _io_handler.getOutputDirectory(label, dirType="application-plots")
+    output_dir = _io_handler.get_output_directory(label, dir_type="application-plots")
 
-    telModel = TelescopeModel(
+    tel_model = TelescopeModel(
         site=args_dict["site"],
-        telescopeModelName=args_dict["telescope"],
-        mongoDBConfig=db_config,
-        modelVersion=args_dict["model_version"],
+        telescope_model_name=args_dict["telescope"],
+        mongo_db_config=db_config,
+        model_version=args_dict["model_version"],
         label=label,
     )
     # If we want to start from values different than the ones currently in the model:
     # align = 0.0046
-    # parsToChange = {
+    # pars_to_change = {
     #     'mirror_reflection_random_angle': '0.0075 0.125 0.0037',
     #     'mirror_align_random_horizontal': f'{align} 28 0 0',
     #     'mirror_align_random_vertical': f'{align} 28 0 0',
     # }
-    # telModel.changeMultipleParameters(**parsToChange)
+    # tel_model.change_multiple_parameters(**pars_to_change)
 
-    allParameters = list()
+    all_parameters = list()
 
-    def addParameters(
+    def add_parameters(
         mirror_reflection, mirror_align, mirror_reflection_fraction=0.15, mirror_reflection_2=0.035
     ):
         """
         Transform the parameters to the proper format and add a new set of
-        parameters to the allParameters list.
+        parameters to the all_parameters list.
         """
         pars = dict()
         mrra = "{:.4f},{:.2f},{:.4f}".format(
@@ -166,7 +166,7 @@ def main():
         mar = "{:.4f},28.,0.,0.".format(mirror_align)
         pars["mirror_align_random_horizontal"] = mar
         pars["mirror_align_random_vertical"] = mar
-        allParameters.append(pars)
+        all_parameters.append(pars)
 
     # Grabbing the previous values of the parameters from the tel model.
     #
@@ -175,14 +175,14 @@ def main():
     # mrra2 -> mirror reflection random angle 2 (third entry of mirror_reflection_random_angle)
     # mar -> mirror align random (first entry of mirror_align_random_horizontal/vertical)
 
-    rawPar = telModel.getParameter("mirror_reflection_random_angle")["Value"]
-    splitPar = splitSimtelParameter(rawPar)
-    mrra_0 = splitPar[0]
-    mfr_0 = splitPar[1]
-    mrra2_0 = splitPar[2]
+    raw_par = tel_model.get_parameter("mirror_reflection_random_angle")["Value"]
+    split_par = split_simtel_parameter(raw_par)
+    mrra_0 = split_par[0]
+    mfr_0 = split_par[1]
+    mrra2_0 = split_par[2]
 
-    rawPar = telModel.getParameter("mirror_align_random_horizontal")["Value"]
-    mar_0 = splitSimtelParameter(rawPar)[0]
+    raw_par = tel_model.get_parameter("mirror_align_random_horizontal")["Value"]
+    mar_0 = split_simtel_parameter(raw_par)[0]
 
     logger.debug(
         "Previous parameter values: \n"
@@ -208,61 +208,61 @@ def main():
         mrf = np.random.uniform(max(mfr_0 - mrf_range, 0), mfr_0 + mrf_range)
         mrra2 = np.random.uniform(max(mrra2_0 - mrra2_range, 0), mrra2_0 + mrra2_range)
         mar = np.random.uniform(max(mar_0 - mar_range, 0), mar_0 + mar_range)
-        addParameters(mrra, mar, mrf, mrra2)
+        add_parameters(mrra, mar, mrf, mrra2)
 
     # Loading measured cumulative PSF
-    dataToPlot = OrderedDict()
+    data_to_plot = OrderedDict()
     if args_dict["data"] is not None:
-        dataFile = gen.findFile(args_dict["data"], args_dict["model_path"])
-        dataToPlot["measured"] = loadData(dataFile)
-        radius = dataToPlot["measured"]["Radius [cm]"]
+        data_file = gen.find_file(args_dict["data"], args_dict["model_path"])
+        data_to_plot["measured"] = load_data(data_file)
+        radius = data_to_plot["measured"]["Radius [cm]"]
 
     # Preparing figure name
-    plotFileName = "_".join((label, telModel.name + ".pdf"))
-    plotFile = outputDir.joinpath(plotFileName)
-    pdfPages = PdfPages(plotFile)
+    plot_file_name = "_".join((label, tel_model.name + ".pdf"))
+    plot_file = output_dir.joinpath(plot_file_name)
+    pdf_pages = PdfPages(plot_file)
 
-    def calculateRMSD(data, sim):
+    def calculate_rmsd(data, sim):
         """
         Calculates the Root Mean Squared Deviation to be used
         as metric to find the best parameters.
         """
         return np.sqrt(np.mean((data - sim) ** 2))
 
-    def runPars(pars, plot=True):
+    def run_pars(pars, plot=True):
         """
         Runs the tuning for one set of parameters, add a plot to the pdfPages
         (if plot=True) and returns the RMSD and the D80.
         """
-        telModel.changeMultipleParameters(**pars)
+        tel_model.change_multiple_parameters(**pars)
 
-        ray = RayTracing.fromKwargs(
-            telescopeModel=telModel,
-            simtelSourcePath=args_dict["simtelpath"],
-            sourceDistance=args_dict["src_distance"] * u.km,
-            zenithAngle=args_dict["zenith"] * u.deg,
-            offAxisAngle=[0.0 * u.deg],
+        ray = RayTracing.from_kwargs(
+            telescope_model=tel_model,
+            simtel_source_path=args_dict["simtelpath"],
+            source_distance=args_dict["src_distance"] * u.km,
+            zenith_angle=args_dict["zenith"] * u.deg,
+            off_axis_angle=[0.0 * u.deg],
         )
 
         ray.simulate(test=args_dict["test"], force=True)
-        ray.analyze(force=True, useRX=False)
+        ray.analyze(force=True, use_rx=False)
 
         # Plotting cumulative PSF
         im = ray.images()[0]
-        d80 = im.getPSF()
+        d80 = im.get_psf()
 
         # Simulated cumulative PSF
-        dataToPlot["simulated"] = im.getCumulativeData(radius * u.cm)
+        data_to_plot["simulated"] = im.get_cumulative_data(radius * u.cm)
 
-        rmsd = calculateRMSD(
-            dataToPlot["measured"]["Cumulative PSF"], dataToPlot["simulated"]["Cumulative PSF"]
+        rmsd = calculate_rmsd(
+            data_to_plot["measured"]["Cumulative PSF"], data_to_plot["simulated"]["Cumulative PSF"]
         )
 
         if plot:
-            fig = visualize.plot1D(
-                dataToPlot,
-                plotDifference=True,
-                noMarkers=True,
+            fig = visualize.plot_1D(
+                data_to_plot,
+                plot_difference=True,
+                no_markers=True,
             )
             ax = fig.get_axes()[0]
             ax.set_ylim(0, 1.05)
@@ -281,25 +281,25 @@ def main():
                 transform=ax.transAxes,
             )
             plt.tight_layout()
-            pdfPages.savefig(fig)
+            pdf_pages.savefig(fig)
             plt.clf()
 
         return d80, rmsd
 
-    # Running the tuning for all parameters in allParameters
+    # Running the tuning for all parameters in all_parameters
     # and storing the best parameters in best_pars
     min_rmsd = 100
-    for pars in allParameters:
-        _, rmsd = runPars(pars, plot=args_dict["plot_all"])
+    for pars in all_parameters:
+        _, rmsd = run_pars(pars, plot=args_dict["plot_all"])
         if rmsd < min_rmsd:
             min_rmsd = rmsd
             best_pars = pars
 
     # Rerunnig and plotting the best pars
-    runPars(best_pars, plot=True)
+    run_pars(best_pars, plot=True)
 
     plt.close()
-    pdfPages.close()
+    pdf_pages.close()
 
     # Printing the results
     print("Best parameters:")

@@ -13,9 +13,9 @@
 
     'site': South or North
 
-    'layoutName': name of a valid layout array.
+    'layout_name': name of a valid layout array.
 
-    'modelVersion': name of a valid model version.
+    'model_version': name of a valid model version.
 
     'default': telescope model names to be assigned to each telescope size by default. \
     It must contain entries for 'LST' and 'MST' (and 'SST' in case of South site).
@@ -46,8 +46,8 @@
     .. code-block:: python
 
         site: North,
-        layoutName: Prod5
-        modelVersion: Prod5
+        layout_name: Prod5
+        model_version: Prod5
         default:
             LST: 'D234'  # Design model for the LSTs
             MST: FlashCam-D  # Design model for the MST-FlashCam
@@ -76,7 +76,7 @@
     .. code-block:: console
 
         python applications/produce_array_config.py --label test \
-            --array_config data/test-data/arrayConfigTest.yml -v DEBUG
+            --array_config data/test-data/array_config_test.yml -v DEBUG
 
     All the produced model files can be found in simtools-output/test/model/
 
@@ -105,19 +105,19 @@ def main():
     args_dict, db_config = config.initialize(db_config=True)
 
     logger = logging.getLogger("simtools")
-    logger.setLevel(gen.getLogLevelFromUser(args_dict["log_level"]))
+    logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
-    arrayModel = ArrayModel(
+    array_model = ArrayModel(
         label=args_dict["label"],
-        mongoDBConfig=db_config,
-        arrayConfigFile=args_dict["array_config"],
+        mongo_db_config=db_config,
+        array_config_file=args_dict["array_config"],
     )
 
     # Printing list of telescope for quick inspection.
-    arrayModel.printTelescopeList()
+    array_model.print_telescope_list()
 
     # Exporting config files.
-    arrayModel.exportAllSimtelConfigFiles()
+    array_model.export_all_simtel_config_files()
 
 
 if __name__ == "__main__":

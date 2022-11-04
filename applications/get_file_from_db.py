@@ -52,10 +52,10 @@ def main():
     args_dict, db_config = config.initialize(db_config=True)
 
     logger = logging.getLogger()
-    logger.setLevel(gen.getLogLevelFromUser(args_dict["log_level"]))
+    logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
-    db = db_handler.DatabaseHandler(mongoDBConfig=db_config)
-    availableDbs = [
+    db = db_handler.DatabaseHandler(mongo_db_config=db_config)
+    available_dbs = [
         db.DB_TABULATED_DATA,
         db.DB_CTA_SIMULATION_MODEL,
         db.DB_CTA_SIMULATION_MODEL_DESCRIPTIONS,
@@ -64,21 +64,23 @@ def main():
         "sandbox",
         "test-data",
     ]
-    fileId = None
+    file_id = None
     if args_dict["output_path"].exists():
-        for dbName in availableDbs:
+        for db_name in available_dbs:
             try:
-                fileId = db.exportFileDB(dbName, args_dict["output_path"], args_dict["file_name"])
+                file_id = db.export_file_db(
+                    db_name, args_dict["output_path"], args_dict["file_name"]
+                )
                 logger.info(
                     "Got file {} from DB {} and saved into {}".format(
-                        args_dict["file_name"], dbName, args_dict["output_path"]
+                        args_dict["file_name"], db_name, args_dict["output_path"]
                     )
                 )
                 break
             except FileNotFoundError:
                 continue
 
-        if fileId is None:
+        if file_id is None:
             logger.error(
                 "The file {} was not found in any of the available DBs.".format(
                     args_dict["file_name"]

@@ -108,20 +108,20 @@ def main():
     args_dict, _ = _parse(label, description=("Print a list of array element positions"))
 
     _logger = logging.getLogger()
-    _logger.setLevel(gen.getLogLevelFromUser(args_dict["log_level"]))
+    _logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
     layout = layout_array.LayoutArray()
-    layout.readTelescopeListFile(telescopeListFile=args_dict["array_element_list"])
-    layout.convertCoordinates()
+    layout.read_telescope_list_file(telescope_list_file=args_dict["array_element_list"])
+    layout.convert_coordinates()
     if args_dict["export"] is not None:
-        layout.exportTelescopeList(
-            crsName=args_dict["export"],
-            corsikaZ=args_dict["use_corsika_telescope_height"],
+        layout.export_telescope_list(
+            crs_name=args_dict["export"],
+            corsika_z=args_dict["use_corsika_telescope_height"],
         )
     else:
-        layout.printTelescopeList(
+        layout.print_telescope_list(
             compact_printing=args_dict["compact"],
-            corsikaZ=args_dict["use_corsika_telescope_height"],
+            corsika_z=args_dict["use_corsika_telescope_height"],
         )
 
 

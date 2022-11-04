@@ -22,15 +22,15 @@ def main():
     args_dict, db_config = config.initialize(db_config=True, telescope_model=True)
 
     logger = logging.getLogger()
-    logger.setLevel(gen.getLogLevelFromUser(args_dict["log_level"]))
+    logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
-    db = db_handler.DatabaseHandler(mongoDBConfig=db_config)
+    db = db_handler.DatabaseHandler(mongo_db_config=db_config)
 
     if args_dict["model_version"] == "all":
         raise NotImplementedError("Printing last 5 versions is not implemented yet.")
     else:
         version = args_dict["model_version"]
-    pars = db.getModelParameters(args_dict["site"], args_dict["telescope"], version)
+    pars = db.get_model_parameters(args_dict["site"], args_dict["telescope"], version)
     print()
     pprint(pars[args_dict["parameter"]])
     print()
