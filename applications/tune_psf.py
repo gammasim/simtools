@@ -222,7 +222,7 @@ def main():
     plot_file = output_dir.joinpath(plot_file_name)
     pdf_pages = PdfPages(plot_file)
 
-    def calculate_RMSD(data, sim):
+    def calculate_rmsd(data, sim):
         """
         Calculates the Root Mean Squared Deviation to be used
         as metric to find the best parameters.
@@ -254,7 +254,7 @@ def main():
         # Simulated cumulative PSF
         data_to_plot["simulated"] = im.get_cumulative_data(radius * u.cm)
 
-        rmsd = calculate_RMSD(
+        rmsd = calculate_rmsd(
             data_to_plot["measured"]["Cumulative PSF"], data_to_plot["simulated"]["Cumulative PSF"]
         )
 
