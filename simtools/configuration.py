@@ -53,7 +53,7 @@ class Configurator:
         self._logger = logging.getLogger(__name__)
         self._logger.debug("Init Configuration")
 
-        self.configClassInit = config
+        self.config_class_init = config
         self.label = label
         self.config = {}
         self.parser = argparser.CommandLineParser(
@@ -71,7 +71,7 @@ class Configurator:
         if add_db_config:
             self.parser.initialize_db_config_arguments()
 
-        self._fillConfig(arg_list)
+        self._fill_config(arg_list)
         return self.config
 
     def initialize(
@@ -126,26 +126,26 @@ class Configurator:
             job_submission=job_submission,
         )
 
-        self._fillFromCommandLine()
+        self._fill_from_command_line()
         try:
-            self._fillFromConfigFile(self.config["workflow_config"])
+            self._fill_from_config_file(self.config["workflow_config"])
         except KeyError:
             pass
         try:
-            self._fillFromConfigFile(self.config["config"])
+            self._fill_from_config_file(self.config["config"])
         except KeyError:
             pass
-        self._fillFromConfigDict(self.configClassInit)
-        self._fillFromEnvironmentalVariables()
-        self._initializeIOHandler()
-        _db_dict = self._getDBParameters()
+        self._fill_from_config_dict(self.config_class_init)
+        self._fill_from_environmental_variables()
+        self._initialize_io_handler()
+        _db_dict = self._get_db_parameters()
 
         if self.config["label"] is None:
             self.config["label"] = self.label
 
         return self.config, _db_dict
 
-    def _fillFromCommandLine(self, arg_list=None):
+    def _fill_from_command_line(self, arg_list=None):
         """
         Fill configuration parameters from command line arguments.
 
@@ -154,9 +154,9 @@ class Configurator:
         if arg_list is None:
             arg_list = sys.argv[1:]
 
-        self._fillConfig(arg_list)
+        self._fill_config(arg_list)
 
-    def _fillFromConfigDict(self, _input_dict):
+    def _fill_from_config_dict(self, _input_dict):
         """
         Fill configuration parameters from dictionary.
         Enforce that configuration parameter names are lower case.
@@ -175,7 +175,7 @@ class Configurator:
         except AttributeError:
             pass
 
-        self._fillConfig(_tmp_config)
+        self._fill_config(_tmp_config)
 
     def _check_parameter_configuration_status(self, key, value):
         """
@@ -208,7 +208,7 @@ class Configurator:
             )
             raise InvalidConfigurationParameter
 
-    def _fillFromConfigFile(self, config_file):
+    def _fill_from_config_file(self, config_file):
         """
         Read and fill configuration parameters from yaml file.
         Take into account that this could be a CTASIMPIPE workflow configuration file.
@@ -234,13 +234,13 @@ class Configurator:
                 _config_dict = yaml.safe_load(stream)
             if "CTASIMPIPE" in _config_dict:
                 try:
-                    self._fillFromConfigDict(_config_dict["CTASIMPIPE"]["CONFIGURATION"])
+                    self._fill_from_config_dict(_config_dict["CTASIMPIPE"]["CONFIGURATION"])
                 except KeyError:
                     self._logger.info(
                         "No CTASIMPIPE:CONFIGURATION dict found in {}.".format(config_file)
                     )
             else:
-                self._fillFromConfigDict(_config_dict)
+                self._fill_from_config_dict(_config_dict)
         # TypeError is raised for config_file=None
         except TypeError:
             pass
@@ -248,7 +248,7 @@ class Configurator:
             self._logger.error("Configuration file not found: {}".format(config_file))
             raise
 
-    def _fillFromEnvironmentalVariables(self):
+    def _fill_from_environmental_variables(self):
         """
         Fill any unconfigured configuration parameters (parameter is None) \
         from environmental variables.
@@ -263,22 +263,22 @@ class Configurator:
         except AttributeError:
             pass
 
-        self._fillFromConfigDict(_env_dict)
+        self._fill_from_config_dict(_env_dict)
 
-    def _initializeIOHandler(self):
+    def _initialize_io_handler(self):
         """
         Initialize IOHandler with input and output paths.
 
         """
         _io_handler = io_handler.IOHandler()
-        _io_handler.setPaths(
+        _io_handler.set_paths(
             output_path=self.config.get("output_path", None),
             data_path=self.config.get("data_path", None),
             model_path=self.config.get("model_path", None),
         )
 
     @staticmethod
-    def _arglistFromConfig(input_var):
+    def _arglist_from_config(input_var):
         """
         Convert input list of strings as needed by argparse.
 
@@ -338,7 +338,7 @@ class Configurator:
 
         return input_dict
 
-    def _fillConfig(self, input_container):
+    def _fill_config(self, input_container):
         """
         Fill configuration dictionary.
 
@@ -352,12 +352,13 @@ class Configurator:
         self.config = self._convert_stringnone_to_none(
             vars(
                 self.parser.parse_args(
-                    self._arglistFromConfig(self.config) + self._arglistFromConfig(input_container)
+                    self._arglist_from_config(self.config)
+                    + self._arglist_from_config(input_container)
                 )
             )
         )
 
-    def _getDBParameters(self):
+    def _get_db_parameters(self):
         """
         Return parameters for DB configuration
 

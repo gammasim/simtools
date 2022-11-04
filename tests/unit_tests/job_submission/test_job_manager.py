@@ -14,7 +14,7 @@ def label():
 
 
 def test_test_submission_system(label):
-    jm.JobManager(submitCommand=None)
-    jm.JobManager(submitCommand="local")
+    jm.JobManager(submit_command=None)
+    jm.JobManager(submit_command="local")
     with pytest.raises(jm.MissingWorkloadManager):
-        jm.JobManager(submitCommand="abc")
+        jm.JobManager(submit_command="abc")

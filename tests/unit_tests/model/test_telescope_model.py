@@ -15,155 +15,160 @@ logger.setLevel(logging.DEBUG)
 
 @pytest.fixture
 def lst_config_file(db, io_handler):
-    testFileName = "CTA-North-LST-1-Current_test-telescope-model.cfg"
-    db.exportFileDB(
-        dbName="test-data",
-        dest=io_handler.getOutputDirectory(dirType="model", test=True),
-        fileName=testFileName,
+    test_file_name = "CTA-North-LST-1-Current_test-telescope-model.cfg"
+    db.export_file_db(
+        db_name="test-data",
+        dest=io_handler.get_output_directory(dir_type="model", test=True),
+        file_name=test_file_name,
     )
 
-    cfgFile = gen.findFile(testFileName, io_handler.getOutputDirectory(dirType="model", test=True))
-    return cfgFile
+    cfg_file = gen.find_file(
+        test_file_name, io_handler.get_output_directory(dir_type="model", test=True)
+    )
+    return cfg_file
 
 
 @pytest.fixture
 def telescope_model_from_config_file(lst_config_file):
 
     label = "test-telescope-model"
-    telModel = TelescopeModel.fromConfigFile(
+    tel_model = TelescopeModel.from_config_file(
         site="North",
-        telescopeModelName="LST-1",
+        telescope_model_name="LST-1",
         label=label,
-        configFileName=lst_config_file,
+        config_file_name=lst_config_file,
     )
-    return telModel
+    return tel_model
 
 
 def test_handling_parameters(telescope_model_lst):
 
-    telModel = telescope_model_lst
+    tel_model = telescope_model_lst
 
     logger.info(
         "Old mirror_reflection_random_angle:{}".format(
-            telModel.getParameterValue("mirror_reflection_random_angle")
+            tel_model.get_parameter_value("mirror_reflection_random_angle")
         )
     )
     logger.info("Changing mirror_reflection_random_angle")
     new_mrra = "0.0080 0 0"
-    telModel.changeParameter("mirror_reflection_random_angle", new_mrra)
+    tel_model.change_parameter("mirror_reflection_random_angle", new_mrra)
 
-    assert new_mrra == telModel.getParameterValue("mirror_reflection_random_angle")
+    assert new_mrra == tel_model.get_parameter_value("mirror_reflection_random_angle")
 
     logging.info("Adding new_parameter")
     new_par = "23"
-    telModel.addParameter("new_parameter", new_par)
+    tel_model.add_parameter("new_parameter", new_par)
 
-    assert new_par == telModel.getParameterValue("new_parameter")
+    assert new_par == tel_model.get_parameter_value("new_parameter")
 
     with pytest.raises(InvalidParameter):
-        telModel.getParameter("bla_bla")
+        tel_model.get_parameter("bla_bla")
 
 
 def test_flen_type(telescope_model_lst):
 
-    telModel = telescope_model_lst
-    flenInfo = telModel.getParameter("focal_length")
-    logger.info("Focal Length = {}, type = {}".format(flenInfo["Value"], flenInfo["Type"]))
+    tel_model = telescope_model_lst
+    flen_info = tel_model.get_parameter("focal_length")
+    logger.info("Focal Length = {}, type = {}".format(flen_info["Value"], flen_info["Type"]))
 
-    assert isinstance(flenInfo["Value"], float)
+    assert isinstance(flen_info["Value"], float)
 
 
 def test_cfg_file(telescope_model_from_config_file, lst_config_file):
 
-    telModel = telescope_model_from_config_file
+    tel_model = telescope_model_from_config_file
 
-    telModel.exportConfigFile()
+    tel_model.export_config_file()
 
     logger.info("Config file (original): {}".format(lst_config_file))
-    logger.info("Config file (new): {}".format(telModel.getConfigFile()))
+    logger.info("Config file (new): {}".format(tel_model.get_config_file()))
 
-    assert filecmp.cmp(lst_config_file, telModel.getConfigFile())
+    assert filecmp.cmp(lst_config_file, tel_model.get_config_file())
 
-    cfgFile = telModel.getConfigFile()
-    tel = TelescopeModel.fromConfigFile(
+    cfg_file = tel_model.get_config_file()
+    tel = TelescopeModel.from_config_file(
         site="south",
-        telescopeModelName="sst-d",
+        telescope_model_name="sst-d",
         label="test-sst",
-        configFileName=cfgFile,
+        config_file_name=cfg_file,
     )
-    tel.exportConfigFile()
-    logger.info("Config file (sst): {}".format(tel.getConfigFile()))
+    tel.export_config_file()
+    logger.info("Config file (sst): {}".format(tel.get_config_file()))
     # TODO: testing that file can be written and that it is  different,
     #       but not the file has the
     #       correct contents
-    assert False is filecmp.cmp(lst_config_file, tel.getConfigFile())
+    assert False is filecmp.cmp(lst_config_file, tel.get_config_file())
 
 
 def test_updating_export_model_files(db_config, io_handler):
     """
     It was found in derive_mirror_rnda_angle that the DB was being
     accessed each time the model was changed, because the model
-    files were being re-exported. A flag called _isExportedModelFilesUpToDate
+    files were being re-exported. A flag called _is_exported_model_files_up_to_date
     was added to prevent this behavior. This test is meant to assure
     it is working properly.
     """
 
-    # We need a brand new telescopeModel to avoid interference
+    # We need a brand new telescope_model to avoid interference
     tel = TelescopeModel(
         site="North",
-        telescopeModelName="LST-1",
-        modelVersion="prod4",
+        telescope_model_name="LST-1",
+        model_version="prod4",
         label="test-telescope-model-2",
-        mongoDBConfig=db_config,
+        mongo_db_config=db_config,
     )
 
     logger.debug(
-        "tel._isExportedModelFiles should be False because exportConfigFile" " was not called yet."
+        "tel._is_exported_model_files should be False because export_config_file"
+        " was not called yet."
     )
-    assert False is tel._isExportedModelFilesUpToDate
+    assert False is tel._is_exported_model_files_up_to_date
 
     # Exporting config file
-    tel.exportConfigFile()
-    logger.debug("tel._isExportedModelFiles should be True because exportConfigFile" " was called.")
-    assert tel._isExportedModelFilesUpToDate
+    tel.export_config_file()
+    logger.debug(
+        "tel._is_exported_model_files should be True because export_config_file" " was called."
+    )
+    assert tel._is_exported_model_files_up_to_date
 
     # Changing a non-file parameter
     logger.info("Changing a parameter that IS NOT a file - mirror_reflection_random_angle")
-    tel.changeParameter("mirror_reflection_random_angle", "0.0080 0 0")
+    tel.change_parameter("mirror_reflection_random_angle", "0.0080 0 0")
     logger.debug(
-        "tel._isExportedModelFiles should still be True because the changed "
+        "tel._is_exported_model_files should still be True because the changed "
         "parameter was not a file"
     )
-    assert tel._isExportedModelFilesUpToDate
+    assert tel._is_exported_model_files_up_to_date
 
     # Testing the DB connection
     logger.info("DB should NOT be read next.")
-    tel.exportConfigFile()
+    tel.export_config_file()
 
     # Changing a parameter that is a file
     logger.debug("Changing a parameter that IS a file - camera_config_file")
-    tel.changeParameter("camera_config_file", tel.getParameterValue("camera_config_file"))
+    tel.change_parameter("camera_config_file", tel.get_parameter_value("camera_config_file"))
     logger.debug(
-        "tel._isExportedModelFiles should be False because a parameter that "
+        "tel._is_exported_model_files should be False because a parameter that "
         "is a file was changed."
     )
-    assert False is tel._isExportedModelFilesUpToDate
+    assert False is tel._is_exported_model_files_up_to_date
 
 
 def test_load_reference_data(telescope_model_lst):
 
-    telModel = telescope_model_lst
+    tel_model = telescope_model_lst
 
-    assert telModel.referenceData["nsb_reference_value"]["Value"] == pytest.approx(0.24)
+    assert tel_model.reference_data["nsb_reference_value"]["Value"] == pytest.approx(0.24)
 
 
 def test_export_derived_files(telescope_model_lst):
 
-    telModel = telescope_model_lst
+    tel_model = telescope_model_lst
 
-    _ = telModel.derived
+    _ = tel_model.derived
     assert (
-        telModel.getDerivedDirectory()
+        tel_model.get_derived_directory()
         .joinpath("ray-tracing-North-LST-1-d10.0-za20.0_validate_optics.ecsv")
         .exists()
     )
@@ -171,70 +176,70 @@ def test_export_derived_files(telescope_model_lst):
 
 def test_get_on_axis_eff_optical_area(telescope_model_lst):
 
-    telModel = telescope_model_lst
+    tel_model = telescope_model_lst
 
-    assert telModel.getOnAxisEffOpticalArea().value == pytest.approx(
+    assert tel_model.get_on_axis_eff_optical_area().value == pytest.approx(
         365.48310154491
     )  # Value for LST -1
 
 
 def test_read_two_dim_wavelength_angle(telescope_model_sst):
 
-    telModel = telescope_model_sst
-    telModel.exportConfigFile()
+    tel_model = telescope_model_sst
+    tel_model.export_config_file()
 
-    twoDimFile = telModel.getParameterValue("camera_filter")
-    assert telModel.getConfigDirectory().joinpath(twoDimFile).exists()
-    twoDimDist = telModel.readTwoDimWavelengthAngle(twoDimFile)
-    assert len(twoDimDist["Wavelength"]) > 0
-    assert len(twoDimDist["Angle"]) > 0
-    assert len(twoDimDist["z"]) > 0
-    assert twoDimDist["Wavelength"][4] == pytest.approx(300)
-    assert twoDimDist["Angle"][4] == pytest.approx(28)
-    assert twoDimDist["z"][4][4] == pytest.approx(0.985199988)
+    two_dim_file = tel_model.get_parameter_value("camera_filter")
+    assert tel_model.get_config_directory().joinpath(two_dim_file).exists()
+    two_dim_dist = tel_model.read_two_dim_wavelength_angle(two_dim_file)
+    assert len(two_dim_dist["Wavelength"]) > 0
+    assert len(two_dim_dist["Angle"]) > 0
+    assert len(two_dim_dist["z"]) > 0
+    assert two_dim_dist["Wavelength"][4] == pytest.approx(300)
+    assert two_dim_dist["Angle"][4] == pytest.approx(28)
+    assert two_dim_dist["z"][4][4] == pytest.approx(0.985199988)
 
 
 def test_read_incidence_angle_distribution(telescope_model_sst):
 
-    telModel = telescope_model_sst
+    tel_model = telescope_model_sst
 
-    _ = telModel.derived
-    incidenceAngleFile = telModel.getParameterValue("camera_filter_incidence_angle")
-    assert telModel.getDerivedDirectory().joinpath(incidenceAngleFile).exists()
-    incidenceAngleDist = telModel.readIncidenceAngleDistribution(incidenceAngleFile)
-    assert len(incidenceAngleDist["Incidence angle"]) > 0
-    assert len(incidenceAngleDist["Fraction"]) > 0
-    assert incidenceAngleDist["Fraction"][
-        np.nanargmin(np.abs(33.05 - incidenceAngleDist["Incidence angle"].value))
+    _ = tel_model.derived
+    incidence_angle_file = tel_model.get_parameter_value("camera_filter_incidence_angle")
+    assert tel_model.get_derived_directory().joinpath(incidence_angle_file).exists()
+    incidence_angle_dist = tel_model.read_incidence_angle_distribution(incidence_angle_file)
+    assert len(incidence_angle_dist["Incidence angle"]) > 0
+    assert len(incidence_angle_dist["Fraction"]) > 0
+    assert incidence_angle_dist["Fraction"][
+        np.nanargmin(np.abs(33.05 - incidence_angle_dist["Incidence angle"].value))
     ].value == pytest.approx(0.027980644661989726)
 
 
 def test_calc_average_curve(telescope_model_sst):
 
-    telModel = telescope_model_sst
-    telModel.exportConfigFile()
-    _ = telModel.derived
+    tel_model = telescope_model_sst
+    tel_model.export_config_file()
+    _ = tel_model.derived
 
-    twoDimFile = telModel.getParameterValue("camera_filter")
-    twoDimDist = telModel.readTwoDimWavelengthAngle(twoDimFile)
-    incidenceAngleFile = telModel.getParameterValue("camera_filter_incidence_angle")
-    incidenceAngleDist = telModel.readIncidenceAngleDistribution(incidenceAngleFile)
-    averageDist = telModel.calcAverageCurve(twoDimDist, incidenceAngleDist)
-    assert averageDist["z"][np.nanargmin(np.abs(300 - averageDist["Wavelength"]))] == pytest.approx(
-        0.9398265298920796
-    )
+    two_dim_file = tel_model.get_parameter_value("camera_filter")
+    two_dim_dist = tel_model.read_two_dim_wavelength_angle(two_dim_file)
+    incidence_angle_file = tel_model.get_parameter_value("camera_filter_incidence_angle")
+    incidence_angle_dist = tel_model.read_incidence_angle_distribution(incidence_angle_file)
+    average_dist = tel_model.calc_average_curve(two_dim_dist, incidence_angle_dist)
+    assert average_dist["z"][
+        np.nanargmin(np.abs(300 - average_dist["Wavelength"]))
+    ] == pytest.approx(0.9398265298920796)
 
 
 def test_export_table_to_model_directory(telescope_model_sst):
 
-    telModel = telescope_model_sst
-    telModel.exportConfigFile()
-    _ = telModel.derived
+    tel_model = telescope_model_sst
+    tel_model.export_config_file()
+    _ = tel_model.derived
 
-    twoDimFile = telModel.getParameterValue("camera_filter")
-    twoDimDist = telModel.readTwoDimWavelengthAngle(twoDimFile)
-    incidenceAngleFile = telModel.getParameterValue("camera_filter_incidence_angle")
-    incidenceAngleDist = telModel.readIncidenceAngleDistribution(incidenceAngleFile)
-    averageDist = telModel.calcAverageCurve(twoDimDist, incidenceAngleDist)
-    oneDimFile = telModel.exportTableToModelDirectory("test_average_curve.dat", averageDist)
-    assert oneDimFile.exists()
+    two_dim_file = tel_model.get_parameter_value("camera_filter")
+    two_dim_dist = tel_model.read_two_dim_wavelength_angle(two_dim_file)
+    incidence_angle_file = tel_model.get_parameter_value("camera_filter_incidence_angle")
+    incidence_angle_dist = tel_model.read_incidence_angle_distribution(incidence_angle_file)
+    average_dist = tel_model.calc_average_curve(two_dim_dist, incidence_angle_dist)
+    one_dim_file = tel_model.export_table_to_model_directory("test_average_curve.dat", average_dist)
+    assert one_dim_file.exists()
