@@ -14,18 +14,18 @@ class SimtelRunnerArray(SimtelRunner):
     SimtelRunnerArray is the interface with sim_telarray to perform array simulations.
 
     Configurable parameters:
-        simtelDataDirectory:
+        simtel_data_directory:
             len: 1
             default: null
             unit: null
         primary:
             len: 1
             unit: null
-        zenithAngle:
+        zenith_angle:
             len: 1
             unit: deg
             default: 20 deg
-        azimuthAngle:
+        azimuth_angle:
             len: 1
             unit: deg
             default: 0 deg
@@ -34,113 +34,113 @@ class SimtelRunnerArray(SimtelRunner):
     ----------
     label: str, optional
         Instance label.
-    arrayModel: ArrayModel
+    array_model: ArrayModel
         Instance of the ArrayModel class.
     config: namedtuple
-        Contains the configurable parameters (zenithAngle).
+        Contains the configurable parameters (zenith_angle).
 
     Methods
     -------
-    getRunScript(self, test=False, inputFile=None, runNumber=None)
+    get_run_script(self, test=False, input_file=None, run_number=None)
         Builds and returns the full path of the bash run script containing
         the sim_telarray command.
-    run(test=False, force=False, inputFile=None, runNumber=None)
+    run(test=False, force=False, input_file=None, run_number=None)
         Run sim_telarray. test=True will make it faster and force=True will remove existing files
         and run again.
     """
 
     def __init__(
         self,
-        arrayModel,
+        array_model,
         label=None,
-        simtelSourcePath=None,
-        configData=None,
-        configFile=None,
+        simtel_source_path=None,
+        config_data=None,
+        config_file=None,
     ):
         """
         SimtelRunnerArray.
 
         Parameters
         ----------
-        arrayModel: str
+        array_model: str
             Instance of TelescopeModel class.
         label: str, optional
             Instance label. Important for output file naming.
-        simtelSourcePath: str (or Path), optional
+        simtel_source_path: str (or Path), optional
             Location of sim_telarray installation.
-        configData: dict.
+        config_data: dict.
             Dict containing the configurable parameters.
-        configFile: str or Path
+        config_file: str or Path
             Path of the yaml file containing the configurable parameters.
         """
         self._logger = logging.getLogger(__name__)
         self._logger.debug("Init SimtelRunnerArray")
 
-        super().__init__(label=label, simtelSourcePath=simtelSourcePath)
+        super().__init__(label=label, simtel_source_path=simtel_source_path)
 
-        self.arrayModel = self._validateArrayModel(arrayModel)
-        self.label = label if label is not None else self.arrayModel.label
+        self.array_model = self._validate_array_model(array_model)
+        self.label = label if label is not None else self.array_model.label
 
         self.io_handler = io_handler.IOHandler()
 
-        self._baseDirectory = self.io_handler.getOutputDirectory(self.label, "array-simulator")
+        self._base_directory = self.io_handler.get_output_directory(self.label, "array-simulator")
 
-        # Loading configData
-        _configDataIn = gen.collectDataFromYamlOrDict(configFile, configData)
-        _parameterFile = self.io_handler.getInputDataFile(
+        # Loading config_data
+        _config_data_in = gen.collect_data_from_yaml_or_dict(config_file, config_data)
+        _parameter_file = self.io_handler.get_input_data_file(
             "parameters", "simtel-runner-array_parameters.yml"
         )
-        _parameters = gen.collectDataFromYamlOrDict(_parameterFile, None)
-        self.config = gen.validateConfigData(_configDataIn, _parameters)
+        _parameters = gen.collect_data_from_yaml_or_dict(_parameter_file, None)
+        self.config = gen.validate_config_data(_config_data_in, _parameters)
 
-        self._loadSimtelDataDirectories()
+        self._load_simtel_data_directories()
 
-    def _loadSimtelDataDirectories(self):
+    def _load_simtel_data_directories(self):
         """
         Create sim_telarray output directories for data, log and input.
 
-        If simtelDataDirectory is not given as a configurable parameter,
+        If simtel_data_directory is not given as a configurable parameter,
         the standard directory of simtools output (simtools-output) will
         be used. A sub directory simtel-data will be created and sub directories for
         log and data will be created inside it.
         """
 
-        if self.config.simtelDataDirectory is None:
+        if self.config.simtel_data_directory is None:
             # Default config value
-            simtelBaseDir = self._baseDirectory
+            simtel_base_dir = self._base_directory
         else:
-            simtelBaseDir = Path(self.config.simtelDataDirectory)
+            simtel_base_dir = Path(self.config.simtel_data_directory)
 
-        simtelBaseDir = simtelBaseDir.joinpath("simtel-data")
-        simtelBaseDir = simtelBaseDir.joinpath(self.arrayModel.site)
-        simtelBaseDir = simtelBaseDir.joinpath(self.config.primary)
-        simtelBaseDir = simtelBaseDir.absolute()
+        simtel_base_dir = simtel_base_dir.joinpath("simtel-data")
+        simtel_base_dir = simtel_base_dir.joinpath(self.array_model.site)
+        simtel_base_dir = simtel_base_dir.joinpath(self.config.primary)
+        simtel_base_dir = simtel_base_dir.absolute()
 
-        self._simtelDataDir = simtelBaseDir.joinpath("data")
-        self._simtelDataDir.mkdir(parents=True, exist_ok=True)
-        self._simtelLogDir = simtelBaseDir.joinpath("log")
-        self._simtelLogDir.mkdir(parents=True, exist_ok=True)
+        self._simtel_data_dir = simtel_base_dir.joinpath("data")
+        self._simtel_data_dir.mkdir(parents=True, exist_ok=True)
+        self._simtel_log_dir = simtel_base_dir.joinpath("log")
+        self._simtel_log_dir.mkdir(parents=True, exist_ok=True)
 
-    def getLogFile(self, runNumber):
+    def get_log_file(self, run_number):
         """Get full path of the simtel log file for a given run."""
-        fileName = names.simtelLogFileName(
-            run=runNumber,
+        file_name = names.simtel_log_file_name(
+            run=run_number,
             primary=self.config.primary,
-            arrayName=self.arrayModel.layoutName,
-            site=self.arrayModel.site,
-            zenith=self.config.zenithAngle,
-            azimuth=self.config.azimuthAngle,
+            array_name=self.array_model.layout_name,
+            site=self.array_model.site,
+            zenith=self.config.zenith_angle,
+            azimuth=self.config.azimuth_angle,
             label=self.label,
         )
-        return self._simtelLogDir.joinpath(fileName)
+        return self._simtel_log_dir.joinpath(file_name)
 
-    def getSubLogFile(self, runNumber, mode="out"):
+    def get_sub_log_file(self, run_number, mode="out"):
         """
         Get the full path of the submission log file.
 
         Parameters
         ----------
-        runNumber: int
+        run_number: int
             Run number.
         mode: str
             out or err
@@ -148,7 +148,7 @@ class SimtelRunnerArray(SimtelRunner):
         Raises
         ------
         ValueError
-            If runNumber is not valid (not an unsigned int).
+            If run_number is not valid (not an unsigned int).
 
         Returns
         -------
@@ -156,66 +156,66 @@ class SimtelRunnerArray(SimtelRunner):
             Full path of the run log file.
         """
 
-        fileName = names.simtelSubLogFileName(
-            run=runNumber,
+        file_name = names.simtel_sub_log_file_name(
+            run=run_number,
             primary=self.config.primary,
-            arrayName=self.arrayModel.layoutName,
-            site=self.arrayModel.site,
-            zenith=self.config.zenithAngle,
-            azimuth=self.config.azimuthAngle,
+            array_name=self.array_model.layout_name,
+            site=self.array_model.site,
+            zenith=self.config.zenith_angle,
+            azimuth=self.config.azimuth_angle,
             label=self.label,
             mode=mode,
         )
-        return self._simtelLogDir.joinpath(fileName)
+        return self._simtel_log_dir.joinpath(file_name)
 
-    def getHistogramFile(self, runNumber):
+    def get_histogram_file(self, run_number):
         """Get full path of the simtel histogram file for a given run."""
-        fileName = names.simtelHistogramFileName(
-            run=runNumber,
+        file_name = names.simtel_histogram_file_name(
+            run=run_number,
             primary=self.config.primary,
-            arrayName=self.arrayModel.layoutName,
-            site=self.arrayModel.site,
-            zenith=self.config.zenithAngle,
-            azimuth=self.config.azimuthAngle,
+            array_name=self.array_model.layout_name,
+            site=self.array_model.site,
+            zenith=self.config.zenith_angle,
+            azimuth=self.config.azimuth_angle,
             label=self.label,
         )
-        return self._simtelDataDir.joinpath(fileName)
+        return self._simtel_data_dir.joinpath(file_name)
 
-    def getOutputFile(self, runNumber):
+    def get_output_file(self, run_number):
         """Get full path of the simtel output file for a given run."""
-        fileName = names.simtelOutputFileName(
-            run=runNumber,
+        file_name = names.simtel_output_file_name(
+            run=run_number,
             primary=self.config.primary,
-            arrayName=self.arrayModel.layoutName,
-            site=self.arrayModel.site,
-            zenith=self.config.zenithAngle,
-            azimuth=self.config.azimuthAngle,
+            array_name=self.array_model.layout_name,
+            site=self.array_model.site,
+            zenith=self.config.zenith_angle,
+            azimuth=self.config.azimuth_angle,
             label=self.label,
         )
-        return self._simtelDataDir.joinpath(fileName)
+        return self._simtel_data_dir.joinpath(file_name)
 
-    def hasSubLogFile(self, runNumber, mode="out"):
+    def has_sub_log_file(self, run_number, mode="out"):
         """
         Checks that the sub run log file for this run number
         is a valid file on disk
 
         Parameters
         ----------
-        runNumber: int
+        run_number: int
             Run number.
 
         """
 
-        runSubFile = self.getSubLogFile(runNumber=runNumber, mode=mode)
-        return Path(runSubFile).is_file()
+        run_sub_file = self.get_sub_log_file(run_number=run_number, mode=mode)
+        return Path(run_sub_file).is_file()
 
-    def getResources(self, runNumber):
+    def get_resources(self, run_number):
         """
         Reading run time from last line of submission log file.
 
         Parameters
         ----------
-        runNumber: int
+        run_number: int
             Run number.
 
         Returns
@@ -225,14 +225,14 @@ class SimtelRunnerArray(SimtelRunner):
 
         """
 
-        subLogFile = self.getSubLogFile(runNumber=runNumber, mode="out")
+        sub_log_file = self.get_sub_log_file(run_number=run_number, mode="out")
 
-        self._logger.debug("Reading resources from {}".format(subLogFile))
+        self._logger.debug("Reading resources from {}".format(sub_log_file))
 
         _resources = {}
 
         _resources["runtime"] = None
-        with open(subLogFile, "r") as file:
+        with open(sub_log_file, "r") as file:
             for line in reversed(list(file)):
                 if "RUNTIME" in line:
                     _resources["runtime"] = int(line.split()[1])
@@ -243,48 +243,46 @@ class SimtelRunnerArray(SimtelRunner):
 
         return _resources
 
-    def _shallRun(self, runNumber=None):
+    def _shall_run(self, run_number=None):
         """Tells if simulations should be run again based on the existence of output files."""
-        return not self.getOutputFile(runNumber).exists()
+        return not self.get_output_file(run_number).exists()
 
-    def _makeRunCommand(self, inputFile, runNumber=1):
+    def _make_run_command(self, input_file, run_number=1):
         """
         Builds and returns the command to run simtel_array.
 
         Attributes
         ----------
-        inputFile: str
+        input_file: str
             Full path of the input CORSIKA file
-        runNumber: int
+        run_number: int
             run number
 
         """
 
-        self._logFile = self.getLogFile(runNumber)
-        histogramFile = self.getHistogramFile(runNumber)
-        outputFile = self.getOutputFile(runNumber)
+        self._log_file = self.get_log_file(run_number)
+        histogram_file = self.get_histogram_file(run_number)
+        output_file = self.get_output_file(run_number)
 
         # Array
-        command = str(self._simtelSourcePath.joinpath("sim_telarray/bin/sim_telarray"))
-        command += " -c {}".format(self.arrayModel.getConfigFile())
-        command += " -I{}".format(self.arrayModel.getConfigDirectory())
-        command += super()._configOption("telescope_theta", self.config.zenithAngle)
-        command += super()._configOption("telescope_phi", self.config.azimuthAngle)
-        command += super()._configOption("power_law", "2.5")
-        command += super()._configOption("histogram_file", histogramFile)
-        command += super()._configOption("output_file", outputFile)
-        command += super()._configOption("random_state", "auto")
-        command += super()._configOption("show", "all")
-        command += " " + str(inputFile)
-        command += " > " + str(self._logFile) + " 2>&1"
+        command = str(self._simtel_source_path.joinpath("sim_telarray/bin/sim_telarray"))
+        command += " -c {}".format(self.array_model.get_config_file())
+        command += " -I{}".format(self.array_model.get_config_directory())
+        command += super()._config_option("telescope_theta", self.config.zenith_angle)
+        command += super()._config_option("telescope_phi", self.config.azimuth_angle)
+        command += super()._config_option("power_law", "2.5")
+        command += super()._config_option("histogram_file", histogram_file)
+        command += super()._config_option("output_file", output_file)
+        command += super()._config_option("random_state", "auto")
+        command += super()._config_option("show", "all")
+        command += " " + str(input_file)
+        command += " > " + str(self._log_file) + " 2>&1"
 
         return command
 
-    # END of makeRunCommand
-
-    def _checkRunResult(self, runNumber):
+    def _check_run_result(self, run_number):
         # Checking run
-        if not self.getOutputFile(runNumber).exists():
+        if not self.get_output_file(run_number).exists():
             msg = "sim_telarray output file does not exist."
             self._logger.error(msg)
             raise InvalidOutputFile(msg)

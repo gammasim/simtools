@@ -15,10 +15,10 @@ def test_validate_telescope_name():
 
     for key, value in telescopes.items():
         logging.getLogger().info("Validating {}".format(key))
-        newName = names.validateTelescopeModelName(key)
-        logging.getLogger().info("New name {}".format(newName))
+        new_name = names.validate_telescope_model_name(key)
+        logging.getLogger().info("New name {}".format(new_name))
 
-        assert value == newName
+        assert value == new_name
 
 
 def test_validate_telescope_name_db():
@@ -31,10 +31,10 @@ def test_validate_telescope_name_db():
 
     for key, value in telescopes.items():
         logging.getLogger().info("Validating {}".format(key))
-        newName = names.validateTelescopeNameDB(key)
-        logging.getLogger().info("New name {}".format(newName))
+        new_name = names.validate_telescope_name_db(key)
+        logging.getLogger().info("New name {}".format(new_name))
 
-        assert value == newName
+        assert value == new_name
 
     telescopes = {
         "ssss-sst-d": "SSSS-SST-D",
@@ -45,20 +45,22 @@ def test_validate_telescope_name_db():
     for key, value in telescopes.items():
         logging.getLogger().info("Validating {}".format(key))
         with pytest.raises(ValueError):
-            names.validateTelescopeNameDB(key)
+            names.validate_telescope_name_db(key)
 
 
 def test_validate_other_names():
-    modelVersion = names.validateModelVersionName("p4")
-    logging.getLogger().info(modelVersion)
+    model_version = names.validate_model_version_name("p4")
+    logging.getLogger().info(model_version)
 
-    assert modelVersion == "prod4"
+    assert model_version == "prod4"
 
 
-def test_simtoolsInstrumentName():
+def test_simtools_instrument_name():
 
-    assert names.simtoolsInstrumentName("South", "MST", "FlashCam", "D") == "South-MST-FlashCam-D"
-    assert names.simtoolsInstrumentName("North", "MST", "NectarCam", "7") == "North-MST-NectarCam-7"
+    assert names.simtools_instrument_name("South", "MST", "FlashCam", "D") == "South-MST-FlashCam-D"
+    assert (
+        names.simtools_instrument_name("North", "MST", "NectarCam", "7") == "North-MST-NectarCam-7"
+    )
 
     with pytest.raises(ValueError):
-        names.simtoolsInstrumentName("West", "MST", "FlashCam", "D")
+        names.simtools_instrument_name("West", "MST", "FlashCam", "D")

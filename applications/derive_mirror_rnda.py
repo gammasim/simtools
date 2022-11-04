@@ -113,7 +113,7 @@
     .. todo::
 
         * Change default model to default (after this feature is implemented in db_handler)
-        * Fix the setStyle. For some reason, sphinx cannot built docs with it on.
+        * Fix the set_style. For some reason, sphinx cannot built docs with it on.
 """
 
 import logging
@@ -228,23 +228,23 @@ def _define_telescope_model(label, args_dict, db_config):
 
     tel = TelescopeModel(
         site=args_dict["site"],
-        telescopeModelName=args_dict["telescope"],
-        modelVersion=args_dict["model_version"],
-        mongoDBConfig=db_config,
+        telescope_model_name=args_dict["telescope"],
+        model_version=args_dict["model_version"],
+        mongo_db_config=db_config,
         label=label,
     )
     if args_dict["mirror_list"] is not None:
-        mirrorListFile = gen.findFile(name=args_dict["mirror_list"], loc=args_dict["model_path"])
-        tel.changeParameter("mirror_list", args_dict["mirror_list"])
-        tel.addParameterFile("mirror_list", mirrorListFile)
+        mirror_list_file = gen.find_file(name=args_dict["mirror_list"], loc=args_dict["model_path"])
+        tel.change_parameter("mirror_list", args_dict["mirror_list"])
+        tel.add_parameter_file("mirror_list", mirror_list_file)
     if args_dict["random_flen"] is not None:
-        tel.changeParameter("random_focal_length", str(args_dict["random_flen"]))
+        tel.change_parameter("random_focal_length", str(args_dict["random_flen"]))
 
     return tel
 
 
 def _print_and_write_results(
-    args_dict, rndaStart, rndaOpt, meanD80, sigD80, resultsRnda, resultsMean, resultsSig
+    args_dict, rnda_start, rnda_opt, mean_d80, sig_d80, results_rnda, results_mean, results_sig
 ):
     """
     Print results to screen write metadata and data files
@@ -266,21 +266,21 @@ def _print_and_write_results(
     else:
         print("Mean = {:.3f} cm".format(args_dict["psf_measurement_containment_mean"]))
     print("\nSimulated D{:}:".format(containment_fraction_percent))
-    print("Mean = {:.3f} cm, StdDev = {:.3f} cm".format(meanD80, sigD80))
+    print("Mean = {:.3f} cm, StdDev = {:.3f} cm".format(mean_d80, sig_d80))
     print("\nmirror_random_reflection_angle")
-    print("Previous value = {:.6f}".format(rndaStart))
-    print("New value = {:.6f}\n".format(rndaOpt))
+    print("Previous value = {:.6f}".format(rnda_start))
+    print("New value = {:.6f}\n".format(rnda_opt))
 
     # Result table written to ecsv file using file_writer
     # First entry is always the best fit result
     result_table = QTable(
         [
-            [True] + [False] * len(resultsRnda),
-            ([rndaOpt] + resultsRnda) * u.deg,
-            ([0.0] * (len(resultsRnda) + 1)),
-            ([0.0] * (len(resultsRnda) + 1)) * u.deg,
-            ([meanD80] + resultsMean) * u.cm,
-            ([sigD80] + resultsSig) * u.cm,
+            [True] + [False] * len(results_rnda),
+            ([rnda_opt] + results_rnda) * u.deg,
+            ([0.0] * (len(results_rnda) + 1)),
+            ([0.0] * (len(results_rnda) + 1)) * u.deg,
+            ([mean_d80] + results_mean) * u.cm,
+            ([sig_d80] + results_sig) * u.cm,
         ],
         names=(
             "best_fit",
@@ -334,7 +334,7 @@ def main():
     args_dict, db_config = _parse(label)
 
     logger = logging.getLogger()
-    logger.setLevel(gen.getLogLevelFromUser(args_dict["log_level"]))
+    logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
     tel = _define_telescope_model(label, args_dict, db_config)
 
@@ -346,69 +346,71 @@ def main():
 
     def run(rnda):
         """Runs the simulations for one given value of rnda"""
-        tel.changeParameter("mirror_reflection_random_angle", str(rnda))
-        ray = RayTracing.fromKwargs(
-            telescopeModel=tel,
-            singleMirrorMode=True,
-            mirrorNumbers=list(range(1, 10)) if args_dict["test"] else "all",
-            simtelSourcePath=args_dict.get("simtelpath", None),
-            useRandomFocalLength=args_dict["use_random_flen"],
+        tel.change_parameter("mirror_reflection_random_angle", str(rnda))
+        ray = RayTracing.from_kwargs(
+            telescope_model=tel,
+            single_mirror_mode=True,
+            mirror_numbers=list(range(1, 10)) if args_dict["test"] else "all",
+            simtel_source_path=args_dict.get("simtelpath", None),
+            use_random_focal_length=args_dict["use_random_flen"],
         )
         ray.simulate(test=False, force=True)  # force has to be True, always
         ray.analyze(force=True)
 
         return (
-            ray.getMean("d80_cm").to(u.cm).value,
-            ray.getStdDev("d80_cm").to(u.cm).value,
+            ray.get_mean("d80_cm").to(u.cm).value,
+            ray.get_std_dev("d80_cm").to(u.cm).value,
         )
 
     # First - rnda from previous model or from command line
     if args_dict["rnda"] != 0:
-        rndaStart = args_dict["rnda"]
+        rnda_start = args_dict["rnda"]
     else:
-        rndaStart = tel.getParameter("mirror_reflection_random_angle")["Value"]
-        if isinstance(rndaStart, str):
-            rndaStart = float(rndaStart.split()[0])
+        rnda_start = tel.get_parameter("mirror_reflection_random_angle")["Value"]
+        if isinstance(rnda_start, str):
+            rnda_start = float(rnda_start.split()[0])
 
-    logger.info("Start value for mirror_reflection_random_angle: {:}".format(rndaStart))
+    logger.info("Start value for mirror_reflection_random_angle: {:}".format(rnda_start))
 
-    resultsRnda = list()
-    resultsMean = list()
-    resultsSig = list()
+    results_rnda = list()
+    results_mean = list()
+    results_sig = list()
     if args_dict["no_tuning"]:
-        rndaOpt = rndaStart
+        rnda_opt = rnda_start
     else:
 
-        def collectResults(rnda, mean, sig):
-            resultsRnda.append(rnda)
-            resultsMean.append(mean)
-            resultsSig.append(sig)
+        def collect_results(rnda, mean, sig):
+            results_rnda.append(rnda)
+            results_mean.append(mean)
+            results_sig.append(sig)
 
         stop = False
-        meanD80, sigD80 = run(rndaStart)
-        rnda = rndaStart
-        signDelta = np.sign(meanD80 - args_dict["psf_measurement_containment_mean"])
-        collectResults(rnda, meanD80, sigD80)
+        mean_d80, sig_d80 = run(rnda_start)
+        rnda = rnda_start
+        sign_delta = np.sign(mean_d80 - args_dict["psf_measurement_containment_mean"])
+        collect_results(rnda, mean_d80, sig_d80)
         while not stop:
-            rnda = rnda - (0.1 * rndaStart * signDelta)
-            meanD80, sigD80 = run(rnda)
-            newSignDelta = np.sign(meanD80 - args_dict["psf_measurement_containment_mean"])
-            stop = newSignDelta != signDelta
-            signDelta = newSignDelta
-            collectResults(rnda, meanD80, sigD80)
+            rnda = rnda - (0.1 * rnda_start * sign_delta)
+            mean_d80, sig_d80 = run(rnda)
+            new_sign_delta = np.sign(mean_d80 - args_dict["psf_measurement_containment_mean"])
+            stop = new_sign_delta != sign_delta
+            sign_delta = new_sign_delta
+            collect_results(rnda, mean_d80, sig_d80)
 
         # Linear interpolation using two last rnda values
-        resultsRnda, resultsMean, resultsSig = gen.sortArrays(resultsRnda, resultsMean, resultsSig)
-        rndaOpt = np.interp(
+        results_rnda, results_mean, results_sig = gen.sort_arrays(
+            results_rnda, results_mean, results_sig
+        )
+        rnda_opt = np.interp(
             x=args_dict["psf_measurement_containment_mean"],
-            xp=resultsMean,
-            fp=resultsRnda,
+            xp=results_mean,
+            fp=results_rnda,
         )
 
-    meanD80, sigD80 = run(rndaOpt)
+    mean_d80, sig_d80 = run(rnda_opt)
 
     _print_and_write_results(
-        args_dict, rndaStart, rndaOpt, meanD80, sigD80, resultsRnda, resultsMean, resultsSig
+        args_dict, rnda_start, rnda_opt, mean_d80, sig_d80, results_rnda, results_mean, results_sig
     )
 
 

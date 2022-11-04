@@ -14,45 +14,45 @@ logger.setLevel(logging.DEBUG)
 
 
 @pytest.fixture
-def arrayConfigData():
+def array_config_data():
     return {
         "site": "North",
-        "layoutName": "1LST",
-        "modelVersion": "Prod5",
+        "layout_name": "1LST",
+        "model_version": "Prod5",
         "default": {"LST": "1"},
     }
 
 
 @pytest.fixture
-def arrayModel(arrayConfigData, io_handler, db_config):
-    arrayModel = ArrayModel(
-        label="test-lst-array", arrayConfigData=arrayConfigData, mongoDBConfig=db_config
+def array_model(array_config_data, io_handler, db_config):
+    array_model = ArrayModel(
+        label="test-lst-array", array_config_data=array_config_data, mongo_db_config=db_config
     )
-    return arrayModel
+    return array_model
 
 
 @pytest.fixture
-def simtelRunner(arrayModel, simtelpath):
-    simtelRunner = SimtelRunnerArray(
-        arrayModel=arrayModel,
-        simtelSourcePath=simtelpath,
-        configData={
+def simtel_runner(array_model, simtelpath):
+    simtel_runner = SimtelRunnerArray(
+        array_model=array_model,
+        simtel_source_path=simtelpath,
+        config_data={
             "primary": "proton",
-            "zenithAngle": 20 * u.deg,
-            "azimuthAngle": 0 * u.deg,
+            "zenith_angle": 20 * u.deg,
+            "azimuth_angle": 0 * u.deg,
         },
     )
-    return simtelRunner
+    return simtel_runner
 
 
 @pytest.fixture
-def corsikaFile(io_handler):
-    corsikaFile = io_handler.getInputDataFile(
-        fileName="run1_proton_za20deg_azm0deg-North-1LST_trigger_rates.corsika.zst", test=True
+def corsika_file(io_handler):
+    corsika_file = io_handler.get_input_data_file(
+        file_name="run1_proton_za20deg_azm0deg-North-1LST_trigger_rates.corsika.zst", test=True
     )
-    return corsikaFile
+    return corsika_file
 
 
-def test_run_script(simtelRunner, corsikaFile):
-    script = simtelRunner.getRunScript(runNumber=1, inputFile=corsikaFile)
+def test_run_script(simtel_runner, corsika_file):
+    script = simtel_runner.get_run_script(run_number=1, input_file=corsika_file)
     assert Path(script).exists()
