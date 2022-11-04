@@ -18,7 +18,7 @@ class JobManager:
 
     Attributes
     ----------
-    submitCommand: str
+    submit_command: str
        job submission command (allowed is qsub, condor_submit, local).
     test: bool
        testing mode without sub submission
@@ -32,27 +32,27 @@ class JobManager:
 
     """
 
-    def __init__(self, submitCommand=None, test=False):
+    def __init__(self, submit_command=None, test=False):
         """
         JobManager init
 
         Parameters
         ----------
-        submitCommand: str
+        submit_command: str
             job submission command
         test: bool
         testing mode without sub submission
 
         """
         self._logger = logging.getLogger(__name__)
-        self.submitCommand = submitCommand
+        self.submit_command = submit_command
         self.test = test
 
         try:
             self.test_submission_system()
         except MissingWorkloadManager:
             self._logger.error(
-                "Requested workflow manager not found: {}".format(self.submitCommand)
+                "Requested workflow manager not found: {}".format(self.submit_command)
             )
             raise
 
@@ -68,17 +68,17 @@ class JobManager:
 
         """
 
-        if self.submitCommand is None:
+        if self.submit_command is None:
             return
-        elif self.submitCommand.find("qsub") >= 0:
+        elif self.submit_command.find("qsub") >= 0:
             if gen.program_is_executable("qsub"):
                 return
             raise MissingWorkloadManager
-        elif self.submitCommand.find("condor_submit") >= 0:
+        elif self.submit_command.find("condor_submit") >= 0:
             if gen.program_is_executable("condor_submit"):
                 return
             raise MissingWorkloadManager
-        elif self.submitCommand.find("local") >= 0:
+        elif self.submit_command.find("local") >= 0:
             return
 
         raise MissingWorkloadManager
@@ -107,11 +107,11 @@ class JobManager:
         self._logger.info("Job error stream {}".format(self.run_out_file + ".err"))
         self._logger.info("Job log stream {}".format(self.run_out_file + ".job"))
 
-        if self.submitCommand.find("qsub") >= 0:
+        if self.submit_command.find("qsub") >= 0:
             self._submit_gridengine()
-        elif self.submitCommand.find("condor_submit") >= 0:
-            self._submit_HTcondor()
-        elif self.submitCommand.find("local") >= 0:
+        elif self.submit_command.find("condor_submit") >= 0:
+            self._submit_htcondor()
+        elif self.submit_command.find("local") >= 0:
             self._submit_local()
 
     def _submit_local(self):
@@ -123,16 +123,16 @@ class JobManager:
 
         self._logger.info("Running script locally")
 
-        shellCommand = (
+        shell_command = (
             self.run_script + " > " + self.run_out_file + ".out" " 2> " + self.run_out_file + ".err"
         )
 
         if not self.test:
-            os.system(shellCommand)
+            os.system(shell_command)
         else:
             self._logger.info("Testing (local)")
 
-    def _submit_HTcondor(self):
+    def _submit_htcondor(self):
         """
         Submit a job described by a shell script to HTcondor
 
@@ -150,9 +150,9 @@ class JobManager:
         except FileNotFoundError:
             self._logger.error("Failed creating condor submission file {}".format(_condor_file))
 
-        shellCommand = self.submitCommand + " " + _condor_file
+        shell_command = self.submit_command + " " + _condor_file
         if not self.test:
-            os.system(shellCommand)
+            os.system(shell_command)
         else:
             self._logger.info("Testing (HTcondor)")
 
@@ -162,16 +162,16 @@ class JobManager:
 
         """
 
-        thisSubCmd = copy(self.submitCommand)
-        thisSubCmd = thisSubCmd + " -o " + self.run_out_file + ".out"
-        thisSubCmd = thisSubCmd + " -e " + self.run_out_file + ".err"
+        this_sub_cmd = copy(self.submit_command)
+        this_sub_cmd = this_sub_cmd + " -o " + self.run_out_file + ".out"
+        this_sub_cmd = this_sub_cmd + " -e " + self.run_out_file + ".err"
 
         self._logger.info("Submitting script to gridengine")
 
-        shellCommand = thisSubCmd + " " + self.run_script
-        self._logger.debug(shellCommand)
+        shell_command = this_sub_cmd + " " + self.run_script
+        self._logger.debug(shell_command)
         if not self.test:
-            os.system(shellCommand)
+            os.system(shell_command)
         else:
             self._logger.info("Testing (gridengine)")
-            self._logger.info(shellCommand)
+            self._logger.info(shell_command)

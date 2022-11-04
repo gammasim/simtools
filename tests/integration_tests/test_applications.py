@@ -165,7 +165,7 @@ APP_LIST = {
     # Layout
     "make_regular_arrays": [[]],
     # Production
-    "produce_array_config": [["--array_config", "./tests/resources/arrayConfigTest.yml"]],
+    "produce_array_config": [["--array_config", "./tests/resources/array_config_test.yml"]],
     # Trigger
     "sim_showers_for_trigger_rates": [
         [
@@ -215,7 +215,7 @@ APP_LIST = {
     "production::showers_only": [
         [
             "--productionconfig",
-            "./tests/resources/prodConfigTest.yml",
+            "./tests/resources/prod_config_test.yml",
             "--task",
             "simulate",
             "--showers_only",
@@ -227,7 +227,7 @@ APP_LIST = {
     "production::array_only": [
         [
             "--productionconfig",
-            "./tests/resources/prodConfigTest.yml",
+            "./tests/resources/prod_config_test.yml",
             "--task",
             "simulate",
             "--array_only",
@@ -295,21 +295,21 @@ def test_applications(application, io_handler, monkeypatch, db):
     # Notice this is done for all tests, so keep in mind if in the future we add tests with input.
     monkeypatch.setattr("sys.stdin", StringIO("y\n"))
 
-    def prepare_one_file(fileName):
-        db.exportFileDB(
-            dbName="test-data",
-            dest=io_handler.getOutputDirectory(dirType="model", test=True),
-            fileName=fileName,
+    def prepare_one_file(file_name):
+        db.export_file_db(
+            db_name="test-data",
+            dest=io_handler.get_output_directory(dir_type="model", test=True),
+            file_name=file_name,
         )
 
     prepare_one_file("PSFcurve_data_v2.txt")
     prepare_one_file("MLTdata-preproduction.ecsv")
 
-    def makeCommand(app, args):
+    def make_command(app, args):
         cmd = "python applications/" + app + ".py"
         for aa in args:
             aa = aa.replace(
-                "TESTMODELDIR", str(io_handler.getOutputDirectory(dirType="model", test=True))
+                "TESTMODELDIR", str(io_handler.get_output_directory(dir_type="model", test=True))
             )
             cmd += " " + aa
         return cmd
@@ -317,8 +317,8 @@ def test_applications(application, io_handler, monkeypatch, db):
     for args in APP_LIST[application]:
         app_name = application.partition("::")[0]
         logger.info("Running with args: {}".format(args))
-        cmd = makeCommand(app_name, args)
+        cmd = make_command(app_name, args)
         logger.info("Running command: {}".format(cmd))
         out = os.system(cmd)
-        isOutputValid = out == 0
-        assert isOutputValid
+        is_output_valid = out == 0
+        assert is_output_valid

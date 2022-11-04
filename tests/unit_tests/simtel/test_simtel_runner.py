@@ -11,17 +11,17 @@ logger.setLevel(logging.DEBUG)
 
 
 @pytest.fixture
-def simtelRunner(simtelpath):
+def simtel_runner(simtelpath):
 
-    simtelRunner = SimtelRunner(simtelSourcePath=simtelpath)
-    return simtelRunner
+    simtel_runner = SimtelRunner(simtel_source_path=simtelpath)
+    return simtel_runner
 
 
-def test_run(simtelRunner):
+def test_run(simtel_runner):
     with pytest.raises(RuntimeError):
-        simtelRunner.run()
+        simtel_runner.run()
 
 
-def test_simtel_execution_error(simtelRunner):
+def test_simtel_execution_error(simtel_runner):
     with pytest.raises(SimtelExecutionError):
-        simtelRunner._raiseSimtelError()
+        simtel_runner._raise_simtel_error()

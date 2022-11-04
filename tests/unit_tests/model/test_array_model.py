@@ -10,35 +10,35 @@ logger.setLevel(logging.DEBUG)
 
 
 def test_input_validation(db_config, io_handler):
-    arrayConfigData = {
+    array_config_data = {
         "site": "North",
-        "layoutName": "test-layout",
-        "modelVersion": "Prod5",
+        "layout_name": "test-layout",
+        "model_version": "Prod5",
         "default": {"LST": "1", "MST": "FlashCam-D"},
         "MST-05": "NectarCam-D",
     }
-    am = ArrayModel(label="test", arrayConfigData=arrayConfigData, mongoDBConfig=db_config)
+    am = ArrayModel(label="test", array_config_data=array_config_data, mongo_db_config=db_config)
 
-    am.printTelescopeList()
+    am.print_telescope_list()
 
-    assert am.numberOfTelescopes == 19
+    assert am.number_of_telescopes == 19
 
 
 def test_exporting_config_files(db_config, io_handler):
-    arrayConfigData = {
+    array_config_data = {
         "site": "North",
-        "layoutName": "test-layout",
-        "modelVersion": "Prod5",
+        "layout_name": "test-layout",
+        "model_version": "Prod5",
         "default": {"LST": "1", "MST": "FlashCam-D"},
         "MST-05": {
             "name": "NectarCam-D",
             "camera_config_name": "NectarCam-test",
         },
     }
-    am = ArrayModel(label="test", arrayConfigData=arrayConfigData, mongoDBConfig=db_config)
+    am = ArrayModel(label="test", array_config_data=array_config_data, mongo_db_config=db_config)
 
-    am.exportSimtelTelescopeConfigFiles()
-    am.exportSimtelArrayConfigFile()
+    am.export_simtel_telescope_config_files()
+    am.export_simtel_array_config_file()
 
     list_of_export_files = [
         "Aclylite8_tra_v2013ref.dat",
@@ -73,4 +73,4 @@ def test_exporting_config_files(db_config, io_handler):
     ]
 
     for modelfile in list_of_export_files:
-        assert Path(am.getConfigDirectory()).joinpath(modelfile).exists()
+        assert Path(am.get_config_directory()).joinpath(modelfile).exists()

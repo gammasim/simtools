@@ -63,7 +63,7 @@ class SchemaValidator:
         """
         if meta_file_name:
             self._logger.debug("Reading meta data from {}".format(meta_file_name))
-            self.data_dict = gen.collectDataFromYamlOrDict(meta_file_name, None)
+            self.data_dict = gen.collect_data_from_yaml_or_dict(meta_file_name, None)
 
         if lower_case:
             self.data_dict = gen.change_dict_keys_case(self.data_dict, True)
