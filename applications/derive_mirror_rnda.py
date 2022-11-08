@@ -48,18 +48,18 @@
     telescope (str, required)
         Telescope name (e.g. North-LST-1, South-SST-D, ...)
     model_version (str, optional)
-        Model version (default=prod4)
+        Model version (default='Current')
     containment_mean (float, required)
         Mean of measured containment diameter [cm]
     containment_sigma (float, optional)
         Std dev of measured containment diameter [cm]
     containment_fraction (float, required)
-        Containment fractio for diameter calculation (typically 0.8)
+        Containment fraction for diameter calculation (typically 0.8)
     rnda (float, optional)
         Starting value of mirror_reflection_random_angle. If not given, the value from the \
         default model will be used.
     2f_measurement (file, optional)
-        File with results from 2f measurements including mirror panel raddii and spot size \
+        File with results from 2f measurements including mirror panel radii and spot size \
         measurements
     d80_list (file, optional)
         File with single column list of measured D80 [cm]. It is used only for plotting the D80 \
