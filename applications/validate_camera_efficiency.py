@@ -40,72 +40,82 @@
     .. todo::
 
         * Change default model to default (after this feature is implemented in db_handler)
-        * Fix the setStyle. For some reason, sphinx cannot built docs with it on.
+        * Fix the set_style. For some reason, sphinx cannot built docs with it on.
 """
 
 import logging
+from pathlib import Path
 
-import simtools.config as cfg
-import simtools.io_handler as io
-import simtools.util.commandline_parser as argparser
+import simtools.configuration as configurator
 import simtools.util.general as gen
+from simtools import io_handler
 from simtools.camera_efficiency import CameraEfficiency
 from simtools.model.telescope_model import TelescopeModel
 
 
-def main():
+def _parse(label):
+    """
+    Parse command line configuration
 
-    parser = argparser.CommandLineParser(
+    """
+    config = configurator.Configurator(
+        label=label,
         description=(
             "Calculate the camera efficiency of the telescope requested. "
             "Plot the camera efficiency vs wavelength for cherenkov and NSB light."
-        )
+        ),
     )
-    parser.initialize_telescope_model_arguments()
-    parser.initialize_default_arguments(add_workflow_config=False)
+    return config.initialize(db_config=True, telescope_model=True)
 
-    args = parser.parse_args()
-    label = "validate_camera_efficiency"
-    cfg.setConfigFileName(args.configFile)
+
+def main():
+
+    label = Path(__file__).stem
+    args_dict, _db_config = _parse(label)
 
     logger = logging.getLogger()
-    logger.setLevel(gen.getLogLevelFromUser(args.logLevel))
+    logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
     # Output directory to save files related directly to this app
-    outputDir = io.getOutputDirectory(cfg.get("outputLocation"), label, dirType="application-plots")
+    _io_handler = io_handler.IOHandler()
+    output_dir = _io_handler.get_output_directory(label, dir_type="application-plots")
 
-    telModel = TelescopeModel(
-        site=args.site,
-        telescopeModelName=args.telescope,
-        modelVersion=args.model_version,
+    tel_model = TelescopeModel(
+        site=args_dict["site"],
+        telescope_model_name=args_dict["telescope"],
+        mongo_db_config=_db_config,
+        model_version=args_dict["model_version"],
         label=label,
     )
 
     # For debugging purposes
-    telModel.exportConfigFile()
+    tel_model.export_config_file()
 
-    logger.info("Validating the camera efficiency of {}".format(telModel.name))
+    logger.info("Validating the camera efficiency of {}".format(tel_model.name))
 
-    ce = CameraEfficiency(telescopeModel=telModel)
+    ce = CameraEfficiency(
+        telescope_model=tel_model,
+        simtel_source_path=args_dict["simtelpath"],
+    )
     ce.simulate(force=True)
     ce.analyze(force=True)
 
     # Plotting the camera efficiency for Cherenkov light
-    fig = ce.plotCherenkovEfficiency()
-    cherenkovPlotFileName = label + "_" + telModel.name + "_cherenkov"
-    cherenkovPlotFile = outputDir.joinpath(cherenkovPlotFileName)
+    fig = ce.plot_cherenkov_efficiency()
+    cherenkov_plot_file_name = label + "_" + tel_model.name + "_cherenkov"
+    cherenkov_plot_file = output_dir.joinpath(cherenkov_plot_file_name)
     for f in ["pdf", "png"]:
-        fig.savefig(str(cherenkovPlotFile) + "." + f, format=f, bbox_inches="tight")
-    logger.info("Plotted cherenkov efficiency in {}".format(cherenkovPlotFile))
+        fig.savefig(str(cherenkov_plot_file) + "." + f, format=f, bbox_inches="tight")
+    logger.info("Plotted cherenkov efficiency in {}".format(cherenkov_plot_file))
     fig.clf()
 
     # Plotting the camera efficiency for NSB light
-    fig = ce.plotNSBEfficiency()
-    nsbPlotFileName = label + "_" + telModel.name + "_nsb"
-    nsbPlotFile = outputDir.joinpath(nsbPlotFileName)
+    fig = ce.plot_nsb_efficiency()
+    nsb_plot_file_name = label + "_" + tel_model.name + "_nsb"
+    nsb_plot_file = output_dir.joinpath(nsb_plot_file_name)
     for f in ["pdf", "png"]:
-        fig.savefig(str(nsbPlotFile) + "." + f, format=f, bbox_inches="tight")
-    logger.info("Plotted NSB efficiency in {}".format(nsbPlotFile))
+        fig.savefig(str(nsb_plot_file) + "." + f, format=f, bbox_inches="tight")
+    logger.info("Plotted NSB efficiency in {}".format(nsb_plot_file))
     fig.clf()
 
 

@@ -38,30 +38,29 @@
     .. todo::
 
         * Change default model to default (after this feature is implemented in db_handler)
-        * Fix the setStyle. For some reason, sphinx cannot built docs with it on.
+        * Fix the set_style. For some reason, sphinx cannot built docs with it on.
 """
 
 import logging
+from pathlib import Path
 
-import simtools.config as cfg
-import simtools.io_handler as io
-import simtools.util.commandline_parser as argparser
+import simtools.configuration as configurator
 import simtools.util.general as gen
+from simtools import io_handler
 from simtools.model.telescope_model import TelescopeModel
 
 
 def main():
 
-    parser = argparser.CommandLineParser(
+    config = configurator.Configurator(
+        label=Path(__file__).stem,
         description=(
             "Calculate the camera FoV of the telescope requested. "
-            "Plot the camera as well, as seen for an observer facing the camera."
-        )
+            "Plot the camera, as seen for an observer facing the camera."
+        ),
     )
-    parser.initialize_telescope_model_arguments()
-    parser.initialize_default_arguments(add_workflow_config=False)
-    parser.add_argument(
-        "--cameraInSkyCoor",
+    config.parser.add_argument(
+        "--camera_in_sky_coor",
         help=(
             "Plot the camera layout in sky coordinates "
             "(akin to looking at it from behind for single mirror telesecopes)"
@@ -69,64 +68,65 @@ def main():
         action="store_true",
         default=False,
     )
-    parser.add_argument(
-        "--printPixelsID",
+    config.parser.add_argument(
+        "--print_pixels_id",
         help=(
             "Up to which pixel ID to print (default: 50). "
-            "To suppress printing of pixel IDs, set to zero (--printPixelsID 0)."
+            "To suppress printing of pixel IDs, set to zero (--print_pixels_id 0). "
             "To print all pixels, set to 'All'."
         ),
         default=50,
     )
 
-    args = parser.parse_args()
+    args_dict, db_config = config.initialize(db_config=True, telescope_model=True)
     label = "validate_camera_fov"
-    cfg.setConfigFileName(args.configFile)
 
     logger = logging.getLogger()
-    logger.setLevel(gen.getLogLevelFromUser(args.logLevel))
+    logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
     # Output directory to save files related directly to this app
-    outputDir = io.getOutputDirectory(cfg.get("outputLocation"), label, dirType="application-plots")
+    _io_handler = io_handler.IOHandler()
+    output_dir = _io_handler.get_output_directory(label, dir_type="application-plots")
 
-    telModel = TelescopeModel(
-        site=args.site,
-        telescopeModelName=args.telescope,
-        modelVersion=args.model_version,
+    tel_model = TelescopeModel(
+        site=args_dict["site"],
+        telescope_model_name=args_dict["telescope"],
+        mongo_db_config=db_config,
+        model_version=args_dict["model_version"],
         label=label,
     )
-    telModel.exportModelFiles()
+    tel_model.export_model_files()
 
-    print("\nValidating the camera FoV of {}\n".format(telModel.name))
+    print("\nValidating the camera FoV of {}\n".format(tel_model.name))
 
-    focalLength = float(telModel.getParameterValue("effective_focal_length"))
-    camera = telModel.camera
+    focal_length = float(tel_model.get_parameter_value("effective_focal_length"))
+    camera = tel_model.camera
 
-    fov, rEdgeAvg = camera.calcFOV()
+    fov, r_edge_avg = camera.calc_fov()
 
-    print("\nEffective focal length = " + "{0:.3f} cm".format(focalLength))
-    print("{0} FoV = {1:.3f} deg".format(telModel.name, fov))
-    print("Avg. edge radius = {0:.3f} cm\n".format(rEdgeAvg))
+    print("\nEffective focal length = " + "{0:.3f} cm".format(focal_length))
+    print("{0} FoV = {1:.3f} deg".format(tel_model.name, fov))
+    print("Avg. edge radius = {0:.3f} cm\n".format(r_edge_avg))
 
     # Now plot the camera as well
     try:
-        pixelIDsToPrint = int(args.printPixelsID)
-        if pixelIDsToPrint == 0:
-            pixelIDsToPrint = -1  # so not print the zero pixel
+        pixel_ids_to_print = int(args_dict["print_pixels_id"])
+        if pixel_ids_to_print == 0:
+            pixel_ids_to_print = -1  # so not print the zero pixel
     except ValueError:
-        if args.printPixelsID.lower() == "all":
-            pixelIDsToPrint = camera.getNumberOfPixels()
+        if args_dict["print_pixels_id"].lower() == "all":
+            pixel_ids_to_print = camera.get_number_of_pixels()
         else:
             raise ValueError(
-                f"The value provided to --printPixelsID ({args.printPixelsID}) "
+                f"The value provided to --print_pixels_id ({args_dict['print_pixels_id']}) "
                 "should be an integer or All"
             )
-    fig = camera.plotPixelLayout(args.cameraInSkyCoor, pixelIDsToPrint)
-    plotFilePrefix = outputDir.joinpath(f"{label}_{telModel.name}_pixelLayout")
+    fig = camera.plot_pixel_layout(args_dict["camera_in_sky_coor"], pixel_ids_to_print)
+    plot_file_prefix = output_dir.joinpath(f"{label}_{tel_model.name}_pixel_layout")
     for suffix in ["pdf", "png"]:
-        fileName = f"{str(plotFilePrefix)}.{suffix}"
-        fig.savefig(fileName, format=suffix, bbox_inches="tight")
-        print("\nSaved camera plot in {}\n".format(fileName))
+        file_name = f"{str(plot_file_prefix)}.{suffix}"
+        fig.savefig(file_name, format=suffix, bbox_inches="tight")
+        print("\nSaved camera plot in {}\n".format(file_name))
     fig.clf()
 
 

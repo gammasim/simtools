@@ -13,9 +13,9 @@
 
     'site': South or North
 
-    'layoutName': name of a valid layout array.
+    'layout_name': name of a valid layout array.
 
-    'modelVersion': name of a valid model version.
+    'model_version': name of a valid model version.
 
     'default': telescope model names to be assigned to each telescope size by default. \
     It must contain entries for 'LST' and 'MST' (and 'SST' in case of South site).
@@ -46,8 +46,8 @@
     .. code-block:: python
 
         site: North,
-        layoutName: Prod5
-        modelVersion: Prod5
+        layout_name: Prod5
+        model_version: Prod5
         default:
             LST: 'D234'  # Design model for the LSTs
             MST: FlashCam-D  # Design model for the MST-FlashCam
@@ -61,7 +61,7 @@
     Command line arguments
     ----------------------
     label (str, optional)
-        Label to identify the output files and directories.
+        Label to identify the output files/directories.
     array_config (str, required)
         Path to a yaml file with the array config data.
     verbosity (str, optional)
@@ -76,56 +76,48 @@
     .. code-block:: console
 
         python applications/produce_array_config.py --label test \
-            --array_config tests/resources/arrayConfigTest.yml -v DEBUG
+            --array_config data/test-data/array_config_test.yml -v DEBUG
 
     All the produced model files can be found in simtools-output/test/model/
 
 """
 
 import logging
+from pathlib import Path
 
-import simtools.config as cfg
-import simtools.util.commandline_parser as argparser
+import simtools.configuration as configurator
 import simtools.util.general as gen
 from simtools.model.array_model import ArrayModel
 
 
 def main():
 
-    parser = argparser.CommandLineParser(
-        description=("Example of how to produce sim_telarray config files for a given array.")
+    config = configurator.Configurator(
+        label=Path(__file__).stem,
+        description=("Example of how to produce sim_telarray config files for a given array."),
     )
-    parser.add_argument(
-        "-l",
-        "--label",
-        help="Identifier str for the output naming.",
-        type=str,
-        required=False,
-    )
-    parser.add_argument(
-        "-a",
+    config.parser.add_argument(
         "--array_config",
         help="Yaml file with array config data.",
         type=str,
         required=True,
     )
-    parser.initialize_default_arguments()
-
-    args = parser.parse_args()
-    cfg.setConfigFileName(args.configFile)
-
-    label = "produce_array_config" if args.label is None else args.label
+    args_dict, db_config = config.initialize(db_config=True)
 
     logger = logging.getLogger("simtools")
-    logger.setLevel(gen.getLogLevelFromUser(args.logLevel))
+    logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
-    arrayModel = ArrayModel(label=label, arrayConfigFile=args.array_config)
+    array_model = ArrayModel(
+        label=args_dict["label"],
+        mongo_db_config=db_config,
+        array_config_file=args_dict["array_config"],
+    )
 
     # Printing list of telescope for quick inspection.
-    arrayModel.printTelescopeList()
+    array_model.print_telescope_list()
 
     # Exporting config files.
-    arrayModel.exportAllSimtelConfigFiles()
+    array_model.export_all_simtel_config_files()
 
 
 if __name__ == "__main__":

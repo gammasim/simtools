@@ -58,101 +58,113 @@
 """
 
 import logging
+from pathlib import Path
 
 import astropy.units as u
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.backends.backend_pdf import PdfPages
 
-import simtools.config as cfg
-import simtools.io_handler as io
-import simtools.util.commandline_parser as argparser
+import simtools.configuration as configurator
 import simtools.util.general as gen
+from simtools import io_handler
 from simtools.model.telescope_model import TelescopeModel
 from simtools.ray_tracing import RayTracing
 
-# from simtools.visualize import setStyle
+# from simtools.visualize import set_style
 
-# setStyle()
+# set_style()
 
 
-def main():
+def _parse(label):
+    """
+    Parse command line configuratio
 
-    parser = argparser.CommandLineParser(
+    """
+
+    config = configurator.Configurator(
+        label=label,
         description=(
-            "Calculate and plot the PSF and eff. mirror area as a function of off-axis angle "
+            "Calculate and plot the PSF and effective mirror area as a function of off-axis angle "
             "of the telescope requested."
-        )
+        ),
     )
-    parser.initialize_telescope_model_arguments()
-    parser.add_argument(
+
+    config.parser.add_argument(
         "--src_distance",
         help="Source distance in km (default=10)",
         type=float,
         default=10,
     )
-    parser.add_argument("--zenith", help="Zenith angle in deg (default=20)", type=float, default=20)
-    parser.add_argument(
+    config.parser.add_argument(
+        "--zenith", help="Zenith angle in deg (default=20)", type=float, default=20
+    )
+    config.parser.add_argument(
         "--max_offset",
         help="Maximum offset angle in deg (default=4)",
         type=float,
         default=4,
     )
-    parser.add_argument(
+    config.parser.add_argument(
         "--offset_steps",
         help="Offset angle step size (default=0.25 deg)",
         type=float,
         default=0.25,
     )
-    parser.add_argument(
+    config.parser.add_argument(
         "--plot_images",
         help="Produce a multiple pages pdf file with the image plots.",
         action="store_true",
     )
-    parser.initialize_default_arguments(add_workflow_config=False)
+    return config.initialize(db_config=True, telescope_model=True)
 
-    args = parser.parse_args()
-    label = "validate_optics"
-    cfg.setConfigFileName(args.configFile)
+
+def main():
+
+    label = Path(__file__).stem
+    args_dict, db_config = _parse(label)
 
     logger = logging.getLogger()
-    logger.setLevel(gen.getLogLevelFromUser(args.logLevel))
+    logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
-    # Output directory to save files related directly to this app
-    outputDir = io.getOutputDirectory(cfg.get("outputLocation"), label, dirType="application-plots")
+    _io_handler = io_handler.IOHandler()
+    output_dir = _io_handler.get_output_directory(label, dir_type="application-plots")
 
-    telModel = TelescopeModel(
-        site=args.site,
-        telescopeModelName=args.telescope,
-        modelVersion=args.model_version,
+    tel_model = TelescopeModel(
+        site=args_dict["site"],
+        telescope_model_name=args_dict["telescope"],
+        model_version=args_dict["model_version"],
         label=label,
-        readFromDB=True,
+        mongo_db_config=db_config,
     )
 
     ######################################################################
     # This is here as an example how to change parameters when necessary.
     ######################################################################
-    # parsToChange = {
+    # pars_to_change = {
     #     'mirror_focal_length': 1608.3,
     #     'mirror_offset': -177.5,
     #     'camera_body_diameter': 289.7,
     #     'telescope_transmission': 1
     # }
-    # telModel.changeMultipleParameters(**parsToChange)
+    # tel_model.change_multiple_parameters(**pars_to_change)
 
     print(
         "\nValidating telescope optics with ray tracing simulations"
-        " for {}\n".format(telModel.name)
+        " for {}\n".format(tel_model.name)
     )
 
-    ray = RayTracing.fromKwargs(
-        telescopeModel=telModel,
-        sourceDistance=args.src_distance * u.km,
-        zenithAngle=args.zenith * u.deg,
-        offAxisAngle=np.linspace(0, args.max_offset, int(args.max_offset / args.offset_steps) + 1)
+    ray = RayTracing.from_kwargs(
+        telescope_model=tel_model,
+        simtel_source_path=args_dict["simtelpath"],
+        source_distance=args_dict["src_distance"] * u.km,
+        zenith_angle=args_dict["zenith"] * u.deg,
+        off_axis_angle=np.linspace(
+            0, args_dict["max_offset"], int(args_dict["max_offset"] / args_dict["offset_steps"]) + 1
+        )
         * u.deg,
     )
-    ray.simulate(test=args.test, force=False)
+    ray.simulate(test=args_dict["test"], force=False)
     ray.analyze(force=True)
 
     # Plotting
@@ -161,27 +173,27 @@ def main():
 
         ray.plot(key, marker="o", linestyle=":", color="k")
 
-        plotFileName = "_".join((label, telModel.name, key))
-        plotFile = outputDir.joinpath(plotFileName)
-        plt.savefig(str(plotFile) + ".pdf", format="pdf", bbox_inches="tight")
-        plt.savefig(str(plotFile) + ".png", format="png", bbox_inches="tight")
+        plot_file_name = "_".join((label, tel_model.name, key))
+        plot_file = output_dir.joinpath(plot_file_name)
+        plt.savefig(str(plot_file) + ".pdf", format="pdf", bbox_inches="tight")
+        plt.savefig(str(plot_file) + ".png", format="png", bbox_inches="tight")
         plt.clf()
 
     # Plotting images
-    if args.plot_images:
-        plotFileName = "_".join((label, telModel.name, "images.pdf"))
-        plotFile = outputDir.joinpath(plotFileName)
-        pdfPages = PdfPages(plotFile)
+    if args_dict["plot_images"]:
+        plot_file_name = "_".join((label, tel_model.name, "images.pdf"))
+        plot_file = output_dir.joinpath(plot_file_name)
+        pdf_pages = PdfPages(plot_file)
 
-        logger.info("Plotting images into {}".format(plotFile))
+        logger.info("Plotting images into {}".format(plot_file))
 
         for image in ray.images():
             fig = plt.figure(figsize=(8, 6), tight_layout=True)
-            image.plotImage()
-            pdfPages.savefig(fig)
+            image.plot_image()
+            pdf_pages.savefig(fig)
             plt.clf()
         plt.close()
-        pdfPages.close()
+        pdf_pages.close()
 
 
 if __name__ == "__main__":

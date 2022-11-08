@@ -13,9 +13,9 @@ logger.setLevel(logging.DEBUG)
 
 
 @pytest.fixture
-def corsikaConfigData():
+def corsika_config_data():
     return {
-        "dataDirectory": "./corsika-data",
+        "data_directory": "./corsika-data",
         "nshow": 10,
         "primary": "gamma",
         "erange": [100 * u.GeV, 1 * u.TeV],
@@ -28,40 +28,41 @@ def corsikaConfigData():
 
 
 @pytest.fixture
-def corsikaRunner(corsikaConfigData, cfg_setup):
+def corsika_runner(corsika_config_data, io_handler, simtelpath):
 
-    corsikaRunner = CorsikaRunner(
+    corsika_runner = CorsikaRunner(
         site="south",
-        layoutName="test-layout",
+        layout_name="test-layout",
+        simtel_source_path=simtelpath,
         label="test-corsika-runner",
-        corsikaConfigData=corsikaConfigData,
+        corsika_config_data=corsika_config_data,
     )
-    return corsikaRunner
+    return corsika_runner
 
 
-def test_get_run_script(corsikaRunner):
+def test_get_run_script(corsika_runner):
     # No run number is given
 
-    script = corsikaRunner.getRunScript()
+    script = corsika_runner.get_run_script()
 
     assert script.exists()
 
     # Run number is given
-    runNumber = 3
-    script = corsikaRunner.getRunScript(runNumber=runNumber)
+    run_number = 3
+    script = corsika_runner.get_run_script(run_number=run_number)
 
     assert script.exists()
 
 
-def test_get_run_script_with_invalid_run(corsikaRunner):
+def test_get_run_script_with_invalid_run(corsika_runner):
     for run in [-2, "test"]:
         with pytest.raises(ValueError):
-            _ = corsikaRunner.getRunScript(runNumber=run)
+            _ = corsika_runner.get_run_script(run_number=run)
 
 
-def test_run_script_with_extra(corsikaRunner):
+def test_run_script_with_extra(corsika_runner):
 
     extra = ["testing", "testing-extra-2"]
-    script = corsikaRunner.getRunScript(runNumber=3, extraCommands=extra)
+    script = corsika_runner.get_run_script(run_number=3, extra_commands=extra)
 
-    assert gen.fileHasText(script, "testing-extra-2")
+    assert gen.file_has_text(script, "testing-extra-2")

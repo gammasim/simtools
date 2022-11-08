@@ -6,9 +6,7 @@ import astropy.units as u
 import numpy as np
 import pytest
 
-import simtools.config as cfg
-import simtools.io_handler as io
-from simtools import db_handler
+import simtools.util.general as gen
 from simtools.layout.layout_array import LayoutArray
 
 logger = logging.getLogger()
@@ -16,7 +14,7 @@ logger.setLevel(logging.DEBUG)
 
 
 @pytest.fixture
-def layoutCenterDataDict():
+def layout_center_data_dict():
     return {
         "center_lon": -17.8920302 * u.deg,
         "center_lat": 28.7621661 * u.deg,
@@ -28,7 +26,7 @@ def layoutCenterDataDict():
 
 
 @pytest.fixture
-def corsikaTelescopeDataDict():
+def corsika_telescope_data_dict():
     return {
         "corsika_sphere_radius": {"LST": 12.5 * u.m, "MST": 9.15 * u.m, "SST": 3.0 * u.m},
         "corsika_sphere_center": {"LST": 16 * u.m, "MST": 9 * u.m, "SST": 3.25 * u.m},
@@ -37,185 +35,200 @@ def corsikaTelescopeDataDict():
 
 
 @pytest.fixture
-def db(set_db):
-    db = db_handler.DatabaseHandler()
-    return db
-
-
-@pytest.fixture
-def telescopeTestFile(db):
-    testFileName = "telescope_positions-North-TestLayout.ecsv"
-    db.exportFileDB(
-        dbName="test-data",
-        dest=io.getOutputDirectory(dirType="model", test=True),
-        fileName=testFileName,
+def telescope_test_file(db, args_dict, io_handler):
+    test_file_name = "telescope_positions-North-TestLayout.ecsv"
+    db.export_file_db(
+        db_name="test-data",
+        dest=io_handler.get_output_directory(dir_type="model", test=True),
+        file_name=test_file_name,
     )
 
-    cfgFile = cfg.findFile(testFileName, io.getOutputDirectory(dirType="model", test=True))
-    return cfgFile
+    cfg_file = gen.find_file(
+        test_file_name,
+        io_handler.get_output_directory(dir_type="model", test=True),
+    )
+    return cfg_file
 
 
-def test_fromLayoutArrayName(cfg_setup):
+def test_from_layout_array_name(io_handler):
 
-    layout = LayoutArray.fromLayoutArrayName("south-TestLayout")
+    layout = LayoutArray.from_layout_array_name("south-TestLayout")
 
-    assert 99 == layout.getNumberOfTelescopes()
+    assert 99 == layout.get_number_of_telescopes()
 
 
-def test_initializeCoordinateSystems(layoutCenterDataDict):
+def test_initialize_coordinate_systems(layout_center_data_dict):
 
-    layout = LayoutArray(name="testLayout")
-    layout._initializeCoordinateSystems()
-    _x, _y, _z = layout._arrayCenter.getCoordinates("corsika")
+    layout = LayoutArray(name="test_layout")
+    layout._initialize_coordinate_systems()
+    _x, _y, _z = layout._array_center.get_coordinates("corsika")
     assert _x == 0.0 * u.m and _y == 0.0 * u.m and _z == 0.0 * u.m
-    _lat, _lon, _z = layout._arrayCenter.getCoordinates("mercator")
+    _lat, _lon, _z = layout._array_center.get_coordinates("mercator")
     assert np.isnan(_lat) and np.isnan(_lon)
 
-    layout._initializeCoordinateSystems(layoutCenterDataDict, False)
-    _x, _y, _z = layout._arrayCenter.getCoordinates("corsika")
-    assert _x == 0.0 * u.m and _y == 0.0 * u.m and _z == layoutCenterDataDict["center_alt"]
-    _lat, _lon, _z = layout._arrayCenter.getCoordinates("mercator")
-    assert _lat.value == pytest.approx(layoutCenterDataDict["center_lat"].value, 1.0e-2)
-    assert _lon.value == pytest.approx(layoutCenterDataDict["center_lon"].value, 1.0e-2)
-    _E, _N, _z = layout._arrayCenter.getCoordinates("utm")
+    layout._initialize_coordinate_systems(layout_center_data_dict, False)
+    _x, _y, _z = layout._array_center.get_coordinates("corsika")
+    assert _x == 0.0 * u.m and _y == 0.0 * u.m and _z == layout_center_data_dict["center_alt"]
+    _lat, _lon, _z = layout._array_center.get_coordinates("mercator")
+    assert _lat.value == pytest.approx(layout_center_data_dict["center_lat"].value, 1.0e-2)
+    assert _lon.value == pytest.approx(layout_center_data_dict["center_lon"].value, 1.0e-2)
+    _E, _N, _z = layout._array_center.get_coordinates("utm")
     assert _E.value == pytest.approx(217609.0, 1.0)
     assert _N.value == pytest.approx(3185067.0, 1.0)
 
 
-def test_initializeCorsikaTelescopeFromFile(corsikaTelescopeDataDict):
+def test_initialize_corsika_telescope_from_file(corsika_telescope_data_dict, args_dict, io_handler):
 
-    layout = LayoutArray(name="testLayout")
-    layout._initializeCorsikaTelescope()
+    layout = LayoutArray(name="test_layout")
+    layout._initialize_corsika_telescope()
 
-    for key, value in corsikaTelescopeDataDict["corsika_sphere_radius"].items():
-        assert value == layout._corsikaTelescope["corsika_sphere_radius"][key]
-    for key, value in corsikaTelescopeDataDict["corsika_sphere_center"].items():
-        assert value == layout._corsikaTelescope["corsika_sphere_center"][key]
-
-
-def test_read_tel_list(cfg_setup, telescopeTestFile):
-
-    layout = LayoutArray(name="testLayout")
-    layout.readTelescopeListFile(telescopeTestFile)
-    layout.convertCoordinates()
-    assert 19 == layout.getNumberOfTelescopes()
-
-    layout_2 = LayoutArray(name="testLayout", telescopeListFile=telescopeTestFile)
-    layout_2.convertCoordinates()
-    assert 19 == layout_2.getNumberOfTelescopes()
+    for key, value in corsika_telescope_data_dict["corsika_sphere_radius"].items():
+        assert value == layout._corsika_telescope["corsika_sphere_radius"][key]
+    for key, value in corsika_telescope_data_dict["corsika_sphere_center"].items():
+        assert value == layout._corsika_telescope["corsika_sphere_center"][key]
 
 
-def test_add_tel(cfg_setup, telescopeTestFile):
+def test_read_tel_list(telescope_test_file):
 
-    layout = LayoutArray(name="testLayout")
-    layout.readTelescopeListFile(telescopeTestFile)
-    ntel_before = layout.getNumberOfTelescopes()
-    layout.addTelescope("LST-05", "corsika", 100.0 * u.m, 50.0 * u.m, 2177.0 * u.m)
-    ntel_after = layout.getNumberOfTelescopes()
+    layout = LayoutArray(name="test_layout")
+    layout.read_telescope_list_file(telescope_test_file)
+    layout.convert_coordinates()
+    assert 19 == layout.get_number_of_telescopes()
+
+    layout_2 = LayoutArray(name="test_layout", telescope_list_file=telescope_test_file)
+    layout_2.convert_coordinates()
+    assert 19 == layout_2.get_number_of_telescopes()
+
+
+def test_add_tel(telescope_test_file):
+
+    layout = LayoutArray(name="test_layout")
+    layout.read_telescope_list_file(telescope_test_file)
+    ntel_before = layout.get_number_of_telescopes()
+    layout.add_telescope("LST-05", "corsika", 100.0 * u.m, 50.0 * u.m, 2177.0 * u.m)
+    ntel_after = layout.get_number_of_telescopes()
     assert ntel_before + 1 == ntel_after
 
-    layout.addTelescope("LST-05", "corsika", 100.0 * u.m, 50.0 * u.m, None, 50.0 * u.m)
-    assert layout._telescopeList[-1].getAltitude().value == pytest.approx(2192.0)
+    layout.add_telescope("LST-05", "corsika", 100.0 * u.m, 50.0 * u.m, None, 50.0 * u.m)
+    assert layout._telescope_list[-1].get_altitude().value == pytest.approx(2192.0)
 
 
-def test_build_layout(cfg_setup, layoutCenterDataDict, corsikaTelescopeDataDict):
+def test_build_layout(
+    layout_center_data_dict, corsika_telescope_data_dict, tmp_test_directory, io_handler
+):
 
     layout = LayoutArray(
         label="test_layout",
         name="LST4",
-        layoutCenterData=layoutCenterDataDict,
-        corsikaTelescopeData=corsikaTelescopeDataDict,
+        layout_center_data=layout_center_data_dict,
+        corsika_telescope_data=corsika_telescope_data_dict,
     )
 
-    layout.addTelescope(
-        telescopeName="LST-01", crsName="corsika", xx=57.5 * u.m, yy=57.5 * u.m, telCorsikaZ=0 * u.m
+    layout.add_telescope(
+        telescope_name="LST-01",
+        crs_name="corsika",
+        xx=57.5 * u.m,
+        yy=57.5 * u.m,
+        tel_corsika_z=0 * u.m,
     )
-    layout.addTelescope(
-        telescopeName="LST-02",
-        crsName="corsika",
+    layout.add_telescope(
+        telescope_name="LST-02",
+        crs_name="corsika",
         xx=-57.5 * u.m,
         yy=57.5 * u.m,
-        telCorsikaZ=0 * u.m,
+        tel_corsika_z=0 * u.m,
     )
-    layout.addTelescope(
-        telescopeName="LST-02",
-        crsName="corsika",
+    layout.add_telescope(
+        telescope_name="LST-02",
+        crs_name="corsika",
         xx=57.5 * u.m,
         yy=-57.5 * u.m,
-        telCorsikaZ=0 * u.m,
+        tel_corsika_z=0 * u.m,
     )
-    layout.addTelescope(
-        telescopeName="LST-04",
-        crsName="corsika",
+    layout.add_telescope(
+        telescope_name="LST-04",
+        crs_name="corsika",
         xx=-57.5 * u.m,
         yy=-57.5 * u.m,
-        telCorsikaZ=0 * u.m,
+        tel_corsika_z=0 * u.m,
     )
 
-    layout.convertCoordinates()
-    layout.printTelescopeList()
-    layout.exportTelescopeList("corsika")
+    layout.convert_coordinates()
+    layout.print_telescope_list()
+    layout.export_telescope_list(crs_name="corsika")
 
     # Building a second layout from the file exported by the first one
     layout_2 = LayoutArray("test_layout_2")
-    layout_2.readTelescopeListFile(layout.telescopeListFile)
+    layout_2.read_telescope_list_file(layout.telescope_list_file)
 
-    assert 4 == layout_2.getNumberOfTelescopes()
-    assert layout_2._arrayCenter.getAltitude().value == pytest.approx(
-        layout._arrayCenter.getAltitude().value, 1.0e-2
+    assert 4 == layout_2.get_number_of_telescopes()
+    assert layout_2._array_center.get_altitude().value == pytest.approx(
+        layout._array_center.get_altitude().value, 1.0e-2
     )
 
 
-def test_converting_center_coordinates(cfg_setup, layoutCenterDataDict, corsikaTelescopeDataDict):
+def test_converting_center_coordinates(layout_center_data_dict, corsika_telescope_data_dict):
 
     layout = LayoutArray(
         label="test_layout",
         name="LST4",
-        layoutCenterData=layoutCenterDataDict,
-        corsikaTelescopeData=corsikaTelescopeDataDict,
+        layout_center_data=layout_center_data_dict,
+        corsika_telescope_data=corsika_telescope_data_dict,
     )
 
-    _lat, _lon, _ = layout._arrayCenter.getCoordinates("mercator")
+    _lat, _lon, _ = layout._array_center.get_coordinates("mercator")
     assert _lat.value == pytest.approx(28.7621661)
     assert _lon.value == pytest.approx(-17.8920302)
 
-    _east, _north, _ = layout._arrayCenter.getCoordinates("utm")
+    _east, _north, _ = layout._array_center.get_coordinates("utm")
     assert _north.value == pytest.approx(3185067.28)
     assert _east.value == pytest.approx(217609.23)
 
-    assert layout._arrayCenter.getAltitude().value == pytest.approx(2177.0)
+    assert layout._array_center.get_altitude().value == pytest.approx(2177.0)
 
 
-def test_getCorsikaInputList(layoutCenterDataDict, corsikaTelescopeDataDict, telescopeTestFile):
-
-    layout = LayoutArray(
-        label="test_layout",
-        name="LST4",
-        layoutCenterData=layoutCenterDataDict,
-        corsikaTelescopeData=corsikaTelescopeDataDict,
-    )
-    layout.addTelescope(
-        telescopeName="LST-01", crsName="corsika", xx=57.5 * u.m, yy=57.5 * u.m, telCorsikaZ=0 * u.m
-    )
-    corsikaInputList = layout.getCorsikaInputList()
-
-    assert corsikaInputList == "TELESCOPE\t 57.500E2\t 57.500E2\t 0.000E2\t 12.500E2\t # LST-01\n"
-
-
-def test_altitudeFromCorsikaZ(cfg_setup, layoutCenterDataDict, corsikaTelescopeDataDict):
+def test_get_corsika_input_list(
+    layout_center_data_dict, corsika_telescope_data_dict, telescope_test_file
+):
 
     layout = LayoutArray(
         label="test_layout",
         name="LST4",
-        layoutCenterData=layoutCenterDataDict,
-        corsikaTelescopeData=corsikaTelescopeDataDict,
+        layout_center_data=layout_center_data_dict,
+        corsika_telescope_data=corsika_telescope_data_dict,
+    )
+    layout.add_telescope(
+        telescope_name="LST-01",
+        crs_name="corsika",
+        xx=57.5 * u.m,
+        yy=57.5 * u.m,
+        tel_corsika_z=0 * u.m,
+    )
+    corsika_input_list = layout.get_corsika_input_list()
+
+    assert corsika_input_list == "TELESCOPE\t 57.500E2\t 57.500E2\t 0.000E2\t 12.500E2\t # LST-01\n"
+
+
+def test_altitude_from_corsika_z(layout_center_data_dict, corsika_telescope_data_dict):
+
+    layout = LayoutArray(
+        label="test_layout",
+        name="LST4",
+        layout_center_data=layout_center_data_dict,
+        corsika_telescope_data=corsika_telescope_data_dict,
     )
 
-    layout.addTelescope(
-        telescopeName="LST-01", crsName="corsika", xx=57.5 * u.m, yy=57.5 * u.m, telCorsikaZ=0 * u.m
+    layout.add_telescope(
+        telescope_name="LST-01",
+        crs_name="corsika",
+        xx=57.5 * u.m,
+        yy=57.5 * u.m,
+        tel_corsika_z=0 * u.m,
     )
 
-    assert layout._altitudeFromCorsikaZ(5.0 * u.m, None, "LST-01").value == pytest.approx(2147.0)
-    assert layout._altitudeFromCorsikaZ(None, 8848.0 * u.m, "LST-01").value == pytest.approx(6706.0)
+    assert layout._altitude_from_corsika_z(5.0 * u.m, None, "LST-01").value == pytest.approx(2147.0)
+    assert layout._altitude_from_corsika_z(None, 8848.0 * u.m, "LST-01").value == pytest.approx(
+        6706.0
+    )
     with pytest.raises(TypeError):
-        layout._altitudeFromCorsikaZ(5.0, None, "LST-01")
+        layout._altitude_from_corsika_z(5.0, None, "LST-01")
