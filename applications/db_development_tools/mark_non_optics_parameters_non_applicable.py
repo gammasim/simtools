@@ -41,39 +41,39 @@ def main():
         required=True,
     )
     parser.add_argument(
-        "--configFile",
+        "--config_file",
         help="gammasim-tools configuration file",
         required=False,
     )
     parser.add_argument(
         "-V",
         "--verbosity",
-        dest="logLevel",
+        dest="log_level",
         action="store",
         default="info",
         help="Log level to print (default is INFO)",
     )
 
     args = parser.parse_args()
-    cfg.setConfigFileName(args.configFile)
+    cfg.set_config_file_name(args.config_file)
 
     logger = logging.getLogger()
-    logger.setLevel(gen.getLogLevelFromUser(args.logLevel))
+    logger.setLevel(gen.get_log_level_from_user(args.log_level))
 
     with open(args.sections, "r") as stream:
-        parameterCatogeries = yaml.safe_load(stream)
+        parameter_catogeries = yaml.safe_load(stream)
 
-    nonOpticCatagories = [
+    non_optic_catagories = [
         "Readout electronics",
         "Trigger",
         "Photon conversion",
         "Camera",
         "Unnecessary",
     ]
-    nonOpticParameters = list()
-    for category in nonOpticCatagories:
-        for parNow in parameterCatogeries[category]:
-            nonOpticParameters.append(parNow)
+    non_optic_parameters = list()
+    for category in non_optic_catagories:
+        for par_now in parameter_catogeries[category]:
+            non_optic_parameters.append(par_now)
 
     versions = [
         "default",
@@ -92,28 +92,28 @@ def main():
 
     db = db_handler.DatabaseHandler()
 
-    for versionNow in versions:
+    for version_now in versions:
         for site in ["North", "South"]:
-            for parNow in nonOpticParameters:
-                db.updateParameterField(
-                    dbName=db.DB_CTA_SIMULATION_MODEL,
+            for par_now in non_optic_parameters:
+                db.update_parameter_field(
+                    db_name=db.DB_CTA_SIMULATION_MODEL,
                     telescope="{}-MST-Structure-D".format(site),
-                    version=versionNow,
-                    parameter=parNow,
+                    version=version_now,
+                    parameter=par_now,
                     field="Applicable",
-                    newValue=False,
+                    new_value=False,
                 )
-            pars = db.readMongoDB(
-                dbName=db.DB_CTA_SIMULATION_MODEL,
-                telescopeModelNameDB="{}-MST-Structure-D".format(site),
-                modelVersion=versionNow,
-                runLocation="",
-                writeFiles=False,
-                onlyApplicable=False,
+            pars = db.read_mongo_db(
+                db_name=db.DB_CTA_SIMULATION_MODEL,
+                telescope_model_name_db="{}-MST-Structure-D".format(site),
+                model_version=version_now,
+                run_location="",
+                write_files=False,
+                only_applicable=False,
             )
-            for parNow in nonOpticParameters:
-                if parNow in pars:
-                    assert pars[parNow]["Applicable"] is False
+            for par_now in non_optic_parameters:
+                if par_now in pars:
+                    assert pars[par_now]["Applicable"] is False
 
 
 if __name__ == "__main__":

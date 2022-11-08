@@ -11,7 +11,7 @@
     submitted (so typically you first run shower simulations, and then the \
     array simulations).
 
-    A configuration file is required. See tests/resources/prodConfigTest.yml \
+    A configuration file is required. See tests/resources/prod_config_test.yml \
     for an example.
 
     The workload management system used is given in the configuration file. \
@@ -28,7 +28,7 @@
     task (str)
         What task to execute. Options:
             simulate (perform simulations),
-            filelist (print list of output files)
+            file_list (print list of output files)
             inspect (plot sim_telarray histograms for quick inspection)
             resources (print quicklook into used computational resources)
     array_only (activation mode)
@@ -47,7 +47,7 @@
 
     .. code-block:: console
 
-        python applications/production.py -t simulate -p tests/resources/prodConfigTest.yml --test
+        python applications/production.py -t simulate -p tests/resources/prod_config_test.yml --test
 
     Running shower simulations.
 """
@@ -57,8 +57,7 @@ from copy import copy
 
 from astropy.io.misc import yaml
 
-import simtools.config as cfg
-import simtools.util.commandline_parser as argparser
+import simtools.configuration as configurator
 import simtools.util.general as gen
 from simtools.simulator import Simulator
 
@@ -79,29 +78,27 @@ def _parse(description=None):
 
     """
 
-    parser = argparser.CommandLineParser(description=description)
-    parser.add_argument(
-        "-p",
+    config = configurator.Configurator(description=description)
+    config.parser.add_argument(
         "--productionconfig",
         help="Simulation configuration file",
         type=str,
         required=True,
     )
-    parser.add_argument(
-        "-t",
+    config.parser.add_argument(
         "--task",
         help=(
             "What task to execute. Options: "
             "simulate (perform simulations),"
-            "filelist (print list of output files),"
+            "file_list (print list of output files),"
             "inspect (plot sim_telarray histograms for quick inspection),"
             "resources (print report of computing resources)"
         ),
         type=str,
         required=True,
-        choices=["simulate", "filelist", "inspect", "resources"],
+        choices=["simulate", "file_list", "inspect", "resources"],
     )
-    parser.add_argument(
+    config.parser.add_argument(
         "--primary",
         help="Primary to be selected from the simulation configuration file.",
         type=str,
@@ -116,7 +113,7 @@ def _parse(description=None):
             "iron",
         ],
     )
-    group = parser.add_mutually_exclusive_group(required=True)
+    group = config.parser.add_mutually_exclusive_group(required=True)
     group.add_argument(
         "--showers_only",
         help="Simulates only showers, no array detection",
@@ -127,20 +124,19 @@ def _parse(description=None):
         help="Simulates only array detection, no showers",
         action="store_true",
     )
-    parser.initialize_default_arguments(add_workflow_config=False)
-    return parser.parse_args()
+    return config.initialize(db_config=True, job_submission=True)
 
 
-def _proccessSimulationConfigFile(configFile, primaryConfig, logger):
+def _proccess_simulation_config_file(config_file, primary_config, logger):
     """
     Read simulation configuration file with details on shower
     and array simulations
 
     Attributes
     ----------
-    configFile: str
+    config_file: str
         Name of simulation configuration file
-    primaryConfig: str
+    primary_config: str
         Name of the primary selected from the configuration file.
 
     Returns
@@ -155,86 +151,96 @@ def _proccessSimulationConfigFile(configFile, primaryConfig, logger):
     """
 
     try:
-        with open(configFile) as file:
-            configData = yaml.load(file)
+        with open(config_file) as file:
+            config_data = yaml.load(file)
     except FileNotFoundError:
-        logger.error("Error loading simulation configuration file from {}".format(configFile))
+        logger.error("Error loading simulation configuration file from {}".format(config_file))
         raise
 
-    label = configData.pop("label", dict())
-    defaultData = configData.pop("default", dict())
-    configShowers = dict()
-    configArrays = dict()
+    label = config_data.pop("label", dict())
+    default_data = config_data.pop("default", dict())
+    config_showers = dict()
+    config_arrays = dict()
 
-    for primary, primaryData in configData.items():
+    for primary, primary_data in config_data.items():
 
-        if primaryConfig is not None and primary != primaryConfig:
+        if primary_config is not None and primary != primary_config:
             continue
 
-        thisDefault = copy(defaultData)
+        this_default = copy(default_data)
 
-        configShowers[primary] = copy(thisDefault.pop("showers", dict()))
-        configArrays[primary] = copy(thisDefault.pop("array", dict()))
+        config_showers[primary] = copy(this_default.pop("showers", dict()))
+        config_arrays[primary] = copy(this_default.pop("array", dict()))
 
         # Grabbing common entries for showers and array
-        for key, value in primaryData.items():
+        for key, value in primary_data.items():
             if key in ["showers", "array"]:
                 continue
-            configShowers[primary][key] = value
-            configArrays[primary][key] = value
+            config_showers[primary][key] = value
+            config_arrays[primary][key] = value
 
         # Grabbing showers entries
-        for key, value in primaryData.get("showers", dict()).items():
-            configShowers[primary][key] = value
-        configShowers[primary]["primary"] = primary
+        for key, value in primary_data.get("showers", dict()).items():
+            config_showers[primary][key] = value
+        config_showers[primary]["primary"] = primary
 
         # Grabbing array entries
-        for key, value in primaryData.get("array", dict()).items():
-            configArrays[primary][key] = value
-        configArrays[primary]["primary"] = primary
+        for key, value in primary_data.get("array", dict()).items():
+            config_arrays[primary][key] = value
+        config_arrays[primary]["primary"] = primary
 
         # Filling in the remaining default keys
-        for key, value in thisDefault.items():
-            configShowers[primary][key] = value
-            configArrays[primary][key] = value
+        for key, value in this_default.items():
+            config_showers[primary][key] = value
+            config_arrays[primary][key] = value
 
-    return label, configShowers, configArrays
+    return label, config_showers, config_arrays
 
 
 def main():
 
-    args = _parse(description=("Air shower and array simulations"))
-
-    cfg.setConfigFileName(args.configFile)
+    args_dict, db_config = _parse(description=("Air shower and array simulations"))
 
     logger = logging.getLogger()
-    logger.setLevel(gen.getLogLevelFromUser(args.logLevel))
+    logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
-    label, showerConfigs, arrayConfigs = _proccessSimulationConfigFile(
-        args.productionconfig, args.primary, logger
+    label, shower_configs, array_configs = _proccess_simulation_config_file(
+        args_dict["productionconfig"], args_dict["primary"], logger
     )
+    if args_dict["label"] is None:
+        args_dict["label"] = label
 
-    showerSimulators = dict()
-    for primary, configData in showerConfigs.items():
-        showerSimulators[primary] = Simulator(
-            label=label, simulator="corsika", configData=configData, test=args.test
+    shower_simulators = dict()
+    for primary, config_data in shower_configs.items():
+        shower_simulators[primary] = Simulator(
+            label=label,
+            simulator="corsika",
+            simulator_source_path=args_dict["simtelpath"],
+            config_data=config_data,
+            submit_command=args_dict["submit_command"],
+            test=args_dict["test"],
         )
 
-    if args.showers_only:
-        for primary, shower in showerSimulators.items():
-            _taskFunction = getattr(shower, args.task)
-            _taskFunction()
+    if args_dict["showers_only"]:
+        for primary, shower in shower_simulators.items():
+            _task_function = getattr(shower, args_dict["task"])
+            _task_function()
 
-    if args.array_only:
-        arraySimulators = dict()
-        for primary, configData in arrayConfigs.items():
-            arraySimulators[primary] = Simulator(
-                label=label, simulator="simtel", configData=configData
+    if args_dict["array_only"]:
+        array_simulators = dict()
+        for primary, config_data in array_configs.items():
+            array_simulators[primary] = Simulator(
+                label=label,
+                simulator="simtel",
+                simulator_source_path=args_dict["simtelpath"],
+                config_data=config_data,
+                submit_command=args_dict["submit_command"],
+                mongo_db_config=db_config,
             )
-        for primary, array in arraySimulators.items():
-            inputList = showerSimulators[primary].getListOfOutputFiles()
-            _taskFunction = getattr(array, args.task)
-            _taskFunction(inputFileList=inputList)
+        for primary, array in array_simulators.items():
+            input_list = shower_simulators[primary].get_list_of_output_files()
+            _task_function = getattr(array, args_dict["task"])
+            _task_function(input_file_list=input_list)
 
 
 if __name__ == "__main__":

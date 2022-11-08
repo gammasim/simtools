@@ -1,30 +1,30 @@
-zenithAngle:
+zenith_angle:
   len: 1
   unit: !astropy.units.Unit {unit: deg}
   default: !astropy.units.Quantity
     value: 20
     unit: !astropy.units.Unit {unit: deg}
   names: ['zenith', 'theta']
-offAxisAngle:
+off_axis_angle:
   len: null
   unit: !astropy.units.Unit {unit: deg}
   default: !astropy.units.Quantity
     value: 0
     unit: !astropy.units.Unit {unit: deg}
   names: ['offaxis', 'offset']
-sourceDistance:
+source_distance:
   len: 1
   unit: !astropy.units.Unit {unit: km}
   default: !astropy.units.Quantity
     value: 10
     unit: !astropy.units.Unit {unit: km}
   names: ['sourcedist', 'srcdist']
-singleMirrorMode:
+single_mirror_mode:
   len: 1
   default: False
-useRandomFocalLength:
+use_random_focal_length:
   len: 1
   default: False
-mirrorNumbers:
+mirror_numbers:
   len: null
   default: 'all'

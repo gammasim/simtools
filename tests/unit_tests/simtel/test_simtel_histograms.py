@@ -2,29 +2,32 @@
 
 import logging
 
-import simtools.io_handler as io
 from simtools.simtel.simtel_histograms import SimtelHistograms
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 
-def test_histograms(cfg_setup):
+def test_histograms(io_handler):
     histogram_files = list()
     histogram_files.append(
-        io.getInputDataFile(
-            fileName="run1_gamma_za20deg_azm0deg-North-Prod5_test-production-5.hdata.zst", test=True
+        io_handler.get_input_data_file(
+            file_name="run1_gamma_za20deg_azm0deg-North-Prod5_test-production-5.hdata.zst",
+            test=True,
         )
     )
     histogram_files.append(
-        io.getInputDataFile(
-            fileName="run2_gamma_za20deg_azm0deg-North-Prod5_test-production-5.hdata.zst", test=True
+        io_handler.get_input_data_file(
+            file_name="run2_gamma_za20deg_azm0deg-North-Prod5_test-production-5.hdata.zst",
+            test=True,
         )
     )
 
-    hists = SimtelHistograms(histogramFiles=histogram_files, test=True)
+    hists = SimtelHistograms(histogram_files=histogram_files, test=True)
 
-    figName = io.getOutputFile(fileName="simtelHistograms.pdf", dirType="plots", test=True)
-    hists.plotAndSaveFigures(figName=figName)
+    fig_name = io_handler.get_output_file(
+        file_name="simtel_histograms.pdf", dir_type="plots", test=True
+    )
+    hists.plot_and_save_figures(fig_name=fig_name)
 
-    assert figName.exists()
+    assert fig_name.exists()

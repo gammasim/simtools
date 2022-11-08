@@ -3,15 +3,14 @@
 import logging
 from pprint import pprint
 
-import simtools.config as cfg
-import simtools.util.commandline_parser as argparser
+import simtools.configuration as configurator
 import simtools.util.general as gen
 from simtools import db_handler
 
 
 def main():
 
-    parser = argparser.CommandLineParser(
+    config = configurator.Configurator(
         description=(
             "Get a parameter entry from DB for a specific telescope. "
             "The application receives a parameter name and optionally a version. "
@@ -19,28 +18,21 @@ def main():
             "If no version is provided, the entries of the last 5 versions are printed."
         )
     )
-    parser.initialize_telescope_model_arguments()
-    parser.add_argument("-p", "--parameter", help="Parameter name", type=str, required=True)
-    parser.initialize_default_arguments()
-
-    args = parser.parse_args()
-    cfg.setConfigFileName(args.configFile)
+    config.parser.add_argument("--parameter", help="Parameter name", type=str, required=True)
+    args_dict, db_config = config.initialize(db_config=True, telescope_model=True)
 
     logger = logging.getLogger()
-    logger.setLevel(gen.getLogLevelFromUser(args.logLevel))
+    logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
-    if not cfg.get("useMongoDB"):
-        raise ValueError("This application works only with MongoDB and you asked not to use it")
+    db = db_handler.DatabaseHandler(mongo_db_config=db_config)
 
-    db = db_handler.DatabaseHandler()
-
-    if args.model_version == "all":
+    if args_dict["model_version"] == "all":
         raise NotImplementedError("Printing last 5 versions is not implemented yet.")
     else:
-        version = args.model_version
-    pars = db.getModelParameters(args.site, args.telescope, version)
+        version = args_dict["model_version"]
+    pars = db.get_model_parameters(args_dict["site"], args_dict["telescope"], version)
     print()
-    pprint(pars[args.parameter])
+    pprint(pars[args_dict["parameter"]])
     print()
 
 
