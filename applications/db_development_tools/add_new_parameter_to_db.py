@@ -16,6 +16,7 @@ import simtools.config as cfg
 import simtools.util.commandline_parser as argparser
 import simtools.util.general as gen
 from simtools import db_handler
+from simtools.util import names
 
 
 def main():
@@ -26,36 +27,53 @@ def main():
     parser.initialize_default_arguments(add_workflow_config=False)
 
     args = parser.parse_args()
-    cfg.setConfigFileName(args.configFile)
+    cfg.set_config_file_name(args.config_file)
 
     logger = logging.getLogger()
-    logger.setLevel(gen.getLogLevelFromUser(args.logLevel))
+    logger.setLevel(gen.get_log_level_from_user(args.log_level))
 
-    epsgs = [32628, 32719]
+    # epsgs = [32628, 32719]
+    parameter = {"camera_filter_incidence_angle": "sst_photon_incidence_angle_camera_window.ecsv"}
 
     db = db_handler.DatabaseHandler()
 
-    for site, epsgSite in zip(["North", "South"], epsgs):
-        allVersions = db.getAllVersions(
-            dbName=db.DB_CTA_SIMULATION_MODEL,
-            site=site,
-            parameter="altitude",
-            collectionName="sites",
-        )
-        for versionNow in allVersions:
-            db.addNewParameter(
-                dbName=db.DB_CTA_SIMULATION_MODEL,
-                site=site,
-                parameter="EPSG",
-                version=versionNow,
-                value=epsgSite,
-                collectionName="sites",
-                Applicable=True,
-                Type=str(int),
-                File=False,
+    telescopes = [
+        "South-SST-Structure-D",
+        "South-SST-Camera-D",
+        "South-SST-ASTRI-D",
+    ]
+
+    for telescope_now in telescopes:
+        for par_now, par_value in parameter.items():
+            all_versions = db.get_all_versions(
+                db_name=db.DB_CTA_SIMULATION_MODEL,
+                telescope_model_name="-".join(telescope_now.split("-")[1:]),
+                site=names.get_site_from_telescope_name(telescope_now),
+                parameter="camera_config_file",  # Just a random parameter to get the versions
+                collection_name="telescopes",
             )
-            sitePars = db.getSiteParameters(site, versionNow)
-            assert sitePars["EPSG"]["Value"] == epsgSite
+            for version_now in all_versions:
+                db.add_new_parameter(
+                    db_name=db.DB_CTA_SIMULATION_MODEL,
+                    telescope=telescope_now,
+                    parameter=par_now,
+                    version=version_now,
+                    value=par_value,
+                    collection_name="telescopes",
+                    Applicable=True,
+                    Type=str(str),
+                    File=True,
+                    file_prefix="./",
+                )
+                pars = db.read_mongo_db(
+                    db_name=db.DB_CTA_SIMULATION_MODEL,
+                    telescope_model_name_db=telescope_now,
+                    model_version=version_now,
+                    run_location="./",
+                    collection_name="telescopes",
+                    write_files=False,
+                )
+                assert pars[par_now]["Value"] == par_value
 
 
 if __name__ == "__main__":

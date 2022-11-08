@@ -1,6 +1,6 @@
 site: North
-layoutName: test-layout
-modelVersion: Prod5
+layout_name: test-layout
+model_version: Prod5
 default:
     LST: '1'
     MST: FlashCam-D

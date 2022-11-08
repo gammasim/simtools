@@ -1,7 +1,8 @@
 def top_level_reference_schema():
     """
-    Return datamodel reference schema
-    derived from CTA Top-Level Data Model
+    Reference schema following the CTA Top-Level Data Model.
+
+    This metadata schema is used for gammasim-tools data products.
 
     Returns
     -------
@@ -24,6 +25,7 @@ def top_level_reference_schema():
                     "MODEL": {"NAME": "simpipe-table", "VERSION": "0.1.0", "URL": None},
                 },
                 "FORMAT": None,
+                "FILENAME": None,
                 "VALID": {"START": None, "END": None},
             },
             "INSTRUMENT": {"SITE": None, "CLASS": None, "TYPE": None, "SUBTYPE": None, "ID": None},
@@ -55,14 +57,14 @@ def top_level_reference_schema():
     }
 
 
-def user_input_reference_schema():
+def metadata_input_reference_schema():
     """
-    Return datamodel reference schema
-    for user input
+    Reference data model scheme for input metadata.
+    Describes metadata provided for input to gammasim-tools applications.
 
     Returns
     -------
-    dict with user input reference schema
+    dict with input reference schema
 
 
     """
@@ -89,12 +91,43 @@ def user_input_reference_schema():
             "DESCRIPTION": {"type": "str", "required": True},
             "CREATION_TIME": {"type": "datetime", "required": True},
             "FORMAT": {"type": "str", "required": False, "default": "ecsv"},
-            "DATA": {"type": "str", "required": True},
             "VALID": {
                 "START": {"type": "datetime", "required": False, "default": "None"},
                 "END": {"type": "datetime", "required": False, "default": "None"},
             },
             "DOCUMENT": {"type": "list", "required": False, "default": "None"},
             "ASSOCIATION": {"type": "instrumentlist", "required": True},
+        },
+    }
+
+
+def workflow_configuration_schema():
+    """
+    Reference schmema for gammasim-tools workflow configuration.
+
+    Returns
+    -------
+    dict with workflow configuration
+
+    """
+
+    return {
+        "reference": {"version": "0.1.0"},
+        "activity": {
+            "name": None,
+            "id": None,
+            "description": None,
+        },
+        "datamodel": {
+            "inputschema": None,
+        },
+        "product": {
+            "description": None,
+            "format": None,
+            "filename": None,
+        },
+        "configuration": {
+            "log_level": "INFO",
+            "test": False,
         },
     }

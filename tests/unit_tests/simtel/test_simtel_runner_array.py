@@ -6,7 +6,6 @@ from pathlib import Path
 import astropy.units as u
 import pytest
 
-import simtools.io_handler as io
 from simtools.model.array_model import ArrayModel
 from simtools.simtel.simtel_runner_array import SimtelRunnerArray
 
@@ -15,42 +14,45 @@ logger.setLevel(logging.DEBUG)
 
 
 @pytest.fixture
-def arrayConfigData():
+def array_config_data():
     return {
         "site": "North",
-        "layoutName": "1LST",
-        "modelVersion": "Prod5",
+        "layout_name": "1LST",
+        "model_version": "Prod5",
         "default": {"LST": "1"},
     }
 
 
 @pytest.fixture
-def arrayModel(arrayConfigData, set_db):
-    arrayModel = ArrayModel(label="test-lst-array", arrayConfigData=arrayConfigData)
-    return arrayModel
+def array_model(array_config_data, io_handler, db_config):
+    array_model = ArrayModel(
+        label="test-lst-array", array_config_data=array_config_data, mongo_db_config=db_config
+    )
+    return array_model
 
 
 @pytest.fixture
-def simtelRunner(arrayModel):
-    simtelRunner = SimtelRunnerArray(
-        arrayModel=arrayModel,
-        configData={
+def simtel_runner(array_model, simtelpath):
+    simtel_runner = SimtelRunnerArray(
+        array_model=array_model,
+        simtel_source_path=simtelpath,
+        config_data={
             "primary": "proton",
-            "zenithAngle": 20 * u.deg,
-            "azimuthAngle": 0 * u.deg,
+            "zenith_angle": 20 * u.deg,
+            "azimuth_angle": 0 * u.deg,
         },
     )
-    return simtelRunner
+    return simtel_runner
 
 
 @pytest.fixture
-def corsikaFile():
-    corsikaFile = io.getInputDataFile(
-        fileName="run1_proton_za20deg_azm0deg-North-1LST_trigger_rates.corsika.zst", test=True
+def corsika_file(io_handler):
+    corsika_file = io_handler.get_input_data_file(
+        file_name="run1_proton_za20deg_azm0deg-North-1LST_trigger_rates.corsika.zst", test=True
     )
-    return corsikaFile
+    return corsika_file
 
 
-def test_run_script(cfg_setup, simtelRunner, corsikaFile):
-    script = simtelRunner.getRunScript(runNumber=1, inputFile=corsikaFile)
+def test_run_script(simtel_runner, corsika_file):
+    script = simtel_runner.get_run_script(run_number=1, input_file=corsika_file)
     assert Path(script).exists()
