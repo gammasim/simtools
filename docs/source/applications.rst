@@ -35,8 +35,10 @@ List of Applications
 * `add_file_to_db`_
 * `compare_cumulative_psf`_
 * `derive_mirror_rnda`_
+* `get_file_from_db`_
 * `get_parameter`_
 * `make_regular_arrays`_
+* `plot_simtel_histograms`_
 * `print_array_elements`_
 * `produce_array_config`_
 * `production`_
@@ -68,6 +70,11 @@ derive_mirror_rnda
 .. automodule:: derive_mirror_rnda
    :members:
 
+get_file_from_db
+==================
+
+.. automodule:: get_file_from_db
+   :members:
 
 get_parameter
 =============
