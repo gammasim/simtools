@@ -6,8 +6,8 @@
     This application adds a file to the DB.
 
     The name and location of the file are required.
-    This application should complement the ones for updating parameters \
-    and adding entries to the DB.
+    This application should complement the ones for updating parameters, \
+    adding entries to the DB and getting file from the DB.
 
     Command line arguments
     ----------------------
