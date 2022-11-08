@@ -4,33 +4,21 @@ import logging
 
 import pytest
 
-from simtools.model.telescope_model import TelescopeModel
-
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 
-@pytest.fixture
-def telescope_model(set_db):
-    telescopeModel = TelescopeModel(
-        site="North",
-        telescopeModelName="LST-1",
-        modelVersion="Prod5",
-        label="test-telescope-model",
-    )
-    telescopeModel.exportModelFiles()
-    return telescopeModel
+def test_get_number_of_pixels(telescope_model_lst):
+
+    telescope_model_lst.export_model_files()
+    assert telescope_model_lst.camera.get_number_of_pixels() == 1855  # Value for LST
 
 
-def test_get_number_of_pixels(telescope_model):
+def test_pixel_solid_angle(telescope_model_lst):
 
-    assert telescope_model.camera.getNumberOfPixels() == 1855  # Value for LST
+    tel_model = telescope_model_lst
+    telescope_model_lst.export_model_files()
+    pix_solid_angle = tel_model.camera.get_pixel_active_solid_angle()
+    logger.debug(f"Pixel solid angle is {pix_solid_angle}")
 
-
-def test_pixel_solid_angle(telescope_model):
-
-    telModel = telescope_model
-    pixSolidAngle = telModel.camera.getPixelActiveSolidAngle()
-    logger.debug(f"Pixel solid angle is {pixSolidAngle}")
-
-    assert pixSolidAngle * 1e6 == pytest.approx(2.43, 0.01)  # Value for LST
+    assert pix_solid_angle * 1e6 == pytest.approx(2.43, 0.01)  # Value for LST

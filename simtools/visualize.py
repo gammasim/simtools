@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 from astropy.table import QTable
 from cycler import cycler
 
-__all__ = ["setStyle", "plot1D", "plotTable"]
+__all__ = ["set_style", "plot_1D", "plot_table"]
 
 COLORS = dict()
 COLORS["classic"] = [
@@ -103,7 +103,7 @@ LINES = [
 ]
 
 
-def _addUnit(title, array):
+def _add_unit(title, array):
     """
     A function to add a unit to "title" (presumably an axis title).
     The unit is extracted from the unit field of the array, in case array is an astropy quantity.
@@ -142,7 +142,7 @@ def _addUnit(title, array):
     return "{}{}".format(title, unit)
 
 
-def setStyle(palette="default", bigPlot=False):
+def set_style(palette="default", big_plot=False):
     """
     A function to set the plotting style as part of an effort to
     homogenize plot style across the framework.
@@ -163,7 +163,7 @@ def setStyle(palette="default", bigPlot=False):
     Parameters
     ----------
     palette: str
-    bigPlot: bool
+    big_plot: bool
 
     Raises
     ------
@@ -173,13 +173,13 @@ def setStyle(palette="default", bigPlot=False):
     if palette not in COLORS:
         raise KeyError("palette must be one of {}".format(", ".join(COLORS)))
 
-    fontsize = {"default": 17, "bigPlot": 30}
-    markersize = {"default": 8, "bigPlot": 18}
-    plotSize = "default"
-    if bigPlot:
-        plotSize = "bigPlot"
+    fontsize = {"default": 17, "big_plot": 30}
+    markersize = {"default": 8, "big_plot": 18}
+    plot_size = "default"
+    if big_plot:
+        plot_size = "big_plot"
 
-    plt.rc("lines", linewidth=2, markersize=markersize[plotSize])
+    plt.rc("lines", linewidth=2, markersize=markersize[plot_size])
     plt.rc(
         "axes",
         prop_cycle=(
@@ -188,21 +188,21 @@ def setStyle(palette="default", bigPlot=False):
     )
     plt.rc(
         "axes",
-        titlesize=fontsize[plotSize],
-        labelsize=fontsize[plotSize],
+        titlesize=fontsize[plot_size],
+        labelsize=fontsize[plot_size],
         labelpad=5,
         grid=True,
         axisbelow=True,
     )
-    plt.rc("xtick", labelsize=fontsize[plotSize])
-    plt.rc("ytick", labelsize=fontsize[plotSize])
+    plt.rc("xtick", labelsize=fontsize[plot_size])
+    plt.rc("ytick", labelsize=fontsize[plot_size])
     plt.rc("legend", loc="best", shadow=False, fontsize="medium")
-    plt.rc("font", family="serif", size=fontsize[plotSize])
+    plt.rc("font", family="serif", size=fontsize[plot_size])
 
     return
 
 
-def getColors(palette="default"):
+def get_colors(palette="default"):
     """
     Get the colour list of the palette requested.
     If no palette is provided, the default is returned.
@@ -226,7 +226,7 @@ def getColors(palette="default"):
     return COLORS[palette]
 
 
-def getMarkers():
+def get_markers():
     """
     Get the marker list used in this module.
 
@@ -238,7 +238,7 @@ def getMarkers():
     return MARKERS
 
 
-def getLines():
+def get_lines():
     """
     Get the line style list used in this module.
 
@@ -250,7 +250,7 @@ def getLines():
     return LINES
 
 
-def plot1D(data, **kwargs):
+def plot_1D(data, **kwargs):
     """
     Produce a high contrast one dimensional plot from multiple data sets.
     A ratio plot can be added at the bottom to allow easy comparison.
@@ -267,22 +267,22 @@ def plot1D(data, **kwargs):
           and will be used in the legend.
     **kwargs:
         * palette: string
-          Choose a colour palette (see setStyle for additional information).
+          Choose a colour palette (see set_style for additional information).
         * title: string
           Set a plot title.
-        * npLegend: bool
+        * np_legend: bool
           Do not print a legend for the plot.
-        * bigPlot: bool
+        * big_plot: bool
           Increase marker and font sizes (like in a wide light curve).
-        * noMarkers: bool
+        * no_markers: bool
           Do not print markers.
-        * emptyMarkers: bool
+        * empty_markers: bool
           Print empty (hollow) markers
-        * plotRatio: bool
+        * plot_ratio: bool
           Add a ratio plot at the bottom. The first entry in the data dictionary
           is used as the reference for the ratio.
           If data dictionary is not an OrderedDict, the reference will be random.
-        * plotDifference: bool
+        * plot_difference: bool
           Add a difference plot at the bottom. The first entry in the data dictionary
           is used as the reference for the difference.
           If data dictionary is not an OrderedDict, the reference will be random.
@@ -296,41 +296,41 @@ def plot1D(data, **kwargs):
 
     palette = kwargs.get("palette", "default")
     kwargs.pop("palette", None)
-    bigPlot = kwargs.get("bigPlot", False)
-    kwargs.pop("bigPlot", None)
+    big_plot = kwargs.get("big_plot", False)
+    kwargs.pop("big_plot", None)
     title = kwargs.get("title", "")
     kwargs.pop("title", None)
-    noLegend = kwargs.get("noLegend", False)
-    kwargs.pop("noLegend", None)
-    noMarkers = kwargs.get("noMarkers", False)
-    kwargs.pop("noMarkers", None)
-    emptyMarkers = kwargs.get("emptyMarkers", False)
-    kwargs.pop("emptyMarkers", None)
+    no_legend = kwargs.get("no_legend", False)
+    kwargs.pop("no_legend", None)
+    no_markers = kwargs.get("no_markers", False)
+    kwargs.pop("no_markers", None)
+    empty_markers = kwargs.get("empty_markers", False)
+    kwargs.pop("empty_markers", None)
 
-    if noMarkers:
+    if no_markers:
         kwargs["marker"] = "None"
         kwargs["linewidth"] = 4
-    if emptyMarkers:
+    if empty_markers:
         kwargs["markerfacecolor"] = "None"
-        kwargs.pop("emptyMarkers", None)
+        kwargs.pop("empty_markers", None)
 
-    setStyle(palette, bigPlot)
+    set_style(palette, big_plot)
 
     if not isinstance(data, dict):
-        dataDict = dict()
-        dataDict["_default"] = data
+        data_dict = dict()
+        data_dict["_default"] = data
     else:
-        dataDict = data
+        data_dict = data
 
-    plotRatio = kwargs.get("plotRatio", False)
-    kwargs.pop("plotRatio", None)
-    plotDifference = kwargs.get("plotDifference", False)
-    kwargs.pop("plotDifference", None)
-    if plotRatio or plotDifference:
-        if len(dataDict) < 2:
+    plot_ratio = kwargs.get("plot_ratio", False)
+    kwargs.pop("plot_ratio", None)
+    plot_difference = kwargs.get("plot_difference", False)
+    kwargs.pop("plot_difference", None)
+    if plot_ratio or plot_difference:
+        if len(data_dict) < 2:
             raise ValueError("Asked to plot a ratio or difference with just one set of data")
 
-    if plotRatio or plotDifference:
+    if plot_ratio or plot_difference:
         gs = gridspec.GridSpec(2, 1, height_ratios=[3, 1])
         fig = plt.figure(figsize=(8, 8))
     else:
@@ -344,58 +344,58 @@ def plot1D(data, **kwargs):
     plt.subplot(gs[0])
     ax1 = plt.gca()
 
-    for label, dataNow in dataDict.items():
-        assert len(dataNow.dtype.names) == 2, "Input array must have two columns with titles."
-        xTitle, yTitle = dataNow.dtype.names[0], dataNow.dtype.names[1]
-        xTitleUnit = _addUnit(xTitle, dataNow[xTitle])
-        yTitleUnit = _addUnit(yTitle, dataNow[yTitle])
-        plt.plot(dataNow[xTitle], dataNow[yTitle], label=label, **kwargs)
+    for label, data_now in data_dict.items():
+        assert len(data_now.dtype.names) == 2, "Input array must have two columns with titles."
+        x_title, y_title = data_now.dtype.names[0], data_now.dtype.names[1]
+        x_title_unit = _add_unit(x_title, data_now[x_title])
+        y_title_unit = _add_unit(y_title, data_now[y_title])
+        plt.plot(data_now[x_title], data_now[y_title], label=label, **kwargs)
 
-    if plotRatio or plotDifference:
+    if plot_ratio or plot_difference:
         gs.update(hspace=0.02)
     else:
-        plt.xlabel(xTitleUnit)
-    plt.ylabel(yTitleUnit)
+        plt.xlabel(x_title_unit)
+    plt.ylabel(y_title_unit)
 
     if len(title) > 0:
         plt.title(title, y=1.02)
-    if "_default" not in list(dataDict.keys()) and not noLegend:
+    if "_default" not in list(data_dict.keys()) and not no_legend:
         plt.legend()
-    if not (plotRatio or plotDifference):
+    if not (plot_ratio or plot_difference):
         plt.tight_layout()
 
     ##########################################################################################
     # Plot a ratio
     ##########################################################################################
 
-    if plotRatio or plotDifference:
+    if plot_ratio or plot_difference:
         plt.subplot(gs[1], sharex=ax1)
         # In order to advance the cycler one color/style,
         # so the colors stay consistent in the ratio, plot null data first.
         plt.plot([], [])
 
         # Use the first entry as the reference for the ratio.
-        # If dataDict is not an OrderedDict, the reference will be random.
-        dataRefName = next(iter(dataDict))
-        for label, dataNow in dataDict.items():
-            if label == dataRefName:
+        # If data_dict is not an OrderedDict, the reference will be random.
+        data_ref_name = next(iter(data_dict))
+        for label, data_now in data_dict.items():
+            if label == data_ref_name:
                 continue
             else:
-                xTitle, yTitle = dataNow.dtype.names[0], dataNow.dtype.names[1]
-                xTitleUnit = _addUnit(xTitle, dataNow[xTitle])
-                if plotRatio:
-                    yValues = dataNow[yTitle] / dataDict[dataRefName][yTitle]
+                x_title, y_title = data_now.dtype.names[0], data_now.dtype.names[1]
+                x_title_unit = _add_unit(x_title, data_now[x_title])
+                if plot_ratio:
+                    y_values = data_now[y_title] / data_dict[data_ref_name][y_title]
                 else:
-                    yValues = dataNow[yTitle] - dataDict[dataRefName][yTitle]
-                plt.plot(dataNow[xTitle], yValues, **kwargs)
+                    y_values = data_now[y_title] - data_dict[data_ref_name][y_title]
+                plt.plot(data_now[x_title], y_values, **kwargs)
 
-        plt.xlabel(xTitleUnit)
-        yTitleRatio = "Ratio to {}".format(dataRefName)
-        if len(yTitleRatio) > 20:
-            yTitleRatio = "Ratio"
-        if plotDifference:
-            yTitleRatio = "Difference to {}".format(dataRefName)
-        plt.ylabel(yTitleRatio)
+        plt.xlabel(x_title_unit)
+        y_title_ratio = "Ratio to {}".format(data_ref_name)
+        if len(y_title_ratio) > 20:
+            y_title_ratio = "Ratio"
+        if plot_difference:
+            y_title_ratio = "Difference to {}".format(data_ref_name)
+        plt.ylabel(y_title_ratio)
 
         ylim = plt.gca().get_ylim()
         nbins = min(int((ylim[1] - ylim[0]) / 0.05 + 1), 6)
@@ -404,7 +404,7 @@ def plot1D(data, **kwargs):
     return fig
 
 
-def plotTable(table, yTitle, **kwargs):
+def plot_table(table, y_title, **kwargs):
     """
     Produce a high contrast one dimensional plot from the data in an astropy.Table.
     A ratio plot can be added at the bottom to allow easy comparison.
@@ -418,21 +418,21 @@ def plotTable(table, yTitle, **kwargs):
            The first column of the table is the x-axis and the second column is the y-axis.
            Any additional columns will be treated as additional data to plot.
            The column titles are used in the legend (except for the first column).
-    yTitle: str
+    y_title: str
            The y-axis title.
 
     **kwargs:
-        * palette: choose a colour palette (see setStyle for additional information).
+        * palette: choose a colour palette (see set_style for additional information).
         * title: set a plot title.
-        * noLegend: do not print a legend for the plot.
-        * bigPlot: increase marker and font sizes (like in a wide light curve).
-        * noMarkers: do not print markers.
-        * emptyMarkers: print empty (hollow) markers
-        * plotRatio: bool
+        * no_legend: do not print a legend for the plot.
+        * big_plot: increase marker and font sizes (like in a wide light curve).
+        * no_markers: do not print markers.
+        * empty_markers: print empty (hollow) markers
+        * plot_ratio: bool
           Add a ratio plot at the bottom. The first entry in the data dictionary
           is used as the reference for the ratio.
           If data dictionary is not an OrderedDict, the reference will be random.
-        * plotDifference: bool
+        * plot_difference: bool
           Add a difference plot at the bottom. The first entry in the data dictionary
           is used as the reference for the difference.
           If data dictionary is not an OrderedDict, the reference will be random.
@@ -447,15 +447,15 @@ def plotTable(table, yTitle, **kwargs):
     if len(table.keys()) < 2:
         raise ValueError("Table has to have at least two columns")
 
-    xAxis = table.keys()[0]
-    dataDict = OrderedDict()
+    x_axis = table.keys()[0]
+    data_dict = OrderedDict()
     for column in table.keys()[1:]:
-        dataDict[column] = QTable([table[xAxis], table[column]], names=[xAxis, yTitle])
+        data_dict[column] = QTable([table[x_axis], table[column]], names=[x_axis, y_title])
 
-    return plot1D(dataDict, **kwargs)
+    return plot_1D(data_dict, **kwargs)
 
 
-def plotHist2D(data, **kwargs):
+def plot_hist_2D(data, **kwargs):
     """
     Produce a two dimensional histogram plot.
     Any option that can be changed after plotting (e.g., axes limits, log scale, etc.) should be
@@ -484,7 +484,7 @@ def plotHist2D(data, **kwargs):
         title = ""
 
     # Set default style since the usual options do not affect 2D plots (for now).
-    setStyle()
+    set_style()
 
     gs = gridspec.GridSpec(1, 1)
     fig = plt.figure(figsize=(8, 6))
@@ -495,13 +495,13 @@ def plotHist2D(data, **kwargs):
 
     plt.subplot(gs[0])
     assert len(data.dtype.names) == 2, "Input array must have two columns with titles."
-    xTitle, yTitle = data.dtype.names[0], data.dtype.names[1]
-    xTitleUnit = _addUnit(xTitle, data[xTitle])
-    yTitleUnit = _addUnit(yTitle, data[yTitle])
-    plt.hist2d(data[xTitle], data[yTitle], cmap=cmap, **kwargs)
+    x_title, y_title = data.dtype.names[0], data.dtype.names[1]
+    x_title_unit = _add_unit(x_title, data[x_title])
+    y_title_unit = _add_unit(y_title, data[y_title])
+    plt.hist2d(data[x_title], data[y_title], cmap=cmap, **kwargs)
 
-    plt.xlabel(xTitleUnit)
-    plt.ylabel(yTitleUnit)
+    plt.xlabel(x_title_unit)
+    plt.ylabel(y_title_unit)
 
     plt.gca().set_aspect("equal", adjustable="datalim")
 

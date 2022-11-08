@@ -11,12 +11,12 @@
 
     Command line arguments
     ----------------------
-    fileName (str or list of str, required)
+    file_name (str or list of str, required)
         Name of the file to upload including the full path. \
         A list of files is also allowed, in which case only one -f is necessary, \
         i.e., python applications/add_file_to_db.py -f file_1.dat file_2.dat file_3.dat \
         If no path is given, the file is assumed to be in the CWD.
-    directory (str, required if fileName isn't given)
+    input_path (str, required if file_name is not given)
         A directory with files to upload to the DB. \
         All files in the directory with a predefined list of extensions will be uploaded.
     db (str)
@@ -31,19 +31,18 @@
 
     .. code-block:: console
 
-        python applications/add_file_to_db.py -f data/data-to-upload/test-data.dat
+        python applications/add_file_to_db.py --file_name data/data-to-upload/test-data.dat
 """
 
 import logging
 from pathlib import Path
 
-import simtools.config as cfg
-import simtools.util.commandline_parser as argparser
+import simtools.configuration as configurator
 import simtools.util.general as gen
 from simtools import db_handler
 
 
-def _userConfirm():
+def _user_confirm():
     """
     Ask the user to enter y or n (case-insensitive).
 
@@ -54,96 +53,93 @@ def _userConfirm():
 
     answer = ""
     while answer not in ["y", "n"]:
-        answer = input("Is this OK? [y/n]").lower()
-
-    return answer == "y"
+        try:
+            answer = input("Is this OK? [y/n]").lower()
+            return answer == "y"
+        except EOFError:
+            return False
 
 
 def main():
 
-    db = db_handler.DatabaseHandler()
+    _db_tmp = db_handler.DatabaseHandler(mongo_db_config=None)
 
-    parser = argparser.CommandLineParser(description=("Add a file or files to the DB."))
-    group = parser.add_mutually_exclusive_group(required=True)
+    config = configurator.Configurator(
+        label="Add file to the DB.",
+        description="python applications/add_file_to_db.py --file_name file_1.dat file_2.dat",
+    )
+    group = config.parser.add_mutually_exclusive_group(required=True)
     group.add_argument(
-        "-f",
-        "--fileName",
+        "--file_name",
         help=(
             "The file name to upload. "
             "A list of files is also allowed, in which case only one -f is necessary, "
-            "i.e., python applications/add_file_to_db.py -f file_1.dat file_2.dat file_3.dat "
-            "If no path is given, the file is assumed to be in the CWD."
+            "i.e., python applications/add_file_to_db.py --file_name file_1.dat file_2.dat "
+            "file_3.dat. If no path is given, the file is assumed to be in the CWD."
         ),
         type=str,
         nargs="+",
     )
     group.add_argument(
-        "-d",
-        "--directory",
+        "--input_path",
         help=(
             "A directory with files to upload to the DB. "
             "All files in the directory with the following extensions "
-            "will be uploaded: {}".format(", ".join(db.ALLOWED_FILE_EXTENSIONS))
+            "will be uploaded: {}".format(", ".join(_db_tmp.ALLOWED_FILE_EXTENSIONS))
         ),
-        type=str,
+        type=Path,
     )
-    parser.add_argument(
-        "-db",
-        dest="dbToInsertTo",
+    config.parser.add_argument(
+        "--db",
         type=str,
-        default=db.DB_TABULATED_DATA,
+        default=_db_tmp.DB_TABULATED_DATA,
         choices=[
-            db.DB_TABULATED_DATA,
-            db.DB_DERIVED_VALUES,
-            db.DB_REFERENCE_DATA,
+            _db_tmp.DB_TABULATED_DATA,
+            _db_tmp.DB_DERIVED_VALUES,
+            _db_tmp.DB_REFERENCE_DATA,
             "sandbox",
             "test-data",
         ],
-        help=(
-            "The DB to insert the files to. "
-            'The choices are {0} or "sandbox", '
-            "the default is {0}".format(db.DB_TABULATED_DATA)
-        ),
+        help=("The database to insert the files to."),
     )
-    parser.initialize_default_arguments()
-    args = parser.parse_args()
-    cfg.setConfigFileName(args.configFile)
+    args_dict, db_config = config.initialize(paths=False, db_config=True)
 
     logger = logging.getLogger()
-    logger.setLevel(gen.getLogLevelFromUser(args.logLevel))
+    logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
-    filesToInsert = list()
-    if args.fileName is not None:
-        for fileNow in args.fileName:
-            if Path(fileNow).suffix in db.ALLOWED_FILE_EXTENSIONS:
-                filesToInsert.append(fileNow)
+    db = db_handler.DatabaseHandler(mongo_db_config=db_config)
+
+    files_to_insert = list()
+    if args_dict.get("file_name", None) is not None:
+        for file_now in args_dict["file_name"]:
+            if Path(file_now).suffix in db.ALLOWED_FILE_EXTENSIONS:
+                files_to_insert.append(file_now)
             else:
                 logger.warning(
                     "The file {} will not be uploaded to the DB because its extension is not "
-                    "in the allowed extension list: {}".format(fileNow, db.ALLOWED_FILE_EXTENSIONS)
+                    "in the allowed extension list: {}".format(file_now, db.ALLOWED_FILE_EXTENSIONS)
                 )
     else:
-        for extNow in db.ALLOWED_FILE_EXTENSIONS:
-            filesToInsert.extend(Path(args.directory).glob("*{}".format(extNow)))
+        for ext_now in db.ALLOWED_FILE_EXTENSIONS:
+            files_to_insert.extend(Path(args_dict["input_path"]).glob("*{}".format(ext_now)))
 
     plural = "s"
-    if len(filesToInsert) < 1:
+    if len(files_to_insert) < 1:
         raise ValueError("No files were provided to upload")
-    elif len(filesToInsert) == 1:
+    elif len(files_to_insert) == 1:
         plural = ""
     else:
         pass
 
-    print("Should I insert the following file{} to the {} DB?:\n".format(plural, args.dbToInsertTo))
-    print(*filesToInsert, sep="\n")
+    print(f"Should the following file{plural} be inserted to the {args_dict['db']} DB?:\n")
+    print(*files_to_insert, sep="\n")
     print()
-    if _userConfirm():
-        db.insertFilesToDB(filesToInsert, args.dbToInsertTo)
-        logger.info("File{} inserted to {} DB".format(plural, args.dbToInsertTo))
+    if _user_confirm():
+        for file_to_insert_now in files_to_insert:
+            db.insert_file_to_db(file_to_insert_now, args_dict["db"])
+            logger.info("File {} inserted to {} DB".format(file_to_insert_now, args_dict["db"]))
     else:
-        logger.info(
-            "Aborted, did not insert the file{} to the {} DB".format(plural, args.dbToInsertTo)
-        )
+        logger.info("Aborted, did not insert file {} to the {} DB".format(plural, args_dict["db"]))
 
 
 if __name__ == "__main__":

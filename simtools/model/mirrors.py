@@ -22,24 +22,24 @@ class Mirrors:
         3=other hex.)
     diameter: float
         Single diameter in cm.
-    numberOfMirrors: int
+    number_of_mirrors: int
         Number of mirrors.
 
     Methods
     -------
-    readMirrorList(mirrorListFile)
+    read_mirror_list(mirror_list_file)
         Read the mirror list and store the data.
-    plotMirrorLayout()
+    plot_mirror_layout()
         Plot the mirror layout (to be implemented).
     """
 
-    def __init__(self, mirrorListFile):
+    def __init__(self, mirror_list_file):
         """
         Mirrors.
 
         Parameters
         ----------
-        mirrorListFile: str
+        mirror_list_file: str
             mirror list in sim_telarray or ecsv format (with
             panel focal length only)
         """
@@ -49,12 +49,12 @@ class Mirrors:
         self._mirrors = dict()
         self.diameter = None
         self.shape = None
-        self.numberOfMirrors = 0
+        self.number_of_mirrors = 0
 
-        self._mirrorListFile = mirrorListFile
-        self._readMirrorList()
+        self._mirror_list_file = mirror_list_file
+        self._read_mirror_list()
 
-    def _readMirrorList(self):
+    def _read_mirror_list(self):
         """
         Read the mirror lists from disk and store the data
 
@@ -63,12 +63,12 @@ class Mirrors:
 
         """
 
-        if str(self._mirrorListFile).find("ecsv") > 0:
-            self._readMirrorList_from_ecsv()
+        if str(self._mirror_list_file).find("ecsv") > 0:
+            self._read_mirror_list_from_ecsv()
         else:
-            self._readMirrorList_from_sim_telarray()
+            self._read_mirror_list_from_sim_telarray()
 
-    def _readMirrorList_from_ecsv(self):
+    def _read_mirror_list_from_ecsv(self):
         """
         Read the mirror list in ecsv format and store the data.
 
@@ -83,29 +83,29 @@ class Mirrors:
         self._logger.debug("Shape = {}".format(self.shape))
         self._logger.debug("Diameter = {}".format(self.diameter))
 
-        _mirror_table = Table.read(self._mirrorListFile, format="ascii.ecsv")
-        self._logger.debug("Reading mirror properties from {}".format(self._mirrorListFile))
+        _mirror_table = Table.read(self._mirror_list_file, format="ascii.ecsv")
+        self._logger.debug("Reading mirror properties from {}".format(self._mirror_list_file))
         try:
             self._mirrors["flen"] = list(_mirror_table["mirror_panel_radius"].to("cm").value / 2.0)
-            self.numberOfMirrors = len(self._mirrors["flen"])
-            self._mirrors["number"] = list(range(self.numberOfMirrors))
-            self._mirrors["posX"] = [0.0] * self.numberOfMirrors
-            self._mirrors["posY"] = [0.0] * self.numberOfMirrors
-            self._mirrors["diameter"] = [self.diameter] * self.numberOfMirrors
-            self._mirrors["shape"] = [self.shape] * self.numberOfMirrors
+            self.number_of_mirrors = len(self._mirrors["flen"])
+            self._mirrors["number"] = list(range(self.number_of_mirrors))
+            self._mirrors["pos_x"] = [0.0] * self.number_of_mirrors
+            self._mirrors["pos_y"] = [0.0] * self.number_of_mirrors
+            self._mirrors["diameter"] = [self.diameter] * self.number_of_mirrors
+            self._mirrors["shape"] = [self.shape] * self.number_of_mirrors
         except KeyError:
             self._logger.debug(
                 "Missing column for mirror panel focal length (flen) in {}".format(
-                    self._mirrorListFile
+                    self._mirror_list_file
                 )
             )
 
-        if self.numberOfMirrors == 0:
+        if self.number_of_mirrors == 0:
             msg = "Problem reading mirror list file"
             self._logger.error(msg)
             raise InvalidMirrorListFile()
 
-    def _readMirrorList_from_sim_telarray(self):
+    def _read_mirror_list_from_sim_telarray(self):
         """
         Read the mirror list in sim_telarray format and store the data.
 
@@ -116,40 +116,40 @@ class Mirrors:
         """
 
         self._mirrors["number"] = list()
-        self._mirrors["posX"] = list()
-        self._mirrors["posY"] = list()
+        self._mirrors["pos_x"] = list()
+        self._mirrors["pos_y"] = list()
         self._mirrors["diameter"] = list()
         self._mirrors["flen"] = list()
         self._mirrors["shape"] = list()
 
-        mirrorCounter = 0
-        collectGeoPars = True
-        with open(self._mirrorListFile, "r") as file:
+        mirror_counter = 0
+        collect_geo_pars = True
+        with open(self._mirror_list_file, "r") as file:
             for line in file:
                 line = line.split()
                 if "#" in line[0] or "$" in line[0]:
                     continue
-                if collectGeoPars:
+                if collect_geo_pars:
                     self.diameter = float(line[2])
                     self.shape = int(line[4])
-                    collectGeoPars = False
+                    collect_geo_pars = False
                     self._logger.debug("Shape = {}".format(self.shape))
                     self._logger.debug("Diameter = {}".format(self.diameter))
 
-                self._mirrors["number"].append(mirrorCounter)
-                self._mirrors["posX"].append(float(line[0]))
-                self._mirrors["posY"].append(float(line[1]))
+                self._mirrors["number"].append(mirror_counter)
+                self._mirrors["pos_x"].append(float(line[0]))
+                self._mirrors["pos_y"].append(float(line[1]))
                 self._mirrors["diameter"].append(float(line[2]))
                 self._mirrors["flen"].append(float(line[3]))
                 self._mirrors["shape"].append(float(line[4]))
-                mirrorCounter += 1
-        self.numberOfMirrors = mirrorCounter
-        if self.numberOfMirrors == 0:
+                mirror_counter += 1
+        self.number_of_mirrors = mirror_counter
+        if self.number_of_mirrors == 0:
             msg = "Problem reading mirror list file"
             self._logger.error(msg)
             raise InvalidMirrorListFile()
 
-    def getSingleMirrorParameters(self, number):
+    def get_single_mirror_parameters(self, number):
         """
         Get parameters for a single mirror given by number.
 
@@ -160,20 +160,20 @@ class Mirrors:
 
         Returns
         -------
-        (posX, posY, diameter, flen, shape)
+        (pos_x, pos_y, diameter, flen, shape)
         """
-        if number > self.numberOfMirrors - 1:
+        if number > self.number_of_mirrors - 1:
             self._logger.error("Mirror number is out range")
             return None
         return (
-            self._mirrors["posX"][number],
-            self._mirrors["posY"][number],
+            self._mirrors["pos_x"][number],
+            self._mirrors["pos_y"][number],
             self._mirrors["diameter"][number],
             self._mirrors["flen"][number],
             self._mirrors["shape"][number],
         )
 
-    def plotMirrorLayout(self):
+    def plot_mirror_layout(self):
         """
         Plot the mirror layout.
 

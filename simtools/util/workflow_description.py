@@ -1,41 +1,33 @@
 import datetime
 import logging
-import os
 import uuid
 from pathlib import Path
 
-import simtools.config as cfg
-import simtools.io_handler as io
-import simtools.util.data_model as data_model
 import simtools.util.general as gen
 import simtools.util.validate_schema as vs
 import simtools.version
-from simtools.util import names
+from simtools import io_handler
+from simtools.util import data_model, names
 
 
 class WorkflowDescription:
     """
-    Workflow description, configuration and metadata class
+    Workflow description, configuration and metadata class.
+    Assigns uuid to workflow in ACIVITY:ID
 
     Attributes
     ----------
-    label: str
-        workflow (activity) name
-    args: argparse.Namespace
-        command line parameters
+    args_dict: dict
+        configuration parameters
 
     Methods
     -------
-    collect_workflow_configuration()
-        Collect configuration parameters from command line or file
     collect_product_meta_data()
         Collect product meta data information and add activity information
     get_configuration_parameter()
-        Returns workflow configuration parameter (entry of CONFIGURATION:key)
+        Returns workflow configuration parameter (entry of configuration:key)
     set_configuration_parameter()
-        Sets workflow configuration parameter (entry of CONFIGURATION:key)
-    label()
-        Return workflow name
+        Sets workflow configuration parameter (entry of configuration:key)
     product_data_directory()
         Return product data directory
     product_data_file_format()
@@ -48,92 +40,50 @@ class WorkflowDescription:
 
     """
 
-    def __init__(self, label=None, args=None):
+    def __init__(self, args_dict):
         """
-        Initialize workflow configuration class
+        Initialize workflow configuration.
 
         Parameters
         ----------
-        label: str
-            workflow label
         args: argparse.Namespace
             command line parameters
 
         """
 
         self._logger = logging.getLogger(__name__)
+        self.io_handler = io_handler.IOHandler()
 
-        self.args = args
-        self.workflow_config = self._default_workflow_config()
-        self.workflow_config["ACTIVITY"]["NAME"] = label
-        self.workflow_config["ACTIVITY"]["ID"] = str(uuid.uuid4())
+        self.args_dict = args_dict
+        self.workflow_config = data_model.workflow_configuration_schema()
+        self.workflow_config["activity"]["name"] = args_dict["label"]
+        self.workflow_config["activity"]["id"] = str(uuid.uuid4())
 
-        if self.args:
-            self.collect_workflow_configuration()
+        self._read_workflow_configuration(self.args_dict.get("workflow_config", None))
+        self.workflow_config["configuration"] = self.args_dict
 
-        self.top_level_meta = data_model.top_level_reference_schema()
-
-        if self.args:
-            self.collect_product_meta_data()
-
-    def collect_workflow_configuration(self):
-        """
-        Collect configuration parameters from command
-        line and/or configuration file and fill it into
-        workflow configuration dict.
-
-        Priority is given to arguments given through the
-        command line (if they are given in both workflow
-        configuration file and command line), with the
-        exception of 'None' values.
-
-        """
-
-        self._read_workflow_configuration(self._from_args("workflow_config_file"))
-
-        self.workflow_config["INPUT"]["METAFILE"] = self._from_args(
-            "input_meta_file", self.workflow_config["INPUT"]["METAFILE"]
+        self.top_level_meta = gen.change_dict_keys_case(
+            data_model.top_level_reference_schema(), True
         )
-
-        self.workflow_config["INPUT"]["DATAFILE"] = self._from_args(
-            "input_data_file", self.workflow_config["INPUT"]["DATAFILE"]
-        )
-
-        for arg in vars(self.args):
-            self.workflow_config["CONFIGURATION"][str(arg)] = getattr(self.args, arg)
-
-        if self.workflow_config["CONFIGURATION"]["configFile"]:
-            cfg.setConfigFileName(self.workflow_config["CONFIGURATION"]["configFile"])
+        self.collect_product_meta_data()
 
     def collect_product_meta_data(self):
         """
-        Collect product meta data and verify the
-        schema
+        Collect and verify product metadata.
 
         """
 
-        self._fill_top_level_meta_from_args()
+        self._fill_association_meta_from_args(
+            self.top_level_meta["cta"]["context"]["sim"]["association"]
+        )
 
-        if self.workflow_config["INPUT"]["METAFILE"]:
-            self._fill_top_level_meta_from_file()
+        self._fill_product_meta(self.top_level_meta["cta"]["product"])
 
-        self._fill_product_meta()
-        self._fill_product_association_identifier()
-        self._fill_activity_meta()
+        self._fill_top_level_meta_from_file(self.top_level_meta["cta"])
 
-    def label(self):
-        """
-        Return workflow name
-        (often set as label)
+        self._fill_association_id(self.top_level_meta["cta"]["context"]["sim"]["association"])
 
-        Returns
-        -------
-        label str
-           activity name
-
-        """
-
-        return self.workflow_config["ACTIVITY"]["NAME"]
+        self._fill_activity_meta(self.top_level_meta["cta"]["activity"])
 
     def set_configuration_parameter(self, key, value):
         """
@@ -142,13 +92,13 @@ class WorkflowDescription:
         Raises
         ------
         KeyError
-            if CONFIGURATION does not exist in workflow
+            if configuration does not exist in workflow
 
         """
         try:
-            self.workflow_config["CONFIGURATION"][key] = value
+            self.workflow_config["configuration"][key] = value
         except KeyError:
-            self._logger.error("Missing key {} in CONFIGURATION".format(key))
+            self._logger.error("Missing key {} in configuration".format(key))
             raise
 
     def get_configuration_parameter(self, key):
@@ -158,19 +108,19 @@ class WorkflowDescription:
         Returns
         -------
         configuration  value
-           value of CONFIGURATION parameter
+           value of configuration parameter
 
         Raises
         ------
         KeyError
-            if CONFIGURATION does not exist in workflow
+            if configuration does not exist in workflow
 
         """
 
         try:
-            return self.workflow_config["CONFIGURATION"][key]
+            return self.workflow_config["configuration"][key]
         except KeyError:
-            self._logger.error("Missing key {} in CONFIGURATION".format(key))
+            self._logger.error("Missing key {} in configuration".format(key))
             raise
 
     def reference_data_columns(self):
@@ -180,39 +130,41 @@ class WorkflowDescription:
 
         Returns
         -------
-        DATA_COLUMNS dict
+        data_columns dict
             reference data columns
 
         Raises
         ------
         KeyError
-            if DATA_COLUMNS does not exist in workflow
+            if data_columns does not exist in workflow
             configuration
 
         """
 
         try:
-            return self.workflow_config["DATA_COLUMNS"]
+            return self.workflow_config["data_columns"]
         except KeyError:
-            self._logger.error("Missing DATA_COLUMNS entry in workflow configuration")
+            self._logger.error("Missing data_columns entry in workflow configuration")
+            print(self.workflow_config)
             raise
 
-    def product_data_file_name(self, suffix=None):
+    def product_data_file_name(self, suffix=None, full_path=True):
         """
-        Return full path and name of product data file
+        Return name of product data file.
 
-        file name is determined by:
-        a. Top-level meta ['PRODUCT']['DATA']
-        b. Top-level meta ['PRODUCT']['ID'] + label
+        File name is the combination of activity id (or 'TEST' if CONFIGURATION:TEST is set) and:
+        a. Top-level meta ['product']['name']
+           or
+        b. Top-level meta ['activity']['name']
 
-        File name always used CTA:PRODUCT:ID for unique identification
-        (not applied when CONFIGURATION:test is true)
+        (depending which one is set)
 
         Parameters
         ----------
-        suffix str
+        suffix: str
            file name extension (if none: use product_data_file_format()
-
+        full_path: bool
+            if true: return path + file name, otherwise file name only
 
         Returns
         -------
@@ -224,39 +176,42 @@ class WorkflowDescription:
         KeyError
             if data file name is not defined in workflow configuration
             or in product metadata dict
+        TypeError
+            if activity:name and product:filename is None
 
         """
 
-        _directory = self.product_data_directory()
         try:
-            if self.workflow_config["CONFIGURATION"]["test"]:
+            if self.workflow_config["configuration"]["test"]:
                 _filename = "TEST"
             else:
-                _filename = self.workflow_config["ACTIVITY"]["ID"]
-            if self.workflow_config["PRODUCT"]["FILENAME"]:
-                _filename += "-" + self.workflow_config["PRODUCT"]["FILENAME"]
+                _filename = self.workflow_config["activity"]["id"]
+            if self.workflow_config["product"]["filename"]:
+                _filename += "-" + self.workflow_config["product"]["filename"]
             else:
-                _filename += "-" + self.workflow_config["ACTIVITY"]["NAME"]
+                _filename += "-" + self.workflow_config["activity"]["name"]
         except KeyError:
-            self._logger.error("Missing CTA:PRODUCT:ID in metadata")
+            self._logger.error("Missing cta:product:id in metadata")
             raise
         except TypeError:
-            self._logger.error("Missing ACTIVITY:NAME in metadata")
+            self._logger.error("Missing activity:name in metadata")
             raise
 
         if not suffix:
             suffix = "." + self.product_data_file_format(suffix=True)
 
-        return Path(_directory).joinpath(_filename + suffix)
+        if full_path:
+            return Path(self.product_data_directory()).joinpath(_filename + suffix)
+        return Path(_filename + suffix)
 
     def product_data_file_format(self, suffix=False):
         """
-        Return file format for data file
+        Return file format for product data.
 
         Parameters
         ----------
         suffix: bool
-            return just the ecsv suffix (if format is ascii.ecsv)
+            return the ecsv suffix (if format is ascii.ecsv)
             return file format (if false)
 
         Returns
@@ -274,7 +229,8 @@ class WorkflowDescription:
 
         _file_format = "ascii.ecsv"
         try:
-            _file_format = self.workflow_config["PRODUCT"]["FORMAT"]
+            if self.workflow_config["product"]["format"] is not None:
+                _file_format = self.workflow_config["product"]["format"]
         except KeyError:
             self._logger.info("Using default file format for model file: ascii.ecsv")
 
@@ -285,58 +241,29 @@ class WorkflowDescription:
 
     def product_data_directory(self):
         """
-        Return output directory for data products.
-        Create directory if necessary.
-
-        Output directory is determined following this sorted
-        list:
-        1. PRODUCT:DIRECTORY is set (e.g., through workflow file)
-        2. gammasim-tools output location
+        Output directory for data products.
 
         Returns
         -------
         path
             output directory for data products
 
-        Raises
-        ------
-        KeyError
-            if data file name is not defined in workflow configuration
-            or in product metadata dict
-
         """
 
-        _output_label = self.workflow_config["ACTIVITY"]["NAME"]
-
-        if self.workflow_config["PRODUCT"]["DIRECTORY"]:
-            path = Path(self.workflow_config["PRODUCT"]["DIRECTORY"])
-            path.mkdir(parents=True, exist_ok=True)
-            _output_dir = path.absolute()
-        else:
-            _output_dir = cfg.get("outputLocation")
-
-        _output_dir = io.getOutputDirectory(_output_dir, _output_label, "application-plots")
-
-        self._logger.info("Outputdirectory {}".format(_output_dir))
+        _output_dir = self.io_handler.get_output_directory(
+            self.workflow_config["activity"]["name"], "product-data"
+        )
+        self._logger.debug("Outputdirectory {}".format(_output_dir))
         return _output_dir
 
-    def _from_args(self, key, default_return=None):
+    def _fill_association_meta_from_args(self, association_dict):
         """
-        Return argparser argument.
-        No errors raised if argument does not exist
+        Append association meta data set through configurator.
 
-        """
-
-        try:
-            return self.args.__dict__[key]
-        except KeyError:
-            pass
-
-        return default_return
-
-    def _fill_top_level_meta_from_args(self):
-        """
-        Fill metadata available through command line into top-level template
+        Parameters
+        ----------
+        association_dict: dict
+            Dictionary for assocation metadata field.
 
         Raises
         ------
@@ -344,81 +271,73 @@ class WorkflowDescription:
             if metadata description cannot be filled
 
         """
+        self._logger.debug("Fill metadata from args: {}".format(self.args_dict))
 
+        _association = {}
         try:
-            _association = {}
-            _association["SITE"] = self.args.site
-            _split_telescope_name = self.args.telescope.split("-")
-            _association["CLASS"] = _split_telescope_name[0]
-            _association["TYPE"] = _split_telescope_name[1]
-            _association["SUBTYPE"] = _split_telescope_name[2]
-            self.top_level_meta["CTA"]["CONTEXT"]["SIM"]["ASSOCIATION"][0] = _association
+            if "site" in self.args_dict:
+                _association["site"] = self.args_dict["site"]
+            if "telescope" in self.args_dict:
+                _split_telescope_name = self.args_dict["telescope"].split("-")
+                _association["class"] = _split_telescope_name[0]
+                _association["type"] = _split_telescope_name[1]
+                _association["subtype"] = _split_telescope_name[2]
         except KeyError:
-            self._logger.error("Error reading user input meta data from args")
+            self._logger.error("Error reading association meta data from args")
             raise
         except AttributeError as e:
             self._logger.debug("Missing parameter on command line, use defaults ({})".format(e))
 
-    def _fill_top_level_meta_from_file(self):
+        self._fill_context_sim_list(association_dict, _association)
+
+    def _fill_top_level_meta_from_file(self, top_level_dict):
         """
-        Read and validate user-provided metadata from file.
-        Fill metadata into top-level template.
+        Read and validate metadata from file. Fill metadata into top-level template.
+
+        Parameters
+        ----------
+        top_level_dict: dict
+            Dictionary for top level metadata
 
         Raises
         ------
         KeyError
             if corresponding fields cannot by accessed in the
-            user top-level or user metadata dictionaries
+            top-level or metadata dictionaries
 
         """
 
         _schema_validator = vs.SchemaValidator()
-        _user_meta = _schema_validator.validate_and_transform(
-            self.workflow_config["INPUT"]["METAFILE"]
-        )
+        try:
+            _input_meta = _schema_validator.validate_and_transform(
+                meta_file_name=self.workflow_config["configuration"]["input_meta"],
+                lower_case=True,
+            )
+        except KeyError:
+            self._logger.debug("No input metadata file defined")
+            return
 
         try:
-            self.top_level_meta["CTA"]["CONTACT"] = _user_meta["CONTACT"]
-            self.top_level_meta["CTA"]["INSTRUMENT"] = _user_meta["INSTRUMENT"]
-            self.top_level_meta["CTA"]["PRODUCT"]["DESCRIPTION"] = _user_meta["PRODUCT"][
-                "DESCRIPTION"
-            ]
-            self.top_level_meta["CTA"]["PRODUCT"]["CREATION_TIME"] = _user_meta["PRODUCT"][
-                "CREATION_TIME"
-            ]
-            if "VALID" in _user_meta["PRODUCT"]:
-                if "START" in _user_meta["PRODUCT"]["VALID"]:
-                    self.top_level_meta["CTA"]["PRODUCT"]["VALID"]["START"] = _user_meta["PRODUCT"][
-                        "VALID"
-                    ]["START"]
-                if "END" in _user_meta["PRODUCT"]["VALID"]:
-                    self.top_level_meta["CTA"]["PRODUCT"]["VALID"]["END"] = _user_meta["PRODUCT"][
-                        "VALID"
-                    ]["END"]
-            self.top_level_meta["CTA"]["PROCESS"] = _user_meta["PROCESS"]
-            self.top_level_meta["CTA"]["CONTEXT"]["SIM"]["ASSOCIATION"] = _user_meta["PRODUCT"][
-                "ASSOCIATION"
-            ]
-            try:
-                self.top_level_meta["CTA"]["CONTEXT"]["SIM"]["DOCUMENT"] = _user_meta["CONTEXT"][
-                    "DOCUMENT"
-                ]
-            except KeyError:
-                pass
+            self._merge_config_dicts(top_level_dict, _input_meta)
         except KeyError:
-            self._logger.error("Error reading user input meta data")
+            self._logger.error("Error reading input meta data")
             raise
+        # list entry copies
+        for association in _input_meta["product"]["association"]:
+            self._fill_context_sim_list(
+                top_level_dict["context"]["sim"]["association"], association
+            )
+        for document in _input_meta["product"]["document"]:
+            self._fill_context_sim_list(top_level_dict["context"]["sim"]["document"], document)
 
-        try:
-            self.workflow_config["PRODUCT"]["FILENAME"] = os.path.splitext(
-                _user_meta["PRODUCT"]["DATA"]
-            )[0]
-        except KeyError:
-            pass
-
-    def _fill_product_meta(self):
+    def _fill_product_meta(self, product_dict):
         """
-        Fill metadata for data product
+        Fill metadata for data products fields.
+
+        Parameters
+        ----------
+        product_dict: dict
+            Dictionary describing data product.
 
         Raises
         ------
@@ -428,44 +347,43 @@ class WorkflowDescription:
 
         """
 
-        self.top_level_meta["CTA"]["PRODUCT"]["ID"] = self.workflow_config["ACTIVITY"]["ID"]
-        self._logger.debug(
-            "Assigned ACTIVITE UUID {}".format(self.top_level_meta["CTA"]["PRODUCT"]["ID"])
-        )
+        product_dict["id"] = self.workflow_config["activity"]["id"]
+        self._logger.debug("Assigned ACTIVITY UUID {}".format(product_dict["id"]))
 
-        try:
-            self.top_level_meta["CTA"]["PRODUCT"]["FORMAT"] = self.product_data_file_format()
-        except KeyError:
-            self._logger.error("Missing CTA:PRODUCT:FORMAT key in user input meta data")
-            raise
+        product_dict["format"] = self.product_data_file_format()
+        product_dict["filename"] = str(self.product_data_file_name(full_path=False))
 
-    def _fill_product_association_identifier(self):
+    @staticmethod
+    def _fill_association_id(association_dict):
         """
-        Fill list of associations in top-level data model
+        Fill association id from site and telescope class, type, subtype.
 
-        Raises
-        ------
-        KeyError
-            if CONTEXT:SIM:ASSOCIATION is not found
+        Parameters
+        ----------
+        association_dict: dict
+            Association dictionary.
 
         """
-
-        try:
-            for association in self.top_level_meta["CTA"]["CONTEXT"]["SIM"]["ASSOCIATION"]:
-                association["ID"] = names.simtoolsInstrumentName(
-                    association["SITE"],
-                    association["CLASS"],
-                    association["TYPE"],
-                    association["SUBTYPE"],
+        for association in association_dict:
+            try:
+                association["id"] = names.simtools_instrument_name(
+                    association["site"],
+                    association["class"],
+                    association["type"],
+                    association["subtype"],
                 )
-        except KeyError:
-            self._logger.error("Error reading CONTEXT:SIM:ASSOCIATION")
-            raise
+            except ValueError:
+                association["id"] = None
 
-    def _fill_activity_meta(self):
+    def _fill_activity_meta(self, activity_dict):
         """
         Fill activity (software) related meta data
 
+        Parameters
+        ----------
+        activity_dict: dict
+            Dictionary for top-level activitiy meta data.
+
         Raises
         ------
         KeyError
@@ -474,117 +392,111 @@ class WorkflowDescription:
 
         """
         try:
-            self.top_level_meta["CTA"]["ACTIVITY"]["NAME"] = self.workflow_config["ACTIVITY"][
-                "NAME"
-            ]
-            self.top_level_meta["CTA"]["ACTIVITY"]["START"] = datetime.datetime.now().isoformat(
-                timespec="seconds"
-            )
-            self.top_level_meta["CTA"]["ACTIVITY"]["END"] = self.top_level_meta["CTA"]["ACTIVITY"][
-                "START"
-            ]
-            self.top_level_meta["CTA"]["ACTIVITY"]["SOFTWARE"][
-                "VERSION"
-            ] = simtools.version.__version__
+            activity_dict["name"] = self.workflow_config["activity"]["name"]
+            activity_dict["start"] = datetime.datetime.now().isoformat(timespec="seconds")
+            activity_dict["end"] = activity_dict["start"]
+            activity_dict["software"]["version"] = simtools.version.__version__
         except KeyError:
-            self._logger.error("Error ACTIVITY meta from user input meta data")
+            self._logger.error("Error ACTIVITY meta from input meta data")
             raise
 
     def _read_workflow_configuration(self, workflow_config_file):
         """
-        Read configuration parameter file and return it as a single dict
-        (simplifies processing)
+        Read workflow configuration from file and merge it with existing workflow config.
+        Keys are changed to lower case.
 
         Parameters
         ----------
         workflow_config_file
-            configuration file describing this workflow
-
-        Returns
-        -------
-        workflow_config: dict
-            workflow configuration
+            name of configuration file describing this workflow
 
         """
 
         if workflow_config_file:
             try:
-                _workflow_from_file = gen.collectDataFromYamlOrDict(workflow_config_file, None)[
-                    "CTASIMPIPE"
-                ]
+                _workflow_from_file = gen.change_dict_keys_case(
+                    gen.collect_data_from_yaml_or_dict(workflow_config_file, None)["CTASIMPIPE"],
+                    True,
+                )
                 self._logger.debug(
                     "Reading workflow configuration from {}".format(workflow_config_file)
                 )
             except KeyError:
                 self._logger.debug("Error reading CTASIMPIPE workflow configuration")
 
-            self._merge_config_dicts(self.workflow_config, _workflow_from_file)
+            self._merge_config_dicts(self.workflow_config, _workflow_from_file, True)
 
-    def _merge_config_dicts(self, dict_high, dict_low):
+    def _merge_config_dicts(self, dict_high, dict_low, add_new_fields=False):
         """
-        Merge two config dicts and replace values which are Nonetype.
+        Merge two config dicts and replace values in dict_high which are Nonetype.
         Priority to dict_high in case of conflicting entries.
 
+        Parameters
+        ----------
+        dict_high: dict
+            Dictionary into which values are merged.
+        dict_low: dict
+            Dictionary from which values are taken for merging.
+        add_new_fields: bool
+            If true: add fields from dict_low to dict_high, if they don't exist in dict_high
 
         """
+
+        if dict_high is None and dict_low:
+            dict_high = dict_low
+            return
 
         for k in dict_low:
             if k in dict_high:
                 if isinstance(dict_low[k], dict):
-                    self._merge_config_dicts(dict_high[k], dict_low[k])
+                    self._merge_config_dicts(dict_high[k], dict_low[k], add_new_fields)
                 elif dict_high[k] is None:
                     dict_high[k] = dict_low[k]
                 elif dict_high[k] != dict_low[k] and dict_low[k] is not None:
                     self._logger.debug(
-                        "Conflicting entries between dict: {} vs {}".format(
-                            dict_high[k], dict_low[k]
+                        "Conflicting entries between dict: {} vs {} (use {})".format(
+                            dict_high[k], dict_low[k], dict_high[k]
                         )
                     )
-            else:
+            elif add_new_fields:
                 dict_high[k] = dict_low[k]
 
-    def user_input_data_file_name(self):
+    def input_data_file_name(self):
         """
-        Return user input data file
-        (full path)
+        Return input data file (full path).
+
+        Returns
+        -------
+        str
+            Input data file (full path).
         """
 
         try:
-            return self.workflow_config["INPUT"]["DATAFILE"]
+            return self.workflow_config["configuration"]["input_data"]
         except KeyError:
-            self._logger.error("Missing description of INPUT:DATAFILE")
+            self._logger.error("Missing description of CONFIGURATON:INPUT_DATA")
             raise
 
     @staticmethod
-    def _default_workflow_config():
+    def _fill_context_sim_list(product_list, new_entry_dict):
         """
-        Setup default dictionary for workflow config
+        Fill list-type entries into metadata.
+        Take into account the first list entry is the default value filled with Nones.
 
-        CONFIGURATION collects all argparse argument
+        Returns
+        -------
+        list
+            Updated product list.
+
 
         """
-
-        return {
-            "REFERENCE": {"VERSION": "0.1.0"},
-            "ACTIVITY": {
-                "NAME": None,
-                "ID": None,
-                "DESCRIPTION": None,
-            },
-            "DATAMODEL": {
-                "USERINPUTSCHEMA": None,
-            },
-            "INPUT": {
-                "METAFILE": None,
-                "DATAFILE": None,
-            },
-            "PRODUCT": {
-                "DIRECTORY": None,
-                "FILENAME": None,
-            },
-            "CONFIGURATION": {
-                "configFile": "./config.yml",
-                "logLevel": "INFO",
-                "test": False,
-            },
-        }
+        if len(new_entry_dict) == 0:
+            return
+        try:
+            if any(v is not None for v in product_list[0].values()):
+                product_list.append(new_entry_dict)
+            else:
+                product_list[0] = new_entry_dict
+        except (TypeError, IndexError):
+            product_list = [new_entry_dict]
+        return product_list
