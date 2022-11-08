@@ -58,12 +58,12 @@
         mirror_align_random_horizontal: '0.0040,28.,0.0,0.0'
         mirror_align_random_vertical: '0.0040,28.,0.0,0.0'
 
-    And the run:
+    And then run:
 
     .. code-block:: console
 
         python applications/compare_cumulative_psf.py --site North --telescope LST-1 \
-            --model_version prod4 --pars lst_pars.yml --data PSFcurve_data_v2.txt
+            --model_version prod5 --pars lst_pars.yml --data PSFcurve_data_v2.txt
 
     .. todo::
 
