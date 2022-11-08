@@ -217,8 +217,7 @@ class SimtelRunnerArray(SimtelRunner):
         """
 
         info_for_file_name = self.get_info_for_file_name(run_number)
-        info_for_file_name["mode"] = mode
-        run_sub_file = self.get_file_name("sub_log", **info_for_file_name)
+        run_sub_file = self.get_file_name("sub_log", **info_for_file_name, mode=mode)
         return Path(run_sub_file).is_file()
 
     def get_resources(self, run_number):
@@ -238,8 +237,7 @@ class SimtelRunnerArray(SimtelRunner):
         """
 
         info_for_file_name = self.get_info_for_file_name(run_number)
-        info_for_file_name["mode"] = "out"
-        sub_log_file = self.get_file_name("sub_log", **info_for_file_name)
+        sub_log_file = self.get_file_name("sub_log", **info_for_file_name, mode="out")
 
         self._logger.debug("Reading resources from {}".format(sub_log_file))
 
