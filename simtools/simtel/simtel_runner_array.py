@@ -4,7 +4,6 @@ from pathlib import Path
 import simtools.util.general as gen
 from simtools import io_handler
 from simtools.simtel.simtel_runner import InvalidOutputFile, SimtelRunner
-from simtools.util import names
 
 __all__ = ["SimtelRunnerArray"]
 
@@ -121,78 +120,89 @@ class SimtelRunnerArray(SimtelRunner):
         self._simtel_log_dir = simtel_base_dir.joinpath("log")
         self._simtel_log_dir.mkdir(parents=True, exist_ok=True)
 
-    def get_log_file(self, run_number):
-        """Get full path of the simtel log file for a given run."""
-        file_name = names.simtel_log_file_name(
-            run=run_number,
-            primary=self.config.primary,
-            array_name=self.array_model.layout_name,
-            site=self.array_model.site,
-            zenith=self.config.zenith_angle,
-            azimuth=self.config.azimuth_angle,
-            label=self.label,
-        )
-        return self._simtel_log_dir.joinpath(file_name)
-
-    def get_sub_log_file(self, run_number, mode="out"):
+    def get_info_for_file_name(self, run_number):
         """
-        Get the full path of the submission log file.
+        Get a dirctionary with the info necessary for building the sim_telarray file names.
+
+        Returns
+        -------
+        dict
+            Dictionary with the keys necessary for building the sim_telarray file names.
+        """
+        return {
+            "run": run_number,
+            "primary": self.config.primary,
+            "array_name": self.array_model.layout_name,
+            "site": self.array_model.site,
+            "zenith": self.config.zenith_angle,
+            "azimuth": self.config.azimuth_angle,
+            "label": self.label,
+        }
+
+    def get_file_name(self, file_type, **kwargs):
+        """
+        Get a sim_telarray style file name for various file types.
 
         Parameters
         ----------
-        run_number: int
-            Run number.
-        mode: str
-            out or err
+        file_type: str
+            The type of file it is (determines the file suffix).
+            Choices are log, histogram, output or sub_log.
+        kwargs: dict
+            The dictionary must include the following parameters (unless listed as optional):
+                run: int
+                    Run number.
+                primary: str
+                    Primary particle (e.g gamma, proton etc).
+                zenith: float
+                    Zenith angle (deg).
+                azimuth: float
+                    Azimuth angle (deg).
+                site: str
+                    Paranal or LaPalma.
+                array_name: str
+                    Array name.
+                label: str
+                    Instance label (optional).
+                mode: str
+                    out or err (optional, relevant only for sub_log).
+
+        Returns
+        -------
+        str
+            File name with full path.
 
         Raises
         ------
         ValueError
-            If run_number is not valid (not an unsigned int).
-
-        Returns
-        -------
-        Path:
-            Full path of the run log file.
+            If file_type is unknown.
         """
 
-        file_name = names.simtel_sub_log_file_name(
-            run=run_number,
-            primary=self.config.primary,
-            array_name=self.array_model.layout_name,
-            site=self.array_model.site,
-            zenith=self.config.zenith_angle,
-            azimuth=self.config.azimuth_angle,
-            label=self.label,
-            mode=mode,
+        file_label = (
+            f"_{kwargs['label']}" if "label" in kwargs and kwargs["label"] is not None else ""
         )
-        return self._simtel_log_dir.joinpath(file_name)
-
-    def get_histogram_file(self, run_number):
-        """Get full path of the simtel histogram file for a given run."""
-        file_name = names.simtel_histogram_file_name(
-            run=run_number,
-            primary=self.config.primary,
-            array_name=self.array_model.layout_name,
-            site=self.array_model.site,
-            zenith=self.config.zenith_angle,
-            azimuth=self.config.azimuth_angle,
-            label=self.label,
+        file_name = (
+            f"run{kwargs['run']}_{kwargs['primary']}_"
+            f"za{int(kwargs['zenith']):d}deg_azm{int(kwargs['azimuth']):d}deg-"
+            f"{kwargs['site']}-{kwargs['array_name']}{file_label}"
         )
-        return self._simtel_data_dir.joinpath(file_name)
-
-    def get_output_file(self, run_number):
-        """Get full path of the simtel output file for a given run."""
-        file_name = names.simtel_output_file_name(
-            run=run_number,
-            primary=self.config.primary,
-            array_name=self.array_model.layout_name,
-            site=self.array_model.site,
-            zenith=self.config.zenith_angle,
-            azimuth=self.config.azimuth_angle,
-            label=self.label,
-        )
-        return self._simtel_data_dir.joinpath(file_name)
+        if file_type == "log":
+            file_name += ".log"
+            return self._simtel_log_dir.joinpath(file_name)
+        if file_type == "histogram":
+            file_name += ".hdata.zst"
+            return self._simtel_data_dir.joinpath(file_name)
+        if file_type == "output":
+            file_name += ".simtel.zst"
+            return self._simtel_data_dir.joinpath(file_name)
+        if file_type == "sub_log":
+            suffix = ".log"
+            if "mode" in kwargs:
+                suffix = f".{kwargs['mode']}"
+            file_name = f"log-sub-{file_name}{suffix}"
+            return self._simtel_log_dir.joinpath(file_name)
+        else:
+            raise ValueError(f"The requested file type ({file_type}) is unknown")
 
     def has_sub_log_file(self, run_number, mode="out"):
         """
@@ -206,7 +216,9 @@ class SimtelRunnerArray(SimtelRunner):
 
         """
 
-        run_sub_file = self.get_sub_log_file(run_number=run_number, mode=mode)
+        info_for_file_name = self.get_info_for_file_name(run_number)
+        info_for_file_name["mode"] = mode
+        run_sub_file = self.get_file_name("sub_log", **info_for_file_name)
         return Path(run_sub_file).is_file()
 
     def get_resources(self, run_number):
@@ -225,7 +237,9 @@ class SimtelRunnerArray(SimtelRunner):
 
         """
 
-        sub_log_file = self.get_sub_log_file(run_number=run_number, mode="out")
+        info_for_file_name = self.get_info_for_file_name(run_number)
+        info_for_file_name["mode"] = "out"
+        sub_log_file = self.get_file_name("sub_log", **info_for_file_name)
 
         self._logger.debug("Reading resources from {}".format(sub_log_file))
 
@@ -245,7 +259,10 @@ class SimtelRunnerArray(SimtelRunner):
 
     def _shall_run(self, run_number=None):
         """Tells if simulations should be run again based on the existence of output files."""
-        return not self.get_output_file(run_number).exists()
+        output_file = self.get_file_name(
+            file_type="output", **self.get_info_for_file_name(run_number)
+        )
+        return not output_file.exists()
 
     def _make_run_command(self, input_file, run_number=1):
         """
@@ -260,9 +277,10 @@ class SimtelRunnerArray(SimtelRunner):
 
         """
 
-        self._log_file = self.get_log_file(run_number)
-        histogram_file = self.get_histogram_file(run_number)
-        output_file = self.get_output_file(run_number)
+        info_for_file_name = self.get_info_for_file_name(run_number)
+        self._log_file = self.get_file_name(file_type="log", **info_for_file_name)
+        histogram_file = self.get_file_name(file_type="histogram", **info_for_file_name)
+        output_file = self.get_file_name(file_type="output", **info_for_file_name)
 
         # Array
         command = str(self._simtel_source_path.joinpath("sim_telarray/bin/sim_telarray"))
@@ -282,7 +300,10 @@ class SimtelRunnerArray(SimtelRunner):
 
     def _check_run_result(self, run_number):
         # Checking run
-        if not self.get_output_file(run_number).exists():
+        output_file = self.get_file_name(
+            file_type="output", **self.get_info_for_file_name(run_number)
+        )
+        if not output_file.exists():
             msg = "sim_telarray output file does not exist."
             self._logger.error(msg)
             raise InvalidOutputFile(msg)
