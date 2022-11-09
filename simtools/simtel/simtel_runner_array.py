@@ -191,20 +191,16 @@ class SimtelRunnerArray(SimtelRunner):
             f"{kwargs['site']}_{kwargs['array_name']}{file_label}"
         )
         if file_type == "log":
-            file_name += ".log"
-            return self._simtel_log_dir.joinpath(file_name)
+            return self._simtel_log_dir.joinpath(f"{file_name}.log")
         elif file_type == "histogram":
-            file_name += ".hdata.zst"
-            return self._simtel_data_dir.joinpath(file_name)
+            return self._simtel_log_dir.joinpath(f"{file_name}.hdata.zst")
         elif file_type == "output":
-            file_name += ".simtel.zst"
-            return self._simtel_data_dir.joinpath(file_name)
+            return self._simtel_data_dir.joinpath(f"{file_name}.simtel.zst")
         elif file_type == "sub_log":
             suffix = ".log"
             if "mode" in kwargs:
                 suffix = f".{kwargs['mode']}"
-            file_name = f"log_sub_{file_name}{suffix}"
-            return self._simtel_log_dir.joinpath(file_name)
+            return self._simtel_log_dir.joinpath(f"log_sub_{file_name}{suffix}")
         else:
             raise ValueError(f"The requested file type ({file_type}) is unknown")
 
