@@ -78,6 +78,8 @@ class CorsikaConfig:
         Create and export CORSIKA input file.
     get_input_file()
         Get the full path of the CORSIKA input file.
+    get_file_name()
+        Get a CORSIKA config style file name for various file types.
     """
 
     def __init__(
@@ -452,13 +454,14 @@ class CorsikaConfig:
                 Get the CORSIKA input file for one specific run.
                 This is the input file after being pre-processed by sim_telarray (pfp).
             for file_type="config":
-                Get the CORSIKA input file for one specific run.
-                This is the input file after being pre-processed by sim_telarray (pfp).
+                Get a general CORSIKA config inputs file.
+            for file_type="output_generic"
+                Get a generic file name for the TELFIL option in the CORSIKA inputs file.
 
         Raises
         ------
         ValueError
-            If file_type is unknown.
+            If file_type is unknown or if the run number is not given for file_type==config_tmp.
         """
 
         file_label = f"_{self.label}" if self.label is not None else ""

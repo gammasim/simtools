@@ -73,6 +73,10 @@ class CorsikaRunner:
     -------
     get_run_script(run_number)
         Get the full path of the run script file for a given run number.
+    get_info_for_file_name()
+        Get a dirctionary with the info necessary for building the CORSIKA runner file names.
+    get_file_name()
+        Get a CORSIKA style file name for various file types.
     """
 
     def __init__(
