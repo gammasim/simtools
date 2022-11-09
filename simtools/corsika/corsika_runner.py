@@ -212,7 +212,9 @@ class CorsikaRunner:
         )
 
         # CORSIKA input file for a specific run, created by the preprocessor pfp
-        corsika_input_tmp_name = self.corsika_config.get_input_file_name_for_run(run_number)
+        corsika_input_tmp_name = self.corsika_config.get_file_name(
+            file_type="config_tmp", run_number=run_number
+        )
         corsika_input_tmp_file = self._corsika_input_dir.joinpath(corsika_input_tmp_name)
 
         pfp_command = self._get_pfp_command(run_number, corsika_input_tmp_file)
@@ -330,38 +332,38 @@ class CorsikaRunner:
             f"_{kwargs['label']}" if "label" in kwargs and kwargs["label"] is not None else ""
         )
         file_name = (
-            f"corsika-run{kwargs['run']}-{kwargs['array_name']}-"
-            f"{kwargs['site']}-{kwargs['primary']}{file_label}"
+            f"corsika_run{kwargs['run']}_{kwargs['array_name']}_"
+            f"{kwargs['site']}_{kwargs['primary']}{file_label}"
         )
 
         if file_type == "log":
-            return self._corsika_log_dir.joinpath(f"log-{file_name}.log")
-        if file_type == "corsike_log":
+            return self._corsika_log_dir.joinpath(f"log_{file_name}.log")
+        elif file_type == "corsike_log":
             run_dir = self._get_run_directory(kwargs["run"])
             return self._corsika_data_dir.joinpath(run_dir).joinpath(
                 "run{}.log".format(kwargs["run"])
             )
-        if file_type == "script":
+        elif file_type == "script":
             script_file_dir = self._output_directory.joinpath("scripts")
             script_file_dir.mkdir(parents=True, exist_ok=True)
             return script_file_dir.joinpath(f"{file_name}.sh")
-        if file_type == "output":
+        elif file_type == "output":
             zenith = self.corsika_config.get_user_parameter["THETAP"][0]
             azimuth = self.corsika_config.get_user_parameter["AZM"][0]
             file_name = (
-                f"corsika-run{kwargs['run']}_{kwargs['primary']}_"
-                f"za{int(zenith):d}deg_azm{azimuth:d}deg-"
-                f"{kwargs['site']}-{kwargs['array_name']}{file_label}"
+                f"corsika_run{kwargs['run']}_{kwargs['primary']}_"
+                f"za{int(zenith):d}deg_azm{azimuth:d}deg_"
+                f"{kwargs['site']}_{kwargs['array_name']}{file_label}"
             )
             run_dir = self._get_run_directory(kwargs["run"])
             return self._corsika_data_dir.joinpath(run_dir).joinpath(f"{file_name}.zst")
-        if file_type == "sub_log":
+        elif file_type == "sub_log":
             suffix = ".log"
             if "mode" in kwargs:
                 suffix = f".{kwargs['mode']}"
             sub_log_file_dir = self._output_directory.joinpath("logs")
             sub_log_file_dir.mkdir(parents=True, exist_ok=True)
-            return sub_log_file_dir.joinpath(f"log-sub-{file_name}{suffix}")
+            return sub_log_file_dir.joinpath(f"log_sub_{file_name}{suffix}")
         else:
             raise ValueError(f"The requested file type ({file_type}) is unknown")
 

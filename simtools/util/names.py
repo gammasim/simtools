@@ -14,7 +14,6 @@ __all__ = [
     "simtel_telescope_config_file_name",
     "simtel_array_config_file_name",
     "simtel_single_mirror_list_file_name",
-    "corsika_config_file_name",
 ]
 
 
@@ -762,83 +761,4 @@ def camera_efficiency_log_file_name(site, telescope_model_name, zenith_angle, la
     name = "camera-efficiency-{}-{}-za{:.1f}".format(site, telescope_model_name, zenith_angle)
     name += "_{}".format(label) if label is not None else ""
     name += ".log"
-    return name
-
-
-def corsika_config_file_name(array_name, site, primary, zenith, view_cone, label=None):
-    """
-    CORSIKA config file name.
-
-    Parameters
-    ----------
-    array_name: str
-        Array name.
-    site: str
-        Paranal or LaPalma.
-    primary: str
-        Primary particle (e.g gamma, proton etc).
-    zenith: float
-        Zenith angle (deg).
-    view_cone: list of float
-        View cone limits (len = 2).
-    label: str
-        Instance label.
-
-    Returns
-    -------
-    str
-        File name.
-    """
-    is_diffuse = view_cone[0] != 0 or view_cone[1] != 0
-
-    name = "corsika-config_{}_{}_{}".format(site, array_name, primary)
-    name += "_za{:d}-{:d}".format(int(zenith[0]), int(zenith[1]))
-    name += "_cone{:d}-{:d}".format(int(view_cone[0]), int(view_cone[1])) if is_diffuse else ""
-    name += "_{}".format(label) if label is not None else ""
-    name += ".input"
-    return name
-
-
-def corsika_config_tmp_file_name(array_name, site, primary, zenith, view_cone, run, label=None):
-    """
-    CORSIKA config file name.
-
-    Parameters
-    ----------
-    array_name: str
-        Array name.
-    site: str
-        South or North.
-    primary: str
-        Primary particle (e.g gamma, proton etc).
-    zenith: float
-        Zenith angle (deg).
-    view_cone: list of float
-        View cone limits (len = 2).
-    run: int
-        Run number.
-    label: str
-        Instance label.
-
-    Returns
-    -------
-    str
-        File name.
-    """
-    is_diffuse = view_cone[0] != 0 or view_cone[1] != 0
-
-    name = "corsika-config-run{}".format(run)
-    name += "_{}_{}_{}".format(array_name, site, primary)
-    name += "_za{:d}-{:d}".format(int(zenith[0]), int(zenith[1]))
-    name += "_cone{:d}-{:d}".format(int(view_cone[0]), int(view_cone[1])) if is_diffuse else ""
-    name += "_{}".format(label) if label is not None else ""
-    name += ".txt"
-    return name
-
-
-def corsika_output_generic_file_name(array_name, site, label=None):
-    name = "run${RUNNR}_${PRMNAME}_za${ZA}deg_azm${AZM}deg"
-    name += "-{}-{}".format(site, array_name)
-    name += "_{}".format(label) if label is not None else ""
-    name += ".corsika.zst"
     return name

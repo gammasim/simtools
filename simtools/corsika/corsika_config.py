@@ -78,9 +78,6 @@ class CorsikaConfig:
         Create and export CORSIKA input file.
     get_input_file()
         Get the full path of the CORSIKA input file.
-    get_input_file_name_for_run(run_number)
-        Get the CORSIKA input file for one specific run.
-        This is the input file after being pre-processed by sim_telarray (pfp).
     """
 
     def __init__(
@@ -355,30 +352,6 @@ class CorsikaConfig:
         for par, value in self._user_parameters.items():
             print("{} = {}".format(par, value))
 
-    def get_output_file_name(self, run_number):
-        """
-        Get the name of the CORSIKA output file for a certain run.
-
-        Parameters
-        ----------
-        run_number: int
-            Run number.
-
-        Returns
-        -------
-        str:
-            Name of the output CORSIKA file.
-        """
-        return names.corsika_output_file_name(
-            run_number,
-            self.primary,
-            self.layout_name,
-            self.site,
-            self._user_parameters["THETAP"][0],
-            self._user_parameters["AZM"][0],
-            self.label,
-        )
-
     def export_input_file(self):
         """Create and export CORSIKA input file."""
         self._set_output_file_and_directory()
@@ -458,23 +431,74 @@ class CorsikaConfig:
 
         self._is_file_updated = True
 
-    def _set_output_file_and_directory(self):
-        config_file_name = names.corsika_config_file_name(
-            array_name=self.layout_name,
-            site=self.site,
-            primary=self.primary,
-            zenith=self._user_parameters["THETAP"],
-            view_cone=self._user_parameters["VIEWCONE"],
-            label=self.label,
+    def get_file_name(self, file_type, run_number=None):
+        """
+        Get a CORSIKA config style file name for various file types.
+
+        Parameters
+        ----------
+        file_type: str
+            The type of file it is (determines the file suffix).
+            Choices are log, histogram, output or sub_log.
+        kwargs: dict
+            The dictionary must include the following parameters (unless listed as optional):
+                run_number: int
+                    Run number.
+
+        Returns
+        -------
+        str
+            for file_type="config_tmp":
+                Get the CORSIKA input file for one specific run.
+                This is the input file after being pre-processed by sim_telarray (pfp).
+            for file_type="config":
+                Get the CORSIKA input file for one specific run.
+                This is the input file after being pre-processed by sim_telarray (pfp).
+
+        Raises
+        ------
+        ValueError
+            If file_type is unknown.
+        """
+
+        file_label = f"_{self.label}" if self.label is not None else ""
+        view_cone = ""
+        if self._user_parameters["VIEWCONE"][0] != 0 or self._user_parameters["VIEWCONE"][1] != 0:
+            view_cone = (
+                f"_cone{int(self._user_parameters['VIEWCONE'][0]):d}-"
+                f"{int(self._user_parameters['VIEWCONE'][1]):d}"
+            )
+        file_name = (
+            f"{self.primary}_{self.site}_{self.layout_name}"
+            f"za{int(self._user_parameters['THETAP'][0]):d}-"
+            f"{int(self._user_parameters['THETAP'][1]):d}deg"
+            f"{view_cone}{file_label}.txt"
         )
+
+        if file_type == "config_tmp":
+            if run_number is not None:
+                return f"corsika_config_run{run_number}_{file_name}.txt"
+            else:
+                raise ValueError("Must provide a run number for a temporary CORSIKA config file")
+        elif file_type == "config":
+            return f"corsika_config_{file_name}.input"
+        elif file_type == "output_generic":
+            file_name = (
+                "corsika_run${RUNNR}_${PRMNAME}_za${ZA}deg_azm${AZM}deg"
+                f"_{self.site}_{self.layout_name}{file_label}.zst"
+            )
+            return file_name
+        else:
+            raise ValueError(f"The requested file type ({file_type}) is unknown")
+
+    def _set_output_file_and_directory(self):
+        config_file_name = self.get_file_name(file_type="config")
         file_directory = self.io_handler.get_output_directory(label=self.label, dir_type="corsika")
         file_directory.mkdir(parents=True, exist_ok=True)
         self._logger.info("Creating directory {}, if needed.".format(file_directory))
         self._config_file_path = file_directory.joinpath(config_file_name)
 
-        self._output_generic_file_name = names.corsika_output_generic_file_name(
-            array_name=self.layout_name, site=self.site, label=self.label
-        )
+        self._output_generic_file_name = self.get_file_name(file_type="output_generic")
 
     def _write_seeds(self, file):
         """
@@ -504,28 +528,3 @@ class CorsikaConfig:
         if not self._is_file_updated:
             self.export_input_file()
         return self._config_file_path
-
-    def get_input_file_name_for_run(self, run_number):
-        """
-        Get the CORSIKA input file for one specific run.
-        This is the input file after being pre-processed by sim_telarray (pfp).
-
-        Parameters
-        ----------
-        run_number: int
-            Run number.
-
-        Returns
-        -------
-        str:
-            Name of the input file.
-        """
-        return names.corsika_config_tmp_file_name(
-            array_name=self.layout_name,
-            site=self.site,
-            primary=self.primary,
-            zenith=self._user_parameters["THETAP"],
-            view_cone=self._user_parameters["VIEWCONE"],
-            run=run_number,
-            label=self.label,
-        )
