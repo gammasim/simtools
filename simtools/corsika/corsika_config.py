@@ -441,11 +441,9 @@ class CorsikaConfig:
         ----------
         file_type: str
             The type of file it is (determines the file suffix).
-            Choices are log, histogram, output or sub_log.
-        kwargs: dict
-            The dictionary must include the following parameters (unless listed as optional):
-                run_number: int
-                    Run number.
+            Choices are config_tmp, config or output_generic.
+        run_number: int
+            Run number (optional).
 
         Returns
         -------
