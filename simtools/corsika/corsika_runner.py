@@ -73,12 +73,6 @@ class CorsikaRunner:
     -------
     get_run_script(run_number)
         Get the full path of the run script file for a given run number.
-    get_log_file(run_number)
-        Get the full path of the run log file.
-    get_corsika_log_file(run_number)
-        Get the full path of the CORSIKA log file.
-    get_output_file(run_number)
-        Get the full path of the CORSIKA output file.
     """
 
     def __init__(
@@ -213,17 +207,9 @@ class CorsikaRunner:
         }
         run_number = self._validate_run_number(kwargs["run_number"])
 
-        # Setting script file name
-        script_file_name = names.corsika_run_script_file_name(
-            array_name=self.layout_name,
-            site=self.site,
-            primary=self.corsika_config.primary,
-            run=run_number,
-            label=self.label,
+        script_file_path = self.get_file_name(
+            file_type="script", **self.get_info_for_file_name(run_number)
         )
-        script_file_dir = self._output_directory.joinpath("scripts")
-        script_file_dir.mkdir(parents=True, exist_ok=True)
-        script_file_path = script_file_dir.joinpath(script_file_name)
 
         # CORSIKA input file for a specific run, created by the preprocessor pfp
         corsika_input_tmp_name = self.corsika_config.get_input_file_name_for_run(run_number)
@@ -275,7 +261,7 @@ class CorsikaRunner:
         """Get autoinputs command."""
         corsika_bin_path = self._simtel_source_path.joinpath("corsika-run/corsika")
 
-        log_file = self.get_log_file(run_number)
+        log_file = self.get_file_name(file_type="log", **self.get_info_for_file_name(run_number))
 
         cmd = self._simtel_source_path.joinpath("sim_telarray/bin/corsika_autoinputs")
         cmd = str(cmd) + " --run {}".format(corsika_bin_path)
@@ -286,6 +272,98 @@ class CorsikaRunner:
         cmd += " {} > {} 2>&1".format(input_tmp_file, log_file)
         cmd += " || exit 1\n"
         return cmd
+
+    def get_info_for_file_name(self, run_number):
+        """
+        Get a dirctionary with the info necessary for building the CORSIKA runner file names.
+
+        Returns
+        -------
+        dict
+            Dictionary with the keys necessary for building the CORSIKA runner file names.
+        """
+        run_number = self._validate_run_number(run_number)
+        return {
+            "run": run_number,
+            "primary": self.corsika_config.primary,
+            "array_name": self.layout_name,
+            "site": self.site,
+            "label": self.label,
+        }
+
+    def get_file_name(self, file_type, **kwargs):
+        """
+        Get a CORSIKA style file name for various file types.
+
+        Parameters
+        ----------
+        file_type: str
+            The type of file it is (determines the file suffix).
+            Choices are log, histogram, output or sub_log.
+        kwargs: dict
+            The dictionary must include the following parameters (unless listed as optional):
+                run: int
+                    Run number.
+                primary: str
+                    Primary particle (e.g gamma, proton etc).
+                site: str
+                    Paranal or LaPalma.
+                array_name: str
+                    Array name.
+                label: str
+                    Instance label (optional).
+                mode: str
+                    out or err (optional, relevant only for sub_log).
+
+        Returns
+        -------
+        str
+            File name with full path.
+
+        Raises
+        ------
+        ValueError
+            If file_type is unknown.
+        """
+
+        file_label = (
+            f"_{kwargs['label']}" if "label" in kwargs and kwargs["label"] is not None else ""
+        )
+        file_name = (
+            f"corsika-run{kwargs['run']}-{kwargs['array_name']}-"
+            f"{kwargs['site']}-{kwargs['primary']}{file_label}"
+        )
+
+        if file_type == "log":
+            return self._corsika_log_dir.joinpath(f"log-{file_name}.log")
+        if file_type == "corsike_log":
+            run_dir = self._get_run_directory(kwargs["run"])
+            return self._corsika_data_dir.joinpath(run_dir).joinpath(
+                "run{}.log".format(kwargs["run"])
+            )
+        if file_type == "script":
+            script_file_dir = self._output_directory.joinpath("scripts")
+            script_file_dir.mkdir(parents=True, exist_ok=True)
+            return script_file_dir.joinpath(f"{file_name}.sh")
+        if file_type == "output":
+            zenith = self.corsika_config.get_user_parameter["THETAP"][0]
+            azimuth = self.corsika_config.get_user_parameter["AZM"][0]
+            file_name = (
+                f"corsika-run{kwargs['run']}_{kwargs['primary']}_"
+                f"za{int(zenith):d}deg_azm{azimuth:d}deg-"
+                f"{kwargs['site']}-{kwargs['array_name']}{file_label}"
+            )
+            run_dir = self._get_run_directory(kwargs["run"])
+            return self._corsika_data_dir.joinpath(run_dir).joinpath(f"{file_name}.zst")
+        if file_type == "sub_log":
+            suffix = ".log"
+            if "mode" in kwargs:
+                suffix = f".{kwargs['mode']}"
+            sub_log_file_dir = self._output_directory.joinpath("logs")
+            sub_log_file_dir.mkdir(parents=True, exist_ok=True)
+            return sub_log_file_dir.joinpath(f"log-sub-{file_name}{suffix}")
+        else:
+            raise ValueError(f"The requested file type ({file_type}) is unknown")
 
     def has_run_log_file(self, run_number=None):
         """
@@ -299,9 +377,9 @@ class CorsikaRunner:
 
         """
 
-        run_number = self._validate_run_number(run_number)
-        run_log_file = self.get_log_file(run_number=run_number)
-        return Path(run_log_file).is_file()
+        return Path(
+            self.get_file_name(file_type="log", **self.get_info_for_file_name(run_number))
+        ).is_file()
 
     def has_sub_log_file(self, run_number=None, mode="out"):
         """
@@ -315,9 +393,11 @@ class CorsikaRunner:
 
         """
 
-        run_number = self._validate_run_number(run_number)
-        run_sub_file = self.get_sub_log_file(run_number=run_number, mode=mode)
-        return Path(run_sub_file).is_file()
+        return Path(
+            self.get_file_name(
+                file_type="sub_log", **self.get_info_for_file_name(run_number), mode=mode
+            )
+        ).is_file()
 
     def get_resources(self, run_number=None):
         """
@@ -335,8 +415,9 @@ class CorsikaRunner:
 
         """
 
-        run_number = self._validate_run_number(run_number)
-        sub_log_file = self.get_sub_log_file(run_number=run_number, mode="out")
+        sub_log_file = self.get_file_name(
+            file_type="sub_log", **self.get_info_for_file_name(run_number), mode="out"
+        )
 
         self._logger.debug("Reading resources from {}".format(sub_log_file))
 
@@ -356,117 +437,6 @@ class CorsikaRunner:
         _resources["n_events"] = int(self.corsika_config.get_user_parameter("NSHOW"))
 
         return _resources
-
-    def get_log_file(self, run_number=None):
-        """
-        Get the full path of the run log file.
-
-        Parameters
-        ----------
-        run_number: int
-            Run number.
-
-        Raises
-        ------
-        ValueError
-            If run_number is not valid (not an unsigned int).
-
-        Returns
-        -------
-        Path:
-            Full path of the run log file.
-        """
-        run_number = self._validate_run_number(run_number)
-        log_file_name = names.corsika_run_log_file_name(
-            site=self.site,
-            run=run_number,
-            primary=self.corsika_config.primary,
-            array_name=self.layout_name,
-            label=self.label,
-        )
-        return self._corsika_log_dir.joinpath(log_file_name)
-
-    def get_sub_log_file(self, run_number=None, mode="out"):
-        """
-        Get the full path of the submission log file.
-
-        Parameters
-        ----------
-        run_number: int
-            Run number.
-        mode: str
-            out or err
-
-        Raises
-        ------
-        ValueError
-            If run_number is not valid (not an unsigned int).
-
-        Returns
-        -------
-        Path:
-            Full path of the run log file.
-        """
-        run_number = self._validate_run_number(run_number)
-        log_file_name = names.corsika_sub_log_file_name(
-            site=self.site,
-            run=run_number,
-            primary=self.corsika_config.primary,
-            array_name=self.layout_name,
-            label=self.label,
-            mode=mode,
-        )
-
-        sub_log_file_dir = self._output_directory.joinpath("logs")
-        sub_log_file_dir.mkdir(parents=True, exist_ok=True)
-        return sub_log_file_dir.joinpath(log_file_name)
-
-    def get_corsika_log_file(self, run_number=None):
-        """
-        Get the full path of the CORSIKA log file.
-
-        Parameters
-        ----------
-        run_number: int
-            Run number.
-
-        Raises
-        ------
-        ValueError
-            If run_number is not valid (not an unsigned int).
-
-        Returns
-        -------
-        Path:
-            Full path of the CORSIKA log file.
-        """
-        run_number = self._validate_run_number(run_number)
-        run_dir = self._get_run_directory(run_number)
-        return self._corsika_data_dir.joinpath(run_dir).joinpath("run{}.log".format(run_number))
-
-    def get_output_file(self, run_number=None):
-        """
-        Get the full path of the CORSIKA output file.
-
-        Parameters
-        ----------
-        run_number: int
-            Run number.
-
-        Raises
-        ------
-        ValueError
-            If run_number is not valid (not an unsigned int).
-
-        Returns
-        -------
-        Path:
-            Full path of the CORSIKA output file.
-        """
-        run_number = self._validate_run_number(run_number)
-        corsika_file_name = self.corsika_config.get_output_file_name(run_number)
-        run_dir = self._get_run_directory(run_number)
-        return self._corsika_data_dir.joinpath(run_dir).joinpath(corsika_file_name)
 
     @staticmethod
     def _get_run_directory(run_number):

@@ -15,8 +15,6 @@ __all__ = [
     "simtel_array_config_file_name",
     "simtel_single_mirror_list_file_name",
     "corsika_config_file_name",
-    "corsika_output_file_name",
-    "corsika_sub_log_file_name",
 ]
 
 
@@ -838,132 +836,9 @@ def corsika_config_tmp_file_name(array_name, site, primary, zenith, view_cone, r
     return name
 
 
-def corsika_output_file_name(run, primary, array_name, site, zenith, azimuth, label=None):
-    """
-    CORSIKA output file name.
-
-    Warnings
-    --------
-        zst extension is hardcoded here.
-
-    Parameters
-    ----------
-    array_name: str
-        Array name.
-    site: str
-        Paranal or LaPalma.
-    zenith: float
-        Zenith angle (deg).
-    view_cone: list of float
-        View cone limits (len = 2).
-    run: int
-        Run number.
-    label: str
-        Instance label.
-
-    Returns
-    -------
-    str
-        File name.
-    """
-    name = "run{}_{}_za{:d}deg_azm{:d}deg-{}-{}".format(
-        run, primary, int(zenith), int(azimuth), site, array_name
-    )
-    name += "_{}".format(label) if label is not None else ""
-    name += ".corsika.zst"
-    return name
-
-
 def corsika_output_generic_file_name(array_name, site, label=None):
     name = "run${RUNNR}_${PRMNAME}_za${ZA}deg_azm${AZM}deg"
     name += "-{}-{}".format(site, array_name)
     name += "_{}".format(label) if label is not None else ""
     name += ".corsika.zst"
-    return name
-
-
-def corsika_run_script_file_name(array_name, site, primary, run, label=None):
-    """
-    CORSIKA script file path.
-
-    Parameters
-    ----------
-    array_name: str
-        Array name.
-    site: str
-        Paranal or LaPalma.
-    run: int
-        RUn number.
-    label: str
-        Instance label.
-
-    Returns
-    -------
-    str
-        File path.
-    """
-    name = "run{}-corsika-{}-{}-{}".format(run, array_name, site, primary)
-    name += "_{}".format(label) if label is not None else ""
-    name += ".sh"
-    return name
-
-
-def corsika_run_log_file_name(array_name, site, primary, run, label=None):
-    """
-    CORSIKA script file name.
-
-    Parameters
-    ----------
-    array_name: str
-        Array name.
-    site: str
-        Paranal or LaPalma.
-    primary: str
-        Primary particle name.
-    run: int
-        RUn number.
-    label: str
-        Instance label.
-
-    Returns
-    -------
-    str
-        File path.
-    """
-    name = "log-corsika-run{}-{}-{}-{}".format(run, array_name, site, primary)
-    name += "_{}".format(label) if label is not None else ""
-    name += ".log"
-    return name
-
-
-def corsika_sub_log_file_name(array_name, site, primary, run, mode, label=None):
-    """
-    CORSIKA submission file name.
-
-    Parameters
-    ----------
-    array_name: str
-        Array name.
-    site: str
-        Paranal or LaPalma.
-    primary: str
-        Primary particle name.
-    run: int
-        RUn number.
-    mode: str
-        out or err.
-    label: str
-        Instance label.
-
-    Returns
-    -------
-    str
-        File path.
-    """
-    name = "log-sub-corsika-run{}-{}-{}-{}".format(run, array_name, site, primary)
-    name += "_{}".format(label) if label is not None else ""
-    if len(mode) > 0:
-        name += "." + mode
-    else:
-        name += ".log"
     return name
