@@ -46,6 +46,10 @@ class SimtelRunnerArray(SimtelRunner):
     run(test=False, force=False, input_file=None, run_number=None)
         Run sim_telarray. test=True will make it faster and force=True will remove existing files
         and run again.
+    get_info_for_file_name()
+        Get a dirctionary with the info necessary for building the sim_telarray file names.
+    get_file_name()
+        Get a sim_telarray style file name for various file types.
     """
 
     def __init__(
