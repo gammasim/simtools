@@ -348,11 +348,11 @@ class CorsikaRunner:
             script_file_dir.mkdir(parents=True, exist_ok=True)
             return script_file_dir.joinpath(f"{file_name}.sh")
         elif file_type == "output":
-            zenith = self.corsika_config.get_user_parameter["THETAP"][0]
-            azimuth = self.corsika_config.get_user_parameter["AZM"][0]
+            zenith = self.corsika_config.get_user_parameter("THETAP")[0]
+            azimuth = self.corsika_config.get_user_parameter("AZM")[0]
             file_name = (
                 f"corsika_run{kwargs['run']}_{kwargs['primary']}_"
-                f"za{int(zenith):d}deg_azm{azimuth:d}deg_"
+                f"za{int(zenith):d}deg_azm{int(azimuth):d}deg_"
                 f"{kwargs['site']}_{kwargs['array_name']}{file_label}"
             )
             run_dir = self._get_run_directory(kwargs["run"])
