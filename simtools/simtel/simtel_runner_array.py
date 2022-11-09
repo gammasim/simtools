@@ -183,23 +183,23 @@ class SimtelRunnerArray(SimtelRunner):
         )
         file_name = (
             f"run{kwargs['run']}_{kwargs['primary']}_"
-            f"za{int(kwargs['zenith']):d}deg_azm{int(kwargs['azimuth']):d}deg-"
-            f"{kwargs['site']}-{kwargs['array_name']}{file_label}"
+            f"za{int(kwargs['zenith']):d}deg_azm{int(kwargs['azimuth']):d}deg_"
+            f"{kwargs['site']}_{kwargs['array_name']}{file_label}"
         )
         if file_type == "log":
             file_name += ".log"
             return self._simtel_log_dir.joinpath(file_name)
-        if file_type == "histogram":
+        elif file_type == "histogram":
             file_name += ".hdata.zst"
             return self._simtel_data_dir.joinpath(file_name)
-        if file_type == "output":
+        elif file_type == "output":
             file_name += ".simtel.zst"
             return self._simtel_data_dir.joinpath(file_name)
-        if file_type == "sub_log":
+        elif file_type == "sub_log":
             suffix = ".log"
             if "mode" in kwargs:
                 suffix = f".{kwargs['mode']}"
-            file_name = f"log-sub-{file_name}{suffix}"
+            file_name = f"log_sub_{file_name}{suffix}"
             return self._simtel_log_dir.joinpath(file_name)
         else:
             raise ValueError(f"The requested file type ({file_type}) is unknown")
