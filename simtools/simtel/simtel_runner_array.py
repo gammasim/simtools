@@ -208,20 +208,22 @@ class SimtelRunnerArray(SimtelRunner):
         else:
             raise ValueError(f"The requested file type ({file_type}) is unknown")
 
-    def has_sub_log_file(self, run_number, mode="out"):
+    def has_file(self, file_type, run_number, mode="out"):
         """
-        Checks that the sub run log file for this run number
-        is a valid file on disk
+        Checks that the file of file_type for the specified run number exists.
 
         Parameters
         ----------
+        file_type: str
+            File type to check.
+            Choices are log, histogram, output or sub_log.
         run_number: int
             Run number.
 
         """
 
         info_for_file_name = self.get_info_for_file_name(run_number)
-        run_sub_file = self.get_file_name("sub_log", **info_for_file_name, mode=mode)
+        run_sub_file = self.get_file_name(file_type, **info_for_file_name, mode=mode)
         return Path(run_sub_file).is_file()
 
     def get_resources(self, run_number):

@@ -305,7 +305,7 @@ class CorsikaRunner:
         ----------
         file_type: str
             The type of file it is (determines the file suffix).
-            Choices are log, histogram, output or sub_log.
+            Choices are log, corsika_log, script, output or sub_log.
         kwargs: dict
             The dictionary must include the following parameters (unless listed as optional):
                 run: int
@@ -342,7 +342,7 @@ class CorsikaRunner:
 
         if file_type == "log":
             return self._corsika_log_dir.joinpath(f"log_{file_name}.log")
-        elif file_type == "corsike_log":
+        elif file_type == "corsika_log":
             run_dir = self._get_run_directory(kwargs["run"])
             return self._corsika_data_dir.joinpath(run_dir).joinpath(
                 "run{}.log".format(kwargs["run"])
@@ -371,39 +371,23 @@ class CorsikaRunner:
         else:
             raise ValueError(f"The requested file type ({file_type}) is unknown")
 
-    def has_run_log_file(self, run_number=None):
+    def has_file(self, file_type, run_number=None, mode="out"):
         """
-        Checks that the run log file for this run number
-        is a valid file on disk
+        Checks that the file of file_type for the specified run number exists.
 
         Parameters
         ----------
+        file_type: str
+            File type to check.
+            Choices are log, corsika_log, script, output or sub_log.
         run_number: int
             Run number.
 
         """
 
-        return Path(
-            self.get_file_name(file_type="log", **self.get_info_for_file_name(run_number))
-        ).is_file()
-
-    def has_sub_log_file(self, run_number=None, mode="out"):
-        """
-        Checks that the sub run log file for this run number
-        is a valid file on disk
-
-        Parameters
-        ----------
-        run_number: int
-            Run number.
-
-        """
-
-        return Path(
-            self.get_file_name(
-                file_type="sub_log", **self.get_info_for_file_name(run_number), mode=mode
-            )
-        ).is_file()
+        info_for_file_name = self.get_info_for_file_name(run_number)
+        run_sub_file = self.get_file_name(file_type, **info_for_file_name, mode=mode)
+        return Path(run_sub_file).is_file()
 
     def get_resources(self, run_number=None):
         """
