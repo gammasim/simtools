@@ -61,13 +61,10 @@
     2f_measurement (file, optional)
         File with results from 2f measurements including mirror panel radii and spot size \
         measurements
-    d80_list (file, optional)
-        File with single column list of measured D80 [cm]. It is used only for plotting the D80 \
-        distributions. If given, the measured distribution will be plotted on the top of the \
-        simulated one.
     mirror_list (file, optional)
-        Mirror list file (in sim_telarray format) to replace the default one. It should be used \
-        if measured mirror focal lengths need to be taken into account.
+        Mirror list file to replace the default one. It should be used if measured mirror focal \
+        lengths need to be taken into account. It contains the following information about the \
+        mirrors: ID, panel radius, optical PSF (d80), PSF (d80) and surface reflectivity.
     use_random_flen (activation mode, optional)
         Use random focal lengths, instead of the measured ones. The argument random_flen can be \
         used to replace the default random_focal_length from the model.
@@ -91,8 +88,7 @@
 
         python applications/derive_mirror_rnda.py --site North --telescope MST-FlashCam-D \
             --containment_mean 1.4 --containment_sigma 0.16 --containment_fraction 0.8 \
-            --mirror_list mirror_MST_focal_lengths.dat --d80_list mirror_MST_D80.dat \
-            --rnda 0.0075
+            --mirror_list mirror_MST_focal_lengths.dat --rnda 0.0075
 
 
     Expected output:
