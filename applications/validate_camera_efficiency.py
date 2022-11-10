@@ -10,9 +10,9 @@
     of wavelength are plotted. See examples below.
 
     .. _validate_camera_eff_plot:
-    .. image:: docs/source/images/validate_camera_efficiency_North-MST-NectarCam-D_cherenkov.png
+    .. image:: images/validate_camera_efficiency_North-MST-NectarCam-D_cherenkov.png
       :width: 49 %
-    .. image:: docs/source/images/validate_camera_efficiency_North-MST-NectarCam-D_nsb.png
+    .. image:: images/validate_camera_efficiency_North-MST-NectarCam-D_nsb.png
       :width: 49 %
 
     Command line arguments
