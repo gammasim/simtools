@@ -48,6 +48,7 @@ def main():
         "--file_name",
         help=("The name of the file name to be downloaded."),
         type=str,
+        required=True,
     )
     args_dict, db_config = config.initialize(db_config=True)
 
