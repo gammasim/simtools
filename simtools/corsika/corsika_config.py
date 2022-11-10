@@ -470,10 +470,10 @@ class CorsikaConfig:
                 f"{int(self._user_parameters['VIEWCONE'][1]):d}"
             )
         file_name = (
-            f"{self.primary}_{self.site}_{self.layout_name}"
+            f"{self.primary}_{self.site}_{self.layout_name}_"
             f"za{int(self._user_parameters['THETAP'][0]):d}-"
             f"{int(self._user_parameters['THETAP'][1]):d}deg"
-            f"{view_cone}{file_label}.txt"
+            f"{view_cone}{file_label}"
         )
 
         if file_type == "config_tmp":

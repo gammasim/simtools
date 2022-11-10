@@ -40,9 +40,6 @@ class SimtelRunnerArray(SimtelRunner):
 
     Methods
     -------
-    get_run_script(self, test=False, input_file=None, run_number=None)
-        Builds and returns the full path of the bash run script containing
-        the sim_telarray command.
     run(test=False, force=False, input_file=None, run_number=None)
         Run sim_telarray. test=True will make it faster and force=True will remove existing files
         and run again.
