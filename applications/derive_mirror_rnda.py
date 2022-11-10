@@ -69,8 +69,8 @@
         Use random focal lengths, instead of the measured ones. The argument random_flen can be \
         used to replace the default random_focal_length from the model.
     random_flen (float, optional)
-        Value to replace the default random_focal_length. Only used if use_random_flen \
-        is activated.
+        Value of the random focal lengths to replace the default random_focal_length. Only used if \
+         use_random_flen is activated.
     no_tuning (activation mode, optional)
         Turn off the tuning - A single case will be simulated and plotted.
     test (activation mode, optional)
@@ -84,12 +84,20 @@
 
     Runtime about 3 min.
 
+    First get the mirror list from the DB:
+
+    .. code-block:: console
+
+        python applications/get_file_from_db.py --file_name MLTdata-preproduction.ecsv \
+        --output_path tests/resources
+
+    Then run the application:
+
     .. code-block:: console
 
         python applications/derive_mirror_rnda.py --site North --telescope MST-FlashCam-D \
-            --containment_mean 1.4 --containment_sigma 0.16 --containment_fraction 0.8 \
-            --mirror_list mirror_MST_focal_lengths.dat --rnda 0.0075
-
+            --containment_fraction 0.8 --mirror_list tests/resources/MLTdata-preproduction.ecsv
+            --psf_measurement tests/resources/MLTdata-preproduction.ecsv --rnda 0.0063
 
     Expected output:
 
@@ -170,7 +178,9 @@ def _parse(label):
         "--mirror_list",
         help=(
             "Mirror list file to replace the default one. It should be used if"
-            " measured mirror focal lengths need to be accounted"
+            " measured mirror focal lengths need to be accounted. It contains the following"
+            "information about the mirrors: ID, panel radius, optical PSF (d80), PSF (d80) and"
+            "surface reflectivity."
         ),
         type=str,
         required=False,
@@ -178,7 +188,7 @@ def _parse(label):
     config.parser.add_argument(
         "--use_random_flen",
         help=(
-            "Use random focal lengths. Read value for random_focal_length parameter read"
+            "Use random focal lengths. Read value for random_focal_length parameter, read"
             " from DB or provide by using the argument random_flen."
         ),
         action="store_true",
@@ -186,7 +196,8 @@ def _parse(label):
     )
     config.parser.add_argument(
         "--random_flen",
-        help="Value to replace the default random_focal_length.",
+        help="Value of the random focal length to replace the default one. Only used if"
+        "use_random_flen is activated.",
         default=None,
         type=float,
         required=False,
