@@ -336,8 +336,8 @@ class CorsikaRunner:
             f"_{kwargs['label']}" if "label" in kwargs and kwargs["label"] is not None else ""
         )
         file_name = (
-            f"corsika_run{kwargs['run']}_{kwargs['array_name']}_"
-            f"{kwargs['site']}_{kwargs['primary']}{file_label}"
+            f"corsika_run{kwargs['run']}_{kwargs['primary']}_"
+            f"{kwargs['site']}_{kwargs['array_name']}{file_label}"
         )
 
         if file_type == "log":
