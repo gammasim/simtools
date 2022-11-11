@@ -281,7 +281,7 @@ class CorsikaRunner:
 
     def get_info_for_file_name(self, run_number):
         """
-        Get a dirctionary with the info necessary for building the CORSIKA runner file names.
+        Get a dictionary with the info necessary for building the CORSIKA runner file names.
 
         Returns
         -------
