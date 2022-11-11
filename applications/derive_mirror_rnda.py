@@ -84,15 +84,6 @@
 
     Runtime about 3 min.
 
-    First get the mirror list from the DB:
-
-    .. code-block:: console
-
-        python applications/get_file_from_db.py --file_name MLTdata-preproduction.ecsv \
-        --output_path tests/resources
-
-    Then run the application:
-
     .. code-block:: console
 
         python applications/derive_mirror_rnda.py --site North --telescope MST-FlashCam-D \
