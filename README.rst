@@ -12,6 +12,9 @@ gammasim-tools
 
 .. image:: https://github.com/gammasim/gammasim-tools/actions/workflows/CI-docs.yml/badge.svg
    :target: https://github.com/gammasim/gammasim-tools/actions/workflows/CI-docs.yml
+ 
+.. image:: https://app.codacy.com/project/badge/Grade/717d4dc06dfa45d3ad0d61499ffc0e2e    
+   :target: https://www.codacy.com/gh/gammasim/gammasim-tools/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=gammasim/gammasim-tools&amp;utm_campaign=Badge_Grade
 
 .. image:: https://codecov.io/gh/gammasim/gammasim-tools/branch/master/graph/badge.svg?token=AYAIRPARCH
    :target: https://codecov.io/gh/gammasim/gammasim-tools
