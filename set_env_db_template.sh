@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 export DB_API_PORT=27017 #Port on the MongoDB server
 export DB_SERVER='cta-simpipe-protodb.zeuthen.desy.de' # MongoDB server
 export DB_API_USER=YOUR_USERNAME # username for MongoDB: ask the responsible person
