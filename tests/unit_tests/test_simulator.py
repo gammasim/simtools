@@ -20,7 +20,7 @@ logger.setLevel(logging.DEBUG)
 
 @pytest.fixture
 def label():
-    return "test-simulator"
+    return "test"
 
 
 @pytest.fixture
@@ -66,7 +66,7 @@ def shower_config_data():
 
 @pytest.fixture
 def corsika_file():
-    return "run1_proton_za20deg_azm0deg-North-1LST_trigger_rates.corsika.zst"
+    return "run1_proton_za20deg_azm0deg_North_1LST_test.corsika.zst"
 
 
 @pytest.fixture
