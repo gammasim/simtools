@@ -342,16 +342,16 @@ class CorsikaRunner:
 
         if file_type == "log":
             return self._corsika_log_dir.joinpath(f"log_{file_name}.log")
-        elif file_type == "corsika_log":
+        if file_type == "corsika_log":
             run_dir = self._get_run_directory(kwargs["run"])
             return self._corsika_data_dir.joinpath(run_dir).joinpath(
                 "run{}.log".format(kwargs["run"])
             )
-        elif file_type == "script":
+        if file_type == "script":
             script_file_dir = self._output_directory.joinpath("scripts")
             script_file_dir.mkdir(parents=True, exist_ok=True)
             return script_file_dir.joinpath(f"{file_name}.sh")
-        elif file_type == "output":
+        if file_type == "output":
             zenith = self.corsika_config.get_user_parameter("THETAP")[0]
             azimuth = self.corsika_config.get_user_parameter("AZM")[0]
             file_name = (
@@ -361,15 +361,15 @@ class CorsikaRunner:
             )
             run_dir = self._get_run_directory(kwargs["run"])
             return self._corsika_data_dir.joinpath(run_dir).joinpath(f"{file_name}.zst")
-        elif file_type == "sub_log":
+        if file_type == "sub_log":
             suffix = ".log"
             if "mode" in kwargs:
                 suffix = f".{kwargs['mode']}"
             sub_log_file_dir = self._output_directory.joinpath("logs")
             sub_log_file_dir.mkdir(parents=True, exist_ok=True)
             return sub_log_file_dir.joinpath(f"log_sub_{file_name}{suffix}")
-        else:
-            raise ValueError(f"The requested file type ({file_type}) is unknown")
+
+        raise ValueError(f"The requested file type ({file_type}) is unknown")
 
     def has_file(self, file_type, run_number=None, mode="out"):
         """
