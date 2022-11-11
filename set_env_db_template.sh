@@ -1,7 +1,7 @@
 export DB_API_PORT=27017 #Port on the MongoDB server
 export DB_SERVER='cta-simpipe-protodb.zeuthen.desy.de' # MongoDB server
-export DB_API_USER=YOUR USERNAME # username for MongoDB: ask the responsible person
-export DB_API_PW=YOUR PASSWORD # Password for MongoDB: ask the responsible person
+export DB_API_USER=YOUR_USERNAME # username for MongoDB: ask the responsible person
+export DB_API_PW=YOUR_PASSWORD # Password for MongoDB: ask the responsible person
 export DB_API_AUTHENTICATION_DATABASE='admin'
 export SIMTELPATH='/workdir/sim_telarray'
 
