@@ -304,7 +304,7 @@ class CorsikaRunner:
         Parameters
         ----------
         file_type: str
-            The type of file it is (determines the file suffix).
+            The type of file (determines the file suffix).
             Choices are log, corsika_log, script, output or sub_log.
         kwargs: dict
             The dictionary must include the following parameters (unless listed as optional):
@@ -313,7 +313,7 @@ class CorsikaRunner:
                 primary: str
                     Primary particle (e.g gamma, proton etc).
                 site: str
-                    Paranal or LaPalma.
+                    Site name (usually North/South or Paranal/LaPalma).
                 array_name: str
                     Array name.
                 label: str
