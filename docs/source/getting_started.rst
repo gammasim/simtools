@@ -29,4 +29,11 @@ Each time you want to use the package, just activate the conda environment:
 
     $ conda activate gammasim-tools-dev
 
+If you need access to the DB, ask one of the developers, update the login \
+credentials in set_env_db.sh and source it to activate the environmental variables:
+
+.. code-block:: console
+
+    $ source set_env_db.sh
+
 You are all set now =)
