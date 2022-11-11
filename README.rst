@@ -73,3 +73,8 @@ STYLE GUIDELINES:
 * Keep it clean!
 * Sphinx for docs with docstrings in `Numpy style <https://numpydoc.readthedocs.io/en/latest/format.html#id4>`_
 * Pep8 is required.
+
+
+.. image:: https://api.codacy.com/project/badge/Grade/0aa8e74340fa409facb5dc47ebea6ca3
+   :alt: Codacy Badge
+   :target: https://app.codacy.com/gh/gammasim/gammasim-tools?utm_source=github.com&utm_medium=referral&utm_content=gammasim/gammasim-tools&utm_campaign=Badge_Grade_Settings
