@@ -417,7 +417,11 @@ class Simulator:
             job_manager = JobManager(submit_command=self._submit_command, test=self.test)
             job_manager.submit(
                 run_script=run_script,
-                run_out_file=self._simulation_runner.get_sub_log_file(run_number=run, mode=""),
+                run_out_file=self._simulation_runner.get_file_name(
+                    file_type="sub_log",
+                    **self._simulation_runner.get_info_for_file_name(run),
+                    mode="",
+                ),
             )
 
             self._fill_results(file, run)
@@ -438,12 +442,10 @@ class Simulator:
         )
 
         for run, _ in runs_and_files_to_submit.items():
-            print(
-                "{} (file exists: {})".format(
-                    str(self._simulation_runner.get_output_file(run)),
-                    Path.exists(self._simulation_runner.get_output_file(run)),
-                )
+            output_file_name = self._simulation_runner.get_file_name(
+                file_type="output", **self._simulation_runner.get_info_for_file_name(run)
             )
+            print(f"{str(output_file_name)} (file exists: {Path.exists(output_file_name)})")
 
     def _get_runs_and_files_to_submit(self, input_file_list=None):
         """
@@ -522,14 +524,29 @@ class Simulator:
 
         """
 
-        self._results["output"].append(str(self._simulation_runner.get_output_file(run)))
-        self._results["sub_out"].append(
-            str(self._simulation_runner.get_sub_log_file(run, mode="out"))
+        info_for_file_name = self._simulation_runner.get_info_for_file_name(run)
+        self._results["output"].append(
+            str(self._simulation_runner.get_file_name(file_type="output", **info_for_file_name))
         )
-        self._results["log"].append(str(self._simulation_runner.get_log_file(run)))
+        self._results["sub_out"].append(
+            str(
+                self._simulation_runner.get_file_name(
+                    file_type="sub_log", **info_for_file_name, mode="out"
+                )
+            )
+        )
+        self._results["log"].append(
+            str(self._simulation_runner.get_file_name(file_type="log", **info_for_file_name))
+        )
         if self.simulator == "simtel":
             self._results["input"].append(str(file))
-            self._results["hist"].append(str(self._simulation_runner.get_histogram_file(run)))
+            self._results["hist"].append(
+                str(
+                    self._simulation_runner.get_file_name(
+                        file_type="histogram", **info_for_file_name
+                    )
+                )
+            )
         else:
             self._results["input"].append(None)
             self._results["hist"].append(None)
@@ -585,9 +602,10 @@ class Simulator:
             runs_to_list = self._get_runs_to_simulate(run_list=run_list, run_range=run_range)
 
             for run in runs_to_list:
-                self._results["output"].append(
-                    str(self._simulation_runner.get_output_file(run_number=run))
+                output_file_name = self._simulation_runner.get_file_name(
+                    file_type="output", **self._simulation_runner.get_info_for_file_name(run)
                 )
+                self._results["output"].append(str(output_file_name))
 
         return self._results["output"]
 
