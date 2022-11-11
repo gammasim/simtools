@@ -44,7 +44,7 @@ class SimtelRunnerArray(SimtelRunner):
         Run sim_telarray. test=True will make it faster and force=True will remove existing files
         and run again.
     get_info_for_file_name()
-        Get a dirctionary with the info necessary for building the sim_telarray file names.
+        Get a dictionary with the info necessary for building the sim_telarray file names.
     get_file_name()
         Get a sim_telarray style file name for various file types.
     """
