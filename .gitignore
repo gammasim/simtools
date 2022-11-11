@@ -11,6 +11,9 @@ docs/build
 # DB config gfile
 dbDetails.yml
 
+# set environmemnt
+set_env_db.sh
+
 # Mac users
 .DS_Store
 
