@@ -147,7 +147,7 @@ class SimtelRunnerArray(SimtelRunner):
         Parameters
         ----------
         file_type: str
-            The type of file it is (determines the file suffix).
+            The type of file (determines the file suffix).
             Choices are log, histogram, output or sub_log.
         kwargs: dict
             The dictionary must include the following parameters (unless listed as optional):
@@ -160,7 +160,7 @@ class SimtelRunnerArray(SimtelRunner):
                 azimuth: float
                     Azimuth angle (deg).
                 site: str
-                    Paranal or LaPalma.
+                    Site name (usually North/South or Paranal/LaPalma).
                 array_name: str
                     Array name.
                 label: str

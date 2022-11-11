@@ -440,7 +440,7 @@ class CorsikaConfig:
         Parameters
         ----------
         file_type: str
-            The type of file it is (determines the file suffix).
+            The type of file (determines the file suffix).
             Choices are config_tmp, config or output_generic.
         run_number: int
             Run number (optional).
