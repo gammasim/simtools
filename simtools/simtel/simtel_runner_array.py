@@ -189,17 +189,17 @@ class SimtelRunnerArray(SimtelRunner):
         )
         if file_type == "log":
             return self._simtel_log_dir.joinpath(f"{file_name}.log")
-        elif file_type == "histogram":
+        if file_type == "histogram":
             return self._simtel_log_dir.joinpath(f"{file_name}.hdata.zst")
-        elif file_type == "output":
+        if file_type == "output":
             return self._simtel_data_dir.joinpath(f"{file_name}.simtel.zst")
-        elif file_type == "sub_log":
+        if file_type == "sub_log":
             suffix = ".log"
             if "mode" in kwargs:
                 suffix = f".{kwargs['mode']}"
             return self._simtel_log_dir.joinpath(f"log_sub_{file_name}{suffix}")
-        else:
-            raise ValueError(f"The requested file type ({file_type}) is unknown")
+
+        raise ValueError(f"The requested file type ({file_type}) is unknown")
 
     def has_file(self, file_type, run_number, mode="out"):
         """

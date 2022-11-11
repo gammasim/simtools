@@ -481,16 +481,16 @@ class CorsikaConfig:
                 return f"corsika_config_run{run_number}_{file_name}.txt"
             else:
                 raise ValueError("Must provide a run number for a temporary CORSIKA config file")
-        elif file_type == "config":
+        if file_type == "config":
             return f"corsika_config_{file_name}.input"
-        elif file_type == "output_generic":
+        if file_type == "output_generic":
             file_name = (
                 "corsika_run${RUNNR}_${PRMNAME}_za${ZA}deg_azm${AZM}deg"
                 f"_{self.site}_{self.layout_name}{file_label}.zst"
             )
             return file_name
-        else:
-            raise ValueError(f"The requested file type ({file_type}) is unknown")
+
+        raise ValueError(f"The requested file type ({file_type}) is unknown")
 
     def _set_output_file_and_directory(self):
         config_file_name = self.get_file_name(file_type="config")
