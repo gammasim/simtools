@@ -163,7 +163,7 @@ class SimtelRunner:
             self._logger.info("Running (test) with command:{}".format(command))
             self._run_simtel_and_check_output(command)
         else:
-            self._logger.info("Running ({}x) with command:{}".format(self.RUNS_PER_SET, command))
+            self._logger.debug("Running ({}x) with command:{}".format(self.RUNS_PER_SET, command))
             self._run_simtel_and_check_output(command)
 
             for _ in range(self.RUNS_PER_SET - 1):
