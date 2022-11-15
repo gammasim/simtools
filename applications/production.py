@@ -58,10 +58,9 @@
         python applications/production.py --task simulate --productionconfig prod_config_test.yml \
         --test --showers_only --submit_command local
 
-    The output is saved in simtools-output/test-production, which is given by the key 'label'
-    in the configuration file.
+    The output is saved in simtools-output/test-production.
 
-    Expected final output:
+    Expected final print-out message:
 
     .. code-block:: console
 

@@ -57,12 +57,30 @@
     -------
     LST-1 Prod5
 
-    Runtime around 5 min.
+    First get the PSF data from the DB:
+
+    .. code-block:: console
+
+        python applications/get_file_from_db.py --file_name PSFcurve_data_v2.txt
+
+    Then run the application. Runtime around 3 min.
 
     .. code-block:: console
 
         python applications/tune_psf.py --site North --telescope LST-1 \
-            --model_version prod5 --data PSFcurve_data_v2.txt --plot_all
+            --model_version prod5 --data PSFcurve_data_v2.txt --plot_all --test
+
+    The output is saved in simtools-output/tune_psf.
+
+    Expected final print-out message:
+
+    .. code-block:: console
+
+        Best parameters:
+        mirror_reflection_random_angle = 0.0043,0.08,0.0470
+        mirror_align_random_horizontal = 0.0047,28.,0.,0.
+        mirror_align_random_vertical = 0.0047,28.,0.,0.
+
 """
 
 import logging

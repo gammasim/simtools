@@ -31,7 +31,9 @@
         python applications/submit_data_from_external.py --workflow_config \
         set_MST_mirror_2f_measurements_from_external.config.yml
 
-    Expected final output:
+    The output is saved in simtools-output/submit_data_from_external.
+
+    Expected final print-out message:
 
     .. code-block:: console
 

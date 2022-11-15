@@ -37,6 +37,16 @@
         python applications/validate_camera_efficiency.py --site North \
             --telescope MST-NectarCam-D --model_version prod5
 
+    The output is saved in simtools-output/validate_camera_efficiency.
+
+    Expected final print-out message:
+
+    .. code-block:: console
+
+        INFO::validate_camera_efficiency(l118)::main::Plotted NSB efficiency in /workdir/external/\
+        gammasim-tools/simtools-output/validate_camera_efficiency/application-plots/validate_camera\
+        _efficiency_MST-NectarCam-D_nsb
+
     .. todo::
 
         * Change default model to default (after this feature is implemented in db_handler)

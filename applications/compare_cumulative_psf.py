@@ -69,7 +69,9 @@
         python applications/compare_cumulative_psf.py --site North --telescope LST-1 \
             --model_version prod5 --pars lst_pars_example.yml --data PSFcurve_data_v2.txt
 
-    Expected final output:
+    The output is saved in simtools-output/compare_cumulative_psf
+
+    Expected final print-out message:
 
     .. code-block:: console
 

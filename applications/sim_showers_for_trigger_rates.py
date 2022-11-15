@@ -50,9 +50,9 @@
         python applications/sim_showers_for_trigger_rates.py --array 4LST --site North --primary \
         proton --nruns 2 --nevents 10000 --test --submit_command local
 
-    The output is saved to simtools-output/sim_showers_for_trigger_rates/
+    The output is saved in simtools-output/sim_showers_for_trigger_rates.
 
-    Expected final output:
+    Expected final print-out message:
 
     .. code-block:: console
 
