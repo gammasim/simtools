@@ -107,7 +107,7 @@ class CommandLineParser(argparse.ArgumentParser):
             required=False,
         )
         _job_group.add_argument(
-            "--simtelpath",
+            "--simtel_path",
             help="path pointing to sim_telarray installation",
             type=Path,
             required=False,
