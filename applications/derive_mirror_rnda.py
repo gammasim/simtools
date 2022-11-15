@@ -82,28 +82,33 @@
     -------
     MST - Prod5 (07.2020)
 
-    Runtime about 3 min.
+    First get the file with mirror list and PSF data from DB
+
+     .. code-block:: console
+
+        python applications/get_file_from_db.py --file_name MLTdata-preproduction.ecsv
+
+    Run the application. Runtime about 4 min.
 
     .. code-block:: console
 
         python applications/derive_mirror_rnda.py --site North --telescope MST-FlashCam-D \
-            --containment_fraction 0.8 --mirror_list tests/resources/MLTdata-preproduction.ecsv
-            --psf_measurement tests/resources/MLTdata-preproduction.ecsv --rnda 0.0063
+            --containment_fraction 0.8 --mirror_list MLTdata-preproduction.ecsv
+            --psf_measurement MLTdata-preproduction.ecsv --rnda 0.0063 --test
 
-    Expected output:
+    Expected final output:
 
     .. code-block:: console
 
-        Measured Containment Diameter (80% containment):
-        Mean = 1.400 cm, StdDev = 0.160 cm
+        Measured D80:
+        Mean = 1.403 cm, StdDev = 0.163 cm
 
-        Simulated Containment Diameter (80% containment):
-        Mean = 1.401 cm, StdDev = 0.200 cm
+        Simulated D80:
+        Mean = 1.404 cm, StdDev = 0.608 cm
 
         mirror_random_reflection_angle
-        Previous value = 0.007500
-        New value = 0.006378
-
+        Previous value = 0.006300
+        New value = 0.004975
 
     .. todo::
 
