@@ -15,7 +15,7 @@ logger.setLevel(logging.DEBUG)
 
 
 @pytest.mark.parametrize("telescope_model_name", ["sst-1M", "sst-ASTRI", "sst-GCT"])
-def test_ssts(telescope_model_name, db_config, simtelpath_no_mock, io_handler):
+def test_ssts(telescope_model_name, db_config, simtel_path_no_mock, io_handler):
     # Test with 3 SSTs
     version = "prod3"
     config_data = {
@@ -32,13 +32,13 @@ def test_ssts(telescope_model_name, db_config, simtelpath_no_mock, io_handler):
     )
 
     ray = RayTracing(
-        telescope_model=tel, simtel_source_path=simtelpath_no_mock, config_data=config_data
+        telescope_model=tel, simtel_source_path=simtel_path_no_mock, config_data=config_data
     )
     ray.simulate(test=True, force=True)
     ray.analyze(force=True)
 
 
-def test_rx(db_config, simtelpath_no_mock, io_handler):
+def test_rx(db_config, simtel_path_no_mock, io_handler):
     version = "current"
     label = "test-lst"
 
@@ -57,7 +57,7 @@ def test_rx(db_config, simtelpath_no_mock, io_handler):
     )
 
     ray = RayTracing(
-        telescope_model=tel, simtel_source_path=simtelpath_no_mock, config_data=config_data
+        telescope_model=tel, simtel_source_path=simtel_path_no_mock, config_data=config_data
     )
 
     ray.simulate(test=True, force=True)
@@ -95,7 +95,7 @@ def test_rx(db_config, simtelpath_no_mock, io_handler):
     plt.savefig(plot_file_area)
 
 
-def test_plot_image(db_config, simtelpath_no_mock, io_handler):
+def test_plot_image(db_config, simtel_path_no_mock, io_handler):
     version = "prod3"
     label = "test-astri"
     config_data = {
@@ -113,7 +113,7 @@ def test_plot_image(db_config, simtelpath_no_mock, io_handler):
     )
 
     ray = RayTracing(
-        telescope_model=tel, simtel_source_path=simtelpath_no_mock, config_data=config_data
+        telescope_model=tel, simtel_source_path=simtel_path_no_mock, config_data=config_data
     )
 
     ray.simulate(test=True, force=True)
@@ -132,7 +132,7 @@ def test_plot_image(db_config, simtelpath_no_mock, io_handler):
         plt.savefig(plot_file)
 
 
-def test_single_mirror(db_config, simtelpath_no_mock, io_handler, plot=False):
+def test_single_mirror(db_config, simtel_path_no_mock, io_handler, plot=False):
 
     # Test MST, single mirror PSF simulation
     version = "prod3"
@@ -147,7 +147,7 @@ def test_single_mirror(db_config, simtelpath_no_mock, io_handler, plot=False):
     )
 
     ray = RayTracing(
-        telescope_model=tel, simtel_source_path=simtelpath_no_mock, config_data=config_data
+        telescope_model=tel, simtel_source_path=simtel_path_no_mock, config_data=config_data
     )
     ray.simulate(test=True, force=True)
     ray.analyze(force=True)
@@ -164,7 +164,7 @@ def test_single_mirror(db_config, simtelpath_no_mock, io_handler, plot=False):
     plt.savefig(plot_file)
 
 
-def test_integral_curve(db_config, simtelpath_no_mock, io_handler):
+def test_integral_curve(db_config, simtel_path_no_mock, io_handler):
     version = "prod4"
     label = "lst_integral"
 
@@ -183,7 +183,7 @@ def test_integral_curve(db_config, simtelpath_no_mock, io_handler):
     )
 
     ray = RayTracing(
-        telescope_model=tel, simtel_source_path=simtelpath_no_mock, config_data=config_data
+        telescope_model=tel, simtel_source_path=simtel_path_no_mock, config_data=config_data
     )
 
     ray.simulate(test=True, force=True)
