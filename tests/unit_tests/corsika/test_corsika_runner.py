@@ -29,12 +29,12 @@ def corsika_config_data():
 
 
 @pytest.fixture
-def corsika_runner(corsika_config_data, io_handler, simtelpath):
+def corsika_runner(corsika_config_data, io_handler, simtel_path):
 
     corsika_runner = CorsikaRunner(
         site="south",
         layout_name="test-layout",
-        simtel_source_path=simtelpath,
+        simtel_source_path=simtel_path,
         label="test-corsika-runner",
         corsika_config_data=corsika_config_data,
     )
