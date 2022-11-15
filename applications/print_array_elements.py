@@ -43,7 +43,8 @@
             --array_element_list telescope_positions-South-4MST.ecsv \
             --compact corsika
 
-    Expected output:
+
+    Expected final print-out message:
 
     .. code-block:: console
 

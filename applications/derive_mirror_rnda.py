@@ -96,7 +96,9 @@
             --containment_fraction 0.8 --mirror_list MLTdata-preproduction.ecsv
             --psf_measurement MLTdata-preproduction.ecsv --rnda 0.0063 --test
 
-    Expected final output:
+    The output is saved in simtools-output/derive_mirror_rnda.
+
+    Expected final print-out message:
 
     .. code-block:: console
 
@@ -109,6 +111,7 @@
         mirror_random_reflection_angle
         Previous value = 0.006300
         New value = 0.004975
+
 
     .. todo::
 

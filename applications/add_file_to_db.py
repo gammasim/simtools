@@ -33,7 +33,7 @@
 
         python applications/add_file_to_db.py --file_name test_application.dat
 
-    Expected output:
+    Expected final print-out message:
 
     .. code-block:: console
 
