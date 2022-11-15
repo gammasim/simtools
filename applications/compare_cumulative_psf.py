@@ -50,20 +50,30 @@
 
     Runtime < 1 min.
 
-    First, create an yml file named lst_pars.yml with the following content:
+    First, get the yml file named lst_pars_example.yml from the DB:
 
     .. code-block:: yaml
 
-        mirror_reflection_random_angle: '0.0075,0.15,0.035'
-        mirror_align_random_horizontal: '0.0040,28.,0.0,0.0'
-        mirror_align_random_vertical: '0.0040,28.,0.0,0.0'
+        python applications/get_file_from_db.py --file_name lst_pars_example.yml
 
-    And then run:
+    Get also the PSF data from the DB:
+
+    .. code-block:: yaml
+
+        python applications/get_file_from_db.py --file_name PSFcurve_data_v2.txt
+
+    And finally run:
 
     .. code-block:: console
 
         python applications/compare_cumulative_psf.py --site North --telescope LST-1 \
-            --model_version prod5 --pars lst_pars.yml --data PSFcurve_data_v2.txt
+            --model_version prod5 --pars lst_pars_example.yml --data PSFcurve_data_v2.txt
+
+    Expected output:
+
+    .. code-block:: console
+
+        d80 in cm = 3.3662565358159013
 
     .. todo::
 
