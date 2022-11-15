@@ -215,7 +215,7 @@ def main():
         shower_simulators[primary] = Simulator(
             label=label,
             simulator="corsika",
-            simulator_source_path=args_dict["simtelpath"],
+            simulator_source_path=args_dict["simtel_path"],
             config_data=config_data,
             submit_command=args_dict["submit_command"],
             test=args_dict["test"],
@@ -232,7 +232,7 @@ def main():
             array_simulators[primary] = Simulator(
                 label=label,
                 simulator="simtel",
-                simulator_source_path=args_dict["simtelpath"],
+                simulator_source_path=args_dict["simtel_path"],
                 config_data=config_data,
                 submit_command=args_dict["submit_command"],
                 mongo_db_config=db_config,
