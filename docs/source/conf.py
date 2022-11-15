@@ -24,7 +24,7 @@ sys.path.insert(0, os.path.abspath("../.."))
 
 project = "gammasim-tools"
 copyright = "2022, gammasim-tools developers"
-author = "Raul R Prado and Orel Gueta and Gernot Maier"
+author = "Raul R Prado and Orel Gueta and Gernot Maier and Victor Barbosa Martins"
 
 # The short X.Y version
 version = ""
