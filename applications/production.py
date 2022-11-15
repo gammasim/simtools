@@ -11,8 +11,7 @@
     submitted (so typically you first run shower simulations, and then the \
     array simulations).
 
-    A configuration file is required. See tests/resources/prod_config_test.yml \
-    for an example.
+    A configuration file is required.
 
     The workload management system used is given in the configuration file. \
     Allowed systems are qsub (using gridengine), condor_submit \
@@ -25,6 +24,7 @@
     primary (str)
         Name of the primary to be selected from the configuration file. In case it \
         is not given, all the primaries listed in the configuration file will be simulated.
+        The choices are: gamma, electron, proton, helium, nitrogen, silicon, and iron.
     task (str)
         What task to execute. Options:
             simulate (perform simulations),
@@ -45,11 +45,28 @@
     -------
     Testing a mini-prod5 simulation.
 
+    First get the configuration file from the DB
+
     .. code-block:: console
 
-        python applications/production.py -t simulate -p tests/resources/prod_config_test.yml --test
+        python applications/get_file_from_db.py --file_name prod_config_test.yml
 
-    Running shower simulations.
+    Then run the application:
+
+    .. code-block:: console
+
+        python applications/production.py --task simulate --productionconfig prod_config_test.yml \
+        --test --showers_only --submit_command local
+
+    The output is saved in simtools-output/test-production, which is given by the key 'label'
+    in the configuration file.
+
+    Expected final output:
+
+    .. code-block:: console
+
+        INFO::job_manager(l124)::_submit_local::Running script locally
+        INFO::job_manager(l133)::_submit_local::Testing (local)
 """
 
 import logging
