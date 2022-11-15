@@ -31,7 +31,19 @@
 
     .. code-block:: console
 
-        python applications/add_file_to_db.py --file_name data/data-to-upload/test-data.dat
+        python applications/add_file_to_db.py --file_name test_application.dat
+
+    Expected output:
+
+    .. code-block:: console
+
+        INFO::get_file_from_db(l75)::main::Got file test_application.dat from DB test-data and \
+        saved into .
+
+
+
+
+
 """
 
 import logging

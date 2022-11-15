@@ -69,7 +69,7 @@
         python applications/compare_cumulative_psf.py --site North --telescope LST-1 \
             --model_version prod5 --pars lst_pars_example.yml --data PSFcurve_data_v2.txt
 
-    Expected output:
+    Expected final output:
 
     .. code-block:: console
 
