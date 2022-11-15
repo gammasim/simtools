@@ -26,7 +26,7 @@
         python applications/get_parameter.py --parameter mirror_list --site North --telescope LST-1\
          --model_version prod5
 
-    Expected output:
+    Expected final print-out message:
 
     .. code-block:: console
 

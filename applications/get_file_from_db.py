@@ -26,10 +26,14 @@
 
     .. code-block:: console
 
-        python applications/get_file_from_db.py ---file_name mirror_CTA-N-LST1_v2019-03-31.dat
+        python applications/get_file_from_db.py --file_name mirror_CTA-N-LST1_v2019-03-31.dat
 
-    Expected output:
+    Expected final print-out message:
 
+    .. code-block:: console
+
+        INFO::get_file_from_db(l82)::main::Got file mirror_CTA-N-LST1_v2019-03-31.dat from DB \
+        CTA-Simulation-Model and saved into .
 
 """
 

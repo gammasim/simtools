@@ -84,9 +84,9 @@
         python applications/produce_array_config.py --label test --array_config \
         array_config_test.yml
 
-    All the produced model files can be found in simtools-output/test/model/
+    The output is saved in simtools-output/test/model.
 
-    Expected final output:
+    Expected final print-out message:
 
     .. code-block:: console
 
