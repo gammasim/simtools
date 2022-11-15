@@ -3,7 +3,7 @@ name: CI-integrationtests
 # Execute integration tests for applications
 #
 env:
-  SIMTELPATH: ${{ github.workspace }}/
+  SIMTEL_PATH: ${{ github.workspace }}/
   DB_SERVER: ${{ secrets.DB_SERVER }}
   DB_API_USER: ${{ secrets.DB_API_USER }}
   DB_API_PW: ${{ secrets.DB_API_PW }}
@@ -65,8 +65,8 @@ jobs:
 
       - name: run sim_telarray
         run: |
-          echo "${SIMTELPATH}"
-          ls "${SIMTELPATH}"
+          echo "${SIMTEL_PATH}"
+          ls "${SIMTEL_PATH}"
 
       - name: Integration tests
         shell: bash -l {0}

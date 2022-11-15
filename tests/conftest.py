@@ -53,7 +53,7 @@ def mock_settings_env_vars(tmp_test_directory):
     with mock.patch.dict(
         os.environ,
         {
-            "SIMTELPATH": str(tmp_test_directory) + "/simtel",
+            "SIMTEL_PATH": str(tmp_test_directory) + "/simtel",
             "DB_API_USER": "db_user",
             "DB_API_PW": "12345",
             "DB_API_PORT": "42",
@@ -66,7 +66,7 @@ def mock_settings_env_vars(tmp_test_directory):
 
 @pytest.fixture
 def simtel_path(mock_settings_env_vars):
-    simtel_path = Path(os.path.expandvars("$SIMTELPATH"))
+    simtel_path = Path(os.path.expandvars("$SIMTEL_PATH"))
     if simtel_path.exists():
         return simtel_path
     return ""
@@ -74,7 +74,7 @@ def simtel_path(mock_settings_env_vars):
 
 @pytest.fixture
 def simtel_path_no_mock():
-    simtel_path = Path(os.path.expandvars("$SIMTELPATH"))
+    simtel_path = Path(os.path.expandvars("$SIMTEL_PATH"))
     if simtel_path.exists():
         return simtel_path
     return ""
