@@ -194,7 +194,7 @@ class CommandLineParser(argparse.ArgumentParser):
 
         _job_group = self.add_argument_group("telescope model")
         _job_group.add_argument(
-            "--site", help="CTAO site (e.g. North, South)", type=self.site, required=True
+            "--site", help="CTAO site (e.g. North, South)", type=self.site, required=False
         )
         if add_telescope:
             _job_group.add_argument(
