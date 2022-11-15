@@ -14,6 +14,12 @@
     parameter (str, required)
         Parameter name
 
+    site (str, required)
+        South or North.
+
+    telescope (str, optional)
+        Telescope model name (e.g. LST-1, SST-D, ...)
+
     verbosity (str, optional)
         Log level to print (default=INFO).
 
