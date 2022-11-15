@@ -49,18 +49,17 @@
         Telescope name (e.g. North-LST-1, South-SST-D, ...)
     model_version (str, optional)
         Model version (default='Current')
-    containment_mean (float, required)
+    psf_measurement (str, optional)
+        Results from PSF measurements for each mirror panel spot size
+    psf_measurement_containment_mean (float, required)
         Mean of measured containment diameter [cm]
-    containment_sigma (float, optional)
+    psf_measurement_containment_sigma (float, optional)
         Std dev of measured containment diameter [cm]
     containment_fraction (float, required)
         Containment fraction for diameter calculation (typically 0.8)
     rnda (float, optional)
         Starting value of mirror_reflection_random_angle. If not given, the value from the \
         default model will be used.
-    2f_measurement (file, optional)
-        File with results from 2f measurements including mirror panel radii and spot size \
-        measurements
     mirror_list (file, optional)
         Mirror list file to replace the default one. It should be used if measured mirror focal \
         lengths need to be taken into account. It contains the following information about the \
@@ -88,7 +87,7 @@
 
         python applications/get_file_from_db.py --file_name MLTdata-preproduction.ecsv
 
-    Run the application. Runtime about 4 min.
+    Then run the application. Runtime about 4 min.
 
     .. code-block:: console
 
