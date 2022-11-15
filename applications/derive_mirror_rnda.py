@@ -351,7 +351,7 @@ def main():
             telescope_model=tel,
             single_mirror_mode=True,
             mirror_numbers=list(range(1, 10)) if args_dict["test"] else "all",
-            simtel_source_path=args_dict.get("simtelpath", None),
+            simtel_source_path=args_dict.get("simtel_path", None),
             use_random_focal_length=args_dict["use_random_flen"],
         )
         ray.simulate(test=False, force=True)  # force has to be True, always
