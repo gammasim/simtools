@@ -23,7 +23,9 @@
 
         python applications/make_regular_arrays.py
 
-    Expected final output:
+    The output is saved in simtools-output/make_regular_arrays.
+
+    Expected final print-out message:
 
     .. code-block:: console
 
