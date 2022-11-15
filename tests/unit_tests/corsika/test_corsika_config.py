@@ -195,3 +195,22 @@ def test_config_data_from_yaml_file(db, io_handler):
         "PHIP": [180.0, 180.0],
     }
     assert test_dict == cc._user_parameters
+
+
+def test_get_file_name(corsika_config, io_handler):
+    file_name = "proton_South_4LST_za20-20deg_cone0-5_test-corsika-config"
+
+    assert (
+        corsika_config.get_file_name("config_tmp", run_number=1)
+        == f"corsika_config_run1_{file_name}.txt"
+    )
+    with pytest.raises(ValueError):
+        assert corsika_config.get_file_name("config_tmp") == f"corsika_config_run1_{file_name}.txt"
+
+    assert corsika_config.get_file_name("config") == f"corsika_config_{file_name}.input"
+    assert corsika_config.get_file_name("output_generic") == (
+        "corsika_run${RUNNR}_${PRMNAME}_za${ZA}deg_azm${AZM}deg"
+        "_South_4LST_test-corsika-config.zst"
+    )
+    with pytest.raises(ValueError):
+        corsika_config.get_file_name("foobar")
