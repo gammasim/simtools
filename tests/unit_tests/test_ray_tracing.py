@@ -7,7 +7,7 @@ from simtools.model.telescope_model import TelescopeModel
 from simtools.ray_tracing import RayTracing
 
 
-def test_config_data_from_dict(db_config, simtelpath, io_handler):
+def test_config_data_from_dict(db_config, simtel_path, io_handler):
 
     label = "test-config-data"
     version = "prod5"
@@ -28,7 +28,7 @@ def test_config_data_from_dict(db_config, simtelpath, io_handler):
 
     ray = RayTracing(
         telescope_model=tel,
-        simtel_source_path=simtelpath,
+        simtel_source_path=simtel_path,
         config_data=config_data,
     )
 
@@ -36,7 +36,7 @@ def test_config_data_from_dict(db_config, simtelpath, io_handler):
     assert len(ray.config.off_axis_angle) == 2
 
 
-def test_from_kwargs(db, io_handler, simtelpath):
+def test_from_kwargs(db, io_handler, simtel_path):
 
     label = "test-from-kwargs"
 
@@ -64,7 +64,7 @@ def test_from_kwargs(db, io_handler, simtelpath):
 
     ray = RayTracing.from_kwargs(
         telescope_model=tel,
-        simtel_source_path=simtelpath,
+        simtel_source_path=simtel_path,
         source_distance=source_distance,
         zenith_angle=zenith_angle,
         off_axis_angle=off_axis_angle,
