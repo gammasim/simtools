@@ -52,13 +52,13 @@ Environmental variables can be used to set the paths/locations. Example:
 
 .. code-block:: console
 
-    simtelPath: $SIMTELPATH
+    simtel_path: $SIMTELPATH
 
 or
 
 .. code-block:: console
 
-    simtelPath: ${SIMTELPATH}
+    simtel_path: ${SIMTELPATH}
 
 
 .. _configmodule:
