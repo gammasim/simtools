@@ -3,10 +3,10 @@
 Layout
 ======
 
-In this section you find the reference documentation of the Layout Array and  Telescope Position modules.
-The Layout Array module deals with the telescope positions and its coordinate transformations.
-It is used within CORSIKA Config and Array Model in order to encapsulate the information about the
-telescope positions.
+In this section you find the reference documentation of the Layout Array and  Telescope Position
+modules. The Layout Array module deals with the telescope positions and its coordinate
+transformations. It is used within CORSIKA Config and Array Model in order to encapsulate the
+information about the telescope positions.
 
 * :ref:`layout_array <layoutarraymodule>`
 * :ref:`telescope_position <telescopedatamodule>`
