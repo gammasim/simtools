@@ -13,17 +13,17 @@ logger.setLevel(logging.DEBUG)
 
 
 @pytest.fixture
-def camera_efficiency_lst(telescope_model_lst, simtelpath):
+def camera_efficiency_lst(telescope_model_lst, simtel_path):
     camera_efficiency_lst = CameraEfficiency(
-        telescope_model=telescope_model_lst, simtel_source_path=simtelpath, test=True
+        telescope_model=telescope_model_lst, simtel_source_path=simtel_path, test=True
     )
     return camera_efficiency_lst
 
 
 @pytest.fixture
-def camera_efficiency_sst(telescope_model_sst, simtelpath):
+def camera_efficiency_sst(telescope_model_sst, simtel_path):
     camera_efficiency_sst = CameraEfficiency(
-        telescope_model=telescope_model_sst, simtel_source_path=simtelpath, test=True
+        telescope_model=telescope_model_sst, simtel_source_path=simtel_path, test=True
     )
     return camera_efficiency_sst
 
@@ -48,14 +48,14 @@ def results_file(db, io_handler):
     ).joinpath("camera-efficiency-North-LST-1-za20.0_validate_camera_efficiency.ecsv")
 
 
-def test_from_kwargs(telescope_model_lst, simtelpath):
+def test_from_kwargs(telescope_model_lst, simtel_path):
 
     tel_model = telescope_model_lst
     label = "test-from-kwargs"
     zenith_angle = 30 * u.deg
     ce = CameraEfficiency.from_kwargs(
         telescope_model=tel_model,
-        simtel_source_path=simtelpath,
+        simtel_source_path=simtel_path,
         label=label,
         zenith_angle=zenith_angle,
         test=True,
@@ -63,10 +63,10 @@ def test_from_kwargs(telescope_model_lst, simtelpath):
     assert ce.config.zenith_angle == 30
 
 
-def test_validate_telescope_model(simtelpath):
+def test_validate_telescope_model(simtel_path):
 
     with pytest.raises(ValueError):
-        CameraEfficiency(telescope_model="bla_bla", simtel_source_path=simtelpath)
+        CameraEfficiency(telescope_model="bla_bla", simtel_source_path=simtel_path)
 
 
 def test_load_files(camera_efficiency_lst):
