@@ -25,11 +25,8 @@
         Plot the camera layout in sky coordinates akin to looking at it from behind for single \
          mirror telescopes (default=False)
     print_pixels_id (bool, optional)
-        Plot the camera layout in sky coordinates (akin to looking at it from behind for single \
-        mirror telesecopes) (default=False)"
-    print_pixels_id (bool, optional)
-        Up to which pixel ID to print (default: 50). To suppress printing of pixel IDs, set to zero\
-         (--print_pixels_id 0). To print all pixels, set to 'All'.
+        Up to which pixel ID to print (default=50). To suppress printing of pixel IDs, set to zero\
+         (--print_pixels_id 0). To print all pixels, set to 'All'."
 
     verbosity (str, optional)
         Log level to print (default=INFO).
@@ -37,8 +34,6 @@
     Example
     -------
     LST - Prod5
-
-    Runtime 1 min
 
     .. code-block:: console
 
