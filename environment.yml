@@ -1,11 +1,13 @@
 # A conda environment with all useful package for gammasim-tools developers
 name: gammasim-tools-dev
+channels:
+  - conda-forge
 dependencies:
   - python=3.9
   - pyyaml
   - numpy
   - astropy
-  - matplotlib
+  - matplotlib-base
   - sphinx
   - pre-commit
   - pytest
