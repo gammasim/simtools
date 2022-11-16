@@ -20,19 +20,19 @@ Configuration file
 
 gammasim-tools requires one configuration file in yaml format. This file should be named
 config.yml and it should be located at the main gammasim-tools directory. Alternatively one can use
-the function config.setConfigFileName to set an alternative file.
+the function config.set_config_file_name to set an alternative file.
 
 The configuration file must contain the following entries:
 
-useMongoDB: bool
+use_mongo_db: bool
     Flag to turn on MongoDB. If False, the older yaml files will be used to access the Model
     Parameters.
 
-mongoDBConfigFile: str
+mongo_db_config_file: str
     Path to the MongoDB config file (see :ref:`Model Parameters DB`), which will be ignored if
     useMongoDB is False.
 
-modelFilesLocations: list of str
+model_path: list of str
     List with the locations of the model files. The location of the dataFromTheInstruments is
     required for most of the applications and can be found on `gitlab (repo data-from-instrument-
     teams) <https://gitlab.cta-observatory.org/cta-consortium/aswg/simulations/simulation-model/
@@ -45,14 +45,14 @@ modelFilesLocations: list of str
     The files will always be searched recursively within all the subdirectories inside the directory
     given by the location.
 
-outputLocation: str
+output_path: str
     Path to the parent directory where the output directory will be created (see :ref:`I/O <IO>`).
 
-testDataLocation: str
+data_path: str
     Path to the directory containing the data used to perform automatic tests. These data is
     provided at gammasim-tools/data/.
 
-simtelPath: str
+simtelpath: str
     Path to the parent sim_telarray directory, containing the sim_telarray and CORSIKA software
     unpacked and compiled.
 
