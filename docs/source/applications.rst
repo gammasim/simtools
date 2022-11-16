@@ -13,14 +13,14 @@ task. These applications will be used as building blocks for the Simulation Syst
 The application scripts can be found in gammasim-tools/applications.
 
 The applications expect a config file named config.yml in your gammasim-tools directory (unless
-specified differently using the function config.setConfigFileName) . Please, follow the instructions
+specified differently using the function config.set_config_file_name) . Please, follow the instructions
 in :ref:`Configuration` to setup your config file. Alternatively, you can set up environmental
 variables through the *set_env_db_template.sh* script or pass it as arguments to the applications.
 The available arguments can be access by calling *--help* after calling the application.
 
 Some applications require one or multiple file names as input in the command line. The system will
 first search on main gammasim-tools directory for these files, and in case it is not found, it will
-search into the directories given by the config parameter *modelFilesLocation*.
+search into the directories given by the config parameter *model_path*.
 
 The output files from the applications will be written to $output_path/$label, where
 *output_path* is a config parameter and *label* is the name of the application. The plots
