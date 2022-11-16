@@ -50,7 +50,7 @@ def mock_settings_env_vars(tmp_test_directory):
     with mock.patch.dict(
         os.environ,
         {
-            "SIMTELPATH": str(tmp_test_directory) + "/simtel",
+            "SIMTEL_PATH": str(tmp_test_directory) + "/simtel",
             "DB_API_USER": "db_user",
             "DB_API_PW": "12345",
             "DB_API_PORT": "42",
@@ -62,23 +62,23 @@ def mock_settings_env_vars(tmp_test_directory):
 
 
 @pytest.fixture
-def simtelpath(mock_settings_env_vars):
-    simtelpath = Path(os.path.expandvars("$SIMTELPATH"))
-    if simtelpath.exists():
-        return simtelpath
+def simtel_path(mock_settings_env_vars):
+    simtel_path = Path(os.path.expandvars("$SIMTEL_PATH"))
+    if simtel_path.exists():
+        return simtel_path
     return ""
 
 
 @pytest.fixture
-def simtelpath_no_mock():
-    simtelpath = Path(os.path.expandvars("$SIMTELPATH"))
-    if simtelpath.exists():
-        return simtelpath
+def simtel_path_no_mock():
+    simtel_path = Path(os.path.expandvars("$SIMTEL_PATH"))
+    if simtel_path.exists():
+        return simtel_path
     return ""
 
 
 @pytest.fixture
-def args_dict(tmp_test_directory, simtelpath):
+def args_dict(tmp_test_directory, simtel_path):
 
     return Configurator().default_config(
         (
@@ -86,14 +86,14 @@ def args_dict(tmp_test_directory, simtelpath):
             str(tmp_test_directory),
             "--data_path",
             "./data/",
-            "--simtelpath",
-            str(simtelpath),
+            "--simtel_path",
+            str(simtel_path),
         ),
     )
 
 
 @pytest.fixture
-def args_dict_site(tmp_test_directory, simtelpath):
+def args_dict_site(tmp_test_directory, simtel_path):
 
     return Configurator().default_config(
         (
@@ -101,8 +101,8 @@ def args_dict_site(tmp_test_directory, simtelpath):
             str(tmp_test_directory),
             "--data_path",
             "./data/",
-            "--simtelpath",
-            str(simtelpath),
+            "--simtel_path",
+            str(simtel_path),
             "--site",
             "South",
             "--telescope",
@@ -114,11 +114,11 @@ def args_dict_site(tmp_test_directory, simtelpath):
 
 
 @pytest.fixture
-def configurator(tmp_test_directory, simtelpath):
+def configurator(tmp_test_directory, simtel_path):
 
     config = Configurator()
     config.default_config(
-        ("--output_path", str(tmp_test_directory), "--simtelpath", str(simtelpath))
+        ("--output_path", str(tmp_test_directory), "--simtel_path", str(simtel_path))
     )
     return config
 

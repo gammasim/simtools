@@ -105,7 +105,7 @@ def main():
 
     ce = CameraEfficiency(
         telescope_model=tel_model,
-        simtel_source_path=args_dict["simtelpath"],
+        simtel_source_path=args_dict["simtel_path"],
     )
     ce.simulate(force=True)
     ce.analyze(force=True)

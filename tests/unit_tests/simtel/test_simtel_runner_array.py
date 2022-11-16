@@ -33,10 +33,10 @@ def array_model(array_config_data, io_handler, db_config):
 
 
 @pytest.fixture
-def simtel_runner(array_model, simtelpath):
+def simtel_runner(array_model, simtel_path):
     simtel_runner = SimtelRunnerArray(
         array_model=array_model,
-        simtel_source_path=simtelpath,
+        simtel_source_path=simtel_path,
         config_data={
             "primary": "proton",
             "zenith_angle": 20 * u.deg,
