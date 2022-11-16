@@ -7,25 +7,28 @@ Applications
 Introduction
 ============
 
-Applications are python scripts built on the :ref:`Library` that execute a simple, well defined task.
-These applications will be used as building blocks for the Simulation System Workflows.
+Applications are python scripts built on the :ref:`Library` that execute a simple, well defined
+task. These applications will be used as building blocks for the Simulation System Workflows.
 
 The application scripts can be found in gammasim-tools/applications.
 
-The applications expect a config file named config.yml in your gammasim-tools directory (unless specified differently
-using the function config.setConfigFileName) . Please,
-follow the instructions in :ref:`Configuration` to setup your config file.
+The applications expect a config file named config.yml in your gammasim-tools directory (unless
+specified differently using the function config.setConfigFileName) . Please, follow the instructions
+in :ref:`Configuration` to setup your config file. Alternatively, you can set up environmental
+variables through the *set_env_db_template.sh* script or pass it as arguments to the applications.
+The available arguments can be access by calling *--help* after calling the application.
 
 Some applications require one or multiple file names as input in the command line. The system will
-first search on main gammasim-tools directory for these files, and in case it is not found, it will search
-into the directories given by the config parameter *modelFilesLocation*.
+first search on main gammasim-tools directory for these files, and in case it is not found, it will
+search into the directories given by the config parameter *modelFilesLocation*.
 
-The output files from the applications will be written to $outputLocation/$label, where *outputLocation*
-is a config parameter and *label* is the name of the application. The plots produced directly by the application
-are stored in the sub-directory *application-plots*. The high-level data produced intermediately (e.g PSF tables)
-can be found in the sub-directories relative to the specific type of application (e.g *ray-tracing* for optics
-related applications, *camera-efficiency* for camera efficiency applications etc). All files related to the
-model (e.g sim_telarray config files) are stored in the sub-directory *model*.
+The output files from the applications will be written to $output_path/$label, where
+*output_path* is a config parameter and *label* is the name of the application. The plots
+produced directly by the application are stored in the sub-directory *application-plots*. The high-
+level data produced intermediately (e.g PSF tables) can be found in the sub-directories relative to
+the specific type of application (e.g *ray-tracing* for optics related applications,
+*camera-efficiency* for camera efficiency applications etc). All files related to the model (e.g
+sim_telarray config files) are stored in the sub-directory *model*.
 
 Below you find the list of the currently available applications and their respective documentation.
 

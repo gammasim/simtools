@@ -8,7 +8,9 @@ This section is meant for developers.
 Documentation
 =============
 
-Sphinx is used to create this documentation automatically with each merge into the master branch, see the `Github Action workflow CI-docs <https://github.com/gammasim/gammasim-tools/blob/master/.github/workflows/CI-docs.yml>`_.
+Sphinx is used to create this documentation automatically with each merge into the master branch,
+see the `Github Action workflow CI-docs <https://github.com/gammasim/gammasim-tools/blob/master/
+.github/workflows/CI-docs.yml>`_.
 
 For testing of Sphinx:
 
@@ -51,18 +53,22 @@ The telescope names as used by gammasim-tools follow the pattern "Site-Class-Typ
 
 * "Site" is either "North" or "South";
 * "Class" is either "LST", "MST", "SCT" or "SST";
-* "Type" is a single number ONLY in case of a real telescope existing at the site or a string containing a "D" in case of any other telescope design.
+* "Type" is a single number ONLY in case of a real telescope existing at the site or a string
+containing a "D" in case of any other telescope design.
 
 For example:
 
-* "North-LST-1" is the first LST commissioned at the La Palma site, while "North-LST-D234" is the current design of the further 3 LSTs.
-* "North-MST-FlashCam-D" and "North-MST-NectarCam-D" are the two MST designs containing different cameras.
+* "North-LST-1" is the first LST commissioned at the La Palma site, while "North-LST-D234" is the
+current design of the further 3 LSTs.
+* "North-MST-FlashCam-D" and "North-MST-NectarCam-D" are the two MST designs containing different
+cameras.
 
-Any input telescope names can (and should) be validated by the function validateTelescopeName (see :ref:`util.names <utilnames>`).
-For the Site field, any different capitalization (e.g "south") or site names like "paranal" and "lapalma" will be accepted
-and converted to the standard ones. The same applies to the Class field.
-For the Type field, any string will be accepted and a selected list of variations will be converted to the standard ones
-(e.g "flashcam" will be converted to "FlashCam").
+Any input telescope names can (and should) be validated by the function validateTelescopeName (see
+:ref:`util.names <utilnames>`).
+For the Site field, any different capitalization (e.g "south") or site names like "paranal" and
+"lapalma" will be accepted and converted to the standard ones. The same applies to the Class field.
+For the Type field, any string will be accepted and a selected list of variations will be converted
+to the standard ones (e.g "flashcam" will be converted to "FlashCam").
 
 
 Validating names
@@ -71,13 +77,13 @@ Validating names
 Any name that is recurrently used along the the package should be validated when given as input.
 Examples of names are: telescope, site, camera, model version. The functionalities to validate names
 are found in util.names. The function validateName receives the input string and a name dictionary,
-that is usually called allSomethingNames. This dictionary contain the possible names (as keys) and lists
-of allowed alternatives names as values. In case the input name is found in one of the lists, the key
-is returned.
+that is usually called allSomethingNames. This dictionary contain the possible names (as keys) and
+lists of allowed alternatives names as values. In case the input name is found in one of the lists,
+the key is returned.
 
-The name dictionaries are also defined in util.names. One should also define specific functions named
-validateSomethingNames that call the validateName with the proper name dictionary. This is only meant to
-provide a clear interface.
+The name dictionaries are also defined in util.names. One should also define specific functions
+named validateSomethingNames that call the validateName with the proper name dictionary. This is
+only meant to provide a clear interface.
 
 This is an example of a name dictionary:
 
@@ -153,7 +159,8 @@ properties. See an example below:
 * len gives the length of the input. If null, any len is accepted.
 * unit is the astropy unit
 * default must have the same len
-* names is a list of acceptable input names. The key in the returned dict will have the name given at the definition of the block (zenithAngle in this example)
+* names is a list of acceptable input names. The key in the returned dict will have the name given
+at the definition of the block (zenithAngle in this example)
 
 
 Applications
@@ -167,14 +174,14 @@ should be done at some module in the library.
 Layout arrays
 =============
 
-The layout arrays provide the telescope positions and deal with coordinate transformations. The main module
-that implements it is simtools.layout.layout_array. A LayoutArray can be created on the fly by providing the
-telescope positions. However that is only supposed to be done once for each layout. After that it is
-recommended to use a pre-defined layout file (ecsv format) and create a LayoutArray by using the class
-method fromLayoutArrayName.
+The layout arrays provide the telescope positions and deal with coordinate transformations. The main
+module that implements it is simtools.layout.layout_array. A LayoutArray can be created on the fly
+by providing the telescope positions. However that is only supposed to be done once for each layout.
+After that it is recommended to use a pre-defined layout file (ecsv format) and create a LayoutArray
+by using the class method fromLayoutArrayName.
 
-The creation of the layout should be done in a separate application of the ones in which it will be used.
-The layout file can be then exported and stored at the data/layout directory.
+The creation of the layout should be done in a separate application of the ones in which it will be
+used. The layout file can be then exported and stored at the data/layout directory.
 
 An example of how to create a layout can be found at the application make_regular_arrays.
 
@@ -183,8 +190,8 @@ Testing
 =======
 
 pytest framework is used for unit testing.
-The test modules are located in simtools/test (note the differences between unit and integration tests).
-Every module should have its respective test module and
+The test modules are located in simtools/test (note the differences between unit and integration
+tests). Every module should have its respective test module and
 ideally all functions should be covered by tests.
 
 It is important to write the tests in parallel with the modules

@@ -25,10 +25,6 @@
     verbosity (str, optional)
         Log level to print (default=INFO).
 
-    Further optional arguments are found in :func:`~commandline_parser.CommandLineParser.initialize\
-    _config_files`, :func:`~commandline_parser.CommandLineParser.initialize_application_execution_\
-    arguments` and :func:`~commandline_parser.CommandLineParser.initialize_db_config_arguments`.
-
     Example
     -------
     uploading a dummy file.
@@ -41,7 +37,7 @@
 
     .. code-block:: console
 
-        INFO::get_file_from_db(l75)::main::Got file test_application.dat from DB test-data and \
+        INFO::get_file_from_db(l75)::main::Got file test_application.dat from DB test-data and
         saved into .
 
 """
