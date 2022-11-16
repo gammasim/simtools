@@ -13,8 +13,8 @@
     ----------------------
     file_name (str or list of str, required)
         Name of the file to upload including the full path. \
-        A list of files is also allowed, in which case only one -f is necessary, \
-        i.e., python applications/add_file_to_db.py -f file_1.dat file_2.dat file_3.dat \
+        A list of files is also allowed, in which case only one -file_name is necessary, \
+        i.e., python applications/add_file_to_db.py -file_name file_1.dat file_2.dat file_3.dat \
         If no path is given, the file is assumed to be in the CWD.
     input_path (str, required if file_name is not given)
         A directory with files to upload to the DB. \
@@ -25,13 +25,17 @@
     verbosity (str, optional)
         Log level to print (default=INFO).
 
+    Further optional arguments are found in :func:`~commandline_parser.CommandLineParser.initialize\
+    _config_files`, :func:`~commandline_parser.CommandLineParser.initialize_application_execution_\
+    arguments` and :func:`~commandline_parser.CommandLineParser.initialize_db_config_arguments`.
+
     Example
     -------
     uploading a dummy file.
 
     .. code-block:: console
 
-        python applications/add_file_to_db.py --file_name test_application.dat
+        python applications/add_file_to_db.py --file_name test_application.dat --db test-data
 
     Expected final print-out message:
 
@@ -39,10 +43,6 @@
 
         INFO::get_file_from_db(l75)::main::Got file test_application.dat from DB test-data and \
         saved into .
-
-
-
-
 
 """
 
@@ -78,7 +78,8 @@ def main():
 
     config = configurator.Configurator(
         label="Add file to the DB.",
-        description="python applications/add_file_to_db.py --file_name file_1.dat file_2.dat",
+        description="python applications/add_file_to_db.py --file_name test_application.dat --db \
+         test-data",
     )
     group = config.parser.add_mutually_exclusive_group(required=True)
     group.add_argument(
