@@ -70,12 +70,12 @@ def corsika_file():
 
 
 @pytest.fixture
-def array_simulator(label, array_config_data, io_handler, db_config, simtelpath):
+def array_simulator(label, array_config_data, io_handler, db_config, simtel_path):
 
     array_simulator = Simulator(
         label=label,
         simulator="simtel",
-        simulator_source_path=simtelpath,
+        simulator_source_path=simtel_path,
         config_data=array_config_data,
         mongo_db_config=db_config,
     )
@@ -83,12 +83,12 @@ def array_simulator(label, array_config_data, io_handler, db_config, simtelpath)
 
 
 @pytest.fixture
-def shower_simulator(label, shower_config_data, io_handler, simtelpath):
+def shower_simulator(label, shower_config_data, io_handler, simtel_path):
 
     shower_simulator = Simulator(
         label=label,
         simulator="corsika",
-        simulator_source_path=simtelpath,
+        simulator_source_path=simtel_path,
         config_data=shower_config_data,
     )
     return shower_simulator
@@ -282,13 +282,13 @@ def test_fill_results(array_simulator, shower_simulator, input_file_list):
 
 
 def test_print_histograms(
-    array_config_data, shower_simulator, input_file_list, db_config, simtelpath
+    array_config_data, shower_simulator, input_file_list, db_config, simtel_path
 ):
 
     _array_simulator = Simulator(
         label="simtel_test",
         simulator="simtel",
-        simulator_source_path=simtelpath,
+        simulator_source_path=simtel_path,
         config_data=array_config_data,
         mongo_db_config=db_config,
     )
@@ -311,7 +311,7 @@ def test_get_list_of_files(shower_simulator):
     assert len(shower_simulator.get_list_of_output_files(run_range=[1, 4])) == 14
 
 
-def test_no_corsika_data(shower_config_data, label, simtelpath, io_handler):
+def test_no_corsika_data(shower_config_data, label, simtel_path, io_handler):
 
     new_shower_config_data = copy(shower_config_data)
     new_shower_config_data.pop("data_directory", None)
@@ -319,7 +319,7 @@ def test_no_corsika_data(shower_config_data, label, simtelpath, io_handler):
         label=label,
         simulator="corsika",
         config_data=new_shower_config_data,
-        simulator_source_path=simtelpath,
+        simulator_source_path=simtel_path,
     )
     files = new_shower_simulator.get_list_of_output_files(run_list=[3])
 
@@ -335,13 +335,13 @@ def test_make_resources_report(array_simulator, input_file_list):
         array_simulator._make_resources_report(input_file_list)
 
 
-def test_get_runs_to_simulate(shower_config_data, simtelpath, io_handler):
+def test_get_runs_to_simulate(shower_config_data, simtel_path, io_handler):
 
     shower_simulator = Simulator(
         label="corsika-test",
         simulator="corsika",
         config_data=shower_config_data,
-        simulator_source_path=simtelpath,
+        simulator_source_path=simtel_path,
     )
     assert len(shower_simulator.runs) == len(
         shower_simulator._get_runs_to_simulate(run_list=None, run_range=None)
