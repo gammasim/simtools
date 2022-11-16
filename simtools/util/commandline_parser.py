@@ -17,7 +17,7 @@ class CommandLineParser(argparse.ArgumentParser):
     initialize_default_arguments:
         Initialize default arguments used by all applications
     initialize_telescope_model_arguments:
-        nitialize default arguments for telescope model definitions
+        Initialize default arguments for telescope model definitions
 
     """
 
@@ -62,7 +62,14 @@ class CommandLineParser(argparse.ArgumentParser):
         """
         Initialize configuration and workflow files.
 
+        Parameters
+        ----------
+        config (str, optional)
+            gammasim-tools configuration file.
+        workflow_config (str, optional)
+            workflow configuration file.
         """
+
         _job_group = self.add_argument_group("configuration")
         _job_group.add_argument(
             "--config",
@@ -117,6 +124,16 @@ class CommandLineParser(argparse.ArgumentParser):
         """
         Initialize application execution arguments.
 
+        Parameters
+        ----------
+        test (bool, optional)
+            Test option for faster execution during development.
+        label (str, optional)
+            Job label.
+        log_level (str, optional)
+            Log level to print (default is INFO).
+        version (str, optional)
+            Version.
         """
         _job_group = self.add_argument_group("execution")
         _job_group.add_argument(
@@ -144,6 +161,17 @@ class CommandLineParser(argparse.ArgumentParser):
     def initialize_db_config_arguments(self):
         """
         Initialize DB configuration parameters.
+
+        Parameters
+        ----------
+        db_api_user (str, optional)
+            Database user.
+        db_api_pw (str, optional)
+            Database password.
+        db_api_port (int, optional)
+            Database port.
+        db_api_authentication_database (str, optional)
+            Database  with user info (optional, default is 'admin').
 
         """
         _job_group = self.add_argument_group("MongoDB configuration")
