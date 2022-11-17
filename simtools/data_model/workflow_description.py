@@ -3,11 +3,10 @@ import logging
 import uuid
 from pathlib import Path
 
-import simtools.data_model.validate_schema as vs
 import simtools.util.general as gen
 import simtools.version
 from simtools import io_handler
-from simtools.data_model import data_model
+from simtools.data_model import data_model, validate_schema
 from simtools.util import names
 
 
@@ -308,7 +307,7 @@ class WorkflowDescription:
 
         """
 
-        _schema_validator = vs.SchemaValidator()
+        _schema_validator = validate_schema.SchemaValidator()
         try:
             _input_meta = _schema_validator.validate_and_transform(
                 meta_file_name=self.workflow_config["configuration"]["input_meta"],
