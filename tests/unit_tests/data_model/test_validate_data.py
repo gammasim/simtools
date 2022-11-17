@@ -8,7 +8,7 @@ from astropy import units as u
 from astropy.table import Column, Table
 from astropy.utils.diff import report_diff_values
 
-import simtools.util.validate_data as ds
+from simtools.data_model import validate_data
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
@@ -16,7 +16,7 @@ logger.setLevel(logging.DEBUG)
 
 def test_sort_data():
 
-    data_validator = ds.DataValidator()
+    data_validator = validate_data.DataValidator()
     data_validator._reference_data_columns = get_reference_columns()
 
     table_1 = Table()
@@ -40,7 +40,7 @@ def test_sort_data():
 
     reverse_sorted_data_columns = get_reference_columns()
     reverse_sorted_data_columns["wavelength"]["attribute"] = ["remove_duplicates", "reversesort"]
-    data_validator_reverse = ds.DataValidator()
+    data_validator_reverse = validate_data.DataValidator()
     data_validator_reverse._reference_data_columns = reverse_sorted_data_columns
 
     data_validator_reverse.data_table = table_1
@@ -56,7 +56,7 @@ def test_sort_data():
 
 def test_check_data_for_duplicates():
 
-    data_validator = ds.DataValidator()
+    data_validator = validate_data.DataValidator()
     data_validator._reference_data_columns = get_reference_columns()
 
     table_unique = Table()
@@ -96,7 +96,7 @@ def test_check_data_for_duplicates():
 
 def test_interval_check_allow_range():
 
-    data_validator = ds.DataValidator()
+    data_validator = validate_data.DataValidator()
 
     assert data_validator._interval_check((0.1, 0.9), (0.0, 1.0), "allowed_range") == True
     assert data_validator._interval_check((0.0, 1.0), (0.0, 1.0), "allowed_range") == True
@@ -108,7 +108,7 @@ def test_interval_check_allow_range():
 
 def test_interval_check_required_range():
 
-    data_validator = ds.DataValidator()
+    data_validator = validate_data.DataValidator()
 
     assert data_validator._interval_check((250.0, 700.0), (300.0, 600), "required_range") == True
     assert data_validator._interval_check((300.0, 600.0), (300.0, 600), "required_range") == True
@@ -120,7 +120,7 @@ def test_interval_check_required_range():
 
 def test_check_range():
 
-    data_validator = ds.DataValidator()
+    data_validator = validate_data.DataValidator()
     data_validator._reference_data_columns = get_reference_columns()
 
     col_1 = Column(name="qe", data=[0.1, 0.5], dtype="float32")
@@ -138,7 +138,7 @@ def test_check_range():
 
 def test_column_units():
 
-    data_validator = ds.DataValidator()
+    data_validator = validate_data.DataValidator()
     data_validator._reference_data_columns = get_reference_columns()
 
     table_1 = Table()
@@ -168,7 +168,7 @@ def test_column_units():
 
 def test_check_required_columns():
 
-    data_validator = ds.DataValidator()
+    data_validator = validate_data.DataValidator()
     data_validator._reference_data_columns = get_reference_columns()
 
     table_1 = Table()

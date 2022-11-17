@@ -10,7 +10,7 @@ from scipy.spatial import cKDTree as KDTree
 from scipy.spatial import distance
 
 import simtools.util.legend_handlers as leg_h
-from simtools.util.model import (
+from simtools.model.model_utils import (
     get_camera_name,
     get_telescope_class,
     is_two_mirror_telescope,

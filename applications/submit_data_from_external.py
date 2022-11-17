@@ -35,11 +35,11 @@
 import logging
 from pathlib import Path
 
+import simtools.data_model.model_data_writer as writer
 import simtools.util.general as gen
-import simtools.util.model_data_writer as writer
-import simtools.util.validate_data as ds
-from simtools.configuration import Configurator
-from simtools.util.workflow_description import WorkflowDescription
+from simtools.configuration import configurator
+from simtools.data_model import validate_data
+from simtools.data_model.workflow_description import WorkflowDescription
 
 
 def _parse(label, description, usage):
@@ -53,7 +53,7 @@ def _parse(label, description, usage):
 
     """
 
-    config = Configurator(label=label, description=description, usage=usage)
+    config = configurator.Configurator(label=label, description=description, usage=usage)
 
     config.parser.add_argument(
         "--input_meta",
@@ -85,7 +85,7 @@ def main():
 
     workflow = WorkflowDescription(args_dict=args_dict)
 
-    data_validator = ds.DataValidator(workflow)
+    data_validator = validate_data.DataValidator(workflow)
     data_validator.validate()
 
     file_writer = writer.ModelDataWriter(workflow)

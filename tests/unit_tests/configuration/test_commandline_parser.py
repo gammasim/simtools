@@ -5,7 +5,7 @@ import logging
 
 import pytest
 
-import simtools.util.commandline_parser as parser
+import simtools.configuration.commandline_parser as parser
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
