@@ -49,7 +49,7 @@ class CorsikaConfig:
 
     The remaining CORSIKA parameters can be set as a yaml file, using the argument \
     corsika_parameters_file. When not given, corsika_parameters will be loaded \
-    from data/corsika/corsika_parameters.yml.
+    from parameters/corsika/corsika_parameters.yml.
 
     Attributes
     ----------
@@ -153,7 +153,7 @@ class CorsikaConfig:
         else:
             # Default file from data directory.
             self._corsika_parameters_file = self.io_handler.get_input_data_file(
-                "corsika", "corsika_parameters.yml"
+                "parameters", "corsika_parameters.yml"
             )
         self._logger.debug(
             "Loading CORSIKA parameters from file {}".format(self._corsika_parameters_file)
