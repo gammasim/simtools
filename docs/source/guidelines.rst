@@ -4,9 +4,12 @@ Guidelines for gammasim-tools Developers
 ****************************************
 
 This section provides help and guidelines for developers of gammasim-tools.
-If you want to contribute to gammasim-tools, please use one of the contact points listed at the entry page of this documentation.
-In general, please take note of the `ctapipe Development Guidelines <https://cta-observatory.github.io/ctapipe/development/index.html>`_.
-gammasim-tools follows the same `style <https://cta-observatory.github.io/ctapipe/development/style-guide.html#>`_ and `code guidelines <https://cta-observatory.github.io/ctapipe/development/code-guidelines.html>`_ as `ctapip <https://github.com/cta-observatory/ctapipe/>`_.
+If you want to contribute to gammasim-tools, please use one of the contact points listed at the
+entry page of this documentation. In general, please take note of the `ctapipe Development
+Guidelines <https://cta-observatory.github.io/ctapipe/development/index.html>`_. gammasim-tools
+follows the same `style <https://cta-observatory.github.io/ctapipe/development/style-guide.html#>`_
+and `code guidelines <https://cta-observatory.github.io/ctapipe/development/code-guidelines.html>`_
+as `ctapip <https://github.com/cta-observatory/ctapipe/>`_.
 
 Project setup
 =============
@@ -15,7 +18,11 @@ The main code repository for gammasim-tools is on GitHub:
 
 `https://github.com/gammasim/gammasim-tools <https://github.com/gammasim/gammasim-tools>`_
 
-The main directories for developers are the `simtools <https://github.com/gammasim/gammasim-tools/tree/master/simtools>`_, `applications <https://github.com/gammasim/gammasim-tools/tree/master/applications>`_, `tests <https://github.com/gammasim/gammasim-tools/tree/master/tests>`_, and `docs <https://github.com/gammasim/gammasim-tools/tree/master/docs>`_ folders.
+The main directories for developers are the
+`simtools <https://github.com/gammasim/gammasim-tools/tree/master/simtools>`_,
+`applications <https://github.com/gammasim/gammasim-tools/tree/master/applications>`_,
+`tests <https://github.com/gammasim/gammasim-tools/tree/master/tests>`_,
+and `docs <https://github.com/gammasim/gammasim-tools/tree/master/docs>`_ folders.
 
 
 Python version
@@ -27,7 +34,9 @@ The gammasim-tools package is currently developed for Python 3.9.
 Code formatting
 ===============
 
-Linting and code checks are done automatically using the pre-commit functionaility using ``isort``, ``black`` and ``pyflakes``. As part of the CI workflow Codacy performs a few additional code checks as well.
+Linting and code checks are done automatically using the pre-commit functionaility using ``isort``,
+``black`` and ``pyflakes``. As part of the CI workflow Codacy performs a few additional code checks
+as well.
 
 It is recommended for developers to install ``pre-commit``:
 
@@ -35,7 +44,9 @@ It is recommended for developers to install ``pre-commit``:
 
     pre-commit install
 
-The configuration of ``pre-commit`` is defined in `.pre-commit-config.yaml <https://github.com/gammasim/gammasim-tools/blob/master/.pre-commit-config.yaml>`_.
+The configuration of ``pre-commit`` is defined in
+`.pre-commit-config.yaml <https://github.com/gammasim/gammasim-tools/blob/master/.pre-commit-config
+.yaml>`_.
 
 For testing, pre-commit can be applied locally without commit:
 
@@ -52,10 +63,13 @@ In rare cases, one might want to skip pre-commit checks with
 Logging
 =======
 
-Sufficient logging information should be provided to users and developers. As general guideline, the following logging levels should be used:
+Sufficient logging information should be provided to users and developers. As general guideline, the
+following logging levels should be used:
 
-- **INFO**: information useful for the general user about the progress, intermediate results, input or output.
-- **WARNING**: information for the general user or developer on something they should know but cannot change.
+- **INFO**: information useful for the general user about the progress, intermediate results, input
+or output.
+- **WARNING**: information for the general user or developer on something they should know but
+cannot change.
 - **DEBUG**: information only interesting for developers or useful for debugging.
 - **ERROR**: something which always leads to an exception or program exit.
 
@@ -66,23 +80,32 @@ Testing
 =======
 
 pytest framework is used for unit testing.
-The test modules are located in `simtools/tests <https://github.com/gammasim/gammasim-tools/tree/master/tests>`_ modules separated by unit and integration tests.
+The test modules are located in
+`simtools/tests <https://github.com/gammasim/gammasim-tools/tree/master/tests>`_ modules separated
+by unit and integration tests.
 Every module should have a reasonable unit test, ideally all functions should be covered by tests.
 Applications should be tested using integration tests.
 It is important to write the tests in parallel with the modules
 to assure that the code is testable.
 
-General service functions for tests (e.g., DB connection) can be found in `conftest.py <https://github.com/gammasim/gammasim-tools/blob/master/tests/conftest.py>`_. This should be used to avoid duplication.
+General service functions for tests (e.g., DB connection) can be found in
+`conftest.py <https://github.com/gammasim/gammasim-tools/blob/master/tests/conftest.py>`_.
+This should be used to avoid duplication.
 
 
-.. note:: Developers should expect that code changes affecting several modules are acceptable in case unit tests are successful.
+.. note:: Developers should expect that code changes affecting several modules are acceptable in
+case unit tests are successful.
 
 
 Documentation
 =============
 
-Sphinx is used to create this documentation from the files in the `docs <https://github.com/gammasim/gammasim-tools/tree/master/docs>`_ directory and from the docstrings in the code.
-This is done automatically with each merge into the master branch, see the `GitHub Action workflow CI-docs <https://github.com/gammasim/gammasim-tools/blob/master/.github/workflows/CI-docs.yml>`_.
+Sphinx is used to create this documentation from the files in the
+`docs <https://github.com/gammasim/gammasim-tools/tree/master/docs>`_ directory and from the
+docstrings in the code.
+This is done automatically with each merge into the master branch, see the
+`GitHub Action workflow CI-docs <https://github.com/gammasim/gammasim-tools/blob/master/.github/
+workflows/CI-docs.yml>`_.
 
 Docstrings following the Numpy style must be added to any public function, class or method.
 It is also recommended to add docstrings-like comments to private functions.
@@ -124,8 +147,9 @@ For writing and testing documentation locally:
     cd docs
     make html
 
-This is especially recommended to identify warnings and errors by Sphinx (e.g., from badly formatted docstrings or RST files).
-The documentation can be viewed locally in a browser starting from the file ``./build/html/index.html``.
+This is especially recommended to identify warnings and errors by Sphinx (e.g., from badly formatted
+docstrings or RST files). The documentation can be viewed locally in a browser starting from the
+file ``./build/html/index.html``.
 
 
 Writing Applications
@@ -160,14 +184,17 @@ All applications should follow the same structure:
         # application code follows
         ...
 
-Application handling should be done using the ``Configurator`` class, which allows to set configurations from command line, configuration file, or environmental variables.
+Application handling should be done using the ``Configurator`` class, which allows to set
+configurations from command line, configuration file, or environmental variables.
 
 
 Dependencies
 ============
 
-Dependencies on python packages are listed in the `environment file <https://github.com/gammasim/gammasim-tools/blob/master/environment.yml>`_.
-Some of the packages installed are used for the development only and not needed for executing gammasim-tools applications.
+Dependencies on python packages are listed in the
+`environment file <https://github.com/gammasim/gammasim-tools/blob/master/environment.yml>`_.
+Some of the packages installed are used for the development only and not needed for executing
+gammasim-tools applications.
 
 
 Integration with CORSIKA and sim_telarray
@@ -179,7 +206,8 @@ minimally coupled with the rest of the package. The modules that depend directly
 tools should be connected to the rest of the package through interfaces. This way, it
 will be easier to replace these tools in the future.
 
-One example of this approach is `simulator module <https://github.com/gammasim/gammasim-tools/blob/master/simtools/simulator.py>`_,
+One example of this approach is
+`simulator module <https://github.com/gammasim/gammasim-tools/blob/master/simtools/simulator.py>`_,
 which connects to the tools used to manage and run simulations.
 
 
@@ -189,7 +217,8 @@ Handling data files
 .. warning:: Requires review
 
 Data files should be kept outside of the gammasim-tools repository.
-Some auxiliary files can be found in the `data directory <https://github.com/gammasim/gammasim-tools/tree/master/data>`_.
+Some auxiliary files can be found in the
+`data directory <https://github.com/gammasim/gammasim-tools/tree/master/data>`_.
 Note that this is under review and might go away in near future.
 
 
@@ -203,17 +232,23 @@ The telescope names as used by gammasim-tools follow the pattern "Site-Class-Typ
 
 * "Site" is either "North" or "South";
 * "Class" is either "LST", "MST", "SCT" or "SST";
-* "Type" is a single number ONLY in case of a real telescope existing at the site or a string containing a "D" in case of any other telescope design.
+* "Type" is a single number ONLY in case of a real telescope existing at the site or a string
+containing a "D" in case of any other telescope design.
 
 For example:
 
-* "North-LST-1" is the first LST commissioned at the La Palma site, while "North-LST-D234" is the current design of the further 3 LSTs.
-* "North-MST-FlashCam-D" and "North-MST-NectarCam-D" are the two MST designs containing different cameras.
+* "North-LST-1" is the first LST commissioned at the La Palma site, while "North-LST-D234" is the
+current design of the further 3 LSTs.
+* "North-MST-FlashCam-D" and "North-MST-NectarCam-D" are the two MST designs containing different
+cameras.
 
-Any input telescope names can (and should) be validated by the function validate_telescope_name (see module :ref:`util.names <utilnames>`).
-For the Site field, any different capitalization (e.g "south") or site names like "paranal" and "lapalma" will be accepted
+Any input telescope names can (and should) be validated by the function validate_telescope_name
+(see module :ref:`util.names <utilnames>`).
+For the Site field, any different capitalization (e.g "south") or site names like "paranal" and
+"lapalma" will be accepted
 and converted to the standard ones. The same applies to the Class field.
-For the Type field, any string will be accepted and a selected list of variations will be converted to the standard ones
+For the Type field, any string will be accepted and a selected list of variations will be converted
+to the standard ones
 (e.g "flashcam" will be converted to "FlashCam").
 
 
@@ -222,13 +257,18 @@ Validating names
 
 Names that are recurrently used along the the package should be validated when given as input.
 Examples of names are: telescope, site, camera, model version. The functionalities to validate names
-are found in  :ref:`util.names <utilnames>`. The function validate_name receives the input string and a name dictionary,
-that is usually called all_something_names. This dictionary contain the possible names (as keys) and lists
-of allowed alternatives names as values. In case the input name is found in one of the lists, the key
+are found in  :ref:`util.names <utilnames>`. The function validate_name receives the input string
+and a name dictionary,
+that is usually called all_something_names. This dictionary contain the possible names (as keys) and
+lists
+of allowed alternatives names as values. In case the input name is found in one of the lists, the
+key
 is returned.
 
-The name dictionaries are also defined in util.names. One should also define specific functions named
-validate_something_names that call the validate_name with the proper name dictionary. This is only meant to
+The name dictionaries are also defined in util.names. One should also define specific functions
+named
+validate_something_names that call the validate_name with the proper name dictionary. This is only
+meant to
 provide a clear interface.
 
 This is an example of a name dictionary:
@@ -293,19 +333,24 @@ properties. See an example below:
 * len gives the length of the input. If null, any len is accepted.
 * unit is the astropy unit
 * default must have the same len
-* names is a list of acceptable input names. The key in the returned dict will have the name given at the definition of the block (zenith_angle in this example)
+* names is a list of acceptable input names. The key in the returned dict will have the name given
+at the definition of the block (zenith_angle in this example)
 
 
 Docker Container for Development
 =================================
 
-A docker container is made available for developers, see the `gammasim-tools container repository <https://github.com/gammasim/containers/tree/main/dev>`_.
+A docker container is made available for developers, see the
+`gammasim-tools container repository <https://github.com/gammasim/containers/tree/main/dev>`_.
 The container has the python packages, CORSIKA, and sim_telarray pre-installed.
 Setting up a system to run gammasim-tools applications or tests should be a matter of minutes:
 
-\1. install Docker and start the Docker application (see `Docker installation page <https://docs.docker.com/engine/install/>`_). Other container systems like Apptainer, Singularity, Buildah/Podman, etc should work, but are not thoroughly tested.
+\1. install Docker and start the Docker application (see
+`Docker installation page <https://docs.docker.com/engine/install/>`_). Other container systems like
+Apptainer, Singularity, Buildah/Podman, etc should work, but are not thoroughly tested.
 
-2. obtain the access parameters for the CTA Simulation Model data base and write a small script ``set_DB_environ.sh`` to set these parameters to be used in the container:
+2. obtain the access parameters for the CTA Simulation Model data base and write a small script
+``set_DB_environ.sh`` to set these parameters to be used in the container:
 .. code-block::
     export DB_API_USER=<db_user_name>
     export DB_API_PW=<db_password>
@@ -320,7 +365,7 @@ Setting up a system to run gammasim-tools applications or tests should be a matt
     # clone gammasim-tools repository
     git clone https://github.com/gammasim/gammasim-tools.git
     # startup a container (download if is not available in your environment)
-    docker run --rm -it -v "$(pwd)/external:/workdir/external" ghcr.io/gammasim/containers/gammasim-tools-dev:v0.3.0-dev1 bash -c "$(cat ./entrypoint.sh) && bash"
+    `docker run --rm -it -v "$(pwd)/external:/workdir/external" ghcr.io/gammasim/containers/gammasim-tools-dev:v0.3.0-dev1 bash -c "$(cat ./entrypoint.sh) && bash"`
     # Now you can run gammasim-tools application
     # Try e.g. to run the unit tests:
     pytest tests/unit_tests/

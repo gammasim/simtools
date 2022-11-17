@@ -18,7 +18,15 @@ logger.setLevel(logging.DEBUG)
 
 
 APP_LIST = {
-    # Optics
+    "add_file_to_db": [
+        [
+            "--file_name",
+            "TESTMODELDIR/MLTdata-preproduction.usermeta.yml",
+            "TESTMODELDIR/MLTdata-preproduction.ecsv",
+            "--db",
+            "sandbox",
+        ]
+    ],
     "compare_cumulative_psf": [
         [
             "--site",
@@ -32,17 +40,6 @@ APP_LIST = {
             "--zenith",
             "20",
             "--test",
-        ]
-    ],
-    "submit_data_from_external::help": [
-        [
-            "--help",
-        ]
-    ],
-    "submit_data_from_external::submit": [
-        [
-            "--workflow_config",
-            "tests/resources/set_MST_mirror_2f_measurements_from_external.config.yml",
         ]
     ],
     "derive_mirror_rnda::help": [
@@ -66,7 +63,7 @@ APP_LIST = {
             " --test",
         ]
     ],
-    "derive_mirror_rnda::psf_notuning": [
+    "derive_mirror_rnda::psf_measurement": [
         [
             "--site",
             "North",
@@ -83,7 +80,7 @@ APP_LIST = {
             " --test",
         ]
     ],
-    "derive_mirror_rnda::psf_measurement": [
+    "derive_mirror_rnda::psf_notuning": [
         [
             "--site",
             "North",
@@ -117,74 +114,6 @@ APP_LIST = {
             " --test",
         ]
     ],
-    "validate_optics": [
-        [
-            "--site",
-            "North",
-            "--telescope",
-            "LST-1",
-            "--max_offset",
-            "1.0",
-            "--src_distance",
-            "11",
-            "--zenith",
-            "20",
-            "--test",
-        ]
-    ],
-    "tune_psf": [
-        [
-            "--site",
-            "North",
-            "--telescope",
-            "LST-1",
-            "--model_version",
-            "prod5",
-            "--data",
-            "TESTMODELDIR/PSFcurve_data_v2.txt",
-            "--zenith",
-            "20",
-            "--test",
-        ]
-    ],
-    # Camera
-    "validate_camera_efficiency::MST-NectarCam-D": [
-        ["--site", "North", "--telescope", "MST-NectarCam-D", "--model_version", "prod5"]
-    ],
-    "validate_camera_efficiency::SST-D": [
-        ["--site", "South", "--telescope", "SST-D", "--model_version", "prod5"]
-    ],
-    "validate_camera_fov": [
-        ["--site", "North", "--telescope", "MST-NectarCam-D", "--model_version", "prod5"]
-    ],
-    "plot_simtel_histograms::help": [
-        [
-            "--help",
-        ]
-    ],
-    # Layout
-    "make_regular_arrays": [[]],
-    # Production
-    "produce_array_config": [["--array_config", "./tests/resources/array_config_test.yml"]],
-    # Trigger
-    "sim_showers_for_trigger_rates": [
-        [
-            "--array",
-            "4LST",
-            "--site",
-            "North",
-            "--primary",
-            "proton",
-            "--nruns",
-            "2",
-            "--nevents",
-            "10000",
-            "--test",
-            "--submit_command",
-            "local",
-        ]
-    ],
-    # Database
     "get_file_from_db::CTA-Simulation-Model": [["--file_name", "mirror_CTA-S-LST_v2020-04-07.dat"]],
     "get_file_from_db::test-data": [["--file_name", "PSFcurve_data_v2.txt"]],
     "get_file_from_db::CTA-Simulation-Model-Derived-Values": [
@@ -202,41 +131,12 @@ APP_LIST = {
             "prod5",
         ]
     ],
-    "add_file_to_db": [
+    "make_regular_arrays": [[]],
+    "plot_simtel_histograms::help": [
         [
-            "--file_name",
-            "TESTMODELDIR/MLTdata-preproduction.usermeta.yml",
-            "TESTMODELDIR/MLTdata-preproduction.ecsv",
-            "--db",
-            "sandbox",
+            "--help",
         ]
     ],
-    # Production
-    "production::showers_only": [
-        [
-            "--productionconfig",
-            "./tests/resources/prod_config_test.yml",
-            "--task",
-            "simulate",
-            "--showers_only",
-            "--test",
-            "--submit_command",
-            "local",
-        ]
-    ],
-    "production::array_only": [
-        [
-            "--productionconfig",
-            "./tests/resources/prod_config_test.yml",
-            "--task",
-            "simulate",
-            "--array_only",
-            "--test",
-            "--submit_command",
-            "local",
-        ]
-    ],
-    # print_array
     "print_array_elements::print_all": [
         ["--array_element_list", "tests/resources/telescope_positions-South-4MST.ecsv"],
     ],
@@ -265,7 +165,6 @@ APP_LIST = {
             "--use_corsika_telescope_height",
         ],
     ],
-    # files without corsika_spheres definition
     "print_array_elements::print_compact_nocors_utm": [
         [
             "--array_element_list",
@@ -281,6 +180,98 @@ APP_LIST = {
             "--compact",
             "corsika",
         ],
+    ],
+    "produce_array_config": [["--array_config", "./tests/resources/array_config_test.yml"]],
+    "production::showers_only": [
+        [
+            "--productionconfig",
+            "./tests/resources/prod_config_test.yml",
+            "--task",
+            "simulate",
+            "--showers_only",
+            "--test",
+            "--submit_command",
+            "local",
+        ]
+    ],
+    "production::array_only": [
+        [
+            "--productionconfig",
+            "./tests/resources/prod_config_test.yml",
+            "--task",
+            "simulate",
+            "--array_only",
+            "--test",
+            "--submit_command",
+            "local",
+        ]
+    ],
+    "sim_showers_for_trigger_rates": [
+        [
+            "--array",
+            "4LST",
+            "--site",
+            "North",
+            "--primary",
+            "proton",
+            "--nruns",
+            "2",
+            "--nevents",
+            "10000",
+            "--test",
+            "--submit_command",
+            "local",
+        ]
+    ],
+    "submit_data_from_external::help": [
+        [
+            "--help",
+        ]
+    ],
+    "submit_data_from_external::submit": [
+        [
+            "--workflow_config",
+            "tests/resources/set_MST_mirror_2f_measurements_from_external.config.yml",
+        ]
+    ],
+    "tune_psf": [
+        [
+            "--site",
+            "North",
+            "--telescope",
+            "LST-1",
+            "--model_version",
+            "prod5",
+            "--data",
+            "TESTMODELDIR/PSFcurve_data_v2.txt",
+            "--zenith",
+            "20",
+            "--test",
+        ]
+    ],
+    "validate_camera_efficiency::MST-NectarCam-D": [
+        ["--site", "North", "--telescope", "MST-NectarCam-D", "--model_version", "prod5"]
+    ],
+    "validate_camera_efficiency::SST-D": [
+        ["--site", "South", "--telescope", "SST-D", "--model_version", "prod5"]
+    ],
+    "validate_camera_fov": [
+        ["--site", "North", "--telescope", "MST-NectarCam-D", "--model_version", "prod5"]
+    ],
+    "validate_optics": [
+        [
+            "--site",
+            "North",
+            "--telescope",
+            "LST-1",
+            "--max_offset",
+            "1.0",
+            "--src_distance",
+            "11",
+            "--zenith",
+            "20",
+            "--test",
+        ]
     ],
 }
 
