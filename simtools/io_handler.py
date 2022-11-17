@@ -84,6 +84,11 @@ class IOHandler(metaclass=IOHandlerSingleton):
         Returns
         -------
         Path
+
+        Raises
+        -------
+        FileNotFoundError
+            if error creating directory
         """
 
         if test:

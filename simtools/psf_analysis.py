@@ -330,6 +330,11 @@ class PSFImage:
             (float, float, float):
                 Average radius, min radius, max radius of the interval where target_number photons
                 are inside.
+
+            Raises
+            ------
+            RuntimeError
+                if radius is not found (found_radius is False)
             """
             r0, r1 = rad_min, rad_min + dr
             s0, s1 = 0, 0
