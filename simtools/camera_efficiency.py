@@ -22,11 +22,18 @@ class CameraEfficiency:
 
     Parameters
     ----------
-        zenith_angle:
-            len: 1,
-            unit: deg,
-            default: 20 deg,
-            names: ['zenith', 'theta']
+    telescope_model: TelescopeModel
+        Instance of the TelescopeModel class.
+    simtel_source_path: str (or Path)
+        Location of sim_telarray installation.
+    label: str
+        Instance label, optional.
+    config_data: dict.
+        Dict containing the configurable parameters.
+    config_file: str or Path
+        Path of the yaml file containing the configurable parameters.
+    test: bool
+        Is it a test instance (at the moment only affects the location of files).
 
     Attributes
     ----------
@@ -71,23 +78,9 @@ class CameraEfficiency:
         test=False,
     ):
         """
-        CameraEfficiency init.
-
-        Parameters
-        ----------
-        telescope_model: TelescopeModel
-            Instance of the TelescopeModel class.
-        simtel_source_path: str (or Path)
-            Location of sim_telarray installation.
-        label: str
-            Instance label, optional.
-        config_data: dict.
-            Dict containing the configurable parameters.
-        config_file: str or Path
-            Path of the yaml file containing the configurable parameters.
-        test: bool
-            Is it a test instance (at the moment only affects the location of files).
+        Initiliaze the CameraEfficiency class.
         """
+
         self._logger = logging.getLogger(__name__)
 
         self._simtel_source_path = simtel_source_path

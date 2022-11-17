@@ -22,8 +22,11 @@ __all__ = ["DatabaseHandler"]
 class DatabaseHandler:
     """
     DatabaseHandler provides the interface to the DB.
+
     Parameters
     ----------
+    mongo_db_config: str
+        file with the DB configuration file
 
     Attributes
     ----------
