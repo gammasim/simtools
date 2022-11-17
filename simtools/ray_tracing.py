@@ -59,7 +59,7 @@ class RayTracing:
 
     Methods
     -------
-    analyse(export=True, force=False, use_rx=False, no_tel_transmission=False,
+    analyze(export=True, force=False, use_rx=False, no_tel_transmission=False,
         containment_fraction=0.8)
         Analyze RayTracing, meaning read simtel files, compute psfs and eff areas and store the
         results in _results.
