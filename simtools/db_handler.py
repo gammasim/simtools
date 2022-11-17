@@ -675,8 +675,6 @@ class DatabaseHandler:
 
         Parameters
         ----------
-        db_name: str
-            The name of the DB.
         site: str
             South or North.
         model_version: str
@@ -936,14 +934,16 @@ class DatabaseHandler:
         ----------
         db_name: str
             the name of the DB
+        collection: str
+            the name of the collection to copy from
         query: dict
             A dictionary listing the fields/values to delete.
             For example,
             query = {
                 "Telescope": "North-LST-1",
-                "Version": "prod4",
+                "Version": "prod5",
             }
-            would delete the entire prod4 version from telescope North-LST-1.
+            would delete the entire prod5 version from telescope North-LST-1.
         """
 
         _collection = DatabaseHandler.db_client[db_name][collection]
@@ -1230,10 +1230,10 @@ class DatabaseHandler:
         ----------
         db_name: str
             the name of the DB
-        parameter: str
-            Which parameter to add
         version: str
             The version of the new parameter value
+        parameter: str
+            Which parameter to add
         value: can be any type, preferably given in kwargs
             The value to set for the new parameter
         telescope: str
