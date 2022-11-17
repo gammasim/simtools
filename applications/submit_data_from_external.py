@@ -36,9 +36,9 @@ import logging
 from pathlib import Path
 
 import simtools.data_model.model_data_writer as writer
-import simtools.data_model.validate_data as ds
 import simtools.util.general as gen
 from simtools.configuration import configurator
+from simtools.data_model import validate_data
 from simtools.data_model.workflow_description import WorkflowDescription
 
 
@@ -85,7 +85,7 @@ def main():
 
     workflow = WorkflowDescription(args_dict=args_dict)
 
-    data_validator = ds.DataValidator(workflow)
+    data_validator = validate_data.DataValidator(workflow)
     data_validator.validate()
 
     file_writer = writer.ModelDataWriter(workflow)
