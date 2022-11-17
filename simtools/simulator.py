@@ -75,6 +75,25 @@ class Simulator:
 
     Parameters
     ----------
+    simulator: choices: [simtel, corsika]
+        implemented are sim_telarray and CORSIKA
+    simulator_source_path: str or Path
+        Location of exectutables for simulation software \
+            (e.g. path with CORSIKA or sim_telarray)
+    label: str
+        Instance label.
+    config_data: dict
+        Dict with shower or array model configuration data.
+    config_file: str or Path
+        Path to yaml file containing configurable data.
+    submit_command: str
+        Job submission command.
+    extra_commands: str or list of str
+        Extra commands to be added to the run script before the run command,
+    mongo_db_config: dict
+        MongoDB configuration.
+    test: bool
+        If True, no jobs are submitted; only run scripts are prepared
 
     Attributes
     ----------
@@ -126,29 +145,7 @@ class Simulator:
         test=False,
     ):
         """
-        Simulator init.
-
-        Parameters
-        ----------
-        simulator: choices: [simtel, corsika]
-            implemented are sim_telarray and CORSIKA
-        simulator_source_path: str or Path
-            Location of exectutables for simulation software \
-                (e.g. path with CORSIKA or sim_telarray)
-        label: str
-            Instance label.
-        config_data: dict
-            Dict with shower or array model configuration data.
-        config_file: str or Path
-            Path to yaml file containing configurable data.
-        submit_command: str
-            Job submission command.
-        extra_commands: str or list of str
-            Extra commands to be added to the run script before the run command,
-        mongo_db_config: dict
-            MongoDB configuration.
-        test: bool
-            If True, no jobs are submitted; only run scripts are prepared
+        Initialize Simulator class.
         """
         self._logger = logging.getLogger(__name__)
         self._logger.debug("Init Simulator {}".format(simulator))

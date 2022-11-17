@@ -28,9 +28,10 @@ class PSFImage:
 
     Parameters
     ----------
-    focal_lenght: float
-        Focal length of the system in cm, needed to convert quantities from cm to deg. If None,
-        get_psf will only work in cm (not in deg).
+    focal_length: float, optional
+        Focal length of the system in cm. If not given, PSF can only be computed in cm.
+    total_scattered_area: float, optional
+        Scatter area of all photons in cm^2. If not given, effective area cannot be computed.
 
     Attributes
     ----------
@@ -61,12 +62,7 @@ class PSFImage:
 
     def __init__(self, focal_length=None, total_scattered_area=None):
         """
-        Parameters
-        ----------
-        focal_length: float, optional
-            Focal length of the system in cm. If not given, PSF can only be computed in cm.
-        total_scattered_area: float, optional
-            Scatter area of all photons in cm^2. If not given, effective area cannot be computed.
+        Initialize PSFImage class.
         """
 
         self._logger = logging.getLogger(__name__)
