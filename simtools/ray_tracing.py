@@ -26,7 +26,8 @@ class RayTracing:
     """
     Class for handling ray tracing simulations and analysis.
 
-    Configurable parameters:
+    Parameters
+    ----------
         zenith_angle:
             len: 1
             unit: deg
@@ -58,23 +59,26 @@ class RayTracing:
 
     Methods
     -------
-    simulate(test=False, force=False)
-        Simulate RayTracing using SimtelRunnerRayTracing.
-    analyse(export=True, force=False, use_rx=False, no_tel_transmission=False)
+    analyse(export=True, force=False, use_rx=False, no_tel_transmission=False,
+        containment_fraction=0.8)
         Analyze RayTracing, meaning read simtel files, compute psfs and eff areas and store the
         results in _results.
     export_results()
         Export results to a csv file.
-    plot(key, **kwargs)
-        Plot key vs off-axis angle.
-    plot_histogram(key, **kwargs)
-        Plot histogram of key (d80_cm, d80_deg, eff_area, eff_flen).
+    from_kwargs(**kwargs)
+        Builds a RayTracing object from kwargs only.
     get_mean(key)
         Get mean value of key(d80_cm, d80_deg, eff_area, eff_flen).
     get_std_dev(key)
         Get std dev of key(d80_cm, d80_deg, eff_area, eff_flen).
     images()
         Get list of PSFImages.
+    plot(key, save=False, **kwargs)
+        Plot key vs off-axis angle.
+    plot_histogram(key, **kwargs)
+        Plot histogram of key (d80_cm, d80_deg, eff_area, eff_flen).
+    simulate(test=False, force=False)
+        Simulate RayTracing using SimtelRunnerRayTracing.
     """
 
     YLABEL = {
