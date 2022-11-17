@@ -42,7 +42,7 @@ def get_authors_from_citation_file(file_name):
             author += " (" + person["affiliation"] + "), "
     except KeyError:
         pass
-    return author[:-1]
+    return author[:-2]
 
 
 # -- Project information -----------------------------------------------------
