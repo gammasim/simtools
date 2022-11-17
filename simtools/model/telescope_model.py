@@ -11,6 +11,7 @@ import simtools.util.general as gen
 from simtools import db_handler, io_handler
 from simtools.model.camera import Camera
 from simtools.model.mirrors import Mirrors
+from simtools.model.model_utils import validate_model_parameter
 from simtools.simtel.simtel_config_writer import SimtelConfigWriter
 from simtools.util import names
 
