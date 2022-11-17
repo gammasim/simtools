@@ -48,7 +48,7 @@ class CorsikaRunner:
 
     The remaining CORSIKA parameters can be set as a yaml file, using the argument \
     corsika_parameters_file. When not given, corsika_parameters will be loaded \
-    from data/corsika/corsika_parameters.yml.
+    from parameters/corsika/corsika_parameters.yml.
 
     The CORSIKA output directory must be set by the data_directory entry. \
     The following directories will be created to store the output data, logs and input \
