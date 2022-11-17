@@ -2,7 +2,7 @@ import logging
 
 import pytest
 
-import simtools.job_submission.job_manager as jm
+import simtools.job_execution.job_manager as jm
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
