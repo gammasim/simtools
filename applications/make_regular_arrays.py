@@ -56,7 +56,7 @@ def main():
     _io_handler = io_handler.IOHandler()
 
     corsika_pars = gen.collect_data_from_yaml_or_dict(
-        _io_handler.get_input_data_file("corsika", "corsika_parameters.yml"), None
+        _io_handler.get_input_data_file("parameters", "corsika_parameters.yml"), None
     )
 
     # Reading site parameters from DB
