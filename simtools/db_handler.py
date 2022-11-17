@@ -22,6 +22,8 @@ __all__ = ["DatabaseHandler"]
 class DatabaseHandler:
     """
     DatabaseHandler provides the interface to the DB.
+    Parameters
+    ----------
 
     Attributes
     ----------
@@ -30,28 +32,46 @@ class DatabaseHandler:
 
     Methods
     -------
-    get_model_parameters()
-        Get the model parameters of a specific telescope with a specific version.
-    get_site_parameters()
-        Get the site parameters of a specific version of a site.
-    copy_telescope()
-        Copy a full telescope configuration of a specific version to a new telescope name.
-    delete_query()
-        Delete all entries from the DB which correspond to the provided query.
-    update_parameter()
-        Update a parameter value for a specific telescope/version.
-    update_parameter_field()
-        Update a parameter field other than value for a specific telescope/version.
-    add_parameter()
-        Add a parameter value for a specific telescope.
-    add_new_paramete()
+    add_new_parameter(db_name, version, parameter, value, telescope=None, site=None,
+        collection_name="telescopes", file_prefix=None)
         Add a new parameter for a specific telescope.
-    insert_file_to_db()
-        Insert a file or a list of files to the DB.
-    export_file_db()
+    add_parameter(db_name, telescope, parameter, new_version, new_value,
+        collection_name="telescopes", file_prefix=None)
+        Add a parameter value for a specific telescope.
+    copy_documents(db_name, collection, query, db_to_copy_to, collection_to_copy_to=None)
+        Copy the documents matching to "query" to the DB "db_to_copy_to".
+    copy_telescope(db_name, tel_to_copy, version_to_copy, new_tel_name,
+        collection_name="telescopes", db_to_copy_to=None, collection_to_copy_to=None)
+        Copy a full telescope configuration of a specific version to a new telescope name.
+    delete_query(db_name, collection, query)
+        Delete all entries from the DB which correspond to the provided query.
+    export_file_db(db_name, dest, file_name)
         Get a file from the DB and write it to disk.
-    get_all_versions()
+    export_model_files()
+        Export all the files in a model from the DB to disk
+    get_all_versions(db_name, parameter, telescope_model_name=None, site=None,
+        collection_name="telescopes")
         Get all version entries in the DB of a telescope or site for a specific parameter.
+    get_descriptions(db_name=DB_CTA_SIMULATION_MODEL_DESCRIPTIONS, collection_name="telescopes")
+        Get parameter descriptions from MongoDB
+    get_derived_values(site, telescope_model_name, model_version)
+        Get a derived value from the DB for a specific telescope.
+    get_model_parameters(site, telescope_model_name, model_version, only_applicable=False)
+        Get the model parameters of a specific telescope with a specific version.
+    get_reference_data(site, model_version, only_applicable=False)
+        Get parameters from MongoDB for a specific telescope.
+    get_site_parameters(site, model_version, only_applicable=False)
+        Get the site parameters of a specific version of a site.
+    insert_file_to_db(file_name, db_name=DB_CTA_SIMULATION_MODEL, **kwargs)
+        Insert a file or a list of files to the DB.
+    set_mongo_db_config(mongo_db_config)
+        Set the MongoDB config and open the connection to the DB.
+    update_parameter(db_name, telescope, version, parameter, new_value,
+        collection_name="telescopes", file_prefix=None)
+        Update a parameter value for a specific telescope/version.
+    update_parameter_field(db_name, version, parameter, field, new_value, telescope=None, site=None,
+        collection_name="telescopes")
+        Update a parameter field other than value for a specific telescope/version.
     """
 
     # TODO move into config file?
