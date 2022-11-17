@@ -85,8 +85,8 @@
 import logging
 from pathlib import Path
 
-import simtools.configuration.configurator as configurator
 import simtools.util.general as gen
+from simtools.configuration import configurator
 from simtools.model.array_model import ArrayModel
 
 
