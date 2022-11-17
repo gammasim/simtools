@@ -13,8 +13,8 @@ from pymongo.errors import BulkWriteError
 
 import simtools.util.general as gen
 from simtools import io_handler
+from simtools.model.model_utils import get_telescope_class
 from simtools.util import names
-from simtools.util.model import get_telescope_class
 
 __all__ = ["DatabaseHandler"]
 
