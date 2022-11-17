@@ -25,8 +25,15 @@ class DatabaseHandler:
 
     Parameters
     ----------
-    mongo_db_config: str
-        file with the DB configuration file
+    io_handler: IOHandler
+        Instance of IOHandler
+    mongo_db_config: dict
+        Dictionary with the MongoDB configuration with the following entries:
+        "db_server" - DB server address
+        "db_api_port" - Port to use
+        "db_api_user" - API username
+        "db_api_pw" - Password for the API user
+        "db_api_authentication_database" - DB with user info (optional, default is "admin")
 
     Attributes
     ----------
@@ -95,7 +102,7 @@ class DatabaseHandler:
         Raises
         -------
         KeyError
-            if there is non-valid key in the db_config
+            if there is non-valid key in the db_config.
         """
         self._logger = logging.getLogger(__name__)
         self._logger.debug("Initialize DatabaseHandler")
@@ -113,17 +120,12 @@ class DatabaseHandler:
         Parameters
         ----------
         mongo_db_config: dict
-            Dictionary with the MongoDB configuration with the following entries:
-            "db_server" - DB server address
-            "db_api_port" - Port to use
-            "db_api_user" - API username
-            "db_api_pw" - Password for the API user
-            "db_api_authentication_database" - DB with user info (optional, default is "admin")
+            Dictionary with the MongoDB configuration.
 
         Raises
         -------
         KeyError
-            if there is non-valid key in the db_config
+            if there is non-valid key in the db_config.
         """
 
         self.mongo_db_config = mongo_db_config

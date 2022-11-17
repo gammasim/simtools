@@ -35,8 +35,16 @@ class PSFImage:
 
     Attributes
     ----------
-    effective_area: float
-        Mirror effective area in cm.
+    photon_pos_x: list of float
+        The list with X coordinate of photons
+    photon_pos_y: list of float
+        The list with Y coordinate of photons
+    photon_r: list of float
+        The list with R distance of photons from the center
+    centroid_x: float
+        The X coordinate of the center
+    centroid_y: float
+        The Y coordinate of the center
 
     Methods
     -------

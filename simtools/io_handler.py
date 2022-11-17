@@ -24,6 +24,12 @@ class IOHandler(metaclass=IOHandlerSingleton):
 
     Attributes
     ----------
+    output_path: str or Path
+        Parent path of the output files created by this class.
+    data_path: str or Path
+        Parent path of the data files.
+    model_path: str or Path
+        Parent path of the output files created by this class.
 
     Methods
     -------
