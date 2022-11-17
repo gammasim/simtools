@@ -125,13 +125,13 @@ For writing and testing documentation locally:
     make html
 
 This is especially recommended to identify warnings and errors by Sphinx (e.g., from badly formatted docstrings or RST files).
-The documentation can be viewed locally in a browser starting from the file ``./docs/build/html/index.html``.
+The documentation can be viewed locally in a browser starting from the file ``./build/html/index.html``.
 
 
 Writing Applications
 ====================
 
-Applications are command lines tools that should be build off of the simtools library.
+Applications are command lines tools that should be built off of the gammasim-tools library.
 Application should not include complex algorithm, this should be done at the module level.
 
 All applications should follow the same structure:
@@ -173,7 +173,7 @@ Some of the packages installed are used for the development only and not needed 
 Integration with CORSIKA and sim_telarray
 =========================================
 
-CORSIKA and sim_telarray are external tools to simtools.
+CORSIKA and sim_telarray are external tools to gammasim-tools.
 Their integration should be
 minimally coupled with the rest of the package. The modules that depend directly on these
 tools should be connected to the rest of the package through interfaces. This way, it
@@ -210,7 +210,7 @@ For example:
 * "North-LST-1" is the first LST commissioned at the La Palma site, while "North-LST-D234" is the current design of the further 3 LSTs.
 * "North-MST-FlashCam-D" and "North-MST-NectarCam-D" are the two MST designs containing different cameras.
 
-Any input telescope names can (and should) be validated by the function validateTelescopeName (see module :ref:`util.names <utilnames>`).
+Any input telescope names can (and should) be validated by the function validate_telescope_name (see module :ref:`util.names <utilnames>`).
 For the Site field, any different capitalization (e.g "south") or site names like "paranal" and "lapalma" will be accepted
 and converted to the standard ones. The same applies to the Class field.
 For the Type field, any string will be accepted and a selected list of variations will be converted to the standard ones
@@ -222,13 +222,13 @@ Validating names
 
 Names that are recurrently used along the the package should be validated when given as input.
 Examples of names are: telescope, site, camera, model version. The functionalities to validate names
-are found in  :ref:`util.names <utilnames>`. The function validateName receives the input string and a name dictionary,
-that is usually called allSomethingNames. This dictionary contain the possible names (as keys) and lists
+are found in  :ref:`util.names <utilnames>`. The function validate_name receives the input string and a name dictionary,
+that is usually called all_something_names. This dictionary contain the possible names (as keys) and lists
 of allowed alternatives names as values. In case the input name is found in one of the lists, the key
 is returned.
 
 The name dictionaries are also defined in util.names. One should also define specific functions named
-validateSomethingNames that call the validateName with the proper name dictionary. This is only meant to
+validate_something_names that call the validate_name with the proper name dictionary. This is only meant to
 provide a clear interface.
 
 This is an example of a name dictionary:
@@ -262,18 +262,18 @@ must have them validated. The validation assures that the units, type and
 format are correct and also allow for default values.
 
 The configurable input must be passed to classes through a dictionary or a yaml
-file. In the case of a dictionary the parameter is called configData, and in the
-case of a yaml file, configFile. See the ray_tracing module for an example.
+file. In the case of a dictionary the parameter is called config_data, and in the
+case of a yaml file, config_file. See the ray_tracing module for an example.
 
-The function gen.collectDataFromYamlOrDict(configData, configFile, allowEmpty=False)
+The function gen.collect_data_from_yaml_or_dict(config_data, config_file, allow_empty=False)
 must be used to read these arguments. It identifies which case was given and
 reads it accordingly, returning a dictionary. It also raises an exception in case none are
-given and not allowEmpty.
+given and not allow_empty.
 
-The validation of the input is done by the function gen.validateConfigData, which
+The validation of the input is done by the function gen.validate_config_data, which
 receives the dictionary with the collected input and a parameter dictionary. The parameter
 dictionary is read from a parameter yaml file in the data/parameters directory.
-The file is read through the function io.getDataFile("parameters", filename)
+The file is read through the function io.get_data_file("parameters", filename)
 (see data files section).
 
 The parameter yaml file contains the list of parameters to be validated and its
@@ -281,7 +281,7 @@ properties. See an example below:
 
 .. code-block:: yaml
 
-  zenithAngle:
+  zenith_angle:
     len: 1
     unit: !astropy.units.Unit {unit: deg}
     default: !astropy.units.Quantity
@@ -293,7 +293,7 @@ properties. See an example below:
 * len gives the length of the input. If null, any len is accepted.
 * unit is the astropy unit
 * default must have the same len
-* names is a list of acceptable input names. The key in the returned dict will have the name given at the definition of the block (zenithAngle in this example)
+* names is a list of acceptable input names. The key in the returned dict will have the name given at the definition of the block (zenith_angle in this example)
 
 
 Docker Container for Development
