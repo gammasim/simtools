@@ -6,7 +6,7 @@ Guidelines for gammasim-tools Developers
 This section provides help and guidelines for developers of gammasim-tools.
 If you want to contribute to gammasim-tools, please use one of the contact points listed at the entry page of this documentation.
 In general, please take note of the `ctapipe Development Guidelines <https://cta-observatory.github.io/ctapipe/development/index.html>`_.
-gammasim-tools follows the same `style <https://cta-observatory.github.io/ctapipe/development/style-guide.html#>`_ and `code guidelines <https://cta-observatory.github.io/ctapipe/development/code-guidelines.html>`_.
+gammasim-tools follows the same `style <https://cta-observatory.github.io/ctapipe/development/style-guide.html#>`_ and `code guidelines <https://cta-observatory.github.io/ctapipe/development/code-guidelines.html>`_ as `ctapip <https://github.com/cta-observatory/ctapipe/>`_.
 
 Project setup
 =============
@@ -15,7 +15,7 @@ The main code repository for gammasim-tools is on GitHub:
 
 `https://github.com/gammasim/gammasim-tools <https://github.com/gammasim/gammasim-tools>`_
 
-The main folders for developers are the `simtools <https://github.com/gammasim/gammasim-tools/tree/master/simtools>`_, `applications <https://github.com/gammasim/gammasim-tools/tree/master/applications>`_, `tests <https://github.com/gammasim/gammasim-tools/tree/master/tests>`_, and `docs <https://github.com/gammasim/gammasim-tools/tree/master/docs>`_ folders.
+The main directories for developers are the `simtools <https://github.com/gammasim/gammasim-tools/tree/master/simtools>`_, `applications <https://github.com/gammasim/gammasim-tools/tree/master/applications>`_, `tests <https://github.com/gammasim/gammasim-tools/tree/master/tests>`_, and `docs <https://github.com/gammasim/gammasim-tools/tree/master/docs>`_ folders.
 
 
 Python version
@@ -27,7 +27,7 @@ The gammasim-tools package is currently developed for Python 3.9.
 Code formatting
 ===============
 
-Linting and code checks are done automatically using a CI workflow using ``pyflakes`` (see this `GitHub action workflow <https://github.com/gammasim/gammasim-tools/blob/master/.github/workflows/CI-unittests.yml>`_) and the pre-commit functionality.
+Linting and code checks are done automatically using the pre-commit functionaility using ``isort``, ``black`` and ``pyflakes``. As part of the CI workflow Codacy performs a few additional code checks as well.
 
 It is recommended for developers to install ``pre-commit``:
 
@@ -55,7 +55,7 @@ Logging
 Sufficient logging information should be provided to users and developers. As general guideline, the following logging levels should be used:
 
 - **INFO**: information useful for the general user about the progress, intermediate results, input or output.
-- **WARNING**: information for the general user or developer on something she should know but cannot change.
+- **WARNING**: information for the general user or developer on something they should know but cannot change.
 - **DEBUG**: information only interesting for developers or useful for debugging.
 - **ERROR**: something which always leads to an exception or program exit.
 
