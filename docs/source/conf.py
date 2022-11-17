@@ -15,7 +15,7 @@
 import os
 import sys
 
-from astropy.io.misc import yaml
+import yaml
 
 import simtools.version
 
@@ -31,7 +31,7 @@ def get_authors_from_citation_file(file_name):
     """
     try:
         with open("../../CITATION.cff") as file:
-            citation = yaml.load(file)
+            citation = yaml.safe_load(file)
     except FileNotFoundError:
         raise
 
