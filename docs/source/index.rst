@@ -44,5 +44,6 @@ General Documentation
   framework
   applications
   library
+  auxiliary_data
   databases
   guidelines
