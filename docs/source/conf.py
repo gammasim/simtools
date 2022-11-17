@@ -15,22 +15,51 @@
 import os
 import sys
 
+import yaml
+
+import simtools.version
+
 sys.path.insert(0, os.path.abspath("../../simtools"))
 sys.path.insert(0, os.path.abspath("../../applications"))
 sys.path.insert(0, os.path.abspath("../.."))
+
+
+def get_authors_from_citation_file(file_name):
+    """
+    Read list of authors from CITATION.cff file
+
+    """
+    try:
+        with open("../../CITATION.cff") as file:
+            citation = yaml.safe_load(file)
+    except FileNotFoundError:
+        raise
+
+    author = ""
+    try:
+        for person in citation["authors"]:
+            author = author + person["given-names"] + " " + person["family-names"]
+            author += " (" + person["affiliation"] + "), "
+    except KeyError:
+        pass
+    return author[:-2]
 
 
 # -- Project information -----------------------------------------------------
 
 project = "gammasim-tools"
 copyright = "2022, gammasim-tools developers"
-author = "Raul R Prado and Orel Gueta and Gernot Maier and Victor Barbosa Martins"
+author = get_authors_from_citation_file("../CITATION.cff")
+rst_epilog = """
+.. |author| replace:: {author}
+""".format(
+    author=author
+)
 
 # The short X.Y version
-version = ""
+version = str(simtools.version.__version__)
 # The full version, including alpha/beta/rc tags
-release = "0.0.1"
-
+release = version
 
 # -- General configuration ---------------------------------------------------
 
@@ -93,7 +122,7 @@ master_doc = "index"
 #
 # This is also used if you do content translation via gettext catalogs.
 # Usually you set "language" from the command line for these cases.
-language = None
+language = "en"
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
@@ -110,6 +139,8 @@ pygments_style = "sphinx"
 # a list of builtin themes.
 #
 html_theme = "sphinx_rtd_theme"
+
+html_title = f"{project} v{version} Manual"
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
@@ -131,7 +162,10 @@ html_static_path = []
 # 'searchbox.html']``.
 #
 # html_sidebars = {}
-
+html_sidebars = {
+    "**": ["globaltoc.html", "sourcelink.html", "searchbox.html"],
+    "using/windows": ["windowssidebar.html", "searchbox.html"],
+}
 
 # -- Options for HTMLHelp output ---------------------------------------------
 
