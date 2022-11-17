@@ -20,11 +20,13 @@ class CameraEfficiency:
     """
     Class for handling camera efficiency simulations and analysis.
 
-    Configurable parameters:
-        zenith_angle: {len: 1, unit: deg, default: 20 deg, names: ['zenith', 'theta']}
-
     Parameters
     ----------
+        zenith_angle:
+            len: 1,
+            unit: deg,
+            default: 20 deg,
+            names: ['zenith', 'theta']
 
     Attributes
     ----------
