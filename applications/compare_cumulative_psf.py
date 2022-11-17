@@ -79,7 +79,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import yaml
 
-import simtools.configuration as configurator
+import simtools.configuration.configurator as configurator
 import simtools.util.general as gen
 from simtools import io_handler, visualize
 from simtools.model.telescope_model import TelescopeModel

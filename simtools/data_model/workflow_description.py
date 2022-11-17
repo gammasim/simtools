@@ -3,11 +3,12 @@ import logging
 import uuid
 from pathlib import Path
 
+import simtools.data_model.validate_schema as vs
 import simtools.util.general as gen
-import simtools.util.validate_schema as vs
 import simtools.version
 from simtools import io_handler
-from simtools.util import data_model, names
+from simtools.data_model import data_model
+from simtools.util import names
 
 
 class WorkflowDescription:

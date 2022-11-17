@@ -8,7 +8,7 @@ from astropy import units as u
 from astropy.table import Column, Table
 from astropy.utils.diff import report_diff_values
 
-import simtools.util.validate_data as ds
+import simtools.data_model.validate_data as ds
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
