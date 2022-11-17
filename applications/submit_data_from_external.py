@@ -35,11 +35,11 @@
 import logging
 from pathlib import Path
 
+import simtools.data_model.model_data_writer as writer
+import simtools.data_model.validate_data as ds
 import simtools.util.general as gen
-import simtools.util.model_data_writer as writer
-import simtools.util.validate_data as ds
-from simtools.configuration import Configurator
-from simtools.util.workflow_description import WorkflowDescription
+from simtools.configuration.configurator import Configurator
+from simtools.data_model.workflow_description import WorkflowDescription
 
 
 def _parse(label, description, usage):

@@ -5,9 +5,9 @@ import logging
 
 import pytest
 
+import simtools.data_model.workflow_description as workflow
 import simtools.util.general as gen
-import simtools.util.workflow_description as workflow
-from simtools.util import data_model
+from simtools.data_model import data_model
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
