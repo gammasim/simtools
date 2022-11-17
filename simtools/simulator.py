@@ -73,6 +73,9 @@ class Simulator:
             'MST-01': 'FlashCam-D'
         }
 
+    Parameters
+    ----------
+
     Attributes
     ----------
     label : str
@@ -84,26 +87,30 @@ class Simulator:
 
     Methods
     -------
-    run(input_file_list):
-        Run simulation.
-    simulate(input_file_list, submit_command=None, extra_commands=None, test=False):
-        Submit a run script as a job.
-    print_histograms():
-        Print histograms and save a pdf file.
-    print_output_files():
-        Print list of output files of simulation run.
-    get_list_of_output_files():
-        Get list of output files.
+    file_list(input_file_list=None)
+        List output files obtained with simulation run
+    get_list_of_histogram_files()
+        Get list of histogram files.
     get_list_of_input_files():
         Get list of input files.
     get_list_of_log_files():
         Get list of log files.
-    print_list_of_output_files():
-        Print list of output files.
+    get_list_of_output_files(run_list=None, run_range=None):
+        Get list of output files.
+    print_histograms(input_file_list=None):
+        Print histograms and save a pdf file.
+    print_list_of_histogram_files()
+        Print list of histogram files.
     print_list_of_input_files():
         Print list of output files.
     print_list_of_log_files():
         Print list of log files.
+    print_list_of_output_files():
+        Print list of output files.
+    resources(input_file_list=None)
+        Print a simple report on computing resources used.
+    simulate(input_file_list):
+        Submit a run script as a job.
     """
 
     def __init__(
