@@ -130,13 +130,13 @@ class Simulator:
 
         Parameters
         ----------
-        label: str
-            Instance label.
         simulator: choices: [simtel, corsika]
             implemented are sim_telarray and CORSIKA
         simulator_source_path: str or Path
             Location of exectutables for simulation software \
                 (e.g. path with CORSIKA or sim_telarray)
+        label: str
+            Instance label.
         config_data: dict
             Dict with shower or array model configuration data.
         config_file: str or Path
