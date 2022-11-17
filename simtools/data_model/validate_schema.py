@@ -2,8 +2,8 @@ import datetime
 import logging
 import re
 
-import simtools.data_model.data_model as data_model
 import simtools.util.general as gen
+from simtools.data_model import data_model
 
 
 class SchemaValidator:
