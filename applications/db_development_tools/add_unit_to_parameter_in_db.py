@@ -13,7 +13,7 @@
 import logging
 
 import simtools.config as cfg
-import simtools.util.commandline_parser as argparser
+import simtools.configuration.commandline_parser as argparser
 import simtools.util.general as gen
 from simtools import db_handler
 

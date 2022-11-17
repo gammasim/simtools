@@ -4,7 +4,7 @@ import logging
 
 import pytest
 
-import simtools.util.validate_schema as validator
+import simtools.data_model.validate_schema as validator
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
