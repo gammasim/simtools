@@ -37,10 +37,12 @@ class CameraEfficiency:
 
     Attributes
     ----------
-    label: str
-        Instance label.
     config: namedtuple
         Contains the configurable parameters (zenith_angle).
+    io_handler: IOHandler
+        Instance of IOHandler
+    label: str
+        Instance label.
 
     Methods
     -------
