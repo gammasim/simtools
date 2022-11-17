@@ -66,6 +66,8 @@ class RayTracing:
             mirror_numbers:
                 len: null
                 default: 'all'
+    YLABEL: dict
+        Dictionary with parameters available for plotting
 
     Methods
     -------
