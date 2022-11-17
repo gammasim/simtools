@@ -188,7 +188,7 @@ Handling data files
 
 .. warning:: Requires review
 
-Data files should be kept outside of the Gammasim-tools repository.
+Data files should be kept outside of the gammasim-tools repository.
 Some auxiliary files can be found in the `data directory <https://github.com/gammasim/gammasim-tools/tree/master/data>`_.
 Note that this is under review and might go away in near future.
 
