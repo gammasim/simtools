@@ -7,7 +7,7 @@ import pytest
 
 import simtools.io_handler
 from simtools import db_handler
-from simtools.configuration import Configurator
+from simtools.configuration.configurator import Configurator
 from simtools.model.telescope_model import TelescopeModel
 
 logger = logging.getLogger()

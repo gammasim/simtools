@@ -1,4 +1,4 @@
-from simtools.util import data_model
+from simtools.data_model import data_model
 
 
 def test_top_level_reference_schema():
