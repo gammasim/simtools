@@ -148,7 +148,8 @@ class LayoutArray:
             self._logger.debug("Initialize CORSIKA telescope parameters from file")
             self._initialize_corsika_telescope_from_dict(
                 collect_data_from_yaml_or_dict(
-                    self.io_handler.get_input_data_file("corsika", "corsika_parameters.yml"), None
+                    self.io_handler.get_input_data_file("parameters", "corsika_parameters.yml"),
+                    None,
                 )
             )
 
