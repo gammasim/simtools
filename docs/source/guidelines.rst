@@ -1,17 +1,17 @@
 .. _Guidelines:
 
-Guidelines for Gammasim-tools Developers
+Guidelines for gammasim-tools Developers
 ****************************************
 
-This section provides help and guidelines for developers of Gammasim-tools.
-If you want to contribute to Gammasim-tools, please use one of the contact points listed at the entry page of this documentation.
+This section provides help and guidelines for developers of gammasim-tools.
+If you want to contribute to gammasim-tools, please use one of the contact points listed at the entry page of this documentation.
 In general, please take note of the `ctapipe Development Guidelines <https://cta-observatory.github.io/ctapipe/development/index.html>`_.
-Gammasim-tools follows the same `style <https://cta-observatory.github.io/ctapipe/development/style-guide.html#>`_ and `code guidelines <https://cta-observatory.github.io/ctapipe/development/code-guidelines.html>`_.
+gammasim-tools follows the same `style <https://cta-observatory.github.io/ctapipe/development/style-guide.html#>`_ and `code guidelines <https://cta-observatory.github.io/ctapipe/development/code-guidelines.html>`_.
 
 Project setup
 =============
 
-The main code repository for Gammasim-tools is on GitHub:
+The main code repository for gammasim-tools is on GitHub:
 
 `https://github.com/gammasim/gammasim-tools <https://github.com/gammasim/gammasim-tools>`_
 
@@ -21,7 +21,7 @@ The main folders for developers are the `simtools <https://github.com/gammasim/g
 Python version
 ==============
 
-Gammasim-tools is currently developed for Python 3.9.
+The gammasim-tools package is currently developed for Python 3.9.
 
 
 Code formatting
@@ -167,7 +167,7 @@ Dependencies
 ============
 
 Dependencies on python packages are listed in the `environment file <https://github.com/gammasim/gammasim-tools/blob/master/environment.yml>`_.
-Some of the packages installed are used for the development only and not needed for executing Gammasim-tools applications.
+Some of the packages installed are used for the development only and not needed for executing gammasim-tools applications.
 
 
 Integration with CORSIKA and sim_telarray
@@ -299,7 +299,7 @@ properties. See an example below:
 Docker Container for Development
 =================================
 
-A docker container is made available for developers, see the `Gammasim-tools container repository <https://github.com/gammasim/containers/tree/main/dev>`_.
+A docker container is made available for developers, see the `gammasim-tools container repository <https://github.com/gammasim/containers/tree/main/dev>`_.
 The container has the python packages, CORSIKA, and sim_telarray pre-installed.
 Setting up a system to run gammasim-tools applications or tests should be a matter of minutes:
 
@@ -312,7 +312,7 @@ Setting up a system to run gammasim-tools applications or tests should be a matt
     export DB_API_PORT=<db_port>
     export DB_SERVER=<db_server>
 
-3. Start up a container and e.g. run the Gammasim-tools unit tests using the following commands:
+3. Start up a container and e.g. run the gammasim-tools unit tests using the following commands:
 .. code-block::
 
     # create a working directory
