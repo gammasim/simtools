@@ -451,7 +451,12 @@ class PSFImage:
         return np.core.records.fromarrays(np.c_[radius_all, intensity].T, dtype=d_type)
 
     def plot_cumulative(self, **kwargs):
-        """Plot cumulative data (intensity vs radius)."""
+        """Plot cumulative data (intensity vs radius).
+
+        Parameters
+        ----------
+        **kwargs:
+            image_* for the histogram plot and psf_* for the psf circle."""
         data = self.get_cumulative_data()
         plt.plot(data["Radius [cm]"], data["Cumulative PSF"], **kwargs)
 
