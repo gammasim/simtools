@@ -149,9 +149,13 @@ class CameraEfficiency:
 
         Parameters
         ----------
-
         tel: TelescopeModel
             An assumed instance of the TelescopeModel class.
+        Raises
+        ------
+        ValueError
+            if tel not of type TelescopeModel
+
         """
         if isinstance(tel, TelescopeModel):
             self._logger.debug("TelescopeModel OK")
@@ -411,6 +415,11 @@ class CameraEfficiency:
     def calc_tel_efficiency(self):
         """
         Calculate the telescope total efficiency including gaps (as defined in A-PERF-2020).
+
+        Returns
+        -------
+        tel_effeciency: float
+            Telescope efficiency
         """
 
         # Sum(C1) from 300 - 550 nm:
@@ -430,6 +439,11 @@ class CameraEfficiency:
     def calc_camera_efficiency(self):
         """
         Calculate the camera nominal efficiency including gaps (as defined in B-TEL-1170).
+
+        Returns
+        -------
+        cam_effeciency: float
+            Camera efficiency
         """
 
         # Sum(C1) from 300 - 550 nm:
@@ -457,6 +471,11 @@ class CameraEfficiency:
         ----------
         tel_effeciency: float
             The telescope efficiency as calculated by calc_tel_efficiency()
+
+        Returns
+        -------
+        tel_total_effeciency
+            Telescope total efficiency
         """
 
         # Sum(N1) from 300 - 550 nm:
@@ -470,12 +489,18 @@ class CameraEfficiency:
         fill_factor = self._telescope_model.camera.get_camera_fill_factor()
 
         tel_effeciency_nsb = fill_factor * (n4_sum / (masts_factor * n1_sum))
+        tel_total_effeciency = tel_effeciency / np.sqrt(tel_effeciency_nsb)
 
-        return tel_effeciency / np.sqrt(tel_effeciency_nsb)
+        return tel_total_effeciency
 
     def calc_reflectivity(self):
         """
         Calculate the Cherenkov spectrum weighted reflectivity in the range 300-550 nm.
+
+        Returns
+        -------
+        cher_spec_weighted_reflectivity
+            Cherenkov spectrum weighted reflectivity (300-550 nm)
         """
 
         # Sum(C1) from 300 - 550 nm:
@@ -488,12 +513,20 @@ class CameraEfficiency:
             [wl_now > 299 and wl_now < 551 for wl_now in self._results["wl"]]
         ]
         c2_sum = np.sum(c2_reduced_wl)
+        cher_spec_weighted_reflectivity = c2_sum / c1_sum / self._results["masts"][0]
 
-        return c2_sum / c1_sum / self._results["masts"][0]
+        return cher_spec_weighted_reflectivity
 
     def calc_nsb_rate(self):
         """
         Calculate the NSB rate.
+
+        Returns
+        -------
+        nsb_rate
+            NSB rate
+        n1_sum
+            Sum of NSB counts
         """
 
         nsb_pe_per_ns = (
@@ -560,7 +593,8 @@ class CameraEfficiency:
 
         Returns
         -------
-        plt
+        fig
+            The figure
         """
         self._logger.info("Plotting Cherenkov efficiency vs wavelength")
 
@@ -593,7 +627,8 @@ class CameraEfficiency:
 
         Returns
         -------
-        plt
+        fig
+            The figure
         """
         self._logger.info("Plotting NSB efficiency vs wavelength")
         column_titles = {
