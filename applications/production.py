@@ -57,8 +57,8 @@ from copy import copy
 
 from astropy.io.misc import yaml
 
-import simtools.configuration.configurator as configurator
 import simtools.util.general as gen
+from simtools.configuration import configurator
 from simtools.simulator import Simulator
 
 

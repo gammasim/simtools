@@ -38,7 +38,7 @@ from pathlib import Path
 import simtools.data_model.model_data_writer as writer
 import simtools.data_model.validate_data as ds
 import simtools.util.general as gen
-from simtools.configuration.configurator import Configurator
+from simtools.configuration import configurator
 from simtools.data_model.workflow_description import WorkflowDescription
 
 
@@ -53,7 +53,7 @@ def _parse(label, description, usage):
 
     """
 
-    config = Configurator(label=label, description=description, usage=usage)
+    config = configurator.Configurator(label=label, description=description, usage=usage)
 
     config.parser.add_argument(
         "--input_meta",
