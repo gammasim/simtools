@@ -88,6 +88,11 @@ class DatabaseHandler:
     def __init__(self, mongo_db_config=None):
         """
         Initialize the DatabaseHandler class.
+
+        Raises
+        -------
+        KeyError
+            if there is non-valid key in the db_config
         """
         self._logger = logging.getLogger(__name__)
         self._logger.debug("Initialize DatabaseHandler")
@@ -111,6 +116,11 @@ class DatabaseHandler:
             "db_api_user" - API username
             "db_api_pw" - Password for the API user
             "db_api_authentication_database" - DB with user info (optional, default is "admin")
+
+        Raises
+        -------
+        KeyError
+            if there is non-valid key in the db_config
         """
 
         self.mongo_db_config = mongo_db_config
@@ -132,6 +142,8 @@ class DatabaseHandler:
         Returns
         -------
         A PyMongo DB client
+
+
         """
         try:
             _db_client = MongoClient(
@@ -152,7 +164,8 @@ class DatabaseHandler:
 
     @staticmethod
     def _get_telescope_model_name_for_db(site, telescope_model_name):
-        """Make telescope name as the DB needs from site and telescope_model_name."""
+        """
+        Make telescope name as the DB needs from site and telescope_model_name."""
         return site + "-" + telescope_model_name
 
     def get_model_parameters(
@@ -248,6 +261,11 @@ class DatabaseHandler:
             Dict of model parameters
         dest: str or Path
             Location where to write the files to.
+
+        Raises
+        ----------
+        FileNotFoundError
+            if a file in parameters.values is not found
         """
 
         if self.mongo_db_config:
@@ -459,6 +477,11 @@ class DatabaseHandler:
         Returns
         -------
         dict containing the parameters
+
+        Raises
+        ----------
+        ValueError
+            if query returned zero results.
         """
 
         collection = DatabaseHandler.db_client[db_name][collection_name]
@@ -607,6 +630,11 @@ class DatabaseHandler:
         Returns
         -------
         dict containing the parameters
+
+        Raises
+        -------
+        ValueError
+            if query returned zero results.
         """
 
         _site_validated = names.validate_site_name(site)
@@ -685,6 +713,11 @@ class DatabaseHandler:
         Returns
         -------
         dict containing the parameters
+
+        Raises
+        -------
+        ValueError
+            if query returned zero results.
         """
 
         _site_validated = names.validate_site_name(site)
@@ -842,6 +875,11 @@ class DatabaseHandler:
             The name of the DB to copy to (default is the same as db_name)
         collection_to_copy_to: str
             The name of the collection to copy to (default is the same as collection)
+
+        Raises
+        -------
+        BulkWriteError
+
         """
 
         if db_to_copy_to is None:
@@ -903,6 +941,10 @@ class DatabaseHandler:
             would copy all entries of prod4 version from telescope North-LST-1 to "db_to_copy_to".
         db_to_copy_to: str
             The name of the DB to copy to.
+
+        Raises
+        -------
+        BulkWriteError
         """
 
         _collection = DatabaseHandler.db_client[db_name][collection]
@@ -995,6 +1037,11 @@ class DatabaseHandler:
             The name of the collection in which to update the parameter (default is "telescopes")
         file_prefix: str or Path
             where to find files to upload to the DB
+
+        Raises
+        -------
+        FileNotFoundError
+            if file_prefix is None
         """
 
         collection = DatabaseHandler.db_client[db_name][collection_name]
@@ -1078,6 +1125,11 @@ class DatabaseHandler:
             Update a site parameter (the telescope argument must be None)
         collection_name: str
             The name of the collection in which to update the parameter (default is "telescopes")
+
+        Raises
+        -------
+        ValueError
+            if field not in allowed fields
         """
 
         allowed_fields = ["Applicable", "units", "Type", "items", "minimum", "maximum"]
@@ -1169,6 +1221,11 @@ class DatabaseHandler:
             The name of the collection to which to add a parameter (default is "telescopes")
         file_prefix: str or Path
             where to find files to upload to the DB
+
+        Raises
+        -------
+        FileNotFoundError
+            if file_prefix is None
         """
 
         collection = DatabaseHandler.db_client[db_name][collection_name]
@@ -1247,6 +1304,12 @@ class DatabaseHandler:
             where to find files to upload to the DB
         kwargs: dict
             Any additional fields to add to the parameter
+
+        Raises
+        -------
+        ValueError
+            If key to collection_name is not valid. Valid entries are: 'telescopes' and 'sites'.
+
         """
 
         collection = DatabaseHandler.db_client[db_name][collection_name]
@@ -1313,6 +1376,11 @@ class DatabaseHandler:
         -------
         str
             The version name in the Simulation DB of the requested tag
+
+        Raises
+        -------
+        ValueError
+            if version not valid. Valid versions are: 'Current' and 'Latest'.
         """
 
         if version not in ["Current", "Latest"]:
@@ -1394,6 +1462,11 @@ class DatabaseHandler:
         -------
         all_versions: list
             List of all versions found
+
+        Raises
+        -------
+        ValueError
+            If key to collection_name is not valid. Valid entries are: 'telescopes' and 'sites'.
         """
 
         collection = DatabaseHandler.db_client[db_name][collection_name]
