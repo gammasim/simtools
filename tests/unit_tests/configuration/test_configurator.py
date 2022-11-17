@@ -7,7 +7,10 @@ from pathlib import Path
 import pytest
 import yaml
 
-from simtools.configuration import Configurator, InvalidConfigurationParameter
+from simtools.configuration.configurator import (
+    Configurator,
+    InvalidConfigurationParameter,
+)
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)

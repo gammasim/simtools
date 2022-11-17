@@ -3,7 +3,7 @@ import logging
 import yaml
 
 import simtools.util.general as gen
-from simtools.util import workflow_description
+from simtools.data_model import workflow_description
 
 
 class ModelDataWriter:

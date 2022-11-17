@@ -4,7 +4,7 @@ import sys
 
 import yaml
 
-import simtools.util.commandline_parser as argparser
+import simtools.configuration.commandline_parser as argparser
 from simtools import io_handler
 
 

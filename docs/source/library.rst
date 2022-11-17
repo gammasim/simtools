@@ -1,7 +1,13 @@
 .. _Library:
 
-simtools Library
-****************
+API Documentation
+*****************
+
+gammasim-tools is composed of the following modules:
+
+- ``camera_efficiency``: camera efficiency simulations and analysis
+- ``configuration``:
+
 
 .. toctree::
   :maxdepth: 1
