@@ -37,9 +37,9 @@
 import logging
 from pathlib import Path
 
-import simtools.configuration.configurator as configurator
 import simtools.util.general as gen
 from simtools import db_handler
+from simtools.configuration import configurator
 
 
 def _user_confirm():
