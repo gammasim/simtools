@@ -1,6 +1,7 @@
 import logging
 import shutil
 from copy import copy
+from pydoc import locate
 
 import astropy.io.ascii
 import numpy as np
@@ -10,7 +11,6 @@ import simtools.util.general as gen
 from simtools import db_handler, io_handler
 from simtools.model.camera import Camera
 from simtools.model.mirrors import Mirrors
-from simtools.model.model_utils import validate_model_parameter
 from simtools.simtel.simtel_config_writer import SimtelConfigWriter
 from simtools.util import names
 
@@ -223,7 +223,6 @@ class TelescopeModel:
                     continue
                 elif "#" not in line and len(words) > 0:
                     par, value = _process_line(words)
-                    par, value = validate_model_parameter(par, value)
                     parameters[par] = value
 
         for par, value in parameters.items():
@@ -403,11 +402,27 @@ class TelescopeModel:
             self._logger.error(msg)
             raise InvalidParameter(msg)
         else:
-            # TODO: fix this in order to use the type from the DB directly.
-            if not isinstance(value, type(self._parameters[par_name]["Value"])):
-                self._logger.warning(f"Value type of {par_name} differs from the current one")
+            type_of_par_name = locate(self._parameters[par_name]["Type"])
+            if not isinstance(value, type_of_par_name):
+                self._logger.warning(
+                    f"The type of the provided value ({value}, {type(value)}) "
+                    f"is different from the type of {par_name} "
+                    f"({self._parameters[par_name]['Type']}). "
+                    f"Attempting to cast to the correct type."
+                )
+                try:
+                    value = type_of_par_name(value)
+                except ValueError:
+                    self._logger.error(
+                        f"Could not cast {value} to {self._parameters[par_name]['Type']}."
+                    )
+                    raise
+
+            self._logger.debug(
+                f"Changing parameter {par_name} "
+                f"from {self._parameters[par_name]['Value']} to {value}"
+            )
             self._parameters[par_name]["Value"] = value
-            self._logger.debug("Changing parameter {}".format(par_name))
 
             # In case parameter is a file, the model files will be outdated
             if self._parameters[par_name]["File"]:
