@@ -24,13 +24,15 @@ sim_telarray, GrOPTICS);
 `ctapipe <https://github.com/cta-observatory/ctapipe>`_ and calibpipe);
 * I/O and reporting tools for the MC simulation model parameter and production database.
 
-Contact
+Authors
 =======
 
-* Raul R Prado (raul.prado@desy.de)
-* Orel Gueta (orel.gueta@desy.de)
-* Victor B. Martins (victor.barbosa.martins@desy.de)
-* Gernot Maier (gernot.maier@desy.de)
+|author|
+
+Citation
+========
+
+See citation file (`CITATION.cff <https://github.com/gammasim/gammasim-tools/blob/master/CITATION.cff>`_) on how to site this software.
 
 
 General Documentation
