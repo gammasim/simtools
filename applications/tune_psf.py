@@ -73,12 +73,12 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.backends.backend_pdf import PdfPages
 
-import simtools.configuration as configurator
+import simtools.configuration.configurator as configurator
 import simtools.util.general as gen
 from simtools import io_handler, visualize
+from simtools.model.model_utils import split_simtel_parameter
 from simtools.model.telescope_model import TelescopeModel
 from simtools.ray_tracing import RayTracing
-from simtools.util.model import split_simtel_parameter
 
 
 def load_data(datafile):

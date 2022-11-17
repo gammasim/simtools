@@ -6,8 +6,8 @@ from pathlib import Path
 
 import pytest
 
-import simtools.util.model_data_writer as writer
-import simtools.util.workflow_description as workflow
+import simtools.data_model.model_data_writer as writer
+import simtools.data_model.workflow_description as workflow
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)

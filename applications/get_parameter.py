@@ -3,7 +3,7 @@
 import logging
 from pprint import pprint
 
-import simtools.configuration as configurator
+import simtools.configuration.configurator as configurator
 import simtools.util.general as gen
 from simtools import db_handler
 
