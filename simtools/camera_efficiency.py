@@ -23,6 +23,9 @@ class CameraEfficiency:
     Configurable parameters:
         zenith_angle: {len: 1, unit: deg, default: 20 deg, names: ['zenith', 'theta']}
 
+    Parameters
+    ----------
+
     Attributes
     ----------
     label: str
@@ -32,14 +35,28 @@ class CameraEfficiency:
 
     Methods
     -------
-    simulate(force=False)
-        Simulate camera efficiency using testeff from sim_telarray.
-    analyse(export=True, force=False)
+    analyze(export=True, force=False)
         Analyze output from testeff and store results in _results.
+    calc_camera_efficiency()
+        Calculate the camera nominal efficiency including gaps
+    calc_nsb_rate()
+        Calculate the NSB rate.
+    calc_reflectivity()
+        Calculate the Cherenkov spectrum weighted reflectivity in the range 300-550 nm.
+    calc_tel_efficiency()
+        Calculate the telescope total efficiency including gaps
+    calc_tot_efficiency(tel_effeciency)
+        Calculate the telescope total efficiency including gaps
     export_results()
         Export results to a csv file.
     plot(key, **kwargs)
         Plot key vs wavelength, where key may be Cherenkov or NSB.
+    plot_cherenkov_efficiency()
+        Plot Cherenkov efficiency vs wavelength
+    plot_nsb_efficiency()
+        Plot NSB efficiency vs wavelength.
+    simulate(force=False)
+        Simulate camera efficiency using testeff from sim_telarray.
     """
 
     def __init__(
