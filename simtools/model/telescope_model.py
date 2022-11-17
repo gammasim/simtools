@@ -13,7 +13,6 @@ from simtools.model.camera import Camera
 from simtools.model.mirrors import Mirrors
 from simtools.simtel.simtel_config_writer import SimtelConfigWriter
 from simtools.util import names
-from simtools.util.model import validate_model_parameter
 
 __all__ = ["TelescopeModel"]
 
@@ -224,7 +223,6 @@ class TelescopeModel:
                     continue
                 elif "#" not in line and len(words) > 0:
                     par, value = _process_line(words)
-                    par, value = validate_model_parameter(par, value)
                     parameters[par] = value
 
         for par, value in parameters.items():
