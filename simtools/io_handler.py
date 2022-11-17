@@ -6,7 +6,22 @@ from pathlib import Path
 class IOHandlerSingleton(type):
     """
     Singleton base class
+    Parameters
+    ----------
 
+    Attributes
+    ----------
+
+    Methods
+    -------
+    set_paths(output_path=None, data_path=None, model_path=None)
+        Set paths for input and output.
+    get_output_directory(label=None, dir_type=None, test=False)
+        Get the output directory for the directory type dir_type
+    get_output_file(file_name, label=None, dir_type=None, test=False)
+        Get path of an output file.
+    get_input_data_file(parent_dir=None, file_name=None, test=False)
+        Get path of a data file, using data_path
     """
 
     _instances = {}
