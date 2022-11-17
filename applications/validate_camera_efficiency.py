@@ -46,10 +46,10 @@
 import logging
 from pathlib import Path
 
-import simtools.configuration as configurator
 import simtools.util.general as gen
 from simtools import io_handler
 from simtools.camera_efficiency import CameraEfficiency
+from simtools.configuration import configurator
 from simtools.model.telescope_model import TelescopeModel
 
 
