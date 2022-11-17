@@ -125,9 +125,9 @@ import astropy.units as u
 import numpy as np
 from astropy.table import QTable, Table
 
-import simtools.configuration as configurator
+import simtools.data_model.model_data_writer as writer
 import simtools.util.general as gen
-import simtools.util.model_data_writer as writer
+from simtools.configuration import configurator
 from simtools.model.telescope_model import TelescopeModel
 from simtools.ray_tracing import RayTracing
 
