@@ -26,6 +26,7 @@ which contains a collection of TelescopeModel's and the array layout.
 * `mirrors`_
 * `camera`_
 * `array_model`_
+* `model_utils`_
 
 
 .. _telescope_model:
@@ -61,4 +62,12 @@ array_model
 -----------
 
 .. automodule:: model.array_model
+   :members:
+
+.. _model_utils:
+
+Model utitilities
+-----------------
+
+.. automodule:: model.model_utils
    :members:
