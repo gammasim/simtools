@@ -335,9 +335,9 @@ class CameraEfficiency:
         masts_factor = self._results["masts"][0]
         fill_factor = self._telescope_model.camera.get_camera_fill_factor()
 
-        tel_effeciency = fill_factor * (c4_sum / (masts_factor * c1_sum))
+        tel_efficiency = fill_factor * (c4_sum / (masts_factor * c1_sum))
 
-        return tel_effeciency
+        return tel_efficiency
 
     def calc_camera_efficiency(self):
         """
@@ -356,18 +356,18 @@ class CameraEfficiency:
         c4x_sum = np.sum(c4x_reduced_wl)
         fill_factor = self._telescope_model.camera.get_camera_fill_factor()
 
-        cam_effeciency_no_gaps = c4x_sum / c1_sum
-        cam_effeciency = cam_effeciency_no_gaps * fill_factor
+        cam_efficiency_no_gaps = c4x_sum / c1_sum
+        cam_efficiency = cam_efficiency_no_gaps * fill_factor
 
-        return cam_effeciency
+        return cam_efficiency
 
-    def calc_tot_efficiency(self, tel_effeciency):
+    def calc_tot_efficiency(self, tel_efficiency):
         """
         Calculate the telescope total efficiency including gaps (as defined in A-PERF-2020).
 
         Parameters
         ----------
-        tel_effeciency: float
+        tel_efficiency: float
             The telescope efficiency as calculated by calc_tel_efficiency()
         """
 
@@ -381,9 +381,9 @@ class CameraEfficiency:
         masts_factor = self._results["masts"][0]
         fill_factor = self._telescope_model.camera.get_camera_fill_factor()
 
-        tel_effeciency_nsb = fill_factor * (n4_sum / (masts_factor * n1_sum))
+        tel_efficiency_nsb = fill_factor * (n4_sum / (masts_factor * n1_sum))
 
-        return tel_effeciency / np.sqrt(tel_effeciency_nsb)
+        return tel_efficiency / np.sqrt(tel_efficiency_nsb)
 
     def calc_reflectivity(self):
         """
