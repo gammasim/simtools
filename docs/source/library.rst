@@ -13,9 +13,11 @@ gammasim-tools is composed of the following modules:
   :maxdepth: 1
   :glob:
 
-  simulators
+  camera_efficiency
+  configuration
+  data_model
+  layout_array
   mc_model
   ray_tracing
-  camera_efficiency
-  layout_array
+  simulators
   util
