@@ -79,15 +79,15 @@
 
     Example
     -------
-    MST - Prod5 (07.2020)
+    MST - Prod5
 
-    First get the file with mirror list and PSF data from DB
+    Get mirror list and PSF data from DB:
 
      .. code-block:: console
 
         python applications/get_file_from_db.py --file_name MLTdata-preproduction.ecsv
 
-    Then run the application. Runtime about 4 min.
+    Run the application. Runtime about 4 min.
 
     .. code-block:: console
 
