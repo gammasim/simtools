@@ -184,7 +184,9 @@ class CameraEfficiency:
         simtel = SimtelRunnerCameraEfficiency(
             simtel_source_path=self._simtel_source_path,
             telescope_model=self._telescope_model,
+            zenith_angle=self.config.zenith_angle,
             file_simtel=self._file_simtel,
+            file_log=self._file_log,
             label=self.label,
         )
         simtel.run(test=self.test, force=force)

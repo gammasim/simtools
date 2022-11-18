@@ -153,7 +153,7 @@ class SimtelRunner:
             self._logger.error(msg)
             raise RuntimeError(msg)
 
-        if not self._shall_run(run_number) and not force:
+        if not self._shall_run(run_number=run_number) and not force:
             self._logger.info("Skipping because output exists and force = False")
             return
 
