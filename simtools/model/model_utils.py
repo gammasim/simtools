@@ -3,7 +3,6 @@
 import logging
 import math
 
-from simtools.model.model_parameters import MODEL_PARS
 from simtools.util import names
 
 __all__ = [
@@ -60,31 +59,6 @@ def compute_telescope_transmission(pars, off_axis):
     else:
         t = math.sin(off_axis * _deg_to_rad) / (pars[3] * _deg_to_rad)
         return pars[0] / (1.0 + pars[2] * t ** pars[4])
-
-
-def validate_model_parameter(par_name_in, par_value_in):
-    """
-    Validate model parameter based on the dict MODEL_PARS.
-
-    Parameters
-    ----------
-    par_name_in: str
-        Name of the parameter to be validated.
-    par_value_in: str
-        Value of the parameter to be validated.
-
-    Returns
-    -------
-    (par_name, par_value) after validated. par_value_in is converted to the proper type if that
-    information is available in MODEL_PARS
-    """
-    _logger = logging.getLogger(__name__)
-    _logger.debug("Validating parameter {}".format(par_name_in))
-    for par_name_model in MODEL_PARS:
-        if par_name_in == par_name_model or par_name_in in MODEL_PARS[par_name_model]["names"]:
-            par_type = MODEL_PARS[par_name_model]["type"]
-            return par_name_model, par_type(par_value_in)
-    return par_name_in, par_value_in
 
 
 def get_camera_name(telescope_model_name):
