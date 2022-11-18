@@ -357,7 +357,7 @@ class CameraEfficiency:
         )
         self._logger.info(
             "Expected NSB pixel rate for the reference NSB: "
-            f"{self.calc_nsb_rate()[0]:.4f} [p.e./ns]"
+            f"{self.calc_nsb_rate():.4f} [p.e./ns]"
         )
         print("\033[0m")
 
@@ -413,7 +413,7 @@ class CameraEfficiency:
         Returns
         -------
         cam_efficiency: float
-            Camera efficiency
+            Wavelength-averaged camera efficiency
         """
 
         # Sum(C1) from 300 - 550 nm:
@@ -469,7 +469,7 @@ class CameraEfficiency:
 
         Returns
         -------
-        cher_spec_weighted_reflectivity
+        Float
             Cherenkov spectrum weighted reflectivity (300-550 nm)
         """
 
@@ -494,9 +494,7 @@ class CameraEfficiency:
         Returns
         -------
         nsb_rate
-            NSB rate
-        n1_sum
-            Sum of NSB counts
+            NSB rate in p.e./ns
         """
 
         nsb_pe_per_ns = (
@@ -524,7 +522,7 @@ class CameraEfficiency:
             * self._telescope_model.reference_data["nsb_reference_value"]["Value"]
             / nsb_integral
         )
-        return nsb_rate, n1_sum
+        return nsb_rate
 
     def plot(self, key, **kwargs):  # FIXME - remove this function, probably not needed
         """
@@ -564,7 +562,7 @@ class CameraEfficiency:
         Returns
         -------
         fig
-            The figure
+            The figure instance of pyplot
         """
         self._logger.info("Plotting Cherenkov efficiency vs wavelength")
 
@@ -598,7 +596,7 @@ class CameraEfficiency:
         Returns
         -------
         fig
-            The figure
+            The figure instance of pyplot
         """
         self._logger.info("Plotting NSB efficiency vs wavelength")
         column_titles = {
