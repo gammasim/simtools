@@ -7,7 +7,7 @@
 
     The name and location of the file are required.
     This application should complement the ones for updating parameters, \
-    adding entries to the DB and getting file from the DB.
+    adding entries to the DB and getting files from the DB.
 
     Command line arguments
     ----------------------
