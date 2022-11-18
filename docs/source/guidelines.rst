@@ -9,7 +9,7 @@ entry page of this documentation. In general, please take note of the `ctapipe D
 Guidelines <https://cta-observatory.github.io/ctapipe/development/index.html>`_. gammasim-tools
 follows the same `style <https://cta-observatory.github.io/ctapipe/development/style-guide.html#>`_
 and `code guidelines <https://cta-observatory.github.io/ctapipe/development/code-guidelines.html>`_
-as `ctapip <https://github.com/cta-observatory/ctapipe/>`_.
+as `ctapipe <https://github.com/cta-observatory/ctapipe/>`_.
 
 Project setup
 =============
@@ -34,7 +34,7 @@ The gammasim-tools package is currently developed for Python 3.9.
 Code formatting
 ===============
 
-Linting and code checks are done automatically using the pre-commit functionaility using ``isort``,
+Linting and code checks are done automatically using the pre-commit functionality using ``isort``,
 ``black`` and ``pyflakes``. As part of the CI workflow Codacy performs a few additional code checks
 as well.
 
