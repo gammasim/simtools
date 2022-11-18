@@ -45,27 +45,6 @@ class PSFImage:
         The X coordinate of the center
     centroid_y: float
         The Y coordinate of the center
-
-    Methods
-    -------
-    get_cumulative_data(radius=None)
-        Provide cumulative data (intensity vs radius).
-    get_effective_area()
-        Return effective area under the condition that total area was set given.
-    get_image_data(centralized=True)
-        Provide image data (2D photon positions in cm) as lists.
-    get_psf(fraction=0.8, unit='cm')
-        Compute and return a PSF container.
-    plot_image(centralized=True, **kwargs)
-        Plot image as a 2D histogram (in cm)
-    plot_cumulative(**kwargs):
-        Plot cumulative data (intensity vs radius).
-    read_photon_list_from_simtel_file(file)
-        Read a photon list produced by sim_telarray.
-    set_effective_area(value)
-        Set effective area
-    set_psf(value, fraction=0.8, unit="cm")
-        Set PSF calculated from other methods
     """
 
     def __init__(self, focal_length=None, total_scattered_area=None):
