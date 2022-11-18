@@ -154,7 +154,7 @@ class WorkflowDescription:
 
         File name is the combination of activity id (or 'TEST' if CONFIGURATION:TEST is set) and:
         a. Top-level meta ['product']['name']
-           or
+        or
         b. Top-level meta ['activity']['name']
 
         (depending which one is set)
@@ -162,7 +162,7 @@ class WorkflowDescription:
         Parameters
         ----------
         suffix: str
-           file name extension (if none: use product_data_file_format()
+            file name extension (if none: use product_data_file_format()
         full_path: bool
             if true: return path + file name, otherwise file name only
 

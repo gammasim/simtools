@@ -1,4 +1,4 @@
-.. _Configuration:
+.. _ConfigurationModule:
 
 Configuration
 =============
