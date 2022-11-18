@@ -135,7 +135,6 @@ from simtools.ray_tracing import RayTracing
 def _parse(label):
     """
     Parse command line configuration
-
     """
 
     config = configurator.Configurator(label=label)
@@ -174,28 +173,19 @@ def _parse(label):
     )
     config.parser.add_argument(
         "--mirror_list",
-        help=(
-            "Mirror list file to replace the default one. It should be used if"
-            " measured mirror focal lengths need to be accounted. It contains the following"
-            "information about the mirrors: ID, panel radius, optical PSF (d80), PSF (d80) and"
-            "surface reflectivity."
-        ),
+        help=("Mirror list file to replace the default one."),
         type=str,
         required=False,
     )
     config.parser.add_argument(
         "--use_random_flen",
-        help=(
-            "Use random focal lengths. Read value for random_focal_length parameter, read"
-            " from DB or provide by using the argument random_flen."
-        ),
+        help=("Use random focal lengths."),
         action="store_true",
         required=False,
     )
     config.parser.add_argument(
         "--random_flen",
-        help="Value of the random focal length to replace the default one. Only used if"
-        "use_random_flen is activated.",
+        help="Value of the random focal length. Only used if use_random_flen is activated.",
         default=None,
         type=float,
         required=False,
