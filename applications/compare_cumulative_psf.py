@@ -50,7 +50,7 @@
 
     Runtime < 1 min.
 
-    Retrive MC model parameters and example dataset from the DB:
+    Get MC model parameters and example dataset from the DB:
 
     .. code-block:: yaml
 
