@@ -26,6 +26,8 @@ class SimtelRunnerCameraEfficiency(SimtelRunner):
         label=None,
         simtel_source_path=None,
         file_simtel=None,
+        file_log=None,
+        zenith_angle=None,
     ):
         """
         SimtelRunner.
@@ -40,16 +42,20 @@ class SimtelRunnerCameraEfficiency(SimtelRunner):
             Location of sim_telarray installation.
         file_simtel: str (or Path)
             location of the sim_telarray testeff tool output file
+        zenith_angle: float
+            The zenith angle given in the config to CameraEfficiency
         """
         self._logger = logging.getLogger(__name__)
         self._logger.debug("Init SimtelRunnerCameraEfficiency")
 
         super().__init__(label=label, simtel_source_path=simtel_source_path)
 
-        self.telescope_model = telescope_model
+        self._telescope_model = telescope_model
         self.label = label if label is not None else self.telescope_model.label
 
         self._file_simtel = file_simtel
+        self._file_log = file_log
+        self.zenith_angle = zenith_angle
 
     def _shall_run(self, **kwargs):
         """Tells if simulations should be run again based on the existence of output files."""
@@ -100,7 +106,7 @@ class SimtelRunnerCameraEfficiency(SimtelRunner):
             mirror_reflectivity = self._get_one_dim_distribution(
                 "mirror_reflectivity", "primary_mirror_incidence_angle"
             )
-            mirror_reflectivity_secondary = super()._get_one_dim_distribution(
+            mirror_reflectivity_secondary = self._get_one_dim_distribution(
                 "mirror_reflectivity", "secondary_mirror_incidence_angle"
             )
 
@@ -128,7 +134,7 @@ class SimtelRunnerCameraEfficiency(SimtelRunner):
         command += f" -fqe {self._telescope_model.get_parameter_value('quantum_efficiency')}"
         command += " 200 1000"  # lmin and lmax
         command += " 300 26"  # Xmax, ioatm (Konrad always uses 26)
-        command += f" {self.config.zenith_angle}"
+        command += f" {self.zenith_angle}"
         command += f" 2>{self._file_log}"
         command += f" >{self._file_simtel}"
 
