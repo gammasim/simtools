@@ -57,13 +57,15 @@
     -------
     LST-1 Prod5
 
-    First get the PSF data from the DB:
+    Runtime < 3 min.
+
+    Get PSF data from the DB:
 
     .. code-block:: console
 
         python applications/get_file_from_db.py --file_name PSFcurve_data_v2.txt
 
-    Then run the application. Runtime around 3 min.
+    Run the application:
 
     .. code-block:: console
 

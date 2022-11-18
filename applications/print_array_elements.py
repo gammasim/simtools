@@ -29,13 +29,13 @@
 
     Example:
 
-    First get the array element list
+    Get the array element list
 
     .. code-block:: console
 
         python applications/get_file_from_db.py --file_name telescope_positions-South-4MST.ecsv
 
-    Then run the application:
+    Run the application:
 
     .. code-block:: console
 
