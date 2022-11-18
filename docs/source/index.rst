@@ -4,11 +4,11 @@
 gammasim-tools
 ==============
 
-Prototype implementation of tools for the Simulation Pipeline of the `CTA Observatory <www.cta-observatory.org>`_
+Prototype implementation of tools for the Simulation Pipeline of the `CTA Observatory <www.cta-observatory.org>`_:
 
 * libraries for simulation model management and model database interface;
 * applications for simulation model parameter derivation and validation;
-* standardized interfaces and data products independent of the underlying software (e.g., CORSIKA, sim_telarray);
+* standardized interfaces and data products independent of the underlying simulation software (e.g., `CORSIKA <https://www.iap.kit.edu/corsika/>`_, `sim_telarray <https://www.mpi-hd.mpg.de/hfm/~bernlohr/sim_telarray/>`_);
 * I/O and reporting tools for the MC simulation model parameter and production database.
 
 gammasim-tools is one part of the CTAO Simulation Pipeline, which consist of the following components:
@@ -32,7 +32,7 @@ Citing this Software
 ====================
 
 Please cite this software if you use it for a publication.
-Plese cite the `Zenodo record <https://doi.org/10.5281/zenodo.6346696>`_, see the `CITATION.cff <https://github.com/gammasim/gammasim-tools/blob/master/CITATION.cff>`_ file.
+Please cite the `Zenodo record <https://doi.org/10.5281/zenodo.6346696>`_, see the `CITATION.cff <https://github.com/gammasim/gammasim-tools/blob/master/CITATION.cff>`_ file.
 
 Documentation
 =============
