@@ -143,7 +143,7 @@ class SimtelRunnerCameraEfficiency(SimtelRunner):
 
         return command
 
-    def _check_run_result(self, run_number=None):
+    def _check_run_result(self, **kwargs):
         # Checking run
         if not self._file_simtel.exists():
             msg = "Camera efficiency simulation results file does not exist"
