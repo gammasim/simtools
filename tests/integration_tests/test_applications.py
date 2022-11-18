@@ -94,6 +94,7 @@ APP_LIST = {
             "TESTMODELDIR/MLTdata-preproduction.ecsv",
             "--rnda",
             "0.0063",
+            "--no_tuning",
             " --test",
         ]
     ],
