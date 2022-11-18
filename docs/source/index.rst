@@ -42,7 +42,7 @@ Documentation
   :glob:
 
   getting_started
-  framework
+  configuration
   applications
   library
   auxiliary_files
