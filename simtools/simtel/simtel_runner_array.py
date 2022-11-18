@@ -298,10 +298,10 @@ class SimtelRunnerArray(SimtelRunner):
 
         return command
 
-    def _check_run_result(self, run_number):
+    def _check_run_result(self, **kwargs):
         # Checking run
         output_file = self.get_file_name(
-            file_type="output", **self.get_info_for_file_name(run_number)
+            file_type="output", **self.get_info_for_file_name(kwargs["run_number"])
         )
         if not output_file.exists():
             msg = "sim_telarray output file does not exist."
