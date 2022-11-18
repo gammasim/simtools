@@ -1,12 +1,3 @@
-.. _Framework:
-
-Framework
-=========
-
-* `Configuration`_
-* `IO`_
-
-
 .. _Configuration:
 
 Configuration
@@ -60,20 +51,4 @@ config
 ******
 
 .. automodule:: config
-   :members:
-
-
-.. _IO:
-
-I/O
----
-
-The I/O is handled by the :ref:`io_handler <iomodule>` module (see reference documentation below).
-
-.. _iomodule:
-
-io_handler
-**********
-
-.. automodule:: io_handler
    :members:
