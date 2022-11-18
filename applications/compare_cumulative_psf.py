@@ -50,19 +50,14 @@
 
     Runtime < 1 min.
 
-    First, get the yml file named lst_pars_example.yml from the DB:
+    Retrive MC model parameters and example dataset from the DB:
 
     .. code-block:: yaml
 
         python applications/get_file_from_db.py --file_name lst_pars_example.yml
-
-    Get also the PSF data from the DB:
-
-    .. code-block:: yaml
-
         python applications/get_file_from_db.py --file_name PSFcurve_data_v2.txt
 
-    And finally run:
+    Run the application:
 
     .. code-block:: console
 
