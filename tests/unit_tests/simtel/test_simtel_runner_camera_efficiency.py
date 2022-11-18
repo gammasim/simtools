@@ -39,13 +39,14 @@ def test_shall_run(simtel_runner_camera_efficiency):
     in the integration tests.
     """
 
-    assert not simtel_runner_camera_efficiency._shall_run()
+    assert simtel_runner_camera_efficiency._shall_run()
 
 
 def test_make_run_command(simtel_runner_camera_efficiency):
 
     command = simtel_runner_camera_efficiency._make_run_command()
 
+    assert "testeff" in command
     assert "alt 2147.0 -fatm atm_trans_2147_1_10_2_0_2147.dat" in command
     assert "-flen 2.15191 -spix 0.62" in command
     assert "weighted_average_1D_ref_astri-2d_2018-01-17.dat -m2" in command
