@@ -464,7 +464,7 @@ class CameraEfficiency:
 
         Parameters
         ----------
-        tel_effeciency: float
+        tel_efficiency: float
             The telescope efficiency as calculated by calc_tel_efficiency()
 
         Returns
