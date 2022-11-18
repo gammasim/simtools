@@ -59,7 +59,7 @@ class SimtelRunnerCameraEfficiency(SimtelRunner):
 
     def _shall_run(self, **kwargs):
         """Tells if simulations should be run again based on the existence of output files."""
-        return self._file_simtel.exists()
+        return not self._file_simtel.exists()
 
     def _make_run_command(self, **kwargs):
         """
