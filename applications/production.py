@@ -45,13 +45,13 @@
     -------
     Testing a mini-prod5 simulation.
 
-    First get the configuration file from the DB
+    Get the configuration file from the DB
 
     .. code-block:: console
 
         python applications/get_file_from_db.py --file_name prod_config_test.yml
 
-    Then run the application:
+    Run the application:
 
     .. code-block:: console
 

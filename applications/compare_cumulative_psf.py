@@ -52,7 +52,7 @@
 
     Get MC model parameters and example dataset from the DB:
 
-    .. code-block:: yaml
+    .. code-block:: console
 
         python applications/get_file_from_db.py --file_name lst_pars_example.yml
         python applications/get_file_from_db.py --file_name PSFcurve_data_v2.txt

@@ -17,14 +17,14 @@
     Example
     -------
 
-    First get the workflow configuration from the DB:
+    Get workflow configuration from the DB:
 
     .. code-block:: console
 
         python applications/get_file_from_DB.py --file_name \
         set_MST_mirror_2f_measurements_from_external.config.yml
 
-    Then run the application:
+    Run the application:
 
     .. code-block:: console
 
