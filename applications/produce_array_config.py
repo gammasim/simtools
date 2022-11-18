@@ -71,13 +71,13 @@
     -------
     North - Prod5, simple example
 
-    First get the array configuration from DB:
+    Get the array configuration from DB:
 
     .. code-block:: console
 
         python applications/get_file_from_db.py --file_name array_config_test.yml
 
-    Then run the application. Runtime < 1 min.
+    Run the application. Runtime < 1 min.
 
     .. code-block:: console
 

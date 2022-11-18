@@ -54,7 +54,7 @@ def main():
 
     config.parser.add_argument(
         "--file_name",
-        help=("The name of the file name to be downloaded."),
+        help=("The name of the file to be downloaded."),
         type=str,
         required=True,
     )
