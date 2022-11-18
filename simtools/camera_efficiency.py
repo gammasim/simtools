@@ -1,5 +1,4 @@
 import logging
-import os
 import re
 from collections import defaultdict
 
@@ -11,6 +10,7 @@ from astropy.table import Table
 import simtools.util.general as gen
 from simtools import io_handler, visualize
 from simtools.model.telescope_model import TelescopeModel
+from simtools.simtel.simtel_runner_camera_efficiency import SimtelRunnerCameraEfficiency
 from simtools.util import names
 
 __all__ = ["CameraEfficiency"]
@@ -74,6 +74,7 @@ class CameraEfficiency:
         self._simtel_source_path = simtel_source_path
         self._telescope_model = self._validate_telescope_model(telescope_model)
         self.label = label if label is not None else self._telescope_model.label
+        self.test = test
 
         self.io_handler = io_handler.IOHandler()
         self._base_directory = self.io_handler.get_output_directory(
@@ -180,87 +181,15 @@ class CameraEfficiency:
         """
         self._logger.info("Simulating CameraEfficiency")
 
-        if self._file_simtel.exists() and not force:
-            self._logger.info("Simtel file exists and force=False - skipping simulation")
-            return
-
-        # Processing camera pixel features
-        pixel_shape = self._telescope_model.camera.get_pixel_shape()
-        pixel_shape_cmd = "-hpix" if pixel_shape in [1, 3] else "-spix"
-        pixel_diameter = self._telescope_model.camera.get_pixel_diameter()
-
-        # Processing focal length
-        focal_length = self._telescope_model.get_parameter_value("effective_focal_length")
-        if focal_length == 0.0:
-            self._logger.warning("Using focal_length because effective_focal_length is 0")
-            focal_length = self._telescope_model.get_parameter_value("focal_length")
-
-        # Processing mirror class
-        mirror_class = 1
-        if self._telescope_model.has_parameter("mirror_class"):
-            mirror_class = self._telescope_model.get_parameter_value("mirror_class")
-
-        # Processing camera transmission
-        camera_transmission = 1
-        if self._telescope_model.has_parameter("camera_transmission"):
-            camera_transmission = self._telescope_model.get_parameter_value("camera_transmission")
-
-        # Processing camera filter
-        # A special case is testeff does not support 2D distributions
-        camera_filter_file = self._telescope_model.get_parameter_value("camera_filter")
-        if self._telescope_model.is_file_2D("camera_filter"):
-            camera_filter_file = self._get_one_dim_distribution(
-                "camera_filter", "camera_filter_incidence_angle"
-            )
-
-        # Processing mirror reflectivity
-        # A special case is testeff does not support 2D distributions
-        mirror_reflectivity = self._telescope_model.get_parameter_value("mirror_reflectivity")
-        if mirror_class == 2:
-            mirror_reflectivity_secondary = mirror_reflectivity
-        if self._telescope_model.is_file_2D("mirror_reflectivity"):
-            mirror_reflectivity = self._get_one_dim_distribution(
-                "mirror_reflectivity", "primary_mirror_incidence_angle"
-            )
-            mirror_reflectivity_secondary = self._get_one_dim_distribution(
-                "mirror_reflectivity", "secondary_mirror_incidence_angle"
-            )
-
-        # cmd -> Command to be run at the shell
-        cmd = str(self._simtel_source_path.joinpath("sim_telarray/bin/testeff"))
-        cmd += " -nm -nsb-extra"
-        cmd += f" -alt {self._telescope_model.get_parameter_value('altitude')}"
-        cmd += f" -fatm {self._telescope_model.get_parameter_value('atmospheric_transmission')}"
-        cmd += f" -flen {focal_length * 0.01}"  # focal length in meters
-        cmd += f" {pixel_shape_cmd} {pixel_diameter}"
-        if mirror_class == 1:
-            cmd += f" -fmir {self._telescope_model.get_parameter_value('mirror_list')}"
-        cmd += f" -fref {mirror_reflectivity}"
-        if mirror_class == 2:
-            cmd += " -m2"
-            cmd += f" -fref2 {mirror_reflectivity_secondary}"
-        cmd += f" -teltrans {self._telescope_model.get_telescope_transmission_parameters()[0]}"
-        cmd += f" -camtrans {camera_transmission}"
-        cmd += f" -fflt {camera_filter_file}"
-        cmd += f" -fang {self._telescope_model.camera.get_lightguide_efficiency_angle_file_name()}"
-        cmd += (
-            f" -fwl {self._telescope_model.camera.get_lightguide_efficiency_wavelength_file_name()}"
+        simtel = SimtelRunnerCameraEfficiency(
+            simtel_source_path=self._simtel_source_path,
+            telescope_model=self._telescope_model,
+            file_simtel=self._file_simtel,
+            label=self.label,
         )
-        cmd += f" -fqe {self._telescope_model.get_parameter_value('quantum_efficiency')}"
-        cmd += " 200 1000"  # lmin and lmax
-        cmd += " 300 26"  # Xmax, ioatm (Konrad always uses 26)
-        cmd += f" {self.config.zenith_angle}"
-        cmd += f" 2>{self._file_log}"
-        cmd += f" >{self._file_simtel}"
+        simtel.run(test=self.test, force=force)
 
-        # Moving to sim_telarray directory before running
-        cmd = f"cd {self._simtel_source_path.joinpath('sim_telarray')} && {cmd}"
-
-        self._logger.info(f"Running sim_telarray with cmd: {cmd}")
-        os.system(cmd)
         return
-
-    # END of simulate
 
     def analyze(self, export=True, force=False):
         """
@@ -603,44 +532,3 @@ class CameraEfficiency:
         plt.gca().set_ylim(1e-3, ylim[1])
 
         return plt
-
-    def _get_one_dim_distribution(self, two_dim_parameter, weighting_distribution_parameter):
-        """
-        Calculate an average one-dimensional curve for testeff from the two-dimensional curve.
-        The two-dimensional distribution is provided in two_dim_parameter. The distribution
-        of weights to use for averaging the two-dimensional distribution is given in
-        weighting_distribution_parameter.
-
-        Returns
-        -------
-        one_dim_file: Path
-            The file path and name with the new one-dimensional distribution
-        """
-        incidence_angle_distribution_file = self._telescope_model.get_parameter_value(
-            weighting_distribution_parameter
-        )
-        incidence_angle_distribution = self._telescope_model.read_incidence_angle_distribution(
-            incidence_angle_distribution_file
-        )
-        self._logger.warning(
-            f"The {' '.join(two_dim_parameter.split('_'))} distribution "
-            "is a 2D one which testeff does not support. "
-            "Instead of using the 2D distribution, the two dimensional distribution "
-            "will be averaged, using the photon incidence angle distribution as weights. "
-            "The incidence angle distribution is taken "
-            f"from the file - {incidence_angle_distribution_file})."
-        )
-        two_dim_distribution = self._telescope_model.read_two_dim_wavelength_angle(
-            self._telescope_model.get_parameter_value(two_dim_parameter)
-        )
-        distribution_to_export = self._telescope_model.calc_average_curve(
-            two_dim_distribution, incidence_angle_distribution
-        )
-        new_file_name = (
-            f"weighted_average_1D_{self._telescope_model.get_parameter_value(two_dim_parameter)}"
-        )
-        one_dim_file = self._telescope_model.export_table_to_model_directory(
-            new_file_name, distribution_to_export
-        )
-
-        return one_dim_file
