@@ -164,11 +164,11 @@ class SimtelRunnerRayTracing(SimtelRunner):
                     )
                 )
 
-    def _shall_run(self, run_number=None):
+    def _shall_run(self, **kwargs):
         """Tells if simulations should be run again based on the existence of output files."""
         return not self._is_photon_list_file_ok()
 
-    def _make_run_command(self, input_file, run_number=None):
+    def _make_run_command(self, **kwargs):
         """Return the command to run simtel_array."""
 
         if self._single_mirror_mode:
