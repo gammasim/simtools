@@ -437,7 +437,7 @@ class CameraEfficiency:
 
         Returns
         -------
-        cam_effeciency: float
+        cam_efficiency: float
             Camera efficiency
         """
 
