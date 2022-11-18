@@ -254,26 +254,29 @@ class SimtelRunnerArray(SimtelRunner):
 
         return _resources
 
-    def _shall_run(self, run_number=None):
+    def _shall_run(self, **kwargs):
         """Tells if simulations should be run again based on the existence of output files."""
         output_file = self.get_file_name(
-            file_type="output", **self.get_info_for_file_name(run_number)
+            file_type="output", **self.get_info_for_file_name(kwargs["run_number"])
         )
         return not output_file.exists()
 
-    def _make_run_command(self, input_file, run_number=1):
+    def _make_run_command(self, **kwargs):
         """
         Builds and returns the command to run simtel_array.
 
         Attributes
         ----------
-        input_file: str
-            Full path of the input CORSIKA file
-        run_number: int
-            run number
+        kwargs: dict
+            The dictionary must include the following parameters (unless listed as optional):
+                input_file: str
+                    Full path of the input CORSIKA file
+                run_number: int (optional)
+                    run number
 
         """
 
+        run_number = kwargs["run_number"] if "run_number" in kwargs else 1
         info_for_file_name = self.get_info_for_file_name(run_number)
         self._log_file = self.get_file_name(file_type="log", **info_for_file_name)
         histogram_file = self.get_file_name(file_type="histogram", **info_for_file_name)
@@ -290,7 +293,7 @@ class SimtelRunnerArray(SimtelRunner):
         command += super()._config_option("output_file", output_file)
         command += super()._config_option("random_state", "auto")
         command += super()._config_option("show", "all")
-        command += " " + str(input_file)
+        command += " " + str(kwargs["input_file"])
         command += " > " + str(self._log_file) + " 2>&1"
 
         return command
