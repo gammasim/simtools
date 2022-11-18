@@ -226,10 +226,12 @@ class SimtelRunnerRayTracing(SimtelRunner):
 
         return command
 
-    def _check_run_result(self, run_number=None):
+    def _check_run_result(self, **kwargs):
         # Checking run
         if not self._is_photon_list_file_ok():
-            self._logger.error("Photon list is empty.")
+            msg = "Photon list is empty."
+            self._logger.error(msg)
+            raise RuntimeError(msg)
         else:
             self._logger.debug("Everything looks fine with output file.")
 
