@@ -444,8 +444,8 @@ class CameraEfficiency:
 
         Returns
         -------
-        tel_total_efficiency
-            Telescope total efficiency
+        Float
+            Telescope total efficiency including gaps
         """
 
         # Sum(N1) from 300 - 550 nm:
@@ -459,9 +459,8 @@ class CameraEfficiency:
         fill_factor = self._telescope_model.camera.get_camera_fill_factor()
 
         tel_efficiency_nsb = fill_factor * (n4_sum / (masts_factor * n1_sum))
-        tel_total_efficiency = tel_efficiency / np.sqrt(tel_efficiency_nsb)
 
-        return tel_total_efficiency
+        return tel_efficiency / np.sqrt(tel_efficiency_nsb)
 
     def calc_reflectivity(self):
         """
