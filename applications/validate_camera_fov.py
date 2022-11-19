@@ -20,20 +20,34 @@
     telescope (str, required)
         Telescope model name (e.g. LST-1, SST-D, ...)
     model_version (str, optional)
-        Model version (default=prod4)
+        Model version (default='Current')
+    camera_in_sky_coor (bool, optional)
+        Plot the camera layout in sky coordinates akin to looking at it from behind for single \
+         mirror telescopes (default=False)
+    print_pixels_id (bool, optional)
+        Up to which pixel ID to print (default=50). To suppress printing of pixel IDs, set to zero\
+         (--print_pixels_id 0). To print all pixels, set to 'All'."
+
     verbosity (str, optional)
         Log level to print (default=INFO).
 
     Example
     -------
-    LST - Prod4
-
-    Runtime 1 min
+    LST - Prod5
 
     .. code-block:: console
 
         python applications/validate_camera_fov.py --site North \
             --telescope LST-1 --model_version prod5
+
+    The output is saved in simtools-output/validate_camera_fov.
+
+    Expected final print-out message:
+
+    .. code-block:: console
+
+        Saved camera plot in /workdir/external/gammasim-tools/simtools-output/validate_camera_fov\
+        /application-plots/validate_camera_fov_LST-1_pixel_layout.png
 
     .. todo::
 

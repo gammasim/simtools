@@ -17,11 +17,21 @@
 
     Example
     -------
-    Runtime < 1 min.
+    Runtime < 10 s.
 
     .. code-block:: console
 
         python applications/make_regular_arrays.py
+
+    The output is saved in simtools-output/make_regular_arrays.
+
+    Expected final print-out message:
+
+    .. code-block:: console
+
+        INFO::layout_array(l608)::export_telescope_list::Exporting telescope list to /workdir/exter\
+        nal/gammasim-tools/simtools-output/make_regular_arrays/layout/telescope_positions-North-4LS\
+        T-corsika.ecsv
 """
 
 import logging

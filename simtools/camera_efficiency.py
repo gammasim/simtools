@@ -20,26 +20,29 @@ class CameraEfficiency:
     """
     Class for handling camera efficiency simulations and analysis.
 
-    Configurable parameters:
-        zenith_angle: {len: 1, unit: deg, default: 20 deg, names: ['zenith', 'theta']}
+    Parameters
+    ----------
+    telescope_model: TelescopeModel
+        Instance of the TelescopeModel class.
+    simtel_source_path: str (or Path)
+        Location of sim_telarray installation.
+    label: str
+        Instance label, optional.
+    config_data: dict.
+        Dict containing the configurable parameters.
+    config_file: str or Path
+        Path of the yaml file containing the configurable parameters.
+    test: bool
+        Is it a test instance (at the moment only affects the location of files).
 
     Attributes
     ----------
-    label: str
-        Instance label.
     config: namedtuple
         Contains the configurable parameters (zenith_angle).
-
-    Methods
-    -------
-    simulate(force=False)
-        Simulate camera efficiency using testeff from sim_telarray.
-    analyse(export=True, force=False)
-        Analyze output from testeff and store results in _results.
-    export_results()
-        Export results to a csv file.
-    plot(key, **kwargs)
-        Plot key vs wavelength, where key may be Cherenkov or NSB.
+    io_handler: IOHandler
+        Instance of IOHandler
+    label: str
+        Instance label.
     """
 
     def __init__(
@@ -52,23 +55,9 @@ class CameraEfficiency:
         test=False,
     ):
         """
-        CameraEfficiency init.
-
-        Parameters
-        ----------
-        telescope_model: TelescopeModel
-            Instance of the TelescopeModel class.
-        simtel_source_path: str (or Path)
-            Location of sim_telarray installation.
-        label: str
-            Instance label, optional.
-        config_data: dict.
-            Dict containing the configurable parameters.
-        config_file: str or Path
-            Path of the yaml file containing the configurable parameters.
-        test: bool
-            Is it a test instance (at the moment only affects the location of files).
+        Initiliaze the CameraEfficiency class.
         """
+
         self._logger = logging.getLogger(__name__)
 
         self._simtel_source_path = simtel_source_path
@@ -130,9 +119,13 @@ class CameraEfficiency:
 
         Parameters
         ----------
-
         tel: TelescopeModel
             An assumed instance of the TelescopeModel class.
+        Raises
+        ------
+        ValueError
+            if tel not of type TelescopeModel
+
         """
         if isinstance(tel, TelescopeModel):
             self._logger.debug("TelescopeModel OK")
@@ -364,7 +357,7 @@ class CameraEfficiency:
         )
         self._logger.info(
             "Expected NSB pixel rate for the reference NSB: "
-            f"{self.calc_nsb_rate()[0]:.4f} [p.e./ns]"
+            f"{self.calc_nsb_rate():.4f} [p.e./ns]"
         )
         print("\033[0m")
 
@@ -392,6 +385,11 @@ class CameraEfficiency:
     def calc_tel_efficiency(self):
         """
         Calculate the telescope total efficiency including gaps (as defined in A-PERF-2020).
+
+        Returns
+        -------
+        tel_efficiency: float
+            Telescope efficiency
         """
 
         # Sum(C1) from 300 - 550 nm:
@@ -404,13 +402,18 @@ class CameraEfficiency:
         masts_factor = self._results["masts"][0]
         fill_factor = self._telescope_model.camera.get_camera_fill_factor()
 
-        tel_effeciency = fill_factor * (c4_sum / (masts_factor * c1_sum))
+        tel_efficiency = fill_factor * (c4_sum / (masts_factor * c1_sum))
 
-        return tel_effeciency
+        return tel_efficiency
 
     def calc_camera_efficiency(self):
         """
         Calculate the camera nominal efficiency including gaps (as defined in B-TEL-1170).
+
+        Returns
+        -------
+        cam_efficiency: float
+            Wavelength-averaged camera efficiency
         """
 
         # Sum(C1) from 300 - 550 nm:
@@ -425,19 +428,24 @@ class CameraEfficiency:
         c4x_sum = np.sum(c4x_reduced_wl)
         fill_factor = self._telescope_model.camera.get_camera_fill_factor()
 
-        cam_effeciency_no_gaps = c4x_sum / c1_sum
-        cam_effeciency = cam_effeciency_no_gaps * fill_factor
+        cam_efficiency_no_gaps = c4x_sum / c1_sum
+        cam_efficiency = cam_efficiency_no_gaps * fill_factor
 
-        return cam_effeciency
+        return cam_efficiency
 
-    def calc_tot_efficiency(self, tel_effeciency):
+    def calc_tot_efficiency(self, tel_efficiency):
         """
         Calculate the telescope total efficiency including gaps (as defined in A-PERF-2020).
 
         Parameters
         ----------
-        tel_effeciency: float
+        tel_efficiency: float
             The telescope efficiency as calculated by calc_tel_efficiency()
+
+        Returns
+        -------
+        Float
+            Telescope total efficiency including gaps
         """
 
         # Sum(N1) from 300 - 550 nm:
@@ -450,13 +458,18 @@ class CameraEfficiency:
         masts_factor = self._results["masts"][0]
         fill_factor = self._telescope_model.camera.get_camera_fill_factor()
 
-        tel_effeciency_nsb = fill_factor * (n4_sum / (masts_factor * n1_sum))
+        tel_efficiency_nsb = fill_factor * (n4_sum / (masts_factor * n1_sum))
 
-        return tel_effeciency / np.sqrt(tel_effeciency_nsb)
+        return tel_efficiency / np.sqrt(tel_efficiency_nsb)
 
     def calc_reflectivity(self):
         """
         Calculate the Cherenkov spectrum weighted reflectivity in the range 300-550 nm.
+
+        Returns
+        -------
+        Float
+            Cherenkov spectrum weighted reflectivity (300-550 nm)
         """
 
         # Sum(C1) from 300 - 550 nm:
@@ -469,12 +482,18 @@ class CameraEfficiency:
             [wl_now > 299 and wl_now < 551 for wl_now in self._results["wl"]]
         ]
         c2_sum = np.sum(c2_reduced_wl)
+        cher_spec_weighted_reflectivity = c2_sum / c1_sum / self._results["masts"][0]
 
-        return c2_sum / c1_sum / self._results["masts"][0]
+        return cher_spec_weighted_reflectivity
 
     def calc_nsb_rate(self):
         """
         Calculate the NSB rate.
+
+        Returns
+        -------
+        nsb_rate
+            NSB rate in p.e./ns
         """
 
         nsb_pe_per_ns = (
@@ -502,7 +521,7 @@ class CameraEfficiency:
             * self._telescope_model.reference_data["nsb_reference_value"]["Value"]
             / nsb_integral
         )
-        return nsb_rate, n1_sum
+        return nsb_rate
 
     def plot(self, key, **kwargs):  # FIXME - remove this function, probably not needed
         """
@@ -541,7 +560,8 @@ class CameraEfficiency:
 
         Returns
         -------
-        plt
+        fig
+            The figure instance of pyplot
         """
         self._logger.info("Plotting Cherenkov efficiency vs wavelength")
 
@@ -574,7 +594,8 @@ class CameraEfficiency:
 
         Returns
         -------
-        plt
+        fig
+            The figure instance of pyplot
         """
         self._logger.info("Plotting NSB efficiency vs wavelength")
         column_titles = {
