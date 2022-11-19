@@ -12,19 +12,18 @@
 
 """
 
-import argparse
 import logging
 
 import yaml
 
-import simtools.config as cfg
 import simtools.util.general as gen
 from simtools import db_handler
+from simtools.configuration import configurator
 
 
 def main():
 
-    parser = argparse.ArgumentParser(
+    config = configurator.Configurator(
         description=(
             "Mark all non-structure related parameters in the MST-Structure "
             "DB entries as non-applicable. "
@@ -33,34 +32,20 @@ def main():
             "(see reports repo)."
         )
     )
-    parser.add_argument(
-        "-s",
+    config.parser.add_argument(
         "--sections",
         help="Provide a sections.yml file (see reports repo).",
         type=str,
         required=True,
     )
-    parser.add_argument(
-        "--config_file",
-        help="gammasim-tools configuration file",
-        required=False,
-    )
-    parser.add_argument(
-        "-V",
-        "--verbosity",
-        dest="log_level",
-        action="store",
-        default="info",
-        help="Log level to print (default is INFO)",
-    )
-
-    args = parser.parse_args()
-    cfg.set_config_file_name(args.config_file)
+    args_dict, db_config = config.initialize(db_config=True, telescope_model=True)
 
     logger = logging.getLogger()
-    logger.setLevel(gen.get_log_level_from_user(args.log_level))
+    logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
-    with open(args.sections, "r") as stream:
+    db = db_handler.DatabaseHandler(mongo_db_config=db_config)
+
+    with open(args_dict["sections"], "r") as stream:
         parameter_catogeries = yaml.safe_load(stream)
 
     non_optic_catagories = [
@@ -89,8 +74,6 @@ def main():
         "2020-06-28",
         "prod4",
     ]
-
-    db = db_handler.DatabaseHandler()
 
     for version_now in versions:
         for site in ["North", "South"]:
