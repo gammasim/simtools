@@ -1,7 +1,7 @@
 .. _Library:
 
-API Documentation
-*****************
+API
+***
 
 gammasim-tools is composed of the following modules and module groups:
 

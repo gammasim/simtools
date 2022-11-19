@@ -43,8 +43,8 @@ mirrors
    :members:
 
 
-model utitilities
------------------
+model utilities
+---------------
 
 .. _model_utils:
 

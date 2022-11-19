@@ -33,7 +33,7 @@ For now, expert users should follow the installation procedures for developers.
 Installation for Developers
 ---------------------------
 
-Developers install gammasim-tools directly from the Github repository:
+Developers install gammasim-tools directly from the GitHub repository:
 
 ++++++++++++++++++++
 Clone gammasim-tools
@@ -57,6 +57,9 @@ Create a conda virtual environment with the gammasim-tools dependencies installe
 
     $ pip install -e .
 
+CORSIKA and sim_telarray are external tools to gammasim-tools and are used by several gammasim-tools application.
+Follow the instruction provided by the CORSIKA/sim_telarray authors for installation.
+
 +++++++++++++++++++++++++++
 Set environmental variables
 +++++++++++++++++++++++++++
@@ -66,6 +69,8 @@ Source the ``set_DB_environ.sh`` script (see `Model Database Access`_) to activa
 .. code-block:: console
 
     $ source set_DB_environ.sh
+
+The environmental variable ``$SIM_TELPATH`` should point towards the CORSIKA/sim_telarray installation.
 
 +++++++++++++++++
 Test installation
@@ -100,7 +105,7 @@ Apptainer, Singularity, Buildah/Podman, etc should work, but are not thoroughly 
 Clone gammasim-tools
 ++++++++++++++++++++
 
-Clone gammasim-tools from Github into ``external/gammasim-tools``:
+Clone gammasim-tools from GitHub into ``external/gammasim-tools``:
 
 .. code-block::
 
@@ -120,6 +125,7 @@ Start up a container (the image will we downloaded, if it is not available in yo
     docker run --rm -it -v "$(pwd)/external:/workdir/external" ghcr.io/gammasim/containers/gammasim-tools-dev:v0.3.0-dev1 bash -c "$(cat ./entrypoint.sh) && bash"
 
 The entry script of the container will source the ``set_DB_environ.sh`` script and set the DB access parameters (see `Model Database Access`_).
+The container includes a CORSIKA and sim_telarray installation; the environmental variable ``$SIM_TELPATH`` is set.
 
 +++++++++++++++++
 Test installation
