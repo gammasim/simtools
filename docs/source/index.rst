@@ -42,7 +42,7 @@ Documentation
   :glob:
 
   getting_started
-  configuration
+  gammasim-tools-configuration
   applications
   library
   auxiliary_files
