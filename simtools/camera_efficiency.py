@@ -43,31 +43,6 @@ class CameraEfficiency:
         Instance of IOHandler
     label: str
         Instance label.
-
-    Methods
-    -------
-    analyze(export=True, force=False)
-        Analyze output from testeff and store results in _results.
-    calc_camera_efficiency()
-        Calculate the camera nominal efficiency including gaps
-    calc_nsb_rate()
-        Calculate the NSB rate.
-    calc_reflectivity()
-        Calculate the Cherenkov spectrum weighted reflectivity in the range 300-550 nm.
-    calc_tel_efficiency()
-        Calculate the telescope total efficiency including gaps
-    calc_tot_efficiency(tel_efficiency)
-        Calculate the telescope total efficiency including gaps
-    export_results()
-        Export results to a csv file.
-    plot(key, **kwargs)
-        Plot key vs wavelength, where key may be Cherenkov or NSB.
-    plot_cherenkov_efficiency()
-        Plot Cherenkov efficiency vs wavelength
-    plot_nsb_efficiency()
-        Plot NSB efficiency vs wavelength.
-    simulate(force=False)
-        Simulate camera efficiency using testeff from sim_telarray.
     """
 
     def __init__(
@@ -382,7 +357,7 @@ class CameraEfficiency:
         )
         self._logger.info(
             "Expected NSB pixel rate for the reference NSB: "
-            f"{self.calc_nsb_rate()[0]:.4f} [p.e./ns]"
+            f"{self.calc_nsb_rate():.4f} [p.e./ns]"
         )
         print("\033[0m")
 
@@ -438,7 +413,7 @@ class CameraEfficiency:
         Returns
         -------
         cam_efficiency: float
-            Camera efficiency
+            Wavelength-averaged camera efficiency
         """
 
         # Sum(C1) from 300 - 550 nm:
@@ -469,8 +444,8 @@ class CameraEfficiency:
 
         Returns
         -------
-        tel_total_efficiency
-            Telescope total efficiency
+        Float
+            Telescope total efficiency including gaps
         """
 
         # Sum(N1) from 300 - 550 nm:
@@ -484,9 +459,8 @@ class CameraEfficiency:
         fill_factor = self._telescope_model.camera.get_camera_fill_factor()
 
         tel_efficiency_nsb = fill_factor * (n4_sum / (masts_factor * n1_sum))
-        tel_total_efficiency = tel_efficiency / np.sqrt(tel_efficiency_nsb)
 
-        return tel_total_efficiency
+        return tel_efficiency / np.sqrt(tel_efficiency_nsb)
 
     def calc_reflectivity(self):
         """
@@ -494,7 +468,7 @@ class CameraEfficiency:
 
         Returns
         -------
-        cher_spec_weighted_reflectivity
+        Float
             Cherenkov spectrum weighted reflectivity (300-550 nm)
         """
 
@@ -519,9 +493,7 @@ class CameraEfficiency:
         Returns
         -------
         nsb_rate
-            NSB rate
-        n1_sum
-            Sum of NSB counts
+            NSB rate in p.e./ns
         """
 
         nsb_pe_per_ns = (
@@ -549,7 +521,7 @@ class CameraEfficiency:
             * self._telescope_model.reference_data["nsb_reference_value"]["Value"]
             / nsb_integral
         )
-        return nsb_rate, n1_sum
+        return nsb_rate
 
     def plot(self, key, **kwargs):  # FIXME - remove this function, probably not needed
         """
@@ -589,7 +561,7 @@ class CameraEfficiency:
         Returns
         -------
         fig
-            The figure
+            The figure instance of pyplot
         """
         self._logger.info("Plotting Cherenkov efficiency vs wavelength")
 
@@ -623,7 +595,7 @@ class CameraEfficiency:
         Returns
         -------
         fig
-            The figure
+            The figure instance of pyplot
         """
         self._logger.info("Plotting NSB efficiency vs wavelength")
         column_titles = {
