@@ -48,32 +48,28 @@
     telescope (str, required)
         Telescope name (e.g. North-LST-1, South-SST-D, ...)
     model_version (str, optional)
-        Model version (default=prod4)
-    containment_mean (float, required)
+        Model version (default='Current')
+    psf_measurement (str, optional)
+        Results from PSF measurements for each mirror panel spot size
+    psf_measurement_containment_mean (float, required)
         Mean of measured containment diameter [cm]
-    containment_sigma (float, optional)
+    psf_measurement_containment_sigma (float, optional)
         Std dev of measured containment diameter [cm]
     containment_fraction (float, required)
-        Containment fractio for diameter calculation (typically 0.8)
+        Containment fraction for diameter calculation (typically 0.8)
     rnda (float, optional)
         Starting value of mirror_reflection_random_angle. If not given, the value from the \
         default model will be used.
-    2f_measurement (file, optional)
-        File with results from 2f measurements including mirror panel raddii and spot size \
-        measurements
-    d80_list (file, optional)
-        File with single column list of measured D80 [cm]. It is used only for plotting the D80 \
-        distributions. If given, the measured distribution will be plotted on the top of the \
-        simulated one.
     mirror_list (file, optional)
-        Mirror list file (in sim_telarray format) to replace the default one. It should be used \
-        if measured mirror focal lengths need to be taken into account.
+        Mirror list file to replace the default one. It should be used if measured mirror focal \
+        lengths need to be taken into account. It contains the following information about the \
+        mirrors: ID, panel radius, optical PSF (d80), PSF (d80) and surface reflectivity.
     use_random_flen (activation mode, optional)
         Use random focal lengths, instead of the measured ones. The argument random_flen can be \
         used to replace the default random_focal_length from the model.
     random_flen (float, optional)
-        Value to replace the default random_focal_length. Only used if use_random_flen \
-        is activated.
+        Value of the random focal lengths to replace the default random_focal_length. Only used if \
+         use_random_flen is activated.
     no_tuning (activation mode, optional)
         Turn off the tuning - A single case will be simulated and plotted.
     test (activation mode, optional)
@@ -83,31 +79,37 @@
 
     Example
     -------
-    MST - Prod5 (07.2020)
+    MST - Prod5
 
-    Runtime about 3 min.
+    Get mirror list and PSF data from DB:
+
+     .. code-block:: console
+
+        python applications/get_file_from_db.py --file_name MLTdata-preproduction.ecsv
+
+    Run the application. Runtime about 4 min.
 
     .. code-block:: console
 
         python applications/derive_mirror_rnda.py --site North --telescope MST-FlashCam-D \
-            --containment_mean 1.4 --containment_sigma 0.16 --containment_fraction 0.8 \
-            --mirror_list mirror_MST_focal_lengths.dat --d80_list mirror_MST_D80.dat \
-            --rnda 0.0075
+            --containment_fraction 0.8 --mirror_list MLTdata-preproduction.ecsv
+            --psf_measurement MLTdata-preproduction.ecsv --rnda 0.0063 --test
 
+    The output is saved in simtools-output/derive_mirror_rnda.
 
-    Expected output:
+    Expected final print-out message:
 
     .. code-block:: console
 
-        Measured Containment Diameter (80% containment):
-        Mean = 1.400 cm, StdDev = 0.160 cm
+        Measured D80:
+        Mean = 1.403 cm, StdDev = 0.163 cm
 
-        Simulated Containment Diameter (80% containment):
-        Mean = 1.401 cm, StdDev = 0.200 cm
+        Simulated D80:
+        Mean = 1.404 cm, StdDev = 0.608 cm
 
         mirror_random_reflection_angle
-        Previous value = 0.007500
-        New value = 0.006378
+        Previous value = 0.006300
+        New value = 0.004975
 
 
     .. todo::
@@ -133,7 +135,6 @@ from simtools.ray_tracing import RayTracing
 def _parse(label):
     """
     Parse command line configuration
-
     """
 
     config = configurator.Configurator(label=label)
@@ -172,25 +173,19 @@ def _parse(label):
     )
     config.parser.add_argument(
         "--mirror_list",
-        help=(
-            "Mirror list file to replace the default one. It should be used if"
-            " measured mirror focal lengths need to be accounted"
-        ),
+        help=("Mirror list file to replace the default one."),
         type=str,
         required=False,
     )
     config.parser.add_argument(
         "--use_random_flen",
-        help=(
-            "Use random focal lengths. Read value for random_focal_length parameter read"
-            " from DB or provide by using the argument random_flen."
-        ),
+        help=("Use random focal lengths."),
         action="store_true",
         required=False,
     )
     config.parser.add_argument(
         "--random_flen",
-        help="Value to replace the default random_focal_length.",
+        help="Value of the random focal length. Only used if use_random_flen is activated.",
         default=None,
         type=float,
         required=False,

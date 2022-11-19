@@ -3,18 +3,18 @@
 """
     Summary
     -------
-    This application adds a file to the DB.
+    This application adds a file to a DB.
 
     The name and location of the file are required.
-    This application should complement the ones for updating parameters \
-    and adding entries to the DB.
+    This application should complement the ones for updating parameters, \
+    adding entries to the DB and getting files from the DB.
 
     Command line arguments
     ----------------------
     file_name (str or list of str, required)
         Name of the file to upload including the full path. \
-        A list of files is also allowed, in which case only one -f is necessary, \
-        i.e., python applications/add_file_to_db.py -f file_1.dat file_2.dat file_3.dat \
+        A list of files is also allowed, in which case only one -file_name is necessary, \
+        i.e., python applications/add_file_to_db.py -file_name file_1.dat file_2.dat file_3.dat \
         If no path is given, the file is assumed to be in the CWD.
     input_path (str, required if file_name is not given)
         A directory with files to upload to the DB. \
@@ -31,7 +31,15 @@
 
     .. code-block:: console
 
-        python applications/add_file_to_db.py --file_name data/data-to-upload/test-data.dat
+        python applications/add_file_to_db.py --file_name test_application.dat --db test-data
+
+    Expected final print-out message:
+
+    .. code-block:: console
+
+        INFO::get_file_from_db(l75)::main::Got file test_application.dat from DB test-data and
+        saved into .
+
 """
 
 import logging
@@ -66,7 +74,8 @@ def main():
 
     config = configurator.Configurator(
         label="Add file to the DB.",
-        description="python applications/add_file_to_db.py --file_name file_1.dat file_2.dat",
+        description="python applications/add_file_to_db.py --file_name test_application.dat --db \
+         test-data",
     )
     group = config.parser.add_mutually_exclusive_group(required=True)
     group.add_argument(

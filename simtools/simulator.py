@@ -73,37 +73,44 @@ class Simulator:
             'MST-01': 'FlashCam-D'
         }
 
+    Parameters
+    ----------
+    simulator: choices: [simtel, corsika]
+        implemented are sim_telarray and CORSIKA
+    simulator_source_path: str or Path
+        Location of exectutables for simulation software \
+            (e.g. path with CORSIKA or sim_telarray)
+    label: str
+        Instance label.
+    config_data: dict
+        Dict with shower or array model configuration data.
+    config_file: str or Path
+        Path to yaml file containing configurable data.
+    submit_command: str
+        Job submission command.
+    extra_commands: str or list of str
+        Extra commands to be added to the run script before the run command,
+    mongo_db_config: dict
+        MongoDB configuration.
+    test: bool
+        If True, no jobs are submitted; only run scripts are prepared
+
     Attributes
     ----------
-    label : str
-        Instance label.
-    config : namedtuple
-        Configurable parameters.
     array_model : ArrayModel
         Instance of ArrayModel.
-
-    Methods
-    -------
-    run(input_file_list):
-        Run simulation.
-    simulate(input_file_list, submit_command=None, extra_commands=None, test=False):
-        Submit a run script as a job.
-    print_histograms():
-        Print histograms and save a pdf file.
-    print_output_files():
-        Print list of output files of simulation run.
-    get_list_of_output_files():
-        Get list of output files.
-    get_list_of_input_files():
-        Get list of input files.
-    get_list_of_log_files():
-        Get list of log files.
-    print_list_of_output_files():
-        Print list of output files.
-    print_list_of_input_files():
-        Print list of output files.
-    print_list_of_log_files():
-        Print list of log files.
+    config : namedtuple
+        Configurable parameters.
+    io_handler: IOHandler
+        Instance of IOHandler
+    label : str
+        Instance label.
+    simulator: str
+        Which simulator to use. Choices are: simtel, corsika
+    site: str
+        Validated site name.
+    runs: list of Path
+        List with the simulation file names
     """
 
     def __init__(
@@ -119,29 +126,7 @@ class Simulator:
         test=False,
     ):
         """
-        Simulator init.
-
-        Parameters
-        ----------
-        label: str
-            Instance label.
-        simulator: choices: [simtel, corsika]
-            implemented are sim_telarray and CORSIKA
-        simulator_source_path: str or Path
-            Location of exectutables for simulation software \
-                (e.g. path with CORSIKA or sim_telarray)
-        config_data: dict
-            Dict with shower or array model configuration data.
-        config_file: str or Path
-            Path to yaml file containing configurable data.
-        submit_command: str
-            Job submission command.
-        extra_commands: str or list of str
-            Extra commands to be added to the run script before the run command,
-        mongo_db_config: dict
-            MongoDB configuration.
-        test: bool
-            If True, no jobs are submitted; only run scripts are prepared
+        Initialize Simulator class.
         """
         self._logger = logging.getLogger(__name__)
         self._logger.debug("Init Simulator {}".format(simulator))

@@ -17,9 +17,7 @@ logger = logging.getLogger()
 def tmp_test_directory(tmpdir_factory):
     """
     Sets test directories.
-
     Some tests depend on this structure.
-
     """
 
     tmp_test_dir = tmpdir_factory.mktemp("test-data")
@@ -48,7 +46,6 @@ def mock_settings_env_vars(tmp_test_directory):
     """
     Removes all environment variable from the test system.
     Explicitely sets those needed.
-
     """
     with mock.patch.dict(
         os.environ,
@@ -130,7 +127,6 @@ def configurator(tmp_test_directory, simtel_path):
 def db_config():
     """
     Read DB configuration from tests from environmental variables
-
     """
     mongo_db_config = {}
     _db_para = ("db_api_user", "db_api_pw", "db_api_port", "db_server")

@@ -2,11 +2,12 @@ import datetime
 import logging
 from pathlib import Path
 
+__all__ = ["IOHandlerSingleton", "IOHandler"]
+
 
 class IOHandlerSingleton(type):
     """
     Singleton base class
-
     """
 
     _instances = {}
@@ -21,6 +22,14 @@ class IOHandler(metaclass=IOHandlerSingleton):
     """
     Handle input and output paths.
 
+    Attributes
+    ----------
+    output_path: str or Path
+        Parent path of the output files created by this class.
+    data_path: str or Path
+        Parent path of the data files.
+    model_path: str or Path
+        Parent path of the output files created by this class.
     """
 
     def __init__(self):
@@ -69,6 +78,11 @@ class IOHandler(metaclass=IOHandlerSingleton):
         Returns
         -------
         Path
+
+        Raises
+        -------
+        FileNotFoundError
+            if error creating directory
         """
 
         if test:

@@ -50,20 +50,26 @@
 
     Runtime < 1 min.
 
-    First, create an yml file named lst_pars.yml with the following content:
+    Get an example dataset from the DB:
 
-    .. code-block:: yaml
+    .. code-block:: console
 
-        mirror_reflection_random_angle: '0.0075,0.15,0.035'
-        mirror_align_random_horizontal: '0.0040,28.,0.0,0.0'
-        mirror_align_random_vertical: '0.0040,28.,0.0,0.0'
+        python applications/get_file_from_db.py --file_name PSFcurve_data_v2.txt
 
-    And the run:
+    Run the application:
 
     .. code-block:: console
 
         python applications/compare_cumulative_psf.py --site North --telescope LST-1 \
-            --model_version prod4 --pars lst_pars.yml --data PSFcurve_data_v2.txt
+            --model_version prod5 --data PSFcurve_data_v2.txt
+
+    The output is saved in simtools-output/compare_cumulative_psf
+
+    Expected final print-out message:
+
+    .. code-block:: console
+
+        d80 in cm = 3.3662565358159013
 
     .. todo::
 
@@ -118,7 +124,7 @@ def main():
         "--data", help="Data file name with the measured PSF vs radius [cm]", type=str
     )
     config.parser.add_argument(
-        "--pars", help="Yaml file with the model parameters to be replaced", type=str
+        "--mc_parameter_file", help="Yaml file with the model parameters to be replaced", type=str
     )
 
     args_dict, db_config = config.initialize(db_config=True, telescope_model=True)

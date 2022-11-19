@@ -13,12 +13,12 @@ logger.setLevel(logging.DEBUG)
 
 # This module perform tests on the application by running them with a set
 # of arguments. Each application to be tested corresponds to a key in
-# APP_LIST, that contains a list of list of arguments to be tested, so that
+# APP_LIST, that contains a list of arguments to be tested, so that
 # the same application can be tested with a number of different set of arguments.
 
 
 APP_LIST = {
-    # Optics
+    # Opticas
     "compare_cumulative_psf": [
         [
             "--site",
@@ -66,7 +66,7 @@ APP_LIST = {
             " --test",
         ]
     ],
-    "derive_mirror_rnda::psf_notuning": [
+    "derive_mirror_rnda::psf_measurement": [
         [
             "--site",
             "North",
@@ -83,7 +83,7 @@ APP_LIST = {
             " --test",
         ]
     ],
-    "derive_mirror_rnda::psf_measurement": [
+    "derive_mirror_rnda::psf_notuning": [
         [
             "--site",
             "North",
@@ -97,6 +97,7 @@ APP_LIST = {
             "TESTMODELDIR/MLTdata-preproduction.ecsv",
             "--rnda",
             "0.0063",
+            "--no_tuning",
             " --test",
         ]
     ],
@@ -265,7 +266,6 @@ APP_LIST = {
             "--use_corsika_telescope_height",
         ],
     ],
-    # files without corsika_spheres definition
     "print_array_elements::print_compact_nocors_utm": [
         [
             "--array_element_list",

@@ -6,7 +6,7 @@
     This application validate the camera efficiency by simulating it using \
     the testeff program provided by sim_telarray.
 
-    The results of camera efficiency for Cherenkov (left) and NSB (right) light as a function\
+    The results of camera efficiency for Cherenkov (left) and NSB light (right) as a function\
     of wavelength are plotted. See examples below.
 
     .. _validate_camera_eff_plot:
@@ -22,13 +22,13 @@
     telescope (str, required)
         Telescope model name (e.g. LST-1, SST-D, ...)
     model_version (str, optional)
-        Model version (default=prod4)
+        Model version (default='Current')
     verbosity (str, optional)
         Log level to print (default=INFO).
 
     Example
     -------
-    MST-NectarCam - Prod4
+    MST-NectarCam - Prod5
 
     Runtime < 1 min.
 
@@ -36,6 +36,16 @@
 
         python applications/validate_camera_efficiency.py --site North \
             --telescope MST-NectarCam-D --model_version prod5
+
+    The output is saved in simtools-output/validate_camera_efficiency.
+
+    Expected final print-out message:
+
+    .. code-block:: console
+
+        INFO::validate_camera_efficiency(l118)::main::Plotted NSB efficiency in /workdir/external/\
+        gammasim-tools/simtools-output/validate_camera_efficiency/application-plots/validate_camera\
+        _efficiency_MST-NectarCam-D_nsb
 
     .. todo::
 
