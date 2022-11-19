@@ -292,6 +292,11 @@ def plot_1D(data, **kwargs):
     -------
     pyplot.figure
         A pyplot.figure instance in which the plot was produced
+
+    Raises
+    ------
+    ValueError
+        if asked to plot a ratio or difference with just one set of data
     """
 
     palette = kwargs.get("palette", "default")
@@ -442,6 +447,10 @@ def plot_table(table, y_title, **kwargs):
     -------
     pyplot.fig
 
+    Raises
+    ------
+    ValueError
+        if table has less than two columns.
     """
 
     if len(table.keys()) < 2:

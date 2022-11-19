@@ -7,28 +7,38 @@
     Prototype implementation allowing to submit metadata and
     data through the command line.
 
-
     Command line arguments
     ----------------------
-    workflow_description (str, required)
-        Workflow description (yml format)
-    input_meta (str, required)
+    input_meta (str, optional)
         input meta data file (yml format)
-    input_data (str, required)
+    input_data (str, optional)
         input data file
 
     Example
     -------
 
-    Runtime 1 min
+    Get workflow configuration from the DB:
 
     .. code-block:: console
 
-        python ./submit_data_from_external.py \
-            --workflow_description set_quantum_efficiency_from_external.yml \
-            --input_meta qe_R12992-100-05b.meta.yml \
-            --input_data qe_R12992-100-05b.data.ecsv \
+        python applications/get_file_from_DB.py --file_name \
+        set_MST_mirror_2f_measurements_from_external.config.yml
 
+    Run the application:
+
+    .. code-block:: console
+
+        python applications/submit_data_from_external.py --workflow_config \
+        set_MST_mirror_2f_measurements_from_external.config.yml
+
+    The output is saved in simtools-output/submit_data_from_external.
+
+    Expected final print-out message:
+
+    .. code-block:: console
+
+        INFO::model_data_writer(l57)::write_data::Writing data to /workdir/external/gammasim-tools/\
+        simtools-output/submit_data_from_external/product-data/TEST-submit_data_from_external.ecsv
 
 """
 

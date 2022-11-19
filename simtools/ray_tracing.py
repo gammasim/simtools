@@ -26,55 +26,48 @@ class RayTracing:
     """
     Class for handling ray tracing simulations and analysis.
 
-    Configurable parameters:
-        zenith_angle:
-            len: 1
-            unit: deg
-            default: 20 deg
-        off_axis_angle:
-            len: null
-            unit: deg
-            default: [0 deg]
-        source_distance:
-            len: 1
-            unit: km
-            default: 10 km
-        single_mirror_mode:
-            len: 1
-            default: False
-        use_random_focal_length:
-            len: 1
-            default: False
-        mirror_numbers:
-            len: null
-            default: 'all'
+    Parameters
+    ----------
+    telescope_model: TelescopeModel
+        Instance of the TelescopeModel class.
+    label: str
+        Instance label.
+    simtel_source_path: str (or Path)
+        Location of sim_telarray installation.
+    config_data: dict.
+        Dict containing the configurable parameters.
+    config_file: str or Path
+        Path of the yaml file containing the configurable parameters.
 
     Attributes
     ----------
     label: str
         Instance label.
     config: namedtuple
-        Contains the configurable parameters (zenith_angle).
-
-    Methods
-    -------
-    simulate(test=False, force=False)
-        Simulate RayTracing using SimtelRunnerRayTracing.
-    analyse(export=True, force=False, use_rx=False, no_tel_transmission=False)
-        Analyze RayTracing, meaning read simtel files, compute psfs and eff areas and store the
-        results in _results.
-    export_results()
-        Export results to a csv file.
-    plot(key, **kwargs)
-        Plot key vs off-axis angle.
-    plot_histogram(key, **kwargs)
-        Plot histogram of key (d80_cm, d80_deg, eff_area, eff_flen).
-    get_mean(key)
-        Get mean value of key(d80_cm, d80_deg, eff_area, eff_flen).
-    get_std_dev(key)
-        Get std dev of key(d80_cm, d80_deg, eff_area, eff_flen).
-    images()
-        Get list of PSFImages.
+        Contains the configurable parameters:
+            zenith_angle:
+                len: 1
+                unit: deg
+                default: 20 deg
+            off_axis_angle:
+                len: null
+                unit: deg
+                default: [0 deg]
+            source_distance:
+                len: 1
+                unit: km
+                default: 10 km
+            single_mirror_mode:
+                len: 1
+                default: False
+            use_random_focal_length:
+                len: 1
+                default: False
+            mirror_numbers:
+                len: null
+                default: 'all'
+    YLABEL: dict
+        Dictionary with parameters available for plotting
     """
 
     YLABEL = {
@@ -93,21 +86,9 @@ class RayTracing:
         config_file=None,
     ):
         """
-        RayTracing init.
-
-        Parameters
-        ----------
-        telescope_model: TelescopeModel
-            Instance of the TelescopeModel class.
-        label: str
-            Instance label.
-        simtel_source_path: str (or Path)
-            Location of sim_telarray installation.
-        config_data: dict.
-            Dict containing the configurable parameters.
-        config_file: str or Path
-            Path of the yaml file containing the configurable parameters.
+        Initialize RayTracing class.
         """
+
         self._logger = logging.getLogger(__name__)
 
         self._simtel_source_path = Path(simtel_source_path)

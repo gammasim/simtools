@@ -7,11 +7,10 @@
     Arrays with one (1MST) or four telescopes (4LST) can be used, in case of \
     mono or stereo trigger configurations, respectively.
 
-    Simulations are managed by the shower_simulator module.
+    Simulations are managed by the Simulator module.
     Each run is simulated in a job. Each job is submitted by using the submission \
-    command from the global config settings (see config_template.yml). \
-    The config entry extra_commands can be used to extra commands to be ran in each job,
-    before the actual simulation.
+    command from the global config settings. The config entry extra_commands can be used \
+    to extra commands to be ran in each job, before the actual simulation.
 
     At the moment, the shower simulations are performed by CORSIKA, which requires \
     the zstd package. Please, make sure that the command to set your zstd path is \
@@ -48,8 +47,20 @@
 
     .. code-block:: console
 
-        python applications/sim_showers_for_trigger_rates.py -a 4LST -s North \
-        --primary proton --nruns 100 --nevents 10000 --output {some dir for large files}
+        python applications/sim_showers_for_trigger_rates.py --array 4LST --site North --primary \
+        proton --nruns 2 --nevents 10000 --test --submit_command local
+
+    The output is saved in simtools-output/sim_showers_for_trigger_rates.
+
+    Expected final print-out message:
+
+    .. code-block:: console
+
+        INFO::sim_showers_for_trigger_rates(l174)::main::List of log files exported to \
+        /workdir/external/gammasim-tools/simtools-output/sim_showers_for_trigger_rates/application-\
+        plots/log_files_proton.list
+        INFO::simulator(l646)::get_list_of_log_files::Getting list of log files
+
 """
 
 import logging
@@ -129,7 +140,7 @@ def main():
     # Output directory to save files related directly to this app
     _io_handler = io_handler.IOHandler()
     output_dir = _io_handler.get_output_directory(label, dir_type="application-plots")
-
+    print(output_dir)
     shower_config_data = {
         "data_directory": args_dict["output"],
         "site": args_dict["site"],

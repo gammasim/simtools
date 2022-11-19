@@ -93,7 +93,7 @@ class TelescopeModel:
         mongo_db_config: dict
             MongoDB configuration.
         model_version: str, optional
-            Version of the model (ex. prod4) (default='Current').
+            Version of the model (ex. prod5) (default='Current').
         label: str, optional
             Instance label. Important for output file naming.
 
