@@ -47,4 +47,5 @@ Documentation
   library
   auxiliary_files
   databases
+  simulation_software
   guidelines

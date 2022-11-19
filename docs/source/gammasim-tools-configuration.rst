@@ -38,4 +38,4 @@ Configuration parameter read from a environmental variable:
 
 Configuration methods can be combined. Configuration parameters are generally expected in lower-case snake-make case.
 Configuration parameters for each application are printed to screen when executing the application with the ``--help`` option.
-Parameters with the same functionality are named consistently the same among all appliations.
+Parameters with the same functionality are named consistently the same among all applications.
