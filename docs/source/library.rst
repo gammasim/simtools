@@ -3,11 +3,7 @@
 API Documentation
 *****************
 
-gammasim-tools is composed of the following modules:
-
-- ``camera_efficiency``: camera efficiency simulations and analysis
-- ``configuration``:
-
+gammasim-tools is composed of the following modules and module groups:
 
 .. toctree::
   :maxdepth: 1
@@ -15,12 +11,16 @@ gammasim-tools is composed of the following modules:
 
   camera_efficiency
   configuration_module
+  corsika
   data_model
   db_handler
   io_handler
+  job_execution
   layout_array
   mc_model
   psf_analysis
   ray_tracing
+  sim_telarray
   simulators
   util
+  visualize
