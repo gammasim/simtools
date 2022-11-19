@@ -3,7 +3,7 @@
 """
     Summary
     -------
-    This application adds a file to the DB.
+    This application adds a file to a DB.
 
     The name and location of the file are required.
     This application should complement the ones for updating parameters, \

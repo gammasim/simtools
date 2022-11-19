@@ -50,11 +50,10 @@
 
     Runtime < 1 min.
 
-    Get MC model parameters and example dataset from the DB:
+    Get an example dataset from the DB:
 
     .. code-block:: console
 
-        python applications/get_file_from_db.py --file_name lst_pars_example.yml
         python applications/get_file_from_db.py --file_name PSFcurve_data_v2.txt
 
     Run the application:
@@ -62,7 +61,7 @@
     .. code-block:: console
 
         python applications/compare_cumulative_psf.py --site North --telescope LST-1 \
-            --model_version prod5 --pars lst_pars_example.yml --data PSFcurve_data_v2.txt
+            --model_version prod5 --data PSFcurve_data_v2.txt
 
     The output is saved in simtools-output/compare_cumulative_psf
 
@@ -125,7 +124,7 @@ def main():
         "--data", help="Data file name with the measured PSF vs radius [cm]", type=str
     )
     config.parser.add_argument(
-        "--pars", help="Yaml file with the model parameters to be replaced", type=str
+        "--mc_parameter_file", help="Yaml file with the model parameters to be replaced", type=str
     )
 
     args_dict, db_config = config.initialize(db_config=True, telescope_model=True)

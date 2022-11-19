@@ -82,7 +82,6 @@ def validate_telescope_id_name(name):
         Validated name.
     """
 
-    # FIXME: validate telescope id range
     if name == "D" or name.isdigit():
         return name
 
