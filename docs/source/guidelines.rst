@@ -276,7 +276,7 @@ This is an example of a name dictionary:
     "North": ["lapalma", "north"]
   }
 
-And this is an example of how the site name is validated in the :ref:`telescope_model` module:
+And this is an example of how the site name is validated in the :ref:`telescope_model <telescope_model>` module:
 
 
 .. code-block:: python

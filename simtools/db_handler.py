@@ -39,6 +39,7 @@ class DatabaseHandler:
     ----------
     mode: str
         Yaml or MongoDB, only these two options are allowed.
+
     """
 
     # TODO move into config file?
@@ -57,9 +58,10 @@ class DatabaseHandler:
         Initialize the DatabaseHandler class.
 
         Raises
-        -------
+        ------
         KeyError
             if there is non-valid key in the db_config.
+
         """
         self._logger = logging.getLogger(__name__)
         self._logger.debug("Initialize DatabaseHandler")
@@ -80,9 +82,10 @@ class DatabaseHandler:
             Dictionary with the MongoDB configuration.
 
         Raises
-        -------
+        ------
         KeyError
             if there is non-valid key in the db_config.
+
         """
 
         self.mongo_db_config = mongo_db_config
@@ -154,6 +157,7 @@ class DatabaseHandler:
         Returns
         -------
         dict containing the parameters
+
         """
 
         _site_validated = names.validate_site_name(site)
@@ -206,6 +210,7 @@ class DatabaseHandler:
         ------
         FileNotFoundError
             If the desired file is not found.
+
         """
 
         self._logger.debug(f"Getting {file_name} from {db_name} and writing it to {dest}")
@@ -225,9 +230,10 @@ class DatabaseHandler:
             Location where to write the files to.
 
         Raises
-        ----------
+        ------
         FileNotFoundError
             if a file in parameters.values is not found
+
         """
 
         if self.mongo_db_config:
@@ -265,6 +271,7 @@ class DatabaseHandler:
             File name to be found and copied.
         dest_dir: str or Path
             Path of the directory where the file will be written.
+
         """
 
         dest_file = Path(dest_dir).joinpath(file_name)
@@ -299,6 +306,7 @@ class DatabaseHandler:
         Returns
         -------
         dict containing the parameters
+
         """
 
         _tel_class = get_telescope_class(telescope_model_name)
@@ -356,6 +364,7 @@ class DatabaseHandler:
         Returns
         -------
         dict containing the parameters
+
         """
 
         _site_validated = names.validate_site_name(site)
@@ -441,9 +450,10 @@ class DatabaseHandler:
         dict containing the parameters
 
         Raises
-        ----------
+        ------
         ValueError
             if query returned zero results.
+
         """
 
         collection = DatabaseHandler.db_client[db_name][collection_name]
@@ -492,6 +502,7 @@ class DatabaseHandler:
         Returns
         -------
         dict containing the parameters
+
         """
 
         _file_name_db = "parValues-{}.yml".format(telescope_name_yaml)
@@ -522,6 +533,7 @@ class DatabaseHandler:
         Returns
         -------
         dict containing the parameters
+
         """
         _site = names.validate_site_name(site)
         _model_version = names.validate_model_version_name(model_version)
@@ -553,6 +565,7 @@ class DatabaseHandler:
         Returns
         -------
         dict containing the parameters
+
         """
 
         site_yaml = "lapalma" if site == "North" else "paranal"
@@ -594,9 +607,10 @@ class DatabaseHandler:
         dict containing the parameters
 
         Raises
-        -------
+        ------
         ValueError
             if query returned zero results.
+
         """
 
         _site_validated = names.validate_site_name(site)
@@ -644,6 +658,7 @@ class DatabaseHandler:
         Returns
         -------
         dict containing the parameters with their descriptions
+
         """
 
         collection = DatabaseHandler.db_client[db_name][collection_name]
@@ -677,9 +692,10 @@ class DatabaseHandler:
         dict containing the parameters
 
         Raises
-        -------
+        ------
         ValueError
             if query returned zero results.
+
         """
 
         _site_validated = names.validate_site_name(site)
@@ -727,6 +743,7 @@ class DatabaseHandler:
         Returns
         -------
         dict containing the parameters
+
         """
 
         _site_validated = names.validate_site_name(site)
@@ -773,6 +790,7 @@ class DatabaseHandler:
         ------
         FileNotFoundError
             If the desired file is not found.
+
         """
 
         db = DatabaseHandler.db_client[db_name]
@@ -839,7 +857,7 @@ class DatabaseHandler:
             The name of the collection to copy to (default is the same as collection)
 
         Raises
-        -------
+        ------
         BulkWriteError
 
         """
@@ -905,8 +923,9 @@ class DatabaseHandler:
             The name of the DB to copy to.
 
         Raises
-        -------
+        ------
         BulkWriteError
+
         """
 
         _collection = DatabaseHandler.db_client[db_name][collection]
@@ -948,6 +967,7 @@ class DatabaseHandler:
                 "Version": "prod5",
             }
             would delete the entire prod5 version from telescope North-LST-1.
+
         """
 
         _collection = DatabaseHandler.db_client[db_name][collection]
@@ -981,7 +1001,7 @@ class DatabaseHandler:
         """
         Update a parameter value for a specific telescope/version.
         (This function should be rarely used since new values
-         should ideally have their own version.)
+        should ideally have their own version.)
 
         Parameters
         ----------
@@ -1001,9 +1021,10 @@ class DatabaseHandler:
             where to find files to upload to the DB
 
         Raises
-        -------
+        ------
         FileNotFoundError
             if file_prefix is None
+
         """
 
         collection = DatabaseHandler.db_client[db_name][collection_name]
@@ -1089,9 +1110,10 @@ class DatabaseHandler:
             The name of the collection in which to update the parameter (default is "telescopes")
 
         Raises
-        -------
+        ------
         ValueError
             if field not in allowed fields
+
         """
 
         allowed_fields = ["Applicable", "units", "Type", "items", "minimum", "maximum"]
@@ -1185,9 +1207,10 @@ class DatabaseHandler:
             where to find files to upload to the DB
 
         Raises
-        -------
+        ------
         FileNotFoundError
             if file_prefix is None
+
         """
 
         collection = DatabaseHandler.db_client[db_name][collection_name]
@@ -1268,7 +1291,7 @@ class DatabaseHandler:
             Any additional fields to add to the parameter
 
         Raises
-        -------
+        ------
         ValueError
             If key to collection_name is not valid. Valid entries are: 'telescopes' and 'sites'.
 
@@ -1340,9 +1363,10 @@ class DatabaseHandler:
             The version name in the Simulation DB of the requested tag
 
         Raises
-        -------
+        ------
         ValueError
             if version not valid. Valid versions are: 'Current' and 'Latest'.
+
         """
 
         if version not in ["Current", "Latest"]:
@@ -1375,6 +1399,7 @@ class DatabaseHandler:
         file_iD: GridOut._id
             If the file exists, return its GridOut._id, otherwise insert the file and return its"
             "newly created DB GridOut._id.
+
         """
 
         db = DatabaseHandler.db_client[db_name]
@@ -1426,9 +1451,10 @@ class DatabaseHandler:
             List of all versions found
 
         Raises
-        -------
+        ------
         ValueError
             If key to collection_name is not valid. Valid entries are: 'telescopes' and 'sites'.
+
         """
 
         collection = DatabaseHandler.db_client[db_name][collection_name]
