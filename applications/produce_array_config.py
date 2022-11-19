@@ -71,15 +71,28 @@
     -------
     North - Prod5, simple example
 
-    Runtime < 1 min.
+    Get the array configuration from DB:
 
     .. code-block:: console
 
-        python applications/produce_array_config.py --label test \
-            --array_config data/test-data/array_config_test.yml -v DEBUG
+        python applications/get_file_from_db.py --file_name array_config_test.yml
 
-    All the produced model files can be found in simtools-output/test/model/
+    Run the application. Runtime < 1 min.
 
+    .. code-block:: console
+
+        python applications/produce_array_config.py --label test --array_config \
+        array_config_test.yml
+
+    The output is saved in simtools-output/test/model.
+
+    Expected final print-out message:
+
+    .. code-block:: console
+
+        INFO::array_model(l361)::export_simtel_array_config_file::Writing array config file into \
+        /workdir/external/gammasim-tools/simtools-output/test/model/CTA-TestLayout-North-2020-06-\
+        28_test.cfg
 """
 
 import logging

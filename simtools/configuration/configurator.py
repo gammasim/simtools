@@ -24,9 +24,18 @@ class Configurator:
 
     Configuration parameter names are converted always to lower case.
 
+    Parameters
+    ----------
+
+    Attributes
+    ----------
+
     Methods
     -------
-    initialize()
+    default_config(arg_list=None, add_db_config=False)
+        Returns dictionary of default configuration
+    initialize(paths=True, telescope_model=False, workflow_config=False, db_config=False, \
+        job_submission=False)
        Initialize configuration from command line, configuration file, class config, or env.
 
     """

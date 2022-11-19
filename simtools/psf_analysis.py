@@ -28,41 +28,28 @@ class PSFImage:
 
     Parameters
     ----------
-    focal_lenght: float
-        Focal length of the system in cm, needed to convert quantities from cm to deg. If None,
-        get_psf will only work in cm (not in deg).
+    focal_length: float, optional
+        Focal length of the system in cm. If not given, PSF can only be computed in cm.
+    total_scattered_area: float, optional
+        Scatter area of all photons in cm^2. If not given, effective area cannot be computed.
 
     Attributes
     ----------
-    effective_area: float
-        Mirror effective area in cm.
-
-    Methods
-    -------
-    read_photon_list_from_simtel_file(file)
-        Read a photon list produced by sim_telarray.
-    get_psf(fraction=0.8, unit='cm')
-        Compute and return a PSF container.
-    get_effectice_area()
-        Return effective area under the condition that total area was set given.
-    plot_image(**kwargs)
-        Plot image as a 2D histogram
-    plot_integral(**kwargs)
-        Plot cumulative intensity as a function containing fraction.
-    get_cumulative_data(radius=None)
-        Provide cumulative data (intensity vs radius).
-    plot_cumulative(**kwargs):
-        Plot cumulative data (intensity vs radius).
+    photon_pos_x: list of float
+        The list with X coordinate of photons
+    photon_pos_y: list of float
+        The list with Y coordinate of photons
+    photon_r: list of float
+        The list with R distance of photons from the center
+    centroid_x: float
+        The X coordinate of the center
+    centroid_y: float
+        The Y coordinate of the center
     """
 
     def __init__(self, focal_length=None, total_scattered_area=None):
         """
-        Parameters
-        ----------
-        focal_length: float, optional
-            Focal length of the system in cm. If not given, PSF can only be computed in cm.
-        total_scattered_area: float, optional
-            Scatter area of all photons in cm^2. If not given, effective area cannot be computed.
+        Initialize PSFImage class.
         """
 
         self._logger = logging.getLogger(__name__)
@@ -326,6 +313,11 @@ class PSFImage:
             (float, float, float):
                 Average radius, min radius, max radius of the interval where target_number photons
                 are inside.
+
+            Raises
+            ------
+            RuntimeError
+                if radius is not found (found_radius is False)
             """
             r0, r1 = rad_min, rad_min + dr
             s0, s1 = 0, 0
@@ -447,7 +439,12 @@ class PSFImage:
         return np.core.records.fromarrays(np.c_[radius_all, intensity].T, dtype=d_type)
 
     def plot_cumulative(self, **kwargs):
-        """Plot cumulative data (intensity vs radius)."""
+        """Plot cumulative data (intensity vs radius).
+
+        Parameters
+        ----------
+        **kwargs:
+            image_* for the histogram plot and psf_* for the psf circle."""
         data = self.get_cumulative_data()
         plt.plot(data["Radius [cm]"], data["Cumulative PSF"], **kwargs)
 

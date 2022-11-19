@@ -13,7 +13,7 @@
     Command line arguments
     ----------------------
     array_element_list (str)
-        List of array element positions (ecsv format)
+        File name with list of array element positions (ecsv format)
     compact (str)
         Compact output (in requested coordinate system; possible are corsika,utm,mercator)
     export (str)
@@ -29,11 +29,32 @@
 
     Example:
 
+    Get the array element list from the DBs.
+
+    .. code-block:: console
+
+        python applications/get_file_from_db.py --file_name telescope_positions-South-4MST.ecsv
+
+    Run the application:
+
     .. code-block:: console
 
         python applications/print_array_elements.py \
-            --array_element_list NorthArray-utm.ecsv \
+            --array_element_list telescope_positions-South-4MST.ecsv \
             --compact corsika
+
+
+    Expected final print-out message:
+
+    .. code-block:: console
+
+        telescope_name pos_x pos_y altitude
+        MST-01      70.00      70.00    2148.00
+        MST-02     -70.00     -70.00    2238.00
+        MST-03      70.00     -70.00    2138.00
+        MST-04     -70.00     -70.00    2180.00
+
+
 
 """
 
