@@ -1,7 +1,7 @@
 .. _Guidelines:
 
-Guidelines for gammasim-tools Developers
-****************************************
+Developer Guidelines
+********************
 
 This section provides help and guidelines for developers of gammasim-tools.
 If you want to contribute to gammasim-tools, please use one of the contact points listed at the
