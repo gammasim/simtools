@@ -181,8 +181,9 @@ All applications should follow the same structure:
         # application code follows
         ...
 
-Application handling should be done using the ``Configurator`` class, which allows to set
+Application handling should be done using the :ref:`Configurator <configurationconfigurator>` class, which allows to set
 configurations from command line, configuration file, or environmental variables.
+Check the :ref:`commandline_parser <configurationcommandline_parser>` module for generic command line arguments before introducing new ones in applications
 
 
 Dependencies
