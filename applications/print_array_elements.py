@@ -29,7 +29,7 @@
 
     Example:
 
-    Get the array element list
+    Get the array element list from the DBs.
 
     .. code-block:: console
 

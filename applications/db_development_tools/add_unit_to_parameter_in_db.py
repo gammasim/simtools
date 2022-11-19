@@ -12,30 +12,26 @@
 
 import logging
 
-import simtools.config as cfg
-import simtools.configuration.commandline_parser as argparser
 import simtools.util.general as gen
 from simtools import db_handler
+from simtools.configuration import configurator
 
 
 def main():
 
-    parser = argparser.CommandLineParser(description=("Add a unit field to a parameter in the DB."))
-    parser.initialize_default_arguments(add_workflow_config=False)
-
-    args = parser.parse_args()
-    cfg.set_config_file_name(args.config_file)
+    config = configurator.Configurator(description=("Add a unit field to a parameter in the DB."))
+    args_dict, db_config = config.initialize(db_config=True, telescope_model=True)
 
     logger = logging.getLogger()
-    logger.setLevel(gen.get_log_level_from_user(args.log_level))
+    logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
+
+    db = db_handler.DatabaseHandler(mongo_db_config=db_config)
 
     # pars_to_update = ["altitude"]
     pars_to_update = ["ref_long", "ref_lat"]
 
     # units = ["m"]
     units = ["deg", "deg"]
-
-    db = db_handler.DatabaseHandler()
 
     for site in ["North", "South"]:
         for par_now, unit_now in zip(pars_to_update, units):
