@@ -6,8 +6,8 @@ Getting Started
 Model Database Access
 ---------------------
 
-Simulation model parameter are stored in a MongoDB-type database.
-Many gammasim-tools applications depend on access this database, ask one of the developers for the credentials.
+Simulation model parameters are stored in a MongoDB-type database.
+Many gammasim-tools applications depend on access to this database; ask one of the developers for the credentials.
 
 Credentials for database access are passed on to gammasim-tools applications using environmental variables.
 For database access, copy \
@@ -27,7 +27,7 @@ Installation for Users
 
 gammasim-tools is under rapid development and not ready for production use.
 It will be made available in future using the conda packaging system.
-For now, expert users please follow the installation procedures for developers.
+For now, expert users should follow the installation procedures for developers.
 
 
 Installation for Developers
@@ -47,7 +47,7 @@ Clone gammasim-tools
 Install dependencies
 ++++++++++++++++++++
 
-Create a conda virtual environment with all the gammasim-tools dependencies installed:
+Create a conda virtual environment with the gammasim-tools dependencies installed:
 
 .. code-block:: console
 
@@ -61,7 +61,7 @@ Create a conda virtual environment with all the gammasim-tools dependencies inst
 Set environmental variables
 +++++++++++++++++++++++++++
 
-Source the ``set_DB_environ.sh`` script to activate set the environmental variables for the DB access:
+Source the ``set_DB_environ.sh`` script (see `Model Database Access`_) to activate set the environmental variables for the DB access:
 
 .. code-block:: console
 
@@ -82,10 +82,11 @@ Docker Environment for Developers
 ---------------------------------
 
 A docker container is made available for developers, see the
-`gammasim-tools container repository <https://github.com/gammasim/containers/tree/main/dev>`_.
+`gammasim-tools container repository <https://github.com/gammasim/containers/tree/main/dev>`_ for the Docker files.
+Images are uploaded to `package section <https://github.com/orgs/gammasim/packages?repo_name=containershttps://github.com/orgs/gammasim/packages?repo_name=containers>`_ of this repository (at this point a private container repository; ask the gammasim-tools developers for access).
 
-The container has the python packages, CORSIKA, and sim_telarray pre-installed.
-Setting up a system to run gammasim-tools applications or tests should be a matter of minutes:
+The container has python packages, CORSIKA, and sim_telarray pre-installed.
+Setting up a system to run gammasim-tools applications or tests should be a matter of minutes.
 
 +++++++++++++++++++
 Docker Installation
@@ -113,11 +114,12 @@ Spin-up the container
 +++++++++++++++++++++
 
 Start up a container (the image will we downloaded, if it is not available in your environment):
+
 .. code-block::
 
     docker run --rm -it -v "$(pwd)/external:/workdir/external" ghcr.io/gammasim/containers/gammasim-tools-dev:v0.3.0-dev1 bash -c "$(cat ./entrypoint.sh) && bash"
 
-The entry script of the container will source the ``set_DB_environ.sh`` script and set the DB access parameters.
+The entry script of the container will source the ``set_DB_environ.sh`` script and set the DB access parameters (see `Model Database Access`_).
 
 +++++++++++++++++
 Test installation
