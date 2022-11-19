@@ -3,52 +3,39 @@
 Configuration
 -------------
 
-The configuration is handled by the :ref:`config <configmodule>` module (see reference documentation
-below).
+Applications in gammasim-tools can be configured by the following four approaches, which are all equivalent:
 
-Configuration file
-******************
+#. command line arguments;
+#. configuration file (in yaml format);
+#. configuration dictionary when calling the :ref:`Configurator <configurationconfigurator>` class;
+#. environment variables.
 
-gammasim-tools requires one configuration file in yaml format. This file should be named
-config.yml and it should be located at the main gammasim-tools directory. Alternatively one can use
-the function config.set_config_file_name to set an alternative file.
+To illustrate this, e.g., set the path pointing towards the directory for all data products.
 
-The configuration file must contain the following entries:
+Set the output directory using a command line argument:
 
-data_path: str
-    Path to the directory containing the data used to perform automatic tests. These data is
-    provided at gammasim-tools/data/.
+.. code-block::
 
-output_path: str
-    Path to the parent directory where the output directory will be created (see :ref:`I/O <IO>`).
+   $ python application/<application_name> --output_path <path name>
 
-model_path: list of str
-    List with the locations of the model files. The locations of data from the instruments can be
-    found on `gitlab (repo data-from-instrument-teams) <https://gitlab.cta-observatory.org/cta-
-    consortium/aswg/simulations/simulation-model/verification/data-from-instrument-teams>`_. The
-    location of the directory with the yaml files for the model parameters and the sim_telarray
-    config files can be found on gitlab repos `configReports <https://gitlab.cta-observatory.org/
-    cta-consortium/aswg/simulations/simulation-model/simulation-model-description/-/tree/master/
-    configReports>`_ and `dataFiles <https://gitlab.cta-observatory.org/cta-consortium/aswg/
-    simulations/simulation-model/simulation-model-description/-/tree/master/datFiles>`_.
-    The files will always be searched recursively within all the subdirectories inside the directory
-    given by the location.
+Set the output directory using a configuration file in yaml format:
 
-simtel_path: str
-    Path to the parent sim_telarray directory, containing the sim_telarray and CORSIKA software
-    unpacked and compiled.
+.. code-block::
 
-Environmental variables can be used to set the paths/locations. Example:
+   config_file: <path name>
 
+Load the yaml configuration file into the application with:
 
 .. code-block:: console
 
-    simtel_path: $SIM_TELPATH
+   $ python application/<application_name> --config <my_config.yml>
 
-.. _configmodule:
+Configuration parameter read from a environmental variable:
 
-config
-******
+.. code-block:: console
 
-.. automodule:: config
-   :members:
+   $ EXPORT OUTPUT_PATH="<path name>"
+
+Configuration methods can be combined. Configuration parameters are generally expected in lower-case snake-make case.
+Configuration parameters for each application are printed to screen when executing the application with the ``--help`` option.
+Parameters with the same functionality are named consistently the same among all appliations.
