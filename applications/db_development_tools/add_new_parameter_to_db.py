@@ -12,30 +12,26 @@
 
 import logging
 
-import simtools.config as cfg
-import simtools.configuration.commandline_parser as argparser
 import simtools.util.general as gen
 from simtools import db_handler
+from simtools.configuration import configurator
 from simtools.util import names
 
 
 def main():
 
-    parser = argparser.CommandLineParser(
+    config = configurator.Configurator(
         description=("Add a new parameter to the sites collection in the DB.")
     )
-    parser.initialize_default_arguments(add_workflow_config=False)
-
-    args = parser.parse_args()
-    cfg.set_config_file_name(args.config_file)
+    args_dict, db_config = config.initialize(db_config=True, telescope_model=True)
 
     logger = logging.getLogger()
-    logger.setLevel(gen.get_log_level_from_user(args.log_level))
+    logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
+
+    db = db_handler.DatabaseHandler(mongo_db_config=db_config)
 
     # epsgs = [32628, 32719]
     parameter = {"camera_filter_incidence_angle": "sst_photon_incidence_angle_camera_window.ecsv"}
-
-    db = db_handler.DatabaseHandler()
 
     telescopes = [
         "South-SST-Structure-D",
