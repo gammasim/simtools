@@ -36,6 +36,7 @@ Configuration parameter read from a environmental variable:
 
    $ EXPORT OUTPUT_PATH="<path name>"
 
-Configuration methods can be combined. Configuration parameters are generally expected in lower-case snake-make case.
+Configuration methods can be combined; conflicting configuration settings raise an Exception.
+Configuration parameters are generally expected in lower-case snake-make case.
 Configuration parameters for each application are printed to screen when executing the application with the ``--help`` option.
 Parameters with the same functionality are named consistently the same among all applications.
