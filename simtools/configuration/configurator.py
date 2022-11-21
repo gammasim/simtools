@@ -26,34 +26,21 @@ class Configurator:
 
     Attributes
     ----------
-
-    Methods
-    -------
-    default_config(arg_list=None, add_db_config=False)
-        Returns dictionary of default configuration
-    initialize(paths=True, telescope_model=False, workflow_config=False, db_config=False, \
-        job_submission=False)
-       Initialize configuration from command line, configuration file, class config, or env.
-
+    config: (dict, optional)
+        Configuration parameters as dict (default is None).
+    label: (str, optional)
+        Class label (default is None).
+    usage: (str, opitonal)
+        Application usage description (default is None).
+    description: (str, optional)
+        Text displayed as description (default is None).
+    epilog: (str, optional)
+        Text display after all arguments (default is None).
     """
 
     def __init__(self, config=None, label=None, usage=None, description=None, epilog=None):
         """
-        Configurator init.
-
-        Parameters
-        ----------
-        config: dict
-            Configuration parameters as dict.
-        label: str
-            Class label.
-        usage: str
-            Application usage description.
-        description: str
-            Text displayed as description
-        epilog: str
-            Text display after all arguments.
-
+        Initialize Configurator.
         """
 
         self._logger = logging.getLogger(__name__)
@@ -70,7 +57,19 @@ class Configurator:
         """
         Returns dictionary of default configuration
 
+        Parameters
+        ----------
+        arg_list (list, optional)
+            List of arguments (default is None)
+        add_db_config (bool, optional)
+            Add DB configuration file (default is False)
+
+        Returns
+        -------
+        dict
+            Configuration parameters as dict.
         """
+
         self.parser.initialize_default_arguments()
         if arg_list and "--site" in arg_list:
             self.parser.initialize_telescope_model_arguments(True, "--telescope" in arg_list)
@@ -101,21 +100,23 @@ class Configurator:
 
         Parameters
         ----------
-        paths: bool
-            Add path configuration to list of args.
-        telescope_model: bool
-            Add telescope model configuration to list of args.
-        workflow_config: bool
-            Add workflow configuration to list of args.
-        db_config: bool
-            Add database configuration parameters to list of args.
-        job_submission: bool
-            Add job submission configuration to list of args.
+        paths: (bool, optional)
+            Add path configuration to list of args (default is True).
+        telescope_model: (bool, optional)
+            Add telescope model configuration to list of args (default is False).
+        workflow_config: (bool, optional)
+            Add workflow configuration to list of args (default is False).
+        db_config: (bool, optional)
+            Add database configuration parameters to list of args (default is False).
+        job_submission: (bool, optional)
+            Add job submission configuration to list of args (default is False).
 
         Returns
         -------
         dict
             Configuration parameters as dict.
+        dict
+            Dictionary with DB parameters
 
         Raises
         ------
