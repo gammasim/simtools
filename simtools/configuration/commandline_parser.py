@@ -14,16 +14,16 @@ class CommandLineParser(argparse.ArgumentParser):
 
     Atributes
     -------
-    paths: bool
-        Add path configuration to list of args.
-    telescope_model: bool
-        Add telescope model configuration to list of args.
-    workflow_config: bool
-        Add workflow configuration to list of args.
-    db_config: bool
-        Add database configuration parameters to list of args.
-    job_submission: bool
-        Add job submission configuration parameters to list of args.
+    paths: (bool, optional)
+        Add path configuration to list of args (default is True).
+    telescope_model: (bool, optional)
+        Add telescope model configuration to list of args (default is False).
+    workflow_config: (bool, optional)
+        Add workflow configuration to list of args (default is False).
+    db_config: (bool, optional)
+        Add database configuration parameters to list of args (default is False).
+    job_submission:(bool, optional)
+        Add job submission configuration parameters to list of args (default is False).
 
     """
 
@@ -50,14 +50,14 @@ class CommandLineParser(argparse.ArgumentParser):
         self.initialize_config_files(workflow_config)
         self.initialize_application_execution_arguments()
 
-    def initialize_config_files(self, workflow_config):
+    def initialize_config_files(self, workflow_config=False):
         """
         Initialize configuration and workflow files.
 
         Parameters
         ----------
         workflow_config (str, optional)
-            workflow configuration file.
+            workflow configuration file (default is False).
         """
 
         _job_group = self.add_argument_group("configuration")
@@ -184,12 +184,13 @@ class CommandLineParser(argparse.ArgumentParser):
     def initialize_telescope_model_arguments(self, add_model_version=True, add_telescope=True):
         """
         Initialize default arguments for site and telescope model definition
+
         Parameters
         ----------
         add_model_version (str, optional)
-            Model version. Default: Current
+            Model version (default is "Current").
         add_telescope (str, optional)
-            Telescope model name (e.g. LST-1, SST-D, ...).
+            Telescope model name (e.g. LST-1, SST-D, ..., default is True).
         """
 
         _job_group = self.add_argument_group("telescope model")
