@@ -1,3 +1,5 @@
+import pytest
+
 from simtools.data_model import data_model
 
 
@@ -26,3 +28,12 @@ def test_workflow_configuration_schema():
 
     assert isinstance(_config, dict)
     assert len(_config) > 0
+
+
+def test_metadata_input_reference_document_list():
+
+    assert "SITE" in data_model.metadata_input_reference_document_list("instrumentlist")
+    assert "SITE" in data_model.metadata_input_reference_document_list("INSTRUMENTLIST")
+    assert "TYPE" in data_model.metadata_input_reference_document_list("documentlist")
+    with pytest.raises(data_model.InvalidSchemaList, match=r"Invalid schema list: wronglist"):
+        data_model.metadata_input_reference_document_list("wronglist")
