@@ -46,22 +46,21 @@ class CorsikaConfig:
             'cscat': [10, 1500 * u.m, 0]
         }
 
-    The remaining CORSIKA parameters can be set as a yaml file, using the argument \
-    corsika_parameters_file. When not given, corsika_parameters will be loaded  from \
-    parameters/corsika/corsika_parameters.yml.
-
     Parameters
     ----------
     site: (str, required)
         North or South.
     layout_name: (str, required)
         Name of the layout.
-    layout: (LayoutArray, optional)
-        LayoutArray object containing the telescope positions (default is None).
     label: (str, optional)
         Instance label (default is None).
-    primary: (str, optional)
-        Name of the primary particle (e.g gamma, proton ..., default is None).
+    corsika_config_data: (dict, optional)
+        CORSIKA user parameters (default is None)
+    corsika_config_file: (str, optional)
+        Name of the Yaml configuration file (default is None).
+    corsika_parameters_file: (str, optional)
+        Name of the Yaml file to set remaining CORSIKA parameters (default is \
+        data/parameters/corsika_parameters.yml)
     """
 
     def __init__(
@@ -132,7 +131,7 @@ class CorsikaConfig:
 
         Parameters
         ----------
-        corsika_config_data: dict
+        corsika_config_data: (dict, required)
             Contains the user parameters. Ex.
 
             .. code-block:: python
@@ -157,6 +156,7 @@ class CorsikaConfig:
         MissingRequiredInputInCorsikaConfigData
             If any required user parameter is missing.
         """
+
         self._logger.debug("Setting user parameters from corsika_config_data")
         self._user_parameters = dict()
 
@@ -293,7 +293,7 @@ class CorsikaConfig:
 
         Parameters
         ----------
-        par_name: str
+        par_name: (str, required)
             Name of the parameter as used in the CORSIKA input file (e.g. PRMPAR, THETAP ...)
 
         Raises
@@ -404,22 +404,22 @@ class CorsikaConfig:
 
         Parameters
         ----------
-        file_type: str
+        file_type: (str, required)
             The type of file (determines the file suffix).
             Choices are config_tmp, config or output_generic.
-        run_number: int
-            Run number (optional).
+        run_number: (int, optional)
+            Run number (default is None).
 
         Returns
         -------
         str
             for file_type="config_tmp":
                 Get the CORSIKA input file for one specific run.
-                This is the input file after being pre-processed by sim_telarray (pfp).
+                The input file after being pre-processed by sim_telarray (pfp).
             for file_type="config":
-                Get a general CORSIKA config inputs file.
+                A general CORSIKA config inputs file.
             for file_type="output_generic"
-                Get a generic file name for the TELFIL option in the CORSIKA inputs file.
+                A generic file name for the TELFIL option in the CORSIKA inputs file.
 
         Raises
         ------
