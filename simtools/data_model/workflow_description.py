@@ -327,8 +327,11 @@ class WorkflowDescription:
             self._fill_context_sim_list(
                 top_level_dict["context"]["sim"]["association"], association
             )
-        for document in _input_meta["product"]["document"]:
-            self._fill_context_sim_list(top_level_dict["context"]["sim"]["document"], document)
+        try:
+            for document in _input_meta["context"]["document"]:
+                self._fill_context_sim_list(top_level_dict["context"]["sim"]["document"], document)
+        except KeyError:
+            top_level_dict["context"]["sim"].pop("document")
 
     def _fill_product_meta(self, product_dict):
         """
