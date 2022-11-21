@@ -1,6 +1,3 @@
-import logging
-
-
 class InvalidSchemaList(Exception):
     """
     Exception raised for requests of unknown schema lists
@@ -129,9 +126,8 @@ def metadata_input_reference_document_list(schema_list):
             "LINK": {"type": "str", "required": False},
         }
 
-    logger = logging.getLogger(__name__)
-    logger.error("Invalid schema list (%s)", schema_list)
-    raise InvalidSchemaList
+    msg = "Invalid schema list: {}".format(schema_list)
+    raise InvalidSchemaList(msg)
 
 
 def workflow_configuration_schema():
