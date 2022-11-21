@@ -28,10 +28,9 @@ class InvalidCorsikaInput(Exception):
 
 class CorsikaConfig:
     """
-    CorsikaConfig deals with configuration for running CORSIKA. \
-    User parameters must be given by the corsika_config_data or \
-    corsika_config_file arguments. An example of corsika_config_data follows \
-    below.
+    CorsikaConfig deals with configuration for running CORSIKA. User parameters must be given by \
+    the corsika_config_data or corsika_config_file arguments. An example of corsika_config_data
+    follows  below.
 
     .. code-block:: python
 
@@ -48,38 +47,21 @@ class CorsikaConfig:
         }
 
     The remaining CORSIKA parameters can be set as a yaml file, using the argument \
-    corsika_parameters_file. When not given, corsika_parameters will be loaded \
-    from parameters/corsika/corsika_parameters.yml.
+    corsika_parameters_file. When not given, corsika_parameters will be loaded  from \
+    parameters/corsika/corsika_parameters.yml.
 
-    Attributes
+    Parameters
     ----------
-    site: str
+    site: (str, required)
         North or South.
-    layout_name: str
+    layout_name: (str, required)
         Name of the layout.
-    layout: LayoutArray
-        LayoutArray object containing the telescope positions.
-    label: str
-        Instance label.
-    primary: str
-        Name of the primary particle (e.g gamma, proton ...).
-
-    Methods
-    -------
-    set_user_parameters(corsika_config_data)
-        Set user parameters from a dict.
-    get_user_parameter(par_name)
-        Get the value of a user parameter.
-    print_user_parameters()
-        Print user parameters for inspection.
-    get_output_file_name(run_number)
-        Get the name of the CORSIKA output file for a certain run.
-    export_input_file()
-        Create and export CORSIKA input file.
-    get_input_file()
-        Get the full path of the CORSIKA input file.
-    get_file_name()
-        Get a CORSIKA config style file name for various file types.
+    layout: (LayoutArray, optional)
+        LayoutArray object containing the telescope positions (default is None).
+    label: (str, optional)
+        Instance label (default is None).
+    primary: (str, optional)
+        Name of the primary particle (e.g gamma, proton ..., default is None).
     """
 
     def __init__(
@@ -92,24 +74,7 @@ class CorsikaConfig:
         corsika_parameters_file=None,
     ):
         """
-        CorsikaConfig init.
-
-        Parameters
-        ----------
-        site: str
-            South or North.
-        layout_name: str
-            Name of the layout.
-        layout: LayoutArray
-            Instance of LayoutArray.
-        label: str
-            Instance label.
-        corsika_config_data: dict
-            Dict with CORSIKA config data.
-        corsika_config_file: str or Path
-            Path to yaml file containing CORSIKA config data.
-        corsika_parameters_file: str or Path
-            Path to yaml file containing CORSIKA parameters.
+        Initialize CorsikaConfig.
         """
 
         self._logger = logging.getLogger(__name__)
