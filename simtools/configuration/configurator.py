@@ -7,6 +7,11 @@ import yaml
 import simtools.configuration.commandline_parser as argparser
 from simtools import io_handler
 
+__all__ = [
+    "Configurator",
+    "InvalidConfigurationParameter",
+]
+
 
 class InvalidConfigurationParameter(Exception):
     pass
@@ -24,7 +29,7 @@ class Configurator:
 
     Configuration parameter names are converted always to lower case.
 
-    Attributes
+    Parameters
     ----------
     config: (dict, optional)
         Configuration parameters as dict (default is None).
