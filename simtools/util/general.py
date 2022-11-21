@@ -606,18 +606,27 @@ def change_dict_keys_case(data_dict, lower_case=True):
 
     """
     _return_dict = {}
-    for key in data_dict.keys():
-        if lower_case:
-            _key_changed = key.lower()
-        else:
-            _key_changed = key.upper()
-        if isinstance(data_dict[key], dict):
-            _return_dict[_key_changed] = change_dict_keys_case(data_dict[key], lower_case)
-        elif isinstance(data_dict[key], list):
-            _tmp_list = []
-            for _list_entry in data_dict[key]:
-                _tmp_list.append(change_dict_keys_case(_list_entry, lower_case))
-            _return_dict[_key_changed] = _tmp_list
-        else:
-            _return_dict[_key_changed] = data_dict[key]
+    try:
+        for key in data_dict.keys():
+            if lower_case:
+                _key_changed = key.lower()
+            else:
+                _key_changed = key.upper()
+            if isinstance(data_dict[key], dict):
+                _return_dict[_key_changed] = change_dict_keys_case(data_dict[key], lower_case)
+            elif isinstance(data_dict[key], list):
+                _tmp_list = []
+                for _list_entry in data_dict[key]:
+                    if isinstance(_list_entry, dict):
+                        _tmp_list.append(change_dict_keys_case(_list_entry, lower_case))
+                    else:
+                        _tmp_list.append(_list_entry)
+                _return_dict[_key_changed] = _tmp_list
+            else:
+                _return_dict[_key_changed] = data_dict[key]
+    except AttributeError:
+        logger = logging.getLogger(__name__)
+        logger.error("Invalid method argument: %s", data_dict)
+        raise
+
     return _return_dict
