@@ -12,12 +12,18 @@ class CommandLineParser(argparse.ArgumentParser):
 
     Command line arguments should be given in snake_case, e.g. `input_meta`.
 
-    Methods
+    Atributes
     -------
-    initialize_default_arguments:
-        Initialize default arguments used by all applications
-    initialize_telescope_model_arguments:
-        Initialize default arguments for telescope model definitions
+    paths: bool
+        Add path configuration to list of args.
+    telescope_model: bool
+        Add telescope model configuration to list of args.
+    workflow_config: bool
+        Add workflow configuration to list of args.
+    db_config: bool
+        Add database configuration parameters to list of args.
+    job_submission: bool
+        Add job submission configuration parameters to list of args.
 
     """
 
@@ -31,20 +37,6 @@ class CommandLineParser(argparse.ArgumentParser):
     ):
         """
         Initialize default arguments used by all applications (e.g., verbosity or test flag).
-
-        Parameters
-        ----------
-        paths: bool
-            Add path configuration to list of args.
-        telescope_model: bool
-            Add telescope model configuration to list of args.
-        workflow_config: bool
-            Add workflow configuration to list of args.
-        db_config: bool
-            Add database configuration parameters to list of args.
-        job_submission: bool
-            Add job submission configuration parameters to list of args.
-
         """
 
         if telescope_model:
@@ -64,8 +56,6 @@ class CommandLineParser(argparse.ArgumentParser):
 
         Parameters
         ----------
-        config (str, optional)
-            gammasim-tools configuration file.
         workflow_config (str, optional)
             workflow configuration file.
         """
@@ -89,7 +79,6 @@ class CommandLineParser(argparse.ArgumentParser):
     def initialize_path_arguments(self):
         """
         Initialize paths.
-
         """
         _job_group = self.add_argument_group("paths")
         _job_group.add_argument(
@@ -123,18 +112,8 @@ class CommandLineParser(argparse.ArgumentParser):
     def initialize_application_execution_arguments(self):
         """
         Initialize application execution arguments.
-
-        Parameters
-        ----------
-        test (bool, optional)
-            Test option for faster execution during development.
-        label (str, optional)
-            Job label.
-        log_level (str, optional)
-            Log level to print (default is INFO).
-        version (str, optional)
-            Version.
         """
+
         _job_group = self.add_argument_group("execution")
         _job_group.add_argument(
             "--test",
@@ -161,19 +140,8 @@ class CommandLineParser(argparse.ArgumentParser):
     def initialize_db_config_arguments(self):
         """
         Initialize DB configuration parameters.
-
-        Parameters
-        ----------
-        db_api_user (str, optional)
-            Database user.
-        db_api_pw (str, optional)
-            Database password.
-        db_api_port (int, optional)
-            Database port.
-        db_api_authentication_database (str, optional)
-            Database  with user info (optional, default is 'admin').
-
         """
+
         _job_group = self.add_argument_group("MongoDB configuration")
         _job_group.add_argument("--db_api_user", help="database user", type=str, required=False)
         _job_group.add_argument("--db_api_pw", help="database password", type=str, required=False)
@@ -215,9 +183,13 @@ class CommandLineParser(argparse.ArgumentParser):
 
     def initialize_telescope_model_arguments(self, add_model_version=True, add_telescope=True):
         """
-        Initialize default arguments for site and telescope model
-        definition
-
+        Initialize default arguments for site and telescope model definition
+        Parameters
+        ----------
+        add_model_version (str, optional)
+            Model version. Default: Current
+        add_telescope (str, optional)
+            Telescope model name (e.g. LST-1, SST-D, ...).
         """
 
         _job_group = self.add_argument_group("telescope model")
