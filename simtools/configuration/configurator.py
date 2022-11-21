@@ -24,9 +24,6 @@ class Configurator:
 
     Configuration parameter names are converted always to lower case.
 
-    Parameters
-    ----------
-
     Attributes
     ----------
 
