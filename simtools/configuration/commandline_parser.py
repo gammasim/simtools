@@ -4,27 +4,22 @@ from pathlib import Path
 import simtools.util.names as names
 import simtools.version
 
+__all__ = [
+    "CommandLineParser",
+]
+
 
 class CommandLineParser(argparse.ArgumentParser):
     """
-    Command line parser for application and workflows
-    Wrapper around standard python argparse.ArgumentParser
+    Command line parser for application and workflows Wrapper around standard python \
+    argparse.ArgumentParser. Command line arguments should be given in snake_case, e.g. \
+     `input_meta`.
 
-    Command line arguments should be given in snake_case, e.g. `input_meta`.
-
-    Atributes
-    -------
-    paths: (bool, optional)
-        Add path configuration to list of args (default is True).
-    telescope_model: (bool, optional)
-        Add telescope model configuration to list of args (default is False).
-    workflow_config: (bool, optional)
-        Add workflow configuration to list of args (default is False).
-    db_config: (bool, optional)
-        Add database configuration parameters to list of args (default is False).
-    job_submission:(bool, optional)
-        Add job submission configuration parameters to list of args (default is False).
-
+    Parameters
+    ----------
+    argparse.ArgumentParser class
+        Object for parsing command line strings into Python objects. For a list of keywords, please\
+        refer to argparse.ArgumentParser documentation.
     """
 
     def initialize_default_arguments(
@@ -37,6 +32,19 @@ class CommandLineParser(argparse.ArgumentParser):
     ):
         """
         Initialize default arguments used by all applications (e.g., verbosity or test flag).
+
+        Parameters
+        -------
+        paths: (bool, optional)
+            Add path configuration to list of args (default is True).
+        telescope_model: (bool, optional)
+            Add telescope model configuration to list of args (default is False).
+        workflow_config: (bool, optional)
+            Add workflow configuration to list of args (default is False).
+        db_config: (bool, optional)
+            Add database configuration parameters to list of args (default is False).
+        job_submission:(bool, optional)
+            Add job submission configuration parameters to list of args (default is False).
         """
 
         if telescope_model:
