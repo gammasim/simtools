@@ -16,7 +16,7 @@ Set the output directory using a command line argument:
 
 .. code-block::
 
-   $ python application/<application_name> --output_path <path name>
+   $ python applications/<application_name> --output_path <path name>
 
 Set the output directory using a configuration file in yaml format:
 
@@ -28,7 +28,7 @@ Load the yaml configuration file into the application with:
 
 .. code-block:: console
 
-   $ python application/<application_name> --config <my_config.yml>
+   $ python applications/<application_name> --config <my_config.yml>
 
 Configuration parameter read from a environmental variable:
 
