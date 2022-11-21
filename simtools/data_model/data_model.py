@@ -1,3 +1,12 @@
+import logging
+
+
+class InvalidSchemaList(Exception):
+    """
+    Exception raised for requests of unknown schema lists
+    """
+
+
 def top_level_reference_schema():
     """
     Reference schema following the CTA Top-Level Data Model.
@@ -66,7 +75,6 @@ def metadata_input_reference_schema():
     -------
     dict with input reference schema
 
-
     """
 
     return {
@@ -76,13 +84,7 @@ def metadata_input_reference_schema():
             "NAME": {"type": "str", "required": True},
             "EMAIL": {"type": "email", "required": True},
         },
-        "INSTRUMENT": {
-            "SITE": {"type": "str", "required": True},
-            "CLASS": {"type": "str", "required": True},
-            "TYPE": {"type": "str", "required": True},
-            "SUBTYPE": {"type": "str", "required": False},
-            "ID": {"type": "str", "required": True},
-        },
+        "INSTRUMENT": metadata_input_reference_document_list("instrumentlist"),
         "PROCESS": {
             "TYPE": {"type": "str", "required": True},
             "ID": {"type": "str", "required": True},
@@ -95,10 +97,41 @@ def metadata_input_reference_schema():
                 "START": {"type": "datetime", "required": False, "default": "None"},
                 "END": {"type": "datetime", "required": False, "default": "None"},
             },
-            "DOCUMENT": {"type": "list", "required": False, "default": "None"},
             "ASSOCIATION": {"type": "instrumentlist", "required": True},
         },
+        "CONTEXT": {
+            "DOCUMENT": {"type": "documentlist", "required": False, "default": "None"},
+        },
     }
+
+
+def metadata_input_reference_document_list(schema_list):
+    """
+    Reference model data for input metata data of type DOCUMENT.
+
+    Returns
+    -------
+    dict with input reference schema for DOCUMENT
+
+    """
+    if schema_list.lower() == "instrumentlist":
+        return {
+            "SITE": {"type": "str", "required": True},
+            "CLASS": {"type": "str", "required": True},
+            "TYPE": {"type": "str", "required": True},
+            "SUBTYPE": {"type": "str", "required": False},
+            "ID": {"type": "str", "required": True},
+        }
+    if schema_list.lower() == "documentlist":
+        return {
+            "TYPE": {"type": "str", "required": False},
+            "ID": {"type": "str", "required": False},
+            "LINK": {"type": "str", "required": False},
+        }
+
+    logger = logging.getLogger(__name__)
+    logger.error("Invalid schema list (%s)", schema_list)
+    raise InvalidSchemaList
 
 
 def workflow_configuration_schema():
