@@ -93,13 +93,6 @@ make_regular_arrays
    :members:
 
 
-mark_non_optics_parameter_non_applicable
-========================================
-
-.. automodule:: mark_non_optics_parameter_non_applicable
-   :members:
-
-
 plot_simtel_histograms
 ======================
 
