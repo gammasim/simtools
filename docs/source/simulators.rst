@@ -23,7 +23,7 @@ Implemented are productions using CORSIKA and sim_telarray.
 
 .. _job_manager:
 
-.. automodule:: job_submission.job_manager
+.. automodule:: job_execution.job_manager
    :members:
 
 

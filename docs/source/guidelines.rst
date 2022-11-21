@@ -66,10 +66,8 @@ Logging
 Sufficient logging information should be provided to users and developers. As general guideline, the
 following logging levels should be used:
 
-- **INFO**: information useful for the general user about the progress, intermediate results, input
-or output.
-- **WARNING**: information for the general user or developer on something they should know but
-cannot change.
+- **INFO**: information useful for the general user about the progress, intermediate results, input or output.
+- **WARNING**: information for the general user or developer on something they should know but cannot change.
 - **DEBUG**: information only interesting for developers or useful for debugging.
 - **ERROR**: something which always leads to an exception or program exit.
 
@@ -93,8 +91,7 @@ General service functions for tests (e.g., DB connection) can be found in
 This should be used to avoid duplication.
 
 
-.. note:: Developers should expect that code changes affecting several modules are acceptable in
-case unit tests are successful.
+.. note:: Developers should expect that code changes affecting several modules are acceptable in case unit tests are successful.
 
 
 Documentation
@@ -232,15 +229,12 @@ The telescope names as used by gammasim-tools follow the pattern "Site-Class-Typ
 
 * "Site" is either "North" or "South";
 * "Class" is either "LST", "MST", "SCT" or "SST";
-* "Type" is a single number ONLY in case of a real telescope existing at the site or a string
-containing a "D" in case of any other telescope design.
+* "Type" is a single number ONLY in case of a real telescope existing at the site or a string containing a "D" in case of any other telescope design.
 
 For example:
 
-* "North-LST-1" is the first LST commissioned at the La Palma site, while "North-LST-D234" is the
-current design of the further 3 LSTs.
-* "North-MST-FlashCam-D" and "North-MST-NectarCam-D" are the two MST designs containing different
-cameras.
+* "North-LST-1" is the first LST commissioned at the La Palma site, while "North-LST-D234" is the current design of the further 3 LSTs.
+* "North-MST-FlashCam-D" and "North-MST-NectarCam-D" are the two MST designs containing different cameras.
 
 Any input telescope names can (and should) be validated by the function validate_telescope_name
 (see module :ref:`util.names <utilnames>`).
@@ -333,8 +327,7 @@ properties. See an example below:
 * len gives the length of the input. If null, any len is accepted.
 * unit is the astropy unit
 * default must have the same len
-* names is a list of acceptable input names. The key in the returned dict will have the name given
-at the definition of the block (zenith_angle in this example)
+* names is a list of acceptable input names. The key in the returned dict will have the name given at the definition of the block (zenith_angle in this example)
 
 
 Docker Container for Development
@@ -352,6 +345,7 @@ Apptainer, Singularity, Buildah/Podman, etc should work, but are not thoroughly 
 2. obtain the access parameters for the CTA Simulation Model data base and write a small script
 ``set_DB_environ.sh`` to set these parameters to be used in the container:
 .. code-block::
+
     export DB_API_USER=<db_user_name>
     export DB_API_PW=<db_password>
     export DB_API_PORT=<db_port>
