@@ -98,9 +98,9 @@ class SchemaValidator:
                 _this_data = data_dict[key]
             else:
                 if self._field_is_optional(value):
-                    self._logger.debug(f"Optional field {key}")
+                    self._logger.debug("Optional field %s", key)
                     continue
-                msg = f"Missing required field {key}"
+                msg = f"Missing required field '{key}'"
                 raise ValueError(msg)
 
             if isinstance(value, dict):
@@ -109,7 +109,7 @@ class SchemaValidator:
                     try:
                         self._validate_data_type(value, key, _this_data)
                     except UnboundLocalError:
-                        self._logger.error(f"No data for `{key}` key")
+                        self._logger.error("No data for `%s` key", key)
                         raise
                 else:
                     self._validate_schema(value, _this_data)
@@ -163,8 +163,8 @@ class SchemaValidator:
             self._validate_datetime(data_field, self._field_is_optional(schema))
         elif schema["type"] == "email":
             self._validate_email(data_field, key)
-        elif schema["type"] == "instrumentlist":
-            self._validate_instrument_list(data_field)
+        elif schema["type"].endswith("list"):
+            self._validate_list(schema["type"], data_field)
         elif type(data_field).__name__ != schema["type"]:
             try:
                 if isinstance(data_field, (int, str)):
@@ -228,26 +228,29 @@ class SchemaValidator:
         if not re.fullmatch(regex, data_field):
             raise ValueError("invalid email format in field {}: {}".format(key, data_field))
 
-    def _validate_instrument_list(self, instrument_list):
+    def _validate_list(self, schema_type, data_list):
         """
-        Validate entry to be of type INSTRUMENT
+        Validate schmema for list type entry
 
         Parameters
         ----------
-        instrument list: list
-            list of dictionaries of type INSTRUMENT
-            to be validated
+        schema_type
+            reference schema type (e.g., instrumentlist, documentlist)
+        data_list: list
+            list of dictionaries to be validated
 
         """
+        _ref_schema = gen.change_dict_keys_case(
+            data_model.metadata_input_reference_document_list(schema_type), lower_case=True
+        )
 
-        for instrument in instrument_list:
-            self._validate_schema(self._reference_schema["instrument"], instrument)
+        for entry in data_list:
+            self._validate_schema(_ref_schema, entry)
 
-    @staticmethod
-    def _field_is_optional(field_dict):
+    def _field_is_optional(self, field_dict):
         """
-        Check if data field is labeled as not required in
-        the reference metadata schema
+        Check if data field is labeled as optional in the reference metadata schema.
+        Dictionaries as datafields are tested for any optional fields.
 
         Parameters
         ----------
@@ -270,6 +273,11 @@ class SchemaValidator:
             if field_dict["required"]:
                 return False
         except KeyError:
+            if isinstance(field_dict, dict):
+                for value in field_dict.values():
+                    if isinstance(value, dict) and not self._field_is_optional(value):
+                        return False
+                return True
             return False
         return True
 
