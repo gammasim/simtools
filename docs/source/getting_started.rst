@@ -61,7 +61,7 @@ Create a conda virtual environment with the gammasim-tools dependencies installe
 Install CORSIKA and sim_telarray
 ++++++++++++++++++++++++++++++++
 
-CORSIKA and sim_telarray are external tools to gammasim-tools and are used by several gammasim-tools application.
+CORSIKA and sim_telarray are external tools to gammasim-tools and are used by several gammasim-tools applications.
 Follow the instruction provided by the CORSIKA/sim_telarray authors for installation.
 CTA users can download both packages from `here <https://www.mpi-hd.mpg.de/hfm/CTA/MC/Software/Testing/>`_ and install the package with e.g.:
 
