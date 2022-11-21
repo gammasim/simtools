@@ -93,7 +93,6 @@ Test your installation by running the unit tests:
 
     $ pytest tests/unit_tests/
 
-
 Docker Environment for Developers
 ---------------------------------
 
@@ -121,9 +120,9 @@ Clone gammasim-tools from GitHub into ``external/gammasim-tools``:
 .. code-block::
 
     # create a working directory
-    mkdir external && cd external
+    mkdir external
     # clone gammasim-tools repository
-    git clone https://github.com/gammasim/gammasim-tools.git
+    git clone https://github.com/gammasim/gammasim-tools.git external/gammasim-tools
 
 +++++++++++++++++++++
 Spin-up the container
