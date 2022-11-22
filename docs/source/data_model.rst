@@ -1,16 +1,10 @@
 .. _Datamodel:
 
-Data model
+Data Model
 ==========
 
-Data products ingested or produced by gammasim-tools generally follows the CTA data model.
 Modules in the ``data_model`` sections provide functionality for reading, writing, and validation of data.
-
-* :ref:`data_model <datamodeldatamodel>`
-* :ref:`model_data_writer <datamodelmodeldatawriter>`
-* :ref:`validate_data <datamodelvalidatedata>`
-* :ref:`validate_schema <datamodelvalidateschema>`
-* :ref:`workflow_description <datamodelworkflowdescription>`
+Data products ingested or produced by gammasim-tools generally follows the CTA data model.
 
 .. _datamodeldatamodel:
 
