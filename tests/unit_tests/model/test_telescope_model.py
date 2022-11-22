@@ -5,6 +5,7 @@ import logging
 
 import numpy as np
 import pytest
+from astropy import units as u
 
 import simtools.util.general as gen
 from simtools.model.telescope_model import InvalidParameter, TelescopeModel
@@ -39,6 +40,14 @@ def telescope_model_from_config_file(lst_config_file):
         config_file_name=lst_config_file,
     )
     return tel_model
+
+
+def test_get_parameter_value_with_unit(telescope_model_lst):
+
+    tel_model = telescope_model_lst
+
+    assert isinstance(tel_model.get_parameter_value_with_unit("effective_focal_length"), u.Quantity)
+    assert not isinstance(tel_model.get_parameter_value_with_unit("num_gains"), u.Quantity)
 
 
 def test_handling_parameters(telescope_model_lst):

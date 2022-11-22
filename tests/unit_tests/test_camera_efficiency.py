@@ -129,12 +129,3 @@ def test_calc_nsb_rate(telescope_model_lst, camera_efficiency_lst, results_file)
     assert camera_efficiency_lst.calc_nsb_rate() == pytest.approx(
         0.24421390533203186
     )  # Value for Prod5 LST-1
-
-
-def test_get_one_dim_distribution(telescope_model_sst, camera_efficiency_sst):
-
-    telescope_model_sst.export_model_files()
-    camera_filter_file = camera_efficiency_sst._get_one_dim_distribution(
-        "camera_filter", "camera_filter_incidence_angle"
-    )
-    assert camera_filter_file.exists()
