@@ -14,7 +14,7 @@ files.
 Lower level modules are defined to describe sub-elements of the TelescopeModel.
 These modules are `mirrors`_ and `camera`_.
 
-Arrays of telescopes are described by the Array Model module which contains a collection of TelescopeModel's and the array layout.
+Arrays of telescopes are described by the `array_model`_ module which contains a collection of TelescopeModel's and the array layout.
 
 array_model
 -----------
