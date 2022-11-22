@@ -6,10 +6,10 @@ Data Model
 Modules in the ``data_model`` sections provide functionality for reading, writing, and validation of data.
 Data products ingested or produced by gammasim-tools generally follows the CTA data model.
 
-.. _datamodeldatamodel:
+.. _datamodelmetadatamodel:
 
-data_model
-----------
+meta_data_model
+---------------
 
 .. automodule:: data_model.meta_data_model
    :members:
