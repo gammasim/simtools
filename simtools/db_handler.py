@@ -913,12 +913,15 @@ class DatabaseHandler:
             the name of the collection to copy from
         query: dict
             A dictionary with a query to search for documents to copy.
-            For example,
-            query = {
-                'Telescope': 'North-LST-1',
-                'Version': 'prod4',
-            }
-            would copy all entries of prod4 version from telescope North-LST-1 to 'db_to_copy_to'.
+            For example, the query below would copy all entries of prod4 version
+            from telescope North-LST-1 to "db_to_copy_to".
+
+            .. code-block:: python
+
+                query = {
+                    "Telescope": "North-LST-1",
+                    "Version": "prod4",
+                }
         db_to_copy_to: str
             The name of the DB to copy to.
 
@@ -961,12 +964,15 @@ class DatabaseHandler:
             the name of the collection to copy from
         query: dict
             A dictionary listing the fields/values to delete.
-            For example,
-            query = {
-                "Telescope": "North-LST-1",
-                "Version": "prod5",
-            }
-            would delete the entire prod5 version from telescope North-LST-1.
+            For example, the query below would delete the entire prod5 version
+            from telescope North-LST-1.
+
+            .. code-block:: python
+
+                query = {
+                    "Telescope": "North-LST-1",
+                    "Version": "prod5",
+                }
 
         """
 
