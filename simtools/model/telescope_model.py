@@ -5,6 +5,7 @@ from pydoc import locate
 
 import astropy.io.ascii
 import numpy as np
+from astropy import units as u
 from astropy.table import Table
 
 import simtools.util.general as gen
@@ -341,6 +342,31 @@ class TelescopeModel:
         Value of the parameter
         """
         par_info = self.get_parameter(par_name)
+        return par_info["Value"]
+
+    def get_parameter_value_with_unit(self, par_name):
+        """
+        Get the value of an existing parameter of the model as an Astropy Quantity with its unit.
+        If no unit is provided in the model, the value is returned without a unit.
+
+        Parameters
+        ----------
+        par_name: str
+            Name of the parameter.
+
+        Raises
+        ------
+        InvalidParameter
+            If par_name does not match any parameter in this model.
+
+        Returns
+        -------
+        Astropy quantity with the value of the parameter multiplied by its unit.
+        If no unit is provided in the model, the value is returned without a unit.
+        """
+        par_info = self.get_parameter(par_name)
+        if "units" in par_info:
+            return par_info["Value"] * u.Unit(par_info["units"])
         return par_info["Value"]
 
     def add_parameter(self, par_name, value, is_file=False, is_aplicable=True):
