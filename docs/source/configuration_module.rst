@@ -3,10 +3,7 @@
 Configuration
 =============
 
-Reference documentation for modules for the configuration of gammasim-tools applications.
-
-* :ref:`configurator <configurationconfigurator>`
-* :ref:`commandline_parser <configurationcommandline_parser>`
+Reference documentation for the configuration of gammasim-tools applications.
 
 .. _configurationconfigurator:
 
