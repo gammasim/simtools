@@ -3,18 +3,13 @@
 MC Model
 ========
 
-The gammasim-tools description of the MC Model has the `telescope_model`_
-module (and its main class TelescopeModel) as its central element.
-The TelescopeModel class provides a representation of a telescope in terms
-of the MC Model. A TelescopeModel is defined by its telescope name.
-An interface with the :ref:`Model Parameters DB`
-is provided so the model parameters can be read and exported as configuration
-files.
+The array of imaging atmospheric Cherenkov telescopes is abstracted in the simulation model and divided into the following components:
 
-Lower level modules are defined to describe sub-elements of the TelescopeModel.
-These modules are `mirrors`_ and `camera`_.
+- `telescope_model`_ representing a telescope. Defined by its telescope name, allowing to read model parameters from the :ref:`Model Parameters DB` using this name.
+- sub-elements of the telescope represented by the modules `mirrors`_ and `camera`_
+- an array of telescopes (especially the telescope arrangement) represented by `array_model`_.
 
-Arrays of telescopes are described by the `array_model`_ module which contains a collection of TelescopeModel's and the array layout.
+
 
 array_model
 -----------
