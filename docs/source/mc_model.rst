@@ -12,7 +12,7 @@ is provided so the model parameters can be read and exported as configuration
 files.
 
 Lower level modules are defined to describe sub-elements of the TelescopeModel.
-These modules are `mirrors`_ and `camera`_.
+These modules are `mirrors`_, `camera`_, `reference_data`_ and `derived`_.
 
 Arrays of telescopes are described by the `array_model`_ module which contains a collection of TelescopeModel's and the array layout.
 
@@ -40,6 +40,24 @@ mirrors
 .. _mirrors:
 
 .. automodule:: model.mirrors
+   :members:
+
+
+reference_data
+-------
+
+.. _reference_data:
+
+.. automodule:: model.reference_data
+   :members:
+
+
+derived
+-------
+
+.. _derived:
+
+.. automodule:: model.derived
    :members:
 
 
