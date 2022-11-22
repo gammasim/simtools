@@ -153,17 +153,17 @@ class SimtelRunner:
             self._logger.error(msg)
             raise RuntimeError(msg)
 
-        if not self._shall_run(run_number) and not force:
+        if not self._shall_run(run_number=run_number) and not force:
             self._logger.info("Skipping because output exists and force = False")
             return
 
         command = self._make_run_command(input_file=input_file, run_number=run_number)
 
         if test:
-            self._logger.info("Running (test) with command:{}".format(command))
+            self._logger.info("Running (test) with command: {}".format(command))
             self._run_simtel_and_check_output(command)
         else:
-            self._logger.debug("Running ({}x) with command:{}".format(self.RUNS_PER_SET, command))
+            self._logger.debug("Running ({}x) with command: {}".format(self.RUNS_PER_SET, command))
             self._run_simtel_and_check_output(command)
 
             for _ in range(self.RUNS_PER_SET - 1):
@@ -202,7 +202,7 @@ class SimtelRunner:
         if self._simtel_failed(sys_output):
             self._raise_simtel_error()
 
-    def _shall_run(self, run_number=None):
+    def _shall_run(self, **kwargs):
         self._logger.debug(
             "shall_run is being called from the base class - returning False -"
             + "it should be implemented in the sub class"
