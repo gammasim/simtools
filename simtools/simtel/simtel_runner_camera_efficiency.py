@@ -74,10 +74,10 @@ class SimtelRunnerCameraEfficiency(SimtelRunner):
         pixel_diameter = self._telescope_model.camera.get_pixel_diameter()
 
         # Processing focal length
-        focal_length = self._telescope_model.get_parameter_value("effective_focal_length")
+        focal_length = self._telescope_model.get_parameter_value_with_unit("effective_focal_length")
         if focal_length == 0.0:
             self._logger.warning("Using focal_length because effective_focal_length is 0")
-            focal_length = self._telescope_model.get_parameter_value("focal_length")
+            focal_length = self._telescope_model.get_parameter_value_with_unit("focal_length")
 
         # Processing mirror class
         mirror_class = 1
@@ -114,7 +114,7 @@ class SimtelRunnerCameraEfficiency(SimtelRunner):
         command += " -nm -nsb-extra"
         command += f" -alt {self._telescope_model.get_parameter_value('altitude')}"
         command += f" -fatm {self._telescope_model.get_parameter_value('atmospheric_transmission')}"
-        command += f" -flen {focal_length * 0.01}"  # focal length in meters
+        command += f" -flen {focal_length.to('m').value}"
         command += f" {pixel_shape_cmd} {pixel_diameter}"
         if mirror_class == 1:
             command += f" -fmir {self._telescope_model.get_parameter_value('mirror_list')}"
