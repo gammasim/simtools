@@ -5,36 +5,24 @@ import yaml
 import simtools.util.general as gen
 from simtools.data_model import workflow_description
 
+__all__ = ["ModelDataWriter"]
+
 
 class ModelDataWriter:
     """
     Writer for simulation model data and metadata.
 
-    Attributes
+    Parameters
     ----------
-    workflow_config: WorkflowDescription
-        workflow configuration
-
-    Methods
-    -------
-    write_data()
-        Write model data to file.
-    write_metadata()
-        Write metadata to file.
-
+    workflow_config: (WorkflowDescription, optional)
+        Workflow configuration (default is None).
+    args_dict: (Dictionary, optional)
+        Dictionary with configuration parameters (default is None).
     """
 
     def __init__(self, workflow_config=None, args_dict=None):
         """
         Initialize model data
-
-        Parameters
-        ----------
-        workflow_config: WorkflowDescription
-            Workflow configuration
-        args_dict: Dictionary
-            Dictionary with configuration parameters.
-
         """
 
         self._logger = logging.getLogger(__name__)
@@ -47,9 +35,13 @@ class ModelDataWriter:
 
         Parameters
         ----------
-        product_data: astropy Table
+        product_data: (astropy Table, required)
             Model data.
 
+        Raises
+        ------
+        FileNotFoundError
+            if Workflow configuration file not found.
         """
 
         _file = self.workflow_config.product_data_file_name()
@@ -66,18 +58,24 @@ class ModelDataWriter:
         """
         Write model metadata file (yaml file format).
 
-        Attributes
+        Parameters
         ----------
-        ymlfile str
-            name of output file (default=None)
-        keys_lower_case: bool
-            write yaml key in lower case
+        ymlfile: (str, optional)
+            Name of output file (default is None)
+        keys_lower_case: (bool, optional)
+            Write yaml key in lower case (default is False)
 
         Returns
         -------
         str
-            name of output file
+            Name of output file
 
+        Raises
+        ------
+        FileNotFoundError
+            If ymlfile not found.
+        AttributeError
+            If no metadata defined for writing.
         """
 
         try:
