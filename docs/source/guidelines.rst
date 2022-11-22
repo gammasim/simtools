@@ -1,7 +1,7 @@
 .. _Guidelines:
 
-Guidelines for gammasim-tools Developers
-****************************************
+Developer Guidelines
+********************
 
 This section provides help and guidelines for developers of gammasim-tools.
 If you want to contribute to gammasim-tools, please use one of the contact points listed at the
@@ -181,8 +181,9 @@ All applications should follow the same structure:
         # application code follows
         ...
 
-Application handling should be done using the ``Configurator`` class, which allows to set
+Application handling should be done using the :ref:`Configurator <configurationconfigurator>` class, which allows to set
 configurations from command line, configuration file, or environmental variables.
+Check the :ref:`commandline_parser <configurationcommandline_parser>` module for generic command line arguments before introducing new ones in applications
 
 
 Dependencies
@@ -275,7 +276,7 @@ This is an example of a name dictionary:
     "North": ["lapalma", "north"]
   }
 
-And this is an example of how the site name is validated in the :ref:`telescope_model` module:
+And this is an example of how the site name is validated in the :ref:`telescope_model <telescope_model>` module:
 
 
 .. code-block:: python
@@ -328,38 +329,3 @@ properties. See an example below:
 * unit is the astropy unit
 * default must have the same len
 * names is a list of acceptable input names. The key in the returned dict will have the name given at the definition of the block (zenith_angle in this example)
-
-
-Docker Container for Development
-=================================
-
-A docker container is made available for developers, see the
-`gammasim-tools container repository <https://github.com/gammasim/containers/tree/main/dev>`_.
-The container has the python packages, CORSIKA, and sim_telarray pre-installed.
-Setting up a system to run gammasim-tools applications or tests should be a matter of minutes:
-
-\1. install Docker and start the Docker application (see
-`Docker installation page <https://docs.docker.com/engine/install/>`_). Other container systems like
-Apptainer, Singularity, Buildah/Podman, etc should work, but are not thoroughly tested.
-
-2. obtain the access parameters for the CTA Simulation Model data base and write a small script
-``set_DB_environ.sh`` to set these parameters to be used in the container:
-.. code-block::
-
-    export DB_API_USER=<db_user_name>
-    export DB_API_PW=<db_password>
-    export DB_API_PORT=<db_port>
-    export DB_SERVER=<db_server>
-
-3. Start up a container and e.g. run the gammasim-tools unit tests using the following commands:
-.. code-block::
-
-    # create a working directory
-    mkdir external && cd external
-    # clone gammasim-tools repository
-    git clone https://github.com/gammasim/gammasim-tools.git
-    # startup a container (download if is not available in your environment)
-    `docker run --rm -it -v "$(pwd)/external:/workdir/external" ghcr.io/gammasim/containers/gammasim-tools-dev:v0.3.0-dev1 bash -c "$(cat ./entrypoint.sh) && bash"`
-    # Now you can run gammasim-tools application
-    # Try e.g. to run the unit tests:
-    pytest tests/unit_tests/

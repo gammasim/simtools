@@ -117,6 +117,9 @@ class SimtelRunnerRayTracing(SimtelRunner):
         Here we define and write some information into these files. Log files are always required.
         """
 
+        # This file is not actually needed and does not exist in gammasim-tools.
+        # However, we need to provide the name of a CORSIKA input file to sim_telarray
+        # so it is set up here.
         self._corsika_file = self._simtel_source_path.joinpath("run9991.corsika.gz")
 
         # Loop to define and remove existing files.
@@ -164,11 +167,11 @@ class SimtelRunnerRayTracing(SimtelRunner):
                     )
                 )
 
-    def _shall_run(self, run_number=None):
+    def _shall_run(self, **kwargs):
         """Tells if simulations should be run again based on the existence of output files."""
         return not self._is_photon_list_file_ok()
 
-    def _make_run_command(self, input_file, run_number=None):
+    def _make_run_command(self, **kwargs):
         """Return the command to run simtel_array."""
 
         if self._single_mirror_mode:
@@ -226,10 +229,12 @@ class SimtelRunnerRayTracing(SimtelRunner):
 
         return command
 
-    def _check_run_result(self, run_number=None):
+    def _check_run_result(self, **kwargs):
         # Checking run
         if not self._is_photon_list_file_ok():
-            self._logger.error("Photon list is empty.")
+            msg = "Photon list is empty."
+            self._logger.error(msg)
+            raise RuntimeError(msg)
         else:
             self._logger.debug("Everything looks fine with output file.")
 
