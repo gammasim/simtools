@@ -20,6 +20,7 @@ def top_level_reference_schema():
     return {
         "CTA": {
             "REFERENCE": {"VERSION": "1.0.0"},
+            "CONTACT": {"ORGANIZATION": None, "NAME": None, "EMAIL": None},
             "PRODUCT": {
                 "DESCRIPTION": None,
                 "CREATION_TIME": None,
@@ -36,7 +37,6 @@ def top_level_reference_schema():
             },
             "INSTRUMENT": {"SITE": None, "CLASS": None, "TYPE": None, "SUBTYPE": None, "ID": None},
             "PROCESS": {"TYPE": None, "SUBTYPE": None, "ID": None},
-            "CONTACT": {"ORGANIZATION": None, "NAME": None, "EMAIL": None},
             "ACTIVITY": {
                 "NAME": None,
                 "TYPE": "software",
