@@ -80,7 +80,7 @@ class IOHandler(metaclass=IOHandlerSingleton):
         Path
 
         Raises
-        -------
+        ------
         FileNotFoundError
             if error creating directory
         """
