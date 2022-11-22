@@ -30,11 +30,12 @@ class CorsikaConfig:
     """
     CorsikaConfig deals with configuration for running CORSIKA. User parameters must be given by \
     the corsika_config_data or corsika_config_file arguments. An example of corsika_config_data
-    follows  below.
+    follows below.
 
     .. code-block:: python
 
         corsika_config_data = {
+            'data_directory': .
             'primary': 'proton',
             'nshow': 10000,
             'nrun': 1,
@@ -61,6 +62,20 @@ class CorsikaConfig:
     corsika_parameters_file: (str, optional)
         Name of the Yaml file to set remaining CORSIKA parameters (default is \
         data/parameters/corsika_parameters.yml)
+
+    Atributes
+    ---------
+    label: str
+        Instance label (default is None).
+    layout: str
+        Name of the layout.
+    layout_name: str
+        Name of the layout.
+    primary: int
+        CORSIKA particle ID
+    site: str
+        North or South.
+
     """
 
     def __init__(
