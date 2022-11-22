@@ -1,14 +1,11 @@
 def top_level_reference_schema():
     """
     Reference schema following the CTA Top-Level Data Model.
-
     This metadata schema is used for gammasim-tools data products.
 
     Returns
     -------
     dict with reference schema
-
-
     """
 
     return {
@@ -65,8 +62,6 @@ def metadata_input_reference_schema():
     Returns
     -------
     dict with input reference schema
-
-
     """
 
     return {
@@ -108,7 +103,6 @@ def workflow_configuration_schema():
     Returns
     -------
     dict with workflow configuration
-
     """
 
     return {
