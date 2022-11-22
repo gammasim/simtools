@@ -24,9 +24,6 @@ class Configurator:
 
     Configuration parameter names are converted always to lower case.
 
-    Attributes
-    ----------
-
     Methods
     -------
     default_config(arg_list=None, add_db_config=False)
