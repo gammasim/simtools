@@ -17,7 +17,7 @@ Modules in the ``data_model`` sections provide functionality for reading, writin
 data_model
 ----------
 
-.. automodule:: data_model.data_model
+.. automodule:: data_model.meta_data_model
    :members:
 
 .. _datamodelmodeldatawriter:
