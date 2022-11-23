@@ -3,11 +3,10 @@
 """
     Summary
     -------
-    Get a parameter entry from DB for a specific telescope.
+    Get a parameter entry from DB for a specific telescope or a site.
     The application receives a parameter name, a site, a telescope (if applicable) and \
     optionally a version. It then prints out the parameter entry.
-    If no version is provided, the entries of the last 5 versions are printed.
-    The name of the file is required.
+    If no version is provided, the value of the current model is printed..
 
     Command line arguments
     ----------------------
@@ -20,8 +19,12 @@
     telescope (str, optional)
         Telescope model name (e.g. LST-1, SST-D, ...)
 
-    verbosity (str, optional)
+    log_level (str, optional)
         Log level to print (default=INFO).
+
+    Raises
+    ------
+    KeyError in case the parameter requested does not exist in the model parameters.
 
     Example
     -------
@@ -59,10 +62,10 @@ def main():
 
     config = configurator.Configurator(
         description=(
-            "Get a parameter entry from DB for a specific telescope. "
-            "The application receives a parameter name and optionally a version. "
-            "It then prints out the parameter entry. "
-            "If no version is provided, the entries of the last 5 versions are printed."
+            "Get a parameter entry from DB for a specific telescope or a site. "
+            "The application receives a parameter name a site, a telescope (if applicable), "
+            " and optionally a version. It then prints out the parameter entry. "
+            "If no version is provided, the value of the current model is printed. "
         )
     )
     config.parser.add_argument("--parameter", help="Parameter name", type=str, required=True)
@@ -73,11 +76,14 @@ def main():
 
     db = db_handler.DatabaseHandler(mongo_db_config=db_config)
 
-    if args_dict["model_version"] == "all":
-        raise NotImplementedError("Printing last 5 versions is not implemented yet.")
+    if args_dict["telescope"] is not None:
+        pars = db.get_model_parameters(
+            args_dict["site"], args_dict["telescope"], args_dict["model_version"]
+        )
     else:
-        version = args_dict["model_version"]
-    pars = db.get_model_parameters(args_dict["site"], args_dict["telescope"], version)
+        pars = db.get_site_parameters(args_dict["site"], args_dict["model_version"])
+    if args_dict["parameter"] not in pars:
+        raise KeyError(f"The requested parameter, {args_dict['parameter']}, does not exist.")
     print()
     pprint(pars[args_dict["parameter"]])
     print()
