@@ -14,7 +14,7 @@ from simtools.model.mirrors import Mirrors
 from simtools.simtel.simtel_config_writer import SimtelConfigWriter
 from simtools.util import names
 
-__all__ = ["TelescopeModel"]
+__all__ = ["InvalidParameter", "TelescopeModel"]
 
 
 class InvalidParameter(Exception):
@@ -23,54 +23,22 @@ class InvalidParameter(Exception):
 
 class TelescopeModel:
     """
-    TelescopeModel represents the MC model of an individual telescope. \
-    It contains the list of parameters that can be read from the DB. \
-    A set of methods are available to manipulate parameters (changing, adding, removing etc). \
+    TelescopeModel represents the MC model of an individual telescope. It contains the list of \
+    parameters that can be read from the DB. A set of methods are available to manipulate \
+    parameters (changing, adding, removing etc).
 
-
-    Attributes
+    Parameters
     ----------
-    site: str
-        North or South.
-    name: str
-        Telescope name for the base set of parameters (e.g., LST-1, ...).
-    model_version: str
-        Version of the model (e.g., prod5).
-    label: str
-        Instance label.
-    mirrors: Mirrors
-        Mirrors object created from the mirror list of the model.
-    camera: Camera
-        Camera object created from the camera config file of the model.
-    reference_data: Reference data
-        Dictionary with reference data parameters (e.g., NSB reference value)
-    extra_label: str
-        Extra label to be used in case of multiple telescope configurations (e.g., by ArrayModel).
-
-    Methods
-    -------
-    from_config_file(config_file_name, telescope_model_name, label=None)
-        Create a TelescopeModel from a sim_telarray cfg file.
-    set_extra_label(extra_label)
-        Set an extra label for the name of the config file.
-    has_parameter(par_name)
-        Verify if parameter is in the model.
-    get_parameter(par_name)
-        Get an existing parameter of the model.
-    add_parameter(par_name, value)
-        Add new parameters to the model.
-    change_parameter(par_name, value)
-        Change the value of existing parameters to the model.
-    change_multiple_parameters(**pars)
-        Change the value of existing parameters to the model.
-    remove_parameters(*args)
-        Remove parameters from the model.
-    print_parameters()
-        Print parameters and their values for debugging purposes.
-    export_config_file()
-        Export config file for sim_telarray.
-    get_config_file()
-        Get the path to the config file for sim_telarray.
+    site: (str, required)
+        South or North.
+    telescope_model_name: (str, required)
+        Telescope name (ex. LST-1, ...).
+    mongo_db_config: (dict, required)
+        MongoDB configuration.
+    model_version: (str, optional)
+        Version of the model (ex. prod5) (default is 'Current').
+    label: (str, optional)
+        Instance label. Important for output file naming (default is None).
     """
 
     def __init__(
@@ -82,21 +50,7 @@ class TelescopeModel:
         label=None,
     ):
         """
-        TelescopeModel.
-
-        Parameters
-        ----------
-        site: str
-            South or North.
-        telescope_model_name: str
-            Telescope name (ex. LST-1, ...).
-        mongo_db_config: dict
-            MongoDB configuration.
-        model_version: str, optional
-            Version of the model (ex. prod5) (default='Current').
-        label: str, optional
-            Instance label. Important for output file naming.
-
+        Initialize TelescopeModel.
         """
         self._logger = logging.getLogger(__name__)
         self._logger.debug("Init TelescopeModel")
@@ -120,6 +74,7 @@ class TelescopeModel:
 
     @property
     def mirrors(self):
+        """"""
         if not hasattr(self, "_mirrors"):
             self._load_mirrors()
         return self._mirrors
