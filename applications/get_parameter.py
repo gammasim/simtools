@@ -22,6 +22,10 @@
     log_level (str, optional)
         Log level to print (default=INFO).
 
+    Raises
+    ------
+    KeyError in case the parameter requested does not exist in the model parameters.
+
     Example
     -------
     Get the mirror_list parameter from the DB.
