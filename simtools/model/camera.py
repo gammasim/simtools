@@ -9,7 +9,7 @@ from matplotlib.collections import PatchCollection
 from scipy.spatial import cKDTree as KDTree
 from scipy.spatial import distance
 
-import simtools.util.legend_handlers as leg_h
+import simtools.visualization.legend_handlers as leg_h
 from simtools.model.model_utils import (
     get_camera_name,
     get_telescope_class,
