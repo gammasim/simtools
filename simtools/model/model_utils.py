@@ -16,13 +16,13 @@ __all__ = [
 
 def split_simtel_parameter(value):
     """
-    Some array parameters are stored in sim_telarray model as
-    string separated by comma or spaces. This functions turns
-    this string into a list of floats. The delimiter is identified automatically.
+    Some array parameters are stored in sim_telarray model as string separated by comma or spaces.\
+    This functions turns this string into a list of floats. The delimiter is identified \
+    automatically.
 
     Parameters
     ----------
-    value: str
+    value: (str, required)
         String with the array of floats separated by comma or spaces.
 
     Returns
@@ -38,14 +38,14 @@ def split_simtel_parameter(value):
 
 def compute_telescope_transmission(pars, off_axis):
     """
-    Compute tel. transmission (0 < T < 1) for a given set of parameters
-    as defined by the MC model and for a given off-axis angle.
+    Compute tel. transmission (0 < T < 1) for a given set of parameters as defined by the MC model \
+    and for a given off-axis angle.
 
     Parameters
     ----------
-    pars: list of float
+    pars: (list of float, required)
         Parameters of the telescope transmission. Len(pars) should be 4.
-    off_axis: float
+    off_axis: (float, required)
         Off-axis angle in deg.
 
     Returns
@@ -53,6 +53,7 @@ def compute_telescope_transmission(pars, off_axis):
     float
         Telescope transmission.
     """
+
     _deg_to_rad = math.pi / 180.0
     if pars[1] == 0:
         return pars[0]
@@ -67,14 +68,15 @@ def get_camera_name(telescope_model_name):
 
     Parameters
     ----------
-    telescope_model_name: str
-        Telescope model name (ex. LST-1)
+    telescope_model_name: (str, required)
+        Telescope model name (ex. LST-1).
 
     Returns
     -------
     str
-        Camera name (validated by util.names)
+        Camera name (validated by util.names).
     """
+
     _logger = logging.getLogger(__name__)
     camera_name = ""
     tel_class, tel_type = names.split_telescope_model_name(telescope_model_name)
@@ -112,14 +114,15 @@ def get_telescope_class(telescope_model_name):
 
     Parameters
     ----------
-    telescope_model_name: str
-        Telescope model name (ex. LST-1)
+    telescope_model_name: (str, required)
+        Telescope model name (ex. LST-1).
 
     Returns
     -------
     str
-        Telescope class (SST, MST, ...)
+        Telescope class (SST, MST, ...).
     """
+
     tel_class, _ = names.split_telescope_model_name(telescope_model_name)
     return tel_class
 
@@ -130,8 +133,8 @@ def is_two_mirror_telescope(telescope_model_name):
 
     Parameters
     ----------
-    telescope_model_name: str
-        Telescope model name (ex. LST-1)
+    telescope_model_name: (str, required)
+        Telescope model name (ex. LST-1).
 
     Returns
     -------
