@@ -19,6 +19,8 @@ __all__ = ["InvalidParameter", "TelescopeModel"]
 
 
 class InvalidParameter(Exception):
+    """Exception for invalid parameter."""
+
     pass
 
 

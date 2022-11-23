@@ -9,10 +9,14 @@ __all__ = ["InvalidOutputFile", "SimtelExecutionError", "SimtelRunner"]
 
 
 class SimtelExecutionError(Exception):
+    """Exception for simtel_array execution error."""
+
     pass
 
 
 class InvalidOutputFile(Exception):
+    """Exception for invalid output file."""
+
     pass
 
 
