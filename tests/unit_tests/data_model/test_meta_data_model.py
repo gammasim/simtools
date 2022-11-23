@@ -6,12 +6,13 @@ from simtools.data_model import meta_data_model
 
 
 def test_top_level_reference_schema():
-    """(very hard to test this)"""
 
     _top_meta = meta_data_model.top_level_reference_schema()
 
     assert isinstance(_top_meta, dict)
     assert len(_top_meta) > 0
+
+    assert "VERSION" in _top_meta["CTA"]["REFERENCE"]
 
 
 def test_metadata_input_reference_schema():
@@ -22,14 +23,17 @@ def test_metadata_input_reference_schema():
     assert isinstance(_top_ref, dict)
     assert len(_top_ref) > 0
 
+    assert "VERSION" in _top_ref["REFERENCE"]
+
 
 def test_workflow_configuration_schema():
-    """(very hard to test this)"""
 
     _config = meta_data_model.workflow_configuration_schema()
 
     assert isinstance(_config, dict)
     assert len(_config) > 0
+
+    assert "configuration" in _config
 
 
 def test_metadata_input_reference_document_list():

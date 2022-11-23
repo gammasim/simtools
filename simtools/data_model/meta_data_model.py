@@ -5,7 +5,7 @@ Metadata is broken into hierarchical categories in this module.
 
 Metadata definitions require the three following fields to be defined:
 
-* type: data type (str)
+* type: data type
 * required: boolean if this field is required as input(!)
 * default: default value
 
@@ -104,8 +104,6 @@ def _category_context():
 def _category_document():
     """
     Metadata field DOCUMENT.
-
-    Described a
 
     """
 
@@ -213,6 +211,11 @@ def metadata_input_reference_document_list(schema_list):
     """
     Reference model data for input metata data of type documentlist or instrumentlist
 
+    Parameters
+    ----------
+    schema_list: str
+        List type to be returned (e.g., instrumentlist or documentlist)
+
     Returns
     -------
     dict with input reference schema for documentlist or instrumentlist
@@ -265,7 +268,7 @@ def _metadata_dict_with_defaults(meta_dict):
 
     Parameters
     ----------
-    dict
+    meta_dict
         Metadata dictionary
 
     Returns
