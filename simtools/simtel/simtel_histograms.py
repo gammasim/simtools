@@ -11,6 +11,8 @@ __all__ = ["BadHistogramFormat", "SimtelHistograms"]
 
 
 class BadHistogramFormat(Exception):
+    """Exception for bad histogram format."""
+
     pass
 
 

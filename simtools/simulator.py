@@ -23,6 +23,8 @@ __all__ = [
 
 
 class InvalidRunsToSimulate(Exception):
+    """Exception for invalid runs to simulate."""
+
     pass
 
 

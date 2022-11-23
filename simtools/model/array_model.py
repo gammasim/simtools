@@ -12,6 +12,8 @@ __all__ = ["ArrayModel", "InvalidArrayConfigData"]
 
 
 class InvalidArrayConfigData(Exception):
+    """Exception for invalid array configuration data."""
+
     pass
 
 

@@ -24,43 +24,43 @@ __all__ = [
 
 
 class PixelObject(object):
-    """Pixel Object"""
+    """Pixel Object."""
 
     pass
 
 
 class EdgePixelObject(object):
-    """Edge-Pixel Object"""
+    """Edge-Pixel Object."""
 
     pass
 
 
 class OffPixelObject(object):
-    """Off-Pixel Object"""
+    """Off-Pixel Object."""
 
     pass
 
 
 class LSTObject(object):
-    """LST Object"""
+    """LST Object."""
 
     pass
 
 
 class MSTObject(object):
-    """MST Object"""
+    """MST Object."""
 
     pass
 
 
 class SSTObject(object):
-    """SST Object"""
+    """SST Object."""
 
     pass
 
 
 class MeanRadiusOuterEdgeObject(object):
-    """Mean radius outer edge Object"""
+    """Object for Mean radius outer edge."""
 
     pass
 
