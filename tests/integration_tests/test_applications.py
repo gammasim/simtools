@@ -191,7 +191,7 @@ APP_LIST = {
     "get_file_from_db::CTA-Simulation-Model-Derived-Values": [
         ["--file_name", "ray-tracing-North-LST-1-d10.0-za20.0_validate_optics.ecsv"]
     ],
-    "get_parameter": [
+    "get_parameter::telescope_parameter": [
         [
             "--site",
             "North",
@@ -201,6 +201,14 @@ APP_LIST = {
             "mirror_list",
             "--model_version",
             "prod5",
+        ]
+    ],
+    "get_parameter::site_parameter": [
+        [
+            "--site",
+            "North",
+            "--parameter",
+            "altitude",
         ]
     ],
     "add_file_to_db": [
