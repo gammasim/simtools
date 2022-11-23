@@ -7,7 +7,7 @@ import astropy.units as u
 import numpy as np
 
 import simtools.util.general as gen
-from simtools import visualize
+from simtools.visualization import visualize
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)

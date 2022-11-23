@@ -82,10 +82,6 @@ from simtools.configuration import configurator
 from simtools.model.telescope_model import TelescopeModel
 from simtools.ray_tracing import RayTracing
 
-# from simtools.visualize import set_style
-
-# set_style()
-
 
 def _parse(label):
     """
