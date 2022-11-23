@@ -93,8 +93,8 @@ class Configurator:
         job_submission=False,
     ):
         """
-        Initialize configuration from command line, configuration file, class config, \
-        or environmental variable.
+        Initialize configuration from command line, configuration file, class config, or \
+         environmental variable.
 
         Priorities in parameter settings.
         1. command line; 2. yaml file; 3. class init; 4. env variables.
@@ -170,8 +170,8 @@ class Configurator:
 
     def _fill_from_config_dict(self, _input_dict):
         """
-        Fill configuration parameters from dictionary.
-        Enforce that configuration parameter names are lower case.
+        Fill configuration parameters from dictionary. Enforce that configuration parameter names\
+         are lower case.
 
         Parameters
         ----------
@@ -191,8 +191,8 @@ class Configurator:
 
     def _check_parameter_configuration_status(self, key, value):
         """
-        Check if a parameter is already configured and not still set to the default value.
-        Allow configuration of None values.
+        Check if a parameter is already configured and not still set to the default value. Allow \
+        configuration of None values.
 
         Parameters
         ----------
@@ -222,10 +222,9 @@ class Configurator:
 
     def _fill_from_config_file(self, config_file):
         """
-        Read and fill configuration parameters from yaml file.
-        Take into account that this could be a CTASIMPIPE workflow configuration file.
-        (CTASIMPIPE:CONFIGURATION is optional, therefore no error raised when this key
-         is not found)
+        Read and fill configuration parameters from yaml file. Take into account that this could be\
+        a CTASIMPIPE workflow configuration file. (CTASIMPIPE:CONFIGURATION is optional, therefore,\
+        no error raised when this key is not found)
 
         Parameters
         ----------
@@ -262,8 +261,8 @@ class Configurator:
 
     def _fill_from_environmental_variables(self):
         """
-        Fill any unconfigured configuration parameters (parameter is None) \
-        from environmental variables.
+        Fill any unconfigured configuration parameters (parameter is None) rom environmental\
+        variables.
 
         """
 
