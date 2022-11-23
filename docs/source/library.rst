@@ -21,3 +21,4 @@ gammasim-tools is composed of the following modules:
   ray_tracing
   simulators
   util
+  visualization
