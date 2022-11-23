@@ -5,34 +5,23 @@ import re
 import simtools.util.general as gen
 from simtools.data_model import data_model
 
+__all__ = ["SchemaValidator"]
+
 
 class SchemaValidator:
     """
-    Validate a dictionary against a reference schema.
-    Used e.g., to validate metadata provided as input.
+    Validate a dictionary against a reference schema. Used e.g., to validate metadata provided as\
+     input.
 
-    Attributes
+    Parameters
     ----------
-    data_dict: dict
-        Metadata dict to be validated against
-        reference schema
-
-    Methods
-    -------
-    validate_and_transform(meta_file_name=None, lower_case=True)
-        validate meta data provided by file
-
+    data_dict: (dict, optional)
+        Metadata dict to be validated against reference schema (default is None).
     """
 
     def __init__(self, data_dict=None):
         """
-        Initalize validation class and load reference schema.
-
-        Parameters
-        ----------
-        data_dict: dict
-            Metadata dict to be validated against reference schema
-
+        Initialize validation class and load reference schema.
         """
 
         self._logger = logging.getLogger(__name__)
@@ -48,12 +37,11 @@ class SchemaValidator:
 
         Parameters
         ----------
-        meta_file_name
-            file name for file with meta data to
-            be validated (might also be given as
-            dictionary during initialization of the class)
-        lower_case: bool
-            compare schema keys in lower case only (gammasim-tools convention).
+        meta_file_name: (str, optional)
+            file name for file with meta data to be validated (might also be given as dictionary \
+             during initialization of the class (default is None).
+        lower_case: (bool, optional)
+            compare schema keys in lower case only (gammasim-tools convention; default is True).
 
         Returns
         -------
@@ -82,15 +70,12 @@ class SchemaValidator:
         ref_schema: dict
             Reference metadata schema
         data_dict: dict
-            input metadata dict to be validated against
-            reference schema
+            input metadata dict to be validated against reference schema
 
         Raises
         ------
         UnboundLocalError
-            If no data is available for metadata key from the
-            reference schema
-
+            If no data is available for metadata key from the reference schema
         """
 
         for key, value in ref_schema.items():
@@ -116,8 +101,7 @@ class SchemaValidator:
 
     def _process_schema(self):
         """
-        Process schema entries for inconsistencies
-        (quite fine tuned)
+        Process schema entries for inconsistencies (quite fine tuned)
         - remove linefeeds from description string
 
         Raises
@@ -136,8 +120,7 @@ class SchemaValidator:
 
     def _validate_data_type(self, schema, key, data_field):
         """
-        Validate data type against the expected data type
-        from schema
+        Validate data type against the expected data type from schema
 
         Parameters
         ----------
@@ -181,8 +164,7 @@ class SchemaValidator:
     @staticmethod
     def _validate_datetime(data_field, optional_field=False):
         """
-        Validate entry to be of type datetime and of
-        format %Y-%m-%d %H:%M:%S
+        Validate entry to be of type datetime and of format %Y-%m-%d %H:%M:%S
 
         Parameters
         ----------
@@ -246,8 +228,7 @@ class SchemaValidator:
     @staticmethod
     def _field_is_optional(field_dict):
         """
-        Check if data field is labeled as not required in
-        the reference metadata schema
+        Check if data field is labeled as not required in the reference metadata schema
 
         Parameters
         ----------

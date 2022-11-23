@@ -1,7 +1,7 @@
 def top_level_reference_schema():
     """
-    Reference schema following the CTA Top-Level Data Model.
-    This metadata schema is used for gammasim-tools data products.
+    Reference schema following the CTA Top-Level Data Model. This metadata schema is used for \
+     gammasim-tools data products.
 
     Returns
     -------
@@ -56,8 +56,8 @@ def top_level_reference_schema():
 
 def metadata_input_reference_schema():
     """
-    Reference data model scheme for input metadata.
-    Describes metadata provided for input to gammasim-tools applications.
+    Reference data model scheme for input metadata. Describes metadata provided for input to \
+    gammasim-tools applications.
 
     Returns
     -------
