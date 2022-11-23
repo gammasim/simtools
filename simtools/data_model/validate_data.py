@@ -12,34 +12,16 @@ class DataValidator:
     Validate input data for type and units; converts or transform
     data if required.
 
-    Attributes
+    Parameters
     ----------
-    workflow: WorkflowDescription
-        workflow configuration
-
-    Methods
-    -------
-    transform()
-        Apply transformations to data columns.
-    validate()
-        Data value and data file validation.
-    validate_data_file()
-        Open data file and check for file consistency.
-    validate_data_columns()
-        Check each data column for correct units and data ranges.
+    workflow: (WorkflowDescription, optional)
+        workflow description (default is None)
 
     """
 
     def __init__(self, workflow=None):
         """
-        Initalize validation class and read required
-        reference data columns
-
-        Parameters
-        ----------
-        workflow: WorkflowDescription
-            workflow description
-
+        Initalize validation class and read required reference data columns
         """
 
         self._logger = logging.getLogger(__name__)
@@ -54,14 +36,10 @@ class DataValidator:
         """
         Data and data file validation
 
-        Parameters
-        ----------
-        (none)
-
         Returns
         -------
         data_table: astropy.table
-            data table
+            Data table
 
         """
 
@@ -76,14 +54,10 @@ class DataValidator:
         - duplication removal
         - sorting according to axes
 
-        Parameters
-        ----------
-        (none)
-
         Returns
         -------
         data_table: astropy.table
-            data table
+            Data table
 
         """
 
@@ -95,7 +69,6 @@ class DataValidator:
     def validate_data_file(self):
         """
         Open data file and read data from file
-
         """
 
         self._logger.info("Reading data from {}".format(self._data_file_name))
