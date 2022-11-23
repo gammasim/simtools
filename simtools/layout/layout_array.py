@@ -10,6 +10,8 @@ from simtools.layout.telescope_position import TelescopePosition
 from simtools.util import names
 from simtools.util.general import collect_data_from_yaml_or_dict
 
+__all__ = ["InvalidTelescopeListFile", "LayoutArray"]
+
 
 class InvalidTelescopeListFile(Exception):
     pass
@@ -19,32 +21,18 @@ class LayoutArray:
     """
     Manage telescope positions at the array layout level.
 
-    Methods
-    -------
-    from_layout_array_name(layout_array_name, label=None)
-        Create a LayoutArray from a layout name (e.g. South-4LST, North-Prod5, ...)
-    read_telescope_list_file(telescope_list_file)
-        Read list of telescopes from a ecsv file.
-    add_telescope(
-        telescope_name,
-        crs_name,
-        xx,
-        yy,
-        altitude=None
-        tel_corsika_z=None
-    )
-        Add an individual telescope to the telescope list.
-    export_telescope_list()
-        Export a ECSV file with the telescope positions.
-    get_number_of_telescopes()
-        Return the number of telescopes in the list.
-    get_corsika_input_list()
-        Get a string with the piece of text to be added to
-        the CORSIKA input file.
-    print_telescope_list()
-        Print list of telescopes in current layout for inspection.
-    convert_coordinates()
-        Perform all the possible conversions the coordinates of the tel positions.
+    Parameters
+    ----------
+    label: (str, optional)
+        Instance label (default is None).
+    name: (str, optional)
+        Name of the layout (default is None).
+    layout_center_data: (dict, optional)
+        Dict describing array center coordinates (default is None).
+    corsika_telescope_data: (dict, optional)
+        Dict describing CORSIKA telescope parameters (default is None).
+    telescope_list_file: (str or Path, optional)
+        Path to the telescope list file (default is None).
     """
 
     def __init__(
@@ -56,22 +44,9 @@ class LayoutArray:
         telescope_list_file=None,
     ):
         """
-        LayoutArray init.
-
-        Parameters
-        ----------
-        name: str
-            Name of the layout.
-        label: str
-            Instance label.
-        layout_center_data: dict
-            Dict describing array center coordinates.
-        corsika_telescope_data: dict
-            Dict describing CORSIKA telescope parameters.
-        telescope_list_file: str (or Path)
-            Path to the telescope list file.
-
+        Initialize LayoutArray.
         """
+
         self._logger = logging.getLogger(__name__)
         self._logger.debug("Init LayoutArray")
 
@@ -95,14 +70,15 @@ class LayoutArray:
 
         Parameters
         ----------
-        layout_array_name: str
+        layout_array_name: (str, required)
             e.g. South-4LST, North-Prod5 ...
-        label: str, optional
-            Instance label. Important for output file naming.
+        label: (str, optional)
+            Instance label. Important for output file naming (default is None).
 
         Returns
         -------
-        Instance of the LayoutArray class.
+        LayoutArray
+            Instance of the LayoutArray.
         """
 
         spl = layout_array_name.split("-")
@@ -127,9 +103,8 @@ class LayoutArray:
 
     def _initialize_corsika_telescope(self, corsika_dict=None):
         """
-        Initialize Dictionary for CORSIKA telescope parameters.
-        Allow input from different sources (dictionary, yaml, ecsv header), which
-        require checks to handle units correctly.
+        Initialize Dictionary for CORSIKA telescope parameters. Allow input from different sources\
+        (dictionary, yaml, ecsv header), which require checks to handle units correctly.
 
         Parameters
         ----------
@@ -156,8 +131,8 @@ class LayoutArray:
     @staticmethod
     def _initialize_sphere_parameters(sphere_dict):
         """
-        Set CORSIKA sphere parameters from dictionary.
-        Type of input varies and depend on data source for these parameters.
+        Set CORSIKA sphere parameters from dictionary. Type of input varies and depend on data \
+        source for these parameters.
 
         Parameters
         ----------
@@ -227,7 +202,7 @@ class LayoutArray:
         Raises
         ------
         TypeError
-            invalid array center definition
+            invalid array center definition.
 
         """
         self._logger.debug("Initialize array center coordinate systems: {}".format(center_dict))
@@ -272,8 +247,8 @@ class LayoutArray:
 
     def _altitude_from_corsika_z(self, pos_z=None, altitude=None, tel_name=None):
         """
-        Calculate altitude from CORSIKA z-coordinate (if pos_z is given) or
-        CORSIKA z-coordinate from altitude (if altitude is given)
+        Calculate altitude from CORSIKA z-coordinate (if pos_z is given) or CORSIKA z-coordinate \
+        from altitude (if altitude is given).
 
         Parameters
         ----------
@@ -282,12 +257,12 @@ class LayoutArray:
         altitude: astropy.Quantity
             Telescope altitude in equivalent units of meter.
         tel_name: str
-            Telescope Name
+            Telescope Name.
 
         Returns
         -------
         astropy.Quantity
-            Altitude or CORSIKA z-coordinate (np.nan in case of ill-defined value)
+            Altitude or CORSIKA z-coordinate (np.nan in case of ill-defined value).
 
         """
 
@@ -306,17 +281,17 @@ class LayoutArray:
 
     def _get_corsika_sphere_center(self, tel_name):
         """
-        Return CORSIKA sphere center value for given telescope
+        Return CORSIKA sphere center value for given telescope.
 
         Parameters
         ----------
         tel_name: str
-            Telescope Name
+            Telescope Name.
 
         Returns
         -------
         astropy.Quantity
-            Telescope sphere center value (0.0*u.m if sphere center is not defined)
+            Telescope sphere center value (0.0*u.m if sphere center is not defined).
 
         """
 
@@ -334,17 +309,17 @@ class LayoutArray:
         Parameters
         ----------
         row: astropy table row
-            table row
+            table row.
 
         Returns
         -------
         tel: TelescopePosition
-            telescope position
+            Instance of TelescopePosition.
 
         Raises
         ------
         InvalidTelescopeListFile
-            in case neither telescope name or asset_code / sequence number are given
+            in case neither telescope name or asset_code / sequence number are given.
 
         """
 
@@ -430,7 +405,7 @@ class LayoutArray:
 
         Parameters
         ----------
-        telescope_list_file: str (or Path)
+        telescope_list_file: (str or Path, required)
             Path to the telescope list file.
 
         Raises
@@ -453,33 +428,25 @@ class LayoutArray:
         self._initialize_coordinate_systems(table.meta)
         self._load_telescope_list(table)
 
-    def add_telescope(
-        self,
-        telescope_name,
-        crs_name,
-        xx,
-        yy,
-        altitude=None,
-        tel_corsika_z=None,
-    ):
+    def add_telescope(self, telescope_name, crs_name, xx, yy, altitude=None, tel_corsika_z=None):
         """
         Add an individual telescope to the telescope list.
 
         Parameters
         ----------
-        telescope_name: str
+        telescope_name: (str, required)
             Name of the telescope starting with L, M or S (e.g. LST-01, MST-06 ...)
-        crs_name: str
+        crs_name: (str, required)
             Name of coordinate system
-        xx: astropy.units.quantity.Quantity
+        xx: (astropy.units.quantity.Quantity, required)
             x-coordinate for the given coordinate system
-        yy: astropy.units.quantity.Quantity
+        yy: (astropy.units.quantity.Quantity, required)
             y-coordinate for the given coordinate system
-        altitude: astropy.units.quantity.Quantity
+        altitude: (astropy.units.quantity.Quantity, optional)
             Altitude coordinate in equivalent units of u.m.
-        tel_corsika_z: astropy.units.quantity.Quantity
-            CORSIKA z-position (requires setting of CORSIKA observation level and telescope
-            sphere center).
+        tel_corsika_z: (astropy.units.quantity.Quantity, optional)
+            CORSIKA z-position (requires setting of CORSIKA observation level and telescope sphere\
+            center).
         """
 
         tel = TelescopePosition(name=telescope_name)
@@ -492,19 +459,18 @@ class LayoutArray:
 
     def _get_export_metadata(self, export_corsika_meta=False):
         """
-        File metadata for export of array element list to file.
-        Included array center definiton, CORSIKA telescope parameters,
-        and EPSG centre
+        File metadata for export of array element list to file. Included array center definiton,\
+        CORSIKA telescope parameters, and EPSG centre
 
         Parameters
         ----------
-        export_corsika_meta: bool
-            write CORSIKA metadata
+        export_corsika_meta: (bool, optional)
+            write CORSIKA metadata (default is False).
 
         Returns
         -------
         dict
-            metadata header for array element list export
+            Metadata header for array element list export.
 
         """
 
@@ -560,11 +526,10 @@ class LayoutArray:
 
         Parameters
         ----------
-        crs_name: str
+        crs_name: (str, required)
             Name of coordinate system to be used for export.
-        corsika_z: bool
-            Write telescope height in CORSIKA coordinates (for CORSIKA system)
-
+        corsika_z: (bool, optional)
+            Write telescope height in CORSIKA coordinates (for CORSIKA system) (default is False).
         """
 
         table = Table(meta=self._get_export_metadata(crs_name == "corsika"))
@@ -622,14 +587,19 @@ class LayoutArray:
 
     def get_corsika_input_list(self):
         """
-        Get a string with the piece of text to be added to
-        the CORSIKA input file.
+        Get a string with the piece of text to be added to the CORSIKA input file.
 
         Returns
         -------
         str
             Piece of text to be added to the CORSIKA input file.
+
+        Raises
+        ------
+        KeyError
+            if Missing definition of CORSIKA sphere radius or obs_level.
         """
+
         corsika_list = ""
         for tel in self._telescope_list:
             pos_x, pos_y, pos_z = tel.get_coordinates("corsika")
@@ -680,8 +650,8 @@ class LayoutArray:
         Parameters
         ----------
         compact_printing: str
-            Compact printout for a single coordinate system.
-            Coordinates in all systems are printed, if compact_printing is None.
+            Compact printout for a single coordinate system. Coordinates in all systems are \
+            printed, if compact_printing is None.
         corsika_z: bool
             Print telescope height in CORSIKA coordinates (for CORSIKA system)
 
@@ -708,12 +678,12 @@ class LayoutArray:
 
         Parameters
         ----------
-        compact_printing: str
-            Compact printout for a single coordinate system
-        corsika_z: bool
-            Print telescope height in CORSIKA coordinates (for CORSIKA system)
-
+        compact_printing: (str, optional)
+            Compact printout for a single coordinate system (default is "").
+        corsika_z: (bool, optional)
+            Print telescope height in CORSIKA coordinates (for CORSIKA system) (default is False).
         """
+
         if len(compact_printing) == 0:
             self._print_all()
         else:
@@ -737,12 +707,12 @@ class LayoutArray:
 
     def _get_crs_local(self):
         """
-        Local coordinate system definition
+        Local coordinate system definition.
 
         Returns
         -------
         pyproj.CRS
-            local coordinate system
+            local coordinate system.
 
         """
         if self._array_center:
@@ -761,12 +731,12 @@ class LayoutArray:
 
     def _get_crs_utm(self):
         """
-        UTM coordinate system definition
+        UTM coordinate system definition.
 
         Returns
         -------
         pyproj.CRS
-            UTM coordinate system
+            UTM coordinate system.
 
         """
         if self._epsg:
@@ -779,12 +749,12 @@ class LayoutArray:
     @staticmethod
     def _get_crs_wgs84():
         """
-        WGS coordinate system definition
+        WGS coordinate system definition.
 
         Returns
         -------
         pyproj.CRS
-            WGS coordinate system
+            WGS coordinate system.
 
         """
         return pyproj.CRS("EPSG:4326")
@@ -792,8 +762,17 @@ class LayoutArray:
     @staticmethod
     def get_telescope_type(telescope_name):
         """
-        Guess telescope type from name
+        Guess telescope type from name. Types are "LST", "MST", "SST", "SCT".
 
+        Parameters
+        ----------
+        telescope_name: (str, required)
+            Telescope name
+
+        Returns
+        -------
+        str
+            Telescope type.
         """
 
         _class, _ = names.split_telescope_model_name(telescope_name)
