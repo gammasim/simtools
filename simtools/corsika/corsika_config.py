@@ -19,10 +19,14 @@ __all__ = [
 
 
 class MissingRequiredInputInCorsikaConfigData(Exception):
+    """Exception for missing required input in corsika config data."""
+
     pass
 
 
 class InvalidCorsikaInput(Exception):
+    """Exception for invalid corsika input."""
+
     pass
 
 

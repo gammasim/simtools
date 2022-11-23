@@ -8,10 +8,14 @@ __all__ = ["InvalidCoordSystem", "MissingInputForConvertion", "TelescopePosition
 
 
 class InvalidCoordSystem(Exception):
+    """Exception for invalid coordinate system."""
+
     pass
 
 
 class MissingInputForConvertion(Exception):
+    """Exception for missing input for convertion."""
+
     pass
 
 

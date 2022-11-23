@@ -26,18 +26,26 @@ __all__ = [
 
 
 class UnableToIdentifyConfigEntry(Exception):
+    """Exception for unable to indentify configuration entry."""
+
     pass
 
 
 class MissingRequiredConfigEntry(Exception):
+    """Exception for missing required configuration entry."""
+
     pass
 
 
 class InvalidConfigEntry(Exception):
+    """Exception for invalid configuration entry."""
+
     pass
 
 
 class InvalidConfigData(Exception):
+    """Exception for invalid configuration data."""
+
     pass
 
 

@@ -15,6 +15,8 @@ __all__ = ["CorsikaRunner", "MissingRequiredEntryInCorsikaConfig"]
 
 
 class MissingRequiredEntryInCorsikaConfig(Exception):
+    """Exception for missing required entry in corsika config."""
+
     pass
 
 

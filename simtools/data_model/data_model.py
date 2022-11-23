@@ -1,3 +1,10 @@
+__all__ = [
+    "metadata_input_reference_schema",
+    "top_level_reference_schema",
+    "workflow_configuration_schema",
+]
+
+
 def top_level_reference_schema():
     """
     Reference schema following the CTA Top-Level Data Model. This metadata schema is used for \
