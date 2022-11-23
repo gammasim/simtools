@@ -94,11 +94,12 @@ import numpy as np
 from matplotlib.backends.backend_pdf import PdfPages
 
 import simtools.util.general as gen
-from simtools import io_handler, visualize
+from simtools import io_handler
 from simtools.configuration import configurator
 from simtools.model.model_utils import split_simtel_parameter
 from simtools.model.telescope_model import TelescopeModel
 from simtools.ray_tracing import RayTracing
+from simtools.visualization import visualize
 
 
 def load_data(datafile):
