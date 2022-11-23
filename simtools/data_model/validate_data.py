@@ -5,12 +5,13 @@ from astropy import units as u
 from astropy.table import Table, unique
 from astropy.utils.diff import report_diff_values
 
+__all__ = ["DataValidator"]
+
 
 class DataValidator:
     """
-    Simulation model data transformation for data validation.
-    Validate input data for type and units; converts or transform
-    data if required.
+    Simulation model data transformation for data validation. Validate input data for type and \
+    units; converts or transform data if required.
 
     Parameters
     ----------
@@ -76,11 +77,9 @@ class DataValidator:
 
     def validate_data_columns(self):
         """
-        Validate that required data columns are available,
-        columns are in the correct units (if necessary apply a
-        unit conversion), and check ranges (minimum, maximum)
-
-        This is not applied to columns of type 'string'
+        Validate that required data columns are available, columns are in the correct units (if \
+        necessary apply a unit conversion), and check ranges (minimum, maximum). This is not \
+        applied to columns of type 'string'
 
         """
 
@@ -95,8 +94,7 @@ class DataValidator:
 
     def _check_required_columns(self):
         """
-        Check that all required data columns are available
-        in the input data table
+        Check that all required data columns are available in the input data table
 
         Raises
         ------
@@ -114,10 +112,8 @@ class DataValidator:
 
     def _sort_data(self):
         """
-        Sort data according to one data column
-        (if required by any column attribute)
-
-        Data is either sorted or reverse sorted
+        Sort data according to one data column (if required by any column attribute). Data is \
+         either sorted or reverse sorted
 
         Raises
         ------
@@ -154,14 +150,12 @@ class DataValidator:
 
     def _check_data_for_duplicates(self):
         """
-        Remove duplicates from data columns as defined
-        in the data columns description
+        Remove duplicates from data columns as defined in the data columns description
 
         Raises
         ------
-            if row values are different for
-            those rows with duplications in the data columns
-            to be checked for unique values.
+            if row values are different for those rows with duplications in the data columns to be \
+            checked for unique values.
 
         """
 
@@ -211,8 +205,7 @@ class DataValidator:
 
     def _get_reference_unit(self, column_name):
         """
-        Return reference column unit.
-        Includes correct treatment of dimensionless units
+        Return reference column unit. Includes correct treatment of dimensionless units
 
         Parameters
         ----------
@@ -246,10 +239,9 @@ class DataValidator:
 
     def _column_status(self, col_name):
         """
-        Check that column is defined in reference schema (additional
-        data columns are allowed in the input data, but are ignored)
-        and that column type is not string (string-type columns ignored
-        for range checks)
+        Check that column is defined in reference schema (additional data columns are allowed in\
+        the input data, but are ignored) and that column type is not string (string-type columns\
+        ignored for range checks)
 
         """
 
@@ -265,8 +257,8 @@ class DataValidator:
 
     def _check_and_convert_units(self, col):
         """
-        Check that all columns have an allowed units.
-        Convert to reference unit (e.g., Angstrom to nm).
+        Check that all columns have an allowed units. Convert to reference unit (e.g., Angstrom to\
+         nm).
 
         Note on dimensionless columns:
         - should be given in unit descriptor as unit: ''
@@ -318,10 +310,8 @@ class DataValidator:
 
     def _check_range(self, col_name, col_min, col_max, range_type="allowed_range"):
         """
-        Check that column data is within allowed range
-        or required range.
-
-        Assume that column and ranges have the same units
+        Check that column data is within allowed range or required range. Assumes that column and \
+        ranges have the same units.
 
         Parameters
         ----------
@@ -386,8 +376,8 @@ class DataValidator:
     @staticmethod
     def _interval_check(data, axis_range, range_type):
         """
-        Check that values are inside allowed range (range_type='allowed_range')
-        or span at least the given inveral (range_type='required_range').
+        Check that values are inside allowed range (range_type='allowed_range') or span at least \
+         the given inveral (range_type='required_range').
 
         Parameters
         ----------

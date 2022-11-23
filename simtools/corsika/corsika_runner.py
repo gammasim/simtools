@@ -409,9 +409,8 @@ class CorsikaRunner:
 
     def _validate_run_number(self, run_number):
         """
-        Returns the run number from corsika_config in case run_number is None,
-        Raise ValueError if run_number is not valid (< 1) or returns run_number if
-        it is a valid value.
+        Returns the run number from corsika_config in case run_number is None, Raise ValueError if\
+        run_number is not valid (< 1) or returns run_number if it is a valid value.
         """
         if run_number is None:
             return self.corsika_config.get_user_parameter("RUNNR")
