@@ -75,25 +75,36 @@ class TelescopeModel:
 
     @property
     def mirrors(self):
-        """"""
+        """
+        Load the mirror information if the class instance hasn't done it yet.
+        """
         if not hasattr(self, "_mirrors"):
             self._load_mirrors()
         return self._mirrors
 
     @property
     def camera(self):
+        """
+        Load the camera information if the class instance hasn't done it yet.
+        """
         if not hasattr(self, "_camera"):
             self._load_camera()
         return self._camera
 
     @property
     def reference_data(self):
+        """
+        Load the reference data information if the class instance hasn't done it yet.
+        """
         if not hasattr(self, "_reference_data"):
             self._load_reference_data()
         return self._reference_data
 
     @property
     def derived(self):
+        """
+        Load the derived values and export them if the class instance hasn't done it yet.
+        """
         if not hasattr(self, "_derived"):
             self._load_derived_values()
             self.export_derived_files()
@@ -101,16 +112,13 @@ class TelescopeModel:
 
     @property
     def extra_label(self):
+        """
+        Return the extra label if defined, if not return ''.
+        """
         return self._extra_label if self._extra_label is not None else ""
 
     @classmethod
-    def from_config_file(
-        cls,
-        config_file_name,
-        site,
-        telescope_model_name,
-        label=None,
-    ):
+    def from_config_file(cls, config_file_name, site, telescope_model_name, label=None):
         """
         Create a TelescopeModel from a sim_telarray config file.
 
@@ -121,18 +129,19 @@ class TelescopeModel:
 
         Parameters
         ----------
-        config_file_name: str or Path
+        config_file_name: (str or Path, required)
             Path to the input config file.
-        site: str
+        site: (str. required)
             South or North.
-        telescope_model_name: str
+        telescope_model_name: (str, required)
             Telescope model name for the base set of parameters (ex. LST-1, ...).
-        label: str, optional
-            Instance label. Important for output file naming.
+        label: (str, optional)
+            Instance label. Important for output file naming (default is None).
 
         Returns
         -------
-        Instance of the TelescopeModel class.
+        TelescopeModel
+            Instance of TelescopeModel.
         """
         parameters = dict()
         tel = cls(
@@ -193,20 +202,21 @@ class TelescopeModel:
 
         Notes
         -----
-        The config file directory name is not affected by the extra label. \
-        Only the file name is changed. This is important for the ArrayModel \
-        class to export multiple config files in the same directory.
+        The config file directory name is not affected by the extra label. Only the file name is \
+        changed. This is important for the ArrayModel class to export multiple config files in the\
+        same directory.
 
         Parameters
         ----------
-        extra_label: str
+        extra_label: (str, required)
             Extra label to be appended to the original label.
         """
+
         self._extra_label = extra_label
         self._set_config_file_directory_and_name()
 
     def _set_config_file_directory_and_name(self):
-        """Define the variable _config_file_directory and create directories, if needed"""
+        """Define the variable _config_file_directory and create directories, if needed."""
 
         self._config_file_directory = self.io_handler.get_output_directory(self.label, "model")
 
@@ -240,12 +250,13 @@ class TelescopeModel:
 
         Parameters
         ----------
-        par_name: str
+        par_name: (str, required)
             Name of the parameter.
 
         Returns
         -------
         bool
+            True if parameter is in the model.
         """
         return par_name in self._parameters
 
@@ -255,17 +266,17 @@ class TelescopeModel:
 
         Parameters
         ----------
-        par_name: str
+        par_name: (str, required)
             Name of the parameter.
+
+        Returns
+        -------
+        Value of the parameter
 
         Raises
         ------
         InvalidParameter
             If par_name does not match any parameter in this model.
-
-        Returns
-        -------
-        Value of the parameter
         """
         try:
             return self._parameters[par_name]
@@ -284,40 +295,40 @@ class TelescopeModel:
 
         Parameters
         ----------
-        par_name: str
+        par_name: (str, required)
             Name of the parameter.
+
+        Returns
+        -------
+        Value of the parameter.
 
         Raises
         ------
         InvalidParameter
             If par_name does not match any parameter in this model.
-
-        Returns
-        -------
-        Value of the parameter
         """
         par_info = self.get_parameter(par_name)
         return par_info["Value"]
 
     def get_parameter_value_with_unit(self, par_name):
         """
-        Get the value of an existing parameter of the model as an Astropy Quantity with its unit.
+        Get the value of an existing parameter of the model as an Astropy Quantity with its unit.\
         If no unit is provided in the model, the value is returned without a unit.
 
         Parameters
         ----------
-        par_name: str
+        par_name: (str, required)
             Name of the parameter.
+
+        Returns
+        -------
+        Astropy quantity with the value of the parameter multiplied by its unit. If no unit is \
+        provided in the model, the value is returned without a unit.
 
         Raises
         ------
         InvalidParameter
             If par_name does not match any parameter in this model.
-
-        Returns
-        -------
-        Astropy quantity with the value of the parameter multiplied by its unit.
-        If no unit is provided in the model, the value is returned without a unit.
         """
         par_info = self.get_parameter(par_name)
         if "units" in par_info:
@@ -326,19 +337,19 @@ class TelescopeModel:
 
     def add_parameter(self, par_name, value, is_file=False, is_aplicable=True):
         """
-        Add a new parameters to the model. \
-        This function does not modify the DB, it affects only the current instance.
+        Add a new parameters to the model. This function does not modify the DB, it affects only \
+        the current instance.
 
         Parameters
         ----------
-        par_name: str
+        par_name: (str, required)
             Name of the parameter.
-        value:
+        value: (required)
             Value of the parameter.
-        is_file: bool
-            Indicates whether the new parameter is a file or not.
-        is_aplicable: bool
-            Indicates whether the new parameter is applicable or not.
+        is_file: (bool, optional)
+            Indicates whether the new parameter is a file or not (default is False).
+        is_aplicable: (bool, optional)
+            Indicates whether the new parameter is applicable or not (default is True).
 
         Raises
         ------
@@ -363,14 +374,14 @@ class TelescopeModel:
 
     def change_parameter(self, par_name, value):
         """
-        Change the value of an existing parameter to the model. \
-        This function does not modify the DB, it affects only the current instance.
+        Change the value of an existing parameter to the model. This function does not modify the \
+        DB, it affects only the current instance.
 
         Parameters
         ----------
-        par_name: str
+        par_name: (str, required)
             Name of the parameter.
-        value:
+        value: (required)
             Value of the parameter.
 
         Raises
@@ -413,8 +424,8 @@ class TelescopeModel:
 
     def change_multiple_parameters(self, **kwargs):
         """
-        Change the value of multiple existing parameters in the model. \
-        This function does not modify the DB, it affects only the current instance.
+        Change the value of multiple existing parameters in the model. This function does not \
+        modify the DB, it affects only the current instance.
 
         Parameters
         ----------
@@ -440,7 +451,7 @@ class TelescopeModel:
 
         Parameters
         ----------
-        args
+        *args
             Each parameter to be removed has to be passed as args.
 
         Raises
@@ -464,9 +475,9 @@ class TelescopeModel:
 
         Parameters
         ----------
-        par_name: str
+        par_name: (str, required)
             Name of the parameter.
-        file_path: str
+        file_path: (str, required)
             Path of the file to be added to the config file directory.
         """
         if not hasattr(self, "_added_parameter_files"):
@@ -506,9 +517,7 @@ class TelescopeModel:
         )
 
     def export_derived_files(self):
-        """
-        Write to disk a file from the derived values DB.
-        """
+        """Write to disk a file from the derived values DB."""
 
         db = db_handler.DatabaseHandler(mongo_db_config=self.mongo_db_config)
         for par_now in self.derived:
@@ -521,17 +530,18 @@ class TelescopeModel:
 
     def get_config_file(self, no_export=False):
         """
-        Get the path of the config file for sim_telarray. \
-        The config file is produced if the file is not updated.
+        Get the path of the config file for sim_telarray. The config file is produced if the file\
+        is not updated.
 
         Parameters
         ----------
-        no_export: bool
-            Turn it on if you do not want the file to be exported.
+        no_export: (bool, optional)
+            Turn it on if you do not want the file to be exported (default is False).
 
         Returns
         -------
-        Path of the exported config file for sim_telarray.
+        Path
+            Path of the exported config file for sim_telarray.
         """
         if not self._is_config_file_up_to_date and not no_export:
             self.export_config_file()
@@ -543,7 +553,8 @@ class TelescopeModel:
 
         Returns
         -------
-        Path where all the configuration files for sim_telarray are written to.
+        Path
+            Path where all the configuration files for sim_telarray are written to.
         """
         return self._config_file_directory
 
@@ -553,7 +564,8 @@ class TelescopeModel:
 
         Returns
         -------
-        Path where all the files with derived values are written to.
+        Path
+            Path where all the files with derived values are written to.
         """
         return self._config_file_directory.parents[0].joinpath("derived")
 
@@ -579,9 +591,9 @@ class TelescopeModel:
 
         Parameters
         ----------
-        mirror_number: int
+        mirror_number: (int, required)
             Number index of the mirror.
-        set_focal_length_to_zero: bool
+        set_focal_length_to_zero: (bool, required)
             Set the focal length to zero if True.
         """
         if mirror_number > self.mirrors.number_of_mirrors:
@@ -614,10 +626,10 @@ class TelescopeModel:
 
         Parameters
         ----------
-        mirror_number: int
+        mirror_number: (int, required)
             Mirror number.
-        set_focal_length_to_zero: bool
-            Flag to set the focal length to zero.
+        set_focal_length_to_zero: (bool, optional)
+            Flag to set the focal length to zero (default is False).
 
         Returns
         -------
@@ -695,7 +707,7 @@ class TelescopeModel:
 
         Parameters
         ----------
-        par: str
+        par: (str, required)
             Name of the parameter.
 
         Returns
@@ -715,19 +727,19 @@ class TelescopeModel:
 
     def read_two_dim_wavelength_angle(self, file_name):
         """
-        Read a two dimensional distribution of wavelngth and angle (z-axis can be anything).
-        Return a dictionary with three arrays,
-        wavelength, angles, z (can be transmission, reflectivity, etc.)
+        Read a two dimensional distribution of wavelngth and angle (z-axis can be anything). Return\
+        a dictionary with three arrays, wavelength, angles, z (can be transmission, reflectivity,\
+        etc.)
 
         Parameters
         ----------
-        file_name: str or Path
-            File assumed to be in the model directory
+        file_name: (str or Path, required)
+            File assumed to be in the model directory.
 
         Returns
         -------
         dict:
-            dict of three arrays, wavelength, degrees, z
+            dict of three arrays, wavelength, degrees, z.
         """
 
         _file = self.get_config_directory().joinpath(file_name)
@@ -746,9 +758,7 @@ class TelescopeModel:
         }
 
     def get_on_axis_eff_optical_area(self):
-        """
-        Return the on-axis effective optical area (derived previously for this telescope).
-        """
+        """Return the on-axis effective optical area (derived previously for this telescope)."""
 
         ray_tracing_data = astropy.io.ascii.read(
             self.get_derived_directory().joinpath(self.derived["ray_tracing"]["Value"])
@@ -763,17 +773,17 @@ class TelescopeModel:
 
     def read_incidence_angle_distribution(self, incidence_angle_dist_file):
         """
-        Read the incidence angle distrubution from a file
+        Read the incidence angle distribution from a file.
 
         Parameters
         ----------
-        incidence_angle_dist_file: str
+        incidence_angle_dist_file: (str, required)
             File name of the incidence angle distribution
 
         Returns
         -------
         incidence_angle_dist: Astropy table
-            Astropy table with the incidence angle distribution
+            Astropy table with the incidence angle distribution.
         """
 
         incidence_angle_dist = astropy.io.ascii.read(
@@ -784,23 +794,23 @@ class TelescopeModel:
     @staticmethod
     def calc_average_curve(curves, incidence_angle_dist):
         """
-        Calculate an average curve from a set of curves, using as weights
-        the distribution of incidence angles provided in incidence_angle_dist
+        Calculate an average curve from a set of curves, using as weights the distribution of \
+        incidence angles provided in incidence_angle_dist.
 
         Parameters
         ----------
-        curves: dict
-            dict of with 3 "columns", Wavelength, Angle and z
-            The dictionary represents a two dimensional distribution of wavelengths and angles
-            with the z value being e.g., reflectivity, transmission, etc.
-        incidence_angle_dist: Astropy table
-            Astropy table with the incidence angle distribution
-            The assumed columns are "Incidence angle" and "Fraction".
+        curves: (dict, required)
+            dict of with 3 "columns", Wavelength, Angle and z. The dictionary represents a two \
+            dimensional distribution of wavelengths and angles with the z value being e.g.,\
+             reflectivity, transmission, etc.
+        incidence_angle_dist: (Astropy table, required)
+            Astropy table with the incidence angle distribution. The assumed columns are "Incidence\
+            angle" and "Fraction".
 
         Returns
         -------
-        average_curve: Astropy Table
-            Table with the averaged curve
+        average_curve: astropy.table
+            Instance of astropy Table with the averaged curve.
         """
 
         weights = list()
@@ -824,10 +834,10 @@ class TelescopeModel:
 
         Parameters
         ----------
-        file_name: str
-            File name to write to
-        table: Astropy Table
-            Table with the values to write to the file
+        file_name: (str, required)
+            File name to write to.
+        table: (astropy.table, required)
+            Instance of astropy table with the values to write to the file.
 
         Returns
         -------
