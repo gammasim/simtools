@@ -4,10 +4,12 @@ from copy import copy
 
 import simtools.util.general as gen
 
-__all__ = ["JobManager"]
+__all__ = ["JobManager", "MissingWorkloadManager"]
 
 
 class MissingWorkloadManager(Exception):
+    """Exception for missing work load manager."""
+
     pass
 
 

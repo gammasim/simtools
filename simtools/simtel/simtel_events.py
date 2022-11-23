@@ -10,6 +10,8 @@ __all__ = ["InconsistentInputFile", "SimtelEvents"]
 
 
 class InconsistentInputFile(Exception):
+    """Exception for inconsistent input file."""
+
     pass
 
 
