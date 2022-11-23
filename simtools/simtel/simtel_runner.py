@@ -5,7 +5,7 @@ import simtools.util.general as gen
 from simtools.model.array_model import ArrayModel
 from simtools.model.telescope_model import TelescopeModel
 
-__all__ = ["SimtelRunner"]
+__all__ = ["InvalidOutputFile", "SimtelExecutionError", "SimtelRunner"]
 
 
 class SimtelExecutionError(Exception):
@@ -20,36 +20,19 @@ class SimtelRunner:
     """
     SimtelRunner is the base class of the sim_telarray interfaces.
 
-    Attributes
+    Parameters
     ----------
-    label: str, optional
-        Instance label.
-
-    Methods
-    -------
-    get_run_script(self, test=False, input_file=None, run_number=None)
-        Builds and returns the full path of the bash run script containing
-        the sim_telarray command.
-    run(test=False, force=False, input=None)
-        Run sim_telarray. test=True will make it faster and force=True will remove existing files
-        and run again.
+    simtel_source_path: (str (or Path), required)
+        Location of sim_telarray installation.
+    label: (str, optional)
+        Instance label. Important for output file naming (default is None).
     """
 
-    def __init__(
-        self,
-        simtel_source_path,
-        label=None,
-    ):
+    def __init__(self, simtel_source_path, label=None):
         """
-        SimtelRunner.
+        Initialize SimtelRunner.
+        """
 
-        Parameters
-        ----------
-        label: str, optional
-            Instance label. Important for output file naming.
-        simtel_source_path: str (or Path), optional
-            Location of sim_telarray installation.
-        """
         self._logger = logging.getLogger(__name__)
 
         self._simtel_source_path = simtel_source_path
@@ -61,7 +44,18 @@ class SimtelRunner:
         return "SimtelRunner(label={})\n".format(self.label)
 
     def _validate_telescope_model(self, tel):
-        """Validate TelescopeModel"""
+        """Validate TelescopeModel.
+
+        Parameters
+        ----------
+        tel: TelescopeModel
+            instance of TelescopeModel to validate.
+
+        Raises
+        ------
+        ValueError
+            if there 'tel' is not an TelescopeModel instance.
+        """
         if isinstance(tel, TelescopeModel):
             self._logger.debug("TelescopeModel is valid")
             return tel
@@ -71,7 +65,18 @@ class SimtelRunner:
             raise ValueError(msg)
 
     def _validate_array_model(self, array):
-        """Validate ArrayModel"""
+        """Validate ArrayModel
+
+        Parameters
+        ----------
+        array: ArrayModel
+            Instance of ArrayModel to validate.
+
+        Raises
+        ------
+        ValueError
+            if there 'array' is not an ArrayModel instance.
+        """
         if isinstance(array, ArrayModel):
             self._logger.debug("ArrayModel is valid")
             return array
@@ -82,19 +87,18 @@ class SimtelRunner:
 
     def get_run_script(self, test=False, input_file=None, run_number=None, extra_commands=None):
         """
-        Builds and returns the full path of the bash run script containing
-        the sim_telarray command.
+        Builds and returns the full path of the bash run script containing the sim_telarray command.
 
         Parameters
         ----------
-        test: bool
-            Test flag for faster execution.
-        input_file: str or Path
-            Full path of the input CORSIKA file.
-        run_number: int
-            Run number.
-        extra_commands: str
-            Additional commands for running simulations given in config.yml
+        test: (bool, optional)
+            Test flag for faster execution (default is None).
+        input_file: (str or Path, optional)
+            Full path of the input CORSIKA file (default is None).
+        run_number: (int, optional)
+            Run number (default is None).
+        extra_commands: (str, optional)
+            Additional commands for running simulations given in config.yml (default is None).
 
         Returns
         -------
@@ -141,10 +145,10 @@ class SimtelRunner:
 
         Parameters
         ----------
-        test: bool
-            If True, make simulations faster.
-        force: bool
-            If True, remove possible existing output files and run again.
+        test: (bool, optional)
+            If True, make simulations faster (default is None).
+        force: (bool, optional)
+            If True, remove possible existing output files and run again (default is None).
         """
         self._logger.debug("Running sim_telarray")
 
@@ -173,13 +177,25 @@ class SimtelRunner:
 
     @staticmethod
     def _simtel_failed(sys_output):
+        """Test if output is different than 0
+
+        Returns
+        -------
+        bool
+            1 if sys_output is different than 0, and 1 otherwise.
+        """
         return sys_output != 0
 
     def _raise_simtel_error(self):
         """
-        Raise sim_telarray execution error. Final 30 lines from the log file
-        are collected and printed.
+        Raise sim_telarray execution error. Final 30 lines from the log file are collected and
+        printed.
+
+        Raises
+        ------
+        SimtelExecutionError
         """
+
         if hasattr(self, "_log_file"):
             log_lines = gen.collect_final_lines(self._log_file, 30)
             msg = (
@@ -197,6 +213,11 @@ class SimtelRunner:
     def _run_simtel_and_check_output(self, command):
         """
         Run the sim_telarray command and check the exit code.
+
+        Raises
+        ------
+        SimtelExecutionError
+            if output of command is 0.
         """
         sys_output = os.system(command)
         if self._simtel_failed(sys_output):

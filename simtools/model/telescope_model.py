@@ -782,8 +782,8 @@ class TelescopeModel:
 
         Returns
         -------
-        incidence_angle_dist: Astropy table
-            Astropy table with the incidence angle distribution.
+        incidence_angle_dist: astropy.table.Table
+            Instance of astropy.table.Table with the incidence angle distribution.
         """
 
         incidence_angle_dist = astropy.io.ascii.read(
@@ -803,14 +803,14 @@ class TelescopeModel:
             dict of with 3 "columns", Wavelength, Angle and z. The dictionary represents a two \
             dimensional distribution of wavelengths and angles with the z value being e.g.,\
              reflectivity, transmission, etc.
-        incidence_angle_dist: (Astropy table, required)
-            Astropy table with the incidence angle distribution. The assumed columns are "Incidence\
-            angle" and "Fraction".
+        incidence_angle_dist: (astropy.table.Table, required)
+            Instance of astropy.table.Table with the incidence angle distribution. The assumed \
+            columns are "Incidence angle" and "Fraction".
 
         Returns
         -------
-        average_curve: astropy.table
-            Instance of astropy Table with the averaged curve.
+        average_curve: astropy.table.Table
+            Instance of astropy.table.Table with the averaged curve.
         """
 
         weights = list()
@@ -836,8 +836,8 @@ class TelescopeModel:
         ----------
         file_name: (str, required)
             File name to write to.
-        table: (astropy.table, required)
-            Instance of astropy table with the values to write to the file.
+        table: (astropy.table.Table, required)
+            Instance of astropy.table.Table with the values to write to the file.
 
         Returns
         -------

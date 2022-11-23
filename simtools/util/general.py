@@ -10,14 +10,18 @@ import astropy.units as u
 from astropy.io.misc import yaml
 
 __all__ = [
-    "validate_config_data",
     "collect_data_from_yaml_or_dict",
-    "collect_kwargs",
-    "set_default_kwargs",
-    "sort_arrays",
     "collect_final_lines",
+    "collect_kwargs",
+    "InvalidConfigData",
+    "InvalidConfigEntry",
+    "MissingRequiredConfigEntry",
+    "UnableToIdentifyConfigEntry",
     "get_log_level_from_user",
     "separate_args_and_config_data",
+    "set_default_kwargs",
+    "sort_arrays",
+    "validate_config_data",
 ]
 
 
@@ -43,14 +47,15 @@ def file_has_text(file, text):
 
     Parameters
     ----------
-    file: str
+    file: (str, required)
         Path of the file.
-    text: str
+    text: (str, requried)
         Piece of text to be searched for.
 
     Returns
     -------
     bool
+        1 if file has text.
     """
     with open(file, "rb", 0) as string_file, mmap.mmap(
         string_file.fileno(), 0, access=mmap.ACCESS_READ
@@ -74,9 +79,9 @@ def validate_config_data(config_data, parameters):
 
     Parameters
     ----------
-    config_data: dict
+    config_data: (dict, required)
         Input config data.
-    parameters: dict
+    parameters: (dict, required)
         Parameter information necessary for validation.
 
     Raises
@@ -150,12 +155,14 @@ def _validate_and_convert_value_without_units(value, value_keys, par_name, par_i
 
     Parameters
     ----------
-    value: list
-       list of user input values
-    value_keys: list
-       list of keys if user input was a dict; otherwise None
-    par_name: str
-       name of parameter
+    value: (list, required)
+       list of user input values.
+    value_keys: (list, required)
+       list of keys if user input was a dict; otherwise None.
+    par_name: (str, required)
+       name of parameter.
+    par_info: (dict, required)
+        dictionary with parameter info.
 
     Returns
     -------
@@ -307,16 +314,15 @@ def _validate_and_convert_value(par_name, par_info, value_in):
 
 def collect_data_from_yaml_or_dict(in_yaml, in_dict, allow_empty=False):
     """
-    Collect input data that can be given either as a dict
-    or as a yaml file.
+    Collect input data that can be given either as a dict or as a yaml file.
 
     Parameters
     ----------
-    in_yaml: str
+    in_yaml: (str, required)
         Name of the Yaml file.
-    in_dict: dict
+    in_dict: (dict, required)
         Data as dict.
-    allow_empty: bool
+    allow_empty: (bool, optional)
         If True, an error won't be raised in case both yaml and dict are None.
 
     Returns
@@ -351,11 +357,13 @@ def collect_kwargs(label, in_kwargs):
     Parameters
     ----------
     label: str
+        Label to be collected in kwargs.
     in_kwargs: dict
-
+        kwargs.
     Returns
     -------
-    Dict with the collected kwargs.
+    dict
+        Dictionary with the collected kwargs.
     """
     out_kwargs = dict()
     for key, value in in_kwargs.items():
@@ -370,14 +378,15 @@ def set_default_kwargs(in_kwargs, **kwargs):
 
     Parameters
     ----------
-    in_kwargs: dict
+    in_kwargs: (dict, required)
         Input dict to be filled in with the default kwargs.
     **kwargs:
         Default kwargs to be set.
 
     Returns
     -------
-    Dict containing the default kwargs.
+    dict
+        Dictionary containing the default kwargs.
     """
     for par, value in kwargs.items():
         if par not in in_kwargs.keys():
@@ -386,6 +395,18 @@ def set_default_kwargs(in_kwargs, **kwargs):
 
 
 def sort_arrays(*args):
+    """Sort arrays
+
+    Parameters
+    ----------
+    *args
+        Arguments to be sorted.
+    Returns
+    -------
+    list
+        Sorted args.
+    """
+
     order_array = copy.copy(args[0])
     new_args = list()
     for arg in args:
@@ -396,16 +417,19 @@ def sort_arrays(*args):
 
 def collect_final_lines(file, n_lines):
     """
+    Collect final lines.
+
     Parameters
     ----------
-    file: str or Path
+    file: (str or Path, required)
         File to collect the lines from.
-    n_lines: int
+    n_lines: (int, required)
         Number of lines to be collected.
 
     Returns
     -------
-    str: lines
+    str
+        Final lines collected.
     """
     file_in_lines = list()
     with open(file, "r") as f:
@@ -425,12 +449,12 @@ def get_log_level_from_user(log_level):
     Parameters
     ----------
     log_level: str
-        Log level from the user
+        Log level from the user.
 
     Returns
     -------
     logging.LEVEL
-        The requested logging level to be used as input to logging.setLevel()
+        The requested logging level to be used as input to logging.setLevel().
     """
 
     possible_levels = {
@@ -458,7 +482,7 @@ def copy_as_list(value):
 
     Parameters
     ----------
-    value: single variable of any type, or list
+    value (single variable of any type or list, required)
 
     Returns
     -------
@@ -476,16 +500,15 @@ def copy_as_list(value):
 
 def separate_args_and_config_data(expected_args, **kwargs):
     """
-    Separate kwargs into the arguments expected for instancing a class and
-    the dict to be given as config_data.
-    This function is specific for methods from_kwargs in classes which use the
+    Separate kwargs into the arguments expected for instancing a class and the dict to be given as\
+    config_data. This function is specific for methods from_kwargs in classes which use the \
     validate_config_data system.
 
     Parameters
     ----------
-    expected_args: list of str
+    expected_args: (list of str, required)
         List of arguments expected for the class.
-    **kwargs:
+    **kwargs
 
     Returns
     -------
@@ -536,14 +559,15 @@ def find_file(name, loc):
 
     Parameters
     ----------
-    name: str
+    name: (str, required)
         File name to be searched for.
-    loc: Path, optional
+    loc: (Path, required)
         Location of where to search for the file.
 
     Returns
     -------
-    Full path of the file to be found if existing. Otherwise, None
+    Path
+        Full path of the file to be found if existing. Otherwise, None.
 
     Raises
     ------
@@ -592,19 +616,17 @@ def find_file(name, loc):
 
 def change_dict_keys_case(data_dict, lower_case=True):
     """
-    Change keys of a dictionary to lower or upper case.
-    Crawls throught the dictionary and changes all keys.
-    Takes into account list of dictionaries, as e.g. found in the top level data model.
+    Change keys of a dictionary to lower or upper case. Crawls throught the dictionary and changes\
+    all keys. Takes into account list of dictionaries, as e.g. found in the top level data model.
 
     Parameters
     ----------
-    data_dict: dict
+    data_dict: (dict, required)
         Dictionary to be converted.
-    lower_case: bool
-        Change keys to lower (upper) case if True (False)
-
-
+    lower_case: (bool, optional)
+        Change keys to lower (upper) case if True (False) (default is True).
     """
+
     _return_dict = {}
     for key in data_dict.keys():
         if lower_case:
