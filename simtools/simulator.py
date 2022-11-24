@@ -736,9 +736,7 @@ class Simulator:
         """
         if run_list is None and run_range is None:
             if self.runs is None:
-                msg = (
-                    "Runs to simulate were not given as arguments nor " "in config_data - aborting"
-                )
+                msg = "Runs to simulate were not given as arguments nor in config_data - aborting"
                 self._logger.error(msg)
                 return list()
 
