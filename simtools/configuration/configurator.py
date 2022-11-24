@@ -227,7 +227,7 @@ class Configurator:
         """
         Read and fill configuration parameters from yaml file. Take into account that this could be\
         a CTASIMPIPE workflow configuration file. (CTASIMPIPE:CONFIGURATION is optional, therefore,\
-        no error raised when this key is not found)
+        no error is raised when this key is not found)
 
         Parameters
         ----------
