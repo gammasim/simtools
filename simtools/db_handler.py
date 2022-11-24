@@ -178,15 +178,14 @@ class DatabaseHandler:
                 only_applicable,
             )
             return _pars
-        else:
-            _version_validated = names.validate_model_version_name(model_version)
 
-            return self._get_model_parameters_yaml(
-                _site_validated,
-                _tel_model_name_validated,
-                _version_validated,
-                only_applicable,
-            )
+        _version_validated = names.validate_model_version_name(model_version)
+
+        return self._get_model_parameters_yaml(
+            _tel_model_name_validated,
+            _version_validated,
+            only_applicable,
+        )
 
     def export_file_db(self, db_name, dest, file_name):
         """
@@ -281,21 +280,19 @@ class DatabaseHandler:
             if no_file_ok:
                 self._logger.debug("File {} not found but no_file_ok".format(file_name))
                 return
-            else:
-                raise
+
+            raise
 
         dest_file.write_text(file.read_text())
 
     def _get_model_parameters_yaml(
-        self, site, telescope_model_name, model_version, only_applicable=False
+        self, telescope_model_name, model_version, only_applicable=False
     ):
         """
         Get parameters from DB for one specific type.
 
         Parameters
         ----------
-        site: str
-            North or South.
         telescope_model_name: str
             Telescope model name (e.g MST-FlashCam-D ...).
         model_version: str
@@ -546,8 +543,8 @@ class DatabaseHandler:
                 only_applicable,
             )
             return _pars
-        else:
-            return self._get_site_parameters_yaml(_site, _model_version, only_applicable)
+
+        return self._get_site_parameters_yaml(_site, _model_version, only_applicable)
 
     def _get_site_parameters_yaml(self, site, model_version, only_applicable=False):
         """
@@ -797,10 +794,10 @@ class DatabaseHandler:
         file_system = gridfs.GridFS(db)
         if file_system.exists({"filename": file_name}):
             return file_system.find_one({"filename": file_name})
-        else:
-            raise FileNotFoundError(
-                "The file {} does not exist in the database {}".format(file_name, db_name)
-            )
+
+        raise FileNotFoundError(
+            "The file {} does not exist in the database {}".format(file_name, db_name)
+        )
 
     @staticmethod
     def _write_file_from_mongo_to_disk(db_name, path, file):
@@ -821,8 +818,6 @@ class DatabaseHandler:
         fs_output = gridfs.GridFSBucket(db)
         with open(Path(path).joinpath(file.filename), "wb") as output_file:
             fs_output.download_to_stream_by_name(file.filename, output_file)
-
-        return
 
     def copy_telescope(
         self,
@@ -895,9 +890,7 @@ class DatabaseHandler:
         try:
             collection.insert_many(db_entries)
         except BulkWriteError as exc:
-            raise exc(exc.details)
-
-        return
+            raise BulkWriteError.details from exc
 
     def copy_documents(self, db_name, collection, query, db_to_copy_to, collection_to_copy_to=None):
         """
@@ -947,9 +940,7 @@ class DatabaseHandler:
         try:
             _collection.insert_many(db_entries)
         except BulkWriteError as exc:
-            raise exc(exc.details)
-
-        return
+            raise BulkWriteError.details from exc
 
     def delete_query(self, db_name, collection, query):
         """
@@ -991,8 +982,6 @@ class DatabaseHandler:
         )
 
         _collection.delete_many(query)
-
-        return
 
     def update_parameter(
         self,
@@ -1060,8 +1049,8 @@ class DatabaseHandler:
             if file_prefix is None:
                 raise FileNotFoundError(
                     "The location of the file to upload, "
-                    "corresponding to the {} parameter, must be provided."
-                ).format(parameter)
+                    f"corresponding to the {parameter} parameter, must be provided."
+                )
             file_path = Path(file_prefix).joinpath(new_value)
             files_to_add_to_db.add("{}".format(file_path))
             self._logger.info("Will also add the file {} to the DB".format(file_path))
@@ -1073,8 +1062,6 @@ class DatabaseHandler:
         collection.update_one(query, query_update)
         for file_now in files_to_add_to_db:
             self.insert_file_to_db(file_now, db_name)
-
-        return
 
     def update_parameter_field(
         self,
@@ -1162,11 +1149,11 @@ class DatabaseHandler:
                     f"The value of the field {field} is already {new_value}. No changes necessary"
                 )
                 return
-            else:
-                self._logger.info(
-                    f"For {logger_info}, version {_model_version}, parameter {parameter}, "
-                    f"replacing field {field} value from {old_field_value} to {new_value}"
-                )
+
+            self._logger.info(
+                f"For {logger_info}, version {_model_version}, parameter {parameter}, "
+                f"replacing field {field} value from {old_field_value} to {new_value}"
+            )
         else:
             self._logger.info(
                 f"For {logger_info}, version {_model_version}, parameter {parameter}, "
@@ -1176,8 +1163,6 @@ class DatabaseHandler:
         query_update = {"$set": {field: new_value}}
 
         collection.update_one(query, query_update)
-
-        return
 
     def add_parameter(
         self,
@@ -1241,8 +1226,8 @@ class DatabaseHandler:
             if file_prefix is None:
                 raise FileNotFoundError(
                     "The location of the file to upload, "
-                    "corresponding to the {} parameter, must be provided."
-                ).format(parameter)
+                    f"corresponding to the {parameter} parameter, must be provided."
+                )
             file_path = Path(file_prefix).joinpath(new_value)
             files_to_add_to_db.add("{}".format(file_path))
         else:
@@ -1254,8 +1239,6 @@ class DatabaseHandler:
         if len(files_to_add_to_db) > 0:
             self._logger.info("Will also add the file {} to the DB".format(file_path))
             self.insert_file_to_db(files_to_add_to_db, db_name)
-
-        return
 
     def add_new_parameter(
         self,
@@ -1340,14 +1323,12 @@ class DatabaseHandler:
             self._logger.info("Will also add the file {} to the DB".format(file_to_insert_now))
             self.insert_file_to_db(file_to_insert_now, db_name)
 
-        return
-
     def _convert_version_to_tagged(self, model_version, db_name):
         """Convert to tagged version, if needed."""
         if model_version in ["Current", "Latest"]:
             return self._get_tagged_version(db_name, model_version)
-        else:
-            return model_version
+
+        return model_version
 
     @staticmethod
     def _get_tagged_version(db_name, version="Current"):
