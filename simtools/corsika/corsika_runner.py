@@ -22,7 +22,7 @@ class MissingRequiredEntryInCorsikaConfig(Exception):
 
 class CorsikaRunner:
     """
-    CorsikaRunner is responsible for running the CORSIKA, through the corsika_autoinputs program \
+    CorsikaRunner is responsible for running CORSIKA, through the corsika_autoinputs program \
     provided by the sim_telarray package. It provides shell scripts to be run externally or by \
     the module simulator. Same instance can be used to generate scripts for any given run number.
 
