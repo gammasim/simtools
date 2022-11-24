@@ -131,6 +131,8 @@ class RayTracing:
         else:
             self._source_distance = self.config.source_distance
 
+        self._psf_images = None
+        self._results = None
         self._has_results = False
 
         # Results file
@@ -178,10 +180,10 @@ class RayTracing:
         if isinstance(tel, TelescopeModel):
             self._logger.debug("RayTracing contains a valid TelescopeModel")
             return tel
-        else:
-            msg = "Invalid TelescopeModel"
-            self._logger.error(msg)
-            raise ValueError(msg)
+
+        msg = "Invalid TelescopeModel"
+        self._logger.error(msg)
+        raise ValueError(msg)
 
     def simulate(self, test=False, force=False):
         """
@@ -415,7 +417,7 @@ class RayTracing:
 
         self._logger.info("Plotting {} vs off-axis angle".format(key))
 
-        plt = visualize.plot_table(
+        plot = visualize.plot_table(
             self._results["Off-axis angle", key], self.YLABEL[key], no_legend=True, **kwargs
         )
 
@@ -431,7 +433,7 @@ class RayTracing:
             self._output_directory.joinpath("figures").mkdir(exist_ok=True)
             plot_file = self._output_directory.joinpath("figures").joinpath(plot_file_name)
             self._logger.info("Saving fig in {}".format(plot_file))
-            plt.savefig(plot_file)
+            plot.savefig(plot_file)
 
     def plot_histogram(self, key, **kwargs):
         """
