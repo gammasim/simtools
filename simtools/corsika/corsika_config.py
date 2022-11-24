@@ -281,7 +281,7 @@ class CorsikaConfig:
     def _convert_primary_input_and_store_primary_name(self, value):
         """
         Convert a primary name into the proper CORSIKA particle ID and store its name in \
-        self.primary attribute.
+        the self.primary attribute.
 
         Parameters
         ----------
