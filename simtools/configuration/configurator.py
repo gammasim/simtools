@@ -264,7 +264,7 @@ class Configurator:
 
     def _fill_from_environmental_variables(self):
         """
-        Fill any unconfigured configuration parameters (i.e., parameter is None)\
+        Fill any unconfigured configuration parameters (i.e., parameter is None) \
         from environmental variables.
 
         """
