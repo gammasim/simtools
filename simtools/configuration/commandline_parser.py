@@ -34,7 +34,7 @@ class CommandLineParser(argparse.ArgumentParser):
         Initialize default arguments used by all applications (e.g., verbosity or test flag).
 
         Parameters
-        -------
+        ----------
         paths: (bool, optional)
             Add path configuration to list of args (default is True).
         telescope_model: (bool, optional)
