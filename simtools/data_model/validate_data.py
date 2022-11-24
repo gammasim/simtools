@@ -261,8 +261,9 @@ class DataValidator:
          nm).
 
         Note on dimensionless columns:
+
         - should be given in unit descriptor as unit: ''
-        - be forgiving and assume that in cases no unit is given in the data files
+        - be forgiving and assume that in cases no unit is given in the data files\
           means that it should be dimensionless (e.g., for a efficiency)
 
         Parameters
