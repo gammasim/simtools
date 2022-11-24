@@ -73,6 +73,7 @@ class CameraEfficiency:
             test=test,
         )
 
+        self._results = None
         self._has_results = False
 
         _config_data_in = gen.collect_data_from_yaml_or_dict(
@@ -132,10 +133,10 @@ class CameraEfficiency:
         if isinstance(tel, TelescopeModel):
             self._logger.debug("TelescopeModel OK")
             return tel
-        else:
-            msg = "Invalid TelescopeModel"
-            self._logger.error(msg)
-            raise ValueError(msg)
+
+        msg = "Invalid TelescopeModel"
+        self._logger.error(msg)
+        raise ValueError(msg)
 
     def _load_files(self):
         """Define the variables for the file names, including the results, simtel and log file."""
@@ -184,8 +185,6 @@ class CameraEfficiency:
             label=self.label,
         )
         simtel.run(test=self.test, force=force)
-
-        return
 
     def analyze(self, export=True, force=False):
         """
@@ -444,7 +443,7 @@ class CameraEfficiency:
         ]
         n1_sum = np.sum(n1_reduced_wl)
         n1_integral_edges = self._results["N1"][
-            [wl_now == 300 or wl_now == 650 for wl_now in self._results["wl"]]
+            [wl_now in [300, 650] for wl_now in self._results["wl"]]
         ]
         n1_integral_edges_sum = np.sum(n1_integral_edges)
         nsb_integral = 0.0001 * (n1_sum - 0.5 * n1_integral_edges_sum)
@@ -544,15 +543,15 @@ class CameraEfficiency:
         for column_now, column_title in column_titles.items():
             table_to_plot.rename_column(column_now, column_title)
 
-        plt = visualize.plot_table(
+        plot = visualize.plot_table(
             table_to_plot,
             y_title="Nightsky background light efficiency",
             title="{} response to nightsky background light".format(self._telescope_model.name),
             no_markers=True,
         )
 
-        plt.gca().set_yscale("log")
-        ylim = plt.gca().get_ylim()
-        plt.gca().set_ylim(1e-3, ylim[1])
+        plot.gca().set_yscale("log")
+        ylim = plot.gca().get_ylim()
+        plot.gca().set_ylim(1e-3, ylim[1])
 
-        return plt
+        return plot
