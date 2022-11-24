@@ -195,7 +195,7 @@ class Configurator:
     def _check_parameter_configuration_status(self, key, value):
         """
         Check if a parameter is already configured and not still set to the default value. Allow \
-        configuration of None values.
+        configuration with None values.
 
         Parameters
         ----------
