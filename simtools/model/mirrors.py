@@ -14,6 +14,7 @@ class InvalidMirrorListFile(Exception):
 class Mirrors:
     """
     Mirrors class, created from a mirror list file.
+
     Parameters
     ----------
     mirror_list_file: (str, required)
