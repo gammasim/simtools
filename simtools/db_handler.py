@@ -38,7 +38,7 @@ class DatabaseHandler:
     Attributes
     ----------
     mode: str
-        Yaml or MongoDB, only these two options are allowed.
+        yaml or MongoDB, only these two options are allowed.
 
     """
 
@@ -141,7 +141,7 @@ class DatabaseHandler:
         only_applicable=False,
     ):
         """
-        Get parameters from either MongoDB or Yaml DB for a specific telescope.
+        Get parameters from either MongoDB or yaml DB for a specific telescope.
 
         Parameters
         ----------
@@ -491,7 +491,7 @@ class DatabaseHandler:
 
     def _get_all_model_parameters_yaml(self, telescope_name_yaml):
         """
-        Get all parameters from Yaml DB for one specific type.
+        Get all parameters from yaml DB for one specific type.
         No selection is applied.
 
         Parameters
@@ -519,7 +519,7 @@ class DatabaseHandler:
         only_applicable=False,
     ):
         """
-        Get parameters from either MongoDB or Yaml DB for a specific site.
+        Get parameters from either MongoDB or yaml DB for a specific site.
 
         Parameters
         ----------
