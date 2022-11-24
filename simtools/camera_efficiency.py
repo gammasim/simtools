@@ -324,9 +324,7 @@ class CameraEfficiency:
         """
 
         # Sum(C1) from 300 - 550 nm:
-        c1_reduced_wl = self._results["C1"][
-            [wl_now > 299 and wl_now < 551 for wl_now in self._results["wl"]]
-        ]
+        c1_reduced_wl = self._results["C1"][[299 < wl_now < 551 for wl_now in self._results["wl"]]]
         c1_sum = np.sum(c1_reduced_wl)
         # Sum(C4) from 200 - 999 nm:
         c4_sum = np.sum(self._results["C4"])
@@ -348,13 +346,11 @@ class CameraEfficiency:
         """
 
         # Sum(C1) from 300 - 550 nm:
-        c1_reduced_wl = self._results["C1"][
-            [wl_now > 299 and wl_now < 551 for wl_now in self._results["wl"]]
-        ]
+        c1_reduced_wl = self._results["C1"][[299 < wl_now < 551 for wl_now in self._results["wl"]]]
         c1_sum = np.sum(c1_reduced_wl)
         # Sum(C4x) from 300 - 550 nm:
         c4x_reduced_wl = self._results["C4x"][
-            [wl_now > 299 and wl_now < 551 for wl_now in self._results["wl"]]
+            [299 < wl_now < 551 for wl_now in self._results["wl"]]
         ]
         c4x_sum = np.sum(c4x_reduced_wl)
         fill_factor = self._telescope_model.camera.get_camera_fill_factor()
@@ -380,9 +376,7 @@ class CameraEfficiency:
         """
 
         # Sum(N1) from 300 - 550 nm:
-        n1_reduced_wl = self._results["N1"][
-            [wl_now > 299 and wl_now < 551 for wl_now in self._results["wl"]]
-        ]
+        n1_reduced_wl = self._results["N1"][[299 < wl_now < 551 for wl_now in self._results["wl"]]]
         n1_sum = np.sum(n1_reduced_wl)
         # Sum(N4) from 200 - 999 nm:
         n4_sum = np.sum(self._results["N4"])
@@ -404,14 +398,10 @@ class CameraEfficiency:
         """
 
         # Sum(C1) from 300 - 550 nm:
-        c1_reduced_wl = self._results["C1"][
-            [wl_now > 299 and wl_now < 551 for wl_now in self._results["wl"]]
-        ]
+        c1_reduced_wl = self._results["C1"][[299 < wl_now < 551 for wl_now in self._results["wl"]]]
         c1_sum = np.sum(c1_reduced_wl)
         # Sum(C2) from 300 - 550 nm:
-        c2_reduced_wl = self._results["C2"][
-            [wl_now > 299 and wl_now < 551 for wl_now in self._results["wl"]]
-        ]
+        c2_reduced_wl = self._results["C2"][[299 < wl_now < 551 for wl_now in self._results["wl"]]]
         c2_sum = np.sum(c2_reduced_wl)
         cher_spec_weighted_reflectivity = c2_sum / c1_sum / self._results["masts"][0]
 
@@ -438,9 +428,7 @@ class CameraEfficiency:
 
         # NSB input spectrum is from Benn&Ellison
         # (integral is in ph./(cm² ns sr) ) from 300 - 650 nm:
-        n1_reduced_wl = self._results["N1"][
-            [wl_now > 299 and wl_now < 651 for wl_now in self._results["wl"]]
-        ]
+        n1_reduced_wl = self._results["N1"][[299 < wl_now < 651 for wl_now in self._results["wl"]]]
         n1_sum = np.sum(n1_reduced_wl)
         n1_integral_edges = self._results["N1"][
             [wl_now in [300, 650] for wl_now in self._results["wl"]]
