@@ -6,7 +6,7 @@ from pathlib import Path
 import simtools.util.general as gen
 import simtools.version
 from simtools import io_handler
-from simtools.data_model import data_model, validate_schema
+from simtools.data_model import meta_data_model, validate_schema
 from simtools.util import names
 
 
@@ -55,7 +55,7 @@ class WorkflowDescription:
         self.io_handler = io_handler.IOHandler()
 
         self.args_dict = args_dict
-        self.workflow_config = data_model.workflow_configuration_schema()
+        self.workflow_config = meta_data_model.workflow_configuration_schema()
         self.workflow_config["activity"]["name"] = args_dict["label"]
         self.workflow_config["activity"]["id"] = str(uuid.uuid4())
 
@@ -63,7 +63,7 @@ class WorkflowDescription:
         self.workflow_config["configuration"] = self.args_dict
 
         self.top_level_meta = gen.change_dict_keys_case(
-            data_model.top_level_reference_schema(), True
+            meta_data_model.top_level_reference_schema(), True
         )
         self.collect_product_meta_data()
 
@@ -327,8 +327,11 @@ class WorkflowDescription:
             self._fill_context_sim_list(
                 top_level_dict["context"]["sim"]["association"], association
             )
-        for document in _input_meta["product"]["document"]:
-            self._fill_context_sim_list(top_level_dict["context"]["sim"]["document"], document)
+        try:
+            for document in _input_meta["context"]["document"]:
+                self._fill_context_sim_list(top_level_dict["context"]["sim"]["document"], document)
+        except KeyError:
+            top_level_dict["context"]["sim"].pop("document")
 
     def _fill_product_meta(self, product_dict):
         """
@@ -350,6 +353,11 @@ class WorkflowDescription:
         product_dict["id"] = self.workflow_config["activity"]["id"]
         self._logger.debug("Assigned ACTIVITY UUID {}".format(product_dict["id"]))
 
+        product_dict["data"]["category"] = "SIM"
+        product_dict["data"]["level"] = "R0"
+        product_dict["data"]["type"] = "service"
+        product_dict["data"]["model"]["name"] = "simpipe-table"
+        product_dict["data"]["model"]["version"] = "0.1.0"
         product_dict["format"] = self.product_data_file_format()
         product_dict["filename"] = str(self.product_data_file_name(full_path=False))
 
@@ -395,6 +403,7 @@ class WorkflowDescription:
             activity_dict["name"] = self.workflow_config["activity"]["name"]
             activity_dict["start"] = datetime.datetime.now().isoformat(timespec="seconds")
             activity_dict["end"] = activity_dict["start"]
+            activity_dict["software"]["name"] = "gammasim-tools"
             activity_dict["software"]["version"] = simtools.version.__version__
         except KeyError:
             self._logger.error("Error ACTIVITY meta from input meta data")
