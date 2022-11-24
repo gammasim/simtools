@@ -360,8 +360,8 @@ def convert_telescope_model_name_to_yaml(name):
 
     if new_name not in old_names:
         raise ValueError("Telescope name {} could not be converted to yml names".format(name))
-    else:
-        return old_names[new_name]
+
+    return old_names[new_name]
 
 
 all_telescope_class_names = {
