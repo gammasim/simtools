@@ -11,9 +11,11 @@ __all__ = [
 
 class CommandLineParser(argparse.ArgumentParser):
     """
-    Command line parser for application and workflows Wrapper around standard python \
-    argparse.ArgumentParser. Command line arguments should be given in snake_case, e.g. \
-     `input_meta`.
+    Command line parser for application and workflows.
+
+    Wrapper around standard python argparse.ArgumentParser.
+
+    Command line arguments should be given in snake_case, e.g.  `input_meta`.
 
     Parameters
     ----------
