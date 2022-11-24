@@ -62,9 +62,9 @@ class CorsikaConfig:
     corsika_config_data: (dict, optional)
         CORSIKA user parameters (default is None)
     corsika_config_file: (str, optional)
-        Name of the Yaml configuration file (default is None).
+        Name of the yaml configuration file (default is None).
     corsika_parameters_file: (str, optional)
-        Name of the Yaml file to set remaining CORSIKA parameters (default is \
+        Name of the yaml file to set remaining CORSIKA parameters (default is \
         data/parameters/corsika_parameters.yml)
 
     Attributes
