@@ -57,7 +57,7 @@ def file_has_text(file, text):
     ----------
     file: (str, required)
         Path of the file.
-    text: (str, requried)
+    text: (str, required)
         Piece of text to be searched for.
 
     Returns
@@ -624,7 +624,7 @@ def find_file(name, loc):
 
 def change_dict_keys_case(data_dict, lower_case=True):
     """
-    Change keys of a dictionary to lower or upper case. Crawls throught the dictionary and changes\
+    Change keys of a dictionary to lower or upper case. Crawls through the dictionary and changes\
     all keys. Takes into account list of dictionaries, as e.g. found in the top level data model.
 
     Parameters
