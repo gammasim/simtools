@@ -67,8 +67,8 @@ class CorsikaConfig:
         Name of the Yaml file to set remaining CORSIKA parameters (default is \
         data/parameters/corsika_parameters.yml)
 
-    Atributes
-    ---------
+    Attributes
+    ----------
     label: str
         Instance label (default is None).
     layout: str
