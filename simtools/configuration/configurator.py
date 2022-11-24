@@ -24,6 +24,7 @@ class Configurator:
     Configuration handling application configuration.
 
     Allow to set configuration parameters by
+
     - command line arguments
     - configuration file (yml file)
     - configuration dict when calling the class
