@@ -137,6 +137,14 @@ class Simulator:
         self._results = defaultdict(list)
         self.test = test
 
+        self._corsika_config_data = None
+        self.site = None
+        self.layout_name = None
+        self._corsika_parameters_file = None
+        self.config = None
+        self.array_model = None
+        self._simulation_runner = None
+
         self.io_handler = io_handler.IOHandler()
         self._output_directory = self.io_handler.get_output_directory(self.label, self.simulator)
         self._simulator_source_path = Path(simulator_source_path)
@@ -269,19 +277,19 @@ class Simulator:
                 msg = "run_list must contain only integers."
                 self._logger.error(msg)
                 raise InvalidRunsToSimulate
-            else:
-                self._logger.debug("run_list: {}".format(run_list))
-                validated_runs = list(run_list)
+
+            self._logger.debug("run_list: {}".format(run_list))
+            validated_runs = list(run_list)
 
         if run_range is not None:
             if not all(isinstance(r, int) for r in run_range) or len(run_range) != 2:
                 msg = "run_range must contain two integers only."
                 self._logger.error(msg)
                 raise InvalidRunsToSimulate
-            else:
-                run_range = np.arange(run_range[0], run_range[1] + 1)
-                self._logger.debug("run_range: {}".format(run_range))
-                validated_runs.extend(list(run_range))
+
+            run_range = np.arange(run_range[0], run_range[1] + 1)
+            self._logger.debug("run_range: {}".format(run_range))
+            validated_runs.extend(list(run_range))
 
         validated_runs_unique = sorted(set(validated_runs))
         return list(validated_runs_unique)
@@ -468,7 +476,7 @@ class Simulator:
         """Enforce the input list to be a list."""
         if not input_file_list:
             return list()
-        elif not isinstance(input_file_list, list):
+        if not isinstance(input_file_list, list):
             return [input_file_list]
 
         return input_file_list
@@ -729,15 +737,14 @@ class Simulator:
         if run_list is None and run_range is None:
             if self.runs is None:
                 msg = (
-                    "Runs to simulate were not given as arguments nor "
-                    + "in config_data - aborting"
+                    "Runs to simulate were not given as arguments nor " "in config_data - aborting"
                 )
                 self._logger.error(msg)
                 return list()
-            else:
-                return self.runs
-        else:
-            return self._validate_run_list_and_range(run_list, run_range)
+
+            return self.runs
+
+        return self._validate_run_list_and_range(run_list, run_range)
 
     def _print_list_of_files(self, which):
         """
