@@ -110,7 +110,7 @@ def test_validate_schema():
 
     test_schema_2 = get_instrument_test_schema()
     test_schema_2["instrument"].pop("class")
-    with pytest.raises(ValueError, match=r"Missing required field class"):
+    with pytest.raises(ValueError, match=r"Missing required field 'class'"):
         date_validator._validate_schema(reference_schema, test_schema_2)
 
     reference_schema_2 = get_generic_instrument_reference_schema()
@@ -122,7 +122,7 @@ def test_validate_schema():
         date_validator._validate_schema(reference_schema_2, test_schema_3)
 
 
-def test_validate_instrument_list():
+def test_validate_list():
 
     date_validator = validator.SchemaValidator()
     date_validator._reference_schema = get_generic_instrument_reference_schema()
@@ -137,12 +137,12 @@ def test_validate_instrument_list():
         }
     }
     instrument_list = [instrument_1["instrument"]]
-    date_validator._validate_instrument_list(instrument_list)
+    date_validator._validate_list("instrumentlist", instrument_list)
 
     del instrument_1["instrument"]["class"]
     instrument_list.append(instrument_1)
-    with pytest.raises(ValueError, match=r"Missing required field class"):
-        date_validator._validate_instrument_list(instrument_list)
+    with pytest.raises(ValueError, match=r"Missing required field 'class'"):
+        date_validator._validate_list("instrumentlist", instrument_list)
 
 
 def test_check_if_field_is_optional():
@@ -152,10 +152,17 @@ def test_check_if_field_is_optional():
     test_value_1 = {"required": False}
     test_value_2 = {"required": True}
     test_value_3 = {"required": None}
+    # dictionaries with required fields
+    test_value_4 = {"context": {"document": {"required": False}}}
+    test_value_5 = {"context": {"document": {"required": True}}}
+    test_value_6 = {"context": {"document": {"required": False}, "item": {"required": True}}}
 
-    assert date_validator._field_is_optional(test_value_1) == True
-    assert date_validator._field_is_optional(test_value_2) == False
-    assert date_validator._field_is_optional(test_value_3) == True
+    assert date_validator._field_is_optional(test_value_1)
+    assert not date_validator._field_is_optional(test_value_2)
+    assert date_validator._field_is_optional(test_value_3)
+    assert date_validator._field_is_optional(test_value_4)
+    assert not date_validator._field_is_optional(test_value_5)
+    assert not date_validator._field_is_optional(test_value_6)
 
 
 def test_remove_line_feed():
