@@ -59,8 +59,8 @@ def file_has_text(file, text):
         search_result_1 = re_search_1.search(text_file_input)
         if search_result_1 is None:
             return False
-        else:
-            return True
+
+        return True
 
 
 def validate_config_data(config_data, parameters):
@@ -127,7 +127,7 @@ def validate_config_data(config_data, parameters):
     for par_name, par_info in parameters.items():
         if par_name in out_data:
             continue
-        elif "default" in par_info.keys() and par_info["default"] is not None:
+        if "default" in par_info.keys() and par_info["default"] is not None:
             validated_value = _validate_and_convert_value(par_name, par_info, par_info["default"])
             out_data[par_name] = validated_value
         elif "default" in par_info.keys() and par_info["default"] is None:
@@ -168,17 +168,17 @@ def _validate_and_convert_value_without_units(value, value_keys, par_name, par_i
     _, undefined_length = _check_value_entry_length(value, par_name, par_info)
 
     # Checking if values have unit and raising error, if so.
-    if all([isinstance(v, str) for v in value]):
+    if all(isinstance(v, str) for v in value):
         # In case values are string, e.g. mirror_numbers = 'all'
         # This is needed otherwise the elif condition will break
         pass
-    elif any([u.Quantity(v).unit != u.dimensionless_unscaled for v in value]):
+    elif any(u.Quantity(v).unit != u.dimensionless_unscaled for v in value):
         msg = "Config entry {} should not have units".format(par_name)
         logger.error(msg)
         raise InvalidConfigEntry(msg)
 
     if value_keys:
-        return {k: v for (k, v) in zip(value_keys, value)}
+        return dict(zip(value_keys, value))
     return value if len(value) > 1 or undefined_length else value[0]
 
 
@@ -252,7 +252,7 @@ def _validate_and_convert_value_with_units(value, value_keys, par_name, par_info
         msg = "Config entry with undefined length should have a single unit: {}".format(par_name)
         logger.error(msg)
         raise InvalidConfigEntry(msg)
-    elif len(par_unit) == 1:
+    if len(par_unit) == 1:
         par_unit *= value_length
 
     # Checking units and converting them, if needed.
@@ -271,15 +271,14 @@ def _validate_and_convert_value_with_units(value, value_keys, par_name, par_info
             msg = "Config entry given without unit: {}".format(par_name)
             logger.error(msg)
             raise InvalidConfigEntry(msg)
-        elif not arg.unit.is_equivalent(unit):
+        if not arg.unit.is_equivalent(unit):
             msg = "Config entry given with wrong unit: {}".format(par_name)
             logger.error(msg)
             raise InvalidConfigEntry(msg)
-        else:
-            value_with_units.append(arg.to(unit).value)
+        value_with_units.append(arg.to(unit).value)
 
     if value_keys:
-        return {k: v for (k, v) in zip(value_keys, value_with_units)}
+        return dict(zip(value_keys, value_with_units))
 
     return (
         value_with_units if len(value_with_units) > 1 or undefined_length else value_with_units[0]
@@ -332,16 +331,16 @@ def collect_data_from_yaml_or_dict(in_yaml, in_dict, allow_empty=False):
         with open(in_yaml) as file:
             data = yaml.load(file)
         return data
-    elif in_dict is not None:
+    if in_dict is not None:
         return dict(in_dict)
-    else:
-        msg = "config_data has not been provided (by yaml file neither by dict)"
-        if allow_empty:
-            _logger.debug(msg)
-            return None
-        else:
-            _logger.error(msg)
-            raise InvalidConfigData(msg)
+
+    msg = "config_data has not been provided (by yaml file neither by dict)"
+    if allow_empty:
+        _logger.debug(msg)
+        return None
+
+    _logger.error(msg)
+    raise InvalidConfigData(msg)
 
 
 def collect_kwargs(label, in_kwargs):
@@ -412,10 +411,8 @@ def collect_final_lines(file, n_lines):
         for line in f:
             file_in_lines.append(line)
     collected_lines = file_in_lines[-n_lines:-1]
-    out = ""
-    for ll in collected_lines:
-        out += ll
-    return out
+
+    return "".join(collected_lines)
 
 
 def get_log_level_from_user(log_level):
@@ -448,8 +445,8 @@ def get_log_level_from_user(log_level):
                 log_level, list(possible_levels.keys())
             )
         )
-    else:
-        return possible_levels[log_level_lower]
+
+    return possible_levels[log_level_lower]
 
 
 def copy_as_list(value):
@@ -467,11 +464,11 @@ def copy_as_list(value):
     """
     if isinstance(value, str):
         return [value]
-    else:
-        try:
-            return list(value)
-        except Exception:
-            return [value]
+
+    try:
+        return list(value)
+    except Exception:
+        return [value]
 
 
 def separate_args_and_config_data(expected_args, **kwargs):
