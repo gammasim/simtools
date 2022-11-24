@@ -327,7 +327,7 @@ def collect_data_from_yaml_or_dict(in_yaml, in_dict, allow_empty=False):
     Parameters
     ----------
     in_yaml: (str, required)
-        Name of the Yaml file.
+        Name of the yaml file.
     in_dict: (dict, required)
         Data as dict.
     allow_empty: (bool, optional)
