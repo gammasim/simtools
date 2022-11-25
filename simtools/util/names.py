@@ -41,11 +41,6 @@ def validate_sub_system_name(name):
     -------
     str
         Validated name.
-
-    Raises
-    ------
-    ValueError
-        If name is not valid.
     """
     return validate_name(name, {**all_camera_names, **all_structure_names})
 
@@ -63,12 +58,6 @@ def validate_camera_name(name):
     -------
     str
         Validated name.
-
-    Raises
-    ------
-    ValueError
-        If name is not valid.
-
     """
     return validate_name(name, all_camera_names)
 
