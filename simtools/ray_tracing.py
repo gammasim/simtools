@@ -39,36 +39,6 @@ class RayTracing:
         Dict containing the configurable parameters.
     config_file: str or Path
         Path of the yaml file containing the configurable parameters.
-
-    Attributes
-    ----------
-    label: str
-        Instance label.
-    config: namedtuple
-        Contains the configurable parameters:
-            zenith_angle:
-                len: 1
-                unit: deg
-                default: 20 deg
-            off_axis_angle:
-                len: null
-                unit: deg
-                default: [0 deg]
-            source_distance:
-                len: 1
-                unit: km
-                default: 10 km
-            single_mirror_mode:
-                len: 1
-                default: False
-            use_random_focal_length:
-                len: 1
-                default: False
-            mirror_numbers:
-                len: null
-                default: 'all'
-    YLABEL: dict
-        Dictionary with parameters available for plotting
     """
 
     YLABEL = {

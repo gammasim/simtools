@@ -11,28 +11,16 @@ class SchemaValidator:
     Validate a dictionary against a reference schema.
     Used e.g., to validate metadata provided as input.
 
-    Attributes
+    Parameters
     ----------
     data_dict: dict
-        Metadata dict to be validated against
-        reference schema
-
-    Methods
-    -------
-    validate_and_transform(meta_file_name=None, lower_case=True)
-        validate meta data provided by file
+        Metadata dict to be validated against reference schema.
 
     """
 
     def __init__(self, data_dict=None):
         """
-        Initalize validation class and load reference schema.
-
-        Parameters
-        ----------
-        data_dict: dict
-            Metadata dict to be validated against reference schema
-
+        Initialize validation class and load reference schema.
         """
 
         self._logger = logging.getLogger(__name__)
@@ -51,7 +39,7 @@ class SchemaValidator:
         meta_file_name
             file name for file with meta data to
             be validated (might also be given as
-            dictionary during initialization of the class)
+            dictionary during initialization of the class).
         lower_case: bool
             compare schema keys in lower case only (gammasim-tools convention).
 
@@ -83,13 +71,13 @@ class SchemaValidator:
             Reference metadata schema
         data_dict: dict
             input metadata dict to be validated against
-            reference schema
+            reference schema.
 
         Raises
         ------
         UnboundLocalError
             If no data is available for metadata key from the
-            reference schema
+            reference schema.
 
         """
 
@@ -123,7 +111,7 @@ class SchemaValidator:
         Raises
         ------
         KeyError
-            if data_dict["product"]["description"] is not available
+            if data_dict["product"]["description"] is not available.
 
         """
 
@@ -137,21 +125,21 @@ class SchemaValidator:
     def _validate_data_type(self, schema, key, data_field):
         """
         Validate data type against the expected data type
-        from schema
+        from schema.
 
         Parameters
         ----------
         schema: dict
-            metadata description from reference schema
+            metadata description from reference schema.
         key: str
-            data field name to be validated
+            data field name to be validated.
         data_field: dict
-            data field to be validated
+            data field to be validated.
 
         Raises
         ------
         ValueError
-            if data types are inconsistent
+            if data types are inconsistent.
 
         """
 
@@ -182,7 +170,7 @@ class SchemaValidator:
     def _validate_datetime(data_field, optional_field=False):
         """
         Validate entry to be of type datetime and of
-        format %Y-%m-%d %H:%M:%S
+        format %Y-%m-%d %H:%M:%S.
 
         Parameters
         ----------
@@ -214,14 +202,14 @@ class SchemaValidator:
         Parameters
         ----------
         data_field: dict
-            data field to be validated
+            data field to be validated.
         key: str
-            data field name to be validated
+            data field name to be validated.
 
         Raises
         ------
         ValueError
-            if data field is of invalid format
+            if data field is of invalid format.
 
         """
         regex = r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b"
@@ -235,15 +223,14 @@ class SchemaValidator:
         Parameters
         ----------
         schema_type
-            reference schema type (e.g., instrumentlist, documentlist)
+            reference schema type (e.g., instrumentlist, documentlist).
         data_list: list
-            list of dictionaries to be validated
-
+            list of dictionaries to be validated.
         """
+
         _ref_schema = gen.change_dict_keys_case(
             meta_data_model.metadata_input_reference_document_list(schema_type), lower_case=True
         )
-
         for entry in data_list:
             self._validate_schema(_ref_schema, entry)
 
