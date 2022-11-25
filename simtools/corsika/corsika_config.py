@@ -419,11 +419,11 @@ class CorsikaConfig:
         str
             for file_type="config_tmp":
                 Get the CORSIKA input file for one specific run.
-                The input file after being pre-processed by sim_telarray (pfp).
+                This is the input file after being pre-processed by sim_telarray (pfp).
             for file_type="config":
-                A general CORSIKA config inputs file.
+                Get a general CORSIKA config inputs file.
             for file_type="output_generic"
-                A generic file name for the TELFIL option in the CORSIKA inputs file.
+                Get a generic file name for the TELFIL option in the CORSIKA inputs file.
 
         Raises
         ------

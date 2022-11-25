@@ -84,7 +84,7 @@ def validate_telescope_id_name(name):
     Parameters
     ----------
     name: str
-        Name of the telescope ID name.
+        Telescope ID name.
 
     Returns
     -------
@@ -113,7 +113,7 @@ def validate_model_version_name(name):
     Parameters
     ----------
     name: str
-        Name of the model version name.
+        Model version name.
 
     Returns
     -------
@@ -184,7 +184,7 @@ def validate_name(name, all_names):
     name: str
         Name to validate.
     all_names: dict
-        Dictionary withe valid names.
+        Dictionary with valid names.
     Returns
     -------
     str
@@ -217,7 +217,7 @@ def is_valid_name(name, all_names):
     Parameters
     ----------
     name:  str
-        Name to valited.
+        Name to validated.
     all_names: dict
         Dictionary with valid names.
 
@@ -242,7 +242,7 @@ def validate_telescope_model_name(name):
     Parameters
     ----------
     name: str
-        Name of telescope model name.
+        Telescope model name.
 
     Returns
     -------
