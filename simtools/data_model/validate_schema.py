@@ -15,7 +15,7 @@ class SchemaValidator:
 
     Parameters
     ----------
-    data_dict: (dict, optional)
+    data_dict: dict
         Metadata dict to be validated against reference schema (default is None).
     """
 
@@ -37,10 +37,10 @@ class SchemaValidator:
 
         Parameters
         ----------
-        meta_file_name: (str, optional)
+        meta_file_name: str
             file name for file with meta data to be validated (might also be given as dictionary \
              during initialization of the class (default is None).
-        lower_case: (bool, optional)
+        lower_case: bool
             compare schema keys in lower case only (gammasim-tools convention; default is True).
 
         Returns

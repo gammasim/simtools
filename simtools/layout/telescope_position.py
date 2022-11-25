@@ -29,7 +29,7 @@ class TelescopePosition:
 
     Parameters
     ----------
-    name: (str, optional)
+    name: str
         Name of the telescope (e.g LST-01, SST-05, ...) (default is None).
 
     """
@@ -76,13 +76,13 @@ class TelescopePosition:
 
         Parameters
         ----------
-        crs_name: (str, required)
+        crs_name: str
             Name of coordinate system to be used for printing.
-        print_header: (bool, optional)
+        print_header: bool
             Print table header (default is False).
-        corsika_obs_level: (astropy.Quantity, optional)
+        corsika_obs_level: astropy.Quantity
             CORSIKA observation level in equivalent units of meter (default is None).
-        corsika_sphere_center: (astropy.Quantity, optional)
+        corsika_sphere_center: astropy.Quantity
             CORSIKA sphere center in equivalent units of meter (default is None).
 
         Raises
@@ -145,9 +145,9 @@ class TelescopePosition:
 
         Attributes
         ----------
-        crs_name: (str, required)
+        crs_name: str
             name of coordinate system.
-        coordinate_field: (str, optional)
+        coordinate_field: str
             return specified field of coordinate descriptor (default is None).
 
         Returns
@@ -209,13 +209,13 @@ class TelescopePosition:
 
         Attributes
         ----------
-        crs_name: (str, required)
+        crs_name: str
             Name of coordinate system.
-        xx: (float, required)
+        xx: float
             x-coordinate.
-        yy: (float, required)
+        yy: float
             y-coordinate.
-        zz: (float, optional)
+        zz: float
             z-coordinate (altitude) (default is None).
 
         Raises
@@ -261,7 +261,7 @@ class TelescopePosition:
 
         Attributes
         ----------
-        tel_altitude: (astropy.Quantity, required)
+        tel_altitude: astropy.Quantity
         """
 
         for _crs in self.crs.values():
@@ -333,9 +333,9 @@ class TelescopePosition:
 
         Attributes
         ----------
-        crs_name: (str, required)
+        crs_name: str
             Name of coordinate system.
-        crs_check: (bool, optional)
+        crs_check: bool
             Check that projection system is defined (default is False).
 
         Returns
@@ -368,7 +368,7 @@ class TelescopePosition:
 
         Parameters
         ----------
-        crs_name: (str, optional)
+        crs_name: str
             Name of coordinate system to be checked for altitude. If None: check if altitude is \
             define for any system (default is None).
 
@@ -431,11 +431,11 @@ class TelescopePosition:
 
         Parameters
         ----------
-        tel_altitude: (astropy.Quantity, required)
+        tel_altitude: astropy.Quantity
             Telescope altitude in equivalent units of meter.
-        corsika_ob_level: (astropy.Quantity, required)
+        corsika_ob_level: astropy.Quantity
             CORSIKA observation level in equivalent units of meter.
-        corsika_sphere_center: (astropy.Quantity, required)
+        corsika_sphere_center: astropy.Quantity
             CORSIKA sphere center in equivalent units of meter.
 
         Returns
@@ -456,11 +456,11 @@ class TelescopePosition:
 
         Parameters
         ----------
-        tel_corsika_z: (astropy.Quantity, required)
+        tel_corsika_z: astropy.Quantity
             Telescope z-position in CORSIKA system in equivalent units of meter.
-        corsika_ob_level: (astropy.Quantity, optional)
+        corsika_ob_level: astropy.Quantity
             CORSIKA observation level in equivalent units of meter (default is None).
-        corsika_sphere_center: (astropy.Quantity, optional)
+        corsika_sphere_center: astropy.Quantity
             CORSIKA sphere center in equivalent units of meter (default is None).
 
         Returns
@@ -477,11 +477,11 @@ class TelescopePosition:
 
         Parameters
         ----------
-        crs_local: (pyproj.crs.crs.CRS, optional)
+        crs_local: pyproj.crs.crs.CRS
             Pyproj CRS of the local coordinate system (default is None).
-        crs_wgs84: (pyproj.crs.crs.CRS, optional)
+        crs_wgs84: pyproj.crs.crs.CRS
             Pyproj CRS of the mercator coordinate system (default is None).
-        crs_utm: (pyproj.crs.crs.CRS, optional)
+        crs_utm: pyproj.crs.crs.CRS
             Pyproj CRS of the utm coordinate system (default is None).
 
         Raises

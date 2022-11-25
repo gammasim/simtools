@@ -21,7 +21,7 @@ class SimtelEvents:
 
     Parameters
     ----------
-    input_files: (list, optional)
+    input_files: list
         List of sim_telarray output files (str of Path) (default is None).
     """
 
@@ -40,7 +40,7 @@ class SimtelEvents:
 
         Parameters
         ----------
-        files: (list, optional)
+        files: list
             List of sim_telarray files (str or Path) (default is None).
         """
         if not hasattr(self, "input_files"):
@@ -145,10 +145,10 @@ class SimtelEvents:
 
         Parameters
         ----------
-        energy_range: (Tuple with len 2, optional)
+        energy_range: Tuple with len 2
             Max and min energy of energy range, e.g. energy_range=(100 * u.GeV, 10 * u.TeV) \
             (default is None)
-        core_max: (astropy.Quantity (distance), optional)
+        core_max: astropy.Quantity distance)
             Maximum core radius for selecting showers, e.g. core_max=1000 * u.m (default is None).
 
         Returns
@@ -175,10 +175,10 @@ class SimtelEvents:
 
         Parameters
         ----------
-        energy_range: (Tuple len 2, optional)
+        energy_range: Tuple len 2
             Max and min energy of energy range, e.g. energy_range=(100 * u.GeV, 10 * u.TeV) \
             (default is None)
-        core_max: (astropy.Quantity (distance), optional)
+        core_max: astropy.Quantity distance)
             Maximum core radius for selecting showers, e.g. core_max=1000 * u.m (default is None)
 
         Returns
@@ -216,10 +216,10 @@ class SimtelEvents:
 
         Parameters
         ----------
-        energy_range: (Tuple (len 2), optional)
+        energy_range: Tuple len 2)
             Max and min energy of energy range, e.g. energy_range=(100 * u.GeV, 10 * u.TeV) \
             (default is None).
-        core_max: (astropy.Quantity (distance), optional)
+        core_max: astropy.Quantity distance)
             Maximum core radius for selecting showers, e.g. core_max=1000 * u.m (default is None).
 
         Returns

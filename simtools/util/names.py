@@ -34,7 +34,7 @@ def validate_sub_system_name(name):
 
     Parameters
     ----------
-    name: (str, required)
+    name: str
         Name of the subsystem.
 
     Returns
@@ -56,7 +56,7 @@ def validate_camera_name(name):
 
     Parameters
     ----------
-    name: (str, required)
+    name: str
         Camera name
 
     Returns
@@ -83,7 +83,7 @@ def validate_telescope_id_name(name):
 
     Parameters
     ----------
-    name: (str, required)
+    name: str
         Name of the telescope ID name.
 
     Returns
@@ -112,7 +112,7 @@ def validate_model_version_name(name):
 
     Parameters
     ----------
-    name: (str, required)
+    name: str
         Name of the model version name.
 
     Returns
@@ -134,7 +134,7 @@ def validate_simtel_mode_name(name):
 
     Parameters
     ----------
-    name: (str, required)
+    name: str
         sim_telarray mode name.
 
     Returns
@@ -156,7 +156,7 @@ def validate_site_name(name):
 
     Parameters
     ----------
-    name: (str, required)
+    name: str
         Site name.
 
     Returns
@@ -178,7 +178,7 @@ def validate_layout_array_name(name):
 
     Parameters
     ----------
-    name: (str, required)
+    name: str
         Layout array name.
 
     Returns
@@ -201,9 +201,9 @@ def validate_name(name, all_names):
 
     Parameters
     ----------
-    name: (str, required)
+    name: str
         Name to validate.
-    all_names: (dict, required)
+    all_names: dict
         Dictionary withe valid names.
     Returns
     -------
@@ -236,9 +236,9 @@ def is_valid_name(name, all_names):
 
     Parameters
     ----------
-    name:  (str, required)
+    name:  str
         Name to valited.
-    all_names: (dict, required)
+    all_names: dict
         Dictionary with valid names.
 
     Returns
@@ -261,7 +261,7 @@ def validate_telescope_model_name(name):
 
     Parameters
     ----------
-    name: (str, required)
+    name: str
         Name of telescope model name.
 
     Returns
@@ -299,7 +299,7 @@ def split_telescope_model_name(name):
 
     Parameters
     ----------
-    name: (str, required)
+    name: str
         Telescope name.
 
     Returns
@@ -325,7 +325,7 @@ def get_site_from_telescope_name(name):
 
     Parameters
     ----------
-    name: (str, required)
+    name: str
         Telescope name.
 
     Returns
@@ -342,7 +342,7 @@ def validate_telescope_name_db(name):
 
     Parameters
     ----------
-    name: (str, required)
+    name: str
 
     Returns
     -------
@@ -366,7 +366,7 @@ def convert_telescope_model_name_to_yaml(name):
 
     Parameters
     ----------
-    name: (str, required)
+    name: str
         Telescope model name.
 
     Returns
@@ -472,18 +472,18 @@ def simtools_instrument_name(site, telescope_class_name, sub_system_name, telesc
 
     Parameters
     ----------
-    site: (str, required)
+    site: str
         South or North.
-    telescope_class_name: (str, required)
+    telescope_class_name: str
         LST, MST, ...
-    sub_system_name: (str, required)
+    sub_system_name: str
         FlashCam, NectarCam
-    telescope_id_name: (str, required)
+    telescope_id_name: str
         telescope ID (e.g., D, numerial value)
 
     Returns
     -------
-    instrument: name: (str, required)
+    instrument: name: str
         Instrument name.
 
     Raises
@@ -512,15 +512,15 @@ def simtel_telescope_config_file_name(
 
     Parameters
     ----------
-    site: (str, required)
+    site: str
         South or North.
-    telescope_model_name: (str, required)
+    telescope_model_name: str
         LST-1, MST-FlashCam, ...
-    model_version: (str, required)
+    model_version: str
         Version of the model.
-    label: (str, required)
+    label: str
         Instance label.
-    extra_label: (str, required)
+    extra_label: str
         Extra label in case of multiple telescope config files.
 
     Returns
@@ -541,13 +541,13 @@ def simtel_array_config_file_name(array_name, site, version, label):
 
     Parameters
     ----------
-    array_name: (str, required)
+    array_name: str
         Prod5, ...
-    site: (str, required)
+    site: str
         South or North.
-    version: (str, required)
+    version: str
         Version of the model.
-    label: (str, required)
+    label: str
         Instance label.
 
     Returns
@@ -569,15 +569,15 @@ def simtel_single_mirror_list_file_name(
 
     Parameters
     ----------
-    site: (str, required)
+    site: str
         South or North.
-    telescope_model_name: (str, required)
+    telescope_model_name: str
         North-LST-1, South-MST-FlashCam, ...
-    model_version: (str, required)
+    model_version: str
         Version of the model.
-    mirror_number: (int, required)
+    mirror_number: int
         Mirror number.
-    label: (str, required)
+    label: str
         Instance label.
 
     Returns
@@ -598,9 +598,9 @@ def layout_telescope_list_file_name(name, label):
 
     Parameters
     ----------
-    name: (str, required)
+    name: str
         Name of the array.
-    label: (str, required)
+    label: str
         Instance label.
 
     Returns
@@ -629,21 +629,21 @@ def ray_tracing_file_name(
 
     Parameters
     ----------
-    site: (str, required)
+    site: str
         South or North.
-    telescope_model_name: (str, required)
+    telescope_model_name: str
         LST-1, MST-FlashCam, ...
-    source_distance: (float, required)
+    source_distance: float
         Source distance (km).
-    zenith_angle: (float, required)
+    zenith_angle: float
         Zenith angle (deg).
-    off_axis_angle: (float, required)
+    off_axis_angle: float
         Off-axis angle (deg).
-    mirror_number: (int, required)
+    mirror_number: int
         Mirror number. None if not single mirror case.
-    label: (str, required)
+    label: str
         Instance label.
-    base: (str, required)
+    base: str
         Photons, stars or log.
 
     Returns
@@ -666,15 +666,15 @@ def ray_tracing_results_file_name(site, telescope_model_name, source_distance, z
 
     Parameters
     ----------
-    site: (str, required)
+    site: str
         South or North.
-    telescope_model_name: (str, required)
+    telescope_model_name: str
         LST-1, MST-FlashCam, ...
-    source_distance: (float, required)
+    source_distance: float
         Source distance (km).
-    zenith_angle: (float, required)
+    zenith_angle: float
         Zenith angle (deg).
-    label: (str, required)
+    label: str
         Instance label.
 
     Returns
@@ -698,17 +698,17 @@ def ray_tracing_plot_file_name(
 
     Parameters
     ----------
-    key: (str, required)
+    key: str
         Quantity to be plotted (d80_cm, d80_deg, eff_area or eff_flen)
-    site: (str, required)
+    site: str
         South or North.
-    telescope_model_name: (str, required)
+    telescope_model_name: str
         LST-1, MST-FlashCam, ...
-    source_distance: (float, required)
+    source_distance: float
         Source distance (km).
-    zenith_angle: (float, required)
+    zenith_angle: float
         Zenith angle (deg).
-    label: (str, required)
+    label: str
         Instance label.
 
     Returns
@@ -730,13 +730,13 @@ def camera_efficiency_results_file_name(site, telescope_model_name, zenith_angle
 
     Parameters
     ----------
-    site: (str, required)
+    site: str
         South or North.
-    telescope_model_name: (str, required)
+    telescope_model_name: str
         LST-1, MST-FlashCam, ...
-    zenith_angle: (float, required)
+    zenith_angle: float
         Zenith angle (deg).
-    label: (str, required)
+    label: str
         Instance label.
 
     Returns
@@ -756,13 +756,13 @@ def camera_efficiency_simtel_file_name(site, telescope_model_name, zenith_angle,
 
     Parameters
     ----------
-    site: (str, required)
+    site: str
         South or North.
-    telescope_model_name: (str, required)
+    telescope_model_name: str
         LST-1, MST-FlashCam-D, ...
-    zenith_angle: (float, required)
+    zenith_angle: float
         Zenith angle (deg).
-    label: (str, required)
+    label: str
         Instance label.
 
     Returns
@@ -782,13 +782,13 @@ def camera_efficiency_log_file_name(site, telescope_model_name, zenith_angle, la
 
     Parameters
     ----------
-    site: (str, required)
+    site: str
         South or North.
-    telescope_model_name: (str, required)
+    telescope_model_name: str
         LST-1, MST-FlashCam-D, ...
-    zenith_angle: (float, required)
+    zenith_angle: float
         Zenith angle (deg).
-    label: (str, required)
+    label: str
         Instance label.
 
     Returns

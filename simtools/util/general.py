@@ -55,9 +55,9 @@ def file_has_text(file, text):
 
     Parameters
     ----------
-    file: (str, required)
+    file: str
         Path of the file.
-    text: (str, required)
+    text: str
         Piece of text to be searched for.
 
     Returns
@@ -87,9 +87,9 @@ def validate_config_data(config_data, parameters):
 
     Parameters
     ----------
-    config_data: (dict, required)
+    config_data: dict
         Input config data.
-    parameters: (dict, required)
+    parameters: dict
         Parameter information necessary for validation.
 
     Raises
@@ -163,13 +163,13 @@ def _validate_and_convert_value_without_units(value, value_keys, par_name, par_i
 
     Parameters
     ----------
-    value: (list, required)
+    value: list
        list of user input values.
-    value_keys: (list, required)
+    value_keys: list
        list of keys if user input was a dict; otherwise None.
-    par_name: (str, required)
+    par_name: str
        name of parameter.
-    par_info: (dict, required)
+    par_info: dict
         dictionary with parameter info.
 
     Returns
@@ -326,11 +326,11 @@ def collect_data_from_yaml_or_dict(in_yaml, in_dict, allow_empty=False):
 
     Parameters
     ----------
-    in_yaml: (str, required)
+    in_yaml: str
         Name of the yaml file.
-    in_dict: (dict, required)
+    in_dict: dict
         Data as dict.
-    allow_empty: (bool, optional)
+    allow_empty: bool
         If True, an error won't be raised in case both yaml and dict are None.
 
     Returns
@@ -386,7 +386,7 @@ def set_default_kwargs(in_kwargs, **kwargs):
 
     Parameters
     ----------
-    in_kwargs: (dict, required)
+    in_kwargs: dict
         Input dict to be filled in with the default kwargs.
     **kwargs:
         Default kwargs to be set.
@@ -429,9 +429,9 @@ def collect_final_lines(file, n_lines):
 
     Parameters
     ----------
-    file: (str or Path, required)
+    file: str or Path
         File to collect the lines from.
-    n_lines: (int, required)
+    n_lines: int
         Number of lines to be collected.
 
     Returns
@@ -490,7 +490,7 @@ def copy_as_list(value):
 
     Parameters
     ----------
-    value (single variable of any type or list, required)
+    value single variable of any type or list
 
     Returns
     -------
@@ -514,7 +514,7 @@ def separate_args_and_config_data(expected_args, **kwargs):
 
     Parameters
     ----------
-    expected_args: (list of str, required)
+    expected_args: list of str
         List of arguments expected for the class.
     **kwargs
 
@@ -567,9 +567,9 @@ def find_file(name, loc):
 
     Parameters
     ----------
-    name: (str, required)
+    name: str
         File name to be searched for.
-    loc: (Path, required)
+    loc: Path
         Location of where to search for the file.
 
     Returns
@@ -629,9 +629,9 @@ def change_dict_keys_case(data_dict, lower_case=True):
 
     Parameters
     ----------
-    data_dict: (dict, required)
+    data_dict: dict
         Dictionary to be converted.
-    lower_case: (bool, optional)
+    lower_case: bool
         Change keys to lower (upper) case if True (False) (default is True).
     """
 

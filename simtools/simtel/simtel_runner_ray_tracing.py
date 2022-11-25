@@ -36,19 +36,19 @@ class SimtelRunnerRayTracing(SimtelRunner):
 
     Parameters
     ----------
-    telescope_model: (str, required)
+    telescope_model: str
         Instance of TelescopeModel class.
-    label: (str, optional)
+    label: str
         Instance label. Important for output file naming (default is None).
-    simtel_source_path: (str or Path, optional)
+    simtel_source_path: str or Path
         Location of sim_telarray installation (default is None).
-    config_data: (dict, optional)
+    config_data: dict
         Dict containing the configurable parameters (default is None).
-    config_file: (str or Path, optional)
+    config_file: str or Path
         Path of the yaml file containing the configurable parameters (default is None).
-    single_mirror_mode: (bool, optional)
+    single_mirror_mode: bool
         True for single mirror simulations (default is False).
-    force_simulate: (bool, optional)
+    force_simulate: bool
         Remove existing files and force re-running of the ray-tracing simulation (default is False).
     """
 

@@ -34,15 +34,15 @@ class Configurator:
 
     Parameters
     ----------
-    config: (dict, optional)
+    config: dict
         Configuration parameters as dict (default is None).
-    label: (str, optional)
+    label: str
         Class label (default is None).
-    usage: (str, opitonal)
+    usage: str
         Application usage description (default is None).
-    description: (str, optional)
+    description: str
         Text displayed as description (default is None).
-    epilog: (str, optional)
+    epilog: str
         Text display after all arguments (default is None).
     """
 
@@ -67,9 +67,9 @@ class Configurator:
 
         Parameters
         ----------
-        arg_list (list, optional)
+        arg_list list
             List of arguments (default is None)
-        add_db_config (bool, optional)
+        add_db_config bool
             Add DB configuration file (default is False)
 
         Returns
@@ -108,15 +108,15 @@ class Configurator:
 
         Parameters
         ----------
-        paths: (bool, optional)
+        paths: bool
             Add path configuration to list of args (default is True).
-        telescope_model: (bool, optional)
+        telescope_model: bool
             Add telescope model configuration to list of args (default is False).
-        workflow_config: (bool, optional)
+        workflow_config: bool
             Add workflow configuration to list of args (default is False).
-        db_config: (bool, optional)
+        db_config: bool
             Add database configuration parameters to list of args (default is False).
-        job_submission: (bool, optional)
+        job_submission: bool
             Add job submission configuration to list of args (default is False).
 
         Returns

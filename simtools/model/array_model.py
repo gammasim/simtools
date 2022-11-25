@@ -24,13 +24,13 @@ class ArrayModel:
 
     Parameters
     ----------
-    mongo_db_config: (dict, required)
+    mongo_db_config: dict
         MongoDB configuration.
-    array_config_file: (str, optional)
+    array_config_file: str
         Path to a yaml file with the array config data (default is None).
-    array_config_data: (dict, optional)
+    array_config_data: dict
         Dict with the array config data (default is None).
-    label: (str, optional)
+    label: str
         Instance label. Important for output file naming (default is None).
     """
 
@@ -226,9 +226,9 @@ class ArrayModel:
 
         Parameters
         ----------
-        tel_name: (str, required)
+        tel_name: str
             Name of the telescope at the layout level (LST-01, MST-05, ...).
-        tel_size: (str, required)
+        tel_size: str
             LST, MST or SST.
         """
 

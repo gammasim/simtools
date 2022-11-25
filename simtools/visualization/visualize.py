@@ -167,9 +167,9 @@ def set_style(palette="default", big_plot=False):
 
     Parameters
     ----------
-    palette: (str, optional)
+    palette: str
         Colour palette (default is 'default').
-    big_plot: (bool, optional)
+    big_plot: bool
         Flag to set fonts and marker bigger. If True, it sets them bigger (default is False).
 
     Raises
@@ -217,7 +217,7 @@ def get_colors(palette="default"):
 
     Parameters
     ----------
-    palette: (str, optional)
+    palette: str
         Colour palette (default is 'default).
 
     Returns
@@ -272,7 +272,7 @@ def plot_1D(data, **kwargs):
 
     Parameters
     ----------
-    data: (numpy structured array or a dictionary of structured arrays, required).
+    data: numpy structured array or a dictionary of structured arrays
           Each structured array has two columns, the first is the x-axis and the second the y-axis.
           The titles of the columns are set as the axes titles.
           The labels of each dataset set are given in the dictionary keys
@@ -430,11 +430,11 @@ def plot_table(table, y_title, **kwargs):
 
     Parameters
     ----------
-    table: (astropy.Table or astropy.QTable, required)
+    table: astropy.Table or astropy.QTable
            The first column of the table is the x-axis and the second column is the y-axis. Any \
            additional columns will be treated as additional data to plot. The column titles are \
            used in the legend (except for the first column).
-    y_title: (str, required)
+    y_title: str
            The y-axis title.
 
     **kwargs:
@@ -483,7 +483,7 @@ def plot_hist_2D(data, **kwargs):
 
     Parameters
     ----------
-    data: (numpy structured array, required)
+    data: numpy structured array
           The columns of the structured array are used as the x-axis and y-axis titles.
     **kwargs:
         * title: set a plot title.
