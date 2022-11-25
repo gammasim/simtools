@@ -119,11 +119,6 @@ def validate_model_version_name(name):
     -------
     str
         Validated name.
-
-    Raises
-    ------
-    ValueError
-        If name is not valid.
     """
     return validate_name(name, all_model_version_names)
 
@@ -141,11 +136,6 @@ def validate_simtel_mode_name(name):
     -------
     str
         Validated name.
-
-    Raises
-    ------
-    ValueError
-        If name is not valid.
     """
     return validate_name(name, all_simtel_mode_names)
 
@@ -163,11 +153,6 @@ def validate_site_name(name):
     -------
     str
         Validated name.
-
-    Raises
-    ------
-    ValueError
-        If name is not valid.
     """
     return validate_name(name, all_site_names)
 
@@ -185,11 +170,6 @@ def validate_layout_array_name(name):
     -------
     str
         Validated name.
-
-    Raises
-    ------
-    ValueError
-        If name is not valid.
     """
     return validate_name(name, all_layout_array_names)
 
@@ -268,11 +248,6 @@ def validate_telescope_model_name(name):
     -------
     str
         Validated name.
-
-    Raises
-    ------
-    ValueError
-        If name is not valid.
     """
 
     tel_class, tel_type = split_telescope_model_name(name)
@@ -306,11 +281,6 @@ def split_telescope_model_name(name):
     -------
     str, str
        class (LST, MST, SST ...) and type (any complement).
-
-    Raises
-    ------
-    ValueError
-        If name is not valid.
     """
 
     name_parts = name.split("-")
@@ -348,11 +318,6 @@ def validate_telescope_name_db(name):
     -------
     str
         Validated name.
-
-    Raises
-    ------
-    ValueError
-        If name is not valid.
     """
     site = get_site_from_telescope_name(name)
     tel_model_name = "-".join(name.split("-")[1:])
@@ -485,12 +450,6 @@ def simtools_instrument_name(site, telescope_class_name, sub_system_name, telesc
     -------
     instrument: name: str
         Instrument name.
-
-    Raises
-    ------
-    ValueError
-        If any of the parameters is not valid.
-
     """
 
     return (
