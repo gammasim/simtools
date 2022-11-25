@@ -3,20 +3,19 @@ import logging
 import re
 
 import simtools.util.general as gen
-from simtools.data_model import data_model
-
-__all__ = ["SchemaValidator"]
+from simtools.data_model import meta_data_model
 
 
 class SchemaValidator:
     """
-    Validate a dictionary against a reference schema. Used e.g., to validate metadata provided as\
-     input.
+    Validate a dictionary against a reference schema.
+    Used e.g., to validate metadata provided as input.
 
     Parameters
     ----------
     data_dict: dict
         Metadata dict to be validated against reference schema.
+
     """
 
     def __init__(self, data_dict=None):
@@ -27,7 +26,7 @@ class SchemaValidator:
         self._logger = logging.getLogger(__name__)
 
         self._reference_schema = gen.change_dict_keys_case(
-            data_model.metadata_input_reference_schema(), lower_case=True
+            meta_data_model.metadata_input_reference_schema(), lower_case=True
         )
         self.data_dict = data_dict
 
@@ -37,11 +36,12 @@ class SchemaValidator:
 
         Parameters
         ----------
-        meta_file_name: str
-            file name for file with meta data to be validated (might also be given as dictionary \
-             during initialization of the class.
+        meta_file_name
+            file name for file with meta data to
+            be validated (might also be given as
+            dictionary during initialization of the class).
         lower_case: bool
-            compare schema keys in lower case only (gammasim-tools convention; default is True).
+            compare schema keys in lower case only (gammasim-tools convention).
 
         Returns
         -------
@@ -70,12 +70,15 @@ class SchemaValidator:
         ref_schema: dict
             Reference metadata schema
         data_dict: dict
-            input metadata dict to be validated against reference schema
+            input metadata dict to be validated against
+            reference schema.
 
         Raises
         ------
         UnboundLocalError
-            If no data is available for metadata key from the reference schema
+            If no data is available for metadata key from the
+            reference schema.
+
         """
 
         for key, value in ref_schema.items():
@@ -83,9 +86,9 @@ class SchemaValidator:
                 _this_data = data_dict[key]
             else:
                 if self._field_is_optional(value):
-                    self._logger.debug(f"Optional field {key}")
+                    self._logger.debug("Optional field %s", key)
                     continue
-                msg = f"Missing required field {key}"
+                msg = f"Missing required field '{key}'"
                 raise ValueError(msg)
 
             if isinstance(value, dict):
@@ -94,20 +97,21 @@ class SchemaValidator:
                     try:
                         self._validate_data_type(value, key, _this_data)
                     except UnboundLocalError:
-                        self._logger.error(f"No data for `{key}` key")
+                        self._logger.error("No data for `%s` key", key)
                         raise
                 else:
                     self._validate_schema(value, _this_data)
 
     def _process_schema(self):
         """
-        Process schema entries for inconsistencies (quite fine tuned)
+        Process schema entries for inconsistencies
+        (quite fine tuned)
         - remove linefeeds from description string
 
         Raises
         ------
         KeyError
-            if data_dict["product"]["description"] is not available
+            if data_dict["product"]["description"] is not available.
 
         """
 
@@ -120,21 +124,22 @@ class SchemaValidator:
 
     def _validate_data_type(self, schema, key, data_field):
         """
-        Validate data type against the expected data type from schema
+        Validate data type against the expected data type
+        from schema.
 
         Parameters
         ----------
         schema: dict
-            metadata description from reference schema
+            metadata description from reference schema.
         key: str
-            data field name to be validated
+            data field name to be validated.
         data_field: dict
-            data field to be validated
+            data field to be validated.
 
         Raises
         ------
         ValueError
-            if data types are inconsistent
+            if data types are inconsistent.
 
         """
 
@@ -146,8 +151,8 @@ class SchemaValidator:
             self._validate_datetime(data_field, self._field_is_optional(schema))
         elif schema["type"] == "email":
             self._validate_email(data_field, key)
-        elif schema["type"] == "instrumentlist":
-            self._validate_instrument_list(data_field)
+        elif schema["type"].endswith("list"):
+            self._validate_list(schema["type"], data_field)
         elif type(data_field).__name__ != schema["type"]:
             try:
                 if isinstance(data_field, (int, str)):
@@ -164,7 +169,8 @@ class SchemaValidator:
     @staticmethod
     def _validate_datetime(data_field, optional_field=False):
         """
-        Validate entry to be of type datetime and of format %Y-%m-%d %H:%M:%S
+        Validate entry to be of type datetime and of
+        format %Y-%m-%d %H:%M:%S.
 
         Parameters
         ----------
@@ -196,39 +202,42 @@ class SchemaValidator:
         Parameters
         ----------
         data_field: dict
-            data field to be validated
+            data field to be validated.
         key: str
-            data field name to be validated
+            data field name to be validated.
 
         Raises
         ------
         ValueError
-            if data field is of invalid format
+            if data field is of invalid format.
 
         """
         regex = r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b"
         if not re.fullmatch(regex, data_field):
             raise ValueError("invalid email format in field {}: {}".format(key, data_field))
 
-    def _validate_instrument_list(self, instrument_list):
+    def _validate_list(self, schema_type, data_list):
         """
-        Validate entry to be of type INSTRUMENT
+        Validate schmema for list type entry
 
         Parameters
         ----------
-        instrument list: list
-            list of dictionaries of type INSTRUMENT
-            to be validated
-
+        schema_type
+            reference schema type (e.g., instrumentlist, documentlist).
+        data_list: list
+            list of dictionaries to be validated.
         """
 
-        for instrument in instrument_list:
-            self._validate_schema(self._reference_schema["instrument"], instrument)
+        _ref_schema = gen.change_dict_keys_case(
+            meta_data_model.metadata_input_reference_document_list(schema_type), lower_case=True
+        )
+        for entry in data_list:
+            self._validate_schema(_ref_schema, entry)
 
-    @staticmethod
-    def _field_is_optional(field_dict):
+    def _field_is_optional(self, field_dict):
         """
-        Check if data field is labeled as not required in the reference metadata schema
+        Check if data field is labeled as optional in the reference metadata schema.
+        Dictionaries as datafields are tested for any optional fields.
 
         Parameters
         ----------
@@ -251,6 +260,11 @@ class SchemaValidator:
             if field_dict["required"]:
                 return False
         except KeyError:
+            if isinstance(field_dict, dict):
+                for value in field_dict.values():
+                    if isinstance(value, dict) and not self._field_is_optional(value):
+                        return False
+                return True
             return False
         return True
 
