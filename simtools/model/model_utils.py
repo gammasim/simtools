@@ -38,8 +38,8 @@ def split_simtel_parameter(value):
 
 def compute_telescope_transmission(pars, off_axis):
     """
-    Compute tel. transmission (0 < T < 1) for a given set of parameters as defined by the MC model \
-    and for a given off-axis angle.
+    Compute telescope transmission (0 < T < 1) for a given set of parameters as defined by \
+    the MC model and for a given off-axis angle.
 
     Parameters
     ----------
@@ -69,7 +69,7 @@ def get_camera_name(telescope_model_name):
     Parameters
     ----------
     telescope_model_name: str
-        Telescope model name (ex. LST-1).
+        Telescope model name (e.g., LST-1).
 
     Returns
     -------

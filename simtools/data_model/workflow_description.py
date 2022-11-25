@@ -149,7 +149,7 @@ class WorkflowDescription:
         Parameters
         ----------
         suffix: str
-            file name extension (if None: use product_data_file_format(), default is None)
+            file name extension (if None: use product_data_file_format())
         full_path: bool
             if True: return path + file name, otherwise file name only.
 
@@ -198,7 +198,7 @@ class WorkflowDescription:
         ----------
         suffix: bool
             Return the ecsv suffix (if format is ascii.ecsv),
-            Return file format (if false; default is False)
+            Return file format (if false)
 
         Returns
         -------

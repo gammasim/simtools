@@ -45,7 +45,7 @@ class CommandLineParser(argparse.ArgumentParser):
             Add workflow configuration to list of args.
         db_config: bool
             Add database configuration parameters to list of args.
-        job_submission:bool
+        job_submission: bool
             Add job submission configuration parameters to list of args.
         """
 

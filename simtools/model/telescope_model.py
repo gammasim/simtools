@@ -133,7 +133,7 @@ class TelescopeModel:
         ----------
         config_file_name: str or Path
             Path to the input config file.
-        site: (str. required)
+        site: str
             South or North.
         telescope_model_name: str
             Telescope model name for the base set of parameters (ex. LST-1, ...).
@@ -346,7 +346,7 @@ class TelescopeModel:
         ----------
         par_name: str
             Name of the parameter.
-        value: (required)
+        value:
             Value of the parameter.
         is_file: bool
             Indicates whether the new parameter is a file or not.
@@ -383,7 +383,7 @@ class TelescopeModel:
         ----------
         par_name: str
             Name of the parameter.
-        value: (required)
+        value:
             Value of the parameter.
 
         Raises
@@ -803,8 +803,8 @@ class TelescopeModel:
         ----------
         curves: dict
             dict of with 3 "columns", Wavelength, Angle and z. The dictionary represents a two \
-            dimensional distribution of wavelengths and angles with the z value being e.g.,\
-             reflectivity, transmission, etc.
+            dimensional distribution of wavelengths and angles with the z value being e.g., \
+            reflectivity, transmission, etc.
         incidence_angle_dist: astropy.table.Table
             Instance of astropy.table.Table with the incidence angle distribution. The assumed \
             columns are "Incidence angle" and "Fraction".

@@ -63,7 +63,7 @@ def file_has_text(file, text):
     Returns
     -------
     bool
-        1 if file has text.
+        True if file has text.
     """
     with open(file, "rb", 0) as string_file, mmap.mmap(
         string_file.fileno(), 0, access=mmap.ACCESS_READ
