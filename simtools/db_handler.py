@@ -34,12 +34,6 @@ class DatabaseHandler:
         "db_api_user" - API username
         "db_api_pw" - Password for the API user
         "db_api_authentication_database" - DB with user info (optional, default is "admin")
-
-    Attributes
-    ----------
-    mode: str
-        yaml or MongoDB, only these two options are allowed.
-
     """
 
     # TODO move into config file?

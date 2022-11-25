@@ -143,7 +143,7 @@ class TelescopePosition:
         """
         Get coordinates in a given coordinate system.
 
-        Attributes
+        Parameters
         ----------
         crs_name: str
             name of coordinate system.

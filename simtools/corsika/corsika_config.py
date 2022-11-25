@@ -66,20 +66,6 @@ class CorsikaConfig:
     corsika_parameters_file: str
         Name of the yaml file to set remaining CORSIKA parameters (default is \
         data/parameters/corsika_parameters.yml)
-
-    Attributes
-    ----------
-    label: str
-        Instance label (default is None).
-    layout: str
-        Name of the layout.
-    layout_name: str
-        Name of the layout.
-    primary: int
-        CORSIKA particle ID
-    site: str
-        North or South.
-
     """
 
     def __init__(
