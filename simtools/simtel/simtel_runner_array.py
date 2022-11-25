@@ -247,7 +247,7 @@ class SimtelRunnerArray(SimtelRunner):
         """
         Builds and returns the command to run simtel_array.
 
-        Attributes
+        Parameters
         ----------
         kwargs: dict
             The dictionary must include the following parameters (unless listed as optional):
