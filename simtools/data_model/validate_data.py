@@ -16,7 +16,7 @@ class DataValidator:
     Parameters
     ----------
     workflow: WorkflowDescription
-        workflow description (default is None)
+        workflow description.
 
     """
 

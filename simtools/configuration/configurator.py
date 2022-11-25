@@ -35,15 +35,15 @@ class Configurator:
     Parameters
     ----------
     config: dict
-        Configuration parameters as dict (default is None).
+        Configuration parameters as dict.
     label: str
-        Class label (default is None).
+        Class label.
     usage: str
-        Application usage description (default is None).
+        Application usage description.
     description: str
-        Text displayed as description (default is None).
+        Text displayed as description.
     epilog: str
-        Text display after all arguments (default is None).
+        Text display after all arguments.
     """
 
     def __init__(self, config=None, label=None, usage=None, description=None, epilog=None):
@@ -68,9 +68,9 @@ class Configurator:
         Parameters
         ----------
         arg_list: list
-            List of arguments (default is None)
+            List of arguments.
         add_db_config: bool
-            Add DB configuration file (default is False)
+            Add DB configuration file.
 
         Returns
         -------
@@ -109,15 +109,15 @@ class Configurator:
         Parameters
         ----------
         paths: bool
-            Add path configuration to list of args (default is True).
+            Add path configuration to list of args.
         telescope_model: bool
-            Add telescope model configuration to list of args (default is False).
+            Add telescope model configuration to list of args.
         workflow_config: bool
-            Add workflow configuration to list of args (default is False).
+            Add workflow configuration to list of args.
         db_config: bool
-            Add database configuration parameters to list of args (default is False).
+            Add database configuration parameters to list of args.
         job_submission: bool
-            Add job submission configuration to list of args (default is False).
+            Add job submission configuration to list of args.
 
         Returns
         -------

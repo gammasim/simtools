@@ -15,13 +15,13 @@ class SimtelRunnerCameraEfficiency(SimtelRunner):
     telescope_model: str
         Instance of TelescopeModel class.
     label: str
-        Instance label. Important for output file naming (default is None).
+        Instance label. Important for output file naming.
     simtel_source_path: str or Path
-        Location of sim_telarray installation (default is None).
+        Location of sim_telarray installation.
     file_simtel: str or Path
-        location of the sim_telarray testeff tool output file (default is None).
+        location of the sim_telarray testeff tool output file.
     zenith_angle: float
-        The zenith angle given in the config to CameraEfficiency (default is None).
+        The zenith angle given in the config to CameraEfficiency.
     """
 
     def __init__(

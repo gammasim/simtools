@@ -151,7 +151,7 @@ class WorkflowDescription:
         suffix: str
             file name extension (if None: use product_data_file_format(), default is None)
         full_path: bool
-            if True: return path + file name, otherwise file name only (default is True).
+            if True: return path + file name, otherwise file name only.
 
         Returns
         -------

@@ -20,9 +20,9 @@ class JobManager:
     Parameters
     ----------
     submit_command: str
-        Job submission command (default is None).
+        Job submission command.
     test: bool
-        Testing mode without sub submission (default is False).
+        Testing mode without sub submission.
 
     Raises
     ------
@@ -78,9 +78,9 @@ class JobManager:
         Parameters
         ----------
         run_script: string
-            Shell script descring the job to be submitted (default is None).
+            Shell script descring the job to be submitted.
         run_out_file: string
-            Redirect output/error/job stream to this file (out,err,job suffix) (default is None).
+            Redirect output/error/job stream to this file (out,err,job suffix).
 
         """
         self.run_script = str(run_script)

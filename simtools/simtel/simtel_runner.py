@@ -29,7 +29,7 @@ class SimtelRunner:
     simtel_source_path: str or Path)
         Location of sim_telarray installation.
     label: str
-        Instance label. Important for output file naming (default is None).
+        Instance label. Important for output file naming.
     """
 
     def __init__(self, simtel_source_path, label=None):
@@ -96,13 +96,13 @@ class SimtelRunner:
         Parameters
         ----------
         test: bool
-            Test flag for faster execution (default is None).
+            Test flag for faster execution.
         input_file: str or Path
-            Full path of the input CORSIKA file (default is None).
+            Full path of the input CORSIKA file.
         run_number: int
-            Run number (default is None).
+            Run number.
         extra_commands: str
-            Additional commands for running simulations given in config.yml (default is None).
+            Additional commands for running simulations given in config.yml.
 
         Returns
         -------
@@ -150,9 +150,9 @@ class SimtelRunner:
         Parameters
         ----------
         test: bool
-            If True, make simulations faster (default is None).
+            If True, make simulations faster.
         force: bool
-            If True, remove possible existing output files and run again (default is None).
+            If True, remove possible existing output files and run again.
         """
         self._logger.debug("Running sim_telarray")
 

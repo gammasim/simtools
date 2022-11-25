@@ -39,9 +39,9 @@ class TelescopeModel:
     mongo_db_config: dict
         MongoDB configuration.
     model_version: str
-        Version of the model (ex. prod5) (default is 'Current').
+        Version of the model (ex. prod5).
     label: str
-        Instance label. Important for output file naming (default is None).
+        Instance label. Important for output file naming.
     """
 
     def __init__(
@@ -138,7 +138,7 @@ class TelescopeModel:
         telescope_model_name: str
             Telescope model name for the base set of parameters (ex. LST-1, ...).
         label: str
-            Instance label. Important for output file naming (default is None).
+            Instance label. Important for output file naming.
 
         Returns
         -------
@@ -349,9 +349,9 @@ class TelescopeModel:
         value: (required)
             Value of the parameter.
         is_file: bool
-            Indicates whether the new parameter is a file or not (default is False).
+            Indicates whether the new parameter is a file or not.
         is_aplicable: bool
-            Indicates whether the new parameter is applicable or not (default is True).
+            Indicates whether the new parameter is applicable or not.
 
         Raises
         ------
@@ -538,7 +538,7 @@ class TelescopeModel:
         Parameters
         ----------
         no_export: bool
-            Turn it on if you do not want the file to be exported (default is False).
+            Turn it on if you do not want the file to be exported.
 
         Returns
         -------
@@ -631,7 +631,7 @@ class TelescopeModel:
         mirror_number: int
             Mirror number.
         set_focal_length_to_zero: bool
-            Flag to set the focal length to zero (default is False).
+            Flag to set the focal length to zero.
 
         Returns
         -------

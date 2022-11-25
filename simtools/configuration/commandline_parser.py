@@ -38,15 +38,15 @@ class CommandLineParser(argparse.ArgumentParser):
         Parameters
         ----------
         paths: bool
-            Add path configuration to list of args (default is True).
+            Add path configuration to list of args.
         telescope_model: bool
-            Add telescope model configuration to list of args (default is False).
+            Add telescope model configuration to list of args.
         workflow_config: bool
-            Add workflow configuration to list of args (default is False).
+            Add workflow configuration to list of args.
         db_config: bool
-            Add database configuration parameters to list of args (default is False).
+            Add database configuration parameters to list of args.
         job_submission:bool
-            Add job submission configuration parameters to list of args (default is False).
+            Add job submission configuration parameters to list of args.
         """
 
         if telescope_model:
@@ -67,7 +67,7 @@ class CommandLineParser(argparse.ArgumentParser):
         Parameters
         ----------
         workflow_config: str
-            workflow configuration file (default is False).
+            workflow configuration file.
         """
 
         _job_group = self.add_argument_group("configuration")
@@ -198,9 +198,9 @@ class CommandLineParser(argparse.ArgumentParser):
         Parameters
         ----------
         add_model_version: str
-            Model version (default is "Current").
+            Model version.
         add_telescope: str
-            Telescope model name (e.g. LST-1, SST-D, ..., default is True).
+            Telescope model name (e.g. LST-1, SST-D, ...).
         """
 
         _job_group = self.add_argument_group("telescope model")
@@ -216,7 +216,7 @@ class CommandLineParser(argparse.ArgumentParser):
         if add_model_version:
             _job_group.add_argument(
                 "--model_version",
-                help="model version (default=Current)",
+                help="model version",
                 type=str,
                 default="Current",
             )
