@@ -14,9 +14,9 @@ class ModelDataWriter:
 
     Parameters
     ----------
-    workflow_config: (WorkflowDescription, optional)
+    workflow_config: WorkflowDescription
         Workflow configuration (default is None).
-    args_dict: (Dictionary, optional)
+    args_dict: Dictionary
         Dictionary with configuration parameters (default is None).
     """
 
@@ -35,7 +35,7 @@ class ModelDataWriter:
 
         Parameters
         ----------
-        product_data: (astropy Table, required)
+        product_data: astropy Table
             Model data.
 
         Raises
@@ -60,9 +60,9 @@ class ModelDataWriter:
 
         Parameters
         ----------
-        ymlfile: (str, optional)
+        ymlfile: str
             Name of output file (default is None)
-        keys_lower_case: (bool, optional)
+        keys_lower_case: bool
             Write yaml key in lower case (default is False)
 
         Returns

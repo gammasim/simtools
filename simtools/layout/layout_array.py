@@ -25,15 +25,15 @@ class LayoutArray:
 
     Parameters
     ----------
-    label: (str, optional)
+    label: str
         Instance label (default is None).
-    name: (str, optional)
+    name: str
         Name of the layout (default is None).
-    layout_center_data: (dict, optional)
+    layout_center_data: dict
         Dict describing array center coordinates (default is None).
-    corsika_telescope_data: (dict, optional)
+    corsika_telescope_data: dict
         Dict describing CORSIKA telescope parameters (default is None).
-    telescope_list_file: (str or Path, optional)
+    telescope_list_file: str or Path
         Path to the telescope list file (default is None).
     """
 
@@ -72,9 +72,9 @@ class LayoutArray:
 
         Parameters
         ----------
-        layout_array_name: (str, required)
+        layout_array_name: str
             e.g. South-4LST, North-Prod5 ...
-        label: (str, optional)
+        label: str
             Instance label. Important for output file naming (default is None).
 
         Returns
@@ -407,7 +407,7 @@ class LayoutArray:
 
         Parameters
         ----------
-        telescope_list_file: (str or Path, required)
+        telescope_list_file: str or Path
             Path to the telescope list file.
 
         Raises
@@ -436,17 +436,17 @@ class LayoutArray:
 
         Parameters
         ----------
-        telescope_name: (str, required)
+        telescope_name: str
             Name of the telescope starting with L, M or S (e.g. LST-01, MST-06 ...)
-        crs_name: (str, required)
+        crs_name: str
             Name of coordinate system
-        xx: (astropy.units.quantity.Quantity, required)
+        xx: astropy.units.quantity.Quantity
             x-coordinate for the given coordinate system
-        yy: (astropy.units.quantity.Quantity, required)
+        yy: astropy.units.quantity.Quantity
             y-coordinate for the given coordinate system
-        altitude: (astropy.units.quantity.Quantity, optional)
+        altitude: astropy.units.quantity.Quantity
             Altitude coordinate in equivalent units of u.m.
-        tel_corsika_z: (astropy.units.quantity.Quantity, optional)
+        tel_corsika_z: astropy.units.quantity.Quantity
             CORSIKA z-position (requires setting of CORSIKA observation level and telescope sphere\
             center).
         """
@@ -466,7 +466,7 @@ class LayoutArray:
 
         Parameters
         ----------
-        export_corsika_meta: (bool, optional)
+        export_corsika_meta: bool
             write CORSIKA metadata (default is False).
 
         Returns
@@ -528,9 +528,9 @@ class LayoutArray:
 
         Parameters
         ----------
-        crs_name: (str, required)
+        crs_name: str
             Name of coordinate system to be used for export.
-        corsika_z: (bool, optional)
+        corsika_z: bool
             Write telescope height in CORSIKA coordinates (for CORSIKA system) (default is False).
         """
 
@@ -680,9 +680,9 @@ class LayoutArray:
 
         Parameters
         ----------
-        compact_printing: (str, optional)
+        compact_printing: str
             Compact printout for a single coordinate system (default is "").
-        corsika_z: (bool, optional)
+        corsika_z: bool
             Print telescope height in CORSIKA coordinates (for CORSIKA system) (default is False).
         """
 
@@ -768,7 +768,7 @@ class LayoutArray:
 
         Parameters
         ----------
-        telescope_name: (str, required)
+        telescope_name: str
             Telescope name
 
         Returns

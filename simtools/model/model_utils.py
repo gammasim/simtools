@@ -22,7 +22,7 @@ def split_simtel_parameter(value):
 
     Parameters
     ----------
-    value: (str, required)
+    value: str
         String with the array of floats separated by comma or spaces.
 
     Returns
@@ -43,9 +43,9 @@ def compute_telescope_transmission(pars, off_axis):
 
     Parameters
     ----------
-    pars: (list of float, required)
+    pars: list of float
         Parameters of the telescope transmission. Len(pars) should be 4.
-    off_axis: (float, required)
+    off_axis: float
         Off-axis angle in deg.
 
     Returns
@@ -68,7 +68,7 @@ def get_camera_name(telescope_model_name):
 
     Parameters
     ----------
-    telescope_model_name: (str, required)
+    telescope_model_name: str
         Telescope model name (ex. LST-1).
 
     Returns
@@ -114,7 +114,7 @@ def get_telescope_class(telescope_model_name):
 
     Parameters
     ----------
-    telescope_model_name: (str, required)
+    telescope_model_name: str
         Telescope model name (ex. LST-1).
 
     Returns
@@ -133,7 +133,7 @@ def is_two_mirror_telescope(telescope_model_name):
 
     Parameters
     ----------
-    telescope_model_name: (str, required)
+    telescope_model_name: str
         Telescope model name (ex. LST-1).
 
     Returns

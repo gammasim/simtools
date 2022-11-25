@@ -26,11 +26,11 @@ class Camera:
 
     Parameters
     ----------
-    telescope_model_name: (string, required)
+    telescope_model_name: string
         As provided by the telescope model method TelescopeModel (ex South-LST-1).
-    camera_config_file: (string, required)
+    camera_config_file: string
         The sim_telarray file name.
-    focal_length: (float, required)
+    focal_length: float
         The focal length of the camera in (preferably the effective focal length), assumed to be \
         in the same unit as the pixel positions in the camera_config_file, usually cm.
     """
@@ -73,7 +73,7 @@ class Camera:
 
         Parameters
         ----------
-        camera_config_file: (string, required)
+        camera_config_file: string
             The sim_telarray file name.
 
         Returns
@@ -145,7 +145,7 @@ class Camera:
 
         Parameters
         ----------
-        pixels: (dictionary, required)
+        pixels: dictionary
             The dictionary produced by the read_pixel_list method of this class
 
         Returns

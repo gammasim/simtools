@@ -17,7 +17,7 @@ class Mirrors:
 
     Parameters
     ----------
-    mirror_list_file: (str, required)
+    mirror_list_file: str
         mirror list in sim_telarray or ecsv format (with panel focal length only).
     """
 
@@ -135,7 +135,7 @@ class Mirrors:
 
         Parameters
         ----------
-        number: (int, required)
+        number: int
             Mirror number of desired parameters.
 
         Returns

@@ -19,7 +19,7 @@ class WorkflowDescription:
 
     Parameters
     ----------
-    args: (argparse.Namespace, required)
+    args: argparse.Namespace
         Command line parameters
 
     """
@@ -148,7 +148,7 @@ class WorkflowDescription:
 
         Parameters
         ----------
-        suffix: (str, optional)
+        suffix: str
             file name extension (if None: use product_data_file_format(), default is None)
         full_path: bool
             if True: return path + file name, otherwise file name only (default is True).
@@ -246,7 +246,7 @@ class WorkflowDescription:
 
         Parameters
         ----------
-        association_dict: (dict, required)
+        association_dict: dict
             Dictionary for assocation metadata field.
 
         Raises

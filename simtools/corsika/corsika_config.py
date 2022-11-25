@@ -53,17 +53,17 @@ class CorsikaConfig:
 
     Parameters
     ----------
-    site: (str, required)
+    site: str
         North or South.
-    layout_name: (str, required)
+    layout_name: str
         Name of the layout.
-    label: (str, optional)
+    label: str
         Instance label (default is None).
-    corsika_config_data: (dict, optional)
+    corsika_config_data: dict
         CORSIKA user parameters (default is None)
-    corsika_config_file: (str, optional)
+    corsika_config_file: str
         Name of the yaml configuration file (default is None).
-    corsika_parameters_file: (str, optional)
+    corsika_parameters_file: str
         Name of the yaml file to set remaining CORSIKA parameters (default is \
         data/parameters/corsika_parameters.yml)
 
@@ -150,7 +150,7 @@ class CorsikaConfig:
 
         Parameters
         ----------
-        corsika_config_data: (dict, required)
+        corsika_config_data: dict
             Contains the user parameters. Ex.
 
             .. code-block:: python
@@ -312,7 +312,7 @@ class CorsikaConfig:
 
         Parameters
         ----------
-        par_name: (str, required)
+        par_name: str
             Name of the parameter as used in the CORSIKA input file (e.g. PRMPAR, THETAP ...)
 
         Raises
@@ -423,10 +423,10 @@ class CorsikaConfig:
 
         Parameters
         ----------
-        file_type: (str, required)
+        file_type: str
             The type of file (determines the file suffix).
             Choices are config_tmp, config or output_generic.
-        run_number: (int, optional)
+        run_number: int
             Run number (default is None).
 
         Returns
