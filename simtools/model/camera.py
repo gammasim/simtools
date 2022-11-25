@@ -21,34 +21,18 @@ __all__ = ["Camera"]
 
 class Camera:
     """
-    Camera class, defining pixel layout including rotation, finding neighbour pixels,
-    calculating FoV and plotting the camera.
+    Camera class, defining pixel layout including rotation, finding neighbour pixels, calculating\
+    FoV and plotting the camera.
 
-    Methods
-    -------
-    read_pixel_list(camera_config_file)
-        Read the pixel layout from the camera config file,
-        assumed to be in a sim_telarray format.
-    get_pixel_diameter()
-        Get pixel diameter.
-    get_pixel_shape()
-        Get pixel shape.
-    get_lightguide_efficiency_angle_file_name()
-        Get the file name of the light guide efficiency as a function of incidence angle.
-    get_lightguide_efficiency_wavelength_file_name()
-        Get the file name of the light guide efficiency as a function of wavelength.
-    calc_fov()
-        Calculate the FOV of the camera in degrees,
-        taking into account the focal length (preferably the effective focal length).
-    get_neighbour_pixels(pixels)
-        Find adjacent neighbour pixels in cameras with hexagonal or square pixels.
-        Only directly adjacent neighbours are searched for, no diagonals.
-    get_edge_pixels(pixels, neighbours)
-        Find the edge pixels of the camera.
-    plot_pixel_layout()
-        Plot the pixel layout for an observer facing the camera.
-        Including in the plot edge pixels, off pixels, pixel ID for the first 50 pixels,
-        coordinate systems, FOV, focal length and the average edge radius.
+    Parameters
+    ----------
+    telescope_model_name: string
+        As provided by the telescope model method TelescopeModel (ex South-LST-1).
+    camera_config_file: string
+        The sim_telarray file name.
+    focal_length: float
+        The focal length of the camera in (preferably the effective focal length), assumed to be \
+        in the same unit as the pixel positions in the camera_config_file, usually cm.
     """
 
     # Constants for finding neighbour pixels.
@@ -58,18 +42,8 @@ class Camera:
 
     def __init__(self, telescope_model_name, camera_config_file, focal_length):
         """
-        Camera class, defining pixel layout including rotation, finding neighbour pixels,
+        Initialize Camera class, defining pixel layout including rotation, finding neighbour pixels,
         calculating FoV and plotting the camera.
-
-        Parameters
-        ----------
-        telescope_model_name: string
-            As provided by the telescope model method TelescopeModel (ex South-LST-1).
-        camera_config_file: string
-            The sim_telarray file name.
-        focal_length: float
-            The focal length of the camera in (preferably the effective focal length),
-            assumed to be in the same unit as the pixel positions in the camera_config_file.
         """
 
         self._logger = logging.getLogger(__name__)
@@ -105,12 +79,12 @@ class Camera:
         Returns
         -------
         dict: pixels
-            A dictionary with the pixel positions, the camera rotation angle,
-            the pixel shape, the pixel diameter, the pixel IDs and their "on" status.
+            A dictionary with the pixel positions, the camera rotation angle, the pixel shape, \
+            the pixel diameter, the pixel IDs and their "on" status.
 
         Notes
         -----
-        The pixel shape can be hexagonal (denoted as 1 or 3) or a square (denoted as 2).
+        The pixel shape can be hexagonal (denoted as 1 or 3) or a square (denoted as 2). \
         The hexagonal shapes differ in their orientation, where those denoted as 3 are rotated
         clockwise by 30 degrees with respect to those denoted as 1.
         """
@@ -219,23 +193,32 @@ class Camera:
 
         Returns
         -------
-        number of pixels: int
+        int
+            number of pixels.
         """
+
         return len(self._pixels["x"])
 
     def get_pixel_diameter(self):
         """
-        Get pixel diameter contained in _pixels
+        Get pixel diameter contained in _pixels.
 
         Returns
         -------
-        diameter: float
+        float
+            Pixel diameter (usually in cm).
         """
+
         return self._pixels["pixel_diameter"]
 
     def get_pixel_active_solid_angle(self):
         """
         Get the active solid angle of a pixel in sr.
+
+        Returns
+        -------
+        float
+            active solid angle of a pixel in sr.
         """
 
         pixel_area = self.get_pixel_diameter() ** 2
@@ -246,13 +229,13 @@ class Camera:
 
     def get_pixel_shape(self):
         """
-        Get pixel shape code 1, 2 or 3, where 1 and 3 are hexagonal pixels,
-        where one is rotated by 30 degrees with respect to the other.
-        A square pixel is denoted as 2.
+        Get pixel shape code 1, 2 or 3, where 1 and 3 are hexagonal pixels, where one is rotated by\
+        30 degrees with respect to the other. A square pixel is denoted as 2.
 
         Returns
         -------
-        pixel shape: int (1, 2 or 3)
+        int (1, 2 or 3)
+            Pixel shape.
         """
         return self._pixels["pixel_shape"]
 
@@ -262,8 +245,10 @@ class Camera:
 
         Returns
         -------
-        str: file name of the light guide efficiency as a function of incidence angle.
+        str
+            File name of the light guide efficiency as a function of incidence angle.
         """
+
         return self._pixels["lightguide_efficiency_angle_file"]
 
     def get_lightguide_efficiency_wavelength_file_name(self):
@@ -272,7 +257,8 @@ class Camera:
 
         Returns
         -------
-        str: file name of the light guide efficiency as a function of wavelength.
+        str
+            File name of the light guide efficiency as a function of wavelength.
         """
         return self._pixels["lightguide_efficiency_wavelength_file"]
 
@@ -282,8 +268,10 @@ class Camera:
 
         Returns
         -------
-        float: the camera fill factor
+        float
+            The camera fill factor.
         """
+
         if self._pixels["pixel_spacing"] == 9999:
             points = np.array([self._pixels["x"], self._pixels["y"]]).T
             pixel_distances = distance.cdist(points, points, "euclidean")
@@ -300,7 +288,7 @@ class Camera:
         fov: float
             The FOV of the camera in the degrees.
         average_edge_distance: float
-            The average edge distance of the camera
+            The average edge distance of the camera.
 
         Notes
         -----
@@ -329,8 +317,8 @@ class Camera:
         edge_pixel_indices: list
             List of indices of the edge pixels
         focal_length: float
-            The focal length of the camera in (preferably the effective focal length),
-            assumed to be in the same unit as the pixel positions.
+            The focal length of the camera in (preferably the effective focal length), assumed to \
+            be in the same unit as the pixel positions.
 
         Returns
         -------
@@ -358,23 +346,23 @@ class Camera:
     @staticmethod
     def _find_neighbours(x_pos, y_pos, radius):
         """
-        use a KD-Tree to quickly find nearest neighbours
-        (e.g., of the pixels in a camera or mirror facets)
+        use a KD-Tree to quickly find nearest neighbours (e.g., of the pixels in a camera or mirror\
+        facets)
 
         Parameters
         ----------
-        x_pos : array_like
+        x_pos : numpy.array_like
             x position of each e.g., pixel
-        y_pos : array_like
+        y_pos : numpy.array_like
             y position of each e.g., pixel
         radius : float
-            radius to consider neighbour it should be slightly larger
-            than the pixel diameter or mirror facet.
+            radius to consider neighbour it should be slightly larger than the pixel diameter or \
+            mirror facet.
 
         Returns
         -------
-        neighbours: array_like
-            Array of neighbour indices in a list for each e.g., pixel
+        neighbours: numpy.array_like
+            Array of neighbour indices in a list for each e.g., pixel.
         """
 
         points = np.array([x_pos, y_pos]).T
@@ -389,26 +377,25 @@ class Camera:
 
     def _find_adjacent_neighbour_pixels(self, x_pos, y_pos, radius, row_coloumn_dist):
         """
-        Find adjacent neighbour pixels in cameras with square pixels.
-        Only directly adjacent neighbours are allowed, no diagonals.
+        Find adjacent neighbour pixels in cameras with square pixels. Only directly adjacent \
+        neighbours are allowed, no diagonals.
 
         Parameters
         ----------
-        x_pos : array_like
+        x_pos : numpy.array_like
             x position of each pixel
-        y_pos : array_like
+        y_pos : numpy.array_like
             y position of each pixels
         radius : float
             radius to consider neighbour.
             Should be slightly larger than the pixel diameter.
         row_coloumn_dist : float
-            Maximum distance for pixels in the same row/column
-            to consider when looking for a neighbour.
-            Should be around 20% of the pixel diameter.
+            Maximum distance for pixels in the same row/column to consider when looking for a \
+            neighbour. Should be around 20% of the pixel diameter.
 
         Returns
         -------
-        neighbours: array_like
+        neighbours: numpy.array_like
             Array of neighbour indices in a list for each pixel
         """
 
@@ -441,8 +428,8 @@ class Camera:
 
     def _calc_neighbour_pixels(self, pixels):
         """
-        Find adjacent neighbour pixels in cameras with hexagonal or square pixels.
-        Only directly adjacent neighbours are searched for, no diagonals.
+        Find adjacent neighbour pixels in cameras with hexagonal or square pixels. Only directly \
+        adjacent neighbours are searched for, no diagonals.
 
         Parameters
         ----------
@@ -451,7 +438,7 @@ class Camera:
 
         Returns
         -------
-        neighbours: array_like
+        neighbours: numpy.array_like
             Array of neighbour indices in a list for each pixel
         """
 
@@ -479,19 +466,19 @@ class Camera:
 
     def get_neighbour_pixels(self, pixels=None):
         """
-        Get a list of neighbour pixels by calling calc_neighbour_pixels() when necessary.
-        The purpose of this function is to ensure
-        the calculation occurs only once and only when necessary.
+        Get a list of neighbour pixels by calling calc_neighbour_pixels() when necessary. The \
+        purpose of this function is to ensure the calculation occurs only once and only when \
+        necessary.
 
         Parameters
         ----------
-        pixels: dictionary
-            The dictionary produced by the read_pixel_list method of this class
+        pixels: dict
+            The dictionary produced by the read_pixel_list method of this class.
 
         Returns
         -------
-        neighbours: array_like
-            Array of neighbour indices in a list for each pixel
+        neighbours: numpy.array_like
+            Array of neighbour indices in a list for each pixel.
         """
 
         if self._neighbours is None:
@@ -508,14 +495,14 @@ class Camera:
         Parameters
         ----------
         pixels: dictionary
-            The dictionary produced by the read_pixel_list method of this class
-        neighbours: array_like
-            Array of neighbour indices in a list for each pixel
+            The dictionary produced by the read_pixel_list method of this class.
+        neighbours: numpy.array_like
+            Array of neighbour indices in a list for each pixel.
 
         Returns
         -------
-        edge_pixel_indices: array_like
-            Array of edge pixel indices
+        edge_pixel_indices: numpy.array_like
+            Array of edge pixel indices.
         """
 
         self._logger.debug("Searching for edge pixels")
@@ -540,15 +527,15 @@ class Camera:
 
         Parameters
         ----------
-        pixels: dictionary
-            The dictionary produced by the read_pixel_list method of this class
-        neighbours: array_like
-            Array of neighbour indices in a list for each pixel
+        pixels: dict
+            The dictionary produced by the read_pixel_list method of this class.
+        neighbours: numpy.array_like
+            Array of neighbour indices in a list for each pixel.
 
         Returns
         -------
-        edge_pixel_indices: array_like
-            Array of edge pixel indices
+        edge_pixel_indices: numpy.array_like
+            Array of edge pixel indices.
         """
 
         if self._edge_pixel_indices is None:
@@ -562,9 +549,8 @@ class Camera:
 
     def _plot_axes_def(self, plt, rotate_angle):
         """
-        Plot three axes definitions on the pyplot.plt instance provided.
-        The three axes are Alt/Az, the camera coordinate system and
-        the original coordinate system the pixel list was provided in.
+        Plot three axes definitions on the pyplot.plt instance provided. The three axes are Alt/Az,\
+        the camera coordinate system and the original coordinate system the pixel list was provided.
 
         Parameters
         ----------
@@ -703,13 +689,14 @@ class Camera:
 
     def plot_pixel_layout(self, camera_in_sky_coor=False, pixels_id_to_print=50):
         """
-        Plot the pixel layout for an observer facing the camera.
-        Including in the plot edge pixels, off pixels, pixel ID for the first 50 pixels,
-        coordinate systems, FOV, focal length and the average edge radius.
+        Plot the pixel layout for an observer facing the camera. Including in the plot edge pixels,\
+        off pixels, pixel ID for the first 50 pixels, coordinate systems, FOV, focal length and the\
+        average edge radius.
 
         Returns
         -------
-        fig: plt.figure instance with the pixel layout
+        fig: plt.figure instance
+            Figure with the pixel layout.
         """
 
         self._logger.info("Plotting the {} camera".format(self._telescope_model_name))

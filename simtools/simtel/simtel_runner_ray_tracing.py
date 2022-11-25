@@ -34,23 +34,22 @@ class SimtelRunnerRayTracing(SimtelRunner):
             len: 1
             default: 1
 
-    Attributes
+    Parameters
     ----------
-    label: str, optional
-        Instance label.
-    telescope_model: TelescopeModel
-        Instance of the TelescopeModel class.
-    config: namedtuple
-        Contains the configurable parameters (zenith_angle).
-
-    Methods
-    -------
-    get_run_script(self, test=False, input_file=None, run_number=None)
-        Builds and returns the full path of the bash run script containing
-        the sim_telarray command.
-    run(test=False, force=False)
-        Run sim_telarray. test=True will make it faster and force=True will remove existing files
-        and run again.
+    telescope_model: str
+        Instance of TelescopeModel class.
+    label: str
+        Instance label. Important for output file naming.
+    simtel_source_path: str or Path
+        Location of sim_telarray installation.
+    config_data: dict
+        Dict containing the configurable parameters.
+    config_file: str or Path
+        Path of the yaml file containing the configurable parameters.
+    single_mirror_mode: bool
+        True for single mirror simulations.
+    force_simulate: bool
+        Remove existing files and force re-running of the ray-tracing simulation.
     """
 
     def __init__(
@@ -64,24 +63,7 @@ class SimtelRunnerRayTracing(SimtelRunner):
         force_simulate=False,
     ):
         """
-        SimtelRunner.
-
-        Parameters
-        ----------
-        telescope_model: str
-            Instance of TelescopeModel class.
-        label: str, optional
-            Instance label. Important for output file naming.
-        simtel_source_path: str (or Path)
-            Location of sim_telarray installation.
-        config_data: dict.
-            Dict containing the configurable parameters.
-        config_file: str or Path
-            Path of the yaml file containing the configurable parameters.
-        single_mirror_mode: bool
-            True for single mirror simulations.
-        force_simulate: bool
-            Remove existing files and force re-running of the ray-tracing simulation
+        Initialize SimtelRunner.
         """
         self._logger = logging.getLogger(__name__)
         self._logger.debug("Init SimtelRunnerRayTracing")
@@ -230,6 +212,13 @@ class SimtelRunnerRayTracing(SimtelRunner):
         return command
 
     def _check_run_result(self, **kwargs):
+        """Checking run results.
+
+        Raises
+        ------
+        RuntimeError
+            if Photon list is empty.
+        """
         # Checking run
         if not self._is_photon_list_file_ok():
             msg = "Photon list is empty."

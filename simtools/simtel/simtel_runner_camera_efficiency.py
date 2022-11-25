@@ -7,17 +7,21 @@ __all__ = ["SimtelRunnerCameraEfficiency"]
 
 class SimtelRunnerCameraEfficiency(SimtelRunner):
     """
-    SimtelRunnerCameraEfficiency is the interface with the testeff tool of sim_telarray
-    to perform camera efficiency simulations.
+    SimtelRunnerCameraEfficiency is the interface with the testeff tool of sim_telarray to perform\
+    camera efficiency simulations.
 
-    Attributes
+    Parameters
     ----------
-    label: str, optional
-        Instance label.
-    telescope_model: TelescopeModel
-        Instance of the TelescopeModel class.
-    config: namedtuple
-        Contains the configurable parameters (zenith_angle).
+    telescope_model: str
+        Instance of TelescopeModel class.
+    label: str
+        Instance label. Important for output file naming.
+    simtel_source_path: str or Path
+        Location of sim_telarray installation.
+    file_simtel: str or Path
+        location of the sim_telarray testeff tool output file.
+    zenith_angle: float
+        The zenith angle given in the config to CameraEfficiency.
     """
 
     def __init__(
@@ -30,20 +34,7 @@ class SimtelRunnerCameraEfficiency(SimtelRunner):
         zenith_angle=None,
     ):
         """
-        SimtelRunner.
-
-        Parameters
-        ----------
-        telescope_model: str
-            Instance of TelescopeModel class.
-        label: str, optional
-            Instance label. Important for output file naming.
-        simtel_source_path: str (or Path)
-            Location of sim_telarray installation.
-        file_simtel: str (or Path)
-            location of the sim_telarray testeff tool output file
-        zenith_angle: float
-            The zenith angle given in the config to CameraEfficiency
+        Initialize SimtelRunner.
         """
         self._logger = logging.getLogger(__name__)
         self._logger.debug("Init SimtelRunnerCameraEfficiency")
@@ -144,6 +135,13 @@ class SimtelRunnerCameraEfficiency(SimtelRunner):
         return command
 
     def _check_run_result(self, **kwargs):
+        """Checking run results
+
+        Raises
+        ------
+        RuntimeError
+            if camera efficiency simulation results file does not exist.
+        """
         # Checking run
         if not self._file_simtel.exists():
             msg = "Camera efficiency simulation results file does not exist"
