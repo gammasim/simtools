@@ -32,15 +32,15 @@ class TelescopeModel:
 
     Parameters
     ----------
-    site: (str, required)
+    site: str
         South or North.
-    telescope_model_name: (str, required)
+    telescope_model_name: str
         Telescope name (ex. LST-1, ...).
-    mongo_db_config: (dict, required)
+    mongo_db_config: dict
         MongoDB configuration.
-    model_version: (str, optional)
+    model_version: str
         Version of the model (ex. prod5) (default is 'Current').
-    label: (str, optional)
+    label: str
         Instance label. Important for output file naming (default is None).
     """
 
@@ -131,13 +131,13 @@ class TelescopeModel:
 
         Parameters
         ----------
-        config_file_name: (str or Path, required)
+        config_file_name: str or Path
             Path to the input config file.
         site: (str. required)
             South or North.
-        telescope_model_name: (str, required)
+        telescope_model_name: str
             Telescope model name for the base set of parameters (ex. LST-1, ...).
-        label: (str, optional)
+        label: str
             Instance label. Important for output file naming (default is None).
 
         Returns
@@ -210,7 +210,7 @@ class TelescopeModel:
 
         Parameters
         ----------
-        extra_label: (str, required)
+        extra_label: str
             Extra label to be appended to the original label.
         """
 
@@ -252,7 +252,7 @@ class TelescopeModel:
 
         Parameters
         ----------
-        par_name: (str, required)
+        par_name: str
             Name of the parameter.
 
         Returns
@@ -268,7 +268,7 @@ class TelescopeModel:
 
         Parameters
         ----------
-        par_name: (str, required)
+        par_name: str
             Name of the parameter.
 
         Returns
@@ -297,7 +297,7 @@ class TelescopeModel:
 
         Parameters
         ----------
-        par_name: (str, required)
+        par_name: str
             Name of the parameter.
 
         Returns
@@ -319,7 +319,7 @@ class TelescopeModel:
 
         Parameters
         ----------
-        par_name: (str, required)
+        par_name: str
             Name of the parameter.
 
         Returns
@@ -344,13 +344,13 @@ class TelescopeModel:
 
         Parameters
         ----------
-        par_name: (str, required)
+        par_name: str
             Name of the parameter.
         value: (required)
             Value of the parameter.
-        is_file: (bool, optional)
+        is_file: bool
             Indicates whether the new parameter is a file or not (default is False).
-        is_aplicable: (bool, optional)
+        is_aplicable: bool
             Indicates whether the new parameter is applicable or not (default is True).
 
         Raises
@@ -381,7 +381,7 @@ class TelescopeModel:
 
         Parameters
         ----------
-        par_name: (str, required)
+        par_name: str
             Name of the parameter.
         value: (required)
             Value of the parameter.
@@ -477,9 +477,9 @@ class TelescopeModel:
 
         Parameters
         ----------
-        par_name: (str, required)
+        par_name: str
             Name of the parameter.
-        file_path: (str, required)
+        file_path: str
             Path of the file to be added to the config file directory.
         """
         if not hasattr(self, "_added_parameter_files"):
@@ -537,7 +537,7 @@ class TelescopeModel:
 
         Parameters
         ----------
-        no_export: (bool, optional)
+        no_export: bool
             Turn it on if you do not want the file to be exported (default is False).
 
         Returns
@@ -593,9 +593,9 @@ class TelescopeModel:
 
         Parameters
         ----------
-        mirror_number: (int, required)
+        mirror_number: int
             Number index of the mirror.
-        set_focal_length_to_zero: (bool, required)
+        set_focal_length_to_zero: bool
             Set the focal length to zero if True.
         """
         if mirror_number > self.mirrors.number_of_mirrors:
@@ -628,9 +628,9 @@ class TelescopeModel:
 
         Parameters
         ----------
-        mirror_number: (int, required)
+        mirror_number: int
             Mirror number.
-        set_focal_length_to_zero: (bool, optional)
+        set_focal_length_to_zero: bool
             Flag to set the focal length to zero (default is False).
 
         Returns
@@ -709,7 +709,7 @@ class TelescopeModel:
 
         Parameters
         ----------
-        par: (str, required)
+        par: str
             Name of the parameter.
 
         Returns
@@ -735,7 +735,7 @@ class TelescopeModel:
 
         Parameters
         ----------
-        file_name: (str or Path, required)
+        file_name: str or Path
             File assumed to be in the model directory.
 
         Returns
@@ -779,7 +779,7 @@ class TelescopeModel:
 
         Parameters
         ----------
-        incidence_angle_dist_file: (str, required)
+        incidence_angle_dist_file: str
             File name of the incidence angle distribution
 
         Returns
@@ -801,11 +801,11 @@ class TelescopeModel:
 
         Parameters
         ----------
-        curves: (dict, required)
+        curves: dict
             dict of with 3 "columns", Wavelength, Angle and z. The dictionary represents a two \
             dimensional distribution of wavelengths and angles with the z value being e.g.,\
              reflectivity, transmission, etc.
-        incidence_angle_dist: (astropy.table.Table, required)
+        incidence_angle_dist: astropy.table.Table
             Instance of astropy.table.Table with the incidence angle distribution. The assumed \
             columns are "Incidence angle" and "Fraction".
 
@@ -836,9 +836,9 @@ class TelescopeModel:
 
         Parameters
         ----------
-        file_name: (str, required)
+        file_name: str
             File name to write to.
-        table: (astropy.table.Table, required)
+        table: astropy.table.Table
             Instance of astropy.table.Table with the values to write to the file.
 
         Returns

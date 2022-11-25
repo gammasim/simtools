@@ -12,15 +12,15 @@ class SimtelConfigWriter:
 
     Parameters
     ----------
-    site: (str, required)
+    site: str
         South or North.
-    model_version: (str, required)
+    model_version: str
         Version of the model (ex. prod5).
-    telescope_model_name: (str, optional)
+    telescope_model_name: str
         Telescope model name.
-    layout_name: (str, optional)
+    layout_name: str
         Layout name.
-    label: (str, optional)
+    label: str
         Instance label. Important for output file naming.
     """
 
@@ -68,9 +68,9 @@ class SimtelConfigWriter:
 
         Parameters
         ----------
-        config_file_path: (str or Path, required)
+        config_file_path: str or Path
             Path of the file to write on.
-        parameters: (dict, required)
+        parameters: dict
             Model parameters in the same structure as used by the TelescopeModel class.
         """
         with open(config_file_path, "w") as file:
@@ -95,13 +95,13 @@ class SimtelConfigWriter:
 
         Parameters
         ----------
-        config_file_path: (str or Path, required)
+        config_file_path: str or Path
             Path of the file to write on.
-        layout: (LayoutArray, required)
+        layout: LayoutArray
             Instance of LayoutArray referent to the array model.
-        telescope_model: (list of TelescopeModel, required)
+        telescope_model: list of TelescopeModel
             List of TelescopeModel's instances as used by the ArrayModel instance.
-        site_parameters: (dict, required)
+        site_parameters: dict
             Site parameters.
         """
         with open(config_file_path, "w") as file:
@@ -146,13 +146,13 @@ class SimtelConfigWriter:
 
         Parameters
         ----------
-        mirror_number: (int, required)
+        mirror_number: int
             Mirror number.
-        mirrors: (Mirrors, required)
+        mirrors: Mirrors
             Instance of Mirrors.
-        single_mirror_list_file: (str or Path, required)
+        single_mirror_list_file: str or Path
             Path of the file to write on.
-        set_focal_length_to_zero: (bool, optional)
+        set_focal_length_to_zero: bool
             Flag to set the focal length to zero (default is False).
         """
         __, __, diameter, flen, shape = mirrors.get_single_mirror_parameters(mirror_number)

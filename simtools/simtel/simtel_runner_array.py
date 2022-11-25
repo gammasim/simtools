@@ -31,15 +31,15 @@ class SimtelRunnerArray(SimtelRunner):
 
     Parameters
     ----------
-    array_model: (str, required)
+    array_model: str
         Instance of TelescopeModel class.
-    label: (str, optional)
+    label: str
         Instance label. Important for output file naming (default is None).
-    simtel_source_path: (str or Path, optional)
+    simtel_source_path: str or Path
         Location of sim_telarray installation (default is None).
-    config_data: (dict, optional)
+    config_data: dict
         Dict containing the configurable parameters (default is None).
-    config_file: (str or Path, optional)
+    config_file: str or Path
         Path of the yaml file containing the configurable parameters (default is None).
     """
 
@@ -127,7 +127,7 @@ class SimtelRunnerArray(SimtelRunner):
 
         Parameters
         ----------
-        file_type: (str, required)
+        file_type: str
             The type of file (determines the file suffix). Choices are log, histogram, output or\
              sub_log.
         kwargs: dict
@@ -188,12 +188,12 @@ class SimtelRunnerArray(SimtelRunner):
 
         Parameters
         ----------
-        file_type: (str, required)
+        file_type: str
             File type to check.
             Choices are log, histogram, output or sub_log.
-        run_number: (int, required)
+        run_number: int
             Run number.
-        mode: (str, optional)
+        mode: str
             Mode (default is 'out').
         """
 
@@ -207,7 +207,7 @@ class SimtelRunnerArray(SimtelRunner):
 
         Parameters
         ----------
-        run_number: (int, required)
+        run_number: int
             Run number.
 
         Returns

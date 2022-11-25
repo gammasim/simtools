@@ -37,15 +37,15 @@ class CommandLineParser(argparse.ArgumentParser):
 
         Parameters
         ----------
-        paths: (bool, optional)
+        paths: bool
             Add path configuration to list of args (default is True).
-        telescope_model: (bool, optional)
+        telescope_model: bool
             Add telescope model configuration to list of args (default is False).
-        workflow_config: (bool, optional)
+        workflow_config: bool
             Add workflow configuration to list of args (default is False).
-        db_config: (bool, optional)
+        db_config: bool
             Add database configuration parameters to list of args (default is False).
-        job_submission:(bool, optional)
+        job_submission:bool
             Add job submission configuration parameters to list of args (default is False).
         """
 
@@ -66,7 +66,7 @@ class CommandLineParser(argparse.ArgumentParser):
 
         Parameters
         ----------
-        workflow_config (str, optional)
+        workflow_config str
             workflow configuration file (default is False).
         """
 
@@ -197,9 +197,9 @@ class CommandLineParser(argparse.ArgumentParser):
 
         Parameters
         ----------
-        add_model_version (str, optional)
+        add_model_version str
             Model version (default is "Current").
-        add_telescope (str, optional)
+        add_telescope str
             Telescope model name (e.g. LST-1, SST-D, ..., default is True).
         """
 
