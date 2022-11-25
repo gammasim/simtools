@@ -1,34 +1,41 @@
 import logging
 
 __all__ = [
+    "camera_efficiency_log_file_name",
+    "camera_efficiency_results_file_name",
+    "camera_efficiency_simtel_file_name",
+    "convert_telescope_model_name_to_yaml",
+    "get_site_from_telescope_name",
+    "is_valid_name",
+    "layout_telescope_list_file_name",
+    "ray_tracing_file_name",
+    "ray_tracing_plot_file_name",
+    "ray_tracing_results_file_name",
+    "simtel_array_config_file_name",
+    "simtel_telescope_config_file_name",
+    "simtools_instrument_name",
+    "split_telescope_model_name",
+    "validate_camera_name",
+    "validate_layout_array_name",
     "validate_model_version_name",
+    "validate_name",
     "validate_simtel_mode_name",
     "validate_site_name",
-    "validate_layout_array_name",
+    "validate_sub_system_name",
+    "validate_telescope_id_name",
     "validate_telescope_model_name",
-    "validate_camera_name",
-    "convert_telescope_model_name_to_yaml",
-    "split_telescope_model_name",
-    "get_site_from_telescope_name",
-    "ray_tracing_file_name",
-    "simtel_telescope_config_file_name",
-    "simtel_array_config_file_name",
-    "simtel_single_mirror_list_file_name",
+    "validate_telescope_name_db",
 ]
 
 
 def validate_sub_system_name(name):
     """
-    Validate a sub system name (optics structure or camera)
-
-    Raises
-    ------
-    ValueError
-        If name is not valid.
+    Validate a sub system name (optics structure or camera).
 
     Parameters
     ----------
     name: str
+        Name of the subsystem.
 
     Returns
     -------
@@ -42,14 +49,10 @@ def validate_camera_name(name):
     """
     Validate a camera name.
 
-    Raises
-    ------
-    ValueError
-        If name is not valid.
-
     Parameters
     ----------
     name: str
+        Camera name
 
     Returns
     -------
@@ -67,19 +70,20 @@ def validate_telescope_id_name(name):
     - D
     - telescope ID
 
-    Raises
-    ------
-    ValueError
-        If name is not valid.
-
     Parameters
     ----------
     name: str
+        Telescope ID name.
 
     Returns
     -------
     str
         Validated name.
+
+    Raises
+    ------
+    ValueError
+        If name is not valid.
     """
 
     if name == "D" or name.isdigit():
@@ -95,14 +99,10 @@ def validate_model_version_name(name):
     """
     Validate a model version name.
 
-    Raises
-    ------
-    ValueError
-        If name is not valid.
-
     Parameters
     ----------
     name: str
+        Model version name.
 
     Returns
     -------
@@ -116,14 +116,10 @@ def validate_simtel_mode_name(name):
     """
     Validate a sim_telarray mode name.
 
-    Raises
-    ------
-    ValueError
-        If name is not valid.
-
     Parameters
     ----------
     name: str
+        sim_telarray mode name.
 
     Returns
     -------
@@ -137,14 +133,10 @@ def validate_site_name(name):
     """
     Validate a site name.
 
-    Raises
-    ------
-    ValueError
-        If name is not valid.
-
     Parameters
     ----------
     name: str
+        Site name.
 
     Returns
     -------
@@ -158,14 +150,10 @@ def validate_layout_array_name(name):
     """
     Validate a layout array name.
 
-    Raises
-    ------
-    ValueError
-        If name is not valid.
-
     Parameters
     ----------
     name: str
+        Layout array name.
 
     Returns
     -------
@@ -177,24 +165,26 @@ def validate_layout_array_name(name):
 
 def validate_name(name, all_names):
     """
-    Validate a name given the all_names options. For each key in all_names, a list of options is
+    Validate a name given the all_names options. For each key in all_names, a list of options is \
     given. If name is in this list, the key name is returned.
+
+    Parameters
+    ----------
+    name: str
+        Name to validate.
+    all_names: dict
+        Dictionary with valid names.
+    Returns
+    -------
+    str
+        Validated name.
 
     Raises
     ------
     ValueError
         If name is not valid.
-
-    Parameters
-    ----------
-    name: str
-    all_names: dict
-
-    Returns
-    -------
-    str
-        Validated name.
     """
+
     _logger = logging.getLogger(__name__)
 
     if not is_valid_name(name, all_names):
@@ -211,15 +201,21 @@ def validate_name(name, all_names):
 
 def is_valid_name(name, all_names):
     """
+    Check if name is valid.
+
     Parameters
     ----------
-    name: str
+    name:  str
+        Name to validated.
     all_names: dict
+        Dictionary with valid names.
 
     Returns
     -------
     bool
+        True if name is valid. Otherwise, false.
     """
+
     if not isinstance(name, str):
         return False
     for main_name in all_names.keys():
@@ -232,20 +228,17 @@ def validate_telescope_model_name(name):
     """
     Validate a telescope model name.
 
-    Raises
-    ------
-    ValueError
-        If name is not valid.
-
     Parameters
     ----------
     name: str
+        Telescope model name.
 
     Returns
     -------
     str
         Validated name.
     """
+
     tel_class, tel_type = split_telescope_model_name(name)
     tel_class = validate_name(tel_class, all_telescope_class_names)
     if "flashcam" in tel_type:
@@ -268,11 +261,6 @@ def split_telescope_model_name(name):
     """
     Split a telescope name into class and type.
 
-    Raises
-    ------
-    ValueError
-        If name is not valid.
-
     Parameters
     ----------
     name: str
@@ -283,6 +271,7 @@ def split_telescope_model_name(name):
     str, str
        class (LST, MST, SST ...) and type (any complement).
     """
+
     name_parts = name.split("-")
     tel_class = name_parts[0]
     tel_type = "-".join(name_parts[1:])
@@ -309,11 +298,6 @@ def get_site_from_telescope_name(name):
 def validate_telescope_name_db(name):
     """
     Validate a telescope DB name.
-
-    Raises
-    ------
-    ValueError
-        If name is not valid.
 
     Parameters
     ----------
@@ -343,6 +327,11 @@ def convert_telescope_model_name_to_yaml(name):
     -------
     str
         Telescope name (old convention).
+
+    Raises
+    ------
+    ValueError
+        if name is not valid.
     """
     tel_class, tel_type = split_telescope_model_name(name)
     new_name = tel_class + "-" + tel_type
@@ -446,12 +435,10 @@ def simtools_instrument_name(site, telescope_class_name, sub_system_name, telesc
     telescope_id_name: str
         telescope ID (e.g., D, numerial value)
 
-
     Returns
     -------
-    instrumentname str
-        instrument name
-
+    instrument: name: str
+        Instrument name.
     """
 
     return (
