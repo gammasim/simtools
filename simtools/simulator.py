@@ -23,6 +23,8 @@ __all__ = [
 
 
 class InvalidRunsToSimulate(Exception):
+    """Exception for invalid runs to simulate."""
+
     pass
 
 
@@ -94,23 +96,6 @@ class Simulator:
         MongoDB configuration.
     test: bool
         If True, no jobs are submitted; only run scripts are prepared
-
-    Attributes
-    ----------
-    array_model : ArrayModel
-        Instance of ArrayModel.
-    config : namedtuple
-        Configurable parameters.
-    io_handler: IOHandler
-        Instance of IOHandler
-    label : str
-        Instance label.
-    simulator: str
-        Which simulator to use. Choices are: simtel, corsika
-    site: str
-        Validated site name.
-    runs: list of Path
-        List with the simulation file names
     """
 
     def __init__(

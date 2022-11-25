@@ -35,15 +35,6 @@ class CameraEfficiency:
         Path of the yaml file containing the configurable parameters.
     test: bool
         Is it a test instance (at the moment only affects the location of files).
-
-    Attributes
-    ----------
-    config: namedtuple
-        Contains the configurable parameters (zenith_angle).
-    io_handler: IOHandler
-        Instance of IOHandler
-    label: str
-        Instance label.
     """
 
     def __init__(

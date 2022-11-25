@@ -4,45 +4,35 @@ from copy import copy
 
 import simtools.util.general as gen
 
-__all__ = ["JobManager"]
+__all__ = ["JobManager", "MissingWorkloadManager"]
 
 
 class MissingWorkloadManager(Exception):
+    """Exception for missing work load manager."""
+
     pass
 
 
 class JobManager:
     """
-    JobManager provides an interface to workload managers
-    like gridengine or HTCondor.
+    JobManager provides an interface to workload managers like gridengine or HTCondor.
 
-    Attributes
+    Parameters
     ----------
     submit_command: str
-       job submission command (allowed is qsub, condor_submit, local).
+        Job submission command.
     test: bool
-       testing mode without sub submission
+        Testing mode without sub submission.
 
-    Methods
-    -------
-    test_submission_system()
-       Check that the requested workload manager exist
-    submit(run_script, run_out_file)
-       Submit a job described by a shell script
-
+    Raises
+    ------
+    MissingWorkloadManager
+        if requested workflow manager not found.
     """
 
     def __init__(self, submit_command=None, test=False):
         """
-        JobManager init
-
-        Parameters
-        ----------
-        submit_command: str
-            job submission command
-        test: bool
-        testing mode without sub submission
-
+        Initialize JobManager
         """
         self._logger = logging.getLogger(__name__)
         self.submit_command = submit_command
@@ -58,14 +48,12 @@ class JobManager:
 
     def test_submission_system(self):
         """
-        Check that the requested workload manager exist on the \
-        system this script is executed
+        Check that the requested workload manager exist on the system this script is executed.
 
         Raises
         ------
         MissingWorkloadManager
-            if workflow manager is not found
-
+            if workflow manager is not found.
         """
 
         if self.submit_command is None:
@@ -83,20 +71,16 @@ class JobManager:
 
         raise MissingWorkloadManager
 
-    def submit(
-        self,
-        run_script=None,
-        run_out_file=None,
-    ):
+    def submit(self, run_script=None, run_out_file=None):
         """
-        Submit a job described by a shell script
+        Submit a job described by a shell script.
 
         Parameters
         ----------
         run_script: string
-            Shell script descring the job to be submitted
+            Shell script descring the job to be submitted.
         run_out_file: string
-            Redirect output/error/job stream to this file (out,err,job suffix)
+            Redirect output/error/job stream to this file (out,err,job suffix).
 
         """
         self.run_script = str(run_script)

@@ -84,6 +84,8 @@ extensions = [
 
 autosectionlabel_prefix_document = True
 
+# autodoc_default_options = {"members": True, "undoc-members": True, "private-members": True}
+
 # Display todos by setting to True
 todo_include_todos = True
 
