@@ -194,7 +194,7 @@ class PSFImage:
 
     def set_psf(self, value, fraction=0.8, unit="cm"):
         """
-        Set PSF calculated from other methods
+        Set PSF calculated from other methods.
 
         Parameters
         ----------

@@ -181,7 +181,7 @@ class SimtelRunner:
 
     @staticmethod
     def _simtel_failed(sys_output):
-        """Test if output is different than 0
+        """Test if simtel process ended successfully.
 
         Returns
         -------
@@ -192,7 +192,7 @@ class SimtelRunner:
 
     def _raise_simtel_error(self):
         """
-        Raise sim_telarray execution error. Final 30 lines from the log file are collected and
+        Raise sim_telarray execution error. Final 30 lines from the log file are collected and \
         printed.
 
         Raises
@@ -221,7 +221,7 @@ class SimtelRunner:
         Raises
         ------
         SimtelExecutionError
-            if output of command is 0.
+            if run was not successful.
         """
         sys_output = os.system(command)
         if self._simtel_failed(sys_output):
