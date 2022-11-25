@@ -66,7 +66,7 @@ class CommandLineParser(argparse.ArgumentParser):
 
         Parameters
         ----------
-        workflow_config str
+        workflow_config: str
             workflow configuration file (default is False).
         """
 
@@ -197,9 +197,9 @@ class CommandLineParser(argparse.ArgumentParser):
 
         Parameters
         ----------
-        add_model_version str
+        add_model_version: str
             Model version (default is "Current").
-        add_telescope str
+        add_telescope: str
             Telescope model name (e.g. LST-1, SST-D, ..., default is True).
         """
 
