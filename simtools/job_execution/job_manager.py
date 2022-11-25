@@ -19,9 +19,9 @@ class JobManager:
 
     Parameters
     ----------
-    submit_command: (str, optional)
+    submit_command: str
         Job submission command (default is None).
-    test: (bool, optional)
+    test: bool
         Testing mode without sub submission (default is False).
 
     Raises
@@ -77,9 +77,9 @@ class JobManager:
 
         Parameters
         ----------
-        run_script: (string, optional)
+        run_script: string
             Shell script descring the job to be submitted (default is None).
-        run_out_file: (string, optional)
+        run_out_file: string
             Redirect output/error/job stream to this file (out,err,job suffix) (default is None).
 
         """

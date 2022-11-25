@@ -22,9 +22,9 @@ class SimtelHistograms:
 
     Parameters
     ----------
-    histogram_files: (list, required)
+    histogram_files: list
         List of sim_telarray histogram files (str of Path).
-    test: (bool, optional)
+    test: bool
         If True, only a fraction of the histograms will be processed, leading to a much shorter\
          runtime (default is False).
     """
@@ -43,7 +43,7 @@ class SimtelHistograms:
 
         Parameters
         ----------
-        fig_name: (str, required)
+        fig_name: str
             Name of the output figure file.
         """
         self._combine_histogram_files()
@@ -62,7 +62,7 @@ class SimtelHistograms:
 
         Parameters
         ----------
-        i_hist: (int, required)
+        i_hist: int
             Histogram index.
 
         Returns
@@ -160,9 +160,9 @@ class SimtelHistograms:
 
         Parameters
         ----------
-        i_hist: (int, required)
+        i_hist: int
             Index of the histogram to be plotted.
-        ax: (matplotlib.axes.Axes, required)
+        ax: matplotlib.axes.Axes
             Instance of matplotlib.axes.Axes in which to plot the histogram.
         """
 
