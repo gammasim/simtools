@@ -168,9 +168,9 @@ def set_style(palette="default", big_plot=False):
     Parameters
     ----------
     palette: str
-        Colour palette (default is 'default').
+        Colour palette.
     big_plot: bool
-        Flag to set fonts and marker bigger. If True, it sets them bigger (default is False).
+        Flag to set fonts and marker bigger. If True, it sets them bigger.
 
     Raises
     ------
@@ -218,7 +218,7 @@ def get_colors(palette="default"):
     Parameters
     ----------
     palette: str
-        Colour palette (default is 'default).
+        Colour palette.
 
     Returns
     -------

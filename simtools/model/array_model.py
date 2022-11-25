@@ -27,11 +27,11 @@ class ArrayModel:
     mongo_db_config: dict
         MongoDB configuration.
     array_config_file: str
-        Path to a yaml file with the array config data (default is None).
+        Path to a yaml file with the array config data.
     array_config_data: dict
-        Dict with the array config data (default is None).
+        Dict with the array config data.
     label: str
-        Instance label. Important for output file naming (default is None).
+        Instance label. Important for output file naming.
     """
 
     def __init__(self, mongo_db_config, label=None, array_config_file=None, array_config_data=None):

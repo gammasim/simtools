@@ -632,7 +632,7 @@ def change_dict_keys_case(data_dict, lower_case=True):
     data_dict: dict
         Dictionary to be converted.
     lower_case: bool
-        Change keys to lower (upper) case if True (False) (default is True).
+        Change keys to lower (upper) case if True (False).
     """
 
     _return_dict = {}

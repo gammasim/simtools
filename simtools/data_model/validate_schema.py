@@ -16,7 +16,7 @@ class SchemaValidator:
     Parameters
     ----------
     data_dict: dict
-        Metadata dict to be validated against reference schema (default is None).
+        Metadata dict to be validated against reference schema.
     """
 
     def __init__(self, data_dict=None):
@@ -39,7 +39,7 @@ class SchemaValidator:
         ----------
         meta_file_name: str
             file name for file with meta data to be validated (might also be given as dictionary \
-             during initialization of the class (default is None).
+             during initialization of the class.
         lower_case: bool
             compare schema keys in lower case only (gammasim-tools convention; default is True).
 
