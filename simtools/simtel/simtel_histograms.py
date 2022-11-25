@@ -26,7 +26,7 @@ class SimtelHistograms:
         List of sim_telarray histogram files (str of Path).
     test: bool
         If True, only a fraction of the histograms will be processed, leading to a much shorter\
-         runtime (default is False).
+         runtime.
     """
 
     def __init__(self, histogram_files, test=False):

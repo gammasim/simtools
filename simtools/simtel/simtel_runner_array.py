@@ -34,13 +34,13 @@ class SimtelRunnerArray(SimtelRunner):
     array_model: str
         Instance of TelescopeModel class.
     label: str
-        Instance label. Important for output file naming (default is None).
+        Instance label. Important for output file naming.
     simtel_source_path: str or Path
-        Location of sim_telarray installation (default is None).
+        Location of sim_telarray installation.
     config_data: dict
-        Dict containing the configurable parameters (default is None).
+        Dict containing the configurable parameters.
     config_file: str or Path
-        Path of the yaml file containing the configurable parameters (default is None).
+        Path of the yaml file containing the configurable parameters.
     """
 
     def __init__(
@@ -194,7 +194,7 @@ class SimtelRunnerArray(SimtelRunner):
         run_number: int
             Run number.
         mode: str
-            Mode (default is 'out').
+            Mode.
         """
 
         info_for_file_name = self.get_info_for_file_name(run_number)

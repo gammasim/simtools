@@ -26,15 +26,15 @@ class LayoutArray:
     Parameters
     ----------
     label: str
-        Instance label (default is None).
+        Instance label.
     name: str
-        Name of the layout (default is None).
+        Name of the layout.
     layout_center_data: dict
-        Dict describing array center coordinates (default is None).
+        Dict describing array center coordinates.
     corsika_telescope_data: dict
-        Dict describing CORSIKA telescope parameters (default is None).
+        Dict describing CORSIKA telescope parameters.
     telescope_list_file: str or Path
-        Path to the telescope list file (default is None).
+        Path to the telescope list file.
     """
 
     def __init__(
@@ -75,7 +75,7 @@ class LayoutArray:
         layout_array_name: str
             e.g. South-4LST, North-Prod5 ...
         label: str
-            Instance label. Important for output file naming (default is None).
+            Instance label. Important for output file naming.
 
         Returns
         -------
@@ -467,7 +467,7 @@ class LayoutArray:
         Parameters
         ----------
         export_corsika_meta: bool
-            write CORSIKA metadata (default is False).
+            write CORSIKA metadata.
 
         Returns
         -------
@@ -531,7 +531,7 @@ class LayoutArray:
         crs_name: str
             Name of coordinate system to be used for export.
         corsika_z: bool
-            Write telescope height in CORSIKA coordinates (for CORSIKA system) (default is False).
+            Write telescope height in CORSIKA coordinates (for CORSIKA system).
         """
 
         table = Table(meta=self._get_export_metadata(crs_name == "corsika"))
@@ -681,9 +681,9 @@ class LayoutArray:
         Parameters
         ----------
         compact_printing: str
-            Compact printout for a single coordinate system (default is "").
+            Compact printout for a single coordinate system.
         corsika_z: bool
-            Print telescope height in CORSIKA coordinates (for CORSIKA system) (default is False).
+            Print telescope height in CORSIKA coordinates (for CORSIKA system).
         """
 
         if len(compact_printing) == 0:
