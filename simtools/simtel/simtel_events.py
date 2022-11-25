@@ -147,7 +147,7 @@ class SimtelEvents:
         ----------
         energy_range: Tuple with len 2
             Max and min energy of energy range, e.g. energy_range=(100 * u.GeV, 10 * u.TeV).
-        core_max: astropy.Quantity distance)
+        core_max: astropy.Quantity distance
             Maximum core radius for selecting showers, e.g. core_max=1000 * u.m.
 
         Returns
@@ -176,7 +176,7 @@ class SimtelEvents:
         ----------
         energy_range: Tuple len 2
             Max and min energy of energy range, e.g. energy_range=(100 * u.GeV, 10 * u.TeV).
-        core_max: astropy.Quantity distance)
+        core_max: astropy.Quantity distance
             Maximum core radius for selecting showers, e.g. core_max=1000 * u.m.
 
         Returns
@@ -214,9 +214,9 @@ class SimtelEvents:
 
         Parameters
         ----------
-        energy_range: Tuple len 2)
+        energy_range: Tuple len 2
             Max and min energy of energy range, e.g. energy_range=(100 * u.GeV, 10 * u.TeV).
-        core_max: astropy.Quantity distance)
+        core_max: astropy.Quantity distance
             Maximum core radius for selecting showers, e.g. core_max=1000 * u.m.
 
         Returns
