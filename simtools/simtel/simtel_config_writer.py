@@ -153,7 +153,7 @@ class SimtelConfigWriter:
         single_mirror_list_file: str or Path
             Path of the file to write on.
         set_focal_length_to_zero: bool
-            Flag to set the focal length to zero (default is False).
+            Flag to set the focal length to zero.
         """
         __, __, diameter, flen, shape = mirrors.get_single_mirror_parameters(mirror_number)
 

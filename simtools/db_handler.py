@@ -433,7 +433,7 @@ class DatabaseHandler:
         run_location: Path or str
             The sim_telarray run location to write the tabulated data files into.
         collection_name: str
-            The name of the collection to read from (default is "telescopes")
+            The name of the collection to read from.
         write_files: bool
             If true, write the files to the run_location.
         only_applicable: bool
@@ -645,9 +645,9 @@ class DatabaseHandler:
         Parameters
         ----------
         db_name: str
-            The name of the DB (default is DB_CTA_SIMULATION_MODEL_DESCRIPTIONS).
+            The name of the DB.
         collection_name: str
-            The name of the collection to read from (default is "telescopes")
+            The name of the collection to read from.
 
         Returns
         -------
@@ -844,11 +844,11 @@ class DatabaseHandler:
         new_tel_name: str
             The name of the new telescope
         collection_name: str
-            The name of the collection to copy from (default is "telescopes")
+            The name of the collection to copy from.
         db_to_copy_to: str
-            The name of the DB to copy to (default is the same as db_name)
+            The name of the DB to copy to.
         collection_to_copy_to: str
-            The name of the collection to copy to (default is the same as collection)
+            The name of the collection to copy to.
 
         Raises
         ------
@@ -1016,7 +1016,7 @@ class DatabaseHandler:
         new_value: type identical to the original parameter type
             The new value to set for the parameter
         collection_name: str
-            The name of the collection in which to update the parameter (default is "telescopes")
+            The name of the collection in which to update the parameter.
         file_prefix: str or Path
             where to find files to upload to the DB
 
@@ -1107,7 +1107,7 @@ class DatabaseHandler:
         site: str, North or South
             Update a site parameter (the telescope argument must be None)
         collection_name: str
-            The name of the collection in which to update the parameter (default is "telescopes")
+            The name of the collection in which to update the parameter.
 
         Raises
         ------
@@ -1202,7 +1202,7 @@ class DatabaseHandler:
         new_value: type identical to the original parameter type
             The new value to set for the parameter
         collection_name: str
-            The name of the collection to which to add a parameter (default is "telescopes")
+            The name of the collection to which to add a parameter.
         file_prefix: str or Path
             where to find files to upload to the DB
 
@@ -1284,7 +1284,7 @@ class DatabaseHandler:
         site: str
            South or North, ignored if collection_name is "telescopes".
         collection_name: str
-            The name of the collection to add a parameter to (default is "telescopes")
+            The name of the collection to add a parameter to.
         file_prefix: str or Path
             where to find files to upload to the DB
         kwargs: dict
@@ -1443,7 +1443,7 @@ class DatabaseHandler:
             In case "collection_name" is "sites",
             this argument sets which site parameter get the versions of
         collection_name: str
-            The name of the collection in which to update the parameter (default is "telescopes")
+            The name of the collection in which to update the parameter.
 
         Returns
         -------

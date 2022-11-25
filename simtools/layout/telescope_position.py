@@ -30,7 +30,7 @@ class TelescopePosition:
     Parameters
     ----------
     name: str
-        Name of the telescope (e.g LST-01, SST-05, ...) (default is None).
+        Name of the telescope (e.g LST-01, SST-05, ...).
 
     """
 
@@ -79,11 +79,11 @@ class TelescopePosition:
         crs_name: str
             Name of coordinate system to be used for printing.
         print_header: bool
-            Print table header (default is False).
+            Print table header.
         corsika_obs_level: astropy.Quantity
-            CORSIKA observation level in equivalent units of meter (default is None).
+            CORSIKA observation level in equivalent units of meter.
         corsika_sphere_center: astropy.Quantity
-            CORSIKA sphere center in equivalent units of meter (default is None).
+            CORSIKA sphere center in equivalent units of meter.
 
         Raises
         ------
@@ -148,7 +148,7 @@ class TelescopePosition:
         crs_name: str
             name of coordinate system.
         coordinate_field: str
-            return specified field of coordinate descriptor (default is None).
+            return specified field of coordinate descriptor.
 
         Returns
         -------
@@ -216,7 +216,7 @@ class TelescopePosition:
         yy: float
             y-coordinate.
         zz: float
-            z-coordinate (altitude) (default is None).
+            z-coordinate (altitude).
 
         Raises
         ------
@@ -336,7 +336,7 @@ class TelescopePosition:
         crs_name: str
             Name of coordinate system.
         crs_check: bool
-            Check that projection system is defined (default is False).
+            Check that projection system is defined.
 
         Returns
         -------
@@ -370,7 +370,7 @@ class TelescopePosition:
         ----------
         crs_name: str
             Name of coordinate system to be checked for altitude. If None: check if altitude is \
-            define for any system (default is None).
+            define for any system.
 
         Returns
         -------
@@ -459,9 +459,9 @@ class TelescopePosition:
         tel_corsika_z: astropy.Quantity
             Telescope z-position in CORSIKA system in equivalent units of meter.
         corsika_ob_level: astropy.Quantity
-            CORSIKA observation level in equivalent units of meter (default is None).
+            CORSIKA observation level in equivalent units of meter.
         corsika_sphere_center: astropy.Quantity
-            CORSIKA sphere center in equivalent units of meter (default is None).
+            CORSIKA sphere center in equivalent units of meter.
 
         Returns
         -------
@@ -478,11 +478,11 @@ class TelescopePosition:
         Parameters
         ----------
         crs_local: pyproj.crs.crs.CRS
-            Pyproj CRS of the local coordinate system (default is None).
+            Pyproj CRS of the local coordinate system.
         crs_wgs84: pyproj.crs.crs.CRS
-            Pyproj CRS of the mercator coordinate system (default is None).
+            Pyproj CRS of the mercator coordinate system.
         crs_utm: pyproj.crs.crs.CRS
-            Pyproj CRS of the utm coordinate system (default is None).
+            Pyproj CRS of the utm coordinate system.
 
         Raises
         ------

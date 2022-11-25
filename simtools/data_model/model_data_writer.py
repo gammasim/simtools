@@ -15,9 +15,9 @@ class ModelDataWriter:
     Parameters
     ----------
     workflow_config: WorkflowDescription
-        Workflow configuration (default is None).
+        Workflow configuration.
     args_dict: Dictionary
-        Dictionary with configuration parameters (default is None).
+        Dictionary with configuration parameters.
     """
 
     def __init__(self, workflow_config=None, args_dict=None):
@@ -61,9 +61,9 @@ class ModelDataWriter:
         Parameters
         ----------
         ymlfile: str
-            Name of output file (default is None)
+            Name of output file.
         keys_lower_case: bool
-            Write yaml key in lower case (default is False)
+            Write yaml key in lower case.
 
         Returns
         -------

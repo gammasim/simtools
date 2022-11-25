@@ -58,14 +58,13 @@ class CorsikaConfig:
     layout_name: str
         Name of the layout.
     label: str
-        Instance label (default is None).
+        Instance label.
     corsika_config_data: dict
-        CORSIKA user parameters (default is None)
+        CORSIKA user parameters.
     corsika_config_file: str
-        Name of the yaml configuration file (default is None).
+        Name of the yaml configuration file.
     corsika_parameters_file: str
-        Name of the yaml file to set remaining CORSIKA parameters (default is \
-        data/parameters/corsika_parameters.yml)
+        Name of the yaml file to set remaining CORSIKA parameters.
     """
 
     def __init__(
@@ -413,7 +412,7 @@ class CorsikaConfig:
             The type of file (determines the file suffix).
             Choices are config_tmp, config or output_generic.
         run_number: int
-            Run number (default is None).
+            Run number.
 
         Returns
         -------
