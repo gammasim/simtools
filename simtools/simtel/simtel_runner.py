@@ -26,7 +26,7 @@ class SimtelRunner:
 
     Parameters
     ----------
-    simtel_source_path: str or Path)
+    simtel_source_path: str or Path
         Location of sim_telarray installation.
     label: str
         Instance label. Important for output file naming.
