@@ -67,9 +67,9 @@ class Configurator:
 
         Parameters
         ----------
-        arg_list list
+        arg_list: list
             List of arguments (default is None)
-        add_db_config bool
+        add_db_config: bool
             Add DB configuration file (default is False)
 
         Returns
