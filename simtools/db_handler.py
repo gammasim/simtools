@@ -19,6 +19,10 @@ from simtools.util import names
 __all__ = ["DatabaseHandler"]
 
 
+# pylint: disable=unsubscriptable-object
+# The above comment is because pylint does not know that DatabaseHandler.db_client is subscriptable
+
+
 class DatabaseHandler:
     """
     DatabaseHandler provides the interface to the DB.

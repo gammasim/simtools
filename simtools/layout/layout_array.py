@@ -191,7 +191,7 @@ class LayoutArray:
         except (TypeError, KeyError):
             pass
 
-    def _initialize_coordinate_systems(self, center_dict=None, defaults_init=False):
+    def _initialize_coordinate_systems(self, center_dict=None):
         """
         Initialize array center and coordinate systems.
 
@@ -199,8 +199,6 @@ class LayoutArray:
         ----------
         center_dict: dict
             dictionary with coordinates of array center.
-        defaults_init: bool
-            default initialisation without transformation in all available projections.
 
         Raises
         ------
