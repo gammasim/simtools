@@ -7,17 +7,17 @@ from simtools.model.telescope_model import TelescopeModel
 
 __all__ = ["InvalidOutputFile", "SimtelExecutionError", "SimtelRunner"]
 
+# pylint: disable=no-member
+# The line above is needed because there are methods which are used in this class
+# but are implemented in the classes inheriting from it.
+
 
 class SimtelExecutionError(Exception):
     """Exception for simtel_array execution error."""
 
-    pass
-
 
 class InvalidOutputFile(Exception):
     """Exception for invalid output file."""
-
-    pass
 
 
 class SimtelRunner:
@@ -41,6 +41,8 @@ class SimtelRunner:
 
         self._simtel_source_path = simtel_source_path
         self.label = label
+        self._script_dir = None
+        self._script_file = None
 
         self.RUNS_PER_SET = 1
 
@@ -63,10 +65,10 @@ class SimtelRunner:
         if isinstance(tel, TelescopeModel):
             self._logger.debug("TelescopeModel is valid")
             return tel
-        else:
-            msg = "Invalid TelescopeModel"
-            self._logger.error(msg)
-            raise ValueError(msg)
+
+        msg = "Invalid TelescopeModel"
+        self._logger.error(msg)
+        raise ValueError(msg)
 
     def _validate_array_model(self, array):
         """Validate ArrayModel
@@ -84,10 +86,10 @@ class SimtelRunner:
         if isinstance(array, ArrayModel):
             self._logger.debug("ArrayModel is valid")
             return array
-        else:
-            msg = "Invalid ArrayModel"
-            self._logger.error(msg)
-            raise ValueError(msg)
+
+        msg = "Invalid ArrayModel"
+        self._logger.error(msg)
+        raise ValueError(msg)
 
     def get_run_script(self, test=False, input_file=None, run_number=None, extra_commands=None):
         """
