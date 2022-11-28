@@ -232,3 +232,15 @@ def test_altitude_from_corsika_z(layout_center_data_dict, corsika_telescope_data
     )
     with pytest.raises(TypeError):
         layout._altitude_from_corsika_z(5.0, None, "LST-01")
+
+
+def test_telescope_layout_file_to_dict(telescope_test_file):
+
+    layout = LayoutArray(name="test_layout", telescope_list_file=telescope_test_file)
+    telescopes_dict = layout.telescope_layout_file_to_dict(telescope_test_file)
+
+    values_from_file = [20.190000534057617, -352.4599914550781, 62.29999923706055, 9.6]
+    keys = ["pos_x", "pos_y", "pos_z", "radius"]
+    MST10_index = telescopes_dict["telescope_name"] == "MST-10"
+    for key_step in range(len(keys)):
+        assert telescopes_dict[MST10_index][keys[key_step]].value[0] == values_from_file[key_step]
