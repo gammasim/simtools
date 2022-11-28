@@ -10,8 +10,6 @@ __all__ = ["JobManager", "MissingWorkloadManager"]
 class MissingWorkloadManager(Exception):
     """Exception for missing work load manager."""
 
-    pass
-
 
 class JobManager:
     """
@@ -37,6 +35,8 @@ class JobManager:
         self._logger = logging.getLogger(__name__)
         self.submit_command = submit_command
         self.test = test
+        self.run_script = None
+        self.run_out_file = None
 
         try:
             self.test_submission_system()
@@ -58,15 +58,15 @@ class JobManager:
 
         if self.submit_command is None:
             return
-        elif self.submit_command.find("qsub") >= 0:
+        if self.submit_command.find("qsub") >= 0:
             if gen.program_is_executable("qsub"):
                 return
             raise MissingWorkloadManager
-        elif self.submit_command.find("condor_submit") >= 0:
+        if self.submit_command.find("condor_submit") >= 0:
             if gen.program_is_executable("condor_submit"):
                 return
             raise MissingWorkloadManager
-        elif self.submit_command.find("local") >= 0:
+        if self.submit_command.find("local") >= 0:
             return
 
         raise MissingWorkloadManager
