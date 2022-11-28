@@ -5,36 +5,24 @@ import yaml
 import simtools.util.general as gen
 from simtools.data_model import workflow_description
 
+__all__ = ["ModelDataWriter"]
+
 
 class ModelDataWriter:
     """
     Writer for simulation model data and metadata.
 
-    Attributes
+    Parameters
     ----------
     workflow_config: WorkflowDescription
-        workflow configuration
-
-    Methods
-    -------
-    write_data()
-        Write model data to file.
-    write_metadata()
-        Write metadata to file.
-
+        Workflow configuration.
+    args_dict: Dictionary
+        Dictionary with configuration parameters.
     """
 
     def __init__(self, workflow_config=None, args_dict=None):
         """
         Initialize model data
-
-        Parameters
-        ----------
-        workflow_config: WorkflowDescription
-            Workflow configuration
-        args_dict: Dictionary
-            Dictionary with configuration parameters.
-
         """
 
         self._logger = logging.getLogger(__name__)
@@ -50,6 +38,10 @@ class ModelDataWriter:
         product_data: astropy Table
             Model data.
 
+        Raises
+        ------
+        FileNotFoundError
+            if Workflow configuration file not found.
         """
 
         _file = self.workflow_config.product_data_file_name()
@@ -66,18 +58,24 @@ class ModelDataWriter:
         """
         Write model metadata file (yaml file format).
 
-        Attributes
+        Parameters
         ----------
-        ymlfile str
-            name of output file (default=None)
+        ymlfile: str
+            Name of output file.
         keys_lower_case: bool
-            write yaml key in lower case
+            Write yaml key in lower case.
 
         Returns
         -------
         str
-            name of output file
+            Name of output file
 
+        Raises
+        ------
+        FileNotFoundError
+            If ymlfile not found.
+        AttributeError
+            If no metadata defined for writing.
         """
 
         try:

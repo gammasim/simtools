@@ -7,22 +7,21 @@ __all__ = ["SimtelConfigWriter"]
 
 class SimtelConfigWriter:
     """
-    SimtelConfigWriter writes sim_telarray configuration files. \
-    It is designed to be used by model classes (TelescopeModel and ArrayModel) only.
+    SimtelConfigWriter writes sim_telarray configuration files. It is designed to be used by model\
+    classes (TelescopeModel and ArrayModel) only.
 
-    Methods
-    -------
-    write_telescope_config_file(config_file_path, parameters)
-        Writes the sim_telarray config file for a single telescope.
-    write_array_config_file(config_file_path, layout, telescope_model, site_parameters)
-        Writes the sim_telarray config file for an array of telescopes.
-    write_single_mirror_list_file(
-        mirror_number,
-        mirrors,
-        single_mirror_list_file,
-        set_focal_length_to_zero=False
-    )
-        Writes the sim_telarray mirror list file for a single mirror.
+    Parameters
+    ----------
+    site: str
+        South or North.
+    model_version: str
+        Version of the model (ex. prod5).
+    telescope_model_name: str
+        Telescope model name.
+    layout_name: str
+        Layout name.
+    label: str
+        Instance label. Important for output file naming.
     """
 
     TAB = " " * 3
@@ -52,20 +51,7 @@ class SimtelConfigWriter:
         self, site, model_version, layout_name=None, telescope_model_name=None, label=None
     ):
         """
-        SimtelConfigWriter.
-
-        Parameters
-        ----------
-        site: str
-            South or North.
-        model_version: str, required.
-            Version of the model (ex. prod4).
-        telescope_model_name: str, optional.
-            Telescope model name.
-        layout_name: str, optional.
-            Layout name.
-        label: str, optional
-            Instance label. Important for output file naming.
+        Initialize SimtelConfigWriter.
         """
         self._logger = logging.getLogger(__name__)
         self._logger.debug("Init SimtelConfigWriter")
@@ -112,9 +98,9 @@ class SimtelConfigWriter:
         config_file_path: str or Path
             Path of the file to write on.
         layout: LayoutArray
-            LayoutArray object referent to the array model.
+            Instance of LayoutArray referent to the array model.
         telescope_model: list of TelescopeModel
-            List of TelescopeModel's as used by the ArrayModel.
+            List of TelescopeModel's instances as used by the ArrayModel instance.
         site_parameters: dict
             Site parameters.
         """
@@ -163,7 +149,7 @@ class SimtelConfigWriter:
         mirror_number: int
             Mirror number.
         mirrors: Mirrors
-            Mirrors object.
+            Instance of Mirrors.
         single_mirror_list_file: str or Path
             Path of the file to write on.
         set_focal_length_to_zero: bool
@@ -197,8 +183,8 @@ class SimtelConfigWriter:
 
     def _write_header(self, file, title, comment_char="%"):
         """
-        Writes a generic header. commen_char is the character to be used for comments, \
-        which is differs among ctypes of config files.
+        Writes a generic header. commen_char is the character to be used for comments, which \
+        differs among ctypes of config files.
         """
         header = "{}{}\n".format(comment_char, 50 * "=")
         header += "{} {}\n".format(comment_char, title)
