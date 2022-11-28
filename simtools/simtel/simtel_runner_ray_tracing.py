@@ -9,6 +9,10 @@ from simtools.util import names
 
 __all__ = ["SimtelRunnerRayTracing"]
 
+# pylint: disable=no-member
+# The line above is needed because there are members which are created
+# by adding them to the __dict__ of the class rather than directly.
+
 
 class SimtelRunnerRayTracing(SimtelRunner):
     """
@@ -224,8 +228,8 @@ class SimtelRunnerRayTracing(SimtelRunner):
             msg = "Photon list is empty."
             self._logger.error(msg)
             raise RuntimeError(msg)
-        else:
-            self._logger.debug("Everything looks fine with output file.")
+
+        self._logger.debug("Everything looks fine with output file.")
 
     def _is_photon_list_file_ok(self):
         """Check if the photon list is valid,"""
