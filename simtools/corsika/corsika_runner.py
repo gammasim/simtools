@@ -195,7 +195,7 @@ class CorsikaRunner:
         )
         corsika_input_tmp_file = self._corsika_input_dir.joinpath(corsika_input_tmp_name)
 
-        pfp_command = self._get_pfp_command(run_number, corsika_input_tmp_file)
+        pfp_command = self._get_pfp_command(corsika_input_tmp_file)
         autoinputs_command = self._get_autoinputs_command(run_number, corsika_input_tmp_file)
 
         extra_commands = kwargs["extra_commands"]
@@ -230,7 +230,7 @@ class CorsikaRunner:
 
         return script_file_path
 
-    def _get_pfp_command(self, run_number, input_tmp_file):
+    def _get_pfp_command(self, input_tmp_file):
         """Get pfp pre-processor command."""
         cmd = self._simtel_source_path.joinpath("sim_telarray/bin/pfp")
         cmd = str(cmd) + " -V -DWITHOUT_MULTIPIPE - < {}".format(self._corsika_input_file)
@@ -415,7 +415,7 @@ class CorsikaRunner:
         """
         if run_number is None:
             return self.corsika_config.get_user_parameter("RUNNR")
-        elif not float(run_number).is_integer() or run_number < 1:
+        if not float(run_number).is_integer() or run_number < 1:
             msg = "Invalid type of run number ({}) - it must be an uint.".format(run_number)
             self._logger.error(msg)
             raise ValueError(msg)
