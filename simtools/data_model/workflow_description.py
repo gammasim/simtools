@@ -486,10 +486,10 @@ class WorkflowDescription:
         list
             Updated product list.
 
-
         """
+
         if len(new_entry_dict) == 0:
-            return
+            return []
         try:
             if any(v is not None for v in product_list[0].values()):
                 product_list.append(new_entry_dict)
