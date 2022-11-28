@@ -338,12 +338,12 @@ class DataValidator:
         self._logger.debug("Checking data in column '{}' for '{}'".format(col_name, range_type))
 
         try:
-            if range_type != "allowed_range" and range_type != "required_range":
+            if range_type not in ("allowed_range", "required_range"):
                 raise KeyError
             if range_type not in self._reference_data_columns[col_name]:
                 return None
-        except KeyError:
-            raise KeyError(f"Missing column '{col_name} in reference range'")
+        except KeyError as e:
+            raise KeyError(f"Missing column '{col_name} in reference range'") from e
 
         try:
             if not self._interval_check(
