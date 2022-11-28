@@ -13,8 +13,6 @@ __all__ = ["BadHistogramFormat", "SimtelHistograms"]
 class BadHistogramFormat(Exception):
     """Exception for bad histogram format."""
 
-    pass
-
 
 class SimtelHistograms:
     """
@@ -36,6 +34,7 @@ class SimtelHistograms:
         self._logger = logging.getLogger(__name__)
         self._histogram_files = histogram_files
         self._is_test = test
+        self.combined_hists = None
 
     def plot_and_save_figures(self, fig_name):
         """
@@ -120,8 +119,6 @@ class SimtelHistograms:
                     n_files += int(count_file)
 
         self._logger.debug("End of reading {} files".format(n_files))
-
-        return
 
     def _plot_combined_histograms(self, fig_name):
         """
