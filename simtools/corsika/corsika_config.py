@@ -21,13 +21,9 @@ __all__ = [
 class MissingRequiredInputInCorsikaConfigData(Exception):
     """Exception for missing required input in corsika config data."""
 
-    pass
-
 
 class InvalidCorsikaInput(Exception):
     """Exception for invalid corsika input."""
-
-    pass
 
 
 class CorsikaConfig:
@@ -85,6 +81,9 @@ class CorsikaConfig:
 
         self.label = label
         self.site = names.validate_site_name(site)
+        self.primary = None
+        self._config_file_path = None
+        self._output_generic_file_name = None
 
         self.io_handler = io_handler.IOHandler()
 
@@ -191,7 +190,7 @@ class CorsikaConfig:
         for par_name, par_info in user_pars.items():
             if par_name in self._user_parameters:
                 continue
-            elif "default" in par_info.keys():
+            if "default" in par_info.keys():
                 validated_value = self._validate_and_convert_argument(
                     par_name, par_info, par_info["default"]
                 )
@@ -236,32 +235,32 @@ class CorsikaConfig:
 
         if "unit" not in par_info.keys():
             return value_args
-        else:
-            # Turning par_info['unit'] into a list, if it is not.
-            par_unit = gen.copy_as_list(par_info["unit"])
 
-            # Checking units and converting them, if needed.
-            value_args_with_units = list()
-            for arg, unit in zip(value_args, par_unit):
-                if unit is None:
-                    value_args_with_units.append(arg)
-                    continue
+        # Turning par_info['unit'] into a list, if it is not.
+        par_unit = gen.copy_as_list(par_info["unit"])
 
-                if isinstance(arg, str):
-                    arg = u.quantity.Quantity(arg)
+        # Checking units and converting them, if needed.
+        value_args_with_units = list()
+        for arg, unit in zip(value_args, par_unit):
+            if unit is None:
+                value_args_with_units.append(arg)
+                continue
 
-                if not isinstance(arg, u.quantity.Quantity):
-                    msg = "CORSIKA input given without unit: {}".format(par_name)
-                    self._logger.error(msg)
-                    raise InvalidCorsikaInput(msg)
-                elif not arg.unit.is_equivalent(unit):
-                    msg = "CORSIKA input given with wrong unit: {}".format(par_name)
-                    self._logger.error(msg)
-                    raise InvalidCorsikaInput(msg)
-                else:
-                    value_args_with_units.append(arg.to(unit).value)
+            if isinstance(arg, str):
+                arg = u.quantity.Quantity(arg)
 
-            return value_args_with_units
+            if not isinstance(arg, u.quantity.Quantity):
+                msg = "CORSIKA input given without unit: {}".format(par_name)
+                self._logger.error(msg)
+                raise InvalidCorsikaInput(msg)
+            if not arg.unit.is_equivalent(unit):
+                msg = "CORSIKA input given with wrong unit: {}".format(par_name)
+                self._logger.error(msg)
+                raise InvalidCorsikaInput(msg)
+
+            value_args_with_units.append(arg.to(unit).value)
+
+        return value_args_with_units
 
     def _convert_primary_input_and_store_primary_name(self, value):
         """
