@@ -12,8 +12,6 @@ __all__ = ["InconsistentInputFile", "SimtelEvents"]
 class InconsistentInputFile(Exception):
     """Exception for inconsistent input file."""
 
-    pass
-
 
 class SimtelEvents:
     """
@@ -136,7 +134,6 @@ class SimtelEvents:
             self._mc_header["n_use"] * self._mc_header["n_showers"] * self._number_of_files
         )
         self._mc_header["n_triggered"] = number_of_triggered_events
-        return
 
     @u.quantity_input(core_max=u.m)
     def count_triggered_events(self, energy_range=None, core_max=None):
@@ -160,7 +157,7 @@ class SimtelEvents:
 
         is_in_energy_range = list(
             map(
-                lambda e: e > energy_range[0] and e < energy_range[1],
+                lambda e: energy_range[0] < e < energy_range[1],
                 self.summary_events["energy"],
             )
         )
@@ -256,10 +253,10 @@ class SimtelEvents:
 
         try:
             return (energy_range[0].to(u.TeV).value, energy_range[1].to(u.TeV).value)
-        except u.core.UnitConversionError:
+        except u.core.UnitConversionError as e:
             msg = "energy_range must be in units of energy"
             self._logger.error(msg)
-            raise TypeError(msg)
+            raise TypeError(msg) from e
 
     def _validate_core_max(self, core_max):
         """
