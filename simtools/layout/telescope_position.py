@@ -88,9 +88,9 @@ class TelescopePosition:
             telstr += "\t Longitude: {0:0.5f} Latitude: {1:0.5f}".format(
                 self.crs["mercator"]["xx"]["value"], self.crs["mercator"]["yy"]["value"]
             )
-        for _crs_name in self.crs:
+        for _crs_name, _crs_now in self.crs.items():
             if self.has_altitude(_crs_name):
-                telstr += "\t Alt: {:0.2f}".format(self.crs[_crs_name]["zz"]["value"])
+                telstr += "\t Alt: {:0.2f}".format(_crs_now["zz"]["value"])
                 break
 
         return telstr
@@ -162,9 +162,9 @@ class TelescopePosition:
             if print_header:
                 print(headerstr)
             print(telstr)
-        except KeyError:
+        except KeyError as e:
             self._logger.error("Invalid coordinate system ({})".format(crs_name))
-            raise InvalidCoordSystem
+            raise InvalidCoordSystem from e
 
     def get_coordinates(self, crs_name, coordinate_field=None):
         """
@@ -195,9 +195,9 @@ class TelescopePosition:
                     self.crs[crs_name]["yy"]["value"] * self.crs[crs_name]["yy"]["unit"],
                     self.crs[crs_name]["zz"]["value"] * self.crs[crs_name]["zz"]["unit"],
                 )
-            except KeyError:
+            except KeyError as e:
                 self._logger.error("Invalid coordinate system ({})".format(crs_name))
-                raise InvalidCoordSystem
+                raise InvalidCoordSystem from e
         else:
             try:
                 return (
@@ -205,13 +205,13 @@ class TelescopePosition:
                     self.crs[crs_name]["yy"][coordinate_field],
                     self.crs[crs_name]["zz"][coordinate_field],
                 )
-            except KeyError:
+            except KeyError as e:
                 self._logger.error(
                     "Invalid coordinate system ({}) or coordinate field ({})".format(
                         crs_name, coordinate_field
                     )
                 )
-                raise InvalidCoordSystem
+                raise InvalidCoordSystem from e
 
     def _get_coordinate_value(self, value, unit):
         """
@@ -263,9 +263,9 @@ class TelescopePosition:
                 self.crs[crs_name]["zz"]["value"] = self._get_coordinate_value(
                     zz, self.crs[crs_name]["zz"]["unit"]
                 )
-        except KeyError:
+        except KeyError as e:
             self._logger.error("Invalid coordinate system ({})".format(crs_name))
-            raise InvalidCoordSystem
+            raise InvalidCoordSystem from e
 
     def get_altitude(self):
         """ "
@@ -280,6 +280,8 @@ class TelescopePosition:
         for _crs in self.crs.values():
             if _crs["zz"]["value"]:
                 return _crs["zz"]["value"] * u.Unit(_crs["zz"]["unit"])
+
+        return np.nan
 
     def set_altitude(self, tel_altitude):
         """
@@ -380,9 +382,9 @@ class TelescopePosition:
         try:
             if not self.crs[crs_name]["crs"] and crs_check:
                 return False
-        except KeyError:
+        except KeyError as e:
             self._logger.error("Invalid coordinate system ({})".format(crs_name))
-            raise InvalidCoordSystem
+            raise InvalidCoordSystem from e
 
         return (
             self.crs[crs_name]["xx"]["value"] is not np.nan
@@ -423,9 +425,9 @@ class TelescopePosition:
                 self.crs[crs_name]["zz"]["value"] is not np.nan
                 and self.crs[crs_name]["zz"]["value"] is not None
             )
-        except KeyError:
+        except KeyError as e:
             self._logger.error("Invalid coordinate system ({})".format(crs_name))
-            raise InvalidCoordSystem
+            raise InvalidCoordSystem from e
 
     def _set_coordinate_system(self, crs_name, crs_system):
         """
@@ -446,9 +448,9 @@ class TelescopePosition:
         """
         try:
             self.crs[crs_name]["crs"] = crs_system
-        except KeyError:
+        except KeyError as e:
             self._logger.error("Invalid coordinate system ({})".format(crs_name))
-            raise InvalidCoordSystem
+            raise InvalidCoordSystem from e
 
     @staticmethod
     @u.quantity_input(tel_altitude=u.m, corsika_obs_level=u.m, corsika_sphere_center=u.m)
@@ -532,9 +534,9 @@ class TelescopePosition:
                     self.set_coordinates(
                         _crs_to_name, _x, _y, _crs_from["zz"]["value"] * _crs_from["zz"]["unit"]
                     )
-        except (InvalidCoordSystem, TypeError):
+        except (InvalidCoordSystem, TypeError) as e:
             self._logger.error("No reference coordinate system defined")
-            raise MissingInputForConvertion
+            raise MissingInputForConvertion from e
 
     @staticmethod
     def _default_coordinate_system_definition():
