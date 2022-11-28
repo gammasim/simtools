@@ -19,23 +19,27 @@ __all__ = [
 
 
 class MissingRequiredInputInCorsikaConfigData(Exception):
+    """Exception for missing required input in corsika config data."""
+
     pass
 
 
 class InvalidCorsikaInput(Exception):
+    """Exception for invalid corsika input."""
+
     pass
 
 
 class CorsikaConfig:
     """
-    CorsikaConfig deals with configuration for running CORSIKA. \
-    User parameters must be given by the corsika_config_data or \
-    corsika_config_file arguments. An example of corsika_config_data follows \
-    below.
+    CorsikaConfig deals with configuration for running CORSIKA. User parameters must be given by \
+    the corsika_config_data or corsika_config_file arguments. An example of corsika_config_data
+    follows below.
 
     .. code-block:: python
 
         corsika_config_data = {
+            'data_directory': .
             'primary': 'proton',
             'nshow': 10000,
             'nrun': 1,
@@ -47,39 +51,20 @@ class CorsikaConfig:
             'cscat': [10, 1500 * u.m, 0]
         }
 
-    The remaining CORSIKA parameters can be set as a yaml file, using the argument \
-    corsika_parameters_file. When not given, corsika_parameters will be loaded \
-    from parameters/corsika/corsika_parameters.yml.
-
-    Attributes
+    Parameters
     ----------
     site: str
         North or South.
     layout_name: str
         Name of the layout.
-    layout: LayoutArray
-        LayoutArray object containing the telescope positions.
     label: str
         Instance label.
-    primary: str
-        Name of the primary particle (e.g gamma, proton ...).
-
-    Methods
-    -------
-    set_user_parameters(corsika_config_data)
-        Set user parameters from a dict.
-    get_user_parameter(par_name)
-        Get the value of a user parameter.
-    print_user_parameters()
-        Print user parameters for inspection.
-    get_output_file_name(run_number)
-        Get the name of the CORSIKA output file for a certain run.
-    export_input_file()
-        Create and export CORSIKA input file.
-    get_input_file()
-        Get the full path of the CORSIKA input file.
-    get_file_name()
-        Get a CORSIKA config style file name for various file types.
+    corsika_config_data: dict
+        CORSIKA user parameters.
+    corsika_config_file: str
+        Name of the yaml configuration file.
+    corsika_parameters_file: str
+        Name of the yaml file to set remaining CORSIKA parameters.
     """
 
     def __init__(
@@ -92,24 +77,7 @@ class CorsikaConfig:
         corsika_parameters_file=None,
     ):
         """
-        CorsikaConfig init.
-
-        Parameters
-        ----------
-        site: str
-            South or North.
-        layout_name: str
-            Name of the layout.
-        layout: LayoutArray
-            Instance of LayoutArray.
-        label: str
-            Instance label.
-        corsika_config_data: dict
-            Dict with CORSIKA config data.
-        corsika_config_file: str or Path
-            Path to yaml file containing CORSIKA config data.
-        corsika_parameters_file: str or Path
-            Path to yaml file containing CORSIKA parameters.
+        Initialize CorsikaConfig.
         """
 
         self._logger = logging.getLogger(__name__)
@@ -192,6 +160,7 @@ class CorsikaConfig:
         MissingRequiredInputInCorsikaConfigData
             If any required user parameter is missing.
         """
+
         self._logger.debug("Setting user parameters from corsika_config_data")
         self._user_parameters = dict()
 
@@ -296,8 +265,8 @@ class CorsikaConfig:
 
     def _convert_primary_input_and_store_primary_name(self, value):
         """
-        Convert a primary name into the proper CORSIKA particle ID and store \
-        its name in self.primary attribute.
+        Convert a primary name into the proper CORSIKA particle ID and store its name in \
+        the self.primary attribute.
 
         Parameters
         ----------
@@ -443,7 +412,7 @@ class CorsikaConfig:
             The type of file (determines the file suffix).
             Choices are config_tmp, config or output_generic.
         run_number: int
-            Run number (optional).
+            Run number.
 
         Returns
         -------
