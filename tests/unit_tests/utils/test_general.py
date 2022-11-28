@@ -140,13 +140,16 @@ def test_program_is_executable():
 
 def test_change_dict_keys_case():
 
+    # note that ist entries in DATA_COLUMNS:ATTRIBUTE should not be changed (not keys)
     _upper_dict = {
         "REFERENCE": {"VERSION": "0.1.0"},
         "ACTIVITY": {"NAME": "submit", "ID": "84890304", "DESCRIPTION": "Set data"},
+        "DATA_COLUMNS": {"ATTRIBUTE": ["remove_duplicates", "SORT"]},
     }
     _lower_dict = {
         "reference": {"version": "0.1.0"},
         "activity": {"name": "submit", "id": "84890304", "description": "Set data"},
+        "data_columns": {"attribute": ["remove_duplicates", "SORT"]},
     }
     _no_change_dict_upper = gen.change_dict_keys_case(copy(_upper_dict), False)
     assert _no_change_dict_upper == _upper_dict

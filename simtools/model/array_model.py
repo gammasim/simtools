@@ -8,97 +8,61 @@ from simtools.simtel.simtel_config_writer import SimtelConfigWriter
 from simtools.util import names
 from simtools.util.general import collect_data_from_yaml_or_dict
 
-__all__ = ["ArrayModel"]
+__all__ = ["ArrayModel", "InvalidArrayConfigData"]
 
 
 class InvalidArrayConfigData(Exception):
+    """Exception for invalid array configuration data."""
+
     pass
 
 
 class ArrayModel:
     """
-    ArrayModel is an abstract representation of the MC model at the array level.
-    It contains the list of TelescopeModel's and a LayoutArray.
+    ArrayModel is an abstract representation of the MC model at the array level. It contains the\
+    list of TelescopeModel's and a LayoutArray.
 
-    Attributes
+    Parameters
     ----------
-    site: str
-        North or South.
-    layout_name: str
-        Name of the layout.
-    layout: LayoutArray
-        Instance of LayoutArray.
-    model_version: str
-        Version of the model (ex. prod4).
+    mongo_db_config: dict
+        MongoDB configuration.
+    array_config_file: str
+        Path to a yaml file with the array config data.
+    array_config_data: dict
+        Dict with the array config data.
     label: str
-        Instance label.
-    number_of_telescopes: int
-        Number of telescopes in the ArrayModel.
-
-    Methods
-    -------
-    print_telescope_list()
-        Print out the list of telescopes for quick inspection.
-    export_simtel_telescope_config_files()
-        Export sim_telarray config files for all the telescopes
-        into the output model directory.
-    export_simtel_array_config_file()
-        Export sim_telarray config file for the array into the output model
-        directory.
-    export_all_simtel_config_files()
-        Export sim_telarray config file for the array and for each individual telescope
-        into the output model directory.
-    get_config_file()
-        Get the path to the config file for sim_telarray.
-    get_config_directory()
-        Get the path of the array config directory for sim_telarray.
+        Instance label. Important for output file naming.
     """
 
-    def __init__(
-        self,
-        mongo_db_config,
-        label=None,
-        array_config_file=None,
-        array_config_data=None,
-    ):
+    def __init__(self, mongo_db_config, label=None, array_config_file=None, array_config_data=None):
         """
-        ArrayModel.
-
-        Parameters
-        ----------
-        mongo_db_config: dict
-            MongoDB configuration.
-        array_config_file: str
-            Path to a yaml file with the array config data.
-        array_config_data: dict
-            Dict with the array config data.
-        label: str, optional
-            Instance label. Important for output file naming.
-
+        Initialize ArrayModel.
         """
         self._logger = logging.getLogger(__name__)
         self._logger.debug("Init ArrayModel")
-
         self.label = label
         self.site = None
         self.layout = None
         self.layout_name = None
         self.model_version = None
-
         self.io_handler = io_handler.IOHandler()
-
         array_config_data = collect_data_from_yaml_or_dict(array_config_file, array_config_data)
         self._load_array_data(array_config_data)
-
         self._set_config_file_directory()
-
         self._build_array_model(mongo_db_config)
-
         self._telescope_model_files_exported = False
         self._array_model_file_exported = False
 
     @property
     def number_of_telescopes(self):
+        """
+        Return the number of telescopes.
+
+        Returns
+        -------
+        int
+            Number of telescopes.
+        """
         return self.layout.get_number_of_telescopes()
 
     def _load_array_data(self, array_config_data):
@@ -108,6 +72,7 @@ class ArrayModel:
         ----------
         array_config_data: dict
         """
+
         # Validating array_config_data
         # Keys 'site', 'layout_name' and 'default' are mandatory.
         # 'default' must have 'LST', 'MST' and 'SST' (for South site) keys.
@@ -144,8 +109,8 @@ class ArrayModel:
 
     def _validate_array_data(self, array_config_data):
         """
-        Validate array_data by checking the existence of the relevant keys.
-        Searching for the keys: 'site', 'array' and 'default'.
+        Validate array_data by checking the existence of the relevant keys. Searching for the keys:\
+        'site', 'array' and 'default'.
         """
 
         def run_over_pars(pars, data, parent=None):
@@ -254,12 +219,10 @@ class ArrayModel:
 
     def _get_single_telescope_info_from_array_config(self, tel_name, tel_size):
         """
-        array_config_data contains the default telescope models for each
-        telescope size and the list of specific telescopes.
-        For each case, the data can be given only as a name or
-        as a dict with 'name' and parameters to change.
-        This function has to identify these two cases and collect
-        the telescope name and the dict with the parameters to change.
+        array_config_data contains the default telescope models for each telescope size and the \
+        list of specific telescopes. For each case, the data can be given only as a name or as a \
+        dict with 'name' and parameters to change. This function has to identify these two cases\
+        and collect the telescope name and the dict with the parameters to change.
 
         Parameters
         ----------
@@ -276,6 +239,7 @@ class ArrayModel:
             data: dict or str
                 Piece of the array_config_data for one specific telescope.
             """
+
             if isinstance(data, dict):
                 # Case 0: data is dict
                 if "name" not in data.keys():
@@ -323,14 +287,15 @@ class ArrayModel:
 
     def print_telescope_list(self):
         """Print out the list of telescopes for quick inspection."""
+
         for tel_data, tel_model in zip(self.layout, self._telescope_model):
             print("Name: {}\t Model: {}".format(tel_data.name, tel_model.name))
 
     def export_simtel_telescope_config_files(self):
         """
-        Export sim_telarray config files for all the telescopes
-        into the output model directory.
+        Export sim_telarray config files for all the telescopes into the output model directory.
         """
+
         exported_models = list()
         for tel_model in self._telescope_model:
             name = tel_model.name + (
@@ -347,8 +312,7 @@ class ArrayModel:
 
     def export_simtel_array_config_file(self):
         """
-        Export sim_telarray config file for the array into the output model
-        directory.
+        Export sim_telarray config file for the array into the output model directory.
         """
 
         # Setting file name and the location
@@ -375,9 +339,10 @@ class ArrayModel:
 
     def export_all_simtel_config_files(self):
         """
-        Export sim_telarray config file for the array and for each individual telescope
-        into the output model directory.
+        Export sim_telarray config file for the array and for each individual telescope into the \
+        output model directory.
         """
+
         if not self._telescope_model_files_exported:
             self.export_simtel_telescope_config_files()
         if not self._array_model_file_exported:
@@ -385,13 +350,15 @@ class ArrayModel:
 
     def get_config_file(self):
         """
-        Get the path of the array config file for sim_telarray.
-        The config file is produced if the file is not updated.
+        Get the path of the array config file for sim_telarray. The config file is produced if the \
+        file is not updated.
 
         Returns
         -------
-        Path of the exported config file for sim_telarray.
+        Path
+            Path of the exported config file for sim_telarray.
         """
+
         self.export_all_simtel_config_files()
         return self._config_file_path
 
@@ -401,6 +368,7 @@ class ArrayModel:
 
         Returns
         -------
-        Path of the config directory path for sim_telarray.
+        Path
+            Path of the config directory path for sim_telarray.
         """
         return self._config_file_directory

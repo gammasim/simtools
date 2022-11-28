@@ -32,19 +32,6 @@ class PSFImage:
         Focal length of the system in cm. If not given, PSF can only be computed in cm.
     total_scattered_area: float, optional
         Scatter area of all photons in cm^2. If not given, effective area cannot be computed.
-
-    Attributes
-    ----------
-    photon_pos_x: list of float
-        The list with X coordinate of photons
-    photon_pos_y: list of float
-        The list with Y coordinate of photons
-    photon_r: list of float
-        The list with R distance of photons from the center
-    centroid_x: float
-        The X coordinate of the center
-    centroid_y: float
-        The Y coordinate of the center
     """
 
     def __init__(self, focal_length=None, total_scattered_area=None):
@@ -210,7 +197,7 @@ class PSFImage:
 
     def set_psf(self, value, fraction=0.8, unit="cm"):
         """
-        Set PSF calculated from other methods
+        Set PSF calculated from other methods.
 
         Parameters
         ----------

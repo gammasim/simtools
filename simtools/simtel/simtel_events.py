@@ -6,40 +6,28 @@ import astropy.units as u
 import numpy as np
 from eventio.simtel import SimTelFile
 
-__all__ = ["SimtelEvents"]
+__all__ = ["InconsistentInputFile", "SimtelEvents"]
 
 
 class InconsistentInputFile(Exception):
+    """Exception for inconsistent input file."""
+
     pass
 
 
 class SimtelEvents:
     """
-    This class handle sim_telarray events.
-    sim_telarray files are read with eventio package,
+    This class handle sim_telarray events. sim_telarray files are read with eventio package.
 
-    Methods
-    -------
-    plot_and_save_figures(fig_name)
-        Plot all histograms and save a single pdf file.
-
-
-    Attributes
+    Parameters
     ----------
     input_files: list
-        List of sim_telarray files.
-    summary_events: dict
-        Arrays of energy and core radius of events.
+        List of sim_telarray output files (str of Path).
     """
 
     def __init__(self, input_files=None):
         """
-        SimtelEvents
-
-        Parameters
-        ----------
-        input_files: list
-            List of sim_telarray output files (str of Path).
+        Initialize SimtelEvents.
         """
         self._logger = logging.getLogger(__name__)
         self.load_input_files(input_files)
@@ -72,13 +60,19 @@ class SimtelEvents:
 
     @property
     def number_of_files(self):
-        """Number of files loaded."""
+        """Return number of files loaded.
+
+        Returns
+        -------
+        int
+            Number of files loaded.
+        """
         return len(self.input_files) if hasattr(self, "input_files") else 0
 
     def load_header_and_summary(self):
         """
-        Read MC header from sim_telarray files and store it into _mc_header.
-        Also fills summary_events with energy and core radius of triggered events.
+        Read MC header from sim_telarray files and store it into _mc_header. Also fills \
+        summary_events with energy and core radius of triggered events.
         """
 
         self._number_of_files = len(self.input_files)
@@ -151,10 +145,10 @@ class SimtelEvents:
 
         Parameters
         ----------
-        energy_range: Tuple (len 2)
-            Max and min energy of energy range, e.g. energy_range=(100 * u.GeV, 10 * u.TeV)
-        core_max: astropy.Quantity (distance)
-            Maximum core radius for selecting showers, e.g. core_max=1000 * u.m
+        energy_range: Tuple with len 2
+            Max and min energy of energy range, e.g. energy_range=(100 * u.GeV, 10 * u.TeV).
+        core_max: astropy.Quantity distance
+            Maximum core radius for selecting showers, e.g. core_max=1000 * u.m.
 
         Returns
         -------
@@ -180,10 +174,10 @@ class SimtelEvents:
 
         Parameters
         ----------
-        energy_range: Tuple (len 2)
-            Max and min energy of energy range, e.g. energy_range=(100 * u.GeV, 10 * u.TeV)
-        core_max: astropy.Quantity (distance)
-            Maximum core radius for selecting showers, e.g. core_max=1000 * u.m
+        energy_range: Tuple len 2
+            Max and min energy of energy range, e.g. energy_range=(100 * u.GeV, 10 * u.TeV).
+        core_max: astropy.Quantity distance
+            Maximum core radius for selecting showers, e.g. core_max=1000 * u.m.
 
         Returns
         -------
@@ -220,10 +214,10 @@ class SimtelEvents:
 
         Parameters
         ----------
-        energy_range: Tuple (len 2)
-            Max and min energy of energy range, e.g. energy_range=(100 * u.GeV, 10 * u.TeV)
-        core_max: astropy.Quantity (distance)
-            Maximum core radius for selecting showers, e.g. core_max=1000 * u.m
+        energy_range: Tuple len 2
+            Max and min energy of energy range, e.g. energy_range=(100 * u.GeV, 10 * u.TeV).
+        core_max: astropy.Quantity distance
+            Maximum core radius for selecting showers, e.g. core_max=1000 * u.m.
 
         Returns
         -------
