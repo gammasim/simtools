@@ -81,6 +81,7 @@ class LayoutArray:
 
         self._telescope_list = []
         self._epsg = None
+        self.telescope_list_file = None
         if telescope_list_file is None:
             self._initialize_coordinate_systems(layout_center_data)
             self._initialize_corsika_telescope(corsika_telescope_data)
@@ -174,7 +175,7 @@ class LayoutArray:
         _sphere_dict_cleaned = {}
         try:
             for key, value in sphere_dict.items():
-                if isinstance(value, u.Quantity) or isinstance(value, str):
+                if isinstance(value, (str, u.Quantity)):
                     _sphere_dict_cleaned[key] = u.Quantity(value)
                 else:
                     _sphere_dict_cleaned[key] = value["value"] * u.Unit(value["unit"])
@@ -303,6 +304,8 @@ class LayoutArray:
                 self._corsika_telescope["corsika_obs_level"],
                 self._get_corsika_sphere_center(tel_name),
             )
+
+        return np.nan
 
     def _get_corsika_sphere_center(self, tel_name):
         """
@@ -759,6 +762,8 @@ class LayoutArray:
 
         self._logger.debug("crs_local cannot be built: missing array center lon and lat")
 
+        return None
+
     def _get_crs_utm(self):
         """
         UTM coordinate system definition
@@ -775,6 +780,8 @@ class LayoutArray:
             return crs_utm
 
         self._logger.debug("crs_utm cannot be built because EPSG definition is missing")
+
+        return None
 
     @staticmethod
     def _get_crs_wgs84():
@@ -803,3 +810,5 @@ class LayoutArray:
 
         except IndexError:
             pass
+
+        return ""
