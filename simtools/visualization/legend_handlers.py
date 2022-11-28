@@ -2,32 +2,66 @@ import matplotlib.colors as mcolors
 import matplotlib.patches as mpatches
 import numpy as np
 
+__all__ = [
+    "EdgePixelObject",
+    "HexEdgePixelHandler",
+    "HexOffPixelHandler",
+    "HexPixelHandler",
+    "LSTHandler",
+    "LSTObject",
+    "MSTHandler",
+    "MSTObject",
+    "MeanRadiusOuterEdgeHandler",
+    "MeanRadiusOuterEdgeObject",
+    "OffPixelObject",
+    "PixelObject",
+    "SSTHandler",
+    "SSTObject",
+    "SquareEdgePixelHandler",
+    "SquareOffPixelHandler",
+    "SquarePixelHandler",
+]
+
 
 class PixelObject(object):
+    """Pixel Object."""
+
     pass
 
 
 class EdgePixelObject(object):
+    """Edge-Pixel Object."""
+
     pass
 
 
 class OffPixelObject(object):
+    """Off-Pixel Object."""
+
     pass
 
 
 class LSTObject(object):
+    """LST Object."""
+
     pass
 
 
 class MSTObject(object):
+    """MST Object."""
+
     pass
 
 
 class SSTObject(object):
+    """SST Object."""
+
     pass
 
 
 class MeanRadiusOuterEdgeObject(object):
+    """Object for Mean radius outer edge."""
+
     pass
 
 

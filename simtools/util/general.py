@@ -10,30 +10,42 @@ import astropy.units as u
 from astropy.io.misc import yaml
 
 __all__ = [
-    "validate_config_data",
     "collect_data_from_yaml_or_dict",
-    "collect_kwargs",
-    "set_default_kwargs",
-    "sort_arrays",
     "collect_final_lines",
+    "collect_kwargs",
+    "InvalidConfigData",
+    "InvalidConfigEntry",
+    "MissingRequiredConfigEntry",
+    "UnableToIdentifyConfigEntry",
     "get_log_level_from_user",
     "separate_args_and_config_data",
+    "set_default_kwargs",
+    "sort_arrays",
+    "validate_config_data",
 ]
 
 
 class UnableToIdentifyConfigEntry(Exception):
+    """Exception for unable to indentify configuration entry."""
+
     pass
 
 
 class MissingRequiredConfigEntry(Exception):
+    """Exception for missing required configuration entry."""
+
     pass
 
 
 class InvalidConfigEntry(Exception):
+    """Exception for invalid configuration entry."""
+
     pass
 
 
 class InvalidConfigData(Exception):
+    """Exception for invalid configuration data."""
+
     pass
 
 
@@ -51,6 +63,7 @@ def file_has_text(file, text):
     Returns
     -------
     bool
+        True if file has text.
     """
     with open(file, "rb", 0) as string_file, mmap.mmap(
         string_file.fileno(), 0, access=mmap.ACCESS_READ
@@ -151,11 +164,13 @@ def _validate_and_convert_value_without_units(value, value_keys, par_name, par_i
     Parameters
     ----------
     value: list
-       list of user input values
+       list of user input values.
     value_keys: list
-       list of keys if user input was a dict; otherwise None
+       list of keys if user input was a dict; otherwise None.
     par_name: str
-       name of parameter
+       name of parameter.
+    par_info: dict
+        dictionary with parameter info.
 
     Returns
     -------
@@ -306,13 +321,12 @@ def _validate_and_convert_value(par_name, par_info, value_in):
 
 def collect_data_from_yaml_or_dict(in_yaml, in_dict, allow_empty=False):
     """
-    Collect input data that can be given either as a dict
-    or as a yaml file.
+    Collect input data that can be given either as a dict or as a yaml file.
 
     Parameters
     ----------
     in_yaml: str
-        Name of the Yaml file.
+        Name of the yaml file.
     in_dict: dict
         Data as dict.
     allow_empty: bool
@@ -350,11 +364,13 @@ def collect_kwargs(label, in_kwargs):
     Parameters
     ----------
     label: str
+        Label to be collected in kwargs.
     in_kwargs: dict
-
+        kwargs.
     Returns
     -------
-    Dict with the collected kwargs.
+    dict
+        Dictionary with the collected kwargs.
     """
     out_kwargs = dict()
     for key, value in in_kwargs.items():
@@ -376,7 +392,8 @@ def set_default_kwargs(in_kwargs, **kwargs):
 
     Returns
     -------
-    Dict containing the default kwargs.
+    dict
+        Dictionary containing the default kwargs.
     """
     for par, value in kwargs.items():
         if par not in in_kwargs.keys():
@@ -385,6 +402,18 @@ def set_default_kwargs(in_kwargs, **kwargs):
 
 
 def sort_arrays(*args):
+    """Sort arrays
+
+    Parameters
+    ----------
+    *args
+        Arguments to be sorted.
+    Returns
+    -------
+    list
+        Sorted args.
+    """
+
     order_array = copy.copy(args[0])
     new_args = list()
     for arg in args:
@@ -395,6 +424,8 @@ def sort_arrays(*args):
 
 def collect_final_lines(file, n_lines):
     """
+    Collect final lines.
+
     Parameters
     ----------
     file: str or Path
@@ -404,7 +435,8 @@ def collect_final_lines(file, n_lines):
 
     Returns
     -------
-    str: lines
+    str
+        Final lines collected.
     """
     file_in_lines = list()
     with open(file, "r") as f:
@@ -422,12 +454,12 @@ def get_log_level_from_user(log_level):
     Parameters
     ----------
     log_level: str
-        Log level from the user
+        Log level from the user.
 
     Returns
     -------
     logging.LEVEL
-        The requested logging level to be used as input to logging.setLevel()
+        The requested logging level to be used as input to logging.setLevel().
     """
 
     possible_levels = {
@@ -455,7 +487,7 @@ def copy_as_list(value):
 
     Parameters
     ----------
-    value: single variable of any type, or list
+    value single variable of any type or list
 
     Returns
     -------
@@ -473,16 +505,15 @@ def copy_as_list(value):
 
 def separate_args_and_config_data(expected_args, **kwargs):
     """
-    Separate kwargs into the arguments expected for instancing a class and
-    the dict to be given as config_data.
-    This function is specific for methods from_kwargs in classes which use the
+    Separate kwargs into the arguments expected for instancing a class and the dict to be given as\
+    config_data. This function is specific for methods from_kwargs in classes which use the \
     validate_config_data system.
 
     Parameters
     ----------
     expected_args: list of str
         List of arguments expected for the class.
-    **kwargs:
+    **kwargs
 
     Returns
     -------
@@ -535,12 +566,13 @@ def find_file(name, loc):
     ----------
     name: str
         File name to be searched for.
-    loc: Path, optional
+    loc: Path
         Location of where to search for the file.
 
     Returns
     -------
-    Full path of the file to be found if existing. Otherwise, None
+    Path
+        Full path of the file to be found if existing. Otherwise, None.
 
     Raises
     ------
@@ -589,32 +621,39 @@ def find_file(name, loc):
 
 def change_dict_keys_case(data_dict, lower_case=True):
     """
-    Change keys of a dictionary to lower or upper case.
-    Crawls throught the dictionary and changes all keys.
-    Takes into account list of dictionaries, as e.g. found in the top level data model.
+    Change keys of a dictionary to lower or upper case. Crawls through the dictionary and changes\
+    all keys. Takes into account list of dictionaries, as e.g. found in the top level data model.
 
     Parameters
     ----------
     data_dict: dict
         Dictionary to be converted.
     lower_case: bool
-        Change keys to lower (upper) case if True (False)
-
-
+        Change keys to lower (upper) case if True (False).
     """
+
     _return_dict = {}
-    for key in data_dict.keys():
-        if lower_case:
-            _key_changed = key.lower()
-        else:
-            _key_changed = key.upper()
-        if isinstance(data_dict[key], dict):
-            _return_dict[_key_changed] = change_dict_keys_case(data_dict[key], lower_case)
-        elif isinstance(data_dict[key], list):
-            _tmp_list = []
-            for _list_entry in data_dict[key]:
-                _tmp_list.append(change_dict_keys_case(_list_entry, lower_case))
-            _return_dict[_key_changed] = _tmp_list
-        else:
-            _return_dict[_key_changed] = data_dict[key]
+    try:
+        for key in data_dict.keys():
+            if lower_case:
+                _key_changed = key.lower()
+            else:
+                _key_changed = key.upper()
+            if isinstance(data_dict[key], dict):
+                _return_dict[_key_changed] = change_dict_keys_case(data_dict[key], lower_case)
+            elif isinstance(data_dict[key], list):
+                _tmp_list = []
+                for _list_entry in data_dict[key]:
+                    if isinstance(_list_entry, dict):
+                        _tmp_list.append(change_dict_keys_case(_list_entry, lower_case))
+                    else:
+                        _tmp_list.append(_list_entry)
+                _return_dict[_key_changed] = _tmp_list
+            else:
+                _return_dict[_key_changed] = data_dict[key]
+    except AttributeError:
+        logger = logging.getLogger(__name__)
+        logger.error("Invalid method argument: %s", data_dict)
+        raise
+
     return _return_dict
