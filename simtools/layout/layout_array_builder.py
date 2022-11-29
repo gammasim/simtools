@@ -6,18 +6,23 @@ from matplotlib import pyplot as plt
 from matplotlib.collections import PatchCollection
 
 from simtools import io_handler
-from simtools.layout.layout_array import LayoutArray
 from simtools.visualization import legend_handlers as leg_h
 
 
 class LayoutArrayBuilder:
     """
     Manage the array layout. It provides methods to create and plot a LayoutArray.
+
+    Parameters
+    ----------
+    layout_array: simtools.layout.LayoutArray
+        Instance of simtools.layout.LayoutArray.
     """
 
-    def __init__(self):
+    def __init__(self, layout_array):
         """Initialize LayoutArrayBuilder."""
         self.io_handler = io_handler.IOHandler()
+        self.layout_array = layout_array
 
     def plot_array(self, telescopes, rotate_angle=0):
         """
@@ -49,7 +54,7 @@ class LayoutArrayBuilder:
         size_factor = max(np.max(telescopes["pos_x"]), np.max(telescopes["pos_y"])) / (300.0 * u.m)
         fontsize = 12
         for tel_name_now in telescopes["telescope_name"]:
-            for tel_type in tel_counters.keys():
+            for tel_type in tel_counters:
                 if tel_type in tel_name_now:
                     tel_counters[tel_type] += 1
 
@@ -65,7 +70,7 @@ class LayoutArrayBuilder:
             fontsize = 5
 
         patches = []
-        for i_tel in range(len(telescopes)):
+        for i_tel, _ in enumerate(telescopes):
             patches.append(
                 self._get_telescope_patch(
                     telescopes[i_tel]["telescope_name"][:3],
@@ -161,7 +166,7 @@ class LayoutArrayBuilder:
             Instance of mpatches.Circle.
         """
 
-        valid_name = LayoutArray.get_telescope_type(name)
+        valid_name = self.layout_array.get_telescope_type(name)
         fill_flag = False
         if valid_name == "MST":
             fill_flag = True
