@@ -487,7 +487,7 @@ class TelescopeModel:
         file_path: str
             Path of the file to be added to the config file directory.
         """
-        if not hasattr(self, "_added_parameter_files"):
+        if self._added_parameter_files is None:
             self._added_parameter_files = list()
         self._added_parameter_files.append(par_name)
         shutil.copy(file_path, self._config_file_directory)
@@ -498,7 +498,7 @@ class TelescopeModel:
 
         # Removing parameter files added manually (which are not in DB)
         pars_from_db = copy(self._parameters)
-        if hasattr(self, "_added_parameter_files"):
+        if self._added_parameter_files is not None:
             for par in self._added_parameter_files:
                 pars_from_db.pop(par)
 
@@ -610,7 +610,7 @@ class TelescopeModel:
         file_name = names.simtel_single_mirror_list_file_name(
             self.site, self.name, self.model_version, mirror_number, self.label
         )
-        if not hasattr(self, "_single_mirror_list_file_path"):
+        if self._single_mirror_list_file_path is not None:
             self._single_mirror_list_file_paths = dict()
         self._single_mirror_list_file_paths[mirror_number] = self._config_file_directory.joinpath(
             file_name
@@ -700,7 +700,7 @@ class TelescopeModel:
         )
 
     def _load_simtel_config_writer(self):
-        if not hasattr(self, "simtel_config_writer"):
+        if self.simtel_config_writer is None:
             self.simtel_config_writer = SimtelConfigWriter(
                 site=self.site,
                 telescope_model_name=self.name,

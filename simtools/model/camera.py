@@ -64,8 +64,6 @@ class Camera:
         # Initialize an empty list of edge pixels, to be calculated only when necessary.
         self._edge_pixel_indices = None
 
-        return
-
     @staticmethod
     def read_pixel_list(camera_config_file):
         """
@@ -89,7 +87,6 @@ class Camera:
         clockwise by 30 degrees with respect to those denoted as 1.
         """
 
-        dat_file = open(camera_config_file, "r")
         pixels = dict()
         pixels["pixel_diameter"] = 9999
         pixels["pixel_shape"] = 9999
@@ -101,29 +98,33 @@ class Camera:
         pixels["y"] = list()
         pixels["pix_id"] = list()
         pixels["pix_on"] = list()
-        for line in dat_file:
-            pix_info = line.split()
-            if line.startswith("PixType"):
-                pixels["pixel_shape"] = int(pix_info[5].strip())
-                pixels["pixel_diameter"] = float(pix_info[6].strip())
-                pixels["lightguide_efficiency_angle_file"] = pix_info[8].strip().replace('"', "")
-                if len(pix_info) > 9:
-                    pixels["lightguide_efficiency_wavelength_file"] = (
-                        pix_info[9].strip().replace('"', "")
+
+        with open(camera_config_file, "r") as dat_file:
+            for line in dat_file:
+                pix_info = line.split()
+                if line.startswith("PixType"):
+                    pixels["pixel_shape"] = int(pix_info[5].strip())
+                    pixels["pixel_diameter"] = float(pix_info[6].strip())
+                    pixels["lightguide_efficiency_angle_file"] = (
+                        pix_info[8].strip().replace('"', "")
                     )
-            if line.startswith("Rotate"):
-                pixels["rotate_angle"] = np.deg2rad(float(pix_info[1].strip()))
-            if line.startswith("Pixel"):
-                pixels["x"].append(float(pix_info[3].strip()))
-                pixels["y"].append(float(pix_info[4].strip()))
-                pixels["pix_id"].append(int(pix_info[1].strip()))
-                if len(pix_info) > 9:
-                    if int(pix_info[9].strip()) != 0:
-                        pixels["pix_on"].append(True)
+                    if len(pix_info) > 9:
+                        pixels["lightguide_efficiency_wavelength_file"] = (
+                            pix_info[9].strip().replace('"', "")
+                        )
+                if line.startswith("Rotate"):
+                    pixels["rotate_angle"] = np.deg2rad(float(pix_info[1].strip()))
+                if line.startswith("Pixel"):
+                    pixels["x"].append(float(pix_info[3].strip()))
+                    pixels["y"].append(float(pix_info[4].strip()))
+                    pixels["pix_id"].append(int(pix_info[1].strip()))
+                    if len(pix_info) > 9:
+                        if int(pix_info[9].strip()) != 0:
+                            pixels["pix_on"].append(True)
+                        else:
+                            pixels["pix_on"].append(False)
                     else:
-                        pixels["pix_on"].append(False)
-                else:
-                    pixels["pix_on"].append(True)
+                        pixels["pix_on"].append(True)
 
         if pixels["pixel_diameter"] == 9999:
             raise ValueError(
@@ -485,8 +486,8 @@ class Camera:
             if pixels is None:
                 pixels = self._pixels
             return self._calc_neighbour_pixels(pixels)
-        else:
-            return self._neighbours
+
+        return self._neighbours
 
     def _calc_edge_pixels(self, pixels, neighbours):
         """
@@ -544,17 +545,17 @@ class Camera:
             if neighbours is None:
                 neighbours = self.get_neighbour_pixels()
             return self._calc_edge_pixels(pixels, neighbours)
-        else:
-            return self._edge_pixel_indices
 
-    def _plot_axes_def(self, plt, rotate_angle):
+        return self._edge_pixel_indices
+
+    def _plot_axes_def(self, plot, rotate_angle):
         """
         Plot three axes definitions on the pyplot.plt instance provided. The three axes are Alt/Az,\
         the camera coordinate system and the original coordinate system the pixel list was provided.
 
         Parameters
         ----------
-        plt: pyplot.plt instance
+        plot: pyplot.plt instance
             A pyplot.plt instance where to add the axes definitions.
         rotate_angle: float
             The rotation angle applied
@@ -584,7 +585,7 @@ class Camera:
             "ec": "black",
             "invert_yaxis": invert_yaxis,
         }
-        self._plot_one_axis_def(plt, **kwargs)
+        self._plot_one_axis_def(plot, **kwargs)
 
         x_title = r"$x_{\!cam}$"
         y_title = r"$y_{\!cam}$"
@@ -599,7 +600,7 @@ class Camera:
             "ec": "blue",
             "invert_yaxis": invert_yaxis,
         }
-        self._plot_one_axis_def(plt, **kwargs)
+        self._plot_one_axis_def(plot, **kwargs)
 
         x_title = "Alt"
         y_title = "Az"
@@ -614,18 +615,18 @@ class Camera:
             "ec": "red",
             "invert_yaxis": invert_yaxis,
         }
-        self._plot_one_axis_def(plt, **kwargs)
+        self._plot_one_axis_def(plot, **kwargs)
 
         return
 
     @staticmethod
-    def _plot_one_axis_def(plt, **kwargs):
+    def _plot_one_axis_def(plot, **kwargs):
         """
         Plot an axis on the pyplot.plt instance provided.
 
         Parameters
         ----------
-        plt: pyplot.plt instance
+        plot: pyplot.plt instance
             A pyplot.plt instance where to add the axes definitions.
         **kwargs: dict
              x_title: str
@@ -659,7 +660,7 @@ class Camera:
         x_text2 = x_pos + sign * r * np.cos(np.pi / 2.0 + kwargs["rotate_angle"])
         y_text2 = y_pos + r * np.sin(np.pi / 2.0 + kwargs["rotate_angle"])
 
-        plt.gca().annotate(
+        plot.gca().annotate(
             x_title,
             xy=(x_pos, y_pos),
             xytext=(x_text1, y_text1),
@@ -672,7 +673,7 @@ class Camera:
             ),
         )
 
-        plt.gca().annotate(
+        plot.gca().annotate(
             y_title,
             xy=(x_pos, y_pos),
             xytext=(x_text2, y_text2),
@@ -684,8 +685,6 @@ class Camera:
                 arrowstyle="<|-", shrinkA=0, shrinkB=0, fc=kwargs["fc"], ec=kwargs["ec"]
             ),
         )
-
-        return
 
     def plot_pixel_layout(self, camera_in_sky_coor=False, pixels_id_to_print=50):
         """
