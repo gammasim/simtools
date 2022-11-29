@@ -47,7 +47,7 @@ class SimtelRunner:
         self.RUNS_PER_SET = 1
 
     def __repr__(self):
-        return "SimtelRunner(label={})\n".format(self.label)
+        return f"SimtelRunner(label={self.label})\n"
 
     def _validate_telescope_model(self, tel):
         """Validate TelescopeModel.
@@ -116,11 +116,11 @@ class SimtelRunner:
         self._script_dir = self._base_directory.joinpath("scripts")
         self._script_dir.mkdir(parents=True, exist_ok=True)
         self._script_file = self._script_dir.joinpath(
-            "run{}-simtel".format(run_number if run_number is not None else "")
+            f"run{run_number if run_number is not None else ''}-simtel"
         )
-        self._logger.debug("Run bash script - {}".format(self._script_file))
+        self._logger.debug(f"Run bash script - {self._script_file}")
 
-        self._logger.debug("Extra commands to be added to the run script {}".format(extra_commands))
+        self._logger.debug(f"Extra commands to be added to the run script {extra_commands}")
 
         command = self._make_run_command(input_file=input_file, run_number=run_number)
         with self._script_file.open("w") as file:
@@ -132,17 +132,17 @@ class SimtelRunner:
             if extra_commands is not None:
                 file.write("# Writing extras\n")
                 for line in extra_commands:
-                    file.write("{}\n".format(line))
+                    file.write(f"{line}\n")
                 file.write("# End of extras\n\n")
 
             N = 1 if test else self.RUNS_PER_SET
             for _ in range(N):
-                file.write("{}\n\n".format(command))
+                file.write(f"{command}\n\n")
 
             # Printing out runtime
             file.write('\necho "RUNTIME: $SECONDS"\n')
 
-        os.system("chmod ug+x {}".format(self._script_file))
+        os.system(f"chmod ug+x {self._script_file}")
         return self._script_file
 
     def run(self, test=False, force=False, input_file=None, run_number=None):
@@ -170,10 +170,10 @@ class SimtelRunner:
         command = self._make_run_command(input_file=input_file, run_number=run_number)
 
         if test:
-            self._logger.info("Running (test) with command: {}".format(command))
+            self._logger.info(f"Running (test) with command: {command}")
             self._run_simtel_and_check_output(command)
         else:
-            self._logger.debug("Running ({}x) with command: {}".format(self.RUNS_PER_SET, command))
+            self._logger.debug(f"Running ({self.RUNS_PER_SET}x) with command: {command}")
             self._run_simtel_and_check_output(command)
 
             for _ in range(self.RUNS_PER_SET - 1):
@@ -239,6 +239,6 @@ class SimtelRunner:
     @staticmethod
     def _config_option(par, value=None):
         """Util function for building sim_telarray command."""
-        c = " -C {}".format(par)
-        c += "={}".format(value) if value is not None else ""
+        c = f" -C {par}"
+        c += f"={value}" if value is not None else ""
         return c

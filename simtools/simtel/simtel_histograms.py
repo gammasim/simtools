@@ -88,7 +88,7 @@ class SimtelHistograms:
                     try:
                         hists = o.parse()
                     except Exception:
-                        self._logger.warning("Problematic file {}".format(file))
+                        self._logger.warning(f"Problematic file {file}")
                         count_file = False
                         continue
 
@@ -118,7 +118,7 @@ class SimtelHistograms:
 
                     n_files += int(count_file)
 
-        self._logger.debug("End of reading {} files".format(n_files))
+        self._logger.debug(f"End of reading {n_files} files")
 
     def _plot_combined_histograms(self, fig_name):
         """
@@ -135,10 +135,10 @@ class SimtelHistograms:
 
             # Test case: processing only 1/10 of the histograms
             if self._is_test and i_hist % 10 != 0:
-                self._logger.debug("Skipping (test=True): {}".format(histo["title"]))
+                self._logger.debug(f"Skipping (test=True): {histo['title']}")
                 continue
 
-            self._logger.debug("Processing: {}".format(histo["title"]))
+            self._logger.debug(f"Processing: {histo['title']}")
 
             fig = plt.figure(figsize=(8, 6))
             ax = plt.gca()

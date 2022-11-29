@@ -127,12 +127,10 @@ class Camera:
                         pixels["pix_on"].append(True)
 
         if pixels["pixel_diameter"] == 9999:
-            raise ValueError(
-                "Could not read the pixel diameter" " from {} file".format(camera_config_file)
-            )
+            raise ValueError(f"Could not read the pixel diameter from {camera_config_file} file")
         if pixels["pixel_shape"] not in [1, 2, 3]:
             raise ValueError(
-                "Pixel shape in {} unrecognized " "(has to be 1, 2 or 3)".format(camera_config_file)
+                f"Pixel shape in {camera_config_file} unrecognized (has to be 1, 2 or 3)"
             )
 
         return pixels
@@ -168,7 +166,7 @@ class Camera:
         # To get the camera for an observer facing the camera, need to rotate by 90 degrees.
         rotate_angle += np.deg2rad(90)
 
-        self._logger.debug("Rotating pixels by {}".format(np.rad2deg(rotate_angle)))
+        self._logger.debug(f"Rotating pixels by {np.rad2deg(rotate_angle)}")
 
         if rotate_angle != 0:
             for i_pix, xy_pix_pos in enumerate(zip(pixels["x"], pixels["y"])):
@@ -696,7 +694,7 @@ class Camera:
             Figure with the pixel layout.
         """
 
-        self._logger.info("Plotting the {} camera".format(self._telescope_model_name))
+        self._logger.info(f"Plotting the {self._telescope_model_name} camera")
 
         fig, ax = plt.subplots()
         plt.gcf().set_size_inches(8, 8)
@@ -800,7 +798,7 @@ class Camera:
         plt.xlabel("Horizontal scale [cm]", fontsize=18, labelpad=0)
         plt.ylabel("Vertical scale [cm]", fontsize=18, labelpad=0)
         ax.set_title(
-            "Pixels layout in {0:s} camera".format(self._telescope_model_name),
+            f"Pixels layout in {self._telescope_model_name:s} camera",
             fontsize=15,
             y=1.02,
         )
@@ -825,7 +823,7 @@ class Camera:
         ax.text(
             0.02,
             0.96,
-            r"$f_{\mathrm{eff}}$ = " + "{0:.3f} cm".format(self._focal_length),
+            r"$f_{\mathrm{eff}}$ = " + f"{self._focal_length:.3f} cm",
             transform=ax.transAxes,
             color="black",
             fontsize=12,
@@ -833,7 +831,7 @@ class Camera:
         ax.text(
             0.02,
             0.92,
-            "Avg. edge radius = {0:.3f} cm".format(r_edge_avg),
+            f"Avg. edge radius = {r_edge_avg:.3f} cm",
             transform=ax.transAxes,
             color="black",
             fontsize=12,
@@ -841,7 +839,7 @@ class Camera:
         ax.text(
             0.02,
             0.88,
-            "FoV = {0:.3f} deg".format(fov),
+            f"FoV = {fov:.3f} deg",
             transform=ax.transAxes,
             color="black",
             fontsize=12,

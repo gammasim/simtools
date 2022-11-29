@@ -123,7 +123,7 @@ def validate_config_data(config_data, parameters):
 
         # Raising error for an unidentified input.
         if not is_identified:
-            msg = "Entry {} in config_data cannot be identified.".format(key_data)
+            msg = f"Entry {key_data} in config_data cannot be identified."
             logger.error(msg)
             raise UnableToIdentifyConfigEntry(msg)
 
@@ -139,8 +139,7 @@ def validate_config_data(config_data, parameters):
             out_data[par_name] = None
         else:
             msg = (
-                "Required entry in config_data {} ".format(par_name)
-                + "was not given (there may be more)."
+                f"Required entry in config_data {par_name} " + "was not given (there may be more)."
             )
             logger.error(msg)
             raise MissingRequiredConfigEntry(msg)
@@ -180,7 +179,7 @@ def _validate_and_convert_value_without_units(value, value_keys, par_name, par_i
         # This is needed otherwise the elif condition will break
         pass
     elif any(u.Quantity(v).unit != u.dimensionless_unscaled for v in value):
-        msg = "Config entry {} should not have units".format(par_name)
+        msg = f"Config entry {par_name} should not have units"
         logger.error(msg)
         raise InvalidConfigEntry(msg)
 
@@ -220,7 +219,7 @@ def _check_value_entry_length(value, par_name, par_info):
         if par_info["len"] is None:
             undefined_length = True
         elif value_length != par_info["len"]:
-            msg = "Config entry with wrong len: {}".format(par_name)
+            msg = f"Config entry with wrong len: {par_name}"
             logger.error(msg)
             raise InvalidConfigEntry(msg)
     except KeyError:
@@ -256,7 +255,7 @@ def _validate_and_convert_value_with_units(value, value_keys, par_name, par_info
     par_unit = copy_as_list(par_info["unit"])
 
     if undefined_length and len(par_unit) != 1:
-        msg = "Config entry with undefined length should have a single unit: {}".format(par_name)
+        msg = f"Config entry with undefined length should have a single unit: {par_name}"
         logger.error(msg)
         raise InvalidConfigEntry(msg)
     if len(par_unit) == 1:
@@ -275,11 +274,11 @@ def _validate_and_convert_value_with_units(value, value_keys, par_name, par_info
             arg = u.quantity.Quantity(arg)
 
         if not isinstance(arg, u.quantity.Quantity):
-            msg = "Config entry given without unit: {}".format(par_name)
+            msg = f"Config entry given without unit: {par_name}"
             logger.error(msg)
             raise InvalidConfigEntry(msg)
         if not arg.unit.is_equivalent(unit):
-            msg = "Config entry given with wrong unit: {}".format(par_name)
+            msg = f"Config entry given with wrong unit: {par_name}"
             logger.error(msg)
             raise InvalidConfigEntry(msg)
         value_with_units.append(arg.to(unit).value)
@@ -465,9 +464,8 @@ def get_log_level_from_user(log_level):
     log_level_lower = log_level.lower()
     if log_level_lower not in possible_levels:
         raise ValueError(
-            '"{}" is not a logging level, only possible ones are {}'.format(
-                log_level, list(possible_levels.keys())
-            )
+            f"'{log_level}' is not a logging level, "
+            f"only possible ones are {list(possible_levels.keys())}"
         )
 
     return possible_levels[log_level_lower]
@@ -578,7 +576,7 @@ def find_file(name, loc):
 
     def _search_directory(directory, filename, rec=False):
         if not Path(directory).exists():
-            msg = "Directory {} does not exist".format(directory)
+            msg = f"Directory {directory} does not exist"
             _logger.debug(msg)
             return None
 

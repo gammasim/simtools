@@ -14,9 +14,9 @@ def test_validate_telescope_name():
     telescopes = {"sst-d": "SST-D", "mst-flashcam-d": "MST-FlashCam-D", "sct-d": "SCT-D"}
 
     for key, value in telescopes.items():
-        logging.getLogger().info("Validating {}".format(key))
+        logging.getLogger().info(f"Validating {key}")
         new_name = names.validate_telescope_model_name(key)
-        logging.getLogger().info("New name {}".format(new_name))
+        logging.getLogger().info(f"New name {new_name}")
 
         assert value == new_name
 
@@ -30,9 +30,9 @@ def test_validate_telescope_name_db():
     }
 
     for key, value in telescopes.items():
-        logging.getLogger().info("Validating {}".format(key))
+        logging.getLogger().info(f"Validating {key}")
         new_name = names.validate_telescope_name_db(key)
-        logging.getLogger().info("New name {}".format(new_name))
+        logging.getLogger().info(f"New name {new_name}")
 
         assert value == new_name
 
@@ -43,7 +43,7 @@ def test_validate_telescope_name_db():
     }
 
     for key, value in telescopes.items():
-        logging.getLogger().info("Validating {}".format(key))
+        logging.getLogger().info(f"Validating {key}")
         with pytest.raises(ValueError):
             names.validate_telescope_name_db(key)
 

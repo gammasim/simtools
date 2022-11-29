@@ -104,7 +104,7 @@ def get_camera_name(telescope_model_name):
         _logger.error("Invalid telescope name - please validate it first")
 
     camera_name = names.validate_camera_name(camera_name)
-    _logger.debug("Camera name - {}".format(camera_name))
+    _logger.debug(f"Camera name - {camera_name}")
     return camera_name
 
 
