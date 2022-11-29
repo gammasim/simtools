@@ -90,7 +90,7 @@ class LayoutArray:
         layout = cls(name=valid_layout_array_name, label=label)
 
         telescope_list_file = layout.io_handler.get_input_data_file(
-            "layout", "telescope_positions-{}.ecsv".format(valid_layout_array_name)
+            "layout", f"telescope_positions-{valid_layout_array_name}.ecsv"
         )
         layout.read_telescope_list_file(telescope_list_file)
 
@@ -116,9 +116,7 @@ class LayoutArray:
         self._corsika_telescope = {}
 
         if corsika_dict is not None:
-            self._logger.debug(
-                "Initialize CORSIKA telescope parameters from dict: {}".format(corsika_dict)
-            )
+            self._logger.debug(f"Initialize CORSIKA telescope parameters from dict: {corsika_dict}")
             self._initialize_corsika_telescope_from_dict(corsika_dict)
         else:
             self._logger.debug("Initialize CORSIKA telescope parameters from file")
