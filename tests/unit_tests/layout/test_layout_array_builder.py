@@ -15,8 +15,8 @@ logger.setLevel(logging.DEBUG)
 
 
 @pytest.fixture
-def layout_builder_instance(io_handler):
-    return LayoutArrayBuilder()
+def layout_builder_instance(io_handler, layout_array_instance):
+    return LayoutArrayBuilder(layout_array_instance)
 
 
 def test_telescope_layout_file_to_dict(telescope_test_file, layout_builder_instance):
@@ -24,7 +24,7 @@ def test_telescope_layout_file_to_dict(telescope_test_file, layout_builder_insta
     values_from_file = [20.190000534057617, -352.4599914550781, 62.29999923706055, 9.6]
     keys = ["pos_x", "pos_y", "pos_z", "radius"]
     MST10_index = telescopes_dict["telescope_name"] == "MST-10"
-    for key_step in range(len(keys)):
+    for key_step, _ in enumerate(keys):
         assert telescopes_dict[MST10_index][keys[key_step]].value[0] == values_from_file[key_step]
 
 
