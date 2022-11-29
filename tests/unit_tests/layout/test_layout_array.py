@@ -4,6 +4,7 @@ import logging
 
 import astropy.units as u
 import matplotlib.patches as mpatches
+import matplotlib.pyplot as plt
 import numpy as np
 import pytest
 
@@ -52,7 +53,7 @@ def telescope_test_file(db, args_dict, io_handler):
 
 
 @pytest.fixture
-def layout_array_instance():
+def layout_array_instance(io_handler):
     return LayoutArray(name="test_layout")
 
 
@@ -82,7 +83,7 @@ def test_initialize_coordinate_systems(layout_center_data_dict, layout_array_ins
 
 
 def test_initialize_corsika_telescope_from_file(
-    corsika_telescope_data_dict, args_dict, io_handler, layout_array_instance
+    corsika_telescope_data_dict, args_dict, layout_array_instance
 ):
 
     layout_array_instance._initialize_corsika_telescope()
@@ -254,7 +255,7 @@ def test_telescope_layout_file_to_dict(telescope_test_file):
         assert telescopes_dict[MST10_index][keys[key_step]].value[0] == values_from_file[key_step]
 
 
-def test_get_telescope_patch(corsika_telescope_data_dict, io_handler, layout_array_instance):
+def test_get_telescope_patch(corsika_telescope_data_dict, layout_array_instance):
     for tel_type in np.array(list(corsika_telescope_data_dict["corsika_sphere_radius"].keys())):
         radius = corsika_telescope_data_dict["corsika_sphere_radius"][tel_type]
         patch = layout_array_instance._get_telescope_patch(
@@ -263,5 +264,20 @@ def test_get_telescope_patch(corsika_telescope_data_dict, io_handler, layout_arr
         assert mpatches.Circle == type(patch)
 
 
-# def test_rotate_telescope_position(x, y, rotate_angle_deg):
-# layout = LayoutArray(name="test_layout")
+def test_rotate_telescope_position(layout_array_instance):
+    x = np.array([-1, -1, 1, 1])
+    y = np.array([-1, 1, -1, 1])
+    angle_deg = 30
+    x_rot_manual = np.array([-1.37, -0.37, 0.37, 1.37])
+    y_rot_manual = np.array([-0.37, 1.37, -1.37, 0.37])
+    x_rot, y_rot = layout_array_instance._rotate(angle_deg, x, y)
+    x_rot, y_rot = np.around(x_rot, 2), np.around(y_rot, 2)
+    for element in range(len(x)):
+        assert x_rot_manual[element] == x_rot[element]
+        assert y_rot_manual[element] == y_rot[element]
+
+
+def test_plot_array(telescope_test_file, layout_array_instance):
+    telescopes_dict = layout_array_instance.telescope_layout_file_to_dict(telescope_test_file)
+    fig_out = layout_array_instance.plot_array(telescopes_dict, rotate_angle=0)
+    assert isinstance(fig_out, type(plt.figure()))

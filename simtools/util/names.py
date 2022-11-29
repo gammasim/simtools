@@ -271,8 +271,10 @@ def split_telescope_model_name(name):
     str, str
        class (LST, MST, SST ...) and type (any complement).
     """
-
-    name_parts = name.split("-")
+    if "-" in name:
+        name_parts = name.split("-")
+    else:
+        return name, None
     tel_class = name_parts[0]
     tel_type = "-".join(name_parts[1:])
     return tel_class, tel_type
