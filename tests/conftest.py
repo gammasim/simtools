@@ -3,9 +3,11 @@ import os
 from pathlib import Path
 from unittest import mock
 
+import astropy.units as u
 import pytest
 
 import simtools.io_handler
+import simtools.util.general as gen
 from simtools import db_handler
 from simtools.configuration.configurator import Configurator
 from simtools.model.telescope_model import TelescopeModel
@@ -186,3 +188,28 @@ def telescope_model_sst(db, db_config, io_handler):
         label="test-telescope-model-sst",
     )
     return telescope_model_SST
+
+
+@pytest.fixture
+def corsika_telescope_data_dict():
+    return {
+        "corsika_sphere_radius": {"LST": 12.5 * u.m, "MST": 9.15 * u.m, "SST": 3.0 * u.m},
+        "corsika_sphere_center": {"LST": 16 * u.m, "MST": 9 * u.m, "SST": 3.25 * u.m},
+        "corsika_obs_level": 2158 * u.m,
+    }
+
+
+@pytest.fixture
+def telescope_test_file(db, args_dict, io_handler):
+    test_file_name = "telescope_positions-North-TestLayout.ecsv"
+    db.export_file_db(
+        db_name="test-data",
+        dest=io_handler.get_output_directory(dir_type="model", test=True),
+        file_name=test_file_name,
+    )
+
+    cfg_file = gen.find_file(
+        test_file_name,
+        io_handler.get_output_directory(dir_type="model", test=True),
+    )
+    return cfg_file
