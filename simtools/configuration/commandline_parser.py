@@ -1,8 +1,8 @@
 import argparse
 from pathlib import Path
 
-import simtools.util.names as names
 import simtools.version
+from simtools.util import names
 
 __all__ = [
     "CommandLineParser",
