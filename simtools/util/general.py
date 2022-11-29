@@ -28,25 +28,17 @@ __all__ = [
 class UnableToIdentifyConfigEntry(Exception):
     """Exception for unable to indentify configuration entry."""
 
-    pass
-
 
 class MissingRequiredConfigEntry(Exception):
     """Exception for missing required configuration entry."""
-
-    pass
 
 
 class InvalidConfigEntry(Exception):
     """Exception for invalid configuration entry."""
 
-    pass
-
 
 class InvalidConfigData(Exception):
     """Exception for invalid configuration data."""
-
-    pass
 
 
 def file_has_text(file, text):
@@ -614,7 +606,7 @@ def find_file(name, loc):
         ff = _search_directory(ll, name, True)
         if ff is not None:
             return ff
-    msg = "File {} could not be found in {}".format(name, all_locations)
+    msg = f"File {name} could not be found in {all_locations}"
     _logger.error(msg)
     raise FileNotFoundError(msg)
 
@@ -653,7 +645,7 @@ def change_dict_keys_case(data_dict, lower_case=True):
                 _return_dict[_key_changed] = data_dict[key]
     except AttributeError:
         logger = logging.getLogger(__name__)
-        logger.error("Invalid method argument: %s", data_dict)
+        logger.error(f"Invalid method argument: {data_dict}")
         raise
 
     return _return_dict
