@@ -807,10 +807,10 @@ class LayoutArray:
             Instance of plt.figure with the array of telescopes plotted.
 
         """
-
+        fig, ax = plt.subplots(1)
         legend_objects = list()
         legend_labels = list()
-        tel_counters = {"L": 0, "M": 0, "S": 0}
+        tel_counters = {"LST": 0, "MST": 0, "SST": 0}
         if rotate_angle != 0:
             telescopes["pos_x"], telescopes["pos_y"] = self._rotate(
                 rotate_angle, telescopes["pos_x"], telescopes["pos_y"]
@@ -825,26 +825,26 @@ class LayoutArray:
 
         if tel_counters["LST"] > 0:
             legend_objects.append(leg_h.LSTObject())
-            legend_labels.append("LST ({})".format(tel_counters["L"]))
+            legend_labels.append("LST ({})".format(tel_counters["LST"]))
         if tel_counters["MST"] > 0:
             legend_objects.append(leg_h.MSTObject())
-            legend_labels.append("MST ({})".format(tel_counters["M"]))
+            legend_labels.append("MST ({})".format(tel_counters["MST"]))
         if tel_counters["SST"] > 0:
             legend_objects.append(leg_h.SSTObject())
-            legend_labels.append("SST ({})".format(tel_counters["S"]))
+            legend_labels.append("SST ({})".format(tel_counters["SST"]))
             fontsize = 5
 
         patches = []
         for i_tel in range(len(telescopes)):
             patches.append(
                 self._get_telescope_patch(
-                    telescopes[i_tel]["telescope_name"][0],
+                    telescopes[i_tel]["telescope_name"][:3],
                     telescopes[i_tel]["pos_x"],
                     telescopes[i_tel]["pos_y"],
                     telescopes[i_tel]["radius"] * size_factor,
                 )
             )
-            plt.text(
+            ax.text(
                 telescopes[i_tel]["pos_x"].value,
                 telescopes[i_tel]["pos_y"].value + telescopes[i_tel]["radius"].value,
                 telescopes[i_tel]["telescope_name"],
@@ -880,7 +880,7 @@ class LayoutArray:
 
         plt.tight_layout()
 
-        return plt
+        return fig
 
     def telescope_layout_file_to_dict(self, file_name):
         """
@@ -932,9 +932,12 @@ class LayoutArray:
         """
 
         valid_name = self.get_telescope_type(name)
+        fill_flag = False
+        if valid_name == "MST":
+            fill_flag = True
         colors = {"LST": "darkorange", "MST": "dodgerblue", "SST": "black"}
         patch = mpatches.Circle(
-            (x.value, y.value), radius=radius.value, fill=False, color=colors[valid_name]
+            (x.value, y.value), radius=radius.value, fill=fill_flag, color=colors[valid_name]
         )
         return patch
 
@@ -947,9 +950,9 @@ class LayoutArray:
         Parameters
         ----------
         rotation_angle
-        x: numpy.Array of float
+        x: numpy.array of float
             X positions of the telescopes in meters.
-        y: numpy.Array of float
+        y: numpy.array of float
             Y positions of the telescopes in meters.
 
         Returns
