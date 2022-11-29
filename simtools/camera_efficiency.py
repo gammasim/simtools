@@ -293,7 +293,7 @@ class CameraEfficiency:
         if not self._has_results:
             self._logger.error("Cannot export results because they do not exist")
         else:
-            self._logger.info("Exporting results to {}".format(self._file_results))
+            self._logger.info(f"Exporting results to {self._file_results}")
             astropy.io.ascii.write(
                 self._results, self._file_results, format="basic", overwrite=True
             )
