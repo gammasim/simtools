@@ -204,11 +204,8 @@ class ArrayModel:
                 if tel_data.name not in _all_pars_to_change:
                     continue
                 self._logger.debug(
-                    "Changing {} pars of a {}: {}, ...".format(
-                        len(_all_pars_to_change[tel_data.name]),
-                        tel_data.name,
-                        *_all_pars_to_change[tel_data.name],
-                    )
+                    f"Changing {len(_all_pars_to_change[tel_data.name])} pars of a "
+                    f"{tel_data.name}: {*_all_pars_to_change[tel_data.name],}, ..."
                 )
                 tel_model.change_multiple_parameters(**_all_pars_to_change[tel_data.name])
                 tel_model.set_extra_label(tel_data.name)
