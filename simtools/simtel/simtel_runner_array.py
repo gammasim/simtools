@@ -61,6 +61,7 @@ class SimtelRunnerArray(SimtelRunner):
 
         self.array_model = self._validate_array_model(array_model)
         self.label = label if label is not None else self.array_model.label
+        self._log_file = None
 
         self.io_handler = io_handler.IOHandler()
 
@@ -289,5 +290,5 @@ class SimtelRunnerArray(SimtelRunner):
             msg = "sim_telarray output file does not exist."
             self._logger.error(msg)
             raise InvalidOutputFile(msg)
-        else:
-            self._logger.debug("Everything looks fine with the sim_telarray output file.")
+
+        self._logger.debug("Everything looks fine with the sim_telarray output file.")

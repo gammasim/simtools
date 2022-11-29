@@ -48,11 +48,11 @@ class SimtelRunnerCameraEfficiency(SimtelRunner):
         self._file_log = file_log
         self.zenith_angle = zenith_angle
 
-    def _shall_run(self, **kwargs):
+    def _shall_run(self, **kwargs):  # pylint: disable=unused-argument; applies only to this line
         """Tells if simulations should be run again based on the existence of output files."""
         return not self._file_simtel.exists()
 
-    def _make_run_command(self, **kwargs):
+    def _make_run_command(self, **kwargs):  # pylint: disable=unused-argument
         """
         Prepare the command used to run testeff
         """
@@ -134,7 +134,7 @@ class SimtelRunnerCameraEfficiency(SimtelRunner):
 
         return command
 
-    def _check_run_result(self, **kwargs):
+    def _check_run_result(self, **kwargs):  # pylint: disable=unused-argument
         """Checking run results
 
         Raises
