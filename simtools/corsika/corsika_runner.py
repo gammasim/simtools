@@ -17,8 +17,6 @@ __all__ = ["CorsikaRunner", "MissingRequiredEntryInCorsikaConfig"]
 class MissingRequiredEntryInCorsikaConfig(Exception):
     """Exception for missing required entry in corsika config."""
 
-    pass
-
 
 class CorsikaRunner:
     """
@@ -419,5 +417,5 @@ class CorsikaRunner:
             msg = "Invalid type of run number ({}) - it must be an uint.".format(run_number)
             self._logger.error(msg)
             raise ValueError(msg)
-        else:
-            return run_number
+
+        return run_number
