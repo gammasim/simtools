@@ -215,9 +215,8 @@ class Configurator:
         # parameter already set
         if key in self.config and self.config[key] != value:
             self._logger.error(
-                "Inconsistent configuration parameter ({}) definition ({} vs {})".format(
-                    key, self.config[key], value
-                )
+                f"Inconsistent configuration parameter ({key}) definition "
+                f"({self.config[key]} vs {value})"
             )
             raise InvalidConfigurationParameter
 
@@ -241,23 +240,21 @@ class Configurator:
         """
 
         try:
-            self._logger.debug("Reading configuration from {}".format(config_file))
+            self._logger.debug(f"Reading configuration from {config_file}")
             with open(config_file, "r") as stream:
                 _config_dict = yaml.safe_load(stream)
             if "CTASIMPIPE" in _config_dict:
                 try:
                     self._fill_from_config_dict(_config_dict["CTASIMPIPE"]["CONFIGURATION"])
                 except KeyError:
-                    self._logger.info(
-                        "No CTASIMPIPE:CONFIGURATION dict found in {}.".format(config_file)
-                    )
+                    self._logger.info(f"No CTASIMPIPE:CONFIGURATION dict found in {config_file}.")
             else:
                 self._fill_from_config_dict(_config_dict)
         # TypeError is raised for config_file=None
         except TypeError:
             pass
         except FileNotFoundError:
-            self._logger.error("Configuration file not found: {}".format(config_file))
+            self._logger.error(f"Configuration file not found: {config_file}")
             raise
 
     def _fill_from_environmental_variables(self):
