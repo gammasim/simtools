@@ -58,11 +58,11 @@ class Mirrors:
         # TODO - temporary hard wired geopars - should come from DB
         self.diameter = 120
         self.shape = 1
-        self._logger.debug("Shape = {}".format(self.shape))
-        self._logger.debug("Diameter = {}".format(self.diameter))
+        self._logger.debug(f"Shape = {self.shape}")
+        self._logger.debug(f"Diameter = {self.diameter}")
 
         _mirror_table = Table.read(self._mirror_list_file, format="ascii.ecsv")
-        self._logger.debug("Reading mirror properties from {}".format(self._mirror_list_file))
+        self._logger.debug(f"Reading mirror properties from {self._mirror_list_file}")
         try:
             self._mirrors["flen"] = list(_mirror_table["mirror_panel_radius"].to("cm").value / 2.0)
             self.number_of_mirrors = len(self._mirrors["flen"])
@@ -73,9 +73,7 @@ class Mirrors:
             self._mirrors["shape"] = [self.shape] * self.number_of_mirrors
         except KeyError:
             self._logger.debug(
-                "Missing column for mirror panel focal length (flen) in {}".format(
-                    self._mirror_list_file
-                )
+                f"Missing column for mirror panel focal length (flen) in {self._mirror_list_file}"
             )
 
         if self.number_of_mirrors == 0:
@@ -111,8 +109,8 @@ class Mirrors:
                     self.diameter = float(line[2])
                     self.shape = int(line[4])
                     collect_geo_pars = False
-                    self._logger.debug("Shape = {}".format(self.shape))
-                    self._logger.debug("Diameter = {}".format(self.diameter))
+                    self._logger.debug(f"Shape = {self.shape}")
+                    self._logger.debug(f"Diameter = {self.diameter}")
 
                 self._mirrors["number"].append(mirror_counter)
                 self._mirrors["pos_x"].append(float(line[0]))

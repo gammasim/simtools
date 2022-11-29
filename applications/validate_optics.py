@@ -156,10 +156,7 @@ def main():
     # }
     # tel_model.change_multiple_parameters(**pars_to_change)
 
-    print(
-        "\nValidating telescope optics with ray tracing simulations"
-        " for {}\n".format(tel_model.name)
-    )
+    print(f"\nValidating telescope optics with ray tracing simulations for {tel_model.name}\n")
 
     ray = RayTracing.from_kwargs(
         telescope_model=tel_model,
@@ -192,7 +189,7 @@ def main():
         plot_file = output_dir.joinpath(plot_file_name)
         pdf_pages = PdfPages(plot_file)
 
-        logger.info("Plotting images into {}".format(plot_file))
+        logger.info(f"Plotting images into {plot_file}")
 
         for image in ray.images():
             fig = plt.figure(figsize=(8, 6), tight_layout=True)

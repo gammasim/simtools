@@ -180,11 +180,9 @@ def main():
         parameters to the all_parameters list.
         """
         pars = dict()
-        mrra = "{:.4f},{:.2f},{:.4f}".format(
-            mirror_reflection, mirror_reflection_fraction, mirror_reflection_2
-        )
+        mrra = f"{mirror_reflection:.4f},{mirror_reflection_fraction:.2f},{mirror_reflection_2:.4f}"
         pars["mirror_reflection_random_angle"] = mrra
-        mar = "{:.4f},28.,0.,0.".format(mirror_align)
+        mar = f"{mirror_align:.4f},28.,0.,0."
         pars["mirror_align_random_horizontal"] = mar
         pars["mirror_align_random_vertical"] = mar
         all_parameters.append(pars)
@@ -288,15 +286,14 @@ def main():
             ax = fig.get_axes()[0]
             ax.set_ylim(0, 1.05)
             ax.set_title(
-                "refl_rnd={}, align_rnd={}".format(
-                    pars["mirror_reflection_random_angle"], pars["mirror_align_random_vertical"]
-                )
+                f"refl_rnd={pars['mirror_reflection_random_angle']}, "
+                f"align_rnd={pars['mirror_align_random_vertical']}"
             )
 
             ax.text(
                 0.8,
                 0.3,
-                "D80 = {:.3f} cm\nRMSD = {:.4f}".format(d80, rmsd),
+                f"D80 = {d80:.3f} cm\nRMSD = {rmsd:.4f}",
                 verticalalignment="center",
                 horizontalalignment="center",
                 transform=ax.transAxes,
@@ -325,7 +322,7 @@ def main():
     # Printing the results
     print("Best parameters:")
     for par, value in best_pars.items():
-        print("{} = {}".format(par, value))
+        print(f"{par} = {value}")
 
 
 if __name__ == "__main__":

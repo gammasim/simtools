@@ -106,7 +106,7 @@ class CameraEfficiency:
         return cls(**args, config_data=config_data)
 
     def __repr__(self):
-        return "CameraEfficiency(label={})\n".format(self.label)
+        return f"CameraEfficiency(label={self.label})\n"
 
     def _validate_telescope_model(self, tel):
         """Validate TelescopeModel
@@ -492,7 +492,7 @@ class CameraEfficiency:
         fig = visualize.plot_table(
             table_to_plot,
             y_title="Cherenkov light efficiency",
-            title="{} response to Cherenkov light".format(self._telescope_model.name),
+            title=f"{self._telescope_model.name} response to Cherenkov light",
             no_markers=True,
         )
 
@@ -525,7 +525,7 @@ class CameraEfficiency:
         plot = visualize.plot_table(
             table_to_plot,
             y_title="Nightsky background light efficiency",
-            title="{} response to nightsky background light".format(self._telescope_model.name),
+            title=f"{self._telescope_model.name} response to nightsky background light",
             no_markers=True,
         )
 

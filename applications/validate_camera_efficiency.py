@@ -101,7 +101,7 @@ def main():
     # For debugging purposes
     tel_model.export_config_file()
 
-    logger.info("Validating the camera efficiency of {}".format(tel_model.name))
+    logger.info(f"Validating the camera efficiency of {tel_model.name}")
 
     ce = CameraEfficiency(
         telescope_model=tel_model,
@@ -116,7 +116,7 @@ def main():
     cherenkov_plot_file = output_dir.joinpath(cherenkov_plot_file_name)
     for f in ["pdf", "png"]:
         fig.savefig(str(cherenkov_plot_file) + "." + f, format=f, bbox_inches="tight")
-    logger.info("Plotted cherenkov efficiency in {}".format(cherenkov_plot_file))
+    logger.info(f"Plotted cherenkov efficiency in {cherenkov_plot_file}")
     fig.clf()
 
     # Plotting the camera efficiency for NSB light
@@ -125,7 +125,7 @@ def main():
     nsb_plot_file = output_dir.joinpath(nsb_plot_file_name)
     for f in ["pdf", "png"]:
         fig.savefig(str(nsb_plot_file) + "." + f, format=f, bbox_inches="tight")
-    logger.info("Plotted NSB efficiency in {}".format(nsb_plot_file))
+    logger.info(f"Plotted NSB efficiency in {nsb_plot_file}")
     fig.clf()
 
 

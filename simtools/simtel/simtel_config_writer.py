@@ -78,7 +78,7 @@ class SimtelConfigWriter:
 
             file.write("#ifdef TELESCOPE\n")
             file.write(
-                "   echo Configuration for {}".format(self._telescope_model_name)
+                f"   echo Configuration for {self._telescope_model_name}"
                 + " - TELESCOPE $(TELESCOPE)\n"
             )
             file.write("#endif\n\n")
@@ -87,7 +87,7 @@ class SimtelConfigWriter:
                 if par in self.PARS_NOT_TO_WRITE:
                     continue
                 value = parameters[par]["Value"]
-                file.write("{} = {}\n".format(par, value))
+                file.write(f"{par} = {value}\n")
 
     def write_array_config_file(self, config_file_path, layout, telescope_model, site_parameters):
         """
@@ -115,27 +115,27 @@ class SimtelConfigWriter:
             # TELESCOPE 0 - global parameters
             file.write("#if TELESCOPE == 0\n")
             file.write(self.TAB + "echo *****************************\n")
-            file.write(self.TAB + "echo Site: {}\n".format(self._site))
-            file.write(self.TAB + "echo LayoutName: {}\n".format(self._layout_name))
-            file.write(self.TAB + "echo ModelVersion: {}\n".format(self._model_version))
+            file.write(self.TAB + f"echo Site: {self._site}\n")
+            file.write(self.TAB + f"echo LayoutName: {self._layout_name}\n")
+            file.write(self.TAB + f"echo ModelVersion: {self._model_version}\n")
             file.write(self.TAB + "echo *****************************\n\n")
 
             # Writing site parameters
             self._write_site_parameters(file, site_parameters)
 
             # Maximum telescopes
-            file.write(self.TAB + "maximum_telescopes = {}\n\n".format(len(telescope_model)))
+            file.write(self.TAB + f"maximum_telescopes = {len(telescope_model)}\n\n")
 
             # Default telescope - 0th tel in telescope list
             tel_config_file = telescope_model[0].get_config_file(no_export=True).name
-            file.write("# include <{}>\n\n".format(tel_config_file))
+            file.write(f"# include <{tel_config_file}>\n\n")
 
             # Looping over telescopes - from 1 to ...
             for count, tel_model in enumerate(telescope_model):
                 tel_config_file = tel_model.get_config_file(no_export=True).name
-                file.write("%{}\n".format(layout[count].name))
-                file.write("#elif TELESCOPE == {}\n\n".format(count + 1))
-                file.write("# include <{}>\n\n".format(tel_config_file))
+                file.write(f"%{layout[count].name}\n")
+                file.write(f"#elif TELESCOPE == {count + 1}\n\n")
+                file.write(f"# include <{tel_config_file}>\n\n")
             file.write("#endif \n\n")
 
     def write_single_mirror_list_file(
@@ -176,9 +176,7 @@ class SimtelConfigWriter:
             )
             file.write("#\n")
             file.write(
-                "0. 0. {} {} {} 0.\n".format(
-                    diameter, flen if not set_focal_length_to_zero else 0, shape
-                )
+                f"0. 0. {diameter} {flen if not set_focal_length_to_zero else 0} {shape} 0.\n"
             )
 
     def _write_header(self, file, title, comment_char="%"):
@@ -186,25 +184,23 @@ class SimtelConfigWriter:
         Writes a generic header. commen_char is the character to be used for comments, which \
         differs among ctypes of config files.
         """
-        header = "{}{}\n".format(comment_char, 50 * "=")
-        header += "{} {}\n".format(comment_char, title)
-        header += "{} Site: {}\n".format(comment_char, self._site)
-        header += "{} ModelVersion: {}\n".format(comment_char, self._model_version)
+        header = f"{comment_char}{50 * '='}\n"
+        header += f"{comment_char} {title}\n"
+        header += f"{comment_char} Site: {self._site}\n"
+        header += f"{comment_char} ModelVersion: {self._model_version}\n"
         header += (
-            "{} TelescopeModelName: {}\n".format(comment_char, self._telescope_model_name)
+            f"{comment_char} TelescopeModelName: {self._telescope_model_name}\n"
             if self._telescope_model_name is not None
             else ""
         )
         header += (
-            "{} LayoutName: {}\n".format(comment_char, self._layout_name)
+            f"{comment_char} LayoutName: {self._layout_name}\n"
             if self._layout_name is not None
             else ""
         )
-        header += (
-            "{} Label: {}\n".format(comment_char, self._label) if self._label is not None else ""
-        )
-        header += "{}{}\n".format(comment_char, 50 * "=")
-        header += "{}\n".format(comment_char)
+        header += f"{comment_char} Label: {self._label}\n" if self._label is not None else ""
+        header += f"{comment_char}{50 * '='}\n"
+        header += f"{comment_char}\n"
         file.write(header)
 
     def _write_site_parameters(self, file, site_parameters):
@@ -214,5 +210,5 @@ class SimtelConfigWriter:
             if par in self.PARS_NOT_TO_WRITE:
                 continue
             value = site_parameters[par]["Value"]
-            file.write(self.TAB + "{} = {}\n".format(par, value))
+            file.write(self.TAB + f"{par} = {value}\n")
         file.write("\n")
