@@ -138,7 +138,7 @@ class RayTracing:
                 "label",
                 "simtel_source_path",
             ],
-            **kwargs
+            **kwargs,
         )
         return cls(**args, config_data=config_data)
 
@@ -170,9 +170,7 @@ class RayTracing:
         for this_off_axis in self.config.off_axis_angle:
             for this_mirror in all_mirrors:
                 self._logger.info(
-                    "Simulating RayTracing for off_axis={}, mirror={}".format(
-                        this_off_axis, this_mirror
-                    )
+                    f"Simulating RayTracing for off_axis={this_off_axis}, mirror={this_mirror}"
                 )
                 simtel = SimtelRunnerRayTracing(
                     simtel_source_path=self._simtel_source_path,
@@ -238,9 +236,9 @@ class RayTracing:
         all_mirrors = self._mirror_numbers if self.config.single_mirror_mode else [0]
         for this_off_axis in self.config.off_axis_angle:
             for this_mirror in all_mirrors:
-                self._logger.debug("Analyzing RayTracing for off_axis={}".format(this_off_axis))
+                self._logger.debug(f"Analyzing RayTracing for off_axis={this_off_axis}")
                 if self.config.single_mirror_mode:
-                    self._logger.debug("mirror_number={}".format(this_mirror))
+                    self._logger.debug(f"mirror_number={this_mirror}")
 
                 photons_file_name = names.ray_tracing_file_name(
                     self._telescope_model.site,
@@ -326,22 +324,21 @@ class RayTracing:
 
         try:
             with open(file) as _stdin:
-                rx_output = subprocess.Popen(
+                rx_output = subprocess.Popen(  # pylint: disable=consider-using-with
                     shlex.split(
-                        "{}/sim_telarray/bin/rx -f {:.2f} -v".format(
-                            self._simtel_source_path, containment_fraction
-                        )
+                        f"{self._simtel_source_path}/sim_telarray/bin/rx "
+                        f"-f {containment_fraction:.2f} -v"
                     ),
                     stdin=_stdin,
                     stdout=subprocess.PIPE,
                 ).communicate()[0]
         except FileNotFoundError:
-            self._logger.error("Photon list file not found: {}".format(file))
+            self._logger.error(f"Photon list file not found: {file}")
             raise
         try:
             rx_output = rx_output.splitlines()[-1:][0].split()
         except IndexError:
-            self._logger.error("Invalid output from rx: {}".format(rx_output))
+            self._logger.error(f"Invalid output from rx: {rx_output}")
             raise
         containment_diameter_cm = 2 * float(rx_output[0])
         x_mean = float(rx_output[1])
@@ -354,7 +351,7 @@ class RayTracing:
         if not self._has_results:
             self._logger.error("Cannot export results because it does not exist")
         else:
-            self._logger.info("Exporting results to {}".format(self._file_results))
+            self._logger.info(f"Exporting results to {self._file_results}")
             astropy.io.ascii.write(self._results, self._file_results, format="ecsv", overwrite=True)
 
     def _read_results(self):
@@ -385,7 +382,7 @@ class RayTracing:
             self._logger.error(msg)
             raise KeyError(msg)
 
-        self._logger.info("Plotting {} vs off-axis angle".format(key))
+        self._logger.info(f"Plotting {key} vs off-axis angle")
 
         plot = visualize.plot_table(
             self._results["Off-axis angle", key], self.YLABEL[key], no_legend=True, **kwargs
@@ -402,7 +399,7 @@ class RayTracing:
             )
             self._output_directory.joinpath("figures").mkdir(exist_ok=True)
             plot_file = self._output_directory.joinpath("figures").joinpath(plot_file_name)
-            self._logger.info("Saving fig in {}".format(plot_file))
+            self._logger.info(f"Saving fig in {plot_file}")
             plot.savefig(plot_file)
 
     def plot_histogram(self, key, **kwargs):
