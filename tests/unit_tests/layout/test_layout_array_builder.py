@@ -15,8 +15,8 @@ logger.setLevel(logging.DEBUG)
 
 
 @pytest.fixture
-def layout_builder_instance(io_handler, layout_array_instance):
-    return LayoutArrayBuilder(layout_array_instance)
+def layout_builder_instance(io_handler):
+    return LayoutArrayBuilder()
 
 
 def test_telescope_layout_file_to_dict(telescope_test_file, layout_builder_instance):
