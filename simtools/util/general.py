@@ -214,7 +214,7 @@ def _check_value_entry_length(value, par_name, par_info):
 
     # Checking the entry length
     value_length = len(value)
-    logger.debug("Value len of {}: {}".format(par_name, value_length))
+    logger.debug(f"Value len of {par_name}: {value_length}")
     undefined_length = False
     try:
         if par_info["len"] is None:
@@ -409,8 +409,8 @@ def sort_arrays(*args):
     order_array = copy.copy(args[0])
     new_args = list()
     for arg in args:
-        _, a = zip(*sorted(zip(order_array, arg)))
-        new_args.append(list(a))
+        _, value = zip(*sorted(zip(order_array, arg)))
+        new_args.append(list(value))
     return new_args
 
 
@@ -431,8 +431,8 @@ def collect_final_lines(file, n_lines):
         Final lines collected.
     """
     file_in_lines = list()
-    with open(file, "r") as f:
-        for line in f:
+    with open(file, "r") as opened_file:
+        for line in opened_file:
             file_in_lines.append(line)
     collected_lines = file_in_lines[-n_lines:-1]
 
@@ -582,30 +582,30 @@ def find_file(name, loc):
             _logger.debug(msg)
             return None
 
-        f = Path(directory).joinpath(filename)
-        if f.exists():
-            _logger.debug("File {} found in {}".format(filename, directory))
-            return f
+        file = Path(directory).joinpath(filename)
+        if file.exists():
+            _logger.debug(f"File {filename} found in {directory}")
+            return file
         if not rec:  # Not recursively
             return None
 
         for subdir in Path(directory).iterdir():
             if not subdir.is_dir():
                 continue
-            f = _search_directory(subdir, filename, True)
-            if f is not None:
-                return f
+            file = _search_directory(subdir, filename, True)
+            if file is not None:
+                return file
         return None
 
     # Searching file locally
-    ff = _search_directory(".", name)
-    if ff is not None:
-        return ff
+    file = _search_directory(".", name)
+    if file is not None:
+        return file
     # Searching file in given locations
-    for ll in all_locations:
-        ff = _search_directory(ll, name, True)
-        if ff is not None:
-            return ff
+    for location_now in all_locations:
+        file = _search_directory(location_now, name, True)
+        if file is not None:
+            return file
     msg = f"File {name} could not be found in {all_locations}"
     _logger.error(msg)
     raise FileNotFoundError(msg)
