@@ -230,12 +230,14 @@ class MSTHandler(object):
 
     @staticmethod
     def legend_artist(legend, orig_handle, fontsize, handlebox):
-        x0, y0 = handlebox.xdescent + 0.1 * handlebox.width, handlebox.ydescent
-        width = height = handlebox.height
-        patch = mpatches.Rectangle(
-            [x0, y0],
-            width,
-            height,
+        center = (
+            handlebox.xdescent + 0.25 * handlebox.width,
+            handlebox.ydescent + 0.5 * handlebox.height,
+        )
+        radius = handlebox.height
+        patch = mpatches.Circle(
+            xy=center,
+            radius=radius * (11.5 / 23),
             facecolor="dodgerblue",
             edgecolor="dodgerblue",
             transform=handlebox.get_transform(),
@@ -258,7 +260,7 @@ class SSTHandler(object):
         radius = handlebox.height
         patch = mpatches.Circle(
             xy=center,
-            radius=radius * (2.8 / 12),
+            radius=radius * (9.7 / 23),
             facecolor="black",
             edgecolor="black",
             transform=handlebox.get_transform(),
