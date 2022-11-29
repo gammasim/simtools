@@ -229,10 +229,10 @@ class SimtelRunner:
         if self._simtel_failed(sys_output):
             self._raise_simtel_error()
 
-    def _shall_run(self, **kwargs):
+    def _shall_run(self, **kwargs):  # pylint: disable=unused-argument; applies only to this line
         self._logger.debug(
             "shall_run is being called from the base class - returning False -"
-            + "it should be implemented in the sub class"
+            "it should be implemented in the sub class"
         )
         return False
 

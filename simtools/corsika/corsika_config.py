@@ -447,8 +447,7 @@ class CorsikaConfig:
         if file_type == "config_tmp":
             if run_number is not None:
                 return f"corsika_config_run{run_number}_{file_name}.txt"
-            else:
-                raise ValueError("Must provide a run number for a temporary CORSIKA config file")
+            raise ValueError("Must provide a run number for a temporary CORSIKA config file")
         if file_type == "config":
             return f"corsika_config_{file_name}.input"
         if file_type == "output_generic":
