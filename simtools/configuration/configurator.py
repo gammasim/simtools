@@ -16,8 +16,6 @@ __all__ = [
 class InvalidConfigurationParameter(Exception):
     """Exception for Invalid configuration parameter."""
 
-    pass
-
 
 class Configurator:
     """
