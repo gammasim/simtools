@@ -202,7 +202,7 @@ class LayoutArray:
             invalid array center definition.
 
         """
-        self._logger.debug("Initialize array center coordinate systems: {}".format(center_dict))
+        self._logger.debug(f"Initialize array center coordinate systems: {center_dict}")
 
         self._array_center = TelescopePosition()
         self._array_center.name = "array_center"
@@ -416,12 +416,10 @@ class LayoutArray:
         try:
             table = Table.read(telescope_list_file, format="ascii.ecsv")
         except FileNotFoundError:
-            self._logger.error(
-                "Error reading list of array elements from {}".format(telescope_list_file)
-            )
+            self._logger.error(f"Error reading list of array elements from {telescope_list_file}")
             raise
 
-        self._logger.info("Reading array elements from {}".format(telescope_list_file))
+        self._logger.info(f"Reading array elements from {telescope_list_file}")
 
         self._initialize_corsika_telescope(table.meta)
         self._initialize_coordinate_systems(table.meta)
@@ -570,7 +568,7 @@ class LayoutArray:
             pass
 
         self._set_telescope_list_file(crs_name)
-        self._logger.info("Exporting telescope list to {}".format(self.telescope_list_file))
+        self._logger.info(f"Exporting telescope list to {self.telescope_list_file}")
         table.write(self.telescope_list_file, format="ascii.ecsv", overwrite=True)
 
     def get_number_of_telescopes(self):
@@ -620,11 +618,11 @@ class LayoutArray:
                 raise
 
             corsika_list += "TELESCOPE"
-            corsika_list += "\t {:.3f}E2".format(pos_x.value)
-            corsika_list += "\t {:.3f}E2".format(pos_y.value)
-            corsika_list += "\t {:.3f}E2".format(pos_z.value)
-            corsika_list += "\t {:.3f}E2".format(sphere_radius.value)
-            corsika_list += "\t # {}\n".format(tel.name)
+            corsika_list += f"\t {pos_x.value:.3f}E2"
+            corsika_list += f"\t {pos_y.value:.3f}E2"
+            corsika_list += f"\t {pos_z.value:.3f}E2"
+            corsika_list += f"\t {sphere_radius.value:.3f}E2"
+            corsika_list += f"\t # {tel.name}\n"
 
         return corsika_list
 
@@ -634,7 +632,7 @@ class LayoutArray:
 
         """
 
-        print("LayoutArray: {}".format(self.name))
+        print(f"LayoutArray: {self.name}")
         print("ArrayCenter")
         print(self._array_center)
         print("Telescopes")
@@ -719,11 +717,11 @@ class LayoutArray:
             if not np.isnan(_center_lat.value) and not np.isnan(_center_lon.value):
                 proj4_string = (
                     "+proj=tmerc +ellps=WGS84 +datum=WGS84"
-                    + " +lon_0={} +lat_0={}".format(_center_lon, _center_lat)
+                    + f" +lon_0={_center_lon} +lat_0={_center_lat}"
                     + " +axis=nwu +units=m +k_0=1.0"
                 )
                 crs_local = pyproj.CRS.from_proj4(proj4_string)
-                self._logger.debug("Local Mercator projection: {}".format(crs_local))
+                self._logger.debug(f"Local Mercator projection: {crs_local}")
                 return crs_local
 
         self._logger.debug("crs_local cannot be built: missing array center lon and lat")
@@ -742,7 +740,7 @@ class LayoutArray:
         """
         if self._epsg:
             crs_utm = pyproj.CRS.from_user_input(self._epsg)
-            self._logger.debug("UTM system: {}".format(crs_utm))
+            self._logger.debug(f"UTM system: {crs_utm}")
             return crs_utm
 
         self._logger.debug("crs_utm cannot be built because EPSG definition is missing")

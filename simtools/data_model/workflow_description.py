@@ -83,7 +83,7 @@ class WorkflowDescription:
         try:
             self.workflow_config["configuration"][key] = value
         except KeyError:
-            self._logger.error("Missing key {} in configuration".format(key))
+            self._logger.error(f"Missing key {key} in configuration")
             raise
 
     def get_configuration_parameter(self, key):
@@ -109,7 +109,7 @@ class WorkflowDescription:
         try:
             return self.workflow_config["configuration"][key]
         except KeyError:
-            self._logger.error("Missing key {} in configuration".format(key))
+            self._logger.error(f"Missing key {key} in configuration")
             raise
 
     def reference_data_columns(self):
@@ -237,7 +237,7 @@ class WorkflowDescription:
         _output_dir = self.io_handler.get_output_directory(
             self.workflow_config["activity"]["name"], "product-data"
         )
-        self._logger.debug("Outputdirectory {}".format(_output_dir))
+        self._logger.debug(f"Outputdirectory {_output_dir}")
         return _output_dir
 
     def _fill_association_meta_from_args(self, association_dict):
@@ -257,7 +257,7 @@ class WorkflowDescription:
             if metadata description cannot be filled.
 
         """
-        self._logger.debug("Fill metadata from args: {}".format(self.args_dict))
+        self._logger.debug(f"Fill metadata from args: {self.args_dict}")
 
         _association = {}
         try:
@@ -272,7 +272,7 @@ class WorkflowDescription:
             self._logger.error("Error reading association meta data from args")
             raise
         except AttributeError as e:
-            self._logger.debug("Missing parameter on command line, use defaults ({})".format(e))
+            self._logger.debug(f"Missing parameter on command line, use defaults ({e})")
 
         self._fill_context_sim_list(association_dict, _association)
 
@@ -335,7 +335,7 @@ class WorkflowDescription:
         """
 
         product_dict["id"] = self.workflow_config["activity"]["id"]
-        self._logger.debug("Assigned ACTIVITY UUID {}".format(product_dict["id"]))
+        self._logger.debug(f"Assigned ACTIVITY UUID {product_dict['id']}")
 
         product_dict["data"]["category"] = "SIM"
         product_dict["data"]["level"] = "R0"
@@ -411,9 +411,7 @@ class WorkflowDescription:
                     gen.collect_data_from_yaml_or_dict(workflow_config_file, None)["CTASIMPIPE"],
                     True,
                 )
-                self._logger.debug(
-                    "Reading workflow configuration from {}".format(workflow_config_file)
-                )
+                self._logger.debug(f"Reading workflow configuration from {workflow_config_file}")
             except KeyError:
                 self._logger.debug("Error reading CTASIMPIPE workflow configuration")
 
@@ -447,9 +445,8 @@ class WorkflowDescription:
                     dict_high[k] = dict_low[k]
                 elif dict_high[k] != dict_low[k] and dict_low[k] is not None:
                     self._logger.debug(
-                        "Conflicting entries between dict: {} vs {} (use {})".format(
-                            dict_high[k], dict_low[k], dict_high[k]
-                        )
+                        f"Conflicting entries between dict: {dict_high[k]} vs {dict_low[k]} "
+                        f"(use {dict_high[k]})"
                     )
             elif add_new_fields:
                 dict_high[k] = dict_low[k]

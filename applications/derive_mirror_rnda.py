@@ -250,21 +250,19 @@ def _print_and_write_results(
     containment_fraction_percent = int(args_dict["containment_fraction"] * 100)
 
     # Printing results to stdout
-    print("\nMeasured D{:}:".format(containment_fraction_percent))
+    print(f"\nMeasured D{containment_fraction_percent}:")
     if args_dict["psf_measurement_containment_sigma"] is not None:
         print(
-            "Mean = {:.3f} cm, StdDev = {:.3f} cm".format(
-                args_dict["psf_measurement_containment_mean"],
-                args_dict["psf_measurement_containment_sigma"],
-            )
+            f"Mean = {args_dict['psf_measurement_containment_mean']:.3f} cm, "
+            f"StdDev = {args_dict['psf_measurement_containment_sigma']:.3f} cm"
         )
     else:
-        print("Mean = {:.3f} cm".format(args_dict["psf_measurement_containment_mean"]))
-    print("\nSimulated D{:}:".format(containment_fraction_percent))
-    print("Mean = {:.3f} cm, StdDev = {:.3f} cm".format(mean_d80, sig_d80))
+        print(f"Mean = {args_dict['psf_measurement_containment_mean']:.3f} cm")
+    print(f"\nSimulated D{containment_fraction_percent}:")
+    print(f"Mean = {mean_d80:.3f} cm, StdDev = {sig_d80:.3f} cm")
     print("\nmirror_random_reflection_angle")
-    print("Previous value = {:.6f}".format(rnda_start))
-    print("New value = {:.6f}\n".format(rnda_opt))
+    print(f"Previous value = {rnda_start:.6f}")
+    print(f"New value = {rnda_opt:.6f}\n")
 
     # Result table written to ecsv file using file_writer
     # First entry is always the best fit result
@@ -308,17 +306,13 @@ def _get_psf_containment(logger, args_dict):
         )
     except KeyError:
         logger.debug(
-            "Missing column for psf measurement (psf_opt) in {}".format(
-                args_dict["psf_measurement"]
-            )
+            f"Missing column for psf measurement (psf_opt) in {args_dict['psf_measurement']}"
         )
         raise
 
     logger.info(
-        "Determined PSF containment to {:.4} +- {:.4} cm".format(
-            args_dict["psf_measurement_containment_mean"],
-            args_dict["psf_measurement_containment_sigma"],
-        )
+        f"Determined PSF containment to {args_dict['psf_measurement_containment_mean']:.4} "
+        f"+- {args_dict['psf_measurement_containment_sigma']:.4} cm"
     )
 
 
@@ -365,7 +359,7 @@ def main():
         if isinstance(rnda_start, str):
             rnda_start = float(rnda_start.split()[0])
 
-    logger.info("Start value for mirror_reflection_random_angle: {:}".format(rnda_start))
+    logger.info(f"Start value for mirror_reflection_random_angle: {rnda_start}")
 
     results_rnda = list()
     results_mean = list()

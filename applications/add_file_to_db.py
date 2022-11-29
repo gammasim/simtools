@@ -94,7 +94,7 @@ def main():
         help=(
             "A directory with files to upload to the DB. "
             "All files in the directory with the following extensions "
-            "will be uploaded: {}".format(", ".join(_db_tmp.ALLOWED_FILE_EXTENSIONS))
+            f"will be uploaded: {', '.join(_db_tmp.ALLOWED_FILE_EXTENSIONS)}"
         ),
         type=Path,
     )
@@ -125,12 +125,12 @@ def main():
                 files_to_insert.append(file_now)
             else:
                 logger.warning(
-                    "The file {} will not be uploaded to the DB because its extension is not "
-                    "in the allowed extension list: {}".format(file_now, db.ALLOWED_FILE_EXTENSIONS)
+                    f"The file {file_now} will not be uploaded to the DB because its extension "
+                    f"is not in the allowed extension list: {db.ALLOWED_FILE_EXTENSIONS}"
                 )
     else:
         for ext_now in db.ALLOWED_FILE_EXTENSIONS:
-            files_to_insert.extend(Path(args_dict["input_path"]).glob("*{}".format(ext_now)))
+            files_to_insert.extend(Path(args_dict["input_path"]).glob(f"*{ext_now}"))
 
     plural = "s"
     if len(files_to_insert) < 1:
@@ -146,9 +146,9 @@ def main():
     if _user_confirm():
         for file_to_insert_now in files_to_insert:
             db.insert_file_to_db(file_to_insert_now, args_dict["db"])
-            logger.info("File {} inserted to {} DB".format(file_to_insert_now, args_dict["db"]))
+            logger.info(f"File {file_to_insert_now} inserted to {args_dict['db']} DB")
     else:
-        logger.info("Aborted, did not insert file {} to the {} DB".format(plural, args_dict["db"]))
+        logger.info(f"Aborted, did not insert file {plural} to the {args_dict['db']} DB")
 
 
 if __name__ == "__main__":

@@ -695,9 +695,9 @@ class Simulator:
         """
         resources = self._make_resources_report(input_file_list)
         print("-----------------------------")
-        print("Computing Resources Report - {} Simulations".format(self.simulator))
+        print(f"Computing Resources Report - {self.simulator} Simulations")
         for key, value in resources.items():
-            print("{} = {:.2f}".format(key, value))
+            print(f"{key} = {value:.2f}")
         print("-----------------------------")
 
     def _get_runs_to_simulate(self, run_list=None, run_range=None):

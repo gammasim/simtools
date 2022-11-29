@@ -81,9 +81,8 @@ def main():
                     db_name, args_dict["output_path"], args_dict["file_name"]
                 )
                 logger.info(
-                    "Got file {} from DB {} and saved into {}".format(
-                        args_dict["file_name"], db_name, args_dict["output_path"]
-                    )
+                    f"Got file {args_dict['file_name']} from DB {db_name} "
+                    f"and saved into {args_dict['output_path']}"
                 )
                 break
             except FileNotFoundError:
@@ -91,13 +90,11 @@ def main():
 
         if file_id is None:
             logger.error(
-                "The file {} was not found in any of the available DBs.".format(
-                    args_dict["file_name"]
-                )
+                f"The file {args_dict['file_name']} was not found in any of the available DBs."
             )
             raise FileNotFoundError
     else:
-        logger.error("Aborted, directory {} does not exist".format(args_dict["output_path"]))
+        logger.error(f"Aborted, directory {args_dict['output_path']} does not exist")
 
 
 if __name__ == "__main__":

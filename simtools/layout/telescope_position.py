@@ -46,20 +46,23 @@ class TelescopePosition:
     def __str__(self):
         telstr = self.name
         if self.has_coordinates("corsika"):
-            telstr += "\t CORSIKA x(->North): {0:0.2f} y(->West): {1:0.2f}".format(
-                self.crs["corsika"]["xx"]["value"], self.crs["corsika"]["yy"]["value"]
+            telstr += (
+                f"\t CORSIKA x(->North): {self.crs['corsika']['xx']['value']:0.2f} "
+                f"y(->West): {self.crs['corsika']['yy']['value']:0.2f}"
             )
         if self.has_coordinates("utm"):
-            telstr += "\t UTM East: {0:0.2f} UTM North: {1:0.2f}".format(
-                self.crs["utm"]["xx"]["value"], self.crs["utm"]["yy"]["value"]
+            telstr += (
+                f"\t UTM East: {self.crs['utm']['xx']['value']:0.2f} "
+                f"UTM North: {self.crs['utm']['yy']['value']:0.2f}"
             )
         if self.has_coordinates("mercator"):
-            telstr += "\t Longitude: {0:0.5f} Latitude: {1:0.5f}".format(
-                self.crs["mercator"]["xx"]["value"], self.crs["mercator"]["yy"]["value"]
+            telstr += (
+                f"\t Longitude: {self.crs['mercator']['xx']['value']:0.5f} "
+                f"Latitude: {self.crs['mercator']['yy']['value']:0.5f}"
             )
         for _crs_name, _crs_now in self.crs.items():
             if self.has_altitude(_crs_name):
-                telstr += "\t Alt: {:0.2f}".format(_crs_now["zz"]["value"])
+                telstr += f"\t Alt: {_crs_now['zz']['value']:0.2f}"
                 break
 
         return telstr
@@ -105,34 +108,28 @@ class TelescopePosition:
                 _zz_header = "pos_z"
 
             if crs_name == "mercator":
-                telstr = "{0} {1:10.8f} {2:10.8f} {3:10.2f}".format(
-                    self.name,
-                    self.crs[crs_name]["xx"]["value"],
-                    self.crs[crs_name]["yy"]["value"],
-                    _zz,
+                telstr = (
+                    f"{self.name} {self.crs[crs_name]['xx']['value']:10.8f} "
+                    f"{self.crs[crs_name]['yy']['value']:10.8f} {_zz:10.2f}"
                 )
             else:
-                telstr = "{0} {1:10.2f} {2:10.2f} {3:10.2f}".format(
-                    self.name,
-                    self.crs[crs_name]["xx"]["value"],
-                    self.crs[crs_name]["yy"]["value"],
-                    _zz,
+                telstr = (
+                    f"{self.name} {self.crs[crs_name]['xx']['value']:10.2f} "
+                    f"{self.crs[crs_name]['yy']['value']:10.2f} {_zz:10.2f}"
                 )
-            headerstr = "{0} {1} {2} {3}".format(
-                "telescope_name",
-                self.crs[crs_name]["xx"]["name"],
-                self.crs[crs_name]["yy"]["name"],
-                _zz_header,
+            headerstr = (
+                f"telescope_name {self.crs[crs_name]['xx']['name']} "
+                f"{self.crs[crs_name]['yy']['name']} {_zz_header}"
             )
 
             if self.geo_code is not None:
-                telstr += "  {0}".format(self.geo_code)
+                telstr += f"  {self.geo_code}"
                 headerstr += "  geo_code"
             if print_header:
                 print(headerstr)
             print(telstr)
         except KeyError as e:
-            self._logger.error("Invalid coordinate system ({})".format(crs_name))
+            self._logger.error(f"Invalid coordinate system ({crs_name})")
             raise InvalidCoordSystem from e
 
     def get_coordinates(self, crs_name, coordinate_field=None):
@@ -165,7 +162,7 @@ class TelescopePosition:
                     self.crs[crs_name]["zz"]["value"] * self.crs[crs_name]["zz"]["unit"],
                 )
             except KeyError as e:
-                self._logger.error("Invalid coordinate system ({})".format(crs_name))
+                self._logger.error(f"Invalid coordinate system ({crs_name})")
                 raise InvalidCoordSystem from e
         else:
             try:
@@ -176,9 +173,8 @@ class TelescopePosition:
                 )
             except KeyError as e:
                 self._logger.error(
-                    "Invalid coordinate system ({}) or coordinate field ({})".format(
-                        crs_name, coordinate_field
-                    )
+                    f"Invalid coordinate system ({crs_name}) "
+                    f"or coordinate field ({coordinate_field})"
                 )
                 raise InvalidCoordSystem from e
 
@@ -194,7 +190,7 @@ class TelescopePosition:
             try:
                 return value.to(unit).value
             except u.UnitsError:
-                self._logger.error("Invalid unit given ({}) for value: {})".format(unit, value))
+                self._logger.error(f"Invalid unit given ({unit}) for value: {value})")
                 raise
 
         return value
@@ -233,7 +229,7 @@ class TelescopePosition:
                     zz, self.crs[crs_name]["zz"]["unit"]
                 )
         except KeyError as e:
-            self._logger.error("Invalid coordinate system ({})".format(crs_name))
+            self._logger.error(f"Invalid coordinate system ({crs_name})")
             raise InvalidCoordSystem from e
 
     def get_altitude(self):
@@ -350,7 +346,7 @@ class TelescopePosition:
             if not self.crs[crs_name]["crs"] and crs_check:
                 return False
         except KeyError as e:
-            self._logger.error("Invalid coordinate system ({})".format(crs_name))
+            self._logger.error(f"Invalid coordinate system ({crs_name})")
             raise InvalidCoordSystem from e
 
         return (
@@ -393,7 +389,7 @@ class TelescopePosition:
                 and self.crs[crs_name]["zz"]["value"] is not None
             )
         except KeyError as e:
-            self._logger.error("Invalid coordinate system ({})".format(crs_name))
+            self._logger.error(f"Invalid coordinate system ({crs_name})")
             raise InvalidCoordSystem from e
 
     def _set_coordinate_system(self, crs_name, crs_system):
@@ -416,7 +412,7 @@ class TelescopePosition:
         try:
             self.crs[crs_name]["crs"] = crs_system
         except KeyError as e:
-            self._logger.error("Invalid coordinate system ({})".format(crs_name))
+            self._logger.error(f"Invalid coordinate system ({crs_name})")
             raise InvalidCoordSystem from e
 
     @staticmethod

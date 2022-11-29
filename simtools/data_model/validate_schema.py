@@ -50,7 +50,7 @@ class SchemaValidator:
 
         """
         if meta_file_name:
-            self._logger.debug("Reading meta data from {}".format(meta_file_name))
+            self._logger.debug(f"Reading meta data from {meta_file_name}")
             self.data_dict = gen.collect_data_from_yaml_or_dict(meta_file_name, None)
 
         if lower_case:
@@ -143,7 +143,7 @@ class SchemaValidator:
 
         """
 
-        self._logger.debug("checking data field {} for {}".format(key, schema["type"]))
+        self._logger.debug(f"checking data field {key} for {schema['type']}")
 
         convert = {"str": type("str"), "float": type(1.0), "int": type(0), "bool": type(True)}
 
@@ -161,9 +161,8 @@ class SchemaValidator:
                     raise ValueError
             except ValueError as error:
                 raise ValueError(
-                    "invalid type for key {}. Expected: {}, Found: {}".format(
-                        key, schema["type"], type(data_field).__name__
-                    )
+                    f"invalid type for key {key}. Expected: {schema['type']}, "
+                    f"Found: {type(data_field).__name__}"
                 ) from error
 
     @staticmethod
@@ -191,7 +190,7 @@ class SchemaValidator:
         except (ValueError, TypeError) as error:
             if not optional_field:
                 raise ValueError(
-                    "invalid date format. Expected {}; Found {}".format(format_date, data_field)
+                    f"invalid date format. Expected {format_date}; Found {data_field}"
                 ) from error
 
     @staticmethod
@@ -214,7 +213,7 @@ class SchemaValidator:
         """
         regex = r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b"
         if not re.fullmatch(regex, data_field):
-            raise ValueError("invalid email format in field {}: {}".format(key, data_field))
+            raise ValueError(f"invalid email format in field {key}: {data_field}")
 
     def _validate_list(self, schema_type, data_list):
         """

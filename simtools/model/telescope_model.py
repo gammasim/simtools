@@ -364,11 +364,11 @@ class TelescopeModel:
             If an existing parameter is tried to be added.
         """
         if par_name in self._parameters:
-            msg = "Parameter {} already in the model, use change_parameter instead".format(par_name)
+            msg = f"Parameter {par_name} already in the model, use change_parameter instead"
             self._logger.error(msg)
             raise InvalidParameter(msg)
 
-        self._logger.info("Adding {}={} to the model".format(par_name, value))
+        self._logger.info(f"Adding {par_name}={value} to the model")
         self._parameters[par_name] = dict()
         self._parameters[par_name]["Value"] = value
         self._parameters[par_name]["Type"] = type(value)
@@ -397,7 +397,7 @@ class TelescopeModel:
             If the parameter to be changed does not exist in this model.
         """
         if par_name not in self._parameters:
-            msg = "Parameter {} not in the model, use add_parameters instead".format(par_name)
+            msg = f"Parameter {par_name} not in the model, use add_parameters instead"
             self._logger.error(msg)
             raise InvalidParameter(msg)
 
@@ -468,10 +468,10 @@ class TelescopeModel:
         """
         for par in args:
             if par in self._parameters:
-                self._logger.info("Removing parameter {}".format(par))
+                self._logger.info(f"Removing parameter {par}")
                 del self._parameters[par]
             else:
-                msg = "Could not remove parameter {} because it does not exist".format(par)
+                msg = f"Could not remove parameter {par} because it does not exist"
                 self._logger.error(msg)
                 raise InvalidParameter(msg)
         self._is_config_file_up_to_date = False
@@ -508,7 +508,7 @@ class TelescopeModel:
     def print_parameters(self):
         """Print parameters and their values for debugging purposes."""
         for par, info in self._parameters.items():
-            print("{} = {}".format(par, info["Value"]))
+            print(f"{par} = {info['Value']}")
 
     def export_config_file(self):
         """Export the config file used by sim_telarray."""
@@ -723,7 +723,7 @@ class TelescopeModel:
             True if the file is a 2D map type, False otherwise.
         """
         if not self.has_parameter(par):
-            logging.error("Parameter {} does not exist".format(par))
+            logging.error(f"Parameter {par} does not exist")
             return False
 
         file_name = self.get_parameter_value(par)
