@@ -40,7 +40,6 @@ class DatabaseHandler:
         "db_api_authentication_database" - DB with user info (optional, default is "admin")
     """
 
-    # TODO move into config file?
     DB_TABULATED_DATA = "CTA-Simulation-Model"
     DB_CTA_SIMULATION_MODEL = "CTA-Simulation-Model"
     DB_CTA_SIMULATION_MODEL_DESCRIPTIONS = "CTA-Simulation-Model-Descriptions"
@@ -213,7 +212,7 @@ class DatabaseHandler:
         self._logger.debug(f"Getting {file_name} from {db_name} and writing it to {dest}")
         file_path_instance = self._get_file_mongo_db(db_name, file_name)
         self._write_file_from_mongo_to_disk(db_name, dest, file_path_instance)
-        return file_path_instance._id
+        return file_path_instance._id  # pylint: disable=protected-access;
 
     def export_model_files(self, parameters, dest):
         """
@@ -1389,7 +1388,9 @@ class DatabaseHandler:
             self._logger.warning(
                 f"The file {kwargs['filename']} exists in the DB. Returning its ID"
             )
-            return file_system.find_one({"filename": kwargs["filename"]})._id
+            return file_system.find_one(
+                {"filename": kwargs["filename"]}
+            )._id  # pylint: disable=protected-access;
         with open(file_name, "rb") as data_file:
             return file_system.put(data_file, **kwargs)
 
