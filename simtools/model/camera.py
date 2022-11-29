@@ -617,8 +617,6 @@ class Camera:
         }
         self._plot_one_axis_def(plot, **kwargs)
 
-        return
-
     @staticmethod
     def _plot_one_axis_def(plot, **kwargs):
         """

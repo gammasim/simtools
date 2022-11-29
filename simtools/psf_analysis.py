@@ -72,7 +72,7 @@ class PSFImage:
             If photon positions X and Y are not compatible or are empty.
 
         """
-        self._logger.info("Reading sim_telarray file {}".format(file))
+        self._logger.info(f"Reading sim_telarray file {file}")
         self._total_photons = 0
         with open(file, "r") as f:
             for line in f:
@@ -128,8 +128,8 @@ class PSFImage:
             elif total_area_in_file != self._total_area:
                 self._logger.warning(
                     "Conflicting value of the total area found"
-                    + " {} != {}".format(self._total_area, total_area_in_file)
-                    + " - Keeping the original value"
+                    f" {self._total_area} != {total_area_in_file}"
+                    " - Keeping the original value"
                 )
             else:
                 # Do nothing - Keep the original value of _total_area
@@ -241,7 +241,7 @@ class PSFImage:
             Diameter of the circular container with a certain fraction of the photons.
 
         """
-        self._logger.debug("Finding PSF for fraction = {}".format(fraction))
+        self._logger.debug(f"Finding PSF for fraction = {fraction}")
 
         x_pos_sq = [i**2 for i in self.photon_pos_x]
         y_pos_sq = [i**2 for i in self.photon_pos_y]
