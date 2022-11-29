@@ -112,7 +112,7 @@ class Simulator:
         Initialize Simulator class.
         """
         self._logger = logging.getLogger(__name__)
-        self._logger.debug("Init Simulator {}".format(simulator))
+        self._logger.debug(f"Init Simulator {simulator}")
 
         self.label = label
         self._set_simulator(simulator)
@@ -261,7 +261,7 @@ class Simulator:
                 self._logger.error(msg)
                 raise InvalidRunsToSimulate
 
-            self._logger.debug("run_list: {}".format(run_list))
+            self._logger.debug(f"run_list: {run_list}")
             validated_runs = list(run_list)
 
         if run_range is not None:
@@ -271,7 +271,7 @@ class Simulator:
                 raise InvalidRunsToSimulate
 
             run_range = np.arange(run_range[0], run_range[1] + 1)
-            self._logger.debug("run_range: {}".format(run_range))
+            self._logger.debug(f"run_range: {run_range}")
             validated_runs.extend(list(run_range))
 
         validated_runs_unique = sorted(set(validated_runs))
@@ -377,12 +377,12 @@ class Simulator:
 
         """
 
-        self._logger.info("Submission command: {}".format(self._submit_command))
+        self._logger.info(f"Submission command: {self._submit_command}")
 
         runs_and_files_to_submit = self._get_runs_and_files_to_submit(
             input_file_list=input_file_list
         )
-        self._logger.info("Starting submission for {} runs".format(len(runs_and_files_to_submit)))
+        self._logger.info(f"Starting submission for {len(runs_and_files_to_submit)} runs")
 
         for run, file in runs_and_files_to_submit.items():
 
@@ -483,7 +483,7 @@ class Simulator:
             run_str = re.search("run[0-9]*", file_name).group()
             return int(run_str[3:])
         except (ValueError, AttributeError):
-            msg = "Run number could not be guessed from {} using run = 1".format(file_name)
+            msg = f"Run number could not be guessed from {file_name} using run = 1"
             self._logger.warning(msg)
             return 1
 
@@ -739,7 +739,7 @@ class Simulator:
         """
 
         if which not in self._results:
-            self._logger.error("Invalid file type {}".format(which))
+            self._logger.error(f"Invalid file type {which}")
             raise KeyError
-        for f in self._results[which]:
-            print(f)
+        for file in self._results[which]:
+            print(file)

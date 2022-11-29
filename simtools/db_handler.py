@@ -65,7 +65,7 @@ class DatabaseHandler:
         self._logger.debug("Initialize DatabaseHandler")
 
         self.mongo_db_config = mongo_db_config
-        self._logger.debug("DB configuration: {}".format(self.mongo_db_config))
+        self._logger.debug(f"DB configuration: {self.mongo_db_config}")
         self.io_handler = io_handler.IOHandler()
 
         self._set_up_connection()
@@ -276,7 +276,7 @@ class DatabaseHandler:
             file = gen.find_file(file_name, self.io_handler.model_path)
         except FileNotFoundError:
             if no_file_ok:
-                self._logger.debug("File {} not found but no_file_ok".format(file_name))
+                self._logger.debug(f"File {file_name} not found but no_file_ok")
                 return
 
             raise
@@ -366,17 +366,17 @@ class DatabaseHandler:
         _tel_name_db = self._get_telescope_model_name_for_db(_site_validated, telescope_model_name)
         _tel_class = get_telescope_class(telescope_model_name)
 
-        self._logger.debug("Tel_name_db: {}".format(_tel_name_db))
-        self._logger.debug("Tel_class: {}".format(_tel_class))
+        self._logger.debug(f"Tel_name_db: {_tel_name_db}")
+        self._logger.debug(f"Tel_class: {_tel_class}")
 
         if _tel_class == "MST":
             # MST-FlashCam or MST-NectarCam
-            _which_tel_labels = ["{}-MST-Structure-D".format(_site_validated), _tel_name_db]
+            _which_tel_labels = [f"{_site_validated}-MST-Structure-D", _tel_name_db]
         elif _tel_class == "SST":
             # SST = SST-Camera + SST-Structure
             _which_tel_labels = [
-                "{}-SST-Camera-D".format(_site_validated),
-                "{}-SST-Structure-D".format(_site_validated),
+                f"{_site_validated}-SST-Camera-D",
+                f"{_site_validated}-SST-Structure-D",
             ]
         else:
             _which_tel_labels = [_tel_name_db]
@@ -384,15 +384,15 @@ class DatabaseHandler:
         # Selecting version and applicable (if on)
         _pars = dict()
         for _tel in _which_tel_labels:
-            self._logger.debug("Getting {} parameters from MongoDB".format(_tel))
+            self._logger.debug(f"Getting {_tel} parameters from MongoDB")
 
             # If tel is a structure, only applicable pars will be collected, always.
             # The default ones will be covered by the camera pars.
             _select_only_applicable = only_applicable or (
                 _tel
                 in [
-                    "{}-MST-Structure-D".format(_site_validated),
-                    "{}-SST-Structure-D".format(_site_validated),
+                    f"{_site_validated}-MST-Structure-D",
+                    f"{_site_validated}-SST-Structure-D",
                 ]
             )
 
@@ -463,7 +463,7 @@ class DatabaseHandler:
             "Version": _model_version,
         }
 
-        self._logger.debug("Trying the following query: {}".format(query))
+        self._logger.debug(f"Trying the following query: {query}")
         if only_applicable:
             query["Applicable"] = True
         if collection.count_documents(query) < 1:
@@ -500,9 +500,9 @@ class DatabaseHandler:
 
         """
 
-        _file_name_db = "parValues-{}.yml".format(telescope_name_yaml)
+        _file_name_db = f"parValues-{telescope_name_yaml}.yml"
         _yaml_file = gen.find_file(_file_name_db, self.io_handler.model_path)
-        self._logger.debug("Reading DB file {}".format(_yaml_file))
+        self._logger.debug(f"Reading DB file {_yaml_file}")
         with open(_yaml_file, "r") as stream:
             _all_pars = yaml.safe_load(stream)
         return _all_pars
@@ -566,7 +566,7 @@ class DatabaseHandler:
         site_yaml = "lapalma" if site == "North" else "paranal"
 
         yaml_file = gen.find_file("parValues-Sites.yml", self.io_handler.model_path)
-        self._logger.info("Reading DB file {}".format(yaml_file))
+        self._logger.info(f"Reading DB file {yaml_file}")
         with open(yaml_file, "r") as stream:
             _all_pars_versions = yaml.safe_load(stream)
 
@@ -751,7 +751,7 @@ class DatabaseHandler:
             DatabaseHandler.DB_CTA_SIMULATION_MODEL,
         )
 
-        self._logger.debug("Getting derived values for {} from the DB".format(_tel_name_db))
+        self._logger.debug(f"Getting derived values for {_tel_name_db} from the DB")
 
         _pars = self.read_mongo_db(
             DatabaseHandler.DB_DERIVED_VALUES,
@@ -793,9 +793,7 @@ class DatabaseHandler:
         if file_system.exists({"filename": file_name}):
             return file_system.find_one({"filename": file_name})
 
-        raise FileNotFoundError(
-            "The file {} does not exist in the database {}".format(file_name, db_name)
-        )
+        raise FileNotFoundError(f"The file {file_name} does not exist in the database {db_name}")
 
     @staticmethod
     def _write_file_from_mongo_to_disk(db_name, path, file):
@@ -862,9 +860,8 @@ class DatabaseHandler:
             collection_to_copy_to = collection_name
 
         self._logger.info(
-            "Copying version {} of {} to the new telescope {} in the {} DB".format(
-                version_to_copy, tel_to_copy, new_tel_name, db_to_copy_to
-            )
+            f"Copying version {version_to_copy} of {tel_to_copy} "
+            f"to the new telescope {new_tel_name} in the {db_to_copy_to} DB"
         )
 
         collection = DatabaseHandler.db_client[db_name][collection_name]
@@ -883,7 +880,7 @@ class DatabaseHandler:
             post.pop("_id", None)
             db_entries.append(post)
 
-        self._logger.info("Creating new telescope {}".format(new_tel_name))
+        self._logger.info(f"Creating new telescope {new_tel_name}")
         collection = DatabaseHandler.db_client[db_to_copy_to][collection_to_copy_to]
         try:
             collection.insert_many(db_entries)
@@ -932,7 +929,7 @@ class DatabaseHandler:
             db_entries.append(post)
 
         self._logger.info(
-            "Copying documents matching the following query {}\nto {}".format(query, db_to_copy_to)
+            f"Copying documents matching the following query {query}\nto {db_to_copy_to}"
         )
         _collection = DatabaseHandler.db_client[db_to_copy_to][collection_to_copy_to]
         try:
@@ -972,12 +969,7 @@ class DatabaseHandler:
                 query["Version"], DatabaseHandler.DB_CTA_SIMULATION_MODEL
             )
 
-        self._logger.info(
-            "Deleting {} entries from {}".format(
-                _collection.count_documents(query),
-                db_name,
-            )
-        )
+        self._logger.info(f"Deleting {_collection.count_documents(query)} entries from {db_name}")
 
         _collection.delete_many(query)
 
@@ -1036,9 +1028,8 @@ class DatabaseHandler:
         old_value = par_entry["Value"]
 
         self._logger.info(
-            "For telescope {}, version {}\nreplacing {} value from {} to {}".format(
-                telescope, _model_version, parameter, old_value, new_value
-            )
+            f"For telescope {telescope}, version {_model_version}\n"
+            f"replacing {parameter} value from {old_value} to {new_value}"
         )
 
         files_to_add_to_db = set()
@@ -1050,8 +1041,8 @@ class DatabaseHandler:
                     f"corresponding to the {parameter} parameter, must be provided."
                 )
             file_path = Path(file_prefix).joinpath(new_value)
-            files_to_add_to_db.add("{}".format(file_path))
-            self._logger.info("Will also add the file {} to the DB".format(file_path))
+            files_to_add_to_db.add(f"{file_path}")
+            self._logger.info(f"Will also add the file {file_path} to the DB")
         else:
             file = False
 
@@ -1133,9 +1124,7 @@ class DatabaseHandler:
         par_entry = collection.find_one(query)
         if par_entry is None:
             self._logger.warning(
-                "The query {} did not return any results. I will not make any changes.".format(
-                    query
-                )
+                f"The query {query} did not return any results. I will not make any changes."
             )
             return
 
@@ -1227,15 +1216,15 @@ class DatabaseHandler:
                     f"corresponding to the {parameter} parameter, must be provided."
                 )
             file_path = Path(file_prefix).joinpath(new_value)
-            files_to_add_to_db.add("{}".format(file_path))
+            files_to_add_to_db.add(f"{file_path}")
         else:
             par_entry["File"] = False
 
-        self._logger.info("Will add the following entry to DB:\n{}".format(par_entry))
+        self._logger.info(f"Will add the following entry to DB:\n{par_entry}")
 
         collection.insert_one(par_entry)
         if len(files_to_add_to_db) > 0:
-            self._logger.info("Will also add the file {} to the DB".format(file_path))
+            self._logger.info(f"Will also add the file {file_path} to the DB")
             self.insert_file_to_db(files_to_add_to_db, db_name)
 
     def add_new_parameter(
@@ -1309,16 +1298,16 @@ class DatabaseHandler:
                     f"corresponding to the {parameter} parameter, must be provided."
                 )
             file_path = Path(file_prefix).joinpath(value)
-            files_to_add_to_db.add("{}".format(file_path))
+            files_to_add_to_db.add(f"{file_path}")
 
         kwargs.pop("Type", None)
         db_entry.update(kwargs)
 
-        self._logger.info("Will add the following entry to DB:\n{}".format(db_entry))
+        self._logger.info(f"Will add the following entry to DB:\n{db_entry}")
 
         collection.insert_one(db_entry)
         for file_to_insert_now in files_to_add_to_db:
-            self._logger.info("Will also add the file {} to the DB".format(file_to_insert_now))
+            self._logger.info(f"Will also add the file {file_to_insert_now} to the DB")
             self.insert_file_to_db(file_to_insert_now, db_name)
 
     def _convert_version_to_tagged(self, model_version, db_name):
