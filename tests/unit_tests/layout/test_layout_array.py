@@ -24,6 +24,11 @@ def layout_center_data_dict():
     }
 
 
+@pytest.fixture
+def layout_array_instance(io_handler):
+    return LayoutArray(name="test_layout")
+
+
 def test_from_layout_array_name(io_handler):
 
     layout = LayoutArray.from_layout_array_name("south-TestLayout")

@@ -6,23 +6,18 @@ from matplotlib import pyplot as plt
 from matplotlib.collections import PatchCollection
 
 from simtools import io_handler
+from simtools.layout.layout_array import LayoutArray
 from simtools.visualization import legend_handlers as leg_h
 
 
 class LayoutArrayBuilder:
     """
     Manage the array layout. It provides methods to create and plot a LayoutArray.
-
-    Parameters
-    ----------
-    layout_array: simtools.layout.LayoutArray
-        Instance of simtools.layout.LayoutArray.
     """
 
-    def __init__(self, layout_array):
+    def __init__(self):
         """Initialize LayoutArrayBuilder."""
         self.io_handler = io_handler.IOHandler()
-        self.layout_array = layout_array
 
     def plot_array(self, telescopes, rotate_angle=0):
         """
@@ -117,7 +112,8 @@ class LayoutArrayBuilder:
 
         return fig
 
-    def telescope_layout_file_to_dict(self, file_name):
+    @staticmethod
+    def telescope_layout_file_to_dict(file_name):
         """
         Read the telescope layout from ECSV layout file and returns a dictionary with the x, y, z \
         positions and the radius.
@@ -145,7 +141,8 @@ class LayoutArrayBuilder:
 
         return telescopes
 
-    def _get_telescope_patch(self, name, x, y, radius):
+    @staticmethod
+    def _get_telescope_patch(name, x, y, radius):
         """
         Collect the patch of one telescope to be plotted by self.plot_array.
 
@@ -166,7 +163,7 @@ class LayoutArrayBuilder:
             Instance of mpatches.Circle.
         """
 
-        valid_name = self.layout_array.get_telescope_type(name)
+        valid_name = LayoutArray.get_telescope_type(name)
         fill_flag = False
         if valid_name == "MST":
             fill_flag = True
@@ -176,7 +173,8 @@ class LayoutArrayBuilder:
         )
         return patch
 
-    def _rotate(self, rotation_angle, x, y):
+    @staticmethod
+    def _rotate(rotation_angle, x, y):
         """
         Rotate x and y by the rotation angle given in rotation_angle.
         The function returns the rotated x and y values.
@@ -198,9 +196,9 @@ class LayoutArrayBuilder:
         """
         if not isinstance(x, type(y)):
             raise RuntimeError("x and y are not the same type! " "Cannot perform transformation.")
-        if not isinstance(x, list):
-            x_list, y_list = self._rotate(rotation_angle, [x], [y])
-            return x_list[0], y_list[0]
+        if not isinstance(x, (list, np.ndarray)):
+            x = [x]
+            y = [y]
 
         if len(x) != len(y):
             raise RuntimeError(
