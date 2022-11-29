@@ -41,9 +41,7 @@ class JobManager:
         try:
             self.test_submission_system()
         except MissingWorkloadManager:
-            self._logger.error(
-                "Requested workflow manager not found: {}".format(self.submit_command)
-            )
+            self._logger.error(f"Requested workflow manager not found: {self.submit_command}")
             raise
 
     def test_submission_system(self):
@@ -86,10 +84,10 @@ class JobManager:
         self.run_script = str(run_script)
         self.run_out_file = str(run_out_file).replace(".log", "")
 
-        self._logger.info("Submitting script {}".format(self.run_script))
-        self._logger.info("Job output stream {}".format(self.run_out_file + ".out"))
-        self._logger.info("Job error stream {}".format(self.run_out_file + ".err"))
-        self._logger.info("Job log stream {}".format(self.run_out_file + ".job"))
+        self._logger.info(f"Submitting script {self.run_script}")
+        self._logger.info(f"Job output stream {self.run_out_file + '.out'}")
+        self._logger.info(f"Job error stream {self.run_out_file + '.err'}")
+        self._logger.info(f"Job log stream {self.run_out_file + '.job'}")
 
         if self.submit_command.find("qsub") >= 0:
             self._submit_gridengine()
@@ -123,16 +121,16 @@ class JobManager:
         """
 
         _condor_file = self.run_script + ".condor"
-        self._logger.info("Submitting script to HTCondor ({})".format(_condor_file))
+        self._logger.info(f"Submitting script to HTCondor ({_condor_file})")
         try:
             with open(_condor_file, "w") as file:
-                file.write("Executable = {}\n".format(self.run_script))
-                file.write("Output = {}\n".format(self.run_out_file + ".out"))
-                file.write("Error = {}\n".format(self.run_out_file + ".err"))
-                file.write("Log = {}\n".format(self.run_out_file + ".job"))
+                file.write(f"Executable = {self.run_script}\n")
+                file.write(f"Output = {self.run_out_file + '.out'}\n")
+                file.write(f"Error = {self.run_out_file + '.err'}\n")
+                file.write(f"Log = {self.run_out_file + '.job'}\n")
                 file.write("queue 1\n")
         except FileNotFoundError:
-            self._logger.error("Failed creating condor submission file {}".format(_condor_file))
+            self._logger.error(f"Failed creating condor submission file {_condor_file}")
 
         shell_command = self.submit_command + " " + _condor_file
         if not self.test:

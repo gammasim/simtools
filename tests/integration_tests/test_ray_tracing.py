@@ -127,7 +127,7 @@ def test_plot_image(db_config, simtel_path_no_mock, io_handler):
         ax.set_ylabel("Y [cm]")
         image.plot_image(psf_color="b")
         plot_file = io_handler.get_output_file(
-            file_name="test_plot_image_{}.pdf".format(ii), dir_type="plots", test=True
+            file_name=f"test_plot_image_{ii}.pdf", dir_type="plots", test=True
         )
         plt.savefig(plot_file)
 

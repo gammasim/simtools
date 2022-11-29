@@ -119,7 +119,7 @@ class ArrayModel:
                 if pp not in all_keys:
                     key = pp if parent is None else parent + "." + pp
                     msg = (
-                        "Key {} was not found in array_config_data ".format(key)
+                        f"Key {key} was not found in array_config_data "
                         + "- impossible to build array model"
                     )
                     self._logger.error(msg)
@@ -132,7 +132,7 @@ class ArrayModel:
         self._config_file_directory = self.io_handler.get_output_directory(self.label, "model")
         if not self._config_file_directory.exists():
             self._config_file_directory.mkdir(parents=True, exist_ok=True)
-            self._logger.info("Creating directory {}".format(self._config_file_directory))
+            self._logger.info(f"Creating directory {self._config_file_directory}")
 
     def _build_array_model(self, mongo_db_config):
         """
@@ -166,7 +166,7 @@ class ArrayModel:
             if len(pars_to_change) > 0:
                 _all_pars_to_change[tel.name] = pars_to_change
 
-            self._logger.debug("tel_model_name: {}".format(tel_model_name))
+            self._logger.debug(f"tel_model_name: {tel_model_name}")
 
             # Building the basic models - no pars to change yet
             if tel_model_name not in _all_telescope_model_names:
@@ -185,9 +185,7 @@ class ArrayModel:
                 for tel_now in self._telescope_model:
                     if tel_now.name != tel_model_name:
                         continue
-                    self._logger.debug(
-                        "Copying tel model {} already loaded from DB".format(tel_now.name)
-                    )
+                    self._logger.debug(f"Copying tel model {tel_now.name} already loaded from DB")
                     tel_model = copy(tel_now)
                     break
 
@@ -275,7 +273,7 @@ class ArrayModel:
         if not_contains_default_key:
             msg = (
                 "default option was not given in array_config_data "
-                + "for the telescope {}".format(tel_name)
+                + f"for the telescope {tel_name}"
             )
             self._logger.error(msg)
             raise InvalidArrayConfigData(msg)
@@ -287,7 +285,7 @@ class ArrayModel:
         """Print out the list of telescopes for quick inspection."""
 
         for tel_data, tel_model in zip(self.layout, self._telescope_model):
-            print("Name: {}\t Model: {}".format(tel_data.name, tel_model.name))
+            print(f"Name: {tel_data.name}\t Model: {tel_model.name}")
 
     def export_simtel_telescope_config_files(self):
         """
@@ -300,11 +298,11 @@ class ArrayModel:
                 "_" + tel_model.extra_label if tel_model.extra_label != "" else ""
             )
             if name not in exported_models:
-                self._logger.debug("Exporting config file for tel {}".format(name))
+                self._logger.debug(f"Exporting config file for tel {name}")
                 tel_model.export_config_file()
                 exported_models.append(name)
             else:
-                self._logger.debug("Config file for tel {} already exists - skipping".format(name))
+                self._logger.debug(f"Config file for tel {name} already exists - skipping")
 
         self._telescope_model_files_exported = True
 
@@ -320,7 +318,7 @@ class ArrayModel:
         self._config_file_path = self._config_file_directory.joinpath(config_file_name)
 
         # Writing parameters to the file
-        self._logger.info("Writing array config file into {}".format(self._config_file_path))
+        self._logger.info(f"Writing array config file into {self._config_file_path}")
         simtel_writer = SimtelConfigWriter(
             site=self.site,
             layout_name=self.layout_name,

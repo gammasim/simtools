@@ -105,7 +105,7 @@ def main():
 
     for site in ["South", "North"]:
         for array_name in ["1SST", "4SST", "1MST", "4MST", "1LST", "4LST"]:
-            logger.info("Processing array {}".format(array_name))
+            logger.info(f"Processing array {array_name}")
             layout = LayoutArray(
                 label=label,
                 name=site + "-" + array_name,

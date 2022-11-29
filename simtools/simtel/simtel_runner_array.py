@@ -221,7 +221,7 @@ class SimtelRunnerArray(SimtelRunner):
         info_for_file_name = self.get_info_for_file_name(run_number)
         sub_log_file = self.get_file_name("sub_log", **info_for_file_name, mode="out")
 
-        self._logger.debug("Reading resources from {}".format(sub_log_file))
+        self._logger.debug(f"Reading resources from {sub_log_file}")
 
         _resources = {}
 
@@ -267,8 +267,8 @@ class SimtelRunnerArray(SimtelRunner):
 
         # Array
         command = str(self._simtel_source_path.joinpath("sim_telarray/bin/sim_telarray"))
-        command += " -c {}".format(self.array_model.get_config_file())
-        command += " -I{}".format(self.array_model.get_config_directory())
+        command += f" -c {self.array_model.get_config_file()}"
+        command += f" -I{self.array_model.get_config_directory()}"
         command += super()._config_option("telescope_theta", self.config.zenith_angle)
         command += super()._config_option("telescope_phi", self.config.azimuth_angle)
         command += super()._config_option("power_law", "2.5")

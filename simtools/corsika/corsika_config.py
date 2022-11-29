@@ -103,8 +103,9 @@ class CorsikaConfig:
         self._is_file_updated = False
 
     def __repr__(self):
-        text = "<class {}> (site={}, layout={}, label={})".format(
-            self.__class__.__name__, self.site, self.layout_name, self.label
+        text = (
+            f"<class {self.__class__.__name__}> "
+            f"(site={self.site}, layout={self.layout_name}, label={self.label})"
         )
         return text
 
@@ -122,9 +123,7 @@ class CorsikaConfig:
             self._corsika_parameters_file = self.io_handler.get_input_data_file(
                 "parameters", "corsika_parameters.yml"
             )
-        self._logger.debug(
-            "Loading CORSIKA parameters from file {}".format(self._corsika_parameters_file)
-        )
+        self._logger.debug(f"Loading CORSIKA parameters from file {self._corsika_parameters_file}")
         with open(self._corsika_parameters_file, "r") as f:
             self._corsika_parameters = yaml.load(f)
 
@@ -181,7 +180,7 @@ class CorsikaConfig:
 
             # Raising error for an unidentified input.
             if not is_identified:
-                msg = "Argument {} cannot be identified.".format(key_args)
+                msg = f"Argument {key_args} cannot be identified."
                 self._logger.error(msg)
                 raise InvalidCorsikaInput(msg)
 
@@ -196,7 +195,7 @@ class CorsikaConfig:
                 )
                 self._user_parameters[par_name] = validated_value
             else:
-                msg = "Required parameters {} was not given (there may be more).".format(par_name)
+                msg = f"Required parameters {par_name} was not given (there may be more)."
                 self._logger.error(msg)
                 raise MissingRequiredInputInCorsikaConfigData(msg)
 
@@ -229,7 +228,7 @@ class CorsikaConfig:
             value_args = self._convert_primary_input_and_store_primary_name(value_args)
 
         if len(value_args) != par_info["len"]:
-            msg = "CORSIKA input entry with wrong len: {}".format(par_name)
+            msg = f"CORSIKA input entry with wrong len: {par_name}"
             self._logger.error(msg)
             raise InvalidCorsikaInput(msg)
 
@@ -250,11 +249,11 @@ class CorsikaConfig:
                 arg = u.quantity.Quantity(arg)
 
             if not isinstance(arg, u.quantity.Quantity):
-                msg = "CORSIKA input given without unit: {}".format(par_name)
+                msg = f"CORSIKA input given without unit: {par_name}"
                 self._logger.error(msg)
                 raise InvalidCorsikaInput(msg)
             if not arg.unit.is_equivalent(unit):
-                msg = "CORSIKA input given with wrong unit: {}".format(par_name)
+                msg = f"CORSIKA input given with wrong unit: {par_name}"
                 self._logger.error(msg)
                 raise InvalidCorsikaInput(msg)
 
@@ -286,7 +285,7 @@ class CorsikaConfig:
             if value[0].upper() == prim_name or value[0].upper() in prim_info["names"]:
                 self.primary = prim_name.lower()
                 return [prim_info["number"]]
-        msg = "Primary not valid: {}".format(value)
+        msg = f"Primary not valid: {value}"
         self._logger.error(msg)
         raise InvalidCorsikaInput(msg)
 
@@ -312,7 +311,7 @@ class CorsikaConfig:
         try:
             par_value = self._user_parameters[par_name.upper()]
         except KeyError:
-            self._logger.warning("Parameter {} is not a user parameter".format(par_name))
+            self._logger.warning(f"Parameter {par_name} is not a user parameter")
             raise
 
         return par_value if len(par_value) > 1 else par_value[0]
@@ -320,12 +319,12 @@ class CorsikaConfig:
     def print_user_parameters(self):
         """Print user parameters for inspection."""
         for par, value in self._user_parameters.items():
-            print("{} = {}".format(par, value))
+            print(f"{par} = {value}")
 
     def export_input_file(self):
         """Create and export CORSIKA input file."""
         self._set_output_file_and_directory()
-        self._logger.debug("Exporting CORSIKA input file to {}".format(self._config_file_path))
+        self._logger.debug(f"Exporting CORSIKA input file to {self._config_file_path}")
 
         def _get_text_single_line(pars):
             text = ""
@@ -361,9 +360,9 @@ class CorsikaConfig:
 
             # Defining the IACT variables for the output file name
             file.write("\n")
-            file.write("IACT setenv PRMNAME {}\n".format(self.primary))
-            file.write("IACT setenv ZA {}\n".format(int(self._user_parameters["THETAP"][0])))
-            file.write("IACT setenv AZM {}\n".format(int(self._user_parameters["AZM"][0])))
+            file.write(f"IACT setenv PRMNAME {self.primary}\n")
+            file.write(f"IACT setenv ZA {int(self._user_parameters['THETAP'][0])}\n")
+            file.write(f"IACT setenv AZM {int(self._user_parameters['AZM'][0])}\n")
 
             file.write("\n* [ SEEDS ]\n")
             self._write_seeds(file)
@@ -391,7 +390,7 @@ class CorsikaConfig:
             file.write(text_debugging)
 
             file.write("\n* [ OUTUPUT FILE ]\n")
-            file.write("TELFIL {}\n".format(self._output_generic_file_name))
+            file.write(f"TELFIL {self._output_generic_file_name}\n")
 
             file.write("\n* [ IACT TUNING PARAMETERS ]\n")
             text_iact = _get_text_multiple_lines(self._corsika_parameters["IACT_TUNING_PARAMETERS"])
@@ -463,7 +462,7 @@ class CorsikaConfig:
         config_file_name = self.get_file_name(file_type="config")
         file_directory = self.io_handler.get_output_directory(label=self.label, dir_type="corsika")
         file_directory.mkdir(parents=True, exist_ok=True)
-        self._logger.info("Creating directory {}, if needed.".format(file_directory))
+        self._logger.info(f"Creating directory {file_directory}, if needed.")
         self._config_file_path = file_directory.joinpath(config_file_name)
 
         self._output_generic_file_name = self.get_file_name(file_type="output_generic")
@@ -482,7 +481,7 @@ class CorsikaConfig:
         corsika_seeds = [int(rng.uniform(0, 1e7)) for i in range(4)]
 
         for s in corsika_seeds:
-            file.write("SEED {} 0 0\n".format(s))
+            file.write(f"SEED {s} 0 0\n")
 
     def get_input_file(self):
         """
