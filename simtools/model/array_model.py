@@ -14,8 +14,6 @@ __all__ = ["ArrayModel", "InvalidArrayConfigData"]
 class InvalidArrayConfigData(Exception):
     """Exception for invalid array configuration data."""
 
-    pass
-
 
 class ArrayModel:
     """
@@ -45,6 +43,7 @@ class ArrayModel:
         self.layout = None
         self.layout_name = None
         self.model_version = None
+        self._config_file_path = None
         self.io_handler = io_handler.IOHandler()
         array_config_data = collect_data_from_yaml_or_dict(array_config_file, array_config_data)
         self._load_array_data(array_config_data)
@@ -134,7 +133,6 @@ class ArrayModel:
         if not self._config_file_directory.exists():
             self._config_file_directory.mkdir(parents=True, exist_ok=True)
             self._logger.info("Creating directory {}".format(self._config_file_directory))
-        return
 
     def _build_array_model(self, mongo_db_config):
         """
@@ -184,13 +182,13 @@ class ArrayModel:
             else:
                 # Telescope name already exists.
                 # Finding the TelescopeModel and copying it.
-                for tel in self._telescope_model:
-                    if tel.name != tel_model_name:
+                for tel_now in self._telescope_model:
+                    if tel_now.name != tel_model_name:
                         continue
                     self._logger.debug(
-                        "Copying tel model {} already loaded from DB".format(tel.name)
+                        "Copying tel model {} already loaded from DB".format(tel_now.name)
                     )
-                    tel_model = copy(tel)
+                    tel_model = copy(tel_now)
                     break
 
             self._telescope_model.append(tel_model)
@@ -211,7 +209,7 @@ class ArrayModel:
                     "Changing {} pars of a {}: {}, ...".format(
                         len(_all_pars_to_change[tel_data.name]),
                         tel_data.name,
-                        *_all_pars_to_change[tel_data.name]
+                        *_all_pars_to_change[tel_data.name],
                     )
                 )
                 tel_model.change_multiple_parameters(**_all_pars_to_change[tel_data.name])
@@ -250,40 +248,40 @@ class ArrayModel:
                 pars_to_change = {k: v for (k, v) in data.items() if k != "name"}
                 self._logger.debug(
                     "Grabbing tel data as dict - "
-                    + "name: {}, ".format(tel_name)
-                    + "{} pars to change".format(len(pars_to_change))
+                    f"name: {tel_name}, "
+                    f"{len(pars_to_change)} pars to change"
                 )
                 return tel_name, pars_to_change
-            elif isinstance(data, str):
+            if isinstance(data, str):
                 # Case 1: data is string (only name)
                 tel_name = tel_size + "-" + data
                 return tel_name, dict()
-            else:
-                # Case 2: data has a wrong type
-                msg = "ArrayConfig has wrong input for a telescope"
-                self._logger.error(msg)
-                raise InvalidArrayConfigData(msg)
+
+            # Case 2: data has a wrong type
+            msg = "ArrayConfig has wrong input for a telescope"
+            self._logger.error(msg)
+            raise InvalidArrayConfigData(msg)
 
         if tel_name in self._array_config_data.keys():
             # Specific info for this telescope
             return _proccess_single_telescope(self._array_config_data[tel_name])
-        else:
-            # Checking if default option exists in array_config_data
-            not_contains_default_key = (
-                "default" not in self._array_config_data.keys()
-                or tel_size not in self._array_config_data["default"].keys()
+
+        # Checking if default option exists in array_config_data
+        not_contains_default_key = (
+            "default" not in self._array_config_data.keys()
+            or tel_size not in self._array_config_data["default"].keys()
+        )
+
+        if not_contains_default_key:
+            msg = (
+                "default option was not given in array_config_data "
+                + "for the telescope {}".format(tel_name)
             )
+            self._logger.error(msg)
+            raise InvalidArrayConfigData(msg)
 
-            if not_contains_default_key:
-                msg = (
-                    "default option was not given in array_config_data "
-                    + "for the telescope {}".format(tel_name)
-                )
-                self._logger.error(msg)
-                raise InvalidArrayConfigData(msg)
-
-            # Grabbing the default option
-            return _proccess_single_telescope(self._array_config_data["default"][tel_size])
+        # Grabbing the default option
+        return _proccess_single_telescope(self._array_config_data["default"][tel_size])
 
     def print_telescope_list(self):
         """Print out the list of telescopes for quick inspection."""
