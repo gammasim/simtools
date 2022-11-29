@@ -918,11 +918,11 @@ class LayoutArray:
         ----------
         name: str
             Name of the telescope (type).
-        x: float
+        x: astropy.units.m
             X position of the telescope in meters.
-        y: float
+        y: astropy.units.m
             Y position of the telescope in meters.
-        radius: float
+        radius: astropy.units.m
             Radius of the telescope sphere in meters.
 
         Returns
@@ -931,7 +931,7 @@ class LayoutArray:
             Instance of mpatches.Circle.
         """
 
-        valid_name = names.get_telescope_type(name)
+        valid_name = self.get_telescope_type(name)
         colors = {"LST": "darkorange", "MST": "dodgerblue", "SST": "black"}
         patch = mpatches.Circle(
             (x.value, y.value), radius=radius.value, fill=False, color=colors[valid_name]
