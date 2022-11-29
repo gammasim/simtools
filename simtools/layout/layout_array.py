@@ -16,8 +16,6 @@ __all__ = ["InvalidTelescopeListFile", "LayoutArray"]
 class InvalidTelescopeListFile(Exception):
     """Exception for invalid telescope list file."""
 
-    pass
-
 
 class LayoutArray:
     """
