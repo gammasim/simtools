@@ -3,12 +3,9 @@
 import logging
 
 import astropy.units as u
-import matplotlib.patches as mpatches
-import matplotlib.pyplot as plt
 import numpy as np
 import pytest
 
-import simtools.util.general as gen
 from simtools.layout.layout_array import LayoutArray
 
 logger = logging.getLogger()
@@ -25,31 +22,6 @@ def layout_center_data_dict():
         "EPSG": 32628,
         "center_alt": 2177 * u.m,
     }
-
-
-@pytest.fixture
-def corsika_telescope_data_dict():
-    return {
-        "corsika_sphere_radius": {"LST": 12.5 * u.m, "MST": 9.15 * u.m, "SST": 3.0 * u.m},
-        "corsika_sphere_center": {"LST": 16 * u.m, "MST": 9 * u.m, "SST": 3.25 * u.m},
-        "corsika_obs_level": 2158 * u.m,
-    }
-
-
-@pytest.fixture
-def telescope_test_file(db, args_dict, io_handler):
-    test_file_name = "telescope_positions-North-TestLayout.ecsv"
-    db.export_file_db(
-        db_name="test-data",
-        dest=io_handler.get_output_directory(dir_type="model", test=True),
-        file_name=test_file_name,
-    )
-
-    cfg_file = gen.find_file(
-        test_file_name,
-        io_handler.get_output_directory(dir_type="model", test=True),
-    )
-    return cfg_file
 
 
 @pytest.fixture
@@ -241,43 +213,3 @@ def test_altitude_from_corsika_z(layout_center_data_dict, corsika_telescope_data
     )
     with pytest.raises(TypeError):
         layout._altitude_from_corsika_z(5.0, None, "LST-01")
-
-
-def test_telescope_layout_file_to_dict(telescope_test_file):
-
-    layout = LayoutArray(name="test_layout", telescope_list_file=telescope_test_file)
-    telescopes_dict = layout.telescope_layout_file_to_dict(telescope_test_file)
-
-    values_from_file = [20.190000534057617, -352.4599914550781, 62.29999923706055, 9.6]
-    keys = ["pos_x", "pos_y", "pos_z", "radius"]
-    MST10_index = telescopes_dict["telescope_name"] == "MST-10"
-    for key_step in range(len(keys)):
-        assert telescopes_dict[MST10_index][keys[key_step]].value[0] == values_from_file[key_step]
-
-
-def test_get_telescope_patch(corsika_telescope_data_dict, layout_array_instance):
-    for tel_type in np.array(list(corsika_telescope_data_dict["corsika_sphere_radius"].keys())):
-        radius = corsika_telescope_data_dict["corsika_sphere_radius"][tel_type]
-        patch = layout_array_instance._get_telescope_patch(
-            tel_type, 0 * u.m, 0 * u.m, radius.value * u.m
-        )
-        assert mpatches.Circle == type(patch)
-
-
-def test_rotate_telescope_position(layout_array_instance):
-    x = np.array([-1, -1, 1, 1])
-    y = np.array([-1, 1, -1, 1])
-    angle_deg = 30
-    x_rot_manual = np.array([-1.37, -0.37, 0.37, 1.37])
-    y_rot_manual = np.array([-0.37, 1.37, -1.37, 0.37])
-    x_rot, y_rot = layout_array_instance._rotate(angle_deg, x, y)
-    x_rot, y_rot = np.around(x_rot, 2), np.around(y_rot, 2)
-    for element in range(len(x)):
-        assert x_rot_manual[element] == x_rot[element]
-        assert y_rot_manual[element] == y_rot[element]
-
-
-def test_plot_array(telescope_test_file, layout_array_instance):
-    telescopes_dict = layout_array_instance.telescope_layout_file_to_dict(telescope_test_file)
-    fig_out = layout_array_instance.plot_array(telescopes_dict, rotate_angle=0)
-    assert isinstance(fig_out, type(plt.figure()))

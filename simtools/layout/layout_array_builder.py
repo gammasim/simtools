@@ -5,23 +5,19 @@ from astropy.table import QTable
 from matplotlib import pyplot as plt
 from matplotlib.collections import PatchCollection
 
-# from simtools.layout.layout_array import LayoutArray
+from simtools import io_handler
+from simtools.layout.layout_array import LayoutArray
 from simtools.visualization import legend_handlers as leg_h
 
 
 class LayoutArrayBuilder:
     """
     Manage the array layout. It provides methods to create and plot a LayoutArray.
-
-    Parameters
-    ----------
-
-
     """
 
     def __init__(self):
         """Initialize LayoutArrayBuilder."""
-        # layout_array = LayoutArray()
+        self.io_handler = io_handler.IOHandler()
 
     def plot_array(self, telescopes, rotate_angle=0):
         """
@@ -165,7 +161,7 @@ class LayoutArrayBuilder:
             Instance of mpatches.Circle.
         """
 
-        valid_name = self.get_telescope_type(name)
+        valid_name = LayoutArray.get_telescope_type(name)
         fill_flag = False
         if valid_name == "MST":
             fill_flag = True
