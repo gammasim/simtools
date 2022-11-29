@@ -8,8 +8,6 @@ __all__ = ["InvalidMirrorListFile", "Mirrors"]
 class InvalidMirrorListFile(Exception):
     """Exception for invalid mirror list file."""
 
-    pass
-
 
 class Mirrors:
     """
