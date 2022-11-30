@@ -134,7 +134,7 @@ def _add_unit(title, array):
     if isinstance(array, u.Quantity):
         unit = str(array[0].unit)
         if len(unit) > 0:
-            unit = " [{}]".format(unit)
+            unit = f" [{unit}]"
         if re.search(r"\d", unit):
             unit = re.sub(r"(\d)", r"^\1", unit)
             unit = unit.replace("[", r"$[").replace("]", r"]$")
@@ -145,7 +145,7 @@ def _add_unit(title, array):
             )
             unit = ""
 
-    return "{}{}".format(title, unit)
+    return f"{title}{unit}"
 
 
 def set_style(palette="default", big_plot=False):
@@ -179,7 +179,7 @@ def set_style(palette="default", big_plot=False):
     """
 
     if palette not in COLORS:
-        raise KeyError("palette must be one of {}".format(", ".join(COLORS)))
+        raise KeyError(f"palette must be one of {', '.join(COLORS)}")
 
     fontsize = {"default": 17, "big_plot": 30}
     markersize = {"default": 8, "big_plot": 18}
@@ -232,7 +232,7 @@ def get_colors(palette="default"):
     """
 
     if palette not in COLORS:
-        raise KeyError("palette must be one of {}".format(", ".join(COLORS)))
+        raise KeyError(f"palette must be one of {', '.join(COLORS)}")
 
     return COLORS[palette]
 
@@ -407,11 +407,11 @@ def plot_1D(data, **kwargs):
                 plt.plot(data_now[x_title], y_values, **kwargs)
 
         plt.xlabel(x_title_unit)
-        y_title_ratio = "Ratio to {}".format(data_ref_name)
+        y_title_ratio = f"Ratio to {data_ref_name}"
         if len(y_title_ratio) > 20:
             y_title_ratio = "Ratio"
         if plot_difference:
-            y_title_ratio = "Difference to {}".format(data_ref_name)
+            y_title_ratio = f"Difference to {data_ref_name}"
         plt.ylabel(y_title_ratio)
 
         ylim = plt.gca().get_ylim()

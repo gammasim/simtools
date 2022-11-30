@@ -57,9 +57,9 @@ def compute_telescope_transmission(pars, off_axis):
     _deg_to_rad = math.pi / 180.0
     if pars[1] == 0:
         return pars[0]
-    else:
-        t = math.sin(off_axis * _deg_to_rad) / (pars[3] * _deg_to_rad)
-        return pars[0] / (1.0 + pars[2] * t ** pars[4])
+
+    t = math.sin(off_axis * _deg_to_rad) / (pars[3] * _deg_to_rad)
+    return pars[0] / (1.0 + pars[2] * t ** pars[4])
 
 
 def get_camera_name(telescope_model_name):
@@ -104,7 +104,7 @@ def get_camera_name(telescope_model_name):
         _logger.error("Invalid telescope name - please validate it first")
 
     camera_name = names.validate_camera_name(camera_name)
-    _logger.debug("Camera name - {}".format(camera_name))
+    _logger.debug(f"Camera name - {camera_name}")
     return camera_name
 
 
@@ -144,10 +144,10 @@ def is_two_mirror_telescope(telescope_model_name):
     tel_class, tel_type = names.split_telescope_model_name(telescope_model_name)
     if tel_class == "SST":
         # Only 1M is False
-        return False if "1M" in tel_type else True
-    elif tel_class == "SCT":
+        return "1M" not in tel_type
+    if tel_class == "SCT":
         # SCT always two mirrors
         return True
-    else:
-        # All MSTs and LSTs
-        return False
+
+    # All MSTs and LSTs
+    return False

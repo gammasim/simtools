@@ -1,8 +1,8 @@
 import argparse
 from pathlib import Path
 
-import simtools.util.names as names
 import simtools.version
+from simtools.util import names
 
 __all__ = [
     "CommandLineParser",
@@ -240,7 +240,7 @@ class CommandLineParser(argparse.ArgumentParser):
 
         fsite = str(value)
         if not names.validate_site_name(fsite):
-            raise argparse.ArgumentTypeError("{} is an invalid site".format(fsite))
+            raise argparse.ArgumentTypeError(f"{fsite} is an invalid site")
         return fsite
 
     @staticmethod
@@ -262,7 +262,7 @@ class CommandLineParser(argparse.ArgumentParser):
 
         ftelescope = str(value)
         if not names.validate_telescope_model_name(ftelescope):
-            raise argparse.ArgumentTypeError("{} is an invalid telescope name".format(ftelescope))
+            raise argparse.ArgumentTypeError(f"{ftelescope} is an invalid telescope name")
         return ftelescope
 
     @staticmethod
@@ -285,6 +285,6 @@ class CommandLineParser(argparse.ArgumentParser):
         """
         fvalue = float(value)
         if fvalue < 0.0 or fvalue > 1.0:
-            raise argparse.ArgumentTypeError("{} outside of allowed [0,1] interval".format(value))
+            raise argparse.ArgumentTypeError(f"{value} outside of allowed [0,1] interval")
 
         return fvalue

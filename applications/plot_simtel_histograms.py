@@ -99,7 +99,7 @@ def main():
 
         title = simtel_histograms[0].get_histogram_title(i_hist)
 
-        logger.debug("Processing: {}".format(title))
+        logger.debug(f"Processing: {title}")
 
         fig, axs = plt.subplots(1, n_lists, figsize=(6 * n_lists, 6))
 

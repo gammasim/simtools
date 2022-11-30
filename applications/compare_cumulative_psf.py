@@ -165,7 +165,7 @@ def main():
     # Plotting cumulative PSF
     im = ray.images()[0]
 
-    print("d80 in cm = {}".format(im.get_psf()))
+    print(f"d80 in cm = {im.get_psf()}")
 
     # Plotting cumulative PSF
     # Measured cumulative PSF
