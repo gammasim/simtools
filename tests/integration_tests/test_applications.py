@@ -296,7 +296,7 @@ APP_LIST = {
 @pytest.mark.parametrize("application", APP_LIST.keys())
 def test_applications(application, io_handler, monkeypatch, db):
 
-    logger.info("Testing {}".format(application))
+    logger.info(f"Testing {application}")
 
     # The add_file_to_db.py application requires a user confirmation.
     # With this line we mock the user confirmation to be y for the test
@@ -324,9 +324,9 @@ def test_applications(application, io_handler, monkeypatch, db):
 
     for args in APP_LIST[application]:
         app_name = application.partition("::")[0]
-        logger.info("Running with args: {}".format(args))
+        logger.info(f"Running with args: {args}")
         cmd = make_command(app_name, args)
-        logger.info("Running command: {}".format(cmd))
+        logger.info(f"Running command: {cmd}")
         out = os.system(cmd)
         is_output_valid = out == 0
         assert is_output_valid

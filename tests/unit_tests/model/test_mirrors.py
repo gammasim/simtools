@@ -22,7 +22,7 @@ def test_read_list(db, io_handler):
     mirror_list_file = gen.find_file(
         test_file_name, io_handler.get_output_directory(dir_type="model", test=True)
     )
-    logger.info("Using mirror list {}".format(mirror_list_file))
+    logger.info(f"Using mirror list {mirror_list_file}")
     mirrors = Mirrors(mirror_list_file)
     assert 198 == mirrors.number_of_mirrors
     assert 151.0 == pytest.approx(mirrors.diameter)

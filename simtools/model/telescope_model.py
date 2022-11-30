@@ -21,8 +21,6 @@ __all__ = ["InvalidParameter", "TelescopeModel"]
 class InvalidParameter(Exception):
     """Exception for invalid parameter."""
 
-    pass
-
 
 class TelescopeModel:
     """
@@ -63,6 +61,13 @@ class TelescopeModel:
         self.model_version = names.validate_model_version_name(model_version)
         self.label = label
         self._extra_label = None
+        self._added_parameter_files = None
+        self._single_mirror_list_file_paths = None
+        self.simtel_config_writer = None
+        self._mirrors = None
+        self._reference_data = None
+        self._derived = None
+        self._camera = None
 
         self.io_handler = io_handler.IOHandler()
         self.mongo_db_config = mongo_db_config
@@ -80,7 +85,7 @@ class TelescopeModel:
         """
         Load the mirror information if the class instance hasn't done it yet.
         """
-        if not hasattr(self, "_mirrors"):
+        if self._mirrors is None:
             self._load_mirrors()
         return self._mirrors
 
@@ -89,7 +94,7 @@ class TelescopeModel:
         """
         Load the camera information if the class instance hasn't done it yet.
         """
-        if not hasattr(self, "_camera"):
+        if self._camera is None:
             self._load_camera()
         return self._camera
 
@@ -98,7 +103,7 @@ class TelescopeModel:
         """
         Load the reference data information if the class instance hasn't done it yet.
         """
-        if not hasattr(self, "_reference_data"):
+        if self._reference_data is None:
             self._load_reference_data()
         return self._reference_data
 
@@ -107,7 +112,7 @@ class TelescopeModel:
         """
         Load the derived values and export them if the class instance hasn't done it yet.
         """
-        if not hasattr(self, "_derived"):
+        if self._derived is None:
             self._load_derived_values()
             self.export_derived_files()
         return self._derived
@@ -186,9 +191,9 @@ class TelescopeModel:
                 words = line.split()
                 if len(words) == 0:
                     continue
-                elif "%" in words[0] or "echo" in words:
+                if "%" in words[0] or "echo" in words:
                     continue
-                elif "#" not in line and len(words) > 0:
+                if "#" not in line and len(words) > 0:
                     par, value = _process_line(words)
                     parameters[par] = value
 
@@ -286,10 +291,10 @@ class TelescopeModel:
             pass  # search in the derived parameters
         try:
             return self.derived[par_name]
-        except KeyError:
+        except KeyError as e:
             msg = f"Parameter {par_name} was not found in the model"
             self._logger.error(msg)
-            raise InvalidParameter(msg)
+            raise InvalidParameter(msg) from e
 
     def get_parameter_value(self, par_name):
         """
@@ -359,16 +364,16 @@ class TelescopeModel:
             If an existing parameter is tried to be added.
         """
         if par_name in self._parameters:
-            msg = "Parameter {} already in the model, use change_parameter instead".format(par_name)
+            msg = f"Parameter {par_name} already in the model, use change_parameter instead"
             self._logger.error(msg)
             raise InvalidParameter(msg)
-        else:
-            self._logger.info("Adding {}={} to the model".format(par_name, value))
-            self._parameters[par_name] = dict()
-            self._parameters[par_name]["Value"] = value
-            self._parameters[par_name]["Type"] = type(value)
-            self._parameters[par_name]["Applicable"] = is_aplicable
-            self._parameters[par_name]["File"] = is_file
+
+        self._logger.info(f"Adding {par_name}={value} to the model")
+        self._parameters[par_name] = dict()
+        self._parameters[par_name]["Value"] = value
+        self._parameters[par_name]["Type"] = type(value)
+        self._parameters[par_name]["Applicable"] = is_aplicable
+        self._parameters[par_name]["File"] = is_file
 
         self._is_config_file_up_to_date = False
         if is_file:
@@ -392,35 +397,35 @@ class TelescopeModel:
             If the parameter to be changed does not exist in this model.
         """
         if par_name not in self._parameters:
-            msg = "Parameter {} not in the model, use add_parameters instead".format(par_name)
+            msg = f"Parameter {par_name} not in the model, use add_parameters instead"
             self._logger.error(msg)
             raise InvalidParameter(msg)
-        else:
-            type_of_par_name = locate(self._parameters[par_name]["Type"])
-            if not isinstance(value, type_of_par_name):
-                self._logger.warning(
-                    f"The type of the provided value ({value}, {type(value)}) "
-                    f"is different from the type of {par_name} "
-                    f"({self._parameters[par_name]['Type']}). "
-                    f"Attempting to cast to the correct type."
-                )
-                try:
-                    value = type_of_par_name(value)
-                except ValueError:
-                    self._logger.error(
-                        f"Could not cast {value} to {self._parameters[par_name]['Type']}."
-                    )
-                    raise
 
-            self._logger.debug(
-                f"Changing parameter {par_name} "
-                f"from {self._parameters[par_name]['Value']} to {value}"
+        type_of_par_name = locate(self._parameters[par_name]["Type"])
+        if not isinstance(value, type_of_par_name):
+            self._logger.warning(
+                f"The type of the provided value ({value}, {type(value)}) "
+                f"is different from the type of {par_name} "
+                f"({self._parameters[par_name]['Type']}). "
+                f"Attempting to cast to the correct type."
             )
-            self._parameters[par_name]["Value"] = value
+            try:
+                value = type_of_par_name(value)
+            except ValueError:
+                self._logger.error(
+                    f"Could not cast {value} to {self._parameters[par_name]['Type']}."
+                )
+                raise
 
-            # In case parameter is a file, the model files will be outdated
-            if self._parameters[par_name]["File"]:
-                self._is_exported_model_files_up_to_date = False
+        self._logger.debug(
+            f"Changing parameter {par_name} "
+            f"from {self._parameters[par_name]['Value']} to {value}"
+        )
+        self._parameters[par_name]["Value"] = value
+
+        # In case parameter is a file, the model files will be outdated
+        if self._parameters[par_name]["File"]:
+            self._is_exported_model_files_up_to_date = False
 
         self._is_config_file_up_to_date = False
 
@@ -463,10 +468,10 @@ class TelescopeModel:
         """
         for par in args:
             if par in self._parameters:
-                self._logger.info("Removing parameter {}".format(par))
+                self._logger.info(f"Removing parameter {par}")
                 del self._parameters[par]
             else:
-                msg = "Could not remove parameter {} because it does not exist".format(par)
+                msg = f"Could not remove parameter {par} because it does not exist"
                 self._logger.error(msg)
                 raise InvalidParameter(msg)
         self._is_config_file_up_to_date = False
@@ -482,7 +487,7 @@ class TelescopeModel:
         file_path: str
             Path of the file to be added to the config file directory.
         """
-        if not hasattr(self, "_added_parameter_files"):
+        if self._added_parameter_files is None:
             self._added_parameter_files = list()
         self._added_parameter_files.append(par_name)
         shutil.copy(file_path, self._config_file_directory)
@@ -493,7 +498,7 @@ class TelescopeModel:
 
         # Removing parameter files added manually (which are not in DB)
         pars_from_db = copy(self._parameters)
-        if hasattr(self, "_added_parameter_files"):
+        if self._added_parameter_files is not None:
             for par in self._added_parameter_files:
                 pars_from_db.pop(par)
 
@@ -503,7 +508,7 @@ class TelescopeModel:
     def print_parameters(self):
         """Print parameters and their values for debugging purposes."""
         for par, info in self._parameters.items():
-            print("{} = {}".format(par, info["Value"]))
+            print(f"{par} = {info['Value']}")
 
     def export_config_file(self):
         """Export the config file used by sim_telarray."""
@@ -522,12 +527,12 @@ class TelescopeModel:
         """Write to disk a file from the derived values DB."""
 
         db = db_handler.DatabaseHandler(mongo_db_config=self.mongo_db_config)
-        for par_now in self.derived:
-            if self.derived[par_now]["File"]:
+        for par_now in self.derived.values():
+            if par_now["File"]:
                 db.export_file_db(
                     db_name=db.DB_DERIVED_VALUES,
                     dest=self.io_handler.get_output_directory(self.label, "derived"),
-                    file_name=self.derived[par_now]["Value"],
+                    file_name=par_now["Value"],
                 )
 
     def get_config_file(self, no_export=False):
@@ -584,8 +589,8 @@ class TelescopeModel:
         telescope_transmission = self.get_parameter_value("telescope_transmission")
         if isinstance(telescope_transmission, str):
             return [float(v) for v in self.get_parameter_value("telescope_transmission").split()]
-        else:
-            return [float(telescope_transmission), 0, 0, 0]
+
+        return [float(telescope_transmission), 0, 0, 0]
 
     def export_single_mirror_list_file(self, mirror_number, set_focal_length_to_zero):
         """
@@ -600,12 +605,12 @@ class TelescopeModel:
         """
         if mirror_number > self.mirrors.number_of_mirrors:
             logging.error("mirror_number > number_of_mirrors")
-            return None
+            return
 
         file_name = names.simtel_single_mirror_list_file_name(
             self.site, self.name, self.model_version, mirror_number, self.label
         )
-        if not hasattr(self, "_single_mirror_list_file_path"):
+        if self._single_mirror_list_file_paths is None:
             self._single_mirror_list_file_paths = dict()
         self._single_mirror_list_file_paths[mirror_number] = self._config_file_directory.joinpath(
             file_name
@@ -695,7 +700,7 @@ class TelescopeModel:
         )
 
     def _load_simtel_config_writer(self):
-        if not hasattr(self, "simtel_config_writer"):
+        if self.simtel_config_writer is None:
             self.simtel_config_writer = SimtelConfigWriter(
                 site=self.site,
                 telescope_model_name=self.name,
@@ -718,7 +723,7 @@ class TelescopeModel:
             True if the file is a 2D map type, False otherwise.
         """
         if not self.has_parameter(par):
-            logging.error("Parameter {} does not exist".format(par))
+            logging.error(f"Parameter {par} does not exist")
             return False
 
         file_name = self.get_parameter_value(par)
@@ -745,13 +750,15 @@ class TelescopeModel:
         """
 
         _file = self.get_config_directory().joinpath(file_name)
+        line_to_start_from = 0
         with open(_file, "r") as f:
             for i_line, line in enumerate(f):
                 if line.startswith("ANGLE"):
                     degrees = np.array(line.strip().split("=")[1].split(), dtype=np.float16)
+                    line_to_start_from = i_line + 1
                     break  # The rest can be read with np.loadtxt
 
-        _data = np.loadtxt(_file, skiprows=i_line + 1)
+        _data = np.loadtxt(_file, skiprows=line_to_start_from)
 
         return {
             "Wavelength": _data[:, 0],

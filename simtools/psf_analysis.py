@@ -41,6 +41,9 @@ class PSFImage:
 
         self._logger = logging.getLogger(__name__)
 
+        self._total_photons = None
+        self._number_of_detected_photons = None
+        self._effective_area = None
         self.photon_pos_x = list()
         self.photon_pos_y = list()
         self.photon_r = list()
@@ -69,7 +72,7 @@ class PSFImage:
             If photon positions X and Y are not compatible or are empty.
 
         """
-        self._logger.info("Reading sim_telarray file {}".format(file))
+        self._logger.info(f"Reading sim_telarray file {file}")
         self._total_photons = 0
         with open(file, "r") as f:
             for line in f:
@@ -125,8 +128,8 @@ class PSFImage:
             elif total_area_in_file != self._total_area:
                 self._logger.warning(
                     "Conflicting value of the total area found"
-                    + " {} != {}".format(self._total_area, total_area_in_file)
-                    + " - Keeping the original value"
+                    f" {self._total_area} != {total_area_in_file}"
+                    " - Keeping the original value"
                 )
             else:
                 # Do nothing - Keep the original value of _total_area
@@ -151,9 +154,9 @@ class PSFImage:
         """
         if "_effective_area" in self.__dict__ and self._effective_area is not None:
             return self._effective_area
-        else:
-            self._logger.error("Effective Area could not be calculated")
-            return None
+
+        self._logger.error("Effective Area could not be calculated")
+        return None
 
     def set_effective_area(self, value):
         """
@@ -238,7 +241,7 @@ class PSFImage:
             Diameter of the circular container with a certain fraction of the photons.
 
         """
-        self._logger.debug("Finding PSF for fraction = {}".format(fraction))
+        self._logger.debug(f"Finding PSF for fraction = {fraction}")
 
         x_pos_sq = [i**2 for i in self.photon_pos_x]
         y_pos_sq = [i**2 for i in self.photon_pos_y]
@@ -268,9 +271,9 @@ class PSFImage:
         if found_radius:
             # Diameter = 2 * radius
             return 2 * current_radius
-        else:
-            self._logger.warning("Could not find PSF efficiently - trying by scanning")
-            return 2 * self._find_radius_by_scanning(target_number, radius_sig)
+
+        self._logger.warning("Could not find PSF efficiently - trying by scanning")
+        return 2 * self._find_radius_by_scanning(target_number, radius_sig)
 
     def _find_radius_by_scanning(self, target_number, radius_sig):
         """
@@ -311,7 +314,7 @@ class PSFImage:
             found_radius = False
             while not found_radius:
                 s0, s1 = self._sum_photons_in_radius(r0), self._sum_photons_in_radius(r1)
-                if s0 < target_number and s1 > target_number:
+                if s0 < target_number < s1:
                     found_radius = True
                     break
                 if r1 > rad_max:
@@ -320,9 +323,9 @@ class PSFImage:
                 r1 += dr
             if found_radius:
                 return (r0 + r1) / 2, r0, r1
-            else:
-                self._logger.error("Could not find PSF by scanning")
-                raise RuntimeError
+
+            self._logger.error("Could not find PSF by scanning")
+            raise RuntimeError
 
         # Run scan few times with smaller dr to optimize search.
         # Step 0

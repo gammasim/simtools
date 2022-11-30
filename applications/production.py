@@ -170,7 +170,7 @@ def _proccess_simulation_config_file(config_file, primary_config, logger):
         with open(config_file) as file:
             config_data = yaml.load(file)
     except FileNotFoundError:
-        logger.error("Error loading simulation configuration file from {}".format(config_file))
+        logger.error(f"Error loading simulation configuration file from {config_file}")
         raise
 
     label = config_data.pop("label", dict())

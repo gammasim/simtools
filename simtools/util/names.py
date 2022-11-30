@@ -90,7 +90,7 @@ def validate_telescope_id_name(name):
         return name
 
     _logger = logging.getLogger(__name__)
-    msg = "Invalid telescope ID name {}".format(name)
+    msg = f"Invalid telescope ID name {name}"
     _logger.error(msg)
     raise ValueError(msg)
 
@@ -188,13 +188,13 @@ def validate_name(name, all_names):
     _logger = logging.getLogger(__name__)
 
     if not is_valid_name(name, all_names):
-        msg = "Invalid name {}".format(name)
+        msg = f"Invalid name {name}"
         _logger.error(msg)
         raise ValueError(msg)
     for main_name, list_of_names in all_names.items():
         if name.lower() in list_of_names + [main_name.lower()]:
             if name != main_name:
-                _logger.debug("Correcting name {} -> {}".format(name, main_name))
+                _logger.debug(f"Correcting name {name} -> {main_name}")
             return main_name
     return None
 
@@ -348,9 +348,9 @@ def convert_telescope_model_name_to_yaml(name):
     }
 
     if new_name not in old_names:
-        raise ValueError("Telescope name {} could not be converted to yml names".format(name))
-    else:
-        return old_names[new_name]
+        raise ValueError(f"Telescope name {name} could not be converted to yml names")
+
+    return old_names[new_name]
 
 
 all_telescope_class_names = {
@@ -476,9 +476,9 @@ def simtel_telescope_config_file_name(
     str
         File name.
     """
-    name = "CTA-{}-{}-{}".format(site, telescope_model_name, model_version)
-    name += "_{}".format(label) if label is not None else ""
-    name += "_{}".format(extra_label) if extra_label is not None else ""
+    name = f"CTA-{site}-{telescope_model_name}-{model_version}"
+    name += f"_{label}" if label is not None else ""
+    name += f"_{extra_label}" if extra_label is not None else ""
     name += ".cfg"
     return name
 
@@ -503,8 +503,8 @@ def simtel_array_config_file_name(array_name, site, version, label):
     str
         File name.
     """
-    name = "CTA-{}-{}-{}".format(array_name, site, version)
-    name += "_{}".format(label) if label is not None else ""
+    name = f"CTA-{array_name}-{site}-{version}"
+    name += f"_{label}" if label is not None else ""
     name += ".cfg"
     return name
 
@@ -533,9 +533,9 @@ def simtel_single_mirror_list_file_name(
     str
         File name.
     """
-    name = "CTA-single-mirror-list-{}-{}-{}".format(site, telescope_model_name, model_version)
-    name += "-mirror{}".format(mirror_number)
-    name += "_{}".format(label) if label is not None else ""
+    name = f"CTA-single-mirror-list-{site}-{telescope_model_name}-{model_version}"
+    name += f"-mirror{mirror_number}"
+    name += f"_{label}" if label is not None else ""
     name += ".dat"
     return name
 
@@ -556,8 +556,8 @@ def layout_telescope_list_file_name(name, label):
     str
         File name.
     """
-    file_name = "telescope_positions-{}".format(name)
-    file_name += "_{}".format(label) if label is not None else ""
+    file_name = f"telescope_positions-{name}"
+    file_name += f"_{label}" if label is not None else ""
     file_name += ".ecsv"
     return file_name
 
@@ -599,11 +599,12 @@ def ray_tracing_file_name(
     str
         File name.
     """
-    name = "{}-{}-{}-d{:.1f}-za{:.1f}-off{:.3f}".format(
-        base, site, telescope_model_name, source_distance, zenith_angle, off_axis_angle
+    name = (
+        f"{base}-{site}-{telescope_model_name}-d{source_distance:.1f}"
+        f"-za{zenith_angle:.1f}-off{off_axis_angle:.3f}"
     )
-    name += "_mirror{}".format(mirror_number) if mirror_number is not None else ""
-    name += "_{}".format(label) if label is not None else ""
+    name += f"_mirror{mirror_number}" if mirror_number is not None else ""
+    name += f"_{label}" if label is not None else ""
     name += ".log" if base == "log" else ".lis"
     return name
 
@@ -630,10 +631,8 @@ def ray_tracing_results_file_name(site, telescope_model_name, source_distance, z
     str
         File name.
     """
-    name = "ray-tracing-{}-{}-d{:.1f}-za{:.1f}".format(
-        site, telescope_model_name, source_distance, zenith_angle
-    )
-    name += "_{}".format(label) if label is not None else ""
+    name = f"ray-tracing-{site}-{telescope_model_name}-d{source_distance:.1f}-za{zenith_angle:.1f}"
+    name += f"_{label}" if label is not None else ""
     name += ".ecsv"
     return name
 
@@ -664,10 +663,11 @@ def ray_tracing_plot_file_name(
     str
         File name.
     """
-    name = "ray-tracing-{}-{}-{}-d{:.1f}-za{:.1f}".format(
-        site, telescope_model_name, key, source_distance, zenith_angle
+    name = (
+        f"ray-tracing-{site}-{telescope_model_name}-{key}-"
+        f"d{source_distance:.1f}-za{zenith_angle:.1f}"
     )
-    name += "_{}".format(label) if label is not None else ""
+    name += f"_{label}" if label is not None else ""
     name += ".pdf"
     return name
 
@@ -692,8 +692,8 @@ def camera_efficiency_results_file_name(site, telescope_model_name, zenith_angle
     str
         File name.
     """
-    name = "camera-efficiency-{}-{}-za{:.1f}".format(site, telescope_model_name, zenith_angle)
-    name += "_{}".format(label) if label is not None else ""
+    name = f"camera-efficiency-{site}-{telescope_model_name}-za{zenith_angle:.1f}"
+    name += f"_{label}" if label is not None else ""
     name += ".ecsv"
     return name
 
@@ -718,8 +718,8 @@ def camera_efficiency_simtel_file_name(site, telescope_model_name, zenith_angle,
     str
         File name.
     """
-    name = "camera-efficiency-{}-{}-za{:.1f}".format(site, telescope_model_name, zenith_angle)
-    name += "_{}".format(label) if label is not None else ""
+    name = f"camera-efficiency-{site}-{telescope_model_name}-za{zenith_angle:.1f}"
+    name += f"_{label}" if label is not None else ""
     name += ".dat"
     return name
 
@@ -744,7 +744,7 @@ def camera_efficiency_log_file_name(site, telescope_model_name, zenith_angle, la
     str
         File name.
     """
-    name = "camera-efficiency-{}-{}-za{:.1f}".format(site, telescope_model_name, zenith_angle)
-    name += "_{}".format(label) if label is not None else ""
+    name = f"camera-efficiency-{site}-{telescope_model_name}-za{zenith_angle:.1f}"
+    name += f"_{label}" if label is not None else ""
     name += ".log"
     return name
