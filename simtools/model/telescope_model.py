@@ -610,7 +610,7 @@ class TelescopeModel:
         file_name = names.simtel_single_mirror_list_file_name(
             self.site, self.name, self.model_version, mirror_number, self.label
         )
-        if self._single_mirror_list_file_paths is not None:
+        if self._single_mirror_list_file_paths is None:
             self._single_mirror_list_file_paths = dict()
         self._single_mirror_list_file_paths[mirror_number] = self._config_file_directory.joinpath(
             file_name
