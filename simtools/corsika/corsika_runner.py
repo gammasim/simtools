@@ -17,8 +17,6 @@ __all__ = ["CorsikaRunner", "MissingRequiredEntryInCorsikaConfig"]
 class MissingRequiredEntryInCorsikaConfig(Exception):
     """Exception for missing required entry in corsika config."""
 
-    pass
-
 
 class CorsikaRunner:
     """
@@ -101,7 +99,7 @@ class CorsikaRunner:
         self._simtel_source_path = simtel_source_path
         self.io_handler = io_handler.IOHandler()
         self._output_directory = self.io_handler.get_output_directory(self.label, "corsika")
-        self._logger.debug("Creating output dir {}, if needed,".format(self._output_directory))
+        self._logger.debug(f"Creating output dir {self._output_directory}, if needed,")
 
         corsika_config_data = collect_data_from_yaml_or_dict(
             corsika_config_file, corsika_config_data
@@ -195,11 +193,11 @@ class CorsikaRunner:
         )
         corsika_input_tmp_file = self._corsika_input_dir.joinpath(corsika_input_tmp_name)
 
-        pfp_command = self._get_pfp_command(run_number, corsika_input_tmp_file)
+        pfp_command = self._get_pfp_command(corsika_input_tmp_file)
         autoinputs_command = self._get_autoinputs_command(run_number, corsika_input_tmp_file)
 
         extra_commands = kwargs["extra_commands"]
-        self._logger.debug("Extra commands to be added to the run script {}".format(extra_commands))
+        self._logger.debug(f"Extra commands to be added to the run script {extra_commands}")
 
         with open(script_file_path, "w") as file:
             # shebang
@@ -210,13 +208,13 @@ class CorsikaRunner:
 
             if extra_commands is not None:
                 file.write("\n# Writing extras\n")
-                file.write("{}\n".format(extra_commands))
+                file.write(f"{extra_commands}\n")
                 file.write("# End of extras\n\n")
 
-            file.write("export CORSIKA_DATA={}\n".format(self._corsika_data_dir))
+            file.write(f"export CORSIKA_DATA={self._corsika_data_dir}\n")
             file.write("\n# Creating CORSIKA_DATA\n")
-            file.write("mkdir -p {}\n".format(self._corsika_data_dir))
-            file.write("cd {} || exit 2\n".format(self._corsika_data_dir))
+            file.write(f"mkdir -p {self._corsika_data_dir}\n")
+            file.write(f"cd {self._corsika_data_dir} || exit 2\n")
             file.write("\n# Running pfp\n")
             file.write(pfp_command)
             file.write("\n# Running corsika_autoinputs\n")
@@ -226,15 +224,15 @@ class CorsikaRunner:
             file.write('\necho "RUNTIME: $SECONDS"\n')
 
         # Changing permissions
-        os.system("chmod ug+x {}".format(script_file_path))
+        os.system(f"chmod ug+x {script_file_path}")
 
         return script_file_path
 
-    def _get_pfp_command(self, run_number, input_tmp_file):
+    def _get_pfp_command(self, input_tmp_file):
         """Get pfp pre-processor command."""
         cmd = self._simtel_source_path.joinpath("sim_telarray/bin/pfp")
-        cmd = str(cmd) + " -V -DWITHOUT_MULTIPIPE - < {}".format(self._corsika_input_file)
-        cmd += " > {}\n".format(input_tmp_file)
+        cmd = str(cmd) + f" -V -DWITHOUT_MULTIPIPE - < {self._corsika_input_file}"
+        cmd += f" > {input_tmp_file}\n"
         return cmd
 
     def _get_autoinputs_command(self, run_number, input_tmp_file):
@@ -244,12 +242,12 @@ class CorsikaRunner:
         log_file = self.get_file_name(file_type="log", **self.get_info_for_file_name(run_number))
 
         cmd = self._simtel_source_path.joinpath("sim_telarray/bin/corsika_autoinputs")
-        cmd = str(cmd) + " --run {}".format(corsika_bin_path)
-        cmd += " -R {}".format(run_number)
-        cmd += " -p {}".format(self._corsika_data_dir)
+        cmd = str(cmd) + f" --run {corsika_bin_path}"
+        cmd += f" -R {run_number}"
+        cmd += f" -p {self._corsika_data_dir}"
         if self._keep_seeds:
             cmd += " --keep-seeds"
-        cmd += " {} > {} 2>&1".format(input_tmp_file, log_file)
+        cmd += f" {input_tmp_file} > {log_file} 2>&1"
         cmd += " || exit 1\n"
         return cmd
 
@@ -318,9 +316,7 @@ class CorsikaRunner:
             return self._corsika_log_dir.joinpath(f"log_{file_name}.log")
         if file_type == "corsika_log":
             run_dir = self._get_run_directory(kwargs["run"])
-            return self._corsika_data_dir.joinpath(run_dir).joinpath(
-                "run{}.log".format(kwargs["run"])
-            )
+            return self._corsika_data_dir.joinpath(run_dir).joinpath(f"run{kwargs['run']}.log")
         if file_type == "script":
             script_file_dir = self._output_directory.joinpath("scripts")
             script_file_dir.mkdir(parents=True, exist_ok=True)
@@ -383,7 +379,7 @@ class CorsikaRunner:
             file_type="sub_log", **self.get_info_for_file_name(run_number), mode="out"
         )
 
-        self._logger.debug("Reading resources from {}".format(sub_log_file))
+        self._logger.debug(f"Reading resources from {sub_log_file}")
 
         _resources = {}
 
@@ -415,9 +411,9 @@ class CorsikaRunner:
         """
         if run_number is None:
             return self.corsika_config.get_user_parameter("RUNNR")
-        elif not float(run_number).is_integer() or run_number < 1:
-            msg = "Invalid type of run number ({}) - it must be an uint.".format(run_number)
+        if not float(run_number).is_integer() or run_number < 1:
+            msg = f"Invalid type of run number ({run_number}) - it must be an uint."
             self._logger.error(msg)
             raise ValueError(msg)
-        else:
-            return run_number
+
+        return run_number

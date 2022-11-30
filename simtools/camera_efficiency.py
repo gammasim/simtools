@@ -64,6 +64,7 @@ class CameraEfficiency:
             test=test,
         )
 
+        self._results = None
         self._has_results = False
 
         _config_data_in = gen.collect_data_from_yaml_or_dict(
@@ -105,7 +106,7 @@ class CameraEfficiency:
         return cls(**args, config_data=config_data)
 
     def __repr__(self):
-        return "CameraEfficiency(label={})\n".format(self.label)
+        return f"CameraEfficiency(label={self.label})\n"
 
     def _validate_telescope_model(self, tel):
         """Validate TelescopeModel
@@ -123,10 +124,10 @@ class CameraEfficiency:
         if isinstance(tel, TelescopeModel):
             self._logger.debug("TelescopeModel OK")
             return tel
-        else:
-            msg = "Invalid TelescopeModel"
-            self._logger.error(msg)
-            raise ValueError(msg)
+
+        msg = "Invalid TelescopeModel"
+        self._logger.error(msg)
+        raise ValueError(msg)
 
     def _load_files(self):
         """Define the variables for the file names, including the results, simtel and log file."""
@@ -175,8 +176,6 @@ class CameraEfficiency:
             label=self.label,
         )
         simtel.run(test=self.test, force=force)
-
-        return
 
     def analyze(self, export=True, force=False):
         """
@@ -294,7 +293,7 @@ class CameraEfficiency:
         if not self._has_results:
             self._logger.error("Cannot export results because they do not exist")
         else:
-            self._logger.info("Exporting results to {}".format(self._file_results))
+            self._logger.info(f"Exporting results to {self._file_results}")
             astropy.io.ascii.write(
                 self._results, self._file_results, format="basic", overwrite=True
             )
@@ -316,9 +315,7 @@ class CameraEfficiency:
         """
 
         # Sum(C1) from 300 - 550 nm:
-        c1_reduced_wl = self._results["C1"][
-            [wl_now > 299 and wl_now < 551 for wl_now in self._results["wl"]]
-        ]
+        c1_reduced_wl = self._results["C1"][[299 < wl_now < 551 for wl_now in self._results["wl"]]]
         c1_sum = np.sum(c1_reduced_wl)
         # Sum(C4) from 200 - 999 nm:
         c4_sum = np.sum(self._results["C4"])
@@ -340,13 +337,11 @@ class CameraEfficiency:
         """
 
         # Sum(C1) from 300 - 550 nm:
-        c1_reduced_wl = self._results["C1"][
-            [wl_now > 299 and wl_now < 551 for wl_now in self._results["wl"]]
-        ]
+        c1_reduced_wl = self._results["C1"][[299 < wl_now < 551 for wl_now in self._results["wl"]]]
         c1_sum = np.sum(c1_reduced_wl)
         # Sum(C4x) from 300 - 550 nm:
         c4x_reduced_wl = self._results["C4x"][
-            [wl_now > 299 and wl_now < 551 for wl_now in self._results["wl"]]
+            [299 < wl_now < 551 for wl_now in self._results["wl"]]
         ]
         c4x_sum = np.sum(c4x_reduced_wl)
         fill_factor = self._telescope_model.camera.get_camera_fill_factor()
@@ -372,9 +367,7 @@ class CameraEfficiency:
         """
 
         # Sum(N1) from 300 - 550 nm:
-        n1_reduced_wl = self._results["N1"][
-            [wl_now > 299 and wl_now < 551 for wl_now in self._results["wl"]]
-        ]
+        n1_reduced_wl = self._results["N1"][[299 < wl_now < 551 for wl_now in self._results["wl"]]]
         n1_sum = np.sum(n1_reduced_wl)
         # Sum(N4) from 200 - 999 nm:
         n4_sum = np.sum(self._results["N4"])
@@ -396,14 +389,10 @@ class CameraEfficiency:
         """
 
         # Sum(C1) from 300 - 550 nm:
-        c1_reduced_wl = self._results["C1"][
-            [wl_now > 299 and wl_now < 551 for wl_now in self._results["wl"]]
-        ]
+        c1_reduced_wl = self._results["C1"][[299 < wl_now < 551 for wl_now in self._results["wl"]]]
         c1_sum = np.sum(c1_reduced_wl)
         # Sum(C2) from 300 - 550 nm:
-        c2_reduced_wl = self._results["C2"][
-            [wl_now > 299 and wl_now < 551 for wl_now in self._results["wl"]]
-        ]
+        c2_reduced_wl = self._results["C2"][[299 < wl_now < 551 for wl_now in self._results["wl"]]]
         c2_sum = np.sum(c2_reduced_wl)
         cher_spec_weighted_reflectivity = c2_sum / c1_sum / self._results["masts"][0]
 
@@ -430,12 +419,10 @@ class CameraEfficiency:
 
         # NSB input spectrum is from Benn&Ellison
         # (integral is in ph./(cm² ns sr) ) from 300 - 650 nm:
-        n1_reduced_wl = self._results["N1"][
-            [wl_now > 299 and wl_now < 651 for wl_now in self._results["wl"]]
-        ]
+        n1_reduced_wl = self._results["N1"][[299 < wl_now < 651 for wl_now in self._results["wl"]]]
         n1_sum = np.sum(n1_reduced_wl)
         n1_integral_edges = self._results["N1"][
-            [wl_now == 300 or wl_now == 650 for wl_now in self._results["wl"]]
+            [wl_now in [300, 650] for wl_now in self._results["wl"]]
         ]
         n1_integral_edges_sum = np.sum(n1_integral_edges)
         nsb_integral = 0.0001 * (n1_sum - 0.5 * n1_integral_edges_sum)
@@ -505,7 +492,7 @@ class CameraEfficiency:
         fig = visualize.plot_table(
             table_to_plot,
             y_title="Cherenkov light efficiency",
-            title="{} response to Cherenkov light".format(self._telescope_model.name),
+            title=f"{self._telescope_model.name} response to Cherenkov light",
             no_markers=True,
         )
 
@@ -535,15 +522,15 @@ class CameraEfficiency:
         for column_now, column_title in column_titles.items():
             table_to_plot.rename_column(column_now, column_title)
 
-        plt = visualize.plot_table(
+        plot = visualize.plot_table(
             table_to_plot,
             y_title="Nightsky background light efficiency",
-            title="{} response to nightsky background light".format(self._telescope_model.name),
+            title=f"{self._telescope_model.name} response to nightsky background light",
             no_markers=True,
         )
 
-        plt.gca().set_yscale("log")
-        ylim = plt.gca().get_ylim()
-        plt.gca().set_ylim(1e-3, ylim[1])
+        plot.gca().set_yscale("log")
+        ylim = plot.gca().get_ylim()
+        plot.gca().set_ylim(1e-3, ylim[1])
 
-        return plt
+        return plot

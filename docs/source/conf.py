@@ -50,11 +50,9 @@ def get_authors_from_citation_file(file_name):
 project = "gammasim-tools"
 copyright = "2022, gammasim-tools developers"
 author = get_authors_from_citation_file("../CITATION.cff")
-rst_epilog = """
+rst_epilog = f"""
 .. |author| replace:: {author}
-""".format(
-    author=author
-)
+"""
 
 # The short X.Y version
 version = str(simtools.version.__version__)
