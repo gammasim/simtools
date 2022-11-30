@@ -42,17 +42,17 @@ class SimtelRunnerCameraEfficiency(SimtelRunner):
         super().__init__(label=label, simtel_source_path=simtel_source_path)
 
         self._telescope_model = telescope_model
-        self.label = label if label is not None else self.telescope_model.label
+        self.label = label if label is not None else self._telescope_model.label
 
         self._file_simtel = file_simtel
         self._file_log = file_log
         self.zenith_angle = zenith_angle
 
-    def _shall_run(self, **kwargs):
+    def _shall_run(self, **kwargs):  # pylint: disable=unused-argument; applies only to this line
         """Tells if simulations should be run again based on the existence of output files."""
         return not self._file_simtel.exists()
 
-    def _make_run_command(self, **kwargs):
+    def _make_run_command(self, **kwargs):  # pylint: disable=unused-argument
         """
         Prepare the command used to run testeff
         """
@@ -134,7 +134,7 @@ class SimtelRunnerCameraEfficiency(SimtelRunner):
 
         return command
 
-    def _check_run_result(self, **kwargs):
+    def _check_run_result(self, **kwargs):  # pylint: disable=unused-argument
         """Checking run results
 
         Raises
@@ -147,8 +147,8 @@ class SimtelRunnerCameraEfficiency(SimtelRunner):
             msg = "Camera efficiency simulation results file does not exist"
             self._logger.error(msg)
             raise RuntimeError(msg)
-        else:
-            self._logger.debug("Everything looks fine with output file.")
+
+        self._logger.debug("Everything looks fine with output file.")
 
     def _get_one_dim_distribution(self, two_dim_parameter, weighting_distribution_parameter):
         """

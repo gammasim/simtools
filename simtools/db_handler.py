@@ -19,6 +19,10 @@ from simtools.util import names
 __all__ = ["DatabaseHandler"]
 
 
+# pylint: disable=unsubscriptable-object
+# The above comment is because pylint does not know that DatabaseHandler.db_client is subscriptable
+
+
 class DatabaseHandler:
     """
     DatabaseHandler provides the interface to the DB.
@@ -36,7 +40,6 @@ class DatabaseHandler:
         "db_api_authentication_database" - DB with user info (optional, default is "admin")
     """
 
-    # TODO move into config file?
     DB_TABULATED_DATA = "CTA-Simulation-Model"
     DB_CTA_SIMULATION_MODEL = "CTA-Simulation-Model"
     DB_CTA_SIMULATION_MODEL_DESCRIPTIONS = "CTA-Simulation-Model-Descriptions"
@@ -61,7 +64,7 @@ class DatabaseHandler:
         self._logger.debug("Initialize DatabaseHandler")
 
         self.mongo_db_config = mongo_db_config
-        self._logger.debug("DB configuration: {}".format(self.mongo_db_config))
+        self._logger.debug(f"DB configuration: {self.mongo_db_config}")
         self.io_handler = io_handler.IOHandler()
 
         self._set_up_connection()
@@ -172,15 +175,14 @@ class DatabaseHandler:
                 only_applicable,
             )
             return _pars
-        else:
-            _version_validated = names.validate_model_version_name(model_version)
 
-            return self._get_model_parameters_yaml(
-                _site_validated,
-                _tel_model_name_validated,
-                _version_validated,
-                only_applicable,
-            )
+        _version_validated = names.validate_model_version_name(model_version)
+
+        return self._get_model_parameters_yaml(
+            _tel_model_name_validated,
+            _version_validated,
+            only_applicable,
+        )
 
     def export_file_db(self, db_name, dest, file_name):
         """
@@ -210,7 +212,7 @@ class DatabaseHandler:
         self._logger.debug(f"Getting {file_name} from {db_name} and writing it to {dest}")
         file_path_instance = self._get_file_mongo_db(db_name, file_name)
         self._write_file_from_mongo_to_disk(db_name, dest, file_path_instance)
-        return file_path_instance._id
+        return file_path_instance._id  # pylint: disable=protected-access;
 
     def export_model_files(self, parameters, dest):
         """
@@ -273,23 +275,21 @@ class DatabaseHandler:
             file = gen.find_file(file_name, self.io_handler.model_path)
         except FileNotFoundError:
             if no_file_ok:
-                self._logger.debug("File {} not found but no_file_ok".format(file_name))
+                self._logger.debug(f"File {file_name} not found but no_file_ok")
                 return
-            else:
-                raise
+
+            raise
 
         dest_file.write_text(file.read_text())
 
     def _get_model_parameters_yaml(
-        self, site, telescope_model_name, model_version, only_applicable=False
+        self, telescope_model_name, model_version, only_applicable=False
     ):
         """
         Get parameters from DB for one specific type.
 
         Parameters
         ----------
-        site: str
-            North or South.
         telescope_model_name: str
             Telescope model name (e.g MST-FlashCam-D ...).
         model_version: str
@@ -365,17 +365,17 @@ class DatabaseHandler:
         _tel_name_db = self._get_telescope_model_name_for_db(_site_validated, telescope_model_name)
         _tel_class = get_telescope_class(telescope_model_name)
 
-        self._logger.debug("Tel_name_db: {}".format(_tel_name_db))
-        self._logger.debug("Tel_class: {}".format(_tel_class))
+        self._logger.debug(f"Tel_name_db: {_tel_name_db}")
+        self._logger.debug(f"Tel_class: {_tel_class}")
 
         if _tel_class == "MST":
             # MST-FlashCam or MST-NectarCam
-            _which_tel_labels = ["{}-MST-Structure-D".format(_site_validated), _tel_name_db]
+            _which_tel_labels = [f"{_site_validated}-MST-Structure-D", _tel_name_db]
         elif _tel_class == "SST":
             # SST = SST-Camera + SST-Structure
             _which_tel_labels = [
-                "{}-SST-Camera-D".format(_site_validated),
-                "{}-SST-Structure-D".format(_site_validated),
+                f"{_site_validated}-SST-Camera-D",
+                f"{_site_validated}-SST-Structure-D",
             ]
         else:
             _which_tel_labels = [_tel_name_db]
@@ -383,15 +383,15 @@ class DatabaseHandler:
         # Selecting version and applicable (if on)
         _pars = dict()
         for _tel in _which_tel_labels:
-            self._logger.debug("Getting {} parameters from MongoDB".format(_tel))
+            self._logger.debug(f"Getting {_tel} parameters from MongoDB")
 
             # If tel is a structure, only applicable pars will be collected, always.
             # The default ones will be covered by the camera pars.
             _select_only_applicable = only_applicable or (
                 _tel
                 in [
-                    "{}-MST-Structure-D".format(_site_validated),
-                    "{}-SST-Structure-D".format(_site_validated),
+                    f"{_site_validated}-MST-Structure-D",
+                    f"{_site_validated}-SST-Structure-D",
                 ]
             )
 
@@ -462,7 +462,7 @@ class DatabaseHandler:
             "Version": _model_version,
         }
 
-        self._logger.debug("Trying the following query: {}".format(query))
+        self._logger.debug(f"Trying the following query: {query}")
         if only_applicable:
             query["Applicable"] = True
         if collection.count_documents(query) < 1:
@@ -499,9 +499,9 @@ class DatabaseHandler:
 
         """
 
-        _file_name_db = "parValues-{}.yml".format(telescope_name_yaml)
+        _file_name_db = f"parValues-{telescope_name_yaml}.yml"
         _yaml_file = gen.find_file(_file_name_db, self.io_handler.model_path)
-        self._logger.debug("Reading DB file {}".format(_yaml_file))
+        self._logger.debug(f"Reading DB file {_yaml_file}")
         with open(_yaml_file, "r") as stream:
             _all_pars = yaml.safe_load(stream)
         return _all_pars
@@ -540,8 +540,8 @@ class DatabaseHandler:
                 only_applicable,
             )
             return _pars
-        else:
-            return self._get_site_parameters_yaml(_site, _model_version, only_applicable)
+
+        return self._get_site_parameters_yaml(_site, _model_version, only_applicable)
 
     def _get_site_parameters_yaml(self, site, model_version, only_applicable=False):
         """
@@ -565,7 +565,7 @@ class DatabaseHandler:
         site_yaml = "lapalma" if site == "North" else "paranal"
 
         yaml_file = gen.find_file("parValues-Sites.yml", self.io_handler.model_path)
-        self._logger.info("Reading DB file {}".format(yaml_file))
+        self._logger.info(f"Reading DB file {yaml_file}")
         with open(yaml_file, "r") as stream:
             _all_pars_versions = yaml.safe_load(stream)
 
@@ -750,7 +750,7 @@ class DatabaseHandler:
             DatabaseHandler.DB_CTA_SIMULATION_MODEL,
         )
 
-        self._logger.debug("Getting derived values for {} from the DB".format(_tel_name_db))
+        self._logger.debug(f"Getting derived values for {_tel_name_db} from the DB")
 
         _pars = self.read_mongo_db(
             DatabaseHandler.DB_DERIVED_VALUES,
@@ -791,10 +791,8 @@ class DatabaseHandler:
         file_system = gridfs.GridFS(db)
         if file_system.exists({"filename": file_name}):
             return file_system.find_one({"filename": file_name})
-        else:
-            raise FileNotFoundError(
-                "The file {} does not exist in the database {}".format(file_name, db_name)
-            )
+
+        raise FileNotFoundError(f"The file {file_name} does not exist in the database {db_name}")
 
     @staticmethod
     def _write_file_from_mongo_to_disk(db_name, path, file):
@@ -815,8 +813,6 @@ class DatabaseHandler:
         fs_output = gridfs.GridFSBucket(db)
         with open(Path(path).joinpath(file.filename), "wb") as output_file:
             fs_output.download_to_stream_by_name(file.filename, output_file)
-
-        return
 
     def copy_telescope(
         self,
@@ -863,9 +859,8 @@ class DatabaseHandler:
             collection_to_copy_to = collection_name
 
         self._logger.info(
-            "Copying version {} of {} to the new telescope {} in the {} DB".format(
-                version_to_copy, tel_to_copy, new_tel_name, db_to_copy_to
-            )
+            f"Copying version {version_to_copy} of {tel_to_copy} "
+            f"to the new telescope {new_tel_name} in the {db_to_copy_to} DB"
         )
 
         collection = DatabaseHandler.db_client[db_name][collection_name]
@@ -884,14 +879,12 @@ class DatabaseHandler:
             post.pop("_id", None)
             db_entries.append(post)
 
-        self._logger.info("Creating new telescope {}".format(new_tel_name))
+        self._logger.info(f"Creating new telescope {new_tel_name}")
         collection = DatabaseHandler.db_client[db_to_copy_to][collection_to_copy_to]
         try:
             collection.insert_many(db_entries)
         except BulkWriteError as exc:
-            raise exc(exc.details)
-
-        return
+            raise BulkWriteError.details from exc
 
     def copy_documents(self, db_name, collection, query, db_to_copy_to, collection_to_copy_to=None):
         """
@@ -935,15 +928,13 @@ class DatabaseHandler:
             db_entries.append(post)
 
         self._logger.info(
-            "Copying documents matching the following query {}\nto {}".format(query, db_to_copy_to)
+            f"Copying documents matching the following query {query}\nto {db_to_copy_to}"
         )
         _collection = DatabaseHandler.db_client[db_to_copy_to][collection_to_copy_to]
         try:
             _collection.insert_many(db_entries)
         except BulkWriteError as exc:
-            raise exc(exc.details)
-
-        return
+            raise BulkWriteError.details from exc
 
     def delete_query(self, db_name, collection, query):
         """
@@ -977,16 +968,9 @@ class DatabaseHandler:
                 query["Version"], DatabaseHandler.DB_CTA_SIMULATION_MODEL
             )
 
-        self._logger.info(
-            "Deleting {} entries from {}".format(
-                _collection.count_documents(query),
-                db_name,
-            )
-        )
+        self._logger.info(f"Deleting {_collection.count_documents(query)} entries from {db_name}")
 
         _collection.delete_many(query)
-
-        return
 
     def update_parameter(
         self,
@@ -1043,9 +1027,8 @@ class DatabaseHandler:
         old_value = par_entry["Value"]
 
         self._logger.info(
-            "For telescope {}, version {}\nreplacing {} value from {} to {}".format(
-                telescope, _model_version, parameter, old_value, new_value
-            )
+            f"For telescope {telescope}, version {_model_version}\n"
+            f"replacing {parameter} value from {old_value} to {new_value}"
         )
 
         files_to_add_to_db = set()
@@ -1054,11 +1037,11 @@ class DatabaseHandler:
             if file_prefix is None:
                 raise FileNotFoundError(
                     "The location of the file to upload, "
-                    "corresponding to the {} parameter, must be provided."
-                ).format(parameter)
+                    f"corresponding to the {parameter} parameter, must be provided."
+                )
             file_path = Path(file_prefix).joinpath(new_value)
-            files_to_add_to_db.add("{}".format(file_path))
-            self._logger.info("Will also add the file {} to the DB".format(file_path))
+            files_to_add_to_db.add(f"{file_path}")
+            self._logger.info(f"Will also add the file {file_path} to the DB")
         else:
             file = False
 
@@ -1067,8 +1050,6 @@ class DatabaseHandler:
         collection.update_one(query, query_update)
         for file_now in files_to_add_to_db:
             self.insert_file_to_db(file_now, db_name)
-
-        return
 
     def update_parameter_field(
         self,
@@ -1142,9 +1123,7 @@ class DatabaseHandler:
         par_entry = collection.find_one(query)
         if par_entry is None:
             self._logger.warning(
-                "The query {} did not return any results. I will not make any changes.".format(
-                    query
-                )
+                f"The query {query} did not return any results. I will not make any changes."
             )
             return
 
@@ -1156,11 +1135,11 @@ class DatabaseHandler:
                     f"The value of the field {field} is already {new_value}. No changes necessary"
                 )
                 return
-            else:
-                self._logger.info(
-                    f"For {logger_info}, version {_model_version}, parameter {parameter}, "
-                    f"replacing field {field} value from {old_field_value} to {new_value}"
-                )
+
+            self._logger.info(
+                f"For {logger_info}, version {_model_version}, parameter {parameter}, "
+                f"replacing field {field} value from {old_field_value} to {new_value}"
+            )
         else:
             self._logger.info(
                 f"For {logger_info}, version {_model_version}, parameter {parameter}, "
@@ -1170,8 +1149,6 @@ class DatabaseHandler:
         query_update = {"$set": {field: new_value}}
 
         collection.update_one(query, query_update)
-
-        return
 
     def add_parameter(
         self,
@@ -1235,21 +1212,19 @@ class DatabaseHandler:
             if file_prefix is None:
                 raise FileNotFoundError(
                     "The location of the file to upload, "
-                    "corresponding to the {} parameter, must be provided."
-                ).format(parameter)
+                    f"corresponding to the {parameter} parameter, must be provided."
+                )
             file_path = Path(file_prefix).joinpath(new_value)
-            files_to_add_to_db.add("{}".format(file_path))
+            files_to_add_to_db.add(f"{file_path}")
         else:
             par_entry["File"] = False
 
-        self._logger.info("Will add the following entry to DB:\n{}".format(par_entry))
+        self._logger.info(f"Will add the following entry to DB:\n{par_entry}")
 
         collection.insert_one(par_entry)
         if len(files_to_add_to_db) > 0:
-            self._logger.info("Will also add the file {} to the DB".format(file_path))
+            self._logger.info(f"Will also add the file {file_path} to the DB")
             self.insert_file_to_db(files_to_add_to_db, db_name)
-
-        return
 
     def add_new_parameter(
         self,
@@ -1322,26 +1297,24 @@ class DatabaseHandler:
                     f"corresponding to the {parameter} parameter, must be provided."
                 )
             file_path = Path(file_prefix).joinpath(value)
-            files_to_add_to_db.add("{}".format(file_path))
+            files_to_add_to_db.add(f"{file_path}")
 
         kwargs.pop("Type", None)
         db_entry.update(kwargs)
 
-        self._logger.info("Will add the following entry to DB:\n{}".format(db_entry))
+        self._logger.info(f"Will add the following entry to DB:\n{db_entry}")
 
         collection.insert_one(db_entry)
         for file_to_insert_now in files_to_add_to_db:
-            self._logger.info("Will also add the file {} to the DB".format(file_to_insert_now))
+            self._logger.info(f"Will also add the file {file_to_insert_now} to the DB")
             self.insert_file_to_db(file_to_insert_now, db_name)
-
-        return
 
     def _convert_version_to_tagged(self, model_version, db_name):
         """Convert to tagged version, if needed."""
         if model_version in ["Current", "Latest"]:
             return self._get_tagged_version(db_name, model_version)
-        else:
-            return model_version
+
+        return model_version
 
     @staticmethod
     def _get_tagged_version(db_name, version="Current"):
@@ -1415,7 +1388,9 @@ class DatabaseHandler:
             self._logger.warning(
                 f"The file {kwargs['filename']} exists in the DB. Returning its ID"
             )
-            return file_system.find_one({"filename": kwargs["filename"]})._id
+            return file_system.find_one(
+                {"filename": kwargs["filename"]}
+            )._id  # pylint: disable=protected-access;
         with open(file_name, "rb") as data_file:
             return file_system.put(data_file, **kwargs)
 
