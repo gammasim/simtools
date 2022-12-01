@@ -56,7 +56,7 @@ def test_initialize_coordinate_systems(layout_center_data_dict, layout_array_ins
     _lat, _lon, _z = layout_array_instance._array_center.get_coordinates("mercator")
     assert np.isnan(_lat) and np.isnan(_lon)
 
-    layout_array_instance._initialize_coordinate_systems(layout_center_data_dict, False)
+    layout_array_instance._initialize_coordinate_systems(layout_center_data_dict)
     _x, _y, _z = layout_array_instance._array_center.get_coordinates("corsika")
     assert _x == 0.0 * u.m and _y == 0.0 * u.m and _z == layout_center_data_dict["center_alt"]
     _lat, _lon, _z = layout_array_instance._array_center.get_coordinates("mercator")
