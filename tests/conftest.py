@@ -3,7 +3,6 @@ import os
 from pathlib import Path
 from unittest import mock
 
-import astropy.units as u
 import pytest
 
 import simtools.io_handler
@@ -11,6 +10,7 @@ import simtools.util.general as gen
 from simtools import db_handler
 from simtools.configuration.configurator import Configurator
 from simtools.model.telescope_model import TelescopeModel
+from simtools.util import names
 
 logger = logging.getLogger()
 
@@ -191,22 +191,8 @@ def telescope_model_sst(db, db_config, io_handler):
 
 
 @pytest.fixture
-def corsika_telescope_data_dict():
-    return {
-        "corsika_sphere_radius": {
-            "LST": 12.5 * u.m,
-            "MST": 9.15 * u.m,
-            "SCT": 7.15 * u.m,
-            "SST": 3.0 * u.m,
-        },
-        "corsika_sphere_center": {
-            "LST": 16 * u.m,
-            "MST": 9 * u.m,
-            "SCT": 6.1 * u.m,
-            "SST": 3.25 * u.m,
-        },
-        "corsika_obs_level": 2158 * u.m,
-    }
+def corsika_telescope_data_dict(io_handler):
+    return names.get_corsika_telescope_data_dict()
 
 
 @pytest.fixture

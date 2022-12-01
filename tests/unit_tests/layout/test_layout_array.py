@@ -6,6 +6,7 @@ import astropy.units as u
 import numpy as np
 import pytest
 
+import simtools.util.general as gen
 from simtools.layout.layout_array import LayoutArray
 
 logger = logging.getLogger()
@@ -25,13 +26,25 @@ def layout_center_data_dict():
 
 
 @pytest.fixture
-def layout_array_instance(io_handler):
-    return LayoutArray(name="test_layout")
+def telescope_test_file(db, args_dict, io_handler):
+    test_file_name = "telescope_positions-North-TestLayout.ecsv"
+    db.export_file_db(
+        db_name="test-data",
+        dest=io_handler.get_output_directory(dir_type="model", test=True),
+        file_name=test_file_name,
+    )
+
+    cfg_file = gen.find_file(
+        test_file_name,
+        io_handler.get_output_directory(dir_type="model", test=True),
+    )
+    return cfg_file
 
 
 def test_from_layout_array_name(io_handler):
 
     layout = LayoutArray.from_layout_array_name("south-TestLayout")
+
     assert 99 == layout.get_number_of_telescopes()
 
 
@@ -55,14 +68,12 @@ def test_initialize_coordinate_systems(layout_center_data_dict, layout_array_ins
 
 
 def test_initialize_corsika_telescope_from_file(
-    corsika_telescope_data_dict, args_dict, layout_array_instance
+    corsika_telescope_data_dict, args_dict, io_handler, layout_array_instance
 ):
 
     layout_array_instance._initialize_corsika_telescope()
 
     for key, value in corsika_telescope_data_dict["corsika_sphere_radius"].items():
-        print(value)
-        print(layout_array_instance._corsika_telescope["corsika_sphere_radius"][key])
         assert value == layout_array_instance._corsika_telescope["corsika_sphere_radius"][key]
     for key, value in corsika_telescope_data_dict["corsika_sphere_center"].items():
         assert value == layout_array_instance._corsika_telescope["corsika_sphere_center"][key]
@@ -94,11 +105,7 @@ def test_add_tel(telescope_test_file, layout_array_instance):
 
 
 def test_build_layout(
-    layout_center_data_dict,
-    corsika_telescope_data_dict,
-    tmp_test_directory,
-    io_handler,
-    layout_array_instance,
+    layout_center_data_dict, corsika_telescope_data_dict, tmp_test_directory, io_handler
 ):
 
     layout = LayoutArray(
@@ -142,10 +149,11 @@ def test_build_layout(
     layout.export_telescope_list(crs_name="corsika")
 
     # Building a second layout from the file exported by the first one
-    layout_array_instance.read_telescope_list_file(layout.telescope_list_file)
+    layout_2 = LayoutArray("test_layout_2")
+    layout_2.read_telescope_list_file(layout.telescope_list_file)
 
-    assert 4 == layout_array_instance.get_number_of_telescopes()
-    assert layout_array_instance._array_center.get_altitude().value == pytest.approx(
+    assert 4 == layout_2.get_number_of_telescopes()
+    assert layout_2._array_center.get_altitude().value == pytest.approx(
         layout._array_center.get_altitude().value, 1.0e-2
     )
 
@@ -215,3 +223,8 @@ def test_altitude_from_corsika_z(layout_center_data_dict, corsika_telescope_data
     )
     with pytest.raises(TypeError):
         layout._altitude_from_corsika_z(5.0, None, "LST-01")
+
+
+@pytest.fixture
+def layout_array_instance():
+    return LayoutArray(name="test_layout")
