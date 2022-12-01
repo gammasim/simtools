@@ -6,7 +6,7 @@ from matplotlib import pyplot as plt
 from matplotlib.collections import PatchCollection
 
 from simtools import io_handler
-from simtools.layout.layout_array import LayoutArray
+from simtools.util import names
 from simtools.visualization import legend_handlers as leg_h
 
 
@@ -18,8 +18,17 @@ class LayoutArrayBuilder:
     def __init__(self):
         """Initialize LayoutArrayBuilder."""
         self.io_handler = io_handler.IOHandler()
+        self.telescope_types = ["LST", "MST", "SCT", "SST"]
+        telescope_object_list = ["LSTObject", "MSTObject", "SCTObject", "SSTObject"]
+        telescope_colors = ["darkorange", "dodgerblue", "lightsteelblue", "black"]
+        self.colors_dict = {}
+        self.telescope_object_dict = {}
+        for step, telescope_type in enumerate(self.telescope_types):
+            self.colors_dict[telescope_type] = telescope_colors[step]
+            self.telescope_object_dict[telescope_type] = telescope_object_list[step]
 
-    def plot_array(self, telescopes, rotate_angle=0):
+    @u.quantity_input(rotatio_angle=u.deg)
+    def plot_array(self, telescopes, rotate_angle=0 * u.deg):
         """
         Plot the array of telescopes.
 
@@ -40,7 +49,7 @@ class LayoutArrayBuilder:
         fig, ax = plt.subplots(1)
         legend_objects = list()
         legend_labels = list()
-        tel_counters = {"LST": 0, "MST": 0, "SST": 0}
+        tel_counters = {one_telescope: 0 for one_telescope in self.telescope_types}
         if rotate_angle != 0:
             telescopes["pos_x"], telescopes["pos_y"] = self._rotate(
                 rotate_angle, telescopes["pos_x"], telescopes["pos_y"]
@@ -53,22 +62,19 @@ class LayoutArrayBuilder:
                 if tel_type in tel_name_now:
                     tel_counters[tel_type] += 1
 
-        if tel_counters["LST"] > 0:
-            legend_objects.append(leg_h.LSTObject())
-            legend_labels.append("LST ({})".format(tel_counters["LST"]))
-        if tel_counters["MST"] > 0:
-            legend_objects.append(leg_h.MSTObject())
-            legend_labels.append("MST ({})".format(tel_counters["MST"]))
-        if tel_counters["SST"] > 0:
-            legend_objects.append(leg_h.SSTObject())
-            legend_labels.append("SST ({})".format(tel_counters["SST"]))
-            fontsize = 5
+        for one_telescope in self.telescope_types:
+            if tel_counters[one_telescope] > 0:
+                legend_objects.append(getattr(leg_h, self.telescope_object_dict[one_telescope]))
+                legend_labels.append(one_telescope + f" ({tel_counters[one_telescope]})")
 
         patches = []
         for i_tel, _ in enumerate(telescopes):
+            i_tel_name = telescopes[i_tel]["telescope_name"][:3]
+            if i_tel_name == "SST":
+                fontsize = 5
             patches.append(
                 self._get_telescope_patch(
-                    telescopes[i_tel]["telescope_name"][:3],
+                    i_tel_name,
                     telescopes[i_tel]["pos_x"],
                     telescopes[i_tel]["pos_y"],
                     telescopes[i_tel]["radius"] * size_factor,
@@ -89,6 +95,7 @@ class LayoutArrayBuilder:
             leg_h.LSTObject: leg_h.LSTHandler(),
             leg_h.MSTObject: leg_h.MSTHandler(),
             leg_h.SSTObject: leg_h.SSTHandler(),
+            leg_h.SCTObject: leg_h.SCTHandler(),
         }
 
         x_title = "East [m]"
@@ -105,7 +112,7 @@ class LayoutArrayBuilder:
             legend_labels,
             handler_map=legend_handler_map,
             prop={"size": 11},
-            loc="upper left",
+            loc="best",
         )
 
         plt.tight_layout()
@@ -141,8 +148,8 @@ class LayoutArrayBuilder:
 
         return telescopes
 
-    @staticmethod
-    def _get_telescope_patch(name, x, y, radius):
+    @u.quantity_input(x=u.m, y=u.m, radius=u.m)
+    def _get_telescope_patch(self, name, x, y, radius):
         """
         Collect the patch of one telescope to be plotted by self.plot_array.
 
@@ -163,17 +170,29 @@ class LayoutArrayBuilder:
             Instance of mpatches.Circle.
         """
 
-        valid_name = LayoutArray.get_telescope_type(name)
+        valid_name = names.get_telescope_type(name)
         fill_flag = False
         if valid_name == "MST":
             fill_flag = True
-        colors = {"LST": "darkorange", "MST": "dodgerblue", "SST": "black"}
-        patch = mpatches.Circle(
-            (x.value, y.value), radius=radius.value, fill=fill_flag, color=colors[valid_name]
-        )
+        if valid_name == "SCT":
+            patch = mpatches.Rectangle(
+                ((x - radius / 2).value, (y - radius / 2).value),
+                width=radius.value,
+                height=radius.value,
+                fill=False,
+                color=self.colors_dict["SCT"],
+            )
+        else:
+            patch = mpatches.Circle(
+                (x.value, y.value),
+                radius=radius.value,
+                fill=fill_flag,
+                color=self.colors_dict[valid_name],
+            )
         return patch
 
     @staticmethod
+    @u.quantity_input(rotatio_angle=u.deg)
     def _rotate(rotation_angle, x, y):
         """
         Rotate x and y by the rotation angle given in rotation_angle.
@@ -182,30 +201,41 @@ class LayoutArrayBuilder:
 
         Parameters
         ----------
-        rotation_angle
-        x: numpy.array of float
-            X positions of the telescopes in meters.
-        y: numpy.array of float
-            Y positions of the telescopes in meters.
+        rotation_angle: astropy.units.deg
+            Angle to rotate the array in degrees.
+        x: numpy.array or list
+            X positions of the telescopes, usually in meters.
+        y: numpy.array or list
+            Y positions of the telescopes, usually in meters.
 
         Returns
         -------
-        2-tuple of numpy.Array of float
+        2-tuple of list
             X and Y positions of the rotated telescopes positions.
 
         """
         if not isinstance(x, type(y)):
-            raise RuntimeError("x and y are not the same type! " "Cannot perform transformation.")
+            raise RuntimeError("x and y are not the same type! Cannot perform transformation.")
         if not isinstance(x, (list, np.ndarray)):
             x = [x]
             y = [y]
 
         if len(x) != len(y):
             raise RuntimeError(
-                "Cannot perform coordinate transformation " "when x and y have different lengths."
+                "Cannot perform coordinate transformation when x and y have different lengths."
             )
-        x_trans, y_trans = list(), list()
-        rotate_angle = np.deg2rad(rotation_angle)
+
+        try:
+            x = x.to(u.m)
+            y = y.to(u.m)
+            if isinstance(x[0].unit, type(u.m)) and isinstance(y[0].unit, type(u.m)):
+                x = x.value
+                y = y.value
+        except AttributeError:
+            pass
+
+        x_trans, y_trans = [], []
+        rotate_angle = np.deg2rad(rotation_angle.value)
 
         for x_now, y_now in zip(x, y):
             x_trans.append(x_now * np.cos(rotate_angle) + y_now * np.sin(rotate_angle))

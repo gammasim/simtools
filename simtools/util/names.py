@@ -750,3 +750,27 @@ def camera_efficiency_log_file_name(site, telescope_model_name, zenith_angle, la
     name += "_{}".format(label) if label is not None else ""
     name += ".log"
     return name
+
+
+def get_telescope_type(telescope_name):
+    """
+    Guess telescope type from name. Types are "LST", "MST", "SST", "SCT".
+
+    Parameters
+    ----------
+    telescope_name: str
+        Telescope name
+
+    Returns
+    -------
+    str
+        Telescope type.
+    """
+
+    _class, _ = split_telescope_model_name(telescope_name)
+    try:
+        if _class[0:3] in ("LST", "MST", "SST", "SCT"):
+            return _class[0:3]
+
+    except IndexError:
+        pass
