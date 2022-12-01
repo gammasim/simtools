@@ -31,11 +31,10 @@ def test_telescope_layout_file_to_dict(telescope_test_file, layout_builder_insta
 def test_get_telescope_patch(corsika_telescope_data_dict, layout_builder_instance):
 
     for tel_type in np.array(list(corsika_telescope_data_dict["corsika_sphere_radius"].keys())):
-        print(tel_type)
-        print(corsika_telescope_data_dict["corsika_sphere_radius"].values())
-        radius = corsika_telescope_data_dict["corsika_sphere_radius"][tel_type]
+        print(corsika_telescope_data_dict)
+        radius = corsika_telescope_data_dict["corsika_sphere_radius"][tel_type].value
         patch = layout_builder_instance._get_telescope_patch(
-            tel_type, 0 * u.m, 0 * u.m, radius.value * u.m
+            tel_type, 0 * u.m, 0 * u.m, radius * u.m
         )
         if mpatches.Circle == type(patch):
             assert (
