@@ -2,6 +2,8 @@ import matplotlib.colors as mcolors
 import matplotlib.patches as mpatches
 import numpy as np
 
+from simtools.util import names
+
 __all__ = [
     "EdgePixelObject",
     "HexEdgePixelHandler",
@@ -24,10 +26,11 @@ __all__ = [
     "SquarePixelHandler",
 ]
 
-SST_RADIUS = 3
-SCT_RADIUS = 7.25
-MST_RADIUS = 9.15
-LST_RADIUS = 12.5
+corsika_info = names.get_corsika_telescope_data_dict()
+SST_RADIUS = corsika_info["corsika_sphere_radius"]["SST"].value
+SCT_RADIUS = corsika_info["corsika_sphere_radius"]["SCT"].value
+MST_RADIUS = corsika_info["corsika_sphere_radius"]["MST"].value
+LST_RADIUS = corsika_info["corsika_sphere_radius"]["LST"].value
 
 
 class PixelObject(object):
