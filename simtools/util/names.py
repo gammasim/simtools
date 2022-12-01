@@ -1,11 +1,18 @@
 import logging
 
+import astropy.units as u
+
+import simtools.io_handler
+from simtools.util.general import collect_data_from_yaml_or_dict
+
 __all__ = [
     "camera_efficiency_log_file_name",
     "camera_efficiency_results_file_name",
     "camera_efficiency_simtel_file_name",
     "convert_telescope_model_name_to_yaml",
+    "get_corsika_telescope_data_dict",
     "get_site_from_telescope_name",
+    "get_telescope_type",
     "is_valid_name",
     "layout_telescope_list_file_name",
     "ray_tracing_file_name",
@@ -271,10 +278,8 @@ def split_telescope_model_name(name):
     str, str
        class (LST, MST, SST ...) and type (any complement).
     """
-    if "-" in name:
-        name_parts = name.split("-")
-    else:
-        return name, None
+
+    name_parts = name.split("-")
     tel_class = name_parts[0]
     tel_type = "-".join(name_parts[1:])
     return tel_class, tel_type
@@ -755,12 +760,10 @@ def camera_efficiency_log_file_name(site, telescope_model_name, zenith_angle, la
 def get_telescope_type(telescope_name):
     """
     Guess telescope type from name. Types are "LST", "MST", "SST", "SCT".
-
     Parameters
     ----------
     telescope_name: str
         Telescope name
-
     Returns
     -------
     str
@@ -774,3 +777,22 @@ def get_telescope_type(telescope_name):
 
     except IndexError:
         pass
+
+    return ""
+
+
+def get_corsika_telescope_data_dict():
+    io_handler = simtools.io_handler.IOHandler()
+    io_handler.set_paths(output_path="./simtools-output/", data_path="./data/")
+    file_data = collect_data_from_yaml_or_dict(
+        io_handler.get_input_data_file("parameters", "corsika_parameters.yml"), None
+    )
+    keys = ["corsika_sphere_center", "corsika_sphere_radius"]
+    final_dict = {}
+    for key in keys:
+        final_dict[key] = {}
+        for tel_type in file_data[key].keys():
+            final_dict[key][tel_type] = file_data[key][tel_type]["value"] * u.meter
+    final_dict["corsika_obs_level"] = file_data["SITE_PARAMETERS"]["North"]["OBSLEV"][0] * u.cm
+    final_dict["corsika_obs_level"] = final_dict["corsika_obs_level"].to(u.m) * u.meter
+    return final_dict
