@@ -91,7 +91,7 @@ class LayoutArray:
         layout = cls(name=valid_layout_array_name, label=label)
 
         telescope_list_file = layout.io_handler.get_input_data_file(
-            "layout", "telescope_positions-{}.ecsv".format(valid_layout_array_name)
+            "layout", f"telescope_positions-{valid_layout_array_name}.ecsv"
         )
         layout.read_telescope_list_file(telescope_list_file)
 
@@ -117,9 +117,7 @@ class LayoutArray:
         self._corsika_telescope = {}
 
         if corsika_dict is not None:
-            self._logger.debug(
-                "Initialize CORSIKA telescope parameters from dict: {}".format(corsika_dict)
-            )
+            self._logger.debug(f"Initialize CORSIKA telescope parameters from dict: {corsika_dict}")
             self._initialize_corsika_telescope_from_dict(corsika_dict)
         else:
             self._logger.debug("Initialize CORSIKA telescope parameters from file")
@@ -151,7 +149,7 @@ class LayoutArray:
         _sphere_dict_cleaned = {}
         try:
             for key, value in sphere_dict.items():
-                if isinstance(value, u.Quantity) or isinstance(value, str):
+                if isinstance(value, (str, u.Quantity)):
                     _sphere_dict_cleaned[key] = u.Quantity(value)
                 else:
                     _sphere_dict_cleaned[key] = value["value"] * u.Unit(value["unit"])
@@ -190,7 +188,7 @@ class LayoutArray:
         except (TypeError, KeyError):
             pass
 
-    def _initialize_coordinate_systems(self, center_dict=None, defaults_init=False):
+    def _initialize_coordinate_systems(self, center_dict=None):
         """
         Initialize array center and coordinate systems.
 
@@ -198,8 +196,6 @@ class LayoutArray:
         ----------
         center_dict: dict
             dictionary with coordinates of array center.
-        defaults_init: bool
-            default initialisation without transformation in all available projections.
 
         Raises
         ------
@@ -207,7 +203,7 @@ class LayoutArray:
             invalid array center definition.
 
         """
-        self._logger.debug("Initialize array center coordinate systems: {}".format(center_dict))
+        self._logger.debug(f"Initialize array center coordinate systems: {center_dict}")
 
         self._array_center = TelescopePosition()
         self._array_center.name = "array_center"
@@ -280,6 +276,8 @@ class LayoutArray:
                 self._corsika_telescope["corsika_obs_level"],
                 self._get_corsika_sphere_center(tel_name),
             )
+
+        return np.nan
 
     def _get_corsika_sphere_center(self, tel_name):
         """
@@ -419,12 +417,10 @@ class LayoutArray:
         try:
             table = Table.read(telescope_list_file, format="ascii.ecsv")
         except FileNotFoundError:
-            self._logger.error(
-                "Error reading list of array elements from {}".format(telescope_list_file)
-            )
+            self._logger.error(f"Error reading list of array elements from {telescope_list_file}")
             raise
 
-        self._logger.info("Reading array elements from {}".format(telescope_list_file))
+        self._logger.info(f"Reading array elements from {telescope_list_file}")
 
         self._initialize_corsika_telescope(table.meta)
         self._initialize_coordinate_systems(table.meta)
@@ -573,7 +569,7 @@ class LayoutArray:
             pass
 
         self._set_telescope_list_file(crs_name)
-        self._logger.info("Exporting telescope list to {}".format(self.telescope_list_file))
+        self._logger.info(f"Exporting telescope list to {self.telescope_list_file}")
         table.write(self.telescope_list_file, format="ascii.ecsv", overwrite=True)
 
     def get_number_of_telescopes(self):
@@ -623,11 +619,11 @@ class LayoutArray:
                 raise
 
             corsika_list += "TELESCOPE"
-            corsika_list += "\t {:.3f}E2".format(pos_x.value)
-            corsika_list += "\t {:.3f}E2".format(pos_y.value)
-            corsika_list += "\t {:.3f}E2".format(pos_z.value)
-            corsika_list += "\t {:.3f}E2".format(sphere_radius.value)
-            corsika_list += "\t # {}\n".format(tel.name)
+            corsika_list += f"\t {pos_x.value:.3f}E2"
+            corsika_list += f"\t {pos_y.value:.3f}E2"
+            corsika_list += f"\t {pos_z.value:.3f}E2"
+            corsika_list += f"\t {sphere_radius.value:.3f}E2"
+            corsika_list += f"\t # {tel.name}\n"
 
         return corsika_list
 
@@ -637,7 +633,7 @@ class LayoutArray:
 
         """
 
-        print("LayoutArray: {}".format(self.name))
+        print(f"LayoutArray: {self.name}")
         print("ArrayCenter")
         print(self._array_center)
         print("Telescopes")
@@ -722,14 +718,16 @@ class LayoutArray:
             if not np.isnan(_center_lat.value) and not np.isnan(_center_lon.value):
                 proj4_string = (
                     "+proj=tmerc +ellps=WGS84 +datum=WGS84"
-                    + " +lon_0={} +lat_0={}".format(_center_lon, _center_lat)
+                    + f" +lon_0={_center_lon} +lat_0={_center_lat}"
                     + " +axis=nwu +units=m +k_0=1.0"
                 )
                 crs_local = pyproj.CRS.from_proj4(proj4_string)
-                self._logger.debug("Local Mercator projection: {}".format(crs_local))
+                self._logger.debug(f"Local Mercator projection: {crs_local}")
                 return crs_local
 
         self._logger.debug("crs_local cannot be built: missing array center lon and lat")
+
+        return None
 
     def _get_crs_utm(self):
         """
@@ -743,10 +741,12 @@ class LayoutArray:
         """
         if self._epsg:
             crs_utm = pyproj.CRS.from_user_input(self._epsg)
-            self._logger.debug("UTM system: {}".format(crs_utm))
+            self._logger.debug(f"UTM system: {crs_utm}")
             return crs_utm
 
         self._logger.debug("crs_utm cannot be built because EPSG definition is missing")
+
+        return None
 
     @staticmethod
     def _get_crs_wgs84():
@@ -760,3 +760,27 @@ class LayoutArray:
 
         """
         return pyproj.CRS("EPSG:4326")
+
+    @staticmethod
+    def get_telescope_type(telescope_name):
+        """
+        Guess telescope type from name. Types are "LST", "MST", "SST", "SCT".
+
+        Parameters
+        ----------
+        telescope_name: str
+            Telescope name
+
+        Returns
+        -------
+        str
+            Telescope type.
+        """
+
+        _class, _ = names.split_telescope_model_name(telescope_name)
+        try:
+            if _class[0:3] in ("LST", "MST", "SST", "SCT"):
+                return _class[0:3]
+
+        except IndexError:
+            pass

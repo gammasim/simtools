@@ -55,9 +55,8 @@ def test_handling_parameters(telescope_model_lst):
     tel_model = telescope_model_lst
 
     logger.info(
-        "Old mirror_reflection_random_angle:{}".format(
-            tel_model.get_parameter_value("mirror_reflection_random_angle")
-        )
+        "Old mirror_reflection_random_angle: "
+        f"{tel_model.get_parameter_value('mirror_reflection_random_angle')}"
     )
     logger.info("Changing mirror_reflection_random_angle")
     new_mrra = "0.0080 0 0"
@@ -102,7 +101,7 @@ def test_flen_type(telescope_model_lst):
 
     tel_model = telescope_model_lst
     flen_info = tel_model.get_parameter("focal_length")
-    logger.info("Focal Length = {}, type = {}".format(flen_info["Value"], flen_info["Type"]))
+    logger.info(f"Focal Length = {flen_info['Value']}, type = {flen_info['Type']}")
 
     assert isinstance(flen_info["Value"], float)
 
@@ -113,8 +112,8 @@ def test_cfg_file(telescope_model_from_config_file, lst_config_file):
 
     tel_model.export_config_file()
 
-    logger.info("Config file (original): {}".format(lst_config_file))
-    logger.info("Config file (new): {}".format(tel_model.get_config_file()))
+    logger.info(f"Config file (original): {lst_config_file}")
+    logger.info(f"Config file (new): {tel_model.get_config_file()}")
 
     assert filecmp.cmp(lst_config_file, tel_model.get_config_file())
 
@@ -126,7 +125,7 @@ def test_cfg_file(telescope_model_from_config_file, lst_config_file):
         config_file_name=cfg_file,
     )
     tel.export_config_file()
-    logger.info("Config file (sst): {}".format(tel.get_config_file()))
+    logger.info(f"Config file (sst): {tel.get_config_file()}")
     # TODO: testing that file can be written and that it is  different,
     #       but not the file has the
     #       correct contents

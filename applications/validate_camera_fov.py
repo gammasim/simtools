@@ -111,16 +111,16 @@ def main():
     )
     tel_model.export_model_files()
 
-    print("\nValidating the camera FoV of {}\n".format(tel_model.name))
+    print(f"\nValidating the camera FoV of {tel_model.name}\n")
 
     focal_length = float(tel_model.get_parameter_value("effective_focal_length"))
     camera = tel_model.camera
 
     fov, r_edge_avg = camera.calc_fov()
 
-    print("\nEffective focal length = " + "{0:.3f} cm".format(focal_length))
-    print("{0} FoV = {1:.3f} deg".format(tel_model.name, fov))
-    print("Avg. edge radius = {0:.3f} cm\n".format(r_edge_avg))
+    print("\nEffective focal length = " + f"{focal_length:.3f} cm")
+    print(f"{tel_model.name} FoV = {fov:.3f} deg")
+    print(f"Avg. edge radius = {r_edge_avg:.3f} cm\n")
 
     # Now plot the camera as well
     try:
@@ -140,7 +140,7 @@ def main():
     for suffix in ["pdf", "png"]:
         file_name = f"{str(plot_file_prefix)}.{suffix}"
         fig.savefig(file_name, format=suffix, bbox_inches="tight")
-        print("\nSaved camera plot in {}\n".format(file_name))
+        print(f"\nSaved camera plot in {file_name}\n")
     fig.clf()
 
 

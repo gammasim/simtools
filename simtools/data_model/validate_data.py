@@ -72,7 +72,7 @@ class DataValidator:
         Open data file and read data from file
         """
 
-        self._logger.info("Reading data from {}".format(self._data_file_name))
+        self._logger.info(f"Reading data from {self._data_file_name}")
         self.data_table = Table.read(self._data_file_name, guess=True, delimiter=r"\s")
 
     def validate_data_columns(self):
@@ -106,9 +106,9 @@ class DataValidator:
         for key, value in self._reference_data_columns.items():
             if "required_column" in value and value["required_column"] is True:
                 if key in self.data_table.columns:
-                    self._logger.debug("Found required data column '{}'".format(key))
+                    self._logger.debug(f"Found required data column '{key}'")
                 else:
-                    raise KeyError("Missing required column '{}'".format(key))
+                    raise KeyError(f"Missing required column '{key}'")
 
     def _sort_data(self):
         """
@@ -132,16 +132,14 @@ class DataValidator:
                     _columns_by_which_to_reverse_sort.append(key)
 
         if len(_columns_by_which_to_sort) > 0:
-            self._logger.debug("Sorting data columns: {}".format(_columns_by_which_to_sort))
+            self._logger.debug(f"Sorting data columns: {_columns_by_which_to_sort}")
             try:
                 self.data_table.sort(_columns_by_which_to_sort)
             except AttributeError:
                 self._logger.error("No data table defined for sorting")
                 raise
         elif len(_columns_by_which_to_reverse_sort) > 0:
-            self._logger.debug(
-                "Reverse sorting data columns: {}".format(_columns_by_which_to_reverse_sort)
-            )
+            self._logger.debug(f"Reverse sorting data columns: {_columns_by_which_to_reverse_sort}")
             try:
                 self.data_table.sort(_columns_by_which_to_reverse_sort, reverse=True)
             except AttributeError:
@@ -176,9 +174,8 @@ class DataValidator:
                 self.data_table = unique(self.data_table)
             else:
                 self._logger.error(
-                    "Failed removal of duplication for column {}, values are not unqiue".format(
-                        _column_with_unique_requirement
-                    )
+                    "Failed removal of duplication for column "
+                    f"{_column_with_unique_requirement}, values are not unqiue"
                 )
                 raise ValueError
 
@@ -197,10 +194,10 @@ class DataValidator:
 
         for key, value in self._reference_data_columns.items():
             if "attribute" in value and "remove_duplicates" in value["attribute"]:
-                self._logger.debug("Removing duplicates for column '{}'".format(key))
+                self._logger.debug(f"Removing duplicates for column '{key}'")
                 _unique_required_column.append(key)
 
-        self._logger.debug("Unique required columns: {}".format(_unique_required_column))
+        self._logger.debug(f"Unique required columns: {_unique_required_column}")
         return _unique_required_column
 
     def _get_reference_unit(self, column_name):
@@ -228,7 +225,7 @@ class DataValidator:
             reference_unit = self._reference_data_columns[column_name]["unit"]
         except KeyError:
             self._logger.error(
-                "Data column '{}' not found in reference column definition".format(column_name)
+                f"Data column '{column_name}' not found in reference column definition"
             )
             raise
 
@@ -283,7 +280,7 @@ class DataValidator:
 
         """
 
-        self._logger.debug("Checking data column '{}'".format(col.name))
+        self._logger.debug(f"Checking data column '{col.name}'")
 
         try:
             reference_unit = self._get_reference_unit(col.name)
@@ -292,18 +289,16 @@ class DataValidator:
                 return col
 
             self._logger.debug(
-                "Data column '{}' with reference unit '{}' and data unit '{}'".format(
-                    col.name, reference_unit, col.unit
-                )
+                f"Data column '{col.name}' with reference unit "
+                f"'{reference_unit}' and data unit '{col.unit}'"
             )
 
             col.convert_unit_to(reference_unit)
 
         except u.core.UnitConversionError:
             self._logger.error(
-                "Invalid unit in data column '{}'. Expected type '{}', found '{}'".format(
-                    col.name, reference_unit, col.unit
-                )
+                f"Invalid unit in data column '{col.name}'. "
+                f"Expected type '{reference_unit}', found '{col.unit}'"
             )
             raise
 
@@ -335,15 +330,15 @@ class DataValidator:
             range columns
 
         """
-        self._logger.debug("Checking data in column '{}' for '{}'".format(col_name, range_type))
+        self._logger.debug(f"Checking data in column '{col_name}' for '{range_type}'")
 
         try:
-            if range_type != "allowed_range" and range_type != "required_range":
+            if range_type not in ("allowed_range", "required_range"):
                 raise KeyError
             if range_type not in self._reference_data_columns[col_name]:
                 return None
-        except KeyError:
-            raise KeyError(f"Missing column '{col_name} in reference range'")
+        except KeyError as e:
+            raise KeyError(f"Missing column '{col_name} in reference range'") from e
 
         try:
             if not self._interval_check(
@@ -356,19 +351,13 @@ class DataValidator:
             ):
                 raise ValueError
         except KeyError:
-            self._logger.error(
-                "Invalid range ('{}') definition for column '{}'".format(range_type, col_name)
-            )
+            self._logger.error(f"Invalid range ('{range_type}') definition for column '{col_name}'")
         except ValueError:
             self._logger.error(
-                "Value for column '{}' out of range. [[{}, {}], {}: [[{}, {}]".format(
-                    col_name,
-                    col_min,
-                    col_max,
-                    range_type,
-                    self._reference_data_columns[col_name][range_type]["min"],
-                    self._reference_data_columns[col_name][range_type]["max"],
-                )
+                f"Value for column '{col_name}' out of range. "
+                f"[[{col_min}, {col_max}], {range_type}: "
+                f"[[{self._reference_data_columns[col_name][range_type]['min']}, "
+                f"{self._reference_data_columns[col_name][range_type]['max']}]"
             )
             raise
 

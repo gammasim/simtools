@@ -80,7 +80,7 @@ def main():
             for par_now in non_optic_parameters:
                 db.update_parameter_field(
                     db_name=db.DB_CTA_SIMULATION_MODEL,
-                    telescope="{}-MST-Structure-D".format(site),
+                    telescope=f"{site}-MST-Structure-D",
                     version=version_now,
                     parameter=par_now,
                     field="Applicable",
@@ -88,7 +88,7 @@ def main():
                 )
             pars = db.read_mongo_db(
                 db_name=db.DB_CTA_SIMULATION_MODEL,
-                telescope_model_name_db="{}-MST-Structure-D".format(site),
+                telescope_model_name_db=f"{site}-MST-Structure-D",
                 model_version=version_now,
                 run_location="",
                 write_files=False,
