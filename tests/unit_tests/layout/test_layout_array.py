@@ -61,6 +61,8 @@ def test_initialize_corsika_telescope_from_file(
     layout_array_instance._initialize_corsika_telescope()
 
     for key, value in corsika_telescope_data_dict["corsika_sphere_radius"].items():
+        print(value)
+        print(layout_array_instance._corsika_telescope["corsika_sphere_radius"][key])
         assert value == layout_array_instance._corsika_telescope["corsika_sphere_radius"][key]
     for key, value in corsika_telescope_data_dict["corsika_sphere_center"].items():
         assert value == layout_array_instance._corsika_telescope["corsika_sphere_center"][key]

@@ -159,7 +159,7 @@ class ArrayModel:
         _all_telescope_model_names = list()  # List of telescope names without repetition
         _all_pars_to_change = dict()
         for tel in self.layout:
-            tel_size = self.layout.get_telescope_type(tel.name)
+            tel_size = names.get_telescope_type(tel.name)
 
             # Collecting telescope name and pars to change from array_config_data
             tel_model_name, pars_to_change = self._get_single_telescope_info_from_array_config(
