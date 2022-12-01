@@ -173,17 +173,17 @@ def main():
         shower_simulator.simulate()
 
     # Exporting the list of output/log/input files into the application folder
-    output_file_list = output_dir.joinpath("output_files_{}.list".format(args_dict["primary"]))
-    log_file_list = output_dir.joinpath("log_files_{}.list".format(args_dict["primary"]))
+    output_file_list = output_dir.joinpath(f"output_files_{args_dict['primary']}.list")
+    log_file_list = output_dir.joinpath(f"log_files_{args_dict['primary']}.list")
 
     def print_list_into_file(list_of_files, file_name):
         with open(file_name, "w") as f:
             for line in list_of_files:
                 f.write(line + "\n")
 
-    logger.info("List of output files exported to {}".format(output_file_list))
+    logger.info(f"List of output files exported to {output_file_list}")
     print_list_into_file(shower_simulator.get_list_of_output_files(), output_file_list)
-    logger.info("List of log files exported to {}".format(log_file_list))
+    logger.info(f"List of log files exported to {log_file_list}")
     print_list_into_file(shower_simulator.get_list_of_log_files(), log_file_list)
 
 
