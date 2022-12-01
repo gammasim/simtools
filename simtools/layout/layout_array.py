@@ -297,9 +297,9 @@ class LayoutArray:
 
         """
 
-        if self.get_telescope_type(tel_name) is not None:
+        if names.get_telescope_type(tel_name) is not None:
             return self._corsika_telescope["corsika_sphere_center"][
-                self.get_telescope_type(tel_name)
+                names.get_telescope_type(tel_name)
             ]
 
         return 0.0 * u.m
@@ -329,7 +329,7 @@ class LayoutArray:
         try:
             tel.name = row["telescope_name"]
             if "asset_code" not in row:
-                tel.asset_code = self.get_telescope_type(tel.name)
+                tel.asset_code = names.get_telescope_type(tel.name)
         except KeyError:
             pass
         try:
@@ -607,7 +607,7 @@ class LayoutArray:
             pos_x, pos_y, pos_z = tel.get_coordinates("corsika")
             try:
                 sphere_radius = self._corsika_telescope["corsika_sphere_radius"][
-                    self.get_telescope_type(tel.name)
+                    names.get_telescope_type(tel.name)
                 ]
             except KeyError:
                 self._logger.error("Missing definition of CORSIKA sphere radius")
@@ -760,27 +760,3 @@ class LayoutArray:
 
         """
         return pyproj.CRS("EPSG:4326")
-
-    @staticmethod
-    def get_telescope_type(telescope_name):
-        """
-        Guess telescope type from name. Types are "LST", "MST", "SST", "SCT".
-
-        Parameters
-        ----------
-        telescope_name: str
-            Telescope name
-
-        Returns
-        -------
-        str
-            Telescope type.
-        """
-
-        _class, _ = names.split_telescope_model_name(telescope_name)
-        try:
-            if _class[0:3] in ("LST", "MST", "SST", "SCT"):
-                return _class[0:3]
-
-        except IndexError:
-            pass

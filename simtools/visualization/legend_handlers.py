@@ -15,12 +15,19 @@ __all__ = [
     "MeanRadiusOuterEdgeObject",
     "OffPixelObject",
     "PixelObject",
+    "SCTHandler",
+    "SCTObject",
     "SSTHandler",
     "SSTObject",
     "SquareEdgePixelHandler",
     "SquareOffPixelHandler",
     "SquarePixelHandler",
 ]
+
+SST_RADIUS = 3
+SCT_RADIUS = 7.25
+MST_RADIUS = 9.15
+LST_RADIUS = 12.5
 
 
 class PixelObject(object):
@@ -55,6 +62,12 @@ class MSTObject(object):
 
 class SSTObject(object):
     """SST Object."""
+
+    pass
+
+
+class SCTObject(object):
+    """SCT Object."""
 
     pass
 
@@ -237,7 +250,7 @@ class MSTHandler(object):
         radius = handlebox.height
         patch = mpatches.Circle(
             xy=center,
-            radius=radius * (11.5 / 23),
+            radius=radius * (MST_RADIUS / LST_RADIUS),
             facecolor="dodgerblue",
             edgecolor="dodgerblue",
             transform=handlebox.get_transform(),
@@ -260,9 +273,30 @@ class SSTHandler(object):
         radius = handlebox.height
         patch = mpatches.Circle(
             xy=center,
-            radius=radius * (9.7 / 23),
+            radius=radius * (SST_RADIUS / LST_RADIUS),
             facecolor="black",
             edgecolor="black",
+            transform=handlebox.get_transform(),
+        )
+        handlebox.add_artist(patch)
+        return patch
+
+
+class SCTHandler(object):
+    """
+    Legend handler class to plot a representation of an SCT in an array layout.
+    """
+
+    @staticmethod
+    def legend_artist(self, legend, orig_handle, fontsize, handlebox):
+        x0, y0 = handlebox.xdescent + 0.1 * handlebox.width, handlebox.ydescent
+        width = height = handlebox.height
+        patch = mpatches.Rectangle(
+            [x0, y0],
+            width,
+            height,
+            facecolor="lightsteelblue",
+            edgecolor="lightsteelblue",
             transform=handlebox.get_transform(),
         )
         handlebox.add_artist(patch)
