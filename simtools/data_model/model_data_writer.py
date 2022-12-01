@@ -46,12 +46,12 @@ class ModelDataWriter:
 
         _file = self.workflow_config.product_data_file_name()
         try:
-            self._logger.info("Writing data to {}".format(_file))
+            self._logger.info(f"Writing data to {_file}")
             product_data.write(
                 _file, format=self.workflow_config.product_data_file_format(), overwrite=True
             )
         except FileNotFoundError:
-            self._logger.error("Error writing model data to {}".format(_file))
+            self._logger.error(f"Error writing model data to {_file}")
             raise
 
     def write_metadata(self, ymlfile=None, keys_lower_case=False):
@@ -81,7 +81,7 @@ class ModelDataWriter:
         try:
             if not ymlfile:
                 ymlfile = self.workflow_config.product_data_file_name(".yml")
-            self._logger.info("Writing metadata to {}".format(ymlfile))
+            self._logger.info(f"Writing metadata to {ymlfile}")
             with open(ymlfile, "w", encoding="UTF-8") as file:
                 yaml.safe_dump(
                     gen.change_dict_keys_case(self.workflow_config.top_level_meta, keys_lower_case),
@@ -90,7 +90,7 @@ class ModelDataWriter:
                 )
             return ymlfile
         except FileNotFoundError:
-            self._logger.error("Error writing model data to {}".format(ymlfile))
+            self._logger.error(f"Error writing model data to {ymlfile}")
             raise
         except AttributeError:
             self._logger.error("No metadata defined for writing")

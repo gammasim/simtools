@@ -9,6 +9,10 @@ from simtools.util import names
 
 __all__ = ["SimtelRunnerRayTracing"]
 
+# pylint: disable=no-member
+# The line above is needed because there are members which are created
+# by adding them to the __dict__ of the class rather than directly.
+
 
 class SimtelRunnerRayTracing(SimtelRunner):
     """
@@ -126,15 +130,15 @@ class SimtelRunnerRayTracing(SimtelRunner):
         if not file.exists() or force_simulate:
             # Adding header to photon list file.
             with self._photons_file.open("w") as file:
-                file.write("#{}\n".format(50 * "="))
+                file.write(f"#{50 * '='}\n")
                 file.write("# List of photons for RayTracing simulations\n")
-                file.write("#{}\n".format(50 * "="))
-                file.write("# config_file = {}\n".format(self.telescope_model.get_config_file()))
-                file.write("# zenith_angle [deg] = {}\n".format(self.config.zenith_angle))
-                file.write("# off_axis_angle [deg] = {}\n".format(self.config.off_axis_angle))
-                file.write("# source_distance [km] = {}\n".format(self.config.source_distance))
+                file.write(f"#{50 * '='}\n")
+                file.write(f"# config_file = {self.telescope_model.get_config_file()}\n")
+                file.write(f"# zenith_angle [deg] = {self.config.zenith_angle}\n")
+                file.write(f"# off_axis_angle [deg] = {self.config.off_axis_angle}\n")
+                file.write(f"# source_distance [km] = {self.config.source_distance}\n")
                 if self._single_mirror_mode:
-                    file.write("# mirror_number = {}\n\n".format(self.config.mirror_number))
+                    file.write(f"# mirror_number = {self.config.mirror_number}\n\n")
 
             # Filling in star file with a single light source.
             # Parameters defining light source:
@@ -144,16 +148,14 @@ class SimtelRunnerRayTracing(SimtelRunner):
             # - distance of light source
             with self._stars_file.open("w") as file:
                 file.write(
-                    "0. {} 1.0 {}\n".format(
-                        90.0 - self.config.zenith_angle, self.config.source_distance
-                    )
+                    f"0. {90.0 - self.config.zenith_angle} 1.0 {self.config.source_distance}\n"
                 )
 
-    def _shall_run(self, **kwargs):
+    def _shall_run(self, **kwargs):  # pylint: disable=unused-argument; applies only to this line
         """Tells if simulations should be run again based on the existence of output files."""
         return not self._is_photon_list_file_ok()
 
-    def _make_run_command(self, **kwargs):
+    def _make_run_command(self, **kwargs):  # pylint: disable=unused-argument
         """Return the command to run simtel_array."""
 
         if self._single_mirror_mode:
@@ -163,9 +165,9 @@ class SimtelRunnerRayTracing(SimtelRunner):
 
         # RayTracing
         command = str(self._simtel_source_path.joinpath("sim_telarray/bin/sim_telarray"))
-        command += " -c {}".format(self.telescope_model.get_config_file())
+        command += f" -c {self.telescope_model.get_config_file()}"
         command += " -I../cfg/CTA"
-        command += " -I{}".format(self.telescope_model.get_config_directory())
+        command += f" -I{self.telescope_model.get_config_directory()}"
         command += super()._config_option("IMAGING_LIST", str(self._photons_file))
         command += super()._config_option("stars", str(self._stars_file))
         command += super()._config_option(
@@ -211,7 +213,7 @@ class SimtelRunnerRayTracing(SimtelRunner):
 
         return command
 
-    def _check_run_result(self, **kwargs):
+    def _check_run_result(self, **kwargs):  # pylint: disable=unused-argument
         """Checking run results.
 
         Raises
@@ -224,8 +226,8 @@ class SimtelRunnerRayTracing(SimtelRunner):
             msg = "Photon list is empty."
             self._logger.error(msg)
             raise RuntimeError(msg)
-        else:
-            self._logger.debug("Everything looks fine with output file.")
+
+        self._logger.debug("Everything looks fine with output file.")
 
     def _is_photon_list_file_ok(self):
         """Check if the photon list is valid,"""
