@@ -302,9 +302,8 @@ def test_separating_get_and_write(db, io_handler):
         io_handler.get_output_directory(dir_type="model", test=True),
     )
     logger.debug(
-        "Checking files were written to {}".format(
-            io_handler.get_output_directory(dir_type="model", test=True)
-        )
+        "Checking files were written to "
+        f"{io_handler.get_output_directory(dir_type='model', test=True)}"
     )
     for file_now in file_list:
         assert io_handler.get_output_file(file_now, dir_type="model", test=True).exists()
@@ -323,9 +322,8 @@ def test_insert_files_db(db, io_handler, db_cleanup_file_sandbox, caplog):
 
     logger.info("----Testing inserting files to the DB-----")
     logger.info(
-        "Creating a temporary file in {}".format(
-            io_handler.get_output_directory(dir_type="model", test=True)
-        )
+        "Creating a temporary file in "
+        f"{io_handler.get_output_directory(dir_type='model', test=True)}"
     )
     file_name = io_handler.get_output_directory(dir_type="model", test=True) / "test_file.dat"
     with open(file_name, "w") as f:

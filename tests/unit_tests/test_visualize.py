@@ -42,7 +42,7 @@ def test_plot_1D(db, io_handler):
     for i in range(5):
         new_data = np.copy(data_in)
         new_data[y_title] = new_data[y_title] * (1 - 0.1 * (i + 1))
-        data["{}%% reflectivity".format(100 * (1 - 0.1 * (i + 1)))] = new_data
+        data[f"{100 * (1 - 0.1 * (i + 1))}%% reflectivity"] = new_data
 
     plt = visualize.plot_1D(data, title=title, palette="autumn")
 
@@ -51,7 +51,7 @@ def test_plot_1D(db, io_handler):
         plot_file.unlink()
     plt.savefig(plot_file)
 
-    logger.debug("Produced 1D plot ({}).".format(plot_file))
+    logger.debug(f"Produced 1D plot ({plot_file}).")
 
     assert plot_file.exists()
 
@@ -80,7 +80,7 @@ def test_plot_table(db, io_handler):
         plot_file.unlink()
     plt.savefig(plot_file)
 
-    logger.debug("Produced 1D plot ({}).".format(plot_file))
+    logger.debug(f"Produced 1D plot ({plot_file}).")
 
     assert plot_file.exists()
 
