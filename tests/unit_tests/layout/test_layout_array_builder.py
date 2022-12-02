@@ -76,5 +76,5 @@ def test_rotate_telescope_position(layout_builder_instance):
 
 def test_plot_array(telescope_test_file, layout_builder_instance):
     telescopes_dict = layout_builder_instance.telescope_layout_file_to_dict(telescope_test_file)
-    fig_out = layout_builder_instance.plot_array(telescopes_dict, rotate_angle=0)
+    fig_out = visualize.plot_array(telescopes_dict, rotate_angle=0 * u.deg)
     assert isinstance(fig_out, type(plt.figure()))

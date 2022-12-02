@@ -1,13 +1,7 @@
 import astropy.units as u
-import numpy as np
 from astropy.table import QTable
-from matplotlib import pyplot as plt
-from matplotlib.collections import PatchCollection
 
 from simtools import io_handler
-from simtools.util import general as gen
-from simtools.visualization import legend_handlers as leg_h
-from simtools.visualization import visualize
 
 
 class LayoutArrayBuilder:
@@ -23,98 +17,6 @@ class LayoutArrayBuilder:
         self.telescope_object_dict = {}
         for step, telescope_type in enumerate(self.telescope_types):
             self.telescope_object_dict[telescope_type] = telescope_object_list[step]
-
-    @u.quantity_input(rotatio_angle=u.deg)
-    def plot_array(self, telescopes, rotate_angle=0 * u.deg):
-        """
-        Plot the array of telescopes.
-
-        Parameters
-        ----------
-        telescopes: dict
-            Dictionary with the telescope position and names.
-        rotate_angle:
-            Angle to rotate the plot. For rotate_angle = 0 the X-axis points towards the east, and\
-            the Y-axis points towards the North.
-
-        Returns
-        -------
-        plt.figure
-            Instance of plt.figure with the array of telescopes plotted.
-
-        """
-        fig, ax = plt.subplots(1)
-        legend_objects = list()
-        legend_labels = list()
-        tel_counters = {one_telescope: 0 for one_telescope in self.telescope_types}
-        if rotate_angle != 0:
-            telescopes["pos_x"], telescopes["pos_y"] = gen.rotate(
-                rotate_angle, telescopes["pos_x"], telescopes["pos_y"]
-            )
-
-        size_factor = max(np.max(telescopes["pos_x"]), np.max(telescopes["pos_y"])) / (300.0 * u.m)
-        fontsize = 12
-        for tel_name_now in telescopes["telescope_name"]:
-            for tel_type in tel_counters:
-                if tel_type in tel_name_now:
-                    tel_counters[tel_type] += 1
-
-        for one_telescope in self.telescope_types:
-            if tel_counters[one_telescope] > 0:
-                legend_objects.append(getattr(leg_h, self.telescope_object_dict[one_telescope]))
-                legend_labels.append(one_telescope + f" ({tel_counters[one_telescope]})")
-
-        patches = []
-        for i_tel, _ in enumerate(telescopes):
-            i_tel_name = telescopes[i_tel]["telescope_name"][:3]
-            if i_tel_name == "SST":
-                fontsize = 5
-            patches.append(
-                visualize.get_telescope_patch(
-                    i_tel_name,
-                    telescopes[i_tel]["pos_x"],
-                    telescopes[i_tel]["pos_y"],
-                    telescopes[i_tel]["radius"] * size_factor,
-                )
-            )
-            ax.text(
-                telescopes[i_tel]["pos_x"].value,
-                telescopes[i_tel]["pos_y"].value + telescopes[i_tel]["radius"].value,
-                telescopes[i_tel]["telescope_name"],
-                horizontalalignment="center",
-                verticalalignment="bottom",
-                fontsize=fontsize,
-            )
-
-        plt.gca().add_collection(PatchCollection(patches, match_original=True))
-
-        legend_handler_map = {
-            leg_h.LSTObject: leg_h.LSTHandler(),
-            leg_h.MSTObject: leg_h.MSTHandler(),
-            leg_h.SSTObject: leg_h.SSTHandler(),
-            leg_h.SCTObject: leg_h.SCTHandler(),
-        }
-
-        x_title = "East [m]"
-        y_title = "North [m]"
-        plt.axis("square")
-        plt.grid(True)
-        plt.gca().set_axisbelow(True)
-        plt.xlabel(x_title, fontsize=18, labelpad=0)
-        plt.ylabel(y_title, fontsize=18, labelpad=0)
-        plt.tick_params(axis="both", which="major", labelsize=15)
-
-        plt.legend(
-            legend_objects,
-            legend_labels,
-            handler_map=legend_handler_map,
-            prop={"size": 11},
-            loc="best",
-        )
-
-        plt.tight_layout()
-
-        return fig
 
     @staticmethod
     def telescope_layout_file_to_dict(file_name):
