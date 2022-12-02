@@ -20,6 +20,7 @@ __all__ = [
     "MissingRequiredConfigEntry",
     "UnableToIdentifyConfigEntry",
     "get_log_level_from_user",
+    "rotate",
     "separate_args_and_config_data",
     "set_default_kwargs",
     "sort_arrays",
