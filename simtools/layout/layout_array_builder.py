@@ -1,5 +1,4 @@
 import astropy.units as u
-import matplotlib.patches as mpatches
 import numpy as np
 from astropy.table import QTable
 from matplotlib import pyplot as plt
@@ -7,8 +6,8 @@ from matplotlib.collections import PatchCollection
 
 from simtools import io_handler
 from simtools.util import general as gen
-from simtools.util import names
 from simtools.visualization import legend_handlers as leg_h
+from simtools.visualization import visualize
 
 
 class LayoutArrayBuilder:
@@ -21,11 +20,8 @@ class LayoutArrayBuilder:
         self.io_handler = io_handler.IOHandler()
         self.telescope_types = ["LST", "MST", "SCT", "SST"]
         telescope_object_list = ["LSTObject", "MSTObject", "SCTObject", "SSTObject"]
-        telescope_colors = ["darkorange", "dodgerblue", "lightsteelblue", "black"]
-        self.colors_dict = {}
         self.telescope_object_dict = {}
         for step, telescope_type in enumerate(self.telescope_types):
-            self.colors_dict[telescope_type] = telescope_colors[step]
             self.telescope_object_dict[telescope_type] = telescope_object_list[step]
 
     @u.quantity_input(rotatio_angle=u.deg)
@@ -74,7 +70,7 @@ class LayoutArrayBuilder:
             if i_tel_name == "SST":
                 fontsize = 5
             patches.append(
-                self._get_telescope_patch(
+                visualize.get_telescope_patch(
                     i_tel_name,
                     telescopes[i_tel]["pos_x"],
                     telescopes[i_tel]["pos_y"],
@@ -148,46 +144,3 @@ class LayoutArrayBuilder:
         )
 
         return telescopes
-
-    @u.quantity_input(x=u.m, y=u.m, radius=u.m)
-    def _get_telescope_patch(self, name, x, y, radius):
-        """
-        Collect the patch of one telescope to be plotted by self.plot_array.
-
-        Parameters
-        ----------
-        name: str
-            Name of the telescope (type).
-        x: astropy.units.m
-            X position of the telescope in meters.
-        y: astropy.units.m
-            Y position of the telescope in meters.
-        radius: astropy.units.m
-            Radius of the telescope sphere in meters.
-
-        Returns
-        -------
-        patch
-            Instance of mpatches.Circle.
-        """
-
-        valid_name = names.get_telescope_type(name)
-        fill_flag = False
-        if valid_name == "MST":
-            fill_flag = True
-        if valid_name == "SCT":
-            patch = mpatches.Rectangle(
-                ((x - radius / 2).value, (y - radius / 2).value),
-                width=radius.value,
-                height=radius.value,
-                fill=False,
-                color=self.colors_dict["SCT"],
-            )
-        else:
-            patch = mpatches.Circle(
-                (x.value, y.value),
-                radius=radius.value,
-                fill=fill_flag,
-                color=self.colors_dict[valid_name],
-            )
-        return patch
