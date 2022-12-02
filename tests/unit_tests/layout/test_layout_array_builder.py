@@ -10,6 +10,7 @@ import pytest
 from astropy.coordinates.errors import UnitsError
 
 from simtools.layout.layout_array_builder import LayoutArrayBuilder
+from simtools.util import general as gen
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
@@ -54,7 +55,7 @@ def test_rotate_telescope_position(layout_builder_instance):
     y_rot_manual = np.array([-3.7, 13.7, -13.7, 3.7])
 
     def check_results(x_to_test, y_to_test, x_right, y_right):
-        x_rot, y_rot = layout_builder_instance._rotate(angle_deg, x_to_test, y_to_test)
+        x_rot, y_rot = gen.rotate(angle_deg, x_to_test, y_to_test)
         x_rot, y_rot = np.around(x_rot, 1), np.around(y_rot, 1)
         for element, _ in enumerate(x):
             assert x_right[element] == x_rot[element]
@@ -67,11 +68,11 @@ def test_rotate_telescope_position(layout_builder_instance):
     check_results(x_new_array, y_new_array, x_rot_new_array, y_rot_new_array)
 
     with pytest.raises(TypeError):
-        layout_builder_instance._rotate(angle_deg, x, y[0])
+        gen.rotate(angle_deg, x, y[0])
     with pytest.raises(RuntimeError):
-        layout_builder_instance._rotate(angle_deg, x[:-1], y)
+        gen.rotate(angle_deg, x[:-1], y)
     with pytest.raises(UnitsError):
-        layout_builder_instance._rotate(angle_deg, x_new_array.to(u.cm), y_new_array)
+        gen.rotate(angle_deg, x_new_array.to(u.cm), y_new_array)
 
 
 def test_plot_array(telescope_test_file, layout_builder_instance):
