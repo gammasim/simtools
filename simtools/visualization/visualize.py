@@ -614,9 +614,7 @@ def plot_array(telescopes, rotate_angle=0 * u.deg):
         Instance of plt.figure with the array of telescopes plotted.
 
     """
-    telescope_object_dict = {}
-    for step, telescope_type in enumerate(names.all_telescope_class_names):
-        telescope_object_dict[telescope_type] = leg_h.all_telescope_objects[step]
+
     fig, ax = plt.subplots(1)
     legend_objects = list()
     legend_labels = list()
@@ -633,9 +631,10 @@ def plot_array(telescopes, rotate_angle=0 * u.deg):
             if tel_type in tel_name_now:
                 tel_counters[tel_type] += 1
 
-    for one_telescope in names.all_telescope_class_names:
+    for counter, one_telescope in enumerate(names.all_telescope_class_names):
         if tel_counters[one_telescope] > 0:
-            legend_objects.append(getattr(leg_h, telescope_object_dict[one_telescope]))
+
+            legend_objects.append(leg_h.all_telescope_objects[counter])
             legend_labels.append(one_telescope + f" ({tel_counters[one_telescope]})")
 
     patches = []
@@ -662,13 +661,6 @@ def plot_array(telescopes, rotate_angle=0 * u.deg):
 
     plt.gca().add_collection(PatchCollection(patches, match_original=True))
 
-    legend_handler_map = {
-        leg_h.LSTObject: leg_h.LSTHandler(),
-        leg_h.MSTObject: leg_h.MSTHandler(),
-        leg_h.SSTObject: leg_h.SSTHandler(),
-        leg_h.SCTObject: leg_h.SCTHandler(),
-    }
-
     x_title = "East [m]"
     y_title = "North [m]"
     plt.axis("square")
@@ -681,7 +673,7 @@ def plot_array(telescopes, rotate_angle=0 * u.deg):
     plt.legend(
         legend_objects,
         legend_labels,
-        handler_map=legend_handler_map,
+        handler_map=leg_h.legend_handler_map,
         prop={"size": 11},
         loc="best",
     )
