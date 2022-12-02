@@ -21,9 +21,12 @@ __all__ = [
     "get_colors",
     "get_lines",
     "get_markers",
+    "get_telescope_patch",
     "plot_1D",
+    "plot_array",
     "plot_hist_2D",
     "plot_table",
+    "set_style",
 ]
 
 COLORS = dict()
