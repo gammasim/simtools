@@ -7,6 +7,8 @@ from collections import namedtuple
 from pathlib import Path
 
 import astropy.units as u
+import numpy as np
+from astropy.coordinates.errors import UnitsError
 from astropy.io.misc import yaml
 
 __all__ = [
@@ -647,3 +649,51 @@ def change_dict_keys_case(data_dict, lower_case=True):
         raise
 
     return _return_dict
+
+
+@staticmethod
+@u.quantity_input(rotatio_angle=u.deg)
+def rotate(rotation_angle, x, y):
+    """
+    Used mostly for LayoutArrayBuilder class.
+    Rotate x and y by the rotation angle given in rotation_angle, in degrees.
+    The function returns the rotated x and y values in the same unit given.
+
+    Parameters
+    ----------
+    rotation_angle: astropy.units.deg
+        Angle to rotate the array in degrees.
+    x: numpy.array or list
+        X positions of the telescopes, usually in meters.
+    y: numpy.array or list
+        Y positions of the telescopes, usually in meters.
+
+    Returns
+    -------
+    2-tuple of list
+        X and Y positions of the rotated telescopes positions.
+
+    """
+    if not isinstance(x, type(y)):
+        raise TypeError("x and y are not the same type! Cannot perform transformation.")
+    if not isinstance(x, (list, np.ndarray)):
+        x = [x]
+        y = [y]
+
+    if len(x) != len(y):
+        raise RuntimeError(
+            "Cannot perform coordinate transformation when x and y have different lengths."
+        )
+    if isinstance(x[0], u.quantity.Quantity):
+        if not isinstance(x[0].unit, type(y[0].unit)):
+            raise UnitsError(
+                "Cannot perform coordinate transformation when x and y have different units."
+            )
+
+    x_trans, y_trans = [np.zeros_like(x) for i in range(2)]
+    rotate_angle = rotation_angle.to(u.rad).value
+
+    for step, _ in enumerate(x):
+        x_trans[step] = x[step] * np.cos(rotate_angle) + y[step] * np.sin(rotate_angle)
+        y_trans[step] = (-1) * x[step] * np.sin(rotate_angle) + y[step] * np.cos(rotate_angle)
+    return x_trans, y_trans

@@ -1,12 +1,12 @@
 import astropy.units as u
 import matplotlib.patches as mpatches
 import numpy as np
-from astropy.coordinates.errors import UnitsError
 from astropy.table import QTable
 from matplotlib import pyplot as plt
 from matplotlib.collections import PatchCollection
 
 from simtools import io_handler
+from simtools.util import general as gen
 from simtools.util import names
 from simtools.visualization import legend_handlers as leg_h
 
@@ -52,7 +52,7 @@ class LayoutArrayBuilder:
         legend_labels = list()
         tel_counters = {one_telescope: 0 for one_telescope in self.telescope_types}
         if rotate_angle != 0:
-            telescopes["pos_x"], telescopes["pos_y"] = self._rotate(
+            telescopes["pos_x"], telescopes["pos_y"] = gen.rotate(
                 rotate_angle, telescopes["pos_x"], telescopes["pos_y"]
             )
 
@@ -191,50 +191,3 @@ class LayoutArrayBuilder:
                 color=self.colors_dict[valid_name],
             )
         return patch
-
-    @staticmethod
-    @u.quantity_input(rotatio_angle=u.deg)
-    def _rotate(rotation_angle, x, y):
-        """
-        Rotate x and y by the rotation angle given in rotation_angle.
-        The function returns the rotated x and y values.
-        Notice that rotation_angle must be given in degrees!
-
-        Parameters
-        ----------
-        rotation_angle: astropy.units.deg
-            Angle to rotate the array in degrees.
-        x: numpy.array or list
-            X positions of the telescopes, usually in meters.
-        y: numpy.array or list
-            Y positions of the telescopes, usually in meters.
-
-        Returns
-        -------
-        2-tuple of list
-            X and Y positions of the rotated telescopes positions.
-
-        """
-        if not isinstance(x, type(y)):
-            raise TypeError("x and y are not the same type! Cannot perform transformation.")
-        if not isinstance(x, (list, np.ndarray)):
-            x = [x]
-            y = [y]
-
-        if len(x) != len(y):
-            raise RuntimeError(
-                "Cannot perform coordinate transformation when x and y have different lengths."
-            )
-        if isinstance(x[0], u.quantity.Quantity):
-            if not isinstance(x[0].unit, type(y[0].unit)):
-                raise UnitsError(
-                    "Cannot perform coordinate transformation when x and y have different units."
-                )
-
-        x_trans, y_trans = [np.zeros_like(x) for i in range(2)]
-        rotate_angle = rotation_angle.to(u.rad).value
-
-        for step, _ in enumerate(x):
-            x_trans[step] = x[step] * np.cos(rotate_angle) + y[step] * np.sin(rotate_angle)
-            y_trans[step] = (-1) * x[step] * np.sin(rotate_angle) + y[step] * np.cos(rotate_angle)
-        return x_trans, y_trans
