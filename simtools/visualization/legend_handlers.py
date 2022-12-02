@@ -31,7 +31,6 @@ SST_RADIUS = corsika_info["corsika_sphere_radius"]["SST"].value
 SCT_RADIUS = corsika_info["corsika_sphere_radius"]["SCT"].value
 MST_RADIUS = corsika_info["corsika_sphere_radius"]["MST"].value
 LST_RADIUS = corsika_info["corsika_sphere_radius"]["LST"].value
-all_telescope_objects = ["LSTObject", "MSTObject", "SCTObject", "SSTObject"]
 
 
 class PixelObject(object):
@@ -328,3 +327,11 @@ class MeanRadiusOuterEdgeHandler(object):
         )
         handlebox.add_artist(patch)
         return patch
+
+
+all_telescope_objects = [LSTObject, MSTObject, SCTObject, SSTObject]
+all_telescope_handlers = [LSTHandler(), MSTHandler(), SCTHandler(), SSTHandler()]
+legend_handler_map = {
+    telescope_object: telescope_handler
+    for telescope_object, telescope_handler in zip(all_telescope_objects, all_telescope_handlers)
+}
