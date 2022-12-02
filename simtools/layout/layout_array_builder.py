@@ -2,6 +2,8 @@ import astropy.units as u
 from astropy.table import QTable
 
 from simtools import io_handler
+from simtools.util import names
+from simtools.visualization import legend_handlers as leg_h
 
 
 class LayoutArrayBuilder:
@@ -12,11 +14,9 @@ class LayoutArrayBuilder:
     def __init__(self):
         """Initialize LayoutArrayBuilder."""
         self.io_handler = io_handler.IOHandler()
-        self.telescope_types = ["LST", "MST", "SCT", "SST"]
-        telescope_object_list = ["LSTObject", "MSTObject", "SCTObject", "SSTObject"]
         self.telescope_object_dict = {}
-        for step, telescope_type in enumerate(self.telescope_types):
-            self.telescope_object_dict[telescope_type] = telescope_object_list[step]
+        for step, telescope_type in enumerate(names.all_telescope_class_names):
+            self.telescope_object_dict[telescope_type] = leg_h.all_telescope_objects[step]
 
     @staticmethod
     def telescope_layout_file_to_dict(file_name):

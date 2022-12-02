@@ -611,15 +611,13 @@ def plot_array(telescopes, rotate_angle=0 * u.deg):
         Instance of plt.figure with the array of telescopes plotted.
 
     """
-    telescope_types = ["LST", "MST", "SCT", "SST"]
-    telescope_object_list = ["LSTObject", "MSTObject", "SCTObject", "SSTObject"]
     telescope_object_dict = {}
-    for step, telescope_type in enumerate(telescope_types):
-        telescope_object_dict[telescope_type] = telescope_object_list[step]
+    for step, telescope_type in enumerate(names.all_telescope_class_names):
+        telescope_object_dict[telescope_type] = leg_h.all_telescope_objects[step]
     fig, ax = plt.subplots(1)
     legend_objects = list()
     legend_labels = list()
-    tel_counters = {one_telescope: 0 for one_telescope in telescope_types}
+    tel_counters = {one_telescope: 0 for one_telescope in names.all_telescope_class_names}
     if rotate_angle != 0:
         telescopes["pos_x"], telescopes["pos_y"] = gen.rotate(
             rotate_angle, telescopes["pos_x"], telescopes["pos_y"]
@@ -632,7 +630,7 @@ def plot_array(telescopes, rotate_angle=0 * u.deg):
             if tel_type in tel_name_now:
                 tel_counters[tel_type] += 1
 
-    for one_telescope in telescope_types:
+    for one_telescope in names.all_telescope_class_names:
         if tel_counters[one_telescope] > 0:
             legend_objects.append(getattr(leg_h, telescope_object_dict[one_telescope]))
             legend_labels.append(one_telescope + f" ({tel_counters[one_telescope]})")
