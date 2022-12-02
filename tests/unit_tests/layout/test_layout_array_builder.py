@@ -7,6 +7,7 @@ import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
+from astropy.coordinates.errors import UnitsError
 
 from simtools.layout.layout_array_builder import LayoutArrayBuilder
 
@@ -46,28 +47,31 @@ def test_get_telescope_patch(corsika_telescope_data_dict, layout_builder_instanc
 
 
 def test_rotate_telescope_position(layout_builder_instance):
-    x = np.array([-10, -10, 10, 10])
-    y = np.array([-10, 10, -10, 10])
+    x = np.array([-10.0, -10.0, 10.0, 10.0])
+    y = np.array([-10.0, 10.0, -10.0, 10.0])
     angle_deg = 30 * u.deg
     x_rot_manual = np.array([-13.7, -3.7, 3.7, 13.7])
     y_rot_manual = np.array([-3.7, 13.7, -13.7, 3.7])
 
-    def check_results(x, y):
-        x_rot, y_rot = layout_builder_instance._rotate(angle_deg, x, y)
-        x_rot, y_rot = np.around(np.array(x_rot), 1), np.around(np.array(y_rot), 1)
+    def check_results(x_to_test, y_to_test, x_right, y_right):
+        x_rot, y_rot = layout_builder_instance._rotate(angle_deg, x_to_test, y_to_test)
+        x_rot, y_rot = np.around(x_rot, 1), np.around(y_rot, 1)
         for element, _ in enumerate(x):
-            assert x_rot_manual[element] == x_rot[element]
-            assert y_rot_manual[element] == y_rot[element]
+            assert x_right[element] == x_rot[element]
+            assert y_right[element] == y_rot[element]
 
-    check_results(x, y)
+    check_results(x, y, x_rot_manual, y_rot_manual)
 
     x_new_array, y_new_array = x * u.m, y * u.m
-    check_results(x_new_array, y_new_array)
+    x_rot_new_array, y_rot_new_array = x_rot_manual * u.m, y_rot_manual * u.m
+    check_results(x_new_array, y_new_array, x_rot_new_array, y_rot_new_array)
 
+    with pytest.raises(TypeError):
+        layout_builder_instance._rotate(angle_deg, x, y[0])
     with pytest.raises(RuntimeError):
         layout_builder_instance._rotate(angle_deg, x[:-1], y)
-    with pytest.raises(RuntimeError):
-        layout_builder_instance._rotate(angle_deg, x, y * u.m)
+    with pytest.raises(UnitsError):
+        layout_builder_instance._rotate(angle_deg, x_new_array.to(u.cm), y_new_array)
 
 
 def test_plot_array(telescope_test_file, layout_builder_instance):

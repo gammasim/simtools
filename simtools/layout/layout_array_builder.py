@@ -1,6 +1,7 @@
 import astropy.units as u
 import matplotlib.patches as mpatches
 import numpy as np
+from astropy.coordinates.errors import UnitsError
 from astropy.table import QTable
 from matplotlib import pyplot as plt
 from matplotlib.collections import PatchCollection
@@ -215,7 +216,7 @@ class LayoutArrayBuilder:
 
         """
         if not isinstance(x, type(y)):
-            raise RuntimeError("x and y are not the same type! Cannot perform transformation.")
+            raise TypeError("x and y are not the same type! Cannot perform transformation.")
         if not isinstance(x, (list, np.ndarray)):
             x = [x]
             y = [y]
@@ -224,21 +225,16 @@ class LayoutArrayBuilder:
             raise RuntimeError(
                 "Cannot perform coordinate transformation when x and y have different lengths."
             )
+        if isinstance(x[0], u.quantity.Quantity):
+            if not isinstance(x[0].unit, type(y[0].unit)):
+                raise UnitsError(
+                    "Cannot perform coordinate transformation when x and y have different units."
+                )
 
-        try:
-            x = x.to(u.m)
-            y = y.to(u.m)
-            if isinstance(x[0].unit, type(u.m)) and isinstance(y[0].unit, type(u.m)):
-                x = x.value
-                y = y.value
-        except AttributeError:
-            pass
+        x_trans, y_trans = [np.zeros_like(x) for i in range(2)]
+        rotate_angle = rotation_angle.to(u.rad).value
 
-        x_trans, y_trans = [], []
-        rotate_angle = np.deg2rad(rotation_angle.value)
-
-        for x_now, y_now in zip(x, y):
-            x_trans.append(x_now * np.cos(rotate_angle) + y_now * np.sin(rotate_angle))
-            y_trans.append((-1) * x_now * np.sin(rotate_angle) + y_now * np.cos(rotate_angle))
-
+        for step, _ in enumerate(x):
+            x_trans[step] = x[step] * np.cos(rotate_angle) + y[step] * np.sin(rotate_angle)
+            y_trans[step] = (-1) * x[step] * np.sin(rotate_angle) + y[step] * np.cos(rotate_angle)
         return x_trans, y_trans
