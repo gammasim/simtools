@@ -11,6 +11,7 @@ from astropy.coordinates.errors import UnitsError
 
 from simtools.layout.layout_array_builder import LayoutArrayBuilder
 from simtools.util import general as gen
+from simtools.visualization import visualize
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
@@ -35,9 +36,7 @@ def test_get_telescope_patch(corsika_telescope_data_dict, layout_builder_instanc
     for tel_type in np.array(list(corsika_telescope_data_dict["corsika_sphere_radius"].keys())):
         print(corsika_telescope_data_dict)
         radius = corsika_telescope_data_dict["corsika_sphere_radius"][tel_type].value
-        patch = layout_builder_instance._get_telescope_patch(
-            tel_type, 0 * u.m, 0 * u.m, radius * u.m
-        )
+        patch = visualize.get_telescope_patch(tel_type, 0 * u.m, 0 * u.m, radius * u.m)
         if mpatches.Circle == type(patch):
             assert (
                 patch.radius == corsika_telescope_data_dict["corsika_sphere_radius"][tel_type].value

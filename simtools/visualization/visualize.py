@@ -6,9 +6,12 @@ from collections import OrderedDict
 
 import astropy.units as u
 import matplotlib.gridspec as gridspec
+import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 from astropy.table import QTable
 from cycler import cycler
+
+from simtools.util import names
 
 __all__ = [
     "get_colors",
@@ -531,3 +534,55 @@ def plot_hist_2D(data, **kwargs):
     fig.tight_layout()
 
     return fig
+
+
+@u.quantity_input(x=u.m, y=u.m, radius=u.m)
+def get_telescope_patch(name, x, y, radius):
+    """
+    Collect the patch of one telescope to be plotted by plot_array.
+
+    Parameters
+    ----------
+    name: str
+        Name of the telescope (type).
+    x: astropy.units.m
+        X position of the telescope in meters.
+    y: astropy.units.m
+        Y position of the telescope in meters.
+    radius: astropy.units.m
+        Radius of the telescope sphere in meters.
+
+    Returns
+    -------
+    patch
+        Instance of mpatches.Circle.
+    """
+    telescope_types = ["LST", "MST", "SCT", "SST"]
+    telescope_object_list = ["LSTObject", "MSTObject", "SCTObject", "SSTObject"]
+    telescope_colors = ["darkorange", "dodgerblue", "lightsteelblue", "black"]
+    colors_dict = {}
+    telescope_object_dict = {}
+    for step, telescope_type in enumerate(telescope_types):
+        colors_dict[telescope_type] = telescope_colors[step]
+        telescope_object_dict[telescope_type] = telescope_object_list[step]
+
+    valid_name = names.get_telescope_type(name)
+    fill_flag = False
+    if valid_name == "MST":
+        fill_flag = True
+    if valid_name == "SCT":
+        patch = mpatches.Rectangle(
+            ((x - radius / 2).value, (y - radius / 2).value),
+            width=radius.value,
+            height=radius.value,
+            fill=False,
+            color=colors_dict["SCT"],
+        )
+    else:
+        patch = mpatches.Circle(
+            (x.value, y.value),
+            radius=radius.value,
+            fill=fill_flag,
+            color=colors_dict[valid_name],
+        )
+    return patch
