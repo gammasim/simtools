@@ -31,6 +31,7 @@ SST_RADIUS = corsika_info["corsika_sphere_radius"]["SST"].value
 SCT_RADIUS = corsika_info["corsika_sphere_radius"]["SCT"].value
 MST_RADIUS = corsika_info["corsika_sphere_radius"]["MST"].value
 LST_RADIUS = corsika_info["corsika_sphere_radius"]["LST"].value
+all_telescope_objects = ["LSTObject", "MSTObject", "SCTObject", "SSTObject"]
 
 
 class PixelObject(object):
@@ -63,14 +64,14 @@ class MSTObject(object):
     pass
 
 
-class SSTObject(object):
-    """SST Object."""
+class SCTObject(object):
+    """SCT Object."""
 
     pass
 
 
-class SCTObject(object):
-    """SCT Object."""
+class SSTObject(object):
+    """SST Object."""
 
     pass
 
