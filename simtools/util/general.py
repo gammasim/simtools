@@ -652,7 +652,6 @@ def change_dict_keys_case(data_dict, lower_case=True):
     return _return_dict
 
 
-@staticmethod
 @u.quantity_input(rotatio_angle=u.deg)
 def rotate(rotation_angle, x, y):
     """
