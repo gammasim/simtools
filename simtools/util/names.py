@@ -759,7 +759,8 @@ def camera_efficiency_log_file_name(site, telescope_model_name, zenith_angle, la
 
 def get_telescope_type(telescope_name):
     """
-    Guess telescope type from name. Types are "LST", "MST", "SST", "SCT".
+    Guess telescope type from name, e.g. "LST", "MST", ...
+
     Parameters
     ----------
     telescope_name: str
@@ -794,5 +795,5 @@ def get_corsika_telescope_data_dict():
         for tel_type in file_data[key].keys():
             final_dict[key][tel_type] = file_data[key][tel_type]["value"] * u.meter
     final_dict["corsika_obs_level"] = file_data["SITE_PARAMETERS"]["North"]["OBSLEV"][0] * u.cm
-    final_dict["corsika_obs_level"] = final_dict["corsika_obs_level"].to(u.m) * u.meter
+    final_dict["corsika_obs_level"] = final_dict["corsika_obs_level"].to(u.m)
     return final_dict
