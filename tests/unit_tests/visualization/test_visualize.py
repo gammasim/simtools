@@ -145,4 +145,5 @@ def test_plot_array(telescope_test_file):
     layout_builder_instance = LayoutArrayBuilder()
     telescopes_dict = layout_builder_instance.telescope_layout_file_to_dict(telescope_test_file)
     fig_out = visualize.plot_array(telescopes_dict, rotate_angle=0 * u.deg)
+    fig_out.savefig("test.png")
     assert isinstance(fig_out, type(plt.figure()))

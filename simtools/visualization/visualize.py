@@ -626,19 +626,12 @@ def plot_array(telescopes, rotate_angle=0 * u.deg):
 
     size_factor = max(np.max(telescopes["pos_x"]), np.max(telescopes["pos_y"])) / (300.0 * u.m)
     fontsize = 12
-    for tel_name_now in telescopes["telescope_name"]:
-        for tel_type in tel_counters:
-            if tel_type in tel_name_now:
-                tel_counters[tel_type] += 1
-
-    for counter, one_telescope in enumerate(names.all_telescope_class_names):
-        if tel_counters[one_telescope] > 0:
-
-            legend_objects.append(leg_h.all_telescope_objects[counter])
-            legend_labels.append(one_telescope + f" ({tel_counters[one_telescope]})")
 
     patches = []
-    for i_tel, _ in enumerate(telescopes):
+    for i_tel, tel_now in enumerate(telescopes):
+        for tel_type in tel_counters:
+            if tel_type in tel_now["telescope_name"]:
+                tel_counters[tel_type] += 1
         i_tel_name = telescopes[i_tel]["telescope_name"][:3]
         if i_tel_name == "SST":
             fontsize = 5
@@ -658,6 +651,11 @@ def plot_array(telescopes, rotate_angle=0 * u.deg):
             verticalalignment="bottom",
             fontsize=fontsize,
         )
+
+    for counter, one_telescope in enumerate(names.all_telescope_class_names):
+        if tel_counters[one_telescope] > 0:
+            legend_objects.append(leg_h.all_telescope_objects[counter])
+            legend_labels.append(one_telescope + f" ({tel_counters[one_telescope]})")
 
     plt.gca().add_collection(PatchCollection(patches, match_original=True))
 
