@@ -793,8 +793,8 @@ def get_corsika_telescope_data_dict():
     for key in keys:
         final_dict[key] = {}
         for tel_type in file_data[key].keys():
-            unit = "u." + file_data[key][tel_type]["unit"]
-            final_dict[key][tel_type] = file_data[key][tel_type]["value"] * eval(unit)
+            unit = file_data[key][tel_type]["unit"]
+            final_dict[key][tel_type] = file_data[key][tel_type]["value"] * u.Unit(unit)
     final_dict["corsika_obs_level"] = (
         float(file_data["SITE_PARAMETERS"]["North"]["OBSLEV"][0]) * u.cm
     )
