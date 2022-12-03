@@ -605,8 +605,8 @@ def plot_array(telescopes, rotate_angle=0 * u.deg):
     telescopes: dict
         Dictionary with the telescope position and names.
     rotate_angle:
-        Angle to rotate the plot. For rotate_angle = 0 the X-axis points towards the east, and\
-        the Y-axis points towards the North.
+        Angle to rotate the plot. For rotate_angle = 0 the x-axis points towards the east, and\
+        the y-axis points towards the North.
 
     Returns
     -------
