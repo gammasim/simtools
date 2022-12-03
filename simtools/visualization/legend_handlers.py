@@ -36,49 +36,33 @@ LST_RADIUS = corsika_info["corsika_sphere_radius"]["LST"].value
 class PixelObject(object):
     """Pixel Object."""
 
-    pass
-
 
 class EdgePixelObject(object):
     """Edge-Pixel Object."""
-
-    pass
 
 
 class OffPixelObject(object):
     """Off-Pixel Object."""
 
-    pass
-
 
 class LSTObject(object):
     """LST Object."""
-
-    pass
 
 
 class MSTObject(object):
     """MST Object."""
 
-    pass
-
 
 class SCTObject(object):
     """SCT Object."""
-
-    pass
 
 
 class SSTObject(object):
     """SST Object."""
 
-    pass
-
 
 class MeanRadiusOuterEdgeObject(object):
     """Object for Mean radius outer edge."""
-
-    pass
 
 
 class HexPixelHandler(object):
