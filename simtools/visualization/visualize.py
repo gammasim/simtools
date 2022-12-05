@@ -15,6 +15,7 @@ from matplotlib.collections import PatchCollection
 
 from simtools.util import general as gen
 from simtools.util import names
+from simtools.util.names import mst, sct, sst
 from simtools.visualization import legend_handlers as leg_h
 
 __all__ = [
@@ -564,26 +565,24 @@ def get_telescope_patch(name, x, y, radius):
     patch
         Instance of mpatches.Circle.
     """
-    telescope_types = ["LST", "MST", "SCT", "SST"]
-    telescope_object_list = ["LSTObject", "MSTObject", "SCTObject", "SSTObject"]
     telescope_colors = ["darkorange", "dodgerblue", "lightsteelblue", "black"]
     colors_dict = {}
     telescope_object_dict = {}
-    for step, telescope_type in enumerate(telescope_types):
+    for step, telescope_type in enumerate(names.all_telescope_class_names):
         colors_dict[telescope_type] = telescope_colors[step]
-        telescope_object_dict[telescope_type] = telescope_object_list[step]
+        telescope_object_dict[telescope_type] = telescope_type + "Object"
 
     valid_name = names.get_telescope_type(name)
     fill_flag = False
-    if valid_name == "MST":
+    if valid_name == mst:
         fill_flag = True
-    if valid_name == "SCT":
+    if valid_name == sct:
         patch = mpatches.Rectangle(
             ((x - radius / 2).value, (y - radius / 2).value),
             width=radius.value,
             height=radius.value,
             fill=False,
-            color=colors_dict["SCT"],
+            color=colors_dict[sct],
         )
     else:
         patch = mpatches.Circle(
@@ -633,7 +632,7 @@ def plot_array(telescopes, rotate_angle=0 * u.deg):
             if tel_type in tel_now["telescope_name"]:
                 tel_counters[tel_type] += 1
         i_tel_name = telescopes[i_tel]["telescope_name"][:3]
-        if i_tel_name == "SST":
+        if i_tel_name == sst:
             fontsize = 5
         patches.append(
             get_telescope_patch(
