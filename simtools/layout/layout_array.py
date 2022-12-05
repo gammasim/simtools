@@ -9,6 +9,7 @@ from simtools import io_handler
 from simtools.layout.telescope_position import TelescopePosition
 from simtools.util import names
 from simtools.util.general import collect_data_from_yaml_or_dict
+from simtools.util.names import lst
 
 __all__ = ["InvalidTelescopeListFile", "LayoutArray"]
 
@@ -790,7 +791,7 @@ class LayoutArray:
     @staticmethod
     def get_telescope_type(telescope_name):
         """
-        Guess telescope type from name. Types are "LST", "MST", "SST", "SCT".
+        Guess telescope type from name, e.g. "LST", "MST", "SST", "SCT".
 
         Parameters
         ----------
@@ -805,7 +806,7 @@ class LayoutArray:
 
         _class, _ = names.split_telescope_model_name(telescope_name)
         try:
-            if _class[0:3] in ("LST", "MST", "SST", "SCT"):
+            if _class[0:3] in (names.all_telescope_class_names):
                 return _class[0:3]
 
         except IndexError:
@@ -833,6 +834,6 @@ class LayoutArray:
             for tel_name_now in telescope_table["telescope_name"]
         ]
         telescope_table["radius"].unit = u.Unit(
-            telescope_table.meta["corsika_sphere_radius"]["LST"].split()[1]
+            telescope_table.meta["corsika_sphere_radius"][lst].split()[1]
         )
         return telescope_table

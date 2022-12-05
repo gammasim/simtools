@@ -34,6 +34,77 @@ __all__ = [
     "validate_telescope_name_db",
 ]
 
+lst = "LST"
+mst = "MST"
+sct = "SCT"
+sst = "SST"
+
+all_telescope_class_names = {
+    sst: ["sst"],
+    mst: ["mst"],
+    sct: ["sct"],
+    lst: ["lst"],
+}
+
+all_camera_names = {
+    "SST": ["sst"],
+    "ASTRI": ["astri"],
+    "GCT": ["gct", "gct-s"],
+    "1M": ["1m"],
+    "FlashCam": ["flashcam", "flash-cam"],
+    "NectarCam": ["nectarcam", "nectar-cam"],
+    "SCT": ["sct"],
+    "LST": ["lst"],
+}
+
+all_structure_names = {"Structure": ["Structure", "structure"]}
+
+all_site_names = {"South": ["paranal", "south"], "North": ["lapalma", "north"]}
+
+all_model_version_names = {
+    "2015-07-21": [""],
+    "2015-10-20-p1": [""],
+    "prod4-v0.0": [""],
+    "prod4-v0.1": [""],
+    "2018-02-16": [""],
+    "prod3_compatible": ["p3", "prod3", "prod3b"],
+    "prod4": ["p4"],
+    "post_prod3_updates": [""],
+    "2016-12-20": [""],
+    "2018-11-07": [""],
+    "2019-02-22": [""],
+    "2019-05-13": [""],
+    "2019-11-20": [""],
+    "2019-12-30": [""],
+    "2020-02-26": [""],
+    "2020-06-28": ["prod5"],
+    "prod4-prototype": [""],
+    "default": [],
+    "Current": [],
+    "Latest": [],
+}
+
+all_simtel_mode_names = {
+    "RayTracing": ["raytracing", "ray-tracing"],
+    "RayTracingSingleMirror": [
+        "raytracing-singlemirror",
+        "ray-tracing-singlemirror",
+        "ray-tracing-single-mirror",
+    ],
+    "Trigger": ["trigger"],
+}
+
+all_layout_array_names = {
+    "4LST": ["4-lst", "4lst"],
+    "1LST": ["1-lst", "1lst"],
+    "4MST": ["4-mst", "4mst"],
+    "1MST": ["1-mst", "mst"],
+    "4SST": ["4-sst", "4sst"],
+    "1SST": ["1-sst", "sst"],
+    "Prod5": ["prod5", "p5"],
+    "TestLayout": ["test-layout"],
+}
+
 
 def validate_sub_system_name(name):
     """
@@ -358,73 +429,6 @@ def convert_telescope_model_name_to_yaml(name):
         raise ValueError(f"Telescope name {name} could not be converted to yml names")
 
     return old_names[new_name]
-
-
-all_telescope_class_names = {
-    "SST": ["sst"],
-    "MST": ["mst"],
-    "SCT": ["sct"],
-    "LST": ["lst"],
-}
-
-all_camera_names = {
-    "SST": ["sst"],
-    "ASTRI": ["astri"],
-    "GCT": ["gct", "gct-s"],
-    "1M": ["1m"],
-    "FlashCam": ["flashcam", "flash-cam"],
-    "NectarCam": ["nectarcam", "nectar-cam"],
-    "SCT": ["sct"],
-    "LST": ["lst"],
-}
-
-all_structure_names = {"Structure": ["Structure", "structure"]}
-
-all_site_names = {"South": ["paranal", "south"], "North": ["lapalma", "north"]}
-
-all_model_version_names = {
-    "2015-07-21": [""],
-    "2015-10-20-p1": [""],
-    "prod4-v0.0": [""],
-    "prod4-v0.1": [""],
-    "2018-02-16": [""],
-    "prod3_compatible": ["p3", "prod3", "prod3b"],
-    "prod4": ["p4"],
-    "post_prod3_updates": [""],
-    "2016-12-20": [""],
-    "2018-11-07": [""],
-    "2019-02-22": [""],
-    "2019-05-13": [""],
-    "2019-11-20": [""],
-    "2019-12-30": [""],
-    "2020-02-26": [""],
-    "2020-06-28": ["prod5"],
-    "prod4-prototype": [""],
-    "default": [],
-    "Current": [],
-    "Latest": [],
-}
-
-all_simtel_mode_names = {
-    "RayTracing": ["raytracing", "ray-tracing"],
-    "RayTracingSingleMirror": [
-        "raytracing-singlemirror",
-        "ray-tracing-singlemirror",
-        "ray-tracing-single-mirror",
-    ],
-    "Trigger": ["trigger"],
-}
-
-all_layout_array_names = {
-    "4LST": ["4-lst", "4lst"],
-    "1LST": ["1-lst", "1lst"],
-    "4MST": ["4-mst", "4mst"],
-    "1MST": ["1-mst", "mst"],
-    "4SST": ["4-sst", "4sst"],
-    "1SST": ["1-sst", "sst"],
-    "Prod5": ["prod5", "p5"],
-    "TestLayout": ["test-layout"],
-}
 
 
 def simtools_instrument_name(site, telescope_class_name, sub_system_name, telescope_id_name):
