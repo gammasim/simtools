@@ -3,7 +3,7 @@ import logging
 import astropy.units as u
 import numpy as np
 import pyproj
-from astropy.table import Table
+from astropy.table import QTable
 
 from simtools import io_handler
 from simtools.layout.telescope_position import TelescopePosition
@@ -348,11 +348,11 @@ class LayoutArray:
 
     def _load_telescope_list(self, table):
         """
-        Load list of telescope from an astropy table
+        Load list of telescope from an astropy table (support both QTable and Table)
 
         Parameters
         ----------
-        table: astropy.table
+        table: astropy.table.Table or astropy.table.QTable
             data table with array element coordinates
 
         """
@@ -361,40 +361,62 @@ class LayoutArray:
             tel = self._load_telescope_names(row)
 
             try:
-                tel.set_coordinates(
-                    "corsika",
-                    row["pos_x"] * table["pos_x"].unit,
-                    row["pos_y"] * table["pos_y"].unit,
-                )
-            except KeyError:
-                pass
-            try:
-                tel.set_coordinates(
-                    "utm",
-                    row["utm_east"] * table["utm_east"].unit,
-                    row["utm_north"] * table["utm_north"].unit,
-                )
-            except KeyError:
-                pass
-            try:
-                tel.set_coordinates(
-                    "mercator", row["lat"] * table["lat"].unit, row["lon"] * table["lon"].unit
-                )
-            except KeyError:
-                pass
-            try:
-                tel.set_altitude(
-                    self._altitude_from_corsika_z(
-                        pos_z=row["pos_z"] * table["pos_z"].unit, tel_name=tel.name
+                if not isinstance(row["pos_x"], u.Quantity) and not isinstance(
+                    row["pos_y"], u.Quantity
+                ):
+                    tel.set_coordinates(
+                        "corsika",
+                        row["pos_x"] * table["pos_x"].unit,
+                        row["pos_y"] * table["pos_y"].unit,
                     )
-                )
+                else:
+                    tel.set_coordinates("corsika", row["pos_x"], row["pos_y"])
             except KeyError:
                 pass
             try:
-                tel.set_altitude(row["alt"] * table["alt"].unit)
+                if not isinstance(row["utm_east"], u.Quantity) and not isinstance(
+                    row["utm_north"], u.Quantity
+                ):
+                    tel.set_coordinates(
+                        "utm",
+                        row["utm_east"] * table["utm_east"].unit,
+                        row["utm_north"] * table["utm_north"].unit,
+                    )
+                else:
+                    tel.set_coordinates("utm", row["utm_east"], row["utm_north"])
             except KeyError:
                 pass
-
+            try:
+                if not isinstance(row["lat"], u.Quantity) and not isinstance(
+                    row["lon"], u.Quantity
+                ):
+                    tel.set_coordinates(
+                        "mercator", row["lat"] * table["lat"].unit, row["lon"] * table["lon"].unit
+                    )
+                else:
+                    tel.set_coordinates("mercator", row["lat"], row["lon"])
+            except KeyError:
+                pass
+            try:
+                if not isinstance(row["pos_z"], u.Quantity):
+                    tel.set_altitude(
+                        self._altitude_from_corsika_z(
+                            pos_z=row["pos_z"] * table["pos_z"].unit, tel_name=tel.name
+                        )
+                    )
+                else:
+                    tel.set_altitude(
+                        self._altitude_from_corsika_z(pos_z=row["pos_z"], tel_name=tel.name)
+                    )
+            except KeyError:
+                pass
+            try:
+                if not isinstance(row["alt"], u.Quantity):
+                    tel.set_altitude(row["alt"] * table["alt"].unit)
+                else:
+                    tel.set_altitude(row["alt"])
+            except KeyError:
+                pass
             self._telescope_list.append(tel)
 
     def read_telescope_list_file(self, telescope_list_file):
@@ -406,6 +428,11 @@ class LayoutArray:
         telescope_list_file: str or Path
             Path to the telescope list file.
 
+        Returns
+        -------
+        dict
+            Dictionary with the telescope layout information.
+
         Raises
         ------
         FileNotFoundError
@@ -413,7 +440,7 @@ class LayoutArray:
 
         """
         try:
-            table = Table.read(telescope_list_file, format="ascii.ecsv")
+            table = QTable.read(telescope_list_file, format="ascii.ecsv")
         except FileNotFoundError:
             self._logger.error(f"Error reading list of array elements from {telescope_list_file}")
             raise
@@ -423,6 +450,7 @@ class LayoutArray:
         self._initialize_corsika_telescope(table.meta)
         self._initialize_coordinate_systems(table.meta)
         self._load_telescope_list(table)
+        return table
 
     def add_telescope(self, telescope_name, crs_name, xx, yy, altitude=None, tel_corsika_z=None):
         """
@@ -528,10 +556,10 @@ class LayoutArray:
             Write telescope height in CORSIKA coordinates (for CORSIKA system).
         """
 
-        table = Table(meta=self._get_export_metadata(crs_name == "corsika"))
+        table = QTable(meta=self._get_export_metadata(crs_name == "corsika"))
 
-        tel_names, asset_code, sequence_number, geo_code = list(), list(), list(), list()
-        pos_x, pos_y, pos_z = list(), list(), list()
+        tel_names, asset_code, sequence_number, geo_code = [], [], [], []
+        pos_x, pos_y, pos_z = [], [], []
         for tel in self._telescope_list:
             tel_names.append(tel.name)
             asset_code.append(tel.asset_code)
@@ -782,3 +810,29 @@ class LayoutArray:
 
         except IndexError:
             pass
+
+    @staticmethod
+    def include_radius_into_telescope_table(telescope_table):
+        """
+        Include the radius of the telescopes types into the astropy.table.QTable telescopes_table
+
+        Parameters
+        ----------
+        file_name: str
+            Name of the ecsv file with telescope layout.
+
+        Returns
+        -------
+        dict
+            Dictionary with the telescope layout information.
+        """
+
+        telescope_table
+        telescope_table["radius"] = [
+            float(telescope_table.meta["corsika_sphere_radius"][tel_name_now[:3]].split()[0])
+            for tel_name_now in telescope_table["telescope_name"]
+        ]
+        telescope_table["radius"].unit = u.Unit(
+            telescope_table.meta["corsika_sphere_radius"]["LST"].split()[1]
+        )
+        return telescope_table
