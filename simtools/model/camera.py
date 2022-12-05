@@ -93,7 +93,7 @@ class Camera:
         pixels["pixel_spacing"] = 9999
         pixels["lightguide_efficiency_angle_file"] = "none"
         pixels["lightguide_efficiency_wavelength_file"] = "none"
-        pixels["rotate_angle"] = 0  # The LST and MST-NectarCam cameras need to be rotated
+        pixels["rotate_angle"] = 0
         pixels["x"] = list()
         pixels["y"] = list()
         pixels["pix_id"] = list()
