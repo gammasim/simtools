@@ -9,6 +9,7 @@ import simtools.io_handler
 import simtools.util.general as gen
 from simtools import db_handler
 from simtools.configuration.configurator import Configurator
+from simtools.layout.layout_array import LayoutArray
 from simtools.model.telescope_model import TelescopeModel
 from simtools.util import names
 
@@ -209,3 +210,8 @@ def telescope_test_file(db, args_dict, io_handler):
         io_handler.get_output_directory(dir_type="model", test=True),
     )
     return cfg_file
+
+
+@pytest.fixture
+def layout_array_instance():
+    return LayoutArray(name="test_layout")

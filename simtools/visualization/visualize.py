@@ -553,9 +553,9 @@ def get_telescope_patch(name, x, y, radius):
     name: str
         Name of the telescope (type).
     x: astropy.units.m
-        x position of the telescope in meters.
+        X position of the telescope in meters.
     y: astropy.units.m
-        y position of the telescope in meters.
+        Y position of the telescope in meters.
     radius: astropy.units.m
         Radius of the telescope sphere in meters.
 

@@ -11,7 +11,6 @@ import pytest
 from astropy.coordinates.errors import UnitsError
 
 import simtools.util.general as gen
-from simtools.layout.layout_array_builder import LayoutArrayBuilder
 from simtools.visualization import visualize
 
 logger = logging.getLogger(__name__)
@@ -140,9 +139,8 @@ def test_rotate_telescope_position():
         gen.rotate(angle_deg, x_new_array.to(u.cm), y_new_array)
 
 
-def test_plot_array(telescope_test_file):
-    layout_builder_instance = LayoutArrayBuilder()
-    telescopes_dict = layout_builder_instance.telescope_layout_file_to_dict(telescope_test_file)
+def test_plot_array(telescope_test_file, layout_array_instance):
+    telescope_table = layout_array_instance.read_telescope_list_file(telescope_test_file)
+    telescopes_dict = layout_array_instance.include_radius_into_telescope_table(telescope_table)
     fig_out = visualize.plot_array(telescopes_dict, rotate_angle=0 * u.deg)
-    fig_out.savefig("test.png")
     assert isinstance(fig_out, type(plt.figure()))

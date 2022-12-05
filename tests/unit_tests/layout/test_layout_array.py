@@ -225,6 +225,16 @@ def test_altitude_from_corsika_z(layout_center_data_dict, corsika_telescope_data
         layout._altitude_from_corsika_z(5.0, None, "LST-01")
 
 
-@pytest.fixture
-def layout_array_instance():
-    return LayoutArray(name="test_layout")
+def test_include_radius_into_telescope_table(layout_array_instance, telescope_test_file):
+    telescope_table = layout_array_instance.read_telescope_list_file(telescope_test_file)
+    telescope_table_with_radius = layout_array_instance.include_radius_into_telescope_table(
+        telescope_table
+    )
+    values_from_file = np.array([20.190000534057617, -352.4599914550781, 62.29999923706055, 9.6])
+    keys = ["pos_x", "pos_y", "pos_z", "radius"]
+    mst_10_index = telescope_table_with_radius["telescope_name"] == "MST-10"
+    for key_step, _ in enumerate(keys):
+        assert (
+            telescope_table_with_radius[mst_10_index][keys[key_step]].value[0]
+            == values_from_file[key_step]
+        )
