@@ -24,6 +24,8 @@ class LayoutArray:
 
     Parameters
     ----------
+    site: str
+        Site location. Possible arguments are 'North' or 'South'.
     label: str
         Instance label.
     name: str
@@ -38,6 +40,7 @@ class LayoutArray:
 
     def __init__(
         self,
+        site,
         label=None,
         name=None,
         layout_center_data=None,
@@ -53,6 +56,10 @@ class LayoutArray:
 
         self.label = label
         self.name = name
+        if site not in ["North", "South"]:
+            raise ValueError("Site must be 'North' or 'South'!")
+        else:
+            self.site = site
         self.io_handler = io_handler.IOHandler()
 
         self._telescope_list = []
@@ -87,7 +94,7 @@ class LayoutArray:
         array_name = names.validate_layout_array_name(spl[1])
         valid_layout_array_name = site_name + "-" + array_name
 
-        layout = cls(name=valid_layout_array_name, label=label)
+        layout = cls(site_name, name=valid_layout_array_name, label=label)
 
         telescope_list_file = layout.io_handler.get_input_data_file(
             "layout", f"telescope_positions-{valid_layout_array_name}.ecsv"
@@ -117,15 +124,48 @@ class LayoutArray:
 
         if corsika_dict is not None:
             self._logger.debug(f"Initialize CORSIKA telescope parameters from dict: {corsika_dict}")
-            self._initialize_corsika_telescope_from_dict(corsika_dict)
         else:
             self._logger.debug("Initialize CORSIKA telescope parameters from file")
-            self._initialize_corsika_telescope_from_dict(
-                collect_data_from_yaml_or_dict(
-                    self.io_handler.get_input_data_file("parameters", "corsika_parameters.yml"),
-                    None,
-                )
+            corsika_dict = self._from_corsika_file_to_dict()
+
+        self._initialize_corsika_telescope_from_dict(corsika_dict)
+
+    def _from_corsika_file_to_dict(self):
+        """
+        Get the corsika parameter file and return a dictionary with the keys necessary to\
+        initialize this class.
+
+        Raises
+        ------
+        KeyError:
+            If key passed to dictionary is not valid.
+        """
+
+        corsika_parameters_dict = collect_data_from_yaml_or_dict(
+            self.io_handler.get_input_data_file("parameters", "corsika_parameters.yml"), None
+        )
+        corsika_dict = {}
+        corsika_pars = ["corsika_sphere_radius", "corsika_sphere_center"]
+        for simtools_par in corsika_pars:
+            corsika_par = names.translate_simtools_to_corsika(simtools_par)
+            corsika_dict[simtools_par] = {}
+            for tel_type in names.all_telescope_class_names:
+                unit = corsika_parameters_dict[corsika_par][tel_type]["unit"]
+                corsika_dict[simtools_par][tel_type] = corsika_parameters_dict[corsika_par][
+                    tel_type
+                ]["value"] * u.Unit(unit)
+
+        corsika_obs_level = names.translate_simtools_to_corsika("corsika_obs_level")
+        site_par_label = names.translate_simtools_to_corsika("SITE_PARAMETERS")
+        corsika_dict["corsika_obs_level"] = (
+            float(
+                corsika_parameters_dict[site_par_label][self.site][corsika_obs_level][0].split(".")[
+                    0
+                ]
             )
+            * u.m
+        )
+        return corsika_dict
 
     @staticmethod
     def _initialize_sphere_parameters(sphere_dict):
@@ -167,7 +207,6 @@ class LayoutArray:
             dictionary with CORSIKA telescope parameters
 
         """
-
         try:
             self._corsika_telescope["corsika_obs_level"] = u.Quantity(
                 corsika_dict["corsika_obs_level"]
@@ -262,20 +301,19 @@ class LayoutArray:
             Altitude or CORSIKA z-coordinate (np.nan in case of ill-defined value).
 
         """
-
         if pos_z is not None and altitude is None:
             return TelescopePosition.convert_telescope_altitude_from_corsika_system(
                 pos_z,
                 self._corsika_telescope["corsika_obs_level"],
                 self._get_corsika_sphere_center(tel_name),
             )
+
         if altitude is not None and pos_z is None:
             return TelescopePosition.convert_telescope_altitude_to_corsika_system(
                 altitude,
                 self._corsika_telescope["corsika_obs_level"],
                 self._get_corsika_sphere_center(tel_name),
             )
-
         return np.nan
 
     def _get_corsika_sphere_center(self, tel_name):
@@ -828,7 +866,6 @@ class LayoutArray:
             Dictionary with the telescope layout information.
         """
 
-        telescope_table
         telescope_table["radius"] = [
             float(telescope_table.meta["corsika_sphere_radius"][tel_name_now[:3]].split()[0])
             for tel_name_now in telescope_table["telescope_name"]

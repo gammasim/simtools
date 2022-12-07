@@ -1,16 +1,10 @@
 import logging
 
-import astropy.units as u
-
-import simtools.io_handler
-from simtools.util.general import collect_data_from_yaml_or_dict
-
 __all__ = [
     "camera_efficiency_log_file_name",
     "camera_efficiency_results_file_name",
     "camera_efficiency_simtel_file_name",
     "convert_telescope_model_name_to_yaml",
-    "get_corsika_telescope_data_dict",
     "get_site_from_telescope_name",
     "get_telescope_type",
     "is_valid_name",
@@ -40,10 +34,10 @@ sct = "SCT"
 sst = "SST"
 
 all_telescope_class_names = {
-    sst: ["sst"],
+    lst: ["lst"],
     mst: ["mst"],
     sct: ["sct"],
-    lst: ["lst"],
+    sst: ["sst"],
 }
 
 all_camera_names = {
@@ -103,6 +97,10 @@ all_layout_array_names = {
     "1SST": ["1-sst", "sst"],
     "Prod5": ["prod5", "p5"],
     "TestLayout": ["test-layout"],
+}
+
+corsika_to_simtools_names = {
+    "OBSLEV": "corsika_obs_level",
 }
 
 
@@ -786,21 +784,34 @@ def get_telescope_type(telescope_name):
     return ""
 
 
-def get_corsika_telescope_data_dict():
-    io_handler = simtools.io_handler.IOHandler()
-    io_handler.set_paths(output_path="./simtools-output/", data_path="./data/")
-    file_data = collect_data_from_yaml_or_dict(
-        io_handler.get_input_data_file("parameters", "corsika_parameters.yml"), None
-    )
-    keys = ["corsika_sphere_center", "corsika_sphere_radius"]
-    final_dict = {}
-    for key in keys:
-        final_dict[key] = {}
-        for tel_type in file_data[key].keys():
-            unit = file_data[key][tel_type]["unit"]
-            final_dict[key][tel_type] = file_data[key][tel_type]["value"] * u.Unit(unit)
-    final_dict["corsika_obs_level"] = (
-        float(file_data["SITE_PARAMETERS"]["North"]["OBSLEV"][0]) * u.cm
-    )
-    final_dict["corsika_obs_level"] = final_dict["corsika_obs_level"].to(u.m)
-    return final_dict
+def translate_corsika_to_simtools(corsika_par):
+    """
+    Translate the name of a CORSIKA parameter to the name used in simtools.
+    """
+
+    if corsika_par in corsika_to_simtools_names:
+        return corsika_to_simtools_names[corsika_par]
+    else:
+        _logger = logging.getLogger(__name__)
+        msg = f"Translation not found. We will proceed with the original parameter name:\
+            {corsika_par}."
+        _logger.debug(msg)
+        return corsika_par
+
+
+def translate_simtools_to_corsika(simtools_par):
+    """
+    Translate the name of a simtools parameter to the name used in CORSIKA.
+    """
+
+    simtools_to_corsika_names = {
+        new_key: new_value for new_value, new_key in corsika_to_simtools_names.items()
+    }
+    if simtools_par in simtools_to_corsika_names:
+        return simtools_to_corsika_names[simtools_par]
+    else:
+        _logger = logging.getLogger(__name__)
+        msg = f"Translation not found. We will proceed with the original parameter name:\
+            {simtools_par}."
+        _logger.debug(msg)
+        return simtools_par

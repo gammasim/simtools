@@ -655,7 +655,6 @@ def change_dict_keys_case(data_dict, lower_case=True):
 @u.quantity_input(rotatio_angle=u.deg)
 def rotate(rotation_angle, x, y):
     """
-    Used mostly for LayoutArrayBuilder class.
     Rotate x and y by the rotation angle given in rotation_angle, in degrees.
     The function returns the rotated x and y values in the same unit given.
 
