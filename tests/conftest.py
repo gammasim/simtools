@@ -11,7 +11,6 @@ from simtools import db_handler
 from simtools.configuration.configurator import Configurator
 from simtools.layout.layout_array import LayoutArray
 from simtools.model.telescope_model import TelescopeModel
-from simtools.util import names
 
 logger = logging.getLogger()
 
@@ -192,11 +191,6 @@ def telescope_model_sst(db, db_config, io_handler):
 
 
 @pytest.fixture
-def corsika_telescope_data_dict(io_handler):
-    return names.get_corsika_telescope_data_dict()
-
-
-@pytest.fixture
 def telescope_test_file(db, args_dict, io_handler):
     test_file_name = "telescope_positions-North-TestLayout.ecsv"
     db.export_file_db(
@@ -214,4 +208,9 @@ def telescope_test_file(db, args_dict, io_handler):
 
 @pytest.fixture
 def layout_array_instance():
-    return LayoutArray(name="test_layout")
+    return LayoutArray(site="North", name="test_layout")
+
+
+@pytest.fixture
+def corsika_telescope_data_dict(layout_array_instance):
+    return layout_array_instance._from_corsika_file_to_dict()
