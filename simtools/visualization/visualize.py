@@ -570,7 +570,7 @@ def get_telescope_patch(name, x, y, radius):
     telescope_object_dict = {}
     for step, telescope_type in enumerate(names.all_telescope_class_names):
         colors_dict[telescope_type] = telescope_colors[step]
-        telescope_object_dict[telescope_type] = telescope_type + "Object"
+        telescope_object_dict[telescope_type] = leg_h.all_telescope_objects[step]()
 
     valid_name = names.get_telescope_type(name)
     fill_flag = False
@@ -615,8 +615,8 @@ def plot_array(telescopes, rotate_angle=0 * u.deg):
     """
 
     fig, ax = plt.subplots(1)
-    legend_objects = list()
-    legend_labels = list()
+    legend_objects = []
+    legend_labels = []
     tel_counters = {one_telescope: 0 for one_telescope in names.all_telescope_class_names}
     if rotate_angle != 0:
         telescopes["pos_x"], telescopes["pos_y"] = gen.rotate(
@@ -651,9 +651,9 @@ def plot_array(telescopes, rotate_angle=0 * u.deg):
             fontsize=fontsize,
         )
 
-    for counter, one_telescope in enumerate(names.all_telescope_class_names):
+    for step, one_telescope in enumerate(names.all_telescope_class_names):
         if tel_counters[one_telescope] > 0:
-            legend_objects.append(leg_h.all_telescope_objects[counter])
+            legend_objects.append(leg_h.all_telescope_objects[step]())
             legend_labels.append(one_telescope + f" ({tel_counters[one_telescope]})")
 
     plt.gca().add_collection(PatchCollection(patches, match_original=True))
@@ -667,10 +667,14 @@ def plot_array(telescopes, rotate_angle=0 * u.deg):
     plt.ylabel(y_title, fontsize=18, labelpad=0)
     plt.tick_params(axis="both", which="major", labelsize=15)
 
+    legend_handler_map = {
+        list(leg_h.legend_handler_map.keys())[step]: list(leg_h.legend_handler_map.values())[step]()
+        for step, _ in enumerate(leg_h.legend_handler_map)
+    }
     plt.legend(
         legend_objects,
         legend_labels,
-        handler_map=leg_h.legend_handler_map,
+        handler_map=legend_handler_map,
         prop={"size": 11},
         loc="best",
     )

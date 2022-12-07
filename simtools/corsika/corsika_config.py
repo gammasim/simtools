@@ -94,7 +94,12 @@ class CorsikaConfig:
         )
 
         # Load parameters
-        self._load_corsika_parameters_file(corsika_parameters_file)
+        if corsika_parameters_file is None:
+            corsika_parameters_file = self.io_handler.get_input_data_file(
+                "parameters", "corsika_parameters.yml"
+            )
+
+        self._corsika_parameters = self.load_corsika_parameters_file(corsika_parameters_file)
 
         corsika_config_data = collect_data_from_yaml_or_dict(
             corsika_config_file, corsika_config_data
@@ -109,23 +114,26 @@ class CorsikaConfig:
         )
         return text
 
-    def _load_corsika_parameters_file(self, filename):
+    @staticmethod
+    def load_corsika_parameters_file(corsika_parameters_file):
         """
-        Load CORSIKA parameters from a given file (filename not None),
-        or from the default parameter file provided in the
-        data directory (filename is None).
+        Load CORSIKA parameters from a given file (filename not None).
+
+        Parameters
+        ----------
+        corsika_parameters_file: str
+            File with CORSIKA parameters.
+
+        Returns
+        -------
+        corsika_parameters: dict
+            Dictionary with CORSIKA parameters.
         """
-        if filename is not None:
-            # User provided file.
-            self._corsika_parameters_file = filename
-        else:
-            # Default file from data directory.
-            self._corsika_parameters_file = self.io_handler.get_input_data_file(
-                "parameters", "corsika_parameters.yml"
-            )
-        self._logger.debug(f"Loading CORSIKA parameters from file {self._corsika_parameters_file}")
-        with open(self._corsika_parameters_file, "r") as f:
-            self._corsika_parameters = yaml.load(f)
+
+        print(f"Loading CORSIKA parameters from file {corsika_parameters_file}")
+        with open(corsika_parameters_file, "r") as f:
+            corsika_parameters = yaml.load(f)
+        return corsika_parameters
 
     def set_user_parameters(self, corsika_config_data):
         """
