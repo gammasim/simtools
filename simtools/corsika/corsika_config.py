@@ -117,11 +117,11 @@ class CorsikaConfig:
     @staticmethod
     def load_corsika_parameters_file(corsika_parameters_file):
         """
-        Load CORSIKA parameters from a given file (filename not None).
+        Load CORSIKA parameters from the provided corsika_parameters_file.
 
         Parameters
         ----------
-        corsika_parameters_file: str
+        corsika_parameters_file: str or Path
             File with CORSIKA parameters.
 
         Returns
@@ -130,7 +130,9 @@ class CorsikaConfig:
             Dictionary with CORSIKA parameters.
         """
 
-        print(f"Loading CORSIKA parameters from file {corsika_parameters_file}")
+        CorsikaConfig._logger.debug(
+            f"Loading CORSIKA parameters from file {corsika_parameters_file}"
+        )
         with open(corsika_parameters_file, "r") as f:
             corsika_parameters = yaml.load(f)
         return corsika_parameters
