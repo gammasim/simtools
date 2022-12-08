@@ -567,10 +567,8 @@ def get_telescope_patch(name, x, y, radius):
     """
     telescope_colors = ["darkorange", "dodgerblue", "lightsteelblue", "black"]
     colors_dict = {}
-    telescope_object_dict = {}
     for step, telescope_type in enumerate(names.all_telescope_class_names):
         colors_dict[telescope_type] = telescope_colors[step]
-        telescope_object_dict[telescope_type] = leg_h.all_telescope_objects[step]()
 
     valid_name = names.get_telescope_type(name)
     fill_flag = False
