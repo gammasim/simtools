@@ -56,10 +56,7 @@ class LayoutArray:
 
         self.label = label
         self.name = name
-        if site not in ["North", "South"]:
-            raise ValueError("Site must be 'North' or 'South'!")
-        else:
-            self.site = site
+        self.site = names.validate_site_name(site)
         self.io_handler = io_handler.IOHandler()
 
         self._telescope_list = []
