@@ -216,9 +216,10 @@ def test_get_file_name(corsika_config, io_handler):
         corsika_config.get_file_name("foobar")
 
 
-def test_load_corsika_parameters_file(corsika_config, io_handler):
+def test_load_corsika_parameters_file(corsika_config, io_handler, caplog):
     corsika_parameters_file = io_handler.get_input_data_file("parameters", "corsika_parameters.yml")
     corsika_dict = corsika_config.load_corsika_parameters_file(corsika_parameters_file)
+    assert "Loading CORSIKA parameters from file" in caplog.text
     parameters = ["corsika_sphere_center", "corsika_sphere_radius"]
     assert isinstance(corsika_dict, dict)
     for par in parameters:
