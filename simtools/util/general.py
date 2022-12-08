@@ -663,14 +663,14 @@ def rotate(rotation_angle, x, y):
     rotation_angle: astropy.units.deg
         Angle to rotate the array in degrees.
     x: numpy.array or list
-        X positions of the telescopes, usually in meters.
+        x positions of the telescopes, usually in meters.
     y: numpy.array or list
-        Y positions of the telescopes, usually in meters.
+        y positions of the telescopes, usually in meters.
 
     Returns
     -------
     2-tuple of list
-        X and Y positions of the rotated telescopes positions.
+        x and y positions of the rotated telescopes positions.
 
     """
     if not isinstance(x, type(y)):
