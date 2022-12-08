@@ -652,7 +652,7 @@ def plot_array(telescopes, rotate_angle=0 * u.deg):
     for step, one_telescope in enumerate(names.all_telescope_class_names):
         if tel_counters[one_telescope] > 0:
             legend_objects.append(leg_h.all_telescope_objects[step]())
-            legend_labels.append(one_telescope + f" ({tel_counters[one_telescope]})")
+            legend_labels.append(f"{one_telescope} ({tel_counters[one_telescope]})")
 
     plt.gca().add_collection(PatchCollection(patches, match_original=True))
 
