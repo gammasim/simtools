@@ -34,7 +34,7 @@ __all__ = [
 class TelescopeHandler(object):
     """
     Telescope handler that centralizes the telescope information. Individual telescopes handlers
-    inherit the objects from this class.
+    inherit from this class.
     """
 
     def __init__(self):
@@ -45,7 +45,7 @@ class TelescopeHandler(object):
         corsika_info = CorsikaConfig.load_corsika_parameters_file(corsika_parameters_file)
 
         self.radius_dict = {}
-        for _, tel_type in enumerate(names.all_telescope_class_names):
+        for tel_type in names.all_telescope_class_names:
             self.radius_dict[tel_type] = corsika_info["corsika_sphere_radius"][tel_type]["value"]
 
 
