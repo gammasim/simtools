@@ -207,10 +207,10 @@ def telescope_test_file(db, args_dict, io_handler):
 
 
 @pytest.fixture
-def layout_array_instance():
+def layout_array_north_instance():
     return LayoutArray(site="North", name="test_layout")
 
 
 @pytest.fixture
-def corsika_telescope_data_dict(layout_array_instance):
-    return layout_array_instance._from_corsika_file_to_dict()
+def corsika_telescope_data_dict(layout_array_north_instance):
+    return layout_array_north_instance._from_corsika_file_to_dict()
