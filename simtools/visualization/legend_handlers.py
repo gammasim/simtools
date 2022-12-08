@@ -46,7 +46,6 @@ class TelescopeHandler(object):
 
         self.radius_dict = {}
         for _, tel_type in enumerate(names.all_telescope_class_names):
-            print(corsika_info["corsika_sphere_radius"][tel_type])
             self.radius_dict[tel_type] = corsika_info["corsika_sphere_radius"][tel_type]["value"]
 
 
