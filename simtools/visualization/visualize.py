@@ -592,7 +592,7 @@ def get_telescope_patch(name, x, y, radius):
     return patch
 
 
-@u.quantity_input(rotation_angle=u.deg)
+@u.quantity_input(rotate_angle=u.deg)
 def plot_array(telescopes, rotate_angle=0 * u.deg):
     """
     Plot the array of telescopes.
