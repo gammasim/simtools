@@ -272,11 +272,11 @@ def test_include_radius_into_telescope_table(layout_array_north_instance, telesc
 def test_from_corsika_file_to_dict(layout_array_north_instance, manual_corsika_dict_north):
     corsika_dict = layout_array_north_instance._from_corsika_file_to_dict()
     for key, value in corsika_dict.items():
-        if key == "corsika_obs_level":
-            assert value == manual_corsika_dict_north["corsika_obs_level"]
-        else:
+        if isinstance(value, dict):
             for tel_type, subvalue in value.items():
                 assert subvalue == manual_corsika_dict_north[key][tel_type]
+        else:
+            assert value == manual_corsika_dict_north[key]
 
 
 def test_initialize_corsika_telescope_from_dict(
@@ -284,8 +284,8 @@ def test_initialize_corsika_telescope_from_dict(
 ):
     layout_array_north_instance._initialize_corsika_telescope_from_dict(manual_corsika_dict_north)
     for key, value in layout_array_north_instance._corsika_telescope.items():
-        if key == "corsika_obs_level":
-            assert value == manual_corsika_dict_north["corsika_obs_level"]
-        else:
+        if isinstance(value, dict):
             for tel_type, subvalue in value.items():
                 assert subvalue == manual_corsika_dict_north[key][tel_type]
+        else:
+            assert value == manual_corsika_dict_north[key]

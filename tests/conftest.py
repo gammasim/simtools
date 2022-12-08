@@ -207,7 +207,7 @@ def telescope_test_file(db, args_dict, io_handler):
 
 
 @pytest.fixture
-def layout_array_north_instance():
+def layout_array_north_instance(io_handler):
     return LayoutArray(site="North", name="test_layout")
 
 
