@@ -130,9 +130,8 @@ class CorsikaConfig:
             Dictionary with CORSIKA parameters.
         """
 
-        CorsikaConfig._logger.debug(
-            f"Loading CORSIKA parameters from file {corsika_parameters_file}"
-        )
+        logger = logging.getLogger(__name__)
+        logger.debug(f"Loading CORSIKA parameters from file {corsika_parameters_file}")
         with open(corsika_parameters_file, "r") as f:
             corsika_parameters = yaml.load(f)
         return corsika_parameters
