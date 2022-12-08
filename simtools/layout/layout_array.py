@@ -86,9 +86,9 @@ class LayoutArray:
             Instance of the LayoutArray.
         """
 
-        spl = layout_array_name.split("-")
-        site_name = names.validate_site_name(spl[0])
-        array_name = names.validate_layout_array_name(spl[1])
+        split_name = layout_array_name.split("-")
+        site_name = names.validate_site_name(split_name[0])
+        array_name = names.validate_layout_array_name(split_name[1])
         valid_layout_array_name = site_name + "-" + array_name
 
         layout = cls(site_name, name=valid_layout_array_name, label=label)
