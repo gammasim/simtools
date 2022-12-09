@@ -38,6 +38,7 @@ class ArrayModel:
         """
         self._logger = logging.getLogger(__name__)
         self._logger.debug("Init ArrayModel")
+        self.mongo_db_config = mongo_db_config
         self.label = label
         self.site = None
         self.layout = None
@@ -48,7 +49,7 @@ class ArrayModel:
         array_config_data = collect_data_from_yaml_or_dict(array_config_file, array_config_data)
         self._load_array_data(array_config_data)
         self._set_config_file_directory()
-        self._build_array_model(mongo_db_config)
+        self._build_array_model()
         self._telescope_model_files_exported = False
         self._array_model_file_exported = False
 
@@ -83,7 +84,8 @@ class ArrayModel:
         # Grabbing layout name and building LayoutArray
         self.layout_name = names.validate_layout_array_name(array_config_data["layout_name"])
         self.layout = LayoutArray.from_layout_array_name(
-            self.site + "-" + self.layout_name,
+            site=self.site + "-" + self.layout_name,
+            mongo_db_config=self.mongo_db_config,
             label=self.label,
         )
 
@@ -134,20 +136,15 @@ class ArrayModel:
             self._config_file_directory.mkdir(parents=True, exist_ok=True)
             self._logger.info(f"Creating directory {self._config_file_directory}")
 
-    def _build_array_model(self, mongo_db_config):
+    def _build_array_model(self):
         """
         Build the site parameters and the list of telescope models,
         including reading the parameters from the DB.
 
-        Parameters
-        ----------
-        mongo_db_config: str
-            MongoDB configuration.
-
         """
 
         # Getting site parameters from DB
-        db = db_handler.DatabaseHandler(mongo_db_config=mongo_db_config)
+        db = db_handler.DatabaseHandler(mongo_db_config=self.mongo_db_config)
         self._site_parameters = db.get_site_parameters(
             self.site, self.model_version, only_applicable=True
         )
@@ -177,7 +174,7 @@ class ArrayModel:
                     telescope_model_name=tel_model_name,
                     model_version=self.model_version,
                     label=self.label,
-                    mongo_db_config=mongo_db_config,
+                    mongo_db_config=self.mongo_db_config,
                 )
             else:
                 # Telescope name already exists.

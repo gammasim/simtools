@@ -207,8 +207,8 @@ def telescope_test_file(db, args_dict, io_handler):
 
 
 @pytest.fixture
-def layout_array_north_instance(io_handler):
-    return LayoutArray(site="North", name="test_layout")
+def layout_array_north_instance(io_handler, db_config):
+    return LayoutArray(site="North", mongo_db_config=db_config, name="test_layout")
 
 
 @pytest.fixture
