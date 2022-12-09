@@ -79,8 +79,8 @@ class LayoutArray:
 
         Parameters
         ----------
-        layout_center_data: dict
-            Dict describing array center coordinates.
+        mongo_db_config: dict
+            MongoDB configuration.
         layout_array_name: str
             e.g. South-4LST, North-Prod5 ...
         label: str
@@ -97,7 +97,12 @@ class LayoutArray:
         array_name = names.validate_layout_array_name(split_name[1])
         valid_layout_array_name = site_name + "-" + array_name
 
-        layout = cls(site_name, name=valid_layout_array_name, label=label)
+        layout = cls(
+            site=site_name,
+            mongo_db_config=mongo_db_config,
+            name=valid_layout_array_name,
+            label=label,
+        )
 
         telescope_list_file = layout.io_handler.get_input_data_file(
             "layout", f"telescope_positions-{valid_layout_array_name}.ecsv"
