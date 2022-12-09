@@ -5,7 +5,7 @@ import numpy as np
 import pyproj
 from astropy.table import QTable
 
-from simtools import io_handler
+from simtools import db_handler, io_handler
 from simtools.layout.telescope_position import TelescopePosition
 from simtools.util import names
 from simtools.util.general import collect_data_from_yaml_or_dict
@@ -25,7 +25,9 @@ class LayoutArray:
     Parameters
     ----------
     site: str
-        Site location. Possible arguments are 'North' or 'South'.
+        Site name or location (e.g., North/South or LaPalma/Paranal)
+    mongo_db_config: dict
+        MongoDB configuration.
     label: str
         Instance label.
     name: str
@@ -41,6 +43,7 @@ class LayoutArray:
     def __init__(
         self,
         site,
+        mongo_db_config,
         label=None,
         name=None,
         layout_center_data=None,
@@ -54,6 +57,7 @@ class LayoutArray:
         self._logger = logging.getLogger(__name__)
         self._logger.debug("Init LayoutArray")
 
+        self.mongo_db_config = mongo_db_config
         self.label = label
         self.name = name
         self.site = names.validate_site_name(site)
@@ -68,13 +72,15 @@ class LayoutArray:
             self.read_telescope_list_file(telescope_list_file)
 
     @classmethod
-    def from_layout_array_name(cls, layout_array_name, label=None):
+    def from_layout_array_name(cls, mongo_db_config, layout_array_name, label=None):
         """
         Read telescope list from file for given layout name (e.g. South-4LST, North-Prod5, ...).
         Layout definitions are given in the `data/layout` path.
 
         Parameters
         ----------
+        layout_center_data: dict
+            Dict describing array center coordinates.
         layout_array_name: str
             e.g. South-4LST, North-Prod5 ...
         label: str
@@ -152,16 +158,23 @@ class LayoutArray:
                     tel_type
                 ]["value"] * u.Unit(unit)
 
-        corsika_obs_level = names.translate_simtools_to_corsika("corsika_obs_level")
-        site_par_label = names.translate_simtools_to_corsika("SITE_PARAMETERS")
-        corsika_dict["corsika_obs_level"] = (
-            float(
-                corsika_parameters_dict[site_par_label][self.site][corsika_obs_level][0].split(".")[
-                    0
-                ]
-            )
-            * u.m
+        db = db_handler.DatabaseHandler(mongo_db_config=self.mongo_db_config)
+        self._logger.debug("Reading site parameters from DB")
+        _site_pars = db.get_site_parameters(self.site, "Current", only_applicable=True)
+        corsika_dict["corsika_obs_level"] = _site_pars["altitude"]["Value"] * u.Unit(
+            _site_pars["altitude"]["units"]
         )
+
+        # corsika_obs_level = names.translate_simtools_to_corsika("corsika_obs_level")
+        # site_par_label = names.translate_simtools_to_corsika("SITE_PARAMETERS")
+        # corsika_dict["corsika_obs_level"] = (
+        #     float(
+        #         corsika_parameters_dict[site_par_label][self.site][corsika_obs_level][0].split(".")[
+        #             0
+        #         ]
+        #     )
+        #     * u.m
+        # )
         return corsika_dict
 
     @staticmethod
