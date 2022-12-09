@@ -49,10 +49,10 @@ class CorsikaConfig:
 
     Parameters
     ----------
-    site: str
-        North or South.
     mongo_db_config: dict
         MongoDB configuration.
+    site: str
+        North or South.
     layout_name: str
         Name of the layout.
     label: str
@@ -67,8 +67,8 @@ class CorsikaConfig:
 
     def __init__(
         self,
-        site,
         mongo_db_config,
+        site,
         layout_name,
         label=None,
         corsika_config_data=None,
@@ -93,8 +93,8 @@ class CorsikaConfig:
         # Grabbing layout name and building LayoutArray
         self.layout_name = names.validate_layout_array_name(layout_name)
         self.layout = LayoutArray.from_layout_array_name(
-            site=f"{self.site}-{self.layout_name}",
             mongo_db_config=mongo_db_config,
+            layout_array_name=f"{self.site}-{self.layout_name}",
             label=self.label,
         )
 

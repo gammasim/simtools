@@ -33,9 +33,10 @@ def corsika_config_data():
 
 
 @pytest.fixture
-def corsika_config(io_handler, corsika_config_data):
+def corsika_config(io_handler, db_config, corsika_config_data):
 
     corsika_config = CorsikaConfig(
+        mongo_db_config=db_config,
         site="Paranal",
         layout_name="4LST",
         label="test-corsika-config",
@@ -75,13 +76,14 @@ def test_export_input_file(corsika_config):
     assert input_file.exists()
 
 
-def test_wrong_par_in_config_data(corsika_config_data):
+def test_wrong_par_in_config_data(corsika_config_data, db_config):
 
     logger.info("test_wrong_primary_name")
     new_config_data = copy(corsika_config_data)
     new_config_data["wrong_par"] = 20 * u.m
     with pytest.raises(InvalidCorsikaInput):
         corsika_test_Config = CorsikaConfig(
+            mongo_db_config=db_config,
             site="LaPalma",
             layout_name="1LST",
             label="test-corsika-config",
@@ -90,13 +92,14 @@ def test_wrong_par_in_config_data(corsika_config_data):
         corsika_test_Config.print_user_parameters()
 
 
-def test_units_of_config_data(corsika_config_data):
+def test_units_of_config_data(corsika_config_data, db_config):
 
     logger.info("test_units_of_config_data")
     new_config_data = copy(corsika_config_data)
     new_config_data["zenith"] = 20 * u.m
     with pytest.raises(InvalidCorsikaInput):
         corsika_test_Config = CorsikaConfig(
+            mongo_db_config=db_config,
             site="LaPalma",
             layout_name="1LST",
             label="test-corsika-config",
@@ -105,13 +108,14 @@ def test_units_of_config_data(corsika_config_data):
         corsika_test_Config.print_user_parameters()
 
 
-def test_len_of_config_data(corsika_config_data):
+def test_len_of_config_data(corsika_config_data, db_config):
 
     logger.info("test_len_of_config_data")
     new_config_data = copy(corsika_config_data)
     new_config_data["erange"] = [20 * u.TeV]
     with pytest.raises(InvalidCorsikaInput):
         corsika_test_Config = CorsikaConfig(
+            mongo_db_config=db_config,
             site="LaPalma",
             layout_name="1LST",
             label="test-corsika-config",
@@ -120,13 +124,14 @@ def test_len_of_config_data(corsika_config_data):
         corsika_test_Config.print_user_parameters()
 
 
-def test_wrong_primary_name(corsika_config_data):
+def test_wrong_primary_name(corsika_config_data, db_config):
 
     logger.info("test_wrong_primary_name")
     new_config_data = copy(corsika_config_data)
     new_config_data["primary"] = "rock"
     with pytest.raises(InvalidCorsikaInput):
         corsika_test_Config = CorsikaConfig(
+            mongo_db_config=db_config,
             site="LaPalma",
             layout_name="1LST",
             label="test-corsika-config",
@@ -135,13 +140,14 @@ def test_wrong_primary_name(corsika_config_data):
         corsika_test_Config.print_user_parameters()
 
 
-def test_missing_input(corsika_config_data):
+def test_missing_input(corsika_config_data, db_config):
 
     logger.info("test_missing_input")
     new_config_data = copy(corsika_config_data)
     new_config_data.pop("primary")
     with pytest.raises(MissingRequiredInputInCorsikaConfigData):
         corsika_test_Config = CorsikaConfig(
+            mongo_db_config=db_config,
             site="LaPalma",
             layout_name="1LST",
             label="test-corsika-config",
@@ -160,7 +166,7 @@ def test_set_user_parameters(corsika_config_data, corsika_config):
     assert new_corsika_config.get_user_parameter("thetap") == [0, 0]
 
 
-def test_config_data_from_yaml_file(db, io_handler):
+def test_config_data_from_yaml_file(db, io_handler, db_config):
 
     logger.info("test_config_data_from_yaml_file")
     test_file_name = "corsikaConfigTest.yml"
@@ -174,6 +180,7 @@ def test_config_data_from_yaml_file(db, io_handler):
         test_file_name, io_handler.get_output_directory(dir_type="model", test=True)
     )
     cc = CorsikaConfig(
+        mongo_db_config=db_config,
         site="Paranal",
         layout_name="4LST",
         label="test-corsika-config",

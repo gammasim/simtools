@@ -24,10 +24,10 @@ class LayoutArray:
 
     Parameters
     ----------
-    site: str
-        Site name or location (e.g., North/South or LaPalma/Paranal)
     mongo_db_config: dict
         MongoDB configuration.
+    site: str
+        Site name or location (e.g., North/South or LaPalma/Paranal)
     label: str
         Instance label.
     name: str
@@ -42,8 +42,8 @@ class LayoutArray:
 
     def __init__(
         self,
-        site,
         mongo_db_config,
+        site,
         label=None,
         name=None,
         layout_center_data=None,

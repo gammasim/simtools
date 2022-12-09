@@ -84,8 +84,8 @@ class ArrayModel:
         # Grabbing layout name and building LayoutArray
         self.layout_name = names.validate_layout_array_name(array_config_data["layout_name"])
         self.layout = LayoutArray.from_layout_array_name(
-            site=self.site + "-" + self.layout_name,
             mongo_db_config=self.mongo_db_config,
+            layout_array_name=self.site + "-" + self.layout_name,
             label=self.label,
         )
 
