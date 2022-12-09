@@ -120,18 +120,18 @@ def _parse(label=None, description=None):
         default=False,
         action="store_true",
     )
-    return config.initialize()
+    return config.initialize(db_config=True)
 
 
 def main():
 
     label = Path(__file__).stem
-    args_dict, _ = _parse(label, description=("Print a list of array element positions"))
+    args_dict, db_config = _parse(label, description=("Print a list of array element positions"))
 
     _logger = logging.getLogger()
     _logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
-    layout = layout_array.LayoutArray(site="North")
+    layout = layout_array.LayoutArray(site="North", mongo_db_config=db_config)
     layout.read_telescope_list_file(telescope_list_file=args_dict["array_element_list"])
     layout.convert_coordinates()
     if args_dict["export"] is not None:
