@@ -170,16 +170,6 @@ class LayoutArray:
             _site_pars["altitude"]["units"]
         )
 
-        # corsika_obs_level = names.translate_simtools_to_corsika("corsika_obs_level")
-        # site_par_label = names.translate_simtools_to_corsika("SITE_PARAMETERS")
-        # corsika_dict["corsika_obs_level"] = (
-        #     float(
-        #         corsika_parameters_dict[site_par_label][self.site][corsika_obs_level][0].split(".")[
-        #             0
-        #         ]
-        #     )
-        #     * u.m
-        # )
         return corsika_dict
 
     @staticmethod
