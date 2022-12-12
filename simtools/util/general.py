@@ -672,10 +672,19 @@ def rotate(rotation_angle, x, y):
     2-tuple of list
         x and y positions of the rotated telescopes positions.
 
+    Raises
+    ------
+    TypeError:
+        If type of x and y parameters are not valid.
+    RuntimeError:
+        If the length of x and y are different.
+    UnitsError:
+        If the unit of x and y are different.
     """
-    if not isinstance((x, y), (float, float), (int, int), (list, list), (np.ndarray, np.ndarray)):
-        raise TypeError("x and y types are not valid! Cannot perform transformation.")
-    if not isinstance(x, (list, np.ndarray)):
+
+    if not isinstance((list, list), (np.ndarray, np.ndarray)):
+        if not isinstance((x, y), (float, float), (int, int)):
+            raise TypeError("x and y types are not valid! Cannot perform transformation.")
         x = [x]
         y = [y]
 
