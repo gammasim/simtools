@@ -787,11 +787,17 @@ def get_telescope_type(telescope_name):
 def translate_corsika_to_simtools(corsika_par):
     """
     Translate the name of a CORSIKA parameter to the name used in simtools.
+
+    Parameters
+    ----------
+    corsika_par: str
+        Name of the corsika parameter to be translated.
+
     """
 
-    if corsika_par in corsika_to_simtools_names:
+    try:
         return corsika_to_simtools_names[corsika_par]
-    else:
+    except KeyError:
         _logger = logging.getLogger(__name__)
         msg = f"Translation not found. We will proceed with the original parameter name:\
             {corsika_par}."
@@ -802,14 +808,19 @@ def translate_corsika_to_simtools(corsika_par):
 def translate_simtools_to_corsika(simtools_par):
     """
     Translate the name of a simtools parameter to the name used in CORSIKA.
+
+    Parameters
+    ----------
+    simtools_par: str
+        Name of the simtools parameter to be translated.
     """
 
     simtools_to_corsika_names = {
         new_key: new_value for new_value, new_key in corsika_to_simtools_names.items()
     }
-    if simtools_par in simtools_to_corsika_names:
+    try:
         return simtools_to_corsika_names[simtools_par]
-    else:
+    except KeyError:
         _logger = logging.getLogger(__name__)
         msg = f"Translation not found. We will proceed with the original parameter name:\
             {simtools_par}."
