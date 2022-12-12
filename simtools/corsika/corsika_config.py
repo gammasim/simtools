@@ -60,7 +60,8 @@ class CorsikaConfig:
     corsika_config_data: dict
         CORSIKA user parameters.
     corsika_config_file: str
-        Name of the yaml configuration file.
+        Name of the yaml configuration file. If not provided, \
+        data/parameters/corsika_parameters.yml will be used.
     corsika_parameters_file: str
         Name of the yaml file to set remaining CORSIKA parameters.
     """
