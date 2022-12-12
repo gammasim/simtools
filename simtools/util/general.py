@@ -673,8 +673,8 @@ def rotate(rotation_angle, x, y):
         x and y positions of the rotated telescopes positions.
 
     """
-    if not isinstance(x, type(y)):
-        raise TypeError("x and y are not the same type! Cannot perform transformation.")
+    if not isinstance((x, y), (float, float), (int, int), (list, list), (np.ndarray, np.ndarray)):
+        raise TypeError("x and y types are not valid! Cannot perform transformation.")
     if not isinstance(x, (list, np.ndarray)):
         x = [x]
         y = [y]
