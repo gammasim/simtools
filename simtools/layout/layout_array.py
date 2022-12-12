@@ -1,4 +1,5 @@
 import logging
+from pathlib import Path
 
 import astropy.units as u
 import numpy as np
@@ -138,20 +139,40 @@ class LayoutArray:
 
         self._initialize_corsika_telescope_from_dict(corsika_dict)
 
-    def _from_corsika_file_to_dict(self):
+    def _from_corsika_file_to_dict(self, file_name=None):
         """
         Get the corsika parameter file and return a dictionary with the keys necessary to\
         initialize this class.
+
+        Parameters
+        ----------
+        file_name: str or Path
+            File from which to extract the corsika parameters. Default is \
+            data/parameters/corsika_parameters.yml
 
         Returns
         ------
         corsika_dict:
             Dictionary with corsika telescopes information.
+
+        Raises
+        ------
+        FileNotFoundError:
+            If file_name does not exist.
         """
 
-        corsika_parameters_dict = collect_data_from_yaml_or_dict(
-            self.io_handler.get_input_data_file("parameters", "corsika_parameters.yml"), None
-        )
+        if file_name is None:
+            corsika_parameters_dict = collect_data_from_yaml_or_dict(
+                self.io_handler.get_input_data_file("parameters", "corsika_parameters.yml"), None
+            )
+        else:
+            if not isinstance(file_name, Path):
+                file_name = Path(file_name)
+            if file_name.exists():
+                corsika_parameters_dict = collect_data_from_yaml_or_dict(file_name, None)
+            else:
+                raise FileNotFoundError
+
         corsika_dict = {}
         corsika_pars = ["corsika_sphere_radius", "corsika_sphere_center"]
         for simtools_par in corsika_pars:
