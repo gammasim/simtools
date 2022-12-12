@@ -865,30 +865,6 @@ class LayoutArray:
         return pyproj.CRS("EPSG:4326")
 
     @staticmethod
-    def get_telescope_type(telescope_name):
-        """
-        Guess telescope type from name, e.g. "LST", "MST", "SST", "SCT".
-
-        Parameters
-        ----------
-        telescope_name: str
-            Telescope name
-
-        Returns
-        -------
-        str
-            Telescope type.
-        """
-
-        _class, _ = names.split_telescope_model_name(telescope_name)
-        try:
-            if _class[0:3] in (names.all_telescope_class_names):
-                return _class[0:3]
-
-        except IndexError:
-            pass
-
-    @staticmethod
     def include_radius_into_telescope_table(telescope_table):
         """
         Include the radius of the telescopes types into the astropy.table.QTable telescopes_table
