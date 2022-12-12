@@ -143,10 +143,10 @@ class LayoutArray:
         Get the corsika parameter file and return a dictionary with the keys necessary to\
         initialize this class.
 
-        Raises
+        Returns
         ------
-        KeyError:
-            If key passed to dictionary is not valid.
+        corsika_dict:
+            Dictionary with corsika telescopes information.
         """
 
         corsika_parameters_dict = collect_data_from_yaml_or_dict(
