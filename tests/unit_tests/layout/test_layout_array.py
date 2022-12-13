@@ -262,13 +262,26 @@ def test_include_radius_into_telescope_table(layout_array_north_instance, telesc
 
 
 def test_from_corsika_file_to_dict(layout_array_north_instance, manual_corsika_dict_north):
+    def run(corsika_dict):
+        for key, value in corsika_dict.items():
+            if isinstance(value, dict):
+                for tel_type, subvalue in value.items():
+                    assert subvalue == manual_corsika_dict_north[key][tel_type]
+            else:
+                assert value == manual_corsika_dict_north[key]
+
     corsika_dict = layout_array_north_instance._from_corsika_file_to_dict()
-    for key, value in corsika_dict.items():
-        if isinstance(value, dict):
-            for tel_type, subvalue in value.items():
-                assert subvalue == manual_corsika_dict_north[key][tel_type]
-        else:
-            assert value == manual_corsika_dict_north[key]
+    run(corsika_dict)
+
+    corsika_dict = layout_array_north_instance._from_corsika_file_to_dict(
+        file_name="corsika_parameters_2.yml"
+    )
+    run(corsika_dict)
+
+    with pytest.raises(FileNotFoundError):
+        corsika_dict = layout_array_north_instance._from_corsika_file_to_dict(
+            file_name="file_doesnt_exist.yml"
+        )
 
 
 def test_initialize_corsika_telescope_from_dict(
