@@ -28,16 +28,12 @@ __all__ = [
     "validate_telescope_name_db",
 ]
 
-lst = "LST"
-mst = "MST"
-sct = "SCT"
-sst = "SST"
 
 all_telescope_class_names = {
-    lst: ["lst"],
-    mst: ["mst"],
-    sct: ["sct"],
-    sst: ["sst"],
+    "LST": ["lst"],
+    "MST": ["mst"],
+    "SCT": ["sct"],
+    "SST": ["sst"],
 }
 
 all_camera_names = {
