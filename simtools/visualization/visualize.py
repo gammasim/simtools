@@ -629,7 +629,7 @@ def plot_array(telescopes, rotate_angle=0 * u.deg):
         for tel_type in tel_counters:
             if tel_type in tel_now["telescope_name"]:
                 tel_counters[tel_type] += 1
-        i_tel_name = telescopes[i_tel]["telescope_name"][:3]
+        i_tel_name = names.get_telescope_type(telescopes[i_tel]["telescope_name"])
         if i_tel_name == sst:
             fontsize = 5
         patches.append(

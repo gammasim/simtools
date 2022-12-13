@@ -10,7 +10,7 @@ from simtools import db_handler, io_handler
 from simtools.layout.telescope_position import TelescopePosition
 from simtools.util import names
 from simtools.util.general import collect_data_from_yaml_or_dict
-from simtools.util.names import all_telescope_class_names
+from simtools.util.names import all_telescope_class_names, lst
 
 __all__ = ["InvalidTelescopeListFile", "LayoutArray"]
 
@@ -178,7 +178,7 @@ class LayoutArray:
         for simtools_par in corsika_pars:
             corsika_par = names.translate_simtools_to_corsika(simtools_par)
             corsika_dict[simtools_par] = {}
-            for tel_type in names.all_telescope_class_names:
+            for tel_type in all_telescope_class_names:
                 corsika_dict[simtools_par][tel_type] = corsika_parameters_dict[corsika_par][
                     tel_type
                 ]["value"]
@@ -871,22 +871,25 @@ class LayoutArray:
 
         Parameters
         ----------
-        file_name: str
-            Name of the ecsv file with telescope layout.
+        telescope_table: astropy.QTable
+            Astropy QTable with telescope information.
 
         Returns
         -------
-        dict
-            Dictionary with the telescope layout information.
+        astropy.QTable
+            Astropy QTable with telescope information updated with the radius.
         """
 
         telescope_table["radius"] = [
-            float(telescope_table.meta["corsika_sphere_radius"][tel_name_now[:3]].split()[0])
+            float(
+                telescope_table.meta["corsika_sphere_radius"][
+                    names.get_telescope_type(tel_name_now)
+                ].split()[0]
+            )
             for tel_name_now in telescope_table["telescope_name"]
         ]
+
         telescope_table["radius"].unit = u.Unit(
-            telescope_table.meta["corsika_sphere_radius"][all_telescope_class_names["LST"]].split()[
-                1
-            ]
+            telescope_table.meta["corsika_sphere_radius"][lst].split()[1]
         )
         return telescope_table

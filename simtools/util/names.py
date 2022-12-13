@@ -28,12 +28,16 @@ __all__ = [
     "validate_telescope_name_db",
 ]
 
+lst = "LST"
+mst = "MST"
+sct = "SCT"
+sst = "SST"
 
 all_telescope_class_names = {
-    "LST": ["lst"],
-    "MST": ["mst"],
-    "SCT": ["sct"],
-    "SST": ["sst"],
+    lst: ["lst"],
+    mst: ["mst"],
+    sct: ["sct"],
+    sst: ["sst"],
 }
 
 all_camera_names = {
@@ -763,6 +767,7 @@ def get_telescope_type(telescope_name):
     ----------
     telescope_name: str
         Telescope name
+
     Returns
     -------
     str
@@ -771,7 +776,7 @@ def get_telescope_type(telescope_name):
 
     _class, _ = split_telescope_model_name(telescope_name)
     try:
-        if _class[0:3] in ("LST", "MST", "SST", "SCT"):
+        if _class[0:3] in all_telescope_class_names:
             return _class[0:3]
 
     except IndexError:
