@@ -681,9 +681,8 @@ def rotate(rotation_angle, x, y):
     UnitsError:
         If the unit of x and y are different.
     """
-
-    if not isinstance((list, list), (np.ndarray, np.ndarray)):
-        if not isinstance((x, y), (float, float), (int, int)):
+    if not all(isinstance(variable, (list, np.ndarray)) for variable in [x, y]):
+        if not all(isinstance(variable, (float, int, u.Quantity)) for variable in [x, y]):
             raise TypeError("x and y types are not valid! Cannot perform transformation.")
         x = [x]
         y = [y]
