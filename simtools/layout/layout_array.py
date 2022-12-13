@@ -10,7 +10,7 @@ from simtools import db_handler, io_handler
 from simtools.layout.telescope_position import TelescopePosition
 from simtools.util import names
 from simtools.util.general import collect_data_from_yaml_or_dict
-from simtools.util.names import lst
+from simtools.util.names import all_telescope_class_names
 
 __all__ = ["InvalidTelescopeListFile", "LayoutArray"]
 
@@ -885,6 +885,8 @@ class LayoutArray:
             for tel_name_now in telescope_table["telescope_name"]
         ]
         telescope_table["radius"].unit = u.Unit(
-            telescope_table.meta["corsika_sphere_radius"][lst].split()[1]
+            telescope_table.meta["corsika_sphere_radius"][all_telescope_class_names["LST"]].split()[
+                1
+            ]
         )
         return telescope_table
