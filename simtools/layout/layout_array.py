@@ -189,8 +189,11 @@ class LayoutArray:
                         tel_type
                     ] * u.Unit(unit)
                 except KeyError:
-                    logger.error("Key not valid. Dictionary does not have a key 'unit'.")
-                    pass
+                    logger.warning(
+                        "Key not valid. Dictionary does not have a key 'unit'. Continuing without "
+                        "the unit."
+                    )
+                    corsika_dict[simtools_par][tel_type] = corsika_dict[simtools_par][tel_type]
 
         db = db_handler.DatabaseHandler(mongo_db_config=self.mongo_db_config)
         self._logger.debug("Reading site parameters from DB")
@@ -202,7 +205,10 @@ class LayoutArray:
                 _site_pars["altitude"]["units"]
             )
         except KeyError:
-            pass
+            corsika_dict["corsika_obs_level"] = corsika_dict["corsika_obs_level"]
+            logger.warning(
+                "Key not valid. Dictionary does not have a key 'unit'. Continuing without the unit."
+            )
 
         return corsika_dict
 
