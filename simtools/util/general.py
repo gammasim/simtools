@@ -652,7 +652,7 @@ def change_dict_keys_case(data_dict, lower_case=True):
     return _return_dict
 
 
-@u.quantity_input(rotatio_angle=u.deg)
+@u.quantity_input(rotation_angle=u.deg)
 def rotate(rotation_angle, x, y):
     """
     Rotate x and y by the rotation angle given in rotation_angle, in degrees.
@@ -698,9 +698,9 @@ def rotate(rotation_angle, x, y):
             )
 
     x_trans, y_trans = [np.zeros_like(x) for i in range(2)]
-    rotate_angle = rotation_angle.to(u.rad).value
+    rotation_angle = rotation_angle.to(u.rad).value
 
     for step, _ in enumerate(x):
-        x_trans[step] = x[step] * np.cos(rotate_angle) + y[step] * np.sin(rotate_angle)
-        y_trans[step] = (-1) * x[step] * np.sin(rotate_angle) + y[step] * np.cos(rotate_angle)
+        x_trans[step] = x[step] * np.cos(rotation_angle) + y[step] * np.sin(rotation_angle)
+        y_trans[step] = (-1) * x[step] * np.sin(rotation_angle) + y[step] * np.cos(rotation_angle)
     return x_trans, y_trans
