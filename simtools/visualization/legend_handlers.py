@@ -5,7 +5,7 @@ import numpy as np
 from simtools.corsika.corsika_config import CorsikaConfig
 from simtools.io_handler import IOHandler
 from simtools.util import names
-from simtools.util.names import lst, mst, sst
+from simtools.util.names import lst, mst, sct, sst
 
 __all__ = [
     "EdgePixelObject",
@@ -45,6 +45,12 @@ class TelescopeHandler(object):
         corsika_info = CorsikaConfig.load_corsika_parameters_file(corsika_parameters_file)
 
         self.radius_dict = {}
+        self.colors_dict = {
+            lst: "darkorange",
+            mst: "dodgerblue",
+            sct: "black",
+            sst: "lightsteelblue",
+        }
         for tel_type in names.all_telescope_class_names:
             self.radius_dict[tel_type] = corsika_info["corsika_sphere_radius"][tel_type]["value"]
 
@@ -231,7 +237,7 @@ class LSTHandler(TelescopeHandler):
             xy=center,
             radius=radius * self.radius_dict[lst] / self.radius_dict[lst],
             facecolor="none",
-            edgecolor="darkorange",
+            edgecolor=self.colors_dict[lst],
             transform=handlebox.get_transform(),
         )
         handlebox.add_artist(patch)
@@ -252,8 +258,8 @@ class MSTHandler(TelescopeHandler):
         patch = mpatches.Circle(
             xy=center,
             radius=radius * self.radius_dict[mst] / self.radius_dict[lst],
-            facecolor="dodgerblue",
-            edgecolor="dodgerblue",
+            facecolor=self.colors_dict[mst],
+            edgecolor=self.colors_dict[mst],
             transform=handlebox.get_transform(),
         )
         handlebox.add_artist(patch)
@@ -274,8 +280,8 @@ class SSTHandler(TelescopeHandler):
         patch = mpatches.Circle(
             xy=center,
             radius=radius * self.radius_dict[sst] / self.radius_dict[lst],
-            facecolor="black",
-            edgecolor="black",
+            facecolor=self.colors_dict[sst],
+            edgecolor=self.colors_dict[sst],
             transform=handlebox.get_transform(),
         )
         handlebox.add_artist(patch)
@@ -287,16 +293,15 @@ class SCTHandler(object):
     Legend handler class to plot a representation of an SCT in an array layout.
     """
 
-    @staticmethod
-    def legend_artist(legend, orig_handle, fontsize, handlebox):
+    def legend_artist(self, legend, orig_handle, fontsize, handlebox):
         x0, y0 = handlebox.xdescent + 0.1 * handlebox.width, handlebox.ydescent
         width = height = handlebox.height
         patch = mpatches.Rectangle(
             [x0, y0],
             width,
             height,
-            facecolor="lightsteelblue",
-            edgecolor="lightsteelblue",
+            facecolor=self.colors_dict[sct],
+            edgecolor=self.colors_dict[sct],
             transform=handlebox.get_transform(),
         )
         handlebox.add_artist(patch)
