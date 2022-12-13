@@ -681,23 +681,35 @@ def rotate(rotation_angle, x, y):
     UnitsError:
         If the unit of x and y are different.
     """
-    if not all(isinstance(variable, (list, np.ndarray)) for variable in [x, y]):
-        if not all(isinstance(variable, (float, int, u.Quantity)) for variable in [x, y]):
-            raise TypeError("x and y types are not valid! Cannot perform transformation.")
+    allowed_types = (list, np.ndarray, u.Quantity, float, int)
+    if not all(isinstance(variable, allowed_types) for variable in [x, y]):
+        raise TypeError("x and y types are not valid! Cannot perform transformation.")
+
+    if (
+        np.sum(
+            np.array([isinstance(x, type_now) for type_now in allowed_types[:-2]])
+            * np.array([isinstance(y, type_now) for type_now in allowed_types[:-2]])
+        )
+        == 0
+    ):
+        raise TypeError("x and y are not from the same type! Cannot perform transformation.")
+
+    if not isinstance(x, (list, np.ndarray)):
         x = [x]
+    if not isinstance(y, (list, np.ndarray)):
         y = [y]
 
     if len(x) != len(y):
         raise RuntimeError(
             "Cannot perform coordinate transformation when x and y have different lengths."
         )
-    if isinstance(x[0], u.quantity.Quantity):
+    if all(isinstance(variable, (u.Quantity)) for variable in [x, y]):
         if not isinstance(x[0].unit, type(y[0].unit)):
             raise UnitsError(
                 "Cannot perform coordinate transformation when x and y have different units."
             )
 
-    x_trans, y_trans = [np.zeros_like(x) for i in range(2)]
+    x_trans, y_trans = [np.zeros_like(x).astype(float) for i in range(2)]
     rotation_angle = rotation_angle.to(u.rad).value
 
     for step, _ in enumerate(x):
