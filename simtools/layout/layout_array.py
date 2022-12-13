@@ -865,7 +865,8 @@ class LayoutArray:
         """
         return pyproj.CRS("EPSG:4326")
 
-    def include_radius_into_telescope_table(self, telescope_table):
+    @staticmethod
+    def include_radius_into_telescope_table(telescope_table):
         """
         Include the radius of the telescopes types into the astropy.table.QTable telescopes_table
 
