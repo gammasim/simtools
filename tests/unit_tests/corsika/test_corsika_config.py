@@ -227,7 +227,34 @@ def test_load_corsika_parameters_file(corsika_config, io_handler, caplog):
     corsika_parameters_file = io_handler.get_input_data_file("parameters", "corsika_parameters.yml")
     corsika_dict = corsika_config.load_corsika_parameters_file(corsika_parameters_file)
     assert "Loading CORSIKA parameters from file" in caplog.text
-    parameters = ["corsika_sphere_center", "corsika_sphere_radius"]
+    sphere_center = {
+        "LST": {"value": 16, "unit": "m"},
+        "MST": {"value": 9, "unit": "m"},
+        "SCT": {"value": 6.1, "unit": "m"},
+        "SST": {"value": 3.25, "unit": "m"},
+    }
+    sphere_radius = {
+        "LST": {"value": 12.5, "unit": "m"},
+        "MST": {"value": 9.15, "unit": "m"},
+        "SCT": {"value": 7.15, "unit": "m"},
+        "SST": {"value": 3, "unit": "m"},
+    }
     assert isinstance(corsika_dict, dict)
-    for par in parameters:
-        assert par in corsika_dict
+    for tel_type in sphere_center:
+        assert (
+            sphere_center[tel_type]["value"]
+            == corsika_dict["corsika_sphere_center"][tel_type]["value"]
+        )
+        assert (
+            sphere_center[tel_type]["unit"]
+            == corsika_dict["corsika_sphere_center"][tel_type]["unit"]
+        )
+    for tel_type in sphere_radius:
+        assert (
+            sphere_radius[tel_type]["value"]
+            == corsika_dict["corsika_sphere_radius"][tel_type]["value"]
+        )
+        assert (
+            sphere_radius[tel_type]["unit"]
+            == corsika_dict["corsika_sphere_radius"][tel_type]["unit"]
+        )
