@@ -507,8 +507,8 @@ class LayoutArray:
 
         Returns
         -------
-        dict
-            Dictionary with the telescope layout information.
+        astropy.QTable
+            Astropy table with the telescope layout information.
 
         Raises
         ------
