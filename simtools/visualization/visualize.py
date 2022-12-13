@@ -565,11 +565,7 @@ def get_telescope_patch(name, x, y, radius):
     patch
         Instance of mpatches.Circle.
     """
-    telescope_colors = ["darkorange", "dodgerblue", "lightsteelblue", "black"]
-    colors_dict = {}
-    for step, telescope_type in enumerate(names.all_telescope_class_names):
-        colors_dict[telescope_type] = telescope_colors[step]
-
+    tel_obj = leg_h.TelescopeHandler()
     valid_name = names.get_telescope_type(name)
     fill_flag = False
     if valid_name == mst:
@@ -580,14 +576,14 @@ def get_telescope_patch(name, x, y, radius):
             width=radius.value,
             height=radius.value,
             fill=False,
-            color=colors_dict[sct],
+            color=tel_obj.colors_dict[sct],
         )
     else:
         patch = mpatches.Circle(
             (x.value, y.value),
             radius=radius.value,
             fill=fill_flag,
-            color=colors_dict[valid_name],
+            color=tel_obj.colors_dict[valid_name],
         )
     return patch
 
