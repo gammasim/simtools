@@ -4,6 +4,7 @@ from pathlib import Path
 import astropy.units as u
 import numpy as np
 import pyproj
+from astropy.coordinates.errors import UnitsError
 from astropy.table import QTable
 
 from simtools import db_handler, io_handler
@@ -864,8 +865,7 @@ class LayoutArray:
         """
         return pyproj.CRS("EPSG:4326")
 
-    @staticmethod
-    def include_radius_into_telescope_table(telescope_table):
+    def include_radius_into_telescope_table(self, telescope_table):
         """
         Include the radius of the telescopes types into the astropy.table.QTable telescopes_table
 
@@ -878,6 +878,11 @@ class LayoutArray:
         -------
         astropy.QTable
             Astropy QTable with telescope information updated with the radius.
+
+        Raises
+        ------
+        UnitsError:
+            If the units of radii given in the table metadata are not the same.
         """
 
         telescope_table["radius"] = [
@@ -889,7 +894,21 @@ class LayoutArray:
             for tel_name_now in telescope_table["telescope_name"]
         ]
 
+        for tel_type in names.all_telescope_class_names:
+            if tel_type in telescope_table.meta["corsika_sphere_radius"]:
+                if (
+                    telescope_table.meta["corsika_sphere_radius"][tel_type].split()[1]
+                    == telescope_table.meta["corsika_sphere_radius"][lst].split()[1]
+                ):
+                    continue
+                else:
+                    msg = "The units of the telescope radii in the QTable are not the same. \
+                    Aborting."
+                    self._logger.error(msg)
+                    raise UnitsError(msg)
+
         telescope_table["radius"].unit = u.Unit(
             telescope_table.meta["corsika_sphere_radius"][lst].split()[1]
         )
+
         return telescope_table
