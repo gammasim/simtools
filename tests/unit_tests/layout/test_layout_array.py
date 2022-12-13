@@ -251,13 +251,13 @@ def test_include_radius_into_telescope_table(layout_array_north_instance, telesc
     telescope_table_with_radius = layout_array_north_instance.include_radius_into_telescope_table(
         telescope_table
     )
-    values_from_file = np.array([20.190000534057617, -352.4599914550781, 62.29999923706055, 9.6])
+    values_from_file = [20.190000534057617, -352.4599914550781, 62.29999923706055, 9.6]
     keys = ["pos_x", "pos_y", "pos_z", "radius"]
     mst_10_index = telescope_table_with_radius["telescope_name"] == "MST-10"
-    for key_step, _ in enumerate(keys):
+    for key, value_manual in zip(keys, values_from_file):
         assert (
-            telescope_table_with_radius[mst_10_index][keys[key_step]].value[0]
-            == values_from_file[key_step]
+            pytest.approx(telescope_table_with_radius[mst_10_index][key].value[0], 1e-2)
+            == value_manual
         )
 
 
