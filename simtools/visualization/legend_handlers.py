@@ -5,7 +5,7 @@ import numpy as np
 from simtools.corsika.corsika_config import CorsikaConfig
 from simtools.io_handler import IOHandler
 from simtools.util import names
-from simtools.util.names import all_telescope_class_names
+from simtools.util.names import lst, mst, sst
 
 __all__ = [
     "EdgePixelObject",
@@ -229,9 +229,7 @@ class LSTHandler(TelescopeHandler):
         radius = handlebox.height
         patch = mpatches.Circle(
             xy=center,
-            radius=radius
-            * self.radius_dict[all_telescope_class_names["LST"]]
-            / self.radius_dict[all_telescope_class_names["LST"]],
+            radius=radius * self.radius_dict[lst] / self.radius_dict[lst],
             facecolor="none",
             edgecolor="darkorange",
             transform=handlebox.get_transform(),
@@ -253,9 +251,7 @@ class MSTHandler(TelescopeHandler):
         radius = handlebox.height
         patch = mpatches.Circle(
             xy=center,
-            radius=radius
-            * self.radius_dict[all_telescope_class_names["MST"]]
-            / self.radius_dict[all_telescope_class_names["LST"]],
+            radius=radius * self.radius_dict[mst] / self.radius_dict[lst],
             facecolor="dodgerblue",
             edgecolor="dodgerblue",
             transform=handlebox.get_transform(),
@@ -277,9 +273,7 @@ class SSTHandler(TelescopeHandler):
         radius = handlebox.height
         patch = mpatches.Circle(
             xy=center,
-            radius=radius
-            * self.radius_dict[all_telescope_class_names["SST"]]
-            / self.radius_dict[all_telescope_class_names["LST"]],
+            radius=radius * self.radius_dict[sst] / self.radius_dict[lst],
             facecolor="black",
             edgecolor="black",
             transform=handlebox.get_transform(),
