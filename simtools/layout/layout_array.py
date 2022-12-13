@@ -160,7 +160,7 @@ class LayoutArray:
         FileNotFoundError:
             If file_name does not exist.
         """
-
+        logger = logging.getLogger(__name__)
         if file_name is None:
             corsika_parameters_dict = collect_data_from_yaml_or_dict(
                 self.io_handler.get_input_data_file("parameters", "corsika_parameters.yml"), None
@@ -189,6 +189,7 @@ class LayoutArray:
                         tel_type
                     ] * u.Unit(unit)
                 except KeyError:
+                    logger.error("Key not valid. Dictionary does not have a key 'unit'.")
                     pass
 
         db = db_handler.DatabaseHandler(mongo_db_config=self.mongo_db_config)
