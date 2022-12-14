@@ -386,7 +386,7 @@ class LayoutArray:
 
     def _load_telescope_names(self, row):
         """
-        Read and set telescope names
+        Read and set telescope names.
 
         Parameters
         ----------
@@ -460,9 +460,58 @@ class LayoutArray:
                     raise
         return value * unit
 
-    def _if_no_key_in_dict_pass(self, dictionary, key):
+    def _try_set_coordinate(self, row, tel, table, crs_name, key1, key2):
+        """Function auxiliary to self._load_telescope_list. It sets the coordinates.
+
+        Parameters
+        ----------
+        row: dict
+            A row of the astropy.table.Table with array element coordinates.
+        tel: TelescopePosition
+            Instance of TelescopePosition.
+        table: astropy.table.Table or astropy.table.QTable
+            data table with array element coordinates.
+        crs_name: str
+            Name of coordinate system.
+        key1: str
+            Name of x-coordinate.
+        key2: str
+            Name of y-coordinate.
+        """
         try:
-            return dictionary[key]
+            tel.set_coordinates(
+                crs_name,
+                self._assign_unit_to_quantity(row[key1], table[key1].unit),
+                self._assign_unit_to_quantity(row[key2], table[key2].unit),
+            )
+        except KeyError:
+            pass
+
+    def _try_set_altitude(self, tel, table, row):
+        """
+        Function auxiliary to self._load_telescope_list. It sets the altitude of the
+        TelescopePosition instance.
+
+        Parameters
+        ----------
+        row: dict
+            A row of the astropy.table.Table with array element coordinates.
+        tel: TelescopePosition
+            Instance of TelescopePosition.
+        table: astropy.table.Table or astropy.table.QTable
+            data table with array element coordinates.
+        """
+        try:
+            tel.set_altitude(
+                self._altitude_from_corsika_z(
+                    pos_z=self._assign_unit_to_quantity(row["pos_z"], table["pos_z"].unit),
+                    tel_name=tel.name,
+                )
+            )
+        except KeyError:
+            pass
+        try:
+            tel.set_altitude(self._assign_unit_to_quantity(row["alt"], table["alt"].unit))
         except KeyError:
             pass
 
@@ -476,47 +525,13 @@ class LayoutArray:
             data table with array element coordinates
 
         """
-
         for row in table:
             tel = self._load_telescope_names(row)
+            self._try_set_coordinate(row, tel, table, "corsika", "pos_x", "pos_y")
+            self._try_set_coordinate(row, tel, table, "utm", "utm_east", "utm_north")
+            self._try_set_coordinate(row, tel, table, "mercator", "mercator", "lon")
+            self._try_set_altitude(row, tel, table)
 
-            try:
-                tel.set_coordinates(
-                    "corsika",
-                    self._assign_unit_to_quantity(row["pos_x"], table["pos_x"].unit),
-                    self._assign_unit_to_quantity(row["pos_y"], table["pos_y"].unit),
-                )
-            except KeyError:
-                pass
-            try:
-                tel.set_coordinates(
-                    "utm",
-                    self._assign_unit_to_quantity(row["utm_east"], table["utm_east"].unit),
-                    self._assign_unit_to_quantity(row["utm_north"], table["utm_north"].unit),
-                )
-            except KeyError:
-                pass
-            try:
-                tel.set_coordinates(
-                    "mercator",
-                    self._assign_unit_to_quantity(row["lat"], table["lat"].unit),
-                    self._assign_unit_to_quantity(row["lon"], table["lon"].unit),
-                )
-            except KeyError:
-                pass
-            try:
-                tel.set_altitude(
-                    self._altitude_from_corsika_z(
-                        pos_z=self._assign_unit_to_quantity(row["pos_z"], table["pos_z"].unit),
-                        tel_name=tel.name,
-                    )
-                )
-            except KeyError:
-                pass
-            try:
-                tel.set_altitude(self._assign_unit_to_quantity(row["alt"], table["alt"].unit))
-            except KeyError:
-                pass
             self._telescope_list.append(tel)
 
     @staticmethod
