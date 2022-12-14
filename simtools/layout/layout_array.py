@@ -430,6 +430,36 @@ class LayoutArray:
 
         return tel
 
+    def _assign_unit_to_quantity(self, value, unit):
+        """
+        Assign unit to quantity.
+
+        Parameters
+        ----------
+        value:
+            value to get a unit. It can be a float, int, or a Quantity (convertible to 'unit').
+        unit: astropy.units.Unit
+            Unit to apply to 'quantity'.
+
+        Returns
+        -------
+        astropy.units.Quantity
+            Quantity of value 'quantity' and unit 'unit'.
+        """
+        if isinstance(value, u.Quantity):
+            self._logger.debug(f"Value {value} is already of type astropy.units.Quantity.")
+            if isinstance(value.unit, type(unit)):
+                self._logger.debug(f"Quantity {value} has already unit {unit}. Returning {value}")
+                return value
+            else:
+                try:
+                    value = value.to(unit)
+                    return value
+                except u.UnitConversionError:
+                    self._logger.error(f"Cannot convert {value.unit} to {unit}.")
+                    raise
+        return value * unit
+
     def _load_telescope_list(self, table):
         """
         Load list of telescope from an astropy table (support both QTable and Table)
