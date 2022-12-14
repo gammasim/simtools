@@ -261,7 +261,9 @@ def test_include_radius_into_telescope_table(layout_array_north_instance, telesc
         )
 
 
-def test_from_corsika_file_to_dict(layout_array_north_instance, manual_corsika_dict_north):
+def test_from_corsika_file_to_dict(
+    layout_array_north_instance, manual_corsika_dict_north, db, io_handler
+):
     def run(corsika_dict):
         for key, value in corsika_dict.items():
             if isinstance(value, dict):
@@ -273,8 +275,18 @@ def test_from_corsika_file_to_dict(layout_array_north_instance, manual_corsika_d
     corsika_dict = layout_array_north_instance._from_corsika_file_to_dict()
     run(corsika_dict)
 
+    test_file_name = "corsika_parameters_2.yml"
+    db.export_file_db(
+        db_name="test-data",
+        dest=io_handler.get_output_directory(dir_type="parameters", test=True),
+        file_name=test_file_name,
+    )
+
+    corsika_config_file = gen.find_file(
+        test_file_name, io_handler.get_output_directory(dir_type="parameters", test=True)
+    )
     corsika_dict = layout_array_north_instance._from_corsika_file_to_dict(
-        file_name="corsika_parameters_2.yml"
+        file_name=corsika_config_file
     )
     run(corsika_dict)
 
