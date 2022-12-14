@@ -460,6 +460,12 @@ class LayoutArray:
                     raise
         return value * unit
 
+    def _if_no_key_in_dict_pass(self, dictionary, key):
+        try:
+            return dictionary[key]
+        except KeyError:
+            pass
+
     def _load_telescope_list(self, table):
         """
         Load list of telescope from an astropy table (support both QTable and Table)
@@ -475,60 +481,40 @@ class LayoutArray:
             tel = self._load_telescope_names(row)
 
             try:
-                if not isinstance(row["pos_x"], u.Quantity) and not isinstance(
-                    row["pos_y"], u.Quantity
-                ):
-                    tel.set_coordinates(
-                        "corsika",
-                        row["pos_x"] * table["pos_x"].unit,
-                        row["pos_y"] * table["pos_y"].unit,
-                    )
-                else:
-                    tel.set_coordinates("corsika", row["pos_x"], row["pos_y"])
+                tel.set_coordinates(
+                    "corsika",
+                    self._assign_unit_to_quantity(row["pos_x"], table["pos_x"].unit),
+                    self._assign_unit_to_quantity(row["pos_y"], table["pos_y"].unit),
+                )
             except KeyError:
                 pass
             try:
-                if not isinstance(row["utm_east"], u.Quantity) and not isinstance(
-                    row["utm_north"], u.Quantity
-                ):
-                    tel.set_coordinates(
-                        "utm",
-                        row["utm_east"] * table["utm_east"].unit,
-                        row["utm_north"] * table["utm_north"].unit,
-                    )
-                else:
-                    tel.set_coordinates("utm", row["utm_east"], row["utm_north"])
+                tel.set_coordinates(
+                    "utm",
+                    self._assign_unit_to_quantity(row["utm_east"], table["utm_east"].unit),
+                    self._assign_unit_to_quantity(row["utm_north"], table["utm_north"].unit),
+                )
             except KeyError:
                 pass
             try:
-                if not isinstance(row["lat"], u.Quantity) and not isinstance(
-                    row["lon"], u.Quantity
-                ):
-                    tel.set_coordinates(
-                        "mercator", row["lat"] * table["lat"].unit, row["lon"] * table["lon"].unit
-                    )
-                else:
-                    tel.set_coordinates("mercator", row["lat"], row["lon"])
+                tel.set_coordinates(
+                    "mercator",
+                    self._assign_unit_to_quantity(row["lat"], table["lat"].unit),
+                    self._assign_unit_to_quantity(row["lon"], table["lon"].unit),
+                )
             except KeyError:
                 pass
             try:
-                if not isinstance(row["pos_z"], u.Quantity):
-                    tel.set_altitude(
-                        self._altitude_from_corsika_z(
-                            pos_z=row["pos_z"] * table["pos_z"].unit, tel_name=tel.name
-                        )
+                tel.set_altitude(
+                    self._altitude_from_corsika_z(
+                        pos_z=self._assign_unit_to_quantity(row["pos_z"], table["pos_z"].unit),
+                        tel_name=tel.name,
                     )
-                else:
-                    tel.set_altitude(
-                        self._altitude_from_corsika_z(pos_z=row["pos_z"], tel_name=tel.name)
-                    )
+                )
             except KeyError:
                 pass
             try:
-                if not isinstance(row["alt"], u.Quantity):
-                    tel.set_altitude(row["alt"] * table["alt"].unit)
-                else:
-                    tel.set_altitude(row["alt"])
+                tel.set_altitude(self._assign_unit_to_quantity(row["alt"], table["alt"].unit))
             except KeyError:
                 pass
             self._telescope_list.append(tel)
