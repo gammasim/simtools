@@ -487,7 +487,7 @@ class LayoutArray:
         except KeyError:
             pass
 
-    def _try_set_altitude(self, tel, table, row):
+    def _try_set_altitude(self, row, tel, table):
         """
         Function auxiliary to self._load_telescope_list. It sets the altitude of the
         TelescopePosition instance.
