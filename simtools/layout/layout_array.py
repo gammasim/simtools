@@ -70,7 +70,7 @@ class LayoutArray:
             self._initialize_coordinate_systems(layout_center_data)
             self._initialize_corsika_telescope(corsika_telescope_data)
         else:
-            self.read_telescope_list_file(telescope_list_file)
+            self.initialize_layout_array_from_telescope_file(telescope_list_file)
 
     @classmethod
     def from_layout_array_name(cls, mongo_db_config, layout_array_name, label=None):
@@ -108,7 +108,7 @@ class LayoutArray:
         telescope_list_file = layout.io_handler.get_input_data_file(
             "layout", f"telescope_positions-{valid_layout_array_name}.ecsv"
         )
-        layout.read_telescope_list_file(telescope_list_file)
+        layout.initialize_layout_array_from_telescope_file(telescope_list_file)
 
         return layout
 
@@ -503,7 +503,8 @@ class LayoutArray:
                 pass
             self._telescope_list.append(tel)
 
-    def read_telescope_list_file(self, telescope_list_file):
+    @staticmethod
+    def read_telescope_list_file(telescope_list_file):
         """
         Read list of telescopes from a ecsv file.
 
@@ -523,18 +524,29 @@ class LayoutArray:
             If file cannot be opened.
 
         """
+        _logger = logging.getLogger(__name__)
         try:
             table = QTable.read(telescope_list_file, format="ascii.ecsv")
         except FileNotFoundError:
-            self._logger.error(f"Error reading list of array elements from {telescope_list_file}")
+            _logger.error(f"Error reading list of array elements from {telescope_list_file}")
             raise
+        _logger.info(f"Reading array elements from {telescope_list_file}")
 
-        self._logger.info(f"Reading array elements from {telescope_list_file}")
+        return table
 
+    def initialize_layout_array_from_telescope_file(self, telescope_list_file):
+        """
+        Initialize the Layout array from a telescope list file.
+
+        Parameters
+        ----------
+        telescope_list_file: str or Path
+            Path to the telescope list file.
+        """
+        table = self.read_telescope_list_file(telescope_list_file)
         self._initialize_corsika_telescope(table.meta)
         self._initialize_coordinate_systems(table.meta)
         self._load_telescope_list(table)
-        return table
 
     def add_telescope(self, telescope_name, crs_name, xx, yy, altitude=None, tel_corsika_z=None):
         """

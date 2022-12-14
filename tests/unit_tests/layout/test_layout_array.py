@@ -115,9 +115,29 @@ def test_initialize_corsika_telescope_from_file(
         assert value == layout_array_north_instance._corsika_telescope["corsika_sphere_center"][key]
 
 
-def test_read_tel_list(telescope_test_file, layout_array_north_instance, db_config):
+def test_read_telescope_list_file(telescope_test_file, layout_array_north_instance, db_config):
+    table = layout_array_north_instance.read_telescope_list_file(telescope_test_file)
+    assert table.meta["data_type"] == "positionfile"
+    assert table.meta["description"] == "telescope positions for CTA North (La Palma)"
+    columns = ["pos_x", "pos_y", "pos_z"]
+    pos_x = [-70.93, -35.27, 75.28, 30.91, -211.54, -153.26]
+    pos_y = [-52.07, 66.14, 50.49, -64.54, 5.66, 169.01]
+    pos_z = [43.00, 32.00, 28.70, 32.00, 50.3, 24.0]
+    columns_manual = [pos_x, pos_y, pos_z]
+    for step, col in enumerate(columns):
+        assert all(
+            [
+                pytest.approx(table[col][tel_num].value, 0.1) == columns_manual[step][tel_num]
+                for tel_num in range(6)
+            ]
+        )
 
-    layout_array_north_instance.read_telescope_list_file(telescope_test_file)
+
+def test_initialize_layout_array_from_telescope_file(
+    telescope_test_file, layout_array_north_instance, db_config
+):
+
+    layout_array_north_instance.initialize_layout_array_from_telescope_file(telescope_test_file)
     layout_array_north_instance.convert_coordinates()
     assert 19 == layout_array_north_instance.get_number_of_telescopes()
 
@@ -188,7 +208,7 @@ def test_build_layout(layout_array_north_four_LST_instance, tmp_test_directory, 
 
     # Building a second layout from the file exported by the first one
     layout_2 = LayoutArray(site="North", mongo_db_config=db_config, name="test_layout_2")
-    layout_2.read_telescope_list_file(layout.telescope_list_file)
+    layout_2.initialize_layout_array_from_telescope_file(layout.telescope_list_file)
 
     assert 4 == layout_2.get_number_of_telescopes()
     assert layout_2._array_center.get_altitude().value == pytest.approx(
