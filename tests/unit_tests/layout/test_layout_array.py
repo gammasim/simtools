@@ -326,3 +326,14 @@ def test_initialize_corsika_telescope_from_dict(
                 assert subvalue == manual_corsika_dict_north[key][tel_type]
         else:
             assert value == manual_corsika_dict_north[key]
+
+
+def test_assign_unit_to_quantity(layout_array_north_instance):
+    quantity = layout_array_north_instance._assign_unit_to_quantity(10, u.m)
+    assert quantity == 10 * u.m
+
+    quantity = layout_array_north_instance._assign_unit_to_quantity(1000 * u.cm, u.m)
+    assert quantity == 10 * u.m
+
+    with pytest.raises(u.UnitConversionError):
+        layout_array_north_instance._assign_unit_to_quantity(1000 * u.TeV, u.m)
