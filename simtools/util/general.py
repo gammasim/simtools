@@ -652,7 +652,6 @@ def change_dict_keys_case(data_dict, lower_case=True):
     return _return_dict
 
 
-@u.quantity_input(rotation_angle=u.deg)
 def rotate(rotation_angle, x, y):
     """
     Rotate x and y by the rotation angle given in rotation_angle, in degrees.
@@ -661,7 +660,7 @@ def rotate(rotation_angle, x, y):
 
     Parameters
     ----------
-    rotation_angle: astropy.units.deg
+    rotation_angle: astropy.units.deg or astropy.units.rad
         Angle to rotate the array in degrees.
     x: numpy.array or list
         x positions of the telescopes, usually in meters.
@@ -681,6 +680,7 @@ def rotate(rotation_angle, x, y):
         If the length of x and y are different.
     UnitsError:
         If the unit of x and y are different.
+        If unit of rotation_angle is neither u.deg nor u.rad.
     """
     allowed_types = (list, np.ndarray, u.Quantity, float, int)
     if not all(isinstance(variable, allowed_types) for variable in [x, y]):
@@ -709,6 +709,12 @@ def rotate(rotation_angle, x, y):
             raise UnitsError(
                 "Cannot perform coordinate transformation when x and y have different units."
             )
+    if isinstance(rotation_angle, type(u.rad)):
+        rotation_angle = rotation_angle.to(u.deg)
+    elif isinstance(rotation_angle, type(u.deg)):
+        pass
+    else:
+        raise UnitsError(f"Invalid unit for {rotation_angle}. Valid units are u.deg or u.rad.")
 
     x_trans, y_trans = [np.zeros_like(x).astype(float) for i in range(2)]
     rotation_angle = rotation_angle.to(u.rad).value
