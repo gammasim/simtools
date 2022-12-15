@@ -484,7 +484,10 @@ class LayoutArray:
                 self._assign_unit_to_quantity(row[key1], table[key1].unit),
                 self._assign_unit_to_quantity(row[key2], table[key2].unit),
             )
+            self._logger.debug(f"{key1} and {key2} are given. Setting coordinates.")
+
         except KeyError:
+            self._logger.debug(f"{key1} and {key2} are not given. Coordinates not set.")
             pass
 
     def _try_set_altitude(self, row, tel, table):
@@ -508,10 +511,14 @@ class LayoutArray:
                     tel_name=tel.name,
                 )
             )
+            self._logger.debug(
+                "CORSIKA z-coordinate of telescope is given. Setting altitude from it."
+            )
         except KeyError:
             pass
         try:
             tel.set_altitude(self._assign_unit_to_quantity(row["alt"], table["alt"].unit))
+            self._logger.debug("Telescope altitude is given. Setting altitude from it.")
         except KeyError:
             pass
 
