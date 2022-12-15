@@ -337,3 +337,31 @@ def test_assign_unit_to_quantity(layout_array_north_instance):
 
     with pytest.raises(u.UnitConversionError):
         layout_array_north_instance._assign_unit_to_quantity(1000 * u.TeV, u.m)
+
+
+def test_try_set_altitude(layout_array_north_instance, telescope_test_file):
+    table = layout_array_north_instance.read_telescope_list_file(telescope_test_file)
+    obs_level = 2158.0
+    manual_z_positions = [43.00, 32.00, 28.70, 32.00, 50.3, 24.0]
+    corsika_sphere_center = [16.0, 16.0, 16.0, 16.0, 9.0, 9.0]
+    manual_altitudes = [
+        manual_z_positions[step] + obs_level - corsika_sphere_center[step] for step in range(6)
+    ]
+    for step, row in enumerate(table[:6]):
+        tel = layout_array_north_instance._load_telescope_names(row)
+        layout_array_north_instance._try_set_altitude(row, tel, table)
+        for _crs in tel.crs.values():
+            assert pytest.approx(_crs["zz"]["value"], 0.1) == manual_altitudes[step]
+
+
+def test_try_set_coordinate(layout_array_north_instance, telescope_test_file):
+    table = layout_array_north_instance.read_telescope_list_file(telescope_test_file)
+    manual_xx = [-70.93, -35.27, 75.28, 30.91, -211.54, -153.26]
+    manual_yy = [-52.07, 66.14, 50.49, -64.54, 5.66, 169.01]
+    for step, row in enumerate(table[:6]):
+        tel = layout_array_north_instance._load_telescope_names(row)
+        layout_array_north_instance._try_set_coordinate(
+            row, tel, table, "corsika", "pos_x", "pos_y"
+        )
+        assert pytest.approx(tel.crs["corsika"]["xx"]["value"], 0.1) == manual_xx[step]
+        assert pytest.approx(tel.crs["corsika"]["yy"]["value"], 0.1) == manual_yy[step]
