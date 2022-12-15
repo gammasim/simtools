@@ -709,12 +709,16 @@ def rotate(rotation_angle, x, y):
             raise UnitsError(
                 "Cannot perform coordinate transformation when x and y have different units."
             )
-    if isinstance(rotation_angle, type(u.rad)):
-        rotation_angle = rotation_angle.to(u.deg)
-    elif isinstance(rotation_angle, type(u.deg)):
-        pass
-    else:
-        raise UnitsError(f"Invalid unit for {rotation_angle}. Valid units are u.deg or u.rad.")
+    if isinstance(rotation_angle, u.Quantity):
+
+        if isinstance(rotation_angle.unit, type(u.rad)):
+            rotation_angle = rotation_angle.to(u.deg)
+        elif isinstance(rotation_angle.unit, type(u.deg)):
+            pass
+        else:
+            raise u.UnitConversionError(
+                f"Invalid unit for {rotation_angle}. Valid units are u.deg or u.rad."
+            )
 
     x_trans, y_trans = [np.zeros_like(x).astype(float) for i in range(2)]
     rotation_angle = rotation_angle.to(u.rad).value
