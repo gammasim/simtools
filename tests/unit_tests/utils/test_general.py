@@ -173,18 +173,24 @@ def test_rotate_telescope_position():
     x_rot_manual = np.array([-13.7, -3.7, 3.7, 13.7])
     y_rot_manual = np.array([-3.7, 13.7, -13.7, 3.7])
 
-    def check_results(x_to_test, y_to_test, x_right, y_right):
-        x_rot, y_rot = gen.rotate(angle_deg, x_to_test, y_to_test)
+    def check_results(x_to_test, y_to_test, x_right, y_right, angle):
+        x_rot, y_rot = gen.rotate(angle, x_to_test, y_to_test)
         x_rot, y_rot = np.around(x_rot, 1), np.around(y_rot, 1)
         for element, _ in enumerate(x):
             assert x_right[element] == x_rot[element]
             assert y_right[element] == y_rot[element]
 
-    check_results(x, y, x_rot_manual, y_rot_manual)
+    # Testing without units
+    check_results(x, y, x_rot_manual, y_rot_manual, angle_deg)
 
     x_new_array, y_new_array = x * u.m, y * u.m
     x_rot_new_array, y_rot_new_array = x_rot_manual * u.m, y_rot_manual * u.m
-    check_results(x_new_array, y_new_array, x_rot_new_array, y_rot_new_array)
+
+    # Testing with units
+    check_results(x_new_array, y_new_array, x_rot_new_array, y_rot_new_array, angle_deg)
+
+    # Testing with radians
+    check_results(x_new_array, y_new_array, x_rot_new_array, y_rot_new_array, angle_deg.to(u.rad))
 
     with pytest.raises(TypeError):
         gen.rotate(angle_deg, x, y[0])
@@ -198,3 +204,5 @@ def test_rotate_telescope_position():
         gen.rotate(angle_deg, x[:-1], y)
     with pytest.raises(UnitsError):
         gen.rotate(angle_deg, x_new_array.to(u.cm), y_new_array)
+    with pytest.raises(u.UnitConversionError):
+        gen.rotate(30 * u.m, x_new_array, y_new_array)
