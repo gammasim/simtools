@@ -488,7 +488,6 @@ class LayoutArray:
 
         except KeyError:
             self._logger.debug(f"{key1} and {key2} are not given. Coordinates not set.")
-            pass
 
     def _try_set_altitude(self, row, tel, table):
         """
