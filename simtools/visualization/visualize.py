@@ -544,7 +544,7 @@ def plot_hist_2D(data, **kwargs):
     return fig
 
 
-@u.quantity_input(x=u.m, y=u.m, radius=u.m)
+@u.quantity_input()
 def get_telescope_patch(name, x, y, radius):
     """
     Collect the patch of one telescope to be plotted by plot_array.
@@ -553,12 +553,12 @@ def get_telescope_patch(name, x, y, radius):
     ----------
     name: str
         Name of the telescope (type).
-    x: astropy.units.m
-        x position of the telescope in meters.
-    y: astropy.units.m
-        y position of the telescope in meters.
-    radius: astropy.units.m
-        Radius of the telescope sphere in meters.
+    x: astropy.units.Quantity
+        x position of the telescope usually in meters.
+    y: astropy.units.Quantity
+        y position of the telescope usually in meters.
+    radius: astropy.units.Quantity
+        Radius of the telescope sphere usually in meters.
 
     Returns
     -------
@@ -568,6 +568,11 @@ def get_telescope_patch(name, x, y, radius):
     tel_obj = leg_h.TelescopeHandler()
     valid_name = names.get_telescope_type(name)
     fill_flag = False
+
+    x = x.to(u.m)
+    y = y.to(u.m)
+    radius = radius.to(u.m)
+
     if valid_name == mst:
         fill_flag = True
     if valid_name == sct:
