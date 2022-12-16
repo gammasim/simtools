@@ -588,10 +588,12 @@ def get_telescope_patch(name, x, y, radius):
     return patch
 
 
-@u.quantity_input(rotate_angle=u.deg)
 def plot_array(telescopes, rotate_angle=0 * u.deg):
     """
     Plot the array of telescopes.
+    Rotation of the array elements is possible through the 'rotate_angle' given either in degrees,
+    or in radians.
+    The rotation does not change Telescope instance attributes.
 
     Parameters
     ----------
@@ -613,11 +615,13 @@ def plot_array(telescopes, rotate_angle=0 * u.deg):
     legend_labels = []
     tel_counters = {one_telescope: 0 for one_telescope in names.all_telescope_class_names}
     if rotate_angle != 0:
-        telescopes["pos_x"], telescopes["pos_y"] = gen.rotate(
+        pos_x_rotated, pos_y_rotated = gen.rotate(
             rotate_angle, telescopes["pos_x"], telescopes["pos_y"]
         )
+    else:
+        pos_x_rotated, pos_y_rotated = telescopes["pos_x"], telescopes["pos_y"]
 
-    size_factor = max(np.max(telescopes["pos_x"]), np.max(telescopes["pos_y"])) / (300.0 * u.m)
+    size_factor = max(np.max(pos_x_rotated), np.max(pos_y_rotated)) / (300.0 * u.m)
     fontsize = 12
 
     patches = []
@@ -631,14 +635,14 @@ def plot_array(telescopes, rotate_angle=0 * u.deg):
         patches.append(
             get_telescope_patch(
                 i_tel_name,
-                telescopes[i_tel]["pos_x"],
-                telescopes[i_tel]["pos_y"],
+                pos_x_rotated[i_tel],
+                pos_y_rotated[i_tel],
                 telescopes[i_tel]["radius"] * size_factor,
             )
         )
         ax.text(
-            telescopes[i_tel]["pos_x"].value,
-            telescopes[i_tel]["pos_y"].value + telescopes[i_tel]["radius"].value,
+            pos_x_rotated[i_tel].value,
+            pos_y_rotated[i_tel].value + telescopes[i_tel]["radius"].value,
             telescopes[i_tel]["telescope_name"],
             horizontalalignment="center",
             verticalalignment="bottom",
