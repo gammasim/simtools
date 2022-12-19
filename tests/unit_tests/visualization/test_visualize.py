@@ -97,7 +97,7 @@ def test_add_unit():
 
 def test_get_telescope_patch(corsika_telescope_data_dict):
 
-    for tel_type in np.array(list(corsika_telescope_data_dict["corsika_sphere_radius"].keys())):
+    for tel_type in corsika_telescope_data_dict["corsika_sphere_radius"]:
         radius = corsika_telescope_data_dict["corsika_sphere_radius"][tel_type].value
         patch = visualize.get_telescope_patch(tel_type, 0 * u.m, 0 * u.m, radius * u.m)
         if mpatches.Circle == type(patch):
