@@ -8,7 +8,6 @@ import astropy.units as u
 import matplotlib.gridspec as gridspec
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
-import numpy as np
 from astropy.table import QTable
 from cycler import cycler
 from matplotlib.collections import PatchCollection
@@ -629,7 +628,6 @@ def plot_array(telescopes, rotate_angle=0 * u.deg, show_tel_label=False):
     else:
         pos_x_rotated, pos_y_rotated = telescopes["pos_x"], telescopes["pos_y"]
 
-    size_factor = max(np.max(pos_x_rotated), np.max(pos_y_rotated)) / (300.0 * u.m)
     fontsize = 5
 
     patches = []
@@ -645,7 +643,7 @@ def plot_array(telescopes, rotate_angle=0 * u.deg, show_tel_label=False):
                 i_tel_name,
                 pos_x_rotated[i_tel],
                 pos_y_rotated[i_tel],
-                telescopes[i_tel]["radius"] * size_factor,
+                telescopes[i_tel]["radius"],
             )
         )
         if show_tel_label:
