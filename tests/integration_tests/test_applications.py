@@ -165,67 +165,67 @@ APP_LIST = {
     ],
     # Layout
     "make_regular_arrays": [[]],
-    "plot_array::one_file": [
+    "plot_layout_array::one_file": [
         [
             "--telescope_list data/layout/telescope_positions-North-TestLayout.ecsv",
         ]
     ],
-    "plot_array::one_file_one_angle": [
+    "plot_layout_array::one_file_one_angle": [
         [
             "--telescope_list data/layout/telescope_positions-North-TestLayout.ecsv",
             "--rotate_angle 20",
         ]
     ],
-    "plot_array::one_file_two_angles": [
+    "plot_layout_array::one_file_two_angles": [
         [
             "--telescope_list data/layout/telescope_positions-North-TestLayout.ecsv",
             "--rotate_angle 20 30",
         ]
     ],
-    "plot_array::two_files": [
+    "plot_layout_array::two_files": [
         [
             "--telescope_list data/layout/telescope_positions-North-TestLayout.ecsv "
             "data/layout/telescope_positions-South-TestLayout.ecsv",
         ]
     ],
-    "plot_array::two_files_one_angle": [
+    "plot_layout_array::two_files_one_angle": [
         [
             "--telescope_list data/layout/telescope_positions-North-TestLayout.ecsv "
             "data/layout/telescope_positions-South-TestLayout.ecsv",
             "--rotate_angle 20",
         ]
     ],
-    "plot_array::two_files_two_angles": [
+    "plot_layout_array::two_files_two_angles": [
         [
             "--telescope_list data/layout/telescope_positions-North-TestLayout.ecsv "
             "data/layout/telescope_positions-South-TestLayout.ecsv",
             "--rotate_angle 20 30",
         ]
     ],
-    "plot_array::layout_name": [
+    "plot_layout_array::layout_name": [
         [
             "--layout_array_name North-4LST",
         ]
     ],
-    "plot_array::layout_name_one_angle": [
+    "plot_layout_array::layout_name_one_angle": [
         [
             "--layout_array_name North-4LST",
             "--rotate_angle 20",
         ]
     ],
-    "plot_array::layout_name_two_angles": [
+    "plot_layout_array::layout_name_two_angles": [
         [
             "--layout_array_name North-4LST",
             "--rotate_angle 20 30",
         ]
     ],
-    "plot_array::layout_two_names_one_angle": [
+    "plot_layout_array::layout_two_names_one_angle": [
         [
             "--layout_array_name North-4LST South-4LST",
             "--rotate_angle 20",
         ]
     ],
-    "plot_array::layout_two_names_two_angles": [
+    "plot_layout_array::layout_two_names_two_angles": [
         [
             "--layout_array_name North-4LST South-4LST",
             "--rotate_angle 20 30",
