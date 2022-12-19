@@ -23,7 +23,7 @@
     .. code-block:: console
 
         python applications/plot_simtel_histograms.py \
-            -file_lists list_test1.txt list_test2.txt --figure_name histograms_comparison
+            --file_lists list_test1.txt list_test2.txt --figure_name histograms_comparison
 
 """
 
