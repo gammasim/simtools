@@ -1,14 +1,16 @@
 import logging
+from pathlib import Path
 
 import astropy.units as u
 import numpy as np
 import pyproj
-from astropy.table import Table
+from astropy.table import QTable
 
-from simtools import io_handler
+from simtools import db_handler, io_handler
 from simtools.layout.telescope_position import TelescopePosition
 from simtools.util import names
 from simtools.util.general import collect_data_from_yaml_or_dict
+from simtools.util.names import all_telescope_class_names
 
 __all__ = ["InvalidTelescopeListFile", "LayoutArray"]
 
@@ -23,6 +25,10 @@ class LayoutArray:
 
     Parameters
     ----------
+    mongo_db_config: dict
+        MongoDB configuration.
+    site: str
+        Site name or location (e.g., North/South or LaPalma/Paranal)
     label: str
         Instance label.
     name: str
@@ -37,6 +43,8 @@ class LayoutArray:
 
     def __init__(
         self,
+        mongo_db_config,
+        site,
         label=None,
         name=None,
         layout_center_data=None,
@@ -50,27 +58,30 @@ class LayoutArray:
         self._logger = logging.getLogger(__name__)
         self._logger.debug("Init LayoutArray")
 
+        self.mongo_db_config = mongo_db_config
         self.label = label
         self.name = name
+        self.site = names.validate_site_name(site)
         self.io_handler = io_handler.IOHandler()
 
         self._telescope_list = []
         self._epsg = None
-        self.telescope_list_file = None
         if telescope_list_file is None:
             self._initialize_coordinate_systems(layout_center_data)
             self._initialize_corsika_telescope(corsika_telescope_data)
         else:
-            self.read_telescope_list_file(telescope_list_file)
+            self.initialize_layout_array_from_telescope_file(telescope_list_file)
 
     @classmethod
-    def from_layout_array_name(cls, layout_array_name, label=None):
+    def from_layout_array_name(cls, mongo_db_config, layout_array_name, label=None):
         """
         Read telescope list from file for given layout name (e.g. South-4LST, North-Prod5, ...).
         Layout definitions are given in the `data/layout` path.
 
         Parameters
         ----------
+        mongo_db_config: dict
+            MongoDB configuration.
         layout_array_name: str
             e.g. South-4LST, North-Prod5 ...
         label: str
@@ -82,17 +93,22 @@ class LayoutArray:
             Instance of the LayoutArray.
         """
 
-        spl = layout_array_name.split("-")
-        site_name = names.validate_site_name(spl[0])
-        array_name = names.validate_layout_array_name(spl[1])
+        split_name = layout_array_name.split("-")
+        site_name = names.validate_site_name(split_name[0])
+        array_name = names.validate_layout_array_name(split_name[1])
         valid_layout_array_name = site_name + "-" + array_name
 
-        layout = cls(name=valid_layout_array_name, label=label)
+        layout = cls(
+            site=site_name,
+            mongo_db_config=mongo_db_config,
+            name=valid_layout_array_name,
+            label=label,
+        )
 
         telescope_list_file = layout.io_handler.get_input_data_file(
             "layout", f"telescope_positions-{valid_layout_array_name}.ecsv"
         )
-        layout.read_telescope_list_file(telescope_list_file)
+        layout.initialize_layout_array_from_telescope_file(telescope_list_file)
 
         return layout
 
@@ -117,15 +133,84 @@ class LayoutArray:
 
         if corsika_dict is not None:
             self._logger.debug(f"Initialize CORSIKA telescope parameters from dict: {corsika_dict}")
-            self._initialize_corsika_telescope_from_dict(corsika_dict)
         else:
             self._logger.debug("Initialize CORSIKA telescope parameters from file")
-            self._initialize_corsika_telescope_from_dict(
-                collect_data_from_yaml_or_dict(
-                    self.io_handler.get_input_data_file("parameters", "corsika_parameters.yml"),
-                    None,
-                )
+            corsika_dict = self._from_corsika_file_to_dict()
+
+        self._initialize_corsika_telescope_from_dict(corsika_dict)
+
+    def _from_corsika_file_to_dict(self, file_name=None):
+        """
+        Get the corsika parameter file and return a dictionary with the keys necessary to\
+        initialize this class.
+
+        Parameters
+        ----------
+        file_name: str or Path
+            File from which to extract the corsika parameters. Default is \
+            data/parameters/corsika_parameters.yml
+
+        Returns
+        ------
+        corsika_dict:
+            Dictionary with corsika telescopes information.
+
+        Raises
+        ------
+        FileNotFoundError:
+            If file_name does not exist.
+        """
+        logger = logging.getLogger(__name__)
+        if file_name is None:
+            corsika_parameters_dict = collect_data_from_yaml_or_dict(
+                self.io_handler.get_input_data_file("parameters", "corsika_parameters.yml"), None
             )
+        else:
+            if not isinstance(file_name, Path):
+                file_name = Path(file_name)
+            if file_name.exists():
+                corsika_parameters_dict = collect_data_from_yaml_or_dict(file_name, None)
+            else:
+                raise FileNotFoundError
+
+        corsika_dict = {}
+        corsika_pars = ["corsika_sphere_radius", "corsika_sphere_center"]
+        for simtools_par in corsika_pars:
+            corsika_par = names.translate_simtools_to_corsika(simtools_par)
+            corsika_dict[simtools_par] = {}
+            for tel_type in all_telescope_class_names:
+                corsika_dict[simtools_par][tel_type] = corsika_parameters_dict[corsika_par][
+                    tel_type
+                ]["value"]
+
+                try:
+                    unit = corsika_parameters_dict[corsika_par][tel_type]["unit"]
+                    corsika_dict[simtools_par][tel_type] = corsika_dict[simtools_par][
+                        tel_type
+                    ] * u.Unit(unit)
+                except KeyError:
+                    logger.warning(
+                        "Key not valid. Dictionary does not have a key 'unit'. Continuing without "
+                        "the unit."
+                    )
+                    corsika_dict[simtools_par][tel_type] = corsika_dict[simtools_par][tel_type]
+
+        db = db_handler.DatabaseHandler(mongo_db_config=self.mongo_db_config)
+        self._logger.debug("Reading site parameters from DB")
+        _site_pars = db.get_site_parameters(self.site, "Current", only_applicable=True)
+        corsika_dict["corsika_obs_level"] = _site_pars["altitude"]["Value"]
+
+        try:
+            corsika_dict["corsika_obs_level"] = corsika_dict["corsika_obs_level"] * u.Unit(
+                _site_pars["altitude"]["units"]
+            )
+        except KeyError:
+            corsika_dict["corsika_obs_level"] = corsika_dict["corsika_obs_level"]
+            logger.warning(
+                "Key not valid. Dictionary does not have a key 'unit'. Continuing without the unit."
+            )
+
+        return corsika_dict
 
     @staticmethod
     def _initialize_sphere_parameters(sphere_dict):
@@ -167,7 +252,6 @@ class LayoutArray:
             dictionary with CORSIKA telescope parameters
 
         """
-
         try:
             self._corsika_telescope["corsika_obs_level"] = u.Quantity(
                 corsika_dict["corsika_obs_level"]
@@ -262,20 +346,19 @@ class LayoutArray:
             Altitude or CORSIKA z-coordinate (np.nan in case of ill-defined value).
 
         """
-
         if pos_z is not None and altitude is None:
             return TelescopePosition.convert_telescope_altitude_from_corsika_system(
                 pos_z,
                 self._corsika_telescope["corsika_obs_level"],
                 self._get_corsika_sphere_center(tel_name),
             )
+
         if altitude is not None and pos_z is None:
             return TelescopePosition.convert_telescope_altitude_to_corsika_system(
                 altitude,
                 self._corsika_telescope["corsika_obs_level"],
                 self._get_corsika_sphere_center(tel_name),
             )
-
         return np.nan
 
     def _get_corsika_sphere_center(self, tel_name):
@@ -294,16 +377,16 @@ class LayoutArray:
 
         """
 
-        if self.get_telescope_type(tel_name) is not None:
+        if names.get_telescope_type(tel_name) is not None:
             return self._corsika_telescope["corsika_sphere_center"][
-                self.get_telescope_type(tel_name)
+                names.get_telescope_type(tel_name)
             ]
 
         return 0.0 * u.m
 
     def _load_telescope_names(self, row):
         """
-        Read and set telescope names
+        Read and set telescope names.
 
         Parameters
         ----------
@@ -326,7 +409,7 @@ class LayoutArray:
         try:
             tel.name = row["telescope_name"]
             if "asset_code" not in row:
-                tel.asset_code = self.get_telescope_type(tel.name)
+                tel.asset_code = names.get_telescope_type(tel.name)
         except KeyError:
             pass
         try:
@@ -347,58 +430,118 @@ class LayoutArray:
 
         return tel
 
-    def _load_telescope_list(self, table):
+    def _assign_unit_to_quantity(self, value, unit):
         """
-        Load list of telescope from an astropy table
+        Assign unit to quantity.
 
         Parameters
         ----------
-        table: astropy.table
+        value:
+            value to get a unit. It can be a float, int, or a Quantity (convertible to 'unit').
+        unit: astropy.units.Unit
+            Unit to apply to 'quantity'.
+
+        Returns
+        -------
+        astropy.units.Quantity
+            Quantity of value 'quantity' and unit 'unit'.
+        """
+        if isinstance(value, u.Quantity):
+            self._logger.debug(f"Value {value} is already of type astropy.units.Quantity.")
+            if isinstance(value.unit, type(unit)):
+                self._logger.debug(f"Quantity {value} has already unit {unit}. Returning {value}")
+                return value
+            else:
+                try:
+                    value = value.to(unit)
+                    return value
+                except u.UnitConversionError:
+                    self._logger.error(f"Cannot convert {value.unit} to {unit}.")
+                    raise
+        return value * unit
+
+    def _try_set_coordinate(self, row, tel, table, crs_name, key1, key2):
+        """Function auxiliary to self._load_telescope_list. It sets the coordinates.
+
+        Parameters
+        ----------
+        row: dict
+            A row of the astropy.table.Table with array element coordinates.
+        tel: TelescopePosition
+            Instance of TelescopePosition.
+        table: astropy.table.Table or astropy.table.QTable
+            data table with array element coordinates.
+        crs_name: str
+            Name of coordinate system.
+        key1: str
+            Name of x-coordinate.
+        key2: str
+            Name of y-coordinate.
+        """
+        try:
+            tel.set_coordinates(
+                crs_name,
+                self._assign_unit_to_quantity(row[key1], table[key1].unit),
+                self._assign_unit_to_quantity(row[key2], table[key2].unit),
+            )
+            self._logger.debug(f"{key1} and {key2} are given. Setting coordinates.")
+
+        except KeyError:
+            self._logger.debug(f"{key1} and {key2} are not given. Coordinates not set.")
+
+    def _try_set_altitude(self, row, tel, table):
+        """
+        Function auxiliary to self._load_telescope_list. It sets the altitude of the
+        TelescopePosition instance.
+
+        Parameters
+        ----------
+        row: dict
+            A row of the astropy.table.Table with array element coordinates.
+        tel: TelescopePosition
+            Instance of TelescopePosition.
+        table: astropy.table.Table or astropy.table.QTable
+            data table with array element coordinates.
+        """
+        try:
+            tel.set_altitude(
+                self._altitude_from_corsika_z(
+                    pos_z=self._assign_unit_to_quantity(row["pos_z"], table["pos_z"].unit),
+                    tel_name=tel.name,
+                )
+            )
+            self._logger.debug(
+                "CORSIKA z-coordinate of telescope is given. Setting altitude from it."
+            )
+        except KeyError:
+            pass
+        try:
+            tel.set_altitude(self._assign_unit_to_quantity(row["alt"], table["alt"].unit))
+            self._logger.debug("Telescope altitude is given. Setting altitude from it.")
+        except KeyError:
+            pass
+
+    def _load_telescope_list(self, table):
+        """
+        Load list of telescope from an astropy table (support both QTable and Table)
+
+        Parameters
+        ----------
+        table: astropy.table.Table or astropy.table.QTable
             data table with array element coordinates
 
         """
-
         for row in table:
             tel = self._load_telescope_names(row)
-
-            try:
-                tel.set_coordinates(
-                    "corsika",
-                    row["pos_x"] * table["pos_x"].unit,
-                    row["pos_y"] * table["pos_y"].unit,
-                )
-            except KeyError:
-                pass
-            try:
-                tel.set_coordinates(
-                    "utm",
-                    row["utm_east"] * table["utm_east"].unit,
-                    row["utm_north"] * table["utm_north"].unit,
-                )
-            except KeyError:
-                pass
-            try:
-                tel.set_coordinates(
-                    "mercator", row["lat"] * table["lat"].unit, row["lon"] * table["lon"].unit
-                )
-            except KeyError:
-                pass
-            try:
-                tel.set_altitude(
-                    self._altitude_from_corsika_z(
-                        pos_z=row["pos_z"] * table["pos_z"].unit, tel_name=tel.name
-                    )
-                )
-            except KeyError:
-                pass
-            try:
-                tel.set_altitude(row["alt"] * table["alt"].unit)
-            except KeyError:
-                pass
+            self._try_set_coordinate(row, tel, table, "corsika", "pos_x", "pos_y")
+            self._try_set_coordinate(row, tel, table, "utm", "utm_east", "utm_north")
+            self._try_set_coordinate(row, tel, table, "mercator", "mercator", "lon")
+            self._try_set_altitude(row, tel, table)
 
             self._telescope_list.append(tel)
 
-    def read_telescope_list_file(self, telescope_list_file):
+    @staticmethod
+    def read_telescope_list_file(telescope_list_file):
         """
         Read list of telescopes from a ecsv file.
 
@@ -407,20 +550,37 @@ class LayoutArray:
         telescope_list_file: str or Path
             Path to the telescope list file.
 
+        Returns
+        -------
+        astropy.QTable
+            Astropy table with the telescope layout information.
+
         Raises
         ------
         FileNotFoundError
             If file cannot be opened.
 
         """
+        _logger = logging.getLogger(__name__)
         try:
-            table = Table.read(telescope_list_file, format="ascii.ecsv")
+            table = QTable.read(telescope_list_file, format="ascii.ecsv")
         except FileNotFoundError:
-            self._logger.error(f"Error reading list of array elements from {telescope_list_file}")
+            _logger.error(f"Error reading list of array elements from {telescope_list_file}")
             raise
+        _logger.info(f"Reading array elements from {telescope_list_file}")
 
-        self._logger.info(f"Reading array elements from {telescope_list_file}")
+        return table
 
+    def initialize_layout_array_from_telescope_file(self, telescope_list_file):
+        """
+        Initialize the Layout array from a telescope list file.
+
+        Parameters
+        ----------
+        telescope_list_file: str or Path
+            Path to the telescope list file.
+        """
+        table = self.read_telescope_list_file(telescope_list_file)
         self._initialize_corsika_telescope(table.meta)
         self._initialize_coordinate_systems(table.meta)
         self._load_telescope_list(table)
@@ -529,10 +689,10 @@ class LayoutArray:
             Write telescope height in CORSIKA coordinates (for CORSIKA system).
         """
 
-        table = Table(meta=self._get_export_metadata(crs_name == "corsika"))
+        table = QTable(meta=self._get_export_metadata(crs_name == "corsika"))
 
-        tel_names, asset_code, sequence_number, geo_code = list(), list(), list(), list()
-        pos_x, pos_y, pos_z = list(), list(), list()
+        tel_names, asset_code, sequence_number, geo_code = [], [], [], []
+        pos_x, pos_y, pos_z = [], [], []
         for tel in self._telescope_list:
             tel_names.append(tel.name)
             asset_code.append(tel.asset_code)
@@ -602,7 +762,7 @@ class LayoutArray:
             pos_x, pos_y, pos_z = tel.get_coordinates("corsika")
             try:
                 sphere_radius = self._corsika_telescope["corsika_sphere_radius"][
-                    self.get_telescope_type(tel.name)
+                    names.get_telescope_type(tel.name)
                 ]
             except KeyError:
                 self._logger.error("Missing definition of CORSIKA sphere radius")
@@ -761,27 +921,23 @@ class LayoutArray:
         return pyproj.CRS("EPSG:4326")
 
     @staticmethod
-    def get_telescope_type(telescope_name):
+    def include_radius_into_telescope_table(telescope_table):
         """
-        Guess telescope type from name. Types are "LST", "MST", "SST", "SCT".
+        Include the radius of the telescopes types into the astropy.table.QTable telescopes_table
 
         Parameters
         ----------
-        telescope_name: str
-            Telescope name
+        telescope_table: astropy.QTable
+            Astropy QTable with telescope information.
 
         Returns
         -------
-        str
-            Telescope type.
+        astropy.QTable
+            Astropy QTable with telescope information updated with the radius.
         """
 
-        _class, _ = names.split_telescope_model_name(telescope_name)
-        try:
-            if _class[0:3] in ("LST", "MST", "SST", "SCT"):
-                return _class[0:3]
-
-        except IndexError:
-            pass
-
-        return ""
+        telescope_table["radius"] = [
+            telescope_table.meta["corsika_sphere_radius"][names.get_telescope_type(tel_name_now)]
+            for tel_name_now in telescope_table["telescope_name"]
+        ]
+        return telescope_table
