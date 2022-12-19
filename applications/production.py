@@ -235,6 +235,7 @@ def main():
             config_data=config_data,
             submit_command=args_dict["submit_command"],
             test=args_dict["test"],
+            mongo_db_config=db_config,
         )
 
     if args_dict["showers_only"]:
