@@ -118,14 +118,17 @@ def main():
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
     if args_dict["telescope_list"] is not None:
-        logger.info(f"Plotting array from telescope list file{args_dict['telescope_list']}")
+        logger.info("Plotting array from telescope list file(s).")
         telescope_file = args_dict["telescope_list"]
 
     elif args_dict["layout_array_name"] is not None:
-        logger.info(f"Plotting array from layout array name {args_dict['layout_array_name']}")
-        telescope_file = io_handler_instance.get_input_data_file(
-            "layout", f"telescope_positions-{args_dict['layout_array_name']}.ecsv"
-        )
+        logger.info("Plotting array from layout array name(s).")
+        telescope_file = [
+            io_handler_instance.get_input_data_file(
+                "layout", f"telescope_positions-{one_array}.ecsv"
+            )
+            for _, one_array in enumerate(args_dict["layout_array_name"])
+        ]
 
     for one_file in telescope_file:
         for one_angle in args_dict["rotate_angle"]:
