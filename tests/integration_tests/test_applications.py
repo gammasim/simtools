@@ -18,7 +18,7 @@ logger.setLevel(logging.DEBUG)
 
 
 APP_LIST = {
-    # Opticas
+    # Optics
     "compare_cumulative_psf": [
         [
             "--site",
@@ -165,6 +165,43 @@ APP_LIST = {
     ],
     # Layout
     "make_regular_arrays": [[]],
+    "plot_array::one_file": [
+        [
+            "--telescope_list data/layout/telescope_positions-North-TestLayout.ecsv",
+        ]
+    ],
+    "plot_array::one_file_one_angle": [
+        [
+            "--telescope_list data/layout/telescope_positions-North-TestLayout.ecsv",
+            "--rotate_angle 20",
+        ]
+    ],
+    "plot_array::one_file_two_angles": [
+        [
+            "--telescope_list data/layout/telescope_positions-North-TestLayout.ecsv",
+            "--rotate_angle 20 30",
+        ]
+    ],
+    "plot_array::two_files": [
+        [
+            "--telescope_list data/layout/telescope_positions-North-TestLayout.ecsv "
+            "data/layout/telescope_positions-South-TestLayout.ecsv",
+        ]
+    ],
+    "plot_array::two_files_one_angle": [
+        [
+            "--telescope_list data/layout/telescope_positions-North-TestLayout.ecsv "
+            "data/layout/telescope_positions-South-TestLayout.ecsv",
+            "--rotate_angle 20",
+        ]
+    ],
+    "plot_array::two_files_two_angles": [
+        [
+            "--telescope_list data/layout/telescope_positions-North-TestLayout.ecsv "
+            "data/layout/telescope_positions-South-TestLayout.ecsv",
+            "--rotate_angle 20 30",
+        ]
+    ],
     # Production
     "produce_array_config": [["--array_config", "./tests/resources/array_config_test.yml"]],
     # Trigger
