@@ -99,13 +99,13 @@ def _parse(label):
         default=None,
     )
 
-    return config.initialize(db_config=True)
+    return config.initialize()
 
 
 def main():
 
     label = Path(__file__).stem
-    args_dict, db_config = _parse(label)
+    args_dict, _ = _parse(label)
     io_handler_instance = io_handler.IOHandler()
 
     if args_dict["rotate_angle"] is None:
