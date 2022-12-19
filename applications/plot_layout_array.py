@@ -133,7 +133,7 @@ def main():
     for one_file in telescope_file:
         for one_angle in args_dict["rotate_angle"]:
             base_name = (Path(one_file).name).split(".")[0] + "_"
-            if args_dict["figure_name"] is not None:
+            if args_dict["figure_name"] is None:
                 plot_file_name = (
                     "plot_layout_array_" + base_name + str((round(one_angle.to(u.deg)))) + "deg"
                 )
