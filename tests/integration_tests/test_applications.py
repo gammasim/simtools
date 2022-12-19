@@ -202,6 +202,35 @@ APP_LIST = {
             "--rotate_angle 20 30",
         ]
     ],
+    "plot_array::layout_name": [
+        [
+            "--layout_array_name North-4LST",
+        ]
+    ],
+    "plot_array::layout_name_one_angle": [
+        [
+            "--layout_array_name North-4LST",
+            "--rotate_angle 20",
+        ]
+    ],
+    "plot_array::layout_name_two_angles": [
+        [
+            "--layout_array_name North-4LST",
+            "--rotate_angle 20 30",
+        ]
+    ],
+    "plot_array::layout_two_names_one_angle": [
+        [
+            "--layout_array_name North-4LST South-4LST",
+            "--rotate_angle 20",
+        ]
+    ],
+    "plot_array::layout_two_names_two_angles": [
+        [
+            "--layout_array_name North-4LST South-4LST",
+            "--rotate_angle 20 30",
+        ]
+    ],
     # Production
     "produce_array_config": [["--array_config", "./tests/resources/array_config_test.yml"]],
     # Trigger
