@@ -1,3 +1,4 @@
+from simtools.util import names
 from simtools.visualization import legend_handlers as leg_h
 
 
@@ -9,6 +10,7 @@ def test_objects():
         leg_h.MeanRadiusOuterEdgeObject,
         leg_h.OffPixelObject,
         leg_h.PixelObject,
+        leg_h.SCTObject,
         leg_h.SSTObject,
     ]
 
@@ -17,7 +19,7 @@ def test_objects():
         assert isinstance(instance, object)
 
 
-def test_handlers():
+def test_handlers(io_handler):
     handler_list = [
         leg_h.HexEdgePixelHandler,
         leg_h.HexOffPixelHandler,
@@ -25,11 +27,20 @@ def test_handlers():
         leg_h.LSTHandler,
         leg_h.MSTHandler,
         leg_h.MeanRadiusOuterEdgeHandler,
+        leg_h.SCTHandler,
         leg_h.SquareEdgePixelHandler,
         leg_h.SquareOffPixelHandler,
         leg_h.SquarePixelHandler,
     ]
-    for handler in handler_list:
-        instance = handler()
-        assert isinstance(instance, object)
-        assert instance.legend_artist is not None
+
+    for step, handler in enumerate(handler_list):
+        handler_instance = handler()
+        assert isinstance(handler_instance, object)
+        assert handler_instance.legend_artist is not None
+
+    tel_handler = leg_h.TelescopeHandler()
+    colors = ["darkorange", "dodgerblue", "black", "lightsteelblue"]
+    radius_dict = [12.5, 9.15, 7.15, 3]
+    for step, tel_type in enumerate(names.all_telescope_class_names):
+        assert tel_handler.radius_dict[tel_type] == radius_dict[step]
+        assert tel_handler.colors_dict[tel_type] == colors[step]
