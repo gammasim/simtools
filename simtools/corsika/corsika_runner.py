@@ -54,6 +54,8 @@ class CorsikaRunner:
 
     Parameters
     ----------
+    mongo_db_config: dict
+        MongoDB configuration.
     site: str
         South or North.
     layout_name: str
@@ -74,6 +76,7 @@ class CorsikaRunner:
 
     def __init__(
         self,
+        mongo_db_config,
         site,
         layout_name,
         simtel_source_path,
@@ -104,11 +107,11 @@ class CorsikaRunner:
         corsika_config_data = collect_data_from_yaml_or_dict(
             corsika_config_file, corsika_config_data
         )
-        self._load_corsika_config_data(corsika_config_data)
+        self._load_corsika_config_data(mongo_db_config, corsika_config_data)
 
         self._load_corsika_data_directories()
 
-    def _load_corsika_config_data(self, corsika_config_data):
+    def _load_corsika_config_data(self, mongo_db_config, corsika_config_data):
         """Reads corsika_config_data, creates corsika_config and corsika_input_file."""
 
         corsika_data_directory_from_config = corsika_config_data.get("data_directory", None)
@@ -135,6 +138,7 @@ class CorsikaRunner:
         # in corsika_config_data
         try:
             self.corsika_config = CorsikaConfig(
+                mongo_db_config=mongo_db_config,
                 site=self.site,
                 label=self.label,
                 layout_name=self.layout_name,

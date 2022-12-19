@@ -7,6 +7,8 @@ from collections import namedtuple
 from pathlib import Path
 
 import astropy.units as u
+import numpy as np
+from astropy.coordinates.errors import UnitsError
 from astropy.io.misc import yaml
 
 __all__ = [
@@ -18,6 +20,7 @@ __all__ = [
     "MissingRequiredConfigEntry",
     "UnableToIdentifyConfigEntry",
     "get_log_level_from_user",
+    "rotate",
     "separate_args_and_config_data",
     "set_default_kwargs",
     "sort_arrays",
@@ -647,3 +650,80 @@ def change_dict_keys_case(data_dict, lower_case=True):
         raise
 
     return _return_dict
+
+
+def rotate(rotation_angle, x, y):
+    """
+    Rotate x and y by the rotation angle given in rotation_angle, in degrees.
+    The function returns the rotated x and y values in the same unit given.
+    The direction of rotation is clockwise.
+
+    Parameters
+    ----------
+    rotation_angle: astropy.units.deg or astropy.units.rad
+        Angle to rotate the array in degrees.
+    x: numpy.array or list
+        x positions of the telescopes, usually in meters.
+    y: numpy.array or list
+        y positions of the telescopes, usually in meters.
+
+    Returns
+    -------
+    2-tuple of list
+        x and y positions of the rotated telescopes positions.
+
+    Raises
+    ------
+    TypeError:
+        If type of x and y parameters are not valid.
+    RuntimeError:
+        If the length of x and y are different.
+    UnitsError:
+        If the unit of x and y are different.
+        If unit of rotation_angle is neither u.deg nor u.rad.
+    """
+    allowed_types = (list, np.ndarray, u.Quantity, float, int)
+    if not all(isinstance(variable, allowed_types) for variable in [x, y]):
+        raise TypeError("x and y types are not valid! Cannot perform transformation.")
+
+    if (
+        np.sum(
+            np.array([isinstance(x, type_now) for type_now in allowed_types[:-2]])
+            * np.array([isinstance(y, type_now) for type_now in allowed_types[:-2]])
+        )
+        == 0
+    ):
+        raise TypeError("x and y are not from the same type! Cannot perform transformation.")
+
+    if not isinstance(x, (list, np.ndarray)):
+        x = [x]
+    if not isinstance(y, (list, np.ndarray)):
+        y = [y]
+
+    if len(x) != len(y):
+        raise RuntimeError(
+            "Cannot perform coordinate transformation when x and y have different lengths."
+        )
+    if all(isinstance(variable, (u.Quantity)) for variable in [x, y]):
+        if not isinstance(x[0].unit, type(y[0].unit)):
+            raise UnitsError(
+                "Cannot perform coordinate transformation when x and y have different units."
+            )
+    if isinstance(rotation_angle, u.Quantity):
+
+        if isinstance(rotation_angle.unit, type(u.rad)):
+            rotation_angle = rotation_angle.to(u.deg)
+        elif isinstance(rotation_angle.unit, type(u.deg)):
+            pass
+        else:
+            raise u.UnitConversionError(
+                f"Invalid unit for {rotation_angle}. Valid units are u.deg or u.rad."
+            )
+
+    x_trans, y_trans = [np.zeros_like(x).astype(float) for i in range(2)]
+    rotation_angle = rotation_angle.to(u.rad).value
+
+    for step, _ in enumerate(x):
+        x_trans[step] = x[step] * np.cos(rotation_angle) + y[step] * np.sin(rotation_angle)
+        y_trans[step] = (-1) * x[step] * np.sin(rotation_angle) + y[step] * np.cos(rotation_angle)
+    return x_trans, y_trans

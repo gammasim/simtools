@@ -6,17 +6,28 @@ from collections import OrderedDict
 
 import astropy.units as u
 import matplotlib.gridspec as gridspec
+import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
+import numpy as np
 from astropy.table import QTable
 from cycler import cycler
+from matplotlib.collections import PatchCollection
+
+from simtools.util import general as gen
+from simtools.util import names
+from simtools.util.names import mst, sct, sst
+from simtools.visualization import legend_handlers as leg_h
 
 __all__ = [
     "get_colors",
     "get_lines",
     "get_markers",
+    "get_telescope_patch",
     "plot_1D",
+    "plot_array",
     "plot_hist_2D",
     "plot_table",
+    "set_style",
 ]
 
 COLORS = dict()
@@ -529,5 +540,148 @@ def plot_hist_2D(data, **kwargs):
         plt.title(title, y=1.02)
 
     fig.tight_layout()
+
+    return fig
+
+
+@u.quantity_input()
+def get_telescope_patch(name, x, y, radius):
+    """
+    Collect the patch of one telescope to be plotted by plot_array.
+
+    Parameters
+    ----------
+    name: str
+        Name of the telescope (type).
+    x: astropy.units.Quantity
+        x position of the telescope usually in meters.
+    y: astropy.units.Quantity
+        y position of the telescope usually in meters.
+    radius: astropy.units.Quantity
+        Radius of the telescope sphere usually in meters.
+
+    Returns
+    -------
+    patch
+        Instance of mpatches.Circle.
+    """
+    tel_obj = leg_h.TelescopeHandler()
+    valid_name = names.get_telescope_type(name)
+    fill_flag = False
+
+    x = x.to(u.m)
+    y = y.to(u.m)
+    radius = radius.to(u.m)
+
+    if valid_name == mst:
+        fill_flag = True
+    if valid_name == sct:
+        patch = mpatches.Rectangle(
+            ((x - radius / 2).value, (y - radius / 2).value),
+            width=radius.value,
+            height=radius.value,
+            fill=False,
+            color=tel_obj.colors_dict[sct],
+        )
+    else:
+        patch = mpatches.Circle(
+            (x.value, y.value),
+            radius=radius.value,
+            fill=fill_flag,
+            color=tel_obj.colors_dict[valid_name],
+        )
+    return patch
+
+
+def plot_array(telescopes, rotate_angle=0 * u.deg):
+    """
+    Plot the array of telescopes.
+    Rotation of the array elements is possible through the 'rotate_angle' given either in degrees,
+    or in radians.
+    The rotation does not change Telescope instance attributes.
+
+    Parameters
+    ----------
+    telescopes: dict
+        Dictionary with the telescope position and names.
+    rotate_angle:
+        Angle to rotate the plot. For rotate_angle = 0 the x-axis points towards the east, and\
+        the y-axis points towards the North.
+
+    Returns
+    -------
+    plt.figure
+        Instance of plt.figure with the array of telescopes plotted.
+
+    """
+
+    fig, ax = plt.subplots(1)
+    legend_objects = []
+    legend_labels = []
+    tel_counters = {one_telescope: 0 for one_telescope in names.all_telescope_class_names}
+    if rotate_angle != 0:
+        pos_x_rotated, pos_y_rotated = gen.rotate(
+            rotate_angle, telescopes["pos_x"], telescopes["pos_y"]
+        )
+    else:
+        pos_x_rotated, pos_y_rotated = telescopes["pos_x"], telescopes["pos_y"]
+
+    size_factor = max(np.max(pos_x_rotated), np.max(pos_y_rotated)) / (300.0 * u.m)
+    fontsize = 12
+
+    patches = []
+    for i_tel, tel_now in enumerate(telescopes):
+        for tel_type in tel_counters:
+            if tel_type in tel_now["telescope_name"]:
+                tel_counters[tel_type] += 1
+        i_tel_name = names.get_telescope_type(telescopes[i_tel]["telescope_name"])
+        if i_tel_name == sst:
+            fontsize = 5
+        patches.append(
+            get_telescope_patch(
+                i_tel_name,
+                pos_x_rotated[i_tel],
+                pos_y_rotated[i_tel],
+                telescopes[i_tel]["radius"] * size_factor,
+            )
+        )
+        ax.text(
+            pos_x_rotated[i_tel].value,
+            pos_y_rotated[i_tel].value + telescopes[i_tel]["radius"].value,
+            telescopes[i_tel]["telescope_name"],
+            horizontalalignment="center",
+            verticalalignment="bottom",
+            fontsize=fontsize,
+        )
+
+    for _, one_telescope in enumerate(names.all_telescope_class_names):
+        if tel_counters[one_telescope] > 0:
+            legend_objects.append(leg_h.all_telescope_objects[one_telescope]())
+            legend_labels.append(f"{one_telescope} ({tel_counters[one_telescope]})")
+
+    plt.gca().add_collection(PatchCollection(patches, match_original=True))
+
+    x_title = "East [m]"
+    y_title = "North [m]"
+    plt.axis("square")
+    plt.grid(True)
+    plt.gca().set_axisbelow(True)
+    plt.xlabel(x_title, fontsize=18, labelpad=0)
+    plt.ylabel(y_title, fontsize=18, labelpad=0)
+    plt.tick_params(axis="both", which="major", labelsize=15)
+
+    legend_handler_map = {
+        list(leg_h.legend_handler_map.keys())[step]: list(leg_h.legend_handler_map.values())[step]()
+        for step, _ in enumerate(leg_h.legend_handler_map)
+    }
+    plt.legend(
+        legend_objects,
+        legend_labels,
+        handler_map=legend_handler_map,
+        prop={"size": 11},
+        loc="best",
+    )
+
+    plt.tight_layout()
 
     return fig

@@ -324,6 +324,7 @@ class Simulator:
 
         """
         self._simulation_runner = CorsikaRunner(
+            mongo_db_config=self._mongo_db_config,
             label=self.label,
             site=self.site,
             layout_name=self.layout_name,
