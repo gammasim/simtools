@@ -23,6 +23,8 @@
         Name of the layout array.
     rotate_angle (float, optional)
         Angle to rotate the array before plotting (in degrees).
+    show_tel_label (bool, optional)
+        Shows the telescope labels in the plot.
     verbosity (str, optional)
         Log level to print (default=INFO).
 
@@ -71,6 +73,13 @@ def _parse(label):
         type=str,
         required=False,
         default=None,
+    )
+    config.parser.add_argument(
+        "--show_tel_label",
+        help="Shows the telescope labels in the plot.",
+        action="store_true",
+        required=False,
+        default=False,
     )
     input_group = config.parser.add_mutually_exclusive_group()
     input_group.add_argument(
@@ -130,7 +139,9 @@ def main():
 
             telescope_table = LayoutArray.read_telescope_list_file(one_file)
             telescopes_dict = LayoutArray.include_radius_into_telescope_table(telescope_table)
-            fig_out = plot_array(telescopes_dict, rotate_angle=one_angle)
+            fig_out = plot_array(
+                telescopes_dict, rotate_angle=one_angle, show_tel_label=args_dict["show_tel_label"]
+            )
             output_dir = io_handler_instance.get_output_directory(
                 label, dir_type="application-plots"
             )

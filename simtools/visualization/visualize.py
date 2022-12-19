@@ -593,7 +593,7 @@ def get_telescope_patch(name, x, y, radius):
     return patch
 
 
-def plot_array(telescopes, rotate_angle=0 * u.deg):
+def plot_array(telescopes, rotate_angle=0 * u.deg, show_tel_label=False):
     """
     Plot the array of telescopes.
     Rotation of the array elements is possible through the 'rotate_angle' given either in degrees,
@@ -607,6 +607,9 @@ def plot_array(telescopes, rotate_angle=0 * u.deg):
     rotate_angle:
         Angle to rotate the plot. For rotate_angle = 0 the x-axis points towards the east, and\
         the y-axis points towards the North.
+    show_tel_label: bool
+        If True it will print the label of the individual telescopes in the plot.
+        While it works well for the smaller arrays, it gets crowded for larger arrays.
 
     Returns
     -------
@@ -627,7 +630,7 @@ def plot_array(telescopes, rotate_angle=0 * u.deg):
         pos_x_rotated, pos_y_rotated = telescopes["pos_x"], telescopes["pos_y"]
 
     size_factor = max(np.max(pos_x_rotated), np.max(pos_y_rotated)) / (300.0 * u.m)
-    fontsize = 12
+    fontsize = 5
 
     patches = []
     for i_tel, tel_now in enumerate(telescopes):
@@ -645,14 +648,15 @@ def plot_array(telescopes, rotate_angle=0 * u.deg):
                 telescopes[i_tel]["radius"] * size_factor,
             )
         )
-        ax.text(
-            pos_x_rotated[i_tel].value,
-            pos_y_rotated[i_tel].value + telescopes[i_tel]["radius"].value,
-            telescopes[i_tel]["telescope_name"],
-            horizontalalignment="center",
-            verticalalignment="bottom",
-            fontsize=fontsize,
-        )
+        if show_tel_label:
+            ax.text(
+                pos_x_rotated[i_tel].value,
+                pos_y_rotated[i_tel].value + telescopes[i_tel]["radius"].value,
+                telescopes[i_tel]["telescope_name"],
+                horizontalalignment="center",
+                verticalalignment="bottom",
+                fontsize=fontsize,
+            )
 
     for _, one_telescope in enumerate(names.all_telescope_class_names):
         if tel_counters[one_telescope] > 0:
