@@ -73,14 +73,14 @@ def _parse(label=None, description=None):
     Parameters
     ----------
     label: str
-        label describing application.
+        Label describing application.
     description: str
-        description of application.
+        Description of application.
 
     Returns
     -------
     CommandLineParser
-        command line parser object
+        Command line parser object
 
     """
 
