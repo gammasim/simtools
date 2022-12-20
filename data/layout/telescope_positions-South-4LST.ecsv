@@ -1,15 +1,10 @@
-# %ECSV 0.9
+# %ECSV 1.0
 # ---
 # datatype:
 # - {name: telescope_name, datatype: string}
 # - {name: pos_x, unit: m, datatype: float64}
 # - {name: pos_y, unit: m, datatype: float64}
 # - {name: pos_z, unit: m, datatype: float64}
-# - {name: lat, unit: deg, datatype: float64}
-# - {name: lon, unit: deg, datatype: float64}
-# - {name: utm_east, unit: m, datatype: float64}
-# - {name: utm_north, unit: m, datatype: float64}
-# - {name: alt, unit: m, datatype: float64}
 # meta:
 #   EPSG: 32719
 #   center_alt: !astropy.units.Quantity
@@ -51,8 +46,8 @@
 #       unit: *id001
 #       value: 3.0
 # schema: astropy-2.0
-telescope_name pos_x pos_y pos_z lat lon utm_east utm_north alt
-LST-01 57.5 57.5 57.5 -24.68291005156705 -70.31691313262846 366763.96140825993 7269522.935123434 2131.0
-LST-02 -57.5 -57.5 -57.5 -24.683948255723298 -70.31691313733373 366765.0646964067 7269407.961204613 2131.0
-LST-03 57.5 57.5 57.5 -24.68291005156705 -70.31577685466934 366878.93530575535 7269524.038389416 2131.0
-LST-04 -57.5 -57.5 -57.5 -24.683948255723298 -70.31577684996405 366880.0385930623 7269409.064514085 2131.0
+telescope_name      pos_x      pos_y      pos_z
+LST-01               57.5       57.5      57.5
+LST-02              -57.5      -57.5     -57.5
+LST-03               57.5       57.5      57.5
+LST-04              -57.5      -57.5     -57.5
