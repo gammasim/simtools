@@ -53,9 +53,22 @@ from simtools.visualization.visualize import plot_array
 def _parse(label):
     """
     Parse command line configuration
+
+    Parameters
+    ----------
+    label: str
+        Label describing application.
+    description: str
+        Description of application.
+
+    Returns
+    -------
+    CommandLineParser
+        Command line parser object
+
     """
     config = configurator.Configurator(
-        label=Path(__file__).stem,
+        label=label,
         description=("Plots layout array."),
     )
 
@@ -69,8 +82,8 @@ def _parse(label):
     config.parser.add_argument(
         "--rotate_angle",
         help="Angle to rotate the array before plotting (in degrees).",
-        nargs="+",
         type=str,
+        nargs="+",
         required=False,
         default=None,
     )
@@ -99,7 +112,7 @@ def _parse(label):
         default=None,
     )
 
-    return config.initialize()
+    return config.initialize(db_config=True)
 
 
 def main():
@@ -109,10 +122,11 @@ def main():
     io_handler_instance = io_handler.IOHandler()
 
     if args_dict["rotate_angle"] is None:
-        args_dict["rotate_angle"] = [0 * u.deg]
+        rotate_angles = [0 * u.deg]
     else:
-        for step, one_angle in enumerate(args_dict["rotate_angle"]):
-            args_dict["rotate_angle"][step] = args_dict["rotate_angle"][step] * u.deg
+        rotate_angles = []
+        for _, one_angle in enumerate(args_dict["rotate_angle"]):
+            rotate_angles.append(float(one_angle) * u.deg)
 
     logger = logging.getLogger()
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
@@ -131,11 +145,18 @@ def main():
         ]
 
     for one_file in telescope_file:
-        for one_angle in args_dict["rotate_angle"]:
+
+        logger.debug(f"Processing: {one_file}.")
+        for one_angle in rotate_angles:
+            logger.debug(f"Processing: {one_angle}.")
             base_name = (Path(one_file).name).split(".")[0] + "_"
             if args_dict["figure_name"] is None:
+                print(one_angle.to(u.deg))
                 plot_file_name = (
-                    "plot_layout_array_" + base_name + str((round(one_angle.to(u.deg)))) + "deg"
+                    "plot_layout_array_"
+                    + base_name
+                    + str((round((one_angle.to(u.deg).value))))
+                    + "deg"
                 )
             else:
                 plot_file_name = args_dict["figure_name"]
