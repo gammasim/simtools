@@ -50,7 +50,7 @@ from simtools.layout.layout_array import LayoutArray
 from simtools.visualization.visualize import plot_array
 
 
-def _parse(label):
+def _parse(label, description, usage):
     """
     Parse command line configuration
 
@@ -60,6 +60,8 @@ def _parse(label):
         Label describing application.
     description: str
         Description of application.
+    usage: str
+        Example on how to use the application.
 
     Returns
     -------
@@ -67,10 +69,7 @@ def _parse(label):
         Command line parser object
 
     """
-    config = configurator.Configurator(
-        label=label,
-        description=("Plots layout array."),
-    )
+    config = configurator.Configurator(label=label, description=description, usage=usage)
 
     config.parser.add_argument(
         "--figure_name",
@@ -118,7 +117,9 @@ def _parse(label):
 def main():
 
     label = Path(__file__).stem
-    args_dict, _ = _parse(label)
+    description = "Plots layout array."
+    usage = "python applications/plot_layout_array.py --layout_array_name test_layout"
+    args_dict, _ = _parse(label, description, usage)
     io_handler_instance = io_handler.IOHandler()
 
     if args_dict["rotate_angle"] is None:
