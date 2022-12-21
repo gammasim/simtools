@@ -26,7 +26,7 @@ def layout_center_data_dict():
 
 
 @pytest.fixture
-def telescope_test_file(db, args_dict, io_handler):
+def telescope_north_test_file(db, args_dict, io_handler):
     test_file_name = "telescope_positions-North-TestLayout.ecsv"
     db.export_file_db(
         db_name="test-data",
@@ -115,8 +115,10 @@ def test_initialize_corsika_telescope_from_file(
         assert value == layout_array_north_instance._corsika_telescope["corsika_sphere_center"][key]
 
 
-def test_read_telescope_list_file(telescope_test_file, layout_array_north_instance, db_config):
-    table = layout_array_north_instance.read_telescope_list_file(telescope_test_file)
+def test_read_telescope_list_file(
+    telescope_north_test_file, layout_array_north_instance, db_config
+):
+    table = layout_array_north_instance.read_telescope_list_file(telescope_north_test_file)
     assert table.meta["data_type"] == "positionfile"
     assert table.meta["description"] == "telescope positions for CTA North (La Palma)"
     columns = ["pos_x", "pos_y", "pos_z"]
@@ -134,10 +136,12 @@ def test_read_telescope_list_file(telescope_test_file, layout_array_north_instan
 
 
 def test_initialize_layout_array_from_telescope_file(
-    telescope_test_file, layout_array_north_instance, db_config
+    telescope_north_test_file, layout_array_north_instance, db_config
 ):
 
-    layout_array_north_instance.initialize_layout_array_from_telescope_file(telescope_test_file)
+    layout_array_north_instance.initialize_layout_array_from_telescope_file(
+        telescope_north_test_file
+    )
     layout_array_north_instance.convert_coordinates()
     assert 19 == layout_array_north_instance.get_number_of_telescopes()
 
@@ -145,15 +149,15 @@ def test_initialize_layout_array_from_telescope_file(
         site="North",
         mongo_db_config=db_config,
         name="test_layout",
-        telescope_list_file=telescope_test_file,
+        telescope_list_file=telescope_north_test_file,
     )
     layout_2.convert_coordinates()
     assert 19 == layout_2.get_number_of_telescopes()
 
 
-def test_add_tel(telescope_test_file, layout_array_north_instance):
+def test_add_tel(telescope_north_test_file, layout_array_north_instance):
 
-    layout_array_north_instance.read_telescope_list_file(telescope_test_file)
+    layout_array_north_instance.read_telescope_list_file(telescope_north_test_file)
     ntel_before = layout_array_north_instance.get_number_of_telescopes()
     layout_array_north_instance.add_telescope(
         "LST-05", "corsika", 100.0 * u.m, 50.0 * u.m, 2177.0 * u.m
@@ -266,8 +270,12 @@ def test_altitude_from_corsika_z(layout_array_north_four_LST_instance):
         layout._altitude_from_corsika_z(5.0, None, "LST-01")
 
 
-def test_include_radius_into_telescope_table(layout_array_north_instance, telescope_test_file):
-    telescope_table = layout_array_north_instance.read_telescope_list_file(telescope_test_file)
+def test_include_radius_into_telescope_table(
+    layout_array_north_instance, telescope_north_test_file
+):
+    telescope_table = layout_array_north_instance.read_telescope_list_file(
+        telescope_north_test_file
+    )
     telescope_table_with_radius = layout_array_north_instance.include_radius_into_telescope_table(
         telescope_table
     )
@@ -339,8 +347,8 @@ def test_assign_unit_to_quantity(layout_array_north_instance):
         layout_array_north_instance._assign_unit_to_quantity(1000 * u.TeV, u.m)
 
 
-def test_try_set_altitude(layout_array_north_instance, telescope_test_file):
-    table = layout_array_north_instance.read_telescope_list_file(telescope_test_file)
+def test_try_set_altitude(layout_array_north_instance, telescope_north_test_file):
+    table = layout_array_north_instance.read_telescope_list_file(telescope_north_test_file)
     obs_level = 2158.0
     manual_z_positions = [43.00, 32.00, 28.70, 32.00, 50.3, 24.0]
     corsika_sphere_center = [16.0, 16.0, 16.0, 16.0, 9.0, 9.0]
@@ -354,8 +362,8 @@ def test_try_set_altitude(layout_array_north_instance, telescope_test_file):
             assert pytest.approx(_crs["zz"]["value"], 0.1) == manual_altitudes[step]
 
 
-def test_try_set_coordinate(layout_array_north_instance, telescope_test_file):
-    table = layout_array_north_instance.read_telescope_list_file(telescope_test_file)
+def test_try_set_coordinate(layout_array_north_instance, telescope_north_test_file):
+    table = layout_array_north_instance.read_telescope_list_file(telescope_north_test_file)
     manual_xx = [-70.93, -35.27, 75.28, 30.91, -211.54, -153.26]
     manual_yy = [-52.07, 66.14, 50.49, -64.54, 5.66, 169.01]
     for step, row in enumerate(table[:6]):
