@@ -150,23 +150,28 @@ def test_read_telescope_list_file(telescope_north_test_file, db_config):
 
 
 def test_initialize_layout_array_from_telescope_file(
-    telescope_north_test_file, layout_array_north_instance, db_config
+    telescope_north_test_file,
+    layout_array_north_instance,
+    telescope_south_test_file,
+    layout_array_south_instance,
+    db_config,
 ):
+    def one_site(instance, test_file, number_of_telescopes, label):
+        instance.initialize_layout_array_from_telescope_file(test_file)
+        instance.convert_coordinates()
+        assert number_of_telescopes == instance.get_number_of_telescopes()
 
-    layout_array_north_instance.initialize_layout_array_from_telescope_file(
-        telescope_north_test_file
-    )
-    layout_array_north_instance.convert_coordinates()
-    assert 19 == layout_array_north_instance.get_number_of_telescopes()
+        layout_2 = LayoutArray(
+            site=label,
+            mongo_db_config=db_config,
+            name="test_layout",
+            telescope_list_file=test_file,
+        )
+        layout_2.convert_coordinates()
+        assert number_of_telescopes == layout_2.get_number_of_telescopes()
 
-    layout_2 = LayoutArray(
-        site="North",
-        mongo_db_config=db_config,
-        name="test_layout",
-        telescope_list_file=telescope_north_test_file,
-    )
-    layout_2.convert_coordinates()
-    assert 19 == layout_2.get_number_of_telescopes()
+    one_site(layout_array_north_instance, telescope_north_test_file, 19, "North")
+    one_site(layout_array_south_instance, telescope_south_test_file, 99, "South")
 
 
 def test_add_tel(telescope_north_test_file, layout_array_north_instance):
