@@ -42,6 +42,22 @@ def telescope_north_test_file(db, args_dict, io_handler):
 
 
 @pytest.fixture
+def telescope_south_test_file(db, args_dict, io_handler):
+    test_file_name = "telescope_positions-South-TestLayout.ecsv"
+    db.export_file_db(
+        db_name="test-data",
+        dest=io_handler.get_output_directory(dir_type="model", test=True),
+        file_name=test_file_name,
+    )
+
+    cfg_file = gen.find_file(
+        test_file_name,
+        io_handler.get_output_directory(dir_type="model", test=True),
+    )
+    return cfg_file
+
+
+@pytest.fixture
 def layout_array_north_four_LST_instance(
     layout_center_data_dict, corsika_telescope_data_dict, io_handler, db_config
 ):
@@ -115,10 +131,8 @@ def test_initialize_corsika_telescope_from_file(
         assert value == layout_array_north_instance._corsika_telescope["corsika_sphere_center"][key]
 
 
-def test_read_telescope_list_file(
-    telescope_north_test_file, layout_array_north_instance, db_config
-):
-    table = layout_array_north_instance.read_telescope_list_file(telescope_north_test_file)
+def test_read_telescope_list_file(telescope_north_test_file, db_config):
+    table = LayoutArray.read_telescope_list_file(telescope_north_test_file)
     assert table.meta["data_type"] == "positionfile"
     assert table.meta["description"] == "telescope positions for CTA North (La Palma)"
     columns = ["pos_x", "pos_y", "pos_z"]
@@ -157,7 +171,7 @@ def test_initialize_layout_array_from_telescope_file(
 
 def test_add_tel(telescope_north_test_file, layout_array_north_instance):
 
-    layout_array_north_instance.read_telescope_list_file(telescope_north_test_file)
+    LayoutArray.read_telescope_list_file(telescope_north_test_file)
     ntel_before = layout_array_north_instance.get_number_of_telescopes()
     layout_array_north_instance.add_telescope(
         "LST-05", "corsika", 100.0 * u.m, 50.0 * u.m, 2177.0 * u.m
@@ -270,15 +284,9 @@ def test_altitude_from_corsika_z(layout_array_north_four_LST_instance):
         layout._altitude_from_corsika_z(5.0, None, "LST-01")
 
 
-def test_include_radius_into_telescope_table(
-    layout_array_north_instance, telescope_north_test_file
-):
-    telescope_table = layout_array_north_instance.read_telescope_list_file(
-        telescope_north_test_file
-    )
-    telescope_table_with_radius = layout_array_north_instance.include_radius_into_telescope_table(
-        telescope_table
-    )
+def test_include_radius_into_telescope_table(telescope_north_test_file):
+    telescope_table = LayoutArray.read_telescope_list_file(telescope_north_test_file)
+    telescope_table_with_radius = LayoutArray.include_radius_into_telescope_table(telescope_table)
     values_from_file = [20.190000534057617, -352.4599914550781, 62.29999923706055, 9.6]
     keys = ["pos_x", "pos_y", "pos_z", "radius"]
     mst_10_index = telescope_table_with_radius["telescope_name"] == "MST-10"
@@ -348,7 +356,7 @@ def test_assign_unit_to_quantity(layout_array_north_instance):
 
 
 def test_try_set_altitude(layout_array_north_instance, telescope_north_test_file):
-    table = layout_array_north_instance.read_telescope_list_file(telescope_north_test_file)
+    table = LayoutArray.read_telescope_list_file(telescope_north_test_file)
     obs_level = 2158.0
     manual_z_positions = [43.00, 32.00, 28.70, 32.00, 50.3, 24.0]
     corsika_sphere_center = [16.0, 16.0, 16.0, 16.0, 9.0, 9.0]
@@ -363,7 +371,7 @@ def test_try_set_altitude(layout_array_north_instance, telescope_north_test_file
 
 
 def test_try_set_coordinate(layout_array_north_instance, telescope_north_test_file):
-    table = layout_array_north_instance.read_telescope_list_file(telescope_north_test_file)
+    table = LayoutArray.read_telescope_list_file(telescope_north_test_file)
     manual_xx = [-70.93, -35.27, 75.28, 30.91, -211.54, -153.26]
     manual_yy = [-52.07, 66.14, 50.49, -64.54, 5.66, 169.01]
     for step, row in enumerate(table[:6]):
