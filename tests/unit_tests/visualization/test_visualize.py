@@ -109,8 +109,10 @@ def test_get_telescope_patch(corsika_telescope_data_dict):
             assert isinstance(patch, mpatches.Rectangle)
 
 
-def test_plot_array(telescope_test_file, layout_array_north_instance):
-    telescope_table = layout_array_north_instance.read_telescope_list_file(telescope_test_file)
+def test_plot_array(telescope_north_test_file, layout_array_north_instance):
+    telescope_table = layout_array_north_instance.read_telescope_list_file(
+        telescope_north_test_file
+    )
     telescopes_dict = layout_array_north_instance.include_radius_into_telescope_table(
         telescope_table
     )
