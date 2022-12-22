@@ -214,8 +214,3 @@ def layout_array_north_instance(io_handler, db_config):
 @pytest.fixture
 def layout_array_south_instance(io_handler, db_config):
     return LayoutArray(site="South", mongo_db_config=db_config, name="test_layout")
-
-
-@pytest.fixture
-def corsika_telescope_data_dict(layout_array_north_instance):
-    return layout_array_north_instance._from_corsika_file_to_dict()
