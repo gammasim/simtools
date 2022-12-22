@@ -71,7 +71,7 @@ def telescope_south_test_file(db, args_dict, io_handler):
 
 @pytest.fixture
 def layout_array_north_four_LST_instance(
-    north_layout_center_data_dict, corsika_telescope_data_dict, io_handler, db_config
+    north_layout_center_data_dict, manual_corsika_dict_north, io_handler, db_config
 ):
     layout = LayoutArray(
         site="North",
@@ -79,14 +79,14 @@ def layout_array_north_four_LST_instance(
         label="test_layout",
         name="LST4",
         layout_center_data=north_layout_center_data_dict,
-        corsika_telescope_data=corsika_telescope_data_dict,
+        corsika_telescope_data=manual_corsika_dict_north,
     )
     return layout
 
 
 @pytest.fixture
 def layout_array_south_four_LST_instance(
-    south_layout_center_data_dict, corsika_telescope_data_dict, io_handler, db_config
+    south_layout_center_data_dict, manual_corsika_dict_south, io_handler, db_config
 ):
     layout = LayoutArray(
         site="South",
@@ -94,7 +94,7 @@ def layout_array_south_four_LST_instance(
         label="test_layout",
         name="LST4",
         layout_center_data=south_layout_center_data_dict,
-        corsika_telescope_data=corsika_telescope_data_dict,
+        corsika_telescope_data=manual_corsika_dict_south,
     )
     return layout
 
@@ -118,13 +118,35 @@ def manual_corsika_dict_north():
     }
 
 
+@pytest.fixture
+def manual_corsika_dict_south():
+    return {
+        "corsika_sphere_radius": {
+            "LST": 12.5 * u.m,
+            "MST": 9.15 * u.m,
+            "SCT": 7.15 * u.m,
+            "SST": 3 * u.m,
+        },
+        "corsika_sphere_center": {
+            "LST": 16 * u.m,
+            "MST": 9 * u.m,
+            "SCT": 6.1 * u.m,
+            "SST": 3.25 * u.m,
+        },
+        "corsika_obs_level": 2147 * u.m,
+    }
+
+
 def test_from_layout_array_name(io_handler, db_config):
 
     layout = LayoutArray.from_layout_array_name(
         mongo_db_config=db_config, layout_array_name="south-TestLayout"
     )
-
     assert 99 == layout.get_number_of_telescopes()
+    layout = LayoutArray.from_layout_array_name(
+        mongo_db_config=db_config, layout_array_name="north-TestLayout"
+    )
+    assert 19 == layout.get_number_of_telescopes()
 
 
 def test_initialize_coordinate_systems(
@@ -156,15 +178,23 @@ def test_initialize_coordinate_systems(
 
 
 def test_initialize_corsika_telescope_from_file(
-    corsika_telescope_data_dict, args_dict, io_handler, layout_array_north_instance
+    manual_corsika_dict_north,
+    layout_array_north_instance,
+    manual_corsika_dict_south,
+    layout_array_south_instance,
+    args_dict,
+    io_handler,
 ):
+    def one_site(instance, corsika_dict):
+        layout_array_north_instance._initialize_corsika_telescope()
 
-    layout_array_north_instance._initialize_corsika_telescope()
+        for key, value in corsika_dict["corsika_sphere_radius"].items():
+            assert value == instance._corsika_telescope["corsika_sphere_radius"][key]
+        for key, value in corsika_dict["corsika_sphere_center"].items():
+            assert value == instance._corsika_telescope["corsika_sphere_center"][key]
 
-    for key, value in corsika_telescope_data_dict["corsika_sphere_radius"].items():
-        assert value == layout_array_north_instance._corsika_telescope["corsika_sphere_radius"][key]
-    for key, value in corsika_telescope_data_dict["corsika_sphere_center"].items():
-        assert value == layout_array_north_instance._corsika_telescope["corsika_sphere_center"][key]
+    one_site(layout_array_north_instance, manual_corsika_dict_north)
+    one_site(layout_array_south_instance, manual_corsika_dict_south)
 
 
 def test_read_telescope_list_file(telescope_north_test_file, telescope_south_test_file, db_config):
@@ -295,7 +325,7 @@ def test_build_layout(
     one_site(layout_array_south_four_LST_instance, "South")
 
 
-def test_converting_center_coordinates(layout_array_north_four_LST_instance):
+def test_converting_center_coordinates_north(layout_array_north_four_LST_instance):
 
     layout = layout_array_north_four_LST_instance
 
@@ -310,39 +340,68 @@ def test_converting_center_coordinates(layout_array_north_four_LST_instance):
     assert layout._array_center.get_altitude().value == pytest.approx(2177.0)
 
 
-def test_get_corsika_input_list(layout_array_north_four_LST_instance):
+def test_converting_center_coordinates_south(layout_array_south_four_LST_instance):
 
-    layout = layout_array_north_four_LST_instance
-    layout.add_telescope(
-        telescope_name="LST-01",
-        crs_name="corsika",
-        xx=57.5 * u.m,
-        yy=57.5 * u.m,
-        tel_corsika_z=0 * u.m,
-    )
-    corsika_input_list = layout.get_corsika_input_list()
+    layout = layout_array_south_four_LST_instance
 
-    assert corsika_input_list == "TELESCOPE\t 57.500E2\t 57.500E2\t 0.000E2\t 12.500E2\t # LST-01\n"
+    _lat, _lon, _ = layout._array_center.get_coordinates("mercator")
+    assert _lat.value == pytest.approx(-24.68342915473787)
+    assert _lon.value == pytest.approx(-70.31634499364885)
+
+    _east, _north, _ = layout._array_center.get_coordinates("utm")
+    assert _north.value == pytest.approx(7269466.0)
+    assert _east.value == pytest.approx(366822.0)
+
+    assert layout._array_center.get_altitude().value == pytest.approx(2162.35)
 
 
-def test_altitude_from_corsika_z(layout_array_north_four_LST_instance):
+def test_get_corsika_input_list(
+    layout_array_north_four_LST_instance, layout_array_south_four_LST_instance
+):
+    def one_site(layout):
 
-    layout = layout_array_north_four_LST_instance
+        layout.add_telescope(
+            telescope_name="LST-01",
+            crs_name="corsika",
+            xx=57.5 * u.m,
+            yy=57.5 * u.m,
+            tel_corsika_z=0 * u.m,
+        )
+        corsika_input_list = layout.get_corsika_input_list()
 
-    layout.add_telescope(
-        telescope_name="LST-01",
-        crs_name="corsika",
-        xx=57.5 * u.m,
-        yy=57.5 * u.m,
-        tel_corsika_z=0 * u.m,
-    )
+        assert (
+            corsika_input_list
+            == "TELESCOPE\t 57.500E2\t 57.500E2\t 0.000E2\t 12.500E2\t # LST-01\n"
+        )
 
-    assert layout._altitude_from_corsika_z(5.0 * u.m, None, "LST-01").value == pytest.approx(2147.0)
-    assert layout._altitude_from_corsika_z(None, 8848.0 * u.m, "LST-01").value == pytest.approx(
-        6706.0
-    )
-    with pytest.raises(TypeError):
-        layout._altitude_from_corsika_z(5.0, None, "LST-01")
+    one_site(layout_array_north_four_LST_instance)
+    one_site(layout_array_south_four_LST_instance)
+
+
+def test_altitude_from_corsika_z(
+    layout_array_north_four_LST_instance, layout_array_south_four_LST_instance
+):
+    def one_site(instance, result1, result2):
+
+        instance.add_telescope(
+            telescope_name="LST-01",
+            crs_name="corsika",
+            xx=57.5 * u.m,
+            yy=57.5 * u.m,
+            tel_corsika_z=0 * u.m,
+        )
+
+        assert instance._altitude_from_corsika_z(
+            pos_z=5.0 * u.m, altitude=None, tel_name="LST-01"
+        ).value == pytest.approx(result1)
+        assert instance._altitude_from_corsika_z(
+            pos_z=None, altitude=8848.0 * u.m, tel_name="LST-01"
+        ).value == pytest.approx(result2)
+        with pytest.raises(TypeError):
+            instance._altitude_from_corsika_z(5.0, None, "LST-01")
+
+    one_site(layout_array_north_four_LST_instance, 2147.0, 6706.0)
+    one_site(layout_array_south_four_LST_instance, 2136.0, 6717.0)
 
 
 def test_include_radius_into_telescope_table(telescope_north_test_file, telescope_south_test_file):
@@ -404,15 +463,22 @@ def test_from_corsika_file_to_dict(
 
 
 def test_initialize_corsika_telescope_from_dict(
-    layout_array_north_instance, manual_corsika_dict_north
+    layout_array_north_instance,
+    manual_corsika_dict_north,
+    layout_array_south_instance,
+    manual_corsika_dict_south,
 ):
-    layout_array_north_instance._initialize_corsika_telescope_from_dict(manual_corsika_dict_north)
-    for key, value in layout_array_north_instance._corsika_telescope.items():
-        if isinstance(value, dict):
-            for tel_type, subvalue in value.items():
-                assert subvalue == manual_corsika_dict_north[key][tel_type]
-        else:
-            assert value == manual_corsika_dict_north[key]
+    def one_site(instance, corsika_dict):
+        instance._initialize_corsika_telescope_from_dict(corsika_dict)
+        for key, value in instance._corsika_telescope.items():
+            if isinstance(value, dict):
+                for tel_type, subvalue in value.items():
+                    assert subvalue == corsika_dict[key][tel_type]
+            else:
+                assert value == corsika_dict[key]
+
+    one_site(layout_array_north_instance, manual_corsika_dict_north)
+    one_site(layout_array_south_instance, manual_corsika_dict_south)
 
 
 def test_assign_unit_to_quantity(layout_array_north_instance):
