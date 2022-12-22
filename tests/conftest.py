@@ -4,6 +4,7 @@ from pathlib import Path
 from unittest import mock
 
 import pytest
+from astropy import units as u
 
 import simtools.io_handler
 import simtools.util.general as gen
@@ -214,3 +215,73 @@ def layout_array_north_instance(io_handler, db_config):
 @pytest.fixture
 def layout_array_south_instance(io_handler, db_config):
     return LayoutArray(site="South", mongo_db_config=db_config, name="test_layout")
+
+
+@pytest.fixture
+def manual_corsika_dict_north():
+    return {
+        "corsika_sphere_radius": {
+            "LST": 12.5 * u.m,
+            "MST": 9.15 * u.m,
+            "SCT": 7.15 * u.m,
+            "SST": 3 * u.m,
+        },
+        "corsika_sphere_center": {
+            "LST": 16 * u.m,
+            "MST": 9 * u.m,
+            "SCT": 6.1 * u.m,
+            "SST": 3.25 * u.m,
+        },
+        "corsika_obs_level": 2158 * u.m,
+    }
+
+
+@pytest.fixture
+def manual_corsika_dict_south():
+    return {
+        "corsika_sphere_radius": {
+            "LST": 12.5 * u.m,
+            "MST": 9.15 * u.m,
+            "SCT": 7.15 * u.m,
+            "SST": 3 * u.m,
+        },
+        "corsika_sphere_center": {
+            "LST": 16 * u.m,
+            "MST": 9 * u.m,
+            "SCT": 6.1 * u.m,
+            "SST": 3.25 * u.m,
+        },
+        "corsika_obs_level": 2147 * u.m,
+    }
+
+
+@pytest.fixture
+def telescope_north_test_file(db, args_dict, io_handler):
+    test_file_name = "telescope_positions-North-TestLayout.ecsv"
+    db.export_file_db(
+        db_name="test-data",
+        dest=io_handler.get_output_directory(dir_type="model", test=True),
+        file_name=test_file_name,
+    )
+
+    cfg_file = gen.find_file(
+        test_file_name,
+        io_handler.get_output_directory(dir_type="model", test=True),
+    )
+    return cfg_file
+
+
+@pytest.fixture
+def telescope_south_test_file(db, args_dict, io_handler):
+    test_file_name = "telescope_positions-South-TestLayout.ecsv"
+    db.export_file_db(
+        db_name="test-data",
+        dest=io_handler.get_output_directory(dir_type="model", test=True),
+        file_name=test_file_name,
+    )
+
+    cfg_file = gen.find_file(
+        test_file_name,
+        io_handler.get_output_directory(dir_type="model", test=True),
+    )
+    return cfg_file
