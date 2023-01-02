@@ -144,7 +144,7 @@ class LayoutArray:
         """
         Set the MongoDB config
         """
-        self.site = mongo_db_config
+        self.mongo_db_config = mongo_db_config
 
     def _initialize_corsika_telescope(self, corsika_dict=None):
         """
