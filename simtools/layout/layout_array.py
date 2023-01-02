@@ -198,17 +198,9 @@ class LayoutArray:
         db = db_handler.DatabaseHandler(mongo_db_config=self.mongo_db_config)
         self._logger.debug("Reading site parameters from DB")
         _site_pars = db.get_site_parameters(self.site, "Current", only_applicable=True)
-        corsika_dict["corsika_obs_level"] = _site_pars["altitude"]["Value"]
-
-        try:
-            corsika_dict["corsika_obs_level"] = corsika_dict["corsika_obs_level"] * u.Unit(
-                _site_pars["altitude"]["units"]
-            )
-        except KeyError:
-            corsika_dict["corsika_obs_level"] = corsika_dict["corsika_obs_level"]
-            logger.warning(
-                "Key not valid. Dictionary does not have a key 'unit'. Continuing without the unit."
-            )
+        corsika_dict["corsika_obs_level"] = _site_pars["altitude"]["Value"] * u.Unit(
+            _site_pars["altitude"]["units"]
+        )
 
         return corsika_dict
 
