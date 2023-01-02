@@ -58,8 +58,10 @@ class LayoutArray:
         self._logger = logging.getLogger(__name__)
         self._logger.debug("Init LayoutArray")
 
+        self.mongo_db_config = mongo_db_config
         self.label = label
         self.name = name
+        self.site = names.validate_site_name(site)
         self.io_handler = io_handler.IOHandler()
 
         self._telescope_list = []
@@ -115,34 +117,6 @@ class LayoutArray:
 
     def __getitem__(self, i):
         return self._telescope_list[i]
-
-    @property
-    def site(self):
-        """
-        Get the site
-        """
-        return self._site
-
-    @site.setter
-    def site(self, site):
-        """
-        Set the site
-        """
-        self._site = names.validate_site_name(site)
-
-    @property
-    def mongo_db_config(self):
-        """
-        Get the MongoDB config
-        """
-        return self._mongo_db_config
-
-    @mongo_db_config.setter
-    def mongo_db_config(self, mongo_db_config):
-        """
-        Set the MongoDB config
-        """
-        self._mongo_db_config = mongo_db_config
 
     def _initialize_corsika_telescope(self, corsika_dict=None):
         """
@@ -221,16 +195,16 @@ class LayoutArray:
                     )
                     corsika_dict[simtools_par][tel_type] = corsika_dict[simtools_par][tel_type]
 
-        if self._mongo_db_config is None:
+        if self.mongo_db_config is None:
             self._logger.error("DB connection info was not provided, cannot set telescope altitude")
             raise ValueError
-        if self._site is None:
+        if self.site is None:
             self._logger.error("Site was not provided, cannot set telescope altitude")
             raise ValueError
 
-        db = db_handler.DatabaseHandler(mongo_db_config=self._mongo_db_config)
+        db = db_handler.DatabaseHandler(mongo_db_config=self.mongo_db_config)
         self._logger.debug("Reading site parameters from DB")
-        _site_pars = db.get_site_parameters(self._site, "Current", only_applicable=True)
+        _site_pars = db.get_site_parameters(self.site, "Current", only_applicable=True)
         corsika_dict["corsika_obs_level"] = _site_pars["altitude"]["Value"] * u.Unit(
             _site_pars["altitude"]["units"]
         )
