@@ -120,13 +120,13 @@ def _parse(label=None, description=None):
         default=False,
         action="store_true",
     )
-    return config.initialize(db_config=True)
+    return config.initialize()
 
 
 def main():
 
     label = Path(__file__).stem
-    args_dict, db_config = _parse(label, description=("Print a list of array element positions"))
+    args_dict = _parse(label, description=("Print a list of array element positions"))
 
     _logger = logging.getLogger()
     _logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
