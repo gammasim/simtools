@@ -131,10 +131,7 @@ def main():
     _logger = logging.getLogger()
     _logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
-    layout = layout_array.LayoutArray(site="North", mongo_db_config=db_config)
-    layout.initialize_layout_array_from_telescope_file(
-        telescope_list_file=args_dict["array_element_list"]
-    )
+    layout = layout_array.LayoutArray(telescope_list_file=args_dict["array_element_list"])
     layout.convert_coordinates()
     if args_dict["export"] is not None:
         layout.export_telescope_list(
