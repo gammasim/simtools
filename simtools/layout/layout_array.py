@@ -120,7 +120,7 @@ class LayoutArray:
 
     def _initialize_corsika_telescope(self, corsika_dict=None):
         """
-        Initialize Dictionary for CORSIKA telescope parameters. Allow input from different sources\
+        Initialize Dictionary for CORSIKA telescope parameters. Allow input from different sources
         (dictionary, yaml, ecsv header), which require checks to handle units correctly.
 
         Parameters
@@ -131,23 +131,23 @@ class LayoutArray:
         """
         self._corsika_telescope = {}
 
-        if corsika_dict is not None:
-            self._logger.debug(f"Initialize CORSIKA telescope parameters from dict: {corsika_dict}")
-        else:
+        if corsika_dict is None:
             self._logger.debug("Initialize CORSIKA telescope parameters from file")
             corsika_dict = self._from_corsika_file_to_dict()
+        else:
+            self._logger.debug(f"Initialize CORSIKA telescope parameters from dict: {corsika_dict}")
 
         self._initialize_corsika_telescope_from_dict(corsika_dict)
 
     def _from_corsika_file_to_dict(self, file_name=None):
         """
-        Get the corsika parameter file and return a dictionary with the keys necessary to\
+        Get the corsika parameter file and return a dictionary with the keys necessary to
         initialize this class.
 
         Parameters
         ----------
         file_name: str or Path
-            File from which to extract the corsika parameters. Default is \
+            File from which to extract the corsika parameters. Default is
             data/parameters/corsika_parameters.yml
 
         Returns
