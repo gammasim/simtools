@@ -58,10 +58,8 @@ class LayoutArray:
         self._logger = logging.getLogger(__name__)
         self._logger.debug("Init LayoutArray")
 
-        self.mongo_db_config = mongo_db_config
         self.label = label
         self.name = name
-        self.site = names.validate_site_name(site)
         self.io_handler = io_handler.IOHandler()
 
         self._telescope_list = []
@@ -130,7 +128,7 @@ class LayoutArray:
         """
         Set the site
         """
-        self.site = site
+        self.site = names.validate_site_name(site)
 
     @property
     def mongo_db_config(self):
