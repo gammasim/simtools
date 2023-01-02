@@ -6,7 +6,7 @@
 # - {name: pos_y, unit: m, datatype: float64}
 # - {name: pos_z, unit: m, datatype: float64}
 # meta:
-#   EPSG: 32719
+#   EPSG: 32628
 #   center_alt: !astropy.units.Quantity
 #     unit: &id001 !astropy.units.Unit {unit: m}
 #     value: 2150.0
