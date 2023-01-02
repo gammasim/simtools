@@ -43,8 +43,8 @@ class LayoutArray:
 
     def __init__(
         self,
-        mongo_db_config,
-        site,
+        mongo_db_config=None,
+        site=None,
         label=None,
         name=None,
         layout_center_data=None,
@@ -117,6 +117,34 @@ class LayoutArray:
 
     def __getitem__(self, i):
         return self._telescope_list[i]
+
+    @property
+    def site(self):
+        """
+        Get the site
+        """
+        return self.site
+
+    @site.setter
+    def site(self, site):
+        """
+        Set the site
+        """
+        self.site = site
+
+    @property
+    def mongo_db_config(self):
+        """
+        Get the MongoDB config
+        """
+        return self.mongo_db_config
+
+    @mongo_db_config.setter
+    def mongo_db_config(self, mongo_db_config):
+        """
+        Set the MongoDB config
+        """
+        self.site = mongo_db_config
 
     def _initialize_corsika_telescope(self, corsika_dict=None):
         """
@@ -194,6 +222,13 @@ class LayoutArray:
                         "the unit."
                     )
                     corsika_dict[simtools_par][tel_type] = corsika_dict[simtools_par][tel_type]
+
+        if self.mongo_db_config is None:
+            self._logger.error("DB connection info was not provided, cannot set telescope altitude")
+            raise ValueError
+        if self.site is None:
+            self._logger.error("Site was not provided, cannot set telescope altitude")
+            raise ValueError
 
         db = db_handler.DatabaseHandler(mongo_db_config=self.mongo_db_config)
         self._logger.debug("Reading site parameters from DB")
