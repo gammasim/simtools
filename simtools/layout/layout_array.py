@@ -61,7 +61,7 @@ class LayoutArray:
         self.mongo_db_config = mongo_db_config
         self.label = label
         self.name = name
-        self.site = names.validate_site_name(site)
+        self.site = None if site is None else names.validate_site_name(site)
         self.io_handler = io_handler.IOHandler()
 
         self._telescope_list = []
