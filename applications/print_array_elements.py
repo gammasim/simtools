@@ -131,8 +131,7 @@ def main():
     _logger = logging.getLogger()
     _logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
-    layout = layout_array.LayoutArray()
-    layout.read_telescope_list_file(telescope_list_file=args_dict["array_element_list"])
+    layout = layout_array.LayoutArray(telescope_list_file=args_dict["array_element_list"])
     layout.convert_coordinates()
     if args_dict["export"] is not None:
         layout.export_telescope_list(

@@ -49,6 +49,8 @@ class CorsikaConfig:
 
     Parameters
     ----------
+    mongo_db_config: dict
+        MongoDB configuration.
     site: str
         North or South.
     layout_name: str
@@ -58,13 +60,15 @@ class CorsikaConfig:
     corsika_config_data: dict
         CORSIKA user parameters.
     corsika_config_file: str
-        Name of the yaml configuration file.
+        Name of the yaml configuration file. If not provided, \
+        data/parameters/corsika_parameters.yml will be used.
     corsika_parameters_file: str
         Name of the yaml file to set remaining CORSIKA parameters.
     """
 
     def __init__(
         self,
+        mongo_db_config,
         site,
         layout_name,
         label=None,
@@ -90,11 +94,18 @@ class CorsikaConfig:
         # Grabbing layout name and building LayoutArray
         self.layout_name = names.validate_layout_array_name(layout_name)
         self.layout = LayoutArray.from_layout_array_name(
-            self.site + "-" + self.layout_name, label=self.label
+            mongo_db_config=mongo_db_config,
+            layout_array_name=f"{self.site}-{self.layout_name}",
+            label=self.label,
         )
 
         # Load parameters
-        self._load_corsika_parameters_file(corsika_parameters_file)
+        if corsika_parameters_file is None:
+            corsika_parameters_file = self.io_handler.get_input_data_file(
+                "parameters", "corsika_parameters.yml"
+            )
+
+        self._corsika_parameters = self.load_corsika_parameters_file(corsika_parameters_file)
 
         corsika_config_data = collect_data_from_yaml_or_dict(
             corsika_config_file, corsika_config_data
@@ -109,23 +120,27 @@ class CorsikaConfig:
         )
         return text
 
-    def _load_corsika_parameters_file(self, filename):
+    @staticmethod
+    def load_corsika_parameters_file(corsika_parameters_file):
         """
-        Load CORSIKA parameters from a given file (filename not None),
-        or from the default parameter file provided in the
-        data directory (filename is None).
+        Load CORSIKA parameters from the provided corsika_parameters_file.
+
+        Parameters
+        ----------
+        corsika_parameters_file: str or Path
+            File with CORSIKA parameters.
+
+        Returns
+        -------
+        corsika_parameters: dict
+            Dictionary with CORSIKA parameters.
         """
-        if filename is not None:
-            # User provided file.
-            self._corsika_parameters_file = filename
-        else:
-            # Default file from data directory.
-            self._corsika_parameters_file = self.io_handler.get_input_data_file(
-                "parameters", "corsika_parameters.yml"
-            )
-        self._logger.debug(f"Loading CORSIKA parameters from file {self._corsika_parameters_file}")
-        with open(self._corsika_parameters_file, "r") as f:
-            self._corsika_parameters = yaml.load(f)
+
+        logger = logging.getLogger(__name__)
+        logger.debug(f"Loading CORSIKA parameters from file {corsika_parameters_file}")
+        with open(corsika_parameters_file, "r") as f:
+            corsika_parameters = yaml.load(f)
+        return corsika_parameters
 
     def set_user_parameters(self, corsika_config_data):
         """
