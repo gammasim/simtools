@@ -196,10 +196,10 @@ class LayoutArray:
                     corsika_dict[simtools_par][tel_type] = corsika_dict[simtools_par][tel_type]
 
         if self.mongo_db_config is None:
-            self._logger.error("DB connection info was not provided, cannot set telescope altitude")
+            self._logger.error("DB connection info was not provided, cannot set site altitude")
             raise ValueError
         if self.site is None:
-            self._logger.error("Site was not provided, cannot set telescope altitude")
+            self._logger.error("Site was not provided, cannot set site altitude")
             raise ValueError
 
         db = db_handler.DatabaseHandler(mongo_db_config=self.mongo_db_config)
