@@ -33,7 +33,7 @@ def test_handlers(io_handler):
         leg_h.SquarePixelHandler,
     ]
 
-    for step, handler in enumerate(handler_list):
+    for handler in handler_list:
         handler_instance = handler()
         assert isinstance(handler_instance, object)
         assert handler_instance.legend_artist is not None
