@@ -4,6 +4,8 @@ import logging
 
 import astropy.io.ascii
 import astropy.units as u
+import matplotlib.patches as mpatches
+import matplotlib.pyplot as plt
 import numpy as np
 
 import simtools.util.general as gen
@@ -65,11 +67,11 @@ def test_plot_table(db, io_handler):
     test_file_name = "Transmission_Spectrum_PlexiGlass.dat"
     db.export_file_db(
         db_name="test-data",
-        dest=io_handler.get_output_directory(dir_type="model", test=True),
+        dest=io_handler.get_output_directory(dir_type="../model", test=True),
         file_name=test_file_name,
     )
     table_file = gen.find_file(
-        test_file_name, io_handler.get_output_directory(dir_type="model", test=True)
+        test_file_name, io_handler.get_output_directory(dir_type="../model", test=True)
     )
     table = astropy.io.ascii.read(table_file)
 
@@ -91,3 +93,26 @@ def test_add_unit():
     assert visualize._add_unit("Wavelength", value_with_unit) == "Wavelength [nm]"
     value_without_unit = [30, 40]
     assert visualize._add_unit("Wavelength", value_without_unit) == "Wavelength"
+
+
+def test_get_telescope_patch(corsika_telescope_data_dict):
+
+    for tel_type in np.array(list(corsika_telescope_data_dict["corsika_sphere_radius"].keys())):
+        radius = corsika_telescope_data_dict["corsika_sphere_radius"][tel_type].value
+        patch = visualize.get_telescope_patch(tel_type, 0 * u.m, 0 * u.m, radius * u.m)
+        if mpatches.Circle == type(patch):
+            assert (
+                patch.radius == corsika_telescope_data_dict["corsika_sphere_radius"][tel_type].value
+            )
+
+        else:
+            assert isinstance(patch, mpatches.Rectangle)
+
+
+def test_plot_array(telescope_test_file, layout_array_north_instance):
+    telescope_table = layout_array_north_instance.read_telescope_list_file(telescope_test_file)
+    telescopes_dict = layout_array_north_instance.include_radius_into_telescope_table(
+        telescope_table
+    )
+    fig_out = visualize.plot_array(telescopes_dict, rotate_angle=0 * u.deg)
+    assert isinstance(fig_out, type(plt.figure()))

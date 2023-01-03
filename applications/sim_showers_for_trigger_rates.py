@@ -124,13 +124,13 @@ def _parse(label=None, description=None):
         type=str,
         default=None,
     )
-    return config.initialize(telescope_model=True, job_submission=True)
+    return config.initialize(telescope_model=True, job_submission=True, db_config=True)
 
 
 def main():
 
     label = Path(__file__).stem
-    args_dict, _ = _parse(
+    args_dict, db_config = _parse(
         label=label, description="Simulate showers to be used for trigger rate calculations"
     )
 
@@ -163,6 +163,7 @@ def main():
         config_data=shower_config_data,
         submit_command=args_dict.get("submit_command", ""),
         test=args_dict["test"],
+        mongo_db_config=db_config,
     )
 
     if not args_dict["test"]:
