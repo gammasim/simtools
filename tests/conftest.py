@@ -6,8 +6,10 @@ from unittest import mock
 import pytest
 
 import simtools.io_handler
+import simtools.util.general as gen
 from simtools import db_handler
 from simtools.configuration.configurator import Configurator
+from simtools.layout.layout_array import LayoutArray
 from simtools.model.telescope_model import TelescopeModel
 
 logger = logging.getLogger()
@@ -186,3 +188,29 @@ def telescope_model_sst(db, db_config, io_handler):
         label="test-telescope-model-sst",
     )
     return telescope_model_SST
+
+
+@pytest.fixture
+def telescope_test_file(db, args_dict, io_handler):
+    test_file_name = "telescope_positions-North-TestLayout.ecsv"
+    db.export_file_db(
+        db_name="test-data",
+        dest=io_handler.get_output_directory(dir_type="model", test=True),
+        file_name=test_file_name,
+    )
+
+    cfg_file = gen.find_file(
+        test_file_name,
+        io_handler.get_output_directory(dir_type="model", test=True),
+    )
+    return cfg_file
+
+
+@pytest.fixture
+def layout_array_north_instance(io_handler, db_config):
+    return LayoutArray(site="North", mongo_db_config=db_config, name="test_layout")
+
+
+@pytest.fixture
+def corsika_telescope_data_dict(layout_array_north_instance):
+    return layout_array_north_instance._from_corsika_file_to_dict()
