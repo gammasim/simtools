@@ -43,8 +43,8 @@ class LayoutArray:
 
     def __init__(
         self,
-        mongo_db_config,
-        site,
+        mongo_db_config=None,
+        site=None,
         label=None,
         name=None,
         layout_center_data=None,
@@ -61,7 +61,7 @@ class LayoutArray:
         self.mongo_db_config = mongo_db_config
         self.label = label
         self.name = name
-        self.site = names.validate_site_name(site)
+        self.site = None if site is None else names.validate_site_name(site)
         self.io_handler = io_handler.IOHandler()
 
         self._telescope_list = []
@@ -120,7 +120,7 @@ class LayoutArray:
 
     def _initialize_corsika_telescope(self, corsika_dict=None):
         """
-        Initialize Dictionary for CORSIKA telescope parameters. Allow input from different sources\
+        Initialize Dictionary for CORSIKA telescope parameters. Allow input from different sources
         (dictionary, yaml, ecsv header), which require checks to handle units correctly.
 
         Parameters
@@ -131,23 +131,23 @@ class LayoutArray:
         """
         self._corsika_telescope = {}
 
-        if corsika_dict is not None:
-            self._logger.debug(f"Initialize CORSIKA telescope parameters from dict: {corsika_dict}")
-        else:
+        if corsika_dict is None:
             self._logger.debug("Initialize CORSIKA telescope parameters from file")
             corsika_dict = self._from_corsika_file_to_dict()
+        else:
+            self._logger.debug(f"Initialize CORSIKA telescope parameters from dict: {corsika_dict}")
 
         self._initialize_corsika_telescope_from_dict(corsika_dict)
 
     def _from_corsika_file_to_dict(self, file_name=None):
         """
-        Get the corsika parameter file and return a dictionary with the keys necessary to\
+        Get the corsika parameter file and return a dictionary with the keys necessary to
         initialize this class.
 
         Parameters
         ----------
         file_name: str or Path
-            File from which to extract the corsika parameters. Default is \
+            File from which to extract the corsika parameters. Default is
             data/parameters/corsika_parameters.yml
 
         Returns
@@ -195,20 +195,19 @@ class LayoutArray:
                     )
                     corsika_dict[simtools_par][tel_type] = corsika_dict[simtools_par][tel_type]
 
+        if self.mongo_db_config is None:
+            self._logger.error("DB connection info was not provided, cannot set site altitude")
+            raise ValueError
+        if self.site is None:
+            self._logger.error("Site was not provided, cannot set site altitude")
+            raise ValueError
+
         db = db_handler.DatabaseHandler(mongo_db_config=self.mongo_db_config)
         self._logger.debug("Reading site parameters from DB")
         _site_pars = db.get_site_parameters(self.site, "Current", only_applicable=True)
-        corsika_dict["corsika_obs_level"] = _site_pars["altitude"]["Value"]
-
-        try:
-            corsika_dict["corsika_obs_level"] = corsika_dict["corsika_obs_level"] * u.Unit(
-                _site_pars["altitude"]["units"]
-            )
-        except KeyError:
-            corsika_dict["corsika_obs_level"] = corsika_dict["corsika_obs_level"]
-            logger.warning(
-                "Key not valid. Dictionary does not have a key 'unit'. Continuing without the unit."
-            )
+        corsika_dict["corsika_obs_level"] = _site_pars["altitude"]["Value"] * u.Unit(
+            _site_pars["altitude"]["units"]
+        )
 
         return corsika_dict
 
