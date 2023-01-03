@@ -151,7 +151,6 @@ def main():
         for one_angle in rotate_angles:
             logger.debug(f"Processing: {one_angle}.")
             if args_dict["figure_name"] is None:
-                print(one_angle.to(u.deg))
                 plot_file_name = (
                     f"plot_layout_array_{(Path(one_file).name).split('.')[0]}_"
                     f"{str((round((one_angle.to(u.deg).value))))}deg"
@@ -170,7 +169,7 @@ def main():
             plot_file = output_dir.joinpath(plot_file_name)
 
             for ext in ["pdf", "png"]:
-                logger.info(f"Saving figure to {plot_file}.{ext}.")
+                logger.info(f"Saving figure to {plot_file}.{ext}")
                 plt.savefig(f"{str(plot_file)}.{ext}", format=ext, bbox_inches="tight")
             fig_out.clf()
 
