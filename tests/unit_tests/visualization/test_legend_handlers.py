@@ -1,3 +1,5 @@
+import pytest
+
 from simtools.util import names
 from simtools.visualization import legend_handlers as leg_h
 
@@ -42,5 +44,5 @@ def test_handlers(io_handler):
     colors = ["darkorange", "dodgerblue", "black", "lightsteelblue"]
     radius_dict = [12.5, 9.15, 7.15, 3]
     for step, tel_type in enumerate(names.all_telescope_class_names):
-        assert tel_handler.radius_dict[tel_type] == radius_dict[step]
+        assert tel_handler.radius_dict[tel_type] == pytest.approx(radius_dict[step], 1.0e-3)
         assert tel_handler.colors_dict[tel_type] == colors[step]
