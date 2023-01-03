@@ -6,6 +6,7 @@ __all__ = [
     "camera_efficiency_simtel_file_name",
     "convert_telescope_model_name_to_yaml",
     "get_site_from_telescope_name",
+    "get_telescope_type",
     "is_valid_name",
     "layout_telescope_list_file_name",
     "ray_tracing_file_name",
@@ -26,6 +27,81 @@ __all__ = [
     "validate_telescope_model_name",
     "validate_telescope_name_db",
 ]
+
+lst = "LST"
+mst = "MST"
+sct = "SCT"
+sst = "SST"
+
+all_telescope_class_names = {
+    lst: ["lst"],
+    mst: ["mst"],
+    sct: ["sct"],
+    sst: ["sst"],
+}
+
+all_camera_names = {
+    "SST": ["sst"],
+    "ASTRI": ["astri"],
+    "GCT": ["gct", "gct-s"],
+    "1M": ["1m"],
+    "FlashCam": ["flashcam", "flash-cam"],
+    "NectarCam": ["nectarcam", "nectar-cam"],
+    "SCT": ["sct"],
+    "LST": ["lst"],
+}
+
+all_structure_names = {"Structure": ["Structure", "structure"]}
+
+all_site_names = {"South": ["paranal", "south"], "North": ["lapalma", "north"]}
+
+all_model_version_names = {
+    "2015-07-21": [""],
+    "2015-10-20-p1": [""],
+    "prod4-v0.0": [""],
+    "prod4-v0.1": [""],
+    "2018-02-16": [""],
+    "prod3_compatible": ["p3", "prod3", "prod3b"],
+    "prod4": ["p4"],
+    "post_prod3_updates": [""],
+    "2016-12-20": [""],
+    "2018-11-07": [""],
+    "2019-02-22": [""],
+    "2019-05-13": [""],
+    "2019-11-20": [""],
+    "2019-12-30": [""],
+    "2020-02-26": [""],
+    "2020-06-28": ["prod5"],
+    "prod4-prototype": [""],
+    "default": [],
+    "Current": [],
+    "Latest": [],
+}
+
+all_simtel_mode_names = {
+    "RayTracing": ["raytracing", "ray-tracing"],
+    "RayTracingSingleMirror": [
+        "raytracing-singlemirror",
+        "ray-tracing-singlemirror",
+        "ray-tracing-single-mirror",
+    ],
+    "Trigger": ["trigger"],
+}
+
+all_layout_array_names = {
+    "4LST": ["4-lst", "4lst"],
+    "1LST": ["1-lst", "1lst"],
+    "4MST": ["4-mst", "4mst"],
+    "1MST": ["1-mst", "mst"],
+    "4SST": ["4-sst", "4sst"],
+    "1SST": ["1-sst", "sst"],
+    "Prod5": ["prod5", "p5"],
+    "TestLayout": ["test-layout"],
+}
+
+corsika_to_simtools_names = {
+    "OBSLEV": "corsika_obs_level",
+}
 
 
 def validate_sub_system_name(name):
@@ -351,73 +427,6 @@ def convert_telescope_model_name_to_yaml(name):
         raise ValueError(f"Telescope name {name} could not be converted to yml names")
 
     return old_names[new_name]
-
-
-all_telescope_class_names = {
-    "SST": ["sst"],
-    "MST": ["mst"],
-    "SCT": ["sct"],
-    "LST": ["lst"],
-}
-
-all_camera_names = {
-    "SST": ["sst"],
-    "ASTRI": ["astri"],
-    "GCT": ["gct", "gct-s"],
-    "1M": ["1m"],
-    "FlashCam": ["flashcam", "flash-cam"],
-    "NectarCam": ["nectarcam", "nectar-cam"],
-    "SCT": ["sct"],
-    "LST": ["lst"],
-}
-
-all_structure_names = {"Structure": ["Structure", "structure"]}
-
-all_site_names = {"South": ["paranal", "south"], "North": ["lapalma", "north"]}
-
-all_model_version_names = {
-    "2015-07-21": [""],
-    "2015-10-20-p1": [""],
-    "prod4-v0.0": [""],
-    "prod4-v0.1": [""],
-    "2018-02-16": [""],
-    "prod3_compatible": ["p3", "prod3", "prod3b"],
-    "prod4": ["p4"],
-    "post_prod3_updates": [""],
-    "2016-12-20": [""],
-    "2018-11-07": [""],
-    "2019-02-22": [""],
-    "2019-05-13": [""],
-    "2019-11-20": [""],
-    "2019-12-30": [""],
-    "2020-02-26": [""],
-    "2020-06-28": ["prod5"],
-    "prod4-prototype": [""],
-    "default": [],
-    "Current": [],
-    "Latest": [],
-}
-
-all_simtel_mode_names = {
-    "RayTracing": ["raytracing", "ray-tracing"],
-    "RayTracingSingleMirror": [
-        "raytracing-singlemirror",
-        "ray-tracing-singlemirror",
-        "ray-tracing-single-mirror",
-    ],
-    "Trigger": ["trigger"],
-}
-
-all_layout_array_names = {
-    "4LST": ["4-lst", "4lst"],
-    "1LST": ["1-lst", "1lst"],
-    "4MST": ["4-mst", "4mst"],
-    "1MST": ["1-mst", "mst"],
-    "4SST": ["4-sst", "4sst"],
-    "1SST": ["1-sst", "sst"],
-    "Prod5": ["prod5", "p5"],
-    "TestLayout": ["test-layout"],
-}
 
 
 def simtools_instrument_name(site, telescope_class_name, sub_system_name, telescope_id_name):
@@ -748,3 +757,73 @@ def camera_efficiency_log_file_name(site, telescope_model_name, zenith_angle, la
     name += f"_{label}" if label is not None else ""
     name += ".log"
     return name
+
+
+def get_telescope_type(telescope_name):
+    """
+    Guess telescope type from name, e.g. "LST", "MST", ...
+
+    Parameters
+    ----------
+    telescope_name: str
+        Telescope name
+
+    Returns
+    -------
+    str
+        Telescope type.
+    """
+
+    _class, _ = split_telescope_model_name(telescope_name)
+    try:
+        if _class[0:3] in all_telescope_class_names:
+            return _class[0:3]
+
+    except IndexError:
+        pass
+
+    return ""
+
+
+def translate_corsika_to_simtools(corsika_par):
+    """
+    Translate the name of a CORSIKA parameter to the name used in simtools.
+
+    Parameters
+    ----------
+    corsika_par: str
+        Name of the corsika parameter to be translated.
+
+    """
+
+    try:
+        return corsika_to_simtools_names[corsika_par]
+    except KeyError:
+        _logger = logging.getLogger(__name__)
+        msg = f"Translation not found. We will proceed with the original parameter name:\
+            {corsika_par}."
+        _logger.debug(msg)
+        return corsika_par
+
+
+def translate_simtools_to_corsika(simtools_par):
+    """
+    Translate the name of a simtools parameter to the name used in CORSIKA.
+
+    Parameters
+    ----------
+    simtools_par: str
+        Name of the simtools parameter to be translated.
+    """
+
+    simtools_to_corsika_names = {
+        new_key: new_value for new_value, new_key in corsika_to_simtools_names.items()
+    }
+    try:
+        return simtools_to_corsika_names[simtools_par]
+    except KeyError:
+        _logger = logging.getLogger(__name__)
+        msg = f"Translation not found. We will proceed with the original parameter name:\
+            {simtools_par}."
+        _logger.debug(msg)
+        return simtools_par
