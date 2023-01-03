@@ -142,8 +142,6 @@ def test_initialize_layout_array_from_telescope_file(
     assert 19 == layout_array_north_instance.get_number_of_telescopes()
 
     layout_2 = LayoutArray(
-        site="North",
-        mongo_db_config=db_config,
         name="test_layout",
         telescope_list_file=telescope_test_file,
     )
@@ -207,8 +205,7 @@ def test_build_layout(layout_array_north_four_LST_instance, tmp_test_directory, 
     layout.export_telescope_list(crs_name="corsika")
 
     # Building a second layout from the file exported by the first one
-    layout_2 = LayoutArray(site="North", mongo_db_config=db_config, name="test_layout_2")
-    layout_2.initialize_layout_array_from_telescope_file(layout.telescope_list_file)
+    layout_2 = LayoutArray(telescope_list_file=layout.telescope_list_file, name="test_layout_2")
 
     assert 4 == layout_2.get_number_of_telescopes()
     assert layout_2._array_center.get_altitude().value == pytest.approx(
