@@ -20,7 +20,7 @@
     telescope_list (str, optional)
         The telescopes file (.ecsv) with the array information.
     layout_array_name (str, optional)
-        Name of the layout array.
+        Name of the layout array (e.g., North-TestLayout, South-TestLayout, North-4LST, etc.).
     rotate_angle (float, optional)
         Angle to rotate the array before plotting (in degrees).
     show_tel_label (bool, optional)
@@ -33,7 +33,7 @@
     .. code-block:: console
 
         python applications/plot_layout_array.py --figure_name northern_array_alpha \
-        --layout_array_name test_layout
+        --layout_array_name North-TestLayout
 
 """
 
