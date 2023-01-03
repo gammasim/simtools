@@ -8,7 +8,7 @@
 # meta:
 #   data_type: positionfile
 #   description: "telescope positions for CTA South (Paranal)"
-#   EPSG: 32628
+#   EPSG: 32719
 #   center_alt: !astropy.units.Quantity
 #     unit: &id001 !astropy.units.Unit {unit: m}
 #     value: 2162.35
