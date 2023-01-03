@@ -48,6 +48,6 @@
 # schema: astropy-2.0
 telescope_name      pos_x      pos_y      pos_z
 SST-01               80.0       80.0       80.0
-SST-02              -80.0      -80.0      -80.0
+SST-02              -80.0      -80.0       80.0
 SST-03               80.0       80.0       80.0
-SST-04              -80.0      -80.0      -80.0
+SST-04              -80.0      -80.0       80.0
