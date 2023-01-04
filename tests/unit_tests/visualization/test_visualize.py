@@ -97,7 +97,7 @@ def test_add_unit():
 
 
 def test_get_telescope_patch(manual_corsika_dict_north, manual_corsika_dict_south, io_handler):
-    def one_site(corsika_dict, x, y):
+    def test_one_site(corsika_dict, x, y):
         for tel_type in np.array(list(corsika_dict["corsika_sphere_radius"].keys())):
             radius = corsika_dict["corsika_sphere_radius"][tel_type].value
             patch = visualize.get_telescope_patch(tel_type, x, y, radius * u.m)
@@ -106,13 +106,13 @@ def test_get_telescope_patch(manual_corsika_dict_north, manual_corsika_dict_sout
             else:
                 assert isinstance(patch, mpatches.Rectangle)
 
-    one_site(manual_corsika_dict_north, 0 * u.m, 0 * u.m)
-    one_site(manual_corsika_dict_south, 0 * u.m, 0 * u.m)
+    test_one_site(manual_corsika_dict_north, 0 * u.m, 0 * u.m)
+    test_one_site(manual_corsika_dict_south, 0 * u.m, 0 * u.m)
     # Test passing other units
-    one_site(manual_corsika_dict_north, 0 * u.m, 0 * u.km)
-    one_site(manual_corsika_dict_south, 0 * u.cm, 0 * u.km)
+    test_one_site(manual_corsika_dict_north, 0 * u.m, 0 * u.km)
+    test_one_site(manual_corsika_dict_south, 0 * u.cm, 0 * u.km)
     with pytest.raises(TypeError):
-        one_site(manual_corsika_dict_south, 0, 0)
+        test_one_site(manual_corsika_dict_south, 0, 0)
 
 
 def test_plot_array(
@@ -121,11 +121,11 @@ def test_plot_array(
     telescope_south_test_file,
     layout_array_south_instance,
 ):
-    def one_site(test_file, instance):
+    def test_one_site(test_file, instance):
         telescope_table = instance.read_telescope_list_file(test_file)
         telescopes_dict = instance.include_radius_into_telescope_table(telescope_table)
         fig_out = visualize.plot_array(telescopes_dict, rotate_angle=0 * u.deg)
         assert isinstance(fig_out, type(plt.figure()))
 
-    one_site(telescope_north_test_file, layout_array_north_instance)
-    one_site(telescope_south_test_file, layout_array_south_instance)
+    test_one_site(telescope_north_test_file, layout_array_north_instance)
+    test_one_site(telescope_south_test_file, layout_array_south_instance)
