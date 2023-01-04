@@ -32,7 +32,7 @@ def south_layout_center_data_dict():
         "center_lat": -24.683429 * u.deg,
         "center_easting": 366822 * u.m,
         "center_northing": 7269466 * u.m,
-        "EPSG": 32628,
+        "EPSG": 32719,
         "center_alt": 2162.35 * u.m,
     }
 
