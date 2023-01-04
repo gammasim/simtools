@@ -223,8 +223,15 @@ def manual_corsika_dict_north():
         "corsika_sphere_radius": {
             "LST": 12.5 * u.m,
             "MST": 9.15 * u.m,
+            "SCT": 7.15 * u.m,
+            "SST": 3 * u.m,
         },
-        "corsika_sphere_center": {"LST": 16 * u.m, "MST": 9 * u.m},
+        "corsika_sphere_center": {
+            "LST": 16 * u.m,
+            "MST": 9 * u.m,
+            "SCT": 6.1 * u.m,
+            "SST": 3.25 * u.m,
+        },
         "corsika_obs_level": 2158 * u.m,
     }
 
