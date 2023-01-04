@@ -326,13 +326,13 @@ def test_altitude_from_corsika_z(
             pos_z=5.0 * u.m, altitude=None, tel_name="LST-01"
         ).value == pytest.approx(result1)
         assert instance._altitude_from_corsika_z(
-            pos_z=None, altitude=8848.0 * u.m, tel_name="LST-01"
+            pos_z=None, altitude=2348.0 * u.m, tel_name="LST-01"
         ).value == pytest.approx(result2)
         with pytest.raises(TypeError):
             instance._altitude_from_corsika_z(5.0, None, "LST-01")
 
-    test_one_site(layout_array_north_four_LST_instance, 2147.0, 6706.0)
-    test_one_site(layout_array_south_four_LST_instance, 2136.0, 6717.0)
+    test_one_site(layout_array_north_four_LST_instance, 2147.0, 206.0)
+    test_one_site(layout_array_south_four_LST_instance, 2136.0, 217.0)
 
 
 def test_include_radius_into_telescope_table(telescope_north_test_file, telescope_south_test_file):
