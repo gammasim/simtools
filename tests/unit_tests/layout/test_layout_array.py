@@ -170,7 +170,6 @@ def test_initialize_layout_array_from_telescope_file(
 ):
     def test_one_site(instance, test_file, number_of_telescopes, label):
         instance.initialize_layout_array_from_telescope_file(test_file)
-        instance.convert_coordinates()
         assert number_of_telescopes == instance.get_number_of_telescopes()
 
         layout_2 = LayoutArray(
