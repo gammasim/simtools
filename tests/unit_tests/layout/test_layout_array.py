@@ -173,8 +173,6 @@ def test_initialize_layout_array_from_telescope_file(
         assert number_of_telescopes == instance.get_number_of_telescopes()
 
         layout_2 = LayoutArray(
-            site=label,
-            mongo_db_config=db_config,
             name="test_layout",
             telescope_list_file=test_file,
         )
