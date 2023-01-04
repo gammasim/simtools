@@ -37,7 +37,6 @@ def test_handlers(io_handler):
 
     for handler in handler_list:
         handler_instance = handler()
-        assert isinstance(handler_instance, object)
         assert handler_instance.legend_artist is not None
 
     tel_handler = leg_h.TelescopeHandler()
