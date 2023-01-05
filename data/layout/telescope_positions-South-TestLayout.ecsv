@@ -9,7 +9,7 @@
 #   EPSG: 32719
 #   center_alt: !astropy.units.Quantity
 #     unit: &id001 !astropy.units.Unit {unit: m}
-#     value: 2147.0
+#     value: 2162.35
 #   center_easting: !astropy.units.Quantity
 #     unit: *id001
 #     value: 366822.0000008711
