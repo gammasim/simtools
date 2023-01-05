@@ -18,7 +18,7 @@ logger.setLevel(logging.DEBUG)
 
 
 APP_LIST = {
-    # Opticas
+    # Optics
     "compare_cumulative_psf": [
         [
             "--site",
@@ -165,6 +165,84 @@ APP_LIST = {
     ],
     # Layout
     "make_regular_arrays": [[]],
+    "plot_layout_array::one_file": [
+        [
+            "--telescope_list data/layout/telescope_positions-North-TestLayout.ecsv",
+        ]
+    ],
+    "plot_layout_array::one_file_with_name": [
+        [
+            "--telescope_list data/layout/telescope_positions-North-TestLayout.ecsv",
+            "--figure_name test",
+        ]
+    ],
+    "plot_layout_array::one_file_with_name_and_extension": [
+        [
+            "--telescope_list data/layout/telescope_positions-North-TestLayout.ecsv",
+            "--figure_name test.png",
+        ]
+    ],
+    "plot_layout_array::one_file_one_angle": [
+        [
+            "--telescope_list data/layout/telescope_positions-North-TestLayout.ecsv",
+            "--rotate_angle 20",
+        ]
+    ],
+    "plot_layout_array::one_file_two_angles": [
+        [
+            "--telescope_list data/layout/telescope_positions-North-TestLayout.ecsv",
+            "--rotate_angle 20 30",
+        ]
+    ],
+    "plot_layout_array::two_files": [
+        [
+            "--telescope_list data/layout/telescope_positions-North-TestLayout.ecsv "
+            "data/layout/telescope_positions-South-TestLayout.ecsv",
+        ]
+    ],
+    "plot_layout_array::two_files_one_angle": [
+        [
+            "--telescope_list data/layout/telescope_positions-North-TestLayout.ecsv "
+            "data/layout/telescope_positions-South-TestLayout.ecsv",
+            "--rotate_angle 20",
+        ]
+    ],
+    "plot_layout_array::two_files_two_angles": [
+        [
+            "--telescope_list data/layout/telescope_positions-North-TestLayout.ecsv "
+            "data/layout/telescope_positions-South-TestLayout.ecsv",
+            "--rotate_angle 20 30",
+        ]
+    ],
+    "plot_layout_array::layout_name": [
+        [
+            "--layout_array_name North-4LST",
+        ]
+    ],
+    "plot_layout_array::layout_name_one_angle": [
+        [
+            "--layout_array_name North-4LST",
+            "--rotate_angle 20",
+        ]
+    ],
+    "plot_layout_array::layout_name_two_angles": [
+        [
+            "--layout_array_name North-4LST",
+            "--rotate_angle 20 30",
+        ]
+    ],
+    "plot_layout_array::layout_two_names_one_angle": [
+        [
+            "--layout_array_name North-4LST South-4LST",
+            "--rotate_angle 20",
+        ]
+    ],
+    "plot_layout_array::layout_two_names_two_angles": [
+        [
+            "--layout_array_name North-4LST South-4LST",
+            "--rotate_angle 20 30",
+        ]
+    ],
     # Production
     "produce_array_config": [["--array_config", "./tests/resources/array_config_test.yml"]],
     # Trigger
