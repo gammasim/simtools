@@ -170,6 +170,18 @@ APP_LIST = {
             "--telescope_list data/layout/telescope_positions-North-TestLayout.ecsv",
         ]
     ],
+    "plot_layout_array::one_file_with_name": [
+        [
+            "--telescope_list data/layout/telescope_positions-North-TestLayout.ecsv",
+            "--figure_name test",
+        ]
+    ],
+    "plot_layout_array::one_file_with_name_and_extension": [
+        [
+            "--telescope_list data/layout/telescope_positions-North-TestLayout.ecsv",
+            "--figure_name test.png",
+        ]
+    ],
     "plot_layout_array::one_file_one_angle": [
         [
             "--telescope_list data/layout/telescope_positions-North-TestLayout.ecsv",
