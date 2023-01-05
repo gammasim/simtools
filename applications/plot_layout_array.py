@@ -171,10 +171,24 @@ def main():
             )
             plot_file = output_dir.joinpath(plot_file_name)
 
-            for f in ["pdf", "png"]:
-                logger.info(f"Saving figure to {plot_file}.{f}.")
-                plt.savefig(str(plot_file) + "." + f, format=f, bbox_inches="tight")
-            fig_out.clf()
+            allowed_extensions = ["jpeg", "jpg", "png", "tiff", "ps", "pdf", "bmp"]
+
+            splitted_plot_file_name = plot_file_name.split(".")
+            if len(splitted_plot_file_name) > 1:
+                if splitted_plot_file_name[-1] in allowed_extensions:
+                    logger.info(f"Saving figure as {plot_file}.")
+                    plt.savefig(plot_file, bbox_inches="tight")
+                else:
+                    msg = (
+                        f"Extension in {plot_file} is not valid. Valid extensions are:"
+                        f" {allowed_extensions}."
+                    )
+                    raise NameError(msg)
+            else:
+                for f in ["pdf", "png"]:
+                    logger.info(f"Saving figure to {plot_file}.{f}.")
+                    plt.savefig(str(plot_file) + "." + f, bbox_inches="tight")
+                fig_out.clf()
 
 
 if __name__ == "__main__":
