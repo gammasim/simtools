@@ -126,7 +126,7 @@ def main():
         rotate_angles = [0 * u.deg]
     else:
         rotate_angles = []
-        for _, one_angle in enumerate(args_dict["rotate_angle"]):
+        for one_angle in args_dict["rotate_angle"]:
             rotate_angles.append(float(one_angle) * u.deg)
 
     logger = logging.getLogger()
@@ -142,7 +142,7 @@ def main():
             io_handler_instance.get_input_data_file(
                 "layout", f"telescope_positions-{one_array}.ecsv"
             )
-            for _, one_array in enumerate(args_dict["layout_array_name"])
+            for one_array in args_dict["layout_array_name"]
         ]
 
     for one_file in telescope_file:
