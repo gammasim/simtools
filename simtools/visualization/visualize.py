@@ -601,7 +601,7 @@ def plot_array(telescopes, rotate_angle=0, show_tel_label=False):
     of North/East, a 90 degree rotation is always applied.
     Rotation of the array elements is possible through the 'rotate_angle' given either in degrees,
     or in radians.
-    The direction of rotation is counterclockwise.
+    The direction of rotation of the array elements is counterclockwise.
     The rotation does not change Telescope instance attributes.
 
     Parameters
