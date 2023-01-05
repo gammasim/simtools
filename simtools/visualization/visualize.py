@@ -594,9 +594,11 @@ def get_telescope_patch(name, x, y, radius):
 
 def plot_array(telescopes, rotate_angle=0 * u.deg, show_tel_label=False):
     """
-    Plot the array of telescopes.
+    Plot the array of telescopes. The X axis gives the easting direction and Y axis gives the
+    northing direction.
     Rotation of the array elements is possible through the 'rotate_angle' given either in degrees,
     or in radians.
+    The direction of rotation is counterclockwise.
     The rotation does not change Telescope instance attributes.
 
     Parameters
