@@ -3,7 +3,7 @@
 """
     Summary
     -------
-    This application plots the layout array and saves into pdf and png files.
+    This application plots the layout array and saves into disk.
 
     It accepts as input the telescope list file, the name of the layout, a sequence of arguments
     with the telescope files or a sequence of arguments with the layout names.
@@ -16,7 +16,7 @@
     Command line arguments
     ----------------------
     figure_name (str, optional)
-        File name for the pdf output (without extension).
+        File name for the pdf output.
     telescope_list (str, optional)
         The telescopes file (.ecsv) with the array information.
     layout_array_name (str, optional)
@@ -111,7 +111,7 @@ def _parse(label, description, usage):
         default=None,
     )
 
-    return config.initialize(db_config=True)
+    return config.initialize()
 
 
 def main():
@@ -126,7 +126,7 @@ def main():
         rotate_angles = [0 * u.deg]
     else:
         rotate_angles = []
-        for _, one_angle in enumerate(args_dict["rotate_angle"]):
+        for one_angle in args_dict["rotate_angle"]:
             rotate_angles.append(float(one_angle) * u.deg)
 
     logger = logging.getLogger()
@@ -142,7 +142,7 @@ def main():
             io_handler_instance.get_input_data_file(
                 "layout", f"telescope_positions-{one_array}.ecsv"
             )
-            for _, one_array in enumerate(args_dict["layout_array_name"])
+            for one_array in args_dict["layout_array_name"]
         ]
 
     for one_file in telescope_file:
@@ -168,10 +168,24 @@ def main():
             )
             plot_file = output_dir.joinpath(plot_file_name)
 
-            for ext in ["pdf", "png"]:
-                logger.info(f"Saving figure to {plot_file}.{ext}")
-                plt.savefig(f"{str(plot_file)}.{ext}", format=ext, bbox_inches="tight")
-            fig_out.clf()
+            allowed_extensions = ["jpeg", "jpg", "png", "tiff", "ps", "pdf", "bmp"]
+
+            splitted_plot_file_name = plot_file_name.split(".")
+            if len(splitted_plot_file_name) > 1:
+                if splitted_plot_file_name[-1] in allowed_extensions:
+                    logger.info(f"Saving figure as {plot_file}.")
+                    plt.savefig(plot_file, bbox_inches="tight", dpi=400)
+                else:
+                    msg = (
+                        f"Extension in {plot_file} is not valid. Valid extensions are:"
+                        f" {allowed_extensions}."
+                    )
+                    raise NameError(msg)
+            else:
+                for ext in ["pdf", "png"]:
+                    logger.info(f"Saving figure to {plot_file}.{ext}.")
+                    plt.savefig(f"{str(plot_file)}.{ext}", bbox_inches="tight", dpi=400)
+                fig_out.clf()
 
 
 if __name__ == "__main__":
