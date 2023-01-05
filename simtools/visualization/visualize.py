@@ -666,8 +666,8 @@ def plot_array(telescopes, rotate_angle=0 * u.deg, show_tel_label=False):
 
     plt.gca().add_collection(PatchCollection(patches, match_original=True))
 
-    x_title = "East [m]"
-    y_title = "North [m]"
+    x_title = "Easting [m]"
+    y_title = "Northing [m]"
     plt.axis("square")
     plt.grid(True)
     plt.gca().set_axisbelow(True)
