@@ -544,7 +544,7 @@ def plot_hist_2D(data, **kwargs):
     return fig
 
 
-@u.quantity_input()
+@u.quantity_input(x=u.m, y=u.m, radius=u.m)
 def get_telescope_patch(name, x, y, radius):
     """
     Collect the patch of one telescope to be plotted by plot_array.
