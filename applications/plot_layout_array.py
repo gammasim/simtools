@@ -3,7 +3,7 @@
 """
     Summary
     -------
-    This application plots the layout array and saves into pdf and png files.
+    This application plots the layout array and saves into disk.
 
     It accepts as input the telescope list file, the name of the layout, a sequence of arguments
     with the telescope files or a sequence of arguments with the layout names.
