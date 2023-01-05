@@ -630,8 +630,10 @@ def plot_array(telescopes, rotate_angle=0 * u.deg, show_tel_label=False):
 
     if len(pos_x_rotated) > 30:
         fontsize = 4
+        scale = 2
     else:
         fontsize = 8
+        scale = 1
 
     patches = []
     for i_tel, tel_now in enumerate(telescopes):
@@ -644,13 +646,13 @@ def plot_array(telescopes, rotate_angle=0 * u.deg, show_tel_label=False):
                 i_tel_name,
                 pos_x_rotated[i_tel],
                 pos_y_rotated[i_tel],
-                telescopes[i_tel]["radius"],
+                scale * telescopes[i_tel]["radius"],
             )
         )
         if show_tel_label:
             ax.text(
                 pos_x_rotated[i_tel].value,
-                pos_y_rotated[i_tel].value + telescopes[i_tel]["radius"].value,
+                pos_y_rotated[i_tel].value + scale * telescopes[i_tel]["radius"].value,
                 telescopes[i_tel]["telescope_name"],
                 horizontalalignment="center",
                 verticalalignment="bottom",
