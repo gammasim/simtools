@@ -656,7 +656,7 @@ def rotate(rotation_angle, x, y):
     """
     Rotate x and y by the rotation angle given in rotation_angle, in degrees or radians.
     The function returns the rotated x and y values in the same unit given.
-    The direction of rotation is counterclockwise.
+    The direction of rotation of the elements is counterclockwise.
 
     Parameters
     ----------
