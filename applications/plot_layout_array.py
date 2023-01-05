@@ -16,7 +16,7 @@
     Command line arguments
     ----------------------
     figure_name (str, optional)
-        File name for the pdf output (without extension).
+        File name for the pdf output.
     telescope_list (str, optional)
         The telescopes file (.ecsv) with the array information.
     layout_array_name (str, optional)
@@ -152,7 +152,6 @@ def main():
             logger.debug(f"Processing: {one_angle}.")
             base_name = (Path(one_file).name).split(".")[0] + "_"
             if args_dict["figure_name"] is None:
-                print(one_angle.to(u.deg))
                 plot_file_name = (
                     "plot_layout_array_"
                     + base_name
