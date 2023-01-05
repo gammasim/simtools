@@ -8,10 +8,10 @@
 # - {name: alt, unit: m, datatype: float32, description: telescope position upwards relative to NNN}
 # - {name: geo_code, datatype: string, description: Geographical Position Code}
 # meta:
-#   EPSG: 32719
+#   EPSG: 32628
 #   center_alt: !astropy.units.Quantity
 #     unit: &id001 !astropy.units.Unit {unit: m}
-#     value: 2150.0
+#     value: 2177
 #   center_easting: !astropy.units.Quantity
 #     unit: *id001
 #     value: 217654.06411838497
