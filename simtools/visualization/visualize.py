@@ -594,7 +594,7 @@ def get_telescope_patch(name, x, y, radius):
 
 def plot_array(telescopes, rotate_angle=0 * u.deg, show_tel_label=False):
     """
-    Plot the array of telescopes. The X axis gives the easting direction and Y axis gives the
+    Plot the array of telescopes. The y axis gives the easting direction and Y axis gives the
     northing direction.
     Rotation of the array elements is possible through the 'rotate_angle' given either in degrees,
     or in radians.
@@ -605,10 +605,10 @@ def plot_array(telescopes, rotate_angle=0 * u.deg, show_tel_label=False):
     ----------
     telescopes: dict
         Dictionary with the telescope position and names. Coordinates are given in the CORSIKA
-        coordinate system, i.e. the X positive axis points toward south and the Y positive axis
+        coordinate system, i.e. the y positive axis points toward south and the Y positive axis
         points toward west.
     rotate_angle:
-        Angle to rotate the plot. For rotate_angle = 0 the x-axis points towards the east, and\
+        Angle to rotate the plot. For rotate_angle = 0 the x-axis points towards the east, and
         the y-axis points towards the North.
     show_tel_label: bool
         If True it will print the label of the individual telescopes in the plot.
