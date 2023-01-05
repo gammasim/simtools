@@ -68,11 +68,11 @@ def test_plot_table(db, io_handler):
     test_file_name = "Transmission_Spectrum_PlexiGlass.dat"
     db.export_file_db(
         db_name="test-data",
-        dest=io_handler.get_output_directory(dir_type="../model", test=True),
+        dest=io_handler.get_output_directory(dir_type="model", test=True),
         file_name=test_file_name,
     )
     table_file = gen.find_file(
-        test_file_name, io_handler.get_output_directory(dir_type="../model", test=True)
+        test_file_name, io_handler.get_output_directory(dir_type="model", test=True)
     )
     table = astropy.io.ascii.read(table_file)
 
