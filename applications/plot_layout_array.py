@@ -111,7 +111,7 @@ def _parse(label, description, usage):
         default=None,
     )
 
-    return config.initialize(db_config=True)
+    return config.initialize()
 
 
 def main():
