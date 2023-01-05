@@ -462,7 +462,6 @@ class TelescopePosition:
         astropy.units.m
             Telescope altitude (above sea level)
         """
-
         return tel_corsika_z + corsika_obs_level - corsika_sphere_center
 
     def convert_all(self, crs_local=None, crs_wgs84=None, crs_utm=None):
