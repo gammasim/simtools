@@ -724,6 +724,6 @@ def rotate(rotation_angle, x, y):
     rotation_angle = rotation_angle.to(u.rad)
 
     for step, _ in enumerate(x):
-        x_trans[step] = x[step] * np.cos(rotation_angle) + y[step] - np.sin(rotation_angle)
+        x_trans[step] = x[step] * np.cos(rotation_angle) - y[step] * np.sin(rotation_angle)
         y_trans[step] = (+1) * x[step] * np.sin(rotation_angle) + y[step] * np.cos(rotation_angle)
     return x_trans, y_trans
