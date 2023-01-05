@@ -604,7 +604,9 @@ def plot_array(telescopes, rotate_angle=0 * u.deg, show_tel_label=False):
     Parameters
     ----------
     telescopes: dict
-        Dictionary with the telescope position and names.
+        Dictionary with the telescope position and names. Coordinates are given in the CORSIKA
+        coordinate system, i.e. the X positive axis points toward south and the Y positive axis
+        points toward west.
     rotate_angle:
         Angle to rotate the plot. For rotate_angle = 0 the x-axis points towards the east, and\
         the y-axis points towards the North.
@@ -629,6 +631,8 @@ def plot_array(telescopes, rotate_angle=0 * u.deg, show_tel_label=False):
         )
     else:
         pos_x_rotated, pos_y_rotated = telescopes["pos_x"], telescopes["pos_y"]
+
+    pos_x_rotated, pos_y_rotated = gen.rotate(270 * u.deg, pos_x_rotated, pos_y_rotated)
 
     if len(pos_x_rotated) > 30:
         fontsize = 4
