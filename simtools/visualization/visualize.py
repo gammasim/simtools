@@ -632,7 +632,7 @@ def plot_array(telescopes, rotate_angle=0 * u.deg, show_tel_label=False):
     else:
         pos_x_rotated, pos_y_rotated = telescopes["pos_x"], telescopes["pos_y"]
 
-    pos_x_rotated, pos_y_rotated = gen.rotate(270 * u.deg, pos_x_rotated, pos_y_rotated)
+    pos_x_rotated, pos_y_rotated = gen.rotate(90 * u.deg, pos_x_rotated, pos_y_rotated)
 
     if len(pos_x_rotated) > 30:
         fontsize = 4
