@@ -170,8 +170,8 @@ def test_rotate_telescope_position():
     x = np.array([-10, -10, 10, 10]).astype(int)
     y = np.array([-10.0, 10.0, -10.0, 10.0]).astype(float)
     angle_deg = 30 * u.deg
-    x_rot_manual = np.array([-13.7, -3.7, 3.7, 13.7])
-    y_rot_manual = np.array([-3.7, 13.7, -13.7, 3.7])
+    x_rot_manual = np.array([-3.7, -13.7, 13.7, 3.7])
+    y_rot_manual = np.array([-13.7, 3.7, -3.7, 13.7])
 
     def check_results(x_to_test, y_to_test, x_right, y_right, angle):
         x_rot, y_rot = gen.rotate(angle, x_to_test, y_to_test)

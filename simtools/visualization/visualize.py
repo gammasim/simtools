@@ -8,14 +8,13 @@ import astropy.units as u
 import matplotlib.gridspec as gridspec
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
-import numpy as np
 from astropy.table import QTable
 from cycler import cycler
 from matplotlib.collections import PatchCollection
 
 from simtools.util import general as gen
 from simtools.util import names
-from simtools.util.names import mst, sct, sst
+from simtools.util.names import mst, sct
 from simtools.visualization import legend_handlers as leg_h
 
 __all__ = [
@@ -544,7 +543,7 @@ def plot_hist_2D(data, **kwargs):
     return fig
 
 
-@u.quantity_input()
+@u.quantity_input(x=u.m, y=u.m, radius=u.m)
 def get_telescope_patch(name, x, y, radius):
     """
     Collect the patch of one telescope to be plotted by plot_array.
@@ -593,20 +592,30 @@ def get_telescope_patch(name, x, y, radius):
     return patch
 
 
-def plot_array(telescopes, rotate_angle=0 * u.deg):
+@u.quantity_input(rotate_angle=u.deg)
+def plot_array(telescopes, rotate_angle=0, show_tel_label=False):
     """
-    Plot the array of telescopes.
+    Plot the array of telescopes. The x axis gives the easting direction and y axis gives the
+    northing direction.
+    Note that in order to convert from the CORSIKA coordinate system to the 'conventional' system
+    of North/East, a 90 degree rotation is always applied.
     Rotation of the array elements is possible through the 'rotate_angle' given either in degrees,
     or in radians.
+    The direction of rotation of the array elements is counterclockwise.
     The rotation does not change Telescope instance attributes.
 
     Parameters
     ----------
     telescopes: dict
-        Dictionary with the telescope position and names.
+        Dictionary with the telescope position and names. Coordinates are given in the CORSIKA
+        coordinate system, i.e., the x positive axis points toward north
+        and the y positive axis points toward west.
     rotate_angle:
-        Angle to rotate the plot. For rotate_angle = 0 the x-axis points towards the east, and\
-        the y-axis points towards the North.
+        Angle to rotate the plot. For rotate_angle = 0 the resulting plot will have
+        the x-axis pointing towards the east, and the y-axis pointing towards the North.
+    show_tel_label: bool
+        If True it will print the label of the individual telescopes in the plot.
+        While it works well for the smaller arrays, it gets crowded for larger arrays.
 
     Returns
     -------
@@ -626,8 +635,14 @@ def plot_array(telescopes, rotate_angle=0 * u.deg):
     else:
         pos_x_rotated, pos_y_rotated = telescopes["pos_x"], telescopes["pos_y"]
 
-    size_factor = max(np.max(pos_x_rotated), np.max(pos_y_rotated)) / (300.0 * u.m)
-    fontsize = 12
+    pos_x_rotated, pos_y_rotated = gen.rotate(90 * u.deg, pos_x_rotated, pos_y_rotated)
+
+    if len(pos_x_rotated) > 30:
+        fontsize = 4
+        scale = 2
+    else:
+        fontsize = 8
+        scale = 1
 
     patches = []
     for i_tel, tel_now in enumerate(telescopes):
@@ -635,24 +650,23 @@ def plot_array(telescopes, rotate_angle=0 * u.deg):
             if tel_type in tel_now["telescope_name"]:
                 tel_counters[tel_type] += 1
         i_tel_name = names.get_telescope_type(telescopes[i_tel]["telescope_name"])
-        if i_tel_name == sst:
-            fontsize = 5
         patches.append(
             get_telescope_patch(
                 i_tel_name,
                 pos_x_rotated[i_tel],
                 pos_y_rotated[i_tel],
-                telescopes[i_tel]["radius"] * size_factor,
+                scale * telescopes[i_tel]["radius"],
             )
         )
-        ax.text(
-            pos_x_rotated[i_tel].value,
-            pos_y_rotated[i_tel].value + telescopes[i_tel]["radius"].value,
-            telescopes[i_tel]["telescope_name"],
-            horizontalalignment="center",
-            verticalalignment="bottom",
-            fontsize=fontsize,
-        )
+        if show_tel_label:
+            ax.text(
+                pos_x_rotated[i_tel].value,
+                pos_y_rotated[i_tel].value + scale * telescopes[i_tel]["radius"].value,
+                telescopes[i_tel]["telescope_name"],
+                horizontalalignment="center",
+                verticalalignment="bottom",
+                fontsize=fontsize,
+            )
 
     for _, one_telescope in enumerate(names.all_telescope_class_names):
         if tel_counters[one_telescope] > 0:
@@ -661,8 +675,8 @@ def plot_array(telescopes, rotate_angle=0 * u.deg):
 
     plt.gca().add_collection(PatchCollection(patches, match_original=True))
 
-    x_title = "East [m]"
-    y_title = "North [m]"
+    x_title = "Easting [m]"
+    y_title = "Northing [m]"
     plt.axis("square")
     plt.grid(True)
     plt.gca().set_axisbelow(True)
