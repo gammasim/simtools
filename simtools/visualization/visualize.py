@@ -14,7 +14,7 @@ from matplotlib.collections import PatchCollection
 
 from simtools.util import general as gen
 from simtools.util import names
-from simtools.util.names import mst, sct, sst
+from simtools.util.names import mst, sct
 from simtools.visualization import legend_handlers as leg_h
 
 __all__ = [
@@ -628,7 +628,10 @@ def plot_array(telescopes, rotate_angle=0 * u.deg, show_tel_label=False):
     else:
         pos_x_rotated, pos_y_rotated = telescopes["pos_x"], telescopes["pos_y"]
 
-    fontsize = 5
+    if len(pos_x_rotated) > 30:
+        fontsize = 4
+    else:
+        fontsize = 8
 
     patches = []
     for i_tel, tel_now in enumerate(telescopes):
@@ -636,8 +639,6 @@ def plot_array(telescopes, rotate_angle=0 * u.deg, show_tel_label=False):
             if tel_type in tel_now["telescope_name"]:
                 tel_counters[tel_type] += 1
         i_tel_name = names.get_telescope_type(telescopes[i_tel]["telescope_name"])
-        if i_tel_name == sst:
-            fontsize = 5
         patches.append(
             get_telescope_patch(
                 i_tel_name,

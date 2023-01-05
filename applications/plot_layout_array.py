@@ -177,7 +177,7 @@ def main():
             if len(splitted_plot_file_name) > 1:
                 if splitted_plot_file_name[-1] in allowed_extensions:
                     logger.info(f"Saving figure as {plot_file}.")
-                    plt.savefig(plot_file, bbox_inches="tight")
+                    plt.savefig(plot_file, bbox_inches="tight", dpi=400)
                 else:
                     msg = (
                         f"Extension in {plot_file} is not valid. Valid extensions are:"
@@ -187,7 +187,7 @@ def main():
             else:
                 for f in ["pdf", "png"]:
                     logger.info(f"Saving figure to {plot_file}.{f}.")
-                    plt.savefig(str(plot_file) + "." + f, bbox_inches="tight")
+                    plt.savefig(str(plot_file) + "." + f, bbox_inches="tight", dpi=400)
                 fig_out.clf()
 
 
