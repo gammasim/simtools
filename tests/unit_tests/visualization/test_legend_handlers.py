@@ -40,7 +40,7 @@ def test_handlers(io_handler):
         assert handler_instance.legend_artist is not None
 
     tel_handler = leg_h.TelescopeHandler()
-    colors = ["darkorange", "dodgerblue", "black", "lightsteelblue"]
+    colors = ["darkorange", "dodgerblue", "black", "darkgreen"]
     radius_dict = [12.5, 9.15, 7.15, 3]
     for step, tel_type in enumerate(names.all_telescope_class_names):
         assert tel_handler.radius_dict[tel_type] == pytest.approx(radius_dict[step], 1.0e-3)

@@ -654,9 +654,9 @@ def change_dict_keys_case(data_dict, lower_case=True):
 
 def rotate(rotation_angle, x, y):
     """
-    Rotate x and y by the rotation angle given in rotation_angle, in degrees.
+    Rotate x and y by the rotation angle given in rotation_angle, in degrees or radians.
     The function returns the rotated x and y values in the same unit given.
-    The direction of rotation is clockwise.
+    The direction of rotation of the elements is counterclockwise.
 
     Parameters
     ----------
@@ -721,9 +721,9 @@ def rotate(rotation_angle, x, y):
             )
 
     x_trans, y_trans = [np.zeros_like(x).astype(float) for i in range(2)]
-    rotation_angle = rotation_angle.to(u.rad).value
+    rotation_angle = rotation_angle.to(u.rad)
 
     for step, _ in enumerate(x):
-        x_trans[step] = x[step] * np.cos(rotation_angle) + y[step] * np.sin(rotation_angle)
-        y_trans[step] = (-1) * x[step] * np.sin(rotation_angle) + y[step] * np.cos(rotation_angle)
+        x_trans[step] = x[step] * np.cos(rotation_angle) - y[step] * np.sin(rotation_angle)
+        y_trans[step] = x[step] * np.sin(rotation_angle) + y[step] * np.cos(rotation_angle)
     return x_trans, y_trans
