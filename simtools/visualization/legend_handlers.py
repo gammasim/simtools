@@ -49,7 +49,7 @@ class TelescopeHandler(object):
             lst: "darkorange",
             mst: "dodgerblue",
             sct: "black",
-            sst: "lightsteelblue",
+            sst: "darkgreen",
         }
         for tel_type in names.all_telescope_class_names:
             self.radius_dict[tel_type] = corsika_info["corsika_sphere_radius"][tel_type]["value"]
