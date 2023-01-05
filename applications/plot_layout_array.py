@@ -20,7 +20,7 @@
     telescope_list (str, optional)
         The telescopes file (.ecsv) with the array information.
     layout_array_name (str, optional)
-        Name of the layout array.
+        Name of the layout array (e.g., North-TestLayout, South-TestLayout, North-4LST, etc.).
     rotate_angle (float, optional)
         Angle to rotate the array before plotting (in degrees).
     show_tel_label (bool, optional)
@@ -33,7 +33,7 @@
     .. code-block:: console
 
         python applications/plot_layout_array.py --figure_name northern_array_alpha \
-        --layout_array_name test_layout
+        --layout_array_name North-TestLayout
 
 """
 
@@ -57,9 +57,9 @@ def _parse(label, description, usage):
     Parameters
     ----------
     label: str
-        Label describing application.
+        Label describing the application.
     description: str
-        Description of application.
+        Description of the application.
     usage: str
         Example on how to use the application.
 
@@ -150,13 +150,10 @@ def main():
         logger.debug(f"Processing: {one_file}.")
         for one_angle in rotate_angles:
             logger.debug(f"Processing: {one_angle}.")
-            base_name = (Path(one_file).name).split(".")[0] + "_"
             if args_dict["figure_name"] is None:
                 plot_file_name = (
-                    "plot_layout_array_"
-                    + base_name
-                    + str((round((one_angle.to(u.deg).value))))
-                    + "deg"
+                    f"plot_layout_array_{(Path(one_file).name).split('.')[0]}_"
+                    f"{str((round((one_angle.to(u.deg).value))))}deg"
                 )
             else:
                 plot_file_name = args_dict["figure_name"]
@@ -185,9 +182,9 @@ def main():
                     )
                     raise NameError(msg)
             else:
-                for f in ["pdf", "png"]:
-                    logger.info(f"Saving figure to {plot_file}.{f}.")
-                    plt.savefig(str(plot_file) + "." + f, bbox_inches="tight", dpi=400)
+                for ext in ["pdf", "png"]:
+                    logger.info(f"Saving figure to {plot_file}.{ext}.")
+                    plt.savefig(f"{str(plot_file)}.{ext}", bbox_inches="tight", dpi=400)
                 fig_out.clf()
 
 
