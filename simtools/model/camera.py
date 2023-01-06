@@ -166,9 +166,9 @@ class Camera:
         # (when looking from the camera onto the dish),
         # and the z-axis points in any case from (primary) dish towards camera.
         # To get the camera for an observer facing the camera, need to rotate by 90 degrees.
-        rotate_angle += (90 * u.deg).to("rad")
+        rotate_angle += (90 * u.deg).to(u.rad)
 
-        self._logger.debug(f"Rotating pixels by {rotate_angle.to('deg').value}")
+        self._logger.debug(f"Rotating pixels by {rotate_angle.to(u.deg)} (clockwise rotation)")
 
         if rotate_angle != 0:
             pixels["x"], pixels["y"] = rotate(rotate_angle, pixels["x"], pixels["y"])
@@ -178,7 +178,7 @@ class Camera:
             if pixels["pixel_shape"] == 3:
                 pixels["orientation"] = 30
             if rotate_angle > 0:
-                pixels["orientation"] -= rotate_angle.to("deg").value
+                pixels["orientation"] -= rotate_angle.to(u.deg).value
 
         return pixels
 
