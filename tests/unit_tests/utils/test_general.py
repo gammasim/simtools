@@ -204,5 +204,5 @@ def test_rotate_telescope_position():
         gen.rotate(angle_deg, x[:-1], y)
     with pytest.raises(UnitsError):
         gen.rotate(angle_deg, x_new_array.to(u.cm), y_new_array)
-    with pytest.raises(u.UnitConversionError):
+    with pytest.raises(u.core.UnitsError):
         gen.rotate(30 * u.m, x_new_array, y_new_array)
