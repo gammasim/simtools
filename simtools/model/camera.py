@@ -1,5 +1,6 @@
 import logging
 
+import astropy.units as u
 import matplotlib as mlp
 import matplotlib.colors as mcolors
 import matplotlib.patches as mpatches
@@ -15,6 +16,7 @@ from simtools.model.model_utils import (
     get_telescope_class,
     is_two_mirror_telescope,
 )
+from simtools.util.general import rotate
 
 __all__ = ["Camera"]
 
@@ -155,7 +157,7 @@ class Camera:
             The orientation is determined by the pixel shape (see read_pixel_list for details).
         """
 
-        rotate_angle = pixels["rotate_angle"]  # So not to change the original angle
+        rotate_angle = pixels["rotate_angle"] * u.rad  # So not to change the original angle
         # The original pixel list is given such that
         # x -> North, y -> West, z -> Up in the ground system.
         # At azimuth=0, zenith angle=0 all coordinate systems are aligned.
@@ -164,25 +166,19 @@ class Camera:
         # (when looking from the camera onto the dish),
         # and the z-axis points in any case from (primary) dish towards camera.
         # To get the camera for an observer facing the camera, need to rotate by 90 degrees.
-        rotate_angle += np.deg2rad(90)
+        rotate_angle += (90 * u.deg).to("rad")
 
-        self._logger.debug(f"Rotating pixels by {np.rad2deg(rotate_angle)}")
+        self._logger.debug(f"Rotating pixels by {rotate_angle.to('deg').value}")
 
         if rotate_angle != 0:
-            for i_pix, xy_pix_pos in enumerate(zip(pixels["x"], pixels["y"])):
-                pixels["x"][i_pix] = xy_pix_pos[0] * np.cos(rotate_angle) - xy_pix_pos[1] * np.sin(
-                    rotate_angle
-                )
-                pixels["y"][i_pix] = xy_pix_pos[0] * np.sin(rotate_angle) + xy_pix_pos[1] * np.cos(
-                    rotate_angle
-                )
+            pixels["x"], pixels["y"] = rotate(rotate_angle, pixels["x"], pixels["y"])
 
         pixels["orientation"] = 0
         if pixels["pixel_shape"] == 1 or pixels["pixel_shape"] == 3:
             if pixels["pixel_shape"] == 3:
                 pixels["orientation"] = 30
             if rotate_angle > 0:
-                pixels["orientation"] -= np.rad2deg(rotate_angle)
+                pixels["orientation"] -= rotate_angle.to("deg").value
 
         return pixels
 
