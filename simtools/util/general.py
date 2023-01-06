@@ -652,6 +652,7 @@ def change_dict_keys_case(data_dict, lower_case=True):
     return _return_dict
 
 
+@u.quantity_input(rotation_angle=u.rad)
 def rotate(rotation_angle, x, y):
     """
     Rotate x and y by the rotation angle given in rotation_angle, in degrees or radians.
@@ -709,19 +710,19 @@ def rotate(rotation_angle, x, y):
             raise UnitsError(
                 "Cannot perform coordinate transformation when x and y have different units."
             )
-    if isinstance(rotation_angle, u.Quantity):
+    # if isinstance(rotation_angle, u.Quantity):
 
-        if isinstance(rotation_angle.unit, type(u.rad)):
-            rotation_angle = rotation_angle.to(u.deg)
-        elif isinstance(rotation_angle.unit, type(u.deg)):
-            pass
-        else:
-            raise u.UnitConversionError(
-                f"Invalid unit for {rotation_angle}. Valid units are u.deg or u.rad."
-            )
+    #     if isinstance(rotation_angle.unit, type(u.rad)):
+    #         rotation_angle = rotation_angle.to(u.deg)
+    #     elif isinstance(rotation_angle.unit, type(u.deg)):
+    #         pass
+    #     else:
+    #         raise u.UnitConversionError(
+    #             f"Invalid unit for {rotation_angle}. Valid units are u.deg or u.rad."
+    #         )
 
     x_trans, y_trans = [np.zeros_like(x).astype(float) for i in range(2)]
-    rotation_angle = rotation_angle.to(u.rad)
+    # rotation_angle = rotation_angle.to(u.rad)
 
     for step, _ in enumerate(x):
         x_trans[step] = x[step] * np.cos(rotation_angle) - y[step] * np.sin(rotation_angle)
