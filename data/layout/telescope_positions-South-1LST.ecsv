@@ -1,30 +1,32 @@
 # %ECSV 1.0
 # ---
 # datatype:
-# - {name: telescope_name, datatype: string}
-# - {name: pos_x, unit: m, datatype: float64}
-# - {name: pos_y, unit: m, datatype: float64}
-# - {name: pos_z, unit: m, datatype: float64}
+# - {name: telescope_name, datatype: string, description: common telescope name}
+# - {name: pos_x, unit: m, datatype: float32, description: telescope position towards North relative to MST01 (central MST)}
+# - {name: pos_y, unit: m, datatype: float32, description: telescope position towards West relative to MST01 (central MST)}
+# - {name: pos_z, unit: m, datatype: float32, description: telescope position (centre of sphere) upwards relative to NNN}
 # meta:
+#   data_type: positionfile
+#   description: "telescope positions for CTA South (Paranal)"
 #   EPSG: 32719
 #   center_alt: !astropy.units.Quantity
 #     unit: &id001 !astropy.units.Unit {unit: m}
-#     value: 2147.0
+#     value: 2162.35
 #   center_easting: !astropy.units.Quantity
 #     unit: *id001
-#     value: 366822.0000008711
+#     value: 366822.017
 #   center_lat: !astropy.units.Quantity
 #     unit: &id002 !astropy.units.Unit {unit: deg}
-#     value: -24.68342915473787
+#     value: -24.683429
 #   center_lon: !astropy.units.Quantity
 #     unit: *id002
-#     value: -70.31634499364885
+#     value: -70.316345
 #   center_northing: !astropy.units.Quantity
 #     unit: *id001
-#     value: 7269465.999807887
+#     value: 7269466.999
 #   corsika_obs_level: !astropy.units.Quantity
 #     unit: *id001
-#     value: 2147.0
+#     value: 2147
 #   corsika_sphere_center:
 #     LST: !astropy.units.Quantity
 #       unit: *id001
@@ -32,6 +34,9 @@
 #     MST: !astropy.units.Quantity
 #       unit: *id001
 #       value: 9.0
+#     SCT: !astropy.units.Quantity
+#       unit: *id001
+#       value: 6.1
 #     SST: !astropy.units.Quantity
 #       unit: *id001
 #       value: 3.25
@@ -42,9 +47,14 @@
 #     MST: !astropy.units.Quantity
 #       unit: *id001
 #       value: 9.6
+#     SCT: !astropy.units.Quantity
+#       unit: *id001
+#       value: 7.15
 #     SST: !astropy.units.Quantity
 #       unit: *id001
 #       value: 3.0
+#   comments: |
+#       UTM Zone 19 (S)
 # schema: astropy-2.0
 telescope_name      pos_x      pos_y      pos_z
 LST-01               0.0        0.0        0.0
