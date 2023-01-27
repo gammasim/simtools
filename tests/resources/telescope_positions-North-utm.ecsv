@@ -28,7 +28,6 @@
 #     unit: *id001
 #     value: 2158
 #   comments: |
-#       version 0.1
 #       UTM Zone 28
 #       prod5
 # schema: astropy-2.0
