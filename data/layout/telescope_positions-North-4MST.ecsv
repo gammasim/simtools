@@ -43,7 +43,6 @@
 #       value: 9.6
 #   comments: |
 #       UTM Zone 28
-#       prod5
 # schema: astropy-2.0
 telescope_name      pos_x      pos_y      pos_z
 MST-01               70.0       70.0       70.0

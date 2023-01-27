@@ -29,7 +29,6 @@
 #     value: 2158
 #   comments: |
 #       UTM Zone 28
-#       prod5
 # schema: astropy-2.0
 asset_code sequence_number utm_east utm_north alt geo_code
 LSTN    01    217659.6    3184995.1    2185.0  2B5
