@@ -652,16 +652,18 @@ def change_dict_keys_case(data_dict, lower_case=True):
     return _return_dict
 
 
+@u.quantity_input(rotation_angle=u.rad)
 def rotate(rotation_angle, x, y):
     """
-    Rotate x and y by the rotation angle given in rotation_angle, in degrees or radians.
+    Rotate x and y by the rotation angle given in rotation_angle, in radians (astropy.units.rad),
+    or in degrees (astropy.units.deg).
     The function returns the rotated x and y values in the same unit given.
     The direction of rotation of the elements is counterclockwise.
 
     Parameters
     ----------
-    rotation_angle: astropy.units.deg or astropy.units.rad
-        Angle to rotate the array in degrees.
+    rotation_angle: astropy.units.rad
+        Angle to rotate the array in radians.
     x: numpy.array or list
         x positions of the telescopes, usually in meters.
     y: numpy.array or list
@@ -680,7 +682,6 @@ def rotate(rotation_angle, x, y):
         If the length of x and y are different.
     UnitsError:
         If the unit of x and y are different.
-        If unit of rotation_angle is neither u.deg nor u.rad.
     """
     allowed_types = (list, np.ndarray, u.Quantity, float, int)
     if not all(isinstance(variable, allowed_types) for variable in [x, y]):
@@ -709,19 +710,8 @@ def rotate(rotation_angle, x, y):
             raise UnitsError(
                 "Cannot perform coordinate transformation when x and y have different units."
             )
-    if isinstance(rotation_angle, u.Quantity):
-
-        if isinstance(rotation_angle.unit, type(u.rad)):
-            rotation_angle = rotation_angle.to(u.deg)
-        elif isinstance(rotation_angle.unit, type(u.deg)):
-            pass
-        else:
-            raise u.UnitConversionError(
-                f"Invalid unit for {rotation_angle}. Valid units are u.deg or u.rad."
-            )
 
     x_trans, y_trans = [np.zeros_like(x).astype(float) for i in range(2)]
-    rotation_angle = rotation_angle.to(u.rad)
 
     for step, _ in enumerate(x):
         x_trans[step] = x[step] * np.cos(rotation_angle) - y[step] * np.sin(rotation_angle)
