@@ -10,19 +10,19 @@
 # meta:
 #   EPSG: 32628
 #   center_lon: !astropy.units.Quantity
-#     unit: *id002
+#     unit: &id001 !astropy.units.Unit {unit: deg}
 #     value: -17.8920302
 #   center_lat: !astropy.units.Quantity
-#     unit: &id002 !astropy.units.Unit {unit: deg}
+#     unit: *id001
 #     value: 28.7621661
 #   center_alt: !astropy.units.Quantity
-#     unit: &id001 !astropy.units.Unit {unit: m}
+#     unit: &id002 !astropy.units.Unit {unit: m}
 #     value: 2177
 #   center_northing: !astropy.units.Quantity
-#     unit: *id001
+#     unit: *id002
 #     value: 3185066.278
 #   corsika_obs_level: !astropy.units.Quantity
-#     unit: *id001
+#     unit: *id002
 #     value: 2158
 #   comments: |
 #       UTM Zone 28N

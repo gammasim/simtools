@@ -10,36 +10,36 @@
 #   description: "telescope positions for CTAO North"
 #   EPSG: 32628
 #   center_lon: !astropy.units.Quantity
-#     unit: *id002
+#     unit: &id001 !astropy.units.Unit {unit: deg}
 #     value: -17.8920302
 #   center_lat: !astropy.units.Quantity
-#     unit: &id002 !astropy.units.Unit {unit: deg}
+#     unit: *id001
 #     value: 28.7621661
 #   center_alt: !astropy.units.Quantity
-#     unit: &id001 !astropy.units.Unit {unit: m}
+#     unit: &id002 !astropy.units.Unit {unit: m}
 #     value: 2177
 #   center_northing: !astropy.units.Quantity
-#     unit: *id001
+#     unit: *id002
 #     value: 3185066.278
 #   center_easting: !astropy.units.Quantity
-#     unit: *id001
+#     unit: *id002
 #     value: 217611.227
 #   corsika_obs_level: !astropy.units.Quantity
-#     unit: *id001
+#     unit: *id002
 #     value: 2158
 #   corsika_sphere_radius:
 #     LST: !astropy.units.Quantity
-#       unit: *id001
+#       unit: *id002
 #       value: 12.5
 #     MST: !astropy.units.Quantity
-#       unit: *id001
+#       unit: *id002
 #       value: 9.6
 #   corsika_sphere_center:
 #     LST: !astropy.units.Quantity
-#       unit: *id001
+#       unit: *id002
 #       value: 16.0
 #     MST: !astropy.units.Quantity
-#       unit: *id001
+#       unit: *id002
 #       value: 9.0
 #   comments: |
 #       Prod6 array definition for CTAO North
