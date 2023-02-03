@@ -42,10 +42,11 @@
 #       unit: *id001
 #       value: 9.6
 #   comments: |
+#       Prod6 sub-array from CTAO North
 #       UTM Zone 28N
 # schema: astropy-2.0
 telescope_name      pos_x      pos_y      pos_z
-LST-01               57.5       57.5      57.5
-LST-02              -57.5      57.5      57.5
-LST-03               57.5      -57.5      57.5
-LST-04              -57.5      -57.5      57.5
+LST-01              -70.99     -52.08      43.00
+LST-02              -35.38      66.14      28.90
+LST-03               75.22      50.45      24.40
+LST-04               30.78     -64.51      30.60
