@@ -9,37 +9,24 @@
 #   data_type: positionfile
 #   description: "telescope positions for CTA South (Paranal)"
 #   EPSG: 32719
-#   center_alt: !astropy.units.Quantity
-#     unit: &id001 !astropy.units.Unit {unit: m}
-#     value: 2162.35
-#   center_easting: !astropy.units.Quantity
-#     unit: *id001
-#     value: 366822.017
-#   center_lat: !astropy.units.Quantity
-#     unit: &id002 !astropy.units.Unit {unit: deg}
-#     value: -24.683429
 #   center_lon: !astropy.units.Quantity
 #     unit: *id002
 #     value: -70.316345
+#   center_lat: !astropy.units.Quantity
+#     unit: &id002 !astropy.units.Unit {unit: deg}
+#     value: -24.683429
+#   center_alt: !astropy.units.Quantity
+#     unit: &id001 !astropy.units.Unit {unit: m}
+#     value: 2162.35
 #   center_northing: !astropy.units.Quantity
 #     unit: *id001
 #     value: 7269466.999
+#   center_easting: !astropy.units.Quantity
+#     unit: *id001
+#     value: 366822.017
 #   corsika_obs_level: !astropy.units.Quantity
 #     unit: *id001
 #     value: 2147
-#   corsika_sphere_center:
-#     LST: !astropy.units.Quantity
-#       unit: *id001
-#       value: 16.0
-#     MST: !astropy.units.Quantity
-#       unit: *id001
-#       value: 9.0
-#     SCT: !astropy.units.Quantity
-#       unit: *id001
-#       value: 6.1
-#     SST: !astropy.units.Quantity
-#       unit: *id001
-#       value: 3.25
 #   corsika_sphere_radius:
 #     LST: !astropy.units.Quantity
 #       unit: *id001
@@ -53,6 +40,19 @@
 #     SST: !astropy.units.Quantity
 #       unit: *id001
 #       value: 3.0
+#   corsika_sphere_center:
+#     LST: !astropy.units.Quantity
+#       unit: *id001
+#       value: 16.0
+#     MST: !astropy.units.Quantity
+#       unit: *id001
+#       value: 9.0
+#     SCT: !astropy.units.Quantity
+#       unit: *id001
+#       value: 6.1
+#     SST: !astropy.units.Quantity
+#       unit: *id001
+#       value: 3.25
 #   comments: |
 #       Prod6 sub-array from CTAO South
 #       UTM Zone 19 (S)
