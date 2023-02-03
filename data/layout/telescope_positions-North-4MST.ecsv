@@ -2,12 +2,12 @@
 # ---
 # datatype:
 # - {name: telescope_name, datatype: string, description: common telescope name}
-# - {name: pos_x, unit: m, datatype: float32, description: telescope position towards North relative to MST15 (central MST)}
-# - {name: pos_y, unit: m, datatype: float32, description: telescope position towards West relative to MST15 (central MST)}
-# - {name: pos_z, unit: m, datatype: float32, description: telescope position upwards relative to NNN}
+# - {name: pos_x, unit: m, datatype: float32, description: telescope position towards North relative to the array center.}
+# - {name: pos_y, unit: m, datatype: float32, description: telescope position towards West relative to the array center.}
+# - {name: pos_z, unit: m, datatype: float32, description: telescope position upwards relative to the CORSIKA observation level.}
 # meta:
 #   data_type: positionfile
-#   description: "telescope positions for CTA North (La Palma)"
+#   description: "telescope positions for CTAO North"
 #   EPSG: 32628
 #   center_alt: !astropy.units.Quantity
 #     unit: &id001 !astropy.units.Unit {unit: m}
@@ -42,7 +42,7 @@
 #       unit: *id001
 #       value: 9.6
 #   comments: |
-#       UTM Zone 28
+#       UTM Zone 28N
 # schema: astropy-2.0
 telescope_name      pos_x      pos_y      pos_z
 MST-01               70.0       70.0       70.0

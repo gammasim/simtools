@@ -5,7 +5,7 @@
 # - {name: sequence_number, datatype: string, description: sequence number}
 # - {name: utm_east, unit: m, datatype: float32}
 # - {name: utm_north, unit: m, datatype: float32}
-# - {name: alt, unit: m, datatype: float32, description: telescope position upwards relative to NNN}
+# - {name: alt, unit: m, datatype: float32, description: telescope position upwards relative to the CORSIKA observation level}
 # - {name: geo_code, datatype: string, description: Geographical Position Code}
 # meta:
 #   EPSG: 32628
@@ -28,7 +28,7 @@
 #     unit: *id001
 #     value: 2158
 #   comments: |
-#       UTM Zone 28
+#       UTM Zone 28N
 # schema: astropy-2.0
 asset_code sequence_number utm_east utm_north alt geo_code
 LSTN    01    217659.6    3184995.1    2185.0  2B5
