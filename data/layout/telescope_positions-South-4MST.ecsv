@@ -54,10 +54,11 @@
 #       unit: *id001
 #       value: 3.0
 #   comments: |
+#       Prod6 sub-array from CTAO South
 #       UTM Zone 19 (S)
 # schema: astropy-2.0
 telescope_name      pos_x      pos_y      pos_z
-MST-01               70.0       70.0       70.0
-MST-02              -70.0      -70.0       70.0
-MST-03               70.0      -70.0       70.0
-MST-04              -70.0       70.0        70.0
+MST-01              -0.02        0.00      24.00
+MST-02               1.43      151.02      25.00
+MST-03              -1.47     -151.02      31.00
+MST-04             150.72       73.57      21.00
