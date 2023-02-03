@@ -1,7 +1,7 @@
 # %ECSV 1.0
 # ---
 # datatype:
-# - {name: telescope_name, datatype: string, description: common telescope name}
+# - {name: telescope_name, datatype: string, description: telescope name}
 # - {name: pos_x, unit: m, datatype: float32, description: telescope position towards North relative to the array center.}
 # - {name: pos_y, unit: m, datatype: float32, description: telescope position towards West relative to the array center.}
 # - {name: pos_z, unit: m, datatype: float32, description: telescope position upwards relative to the CORSIKA observation level.}
