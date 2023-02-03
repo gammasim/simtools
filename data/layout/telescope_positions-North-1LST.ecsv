@@ -1,55 +1,48 @@
-# %ECSV 0.9
+# %ECSV 1.0
 # ---
 # datatype:
-# - {name: telescope_name, datatype: string}
-# - {name: pos_x, unit: m, datatype: float64}
-# - {name: pos_y, unit: m, datatype: float64}
-# - {name: pos_z, unit: m, datatype: float64}
-# - {name: lat, unit: deg, datatype: float64}
-# - {name: lon, unit: deg, datatype: float64}
-# - {name: utm_east, unit: m, datatype: float64}
-# - {name: utm_north, unit: m, datatype: float64}
-# - {name: alt, unit: m, datatype: float64}
+# - {name: telescope_name, datatype: string, description: telescope name}
+# - {name: pos_x, unit: m, datatype: float32, description: telescope position towards North relative to the array center.}
+# - {name: pos_y, unit: m, datatype: float32, description: telescope position towards West relative to the array center.}
+# - {name: pos_z, unit: m, datatype: float32, description: telescope position upwards relative to the CORSIKA observation level.}
 # meta:
+#   data_type: positionfile
+#   description: "telescope positions for CTAO North"
 #   EPSG: 32628
-#   center_alt: !astropy.units.Quantity
-#     unit: &id001 !astropy.units.Unit {unit: m}
-#     value: 2150.0
-#   center_easting: !astropy.units.Quantity
-#     unit: *id001
-#     value: 217654.06411838497
-#   center_lat: !astropy.units.Quantity
-#     unit: &id002 !astropy.units.Unit {unit: deg}
-#     value: 28.762158
 #   center_lon: !astropy.units.Quantity
-#     unit: *id002
-#     value: -17.891571
+#     unit: &id001 !astropy.units.Unit {unit: deg}
+#     value: -17.8920302
+#   center_lat: !astropy.units.Quantity
+#     unit: *id001
+#     value: 28.7621661
+#   center_alt: !astropy.units.Quantity
+#     unit: &id002 !astropy.units.Unit {unit: m}
+#     value: 2177
 #   center_northing: !astropy.units.Quantity
-#     unit: *id001
-#     value: 3185065.2899643113
+#     unit: *id002
+#     value: 3185066.278
+#   center_easting: !astropy.units.Quantity
+#     unit: *id002
+#     value: 217611.227
 #   corsika_obs_level: !astropy.units.Quantity
-#     unit: *id001
-#     value: 2158.0
-#   corsika_sphere_center:
-#     LST: !astropy.units.Quantity
-#       unit: *id001
-#       value: 16.0
-#     MST: !astropy.units.Quantity
-#       unit: *id001
-#       value: 9.0
-#     SST: !astropy.units.Quantity
-#       unit: *id001
-#       value: 3.25
+#     unit: *id002
+#     value: 2158
 #   corsika_sphere_radius:
 #     LST: !astropy.units.Quantity
-#       unit: *id001
+#       unit: *id002
 #       value: 12.5
 #     MST: !astropy.units.Quantity
-#       unit: *id001
+#       unit: *id002
 #       value: 9.6
-#     SST: !astropy.units.Quantity
-#       unit: *id001
-#       value: 3.0
+#   corsika_sphere_center:
+#     LST: !astropy.units.Quantity
+#       unit: *id002
+#       value: 16.0
+#     MST: !astropy.units.Quantity
+#       unit: *id002
+#       value: 9.0
+#   comments: |
+#       UTM Zone 28N
 # schema: astropy-2.0
-telescope_name pos_x pos_y pos_z lat lon utm_east utm_north alt
-LST-01 0.0 0.0 0.0 28.762158000000007 -17.891571 217654.06411838497 3185065.2899643113 2142.0
+telescope_name      pos_x      pos_y      pos_z
+LST-01               0.0        0.0        0.0
