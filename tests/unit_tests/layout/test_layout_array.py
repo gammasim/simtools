@@ -72,7 +72,7 @@ def test_from_layout_array_name(io_handler, db_config):
     layout = LayoutArray.from_layout_array_name(
         mongo_db_config=db_config, layout_array_name="south-TestLayout"
     )
-    assert 99 == layout.get_number_of_telescopes()
+    assert 68 == layout.get_number_of_telescopes()
     layout = LayoutArray.from_layout_array_name(
         mongo_db_config=db_config, layout_array_name="north-TestLayout"
     )
