@@ -41,11 +41,11 @@
 
     .. code-block:: console
 
-        telescope_name pos_x pos_y altitude
-        MST-01      70.00      70.00    2148.00
-        MST-02     -70.00     -70.00    2238.00
-        MST-03      70.00     -70.00    2138.00
-        MST-04     -70.00     -70.00    2180.00
+    telescope_name pos_x pos_y altitude
+    MST-01      -0.02      -0.00    2162.00
+    MST-02       1.43     151.02    2163.00
+    MST-03      -1.47    -151.02    2169.00
+    MST-04     150.72      73.57    2159.00
 
 
 
