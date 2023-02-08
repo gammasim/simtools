@@ -463,7 +463,7 @@ def collect_final_lines(file, n_lines):
         # As file is read completely, if there is still data in buffer, then its first line.
         if len(buffer) > 0:
             list_of_lines.append(buffer.decode()[::-1])
-    # return the reversed list
+
     return "".join(list(reversed(list_of_lines)))
 
 
