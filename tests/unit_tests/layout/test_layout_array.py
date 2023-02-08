@@ -129,14 +129,14 @@ def test_initialize_corsika_telescope_from_file(
 
 def test_read_telescope_list_file(telescope_north_test_file, telescope_south_test_file, db_config):
 
-    pos_x_north = [-70.93, -35.27, 75.28, 30.91, -211.54, -153.26]
-    pos_y_north = [-52.07, 66.14, 50.49, -64.54, 5.66, 169.01]
-    pos_z_north = [43.00, 32.00, 28.70, 32.00, 50.3, 24.0]
-    description_north = "telescope positions for CTA North (La Palma)"
-    pos_x_south = [-20.643, 79.994, -19.396, -120.033, -0.017, -1.468]
-    pos_y_south = [-64.817, -0.768, 65.200, 1.151, -0.001, -151.221]
-    pos_z_south = [34.30, 29.40, 31.00, 33.10, 24.35, 31.00]
-    description_south = "telescope positions for CTA South (Paranal)"
+    pos_x_north = [-70.99, -35.38, 75.22, 30.78, -211.61, -153.34]
+    pos_y_north = [-52.08, 66.14, 50.45, -64.51, 5.67, 169.04]
+    pos_z_north = [43.00, 28.90, 24.40, 30.60, 46.50, 26.70]
+    description_north = "telescope positions for CTAO North"
+    pos_x_south = [-20.64, 79.99, -19.40, -120.03, -0.02, 1.43]
+    pos_y_south = [-64.82, -0.77, 65.20, 1.15, 0.00, 151.02]
+    pos_z_south = [34.00, 29.00, 31.00, 33.00, 24.00, 25.00]
+    description_south = "telescope positions for CTAO South"
 
     def test_one_site(test_file, pos_x, pos_y, pos_z, description):
         table = LayoutArray.read_telescope_list_file(test_file)
@@ -180,7 +180,7 @@ def test_initialize_layout_array_from_telescope_file(
         assert number_of_telescopes == layout_2.get_number_of_telescopes()
 
     test_one_site(layout_array_north_instance, telescope_north_test_file, 19, "North")
-    test_one_site(layout_array_south_instance, telescope_south_test_file, 99, "South")
+    test_one_site(layout_array_south_instance, telescope_south_test_file, 68, "South")
 
 
 def test_add_tel(
@@ -337,8 +337,8 @@ def test_altitude_from_corsika_z(
 
 def test_include_radius_into_telescope_table(telescope_north_test_file, telescope_south_test_file):
 
-    values_from_file_north = [20.190000534057617, -352.4599914550781, 62.29999923706055, 9.6]
-    values_from_file_south = [-151.949, 240.011, 27.00]
+    values_from_file_north = [20.29, -352.48, 60.00, 9.6]
+    values_from_file_south = [-149.32, 76.45, 28.00]
 
     def test_one_site(test_file, values_from_file):
         telescope_table = LayoutArray.read_telescope_list_file(test_file)
@@ -470,11 +470,11 @@ def test_try_set_coordinate(
     layout_array_south_instance,
     telescope_south_test_file,
 ):
-    manual_xx_north = [-70.93, -35.27, 75.28, 30.91, -211.54, -153.26]
-    manual_yy_north = [-52.07, 66.14, 50.49, -64.54, 5.66, 169.01]
+    manual_xx_north = [-70.99, -35.38, 75.22, 30.78, -211.61, -153.34]
+    manual_yy_north = [-52.08, 66.14, 50.45, -64.51, 5.67, 169.04]
 
-    manual_xx_south = [-20.643, 79.994, -19.396, -120.033, -0.017, -1.468]
-    manual_yy_south = [-64.817, -0.768, 65.200, 1.151, -0.001, -151.221]
+    manual_xx_south = [-20.64, 79.99, -19.40, -120.03, -0.02, 1.43]
+    manual_yy_south = [-64.82, -0.77, 65.20, 1.15, 0.00, 151.02]
 
     def test_one_site(instance, test_file, manual_xx, manual_yy):
         table = LayoutArray.read_telescope_list_file(test_file)

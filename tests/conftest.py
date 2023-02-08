@@ -7,7 +7,6 @@ import pytest
 from astropy import units as u
 
 import simtools.io_handler
-import simtools.util.general as gen
 from simtools import db_handler
 from simtools.configuration.configurator import Configurator
 from simtools.layout.layout_array import LayoutArray
@@ -240,32 +239,10 @@ def manual_corsika_dict_south():
 
 
 @pytest.fixture
-def telescope_north_test_file(db, args_dict, io_handler):
-    test_file_name = "telescope_positions-North-TestLayout.ecsv"
-    db.export_file_db(
-        db_name="test-data",
-        dest=io_handler.get_output_directory(dir_type="model", test=True),
-        file_name=test_file_name,
-    )
-
-    cfg_file = gen.find_file(
-        test_file_name,
-        io_handler.get_output_directory(dir_type="model", test=True),
-    )
-    return cfg_file
+def telescope_north_test_file():
+    return "data/layout/telescope_positions-North-TestLayout.ecsv"
 
 
 @pytest.fixture
-def telescope_south_test_file(db, args_dict, io_handler):
-    test_file_name = "telescope_positions-South-TestLayout.ecsv"
-    db.export_file_db(
-        db_name="test-data",
-        dest=io_handler.get_output_directory(dir_type="model", test=True),
-        file_name=test_file_name,
-    )
-
-    cfg_file = gen.find_file(
-        test_file_name,
-        io_handler.get_output_directory(dir_type="model", test=True),
-    )
-    return cfg_file
+def telescope_south_test_file():
+    return "data/layout/telescope_positions-South-TestLayout.ecsv"
