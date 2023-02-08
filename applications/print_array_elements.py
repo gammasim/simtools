@@ -29,20 +29,13 @@
 
     Example:
 
-    Get the array element list from the DBs.
-
-    .. code-block:: console
-
-        python applications/get_file_from_db.py --file_name telescope_positions-South-4MST.ecsv
-
     Run the application:
 
     .. code-block:: console
 
         python applications/print_array_elements.py \
-            --array_element_list telescope_positions-South-4MST.ecsv \
+            --array_element_list tests/resources/telescope_positions-South-4MST.ecsv \
             --compact corsika
-
 
     Expected final print-out message:
 
