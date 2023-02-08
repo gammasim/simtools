@@ -103,8 +103,12 @@ def test_initialize_coordinate_systems(
         assert _E.value == pytest.approx(easting, 1.0)
         assert _N.value == pytest.approx(northing, 1.0)
 
-    test_one_site(north_layout_center_data_dict, layout_array_north_instance, 217611.0, 3185066.0)
-    test_one_site(south_layout_center_data_dict, layout_array_south_instance, 366822.0, 7269466.0)
+    test_one_site(
+        north_layout_center_data_dict, layout_array_north_instance, 217611.227, 3185066.278
+    )
+    test_one_site(
+        south_layout_center_data_dict, layout_array_south_instance, 366822.017, 7269466.999
+    )
 
 
 def test_initialize_corsika_telescope_from_file(
