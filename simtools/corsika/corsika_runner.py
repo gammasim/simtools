@@ -337,7 +337,7 @@ class CorsikaRunner:
             return self._corsika_data_dir.joinpath(run_dir).joinpath(f"{file_name}.zst")
         if file_type == "sub_log":
             suffix = ".log"
-            if "mode" in kwargs:
+            if kwargs.get("mode") and len(kwargs["mode"]) > 0:
                 suffix = f".{kwargs['mode']}"
             sub_log_file_dir = self._output_directory.joinpath("logs")
             sub_log_file_dir.mkdir(parents=True, exist_ok=True)
