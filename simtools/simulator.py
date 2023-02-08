@@ -395,9 +395,11 @@ class Simulator:
             job_manager.submit(
                 run_script=run_script,
                 run_out_file=self._simulation_runner.get_file_name(
-                    file_type="sub_log",
+                    file_type="sub_log", **self._simulation_runner.get_info_for_file_name(run)
+                ),
+                log_file=self._simulation_runner.get_file_name(
+                    file_type="log",
                     **self._simulation_runner.get_info_for_file_name(run),
-                    mode="",
                 ),
             )
 
