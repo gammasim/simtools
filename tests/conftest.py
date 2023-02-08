@@ -192,22 +192,6 @@ def telescope_model_sst(db, db_config, io_handler):
 
 
 @pytest.fixture
-def telescope_test_file(db, args_dict, io_handler):
-    test_file_name = "telescope_positions-North-TestLayout.ecsv"
-    db.export_file_db(
-        db_name="test-data",
-        dest=io_handler.get_output_directory(dir_type="model", test=True),
-        file_name=test_file_name,
-    )
-
-    cfg_file = gen.find_file(
-        test_file_name,
-        io_handler.get_output_directory(dir_type="model", test=True),
-    )
-    return cfg_file
-
-
-@pytest.fixture
 def layout_array_north_instance(io_handler, db_config):
     return LayoutArray(site="North", mongo_db_config=db_config, name="test_layout")
 
