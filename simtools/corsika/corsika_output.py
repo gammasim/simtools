@@ -67,7 +67,8 @@ class CorsikaOutput:
 
                 num_photons_tot.append(np.sum(event.photon_bunches[0]["photons"]))
 
-        self.wave_tot = np.abs(np.concatenate(np.array(wave_tot)).flatten())
+        self.wave_tot = np.abs(np.concatenate(np.array(wave_tot)).flatten()) * u.nm
+
         self.x_photon_positions = (
             np.concatenate(np.array(x_photon_positions)).flatten() * u.cm
         ).to(u.m)
@@ -80,10 +81,10 @@ class CorsikaOutput:
             u.m
         )
         self.time_since_first_interaction = (
-            np.concatenate(np.array(time_since_first_interatcion)).flatten() * 1e-9 * u.s
+            np.concatenate(np.array(time_since_first_interatcion)).flatten() * u.ns
         )
-        self.num_photons_tot = np.array(num_photons_tot)
         self.distance = np.sqrt(self.x_photon_positions**2 + self.y_photon_positions**2)
+        self.num_photons_tot = np.array(num_photons_tot, dtype=float)
 
     def get_number_of_photons(self):
         """
