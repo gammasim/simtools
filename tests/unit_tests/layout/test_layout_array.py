@@ -269,8 +269,8 @@ def test_converting_center_coordinates_north(layout_array_north_four_LST_instanc
     assert _lon.value == pytest.approx(-17.8920302)
 
     _east, _north, _ = layout._array_center.get_coordinates("utm")
-    assert _north.value == pytest.approx(3185066.0)
-    assert _east.value == pytest.approx(217611.0)
+    assert _north.value == pytest.approx(3185066.278)
+    assert _east.value == pytest.approx(217611.227)
 
     assert layout._array_center.get_altitude().value == pytest.approx(2177.0)
 
