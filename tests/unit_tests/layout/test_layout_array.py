@@ -18,8 +18,8 @@ def north_layout_center_data_dict():
     return {
         "center_lon": -17.8920302 * u.deg,
         "center_lat": 28.7621661 * u.deg,
-        "center_easting": 217611 * u.m,
-        "center_northing": 3185066 * u.m,
+        "center_easting": 217611.227 * u.m,
+        "center_northing": 3185066.278 * u.m,
         "EPSG": 32628,
         "center_alt": 2177 * u.m,
     }
@@ -30,8 +30,8 @@ def south_layout_center_data_dict():
     return {
         "center_lon": -70.316345 * u.deg,
         "center_lat": -24.683429 * u.deg,
-        "center_easting": 366822 * u.m,
-        "center_northing": 7269466 * u.m,
+        "center_easting": 366822.017 * u.m,
+        "center_northing": 7269466.999 * u.m,
         "EPSG": 32719,
         "center_alt": 2162.35 * u.m,
     }
