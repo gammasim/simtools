@@ -53,7 +53,7 @@ class CorsikaOutput:
 
                 photons = list(event.photon_bunches.values())
                 if self.tel_positions is None:
-                    self.tel_positions = f.telescope_positions
+                    self.tel_positions = np.array(f.telescope_positions)
                 for onetel_position, photons_rel_position in zip(self.tel_positions, photons):
                     x_one_photon = -onetel_position["x"] + photons_rel_position["x"]
                     y_one_photon = -onetel_position["y"] + photons_rel_position["y"]
@@ -107,7 +107,7 @@ class CorsikaOutput:
         """
         return self.wave_tot
 
-    def get_positions(self):
+    def get_photon_positions(self):
         """
         Gets the Cherenkov photon positions on the ground.
 
@@ -163,3 +163,14 @@ class CorsikaOutput:
             The distance of the Cherenkov photons to the array center.
         """
         return self.distance
+
+    def get_telescope_positions(self):
+        """
+        Gets the telescope positions.
+
+        Returns
+        -------
+        numpy.ndarray
+            X and Y positions of the telescopes (the centers of the CORSIKA spheres).
+        """
+        return self.tel_positions
