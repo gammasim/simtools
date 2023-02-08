@@ -7,7 +7,7 @@ from eventio import IACTFile
 
 
 class CorsikaOutput:
-    """corsikaOutput reads the CORSIKA output file (IACT file) of a simulation and save the
+    """CorsikaOutput reads the CORSIKA output file (IACT file) of a simulation and save the
     information about the Chernekov photons. It relies on pyeventio.
 
     Parameters
@@ -21,6 +21,7 @@ class CorsikaOutput:
         self._logger = logging.getLogger(__name__)
         self._logger.debug("Init CorsikaOutput")
         self.input_file = input_file
+        self.tel_positions = None
         self._extract_information()
 
     def _extract_information(self):
@@ -51,7 +52,8 @@ class CorsikaOutput:
             for event in f:
 
                 photons = list(event.photon_bunches.values())
-                self.tel_positions = f.telescope_positions
+                if self.tel_positions is None:
+                    self.tel_positions = f.telescope_positions
                 for onetel_position, photons_rel_position in zip(self.tel_positions, photons):
                     x_one_photon = -onetel_position["x"] + photons_rel_position["x"]
                     y_one_photon = -onetel_position["y"] + photons_rel_position["y"]
@@ -78,7 +80,7 @@ class CorsikaOutput:
             u.m
         )
         self.time_since_first_interaction = (
-            np.concatenate(np.array(time_since_first_interatcion)).flatten() * u.s
+            np.concatenate(np.array(time_since_first_interatcion)).flatten() * 1e-9 * u.s
         )
         self.num_photons_tot = np.array(num_photons_tot)
         self.distance = np.sqrt(self.x_photon_positions**2 + self.y_photon_positions**2)
@@ -136,7 +138,7 @@ class CorsikaOutput:
         Returns
         -------
         numpy.array
-            Height of the Cherenkov photon emission in meters.
+            Height of the Cherenkov photons in meters.
         """
         return self.z_photon_emission
 
