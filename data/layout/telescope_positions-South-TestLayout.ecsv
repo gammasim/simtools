@@ -7,7 +7,7 @@
 # - {name: pos_z, unit: m, datatype: float32, description: telescope position upwards relative to the CORSIKA observation level.}
 # meta:
 #   data_type: positionfile
-#   description: "telescope positions for CTA South (Paranal)"
+#   description: "telescope positions for CTAO South"
 #   EPSG: 32719
 #   center_lon: !astropy.units.Quantity
 #     unit: &id001 !astropy.units.Unit {unit: deg}
@@ -62,7 +62,7 @@ LST-01     -20.64     -64.82      34.00
 LST-02      79.99      -0.77      29.00
 LST-03     -19.40      65.20      31.00
 LST-04    -120.03       1.15      33.00
-MST-01      -0.02      -0.00      24.00
+MST-01      -0.02      0.00      24.00
 MST-02       1.43     151.02      25.00
 MST-03      -1.47    -151.02      31.00
 MST-04     150.72      73.57      21.00
