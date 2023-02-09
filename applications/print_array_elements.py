@@ -29,30 +29,23 @@
 
     Example:
 
-    Get the array element list from the DBs.
-
-    .. code-block:: console
-
-        python applications/get_file_from_db.py --file_name telescope_positions-South-4MST.ecsv
-
     Run the application:
 
     .. code-block:: console
 
         python applications/print_array_elements.py \
-            --array_element_list telescope_positions-South-4MST.ecsv \
+            --array_element_list tests/resources/telescope_positions-South-4MST.ecsv \
             --compact corsika
-
 
     Expected final print-out message:
 
     .. code-block:: console
 
-        telescope_name pos_x pos_y altitude
-        MST-01      70.00      70.00    2148.00
-        MST-02     -70.00     -70.00    2238.00
-        MST-03      70.00     -70.00    2138.00
-        MST-04     -70.00     -70.00    2180.00
+    telescope_name pos_x pos_y altitude
+    MST-01      -0.02      -0.00    2162.00
+    MST-02       1.43     151.02    2163.00
+    MST-03      -1.47    -151.02    2169.00
+    MST-04     150.72      73.57    2159.00
 
 
 
