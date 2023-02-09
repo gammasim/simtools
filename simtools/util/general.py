@@ -25,6 +25,7 @@ __all__ = [
     "set_default_kwargs",
     "sort_arrays",
     "validate_config_data",
+    "get_log_excerpt",
 ]
 
 
@@ -745,7 +746,7 @@ def rotate(rotation_angle, x, y):
     return x_trans, y_trans
 
 
-def get_log_excerpt(log_file):
+def get_log_excerpt(log_file, n_last_lines=30):
     """
     Get an excerpt from a log file (last 30 lines).
 
@@ -764,6 +765,6 @@ def get_log_excerpt(log_file):
         "Runtime error - See below the relevant part of the log file.\n\n"
         f"{log_file}\n"
         "====================================================================\n\n"
-        f"{collect_final_lines(log_file, 30)}\n\n"
+        f"{collect_final_lines(log_file, n_last_lines)}\n\n"
         "====================================================================\n"
     )
