@@ -748,12 +748,14 @@ def rotate(rotation_angle, x, y):
 
 def get_log_excerpt(log_file, n_last_lines=30):
     """
-    Get an excerpt from a log file (last 30 lines).
+    Get an excerpt from a log file, namely the n_last_lines of the file.
 
     Parameters
     ----------
     log_file: str or Path
         Log file to get the excerpt from.
+    n_last_lines: int
+        Number of last lines of the file to get.
 
     Returns
     -------
