@@ -125,6 +125,9 @@ def test_get_file_name(corsika_runner, io_handler):
     ) == sub_log_file_dir.joinpath(f"log_sub_{file_name}.out")
     with pytest.raises(ValueError):
         corsika_runner.get_file_name("foobar", **info_for_file_name, mode="out")
+    assert corsika_runner.get_file_name(
+        "sub_log", **info_for_file_name, mode=""
+    ) == sub_log_file_dir.joinpath(f"log_sub_{file_name}.log")
 
 
 def test_has_file(corsika_runner, corsika_file):
