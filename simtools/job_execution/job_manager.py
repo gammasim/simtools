@@ -125,7 +125,7 @@ class JobManager:
             if sys_output != 0:
                 msg = gen.get_log_excerpt(log_file)
                 self._logger.error(msg)
-                raise JobExecutionError(msg)
+                raise JobExecutionError("See excerpt from log file above\n")
         else:
             self._logger.info("Testing (local)")
 
