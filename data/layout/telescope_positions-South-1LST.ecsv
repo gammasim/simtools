@@ -7,7 +7,7 @@
 # - {name: pos_z, unit: m, datatype: float32, description: telescope position upwards relative to the CORSIKA observation level.}
 # meta:
 #   data_type: positionfile
-#   description: "telescope positions for CTA South (Paranal)"
+#   description: "telescope positions for CTAO South"
 #   EPSG: 32719
 #   center_lon: !astropy.units.Quantity
 #     unit: &id001 !astropy.units.Unit {unit: deg}
