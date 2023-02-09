@@ -764,7 +764,7 @@ def get_log_excerpt(log_file, n_last_lines=30):
     """
 
     return (
-        "Runtime error - See below the relevant part of the log file.\n\n"
+        "\n\nRuntime error - See below the relevant part of the log file.\n\n"
         f"{log_file}\n"
         "====================================================================\n\n"
         f"{collect_final_lines(log_file, n_last_lines)}\n\n"
