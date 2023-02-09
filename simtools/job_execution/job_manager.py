@@ -1,10 +1,11 @@
 import logging
 import os
 from copy import copy
+from pathlib import Path
 
 import simtools.util.general as gen
 
-__all__ = ["JobManager", "MissingWorkloadManager"]
+__all__ = ["JobManager", "MissingWorkloadManager", "JobExecutionError"]
 
 
 class MissingWorkloadManager(Exception):
@@ -88,6 +89,7 @@ class JobManager:
             Provided in order to print the log excerpt in case of run time error.
         """
         self.run_script = str(run_script)
+        run_out_file = Path(run_out_file)
         self.run_out_file = str(run_out_file.parent.joinpath(run_out_file.stem))
 
         self._logger.info(f"Submitting script {self.run_script}")
