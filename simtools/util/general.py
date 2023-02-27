@@ -679,8 +679,8 @@ def change_dict_keys_case(data_dict, lower_case=True):
     return _return_dict
 
 
-@u.quantity_input(rotation_angle=u.rad)
-def rotate(x, y, rotation_angle):
+@u.quantity_input(rotation_angle_1=u.rad, rotation_angle_2=u.rad)
+def rotate(x, y, rotation_angle_1, rotation_angle_2=0 * u.rad):
     """
     Rotate x and y by the rotation angle given in rotation_angle, in radians (astropy.units.rad),
     or in degrees (astropy.units.deg).
@@ -693,8 +693,10 @@ def rotate(x, y, rotation_angle):
         x positions of the telescopes, usually in meters.
     y: numpy.array or list
         y positions of the telescopes, usually in meters.
-    rotation_angle: astropy.units.rad
-        Angle to rotate the array in radians.
+    rotation_angle_1: astropy.units.rad
+        Angle to rotate the array in the observation plane in radians.
+    rotation_angle_2: astropy.units.rad
+        Angle to rotate the observation plane in radians (used only by simtools.corsika_output).
 
     Returns
     -------
@@ -741,8 +743,12 @@ def rotate(x, y, rotation_angle):
     x_trans, y_trans = [np.zeros_like(x).astype(float) for i in range(2)]
 
     for step, _ in enumerate(x):
-        x_trans[step] = x[step] * np.cos(rotation_angle) - y[step] * np.sin(rotation_angle)
-        y_trans[step] = x[step] * np.sin(rotation_angle) + y[step] * np.cos(rotation_angle)
+        x_trans[step] = np.cos(rotation_angle_2) * (
+            x[step] * np.cos(rotation_angle_1) - y[step] * np.sin(rotation_angle_1)
+        )
+        y_trans[step] = np.cos(rotation_angle_2) * (
+            x[step] * np.sin(rotation_angle_1) + y[step] * np.cos(rotation_angle_1)
+        )
     return x_trans, y_trans
 
 
