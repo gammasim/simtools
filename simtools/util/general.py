@@ -653,7 +653,7 @@ def change_dict_keys_case(data_dict, lower_case=True):
 
 
 @u.quantity_input(rotation_angle=u.rad)
-def rotate(rotation_angle, x, y):
+def rotate(x, y, rotation_angle):
     """
     Rotate x and y by the rotation angle given in rotation_angle, in radians (astropy.units.rad),
     or in degrees (astropy.units.deg).
@@ -662,12 +662,12 @@ def rotate(rotation_angle, x, y):
 
     Parameters
     ----------
-    rotation_angle: astropy.units.rad
-        Angle to rotate the array in radians.
     x: numpy.array or list
         x positions of the telescopes, usually in meters.
     y: numpy.array or list
         y positions of the telescopes, usually in meters.
+    rotation_angle: astropy.units.rad
+        Angle to rotate the array in radians.
 
     Returns
     -------
