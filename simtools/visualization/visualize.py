@@ -630,12 +630,12 @@ def plot_array(telescopes, rotate_angle=0, show_tel_label=False):
     tel_counters = {one_telescope: 0 for one_telescope in names.all_telescope_class_names}
     if rotate_angle != 0:
         pos_x_rotated, pos_y_rotated = gen.rotate(
-            rotate_angle, telescopes["pos_x"], telescopes["pos_y"]
+            telescopes["pos_x"], telescopes["pos_y"], rotate_angle
         )
     else:
         pos_x_rotated, pos_y_rotated = telescopes["pos_x"], telescopes["pos_y"]
 
-    pos_x_rotated, pos_y_rotated = gen.rotate(90 * u.deg, pos_x_rotated, pos_y_rotated)
+    pos_x_rotated, pos_y_rotated = gen.rotate(pos_x_rotated, pos_y_rotated, 90 * u.deg)
 
     if len(pos_x_rotated) > 30:
         fontsize = 4
