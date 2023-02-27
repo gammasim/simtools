@@ -203,13 +203,7 @@ class SimtelRunner:
         """
 
         if hasattr(self, "_log_file"):
-            log_lines = gen.collect_final_lines(self._log_file, 30)
-            msg = (
-                "Simtel Error - See below the relevant part of the simtel log file.\n"
-                + "===== from simtel log file ======\n"
-                + log_lines
-                + "================================="
-            )
+            msg = gen.get_log_excerpt(self._log_file)
         else:
             msg = "Simtel log file does not exist."
 

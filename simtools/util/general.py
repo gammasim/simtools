@@ -25,6 +25,7 @@ __all__ = [
     "set_default_kwargs",
     "sort_arrays",
     "validate_config_data",
+    "get_log_excerpt",
 ]
 
 
@@ -432,13 +433,39 @@ def collect_final_lines(file, n_lines):
     str
         Final lines collected.
     """
-    file_in_lines = list()
-    with open(file, "r") as opened_file:
-        for line in opened_file:
-            file_in_lines.append(line)
-    collected_lines = file_in_lines[-n_lines:-1]
+    list_of_lines = []
+    with open(file, "rb") as read_obj:
+        # Move the cursor to the end of the file
+        read_obj.seek(0, os.SEEK_END)
+        # Create a buffer to keep the last read line
+        buffer = bytearray()
+        # Get the current position of pointer i.e eof
+        pointer_location = read_obj.tell()
+        # Loop till pointer reaches the top of the file
+        while pointer_location >= 0:
+            # Move the file pointer to the location pointed by pointer_location
+            read_obj.seek(pointer_location)
+            # Shift pointer location by -1
+            pointer_location = pointer_location - 1
+            # read that byte / character
+            new_byte = read_obj.read(1)
+            # If the read byte is new line character then it means one line is read
+            if new_byte == b"\n":
+                # Save the line in list of lines
+                list_of_lines.append(buffer.decode()[::-1])
+                # If the size of list reaches n_lines, then return the reversed list
+                if len(list_of_lines) == n_lines:
+                    return "".join(list(reversed(list_of_lines)))
+                # Reinitialize the byte array to save next line
+                buffer = bytearray()
+            else:
+                # If last read character is not eol then add it in buffer
+                buffer.extend(new_byte)
+        # As file is read completely, if there is still data in buffer, then its first line.
+        if len(buffer) > 0:
+            list_of_lines.append(buffer.decode()[::-1])
 
-    return "".join(collected_lines)
+    return "".join(list(reversed(list_of_lines)))
 
 
 def get_log_level_from_user(log_level):
@@ -717,6 +744,32 @@ def rotate(x, y, rotation_angle):
         x_trans[step] = x[step] * np.cos(rotation_angle) - y[step] * np.sin(rotation_angle)
         y_trans[step] = x[step] * np.sin(rotation_angle) + y[step] * np.cos(rotation_angle)
     return x_trans, y_trans
+
+
+def get_log_excerpt(log_file, n_last_lines=30):
+    """
+    Get an excerpt from a log file, namely the n_last_lines of the file.
+
+    Parameters
+    ----------
+    log_file: str or Path
+        Log file to get the excerpt from.
+    n_last_lines: int
+        Number of last lines of the file to get.
+
+    Returns
+    -------
+    str
+        Excerpt from log file with header/footer
+    """
+
+    return (
+        "\n\nRuntime error - See below the relevant part of the log file.\n\n"
+        f"{log_file}\n"
+        "====================================================================\n\n"
+        f"{collect_final_lines(log_file, n_last_lines)}\n\n"
+        "====================================================================\n"
+    )
 
 
 def convert_2D_to_radial_distr(xaxis, yaxis, hist2d, bin_size=50, max_dist=1000):
