@@ -1,14 +1,19 @@
 import logging
 import os
 from copy import copy
+from pathlib import Path
 
 import simtools.util.general as gen
 
-__all__ = ["JobManager", "MissingWorkloadManager"]
+__all__ = ["JobManager", "MissingWorkloadManager", "JobExecutionError"]
 
 
 class MissingWorkloadManager(Exception):
     """Exception for missing work load manager."""
+
+
+class JobExecutionError(Exception):
+    """Exception for job execution error (usually CORSIKA or sim_telarray)."""
 
 
 class JobManager:
@@ -69,20 +74,23 @@ class JobManager:
 
         raise MissingWorkloadManager
 
-    def submit(self, run_script=None, run_out_file=None):
+    def submit(self, run_script=None, run_out_file=None, log_file=None):
         """
         Submit a job described by a shell script.
 
         Parameters
         ----------
-        run_script: string
+        run_script: str
             Shell script descring the job to be submitted.
-        run_out_file: string
+        run_out_file: str or Path
             Redirect output/error/job stream to this file (out,err,job suffix).
-
+        log_file: str or Path
+            The log file of the actual simulator (CORSIKA or sim_telarray).
+            Provided in order to print the log excerpt in case of run time error.
         """
         self.run_script = str(run_script)
-        self.run_out_file = str(run_out_file).replace(".log", "")
+        run_out_file = Path(run_out_file)
+        self.run_out_file = str(run_out_file.parent.joinpath(run_out_file.stem))
 
         self._logger.info(f"Submitting script {self.run_script}")
         self._logger.info(f"Job output stream {self.run_out_file + '.out'}")
@@ -94,23 +102,30 @@ class JobManager:
         elif self.submit_command.find("condor_submit") >= 0:
             self._submit_htcondor()
         elif self.submit_command.find("local") >= 0:
-            self._submit_local()
+            self._submit_local(log_file)
 
-    def _submit_local(self):
+    def _submit_local(self, log_file):
         """
         Run a job script on the command line
         (no submission to a workload manager)
 
+        Parameters
+        ----------
+        log_file: str or Path
+            The log file of the actual simulator (CORSIKA or sim_telarray).
+            Provided in order to print the log excerpt in case of run time error.
         """
 
         self._logger.info("Running script locally")
 
-        shell_command = (
-            self.run_script + " > " + self.run_out_file + ".out" " 2> " + self.run_out_file + ".err"
-        )
+        shell_command = f"{self.run_script} > {self.run_out_file}.out 2> {self.run_out_file}.err"
 
         if not self.test:
-            os.system(shell_command)
+            sys_output = os.system(shell_command)
+            if sys_output != 0:
+                msg = gen.get_log_excerpt(log_file)
+                self._logger.error(msg)
+                raise JobExecutionError("See excerpt from log file above\n")
         else:
             self._logger.info("Testing (local)")
 
