@@ -47,8 +47,8 @@ def position_for_testing():
         "altitude": 2.177 * u.km,
         "center_lon": -17.8920302 * u.deg,
         "center_lat": 28.7621661 * u.deg,
-        "utm_east": 217611 * u.m,
-        "utm_north": 3185066 * u.m,
+        "utm_east": 217611.227 * u.m,
+        "utm_north": 3185066.278 * u.m,
     }
 
 

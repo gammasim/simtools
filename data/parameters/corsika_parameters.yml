@@ -67,16 +67,12 @@ SITE_PARAMETERS:
     MAGNET: [20.925, -9.119]
     # ARRANG: [-3.433]
     ARRANG: [0]
-    # TEMPORARY - should be in DB
-    EPSG: [32719]
   North:
     OBSLEV: [2158.e2]
     ATMOSPHERE: [36, 'Y']
     MAGNET: [30.576, 23.571]
     # ARRANG: [-5.3195]
     ARRANG: [0]
-    # TEMPORARY - should be in DB
-    EPSG: [32628]
 
 INTERACTION_FLAGS:
   FIXHEI: [0., 0]
