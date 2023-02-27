@@ -717,3 +717,57 @@ def rotate(rotation_angle, x, y):
         x_trans[step] = x[step] * np.cos(rotation_angle) - y[step] * np.sin(rotation_angle)
         y_trans[step] = x[step] * np.sin(rotation_angle) + y[step] * np.cos(rotation_angle)
     return x_trans, y_trans
+
+
+def convert_2D_to_radial_distr(xaxis, yaxis, hist2d, bin_size=50, max_dist=1000):
+    """
+    Convert a 2D histogram of the photon positions on the ground to a 1D radial distribution.
+
+    Parameters
+    ----------
+    xaxis: numpy.array
+        The values of the X axis (histogram edges) on the ground.
+    yaxis: numpy.array
+        The values of the Y axis (histogram edges) on the ground.
+    hist2d: numpy.ndarray
+        The histogram
+    bin_size: float
+        Size of the step in distance (in meters).
+    max_dist: float
+       Maximum distance to consider in the 1D histogram (in meters).
+
+    Returns
+    -------
+    np.array
+        The edges of the 1D histogram in meters with size = int(max_dist/bin_size) + 1.
+    np.array
+        The values of the 1D histogram with size = int(max_dist/bin_size).
+    """
+
+    distance2D = np.empty_like(hist2d)
+    for x_step, x_element in enumerate(xaxis[:-1]):
+        for y_step, y_element in enumerate(yaxis[:-1]):
+            distance2D[x_step, y_step] = np.sqrt(x_element**2 + y_element**2)
+
+    distance_sorted = np.sort(distance2D, axis=None)
+    x_indices_sorted, y_indices_sorted = np.divmod(
+        np.argsort(distance2D, axis=None), np.size(distance2D, axis=0)
+    )
+    hist_sorted = np.array(
+        [hist2d[x_step, y_step] for x_step, y_step in zip(x_indices_sorted, y_indices_sorted)]
+    )
+    weights, radial_edges = np.histogram(
+        distance_sorted, bins=int(max_dist // bin_size), range=(0, max_dist)
+    )
+
+    histogram_1D = np.empty_like(weights)
+    for radial_step, _ in enumerate(radial_edges[:-1]):
+
+        indices_to_sum = (distance_sorted >= radial_edges[radial_step]) * (
+            distance_sorted < radial_edges[radial_step + 1]
+        )
+        try:
+            histogram_1D[radial_step] = np.sum(hist_sorted[indices_to_sum]) / weights[radial_step]
+        except ValueError:
+            histogram_1D[radial_step] = 0
+    return radial_edges, histogram_1D
