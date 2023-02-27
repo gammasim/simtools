@@ -10,7 +10,11 @@ import numpy as np
 from astropy import units as u
 from eventio import IACTFile
 
-from simtools.util.general import convert_2D_to_radial_distr
+from simtools.util.general import convert_2D_to_radial_distr, rotate
+
+
+class HistogramNotCreated(Exception):
+    """Exception for histogram not created."""
 
 
 class CorsikaOutput:
@@ -40,22 +44,26 @@ class CorsikaOutput:
             raise FileNotFoundError
 
         self.tel_positions = None
+        self.telescope_index = None
 
-    def create_histogram(self, telescope_index=None):
+    def create_histograms(self, telescope_index=None, rotation_angle=0 * u.rad):
         """
-        Extract the information of the Cherenkov photons from a CORSIKA output IACT file and save it
-         into the class instance.
+        Extract the information of the Cherenkov photons from a CORSIKA output IACT file and creates
+        a histogram
 
         Parameters
         ----------
         telescope_index: int or list of int
             The index of the specific telescope to plot the data. If not specified, all telescopes
-            are considered. More telescopes are also allowed.
+            are treated together. More than one telescope is also allowed.
+        rotation_angle: astropy.units.rad
+            Angle to rotate the observation plane in radians. It allows one to compensate for the
+            zenith angle of observations and get the photon distribution in the plane of the
+            telescope cameras.
 
         Returns
         -------
-        histogram: instance of boost_histogram.Histogram if telescope_index=None or list of
-        boost_histogram.Histogram if telescope_index is not None.
+        numpy.array: array of instances of boost_histogram.Histogram.
 
         Raises
         ------
@@ -64,7 +72,6 @@ class CorsikaOutput:
         IndexError:
             If the index or indices passed though telescope_index are out of range.
         """
-
         if telescope_index is not None:
             if not isinstance(telescope_index, list):
                 telescope_index = [telescope_index]
@@ -73,14 +80,17 @@ class CorsikaOutput:
                     msg = "The index or indices given are not of type int."
                     self._logger.error(msg)
                     raise TypeError
+        self.telescope_index = telescope_index
 
-        if telescope_index is None:
+        if self.telescope_index is None:
             xy_maximum = 1000
-            self.hist = bh.Histogram(
-                bh.axis.Regular(bins=100, start=-xy_maximum, stop=xy_maximum),
-                bh.axis.Regular(bins=100, start=-xy_maximum, stop=xy_maximum),
-                bh.axis.Regular(bins=100, start=200, stop=1000),
-            )
+            self.hist = [
+                bh.Histogram(
+                    bh.axis.Regular(bins=100, start=-xy_maximum, stop=xy_maximum),
+                    bh.axis.Regular(bins=100, start=-xy_maximum, stop=xy_maximum),
+                    bh.axis.Regular(bins=100, start=200, stop=1000),
+                )
+            ]
         else:
             xy_maximum = 15
             self.hist = [
@@ -89,8 +99,7 @@ class CorsikaOutput:
                     bh.axis.Regular(bins=100, start=-xy_maximum, stop=xy_maximum),
                     bh.axis.Regular(bins=100, start=200, stop=1000),
                 )
-                * len(telescope_index)
-            ]
+            ] * len(self.telescope_index)
 
         self.num_photon_bunches_per_event = []
         start_time = time.time()
@@ -112,43 +121,51 @@ class CorsikaOutput:
                 )
 
                 photons = list(event.photon_bunches.values())
-                if telescope_index is None:
 
-                    for onetel_position, photons_rel_position in zip(self.tel_positions, photons):
+                for onetel_position, photons_rel_position in zip(self.tel_positions, photons):
+                    photon_rel_position_rotated_x, photon_rel_position_rotated_y = rotate(
+                        photons_rel_position["x"],
+                        photons_rel_position["y"],
+                        (-4.533 * u.deg).to(u.rad),
+                        rotation_angle,
+                    )
 
-                        x_one_photon = -onetel_position["x"] + photons_rel_position["x"]
-                        y_one_photon = -onetel_position["y"] + photons_rel_position["y"]
-                        # photons_rel_position["cx"], photons_rel_position["cy"],
-                        # photons_rel_position["zem"], photons_rel_position["time"]
-
-                        self.hist.fill(
-                            (np.array(x_one_photon) * u.cm).to(u.m),
-                            (np.array(y_one_photon) * u.cm).to(u.m),
+                    # photons_rel_position["cx"], photons_rel_position["cy"],
+                    # photons_rel_position["zem"], photons_rel_position["time"]
+                    if self.telescope_index is None:
+                        self.hist[0].fill(
+                            ((-onetel_position["x"] + photon_rel_position_rotated_x) * u.cm).to(
+                                u.m
+                            ),
+                            ((-onetel_position["y"] + photon_rel_position_rotated_y) * u.cm).to(
+                                u.m
+                            ),
                             np.abs(photons_rel_position["wavelength"]) * u.nm,
                         )
-                else:
-                    for step, one_telescope in enumerate(telescope_index):
-                        try:
-                            # will need one hist for each telescope
-                            self.hist[step].fill(
-                                (np.array(photons[one_telescope]["x"]) * u.cm).to(u.m),
-                                (np.array(photons[one_telescope]["y"]) * u.cm).to(u.m),
-                                np.abs(photons[one_telescope]["wavelength"]) * u.nm,
-                            )
-                        except IndexError:
-                            msg = (
-                                "Index {} is out of range. There are only {} telescopes in the "
-                                "array.".format(one_telescope, len(self.tel_positions))
-                            )
-                            self._logger.error(msg)
-                            raise
+                    else:
+
+                        for step, one_telescope in enumerate(self.telescope_index):
+                            try:
+                                # will need one hist for each telescope
+                                self.hist[step].fill(
+                                    (photon_rel_position_rotated_x * u.cm).to(u.m),
+                                    (photon_rel_position_rotated_y * u.cm).to(u.m),
+                                    np.abs(photons_rel_position[one_telescope]["wavelength"])
+                                    * u.nm,
+                                )
+                            except IndexError:
+                                msg = (
+                                    "Index {} is out of range. There are only {} telescopes in the "
+                                    "array.".format(one_telescope, len(self.tel_positions))
+                                )
+                                self._logger.error(msg)
 
         self._logger.debug(
             "Finished reading the file and creating the histogram in {} seconds".format(
                 time.time() - start_time
             )
         )
-        return self.hist
+        return np.array(self.hist)
 
     def get_2D_position_distr(self, density=True):
         """
@@ -162,23 +179,45 @@ class CorsikaOutput:
         Returns
         -------
         3-tuple of numpy.array
-            The edges of the histogram in X, Y and the matrix with the counts
+            The edges of the histograms in X, Y and the matrices with the counts
 
         Raises
         ------
         TypeError:
             if density is not of type bool.
+        HistogramNotCreated:
+            if the histogram was not previously created.
         """
-        mini = self.hist[:, :, sum]
-        if density is True:
-            areas = functools.reduce(operator.mul, mini.axes.widths)
-            return mini.axes.edges[0].flatten(), mini.axes.edges[1].flatten(), mini.view().T / areas
-        elif density is False:
-            return mini.axes.edges[0].flatten(), mini.axes.edges[1].flatten(), mini.view().T
-        else:
-            msg = "density has to be of type bool."
+        try:
+            mini_hist = []
+            if self.telescope_index is None:
+                include_all = [0]
+            else:
+                include_all = self.telescope_index
+            for step, _ in enumerate(include_all):
+                mini_hist.append(self.hist[step][:, :, sum])
+        except AttributeError:
+            msg = (
+                "The histogram(s) was(were) not created. Please, use `create_histograms` to create "
+                "histograms from the CORSIKA output file."
+            )
             self._logger.error(msg)
-            raise TypeError
+            raise HistogramNotCreated
+
+        x_edges, y_edges, hist_values = [], [], []
+        for step, _ in enumerate(mini_hist):
+            x_edges.append(mini_hist[step].axes.edges[0].flatten())
+            y_edges.append(mini_hist[step].axes.edges[1].flatten())
+            if density is True:
+                areas = functools.reduce(operator.mul, mini_hist[step].axes.widths)
+                hist_values.append(mini_hist[step].view().T / areas)
+            elif density is False:
+                hist_values.append(mini_hist[step].view().T)
+            else:
+                msg = "`density` parameter has to be of type bool."
+                self._logger.error(msg)
+                raise TypeError
+        return np.array(x_edges), np.array(y_edges), np.array(hist_values)
 
     def get_radial_distr(self, bin_size=40, max_dist=1000, density=True):
         """
@@ -200,19 +239,30 @@ class CorsikaOutput:
         np.array
             The values of the 1D histogram with size = int(max_dist/bin_size).
         """
-
-        x, y, hist2D = self.get_2D_position_distr(density=density)
-        edges, hist1D = convert_2D_to_radial_distr(
-            x, y, hist2D, bin_size=bin_size, max_dist=max_dist
-        )
-        return edges, hist1D
+        edges_1D_list, hist1D_list = [], []
+        x_edges_list, y_edges_list, hist2D_values_list = self.get_2D_position_distr(density=density)
+        for step, _ in enumerate(x_edges_list):
+            edges_1D, hist1D = convert_2D_to_radial_distr(
+                x_edges_list[step],
+                y_edges_list[step],
+                hist2D_values_list[step],
+                bin_size=bin_size,
+                max_dist=max_dist,
+            )
+            edges_1D_list.append(edges_1D)
+            hist1D_list.append(hist1D)
+        return np.array(edges_1D_list), np.array(hist1D_list)
 
     def get_wavelength_distr(self):
         """
-        Gets a histogram with the wavelength of the photon bunches.
+        Gets histograms with the wavelengths of the photon bunches.
         """
-        mini = self.hist[sum, sum, :]
-        return mini.axes.edges.T.flatten()[0], mini.view().T
+        x_edges_list, hist_1D_list = [], []
+        for step, _ in enumerate(x_edges_list):
+            mini_hist = self.hist[step][sum, sum, :]
+            x_edges_list.append(mini_hist.axes.edges.T.flatten()[0])
+            hist_1D_list.append(mini_hist.view().T)
+        return np.array(x_edges_list), np.array(hist_1D_list)
 
     def get_num_photon_bunches(self):
         """
@@ -239,30 +289,56 @@ class CorsikaOutput:
         density: bool
             If True, returns the density distribution. If False, returns the distribution of counts.
         """
-        x, y, hist = self.get_2D_position_distr(density=density)
-        fig, ax = plt.subplots()
-        mesh = ax.pcolormesh(x, y, hist)
-        fig.colorbar(mesh)
-        fig.savefig("boost_histogram_dens.png")
+        x_edges, y_edges, hist_values = self.get_2D_position_distr(density=density)
+        for step, _ in enumerate(x_edges):
+            fig, ax = plt.subplots()
+            mesh = ax.pcolormesh(x_edges[step], y_edges[step], hist_values[step])
+            fig.colorbar(mesh)
+            if self.telescope_index is None:
+                fig.savefig("boost_histogram_dens_all_tels.png")
+            else:
+                fig.savefig("boost_histogram_dens_tel_" + str(self.telescope_index[step]) + ".png")
 
     def plot_wavelength_distr(self):
         """
         Plots the 1D distribution of the photon wavelengths
         """
-        wavelength, hist = self.get_wavelength_distr()
-        fig, ax = plt.subplots()
-        ax.bar(wavelength[:-1], hist, align="edge", width=np.diff(wavelength))
-        fig.savefig("boost_histogram_1D.png")
+        wavelengths, hist_values = self.get_wavelength_distr()
+        for step, _ in enumerate(wavelengths):
+            fig, ax = plt.subplots()
+            ax.bar(
+                wavelengths[step][:-1],
+                hist_values[step],
+                align="edge",
+                width=np.diff(wavelengths[step]),
+            )
+            if self.telescope_index is None:
+                fig.savefig("boost_histogram_wavelength_tels.png")
+            else:
+                fig.savefig(
+                    "boost_histogram_wavelength_tel_" + str(self.telescope_index[step]) + ".png"
+                )
 
-    def plot1D_on_ground(self, radial_edges, histogram_1D):
+    def plot1D_on_ground(self, radial_edges, histograms_1D):
         """
         Plots the 1D distribution, i.e. the radial distribution, of the photons on the ground.
         """
-        fig = plt.figure()
-        ax = fig.add_subplot(111)
-        ax.errorbar(radial_edges[:-1], histogram_1D, xerr=int(np.diff(radial_edges)[0] / 2), ls="")
-        # ax.scatter(distance_sorted,hist_sorted, alpha=0.5, c='r')
-        fig.savefig("test.png")
+        for step, _ in enumerate(radial_edges):
+            fig = plt.figure()
+            ax = fig.add_subplot(111)
+            ax.errorbar(
+                radial_edges[step][:-1],
+                histograms_1D[step],
+                xerr=int(np.diff(radial_edges[step])[0] / 2),
+                ls="",
+            )
+            # ax.scatter(distance_sorted,hist_sorted, alpha=0.5, c='r')
+            if self.telescope_index is None:
+                fig.savefig("boost_histogram_1D_pos_tels.png")
+            else:
+                fig.savefig(
+                    "boost_histogram_1D_pos_tel_" + str(self.telescope_index[step]) + ".png"
+                )
 
     # Reformulate
     def get_incoming_direction(self):
