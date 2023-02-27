@@ -682,8 +682,9 @@ def change_dict_keys_case(data_dict, lower_case=True):
 @u.quantity_input(rotation_angle_1=u.rad, rotation_angle_2=u.rad)
 def rotate(x, y, rotation_angle_1, rotation_angle_2=0 * u.rad):
     """
-    Rotate x and y by the rotation angle given in rotation_angle, in radians (astropy.units.rad),
-    or in degrees (astropy.units.deg).
+    Rotate x and y by the rotation_angle_1 given in rotation_angle, in radians (astropy.units.rad),
+    or in degrees (astropy.units.deg). A second angle, rotation_angle_2, allow one to rotate the
+    observations plan in space.
     The function returns the rotated x and y values in the same unit given.
     The direction of rotation of the elements is counterclockwise.
 
