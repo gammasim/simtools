@@ -94,23 +94,31 @@ class CorsikaOutput:
                 )
             ] * len(self.telescope_indices)
 
-        np.array(self.hist)
+        self.hist = np.array(self.hist)
 
-    @u.quantity_input(rotation_angle=u.rad)
-    def _fill_histogram(self, onetel_position, photons_rel_position, rotation_angle):
+    @u.quantity_input(zenith_angle=u.rad, azimuth_angle=u.rad)
+    def _fill_histogram(
+        self, one_tel_info, photons_info, zenith_angle=0 * u.rad, azimuth_angle=0 * u.rad
+    ):
         """Fill the histogram created by self._create_histogram
 
         Parameters
         ----------
-        onetel_position: numpy.record
+        one_tel_info: numpy.record
             Wrapped structured 4-tuple with X, Y, Z positions and the radius of the CORSIKA
              representation of the telescope (in cm).
-
-        photons_rel_position: numpy.ndarray
-            Array with the following information of the Chernekov photons on the ground: x, y, cx,
+        photons_info: numpy.ndarray
+            Array with the following information of the Cherenkov photons on the ground: x, y, cx,
             cy, time, zem, photons, wavelength.
-
-        rotation_angle:
+        zenith_angle: astropy.units.rad
+            Angle (in radians) to rotate the observation plane (in zenith) of the telescope.
+            With the `rotation_angle`, it allows one to compensate for the angle of observations
+            and get the photon distribution in the plane of the telescope cameras.
+            The CORSIKA coordinate system is used, i.e., the X axis points North and the Y axis
+            towards West.
+        azimuth_angle: astropy.units.rad
+            Angle (in radians) to rotate the observation plane (in azimuth) of the telescope.
+            See above for more details.
 
         Raises
         ------
@@ -119,17 +127,17 @@ class CorsikaOutput:
         """
 
         photon_rel_position_rotated_x, photon_rel_position_rotated_y = rotate(
-            photons_rel_position["x"],
-            photons_rel_position["y"],
-            (-4.533 * u.deg).to(u.rad),
-            rotation_angle,
+            photons_info["x"],
+            photons_info["y"],
+            azimuth_angle,
+            zenith_angle,
         )
 
         if self.telescope_indices is None:
             self.hist[0].fill(
-                ((-onetel_position["x"] + photon_rel_position_rotated_x) * u.cm).to(u.m),
-                ((-onetel_position["y"] + photon_rel_position_rotated_y) * u.cm).to(u.m),
-                np.abs(photons_rel_position["wavelength"]) * u.nm,
+                ((-one_tel_info["x"] + photon_rel_position_rotated_x) * u.cm).to(u.m),
+                ((-one_tel_info["y"] + photon_rel_position_rotated_y) * u.cm).to(u.m),
+                np.abs(photons_info["wavelength"]) * u.nm,
             )
         else:
 
@@ -138,7 +146,7 @@ class CorsikaOutput:
                     self.hist[step].fill(
                         (photon_rel_position_rotated_x * u.cm).to(u.m),
                         (photon_rel_position_rotated_y * u.cm).to(u.m),
-                        np.abs(photons_rel_position[one_telescope]["wavelength"]) * u.nm,
+                        np.abs(photons_info[one_telescope]["wavelength"]) * u.nm,
                     )
                 except IndexError:
                     msg = (
@@ -147,20 +155,28 @@ class CorsikaOutput:
                     )
                     self._logger.error(msg)
 
-    def set_histograms(self, telescope_indices=None, rotation_angle=0 * u.rad):
+    @u.quantity_input(zenith_angle=u.rad, azimuth_angle=u.rad)
+    def set_histograms(
+        self, telescope_indices=None, zenith_angle=0 * u.rad, azimuth_angle=0 * u.rad
+    ):
         """
-        Extract the information of the Cherenkov photons from a CORSIKA output IACT file and creates
+        Extract the information of the Cherenkov photons from a CORSIKA output IACT file and create
         a histogram
 
         Parameters
         ----------
         telescope_indices: int or list of int
-            The index of the specific telescopes to be inspected. If not specified, all telescopes
+            The indices of the specific telescopes to be inspected. If not specified, all telescopes
             are treated together in one histogram.
-        rotation_angle: astropy.units.rad
-            Angle to rotate the observation plane in radians. It allows one to compensate for the
-            zenith angle of observations and get the photon distribution in the plane of the
-            telescope cameras.
+        zenith_angle: astropy.units.rad
+            Angle (in radians) to rotate the observation plane (in zenith) of the telescope.
+            With the `rotation_angle`, it allows one to compensate for the angle of observations
+            and get the photon distribution in the plane of the telescope cameras.
+            The CORSIKA coordinate system is used, i.e., the X axis points North and the Y axis
+            towards West.
+        azimuth_angle: astropy.units.rad
+            Angle (in radians) to rotate the observation plane (in azimuth) of the telescope.
+            See above for more details.
 
         Returns
         -------
@@ -189,11 +205,11 @@ class CorsikaOutput:
                 )
 
                 photons = list(event.photon_bunches.values())
-                for onetel_position, photons_rel_position in zip(self.tel_positions, photons):
+                for one_tel_info, photons_info in zip(self.tel_positions, photons):
 
                     # photons_rel_position["cx"], photons_rel_position["cy"],
                     # photons_rel_position["zem"], photons_rel_position["time"]
-                    self._fill_histogram(onetel_position, photons_rel_position, rotation_angle)
+                    self._fill_histogram(one_tel_info, photons_info, zenith_angle, azimuth_angle)
 
         self._logger.debug(
             "Finished reading the file and creating the histogram in {} seconds".format(
@@ -257,6 +273,7 @@ class CorsikaOutput:
         """
         Gets the radial distribution of the photons on the ground in relation to the center of the
         array.
+
         Parameters
         ----------
         bin_size: float
