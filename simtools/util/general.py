@@ -814,7 +814,7 @@ def convert_2D_to_radial_distr(xaxis, yaxis, hist2d, bin_size=50, max_dist=1000)
         [hist2d[x_step, y_step] for x_step, y_step in zip(x_indices_sorted, y_indices_sorted)]
     )
     weights, radial_edges = np.histogram(
-        distance_sorted, bins=int(max_dist // bin_size), range=(0, max_dist)
+        distance_sorted, bins=int(max_dist / bin_size), range=(0, max_dist)
     )
 
     histogram_1D = np.empty_like(weights)
