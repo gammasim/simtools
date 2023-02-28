@@ -80,24 +80,38 @@ class CorsikaOutput:
         if self.telescope_indices is None:
             if xy_maximum is None:
                 xy_maximum = 1000
-            self.hist = [
+            self.hist_position = [
                 bh.Histogram(
                     bh.axis.Regular(bins=bin_size, start=-xy_maximum, stop=xy_maximum),
                     bh.axis.Regular(bins=bin_size, start=-xy_maximum, stop=xy_maximum),
                     bh.axis.Regular(bins=bin_size, start=200, stop=1000),
                 )
             ]
+            self.hist_direction = [
+                bh.Histogram(
+                    bh.axis.Regular(bins=bin_size, start=-1, stop=1),
+                    bh.axis.Regular(bins=bin_size, start=-1, stop=1),
+                )
+            ]
         else:
             if xy_maximum is None:
                 xy_maximum = 15
-            self.hist = [
-                bh.Histogram(
-                    bh.axis.Regular(bins=100, start=-xy_maximum, stop=xy_maximum),
-                    bh.axis.Regular(bins=100, start=-xy_maximum, stop=xy_maximum),
-                    bh.axis.Regular(bins=100, start=200, stop=1000),
+
+            self.hist_position, self.hist_direction = [], []
+            for step, _ in enumerate(self.telescope_indices):
+                self.hist_position.append(
+                    bh.Histogram(
+                        bh.axis.Regular(bins=100, start=-xy_maximum, stop=xy_maximum),
+                        bh.axis.Regular(bins=100, start=-xy_maximum, stop=xy_maximum),
+                        bh.axis.Regular(bins=100, start=200, stop=1000),
+                    )
                 )
-                for step, _ in enumerate(self.telescope_indices)
-            ]
+                self.hist_direction.append(
+                    bh.Histogram(
+                        bh.axis.Regular(bins=bin_size, start=-1, stop=1),
+                        bh.axis.Regular(bins=bin_size, start=-1, stop=1),
+                    )
+                )
 
     @u.quantity_input(zenith_angle=u.rad, azimuth_angle=u.rad)
     def _fill_histograms(self, photons, zenith_angle=0 * u.rad, azimuth_angle=0 * u.rad):
@@ -135,11 +149,12 @@ class CorsikaOutput:
                     azimuth_angle,
                     zenith_angle,
                 )
-                self.hist[0].fill(
+                self.hist_position[0].fill(
                     ((-one_tel_info["x"] + photon_x) * u.cm).to(u.m),
                     ((-one_tel_info["y"] + photon_y) * u.cm).to(u.m),
                     np.abs(photons_info["wavelength"]) * u.nm,
                 )
+                self.hist_direction[0].fill(photons_info["cx"], photons_info["cy"])
             else:
                 photon_x, photon_y = photons_info["x"], photons_info["y"]
                 for step, one_index in enumerate(self.telescope_indices):
@@ -151,11 +166,12 @@ class CorsikaOutput:
                             == self.tel_positions[self.telescope_indices[step]]["y"]
                         ):
 
-                            self.hist[step].fill(
+                            self.hist_position[step].fill(
                                 (photon_x * u.cm).to(u.m),
                                 (photon_y * u.cm).to(u.m),
                                 np.abs(photons_info["wavelength"]) * u.nm,
                             )
+                            self.hist_direction[step].fill(photons_info["cx"], photons_info["cy"])
                     except IndexError:
                         msg = (
                             "Index {} is out of range. There are only {} telescopes in the "
@@ -188,7 +204,7 @@ class CorsikaOutput:
 
         Returns
         -------
-        numpy.array: array of instances of boost_histogram.Histogram.
+        list: list of boost_histogram.Histogram instances.
 
         """
 
@@ -203,18 +219,14 @@ class CorsikaOutput:
             if self.tel_positions is None:
                 self.tel_positions = np.array(f.telescope_positions)
             for event in f:
-                num_photons_per_event_per_telescope = 0
-                for step, telescope_now in enumerate(self.tel_positions):
-                    num_photons_per_event_per_telescope += np.sum(
-                        event.photon_bunches[step]["photons"]
-                    )
+                num_photons_partial_sum = 0
+                for step, _ in enumerate(self.tel_positions):
+                    num_photons_partial_sum += np.sum(event.photon_bunches[step]["photons"])
                 self.num_photon_bunches_per_event = np.append(
-                    self.num_photon_bunches_per_event, num_photons_per_event_per_telescope
+                    self.num_photon_bunches_per_event, num_photons_partial_sum
                 )
-
                 photons = list(event.photon_bunches.values())
                 self._fill_histograms(photons, zenith_angle, azimuth_angle)
-                # photons_rel_position["cx"], photons_rel_position["cy"],
                 # photons_rel_position["zem"], photons_rel_position["time"]
 
         self._logger.debug(
@@ -234,8 +246,12 @@ class CorsikaOutput:
 
         Returns
         -------
-        list of 3-tuple of numpy.array
-            The edges of the histograms in X, Y and the matrices with the counts
+        numpy.array
+            The edges of the direction histograms in X.
+        numpy.array
+            The edges of the direction histograms in Y
+        numpy.ndarray
+            The values (counts) of the histogram.
 
         Raises
         ------
@@ -251,7 +267,7 @@ class CorsikaOutput:
             else:
                 include_all = self.telescope_indices
             for step, _ in enumerate(include_all):
-                mini_hist.append(self.hist[step][:, :, sum])
+                mini_hist.append(self.hist_position[step][:, :, sum])
         except AttributeError:
             msg = (
                 "The histograms were not created. Please, use `create_histograms` to create "
@@ -322,34 +338,73 @@ class CorsikaOutput:
 
     def get_wavelength_distr(self):
         """
-        Gets histograms with the wavelengths of the photon bunches.
+        Get histograms with the wavelengths of the photon bunches.
+
+        Returns
+        -------
+        np.array
+            The edges of the wavelength histogram in nanometers.
+        np.array
+            The values of the wavelength histogram.
         """
         x_edges_list, hist_1D_list = [], []
-        for step, _ in enumerate(self.hist):
-            mini_hist = self.hist[step][sum, sum, :]
+        for step, _ in enumerate(self.hist_position):
+            mini_hist = self.hist_position[step][sum, sum, :]
             x_edges_list.append(mini_hist.axes.edges.T.flatten()[0])
             hist_1D_list.append(mini_hist.view().T)
         return np.array(x_edges_list), np.array(hist_1D_list)
 
-    def get_num_photon_bunches(self):
+    def get_2D_direction_distr(self):
         """
-        Gets the number of photon bunches per event.
+        Get 2D histograms of incoming direction of the Cherenkov photons on the ground.
+
+        Returns
+        -------
+        numpy.array
+            The edges of the direction histograms in cos(X).
+        numpy.array
+            The edges of the direction histograms in cos(Y)
+        numpy.ndarray
+            The values (counts) of the histogram.
         """
+        x_edges, y_edges, mini_hist = [], [], []
+        if self.telescope_indices is None:
+            size = 1
+        else:
+            size = len(self.telescope_indices)
+        for step in range(size):
+            x_edges.append(self.hist_direction[step].axes.edges[0].flatten())
+            y_edges.append(self.hist_direction[step].axes.edges[1].flatten())
+            mini_hist.append(self.hist_direction[step].view().T)
+        return np.array(x_edges), np.array(y_edges), np.array(mini_hist)
+
+    def get_num_photon_bunches_per_event(self):
+        """
+        Get the number of photon bunches per event.
+        """
+        return self.num_photon_bunches_per_event
+
+    def get_total_num_photon_bunches(self):
+        """
+        Get the total number of photon bunches.
+        """
+        return np.sum(self.get_num_photon_bunches_per_event())
 
     def get_telescope_positions(self):
         """
-        Gets the telescope positions.
+        Get the telescope positions.
 
         Returns
         -------
         numpy.ndarray
-            X and Y positions of the telescopes (the centers of the CORSIKA spheres).
+            X, Y and Z positions of the telescopes and their radius according to the CORSIKA
+            spherical representation of the telescopes.
         """
         return self.tel_positions
 
     def plot_2D_on_ground(self, density):
         """
-        Plots the histogram of the photon positions on the ground.
+        Plot the 2D histogram of the photon positions on the ground.
 
         Parameters
         ----------
@@ -366,6 +421,22 @@ class CorsikaOutput:
             else:
                 fig.savefig(
                     "boost_histogram_dens_tel_" + str(self.telescope_indices[step]) + ".png"
+                )
+
+    def plot_2D_direction(self):
+        """
+        Plot the 2D histogram of the incoming direction of photons.
+        """
+        x_edges, y_edges, hist_values = self.get_2D_direction_distr()
+        for step, _ in enumerate(x_edges):
+            fig, ax = plt.subplots()
+            mesh = ax.pcolormesh(x_edges[step], y_edges[step], hist_values[step])
+            fig.colorbar(mesh)
+            if self.telescope_indices is None:
+                fig.savefig("boost_histogram_direction_all_tels.png")
+            else:
+                fig.savefig(
+                    "boost_histogram_direction_tel_" + str(self.telescope_indices[step]) + ".png"
                 )
 
     def plot_wavelength_distr(self):
@@ -410,18 +481,6 @@ class CorsikaOutput:
                 )
 
     # Reformulate
-    def get_incoming_direction(self):
-        """
-        Gets the Cherenkov photon incoming direction.
-
-        Returns
-        -------
-        2-tuple of numpy.array
-            Cosinus of the angles between the incoming Cherenkov photons and the X and Y axes,
-            respectively.
-        """
-
-        return self.y_cos, self.x_cos
 
     def get_height(self):
         """
