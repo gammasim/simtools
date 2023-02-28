@@ -48,7 +48,7 @@ class CorsikaOutput:
 
     def _set_telescope_indices(self, telescope_indices):
         """
-        Set the telescope index (or indices) as the class attribute.
+        Set the telescope index (or indices) as a class attribute.
 
         Parameters
         ----------
@@ -127,20 +127,21 @@ class CorsikaOutput:
         """
 
         for one_tel_info, photons_info in zip(self.tel_positions, photons):
-            photon_rel_position_rotated_x, photon_rel_position_rotated_y = rotate(
-                photons_info["x"],
-                photons_info["y"],
-                azimuth_angle,
-                zenith_angle,
-            )
+
             if self.telescope_indices is None:
+                photon_x, photon_y = rotate(
+                    photons_info["x"],
+                    photons_info["y"],
+                    azimuth_angle,
+                    zenith_angle,
+                )
                 self.hist[0].fill(
-                    ((-one_tel_info["x"] + photon_rel_position_rotated_x) * u.cm).to(u.m),
-                    ((-one_tel_info["y"] + photon_rel_position_rotated_y) * u.cm).to(u.m),
+                    ((-one_tel_info["x"] + photon_x) * u.cm).to(u.m),
+                    ((-one_tel_info["y"] + photon_y) * u.cm).to(u.m),
                     np.abs(photons_info["wavelength"]) * u.nm,
                 )
             else:
-
+                photon_x, photon_y = photons_info["x"], photons_info["y"]
                 for step, one_index in enumerate(self.telescope_indices):
                     try:
                         if (
@@ -151,8 +152,8 @@ class CorsikaOutput:
                         ):
 
                             self.hist[step].fill(
-                                (photon_rel_position_rotated_x * u.cm).to(u.m),
-                                (photon_rel_position_rotated_y * u.cm).to(u.m),
+                                (photon_x * u.cm).to(u.m),
+                                (photon_y * u.cm).to(u.m),
                                 np.abs(photons_info["wavelength"]) * u.nm,
                             )
                     except IndexError:
