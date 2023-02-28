@@ -144,7 +144,7 @@ class CorsikaOutput:
                     self.hist[step].fill(
                         (photon_rel_position_rotated_x * u.cm).to(u.m),
                         (photon_rel_position_rotated_y * u.cm).to(u.m),
-                        np.abs(photons_info[one_telescope]["wavelength"]) * u.nm,
+                        np.abs(photons_info["wavelength"]) * u.nm,
                     )
                 except IndexError:
                     msg = (
