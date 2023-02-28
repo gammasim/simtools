@@ -71,21 +71,25 @@ class CorsikaOutput:
                     raise TypeError
         self.telescope_indices = telescope_indices
 
-    def _create_histograms(self):
+    def _create_histograms(self, bin_size=None, xy_maximum=None):
         """
         Create the histogram instances based on the given telescope indices.
         """
+        if bin_size is None:
+            bin_size = 100
         if self.telescope_indices is None:
-            xy_maximum = 1000
+            if xy_maximum is None:
+                xy_maximum = 1000
             self.hist = [
                 bh.Histogram(
-                    bh.axis.Regular(bins=100, start=-xy_maximum, stop=xy_maximum),
-                    bh.axis.Regular(bins=100, start=-xy_maximum, stop=xy_maximum),
-                    bh.axis.Regular(bins=100, start=200, stop=1000),
+                    bh.axis.Regular(bins=bin_size, start=-xy_maximum, stop=xy_maximum),
+                    bh.axis.Regular(bins=bin_size, start=-xy_maximum, stop=xy_maximum),
+                    bh.axis.Regular(bins=bin_size, start=200, stop=1000),
                 )
             ]
         else:
-            xy_maximum = 15
+            if xy_maximum is None:
+                xy_maximum = 15
             self.hist = [
                 bh.Histogram(
                     bh.axis.Regular(bins=100, start=-xy_maximum, stop=xy_maximum),
@@ -270,9 +274,9 @@ class CorsikaOutput:
                 raise TypeError
         return np.array(x_edges), np.array(y_edges), np.array(hist_values)
 
-    def get_radial_distr(self, bin_size=40, max_dist=1000, density=True):
+    def get_radial_distr(self, bin_size=None, max_dist=None, density=True):
         """
-        Gets the radial distribution of the photons on the ground in relation to the center of the
+        Get the radial distribution of the photons on the ground in relation to the center of the
         array.
 
         Parameters
@@ -291,6 +295,16 @@ class CorsikaOutput:
         np.array
             The values of the 1D histogram with size = int(max_dist/bin_size).
         """
+        if self.telescope_indices is None:
+            if bin_size is None:
+                bin_size = 40
+            if max_dist is None:
+                max_dist = 100
+        else:
+            if bin_size is None:
+                bin_size = 4
+            if max_dist is None:
+                max_dist = 10
         edges_1D_list, hist1D_list = [], []
         x_edges_list, y_edges_list, hist2D_values_list = self.get_2D_position_distr(density=density)
         for step, _ in enumerate(x_edges_list):
