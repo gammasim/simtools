@@ -44,45 +44,38 @@ class CorsikaOutput:
             raise FileNotFoundError
 
         self.tel_positions = None
-        self.telescope_index = None
+        self.telescope_indices = None
 
-    def create_histograms(self, telescope_index=None, rotation_angle=0 * u.rad):
+    def _set_telescope_indices(self, telescope_indices):
         """
-        Extract the information of the Cherenkov photons from a CORSIKA output IACT file and creates
-        a histogram
+        Set the telescope index (or indices) as the class attribute.
 
         Parameters
         ----------
         telescope_index: int or list of int
-            The index of the specific telescope to plot the data. If not specified, all telescopes
-            are treated together. More than one telescope is also allowed.
-        rotation_angle: astropy.units.rad
-            Angle to rotate the observation plane in radians. It allows one to compensate for the
-            zenith angle of observations and get the photon distribution in the plane of the
-            telescope cameras.
-
-        Returns
-        -------
-        numpy.array: array of instances of boost_histogram.Histogram.
+            The index of the specific telescopes to be inspected. If not specified, all telescopes
+            are treated together in one histogram.
 
         Raises
         ------
         TypeError:
             if the index or indices passed through telescope_index are not of type int.
-        IndexError:
-            If the index or indices passed though telescope_index are out of range.
         """
-        if telescope_index is not None:
-            if not isinstance(telescope_index, list):
-                telescope_index = [telescope_index]
-            for one_telescope in telescope_index:
+        if telescope_indices is not None:
+            if not isinstance(telescope_indices, list):
+                telescope_indices = [telescope_indices]
+            for one_telescope in telescope_indices:
                 if not isinstance(one_telescope, int):
                     msg = "The index or indices given are not of type int."
                     self._logger.error(msg)
                     raise TypeError
-        self.telescope_index = telescope_index
+        self.telescope_indices = telescope_indices
 
-        if self.telescope_index is None:
+    def _create_histograms(self):
+        """
+        Create the histogram instances based on the given telescope indices.
+        """
+        if self.telescope_indices is None:
             xy_maximum = 1000
             self.hist = [
                 bh.Histogram(
@@ -99,7 +92,84 @@ class CorsikaOutput:
                     bh.axis.Regular(bins=100, start=-xy_maximum, stop=xy_maximum),
                     bh.axis.Regular(bins=100, start=200, stop=1000),
                 )
-            ] * len(self.telescope_index)
+            ] * len(self.telescope_indices)
+
+        np.array(self.hist)
+
+    @u.quantity_input(rotation_angle=u.rad)
+    def _fill_histogram(self, onetel_position, photons_rel_position, rotation_angle):
+        """Fill the histogram created by self._create_histogram
+
+        Parameters
+        ----------
+        onetel_position: numpy.record
+            Wrapped structured 4-tuple with X, Y, Z positions and the radius of the CORSIKA
+             representation of the telescope (in cm).
+
+        photons_rel_position: numpy.ndarray
+            Array with the following information of the Chernekov photons on the ground: x, y, cx,
+            cy, time, zem, photons, wavelength.
+
+        rotation_angle:
+
+        Raises
+        ------
+        IndexError:
+            If the index or indices passed though telescope_index are out of range.
+        """
+
+        photon_rel_position_rotated_x, photon_rel_position_rotated_y = rotate(
+            photons_rel_position["x"],
+            photons_rel_position["y"],
+            (-4.533 * u.deg).to(u.rad),
+            rotation_angle,
+        )
+
+        if self.telescope_indices is None:
+            self.hist[0].fill(
+                ((-onetel_position["x"] + photon_rel_position_rotated_x) * u.cm).to(u.m),
+                ((-onetel_position["y"] + photon_rel_position_rotated_y) * u.cm).to(u.m),
+                np.abs(photons_rel_position["wavelength"]) * u.nm,
+            )
+        else:
+
+            for step, one_telescope in enumerate(self.telescope_indices):
+                try:
+                    self.hist[step].fill(
+                        (photon_rel_position_rotated_x * u.cm).to(u.m),
+                        (photon_rel_position_rotated_y * u.cm).to(u.m),
+                        np.abs(photons_rel_position[one_telescope]["wavelength"]) * u.nm,
+                    )
+                except IndexError:
+                    msg = (
+                        "Index {} is out of range. There are only {} telescopes in the "
+                        "array.".format(one_telescope, len(self.tel_positions))
+                    )
+                    self._logger.error(msg)
+
+    def set_histograms(self, telescope_indices=None, rotation_angle=0 * u.rad):
+        """
+        Extract the information of the Cherenkov photons from a CORSIKA output IACT file and creates
+        a histogram
+
+        Parameters
+        ----------
+        telescope_indices: int or list of int
+            The index of the specific telescopes to be inspected. If not specified, all telescopes
+            are treated together in one histogram.
+        rotation_angle: astropy.units.rad
+            Angle to rotate the observation plane in radians. It allows one to compensate for the
+            zenith angle of observations and get the photon distribution in the plane of the
+            telescope cameras.
+
+        Returns
+        -------
+        numpy.array: array of instances of boost_histogram.Histogram.
+
+        """
+
+        self._set_telescope_indices(telescope_indices)
+        self._create_histograms()
 
         self.num_photon_bunches_per_event = []
         start_time = time.time()
@@ -108,9 +178,7 @@ class CorsikaOutput:
 
             if self.tel_positions is None:
                 self.tel_positions = np.array(f.telescope_positions)
-
             for event in f:
-
                 num_photons_per_event_per_telescope = 0
                 for step, telescope_now in enumerate(self.tel_positions):
                     num_photons_per_event_per_telescope += np.sum(
@@ -121,51 +189,17 @@ class CorsikaOutput:
                 )
 
                 photons = list(event.photon_bunches.values())
-
                 for onetel_position, photons_rel_position in zip(self.tel_positions, photons):
-                    photon_rel_position_rotated_x, photon_rel_position_rotated_y = rotate(
-                        photons_rel_position["x"],
-                        photons_rel_position["y"],
-                        (-4.533 * u.deg).to(u.rad),
-                        rotation_angle,
-                    )
 
                     # photons_rel_position["cx"], photons_rel_position["cy"],
                     # photons_rel_position["zem"], photons_rel_position["time"]
-                    if self.telescope_index is None:
-                        self.hist[0].fill(
-                            ((-onetel_position["x"] + photon_rel_position_rotated_x) * u.cm).to(
-                                u.m
-                            ),
-                            ((-onetel_position["y"] + photon_rel_position_rotated_y) * u.cm).to(
-                                u.m
-                            ),
-                            np.abs(photons_rel_position["wavelength"]) * u.nm,
-                        )
-                    else:
-
-                        for step, one_telescope in enumerate(self.telescope_index):
-                            try:
-                                # will need one hist for each telescope
-                                self.hist[step].fill(
-                                    (photon_rel_position_rotated_x * u.cm).to(u.m),
-                                    (photon_rel_position_rotated_y * u.cm).to(u.m),
-                                    np.abs(photons_rel_position[one_telescope]["wavelength"])
-                                    * u.nm,
-                                )
-                            except IndexError:
-                                msg = (
-                                    "Index {} is out of range. There are only {} telescopes in the "
-                                    "array.".format(one_telescope, len(self.tel_positions))
-                                )
-                                self._logger.error(msg)
+                    self._fill_histogram(onetel_position, photons_rel_position, rotation_angle)
 
         self._logger.debug(
             "Finished reading the file and creating the histogram in {} seconds".format(
                 time.time() - start_time
             )
         )
-        return np.array(self.hist)
 
     def get_2D_position_distr(self, density=True):
         """
@@ -190,10 +224,10 @@ class CorsikaOutput:
         """
         try:
             mini_hist = []
-            if self.telescope_index is None:
+            if self.telescope_indices is None:
                 include_all = [0]
             else:
-                include_all = self.telescope_index
+                include_all = self.telescope_indices
             for step, _ in enumerate(include_all):
                 mini_hist.append(self.hist[step][:, :, sum])
         except AttributeError:
@@ -258,7 +292,7 @@ class CorsikaOutput:
         Gets histograms with the wavelengths of the photon bunches.
         """
         x_edges_list, hist_1D_list = [], []
-        for step, _ in enumerate(x_edges_list):
+        for step, _ in enumerate(self.hist):
             mini_hist = self.hist[step][sum, sum, :]
             x_edges_list.append(mini_hist.axes.edges.T.flatten()[0])
             hist_1D_list.append(mini_hist.view().T)
@@ -294,10 +328,12 @@ class CorsikaOutput:
             fig, ax = plt.subplots()
             mesh = ax.pcolormesh(x_edges[step], y_edges[step], hist_values[step])
             fig.colorbar(mesh)
-            if self.telescope_index is None:
+            if self.telescope_indices is None:
                 fig.savefig("boost_histogram_dens_all_tels.png")
             else:
-                fig.savefig("boost_histogram_dens_tel_" + str(self.telescope_index[step]) + ".png")
+                fig.savefig(
+                    "boost_histogram_dens_tel_" + str(self.telescope_indices[step]) + ".png"
+                )
 
     def plot_wavelength_distr(self):
         """
@@ -312,11 +348,11 @@ class CorsikaOutput:
                 align="edge",
                 width=np.diff(wavelengths[step]),
             )
-            if self.telescope_index is None:
+            if self.telescope_indices is None:
                 fig.savefig("boost_histogram_wavelength_tels.png")
             else:
                 fig.savefig(
-                    "boost_histogram_wavelength_tel_" + str(self.telescope_index[step]) + ".png"
+                    "boost_histogram_wavelength_tel_" + str(self.telescope_indices[step]) + ".png"
                 )
 
     def plot1D_on_ground(self, radial_edges, histograms_1D):
@@ -333,11 +369,11 @@ class CorsikaOutput:
                 ls="",
             )
             # ax.scatter(distance_sorted,hist_sorted, alpha=0.5, c='r')
-            if self.telescope_index is None:
+            if self.telescope_indices is None:
                 fig.savefig("boost_histogram_1D_pos_tels.png")
             else:
                 fig.savefig(
-                    "boost_histogram_1D_pos_tel_" + str(self.telescope_index[step]) + ".png"
+                    "boost_histogram_1D_pos_tel_" + str(self.telescope_indices[step]) + ".png"
                 )
 
     # Reformulate
