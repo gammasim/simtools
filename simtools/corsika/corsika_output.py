@@ -92,22 +92,20 @@ class CorsikaOutput:
                     bh.axis.Regular(bins=100, start=-xy_maximum, stop=xy_maximum),
                     bh.axis.Regular(bins=100, start=200, stop=1000),
                 )
-            ] * len(self.telescope_indices)
+                for step, _ in enumerate(self.telescope_indices)
+            ]
 
     @u.quantity_input(zenith_angle=u.rad, azimuth_angle=u.rad)
-    def _fill_histogram(
-        self, one_tel_info, photons_info, zenith_angle=0 * u.rad, azimuth_angle=0 * u.rad
-    ):
-        """Fill the histogram created by self._create_histogram
+    def _fill_histograms(self, photons, zenith_angle=0 * u.rad, azimuth_angle=0 * u.rad):
+        """Fill the histograms created by self._create_histogram
 
         Parameters
         ----------
-        one_tel_info: numpy.record
-            Wrapped structured 4-tuple with X, Y, Z positions and the radius of the CORSIKA
-             representation of the telescope (in cm).
-        photons_info: numpy.ndarray
-            Array with the following information of the Cherenkov photons on the ground: x, y, cx,
-            cy, time, zem, photons, wavelength.
+        photons: list
+            List of size M of numpy.void of size (N,8), where M is the number of telescopes in the
+            array, N is the number of photons that reached each telescope. The following information
+             of the Cherenkov photons on the ground are saved: x, y, cx, cy, time, zem, photons,
+             wavelength.
         zenith_angle: astropy.units.rad
             Angle (in radians) to rotate the observation plane (in zenith) of the telescope.
             With the `rotation_angle`, it allows one to compensate for the angle of observations
@@ -124,42 +122,49 @@ class CorsikaOutput:
             If the index or indices passed though telescope_index are out of range.
         """
 
-        photon_rel_position_rotated_x, photon_rel_position_rotated_y = rotate(
-            photons_info["x"],
-            photons_info["y"],
-            azimuth_angle,
-            zenith_angle,
-        )
-
-        if self.telescope_indices is None:
-            self.hist[0].fill(
-                ((-one_tel_info["x"] + photon_rel_position_rotated_x) * u.cm).to(u.m),
-                ((-one_tel_info["y"] + photon_rel_position_rotated_y) * u.cm).to(u.m),
-                np.abs(photons_info["wavelength"]) * u.nm,
+        for one_tel_info, photons_info in zip(self.tel_positions, photons):
+            photon_rel_position_rotated_x, photon_rel_position_rotated_y = rotate(
+                photons_info["x"],
+                photons_info["y"],
+                azimuth_angle,
+                zenith_angle,
             )
-        else:
+            if self.telescope_indices is None:
+                self.hist[0].fill(
+                    ((-one_tel_info["x"] + photon_rel_position_rotated_x) * u.cm).to(u.m),
+                    ((-one_tel_info["y"] + photon_rel_position_rotated_y) * u.cm).to(u.m),
+                    np.abs(photons_info["wavelength"]) * u.nm,
+                )
+            else:
 
-            for step, one_telescope in enumerate(self.telescope_indices):
-                try:
-                    self.hist[step].fill(
-                        (photon_rel_position_rotated_x * u.cm).to(u.m),
-                        (photon_rel_position_rotated_y * u.cm).to(u.m),
-                        np.abs(photons_info["wavelength"]) * u.nm,
-                    )
-                except IndexError:
-                    msg = (
-                        "Index {} is out of range. There are only {} telescopes in the "
-                        "array.".format(one_telescope, len(self.tel_positions))
-                    )
-                    self._logger.error(msg)
+                for step, one_index in enumerate(self.telescope_indices):
+                    try:
+                        if (
+                            one_tel_info["x"]
+                            == self.tel_positions[self.telescope_indices[step]]["x"]
+                            and one_tel_info["y"]
+                            == self.tel_positions[self.telescope_indices[step]]["y"]
+                        ):
+
+                            self.hist[step].fill(
+                                (photon_rel_position_rotated_x * u.cm).to(u.m),
+                                (photon_rel_position_rotated_y * u.cm).to(u.m),
+                                np.abs(photons_info["wavelength"]) * u.nm,
+                            )
+                    except IndexError:
+                        msg = (
+                            "Index {} is out of range. There are only {} telescopes in the "
+                            "array.".format(one_index, len(self.tel_positions))
+                        )
+                        self._logger.error(msg)
 
     @u.quantity_input(zenith_angle=u.rad, azimuth_angle=u.rad)
     def set_histograms(
         self, telescope_indices=None, zenith_angle=0 * u.rad, azimuth_angle=0 * u.rad
     ):
         """
-        Extract the information of the Cherenkov photons from a CORSIKA output IACT file and create
-        a histogram
+        Extract the information of the Cherenkov photons from a CORSIKA output IACT file, create
+         and fill the histograms
 
         Parameters
         ----------
@@ -203,11 +208,9 @@ class CorsikaOutput:
                 )
 
                 photons = list(event.photon_bunches.values())
-                for one_tel_info, photons_info in zip(self.tel_positions, photons):
-
-                    # photons_rel_position["cx"], photons_rel_position["cy"],
-                    # photons_rel_position["zem"], photons_rel_position["time"]
-                    self._fill_histogram(one_tel_info, photons_info, zenith_angle, azimuth_angle)
+                self._fill_histograms(photons, zenith_angle, azimuth_angle)
+                # photons_rel_position["cx"], photons_rel_position["cy"],
+                # photons_rel_position["zem"], photons_rel_position["time"]
 
         self._logger.debug(
             "Finished reading the file and creating the histogram in {} seconds".format(
@@ -217,7 +220,7 @@ class CorsikaOutput:
 
     def get_2D_position_distr(self, density=True):
         """
-        Gets a 2D histogram of position of the Cherenkov photons on the ground.
+        Get 2D histograms of position of the Cherenkov photons on the ground.
 
         Parameters
         ----------
@@ -226,7 +229,7 @@ class CorsikaOutput:
 
         Returns
         -------
-        3-tuple of numpy.array
+        list of 3-tuple of numpy.array
             The edges of the histograms in X, Y and the matrices with the counts
 
         Raises
@@ -246,7 +249,7 @@ class CorsikaOutput:
                 mini_hist.append(self.hist[step][:, :, sum])
         except AttributeError:
             msg = (
-                "The histogram(s) was(were) not created. Please, use `create_histograms` to create "
+                "The histograms were not created. Please, use `create_histograms` to create "
                 "histograms from the CORSIKA output file."
             )
             self._logger.error(msg)
