@@ -52,14 +52,14 @@ class CorsikaOutput:
 
         Parameters
         ----------
-        telescope_index: int or list of int
-            The index of the specific telescopes to be inspected. If not specified, all telescopes
+        telescope_indices: int or list of int
+            The indices of the specific telescopes to be inspected. If not specified, all telescopes
             are treated together in one histogram.
 
         Raises
         ------
         TypeError:
-            if the index or indices passed through telescope_index are not of type int.
+            if the indices passed through telescope_index are not of type int.
         """
         if telescope_indices is not None:
             if not isinstance(telescope_indices, list):
@@ -93,8 +93,6 @@ class CorsikaOutput:
                     bh.axis.Regular(bins=100, start=200, stop=1000),
                 )
             ] * len(self.telescope_indices)
-
-        self.hist = np.array(self.hist)
 
     @u.quantity_input(zenith_angle=u.rad, azimuth_angle=u.rad)
     def _fill_histogram(
