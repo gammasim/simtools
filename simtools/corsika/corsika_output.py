@@ -213,7 +213,7 @@ class CorsikaOutput:
                     self.num_photon_bunches_per_event, num_photons_partial_sum
                 )
                 photons = list(event.photon_bunches.values())
-                self._fill_histograms(photons, self.zenith_angle, self.azimuth_angle)
+                self._fill_histograms(photons)
                 # photons_rel_position["zem"], photons_rel_position["time"]
 
         self._logger.debug(
