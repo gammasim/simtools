@@ -25,18 +25,27 @@ class CorsikaOutput:
     ----------
     input_file: str or Path
         Input file (IACT file) provided by the CORSIKA simulation.
-
+    zenith_angle: astropy.units.rad
+        Zenith angle (in radians) of the observations (in the CORSIKA coordinate system).
+        It is used to rotate the observation plane (in zenith) of the telescope and to plot
+        the sky map of the incoming direction of photons.
+    azimuth_angle: astropy.units.rad
+        Azimuth angle of observation (in radians).
+        See above for more details.
     Raises
     ------
     FileNotFoundError:
         if the input file given does not exist.
     """
 
-    def __init__(self, input_file):
+    @u.quantity_input(zenith_angle=u.rad, azimuth_angle=u.rad)
+    def __init__(self, input_file, zenith_angle=0 * u.rad, azimuth_angle=0 * u.rad):
 
         self._logger = logging.getLogger(__name__)
         self._logger.debug("Init CorsikaOutput")
         self.input_file = input_file
+        self.zenith_angle = zenith_angle
+        self.azimuth_angle = azimuth_angle
 
         if not isinstance(self.input_file, Path):
             self.input_file = Path(self.input_file)
@@ -113,8 +122,7 @@ class CorsikaOutput:
                     )
                 )
 
-    @u.quantity_input(zenith_angle=u.rad, azimuth_angle=u.rad)
-    def _fill_histograms(self, photons, zenith_angle=0 * u.rad, azimuth_angle=0 * u.rad):
+    def _fill_histograms(self, photons):
         """Fill the histograms created by self._create_histogram
 
         Parameters
@@ -124,15 +132,6 @@ class CorsikaOutput:
             array, N is the number of photons that reached each telescope. The following information
              of the Cherenkov photons on the ground are saved: x, y, cx, cy, time, zem, photons,
              wavelength.
-        zenith_angle: astropy.units.rad
-            Angle (in radians) to rotate the observation plane (in zenith) of the telescope.
-            With the `rotation_angle`, it allows one to compensate for the angle of observations
-            and get the photon distribution in the plane of the telescope cameras.
-            The CORSIKA coordinate system is used, i.e., the X axis points North and the Y axis
-            towards West.
-        azimuth_angle: astropy.units.rad
-            Angle (in radians) to rotate the observation plane (in azimuth) of the telescope.
-            See above for more details.
 
         Raises
         ------
@@ -146,8 +145,8 @@ class CorsikaOutput:
                 photon_x, photon_y = rotate(
                     photons_info["x"],
                     photons_info["y"],
-                    azimuth_angle,
-                    zenith_angle,
+                    self.azimuth_angle,
+                    self.zenith_angle,
                 )
                 self.hist_position[0].fill(
                     ((-one_tel_info["x"] + photon_x) * u.cm).to(u.m),
@@ -179,10 +178,7 @@ class CorsikaOutput:
                         )
                         self._logger.error(msg)
 
-    @u.quantity_input(zenith_angle=u.rad, azimuth_angle=u.rad)
-    def set_histograms(
-        self, telescope_indices=None, zenith_angle=0 * u.rad, azimuth_angle=0 * u.rad
-    ):
+    def set_histograms(self, telescope_indices=None):
         """
         Extract the information of the Cherenkov photons from a CORSIKA output IACT file, create
          and fill the histograms
@@ -192,15 +188,6 @@ class CorsikaOutput:
         telescope_indices: int or list of int
             The indices of the specific telescopes to be inspected. If not specified, all telescopes
             are treated together in one histogram.
-        zenith_angle: astropy.units.rad
-            Angle (in radians) to rotate the observation plane (in zenith) of the telescope.
-            With the `rotation_angle`, it allows one to compensate for the angle of observations
-            and get the photon distribution in the plane of the telescope cameras.
-            The CORSIKA coordinate system is used, i.e., the X axis points North and the Y axis
-            towards West.
-        azimuth_angle: astropy.units.rad
-            Angle (in radians) to rotate the observation plane (in azimuth) of the telescope.
-            See above for more details.
 
         Returns
         -------
@@ -226,7 +213,7 @@ class CorsikaOutput:
                     self.num_photon_bunches_per_event, num_photons_partial_sum
                 )
                 photons = list(event.photon_bunches.values())
-                self._fill_histograms(photons, zenith_angle, azimuth_angle)
+                self._fill_histograms(photons, self.zenith_angle, self.azimuth_angle)
                 # photons_rel_position["zem"], photons_rel_position["time"]
 
         self._logger.debug(
@@ -481,7 +468,6 @@ class CorsikaOutput:
                 )
 
     # Reformulate
-
     def get_height(self):
         """
         Gets the Cherenkov photon emission height.
@@ -503,14 +489,3 @@ class CorsikaOutput:
             Time of arrival of the photons since first interaction in seconds.
         """
         return self.time_since_first_interaction
-
-    def get_distance(self):
-        """
-        Gets the distance of the Cherenkov photons on the ground to the array center in meters.
-
-        Returns
-        -------
-        numpy.array
-            The distance of the Cherenkov photons to the array center.
-        """
-        return self.distance
