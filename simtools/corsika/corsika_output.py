@@ -116,17 +116,23 @@ class CorsikaOutput:
                 )
             ]
 
+            self.hist_time_altitude = [
+                bh.Histogram(
+                    bh.axis.Regular(bins=bin_size, start=0, stop=100),
+                    bh.axis.Regular(bins=bin_size, start=15, stop=0),
+                )
+            ]
         else:
             if xy_maximum is None:
                 xy_maximum = 15
 
-            self.hist_position, self.hist_direction = [], []
+            self.hist_position, self.hist_direction, self.hist_time_altitude = [], [], []
             for step, _ in enumerate(self.telescope_indices):
                 self.hist_position.append(
                     bh.Histogram(
-                        bh.axis.Regular(bins=100, start=-xy_maximum, stop=xy_maximum),
-                        bh.axis.Regular(bins=100, start=-xy_maximum, stop=xy_maximum),
-                        bh.axis.Regular(bins=100, start=200, stop=1000),
+                        bh.axis.Regular(bins=bin_size, start=-xy_maximum, stop=xy_maximum),
+                        bh.axis.Regular(bins=bin_size, start=-xy_maximum, stop=xy_maximum),
+                        bh.axis.Regular(bins=bin_size, start=200, stop=1000),
                     )
                 )
 
@@ -134,6 +140,13 @@ class CorsikaOutput:
                     bh.Histogram(
                         bh.axis.Regular(bins=bin_size, start=cosx_obs - 0.1, stop=cosx_obs + 0.1),
                         bh.axis.Regular(bins=bin_size, start=cosy_obs - 0.1, stop=cosy_obs + 0.1),
+                    )
+                )
+
+                self.hist_time_altitude.append(
+                    bh.Histogram(
+                        bh.axis.Regular(bins=bin_size, start=0, stop=100),
+                        bh.axis.Regular(bins=bin_size, start=15, stop=0),
                     )
                 )
 
@@ -169,6 +182,9 @@ class CorsikaOutput:
                     np.abs(photons_info["wavelength"]) * u.nm,
                 )
                 self.hist_direction[0].fill(photons_info["cx"], photons_info["cy"])
+                self.hist_time_altitude.fill(
+                    photons_info["time"] * u.ns, (photons_info["zem"] * u.cm).to(u.km)
+                )
 
             else:
                 photon_x, photon_y = photons_info["x"], photons_info["y"]
@@ -188,6 +204,9 @@ class CorsikaOutput:
                             )
 
                             self.hist_direction[step].fill(photons_info["cx"], photons_info["cy"])
+                            self.hist_time_altitude[step].fill(
+                                photons_info["time"] * u.ns, (photons_info["zem"] * u.cm).to(u.km)
+                            )
 
                     except IndexError:
                         msg = (
@@ -383,6 +402,30 @@ class CorsikaOutput:
             mini_hist.append(self.hist_direction[step].view().T)
         return np.array(x_edges), np.array(y_edges), np.array(mini_hist)
 
+    def get_2D_time_altitude(self):
+        """
+        Get 2D histograms of the time and altitude of the photon production.
+
+        Returns
+        -------
+        numpy.array
+            The edges of the direction histograms in ns.
+        numpy.array
+            The edges of the direction histograms in km.
+        numpy.ndarray
+            The values (counts) of the histogram.
+        """
+        x_edges, y_edges, mini_hist = [], [], []
+        if self.telescope_indices is None:
+            size = 1
+        else:
+            size = len(self.telescope_indices)
+        for step in range(size):
+            x_edges.append(self.hist_time_altitude[step].axes.edges[0].flatten())
+            y_edges.append(self.hist_time_altitude[step].axes.edges[1].flatten())
+            mini_hist.append(self.hist_time_altitude[step].view().T)
+        return np.array(x_edges), np.array(y_edges), np.array(mini_hist)
+
     def get_num_photon_bunches_per_event(self):
         """
         Get the number of photon bunches per event.
@@ -442,6 +485,24 @@ class CorsikaOutput:
             else:
                 fig.savefig(
                     "boost_histogram_direction_tel_" + str(self.telescope_indices[step]) + ".png"
+                )
+
+    def plot_2D_time_altitude(self):
+        """
+        Plot the 2D histogram of the time and altitude where the photon was produced.
+        """
+        x_edges, y_edges, hist_values = self.get_2D_time_altitude()
+        for step, _ in enumerate(x_edges):
+            fig, ax = plt.subplots()
+            mesh = ax.pcolormesh(x_edges[step], y_edges[step], hist_values[step])
+            fig.colorbar(mesh)
+            if self.telescope_indices is None:
+                fig.savefig("boost_histogram_time_altitude_all_tels.png")
+            else:
+                fig.savefig(
+                    "boost_histogram_time_altitude_tel_"
+                    + str(self.telescope_indices[step])
+                    + ".png"
                 )
 
     def plot_wavelength_distr(self):
