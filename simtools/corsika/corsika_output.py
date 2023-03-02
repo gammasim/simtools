@@ -86,6 +86,10 @@ class CorsikaOutput:
         """
         if bin_size is None:
             bin_size = 100
+
+        cosx_obs = np.sin(self.zenith_angle) * np.cos(self.azimuth_angle)
+        cosy_obs = np.sin(self.zenith_angle) * np.sin(self.azimuth_angle)
+
         if self.telescope_indices is None:
             if xy_maximum is None:
                 xy_maximum = 1000
@@ -96,12 +100,14 @@ class CorsikaOutput:
                     bh.axis.Regular(bins=bin_size, start=200, stop=1000),
                 )
             ]
+
             self.hist_direction = [
                 bh.Histogram(
-                    bh.axis.Regular(bins=bin_size, start=-1, stop=1),
-                    bh.axis.Regular(bins=bin_size, start=-1, stop=1),
+                    bh.axis.Regular(bins=bin_size, start=cosx_obs - 0.05, stop=cosx_obs + 0.05),
+                    bh.axis.Regular(bins=bin_size, start=cosy_obs - 0.05, stop=cosy_obs + 0.05),
                 )
             ]
+
         else:
             if xy_maximum is None:
                 xy_maximum = 15
@@ -115,10 +121,11 @@ class CorsikaOutput:
                         bh.axis.Regular(bins=100, start=200, stop=1000),
                     )
                 )
+
                 self.hist_direction.append(
                     bh.Histogram(
-                        bh.axis.Regular(bins=bin_size, start=-1, stop=1),
-                        bh.axis.Regular(bins=bin_size, start=-1, stop=1),
+                        bh.axis.Regular(bins=bin_size, start=cosx_obs - 0.05, stop=cosx_obs + 0.05),
+                        bh.axis.Regular(bins=bin_size, start=cosy_obs - 0.05, stop=cosy_obs + 0.05),
                     )
                 )
 
@@ -154,6 +161,7 @@ class CorsikaOutput:
                     np.abs(photons_info["wavelength"]) * u.nm,
                 )
                 self.hist_direction[0].fill(photons_info["cx"], photons_info["cy"])
+
             else:
                 photon_x, photon_y = photons_info["x"], photons_info["y"]
                 for step, one_index in enumerate(self.telescope_indices):
@@ -170,7 +178,9 @@ class CorsikaOutput:
                                 (photon_y * u.cm).to(u.m),
                                 np.abs(photons_info["wavelength"]) * u.nm,
                             )
+
                             self.hist_direction[step].fill(photons_info["cx"], photons_info["cy"])
+
                     except IndexError:
                         msg = (
                             "Index {} is out of range. There are only {} telescopes in the "
