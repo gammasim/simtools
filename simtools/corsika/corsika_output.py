@@ -80,6 +80,15 @@ class CorsikaOutput:
                     raise TypeError
         self.telescope_indices = telescope_indices
 
+    def _get_directive_cosinus(self):
+        """
+        Get the direction cosinus (X and Y) from the incoming particle, which helps defining the
+        range of the histograms built from the photon incoming directions.
+        """
+        cosx_obs = np.sin(self.zenith_angle) * np.cos(self.azimuth_angle)
+        cosy_obs = np.sin(self.zenith_angle) * np.sin(self.azimuth_angle)
+        return cosx_obs, cosy_obs
+
     def _create_histograms(self, bin_size=None, xy_maximum=None):
         """
         Create the histogram instances based on the given telescope indices.
@@ -87,8 +96,7 @@ class CorsikaOutput:
         if bin_size is None:
             bin_size = 100
 
-        cosx_obs = np.sin(self.zenith_angle) * np.cos(self.azimuth_angle)
-        cosy_obs = np.sin(self.zenith_angle) * np.sin(self.azimuth_angle)
+        cosx_obs, cosy_obs = self._get_directive_cosinus()
 
         if self.telescope_indices is None:
             if xy_maximum is None:
