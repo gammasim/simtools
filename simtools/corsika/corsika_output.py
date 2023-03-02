@@ -103,8 +103,8 @@ class CorsikaOutput:
 
             self.hist_direction = [
                 bh.Histogram(
-                    bh.axis.Regular(bins=bin_size, start=cosx_obs - 0.05, stop=cosx_obs + 0.05),
-                    bh.axis.Regular(bins=bin_size, start=cosy_obs - 0.05, stop=cosy_obs + 0.05),
+                    bh.axis.Regular(bins=bin_size, start=cosx_obs - 0.1, stop=cosx_obs + 0.1),
+                    bh.axis.Regular(bins=bin_size, start=cosy_obs - 0.1, stop=cosy_obs + 0.1),
                 )
             ]
 
@@ -124,8 +124,8 @@ class CorsikaOutput:
 
                 self.hist_direction.append(
                     bh.Histogram(
-                        bh.axis.Regular(bins=bin_size, start=cosx_obs - 0.05, stop=cosx_obs + 0.05),
-                        bh.axis.Regular(bins=bin_size, start=cosy_obs - 0.05, stop=cosy_obs + 0.05),
+                        bh.axis.Regular(bins=bin_size, start=cosx_obs - 0.1, stop=cosx_obs + 0.1),
+                        bh.axis.Regular(bins=bin_size, start=cosy_obs - 0.1, stop=cosy_obs + 0.1),
                     )
                 )
 
