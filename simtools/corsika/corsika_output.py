@@ -105,7 +105,7 @@ class CorsikaOutput:
                 bh.Histogram(
                     bh.axis.Regular(bins=bin_size, start=-xy_maximum, stop=xy_maximum),
                     bh.axis.Regular(bins=bin_size, start=-xy_maximum, stop=xy_maximum),
-                    bh.axis.Regular(bins=bin_size, start=200, stop=1000),
+                    bh.axis.Regular(bins=bin_size, start=200, stop=100),
                 )
             ]
 
@@ -118,7 +118,7 @@ class CorsikaOutput:
 
             self.hist_time_altitude = [
                 bh.Histogram(
-                    bh.axis.Regular(bins=bin_size, start=0, stop=100),
+                    bh.axis.Regular(bins=bin_size, start=0, stop=1000),
                     bh.axis.Regular(bins=bin_size, start=15, stop=0),
                 )
             ]
@@ -182,7 +182,7 @@ class CorsikaOutput:
                     np.abs(photons_info["wavelength"]) * u.nm,
                 )
                 self.hist_direction[0].fill(photons_info["cx"], photons_info["cy"])
-                self.hist_time_altitude.fill(
+                self.hist_time_altitude[0].fill(
                     photons_info["time"] * u.ns, (photons_info["zem"] * u.cm).to(u.km)
                 )
 
@@ -235,7 +235,7 @@ class CorsikaOutput:
         self._set_telescope_indices(telescope_indices)
         self._create_histograms()
 
-        self.num_photon_bunches_per_event = []
+        self.num_photons_per_event = []
         start_time = time.time()
         self._logger.debug("Starting reading the file at {}.".format(start_time))
         with IACTFile(self.input_file) as f:
@@ -243,11 +243,30 @@ class CorsikaOutput:
             if self.tel_positions is None:
                 self.tel_positions = np.array(f.telescope_positions)
             for event in f:
+                """print("event.count")
+                print(event.count)
+                print("event.event_number")
+                print(event.event_number)
+                print("event.header")
+                print(event.header)
+                print("event.impact_x")
+                print(event.impact_x)
+                print("event.impact_y")
+                print(event.impact_y)
+                print("event.n_bunches")
+                print(event.n_bunches)
+                print("event.n_photons")
+                print(event.n_photons)
+                print("event.particles")
+                print(event.particles)
+                print("event.photon_bunches")
+                print(event.photon_bunches)"""
+
                 num_photons_partial_sum = 0
                 for step, _ in enumerate(self.tel_positions):
-                    num_photons_partial_sum += np.sum(event.photon_bunches[step]["photons"])
-                self.num_photon_bunches_per_event = np.append(
-                    self.num_photon_bunches_per_event, num_photons_partial_sum
+                    num_photons_partial_sum += np.sum(event.n_photons[step])
+                self.num_photons_per_event = np.append(
+                    self.num_photons_per_event, num_photons_partial_sum
                 )
                 photons = list(event.photon_bunches.values())
                 self._fill_histograms(photons)
@@ -258,6 +277,7 @@ class CorsikaOutput:
                 time.time() - start_time
             )
         )
+        print(np.mean(self.num_photons_per_event), np.std(self.num_photons_per_event))
 
     def get_2D_position_distr(self, density=True):
         """
@@ -430,7 +450,7 @@ class CorsikaOutput:
         """
         Get the number of photon bunches per event.
         """
-        return self.num_photon_bunches_per_event
+        return self.num_photons_per_event
 
     def get_total_num_photon_bunches(self):
         """
