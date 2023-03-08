@@ -118,7 +118,7 @@ class CorsikaOutput:
 
             self.hist_time_altitude = [
                 bh.Histogram(
-                    bh.axis.Regular(bins=bin_size, start=0, stop=1000),
+                    bh.axis.Regular(bins=bin_size, start=0, stop=2000),
                     bh.axis.Regular(bins=bin_size, start=15, stop=0),
                 )
             ]
@@ -145,7 +145,7 @@ class CorsikaOutput:
 
                 self.hist_time_altitude.append(
                     bh.Histogram(
-                        bh.axis.Regular(bins=bin_size, start=0, stop=100),
+                        bh.axis.Regular(bins=bin_size, start=0, stop=2000),
                         bh.axis.Regular(bins=bin_size, start=15, stop=0),
                     )
                 )
@@ -446,17 +446,36 @@ class CorsikaOutput:
             mini_hist.append(self.hist_time_altitude[step].view().T)
         return np.array(x_edges), np.array(y_edges), np.array(mini_hist)
 
-    def get_num_photon_bunches_per_event(self):
+    def get_time_distr(self):
+        """
+        Get the distribution of the emitted time of the Cherenkov photons. The start of the time
+        is given according to the CORSIKA configuration.
+
+        Returns
+        -------
+        numpy.array
+            The edges of the direction histograms in ns.
+        numpy.ndarray
+            The values (counts) of the histogram.
+        """
+        x_edges_list, hist_1D_list = [], []
+        for step, _ in enumerate(self.hist_time_altitude):
+            mini_hist = self.hist_time_altitude[step][:, sum]
+            x_edges_list.append(mini_hist.axes.edges.T.flatten()[0])
+            hist_1D_list.append(mini_hist.view().T)
+        return np.array(x_edges_list), np.array(hist_1D_list)
+
+    def get_num_photons_per_event(self):
         """
         Get the number of photon bunches per event.
         """
         return self.num_photons_per_event
 
-    def get_total_num_photon_bunches(self):
+    def get_total_num_photons(self):
         """
         Get the total number of photon bunches.
         """
-        return np.sum(self.get_num_photon_bunches_per_event())
+        return np.sum(self.get_num_photons_per_event())
 
     def get_telescope_positions(self):
         """
