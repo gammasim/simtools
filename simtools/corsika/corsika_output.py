@@ -465,6 +465,24 @@ class CorsikaOutput:
             hist_1D_list.append(mini_hist.view().T)
         return np.array(x_edges_list), np.array(hist_1D_list)
 
+    def get_altitude_distr(self):
+        """
+        Get the emission altitude of the Cherenkov photons.
+
+        Returns
+        -------
+        numpy.array
+            The edges of the direction histograms in km.
+        numpy.ndarray
+            The values (counts) of the histogram.
+        """
+        x_edges_list, hist_1D_list = [], []
+        for step, _ in enumerate(self.hist_time_altitude):
+            mini_hist = self.hist_time_altitude[step][sum, :]
+            x_edges_list.append(mini_hist.axes.edges.T.flatten()[0])
+            hist_1D_list.append(mini_hist.view().T)
+        return np.array(x_edges_list), np.array(hist_1D_list)
+
     def get_num_photons_per_event(self):
         """
         Get the number of photon bunches per event.
@@ -606,25 +624,23 @@ class CorsikaOutput:
                     "boost_histogram_1D_time_tel_" + str(self.telescope_indices[step]) + ".png"
                 )
 
-    # Reformulate
-    def get_height(self):
+    def plot_altitude_distr(self, altitude_edges, histograms_1D):
         """
-        Gets the Cherenkov photon emission height.
-
-        Returns
-        -------
-        numpy.array
-            Height of the Cherenkov photons in meters.
+        Plots the 1D distribution, i.e. the radial distribution, of the photons on the ground.
         """
-        return self.z_photon_emission
-
-    def get_time(self):
-        """
-        Gets the Cherenkov time of arrival of the Cherenkov photons since first interaction (in s).
-
-        Returns
-        -------
-        numpy.array
-            Time of arrival of the photons since first interaction in seconds.
-        """
-        return self.time_since_first_interaction
+        for step, _ in enumerate(altitude_edges):
+            fig = plt.figure()
+            ax = fig.add_subplot(111)
+            ax.errorbar(
+                altitude_edges[step][:-1],
+                histograms_1D[step],
+                xerr=int(np.diff(altitude_edges[step])[0] / 2),
+                ls="",
+            )
+            # ax.scatter(distance_sorted,hist_sorted, alpha=0.5, c='r')
+            if self.telescope_indices is None:
+                fig.savefig("boost_histogram_1D_altitude_tels.png")
+            else:
+                fig.savefig(
+                    "boost_histogram_1D_altitude_tel_" + str(self.telescope_indices[step]) + ".png"
+                )
