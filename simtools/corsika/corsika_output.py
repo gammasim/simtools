@@ -118,7 +118,7 @@ class CorsikaOutput:
 
             self.hist_time_altitude = [
                 bh.Histogram(
-                    bh.axis.Regular(bins=bin_size, start=0, stop=2000),
+                    bh.axis.Regular(bins=bin_size, start=0, stop=500),
                     bh.axis.Regular(bins=bin_size, start=15, stop=0),
                 )
             ]
@@ -145,7 +145,7 @@ class CorsikaOutput:
 
                 self.hist_time_altitude.append(
                     bh.Histogram(
-                        bh.axis.Regular(bins=bin_size, start=0, stop=2000),
+                        bh.axis.Regular(bins=bin_size, start=0, stop=500),
                         bh.axis.Regular(bins=bin_size, start=15, stop=0),
                     )
                 )
@@ -583,6 +583,27 @@ class CorsikaOutput:
             else:
                 fig.savefig(
                     "boost_histogram_1D_pos_tel_" + str(self.telescope_indices[step]) + ".png"
+                )
+
+    def plot_time_distr(self, time_edges, histograms_1D):
+        """
+        Plots the 1D distribution, i.e. the radial distribution, of the photons on the ground.
+        """
+        for step, _ in enumerate(time_edges):
+            fig = plt.figure()
+            ax = fig.add_subplot(111)
+            ax.errorbar(
+                time_edges[step][:-1],
+                histograms_1D[step],
+                xerr=int(np.diff(time_edges[step])[0] / 2),
+                ls="",
+            )
+            # ax.scatter(distance_sorted,hist_sorted, alpha=0.5, c='r')
+            if self.telescope_indices is None:
+                fig.savefig("boost_histogram_1D_time_tels.png")
+            else:
+                fig.savefig(
+                    "boost_histogram_1D_time_tel_" + str(self.telescope_indices[step]) + ".png"
                 )
 
     # Reformulate
