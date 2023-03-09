@@ -480,7 +480,10 @@ class CorsikaOutput:
         for step, _ in enumerate(self.hist_time_altitude):
             mini_hist = self.hist_time_altitude[step][sum, :]
             x_edges_list.append(mini_hist.axes.edges.T.flatten()[0])
+            print(mini_hist.axes.edges.T.flatten()[0])
+            print(mini_hist.view().T)
             hist_1D_list.append(mini_hist.view().T)
+
         return np.array(x_edges_list), np.array(hist_1D_list)
 
     def get_num_photons_per_event(self):
@@ -592,7 +595,7 @@ class CorsikaOutput:
             ax.errorbar(
                 radial_edges[step][:-1],
                 histograms_1D[step],
-                xerr=int(np.diff(radial_edges[step])[0] / 2),
+                xerr=np.abs(np.diff(radial_edges[step])[0] / 2),
                 ls="",
             )
             # ax.scatter(distance_sorted,hist_sorted, alpha=0.5, c='r')
@@ -613,7 +616,7 @@ class CorsikaOutput:
             ax.errorbar(
                 time_edges[step][:-1],
                 histograms_1D[step],
-                xerr=int(np.diff(time_edges[step])[0] / 2),
+                xerr=np.abs(np.diff(time_edges[step])[0] / 2),
                 ls="",
             )
             # ax.scatter(distance_sorted,hist_sorted, alpha=0.5, c='r')
@@ -634,7 +637,7 @@ class CorsikaOutput:
             ax.errorbar(
                 altitude_edges[step][:-1],
                 histograms_1D[step],
-                xerr=int(np.diff(altitude_edges[step])[0] / 2),
+                xerr=np.abs(np.diff(altitude_edges[step])[0] / 2),
                 ls="",
             )
             # ax.scatter(distance_sorted,hist_sorted, alpha=0.5, c='r')
