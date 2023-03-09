@@ -490,60 +490,64 @@ class CorsikaOutput:
         """
         return self.tel_positions
 
-    def plot_2D_on_ground(self, density):
+    def _kernel_plot_2D_photons(self, name):
         """
-        Plot the 2D histogram of the photon positions on the ground.
+        Create the figure of a 2D plot. The parameter `name` indicate which plot. Choices are
+        "counts", "density", "direction".
 
-        Parameters
-        ----------
-        density: bool
-            If True, returns the density distribution. If False, returns the distribution of counts.
+        Returns
+        -------
+        list
+            List of figures for the given telescopes.
+
         """
-        x_edges, y_edges, hist_values = self.get_2D_position_distr(density=density)
+        valid_names = {"counts", "density", "direction", "time_altitude"}
+        if name not in valid_names:
+            msg = "results: status must be one of {}".format(valid_names)
+            self._logger.error(msg)
+            raise ValueError(msg)
+
+        if name == "counts":
+            x_edges, y_edges, hist_values = self.get_2D_position_distr(density=False)
+        elif name == "density":
+            x_edges, y_edges, hist_values = self.get_2D_position_distr(density=True)
+        elif name == "direction":
+            x_edges, y_edges, hist_values = self.get_2D_direction_distr()
+        elif name == "time_altitude":
+            x_edges, y_edges, hist_values = self.get_2D_time_altitude()
+
+        all_figs = []
         for step, _ in enumerate(x_edges):
             fig, ax = plt.subplots()
             mesh = ax.pcolormesh(x_edges[step], y_edges[step], hist_values[step])
             fig.colorbar(mesh)
+            all_figs.append(fig)
             if self.telescope_indices is None:
-                fig.savefig("boost_histogram_dens_all_tels.png")
+                fig.savefig("boost_histogram_" + name + "_all_tels.png")
             else:
                 fig.savefig(
-                    "boost_histogram_dens_tel_" + str(self.telescope_indices[step]) + ".png"
+                    "boost_histogram_" + name + "_tel_" + str(self.telescope_indices[step]) + ".png"
                 )
+
+        return all_figs
+
+    def plot_2D_on_ground(self):
+        """
+        Plot the 2D histogram of the photon positions on the ground.
+        """
+        return self._kernel_plot_2D_photons("density")
 
     def plot_2D_direction(self):
         """
         Plot the 2D histogram of the incoming direction of photons.
         """
-        x_edges, y_edges, hist_values = self.get_2D_direction_distr()
-        for step, _ in enumerate(x_edges):
-            fig, ax = plt.subplots()
-            mesh = ax.pcolormesh(x_edges[step], y_edges[step], hist_values[step])
-            fig.colorbar(mesh)
-            if self.telescope_indices is None:
-                fig.savefig("boost_histogram_direction_all_tels.png")
-            else:
-                fig.savefig(
-                    "boost_histogram_direction_tel_" + str(self.telescope_indices[step]) + ".png"
-                )
+        return self._kernel_plot_2D_photons("direction")
 
     def plot_2D_time_altitude(self):
         """
         Plot the 2D histogram of the time and altitude where the photon was produced.
         """
-        x_edges, y_edges, hist_values = self.get_2D_time_altitude()
-        for step, _ in enumerate(x_edges):
-            fig, ax = plt.subplots()
-            mesh = ax.pcolormesh(x_edges[step], y_edges[step], hist_values[step])
-            fig.colorbar(mesh)
-            if self.telescope_indices is None:
-                fig.savefig("boost_histogram_time_altitude_all_tels.png")
-            else:
-                fig.savefig(
-                    "boost_histogram_time_altitude_tel_"
-                    + str(self.telescope_indices[step])
-                    + ".png"
-                )
+        return self._kernel_plot_2D_photons("time_altitude")
 
     def plot_wavelength_distr(self):
         """
