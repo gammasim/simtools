@@ -243,24 +243,6 @@ class CorsikaOutput:
             if self.tel_positions is None:
                 self.tel_positions = np.array(f.telescope_positions)
             for event in f:
-                """print("event.count")
-                print(event.count)
-                print("event.event_number")
-                print(event.event_number)
-                print("event.header")
-                print(event.header)
-                print("event.impact_x")
-                print(event.impact_x)
-                print("event.impact_y")
-                print(event.impact_y)
-                print("event.n_bunches")
-                print(event.n_bunches)
-                print("event.n_photons")
-                print(event.n_photons)
-                print("event.particles")
-                print(event.particles)
-                print("event.photon_bunches")
-                print(event.photon_bunches)"""
 
                 num_photons_partial_sum = 0
                 for step, _ in enumerate(self.tel_positions):
@@ -480,8 +462,6 @@ class CorsikaOutput:
         for step, _ in enumerate(self.hist_time_altitude):
             mini_hist = self.hist_time_altitude[step][sum, :]
             x_edges_list.append(mini_hist.axes.edges.T.flatten()[0])
-            print(mini_hist.axes.edges.T.flatten()[0])
-            print(mini_hist.view().T)
             hist_1D_list.append(mini_hist.view().T)
 
         return np.array(x_edges_list), np.array(hist_1D_list)
