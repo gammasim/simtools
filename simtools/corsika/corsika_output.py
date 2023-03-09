@@ -500,6 +500,11 @@ class CorsikaOutput:
         list
             List of figures for the given telescopes.
 
+        Raises
+        ------
+        ValueError
+            if `name` is not allowed.
+
         """
         valid_names = {"counts", "density", "direction", "time_altitude"}
         if name not in valid_names:
@@ -531,9 +536,15 @@ class CorsikaOutput:
 
         return all_figs
 
-    def plot_2D_on_ground(self):
+    def plot_2D_counts(self):
         """
         Plot the 2D histogram of the photon positions on the ground.
+        """
+        return self._kernel_plot_2D_photons("counts")
+
+    def plot_2D_density(self):
+        """
+        Plot the 2D histogram of the photon density distribution on the ground.
         """
         return self._kernel_plot_2D_photons("density")
 
@@ -549,85 +560,83 @@ class CorsikaOutput:
         """
         return self._kernel_plot_2D_photons("time_altitude")
 
+    def _kernel_plot_1D_photons(self, name):
+        """
+        Create the figure of a 1D plot. The parameter `name` indicate which plot. Choices are
+        "counts", "density", "direction".
+
+        Returns
+        -------
+        list
+            List of figures for the given telescopes.
+
+        Raises
+        ------
+        ValueError
+            if `name` is not allowed.
+        """
+
+        valid_names = {"wavelength", "counts", "density", "time", "altitude"}
+        if name not in valid_names:
+            msg = "results: status must be one of {}".format(valid_names)
+            self._logger.error(msg)
+            raise ValueError(msg)
+
+        if name == "wavelength":
+            edges, hist_values = self.get_wavelength_distr()
+        elif name == "counts":
+            edges, hist_values = self.get_radial_distr(bin_size=4, max_dist=50, density=False)
+        elif name == "density":
+            edges, hist_values = self.get_radial_distr(bin_size=4, max_dist=50, density=True)
+        elif name == "time":
+            edges, hist_values = self.get_time_distr()
+        elif name == "altitude":
+            edges, hist_values = self.get_altitude_distr()
+
+        all_figs = []
+        for step, _ in enumerate(edges):
+            fig, ax = plt.subplots()
+            ax.bar(
+                edges[step][:-1],
+                hist_values[step],
+                align="edge",
+                width=np.diff(edges[step]),
+            )
+            if self.telescope_indices is None:
+                fig.savefig("boost_histogram_" + name + "_tels.png")
+            else:
+                fig.savefig(
+                    "boost_histogram_" + name + "_tel_" + str(self.telescope_indices[step]) + ".png"
+                )
+            all_figs.append(fig)
+        return all_figs
+
     def plot_wavelength_distr(self):
         """
         Plots the 1D distribution of the photon wavelengths
         """
-        wavelengths, hist_values = self.get_wavelength_distr()
-        for step, _ in enumerate(wavelengths):
-            fig, ax = plt.subplots()
-            ax.bar(
-                wavelengths[step][:-1],
-                hist_values[step],
-                align="edge",
-                width=np.diff(wavelengths[step]),
-            )
-            if self.telescope_indices is None:
-                fig.savefig("boost_histogram_wavelength_tels.png")
-            else:
-                fig.savefig(
-                    "boost_histogram_wavelength_tel_" + str(self.telescope_indices[step]) + ".png"
-                )
+        return self._kernel_plot_1D_photons("wavelength")
 
-    def plot1D_on_ground(self, radial_edges, histograms_1D):
+    def plot_counts_distr(self):
         """
         Plots the 1D distribution, i.e. the radial distribution, of the photons on the ground.
         """
-        for step, _ in enumerate(radial_edges):
-            fig = plt.figure()
-            ax = fig.add_subplot(111)
-            ax.errorbar(
-                radial_edges[step][:-1],
-                histograms_1D[step],
-                xerr=np.abs(np.diff(radial_edges[step])[0] / 2),
-                ls="",
-            )
-            # ax.scatter(distance_sorted,hist_sorted, alpha=0.5, c='r')
-            if self.telescope_indices is None:
-                fig.savefig("boost_histogram_1D_pos_tels.png")
-            else:
-                fig.savefig(
-                    "boost_histogram_1D_pos_tel_" + str(self.telescope_indices[step]) + ".png"
-                )
+        return self._kernel_plot_1D_photons("counts")
+
+    def plot_density_distr(self):
+        """
+        Plots the photon density distribution on the ground.
+        """
+        return self._kernel_plot_1D_photons("density")
 
     def plot_time_distr(self, time_edges, histograms_1D):
         """
         Plots the 1D distribution, i.e. the radial distribution, of the photons on the ground.
         """
-        for step, _ in enumerate(time_edges):
-            fig = plt.figure()
-            ax = fig.add_subplot(111)
-            ax.errorbar(
-                time_edges[step][:-1],
-                histograms_1D[step],
-                xerr=np.abs(np.diff(time_edges[step])[0] / 2),
-                ls="",
-            )
-            # ax.scatter(distance_sorted,hist_sorted, alpha=0.5, c='r')
-            if self.telescope_indices is None:
-                fig.savefig("boost_histogram_1D_time_tels.png")
-            else:
-                fig.savefig(
-                    "boost_histogram_1D_time_tel_" + str(self.telescope_indices[step]) + ".png"
-                )
+        return self._kernel_plot_1D_photons("time")
 
-    def plot_altitude_distr(self, altitude_edges, histograms_1D):
+    def plot_altitude_distr(self):
         """
         Plots the 1D distribution, i.e. the radial distribution, of the photons on the ground.
         """
-        for step, _ in enumerate(altitude_edges):
-            fig = plt.figure()
-            ax = fig.add_subplot(111)
-            ax.errorbar(
-                altitude_edges[step][:-1],
-                histograms_1D[step],
-                xerr=np.abs(np.diff(altitude_edges[step])[0] / 2),
-                ls="",
-            )
-            # ax.scatter(distance_sorted,hist_sorted, alpha=0.5, c='r')
-            if self.telescope_indices is None:
-                fig.savefig("boost_histogram_1D_altitude_tels.png")
-            else:
-                fig.savefig(
-                    "boost_histogram_1D_altitude_tel_" + str(self.telescope_indices[step]) + ".png"
-                )
+        return self._kernel_plot_1D_photons("altitude")
