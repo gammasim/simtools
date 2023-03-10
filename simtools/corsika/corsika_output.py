@@ -105,7 +105,7 @@ class CorsikaOutput:
                 bh.Histogram(
                     bh.axis.Regular(bins=bin_size, start=-xy_maximum, stop=xy_maximum),
                     bh.axis.Regular(bins=bin_size, start=-xy_maximum, stop=xy_maximum),
-                    bh.axis.Regular(bins=bin_size, start=200, stop=100),
+                    bh.axis.Regular(bins=bin_size, start=200, stop=1000),
                 )
             ]
 
@@ -252,7 +252,6 @@ class CorsikaOutput:
                 )
                 photons = list(event.photon_bunches.values())
                 self._fill_histograms(photons)
-                # photons_rel_position["zem"], photons_rel_position["time"]
 
         self._logger.debug(
             "Finished reading the file and creating the histogram in {} seconds".format(
@@ -342,10 +341,10 @@ class CorsikaOutput:
             if bin_size is None:
                 bin_size = 40
             if max_dist is None:
-                max_dist = 100
+                max_dist = 1000
         else:
             if bin_size is None:
-                bin_size = 4
+                bin_size = 1
             if max_dist is None:
                 max_dist = 10
         edges_1D_list, hist1D_list = [], []
@@ -378,6 +377,7 @@ class CorsikaOutput:
             mini_hist = self.hist_position[step][sum, sum, :]
             x_edges_list.append(mini_hist.axes.edges.T.flatten()[0])
             hist_1D_list.append(mini_hist.view().T)
+        print(np.array(x_edges_list), np.array(hist_1D_list))
         return np.array(x_edges_list), np.array(hist_1D_list)
 
     def get_2D_direction_distr(self):
@@ -585,9 +585,9 @@ class CorsikaOutput:
         if name == "wavelength":
             edges, hist_values = self.get_wavelength_distr()
         elif name == "counts":
-            edges, hist_values = self.get_radial_distr(bin_size=4, max_dist=50, density=False)
+            edges, hist_values = self.get_radial_distr(density=False)
         elif name == "density":
-            edges, hist_values = self.get_radial_distr(bin_size=4, max_dist=50, density=True)
+            edges, hist_values = self.get_radial_distr(density=True)
         elif name == "time":
             edges, hist_values = self.get_time_distr()
         elif name == "altitude":
@@ -600,7 +600,7 @@ class CorsikaOutput:
                 edges[step][:-1],
                 hist_values[step],
                 align="edge",
-                width=np.diff(edges[step]),
+                width=np.abs(np.diff(edges[step])),
             )
             if self.telescope_indices is None:
                 fig.savefig("boost_histogram_" + name + "_tels.png")
@@ -629,14 +629,14 @@ class CorsikaOutput:
         """
         return self._kernel_plot_1D_photons("density")
 
-    def plot_time_distr(self, time_edges, histograms_1D):
+    def plot_time_distr(self):
         """
-        Plots the 1D distribution, i.e. the radial distribution, of the photons on the ground.
+        Plots the distribution times in which the photons were generated in ns.
         """
         return self._kernel_plot_1D_photons("time")
 
     def plot_altitude_distr(self):
         """
-        Plots the 1D distribution, i.e. the radial distribution, of the photons on the ground.
+        Plots the distribution of altitude in which the photons were generated in km.
         """
         return self._kernel_plot_1D_photons("altitude")
