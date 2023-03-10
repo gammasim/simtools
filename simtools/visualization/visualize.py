@@ -721,9 +721,20 @@ def _kernel_plot_2D_photons(corsika_output_instance, quantity_name):
         if `name` is not allowed.
 
     """
-    valid_names = {"counts", "density", "direction", "time_altitude"}
-    if quantity_name not in valid_names:
-        msg = "results: status must be one of {}".format(valid_names)
+    x_label = {
+        "counts": "X (m)",
+        "density": r"X (m$^{-2}$)",
+        "direction": "cos(X)",
+        "time_altitude": "Time of emission (ns)",
+    }
+    y_label = {
+        "counts": "Y (m)",
+        "density": r"Y (m$^{-2}$)",
+        "direction": "cos(Y)",
+        "time_altitude": "Altitude of emission (km)",
+    }
+    if quantity_name not in x_label:
+        msg = "quantity_name must be one of {}".format(x_label)
         corsika_output_instance._logger.error(msg)
         raise ValueError(msg)
 
@@ -740,6 +751,8 @@ def _kernel_plot_2D_photons(corsika_output_instance, quantity_name):
     for step, _ in enumerate(x_edges):
         fig, ax = plt.subplots()
         mesh = ax.pcolormesh(x_edges[step], y_edges[step], hist_values[step])
+        ax.set_xlabel(x_label[quantity_name])
+        ax.set_ylabel(y_label[quantity_name])
         fig.colorbar(mesh)
         all_figs.append(fig)
         if corsika_output_instance.telescope_indices is None:
@@ -800,9 +813,15 @@ def _kernel_plot_1D_photons(corsika_output_instance, property_name):
         if `name` is not allowed.
     """
 
-    valid_names = {"wavelength", "counts", "density", "time", "altitude"}
-    if property_name not in valid_names:
-        msg = "results: status must be one of {}".format(valid_names)
+    x_label = {
+        "wavelength": "Wavelength (nm)",
+        "counts": "Distance to center (m)",
+        "density": "Distance to center (m)",
+        "time": "Time of emission (ns)",
+        "altitude": "Altitude of emission (km)",
+    }
+    if property_name not in x_label:
+        msg = "results: status must be one of {}".format(x_label)
         corsika_output_instance._logger.error(msg)
         raise ValueError(msg)
 
@@ -826,6 +845,8 @@ def _kernel_plot_1D_photons(corsika_output_instance, property_name):
             align="edge",
             width=np.abs(np.diff(edges[step])),
         )
+        ax.set_xlabel(x_label[property_name])
+        ax.set_ylabel("Counts")
         if corsika_output_instance.telescope_indices is None:
             fig.savefig("boost_histogram_" + property_name + "_tels.png")
         else:
