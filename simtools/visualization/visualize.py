@@ -8,6 +8,7 @@ import astropy.units as u
 import matplotlib.gridspec as gridspec
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
+import numpy as np
 from astropy.table import QTable
 from cycler import cycler
 from matplotlib.collections import PatchCollection
@@ -699,3 +700,176 @@ def plot_array(telescopes, rotate_angle=0, show_tel_label=False):
     plt.tight_layout()
 
     return fig
+
+
+def _kernel_plot_2D_photons(corsika_output_instance, quantity_name):
+    """
+    The next functions below are used by the the corsikaOutput class to plot all sort of information
+    from the Cherenkov photons saved.
+
+    Create the figure of a 2D plot. The parameter `name` indicate which plot. Choices are
+    "counts", "density", "direction".
+
+    Returns
+    -------
+    list
+        List of figures for the given telescopes.
+
+    Raises
+    ------
+    ValueError
+        if `name` is not allowed.
+
+    """
+    valid_names = {"counts", "density", "direction", "time_altitude"}
+    if quantity_name not in valid_names:
+        msg = "results: status must be one of {}".format(valid_names)
+        corsika_output_instance._logger.error(msg)
+        raise ValueError(msg)
+
+    if quantity_name == "counts":
+        x_edges, y_edges, hist_values = corsika_output_instance.get_2D_position_distr(density=False)
+    elif quantity_name == "density":
+        x_edges, y_edges, hist_values = corsika_output_instance.get_2D_position_distr(density=True)
+    elif quantity_name == "direction":
+        x_edges, y_edges, hist_values = corsika_output_instance.get_2D_direction_distr()
+    elif quantity_name == "time_altitude":
+        x_edges, y_edges, hist_values = corsika_output_instance.get_2D_time_altitude()
+
+    all_figs = []
+    for step, _ in enumerate(x_edges):
+        fig, ax = plt.subplots()
+        mesh = ax.pcolormesh(x_edges[step], y_edges[step], hist_values[step])
+        fig.colorbar(mesh)
+        all_figs.append(fig)
+        if corsika_output_instance.telescope_indices is None:
+            fig.savefig("boost_histogram_" + quantity_name + "_all_tels.png")
+        else:
+            fig.savefig(
+                "boost_histogram_"
+                + quantity_name
+                + "_tel_"
+                + str(corsika_output_instance.telescope_indices[step])
+                + ".png"
+            )
+
+    return all_figs
+
+
+def plot_2D_counts(corsika_output_instance):
+    """
+    Plot the 2D histogram of the photon positions on the ground.
+    """
+    return _kernel_plot_2D_photons(corsika_output_instance, "counts")
+
+
+def plot_2D_density(corsika_output_instance):
+    """
+    Plot the 2D histogram of the photon density distribution on the ground.
+    """
+    return _kernel_plot_2D_photons(corsika_output_instance, "density")
+
+
+def plot_2D_direction(corsika_output_instance):
+    """
+    Plot the 2D histogram of the incoming direction of photons.
+    """
+    return _kernel_plot_2D_photons(corsika_output_instance, "direction")
+
+
+def plot_2D_time_altitude(corsika_output_instance):
+    """
+    Plot the 2D histogram of the time and altitude where the photon was produced.
+    """
+    return _kernel_plot_2D_photons(corsika_output_instance, "time_altitude")
+
+
+def _kernel_plot_1D_photons(corsika_output_instance, property_name):
+    """
+    Create the figure of a 1D plot. The parameter `name` indicate which plot. Choices are
+    "counts", "density", "direction".
+
+    Returns
+    -------
+    list
+        List of figures for the given telescopes.
+
+    Raises
+    ------
+    ValueError
+        if `name` is not allowed.
+    """
+
+    valid_names = {"wavelength", "counts", "density", "time", "altitude"}
+    if property_name not in valid_names:
+        msg = "results: status must be one of {}".format(valid_names)
+        corsika_output_instance._logger.error(msg)
+        raise ValueError(msg)
+
+    if property_name == "wavelength":
+        edges, hist_values = corsika_output_instance.get_wavelength_distr()
+    elif property_name == "counts":
+        edges, hist_values = corsika_output_instance.get_radial_distr(density=False)
+    elif property_name == "density":
+        edges, hist_values = corsika_output_instance.get_radial_distr(density=True)
+    elif property_name == "time":
+        edges, hist_values = corsika_output_instance.get_time_distr()
+    elif property_name == "altitude":
+        edges, hist_values = corsika_output_instance.get_altitude_distr()
+
+    all_figs = []
+    for step, _ in enumerate(edges):
+        fig, ax = plt.subplots()
+        ax.bar(
+            edges[step][:-1],
+            hist_values[step],
+            align="edge",
+            width=np.abs(np.diff(edges[step])),
+        )
+        if corsika_output_instance.telescope_indices is None:
+            fig.savefig("boost_histogram_" + property_name + "_tels.png")
+        else:
+            fig.savefig(
+                "boost_histogram_"
+                + property_name
+                + "_tel_"
+                + str(corsika_output_instance.telescope_indices[step])
+                + ".png"
+            )
+        all_figs.append(fig)
+    return all_figs
+
+
+def plot_wavelength_distr(corsika_output_instance):
+    """
+    Plots the 1D distribution of the photon wavelengths
+    """
+    return _kernel_plot_1D_photons(corsika_output_instance, "wavelength")
+
+
+def plot_counts_distr(corsika_output_instance):
+    """
+    Plots the 1D distribution, i.e. the radial distribution, of the photons on the ground.
+    """
+    return _kernel_plot_1D_photons(corsika_output_instance, "counts")
+
+
+def plot_density_distr(corsika_output_instance):
+    """
+    Plots the photon density distribution on the ground.
+    """
+    return _kernel_plot_1D_photons(corsika_output_instance, "density")
+
+
+def plot_time_distr(corsika_output_instance):
+    """
+    Plots the distribution times in which the photons were generated in ns.
+    """
+    return _kernel_plot_1D_photons(corsika_output_instance, "time")
+
+
+def plot_altitude_distr(corsika_output_instance):
+    """
+    Plots the distribution of altitude in which the photons were generated in km.
+    """
+    return _kernel_plot_1D_photons(corsika_output_instance, "altitude")
