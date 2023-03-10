@@ -261,7 +261,8 @@ class CorsikaOutput:
 
     def get_2D_position_distr(self, density=True):
         """
-        Get 2D histograms of position of the Cherenkov photons on the ground.
+        Get 2D histograms of position of the Cherenkov photons on the ground. If density is True,
+        it returns the photon density per square meter.
 
         Parameters
         ----------
