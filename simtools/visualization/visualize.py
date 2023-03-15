@@ -726,14 +726,14 @@ def _kernel_plot_2D_photons(corsika_output_instance, quantity_name):
         "density": r"X (m$^{-2}$)",
         "direction": "cos(X)",
         "time_altitude": "Time of emission (ns)",
-        "num_photons": "Event number",
+        "num_photons_per_telescope": "Event number",
     }
     y_label = {
         "counts": "Y (m)",
         "density": r"Y (m$^{-2}$)",
         "direction": "cos(Y)",
         "time_altitude": "Altitude of emission (km)",
-        "num_photons": "Telescope index",
+        "num_photons_per_telescope": "Telescope index",
     }
     if quantity_name not in x_label:
         msg = "quantity_name must be one of {}".format(x_label)
