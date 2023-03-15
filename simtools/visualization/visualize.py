@@ -748,7 +748,7 @@ def _kernel_plot_2D_photons(corsika_output_instance, quantity_name):
         x_edges, y_edges, hist_values = corsika_output_instance.get_2D_direction_distr()
     elif quantity_name == "time_altitude":
         x_edges, y_edges, hist_values = corsika_output_instance.get_2D_time_altitude()
-    elif quantity_name == "num_photons":
+    elif quantity_name == "num_photons_per_telescope":
         x_edges, y_edges, hist_values = corsika_output_instance.get_2D_num_photons_distr()
         x_edges, y_edges, hist_values = [x_edges], [y_edges], [hist_values]
 
@@ -810,7 +810,7 @@ def plot_2D_num_photons(corsika_output_instance):
     """
     Plot the 2D histogram of the number of photons per event and per telescope.
     """
-    return _kernel_plot_2D_photons(corsika_output_instance, "num_photons")
+    return _kernel_plot_2D_photons(corsika_output_instance, "num_photons_per_telescope")
 
 
 def _kernel_plot_1D_photons(corsika_output_instance, property_name):
