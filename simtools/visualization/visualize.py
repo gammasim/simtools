@@ -726,12 +726,14 @@ def _kernel_plot_2D_photons(corsika_output_instance, quantity_name):
         "density": r"X (m$^{-2}$)",
         "direction": "cos(X)",
         "time_altitude": "Time of emission (ns)",
+        "num_photons": "Event number",
     }
     y_label = {
         "counts": "Y (m)",
         "density": r"Y (m$^{-2}$)",
         "direction": "cos(Y)",
         "time_altitude": "Altitude of emission (km)",
+        "num_photons": "Telescope index",
     }
     if quantity_name not in x_label:
         msg = "quantity_name must be one of {}".format(x_label)
@@ -746,16 +748,22 @@ def _kernel_plot_2D_photons(corsika_output_instance, quantity_name):
         x_edges, y_edges, hist_values = corsika_output_instance.get_2D_direction_distr()
     elif quantity_name == "time_altitude":
         x_edges, y_edges, hist_values = corsika_output_instance.get_2D_time_altitude()
+    elif quantity_name == "num_photons":
+        x_edges, y_edges, hist_values = corsika_output_instance.get_2D_num_photons_distr()
+        x_edges, y_edges, hist_values = [x_edges], [y_edges], [hist_values]
 
     all_figs = []
     for step, _ in enumerate(x_edges):
         fig, ax = plt.subplots()
+        print((x_edges[step]))
+        print((y_edges[step]))
+        print((hist_values[step]))
         mesh = ax.pcolormesh(x_edges[step], y_edges[step], hist_values[step])
         ax.set_xlabel(x_label[quantity_name])
         ax.set_ylabel(y_label[quantity_name])
         fig.colorbar(mesh)
         all_figs.append(fig)
-        if corsika_output_instance.telescope_indices is None:
+        if corsika_output_instance.telescope_indices is None or quantity_name == "num_photons":
             fig.savefig("boost_histogram_" + quantity_name + "_all_tels.png", bbox_inches="tight")
         else:
             fig.savefig(
@@ -798,6 +806,13 @@ def plot_2D_time_altitude(corsika_output_instance):
     return _kernel_plot_2D_photons(corsika_output_instance, "time_altitude")
 
 
+def plot_2D_num_photons(corsika_output_instance):
+    """
+    Plot the 2D histogram of the number of photons per event and per telescope.
+    """
+    return _kernel_plot_2D_photons(corsika_output_instance, "num_photons")
+
+
 def _kernel_plot_1D_photons(corsika_output_instance, property_name):
     """
     Create the figure of a 1D plot. The parameter `name` indicate which plot. Choices are
@@ -820,6 +835,7 @@ def _kernel_plot_1D_photons(corsika_output_instance, property_name):
         "density": "Distance to center (m)",
         "time": "Time of emission (ns)",
         "altitude": "Altitude of emission (km)",
+        "num_photons": "Number of photons per event",
     }
     if property_name not in x_label:
         msg = "results: status must be one of {}".format(x_label)
@@ -836,6 +852,9 @@ def _kernel_plot_1D_photons(corsika_output_instance, property_name):
         edges, hist_values = corsika_output_instance.get_time_distr()
     elif property_name == "altitude":
         edges, hist_values = corsika_output_instance.get_altitude_distr()
+    elif property_name == "num_photons":
+        edges, hist_values = corsika_output_instance.get_num_photons_distr()
+        edges, hist_values = [edges], [hist_values]
 
     all_figs = []
     for step, _ in enumerate(edges):
@@ -848,7 +867,7 @@ def _kernel_plot_1D_photons(corsika_output_instance, property_name):
         )
         ax.set_xlabel(x_label[property_name])
         ax.set_ylabel("Counts")
-        if corsika_output_instance.telescope_indices is None:
+        if corsika_output_instance.telescope_indices is None or property_name == "num_photons":
             fig.savefig("boost_histogram_" + property_name + "_tels.png", bbox_inches="tight")
         else:
             fig.savefig(
@@ -896,3 +915,10 @@ def plot_altitude_distr(corsika_output_instance):
     Plots the distribution of altitude in which the photons were generated in km.
     """
     return _kernel_plot_1D_photons(corsika_output_instance, "altitude")
+
+
+def plot_num_photons_distr(corsika_output_instance):
+    """
+    Plots the distribution of the number of Cherenkov photons per event.
+    """
+    return _kernel_plot_1D_photons(corsika_output_instance, "num_photons")
