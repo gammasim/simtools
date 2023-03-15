@@ -756,14 +756,15 @@ def _kernel_plot_2D_photons(corsika_output_instance, quantity_name):
         fig.colorbar(mesh)
         all_figs.append(fig)
         if corsika_output_instance.telescope_indices is None:
-            fig.savefig("boost_histogram_" + quantity_name + "_all_tels.png")
+            fig.savefig("boost_histogram_" + quantity_name + "_all_tels.png", bbox_inches="tight")
         else:
             fig.savefig(
                 "boost_histogram_"
                 + quantity_name
                 + "_tel_"
                 + str(corsika_output_instance.telescope_indices[step])
-                + ".png"
+                + ".png",
+                bbox_inches="tight",
             )
 
     return all_figs
@@ -848,14 +849,15 @@ def _kernel_plot_1D_photons(corsika_output_instance, property_name):
         ax.set_xlabel(x_label[property_name])
         ax.set_ylabel("Counts")
         if corsika_output_instance.telescope_indices is None:
-            fig.savefig("boost_histogram_" + property_name + "_tels.png")
+            fig.savefig("boost_histogram_" + property_name + "_tels.png", bbox_inches="tight")
         else:
             fig.savefig(
                 "boost_histogram_"
                 + property_name
                 + "_tel_"
                 + str(corsika_output_instance.telescope_indices[step])
-                + ".png"
+                + ".png",
+                bbox_inches="tight",
             )
         all_figs.append(fig)
     return all_figs
