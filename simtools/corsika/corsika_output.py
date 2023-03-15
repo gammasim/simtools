@@ -234,30 +234,28 @@ class CorsikaOutput:
         self._set_telescope_indices(telescope_indices)
         self._create_histograms()
 
-        self.num_photons_per_event = []
+        self.num_photons_per_event_per_telescope = []
         start_time = time.time()
         self._logger.debug("Starting reading the file at {}.".format(start_time))
         with IACTFile(self.input_file) as f:
 
-            if self.tel_positions is None:
-                self.tel_positions = np.array(f.telescope_positions)
-            for event in f:
+            self.tel_positions = np.array(f.telescope_positions)
+            self.num_telescopes = np.size(self.tel_positions, axis=0)
+            # print((f.input_card))
 
-                num_photons_partial_sum = 0
+            self.num_events = 0
+            for event in f:
                 for step, _ in enumerate(self.tel_positions):
-                    num_photons_partial_sum += np.sum(event.n_photons[step])
-                self.num_photons_per_event = np.append(
-                    self.num_photons_per_event, num_photons_partial_sum
-                )
+                    self.num_photons_per_event_per_telescope.append(event.n_photons[step])
+
                 photons = list(event.photon_bunches.values())
                 self._fill_histograms(photons)
-
+                self.num_events += 1
         self._logger.debug(
-            "Finished reading the file and creating the histogram in {} seconds".format(
+            "Finished reading the file and creating the histograms in {} seconds".format(
                 time.time() - start_time
             )
         )
-        print(np.mean(self.num_photons_per_event), np.std(self.num_photons_per_event))
 
     def get_2D_position_distr(self, density=True):
         """
@@ -377,7 +375,6 @@ class CorsikaOutput:
             mini_hist = self.hist_position[step][sum, sum, :]
             x_edges_list.append(mini_hist.axes.edges.T.flatten()[0])
             hist_1D_list.append(mini_hist.view().T)
-        print(np.array(x_edges_list), np.array(hist_1D_list))
         return np.array(x_edges_list), np.array(hist_1D_list)
 
     def get_2D_direction_distr(self):
@@ -466,15 +463,93 @@ class CorsikaOutput:
 
         return np.array(x_edges_list), np.array(hist_1D_list)
 
+    def get_num_photons_per_event_per_telescope(self):
+        """
+        Get the number of photons per event per telescope.
+        """
+        return (
+            np.array(self.num_photons_per_event_per_telescope)
+            .reshape(self.num_events, self.num_telescopes)
+            .T
+        )
+
+    def get_2D_num_photons_distr(self):
+        """
+        Get the distribution of Cherenkov photons per event per telescope.
+
+        Parameters
+        ----------
+        bins: float
+            Number of bins for the histogram.
+        range: 2-tuple
+            Tuple to define the range of the histogram.
+
+        Returns
+        -------
+        numpy.array
+            Number of photons per event per telescope.
+        numpy.ndarray
+            The values (counts) of the histogram.
+        """
+        num_of_photons_per_event_per_telescope = np.array(
+            self.get_num_photons_per_event_per_telescope()
+        )
+        num_events_array = np.arange(self.num_events + 1)
+        telescope_indices_array = np.arange(self.num_telescopes + 1)
+        return num_events_array, telescope_indices_array, num_of_photons_per_event_per_telescope
+
+    def get_num_photons_distr(self, bins=50, range=None):
+        """
+        Get the distribution of the number of photons, including the telescopes indicated by
+        `self.telescope_indices` or all telescopes if `self.telescope_indices` is None.
+
+        Parameters
+        ----------
+        bins: float
+            Number of bins for the histogram.
+        range: 2-tuple
+            Tuple to define the range of the histogram.
+
+        Returns
+        -------
+        numpy.array
+            Number of photons per event.
+        numpy.ndarray
+            The values (counts) of the histogram.
+        """
+
+        num_of_photons_per_event_per_telescope = self.get_num_photons_per_event_per_telescope()
+        if self.telescope_indices is None:
+            num_photons_per_event = np.sum(num_of_photons_per_event_per_telescope, axis=1)
+        else:
+            num_photons_per_event = np.sum(
+                num_of_photons_per_event_per_telescope[self.telescope_indices], axis=1
+            )
+        hist, edges = np.histogram(num_photons_per_event, bins=bins, range=range)
+        return edges, hist
+
     def get_num_photons_per_event(self):
         """
-        Get the number of photon bunches per event.
+        Get the number of photons per event.
+
+        Returns
+        -------
+        numpy.array
+            Number of photons per event.
+        numpy.ndarray
+            The values (counts) of the histogram.
         """
-        return self.num_photons_per_event
+        num_of_photons_per_event_per_telescope = self.get_num_photons_per_event_per_telescope()
+        return np.sum(np.array(num_of_photons_per_event_per_telescope), axis=0)
 
     def get_total_num_photons(self):
         """
-        Get the total number of photon bunches.
+        Get the total number of photons.
+
+        Returns
+        -------
+        float
+            Total number photons.
         """
         return np.sum(self.get_num_photons_per_event())
 
