@@ -775,6 +775,7 @@ def _kernel_plot_2D_photons(corsika_output_instance, property_name, log_z=False)
         ax.set_ylabel(y_label[property_name])
         ax.set_xlim(np.amin(x_edges[step]), np.amax(x_edges[step]))
         ax.set_ylim(np.amin(y_edges[step]), np.amax(y_edges[step]))
+        ax.set_facecolor("xkcd:black")
         fig.colorbar(mesh)
         all_figs.append(fig)
         if corsika_output_instance.telescope_indices is None or property_name == "num_photons":
