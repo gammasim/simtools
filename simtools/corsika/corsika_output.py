@@ -6,6 +6,7 @@ from pathlib import Path
 
 import boost_histogram as bh
 import numpy as np
+import yaml
 from astropy import units as u
 from eventio import IACTFile
 
@@ -83,71 +84,188 @@ class CorsikaOutput:
         """
         Get the direction cosinus (X and Y) from the incoming particle, which helps defining the
         range of the histograms built from the photon incoming directions.
+
+        Returns
+        -------
+        np.array:
+            Directive cosinus in the X direction.
+        np.array:
+            Directive cosinus in the Y direction.
         """
         cosx_obs = np.sin(self.zenith_angle) * np.cos(self.azimuth_angle)
         cosy_obs = np.sin(self.zenith_angle) * np.sin(self.azimuth_angle)
         return cosx_obs, cosy_obs
 
-    def _create_histograms(self, bin_size=None, xy_maximum=None):
+    def _get_histogram_config(self, yaml_config=None):
         """
-        Create the histogram instances based on the given telescope indices.
-        """
-        if bin_size is None:
-            bin_size = 100
+        Return the dictionary with the configuration to create the histograms.
 
+        Parameters
+        ----------
+        yaml_config: str or Path
+            Yaml file with the configuration parameters to create the histograms. For the correct
+            format, please look at the docstring at `_create_histogram_config`.
+
+        Returns
+        -------
+        dict:
+            Dictionary with the configuration parameters to create the histograms.
+
+        Raises
+        ------
+        TypeError:
+            if type of yaml_config is not valid.
+        FileNotFoundError:
+            if yaml_config does not exist.
+
+        """
+        if isinstance(yaml_config, str):
+            yaml_config = Path(yaml_config)
+        if not isinstance(yaml_config, (Path, type(None))):
+            msg = "The type of `yaml_config` is not valid. Valid types are Path and str."
+            self._logger.error(msg)
+            raise TypeError
+
+        if yaml_config is not None and not yaml_config.exists():
+            raise FileNotFoundError
+
+        if yaml_config is None:
+            hist_config = self._create_histogram_config()
+        else:
+            hist_config = yaml.load(yaml_config)
+        return hist_config
+
+    def _create_histogram_config(self):
+        """
+        Create a dictionary with the configuration necessary to create the histograms. It is used
+        only in case the configuration is not provided in a yaml file.
+
+        Three histograms are created: hist_position with 3 dimensions (X, Y positions and the
+        wavelength), hist_direction with 2 dimensions (directive cosinus in X and Y directions),
+        hist_time_altitude with 2 dimensions (time and altitude of emission).
+
+        Four arguments are passed to each dimension in the dictionary:
+        "bins": the number of bins,
+        "start": the first element of the histogram,
+        "stop": the last element of the histogram, and
+        "scale" to define the scale of the binswhich can be "linear" or "log".
+
+        Returns
+        -------
+        dict:
+            Dictionary with the configuration parameters to create the histograms.
+        """
         cosx_obs, cosy_obs = self._get_directive_cosinus()
+        if self.telescope_indices is None:
+            xy_maximum = 1000 * u.m
+        else:
+            xy_maximum = 15 * u.m
+
+        histogram_config = {
+            "hist_position": {
+                "X axis": {
+                    "bins": 100,
+                    "start": -xy_maximum,
+                    "stop": xy_maximum,
+                    "scale": "linear",
+                },
+                "Y axis": {
+                    "bins": 100,
+                    "start": -xy_maximum,
+                    "stop": xy_maximum,
+                    "scale": "linear",
+                },
+                "Z axis": {
+                    "bins": 100,
+                    "start": 200 * u.nm,
+                    "stop": 1000 * u.nm,
+                    "scale": "linear",
+                },
+            },
+            "hist_direction": {
+                "X axis": {
+                    "bins": 100,
+                    "start": cosx_obs - 0.1,
+                    "stop": cosx_obs + 0.1,
+                    "scale": "linear",
+                },
+                "Y axis": {
+                    "bins": 100,
+                    "start": cosy_obs - 0.1,
+                    "stop": cosy_obs + 0.1,
+                    "scale": "linear",
+                },
+            },
+            "hist_time_altitude": {
+                "X axis": {"bins": 100, "start": 0 * u.ns, "stop": 500 * u.ns, "scale": "linear"},
+                "Y axis": {"bins": 100, "start": 15 * u.km, "stop": 0 * u.km, "scale": "linear"},
+            },
+        }
+        return histogram_config
+
+    def _create_histograms(self):
+        """
+        Create the histogram instances.
+        """
+        config = self._get_histogram_config()
 
         if self.telescope_indices is None:
-            if xy_maximum is None:
-                xy_maximum = 1000
-            self.hist_position = [
-                bh.Histogram(
-                    bh.axis.Regular(bins=bin_size, start=-xy_maximum, stop=xy_maximum),
-                    bh.axis.Regular(bins=bin_size, start=-xy_maximum, stop=xy_maximum),
-                    bh.axis.Regular(bins=bin_size, start=200, stop=1000),
-                )
-            ]
-
-            self.hist_direction = [
-                bh.Histogram(
-                    bh.axis.Regular(bins=bin_size, start=cosx_obs - 0.1, stop=cosx_obs + 0.1),
-                    bh.axis.Regular(bins=bin_size, start=cosy_obs - 0.1, stop=cosy_obs + 0.1),
-                )
-            ]
-
-            self.hist_time_altitude = [
-                bh.Histogram(
-                    bh.axis.Regular(bins=bin_size, start=0, stop=500),
-                    bh.axis.Regular(bins=bin_size, start=15, stop=0),
-                )
-            ]
+            num_of_hist = 1
         else:
-            if xy_maximum is None:
-                xy_maximum = 15
+            num_of_hist = len(self.telescope_indices)
 
-            self.hist_position, self.hist_direction, self.hist_time_altitude = [], [], []
-            for step, _ in enumerate(self.telescope_indices):
-                self.hist_position.append(
-                    bh.Histogram(
-                        bh.axis.Regular(bins=bin_size, start=-xy_maximum, stop=xy_maximum),
-                        bh.axis.Regular(bins=bin_size, start=-xy_maximum, stop=xy_maximum),
-                        bh.axis.Regular(bins=bin_size, start=200, stop=1000),
-                    )
-                )
+        self.hist_position, self.hist_direction, self.hist_time_altitude = [], [], []
+        for step in range(num_of_hist):
 
-                self.hist_direction.append(
-                    bh.Histogram(
-                        bh.axis.Regular(bins=bin_size, start=cosx_obs - 0.1, stop=cosx_obs + 0.1),
-                        bh.axis.Regular(bins=bin_size, start=cosy_obs - 0.1, stop=cosy_obs + 0.1),
-                    )
+            self.hist_position.append(
+                bh.Histogram(
+                    bh.axis.Regular(
+                        bins=config["hist_position"]["X axis"]["bins"],
+                        start=config["hist_position"]["X axis"]["start"].value,
+                        stop=config["hist_position"]["X axis"]["stop"].value,
+                    ),
+                    bh.axis.Regular(
+                        bins=config["hist_position"]["Y axis"]["bins"],
+                        start=config["hist_position"]["Y axis"]["start"].value,
+                        stop=config["hist_position"]["Y axis"]["stop"].value,
+                    ),
+                    bh.axis.Regular(
+                        bins=config["hist_position"]["Z axis"]["bins"],
+                        start=config["hist_position"]["Z axis"]["start"].value,
+                        stop=config["hist_position"]["Z axis"]["stop"].value,
+                    ),
                 )
+            )
 
-                self.hist_time_altitude.append(
-                    bh.Histogram(
-                        bh.axis.Regular(bins=bin_size, start=0, stop=500),
-                        bh.axis.Regular(bins=bin_size, start=15, stop=0),
-                    )
+            self.hist_direction.append(
+                bh.Histogram(
+                    bh.axis.Regular(
+                        bins=config["hist_direction"]["X axis"]["bins"],
+                        start=config["hist_direction"]["X axis"]["start"],
+                        stop=config["hist_direction"]["X axis"]["stop"],
+                    ),
+                    bh.axis.Regular(
+                        bins=config["hist_direction"]["Y axis"]["bins"],
+                        start=config["hist_direction"]["Y axis"]["start"],
+                        stop=config["hist_direction"]["Y axis"]["stop"],
+                    ),
                 )
+            )
+
+            self.hist_time_altitude.append(
+                bh.Histogram(
+                    bh.axis.Regular(
+                        bins=config["hist_time_altitude"]["X axis"]["bins"],
+                        start=config["hist_time_altitude"]["X axis"]["start"].value,
+                        stop=config["hist_time_altitude"]["X axis"]["stop"].value,
+                    ),
+                    bh.axis.Regular(
+                        bins=config["hist_time_altitude"]["Y axis"]["bins"],
+                        start=config["hist_time_altitude"]["Y axis"]["start"].value,
+                        stop=config["hist_time_altitude"]["Y axis"]["stop"].value,
+                    ),
+                )
+            )
 
     def _fill_histograms(self, photons):
         """Fill the histograms created by self._create_histogram
