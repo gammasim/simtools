@@ -704,7 +704,7 @@ def plot_array(telescopes, rotate_angle=0, show_tel_label=False):
 
 
 def _kernel_plot_2D_photons(
-    corsika_output_instance, quantity_name, log_x=False, log_y=False, log_z=False
+    corsika_output_instance, property_name, log_x=False, log_y=False, log_z=False
 ):
     """
     The next functions below are used by the the corsikaOutput class to plot all sort of information
@@ -717,7 +717,7 @@ def _kernel_plot_2D_photons(
     ----------
     corsika_output_instance: corsika.corsika_output.corsikaOutput
         instance of corsika.corsika_output.corsikaOutput.
-    quantity_name: string
+    property_name: string
         Name of the quantity. Options are: "counts", "density", "direction", "time_altitude" and
         "num_photons_per_telescope".
     log_x: bool
@@ -752,20 +752,20 @@ def _kernel_plot_2D_photons(
         "time_altitude": "Altitude of emission (km)",
         "num_photons_per_telescope": "Telescope index",
     }
-    if quantity_name not in x_label:
-        msg = "quantity_name must be one of {}".format(x_label)
+    if property_name not in x_label:
+        msg = "property_name must be one of {}".format(x_label)
         corsika_output_instance._logger.error(msg)
         raise ValueError(msg)
 
-    if quantity_name == "counts":
+    if property_name == "counts":
         x_edges, y_edges, hist_values = corsika_output_instance.get_2D_position_distr(density=False)
-    elif quantity_name == "density":
+    elif property_name == "density":
         x_edges, y_edges, hist_values = corsika_output_instance.get_2D_position_distr(density=True)
-    elif quantity_name == "direction":
+    elif property_name == "direction":
         x_edges, y_edges, hist_values = corsika_output_instance.get_2D_direction_distr()
-    elif quantity_name == "time_altitude":
+    elif property_name == "time_altitude":
         x_edges, y_edges, hist_values = corsika_output_instance.get_2D_time_altitude()
-    elif quantity_name == "num_photons_per_telescope":
+    elif property_name == "num_photons_per_telescope":
         x_edges, y_edges, hist_values = corsika_output_instance.get_2D_num_photons_distr()
         x_edges, y_edges, hist_values = [x_edges], [y_edges], [hist_values]
 
@@ -781,18 +781,18 @@ def _kernel_plot_2D_photons(
             ax.set_xscale("log")
         if log_y is True:
             ax.set_yscale("log")
-        ax.set_xlabel(x_label[quantity_name])
-        ax.set_ylabel(y_label[quantity_name])
+        ax.set_xlabel(x_label[property_name])
+        ax.set_ylabel(y_label[property_name])
         ax.set_xlim(np.amin(x_edges[step]), np.amax(x_edges[step]))
         ax.set_ylim(np.amin(y_edges[step]), np.amax(y_edges[step]))
         fig.colorbar(mesh)
         all_figs.append(fig)
-        if corsika_output_instance.telescope_indices is None or quantity_name == "num_photons":
-            fig.savefig("boost_histogram_" + quantity_name + "_all_tels.png", bbox_inches="tight")
+        if corsika_output_instance.telescope_indices is None or property_name == "num_photons":
+            fig.savefig("boost_histogram_" + property_name + "_all_tels.png", bbox_inches="tight")
         else:
             fig.savefig(
                 "boost_histogram_"
-                + quantity_name
+                + property_name
                 + "_tel_"
                 + str(corsika_output_instance.telescope_indices[step])
                 + ".png",
