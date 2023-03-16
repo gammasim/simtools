@@ -779,12 +779,14 @@ def _kernel_plot_2D_photons(corsika_output_instance, property_name, log_z=False)
         fig.colorbar(mesh)
         all_figs.append(fig)
         if corsika_output_instance.telescope_indices is None or property_name == "num_photons":
-            fig.savefig("boost_histogram_" + property_name + "_all_tels.png", bbox_inches="tight")
+            fig.savefig(
+                "boost_histogram_" + property_name + "_2D_all_tels.png", bbox_inches="tight"
+            )
         else:
             fig.savefig(
                 "boost_histogram_"
                 + property_name
-                + "_tel_"
+                + "_2D_tel_"
                 + str(corsika_output_instance.telescope_indices[step])
                 + ".png",
                 bbox_inches="tight",
