@@ -206,14 +206,14 @@ class CorsikaOutput:
         self._set_histogram_config()
 
         if self.telescope_indices is None:
-            num_of_hist = 1
+            self.num_of_hist = 1
         else:
-            num_of_hist = len(self.telescope_indices)
+            self.num_of_hist = len(self.telescope_indices)
 
         self.hist_position, self.hist_direction, self.hist_time_altitude = [], [], []
 
         transform = {"log": bh.axis.transform.log, "linear": None}
-        for step in range(num_of_hist):
+        for step in range(self.num_of_hist):
 
             self.hist_position.append(
                 bh.Histogram(
@@ -295,51 +295,32 @@ class CorsikaOutput:
 
         for one_tel_info, photons_info in zip(self.tel_positions, photons):
 
+            photon_x, photon_y = rotate(
+                photons_info["x"],
+                photons_info["y"],
+                self.azimuth_angle,
+                self.zenith_angle,
+            )
+
             if self.telescope_indices is None:
-                photon_x, photon_y = rotate(
-                    photons_info["x"],
-                    photons_info["y"],
-                    self.azimuth_angle,
-                    self.zenith_angle,
-                )
-                self.hist_position[0].fill(
-                    ((-one_tel_info["x"] + photon_x) * u.cm).to(u.m),
-                    ((-one_tel_info["y"] + photon_y) * u.cm).to(u.m),
-                    np.abs(photons_info["wavelength"]) * u.nm,
-                )
-                self.hist_direction[0].fill(photons_info["cx"], photons_info["cy"])
-                self.hist_time_altitude[0].fill(
-                    photons_info["time"] * u.ns, (photons_info["zem"] * u.cm).to(u.km)
-                )
+                photon_x = -one_tel_info["x"] + photon_x
+                photon_y = -one_tel_info["y"] + photon_y
 
             else:
                 photon_x, photon_y = photons_info["x"], photons_info["y"]
-                for step, one_index in enumerate(self.telescope_indices):
-                    try:
-                        if (
-                            one_tel_info["x"]
-                            == self.tel_positions[self.telescope_indices[step]]["x"]
-                            and one_tel_info["y"]
-                            == self.tel_positions[self.telescope_indices[step]]["y"]
-                        ):
 
-                            self.hist_position[step].fill(
-                                (photon_x * u.cm).to(u.m),
-                                (photon_y * u.cm).to(u.m),
-                                np.abs(photons_info["wavelength"]) * u.nm,
-                            )
+            for step in range(self.num_of_hist):
 
-                            self.hist_direction[step].fill(photons_info["cx"], photons_info["cy"])
-                            self.hist_time_altitude[step].fill(
-                                photons_info["time"] * u.ns, (photons_info["zem"] * u.cm).to(u.km)
-                            )
+                self.hist_position[step].fill(
+                    (photon_x * u.cm).to(u.m),
+                    (photon_y * u.cm).to(u.m),
+                    np.abs(photons_info["wavelength"]) * u.nm,
+                )
 
-                    except IndexError:
-                        msg = (
-                            "Index {} is out of range. There are only {} telescopes in the "
-                            "array.".format(one_index, len(self.tel_positions))
-                        )
-                        self._logger.error(msg)
+                self.hist_direction[step].fill(photons_info["cx"], photons_info["cy"])
+                self.hist_time_altitude[step].fill(
+                    photons_info["time"] * u.ns, (photons_info["zem"] * u.cm).to(u.km)
+                )
 
     def set_histograms(self, telescope_indices=None):
         """
