@@ -218,22 +218,22 @@ class CorsikaOutput:
             self.hist_position.append(
                 bh.Histogram(
                     bh.axis.Regular(
-                        bins=self.config["hist_position"]["X axis"]["bins"],
-                        start=self.config["hist_position"]["X axis"]["start"].value,
-                        stop=self.config["hist_position"]["X axis"]["stop"].value,
-                        transform=transform[self.config["hist_position"]["X axis"]["scale"]],
+                        bins=self.hist_config["hist_position"]["X axis"]["bins"],
+                        start=self.hist_config["hist_position"]["X axis"]["start"].value,
+                        stop=self.hist_config["hist_position"]["X axis"]["stop"].value,
+                        transform=transform[self.hist_config["hist_position"]["X axis"]["scale"]],
                     ),
                     bh.axis.Regular(
-                        bins=self.config["hist_position"]["Y axis"]["bins"],
-                        start=self.config["hist_position"]["Y axis"]["start"].value,
-                        stop=self.config["hist_position"]["Y axis"]["stop"].value,
-                        transform=transform[self.config["hist_position"]["Y axis"]["scale"]],
+                        bins=self.hist_config["hist_position"]["Y axis"]["bins"],
+                        start=self.hist_config["hist_position"]["Y axis"]["start"].value,
+                        stop=self.hist_config["hist_position"]["Y axis"]["stop"].value,
+                        transform=transform[self.hist_config["hist_position"]["Y axis"]["scale"]],
                     ),
                     bh.axis.Regular(
-                        bins=self.config["hist_position"]["Z axis"]["bins"],
-                        start=self.config["hist_position"]["Z axis"]["start"].value,
-                        stop=self.config["hist_position"]["Z axis"]["stop"].value,
-                        transform=transform[self.config["hist_position"]["Z axis"]["scale"]],
+                        bins=self.hist_config["hist_position"]["Z axis"]["bins"],
+                        start=self.hist_config["hist_position"]["Z axis"]["start"].value,
+                        stop=self.hist_config["hist_position"]["Z axis"]["stop"].value,
+                        transform=transform[self.hist_config["hist_position"]["Z axis"]["scale"]],
                     ),
                 )
             )
@@ -241,16 +241,16 @@ class CorsikaOutput:
             self.hist_direction.append(
                 bh.Histogram(
                     bh.axis.Regular(
-                        bins=self.config["hist_direction"]["X axis"]["bins"],
-                        start=self.config["hist_direction"]["X axis"]["start"],
-                        stop=self.config["hist_direction"]["X axis"]["stop"],
-                        transform=transform[self.config["hist_direction"]["X axis"]["scale"]],
+                        bins=self.hist_config["hist_direction"]["X axis"]["bins"],
+                        start=self.hist_config["hist_direction"]["X axis"]["start"],
+                        stop=self.hist_config["hist_direction"]["X axis"]["stop"],
+                        transform=transform[self.hist_config["hist_direction"]["X axis"]["scale"]],
                     ),
                     bh.axis.Regular(
-                        bins=self.config["hist_direction"]["Y axis"]["bins"],
-                        start=self.config["hist_direction"]["Y axis"]["start"],
-                        stop=self.config["hist_direction"]["Y axis"]["stop"],
-                        transform=transform[self.config["hist_direction"]["Y axis"]["scale"]],
+                        bins=self.hist_config["hist_direction"]["Y axis"]["bins"],
+                        start=self.hist_config["hist_direction"]["Y axis"]["start"],
+                        stop=self.hist_config["hist_direction"]["Y axis"]["stop"],
+                        transform=transform[self.hist_config["hist_direction"]["Y axis"]["scale"]],
                     ),
                 )
             )
@@ -258,16 +258,20 @@ class CorsikaOutput:
             self.hist_time_altitude.append(
                 bh.Histogram(
                     bh.axis.Regular(
-                        bins=self.config["hist_time_altitude"]["X axis"]["bins"],
-                        start=self.config["hist_time_altitude"]["X axis"]["start"].value,
-                        stop=self.config["hist_time_altitude"]["X axis"]["stop"].value,
-                        transform=transform[self.config["hist_time_altitude"]["X axis"]["scale"]],
+                        bins=self.hist_config["hist_time_altitude"]["X axis"]["bins"],
+                        start=self.hist_config["hist_time_altitude"]["X axis"]["start"].value,
+                        stop=self.hist_config["hist_time_altitude"]["X axis"]["stop"].value,
+                        transform=transform[
+                            self.hist_config["hist_time_altitude"]["X axis"]["scale"]
+                        ],
                     ),
                     bh.axis.Regular(
-                        bins=self.config["hist_time_altitude"]["Y axis"]["bins"],
-                        start=self.config["hist_time_altitude"]["Y axis"]["start"].value,
-                        stop=self.config["hist_time_altitude"]["Y axis"]["stop"].value,
-                        transform=transform[self.config["hist_time_altitude"]["Y axis"]["scale"]],
+                        bins=self.hist_config["hist_time_altitude"]["Y axis"]["bins"],
+                        start=self.hist_config["hist_time_altitude"]["Y axis"]["start"].value,
+                        stop=self.hist_config["hist_time_altitude"]["Y axis"]["stop"].value,
+                        transform=transform[
+                            self.hist_config["hist_time_altitude"]["Y axis"]["scale"]
+                        ],
                     ),
                 )
             )
