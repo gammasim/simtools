@@ -5,6 +5,7 @@ import re
 from collections import OrderedDict
 
 import astropy.units as u
+import matplotlib.colors as colors
 import matplotlib.gridspec as gridspec
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
@@ -702,13 +703,29 @@ def plot_array(telescopes, rotate_angle=0, show_tel_label=False):
     return fig
 
 
-def _kernel_plot_2D_photons(corsika_output_instance, quantity_name):
+def _kernel_plot_2D_photons(
+    corsika_output_instance, quantity_name, log_x=False, log_y=False, log_z=False
+):
     """
     The next functions below are used by the the corsikaOutput class to plot all sort of information
     from the Cherenkov photons saved.
 
     Create the figure of a 2D plot. The parameter `name` indicate which plot. Choices are
     "counts", "density", "direction".
+
+    Parameters
+    ----------
+    corsika_output_instance: corsika.corsika_output.corsikaOutput
+        instance of corsika.corsika_output.corsikaOutput.
+    quantity_name: string
+        Name of the quantity. Options are: "counts", "density", "direction", "time_altitude" and
+        "num_photons_per_telescope".
+    log_x: bool
+        if True, the intensity of the X axis is given in logarithmic scale.
+    log_y: bool
+        if True, the intensity of the Y axis is given in logarithmic scale.
+    log_z: bool
+        if True, the intensity of the color bar is given in logarithmic scale.
 
     Returns
     -------
@@ -755,12 +772,19 @@ def _kernel_plot_2D_photons(corsika_output_instance, quantity_name):
     all_figs = []
     for step, _ in enumerate(x_edges):
         fig, ax = plt.subplots()
-        print((x_edges[step]))
-        print((y_edges[step]))
-        print((hist_values[step]))
-        mesh = ax.pcolormesh(x_edges[step], y_edges[step], hist_values[step])
+        if log_z is True:
+            norm = colors.LogNorm(vmin=1, vmax=np.amax(hist_values[step]))
+        else:
+            norm = None
+        mesh = ax.pcolormesh(x_edges[step], y_edges[step], hist_values[step], norm=norm)
+        if log_x is True:
+            ax.set_xscale("log")
+        if log_y is True:
+            ax.set_yscale("log")
         ax.set_xlabel(x_label[quantity_name])
         ax.set_ylabel(y_label[quantity_name])
+        ax.set_xlim(np.amin(x_edges[step]), np.amax(x_edges[step]))
+        ax.set_ylim(np.amin(y_edges[step]), np.amax(y_edges[step]))
         fig.colorbar(mesh)
         all_figs.append(fig)
         if corsika_output_instance.telescope_indices is None or quantity_name == "num_photons":
@@ -778,39 +802,104 @@ def _kernel_plot_2D_photons(corsika_output_instance, quantity_name):
     return all_figs
 
 
-def plot_2D_counts(corsika_output_instance):
+def plot_2D_counts(corsika_output_instance, log_x=False, log_y=False, log_z=True):
     """
     Plot the 2D histogram of the photon positions on the ground.
+
+    Parameters
+    ----------
+    corsika_output_instance: corsika.corsika_output.corsikaOutput
+        instance of corsika.corsika_output.corsikaOutput.
+    log_x: bool
+        if True, the intensity of the X axis is given in logarithmic scale.
+    log_y: bool
+        if True, the intensity of the Y axis is given in logarithmic scale.
+    log_z: bool
+        if True, the intensity of the color bar is given in logarithmic scale.
     """
-    return _kernel_plot_2D_photons(corsika_output_instance, "counts")
+    return _kernel_plot_2D_photons(
+        corsika_output_instance, "counts", log_x=log_x, log_y=log_y, log_z=log_z
+    )
 
 
-def plot_2D_density(corsika_output_instance):
+def plot_2D_density(corsika_output_instance, log_x=False, log_y=False, log_z=True):
     """
     Plot the 2D histogram of the photon density distribution on the ground.
+
+    Parameters
+    ----------
+    corsika_output_instance: corsika.corsika_output.corsikaOutput
+        instance of corsika.corsika_output.corsikaOutput.
+    log_x: bool
+        if True, the intensity of the X axis is given in logarithmic scale.
+    log_y: bool
+        if True, the intensity of the Y axis is given in logarithmic scale.
+    log_z: bool
+        if True, the intensity of the color bar is given in logarithmic scale.
     """
-    return _kernel_plot_2D_photons(corsika_output_instance, "density")
+    return _kernel_plot_2D_photons(
+        corsika_output_instance, "density", log_x=log_x, log_y=log_y, log_z=log_z
+    )
 
 
-def plot_2D_direction(corsika_output_instance):
+def plot_2D_direction(corsika_output_instance, log_x=False, log_y=False, log_z=True):
     """
     Plot the 2D histogram of the incoming direction of photons.
+
+    Parameters
+    ----------
+    corsika_output_instance: corsika.corsika_output.corsikaOutput
+        instance of corsika.corsika_output.corsikaOutput.
+    log_x: bool
+        if True, the intensity of the X axis is given in logarithmic scale.
+    log_y: bool
+        if True, the intensity of the Y axis is given in logarithmic scale.
+    log_z: bool
+        if True, the intensity of the color bar is given in logarithmic scale.
     """
-    return _kernel_plot_2D_photons(corsika_output_instance, "direction")
+    return _kernel_plot_2D_photons(
+        corsika_output_instance, "direction", log_x=log_x, log_y=log_y, log_z=log_z
+    )
 
 
-def plot_2D_time_altitude(corsika_output_instance):
+def plot_2D_time_altitude(corsika_output_instance, log_x=False, log_y=False, log_z=True):
     """
     Plot the 2D histogram of the time and altitude where the photon was produced.
+
+    Parameters
+    ----------
+    corsika_output_instance: corsika.corsika_output.corsikaOutput
+        instance of corsika.corsika_output.corsikaOutput.
+    log_x: bool
+        if True, the intensity of the X axis is given in logarithmic scale.
+    log_y: bool
+        if True, the intensity of the Y axis is given in logarithmic scale.
+    log_z: bool
+        if True, the intensity of the color bar is given in logarithmic scale.
     """
-    return _kernel_plot_2D_photons(corsika_output_instance, "time_altitude")
+    return _kernel_plot_2D_photons(
+        corsika_output_instance, "time_altitude", log_x=log_x, log_y=log_y, log_z=log_z
+    )
 
 
-def plot_2D_num_photons(corsika_output_instance):
+def plot_2D_num_photons(corsika_output_instance, log_x=False, log_y=False, log_z=True):
     """
     Plot the 2D histogram of the number of photons per event and per telescope.
+
+    Parameters
+    ----------
+    corsika_output_instance: corsika.corsika_output.corsikaOutput
+        instance of corsika.corsika_output.corsikaOutput.
+    log_x: bool
+        if True, the intensity of the X axis is given in logarithmic scale.
+    log_y: bool
+        if True, the intensity of the Y axis is given in logarithmic scale.
+    log_z: bool
+        if True, the intensity of the color bar is given in logarithmic scale.
     """
-    return _kernel_plot_2D_photons(corsika_output_instance, "num_photons_per_telescope")
+    return _kernel_plot_2D_photons(
+        corsika_output_instance, "num_photons_per_telescope", log_x=log_x, log_y=log_y, log_z=log_z
+    )
 
 
 def _kernel_plot_1D_photons(corsika_output_instance, property_name):
