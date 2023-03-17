@@ -193,8 +193,13 @@ class CorsikaOutput:
                 },
             },
             "hist_time_altitude": {
-                "X axis": {"bins": 100, "start": 0 * u.ns, "stop": 500 * u.ns, "scale": "linear"},
-                "Y axis": {"bins": 100, "start": 15 * u.km, "stop": 0 * u.km, "scale": "linear"},
+                "X axis": {
+                    "bins": 100,
+                    "start": -500 * u.ns,
+                    "stop": 500 * u.ns,
+                    "scale": "linear",
+                },
+                "Y axis": {"bins": 100, "start": 50 * u.km, "stop": 0 * u.km, "scale": "linear"},
             },
         }
         return histogram_config
@@ -293,6 +298,7 @@ class CorsikaOutput:
             If the index or indices passed though telescope_index are out of range.
         """
 
+        hist_num = 0
         for one_tel_info, photons_info in zip(self.tel_positions, photons):
 
             photon_x, photon_y = rotate(
@@ -309,18 +315,19 @@ class CorsikaOutput:
             else:
                 photon_x, photon_y = photons_info["x"], photons_info["y"]
 
-            for step in range(self.num_of_hist):
+            if one_tel_info in self.tel_positions[self.telescope_indices]:
 
-                self.hist_position[step].fill(
+                self.hist_position[hist_num].fill(
                     (photon_x * u.cm).to(u.m),
                     (photon_y * u.cm).to(u.m),
                     np.abs(photons_info["wavelength"]) * u.nm,
                 )
 
-                self.hist_direction[step].fill(photons_info["cx"], photons_info["cy"])
-                self.hist_time_altitude[step].fill(
+                self.hist_direction[hist_num].fill(photons_info["cx"], photons_info["cy"])
+                self.hist_time_altitude[hist_num].fill(
                     photons_info["time"] * u.ns, (photons_info["zem"] * u.cm).to(u.km)
                 )
+                hist_num += 1
 
     def set_histograms(self, telescope_indices=None):
         """
@@ -353,6 +360,7 @@ class CorsikaOutput:
 
             self.num_events = 0
             for event in f:
+                print(event.header)
                 for step, _ in enumerate(self.tel_positions):
                     self.num_photons_per_event_per_telescope.append(event.n_photons[step])
 

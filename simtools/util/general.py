@@ -2,6 +2,7 @@ import copy
 import logging
 import mmap
 import os
+import pickle
 import re
 from collections import namedtuple
 from pathlib import Path
@@ -828,3 +829,18 @@ def convert_2D_to_radial_distr(xaxis, yaxis, hist2d, bin_size=50, max_dist=1000)
         except ValueError:
             histogram_1D[radial_step] = 0
     return radial_edges, histogram_1D
+
+
+def save_dict_to_file(dictionary, file_name):
+    """
+    Save dictionary to a file.
+
+    Parameters
+    ----------
+    dictionary: dict
+        Dictionary to be saved into a file.
+    file_name: str
+        Name of file to be saved.
+    """
+    with open(file_name, "wb") as f:
+        pickle.dump(dictionary, f)
