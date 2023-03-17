@@ -767,7 +767,7 @@ def _kernel_plot_2D_photons(corsika_output_instance, property_name, log_z=False)
     for step, _ in enumerate(x_edges):
         fig, ax = plt.subplots()
         if log_z is True:
-            norm = colors.LogNorm(vmin=1, vmax=np.amax(hist_values[step]))
+            norm = colors.LogNorm(vmin=1, vmax=np.amax([1, np.amax(hist_values[step])]))
         else:
             norm = None
         mesh = ax.pcolormesh(x_edges[step], y_edges[step], hist_values[step], norm=norm)
@@ -791,6 +791,7 @@ def _kernel_plot_2D_photons(corsika_output_instance, property_name, log_z=False)
                 + ".png",
                 bbox_inches="tight",
             )
+        plt.close()
 
     return all_figs
 
