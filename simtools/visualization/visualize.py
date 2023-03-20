@@ -861,7 +861,7 @@ def plot_2D_time_altitude(corsika_output_instance, log_z=True):
     return _kernel_plot_2D_photons(corsika_output_instance, "time_altitude", log_z=log_z)
 
 
-def plot_2D_num_photons(corsika_output_instance, log_z=True):
+def plot_2D_num_photons_per_telescope(corsika_output_instance, log_z=True):
     """
     Plot the 2D histogram of the number of photons per event and per telescope.
 
