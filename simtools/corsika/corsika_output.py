@@ -380,7 +380,7 @@ class CorsikaOutput:
             )
         )
 
-    def get_2D_position_distr(self, density=True, save=False):
+    def get_2D_position_distr(self, density=True):
         """
         Get 2D histograms of position of the Cherenkov photons on the ground. If density is True,
         it returns the photon density per square meter.
@@ -389,8 +389,6 @@ class CorsikaOutput:
         ----------
         density: bool
             If True, returns the density distribution. If False, returns the distribution of counts.
-        save: bool
-            If True, saves the obtained histogram to file.
 
         Returns
         -------
@@ -484,6 +482,28 @@ class CorsikaOutput:
             hist1D_list.append(hist1D)
         return np.array(edges_1D_list), np.array(hist1D_list)
 
+    def _get_1D(self, label):
+        """
+        Helper function to get 1D distributions.
+
+        Parameters
+        ----------
+        label: str
+            Label to indicate which histogram.
+        """
+        x_edges_list, hist_1D_list = [], []
+        for step, _ in enumerate(self.hist_position):
+            if label == "wavelength":
+                mini_hist = self.hist_position[step][sum, sum, :]
+            elif label == "time":
+                mini_hist = self.hist_time_altitude[step][:, sum]
+            elif label == "altitude":
+                mini_hist = self.hist_time_altitude[step][sum, :]
+
+            x_edges_list.append(mini_hist.axes.edges.T.flatten()[0])
+            hist_1D_list.append(mini_hist.view().T)
+        return np.array(x_edges_list), np.array(hist_1D_list)
+
     def get_wavelength_distr(self):
         """
         Get histograms with the wavelengths of the photon bunches.
@@ -495,12 +515,7 @@ class CorsikaOutput:
         np.array
             The values of the wavelength histogram.
         """
-        x_edges_list, hist_1D_list = [], []
-        for step, _ in enumerate(self.hist_position):
-            mini_hist = self.hist_position[step][sum, sum, :]
-            x_edges_list.append(mini_hist.axes.edges.T.flatten()[0])
-            hist_1D_list.append(mini_hist.view().T)
-        return np.array(x_edges_list), np.array(hist_1D_list)
+        return self._get_1D("wavelength")
 
     def get_2D_direction_distr(self):
         """
@@ -562,12 +577,7 @@ class CorsikaOutput:
         numpy.ndarray
             The values (counts) of the histogram.
         """
-        x_edges_list, hist_1D_list = [], []
-        for step, _ in enumerate(self.hist_time_altitude):
-            mini_hist = self.hist_time_altitude[step][:, sum]
-            x_edges_list.append(mini_hist.axes.edges.T.flatten()[0])
-            hist_1D_list.append(mini_hist.view().T)
-        return np.array(x_edges_list), np.array(hist_1D_list)
+        return self._get_1D("time")
 
     def get_altitude_distr(self):
         """
@@ -580,13 +590,7 @@ class CorsikaOutput:
         numpy.ndarray
             The values (counts) of the histogram.
         """
-        x_edges_list, hist_1D_list = [], []
-        for step, _ in enumerate(self.hist_time_altitude):
-            mini_hist = self.hist_time_altitude[step][sum, :]
-            x_edges_list.append(mini_hist.axes.edges.T.flatten()[0])
-            hist_1D_list.append(mini_hist.view().T)
-
-        return np.array(x_edges_list), np.array(hist_1D_list)
+        return self._get_1D("altitude")
 
     def get_num_photons_per_event_per_telescope(self):
         """
