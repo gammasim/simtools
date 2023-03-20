@@ -380,6 +380,62 @@ class CorsikaOutput:
             )
         )
 
+    def _get_2D(self, label):
+        """
+        Helper function to get 2D distributions.
+
+        Parameters
+        ----------
+        label: str
+            Label to indicate which histogram.
+
+        Raises
+        ------
+        ValueError:
+            if label is not valid.
+        HistogramNotCreated:
+            if the histogram was not previously created.
+        """
+        allowed_labels = {"counts", "density", "direction", "time_altitude"}
+        if label not in allowed_labels:
+            msg = "label is not valid. Valid values are {}".format(allowed_labels)
+            self._logger.error(msg)
+            raise ValueError
+
+        for histogram in ["hist_position", "hist_direction", "hist_time_altitude"]:
+            if not hasattr(self, histogram):
+                msg = (
+                    "The histograms were not created. Please, use `create_histograms` to create "
+                    "histograms from the CORSIKA output file."
+                )
+                self._logger.error(msg)
+                raise HistogramNotCreated
+
+        if self.telescope_indices is None:
+            size = 1
+        else:
+            size = len(self.telescope_indices)
+
+        x_edges, y_edges, hist_values = [], [], []
+        for step in range(size):
+            if label == "counts":
+                mini_hist = self.hist_position[step][:, :, sum]
+                hist_values.append(mini_hist.view().T)
+            elif label == "density":
+                mini_hist = self.hist_position[step][:, :, sum]
+                areas = functools.reduce(operator.mul, mini_hist.axes.widths)
+                hist_values.append(mini_hist.view().T / areas)
+            elif label == "direction":
+                mini_hist = self.hist_direction[step]
+                hist_values.append(self.hist_direction[step].view().T)
+            elif label == "time_altitude":
+                mini_hist = self.hist_time_altitude[step]
+                hist_values.append(self.hist_time_altitude[step].view().T)
+            x_edges.append(mini_hist.axes.edges[0].flatten())
+            y_edges.append(mini_hist.axes.edges[1].flatten())
+
+        return np.array(x_edges), np.array(y_edges), np.array(hist_values)
+
     def get_2D_position_distr(self, density=True):
         """
         Get 2D histograms of position of the Cherenkov photons on the ground. If density is True,
@@ -406,36 +462,87 @@ class CorsikaOutput:
         HistogramNotCreated:
             if the histogram was not previously created.
         """
-        try:
-            mini_hist = []
-            if self.telescope_indices is None:
-                include_all = [0]
-            else:
-                include_all = self.telescope_indices
-            for step, _ in enumerate(include_all):
-                mini_hist.append(self.hist_position[step][:, :, sum])
-        except AttributeError:
-            msg = (
-                "The histograms were not created. Please, use `create_histograms` to create "
-                "histograms from the CORSIKA output file."
-            )
-            self._logger.error(msg)
-            raise HistogramNotCreated
+        if density is True:
+            return self._get_2D("density")
+        else:
+            return self._get_2D("counts")
 
-        x_edges, y_edges, hist_values = [], [], []
-        for step, _ in enumerate(mini_hist):
-            x_edges.append(mini_hist[step].axes.edges[0].flatten())
-            y_edges.append(mini_hist[step].axes.edges[1].flatten())
-            if density is True:
-                areas = functools.reduce(operator.mul, mini_hist[step].axes.widths)
-                hist_values.append(mini_hist[step].view().T / areas)
-            elif density is False:
-                hist_values.append(mini_hist[step].view().T)
-            else:
-                msg = "`density` parameter has to be of type bool."
-                self._logger.error(msg)
-                raise TypeError
-        return np.array(x_edges), np.array(y_edges), np.array(hist_values)
+    def get_2D_direction_distr(self):
+        """
+        Get 2D histograms of incoming direction of the Cherenkov photons on the ground.
+
+        Returns
+        -------
+        numpy.array
+            The edges of the direction histograms in cos(X).
+        numpy.array
+            The edges of the direction histograms in cos(Y)
+        numpy.ndarray
+            The values (counts) of the histogram.
+        """
+        return self._get_2D("direction")
+
+    def get_2D_time_altitude(self):
+        """
+        Get 2D histograms of the time and altitude of the photon production.
+
+        Returns
+        -------
+        numpy.array
+            The edges of the direction histograms in ns.
+        numpy.array
+            The edges of the direction histograms in km.
+        numpy.ndarray
+            The values (counts) of the histogram.
+        """
+        return self._get_2D("time_altitude")
+
+    def get_2D_num_photons_distr(self):
+        """
+        Get the distribution of Cherenkov photons per event per telescope.
+
+        Parameters
+        ----------
+        bins: float
+            Number of bins for the histogram.
+        range: 2-tuple
+            Tuple to define the range of the histogram.
+
+        Returns
+        -------
+        numpy.array
+            Number of photons per event per telescope.
+        numpy.ndarray
+            The values (counts) of the histogram.
+        """
+        num_of_photons_per_event_per_telescope = np.array(
+            self.get_num_photons_per_event_per_telescope()
+        )
+        num_events_array = np.arange(self.num_events + 1)
+        telescope_indices_array = np.arange(self.num_telescopes + 1)
+        return num_events_array, telescope_indices_array, num_of_photons_per_event_per_telescope
+
+    def _get_1D(self, label):
+        """
+        Helper function to get 1D distributions.
+
+        Parameters
+        ----------
+        label: str
+            Label to indicate which histogram.
+        """
+        x_edges_list, hist_1D_list = [], []
+        for step, _ in enumerate(self.hist_position):
+            if label == "wavelength":
+                mini_hist = self.hist_position[step][sum, sum, :]
+            elif label == "time":
+                mini_hist = self.hist_time_altitude[step][:, sum]
+            elif label == "altitude":
+                mini_hist = self.hist_time_altitude[step][sum, :]
+
+            x_edges_list.append(mini_hist.axes.edges.T.flatten()[0])
+            hist_1D_list.append(mini_hist.view().T)
+        return np.array(x_edges_list), np.array(hist_1D_list)
 
     def get_radial_distr(self, bin_size=None, max_dist=None, density=True):
         """
@@ -482,28 +589,6 @@ class CorsikaOutput:
             hist1D_list.append(hist1D)
         return np.array(edges_1D_list), np.array(hist1D_list)
 
-    def _get_1D(self, label):
-        """
-        Helper function to get 1D distributions.
-
-        Parameters
-        ----------
-        label: str
-            Label to indicate which histogram.
-        """
-        x_edges_list, hist_1D_list = [], []
-        for step, _ in enumerate(self.hist_position):
-            if label == "wavelength":
-                mini_hist = self.hist_position[step][sum, sum, :]
-            elif label == "time":
-                mini_hist = self.hist_time_altitude[step][:, sum]
-            elif label == "altitude":
-                mini_hist = self.hist_time_altitude[step][sum, :]
-
-            x_edges_list.append(mini_hist.axes.edges.T.flatten()[0])
-            hist_1D_list.append(mini_hist.view().T)
-        return np.array(x_edges_list), np.array(hist_1D_list)
-
     def get_wavelength_distr(self):
         """
         Get histograms with the wavelengths of the photon bunches.
@@ -516,54 +601,6 @@ class CorsikaOutput:
             The values of the wavelength histogram.
         """
         return self._get_1D("wavelength")
-
-    def get_2D_direction_distr(self):
-        """
-        Get 2D histograms of incoming direction of the Cherenkov photons on the ground.
-
-        Returns
-        -------
-        numpy.array
-            The edges of the direction histograms in cos(X).
-        numpy.array
-            The edges of the direction histograms in cos(Y)
-        numpy.ndarray
-            The values (counts) of the histogram.
-        """
-        x_edges, y_edges, mini_hist = [], [], []
-        if self.telescope_indices is None:
-            size = 1
-        else:
-            size = len(self.telescope_indices)
-        for step in range(size):
-            x_edges.append(self.hist_direction[step].axes.edges[0].flatten())
-            y_edges.append(self.hist_direction[step].axes.edges[1].flatten())
-            mini_hist.append(self.hist_direction[step].view().T)
-        return np.array(x_edges), np.array(y_edges), np.array(mini_hist)
-
-    def get_2D_time_altitude(self):
-        """
-        Get 2D histograms of the time and altitude of the photon production.
-
-        Returns
-        -------
-        numpy.array
-            The edges of the direction histograms in ns.
-        numpy.array
-            The edges of the direction histograms in km.
-        numpy.ndarray
-            The values (counts) of the histogram.
-        """
-        x_edges, y_edges, mini_hist = [], [], []
-        if self.telescope_indices is None:
-            size = 1
-        else:
-            size = len(self.telescope_indices)
-        for step in range(size):
-            x_edges.append(self.hist_time_altitude[step].axes.edges[0].flatten())
-            y_edges.append(self.hist_time_altitude[step].axes.edges[1].flatten())
-            mini_hist.append(self.hist_time_altitude[step].view().T)
-        return np.array(x_edges), np.array(y_edges), np.array(mini_hist)
 
     def get_time_distr(self):
         """
@@ -601,31 +638,6 @@ class CorsikaOutput:
             .reshape(self.num_events, self.num_telescopes)
             .T
         )
-
-    def get_2D_num_photons_distr(self):
-        """
-        Get the distribution of Cherenkov photons per event per telescope.
-
-        Parameters
-        ----------
-        bins: float
-            Number of bins for the histogram.
-        range: 2-tuple
-            Tuple to define the range of the histogram.
-
-        Returns
-        -------
-        numpy.array
-            Number of photons per event per telescope.
-        numpy.ndarray
-            The values (counts) of the histogram.
-        """
-        num_of_photons_per_event_per_telescope = np.array(
-            self.get_num_photons_per_event_per_telescope()
-        )
-        num_events_array = np.arange(self.num_events + 1)
-        telescope_indices_array = np.arange(self.num_telescopes + 1)
-        return num_events_array, telescope_indices_array, num_of_photons_per_event_per_telescope
 
     def get_num_photons_distr(self, bins=50, range=None):
         """
