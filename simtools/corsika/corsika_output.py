@@ -195,8 +195,8 @@ class CorsikaOutput:
             "hist_time_altitude": {
                 "X axis": {
                     "bins": 100,
-                    "start": -500 * u.ns,
-                    "stop": 500 * u.ns,
+                    "start": -1500 * u.ns,
+                    "stop": 1500 * u.ns,
                     "scale": "linear",
                 },
                 "Y axis": {"bins": 100, "start": 50 * u.km, "stop": 0 * u.km, "scale": "linear"},
