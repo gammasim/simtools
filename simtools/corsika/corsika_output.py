@@ -316,14 +316,17 @@ class CorsikaOutput:
             )
 
             if self.telescope_indices is None:
+                hist_num = 0
                 photon_x = -one_tel_info["x"] + photon_x
                 photon_y = -one_tel_info["y"] + photon_y
 
             else:
                 photon_x, photon_y = photons_info["x"], photons_info["y"]
 
-            if one_tel_info in self.tel_positions[self.telescope_indices]:
-
+            if (
+                one_tel_info in self.tel_positions[self.telescope_indices]
+                or self.telescope_indices is None
+            ):
                 self.hist_position[hist_num].fill(
                     (photon_x * u.cm).to(u.m),
                     (photon_y * u.cm).to(u.m),
