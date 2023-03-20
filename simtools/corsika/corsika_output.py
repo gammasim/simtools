@@ -357,7 +357,7 @@ class CorsikaOutput:
             self.tel_positions = np.array(f.telescope_positions)
             self.num_telescopes = np.size(self.tel_positions, axis=0)
             # print((f.input_card))
-            print(f.header)
+            # print(f.header)
 
             self.num_events = 0
             for event in f:

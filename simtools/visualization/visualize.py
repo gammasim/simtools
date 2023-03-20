@@ -901,7 +901,7 @@ def _kernel_plot_1D_photons(corsika_output_instance, property_name, log_y=True):
         "wavelength": "Wavelength (nm)",
         "counts": "Distance to center (m)",
         "density": "Distance to center (m)",
-        "time": "Time of emission (ns)",
+        "time": "Time since 1st interaction (ns)",
         "altitude": "Altitude of emission (km)",
         "num_photons": "Number of photons per event",
     }
