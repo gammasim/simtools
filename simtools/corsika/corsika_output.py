@@ -59,6 +59,10 @@ class CorsikaOutput:
         self.tel_positions = None
         self.telescope_indices = None
 
+        self.allowed_histograms = {"hist_position", "hist_direction", "hist_time_altitude"}
+        self.allowed_1D_labels = {"wavelength", "time", "altitude"}
+        self.allowed_2D_labels = {"counts", "density", "direction", "time_altitude"}
+
     def _set_telescope_indices(self, telescope_indices):
         """
         Set the telescope index (or indices) as a class attribute.
@@ -226,11 +230,10 @@ class CorsikaOutput:
         ValueError:
             if label is now valid.
         """
-        allowed_labels = {"hist_position", "hist_direction", "hist_time_altitude"}
         transform = {"log": bh.axis.transform.log, "linear": None}
 
-        if label not in allowed_labels:
-            msg = "allowed labels must be one of the following: {}".format(allowed_labels)
+        if label not in self.allowed_histograms:
+            msg = "allowed labels must be one of the following: {}".format(self.allowed_histograms)
             self._logger.error(msg)
             raise (ValueError)
 
@@ -383,6 +386,25 @@ class CorsikaOutput:
             )
         )
 
+    def _raise_if_no_histogram(self):
+        """
+        Raise an error if the histograms were not created.
+
+        Raises
+        ------
+        HistogramNotCreated:
+            if the histogram was not previously created.
+        """
+
+        for histogram in self.allowed_histograms:
+            if not hasattr(self, histogram):
+                msg = (
+                    "The histograms were not created. Please, use `create_histograms` to create "
+                    "histograms from the CORSIKA output file."
+                )
+                self._logger.error(msg)
+                raise HistogramNotCreated
+
     def _get_2D(self, label):
         """
         Helper function to get 2D distributions.
@@ -396,23 +418,13 @@ class CorsikaOutput:
         ------
         ValueError:
             if label is not valid.
-        HistogramNotCreated:
-            if the histogram was not previously created.
         """
-        allowed_labels = {"counts", "density", "direction", "time_altitude"}
-        if label not in allowed_labels:
-            msg = "label is not valid. Valid values are {}".format(allowed_labels)
+
+        if label not in self.allowed_2D_labels:
+            msg = "label is not valid. Valid values are {}".format(self.allowed_2D_labels)
             self._logger.error(msg)
             raise ValueError
-
-        for histogram in ["hist_position", "hist_direction", "hist_time_altitude"]:
-            if not hasattr(self, histogram):
-                msg = (
-                    "The histograms were not created. Please, use `create_histograms` to create "
-                    "histograms from the CORSIKA output file."
-                )
-                self._logger.error(msg)
-                raise HistogramNotCreated
+        self._raise_if_no_histogram()
 
         if self.telescope_indices is None:
             size = 1
@@ -533,7 +545,19 @@ class CorsikaOutput:
         ----------
         label: str
             Label to indicate which histogram.
+
+        Raises
+        ------
+        ValueError:
+            if label is not valid.
         """
+
+        if label not in self.allowed_1D_labels:
+            msg = "label is not valid. Valid values are {}".format(self.allowed_1D_labels)
+            self._logger.error(msg)
+            raise ValueError
+        self._raise_if_no_histogram()
+
         x_edges_list, hist_1D_list = [], []
         for step, _ in enumerate(self.hist_position):
             if label == "wavelength":
