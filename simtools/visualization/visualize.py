@@ -736,7 +736,7 @@ def _kernel_plot_2D_photons(corsika_output_instance, property_name, log_z=False)
         "counts": "X (m)",
         "density": r"X (m$^{-2}$)",
         "direction": "cos(X)",
-        "time_altitude": "Time of emission (ns)",
+        "time_altitude": "Time since 1st interaction (ns)",
         "num_photons_per_telescope": "Event number",
     }
     y_label = {
@@ -767,10 +767,7 @@ def _kernel_plot_2D_photons(corsika_output_instance, property_name, log_z=False)
     for step, _ in enumerate(x_edges):
         fig, ax = plt.subplots()
         if log_z is True:
-            try:
-                norm = colors.LogNorm(vmin=1, vmax=np.amax(hist_values[step]))
-            except ValueError:
-                norm = colors.LogNorm(vmin=1, vmax=1)
+            norm = colors.LogNorm(vmin=1, vmax=np.amax([np.amax(hist_values[step]), 2]))
         else:
             norm = None
         mesh = ax.pcolormesh(x_edges[step], y_edges[step], hist_values[step], norm=norm)
