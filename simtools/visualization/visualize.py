@@ -783,6 +783,15 @@ def _kernel_plot_2D_photons(corsika_output_instance, property_name, log_z=False)
                 "boost_histogram_" + property_name + "_2D_all_tels.png", bbox_inches="tight"
             )
         else:
+            ax.text(
+                0.99,
+                0.99,
+                "tel. " + str(step),
+                ha="right",
+                va="top",
+                transform=ax.transAxes,
+                color="white",
+            )
             fig.savefig(
                 "boost_histogram_"
                 + property_name
