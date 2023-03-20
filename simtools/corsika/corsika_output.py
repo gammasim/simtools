@@ -6,11 +6,14 @@ from pathlib import Path
 
 import boost_histogram as bh
 import numpy as np
-import yaml
 from astropy import units as u
 from eventio import IACTFile
 
-from simtools.util.general import convert_2D_to_radial_distr, rotate
+from simtools.util.general import (
+    collect_data_from_yaml_or_dict,
+    convert_2D_to_radial_distr,
+    rotate,
+)
 
 
 class HistogramNotCreated(Exception):
@@ -39,13 +42,14 @@ class CorsikaOutput:
     """
 
     @u.quantity_input(zenith_angle=u.rad, azimuth_angle=u.rad)
-    def __init__(self, input_file, zenith_angle=0 * u.rad, azimuth_angle=0 * u.rad):
+    def __init__(self, input_file, zenith_angle=0 * u.rad, azimuth_angle=0 * u.rad, label=None):
 
         self._logger = logging.getLogger(__name__)
         self._logger.debug("Init CorsikaOutput")
         self.input_file = input_file
         self.zenith_angle = zenith_angle
         self.azimuth_angle = azimuth_angle
+        self.label = label
 
         if not isinstance(self.input_file, Path):
             self.input_file = Path(self.input_file)
@@ -96,15 +100,20 @@ class CorsikaOutput:
         cosy_obs = np.sin(self.zenith_angle) * np.sin(self.azimuth_angle)
         return cosx_obs, cosy_obs
 
-    def _set_histogram_config(self, yaml_config=None):
+    def _set_histogram_config(self, in_yaml=None, in_dict=None):
         """
-        Return the dictionary with the configuration to create the histograms.
+        Return the dictionary with the configuration to create the histograms. The inputs are
+        allowed either through an yaml file or a dictionary. If nothing is given, the dictionary
+        is created with default values.
 
         Parameters
         ----------
-        yaml_config: str or Path
+        in_yaml: str or Path
             Yaml file with the configuration parameters to create the histograms. For the correct
             format, please look at the docstring at `_create_histogram_config`.
+
+        in_dict: dict
+            Dictionary with the configuration parameterse to create the histograms.
 
         Raises
         ------
@@ -114,20 +123,19 @@ class CorsikaOutput:
             if yaml_config does not exist.
 
         """
-        if isinstance(yaml_config, str):
-            yaml_config = Path(yaml_config)
-        if not isinstance(yaml_config, (Path, type(None))):
-            msg = "The type of `yaml_config` is not valid. Valid types are Path and str."
+        if isinstance(in_yaml, str):
+            in_yaml = Path(in_yaml)
+        if not isinstance(in_yaml, (Path, type(None))):
+            msg = "The type of `in_yaml` is not valid. Valid types are Path and str."
             self._logger.error(msg)
             raise TypeError
 
-        if yaml_config is not None and not yaml_config.exists():
+        if in_yaml is not None and not in_yaml.exists():
             raise FileNotFoundError
 
-        if yaml_config is None:
+        self.hist_config = collect_data_from_yaml_or_dict(in_yaml, in_dict, allow_empty=True)
+        if self.hist_config is None:
             self.hist_config = self._create_histogram_config()
-        else:
-            self.hist_config = yaml.load(yaml_config)
 
     def _create_histogram_config(self):
         """
@@ -357,7 +365,6 @@ class CorsikaOutput:
             self.tel_positions = np.array(f.telescope_positions)
             self.num_telescopes = np.size(self.tel_positions, axis=0)
             # print((f.input_card))
-            # print(f.header)
 
             self.num_events = 0
             for event in f:
@@ -374,7 +381,7 @@ class CorsikaOutput:
             )
         )
 
-    def get_2D_position_distr(self, density=True):
+    def get_2D_position_distr(self, density=True, save=False):
         """
         Get 2D histograms of position of the Cherenkov photons on the ground. If density is True,
         it returns the photon density per square meter.
@@ -383,6 +390,8 @@ class CorsikaOutput:
         ----------
         density: bool
             If True, returns the density distribution. If False, returns the distribution of counts.
+        save: bool
+            If True, saves the obtained histogram to file.
 
         Returns
         -------
