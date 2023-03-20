@@ -189,14 +189,14 @@ class CorsikaOutput:
             "hist_direction": {
                 "X axis": {
                     "bins": 100,
-                    "start": cosx_obs - 0.1,
-                    "stop": cosx_obs + 0.1,
+                    "start": cosx_obs - 0.5,
+                    "stop": cosx_obs + 0.5,
                     "scale": "linear",
                 },
                 "Y axis": {
                     "bins": 100,
-                    "start": cosy_obs - 0.1,
-                    "stop": cosy_obs + 0.1,
+                    "start": cosy_obs - 0.5,
+                    "stop": cosy_obs + 0.5,
                     "scale": "linear",
                 },
             },
@@ -212,6 +212,44 @@ class CorsikaOutput:
         }
         return histogram_config
 
+    def _create_regular_axes(self, label):
+        """
+        Helper function to _create_histograms.
+
+        Parameters
+        ----------
+        label: str
+            Label to identify to which histogram the new axis belongs.
+
+        Raises
+        ------
+        ValueError:
+            if label is now valid.
+        """
+        allowed_labels = {"hist_position", "hist_direction", "hist_time_altitude"}
+        transform = {"log": bh.axis.transform.log, "linear": None}
+
+        if label not in allowed_labels:
+            msg = "allowed labels must be one of the following: {}".format(allowed_labels)
+            self._logger.error(msg)
+            raise (ValueError)
+
+        all_axis = ["X axis", "Y axis"]
+        if label == "hist_position":
+            all_axis.append("Z axis")
+
+        boost_axes = []
+        for axis in all_axis:
+            boost_axes.append(
+                bh.axis.Regular(
+                    bins=self.hist_config[label][axis]["bins"],
+                    start=self.hist_config[label][axis]["start"].value,
+                    stop=self.hist_config[label][axis]["stop"].value,
+                    transform=transform[self.hist_config[label][axis]["scale"]],
+                )
+            )
+        return boost_axes
+
     def _create_histograms(self):
         """
         Create the histogram instances.
@@ -225,67 +263,28 @@ class CorsikaOutput:
 
         self.hist_position, self.hist_direction, self.hist_time_altitude = [], [], []
 
-        transform = {"log": bh.axis.transform.log, "linear": None}
         for step in range(self.num_of_hist):
-
+            boost_axes_position = self._create_regular_axes("hist_position")
             self.hist_position.append(
                 bh.Histogram(
-                    bh.axis.Regular(
-                        bins=self.hist_config["hist_position"]["X axis"]["bins"],
-                        start=self.hist_config["hist_position"]["X axis"]["start"].value,
-                        stop=self.hist_config["hist_position"]["X axis"]["stop"].value,
-                        transform=transform[self.hist_config["hist_position"]["X axis"]["scale"]],
-                    ),
-                    bh.axis.Regular(
-                        bins=self.hist_config["hist_position"]["Y axis"]["bins"],
-                        start=self.hist_config["hist_position"]["Y axis"]["start"].value,
-                        stop=self.hist_config["hist_position"]["Y axis"]["stop"].value,
-                        transform=transform[self.hist_config["hist_position"]["Y axis"]["scale"]],
-                    ),
-                    bh.axis.Regular(
-                        bins=self.hist_config["hist_position"]["Z axis"]["bins"],
-                        start=self.hist_config["hist_position"]["Z axis"]["start"].value,
-                        stop=self.hist_config["hist_position"]["Z axis"]["stop"].value,
-                        transform=transform[self.hist_config["hist_position"]["Z axis"]["scale"]],
-                    ),
+                    boost_axes_position[0],
+                    boost_axes_position[1],
+                    boost_axes_position[2],
                 )
             )
-
+            boost_axes_direction = self._create_regular_axes("hist_direction")
             self.hist_direction.append(
                 bh.Histogram(
-                    bh.axis.Regular(
-                        bins=self.hist_config["hist_direction"]["X axis"]["bins"],
-                        start=self.hist_config["hist_direction"]["X axis"]["start"],
-                        stop=self.hist_config["hist_direction"]["X axis"]["stop"],
-                        transform=transform[self.hist_config["hist_direction"]["X axis"]["scale"]],
-                    ),
-                    bh.axis.Regular(
-                        bins=self.hist_config["hist_direction"]["Y axis"]["bins"],
-                        start=self.hist_config["hist_direction"]["Y axis"]["start"],
-                        stop=self.hist_config["hist_direction"]["Y axis"]["stop"],
-                        transform=transform[self.hist_config["hist_direction"]["Y axis"]["scale"]],
-                    ),
+                    boost_axes_direction[0],
+                    boost_axes_direction[1],
                 )
             )
 
+            boost_axes_time_altitude = self._create_regular_axes("hist_time_altitude")
             self.hist_time_altitude.append(
                 bh.Histogram(
-                    bh.axis.Regular(
-                        bins=self.hist_config["hist_time_altitude"]["X axis"]["bins"],
-                        start=self.hist_config["hist_time_altitude"]["X axis"]["start"].value,
-                        stop=self.hist_config["hist_time_altitude"]["X axis"]["stop"].value,
-                        transform=transform[
-                            self.hist_config["hist_time_altitude"]["X axis"]["scale"]
-                        ],
-                    ),
-                    bh.axis.Regular(
-                        bins=self.hist_config["hist_time_altitude"]["Y axis"]["bins"],
-                        start=self.hist_config["hist_time_altitude"]["Y axis"]["start"].value,
-                        stop=self.hist_config["hist_time_altitude"]["Y axis"]["stop"].value,
-                        transform=transform[
-                            self.hist_config["hist_time_altitude"]["Y axis"]["scale"]
-                        ],
-                    ),
+                    boost_axes_time_altitude[0],
+                    boost_axes_time_altitude[1],
                 )
             )
 
