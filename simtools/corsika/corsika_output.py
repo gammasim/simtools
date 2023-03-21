@@ -237,7 +237,7 @@ class CorsikaOutput:
         Raises
         ------
         ValueError:
-            if label is now valid.
+            if label is not valid.
         """
         transform = {"log": bh.axis.transform.log, "linear": None}
 
@@ -559,7 +559,7 @@ class CorsikaOutput:
         """
 
         if label not in self._allowed_1D_labels:
-            msg = "label is not valid. Valid values are {}".format(self._allowed_1D_labels)
+            msg = "`label` is not valid. Valid entries are {}".format(self._allowed_1D_labels)
             self._logger.error(msg)
             raise ValueError
         self._raise_if_no_histogram()
@@ -746,12 +746,68 @@ class CorsikaOutput:
         """
         return self._tel_positions
 
-    def get_event_zenith_angles(self):
+    def _get_info_from_event_header(self, key):
         """
-        Get the zenith angles of the simulated events.
+        Helper function to assist getting information from the event header.
+
+        Parameters
+        ----------
+        key: str
+            Key to indicate which information to extract from the event header.
+
+        Raises
+        ------
+        KeyError:
+            if the key is not valid.
         """
-        zenith_angles = []
+        allowed_keys = {"zenith_angle", "azimuth_angle", "total_energy", "first_interaction_height"}
+        if key not in allowed_keys:
+            msg = "`key` is not allowed. Valid entries are {}".format(allowed_keys)
+            self._logger.error(msg)
+            raise KeyError
+        info_for_all_events = []
         for event_num, event in enumerate(self._event_headers):
-            zenith_angles.append(float(event[corsika7_event_header["zenith_angle"]]))
-        print(np.around(np.array(zenith_angles) * u.rad.to(u.deg), 4))
-        return np.around(np.array(zenith_angles) * u.rad.to(u.deg), 4)
+            info_for_all_events.append(float(event[corsika7_event_header[key]["index"]]))
+        return np.array(info_for_all_events) * corsika7_event_header[key]["unit"]
+
+    @property
+    def event_zenith_angles(self):
+        """
+        Get the zenith angles of the simulated events in degrees.
+        """
+        self._event_zenith_angles = np.around(
+            self._get_info_from_event_header("zenith_angle").to(u.deg), 4
+        )
+        return self._event_zenith_angles
+
+    @property
+    def event_azimuth_angles(self):
+        """
+        Get the azimuth angles of the simulated events in degrees.
+        """
+        self._event_azimuth_angles = np.around(
+            self._get_info_from_event_header("azimuth_angle").to(u.deg), 4
+        )
+        return self._event_azimuth_angles
+
+    @property
+    def event_energies(self):
+        """
+        Get the energy of the simulated events in TeV.
+        """
+        self._event_energies = np.around(
+            self._get_info_from_event_header("total_energy").to(u.TeV), 4
+        )
+        return self._event_energies
+
+    @property
+    def event_first_interaction_heights(self):
+        """
+        Get the height of the first interaction in km.
+        If negative, tracking starts at margin of atmosphere, see TSTART in the CORSIKA 7 user guide
+        .
+        """
+        self._event_first_interaction_heights = np.around(
+            self._get_info_from_event_header("first_interaction_height").to(u.km), 4
+        )
+        return self._event_first_interaction_heights
