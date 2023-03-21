@@ -56,7 +56,6 @@ class CorsikaOutput:
             raise FileNotFoundError
 
         self._tel_positions = None
-        self.telescope_indices = None
 
         self._allowed_histograms = {"hist_position", "hist_direction", "hist_time_altitude"}
         self._allowed_1D_labels = {"wavelength", "time", "altitude"}
@@ -266,7 +265,6 @@ class CorsikaOutput:
         """
         Create the histogram instances.
         """
-
         if self.telescope_indices is None:
             self.num_of_hist = 1
         else:
@@ -366,7 +364,7 @@ class CorsikaOutput:
         list: list of boost_histogram.Histogram instances.
 
         """
-
+        self._telescope_indices = telescope_indices
         self._create_histograms()
 
         self.num_photons_per_event_per_telescope = []
