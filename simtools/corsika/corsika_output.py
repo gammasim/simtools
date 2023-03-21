@@ -29,13 +29,6 @@ class CorsikaOutput:
     ----------
     input_file: str or Path
         Input file (IACT file) provided by the CORSIKA simulation.
-    zenith_angle: astropy.units.rad
-        Zenith angle (in radians) of the observations (in the CORSIKA coordinate system).
-        It is used to rotate the observation plane (in zenith) of the telescope and to plot
-        the sky map of the incoming direction of photons.
-    azimuth_angle: astropy.units.rad
-        Azimuth angle of observation (in radians).
-        See above for more details.
     Raises
     ------
     FileNotFoundError:
@@ -43,13 +36,11 @@ class CorsikaOutput:
     """
 
     @u.quantity_input(zenith_angle=u.rad, azimuth_angle=u.rad)
-    def __init__(self, input_file, zenith_angle=0 * u.rad, azimuth_angle=0 * u.rad):
+    def __init__(self, input_file):
 
         self._logger = logging.getLogger(__name__)
         self._logger.debug("Init CorsikaOutput")
         self.input_file = input_file
-        self.zenith_angle = zenith_angle
-        self.azimuth_angle = azimuth_angle
 
         if not isinstance(self.input_file, Path):
             self.input_file = Path(self.input_file)
@@ -95,10 +86,20 @@ class CorsikaOutput:
                     raise TypeError
         self._telescope_indices = telescope_new_indices
 
-    def _get_directive_cosinus(self):
+    def _get_directive_cosinus(self, zenith_angle, azimuth_angle):
         """
         Get the direction cosinus (X and Y) from the incoming particle, which helps defining the
         range of the histograms built from the photon incoming directions.
+
+        Parameters
+        ----------
+        zenith_angle: astropy.units.rad
+            Zenith angle (in radians) of the observations (in the CORSIKA coordinate system).
+            It is used to rotate the observation plane (in zenith) of the telescope and to plot
+            the sky map of the incoming direction of photons.
+        azimuth_angle: astropy.units.rad
+            Azimuth angle of observation (in radians).
+            See above for more details.
 
         Returns
         -------
@@ -107,8 +108,8 @@ class CorsikaOutput:
         np.array:
             Directive cosinus in the Y direction.
         """
-        cosx_obs = np.sin(self.zenith_angle) * np.cos(self.azimuth_angle)
-        cosy_obs = np.sin(self.zenith_angle) * np.sin(self.azimuth_angle)
+        cosx_obs = np.sin(zenith_angle) * np.cos(azimuth_angle)
+        cosy_obs = np.sin(zenith_angle) * np.sin(azimuth_angle)
         return cosx_obs, cosy_obs
 
     @property
@@ -172,7 +173,7 @@ class CorsikaOutput:
         dict:
             Dictionary with the configuration parameters to create the histograms.
         """
-        cosx_obs, cosy_obs = self._get_directive_cosinus()
+
         if self.telescope_indices is None:
             self._xy_maximum = 1000 * u.m
         else:
@@ -202,14 +203,14 @@ class CorsikaOutput:
             "hist_direction": {
                 "X axis": {
                     "bins": 100,
-                    "start": cosx_obs - 0.5,
-                    "stop": cosx_obs + 0.5,
+                    "start": -1,
+                    "stop": 1,
                     "scale": "linear",
                 },
                 "Y axis": {
                     "bins": 100,
-                    "start": cosy_obs - 0.5,
-                    "stop": cosy_obs + 0.5,
+                    "start": -1,
+                    "stop": 1,
                     "scale": "linear",
                 },
             },
@@ -246,20 +247,30 @@ class CorsikaOutput:
             self._logger.error(msg)
             raise (ValueError)
 
-        all_axis = ["X axis", "Y axis"]
+        all_axes = ["X axis", "Y axis"]
         if label == "hist_position":
-            all_axis.append("Z axis")
+            all_axes.append("Z axis")
 
         boost_axes = []
-        for axis in all_axis:
-            boost_axes.append(
-                bh.axis.Regular(
-                    bins=self.hist_config[label][axis]["bins"],
-                    start=self.hist_config[label][axis]["start"].value,
-                    stop=self.hist_config[label][axis]["stop"].value,
-                    transform=transform[self.hist_config[label][axis]["scale"]],
+        for axis in all_axes:
+            try:
+                boost_axes.append(
+                    bh.axis.Regular(
+                        bins=self.hist_config[label][axis]["bins"],
+                        start=self.hist_config[label][axis]["start"].value,
+                        stop=self.hist_config[label][axis]["stop"].value,
+                        transform=transform[self.hist_config[label][axis]["scale"]],
+                    )
                 )
-            )
+            except AttributeError:
+                boost_axes.append(
+                    bh.axis.Regular(
+                        bins=self.hist_config[label][axis]["bins"],
+                        start=self.hist_config[label][axis]["start"],
+                        stop=self.hist_config[label][axis]["stop"],
+                        transform=transform[self.hist_config[label][axis]["scale"]],
+                    )
+                )
         return boost_axes
 
     def _create_histograms(self):
@@ -298,7 +309,7 @@ class CorsikaOutput:
                 )
             )
 
-    def _fill_histograms(self, photons):
+    def _fill_histograms(self, photons, azimuth_angle, zenith_angle):
         """Fill the histograms created by self._create_histogram
 
         Parameters
@@ -308,6 +319,12 @@ class CorsikaOutput:
             array, N is the number of photons that reached each telescope. The following information
              of the Cherenkov photons on the ground are saved: x, y, cx, cy, time, zem, photons,
              wavelength.
+        azimuth_angle: astropy.Quantity
+            Azimuth angle to rotate the observational plane and obtain it perpendicular to the
+            incoming event. It can be passed in radians or degrees.
+        zenith_angle: astropy.Quantity
+            Zenith angle to rotate the observational plane and obtain it perpendicular to the
+            incoming event. It can be passed in radians or degrees.
 
         Raises
         ------
@@ -321,8 +338,8 @@ class CorsikaOutput:
             photon_x, photon_y = rotate(
                 photons_info["x"],
                 photons_info["y"],
-                self.azimuth_angle,
-                self.zenith_angle,
+                azimuth_angle,
+                zenith_angle,
             )
 
             if self.telescope_indices is None:
@@ -384,7 +401,11 @@ class CorsikaOutput:
                     self.num_photons_per_event_per_telescope.append(event.n_photons[step])
 
                 photons = list(event.photon_bunches.values())
-                self._fill_histograms(photons)
+                self._fill_histograms(
+                    photons,
+                    self.event_azimuth_angles[self.num_events],
+                    self.event_zenith_angles[self.num_events],
+                )
                 self.num_events += 1
         self._logger.debug(
             "Finished reading the file and creating the histograms in {} seconds".format(
