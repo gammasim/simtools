@@ -63,13 +63,6 @@ class CorsikaOutput:
         self._allowed_2D_labels = {"counts", "density", "direction", "time_altitude"}
 
     @property
-    def telescope_indices(self):
-        """
-        The telescope index (or indices) as a class attribute.
-        """
-        return self._telescope_indices
-
-    @telescope_indices.setter
     def telescope_indices(self, telescope_new_indices):
         """
         Set the telescope index (or indices) as a class attribute.
@@ -94,6 +87,7 @@ class CorsikaOutput:
                     self._logger.error(msg)
                     raise TypeError
         self._telescope_indices = telescope_new_indices
+        return self._telescope_indices
 
     def _get_directive_cosinus(self):
         """
