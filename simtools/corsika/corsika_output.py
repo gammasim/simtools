@@ -14,6 +14,7 @@ from simtools.util.general import (
     convert_2D_to_radial_distr,
     rotate,
 )
+from simtools.util.names import corsika7_event_header
 
 
 class HistogramNotCreated(Exception):
@@ -368,17 +369,17 @@ class CorsikaOutput:
         self._create_histograms()
 
         self.num_photons_per_event_per_telescope = []
+        self._event_headers = []
         start_time = time.time()
         self._logger.debug("Starting reading the file at {}.".format(start_time))
         with IACTFile(self.input_file) as f:
 
             self._tel_positions = np.array(f.telescope_positions)
             self.num_telescopes = np.size(self._tel_positions, axis=0)
-            # print((f.input_card))
 
             self.num_events = 0
             for event in f:
-                print(event.header)
+                self._event_headers.append(event.header)
                 for step, _ in enumerate(self._tel_positions):
                     self.num_photons_per_event_per_telescope.append(event.n_photons[step])
 
@@ -456,7 +457,7 @@ class CorsikaOutput:
 
         return np.array(x_edges), np.array(y_edges), np.array(hist_values)
 
-    def get_2D_position_distr(self, density=True):
+    def get_2D_photon_position_distr(self, density=True):
         """
         Get 2D histograms of position of the Cherenkov photons on the ground. If density is True,
         it returns the photon density per square meter.
@@ -487,7 +488,7 @@ class CorsikaOutput:
         else:
             return self._get_2D("counts")
 
-    def get_2D_direction_distr(self):
+    def get_2D_photon_direction_distr(self):
         """
         Get 2D histograms of incoming direction of the Cherenkov photons on the ground.
 
@@ -502,7 +503,7 @@ class CorsikaOutput:
         """
         return self._get_2D("direction")
 
-    def get_2D_time_altitude(self):
+    def get_2D_photon_time_altitude(self):
         """
         Get 2D histograms of the time and altitude of the photon production.
 
@@ -576,7 +577,7 @@ class CorsikaOutput:
             hist_1D_list.append(mini_hist.view().T)
         return np.array(x_edges_list), np.array(hist_1D_list)
 
-    def get_radial_distr(self, bin_size=None, max_dist=None, density=True):
+    def get_photon_radial_distr(self, bin_size=None, max_dist=None, density=True):
         """
         Get the radial distribution of the photons on the ground in relation to the center of the
         array.
@@ -608,7 +609,9 @@ class CorsikaOutput:
             if max_dist is None:
                 max_dist = 10
         edges_1D_list, hist1D_list = [], []
-        x_edges_list, y_edges_list, hist2D_values_list = self.get_2D_position_distr(density=density)
+        x_edges_list, y_edges_list, hist2D_values_list = self.get_2D_photon_position_distr(
+            density=density
+        )
         for step, _ in enumerate(x_edges_list):
             edges_1D, hist1D = convert_2D_to_radial_distr(
                 x_edges_list[step],
@@ -621,7 +624,7 @@ class CorsikaOutput:
             hist1D_list.append(hist1D)
         return np.array(edges_1D_list), np.array(hist1D_list)
 
-    def get_wavelength_distr(self):
+    def get_photon_wavelength_distr(self):
         """
         Get histograms with the wavelengths of the photon bunches.
 
@@ -634,7 +637,7 @@ class CorsikaOutput:
         """
         return self._get_1D("wavelength")
 
-    def get_time_distr(self):
+    def get_photon_time_distr(self):
         """
         Get the distribution of the emitted time of the Cherenkov photons. The start of the time
         is given according to the CORSIKA configuration.
@@ -648,7 +651,7 @@ class CorsikaOutput:
         """
         return self._get_1D("time")
 
-    def get_altitude_distr(self):
+    def get_photon_altitude_distr(self):
         """
         Get the emission altitude of the Cherenkov photons.
 
@@ -742,3 +745,13 @@ class CorsikaOutput:
             spherical representation of the telescopes.
         """
         return self._tel_positions
+
+    def get_event_zenith_angles(self):
+        """
+        Get the zenith angles of the simulated events.
+        """
+        zenith_angles = []
+        for event_num, event in enumerate(self._event_headers):
+            zenith_angles.append(float(event[corsika7_event_header["zenith_angle"]]))
+        print(np.around(np.array(zenith_angles) * u.rad.to(u.deg), 4))
+        return np.around(np.array(zenith_angles) * u.rad.to(u.deg), 4)

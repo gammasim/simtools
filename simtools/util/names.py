@@ -103,6 +103,21 @@ corsika_to_simtools_names = {
     "OBSLEV": "corsika_obs_level",
 }
 
+corsika7_event_header = {
+    "EVTH": 0,
+    "event_number": 1,
+    "particle_id": 2,
+    "total_energy": 3,
+    "starting_altitude": 4,
+    "number_of_first_target": 5,
+    "first_interaction_height": 6,
+    "px_momentum": 7,
+    "py_momentum": 8,
+    "pz_momentum": 9,
+    "zenith_angle": 10,
+    "azimuth_angle": 11,
+}
+
 
 def validate_sub_system_name(name):
     """
