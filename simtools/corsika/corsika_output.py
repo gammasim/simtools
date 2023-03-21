@@ -174,22 +174,22 @@ class CorsikaOutput:
         """
         cosx_obs, cosy_obs = self._get_directive_cosinus()
         if self.telescope_indices is None:
-            xy_maximum = 1000 * u.m
+            self._xy_maximum = 1000 * u.m
         else:
-            xy_maximum = 15 * u.m
+            self._xy_maximum = 15 * u.m
 
         histogram_config = {
             "hist_position": {
                 "X axis": {
                     "bins": 100,
-                    "start": -xy_maximum,
-                    "stop": xy_maximum,
+                    "start": -self._xy_maximum,
+                    "stop": self._xy_maximum,
                     "scale": "linear",
                 },
                 "Y axis": {
                     "bins": 100,
-                    "start": -xy_maximum,
-                    "stop": xy_maximum,
+                    "start": -self._xy_maximum,
+                    "stop": self._xy_maximum,
                     "scale": "linear",
                 },
                 "Z axis": {
@@ -712,8 +712,6 @@ class CorsikaOutput:
         -------
         numpy.array
             Number of photons per event.
-        numpy.ndarray
-            The values (counts) of the histogram.
         """
         num_of_photons_per_event_per_telescope = self.get_num_photons_per_event_per_telescope()
         self._num_photons_per_event = np.sum(
