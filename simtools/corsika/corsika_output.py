@@ -52,6 +52,8 @@ class CorsikaOutput:
         self._allowed_histograms = {"hist_position", "hist_direction", "hist_time_altitude"}
         self._allowed_1D_labels = {"wavelength", "time", "altitude"}
         self._allowed_2D_labels = {"counts", "density", "direction", "time_altitude"}
+        self._events_information = None
+        self._get_event_information()
 
     @property
     def telescope_indices(self):
@@ -386,7 +388,6 @@ class CorsikaOutput:
         self._create_histograms()
 
         self.num_photons_per_event_per_telescope = []
-        self._event_headers = []
         start_time = time.time()
         self._logger.debug("Starting reading the file at {}.".format(start_time))
         with IACTFile(self.input_file) as f:
@@ -396,7 +397,6 @@ class CorsikaOutput:
 
             self.num_events = 0
             for event in f:
-                self._event_headers.append(event.header)
                 for step, _ in enumerate(self._tel_positions):
                     self.num_photons_per_event_per_telescope.append(event.n_photons[step])
 
@@ -767,29 +767,30 @@ class CorsikaOutput:
         """
         return self._tel_positions
 
-    def _get_info_from_event_header(self, key):
+    def _get_event_information(self):
         """
-        Helper function to assist getting information from the event header.
+        Get information from the event header and save into dictionary.
 
-        Parameters
-        ----------
-        key: str
-            Key to indicate which information to extract from the event header.
-
-        Raises
-        ------
-        KeyError:
-            if the key is not valid.
         """
-        allowed_keys = {"zenith_angle", "azimuth_angle", "total_energy", "first_interaction_height"}
-        if key not in allowed_keys:
-            msg = "`key` is not allowed. Valid entries are {}".format(allowed_keys)
-            self._logger.error(msg)
-            raise KeyError
-        info_for_all_events = []
-        for event_num, event in enumerate(self._event_headers):
-            info_for_all_events.append(float(event[corsika7_event_header[key]["index"]]))
-        return np.array(info_for_all_events) * corsika7_event_header[key]["unit"]
+        if self._events_information is None:
+            with IACTFile(self.input_file) as f:
+                self._file_header = f.header
+                self._events_information = {
+                    key: {"value": [], "unit": None} for key in corsika7_event_header
+                }
+                for _, event in enumerate(f):
+                    for key in corsika7_event_header:
+                        self._events_information[key]["value"].append(
+                            (event.header[corsika7_event_header[key]["value"]])
+                        )
+                        if self._events_information[key]["unit"] is None:
+                            self._events_information[key]["unit"] = corsika7_event_header[key][
+                                "unit"
+                            ]
+
+    @property
+    def events_information(self):
+        return self._events_information
 
     @property
     def event_zenith_angles(self):
@@ -797,7 +798,11 @@ class CorsikaOutput:
         Get the zenith angles of the simulated events in degrees.
         """
         self._event_zenith_angles = np.around(
-            self._get_info_from_event_header("zenith_angle").to(u.deg), 4
+            (
+                self.events_information["zenith_angle"]["value"]
+                * self.events_information["zenith_angle"]["unit"]
+            ).to(u.deg),
+            4,
         )
         return self._event_zenith_angles
 
@@ -807,7 +812,11 @@ class CorsikaOutput:
         Get the azimuth angles of the simulated events in degrees.
         """
         self._event_azimuth_angles = np.around(
-            self._get_info_from_event_header("azimuth_angle").to(u.deg), 4
+            (
+                self.events_information["azimuth_angle"]["value"]
+                * self.events_information["azimuth_angle"]["unit"]
+            ).to(u.deg),
+            4,
         )
         return self._event_azimuth_angles
 
@@ -816,10 +825,14 @@ class CorsikaOutput:
         """
         Get the energy of the simulated events in TeV.
         """
-        self._event_energies = np.around(
-            self._get_info_from_event_header("total_energy").to(u.TeV), 4
+        self._event_total_energies = np.around(
+            (
+                self.events_information["total_energy"]["value"]
+                * self.events_information["total_energy"]["unit"]
+            ).to(u.TeV),
+            4,
         )
-        return self._event_energies
+        return self._event_total_energies
 
     @property
     def event_first_interaction_heights(self):
@@ -829,6 +842,10 @@ class CorsikaOutput:
         .
         """
         self._event_first_interaction_heights = np.around(
-            self._get_info_from_event_header("first_interaction_height").to(u.km), 4
+            (
+                self.events_information["first_interaction_height"]["value"]
+                * self.events_information["first_interaction_height"]["unit"]
+            ).to(u.km),
+            4,
         )
         return self._event_first_interaction_heights
