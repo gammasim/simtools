@@ -878,3 +878,39 @@ class CorsikaOutput:
             4,
         )
         return self._event_first_interaction_heights
+
+    @property
+    def corsika_version(self):
+        """
+        Get the CORSIKA version from the events header.
+
+        Returns
+        -------
+        numpy.array
+            The CORSIKA version used for each event.
+        """
+        self._corsika_version = self.events_information["software_version"]["value"]
+        return self._corsika_version
+
+    @property
+    def magnetic_field(self):
+        """
+        Get the Earth magnetic field from the events header in microT.
+
+        Returns
+        -------
+        numpy.array
+            The Earth magnetic field in the X direction used for each event in microT.
+        numpy.array
+            The Earth magnetic field in the Y direction used for each event in microT.
+        """
+        self._magnetic_field_x = (
+            self.events_information["Earth_B_field_x"]["value"]
+            * self.events_information["Earth_B_field_x"]["unit"]
+        )
+        self._magnetic_field_x = (
+            self.events_information["Earth_B_field_y"]["value"]
+            * self.events_information["Earth_B_field_y"]["unit"]
+        )
+
+        return self._magnetic_field_x, self._magnetic_field_y
