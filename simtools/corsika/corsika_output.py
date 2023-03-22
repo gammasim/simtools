@@ -35,7 +35,6 @@ class CorsikaOutput:
         if the input file given does not exist.
     """
 
-    @u.quantity_input(zenith_angle=u.rad, azimuth_angle=u.rad)
     def __init__(self, input_file):
 
         self._logger = logging.getLogger(__name__)
@@ -391,11 +390,7 @@ class CorsikaOutput:
         start_time = time.time()
         self._logger.debug("Starting reading the file at {}.".format(start_time))
         with IACTFile(self.input_file) as f:
-
-            self._tel_positions = np.array(f.telescope_positions)
-            self.num_telescopes = np.size(self._tel_positions, axis=0)
-
-            self.num_events = 0
+            event_counter = 0
             for event in f:
                 for step, _ in enumerate(self._tel_positions):
                     self.num_photons_per_event_per_telescope.append(event.n_photons[step])
@@ -403,10 +398,10 @@ class CorsikaOutput:
                 photons = list(event.photon_bunches.values())
                 self._fill_histograms(
                     photons,
-                    self.event_azimuth_angles[self.num_events],
-                    self.event_zenith_angles[self.num_events],
+                    self.event_azimuth_angles[event_counter],
+                    self.event_zenith_angles[event_counter],
                 )
-                self.num_events += 1
+                event_counter += 1
         self._logger.debug(
             "Finished reading the file and creating the histograms in {} seconds".format(
                 time.time() - start_time
@@ -774,9 +769,12 @@ class CorsikaOutput:
         if self._events_information is None:
             with IACTFile(self.input_file) as f:
                 self._file_header = f.header
+                self._tel_positions = np.array(f.telescope_positions)
+                self.num_telescopes = np.size(self._tel_positions, axis=0)
                 self._events_information = {
                     key: {"value": [], "unit": None} for key in corsika7_event_header
                 }
+                self.num_events = 0
                 for _, event in enumerate(f):
                     for key in corsika7_event_header:
                         self._events_information[key]["value"].append(
@@ -786,6 +784,7 @@ class CorsikaOutput:
                             self._events_information[key]["unit"] = corsika7_event_header[key][
                                 "unit"
                             ]
+                    self.num_events += 1
 
     @property
     def events_information(self):
