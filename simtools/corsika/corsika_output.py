@@ -443,7 +443,7 @@ class CorsikaOutput:
         """
 
         if label not in self._allowed_2D_labels:
-            msg = "label is not valid. Valid values are {}".format(self._allowed_2D_labels)
+            msg = "label is not valid. Valid entries are {}".format(self._allowed_2D_labels)
             self._logger.error(msg)
             raise ValueError
         self._raise_if_no_histogram()
@@ -913,3 +913,88 @@ class CorsikaOutput:
         )
 
         return self._magnetic_field_x, self._magnetic_field_y
+
+    def event_1D_histogram(self, key, bins=50, range=None):
+        """
+        Create a histogram for the all events using `key` as parameter.
+        Valid keys are in ~simtools.names.corsika7_event_header.
+
+        Parameters
+        ----------
+        key: str
+            The information from which to build the histogram, e.g. total_energy, zenith_angle
+            or first_interaction_height.
+        bins: float
+            Number of bins for the histogram.
+        range: 2-tuple
+            Tuple to define the range of the histogram.
+
+        Returns
+        -------
+        numpy.array
+            Edges of the histogram.
+        numpy.ndarray
+            The values (counts) of the histogram.
+
+        Raises
+        ------
+        KeyError:
+            If key is not valid.
+        """
+        if key not in corsika7_event_header:
+            msg = "`key` is not valid. Valid entries are {}".format(corsika7_event_header)
+            self._logger.error(msg)
+            raise KeyError
+        hist, edges = np.histogram(
+            self.events_information[key]["value"] * self.events_information[key]["unit"],
+            bins=bins,
+            range=range,
+        )
+        return edges, hist
+
+    def event_2D_histogram(self, key_1, key_2, bins=50, range=None):
+        """
+        Create a 2D histogram for the all events using `key_1` and `key_2` as parameters.
+        Valid keys are in ~simtools.names.corsika7_event_header.
+
+        Parameters
+        ----------
+        key_1: str
+            The first key from which to build the histogram, e.g. total_energy, zenith_angle
+            or first_interaction_height.
+        key_2: str
+            The second key from which to build the histogram, e.g. total_energy, zenith_angle
+            or first_interaction_height.
+        bins: float
+            Number of bins for the histogram.
+        range: 2-tuple
+            Tuple to define the range of the histogram.
+
+        Returns
+        -------
+        numpy.array
+            X Edges of the histogram.
+        numpy.array
+            Y Edges of the histogram.
+        numpy.ndarray
+            The values (counts) of the histogram.
+
+        Raises
+        ------
+        KeyError:
+            If at least one of the keys is not valid.
+        """
+        for key in [key_1, key_2]:
+            if key not in corsika7_event_header:
+                msg = "At least one of the keys given is not valid. Valid entries are {}".format(
+                    corsika7_event_header
+                )
+                self._logger.error(msg)
+                raise KeyError
+        hist, x_edges, y_edges = np.histogram2d(
+            self.events_information[key_1]["value"] * self.events_information[key_1]["unit"],
+            self.events_information[key_2]["value"] * self.events_information[key_2]["unit"],
+            bins=bins,
+            range=range,
+        )
+        return x_edges, y_edges, hist
