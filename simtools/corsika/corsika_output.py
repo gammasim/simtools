@@ -770,7 +770,6 @@ class CorsikaOutput:
     def _get_event_information(self):
         """
         Get information from the event header and save into dictionary.
-
         """
         if self._events_information is None:
             with IACTFile(self.input_file) as f:
@@ -790,12 +789,27 @@ class CorsikaOutput:
 
     @property
     def events_information(self):
+        """
+        Get the information about the events from their headers.
+        The main information can also be fetched individually through the functions below.
+        For the remaining information (such as px, py, pz), use this function.
+
+        Returns
+        -------
+        dict
+            Dictionary with the events information.
+        """
         return self._events_information
 
     @property
     def event_zenith_angles(self):
         """
         Get the zenith angles of the simulated events in degrees.
+
+        Returns
+        -------
+        numpy.array
+            The zenith angles in degrees for each event.
         """
         self._event_zenith_angles = np.around(
             (
@@ -810,6 +824,11 @@ class CorsikaOutput:
     def event_azimuth_angles(self):
         """
         Get the azimuth angles of the simulated events in degrees.
+
+        Returns
+        -------
+        numpy.array
+            The azimuth angles in degrees for each event.
         """
         self._event_azimuth_angles = np.around(
             (
@@ -824,6 +843,11 @@ class CorsikaOutput:
     def event_energies(self):
         """
         Get the energy of the simulated events in TeV.
+
+        Returns
+        -------
+        numpy.array
+            The total energies in TeV for each event.
         """
         self._event_total_energies = np.around(
             (
@@ -840,6 +864,11 @@ class CorsikaOutput:
         Get the height of the first interaction in km.
         If negative, tracking starts at margin of atmosphere, see TSTART in the CORSIKA 7 user guide
         .
+
+        Returns
+        -------
+        numpy.array
+            The first interaction height in km for each event.
         """
         self._event_first_interaction_heights = np.around(
             (
