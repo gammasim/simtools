@@ -310,7 +310,7 @@ class CorsikaOutput:
                 )
             )
 
-    def _fill_histograms(self, photons, azimuth_angle, zenith_angle):
+    def _fill_histograms(self, photons, azimuth_angle=None, zenith_angle=None):
         """Fill the histograms created by self._create_histogram
 
         Parameters
@@ -323,9 +323,11 @@ class CorsikaOutput:
         azimuth_angle: astropy.Quantity
             Azimuth angle to rotate the observational plane and obtain it perpendicular to the
             incoming event. It can be passed in radians or degrees.
+            If not given, no rotation is performed.
         zenith_angle: astropy.Quantity
             Zenith angle to rotate the observational plane and obtain it perpendicular to the
             incoming event. It can be passed in radians or degrees.
+            If not given, no rotation is performed.
 
         Raises
         ------
@@ -336,20 +338,20 @@ class CorsikaOutput:
         hist_num = 0
         for one_tel_info, photons_info in zip(self._tel_positions, photons):
 
-            photon_x, photon_y = rotate(
-                photons_info["x"],
-                photons_info["y"],
-                azimuth_angle,
-                zenith_angle,
-            )
+            if azimuth_angle is None or zenith_angle is None:
+                photon_x, photon_y = photons_info["x"], photons_info["y"]
+            else:
+                photon_x, photon_y = rotate(
+                    photons_info["x"],
+                    photons_info["y"],
+                    azimuth_angle,
+                    zenith_angle,
+                )
 
             if self.telescope_indices is None:
                 hist_num = 0
                 photon_x = -one_tel_info["x"] + photon_x
                 photon_y = -one_tel_info["y"] + photon_y
-
-            else:
-                photon_x, photon_y = photons_info["x"], photons_info["y"]
 
             if (
                 one_tel_info in self._tel_positions[self.telescope_indices]
