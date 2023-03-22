@@ -119,6 +119,15 @@ corsika7_event_header = {
     "pz_momentum": {"value": 9, "unit": u.GeV / c},
     "zenith_angle": {"value": 10, "unit": u.rad},
     "azimuth_angle": {"value": 11, "unit": u.rad},
+    "num_of_random_num": {"value": 12, "unit": None},
+    "software_version": {"value": 16, "unit": None},
+    "spectrum_slope": {"value": 19, "unit": None},
+    "E_min": {"value": 20, "unit": u.GeV},
+    "E_max": {"value": 21, "unit": u.GeV},
+    "Earth_B_field_x": {"value": 32, "unit": 1e-6 * u.T},
+    "Earth_B_field_y": {"value": 33, "unit": 1e-6 * u.T},
+    "photon_wavelength_min": {"value": 57, "unit": u.nm},
+    "photon_wavelength_max": {"value": 58, "unit": u.nm},
 }
 
 
