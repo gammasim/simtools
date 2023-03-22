@@ -107,18 +107,18 @@ corsika_to_simtools_names = {
 }
 
 corsika7_event_header = {
-    "EVTH": {"index": 0, "unit": None},
-    "event_number": {"index": 1, "unit": None},
-    "particle_id": {"index": 2, "unit": None},
-    "total_energy": {"index": 3, "unit": u.GeV},
-    "starting_altitude": {"index": 4, "unit": u.g * u.cm**-2},
-    "number_of_first_target": {"index": 5, "unit": None},
-    "first_interaction_height": {"index": 6, "unit": u.cm},
-    "px_momentum": {"index": 7, "unit": u.GeV / c},
-    "py_momentum": {"index": 8, "unit": u.GeV / c},
-    "pz_momentum": {"index": 9, "unit": u.GeV / c},
-    "zenith_angle": {"index": 10, "unit": u.rad},
-    "azimuth_angle": {"index": 11, "unit": u.rad},
+    "EVTH": {"value": 0, "unit": None},
+    "event_number": {"value": 1, "unit": None},
+    "particle_id": {"value": 2, "unit": None},
+    "total_energy": {"value": 3, "unit": u.GeV},
+    "starting_altitude": {"value": 4, "unit": u.g * u.cm**-2},
+    "number_of_first_target": {"value": 5, "unit": None},
+    "first_interaction_height": {"value": 6, "unit": u.cm},
+    "px_momentum": {"value": 7, "unit": u.GeV / c},
+    "py_momentum": {"value": 8, "unit": u.GeV / c},
+    "pz_momentum": {"value": 9, "unit": u.GeV / c},
+    "zenith_angle": {"value": 10, "unit": u.rad},
+    "azimuth_angle": {"value": 11, "unit": u.rad},
 }
 
 
