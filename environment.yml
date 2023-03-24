@@ -21,6 +21,8 @@ dependencies:
   - zstandard
   - conda-forge::eventio>=1.5.0
   - pyflakes
+  - pyeventio
+  - boost-histogram
 
 # cheatsheet
 # create: conda env create -f environment.yml
