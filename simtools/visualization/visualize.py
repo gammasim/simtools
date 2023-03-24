@@ -734,14 +734,14 @@ def _kernel_plot_2D_photons(corsika_output_instance, property_name, log_z=False)
     """
     x_label = {
         "counts": "X (m)",
-        "density": r"X (m$^{-2}$)",
+        "density": "X (m)",
         "direction": "cos(X)",
         "time_altitude": "Time since 1st interaction (ns)",
         "num_photons_per_telescope": "Event number",
     }
     y_label = {
         "counts": "Y (m)",
-        "density": r"Y (m$^{-2}$)",
+        "density": "Y (m)",
         "direction": "cos(Y)",
         "time_altitude": "Altitude of emission (km)",
         "num_photons_per_telescope": "Telescope index",
