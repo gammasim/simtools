@@ -344,7 +344,7 @@ def collect_data_from_yaml_or_dict(in_yaml, in_dict, allow_empty=False):
     if in_dict is not None:
         return dict(in_dict)
 
-    msg = "Input has not been provided (by yaml file neither by dict)"
+    msg = "Input has not been provided (neither by yaml file, nor by dict)"
     if allow_empty:
         _logger.debug(msg)
         return None
