@@ -246,7 +246,7 @@ class CorsikaOutput:
         if label not in self._allowed_histograms:
             msg = f"allowed labels must be one of the following: {self._allowed_histograms}"
             self._logger.error(msg)
-            raise (ValueError)
+            raise ValueError
 
         all_axes = ["x axis", "y axis"]
         if label == "hist_position":
