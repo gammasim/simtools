@@ -89,7 +89,7 @@ class CorsikaOutput:
 
     def _get_directive_cosinus(self, zenith_angle, azimuth_angle):
         """
-        Get the direction cosinus (X and Y) from the incoming particle, which helps defining the
+        Get the direction cosinus (x and y) from the incoming particle, which helps defining the
         range of the histograms built from the photon incoming directions.
 
         Parameters
@@ -105,9 +105,9 @@ class CorsikaOutput:
         Returns
         -------
         np.array:
-            Directive cosinus in the X direction.
+            Directive cosinus in the x direction.
         np.array:
-            Directive cosinus in the Y direction.
+            Directive cosinus in the y direction.
         """
         cosx_obs = np.sin(zenith_angle) * np.cos(azimuth_angle)
         cosy_obs = np.sin(zenith_angle) * np.sin(azimuth_angle)
@@ -123,7 +123,7 @@ class CorsikaOutput:
         Parameters
         ----------
         in_yaml: str or Path
-            Yaml file with the configuration parameters to create the histograms. For the correct
+            yaml file with the configuration parameters to create the histograms. For the correct
             format, please look at the docstring at `_create_histogram_config`.
 
         in_dict: dict
@@ -157,8 +157,8 @@ class CorsikaOutput:
         Create a dictionary with the configuration necessary to create the histograms. It is used
         only in case the configuration is not provided in a yaml file.
 
-        Three histograms are created: hist_position with 3 dimensions (X, Y positions and the
-        wavelength), hist_direction with 2 dimensions (directive cosinus in X and Y directions),
+        Three histograms are created: hist_position with 3 dimensions (x, y positions and the
+        wavelength), hist_direction with 2 dimensions (directive cosinus in x and y directions),
         hist_time_altitude with 2 dimensions (time and altitude of emission).
 
         Four arguments are passed to each dimension in the dictionary:
@@ -182,19 +182,19 @@ class CorsikaOutput:
 
         histogram_config = {
             "hist_position": {
-                "X axis": {
+                "x axis": {
                     "bins": 100,
                     "start": -self._xy_maximum,
                     "stop": self._xy_maximum,
                     "scale": "linear",
                 },
-                "Y axis": {
+                "y axis": {
                     "bins": 100,
                     "start": -self._xy_maximum,
                     "stop": self._xy_maximum,
                     "scale": "linear",
                 },
-                "Z axis": {
+                "z axis": {
                     "bins": 100,
                     "start": 200 * u.nm,
                     "stop": 1000 * u.nm,
@@ -202,13 +202,13 @@ class CorsikaOutput:
                 },
             },
             "hist_direction": {
-                "X axis": {
+                "x axis": {
                     "bins": 100,
                     "start": -1,
                     "stop": 1,
                     "scale": "linear",
                 },
-                "Y axis": {
+                "y axis": {
                     "bins": 100,
                     "start": -1,
                     "stop": 1,
@@ -216,13 +216,13 @@ class CorsikaOutput:
                 },
             },
             "hist_time_altitude": {
-                "X axis": {
+                "x axis": {
                     "bins": 100,
                     "start": -2000 * u.ns,
                     "stop": 2000 * u.ns,
                     "scale": "linear",
                 },
-                "Y axis": {"bins": 100, "start": 50 * u.km, "stop": 0 * u.km, "scale": "linear"},
+                "y axis": {"bins": 100, "start": 50 * u.km, "stop": 0 * u.km, "scale": "linear"},
             },
         }
         return histogram_config
@@ -248,9 +248,9 @@ class CorsikaOutput:
             self._logger.error(msg)
             raise (ValueError)
 
-        all_axes = ["X axis", "Y axis"]
+        all_axes = ["x axis", "y axis"]
         if label == "hist_position":
-            all_axes.append("Z axis")
+            all_axes.append("z axis")
 
         boost_axes = []
         for axis in all_axes:
@@ -488,9 +488,9 @@ class CorsikaOutput:
         Returns
         -------
         numpy.array
-            The edges of the direction histograms in X.
+            The edges of the direction histograms in x.
         numpy.array
-            The edges of the direction histograms in Y
+            The edges of the direction histograms in y
         numpy.ndarray
             The values (counts) of the histogram.
 
@@ -513,9 +513,9 @@ class CorsikaOutput:
         Returns
         -------
         numpy.array
-            The edges of the direction histograms in cos(X).
+            The edges of the direction histograms in cos(x).
         numpy.array
-            The edges of the direction histograms in cos(Y)
+            The edges of the direction histograms in cos(y)
         numpy.ndarray
             The values (counts) of the histogram.
         """
@@ -759,7 +759,7 @@ class CorsikaOutput:
         Returns
         -------
         numpy.ndarray
-            X, Y and Z positions of the telescopes and their radius according to the CORSIKA
+            x, y and z positions of the telescopes and their radius according to the CORSIKA
             spherical representation of the telescopes.
         """
         return self._tel_positions
@@ -901,9 +901,9 @@ class CorsikaOutput:
         Returns
         -------
         numpy.array
-            The Earth magnetic field in the X direction used for each event in microT.
+            The Earth magnetic field in the x direction used for each event in microT.
         numpy.array
-            The Earth magnetic field in the Y direction used for each event in microT.
+            The Earth magnetic field in the y direction used for each event in microT.
         """
         self._magnetic_field_x = (
             self.events_information["Earth_B_field_x"]["value"]
@@ -975,9 +975,9 @@ class CorsikaOutput:
         Returns
         -------
         numpy.array
-            X Edges of the histogram.
+            x Edges of the histogram.
         numpy.array
-            Y Edges of the histogram.
+            y Edges of the histogram.
         numpy.ndarray
             The values (counts) of the histogram.
 
