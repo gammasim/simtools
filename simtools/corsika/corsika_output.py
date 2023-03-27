@@ -166,7 +166,7 @@ class CorsikaOutput:
         "bins": the number of bins,
         "start": the first element of the histogram,
         "stop": the last element of the histogram, and
-        "scale" to define the scale of the binswhich can be "linear" or "log". If "log",
+        "scale" to define the scale of the bins which can be "linear" or "log". If "log",
             the start and stop values have to be valid, i.e., >0.
 
         Returns
