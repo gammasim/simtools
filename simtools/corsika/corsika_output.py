@@ -244,7 +244,7 @@ class CorsikaOutput:
         transform = {"log": bh.axis.transform.log, "linear": None}
 
         if label not in self._allowed_histograms:
-            msg = "allowed labels must be one of the following: {}".format(self._allowed_histograms)
+            msg = f"allowed labels must be one of the following: {self._allowed_histograms}"
             self._logger.error(msg)
             raise (ValueError)
 
