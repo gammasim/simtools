@@ -784,9 +784,9 @@ def convert_2D_to_radial_distr(xaxis, yaxis, hist2d, bin_size=50, max_dist=1000)
     Parameters
     ----------
     xaxis: numpy.array
-        The values of the X axis (histogram edges) on the ground.
+        The values of the x axis (histogram edges) on the ground.
     yaxis: numpy.array
-        The values of the Y axis (histogram edges) on the ground.
+        The values of the y axis (histogram edges) on the ground.
     hist2d: numpy.ndarray
         The histogram
     bin_size: float
