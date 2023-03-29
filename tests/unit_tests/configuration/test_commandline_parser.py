@@ -55,9 +55,9 @@ def test_zenith_angle():
         argparse.ArgumentTypeError,
         match=r"The provided zenith angle, -1.0, is outside of the allowed \[0, 180\] interval",
     ):
-        parser.CommandLineParser.efficiency_interval(-1)
+        parser.CommandLineParser.zenith_angle(-1)
     with pytest.raises(
         argparse.ArgumentTypeError,
         match=r"The provided zenith angle, 190.0, is outside of the allowed \[0, 180\] interval",
     ):
-        parser.CommandLineParser.efficiency_interval(190)
+        parser.CommandLineParser.zenith_angle(190)
