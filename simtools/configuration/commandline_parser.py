@@ -205,14 +205,78 @@ class CommandLineParser(argparse.ArgumentParser):
 
         _job_group = self.add_argument_group("telescope model")
         _job_group.add_argument(
-            "--site", help="CTAO site (e.g. North, South)", type=self.site, required=False
+            "--site", help="CTAO site (e.g., North, South)", type=self.site, required=False
         )
         if add_telescope:
             _job_group.add_argument(
                 "--telescope",
-                help="telescope model name (e.g. LST-1, SST-D, ...)",
+                help="telescope model name (e.g., LST-1, SST-D, ...)",
                 type=self.telescope,
             )
+        if add_model_version:
+            _job_group.add_argument(
+                "--model_version",
+                help="model version",
+                type=str,
+                default="Current",
+            )
+
+    def initialize_simulation_arguments(self, add_model_version=True):
+        """
+        Initialize default arguments for site and telescope model definition
+
+        Parameters
+        ----------
+        add_model_version: str
+            Model version.
+        """
+
+        _job_group = self.add_argument_group("simulation configuration")
+        _job_group.parser.add_argument(
+            "--site",
+            help="CTAO site (e.g., Paranal or LaPalma, case insensitive)",
+            type=str.lower,
+            required=True,
+            choices=[
+                "paranal",
+                "lapalma",
+            ],
+        )
+        _job_group.parser.add_argument(
+            "--primary",
+            help="Primary particle to simulate.",
+            type=str.lower,
+            required=True,
+            choices=[
+                "gamma",
+                "gamma_diffuse",
+                "electron",
+                "proton",
+                "muon",
+                "helium",
+                "nitrogen",
+                "silicon",
+                "iron",
+            ],
+        )
+        _job_group.parser.add_argument(
+            "--from_direction",
+            help="Direction from which the primary reaches the atmosphere",
+            type=str.lower,
+            required=True,
+            choices=[
+                "north",
+                "south",
+                "east",
+                "west",
+            ],
+        )
+        _job_group.parser.add_argument(
+            "--zenith_angle",
+            help="Zenith angle in degrees",
+            type=self.zenith_angle,
+            required=True,
+        )
         if add_model_version:
             _job_group.add_argument(
                 "--model_version",
@@ -288,3 +352,31 @@ class CommandLineParser(argparse.ArgumentParser):
             raise argparse.ArgumentTypeError(f"{value} outside of allowed [0,1] interval")
 
         return fvalue
+
+    @staticmethod
+    def zenith_angle(angle):
+        """
+        Argument parser type to check that the zenith angle provided is in the interval [0, 180].
+        We allow here zenith angles larger than 90 degrees in the improbable case
+        such simulations are requested. It is not guaranteed that the actual simulation software
+        supports such angles!
+
+        Parameters
+        ----------
+        angle: float
+            zenith angle to verify
+
+        Raises
+        ------
+        argparse.ArgumentTypeError
+            When angle is outside of the interval [0, 180]
+
+
+        """
+        fangle = float(angle)
+        if fangle < 0.0 or fangle > 180.0:
+            raise argparse.ArgumentTypeError(
+                f"The provided zenith angle, {angle}, is outside of the allowed [0, 180] interval"
+            )
+
+        return fangle
