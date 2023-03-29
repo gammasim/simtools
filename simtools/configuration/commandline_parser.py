@@ -376,7 +376,8 @@ class CommandLineParser(argparse.ArgumentParser):
         fangle = float(angle)
         if fangle < 0.0 or fangle > 180.0:
             raise argparse.ArgumentTypeError(
-                f"The provided zenith angle, {angle}, is outside of the allowed [0, 180] interval"
+                f"The provided zenith angle, {angle:.1f}, "
+                "is outside of the allowed [0, 180] interval"
             )
 
         return fangle
