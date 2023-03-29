@@ -197,10 +197,10 @@ class CommandLineParser(argparse.ArgumentParser):
 
         Parameters
         ----------
-        add_model_version: str
-            Model version.
-        add_telescope: str
-            Telescope model name (e.g. LST-1, SST-D, ...).
+        add_model_version: bool
+            Set if to allow a simulation model argument.
+        add_telescope: bool
+            Set if to allow a telescope name argument.
         """
 
         _job_group = self.add_argument_group("telescope model")
@@ -223,12 +223,12 @@ class CommandLineParser(argparse.ArgumentParser):
 
     def initialize_simulation_arguments(self, add_model_version=True):
         """
-        Initialize default arguments for site and telescope model definition
+        Initialize default arguments for simulation production configuration
 
         Parameters
         ----------
-        add_model_version: str
-            Model version.
+        add_model_version: bool
+            Set if to allow a simulation model argument.
         """
 
         _job_group = self.add_argument_group("simulation configuration")
