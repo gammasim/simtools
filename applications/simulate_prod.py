@@ -66,6 +66,7 @@ from copy import copy
 
 from astropy.io.misc import yaml
 
+import simtools.configuration.commandline_parser as argparser
 import simtools.util.general as gen
 from simtools.configuration import configurator
 from simtools.simulator import Simulator
@@ -89,51 +90,57 @@ def _parse(description=None):
 
     config = configurator.Configurator(description=description)
     config.parser.add_argument(
-        "--productionconfig",
-        help="Simulation configuration file",
+        "--prod_tag",
+        help="The production tag (ID) to use (e.g., Prod5)",
         type=str,
         required=True,
     )
     config.parser.add_argument(
-        "--task",
-        help=(
-            "What task to execute. Options: "
-            "simulate (perform simulations),"
-            "file_list (print list of output files),"
-            "inspect (plot sim_telarray histograms for quick inspection),"
-            "resources (print report of computing resources)"
-        ),
-        type=str,
+        "--site",
+        help="CTAO site (e.g., Paranal or LaPalma, case insensitive)",
+        type=str.lower,
         required=True,
-        choices=["simulate", "file_list", "inspect", "resources"],
+        choices=[
+            "paranal",
+            "lapalma",
+        ],
     )
     config.parser.add_argument(
         "--primary",
-        help="Primary to be selected from the simulation configuration file.",
-        type=str,
-        required=False,
+        help="Primary particle to simulate.",
+        type=str.lower,
+        required=True,
         choices=[
             "gamma",
+            "gamma_diffuse",
             "electron",
             "proton",
+            "muon",
             "helium",
             "nitrogen",
             "silicon",
             "iron",
         ],
     )
-    group = config.parser.add_mutually_exclusive_group(required=True)
-    group.add_argument(
-        "--showers_only",
-        help="Simulates only showers, no array detection",
-        action="store_true",
+    config.parser.add_argument(
+        "--from_direction",
+        help="Direction from which the primary reaches the atmosphere",
+        type=str.lower,
+        required=True,
+        choices=[
+            "north",
+            "south",
+            "east",
+            "west",
+        ],
     )
-    group.add_argument(
-        "--array_only",
-        help="Simulates only array detection, no showers",
-        action="store_true",
+    config.parser.add_argument(
+        "--zenith_angle",
+        help="Zenith angle in degrees",
+        type=argparser.zenith_angle,
+        required=True,
     )
-    return config.initialize(db_config=True, job_submission=True)
+    return config.initialize(db_config=True)
 
 
 def _proccess_simulation_config_file(config_file, primary_config, logger):
