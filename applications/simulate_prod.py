@@ -140,6 +140,23 @@ def _parse(description=None):
         type=argparser.zenith_angle,
         required=True,
     )
+    config.parser.add_argument(
+        "--start_run",
+        help=(
+            "Start run number such that the actual run number will be 'start_run' + 'run'. "
+            "This is useful in case a new transform is submitted for the same production. "
+            "It allows the transformation system to keep using sequential run numbers without "
+            "repetition."
+        ),
+        type=int,
+        required=True,
+    )
+    config.parser.add_argument(
+        "--run",
+        help="Run number (actual run number will be 'start_run' + 'run')",
+        type=int,
+        required=True,
+    )
     return config.initialize(db_config=True)
 
 
@@ -215,7 +232,7 @@ def _proccess_simulation_config_file(config_file, primary_config, logger):
 
 def main():
 
-    args_dict, db_config = _parse(description=("Air shower and array simulations"))
+    args_dict, db_config = _parse(description=("Run simulations for productions"))
 
     logger = logging.getLogger()
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
