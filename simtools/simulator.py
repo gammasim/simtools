@@ -145,8 +145,9 @@ class Simulator:
 
         Parameters
         ----------
-        simulator: choices: [simtel, corsika]
-            implemented are sim_telarray and CORSIKA
+        simulator: choices: [simtel, corsika, corsika_simtel]
+            implemented are sim_telarray and CORSIKA or corsika_simtel
+            (running CORSIKA and piping it directly to sim_telarray)
 
         Raises
         ------
@@ -154,7 +155,7 @@ class Simulator:
 
         """
 
-        if simulator not in ["simtel", "corsika"]:
+        if simulator not in ["simtel", "corsika", "corsika_simtel"]:
             raise gen.InvalidConfigData
         self.simulator = simulator.lower()
 
@@ -173,7 +174,7 @@ class Simulator:
         config_data = gen.collect_data_from_yaml_or_dict(config_file, config_data)
         if self.simulator == "simtel":
             self._load_sim_tel_config_and_model(config_data)
-        elif self.simulator == "corsika":
+        if self.simulator == "corsika":
             self._load_corsika_config_and_model(config_data)
 
     def _load_corsika_config_and_model(self, config_data):
