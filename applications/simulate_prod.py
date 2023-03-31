@@ -247,10 +247,10 @@ def main():
     for primary, config_data in shower_configs.items():
         shower_simulators[primary] = Simulator(
             label=label,
-            simulator="corsika",
+            simulator="corsika_simtel",
             simulator_source_path=args_dict["simtel_path"],
             config_data=config_data,
-            submit_command=args_dict["submit_command"],
+            submit_command="local",
             test=args_dict["test"],
             mongo_db_config=db_config,
         )
