@@ -10,6 +10,7 @@ import numpy as np
 import simtools.util.general as gen
 from simtools import io_handler
 from simtools.corsika.corsika_runner import CorsikaRunner
+from simtools.corsika_simtel.corsika_simtel_runner import CorsikaSimtelRunner
 from simtools.job_execution.job_manager import JobManager
 from simtools.model.array_model import ArrayModel
 from simtools.simtel.simtel_histograms import SimtelHistograms
@@ -174,7 +175,7 @@ class Simulator:
         config_data = gen.collect_data_from_yaml_or_dict(config_file, config_data)
         if self.simulator == "simtel":
             self._load_sim_tel_config_and_model(config_data)
-        if self.simulator == "corsika":
+        if self.simulator in ["corsika", "corsika_simtel"]:
             self._load_corsika_config_and_model(config_data)
 
     def _load_corsika_config_and_model(self, config_data):
@@ -316,8 +317,10 @@ class Simulator:
         """
         if self.simulator == "simtel":
             self._set_simtel_runner()
-        elif self.simulator == "corsika":
+        if self.simulator == "corsika":
             self._set_corsika_runner()
+        if self.simulator == "corsika_simtel":
+            self._set_corsika_simtel_runner()
 
     def _set_corsika_runner(self):
         """
@@ -349,6 +352,21 @@ class Simulator:
                 "zenith_angle": self.config.zenith_angle * u.deg,
                 "azimuth_angle": self.config.azimuth_angle * u.deg,
             },
+        )
+
+    def _set_corsika_simtel_runner(self):
+        """
+        Creating CorsikaRunner.
+
+        """
+        self._simulation_runner = CorsikaSimtelRunner(
+            mongo_db_config=self._mongo_db_config,
+            label=self.label,
+            site=self.site,
+            layout_name=self.layout_name,
+            simtel_source_path=self._simulator_source_path,
+            corsika_parameters_file=self._corsika_parameters_file,
+            corsika_config_data=self._corsika_config_data,
         )
 
     def _fill_results_without_run(self, input_file_list):
@@ -451,7 +469,7 @@ class Simulator:
             _file_list = self._enforce_list_type(input_file_list)
             for file in _file_list:
                 _runs_and_files[self._guess_run_from_file(file)] = file
-        elif self.simulator == "corsika":
+        if self.simulator in ["corsika", "corsika_simtel"]:
             _run_list = self._get_runs_to_simulate()
             for run in _run_list:
                 _runs_and_files[run] = None
