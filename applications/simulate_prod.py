@@ -42,6 +42,11 @@
 
     .. code-block:: console
 
+        python applications/simulate_prod.py --prod_tag Prod5 --site paranal --primary gamma
+        --from_direction north --zenith_angle 20 --start_run 0 --run 1
+
+    .. code-block:: console
+
         python applications/get_file_from_db.py --file_name prod_config_test.yml
 
     Run the application:
@@ -64,11 +69,12 @@
 import logging
 from copy import copy
 
+import astropy.units as u
 from astropy.io.misc import yaml
 
-import simtools.configuration.commandline_parser as argparser
 import simtools.util.general as gen
 from simtools.configuration import configurator
+from simtools.configuration.commandline_parser import CommandLineParser
 from simtools.simulator import Simulator
 
 
@@ -137,7 +143,7 @@ def _parse(description=None):
     config.parser.add_argument(
         "--zenith_angle",
         help="Zenith angle in degrees",
-        type=argparser.zenith_angle,
+        type=CommandLineParser.zenith_angle,
         required=True,
     )
     config.parser.add_argument(
@@ -237,44 +243,72 @@ def main():
     logger = logging.getLogger()
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
-    label, shower_configs, array_configs = _proccess_simulation_config_file(
-        args_dict["productionconfig"], args_dict["primary"], logger
+    # label, shower_configs, array_configs = _proccess_simulation_config_file(
+    #     args_dict["productionconfig"], args_dict["primary"], logger
+    # )
+    # if args_dict["label"] is None:
+    #     args_dict["label"] = label
+    label = "TEST"
+
+    corsika_config_data = {
+        "data_directory": ".",
+        "site": "North",
+        "layout_name": "test-layout",
+        "primary": args_dict["primary"],
+        "nshow": 10,
+        "nrun": 1,
+        "zenith": args_dict["zenith_angle"] * u.deg,
+        "viewcone": [0 * u.deg, 0 * u.deg],
+        "erange": [3 * u.GeV, 300 * u.TeV],
+        "eslope": -2,
+        "phi": 0 * u.deg,
+        "cscat": [5, 1500 * u.m, 0],
+    }
+
+    simulator = Simulator(
+        label=label,
+        simulator="corsika_simtel",
+        simulator_source_path=args_dict["simtel_path"],
+        config_data=corsika_config_data,
+        submit_command="local",
+        test=args_dict["test"],
+        mongo_db_config=db_config,
     )
-    if args_dict["label"] is None:
-        args_dict["label"] = label
 
-    shower_simulators = dict()
-    for primary, config_data in shower_configs.items():
-        shower_simulators[primary] = Simulator(
-            label=label,
-            simulator="corsika_simtel",
-            simulator_source_path=args_dict["simtel_path"],
-            config_data=config_data,
-            submit_command="local",
-            test=args_dict["test"],
-            mongo_db_config=db_config,
-        )
+    print(simulator)
 
-    if args_dict["showers_only"]:
-        for primary, shower in shower_simulators.items():
-            _task_function = getattr(shower, args_dict["task"])
-            _task_function()
+    # shower_simulators = dict()
+    # for primary, config_data in shower_configs.items():
+    #     shower_simulators[primary] = Simulator(
+    #         label=label,
+    #         simulator="corsika_simtel",
+    #         simulator_source_path=args_dict["simtel_path"],
+    #         config_data=config_data,
+    #         submit_command="local",
+    #         test=args_dict["test"],
+    #         mongo_db_config=db_config,
+    #     )
 
-    if args_dict["array_only"]:
-        array_simulators = dict()
-        for primary, config_data in array_configs.items():
-            array_simulators[primary] = Simulator(
-                label=label,
-                simulator="simtel",
-                simulator_source_path=args_dict["simtel_path"],
-                config_data=config_data,
-                submit_command=args_dict["submit_command"],
-                mongo_db_config=db_config,
-            )
-        for primary, array in array_simulators.items():
-            input_list = shower_simulators[primary].get_list_of_output_files()
-            _task_function = getattr(array, args_dict["task"])
-            _task_function(input_file_list=input_list)
+    # if args_dict["showers_only"]:
+    #     for primary, shower in shower_simulators.items():
+    #         _task_function = getattr(shower, args_dict["task"])
+    #         _task_function()
+
+    # if args_dict["array_only"]:
+    #     array_simulators = dict()
+    #     for primary, config_data in array_configs.items():
+    #         array_simulators[primary] = Simulator(
+    #             label=label,
+    #             simulator="simtel",
+    #             simulator_source_path=args_dict["simtel_path"],
+    #             config_data=config_data,
+    #             submit_command=args_dict["submit_command"],
+    #             mongo_db_config=db_config,
+    #         )
+    #     for primary, array in array_simulators.items():
+    #         input_list = shower_simulators[primary].get_list_of_output_files()
+    #         _task_function = getattr(array, args_dict["task"])
+    #         _task_function(input_file_list=input_list)
 
 
 if __name__ == "__main__":
