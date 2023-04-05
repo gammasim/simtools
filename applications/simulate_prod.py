@@ -42,7 +42,7 @@
 
     .. code-block:: console
 
-        python applications/simulate_prod.py --prod_tag Prod5 --site paranal --primary gamma
+        python applications/simulate_prod.py --prod_tag Prod5 --site paranal --primary gamma \
         --from_direction north --zenith_angle 20 --start_run 0 --run 1
 
     .. code-block:: console
@@ -263,6 +263,7 @@ def main():
         "eslope": -2,
         "phi": 0 * u.deg,
         "cscat": [5, 1500 * u.m, 0],
+        "run_range": [1, 1],
     }
 
     simulator = Simulator(
@@ -275,7 +276,7 @@ def main():
         mongo_db_config=db_config,
     )
 
-    print(simulator)
+    simulator.simulate()
 
     # shower_simulators = dict()
     # for primary, config_data in shower_configs.items():
