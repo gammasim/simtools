@@ -1,5 +1,6 @@
 import copy
 import logging
+from pathlib import Path
 
 import astropy.units as u
 import numpy as np
@@ -64,6 +65,8 @@ class CorsikaConfig:
         data/parameters/corsika_parameters.yml will be used.
     corsika_parameters_file: str
         Name of the yaml file to set remaining CORSIKA parameters.
+    simtel_source_path: str or Path
+        Location of source of the sim_telarray/CORSIKA package.
     """
 
     def __init__(
@@ -75,6 +78,7 @@ class CorsikaConfig:
         corsika_config_data=None,
         corsika_config_file=None,
         corsika_parameters_file=None,
+        simtel_source_path=None,
     ):
         """
         Initialize CorsikaConfig.
@@ -88,6 +92,7 @@ class CorsikaConfig:
         self.primary = None
         self._config_file_path = None
         self._output_generic_file_name = None
+        self._simtel_source_path = simtel_source_path
 
         self.io_handler = io_handler.IOHandler()
 
@@ -406,7 +411,8 @@ class CorsikaConfig:
 
             file.write("\n* [ OUTUPUT FILE ]\n")
             if use_multipipe:
-                file.write("TELFIL |${SIM_TELARRAY_PATH}/run_sim_cta\n")
+                run_cta_script = Path(self._simtel_source_path).joinpath("sim_telarray/run_sim_cta")
+                file.write(f"TELFIL |{str(run_cta_script)}\n")
                 file.write(f"IACT TELOPT -c {self.get_file_name('multipipe')}\n")
             else:
                 file.write(f"TELFIL {self._output_generic_file_name}\n")
