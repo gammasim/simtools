@@ -343,7 +343,8 @@ class CorsikaConfig:
 
     def export_input_file(self, use_multipipe=False):
         """Create and export CORSIKA input file."""
-        self._set_output_file_and_directory()
+        dir_type = "corsika_simtel" if use_multipipe else "corsika"
+        self._set_output_file_and_directory(dir_type)
         self._logger.debug(f"Exporting CORSIKA input file to {self._config_file_path}")
 
         def _get_text_single_line(pars):
@@ -487,11 +488,11 @@ class CorsikaConfig:
 
         raise ValueError(f"The requested file type ({file_type}) is unknown")
 
-    def _set_output_file_and_directory(self):
+    def _set_output_file_and_directory(self, dir_type="corsika"):
         config_file_name = self.get_file_name(file_type="config")
-        file_directory = self.io_handler.get_output_directory(label=self.label, dir_type="corsika")
-        file_directory.mkdir(parents=True, exist_ok=True)
+        file_directory = self.io_handler.get_output_directory(label=self.label, dir_type=dir_type)
         self._logger.info(f"Creating directory {file_directory}, if needed.")
+        file_directory.mkdir(parents=True, exist_ok=True)
         self._config_file_path = file_directory.joinpath(config_file_name)
 
         self._output_generic_file_name = self.get_file_name(file_type="output_generic")
