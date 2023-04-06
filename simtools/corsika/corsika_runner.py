@@ -231,6 +231,9 @@ class CorsikaRunner:
             if use_pfp:
                 file.write("\n# Running pfp\n")
                 file.write(pfp_command)
+            else:
+                file.write("\n# Copying CORSIKA input file to run location\n")
+                file.write(f"cp {self._corsika_input_file} {corsika_input_tmp_file}")
             file.write("\n# Running corsika_autoinputs\n")
             file.write(autoinputs_command)
 
