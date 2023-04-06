@@ -149,6 +149,7 @@ class CorsikaRunner:
                 label=self.label,
                 layout_name=self.layout_name,
                 corsika_config_data=self._corsika_config_data,
+                simtel_source_path=self._simtel_source_path,
             )
             # CORSIKA input file used as template for all runs
             self._corsika_input_file = self.corsika_config.get_input_file(use_multipipe)
