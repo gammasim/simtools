@@ -67,6 +67,7 @@
 """
 
 import logging
+import os
 from copy import copy
 
 import astropy.units as u
@@ -248,6 +249,8 @@ def main():
     # )
     # if args_dict["label"] is None:
     #     args_dict["label"] = label
+
+    # FIXME - temp stuff
     label = "TEST"
 
     corsika_config_data = {
@@ -265,6 +268,9 @@ def main():
         "cscat": [5, 1500 * u.m, 0],
         "run_range": [1, 1],
     }
+    os.environ[
+        "SIMTEL_MULTI_CFG_PATH"
+    ] = "/workdir/external/gammasim-tools/simtools-output/TEST/corsika_simtel/"
 
     simulator = Simulator(
         label=label,
