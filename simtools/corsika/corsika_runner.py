@@ -102,7 +102,8 @@ class CorsikaRunner:
 
         self._simtel_source_path = simtel_source_path
         self.io_handler = io_handler.IOHandler()
-        self._output_directory = self.io_handler.get_output_directory(self.label, "corsika")
+        _runner_directory = "corsika_simtel" if use_multipipe else "corsika"
+        self._output_directory = self.io_handler.get_output_directory(self.label, _runner_directory)
         self._logger.debug(f"Creating output dir {self._output_directory}, if needed,")
 
         corsika_config_data = collect_data_from_yaml_or_dict(
