@@ -22,8 +22,8 @@ class HistogramNotCreated(Exception):
 
 
 class CorsikaOutput:
-    """CorsikaOutput reads the CORSIKA output file (IACT file) of a simulation and save the
-    information about the Chernekov photons. It relies on pyeventio.
+    """CorsikaOutput extracts the Cherenkov photons information from a CORSIKA output file
+    (IACT file) using pyeventio.
 
     Parameters
     ----------
