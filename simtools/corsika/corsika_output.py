@@ -145,7 +145,7 @@ class CorsikaOutput:
     def _create_histogram_default_config(self):
         """
         Create a dictionary with the configuration necessary to create the histograms. It is used
-        only in case the configuration is not provided in a yaml file.
+        only in case the configuration is not provided in a yaml file or dict.
 
         Three histograms are created: hist_position with 3 dimensions (x, y positions and the
         wavelength), hist_direction with 2 dimensions (directive cosinus in x and y directions),
