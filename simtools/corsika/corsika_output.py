@@ -44,6 +44,8 @@ class CorsikaOutput:
         if not isinstance(self.input_file, Path):
             self.input_file = Path(self.input_file)
         if not self.input_file.exists():
+            msg = f"file {self.input_file} does not exist."
+            self._logger.error(msg)
             raise FileNotFoundError
 
         self._tel_positions = None
