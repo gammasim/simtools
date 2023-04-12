@@ -102,7 +102,6 @@ class CorsikaOutput:
             the sky map of the incoming direction of photons.
         azimuth_angle: astropy.units.rad
             Azimuth angle of observation (in radians).
-            See above for more details.
 
         Returns
         -------
@@ -387,7 +386,7 @@ class CorsikaOutput:
         list: list of boost_histogram.Histogram instances.
 
         """
-        self._telescope_indices = telescope_indices
+        self.telescope_indices = telescope_indices
         self._create_histograms()
 
         self.num_photons_per_event_per_telescope = []
