@@ -132,7 +132,7 @@ class CorsikaOutput:
         ----------
         in_yaml: str or Path
             yaml file with the configuration parameters to create the histograms. For the correct
-            format, please look at the docstring at `_create_histogram_config`.
+            format, please look at the docstring at `_create_histogram_default_config`.
 
         in_dict: dict
             Dictionary with the configuration parameters to create the histograms.
@@ -140,9 +140,9 @@ class CorsikaOutput:
 
         self._hist_config = collect_data_from_yaml_or_dict(in_yaml, in_dict, allow_empty=True)
         if self._hist_config is None:
-            self._hist_config = self._create_histogram_config()
+            self._hist_config = self._create_histogram_default_config()
 
-    def _create_histogram_config(self):
+    def _create_histogram_default_config(self):
         """
         Create a dictionary with the configuration necessary to create the histograms. It is used
         only in case the configuration is not provided in a yaml file.
