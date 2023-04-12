@@ -352,6 +352,8 @@ class CorsikaOutput:
 
             if self.telescope_indices is None:
                 hist_num = 0
+                # Adding the position of the telescopes to the relative position of the photons
+                # such that we have a common coordinate system.
                 photon_x = -one_tel_info["x"] + photon_x
                 photon_y = -one_tel_info["y"] + photon_y
 
