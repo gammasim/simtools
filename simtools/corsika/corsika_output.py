@@ -275,7 +275,7 @@ class CorsikaOutput:
 
         self.hist_position, self.hist_direction, self.hist_time_altitude = [], [], []
 
-        for step in range(self.num_of_hist):
+        for _ in range(self.num_of_hist):
             boost_axes_position = self._create_regular_axes("hist_position")
             self.hist_position.append(
                 bh.Histogram(
