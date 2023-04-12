@@ -95,31 +95,6 @@ class CorsikaOutput:
                     raise TypeError
         self._telescope_indices = telescope_new_indices
 
-    def _get_directive_cosinus(self, zenith_angle, azimuth_angle):
-        """
-        Get the direction cosinus (x and y) from the incoming particle, which helps defining the
-        range of the histograms built from the photon incoming directions.
-
-        Parameters
-        ----------
-        zenith_angle: astropy.units.rad
-            Zenith angle (in radians) of the observations (in the CORSIKA coordinate system).
-            It is used to rotate the observation plane (in zenith) of the telescope and to plot
-            the sky map of the incoming direction of photons.
-        azimuth_angle: astropy.units.rad
-            Azimuth angle of observation (in radians).
-
-        Returns
-        -------
-        np.array:
-            Directive cosinus in the x direction.
-        np.array:
-            Directive cosinus in the y direction.
-        """
-        cosx_obs = np.sin(zenith_angle) * np.cos(azimuth_angle)
-        cosy_obs = np.sin(zenith_angle) * np.sin(azimuth_angle)
-        return cosx_obs, cosy_obs
-
     @property
     def hist_config(self):
         """
