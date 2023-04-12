@@ -141,7 +141,6 @@ class CorsikaOutput:
         self._hist_config = collect_data_from_yaml_or_dict(in_yaml, in_dict, allow_empty=True)
         if self._hist_config is None:
             self._hist_config = self._create_histogram_config()
-        return self._hist_config
 
     def _create_histogram_config(self):
         """
