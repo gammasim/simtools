@@ -115,11 +115,18 @@ class CorsikaOutput:
         return cosx_obs, cosy_obs
 
     @property
+    def hist_config(self):
+        """
+        The configuration of the histograms.
+        """
+        return self._hist_config
+
+    @hist_config.setter
     def hist_config(self, in_yaml=None, in_dict=None):
         """
-        Return the dictionary with the configuration to create the histograms. The inputs are
-        allowed either through an yaml file or a dictionary. If nothing is given, the dictionary
-        is created with default values.
+        Set the configuration for the histograms (e.g., bin size, min and max values, etc).
+        The inputs are allowed either through a yaml file or a dictionary. If nothing is given,
+        the dictionary is created with default values.
 
         Parameters
         ----------
