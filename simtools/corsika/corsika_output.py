@@ -128,25 +128,8 @@ class CorsikaOutput:
             format, please look at the docstring at `_create_histogram_config`.
 
         in_dict: dict
-            Dictionary with the configuration parameterse to create the histograms.
-
-        Raises
-        ------
-        TypeError:
-            if type of yaml_config is not valid.
-        FileNotFoundError:
-            if yaml_config does not exist.
-
+            Dictionary with the configuration parameters to create the histograms.
         """
-        if isinstance(in_yaml, str):
-            in_yaml = Path(in_yaml)
-        if not isinstance(in_yaml, (Path, type(None))):
-            msg = "The type of `in_yaml` is not valid. Valid types are Path and str."
-            self._logger.error(msg)
-            raise TypeError
-
-        if in_yaml is not None and not in_yaml.exists():
-            raise FileNotFoundError
 
         self._hist_config = collect_data_from_yaml_or_dict(in_yaml, in_dict, allow_empty=True)
         if self._hist_config is None:
