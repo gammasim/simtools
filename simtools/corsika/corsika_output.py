@@ -49,11 +49,17 @@ class CorsikaOutput:
             raise FileNotFoundError
 
         self._tel_positions = None
+        self.num_events = None
+        self.num_of_hist = None
+        self.num_telescopes = None
+        self.num_photons_per_event_per_telescope = None
+        self.num_photons_per_event = None
+        self._event_azimuth_angles = None
+        self._event_zenith_angles = None
 
         self._allowed_histograms = {"hist_position", "hist_direction", "hist_time_altitude"}
         self._allowed_1D_labels = {"wavelength", "time", "altitude"}
         self._allowed_2D_labels = {"counts", "density", "direction", "time_altitude"}
-        self._events_information = None
         self._get_event_information()
 
     @property
