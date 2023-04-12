@@ -301,15 +301,27 @@ class CorsikaOutput:
             )
 
     def _fill_histograms(self, photons, azimuth_angle=None, zenith_angle=None):
-        """Fill the histograms created by self._create_histogram
+        """Fill all the histograms created by self._create_histogram with the information of the
+         photons on the ground.
 
         Parameters
         ----------
         photons: list
-            List of size M of numpy.void of size (N,8), where M is the number of telescopes in the
+            List of size M of numpy.array of size (N,8), where M is the number of telescopes in the
             array, N is the number of photons that reached each telescope. The following information
-             of the Cherenkov photons on the ground are saved: x, y, cx, cy, time, zem, photons,
-             wavelength.
+             of the Cherenkov photons on the ground are saved:
+             x: x position on the ground (CORSIKA coordinate system),
+             y: y position on the ground (CORSIKA coordinate system),
+             cx: direction cosinus in the x direction, i.e., the cosinus of the angle between the
+             incoming direction and the x axis,
+             cy: direction cosinus in the y direction, i.e., the cosinus of the angle between the
+             incoming direction and the y axis,
+             time: time of arrival of the photon in ns. The clock starts when the particle crosses
+             the top of the atmosphere (CORSIKA-defined) if `self.event_first_interaction_heights`
+             is positive or at first interaction if otherwise.
+             zem: altitude where the photon was generated in cm,
+             photons: number of photons associated to this bunch,
+             wavelength: the wavelength of the photons in nm.
         azimuth_angle: astropy.Quantity
             Azimuth angle to rotate the observational plane and obtain it perpendicular to the
             incoming event. It can be passed in radians or degrees.
