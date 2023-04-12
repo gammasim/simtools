@@ -59,7 +59,7 @@ class CorsikaOutput:
     @property
     def telescope_indices(self):
         """
-        The telescope index (or indices) as a class attribute.
+        The telescope index (or indices).
         """
         return self._telescope_indices
 
@@ -72,7 +72,7 @@ class CorsikaOutput:
         ----------
         telescope_new_indices: int or list of int
             The indices of the specific telescopes to be inspected. If not specified, all telescopes
-            are treated together in one histogram.
+            are treated together in one histogram and the value of self._telescope_indices is None.
 
         Raises
         ------
