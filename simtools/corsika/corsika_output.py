@@ -789,7 +789,7 @@ class CorsikaOutput:
                     key: {"value": [], "unit": None} for key in corsika7_event_header
                 }
                 self.num_events = 0
-                for _, event in enumerate(f):
+                for event in f:
                     for key in corsika7_event_header:
                         self._events_information[key]["value"].append(
                             (event.header[corsika7_event_header[key]["value"]])
