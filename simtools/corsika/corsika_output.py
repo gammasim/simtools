@@ -578,7 +578,7 @@ class CorsikaOutput:
         Parameters
         ----------
         bin_size: float
-            Size of the step in distance (in meters).
+            Bin size of the radial distribution (in meters).
         max_dist: float
             Maximum distance to consider in the 1D histogram (in meters).
         density: bool
@@ -602,13 +602,13 @@ class CorsikaOutput:
             if max_dist is None:
                 max_dist = 10
         edges_1D_list, hist1D_list = [], []
-        x_edges_list, y_edges_list, hist2D_values_list = self.get_2D_photon_position_distr(
+        x_position_list, y_position_list, hist2D_values_list = self.get_2D_photon_position_distr(
             density=density
         )
-        for one_hist, _ in enumerate(x_edges_list):
+        for one_hist, _ in enumerate(x_position_list):
             edges_1D, hist1D = convert_2D_to_radial_distr(
-                x_edges_list[one_hist],
-                y_edges_list[one_hist],
+                x_position_list[one_hist],
+                y_position_list[one_hist],
                 hist2D_values_list[one_hist],
                 bin_size=bin_size,
                 max_dist=max_dist,
