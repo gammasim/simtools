@@ -475,13 +475,6 @@ class CorsikaOutput:
             The edges of the direction histograms in y
         numpy.ndarray
             The values (counts) of the histogram.
-
-        Raises
-        ------
-        TypeError:
-            if density is not of type bool.
-        HistogramNotCreated:
-            if the histogram was not previously created.
         """
         if density is True:
             return self._get_hist_2D_projection("density")
