@@ -48,6 +48,13 @@ class CorsikaOutput:
             self._logger.error(msg)
             raise FileNotFoundError
 
+        self._initialize_attributes()
+        self._get_event_information()
+
+    def _initialize_attributes(self):
+        """
+        Initializes the class attributes.
+        """
         self._tel_positions = None
         self.num_events = None
         self.num_of_hist = None
@@ -58,11 +65,15 @@ class CorsikaOutput:
         self._event_zenith_angles = None
         self._events_information = None
         self._hist_config = None
-
+        self._total_num_photons = None
+        self._magnetic_field_x = None
+        self._magnetic_field_y = None
+        self._event_total_energies = None
+        self._event_first_interaction_heights = None
+        self._corsika_version = None
         self._allowed_histograms = {"hist_position", "hist_direction", "hist_time_altitude"}
         self._allowed_1D_labels = {"wavelength", "time", "altitude"}
         self._allowed_2D_labels = {"counts", "density", "direction", "time_altitude"}
-        self._get_event_information()
 
     @property
     def telescope_indices(self):
@@ -719,7 +730,7 @@ class CorsikaOutput:
         numpy.array
             Number of photons per event.
         """
-        if self._num_photons_per_event is not None:
+        if self._num_photons_per_event is None:
             self._num_photons_per_event = np.sum(
                 np.array(self.num_photons_per_event_per_telescope), axis=0
             )
@@ -735,7 +746,8 @@ class CorsikaOutput:
         float
             Total number photons.
         """
-        self._total_num_photons = np.sum(self.num_photons_per_event)
+        if self._total_num_photons is None:
+            self._total_num_photons = np.sum(self.num_photons_per_event)
         return self._total_num_photons
 
     @property
@@ -812,13 +824,14 @@ class CorsikaOutput:
         numpy.array
             The zenith angles in degrees for each event.
         """
-        self._event_zenith_angles = np.around(
-            (
-                self.events_information["zenith_angle"]["value"]
-                * self.events_information["zenith_angle"]["unit"]
-            ).to(u.deg),
-            4,
-        )
+        if self._event_zenith_angles is None:
+            self._event_zenith_angles = np.around(
+                (
+                    self.events_information["zenith_angle"]["value"]
+                    * self.events_information["zenith_angle"]["unit"]
+                ).to(u.deg),
+                4,
+            )
         return self._event_zenith_angles
 
     @property
@@ -831,13 +844,14 @@ class CorsikaOutput:
         numpy.array
             The azimuth angles in degrees for each event.
         """
-        self._event_azimuth_angles = np.around(
-            (
-                self.events_information["azimuth_angle"]["value"]
-                * self.events_information["azimuth_angle"]["unit"]
-            ).to(u.deg),
-            4,
-        )
+        if self._event_azimuth_angles is None:
+            self._event_azimuth_angles = np.around(
+                (
+                    self.events_information["azimuth_angle"]["value"]
+                    * self.events_information["azimuth_angle"]["unit"]
+                ).to(u.deg),
+                4,
+            )
         return self._event_azimuth_angles
 
     @property
@@ -850,13 +864,14 @@ class CorsikaOutput:
         numpy.array
             The total energies in TeV for each event.
         """
-        self._event_total_energies = np.around(
-            (
-                self.events_information["total_energy"]["value"]
-                * self.events_information["total_energy"]["unit"]
-            ).to(u.TeV),
-            4,
-        )
+        if self._event_total_energies is None:
+            self._event_total_energies = np.around(
+                (
+                    self.events_information["total_energy"]["value"]
+                    * self.events_information["total_energy"]["unit"]
+                ).to(u.TeV),
+                4,
+            )
         return self._event_total_energies
 
     @property
@@ -871,13 +886,14 @@ class CorsikaOutput:
         numpy.array
             The first interaction height in km for each event.
         """
-        self._event_first_interaction_heights = np.around(
-            (
-                self.events_information["first_interaction_height"]["value"]
-                * self.events_information["first_interaction_height"]["unit"]
-            ).to(u.km),
-            4,
-        )
+        if self._event_first_interaction_heights is None:
+            self._event_first_interaction_heights = np.around(
+                (
+                    self.events_information["first_interaction_height"]["value"]
+                    * self.events_information["first_interaction_height"]["unit"]
+                ).to(u.km),
+                4,
+            )
         return self._event_first_interaction_heights
 
     @property
@@ -890,7 +906,8 @@ class CorsikaOutput:
         numpy.array
             The CORSIKA version used for each event.
         """
-        self._corsika_version = self.events_information["software_version"]["value"]
+        if self._corsika_version is None:
+            self._corsika_version = self.events_information["software_version"]["value"]
         return self._corsika_version
 
     @property
@@ -905,14 +922,16 @@ class CorsikaOutput:
         numpy.array
             The Earth magnetic field in the y direction used for each event in microT.
         """
-        self._magnetic_field_x = (
-            self.events_information["Earth_B_field_x"]["value"]
-            * self.events_information["Earth_B_field_x"]["unit"]
-        )
-        self._magnetic_field_x = (
-            self.events_information["Earth_B_field_y"]["value"]
-            * self.events_information["Earth_B_field_y"]["unit"]
-        )
+        if self._magnetic_field_x is None:
+            self._magnetic_field_x = (
+                self.events_information["Earth_B_field_x"]["value"]
+                * self.events_information["Earth_B_field_x"]["unit"]
+            )
+        if self._magnetic_field_y is None:
+            self._magnetic_field_x = (
+                self.events_information["Earth_B_field_y"]["value"]
+                * self.events_information["Earth_B_field_y"]["unit"]
+            )
 
         return self._magnetic_field_x, self._magnetic_field_y
 
