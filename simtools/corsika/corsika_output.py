@@ -435,10 +435,7 @@ class CorsikaOutput:
             raise ValueError
         self._raise_if_no_histogram()
 
-        if self.telescope_indices is None:
-            size = 1
-        else:
-            size = len(self.telescope_indices)
+        size = len(self.telescope_indices) if self.telescope_indices is not None else 1
 
         x_edges, y_edges, hist_values = [], [], []
         for step in range(size):
