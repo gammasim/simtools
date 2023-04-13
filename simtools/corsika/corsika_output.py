@@ -632,8 +632,9 @@ class CorsikaOutput:
 
     def get_photon_time_distr(self):
         """
-        Get the distribution of the emitted time of the Cherenkov photons. The start of the time
-        is given according to the CORSIKA configuration.
+        Get the distribution of the emitted time of the Cherenkov photons. The clock starts when the
+         particle crosses the top of the atmosphere (CORSIKA-defined) if
+         `self.event_first_interaction_heights` is positive or at first interaction if otherwise.
 
         Returns
         -------
