@@ -536,7 +536,7 @@ class CorsikaOutput:
         telescope_indices_array = np.arange(self.num_telescopes + 1)
         return num_events_array, telescope_indices_array, num_of_photons_per_event_per_telescope
 
-    def _get_1D(self, label):
+    def _get_hist_1D_projection(self, label):
         """
         Helper function to get 1D distributions.
 
@@ -628,7 +628,7 @@ class CorsikaOutput:
         np.array
             The values of the wavelength histogram.
         """
-        return self._get_1D("wavelength")
+        return self._get_hist_1D_projection("wavelength")
 
     def get_photon_time_distr(self):
         """
@@ -642,7 +642,7 @@ class CorsikaOutput:
         numpy.ndarray
             The values (counts) of the histogram.
         """
-        return self._get_1D("time")
+        return self._get_hist_1D_projection("time")
 
     def get_photon_altitude_distr(self):
         """
@@ -655,7 +655,7 @@ class CorsikaOutput:
         numpy.ndarray
             The values (counts) of the histogram.
         """
-        return self._get_1D("altitude")
+        return self._get_hist_1D_projection("altitude")
 
     def get_num_photons_per_event_per_telescope(self):
         """
