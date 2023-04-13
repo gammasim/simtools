@@ -474,7 +474,7 @@ class CorsikaOutput:
         numpy.array
             The y edges of the density/count histograms in y
         numpy.ndarray
-            The values (counts) of the histogram.
+            The counts of the histogram.
         """
         if density is True:
             return self._get_hist_2D_projection("density")
@@ -492,7 +492,7 @@ class CorsikaOutput:
         numpy.array
             The y edges of the direction histograms in cos(y)
         numpy.ndarray
-            The values (counts) of the histogram.
+            The counts of the histogram.
         """
         return self._get_hist_2D_projection("direction")
 
@@ -507,7 +507,7 @@ class CorsikaOutput:
         numpy.array
             The y edges of the time_altitude histograms in km.
         numpy.ndarray
-            The values (counts) of the histogram.
+            The counts of the histogram.
         """
         return self._get_hist_2D_projection("time_altitude")
 
@@ -527,7 +527,7 @@ class CorsikaOutput:
         numpy.array
             Number of photons per event per telescope.
         numpy.ndarray
-            The values (counts) of the histogram.
+            The counts of the histogram.
         """
         num_of_photons_per_event_per_telescope = np.array(
             self.get_num_photons_per_event_per_telescope()
@@ -589,7 +589,7 @@ class CorsikaOutput:
         np.array
             The edges of the 1D histogram in meters with size = int(max_dist/bin_size) + 1.
         np.array
-            The values of the 1D histogram with size = int(max_dist/bin_size).
+            The counts of the 1D histogram with size = int(max_dist/bin_size).
         """
         if self.telescope_indices is None:
             if bin_size is None:
@@ -626,7 +626,7 @@ class CorsikaOutput:
         np.array
             The edges of the wavelength histogram in nanometers.
         np.array
-            The values of the wavelength histogram.
+            The counts of the wavelength histogram.
         """
         return self._get_hist_1D_projection("wavelength")
 
@@ -641,7 +641,7 @@ class CorsikaOutput:
         numpy.array
             The edges of the direction histograms in ns.
         numpy.ndarray
-            The values (counts) of the histogram.
+            The counts of the histogram.
         """
         return self._get_hist_1D_projection("time")
 
@@ -654,7 +654,7 @@ class CorsikaOutput:
         numpy.array
             The edges of the direction histograms in km.
         numpy.ndarray
-            The values (counts) of the histogram.
+            The counts of the histogram.
         """
         return self._get_hist_1D_projection("altitude")
 
@@ -685,7 +685,7 @@ class CorsikaOutput:
         numpy.array
             Number of photons per event.
         numpy.ndarray
-            The values (counts) of the histogram.
+            The counts of the histogram.
         """
 
         num_of_photons_per_event_per_telescope = self.get_num_photons_per_event_per_telescope()
@@ -912,7 +912,7 @@ class CorsikaOutput:
         numpy.array
             Edges of the histogram.
         numpy.ndarray
-            The values (counts) of the histogram.
+            The counts of the histogram.
 
         Raises
         ------
@@ -955,7 +955,7 @@ class CorsikaOutput:
         numpy.array
             y Edges of the histogram.
         numpy.ndarray
-            The values (counts) of the histogram.
+            The counts of the histogram.
 
         Raises
         ------
