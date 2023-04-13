@@ -483,9 +483,9 @@ class CorsikaOutput:
         Returns
         -------
         numpy.array
-            The x edges of the density/count histograms in x.
+            The x edges of the density/count histograms in x, usually in meters.
         numpy.array
-            The y edges of the density/count histograms in y
+            The y edges of the density/count histograms in y, usually in meters.
         numpy.ndarray
             The counts of the histogram.
         """
@@ -516,9 +516,9 @@ class CorsikaOutput:
         Returns
         -------
         numpy.array
-            The x edges of the time_altitude histograms in ns.
+            The x edges of the time_altitude histograms, usually in ns.
         numpy.array
-            The y edges of the time_altitude histograms in km.
+            The y edges of the time_altitude histograms, usually in km.
         numpy.ndarray
             The counts of the histogram.
         """
@@ -821,8 +821,8 @@ class CorsikaOutput:
 
         Returns
         -------
-        numpy.array
-            The zenith angles in degrees for each event.
+        astropy.Quantity
+            The zenith angles for each event, usually in degrees.
         """
         if self._event_zenith_angles is None:
             self._event_zenith_angles = np.around(
@@ -841,8 +841,8 @@ class CorsikaOutput:
 
         Returns
         -------
-        numpy.array
-            The azimuth angles in degrees for each event.
+        astropy.Quantity
+            The azimuth angles for each event, usually in degrees.
         """
         if self._event_azimuth_angles is None:
             self._event_azimuth_angles = np.around(
@@ -861,8 +861,8 @@ class CorsikaOutput:
 
         Returns
         -------
-        numpy.array
-            The total energies of the incoming particles in TeV for each event.
+        astropy.Quantity
+            The total energies of the incoming particles for each event, usually in TeV.
         """
         if self._event_total_energies is None:
             self._event_total_energies = np.around(
@@ -883,8 +883,8 @@ class CorsikaOutput:
 
         Returns
         -------
-        numpy.array
-            The first interaction height in km for each event.
+        astropy.Quantity
+            The first interaction height for each event, usually in km.
         """
         if self._event_first_interaction_heights is None:
             self._event_first_interaction_heights = np.around(
@@ -917,10 +917,10 @@ class CorsikaOutput:
 
         Returns
         -------
-        numpy.array
-            The Earth magnetic field in the x direction used for each event in microT.
-        numpy.array
-            The Earth magnetic field in the y direction used for each event in microT.
+        astropy.Quantity
+            The Earth magnetic field in the x direction used for each event.
+        astropy.Quantity
+            The Earth magnetic field in the y direction used for each event.
         """
         if self._magnetic_field_x is None:
             self._magnetic_field_x = (
@@ -932,7 +932,6 @@ class CorsikaOutput:
                 self.events_information["Earth_B_field_y"]["value"]
                 * self.events_information["Earth_B_field_y"]["unit"]
             )
-
         return self._magnetic_field_x, self._magnetic_field_y
 
     def event_1D_histogram(self, key, bins=50, range=None):
