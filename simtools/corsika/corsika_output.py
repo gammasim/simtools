@@ -414,7 +414,7 @@ class CorsikaOutput:
                 self._logger.error(msg)
                 raise HistogramNotCreated
 
-    def _get_2D(self, label):
+    def _get_hist_2D_projection(self, label):
         """
         Helper function to get 2D distributions.
 
@@ -487,9 +487,9 @@ class CorsikaOutput:
             if the histogram was not previously created.
         """
         if density is True:
-            return self._get_2D("density")
+            return self._get_hist_2D_projection("density")
         else:
-            return self._get_2D("counts")
+            return self._get_hist_2D_projection("counts")
 
     def get_2D_photon_direction_distr(self):
         """
@@ -504,7 +504,7 @@ class CorsikaOutput:
         numpy.ndarray
             The values (counts) of the histogram.
         """
-        return self._get_2D("direction")
+        return self._get_hist_2D_projection("direction")
 
     def get_2D_photon_time_altitude(self):
         """
@@ -519,7 +519,7 @@ class CorsikaOutput:
         numpy.ndarray
             The values (counts) of the histogram.
         """
-        return self._get_2D("time_altitude")
+        return self._get_hist_2D_projection("time_altitude")
 
     def get_2D_num_photons_distr(self):
         """
