@@ -53,7 +53,7 @@ class CorsikaOutput:
         self.num_of_hist = None
         self.num_telescopes = None
         self._num_photons_per_event_per_telescope = None
-        self.num_photons_per_event = None
+        self._num_photons_per_event = None
         self._event_azimuth_angles = None
         self._event_zenith_angles = None
 
@@ -373,14 +373,16 @@ class CorsikaOutput:
         self.telescope_indices = telescope_indices
         self._create_histograms()
 
-        self._num_photons_per_event_per_telescope = []
+        num_photons_per_event_per_telescope_to_set = []
         start_time = time.time()
         self._logger.debug("Starting reading the file at {}.".format(start_time))
         with IACTFile(self.input_file) as f:
             event_counter = 0
             for event in f:
                 for one_telescope, _ in enumerate(self._tel_positions):
-                    self._num_photons_per_event_per_telescope.append(event.n_photons[one_telescope])
+                    num_photons_per_event_per_telescope_to_set.append(
+                        event.n_photons[one_telescope]
+                    )
 
                 photons = list(event.photon_bunches.values())
                 self._fill_histograms(
@@ -389,6 +391,7 @@ class CorsikaOutput:
                     self.event_zenith_angles[event_counter],
                 )
                 event_counter += 1
+        self.num_photons_per_event_per_telescope(num_photons_per_event_per_telescope_to_set)
         self._logger.debug(
             "Finished reading the file and creating the histograms in {} seconds".format(
                 time.time() - start_time
@@ -661,13 +664,21 @@ class CorsikaOutput:
     @property
     def num_photons_per_event_per_telescope(self):
         """
-        Get the number of photons per event per telescope.
+        The number of photons per event per telescope.
         """
-        return (
-            np.array(self._num_photons_per_event_per_telescope)
-            .reshape(self.num_events, self.num_telescopes)
-            .T
-        )
+        return self._num_photons_per_event_per_telescope
+
+    @num_photons_per_event_per_telescope.setter
+    def num_photons_per_event_per_telescope(self, num_photons_per_event_per_telescope_to_set):
+        """
+        Set the number of photons per event per telescope.
+        """
+        if self._num_photons_per_event_per_telescope is None:
+            self._num_photons_per_event_per_telescope = (
+                np.array(num_photons_per_event_per_telescope_to_set)
+                .reshape(self.num_events, self.num_telescopes)
+                .T
+            )
 
     def get_num_photons_distr(self, bins=50, range=None):
         """
@@ -709,10 +720,11 @@ class CorsikaOutput:
         numpy.array
             Number of photons per event.
         """
-        num_of_photons_per_event_per_telescope = self.num_photons_per_event_per_telescope()
-        self._num_photons_per_event = np.sum(
-            np.array(num_of_photons_per_event_per_telescope), axis=0
-        )
+        if self._num_photons_per_event is not None:
+            num_of_photons_per_event_per_telescope = self.num_photons_per_event_per_telescope()
+            self._num_photons_per_event = np.sum(
+                np.array(num_of_photons_per_event_per_telescope), axis=0
+            )
         return self._num_photons_per_event
 
     @property
