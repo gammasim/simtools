@@ -470,9 +470,9 @@ class CorsikaOutput:
         Returns
         -------
         numpy.array
-            The edges of the direction histograms in x.
+            The x edges of the density/count histograms in x.
         numpy.array
-            The edges of the direction histograms in y
+            The y edges of the density/count histograms in y
         numpy.ndarray
             The values (counts) of the histogram.
         """
@@ -488,9 +488,9 @@ class CorsikaOutput:
         Returns
         -------
         numpy.array
-            The edges of the direction histograms in cos(x).
+            The x edges of the direction histograms in cos(x).
         numpy.array
-            The edges of the direction histograms in cos(y)
+            The y edges of the direction histograms in cos(y)
         numpy.ndarray
             The values (counts) of the histogram.
         """
@@ -503,9 +503,9 @@ class CorsikaOutput:
         Returns
         -------
         numpy.array
-            The edges of the direction histograms in ns.
+            The x edges of the time_altitude histograms in ns.
         numpy.array
-            The edges of the direction histograms in km.
+            The y edges of the time_altitude histograms in km.
         numpy.ndarray
             The values (counts) of the histogram.
         """
