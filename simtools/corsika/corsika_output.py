@@ -379,8 +379,8 @@ class CorsikaOutput:
         with IACTFile(self.input_file) as f:
             event_counter = 0
             for event in f:
-                for step, _ in enumerate(self._tel_positions):
-                    self.num_photons_per_event_per_telescope.append(event.n_photons[step])
+                for one_telescope, _ in enumerate(self._tel_positions):
+                    self.num_photons_per_event_per_telescope.append(event.n_photons[one_telescope])
 
                 photons = list(event.photon_bunches.values())
                 self._fill_histograms(
@@ -435,23 +435,23 @@ class CorsikaOutput:
             raise ValueError
         self._raise_if_no_histogram()
 
-        size = len(self.telescope_indices) if self.telescope_indices is not None else 1
+        num_telescopes = len(self.telescope_indices) if self.telescope_indices is not None else 1
 
         x_edges, y_edges, hist_values = [], [], []
-        for step in range(size):
+        for one_telescope in range(num_telescopes):
             if label == "counts":
-                mini_hist = self.hist_position[step][:, :, sum]
+                mini_hist = self.hist_position[one_telescope][:, :, sum]
                 hist_values.append(mini_hist.view().T)
             elif label == "density":
-                mini_hist = self.hist_position[step][:, :, sum]
+                mini_hist = self.hist_position[one_telescope][:, :, sum]
                 areas = functools.reduce(operator.mul, mini_hist.axes.widths)
                 hist_values.append(mini_hist.view().T / areas)
             elif label == "direction":
-                mini_hist = self.hist_direction[step]
-                hist_values.append(self.hist_direction[step].view().T)
+                mini_hist = self.hist_direction[one_telescope]
+                hist_values.append(self.hist_direction[one_telescope].view().T)
             elif label == "time_altitude":
-                mini_hist = self.hist_time_altitude[step]
-                hist_values.append(self.hist_time_altitude[step].view().T)
+                mini_hist = self.hist_time_altitude[one_telescope]
+                hist_values.append(self.hist_time_altitude[one_telescope].view().T)
             x_edges.append(mini_hist.axes.edges[0].flatten())
             y_edges.append(mini_hist.axes.edges[1].flatten())
 
@@ -565,13 +565,13 @@ class CorsikaOutput:
         self._raise_if_no_histogram()
 
         x_edges_list, hist_1D_list = [], []
-        for step, _ in enumerate(self.hist_position):
+        for one_hist, _ in enumerate(self.hist_position):
             if label == "wavelength":
-                mini_hist = self.hist_position[step][sum, sum, :]
+                mini_hist = self.hist_position[one_hist][sum, sum, :]
             elif label == "time":
-                mini_hist = self.hist_time_altitude[step][:, sum]
+                mini_hist = self.hist_time_altitude[one_hist][:, sum]
             elif label == "altitude":
-                mini_hist = self.hist_time_altitude[step][sum, :]
+                mini_hist = self.hist_time_altitude[one_hist][sum, :]
 
             x_edges_list.append(mini_hist.axes.edges.T.flatten()[0])
             hist_1D_list.append(mini_hist.view().T)
@@ -612,11 +612,11 @@ class CorsikaOutput:
         x_edges_list, y_edges_list, hist2D_values_list = self.get_2D_photon_position_distr(
             density=density
         )
-        for step, _ in enumerate(x_edges_list):
+        for one_hist, _ in enumerate(x_edges_list):
             edges_1D, hist1D = convert_2D_to_radial_distr(
-                x_edges_list[step],
-                y_edges_list[step],
-                hist2D_values_list[step],
+                x_edges_list[one_hist],
+                y_edges_list[one_hist],
+                hist2D_values_list[one_hist],
                 bin_size=bin_size,
                 max_dist=max_dist,
             )
