@@ -862,7 +862,7 @@ class CorsikaOutput:
         Returns
         -------
         numpy.array
-            The total energies in TeV for each event.
+            The total energies of the incoming particles in TeV for each event.
         """
         if self._event_total_energies is None:
             self._event_total_energies = np.around(
