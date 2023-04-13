@@ -56,6 +56,8 @@ class CorsikaOutput:
         self._num_photons_per_event = None
         self._event_azimuth_angles = None
         self._event_zenith_angles = None
+        self._events_information = None
+        self._hist_config = None
 
         self._allowed_histograms = {"hist_position", "hist_direction", "hist_time_altitude"}
         self._allowed_1D_labels = {"wavelength", "time", "altitude"}
@@ -100,10 +102,12 @@ class CorsikaOutput:
         """
         The configuration of the histograms.
         """
+        if self._hist_config is None:
+            self._hist_config = self._create_histogram_default_config()
         return self._hist_config
 
     @hist_config.setter
-    def hist_config(self, in_yaml=None, in_dict=None):
+    def hist_config(self, in_yaml, in_dict):
         """
         Set the configuration for the histograms (e.g., bin size, min and max values, etc).
         The inputs are allowed either through a yaml file or a dictionary. If nothing is given,
@@ -118,10 +122,7 @@ class CorsikaOutput:
         in_dict: dict
             Dictionary with the configuration parameters to create the histograms.
         """
-
         self._hist_config = collect_data_from_yaml_or_dict(in_yaml, in_dict, allow_empty=True)
-        if self._hist_config is None:
-            self._hist_config = self._create_histogram_default_config()
 
     def _create_histogram_default_config(self):
         """
@@ -249,10 +250,8 @@ class CorsikaOutput:
         """
         Create the histogram instances.
         """
-        if self.telescope_indices is None:
-            self.num_of_hist = 1
-        else:
-            self.num_of_hist = len(self.telescope_indices)
+
+        self.num_of_hist = len(self.telescope_indices) if self.telescope_indices is not None else 1
 
         self.hist_position, self.hist_direction, self.hist_time_altitude = [], [], []
 
@@ -319,7 +318,7 @@ class CorsikaOutput:
         """
 
         hist_num = 0
-        for one_tel_info, photons_info in zip(self._tel_positions, photons):
+        for one_tel_info, photons_info in zip(self.tel_positions, photons):
 
             if azimuth_angle is None or zenith_angle is None:
                 photon_x, photon_y = photons_info["x"], photons_info["y"]
@@ -339,7 +338,7 @@ class CorsikaOutput:
                 photon_y = -one_tel_info["y"] + photon_y
 
             if (
-                one_tel_info in self._tel_positions[self.telescope_indices]
+                one_tel_info in self.tel_positions[self.telescope_indices]
                 or self.telescope_indices is None
             ):
                 self.hist_position[hist_num].fill(
@@ -379,7 +378,7 @@ class CorsikaOutput:
         with IACTFile(self.input_file) as f:
             event_counter = 0
             for event in f:
-                for one_telescope, _ in enumerate(self._tel_positions):
+                for one_telescope, _ in enumerate(self.tel_positions):
                     num_photons_per_event_per_telescope_to_set.append(
                         event.n_photons[one_telescope]
                     )
@@ -391,7 +390,7 @@ class CorsikaOutput:
                     self.event_zenith_angles[event_counter],
                 )
                 event_counter += 1
-        self.num_photons_per_event_per_telescope(num_photons_per_event_per_telescope_to_set)
+        self.num_photons_per_event_per_telescope = num_photons_per_event_per_telescope_to_set
         self._logger.debug(
             "Finished reading the file and creating the histograms in {} seconds".format(
                 time.time() - start_time
@@ -532,12 +531,13 @@ class CorsikaOutput:
         numpy.ndarray
             The counts of the histogram.
         """
-        num_of_photons_per_event_per_telescope = np.array(
-            self.num_photons_per_event_per_telescope()
-        )
         num_events_array = np.arange(self.num_events + 1)
         telescope_indices_array = np.arange(self.num_telescopes + 1)
-        return num_events_array, telescope_indices_array, num_of_photons_per_event_per_telescope
+        return (
+            num_events_array,
+            telescope_indices_array,
+            np.array(self.num_photons_per_event_per_telescope),
+        )
 
     def _get_hist_1D_projection(self, label):
         """
@@ -700,12 +700,11 @@ class CorsikaOutput:
             The counts of the histogram.
         """
 
-        num_of_photons_per_event_per_telescope = self.num_photons_per_event_per_telescope()
         if self.telescope_indices is None:
-            num_photons_per_event = np.sum(num_of_photons_per_event_per_telescope, axis=1)
+            num_photons_per_event = np.sum(self.num_photons_per_event_per_telescope, axis=1)
         else:
             num_photons_per_event = np.sum(
-                num_of_photons_per_event_per_telescope[self.telescope_indices], axis=1
+                self.num_photons_per_event_per_telescope[self.telescope_indices], axis=1
             )
         hist, edges = np.histogram(num_photons_per_event, bins=bins, range=range)
         return edges, hist
@@ -721,9 +720,8 @@ class CorsikaOutput:
             Number of photons per event.
         """
         if self._num_photons_per_event is not None:
-            num_of_photons_per_event_per_telescope = self.num_photons_per_event_per_telescope()
             self._num_photons_per_event = np.sum(
-                np.array(num_of_photons_per_event_per_telescope), axis=0
+                np.array(self.num_photons_per_event_per_telescope), axis=0
             )
         return self._num_photons_per_event
 
@@ -753,6 +751,19 @@ class CorsikaOutput:
         """
         return self._tel_positions
 
+    @telescope_positions.setter
+    def telescope_positions(self, new_positions):
+        """
+        Set the telescope positions.
+
+        Parameters
+        ----------
+        numpy.ndarray
+            x, y and z positions of the telescopes and their radius according to the CORSIKA
+            spherical representation of the telescopes.
+        """
+        self._tel_positions = new_positions
+
     def _get_event_information(self):
         """
         Get information from the event header and save into dictionary.
@@ -760,8 +771,8 @@ class CorsikaOutput:
         if self._events_information is None:
             with IACTFile(self.input_file) as f:
                 self._file_header = f.header
-                self._tel_positions = np.array(f.telescope_positions)
-                self.num_telescopes = np.size(self._tel_positions, axis=0)
+                self.tel_positions = np.array(f.telescope_positions)
+                self.num_telescopes = np.size(self.tel_positions, axis=0)
                 self._events_information = {
                     key: {"value": [], "unit": None} for key in corsika7_event_header
                 }
