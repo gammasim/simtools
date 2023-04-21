@@ -779,7 +779,7 @@ def get_log_excerpt(log_file, n_last_lines=30):
 
 def convert_2D_to_radial_distr(xaxis, yaxis, hist2d, bin_size=50, max_dist=1000):
     """
-    Convert a 2D histogram of the photon positions on the ground to a 1D radial distribution.
+    Convert a 2D histogram of positions, e.g. photon positions on the ground, to a 1D distribution.
 
     Parameters
     ----------
@@ -788,16 +788,16 @@ def convert_2D_to_radial_distr(xaxis, yaxis, hist2d, bin_size=50, max_dist=1000)
     yaxis: numpy.array
         The values of the y axis (histogram edges) on the ground.
     hist2d: numpy.ndarray
-        The histogram
+        The histogram counts.
     bin_size: float
-        Size of the step in distance (in meters).
+        Size of the step in distance, usually in meters.
     max_dist: float
-       Maximum distance to consider in the 1D histogram (in meters).
+       Maximum distance to consider in the 1D histogram, usually in meters.
 
     Returns
     -------
     np.array
-        The edges of the 1D histogram in meters with size = int(max_dist/bin_size) + 1.
+        The edges of the 1D histogram with size = int(max_dist/bin_size) + 1.
     np.array
         The values of the 1D histogram with size = int(max_dist/bin_size).
     """
