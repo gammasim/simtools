@@ -698,7 +698,7 @@ def rotate(x, y, rotation_angle_phi, rotation_angle_theta=0 * u.rad):
     rotation_angle_phi: astropy.units.rad
         Angle to rotate the array in the observation plane in radians.
     rotation_angle_theta: astropy.units.rad
-        Angle to rotate the observation plane in radians (used only by simtools.corsika_output).
+        Angle to rotate the observation plane in radians.
 
     Returns
     -------
