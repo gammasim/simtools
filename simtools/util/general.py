@@ -681,13 +681,13 @@ def change_dict_keys_case(data_dict, lower_case=True):
 
 
 @u.quantity_input(rotation_angle_1=u.rad, rotation_angle_2=u.rad)
-def rotate(x, y, rotation_angle_1, rotation_angle_2=0 * u.rad):
+def rotate(x, y, rotation_angle_phi, rotation_angle_theta=0 * u.rad):
     """
-    Rotate x and y by the rotation_angle_1 given in rotation_angle, in radians (astropy.units.rad),
-    or in degrees (astropy.units.deg). A second angle, rotation_angle_2, allow one to rotate the
-    observations plan in space.
+    Transform the x and y coordinates of the telescopes according to two rotations in spherical
+    coordinates: `rotation_angle_phi` gives the rotation on the observation plane (x, y)
+     and `rotation_angle_theta` gives the rotation of the observation plane.
     The function returns the rotated x and y values in the same unit given.
-    The direction of rotation of the elements is counterclockwise.
+    The direction of rotation of the elements in the plane is counterclockwise.
 
     Parameters
     ----------
@@ -695,9 +695,9 @@ def rotate(x, y, rotation_angle_1, rotation_angle_2=0 * u.rad):
         x positions of the telescopes, usually in meters.
     y: numpy.array or list
         y positions of the telescopes, usually in meters.
-    rotation_angle_1: astropy.units.rad
+    rotation_angle_phi: astropy.units.rad
         Angle to rotate the array in the observation plane in radians.
-    rotation_angle_2: astropy.units.rad
+    rotation_angle_theta: astropy.units.rad
         Angle to rotate the observation plane in radians (used only by simtools.corsika_output).
 
     Returns
@@ -742,11 +742,11 @@ def rotate(x, y, rotation_angle_1, rotation_angle_2=0 * u.rad):
                 "Cannot perform coordinate transformation when x and y have different units."
             )
 
-    x_trans = np.cos(rotation_angle_2) * (
-        x * np.cos(rotation_angle_1) - y * np.sin(rotation_angle_1)
+    x_trans = np.cos(rotation_angle_theta) * (
+        x * np.cos(rotation_angle_phi) - y * np.sin(rotation_angle_phi)
     )
-    y_trans = np.cos(rotation_angle_2) * (
-        x * np.sin(rotation_angle_1) + y * np.cos(rotation_angle_1)
+    y_trans = np.cos(rotation_angle_theta) * (
+        x * np.sin(rotation_angle_phi) + y * np.cos(rotation_angle_phi)
     )
     return x_trans, y_trans
 
