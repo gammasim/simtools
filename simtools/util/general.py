@@ -685,7 +685,7 @@ def rotate(x, y, rotation_angle_phi, rotation_angle_theta=0 * u.rad):
     """
     Transform the x and y coordinates of the telescopes according to two rotations in spherical
     coordinates: `rotation_angle_phi` gives the rotation on the observation plane (x, y)
-     and `rotation_angle_theta` gives the rotation of the observation plane.
+     and `rotation_angle_theta` allows to rotate observation plane in space.
     The function returns the rotated x and y values in the same unit given.
     The direction of rotation of the elements in the plane is counterclockwise.
 
