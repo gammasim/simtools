@@ -41,8 +41,7 @@ class CorsikaOutput:
         self._logger.debug("Init CorsikaOutput")
         self.input_file = input_file
 
-        if not isinstance(self.input_file, Path):
-            self.input_file = Path(self.input_file)
+        self.input_file = Path(self.input_file)
         if not self.input_file.exists():
             msg = f"file {self.input_file} does not exist."
             self._logger.error(msg)
