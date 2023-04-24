@@ -105,6 +105,9 @@ class CorsikaOutput:
                     msg = "The index or indices given are not of type int."
                     self._logger.error(msg)
                     raise TypeError
+        # if self._telescope_indices is different than None, the indices of the telescopes passed
+        # are analyzed individually (different histograms for each telescope) even if all telescopes
+        # are listed.
         self._telescope_indices = telescope_new_indices
 
     @property
