@@ -526,7 +526,9 @@ class CorsikaOutput:
 
     def get_2D_num_photons_distr(self):
         """
-        Get the distribution of Cherenkov photons per event per telescope.
+        Get the distribution of Cherenkov photons per event per telescope. It returns the 2D array
+        accounting for the events from all telescopes, regardless of the value passed in
+        `self.telescope_indices`.
 
         Parameters
         ----------
