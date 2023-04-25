@@ -539,6 +539,8 @@ class CorsikaOutput:
         -------
         numpy.array
             Number of photons per event per telescope.
+        numpy.array
+            Indices of the telescopes.
         numpy.ndarray
             The counts of the histogram.
         """
