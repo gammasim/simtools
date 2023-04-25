@@ -331,7 +331,7 @@ class CorsikaOutput:
         """
 
         hist_num = 0
-        for one_tel_info, photons_info in zip(self.tel_positions, photons):
+        for i_tel_info, photons_info in zip(self.tel_positions, photons):
 
             if azimuth_angle is None or zenith_angle is None:
                 photon_x, photon_y = photons_info["x"], photons_info["y"]
@@ -347,11 +347,11 @@ class CorsikaOutput:
                 hist_num = 0
                 # Adding the position of the telescopes to the relative position of the photons
                 # such that we have a common coordinate system.
-                photon_x = -one_tel_info["x"] + photon_x
-                photon_y = -one_tel_info["y"] + photon_y
+                photon_x = -i_tel_info["x"] + photon_x
+                photon_y = -i_tel_info["y"] + photon_y
 
             if (
-                one_tel_info in self.tel_positions[self.telescope_indices]
+                i_tel_info in self.tel_positions[self.telescope_indices]
                 or self.telescope_indices is None
             ):
                 self.hist_position[hist_num].fill(
