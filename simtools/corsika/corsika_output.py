@@ -100,8 +100,8 @@ class CorsikaOutput:
         if telescope_new_indices is not None:
             if not isinstance(telescope_new_indices, list):
                 telescope_new_indices = [telescope_new_indices]
-            for one_telescope in telescope_new_indices:
-                if not isinstance(one_telescope, int):
+            for i_telescope in telescope_new_indices:
+                if not isinstance(i_telescope, int):
                     msg = "The index or indices given are not of type int."
                     self._logger.error(msg)
                     raise TypeError
@@ -391,10 +391,8 @@ class CorsikaOutput:
         with IACTFile(self.input_file) as f:
             event_counter = 0
             for event in f:
-                for one_telescope, _ in enumerate(self.tel_positions):
-                    num_photons_per_event_per_telescope_to_set.append(
-                        event.n_photons[one_telescope]
-                    )
+                for i_telescope, _ in enumerate(self.tel_positions):
+                    num_photons_per_event_per_telescope_to_set.append(event.n_photons[i_telescope])
 
                 photons = list(event.photon_bunches.values())
                 self._fill_histograms(
@@ -453,20 +451,20 @@ class CorsikaOutput:
         num_telescopes = len(self.telescope_indices) if self.telescope_indices is not None else 1
 
         x_edges, y_edges, hist_values = [], [], []
-        for one_telescope in range(num_telescopes):
+        for i_telescope in range(num_telescopes):
             if label == "counts":
-                mini_hist = self.hist_position[one_telescope][:, :, sum]
+                mini_hist = self.hist_position[i_telescope][:, :, sum]
                 hist_values.append(mini_hist.view().T)
             elif label == "density":
-                mini_hist = self.hist_position[one_telescope][:, :, sum]
+                mini_hist = self.hist_position[i_telescope][:, :, sum]
                 areas = functools.reduce(operator.mul, mini_hist.axes.widths)
                 hist_values.append(mini_hist.view().T / areas)
             elif label == "direction":
-                mini_hist = self.hist_direction[one_telescope]
-                hist_values.append(self.hist_direction[one_telescope].view().T)
+                mini_hist = self.hist_direction[i_telescope]
+                hist_values.append(self.hist_direction[i_telescope].view().T)
             elif label == "time_altitude":
-                mini_hist = self.hist_time_altitude[one_telescope]
-                hist_values.append(self.hist_time_altitude[one_telescope].view().T)
+                mini_hist = self.hist_time_altitude[i_telescope]
+                hist_values.append(self.hist_time_altitude[i_telescope].view().T)
             x_edges.append(mini_hist.axes.edges[0].flatten())
             y_edges.append(mini_hist.axes.edges[1].flatten())
 
