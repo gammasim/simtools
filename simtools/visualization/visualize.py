@@ -687,8 +687,10 @@ def plot_array(telescopes, rotate_angle=0, show_tel_label=False):
     plt.tick_params(axis="both", which="major", labelsize=15)
 
     legend_handler_map = {
-        list(leg_h.legend_handler_map.keys())[step]: list(leg_h.legend_handler_map.values())[step]()
-        for step, _ in enumerate(leg_h.legend_handler_map)
+        list(leg_h.legend_handler_map.keys())[i_key]: list(leg_h.legend_handler_map.values())[
+            i_key
+        ]()
+        for i_key, _ in enumerate(leg_h.legend_handler_map)
     }
     plt.legend(
         legend_objects,
@@ -768,17 +770,17 @@ def _kernel_plot_2D_photons(corsika_output_instance, property_name, log_z=False)
         x_edges, y_edges, hist_values = [x_edges], [y_edges], [hist_values]
 
     all_figs = []
-    for step, _ in enumerate(x_edges):
+    for i_hist, _ in enumerate(x_edges):
         fig, ax = plt.subplots()
         if log_z is True:
-            norm = colors.LogNorm(vmin=1, vmax=np.amax([np.amax(hist_values[step]), 2]))
+            norm = colors.LogNorm(vmin=1, vmax=np.amax([np.amax(hist_values[i_hist]), 2]))
         else:
             norm = None
-        mesh = ax.pcolormesh(x_edges[step], y_edges[step], hist_values[step], norm=norm)
+        mesh = ax.pcolormesh(x_edges[i_hist], y_edges[i_hist], hist_values[i_hist], norm=norm)
         ax.set_xlabel(x_label[property_name])
         ax.set_ylabel(y_label[property_name])
-        ax.set_xlim(np.amin(x_edges[step]), np.amax(x_edges[step]))
-        ax.set_ylim(np.amin(y_edges[step]), np.amax(y_edges[step]))
+        ax.set_xlim(np.amin(x_edges[i_hist]), np.amax(x_edges[i_hist]))
+        ax.set_ylim(np.amin(y_edges[i_hist]), np.amax(y_edges[i_hist]))
         ax.set_facecolor("xkcd:black")
         fig.colorbar(mesh)
         all_figs.append(fig)
@@ -790,7 +792,7 @@ def _kernel_plot_2D_photons(corsika_output_instance, property_name, log_z=False)
             ax.text(
                 0.99,
                 0.99,
-                "tel. " + str(step),
+                "tel. " + str(i_hist),
                 ha="right",
                 va="top",
                 transform=ax.transAxes,
@@ -800,7 +802,7 @@ def _kernel_plot_2D_photons(corsika_output_instance, property_name, log_z=False)
                 "boost_histogram_"
                 + property_name
                 + "_2D_tel_"
-                + str(corsika_output_instance.telescope_indices[step])
+                + str(corsika_output_instance.telescope_indices[i_hist])
                 + ".png",
                 bbox_inches="tight",
             )
@@ -935,13 +937,13 @@ def _kernel_plot_1D_photons(corsika_output_instance, property_name, log_y=True):
         edges, hist_values = [edges], [hist_values]
 
     all_figs = []
-    for step, _ in enumerate(edges):
+    for i_hist, _ in enumerate(edges):
         fig, ax = plt.subplots()
         ax.bar(
-            edges[step][:-1],
-            hist_values[step],
+            edges[i_hist][:-1],
+            hist_values[i_hist],
             align="edge",
-            width=np.abs(np.diff(edges[step])),
+            width=np.abs(np.diff(edges[i_hist])),
         )
         ax.set_xlabel(x_label[property_name])
         ax.set_ylabel("Counts")
@@ -955,7 +957,7 @@ def _kernel_plot_1D_photons(corsika_output_instance, property_name, log_y=True):
                 "boost_histogram_"
                 + property_name
                 + "_tel_"
-                + str(corsika_output_instance.telescope_indices[step])
+                + str(corsika_output_instance.telescope_indices[i_hist])
                 + ".png",
                 bbox_inches="tight",
             )
