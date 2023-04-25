@@ -804,9 +804,9 @@ def convert_2D_to_radial_distr(xaxis, yaxis, hist2d, bin_size=50, max_dist=1000)
 
     # distance2D maps the distance to the center from each element in a square matrix.
     distance2D = np.empty_like(hist2d)
-    for x_step, x_element in enumerate(xaxis[:-1]):
-        for y_step, y_element in enumerate(yaxis[:-1]):
-            distance2D[x_step, y_step] = np.sqrt(x_element**2 + y_element**2)
+    for i_x, x_element in enumerate(xaxis[:-1]):
+        for i_y, y_element in enumerate(yaxis[:-1]):
+            distance2D[i_x, i_y] = np.sqrt(x_element**2 + y_element**2)
 
     distance_sorted = np.sort(distance2D, axis=None)
     # The sorting and divmod give us the two indices for the position of the sorted element in the
@@ -815,7 +815,7 @@ def convert_2D_to_radial_distr(xaxis, yaxis, hist2d, bin_size=50, max_dist=1000)
         np.argsort(distance2D, axis=None), np.size(distance2D, axis=0)
     )
     hist_sorted = np.array(
-        [hist2d[x_step, y_step] for x_step, y_step in zip(x_indices_sorted, y_indices_sorted)]
+        [hist2d[i_x, i_y] for i_x, i_y in zip(x_indices_sorted, y_indices_sorted)]
     )
     # For larger distances, we have more elements in a slice 'dr' in radius, hence, we need to
     # acount for it using weights below.
