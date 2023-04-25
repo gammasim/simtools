@@ -824,16 +824,16 @@ def convert_2D_to_radial_distr(xaxis, yaxis, hist2d, bin_size=50, max_dist=1000)
     )
 
     histogram_1D = np.empty_like(weights)
-    for radial_step in radial_edges[:-1]:
+    for i_radial, _ in enumerate(radial_edges[:-1]):
         # Here we sum all the events within a radial interval 'dr' and then divide by the number of
         # bins that fit this interval.
-        indices_to_sum = (distance_sorted >= radial_edges[radial_step]) * (
-            distance_sorted < radial_edges[radial_step + 1]
+        indices_to_sum = (distance_sorted >= radial_edges[i_radial]) * (
+            distance_sorted < radial_edges[i_radial + 1]
         )
         try:
-            histogram_1D[radial_step] = np.sum(hist_sorted[indices_to_sum]) / weights[radial_step]
+            histogram_1D[i_radial] = np.sum(hist_sorted[indices_to_sum]) / weights[i_radial]
         except ValueError:
-            histogram_1D[radial_step] = 0
+            histogram_1D[i_radial] = 0
     return radial_edges, histogram_1D
 
 
