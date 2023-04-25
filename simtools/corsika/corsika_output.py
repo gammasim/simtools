@@ -576,13 +576,13 @@ class CorsikaOutput:
         self._raise_if_no_histogram()
 
         x_edges_list, hist_1D_list = [], []
-        for one_hist, _ in enumerate(self.hist_position):
+        for i_hist, _ in enumerate(self.hist_position):
             if label == "wavelength":
-                mini_hist = self.hist_position[one_hist][sum, sum, :]
+                mini_hist = self.hist_position[i_hist][sum, sum, :]
             elif label == "time":
-                mini_hist = self.hist_time_altitude[one_hist][:, sum]
+                mini_hist = self.hist_time_altitude[i_hist][:, sum]
             elif label == "altitude":
-                mini_hist = self.hist_time_altitude[one_hist][sum, :]
+                mini_hist = self.hist_time_altitude[i_hist][sum, :]
 
             x_edges_list.append(mini_hist.axes.edges.T.flatten()[0])
             hist_1D_list.append(mini_hist.view().T)
@@ -623,11 +623,11 @@ class CorsikaOutput:
         x_position_list, y_position_list, hist2D_values_list = self.get_2D_photon_position_distr(
             density=density
         )
-        for one_hist, _ in enumerate(x_position_list):
+        for i_hist, _ in enumerate(x_position_list):
             edges_1D, hist1D = convert_2D_to_radial_distr(
-                x_position_list[one_hist],
-                y_position_list[one_hist],
-                hist2D_values_list[one_hist],
+                x_position_list[i_hist],
+                y_position_list[i_hist],
+                hist2D_values_list[i_hist],
                 bin_size=bin_size,
                 max_dist=max_dist,
             )
