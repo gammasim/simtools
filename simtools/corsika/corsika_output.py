@@ -97,6 +97,7 @@ class CorsikaOutput:
         TypeError:
             if the indices passed through telescope_index are not of type int.
         """
+
         if telescope_new_indices is not None:
             if not isinstance(telescope_new_indices, list):
                 telescope_new_indices = [telescope_new_indices]
@@ -105,9 +106,8 @@ class CorsikaOutput:
                     msg = "The index or indices given are not of type int."
                     self._logger.error(msg)
                     raise TypeError
-        # if self._telescope_indices is different than None, the indices of the telescopes passed
-        # are analyzed individually (different histograms for each telescope) even if all telescopes
-        # are listed.
+        # if self.single_telescopes is True, the indices of the telescopes passed are analyzed
+        # individually (different histograms for each telescope) even if all telescopes are listed.
         self._telescope_indices = telescope_new_indices
 
     @property
@@ -160,7 +160,7 @@ class CorsikaOutput:
             Dictionary with the configuration parameters to create the histograms.
         """
 
-        if self.telescope_indices is None:
+        if self.single_telescopes is False:
             self._xy_maximum = 1000 * u.m
         else:
             self._xy_maximum = 15 * u.m
@@ -168,13 +168,13 @@ class CorsikaOutput:
         histogram_config = {
             "hist_position": {
                 "x axis": {
-                    "bins": 2000,
+                    "bins": 100,
                     "start": -self._xy_maximum,
                     "stop": self._xy_maximum,
                     "scale": "linear",
                 },
                 "y axis": {
-                    "bins": 2000,
+                    "bins": 100,
                     "start": -self._xy_maximum,
                     "stop": self._xy_maximum,
                     "scale": "linear",
@@ -264,7 +264,7 @@ class CorsikaOutput:
         Create the histogram instances.
         """
 
-        self.num_of_hist = len(self.telescope_indices) if self.telescope_indices is not None else 1
+        self.num_of_hist = len(self.telescope_indices) if self.single_telescopes is True else 1
 
         self.hist_position, self.hist_direction, self.hist_time_altitude = [], [], []
 
@@ -343,7 +343,7 @@ class CorsikaOutput:
                     zenith_angle,
                 )
 
-            if self.telescope_indices is None:
+            if self.single_telescopes is False:
                 hist_num = 0
                 # Adding the position of the telescopes to the relative position of the photons
                 # such that we have a common coordinate system.
@@ -352,7 +352,7 @@ class CorsikaOutput:
 
             if (
                 i_tel_info in self.tel_positions[self.telescope_indices]
-                or self.telescope_indices is None
+                or self.single_telescopes is False
             ):
                 self.hist_position[hist_num].fill(
                     (photon_x * u.cm).to(u.m),
@@ -366,7 +366,7 @@ class CorsikaOutput:
                 )
                 hist_num += 1
 
-    def set_histograms(self, telescope_indices=None):
+    def set_histograms(self, telescope_indices=None, single_telescopes=False):
         """
         Extract the information of the Cherenkov photons from a CORSIKA output IACT file, create
          and fill the histograms
@@ -376,13 +376,19 @@ class CorsikaOutput:
         telescope_indices: int or list of int
             The indices of the specific telescopes to be inspected. If not specified, all telescopes
             are treated together in one histogram.
+        single_telescopes: bool
+            if False, the histograms are supposed to be filled for all telescopes.
+            if True, one histogram is set for each telescope sepparately.
 
         Returns
         -------
         list: list of boost_histogram.Histogram instances.
 
         """
+        if telescope_indices is None:
+            telescope_indices = np.arange(self.num_telescopes).tolist()
         self.telescope_indices = telescope_indices
+        self.single_telescopes = single_telescopes
         self._create_histograms()
 
         num_photons_per_event_per_telescope_to_set = []
@@ -448,10 +454,12 @@ class CorsikaOutput:
             raise ValueError
         self._raise_if_no_histogram()
 
-        num_telescopes = len(self.telescope_indices) if self.telescope_indices is not None else 1
+        num_telescopes_to_fill = (
+            len(self.telescope_indices) if self.single_telescopes is True else 1
+        )
 
         x_edges, y_edges, hist_values = [], [], []
-        for i_telescope in range(num_telescopes):
+        for i_telescope in range(num_telescopes_to_fill):
             if label == "counts":
                 mini_hist = self.hist_position[i_telescope][:, :, sum]
                 hist_values.append(mini_hist.view().T)
@@ -609,7 +617,7 @@ class CorsikaOutput:
         np.array
             The counts of the 1D histogram with size = int(max_dist/bin_size).
         """
-        if self.telescope_indices is None:
+        if self.single_telescopes is False:
             if bin_size is None:
                 bin_size = 40
             if max_dist is None:
@@ -698,7 +706,7 @@ class CorsikaOutput:
     def get_num_photons_distr(self, bins=50, range=None):
         """
         Get the distribution of the number of photons, including the telescopes indicated by
-        `self.telescope_indices` or all telescopes if `self.telescope_indices` is None.
+        `self.telescope_indices`.
 
         Parameters
         ----------
@@ -715,12 +723,9 @@ class CorsikaOutput:
             The counts of the histogram.
         """
 
-        if self.telescope_indices is None:
-            num_photons_per_event = np.sum(self.num_photons_per_event_per_telescope, axis=1)
-        else:
-            num_photons_per_event = np.sum(
-                self.num_photons_per_event_per_telescope[self.telescope_indices], axis=1
-            )
+        num_photons_per_event = np.sum(
+            self.num_photons_per_event_per_telescope[self.telescope_indices], axis=1
+        )
         hist, edges = np.histogram(num_photons_per_event, bins=bins, range=range)
         return edges, hist
 
