@@ -48,7 +48,7 @@ class CorsikaOutput:
             raise FileNotFoundError
 
         self._initialize_attributes()
-        self._derive_event_information()
+        self._read_event_information()
 
     def _initialize_attributes(self):
         """
@@ -785,7 +785,7 @@ class CorsikaOutput:
         """
         self._tel_positions = new_positions
 
-    def _derive_event_information(self):
+    def _read_event_information(self):
         """
         Get information from the event header and save into dictionary.
         """
