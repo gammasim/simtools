@@ -168,19 +168,19 @@ class CorsikaOutput:
         histogram_config = {
             "hist_position": {
                 "x axis": {
-                    "bins": 100,
+                    "bins": 2000,
                     "start": -self._xy_maximum,
                     "stop": self._xy_maximum,
                     "scale": "linear",
                 },
                 "y axis": {
-                    "bins": 100,
+                    "bins": 2000,
                     "start": -self._xy_maximum,
                     "stop": self._xy_maximum,
                     "scale": "linear",
                 },
                 "z axis": {
-                    "bins": 100,
+                    "bins": 80,
                     "start": 200 * u.nm,
                     "stop": 1000 * u.nm,
                     "scale": "linear",
