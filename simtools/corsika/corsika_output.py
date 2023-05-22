@@ -331,7 +331,7 @@ class CorsikaOutput:
         """
 
         hist_num = 0
-        for i_tel_info, photons_info in zip(self.tel_positions, photons):
+        for i_tel_info, photons_info in zip(self.telescope_positions, photons):
 
             if azimuth_angle is None or zenith_angle is None:
                 photon_x, photon_y = photons_info["x"], photons_info["y"]
@@ -351,7 +351,7 @@ class CorsikaOutput:
                 photon_y = -i_tel_info["y"] + photon_y
 
             if (
-                i_tel_info in self.tel_positions[self.telescope_indices]
+                i_tel_info in self.telescope_positions[self.telescope_indices]
                 or self.single_telescopes is False
             ):
                 self.hist_position[hist_num].fill(
@@ -397,7 +397,7 @@ class CorsikaOutput:
         with IACTFile(self.input_file) as f:
             event_counter = 0
             for event in f:
-                for i_telescope, _ in enumerate(self.tel_positions):
+                for i_telescope, _ in enumerate(self.telescope_positions):
                     num_photons_per_event_per_telescope_to_set.append(event.n_photons[i_telescope])
 
                 photons = list(event.photon_bunches.values())
@@ -770,7 +770,7 @@ class CorsikaOutput:
             x, y and z positions of the telescopes and their radius according to the CORSIKA
             spherical representation of the telescopes.
         """
-        return self._tel_positions
+        return self._telescope_positions
 
     @telescope_positions.setter
     def telescope_positions(self, new_positions):
@@ -783,7 +783,7 @@ class CorsikaOutput:
             x, y and z positions of the telescopes and their radius according to the CORSIKA
             spherical representation of the telescopes.
         """
-        self._tel_positions = new_positions
+        self._telescope_positions = new_positions
 
     def _read_event_information(self):
         """
@@ -792,8 +792,8 @@ class CorsikaOutput:
         if self._events_information is None:
             with IACTFile(self.input_file) as f:
                 self._file_header = f.header
-                self.tel_positions = np.array(f.telescope_positions)
-                self.num_telescopes = np.size(self.tel_positions, axis=0)
+                self.telescope_positions = np.array(f.telescope_positions)
+                self.num_telescopes = np.size(self.telescope_positions, axis=0)
                 self._events_information = {
                     key: {"value": [], "unit": None} for key in corsika7_event_header
                 }
