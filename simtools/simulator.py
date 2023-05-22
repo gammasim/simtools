@@ -315,59 +315,53 @@ class Simulator:
         Set simulation runners
 
         """
-        if self.simulator == "simtel":
-            self._set_simtel_runner()
-        if self.simulator == "corsika":
-            self._set_corsika_runner()
-        if self.simulator == "corsika_simtel":
-            self._set_corsika_simtel_runner()
-
-    def _set_corsika_runner(self):
-        """
-        Creating CorsikaRunner.
-
-        """
-        self._simulation_runner = CorsikaRunner(
-            mongo_db_config=self._mongo_db_config,
-            label=self.label,
-            site=self.site,
-            layout_name=self.layout_name,
-            simtel_source_path=self._simulator_source_path,
-            corsika_parameters_file=self._corsika_parameters_file,
-            corsika_config_data=self._corsika_config_data,
-        )
-
-    def _set_simtel_runner(self):
-        """
-        Creating a SimtelRunnerArray.
-
-        """
-        self._simulation_runner = SimtelRunnerArray(
-            label=self.label,
-            array_model=self.array_model,
-            simtel_source_path=self._simulator_source_path,
-            config_data={
+        common_args = {
+            "label": self.label,
+            "simtel_source_path": self._simulator_source_path,
+        }
+        corsika_args = {
+            "mongo_db_config": self._mongo_db_config,
+            "site": self.site,
+            "layout_name": self.layout_name,
+            "corsika_parameters_file": self._corsika_parameters_file,
+            "corsika_config_data": self._corsika_config_data,
+        }
+        simtel_args = {
+            "array_model": self.array_model,
+            "config_data": {
                 "simtel_data_directory": self.config.data_directory,
                 "primary": self.config.primary,
                 "zenith_angle": self.config.zenith_angle * u.deg,
                 "azimuth_angle": self.config.azimuth_angle * u.deg,
             },
-        )
+        }
+        if self.simulator == "corsika":
+            self._set_corsika_runner(common_args | corsika_args)
+        if self.simulator == "simtel":
+            self._set_simtel_runner(common_args | simtel_args)
+        if self.simulator == "corsika_simtel":
+            self._set_corsika_simtel_runner(common_args, corsika_args, simtel_args)
 
-    def _set_corsika_simtel_runner(self):
+    def _set_corsika_runner(self, simulator_args):
         """
         Creating CorsikaRunner.
 
         """
-        self._simulation_runner = CorsikaSimtelRunner(
-            mongo_db_config=self._mongo_db_config,
-            label=self.label,
-            site=self.site,
-            layout_name=self.layout_name,
-            simtel_source_path=self._simulator_source_path,
-            corsika_parameters_file=self._corsika_parameters_file,
-            corsika_config_data=self._corsika_config_data,
-        )
+        self._simulation_runner = CorsikaRunner(**simulator_args)
+
+    def _set_simtel_runner(self, simulator_args):
+        """
+        Creating a SimtelRunnerArray.
+
+        """
+        self._simulation_runner = SimtelRunnerArray(**simulator_args)
+
+    def _set_corsika_simtel_runner(self, common_args, corsika_args, simtel_args):
+        """
+        Creating CorsikaRunner.
+
+        """
+        self._simulation_runner = CorsikaSimtelRunner(common_args, corsika_args, simtel_args)
 
     def _fill_results_without_run(self, input_file_list):
         """
