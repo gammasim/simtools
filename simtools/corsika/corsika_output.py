@@ -331,7 +331,10 @@ class CorsikaOutput:
         """
 
         hist_num = 0
-        for i_tel_info, photons_info in zip(self.telescope_positions, photons):
+        telescope_mask = np.isin(np.arange(self.num_telescopes), self.telescope_indices)
+        for i_tel_info, photons_info in np.array(list(zip(self.telescope_positions, photons)))[
+            telescope_mask
+        ]:
 
             if azimuth_angle is None or zenith_angle is None:
                 photon_x, photon_y = photons_info["x"], photons_info["y"]
@@ -350,21 +353,17 @@ class CorsikaOutput:
                 photon_x = -i_tel_info["x"] + photon_x
                 photon_y = -i_tel_info["y"] + photon_y
 
-            if (
-                i_tel_info in self.telescope_positions[self.telescope_indices]
-                or self.single_telescopes is False
-            ):
-                self.hist_position[hist_num].fill(
-                    (photon_x * u.cm).to(u.m),
-                    (photon_y * u.cm).to(u.m),
-                    np.abs(photons_info["wavelength"]) * u.nm,
-                )
+            self.hist_position[hist_num].fill(
+                (photon_x * u.cm).to(u.m),
+                (photon_y * u.cm).to(u.m),
+                np.abs(photons_info["wavelength"]) * u.nm,
+            )
 
-                self.hist_direction[hist_num].fill(photons_info["cx"], photons_info["cy"])
-                self.hist_time_altitude[hist_num].fill(
-                    photons_info["time"] * u.ns, (photons_info["zem"] * u.cm).to(u.km)
-                )
-                hist_num += 1
+            self.hist_direction[hist_num].fill(photons_info["cx"], photons_info["cy"])
+            self.hist_time_altitude[hist_num].fill(
+                photons_info["time"] * u.ns, (photons_info["zem"] * u.cm).to(u.km)
+            )
+            hist_num += 1
 
     def set_histograms(self, telescope_indices=None, single_telescopes=False):
         """
