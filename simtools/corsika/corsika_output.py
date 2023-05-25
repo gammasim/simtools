@@ -60,6 +60,7 @@ class CorsikaOutput:
         self.num_telescopes = None
         self._num_photons_per_event_per_telescope = None
         self._num_photons_per_event = None
+        self._num_photons_per_telescope = None
         self._event_azimuth_angles = None
         self._event_zenith_angles = None
         self._events_information = None
@@ -397,7 +398,8 @@ class CorsikaOutput:
         with IACTFile(self.input_file) as f:
             event_counter = 0
             for event in f:
-                for i_telescope, _ in enumerate(self.telescope_positions):
+                for i_telescope in self.telescope_indices:
+                    # Count photons only from the telescopes given by self.telescope_indices.
                     num_photons_per_event_per_telescope_to_set.append(event.n_photons[i_telescope])
 
                 photons = list(event.photon_bunches.values())
@@ -535,8 +537,7 @@ class CorsikaOutput:
     def get_2D_num_photons_distr(self):
         """
         Get the distribution of Cherenkov photons per event per telescope. It returns the 2D array
-        accounting for the events from all telescopes, regardless of the value passed in
-        `self.telescope_indices`.
+        accounting for the events from the telescopes given by `self.telescope_indices`.
 
         Parameters
         ----------
@@ -555,7 +556,7 @@ class CorsikaOutput:
             The counts of the histogram.
         """
         num_events_array = np.arange(self.num_events + 1)
-        telescope_indices_array = np.arange(self.num_telescopes + 1)
+        telescope_indices_array = np.arange(len(self.telescope_indices) + 1)
         return (
             num_events_array,
             telescope_indices_array,
@@ -699,14 +700,28 @@ class CorsikaOutput:
         if self._num_photons_per_event_per_telescope is None:
             self._num_photons_per_event_per_telescope = (
                 np.array(num_photons_per_event_per_telescope_to_set)
-                .reshape(self.num_events, self.num_telescopes)
+                .reshape(self.num_events, len(self.telescope_indices))
                 .T
             )
 
+    @property
+    def num_photons_per_event(self):
+        """
+        Get the distribution of the number of photons amongst the events,
+         including the telescopes indicated by `self.telescope_indices`.
+
+        Returns
+        -------
+        numpy.array
+            Number of photons per event.
+        """
+        if self._num_photons_per_event is None:
+            self._num_photons_per_event = np.sum(self.num_photons_per_event_per_telescope, axis=1)
+        return self._num_photons_per_event
+
     def get_num_photons_distr(self, bins=50, range=None):
         """
-        Get the distribution of the number of photons, including the telescopes indicated by
-        `self.telescope_indices`.
+        Get the distribution of
 
         Parameters
         ----------
@@ -722,28 +737,25 @@ class CorsikaOutput:
         numpy.ndarray
             The counts of the histogram.
         """
-
-        num_photons_per_event = np.sum(
-            self.num_photons_per_event_per_telescope[self.telescope_indices], axis=1
-        )
-        hist, edges = np.histogram(num_photons_per_event, bins=bins, range=range)
+        hist, edges = np.histogram(self.num_photons_per_event, bins=bins, range=range)
         return edges, hist
 
     @property
-    def num_photons_per_event(self):
+    def num_photons_per_telescope(self):
         """
-        The number of photons per event.
+        The number of photons per event, considering the telescopes given by
+        self.telescope_indices.
 
         Returns
         -------
         numpy.array
-            Number of photons per event.
+            Number of photons per telescope.
         """
-        if self._num_photons_per_event is None:
-            self._num_photons_per_event = np.sum(
+        if self._num_photons_per_telescope is None:
+            self._num_photons_per_telescope = np.sum(
                 np.array(self.num_photons_per_event_per_telescope), axis=0
             )
-        return self._num_photons_per_event
+        return self._num_photons_per_telescope
 
     @property
     def total_num_photons(self):
