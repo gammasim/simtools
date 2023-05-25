@@ -107,7 +107,7 @@ class CorsikaOutput:
                     msg = "The index or indices given are not of type int."
                     self._logger.error(msg)
                     raise TypeError
-        # if self.single_telescopes is True, the indices of the telescopes passed are analyzed
+        # if self.individual_telescopes is True, the indices of the telescopes passed are analyzed
         # individually (different histograms for each telescope) even if all telescopes are listed.
         self._telescope_indices = telescope_new_indices
 
@@ -161,7 +161,7 @@ class CorsikaOutput:
             Dictionary with the configuration parameters to create the histograms.
         """
 
-        if self.single_telescopes is False:
+        if self.individual_telescopes is False:
             self._xy_maximum = 1000 * u.m
         else:
             self._xy_maximum = 15 * u.m
@@ -265,7 +265,7 @@ class CorsikaOutput:
         Create the histogram instances.
         """
 
-        self.num_of_hist = len(self.telescope_indices) if self.single_telescopes is True else 1
+        self.num_of_hist = len(self.telescope_indices) if self.individual_telescopes is True else 1
 
         self.hist_position, self.hist_direction, self.hist_time_altitude = [], [], []
 
@@ -347,7 +347,7 @@ class CorsikaOutput:
                     zenith_angle,
                 )
 
-            if self.single_telescopes is False:
+            if self.individual_telescopes is False:
                 hist_num = 0
                 # Adding the position of the telescopes to the relative position of the photons
                 # such that we have a common coordinate system.
@@ -366,7 +366,7 @@ class CorsikaOutput:
             )
             hist_num += 1
 
-    def set_histograms(self, telescope_indices=None, single_telescopes=False):
+    def set_histograms(self, telescope_indices=None, individual_telescopes=False):
         """
         Extract the information of the Cherenkov photons from a CORSIKA output IACT file, create
          and fill the histograms
@@ -376,7 +376,7 @@ class CorsikaOutput:
         telescope_indices: int or list of int
             The indices of the specific telescopes to be inspected. If not specified, all telescopes
             are treated together in one histogram.
-        single_telescopes: bool
+        individual_telescopes: bool
             if False, the histograms are supposed to be filled for all telescopes.
             if True, one histogram is set for each telescope sepparately.
 
@@ -389,7 +389,7 @@ class CorsikaOutput:
         if telescope_indices is None:
             telescope_indices = self.all_telescope_indices.tolist()
         self.telescope_indices = telescope_indices
-        self.single_telescopes = single_telescopes
+        self.individual_telescopes = individual_telescopes
         self._create_histograms()
 
         num_photons_per_event_per_telescope_to_set = []
@@ -457,7 +457,7 @@ class CorsikaOutput:
         self._raise_if_no_histogram()
 
         num_telescopes_to_fill = (
-            len(self.telescope_indices) if self.single_telescopes is True else 1
+            len(self.telescope_indices) if self.individual_telescopes is True else 1
         )
 
         x_edges, y_edges, hist_values = [], [], []
@@ -618,7 +618,7 @@ class CorsikaOutput:
         np.array
             The counts of the 1D histogram with size = int(max_dist/bin_size).
         """
-        if self.single_telescopes is False:
+        if self.individual_telescopes is False:
             if bin_size is None:
                 bin_size = 40
             if max_dist is None:
