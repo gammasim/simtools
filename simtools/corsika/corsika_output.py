@@ -331,7 +331,7 @@ class CorsikaOutput:
         """
 
         hist_num = 0
-        telescope_mask = np.isin(np.arange(self.num_telescopes), self.telescope_indices)
+        telescope_mask = np.isin(self.all_telescope_indices, self.telescope_indices)
         for i_tel_info, photons_info in np.array(list(zip(self.telescope_positions, photons)))[
             telescope_mask
         ]:
@@ -384,8 +384,9 @@ class CorsikaOutput:
         list: list of boost_histogram.Histogram instances.
 
         """
+        self.all_telescope_indices = np.arange(self.num_telescopes)
         if telescope_indices is None:
-            telescope_indices = np.arange(self.num_telescopes).tolist()
+            telescope_indices = self.all_telescope_indices.tolist()
         self.telescope_indices = telescope_indices
         self.single_telescopes = single_telescopes
         self._create_histograms()
