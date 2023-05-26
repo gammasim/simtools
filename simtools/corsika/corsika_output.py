@@ -722,9 +722,9 @@ class CorsikaOutput:
             self._num_photons_per_event = np.sum(self.num_photons_per_event_per_telescope, axis=1)
         return self._num_photons_per_event
 
-    def get_num_photons_distr(self, bins=50, range=None):
+    def get_num_photons_distr(self, bins=50, range=None, event_or_telescope="event"):
         """
-        Get the distribution of
+        Get the distribution of photons per event.
 
         Parameters
         ----------
@@ -732,6 +732,10 @@ class CorsikaOutput:
             Number of bins for the histogram.
         range: 2-tuple
             Tuple to define the range of the histogram.
+        event_or_telescope: str
+            Indicates if the distribution of photons is given for the events, or for the telescopes.
+            Allowed values are: "event" or "telescope".
+
 
         Returns
         -------
@@ -739,8 +743,20 @@ class CorsikaOutput:
             Number of photons per event.
         numpy.ndarray
             The counts of the histogram.
+
+        Raises
+        ------
+        ValueError:
+            if event_or_telescope not valid.
         """
-        hist, edges = np.histogram(self.num_photons_per_event, bins=bins, range=range)
+        if event_or_telescope == "event":
+            hist, edges = np.histogram(self.num_photons_per_event, bins=bins, range=range)
+        elif event_or_telescope == "telescope":
+            hist, edges = np.histogram(self.num_photons_per_telescope, bins=bins, range=range)
+        else:
+            msg = "`event_or_telescope` has to be either 'event' or 'telescope'."
+            self._logger.error(msg)
+            raise ValueError
         return edges, hist
 
     @property
