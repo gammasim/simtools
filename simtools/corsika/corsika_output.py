@@ -162,22 +162,25 @@ class CorsikaOutput:
         """
 
         if self.individual_telescopes is False:
-            self._xy_maximum = 1000 * u.m
+            xy_maximum = 1000 * u.m
+            xy_bin = 100 * u.m
+
         else:
-            self._xy_maximum = 15 * u.m
+            xy_maximum = 16 * u.m
+            xy_bin = 64 * u.m
 
         histogram_config = {
             "hist_position": {
                 "x axis": {
-                    "bins": 100,
-                    "start": -self._xy_maximum,
-                    "stop": self._xy_maximum,
+                    "bins": xy_bin,
+                    "start": -xy_maximum,
+                    "stop": xy_maximum,
                     "scale": "linear",
                 },
                 "y axis": {
-                    "bins": 100,
-                    "start": -self._xy_maximum,
-                    "stop": self._xy_maximum,
+                    "bins": xy_bin,
+                    "start": -xy_maximum,
+                    "stop": xy_maximum,
                     "scale": "linear",
                 },
                 "z axis": {
