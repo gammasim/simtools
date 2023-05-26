@@ -72,7 +72,7 @@ def file_has_text(file, text):
         return True
 
 
-def validate_config_data(config_data, parameters):
+def validate_config_data(config_data, parameters, ignore_unidentified=False):
     """
     Validate a generic config_data dict by using the info
     given by the parameters dict. The entries will be validated
@@ -128,8 +128,11 @@ def validate_config_data(config_data, parameters):
         # Raising error for an unidentified input.
         if not is_identified:
             msg = f"Entry {key_data} in config_data cannot be identified."
-            logger.error(msg)
-            raise UnableToIdentifyConfigEntry(msg)
+            if ignore_unidentified:
+                logger.warning(msg)
+            else:
+                logger.error(msg)
+                raise UnableToIdentifyConfigEntry(msg)
 
     # Checking for parameters with default option.
     # If it is not given, filling it with the default value.
