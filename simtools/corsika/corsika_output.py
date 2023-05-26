@@ -119,6 +119,8 @@ class CorsikaOutput:
         The configuration of the histograms.
         """
         if self._hist_config is None:
+            msg = "No configuration was defined before. The default config is being created now."
+            self._logger.warning(msg)
             self._hist_config = self._create_histogram_default_config()
         return self._hist_config
 
