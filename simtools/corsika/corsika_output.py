@@ -163,11 +163,11 @@ class CorsikaOutput:
 
         if self.individual_telescopes is False:
             xy_maximum = 1000 * u.m
-            xy_bin = 100 * u.m
+            xy_bin = 100
 
         else:
             xy_maximum = 16 * u.m
-            xy_bin = 64 * u.m
+            xy_bin = 64
 
         histogram_config = {
             "hist_position": {
