@@ -173,10 +173,13 @@ class Simulator:
 
         """
         config_data = gen.collect_data_from_yaml_or_dict(config_file, config_data)
+        if self.simulator == "corsika":
+            self._load_corsika_config_and_model(config_data)
         if self.simulator == "simtel":
             self._load_sim_tel_config_and_model(config_data)
-        if self.simulator in ["corsika", "corsika_simtel"]:
+        if self.simulator == "corsika_simtel":
             self._load_corsika_config_and_model(config_data)
+            self._load_sim_tel_config_and_model(config_data)
 
     def _load_corsika_config_and_model(self, config_data):
         """
@@ -210,6 +213,12 @@ class Simulator:
             "corsika_parameters_file", None
         )
 
+        # Remove sim_telarray parameters from the CORSIKA config dictionary
+        # TODO - Replace this with a more elegant solution!
+        tel_keys = [k for k in self._corsika_config_data.keys() if k[1:4] in ["ST-", "CT-"]]
+        for key in ["model_version", "default"] + tel_keys:
+            self._corsika_config_data.pop(key, None)
+
     def _load_sim_tel_config_and_model(self, config_data):
         """
         Load array model and configuration parameters for array simulations
@@ -226,7 +235,9 @@ class Simulator:
             "parameters", "array-simulator_parameters.yml"
         )
         _parameters = gen.collect_data_from_yaml_or_dict(_parameter_file, None)
-        self.config = gen.validate_config_data(_rest_config, _parameters)
+        # The solution below with ignore_unidentified might be temporary
+        # TODO - Think if there's a better solution
+        self.config = gen.validate_config_data(_rest_config, _parameters, ignore_unidentified=True)
 
         self.array_model = ArrayModel(
             label=self.label,
