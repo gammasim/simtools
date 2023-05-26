@@ -142,9 +142,7 @@ def validate_config_data(config_data, parameters):
         elif "default" in par_info.keys() and par_info["default"] is None:
             out_data[par_name] = None
         else:
-            msg = (
-                f"Required entry in config_data {par_name} " + "was not given (there may be more)."
-            )
+            msg = f"Required entry in config_data {par_name} was not given (there may be more)."
             logger.error(msg)
             raise MissingRequiredConfigEntry(msg)
 
