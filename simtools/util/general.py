@@ -680,7 +680,7 @@ def change_dict_keys_case(data_dict, lower_case=True):
     return _return_dict
 
 
-@u.quantity_input(rotation_angle_1=u.rad, rotation_angle_2=u.rad)
+@u.quantity_input(rotation_angle_phi=u.rad, rotation_angle_theta=u.rad)
 def rotate(x, y, rotation_angle_phi, rotation_angle_theta=0 * u.rad):
     """
     Transform the x and y coordinates of the telescopes according to two rotations in spherical
