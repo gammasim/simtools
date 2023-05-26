@@ -106,10 +106,10 @@ def validate_config_data(config_data, parameters):
     logger = logging.getLogger(__name__)
 
     # Dict to be filled and returned
-    out_data = dict()
+    out_data = {}
 
     if config_data is None:
-        config_data = dict()
+        config_data = {}
 
     # Collecting all entries given as in config_data.
     for key_data, value_data in config_data.items():
