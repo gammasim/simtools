@@ -85,13 +85,14 @@ class CorsikaOutput:
     @telescope_indices.setter
     def telescope_indices(self, telescope_new_indices):
         """
-        Set the telescope index (or indices) as a class attribute.
+        Set the telescope index (or indices).
 
         Parameters
         ----------
         telescope_new_indices: int or list of int
             The indices of the specific telescopes to be inspected. If not specified, all telescopes
-            are treated together in one histogram and the value of self._telescope_indices is None.
+            are treated together in one histogram and the value of self._telescope_indices is a list
+            of all telescope indices.
 
         Raises
         ------
