@@ -32,7 +32,7 @@
         Should be one of North, South, East, West (case insensitive)
     zenith_angle (float, required)
         Zenith angle in degrees
-    verbosity (str, optional)
+    log_level (str, optional)
         Log level to print (default=INFO).
 
     Example
@@ -268,6 +268,19 @@ def main():
         "cscat": [5, 1500 * u.m, 0],
         "run_range": [1, 1],
     }
+    simtel_config_data = {
+        "data_directory": ".",
+        "site": "North",
+        "layout_name": "test-layout",
+        "zenith": args_dict["zenith_angle"] * u.deg,
+        "phi": 0 * u.deg,
+        "model_version": args_dict["prod_tag"],
+        "default": {
+            "LST": "D234",
+            "MST": "NectarCam-D",
+        },
+        "LST-01": "1",
+    }
     os.environ[
         "SIMTEL_MULTI_CFG_PATH"
     ] = "/workdir/external/gammasim-tools/simtools-output/TEST/corsika_simtel/"
@@ -277,7 +290,7 @@ def main():
         label=label,
         simulator="corsika_simtel",
         simulator_source_path=args_dict["simtel_path"],
-        config_data=corsika_config_data,
+        config_data=corsika_config_data | simtel_config_data,
         submit_command="local",
         test=args_dict["test"],
         mongo_db_config=db_config,
