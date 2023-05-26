@@ -831,6 +831,9 @@ def convert_2D_to_radial_distr(xaxis, yaxis, hist2d, bin_size=50, max_dist=1000)
         indices_to_sum = (distance_sorted >= radial_edges[i_radial]) * (
             distance_sorted < radial_edges[i_radial + 1]
         )
+        # In case there is no event in any bin, according to the defined bin size,
+        # we assign the histogram count to be zero. In this case, it is wise to increase the bin
+        # size of your analysis.
         try:
             histogram_1D[i_radial] = np.sum(hist_sorted[indices_to_sum]) / weights[i_radial]
         except ValueError:
