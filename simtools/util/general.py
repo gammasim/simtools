@@ -802,21 +802,22 @@ def convert_2D_to_radial_distr(xaxis, yaxis, hist2d, bin_size=50, max_dist=1000)
         The values of the 1D histogram with size = int(max_dist/bin_size).
     """
 
-    # distance2D maps the distance to the center from each element in a square matrix.
-    distance2D = np.empty_like(hist2d)
-    for i_x, x_element in enumerate(xaxis[:-1]):
-        for i_y, y_element in enumerate(yaxis[:-1]):
-            distance2D[i_x, i_y] = np.sqrt(x_element**2 + y_element**2)
+    grid_2d_x, grid_2d_y = np.meshgrid(xaxis[:-1], yaxis[:-1])  # [:-1], since xaxis and yaxis are
+    # the hist edges (n + 1).
+    # radial_distance_map maps the distance to the center from each element in a square matrix.
+    radial_distance_map = np.sqrt(grid_2d_x**2 + grid_2d_y**2)
 
-    distance_sorted = np.sort(distance2D, axis=None)
     # The sorting and divmod give us the two indices for the position of the sorted element in the
     # original 2d matrix
     x_indices_sorted, y_indices_sorted = np.divmod(
-        np.argsort(distance2D, axis=None), np.size(distance2D, axis=0)
+        np.argsort(radial_distance_map, axis=None), np.size(radial_distance_map, axis=0)
     )
+    # We construct a 1D array with the histogram counts sorted according to the distance to the
+    # center.
     hist_sorted = np.array(
         [hist2d[i_x, i_y] for i_x, i_y in zip(x_indices_sorted, y_indices_sorted)]
     )
+    distance_sorted = np.sort(radial_distance_map, axis=None)
     # For larger distances, we have more elements in a slice 'dr' in radius, hence, we need to
     # acount for it using weights below.
     weights, radial_edges = np.histogram(
