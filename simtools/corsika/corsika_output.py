@@ -243,24 +243,21 @@ class CorsikaOutput:
 
         boost_axes = []
         for axis in all_axes:
-            try:
-                boost_axes.append(
-                    bh.axis.Regular(
-                        bins=self.hist_config[label][axis]["bins"],
-                        start=self.hist_config[label][axis]["start"].value,
-                        stop=self.hist_config[label][axis]["stop"].value,
-                        transform=transform[self.hist_config[label][axis]["scale"]],
-                    )
+
+            if isinstance(self.hist_config[label][axis]["start"], u.quantity.Quantity):
+                start = self.hist_config[label][axis]["start"].value
+                stop = self.hist_config[label][axis]["stop"].value
+            else:
+                start = self.hist_config[label][axis]["start"]
+                stop = self.hist_config[label][axis]["stop"]
+            boost_axes.append(
+                bh.axis.Regular(
+                    bins=self.hist_config[label][axis]["bins"],
+                    start=start,
+                    stop=stop,
+                    transform=transform[self.hist_config[label][axis]["scale"]],
                 )
-            except AttributeError:
-                boost_axes.append(
-                    bh.axis.Regular(
-                        bins=self.hist_config[label][axis]["bins"],
-                        start=self.hist_config[label][axis]["start"],
-                        stop=self.hist_config[label][axis]["stop"],
-                        transform=transform[self.hist_config[label][axis]["scale"]],
-                    )
-                )
+            )
         return boost_axes
 
     def _create_histograms(self):
