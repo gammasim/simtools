@@ -669,7 +669,7 @@ class CorsikaOutput:
         Returns
         -------
         numpy.array
-            The edges of the direction histograms in ns.
+            The edges of the time histograms in ns.
         numpy.ndarray
             The counts of the histogram.
         """
@@ -682,7 +682,7 @@ class CorsikaOutput:
         Returns
         -------
         numpy.array
-            The edges of the direction histograms in km.
+            The edges of the photon altitude histograms in km.
         numpy.ndarray
             The counts of the histogram.
         """
