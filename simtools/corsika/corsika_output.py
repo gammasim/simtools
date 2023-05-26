@@ -55,6 +55,7 @@ class CorsikaOutput:
         Initializes the class attributes.
         """
         self._tel_positions = None
+        self._telescope_indices = None
         self.num_events = None
         self.num_of_hist = None
         self.num_telescopes = None
@@ -100,7 +101,7 @@ class CorsikaOutput:
             if the indices passed through telescope_index are not of type int.
         """
 
-        if telescope_new_indices is not None:
+        if telescope_new_indices is not None and self._telescope_indices is None:
             if not isinstance(telescope_new_indices, list):
                 telescope_new_indices = [telescope_new_indices]
             for i_telescope in telescope_new_indices:
@@ -375,8 +376,7 @@ class CorsikaOutput:
         Parameters
         ----------
         telescope_indices: int or list of int
-            The indices of the specific telescopes to be inspected. If not specified, all telescopes
-            are treated together in one histogram.
+            The indices of the specific telescopes to be inspected.
         individual_telescopes: bool
             if False, the histograms are supposed to be filled for all telescopes.
             if True, one histogram is set for each telescope sepparately.
