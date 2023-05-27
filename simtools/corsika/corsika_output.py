@@ -7,6 +7,7 @@ from pathlib import Path
 import boost_histogram as bh
 import numpy as np
 from astropy import units as u
+from corsikaio.subblocks import event_header
 from eventio import IACTFile
 
 from simtools.util.general import (
@@ -821,7 +822,9 @@ class CorsikaOutput:
         Get information from the event header and save into dictionary.
         """
         if self._events_information is None:
+
             with IACTFile(self.input_file) as f:
+
                 self._file_header = f.header
                 self.telescope_positions = np.array(f.telescope_positions)
                 self.num_telescopes = np.size(self.telescope_positions, axis=0)
@@ -830,6 +833,7 @@ class CorsikaOutput:
                 }
                 self.num_events = 0
                 for event in f:
+                    self._get_event_header(event)
                     for key in corsika7_event_header:
                         self._events_information[key]["value"].append(
                             (event.header[corsika7_event_header[key]["value"]])
@@ -839,6 +843,34 @@ class CorsikaOutput:
                                 "unit"
                             ]
                     self.num_events += 1
+
+    def _get_event_header(self, event):
+        """
+        Get the events header.
+
+        Parameters
+        ----------
+        event
+        """
+        all_corsika_versions = list(event_header.event_header_types.keys())
+        header = np.array(list(event.header))
+        for version in reversed(all_corsika_versions):
+            # Get the event header for this event according to this software version
+            single_event_header = event_header.event_header_types[version]
+            # Get the position in the array, where the version is
+            version_index_position = np.argwhere(
+                np.array(list(single_event_header.names)) == "version"
+            )[0]
+            # Get the version of the software
+            version_from_file = np.around(float(header[version_index_position]), 1)
+
+            # If the version found is the same as the initial guess, leave the loop, otherwise,
+            # iterate until we find the correct version.
+            if version == version_from_file:
+                break
+
+        # create here a dict with key and value from the header according to the version found
+        print(version_from_file)
 
     @property
     def events_information(self):
