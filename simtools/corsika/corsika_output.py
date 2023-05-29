@@ -895,11 +895,9 @@ class CorsikaOutput:
             The zenith angles for each event, usually in degrees.
         """
         if self._event_zenith_angles is None:
+
             self._event_zenith_angles = np.around(
-                (
-                    self.events_information["zenith_angle"]["value"]
-                    * self.events_information["zenith_angle"]["unit"]
-                ).to(u.deg),
+                (self.event_information["zenith"] * u.rad).to(u.deg),
                 4,
             )
         return self._event_zenith_angles
@@ -916,10 +914,7 @@ class CorsikaOutput:
         """
         if self._event_azimuth_angles is None:
             self._event_azimuth_angles = np.around(
-                (
-                    self.events_information["azimuth_angle"]["value"]
-                    * self.events_information["azimuth_angle"]["unit"]
-                ).to(u.deg),
+                (self.event_information["azimuth"] * u.rad).to(u.deg),
                 4,
             )
         return self._event_azimuth_angles
@@ -936,10 +931,7 @@ class CorsikaOutput:
         """
         if self._event_total_energies is None:
             self._event_total_energies = np.around(
-                (
-                    self.events_information["total_energy"]["value"]
-                    * self.events_information["total_energy"]["unit"]
-                ).to(u.TeV),
+                (self.event_information["total_energy"] * u.GeV).to(u.TeV),
                 4,
             )
         return self._event_total_energies
@@ -958,12 +950,10 @@ class CorsikaOutput:
         """
         if self._event_first_interaction_heights is None:
             self._event_first_interaction_heights = np.around(
-                (
-                    self.events_information["first_interaction_height"]["value"]
-                    * self.events_information["first_interaction_height"]["unit"]
-                ).to(u.km),
+                (self.event_information["first_interaction_height"] * u.cm).to(u.km),
                 4,
             )
+        print(self._event_first_interaction_heights)
         return self._event_first_interaction_heights
 
     @property
@@ -979,15 +969,9 @@ class CorsikaOutput:
             The Earth magnetic field in the y direction used for each event.
         """
         if self._magnetic_field_x is None:
-            self._magnetic_field_x = (
-                self.events_information["Earth_B_field_x"]["value"]
-                * self.events_information["Earth_B_field_x"]["unit"]
-            )
+            self._magnetic_field_x = self.event_information["earth_magnetic_field_x"] * 1e-6 * u.T
         if self._magnetic_field_y is None:
-            self._magnetic_field_x = (
-                self.events_information["Earth_B_field_y"]["value"]
-                * self.events_information["Earth_B_field_y"]["unit"]
-            )
+            self._magnetic_field_x = self.event_information["earth_magnetic_field_z"] * 1e-6 * u.T
         return self._magnetic_field_x, self._magnetic_field_y
 
     def event_1D_histogram(self, key, bins=50, range=None):
