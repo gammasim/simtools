@@ -1007,7 +1007,7 @@ class CorsikaOutput:
             self._logger.error(msg)
             raise KeyError
         hist, edges = np.histogram(
-            self.event_information[key]["value"],
+            self.event_information[key],
             bins=bins,
             range=range,
         )
