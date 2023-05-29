@@ -15,7 +15,6 @@ from simtools.util.general import (
     convert_2D_to_radial_distr,
     rotate,
 )
-from simtools.util.names import corsika7_event_header
 
 
 class HistogramNotCreated(Exception):
@@ -111,9 +110,9 @@ class CorsikaOutput:
         Get the run header.
         """
         if self._header is None:
-            keys = list(run_header.run_header_types[np.around(self.version, 1)].names)
+            self.all_run_keys = list(run_header.run_header_types[np.around(self.version, 1)].names)
             self._header = {}
-            for i_key, key in enumerate(keys):
+            for i_key, key in enumerate(self.all_run_keys):
                 self._header[key] = self.iact_file.header[i_key]
         return self._header
 
@@ -136,11 +135,13 @@ class CorsikaOutput:
                 # print(self.header)
                 self.telescope_positions = np.array(self.iact_file.telescope_positions)
                 self.num_telescopes = np.size(self.telescope_positions, axis=0)
-                keys = list(event_header.event_header_types[np.around(self.version, 1)].names)
-                self.event_information = {key: [] for key in keys}
+                self.all_event_keys = list(
+                    event_header.event_header_types[np.around(self.version, 1)].names
+                )
+                self.event_information = {key: [] for key in self.all_event_keys}
                 self.num_events = 0
                 for event in self.iact_file:
-                    for i_key, key in enumerate(keys):
+                    for i_key, key in enumerate(self.all_event_keys):
                         self.event_information[key].append((event.header[i_key]))
                     self.num_events += 1
 
@@ -977,13 +978,13 @@ class CorsikaOutput:
     def event_1D_histogram(self, key, bins=50, range=None):
         """
         Create a histogram for the all events using `key` as parameter.
-        Valid keys are in ~simtools.names.corsika7_event_header.
+        Valid keys are stored in `self.all_event_keys` (CORSIKA defined).
 
         Parameters
         ----------
         key: str
-            The information from which to build the histogram, e.g. total_energy, zenith_angle
-            or first_interaction_height.
+            The information from which to build the histogram, e.g. total_energy, zenith or
+            first_interaction_height.
         bins: float
             Number of bins for the histogram.
         range: 2-tuple
@@ -1001,12 +1002,12 @@ class CorsikaOutput:
         KeyError:
             If key is not valid.
         """
-        if key not in corsika7_event_header:
-            msg = "`key` is not valid. Valid entries are {}".format(corsika7_event_header)
+        if key not in self.all_event_keys:
+            msg = "`key` is not valid. Valid entries are {}".format(self.all_event_keys)
             self._logger.error(msg)
             raise KeyError
         hist, edges = np.histogram(
-            self.events_information[key]["value"] * self.events_information[key]["unit"],
+            self.event_information[key]["value"],
             bins=bins,
             range=range,
         )
@@ -1015,16 +1016,16 @@ class CorsikaOutput:
     def event_2D_histogram(self, key_1, key_2, bins=50, range=None):
         """
         Create a 2D histogram for the all events using `key_1` and `key_2` as parameters.
-        Valid keys are in ~simtools.names.corsika7_event_header.
+        Valid keys are stored in `self.all_event_keys` (CORSIKA defined).
 
         Parameters
         ----------
         key_1: str
-            The first key from which to build the histogram, e.g. total_energy, zenith_angle
-            or first_interaction_height.
+            The information from which to build the histogram, e.g. total_energy, zenith or
+            first_interaction_height.
         key_2: str
-            The second key from which to build the histogram, e.g. total_energy, zenith_angle
-            or first_interaction_height.
+            The information from which to build the histogram, e.g. total_energy, zenith or
+            first_interaction_height.
         bins: float
             Number of bins for the histogram.
         range: 2-tuple
@@ -1045,15 +1046,15 @@ class CorsikaOutput:
             If at least one of the keys is not valid.
         """
         for key in [key_1, key_2]:
-            if key not in corsika7_event_header:
+            if key not in self.all_event_keys:
                 msg = "At least one of the keys given is not valid. Valid entries are {}".format(
-                    corsika7_event_header
+                    self.all_event_keys
                 )
                 self._logger.error(msg)
                 raise KeyError
         hist, x_edges, y_edges = np.histogram2d(
-            self.events_information[key_1]["value"] * self.events_information[key_1]["unit"],
-            self.events_information[key_2]["value"] * self.events_information[key_2]["unit"],
+            self.event_information[key_1],
+            self.event_information[key_2],
             bins=bins,
             range=range,
         )
