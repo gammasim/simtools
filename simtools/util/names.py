@@ -1,8 +1,5 @@
 import logging
 
-from astropy import units as u
-from astropy.constants import c
-
 __all__ = [
     "camera_efficiency_log_file_name",
     "camera_efficiency_results_file_name",
@@ -104,30 +101,6 @@ all_layout_array_names = {
 
 corsika_to_simtools_names = {
     "OBSLEV": "corsika_obs_level",
-}
-
-corsika7_event_header = {
-    "EVTH": {"value": 0, "unit": None},
-    "event_number": {"value": 1, "unit": None},
-    "particle_id": {"value": 2, "unit": None},
-    "total_energy": {"value": 3, "unit": u.GeV},
-    "starting_altitude": {"value": 4, "unit": u.g * u.cm**-2},
-    "number_of_first_target": {"value": 5, "unit": None},
-    "first_interaction_height": {"value": 6, "unit": u.cm},
-    "px_momentum": {"value": 7, "unit": u.GeV / c},
-    "py_momentum": {"value": 8, "unit": u.GeV / c},
-    "pz_momentum": {"value": 9, "unit": u.GeV / c},
-    "zenith_angle": {"value": 10, "unit": u.rad},
-    "azimuth_angle": {"value": 11, "unit": u.rad},
-    "num_of_random_num": {"value": 12, "unit": None},
-    "software_version": {"value": 16, "unit": None},
-    "spectrum_slope": {"value": 19, "unit": None},
-    "E_min": {"value": 20, "unit": u.GeV},
-    "E_max": {"value": 21, "unit": u.GeV},
-    "Earth_B_field_x": {"value": 32, "unit": 1e-6 * u.T},
-    "Earth_B_field_y": {"value": 33, "unit": 1e-6 * u.T},
-    "photon_wavelength_min": {"value": 57, "unit": u.nm},
-    "photon_wavelength_max": {"value": 58, "unit": u.nm},
 }
 
 
