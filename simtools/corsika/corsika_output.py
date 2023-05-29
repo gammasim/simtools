@@ -885,6 +885,9 @@ class CorsikaOutput:
         """
         self._telescope_positions = new_positions
 
+    # In the next five functions, we provide dedicated functions to retrieve specific information
+    # about the runs, i.e. zenith, azimuth, total energy, interaction height and Earth magnetic
+    # field defined for the run. For other information, please use the `get_event_info` function.
     @property
     def event_zenith_angles(self):
         """
@@ -954,7 +957,6 @@ class CorsikaOutput:
                 (self.event_information["first_interaction_height"] * u.cm).to(u.km),
                 4,
             )
-        print(self._event_first_interaction_heights)
         return self._event_first_interaction_heights
 
     @property
@@ -974,6 +976,56 @@ class CorsikaOutput:
         if self._magnetic_field_y is None:
             self._magnetic_field_x = self.event_information["earth_magnetic_field_z"] * 1e-6 * u.T
         return self._magnetic_field_x, self._magnetic_field_y
+
+    def get_event_info(self, parameter):
+        """
+        Get specific information (i.e. any parameter) of the events. The parameter is passed through
+        the key word `parameter`. Available options are to be found under `self.all_event_keys`.
+        The unit of the parameter, if any, is given according to the CORSIKA version
+        (please see user guide in this case).
+
+        Parameters
+        ----------
+        parameter: str
+            The parameter of interest. Available options are to be found under
+            `self.all_event_keys`.
+
+        Raises
+        ------
+        KeyError:
+            If parameter is not valid.
+        """
+
+        if parameter not in self.all_event_keys:
+            msg = "`key` is not valid. Valid entries are {}".format(self.all_event_keys)
+            self._logger.error(msg)
+            raise KeyError
+        return self.event_information[parameter]
+
+    def get_run_info(self, parameter):
+        """
+        Get specific information (i.e. any parameter) of the run. The parameter is passed through
+        the key word `parameter`. Available options are to be found under `self.all_run_keys`.
+        The unit of the parameter, if any, is given according to the CORSIKA version
+        (please see user guide in this case).
+
+        Parameters
+        ----------
+        parameter: str
+            The parameter of interest. Available options are to be found under
+            `self.all_run_keys`.
+
+        Raises
+        ------
+        KeyError:
+            If parameter is not valid.
+        """
+
+        if parameter not in self.all_run_keys:
+            msg = "`key` is not valid. Valid entries are {}".format(self.all_run_keys)
+            self._logger.error(msg)
+            raise KeyError
+        return self.header[parameter]
 
     def event_1D_histogram(self, key, bins=50, range=None):
         """
