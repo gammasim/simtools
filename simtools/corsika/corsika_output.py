@@ -7,7 +7,7 @@ from pathlib import Path
 import boost_histogram as bh
 import numpy as np
 from astropy import units as u
-from corsikaio.subblocks import event_header
+from corsikaio.subblocks import event_header, run_header
 from eventio import IACTFile
 
 from simtools.util.general import (
@@ -49,7 +49,7 @@ class CorsikaOutput:
             raise FileNotFoundError
 
         self._initialize_attributes()
-        self._read_event_information()
+        self.read_event_information()
 
     def _initialize_attributes(self):
         """
@@ -72,10 +72,77 @@ class CorsikaOutput:
         self._magnetic_field_y = None
         self._event_total_energies = None
         self._event_first_interaction_heights = None
-        self._corsika_version = None
+        self._version = None
+        self._header = None
+        self.event_information = None
         self._allowed_histograms = {"hist_position", "hist_direction", "hist_time_altitude"}
         self._allowed_1D_labels = {"wavelength", "time", "altitude"}
         self._allowed_2D_labels = {"counts", "density", "direction", "time_altitude"}
+
+    @property
+    def version(self):
+        """
+        Get the version of the Corsika output file.
+        """
+
+        if self._version is None:
+            all_corsika_versions = list(run_header.run_header_types.keys())
+            header = np.array(list(self.iact_file.header))
+
+            for i_version in reversed(all_corsika_versions):
+                # Get the event header for this software version being tested.
+                single_run_header = run_header.run_header_types[i_version]
+                # Get the position in the dictionary, where the version is.
+                version_index_position = np.argwhere(
+                    np.array(list(single_run_header.names)) == "version"
+                )[0]
+
+                # Check if version tested is the same as the version written in the file header.
+                if i_version == np.around(float(header[version_index_position]), 1):
+                    # If the version found is the same as the initial guess, leave the loop,
+                    # otherwise, iterate until we find the correct version.
+                    self._version = np.around(float(header[version_index_position]), 3)
+                    break
+        return self._version
+
+    @property
+    def header(self):
+        """
+        Get the run header.
+        """
+        if self._header is None:
+            keys = list(run_header.run_header_types[np.around(self.version, 1)].names)
+            self._header = {}
+            for i_key, key in enumerate(keys):
+                self._header[key] = self.iact_file.header[i_key]
+        return self._header
+
+    def read_event_information(self):
+        """
+        Read the information about the events from their headers and save as a class instance.
+        The main information can also be fetched individually through the functions below.
+        For the remaining information (such as px, py, pz), use this function.
+
+        Returns
+        -------
+        dict
+            Dictionary with the events information.
+        """
+
+        if self.event_information is None:
+
+            with IACTFile(self.input_file) as self.iact_file:
+                # print(self.version)
+                # print(self.header)
+                self.telescope_positions = np.array(self.iact_file.telescope_positions)
+                self.num_telescopes = np.size(self.telescope_positions, axis=0)
+                keys = list(event_header.event_header_types[np.around(self.version, 1)].names)
+                self.event_information = {key: [] for key in keys}
+                self.num_events = 0
+                for event in self.iact_file:
+                    for i_key, key in enumerate(keys):
+                        self.event_information[key].append((event.header[i_key]))
+                    self.num_events += 1
 
     @property
     def telescope_indices(self):
@@ -817,75 +884,6 @@ class CorsikaOutput:
         """
         self._telescope_positions = new_positions
 
-    def _read_event_information(self):
-        """
-        Get information from the event header and save into dictionary.
-        """
-        if self._events_information is None:
-
-            with IACTFile(self.input_file) as f:
-
-                self._file_header = f.header
-                self.telescope_positions = np.array(f.telescope_positions)
-                self.num_telescopes = np.size(self.telescope_positions, axis=0)
-                self._events_information = {
-                    key: {"value": [], "unit": None} for key in corsika7_event_header
-                }
-                self.num_events = 0
-                for event in f:
-                    self._get_event_header(event)
-                    for key in corsika7_event_header:
-                        self._events_information[key]["value"].append(
-                            (event.header[corsika7_event_header[key]["value"]])
-                        )
-                        if self._events_information[key]["unit"] is None:
-                            self._events_information[key]["unit"] = corsika7_event_header[key][
-                                "unit"
-                            ]
-                    self.num_events += 1
-
-    def _get_event_header(self, event):
-        """
-        Get the events header.
-
-        Parameters
-        ----------
-        event
-        """
-        all_corsika_versions = list(event_header.event_header_types.keys())
-        header = np.array(list(event.header))
-        for version in reversed(all_corsika_versions):
-            # Get the event header for this event according to this software version
-            single_event_header = event_header.event_header_types[version]
-            # Get the position in the array, where the version is
-            version_index_position = np.argwhere(
-                np.array(list(single_event_header.names)) == "version"
-            )[0]
-            # Get the version of the software
-            version_from_file = np.around(float(header[version_index_position]), 1)
-
-            # If the version found is the same as the initial guess, leave the loop, otherwise,
-            # iterate until we find the correct version.
-            if version == version_from_file:
-                break
-
-        # create here a dict with key and value from the header according to the version found
-        print(version_from_file)
-
-    @property
-    def events_information(self):
-        """
-        Get the information about the events from their headers.
-        The main information can also be fetched individually through the functions below.
-        For the remaining information (such as px, py, pz), use this function.
-
-        Returns
-        -------
-        dict
-            Dictionary with the events information.
-        """
-        return self._events_information
-
     @property
     def event_zenith_angles(self):
         """
@@ -967,20 +965,6 @@ class CorsikaOutput:
                 4,
             )
         return self._event_first_interaction_heights
-
-    @property
-    def corsika_version(self):
-        """
-        Get the CORSIKA version from the events header.
-
-        Returns
-        -------
-        numpy.array
-            The CORSIKA version used for each event.
-        """
-        if self._corsika_version is None:
-            self._corsika_version = self.events_information["software_version"]["value"]
-        return self._corsika_version
 
     @property
     def magnetic_field(self):
