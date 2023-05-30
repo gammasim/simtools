@@ -101,7 +101,7 @@ class CorsikaOutput:
                 )[0]
 
                 # Check if version tested is the same as the version written in the file header.
-                if i_version == np.around(float(header[version_index_position]), 1):
+                if i_version == np.trunc(float(header[version_index_position]) * 10) / 10:
                     # If the version found is the same as the initial guess, leave the loop,
                     # otherwise, iterate until we find the correct version.
                     self._version = np.around(float(header[version_index_position]), 3)
@@ -141,7 +141,7 @@ class CorsikaOutput:
                 self.telescope_positions = np.array(self.iact_file.telescope_positions)
                 self.num_telescopes = np.size(self.telescope_positions, axis=0)
                 self.all_event_keys = list(
-                    event_header.event_header_types[np.around(self.version, 1)].names
+                    event_header.event_header_types[np.trunc(self.version * 10) / 10].names
                 )
                 self.event_information = {key: [] for key in self.all_event_keys}
                 self.num_events = 0
