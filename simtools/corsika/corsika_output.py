@@ -54,8 +54,8 @@ class CorsikaOutput:
         """
         Initializes the class attributes.
         """
-        self._tel_positions = None
         self._telescope_indices = None
+        self._telescope_positions = None
         self.num_events = None
         self.num_of_hist = None
         self.num_telescopes = None
@@ -64,7 +64,6 @@ class CorsikaOutput:
         self._num_photons_per_telescope = None
         self._event_azimuth_angles = None
         self._event_zenith_angles = None
-        self._events_information = None
         self._hist_config = None
         self._total_num_photons = None
         self._magnetic_field_x = None
@@ -82,6 +81,11 @@ class CorsikaOutput:
     def version(self):
         """
         Get the version of the Corsika output file.
+
+        Returns
+        -------
+        float:
+            The version of CORSIKA used to produce the output given by `self.input_file`.
         """
 
         if self._version is None:
@@ -108,6 +112,11 @@ class CorsikaOutput:
     def header(self):
         """
         Get the run header.
+
+        Returns
+        -------
+        dict:
+            The run header.
         """
         if self._header is None:
             self.all_run_keys = list(run_header.run_header_types[np.around(self.version, 1)].names)
@@ -122,10 +131,6 @@ class CorsikaOutput:
         The main information can also be fetched individually through the functions below.
         For the remaining information (such as px, py, pz), use this function.
 
-        Returns
-        -------
-        dict
-            Dictionary with the events information.
         """
 
         if self.event_information is None:
@@ -148,7 +153,12 @@ class CorsikaOutput:
     @property
     def telescope_indices(self):
         """
-        The telescope index (or indices).
+        The telescope index (or indices), which are considered for the production of the histograms.
+
+        Returns
+        -------
+        list:
+            The indices of the telescopes of interest.
         """
         return self._telescope_indices
 
@@ -186,6 +196,11 @@ class CorsikaOutput:
     def hist_config(self):
         """
         The configuration of the histograms.
+
+        Returns
+        -------
+        dict:
+            the dictionary with the histogram configuration.
         """
         if self._hist_config is None:
             msg = "No configuration was defined before. The default config is being created now."
