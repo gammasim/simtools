@@ -376,7 +376,9 @@ class LayoutArray:
 
         """
 
-        if names.get_telescope_type(tel_name) is not None:
+        if (names.get_telescope_type(tel_name) is not None
+                and len(names.get_telescope_type(tel_name)) > 0):
+
             return self._corsika_telescope["corsika_sphere_center"][
                 names.get_telescope_type(tel_name)
             ]
