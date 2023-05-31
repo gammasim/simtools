@@ -24,7 +24,34 @@
 #   corsika_obs_level: !astropy.units.Quantity
 #     unit: *id002
 #     value: 2158
+#   corsika_sphere_radius:
+#     LST: !astropy.units.Quantity
+#       unit: *id002
+#       value: 12.5
+#     MST: !astropy.units.Quantity
+#       unit: *id002
+#       value: 9.6
+#     SCT: !astropy.units.Quantity
+#       unit: *id002
+#       value: 7.15
+#     SST: !astropy.units.Quantity
+#       unit: *id002
+#       value: 3.0
+#   corsika_sphere_center:
+#     LST: !astropy.units.Quantity
+#       unit: *id002
+#       value: 16.0
+#     MST: !astropy.units.Quantity
+#       unit: *id002
+#       value: 9.0
+#     SCT: !astropy.units.Quantity
+#       unit: *id002
+#       value: 6.1
+#     SST: !astropy.units.Quantity
+#       unit: *id002
+#       value: 3.25
 #   comments: |
+#       Prod6 sub-array from CTAO North
 #       UTM Zone 28N
 # schema: astropy-2.0
 asset_code sequence_number utm_east utm_north alt geo_code
