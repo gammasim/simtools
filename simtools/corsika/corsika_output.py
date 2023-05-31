@@ -119,11 +119,24 @@ class CorsikaOutput:
         dict:
             The run header.
         """
+
+        # Get keys in the header
         if self._header is None:
             self.all_run_keys = list(run_header.run_header_types[np.around(self.version, 1)].names)
             self._header = {}
-            for i_key, key in enumerate(self.all_run_keys):
-                self._header[key] = self.iact_file.header[i_key]
+
+            # Get units of the header
+            all_run_units = get_units_from_fields(
+                run_header.run_header_fields[np.trunc(self.version * 10) / 10]
+            )
+            all_header_astropy_units = self._get_header_astropy_units(
+                self.all_run_keys, all_run_units
+            )
+
+            # Fill the header dictionary
+            for i_key, key in enumerate(self.all_run_keys[1:]):  # starting at the second
+                # element to avoid the non-numeric (e.g. 'EVTH') key.
+                self._header[key] = self.iact_file.header[i_key + 1] * all_header_astropy_units[key]
         return self._header
 
     def read_event_information(self):
@@ -138,7 +151,7 @@ class CorsikaOutput:
 
             with IACTFile(self.input_file) as self.iact_file:
                 # print(self.version)
-                # print(self.header)
+                print(self.header)
                 self.telescope_positions = np.array(self.iact_file.telescope_positions)
                 self.num_telescopes = np.size(self.telescope_positions, axis=0)
                 self.all_event_keys = list(
@@ -147,7 +160,7 @@ class CorsikaOutput:
                 all_event_units = get_units_from_fields(
                     event_header.event_header_fields[np.trunc(self.version * 10) / 10]
                 )
-                all_event_astropy_units = {}
+
                 self.event_information = {key: [] for key in self.all_event_keys}
 
                 self.num_events = 0
@@ -158,23 +171,47 @@ class CorsikaOutput:
 
                     self.num_events += 1
 
-                # Build a dictionary with astropy units for the unit of the event's parameters.
-                for i_key, key in enumerate(self.all_event_keys[1:]):  # starting at the second
-                    # element to avoid the non-numeric 'EVTH' key.
-
-                    # We extract the astropy unit (dimensionless in case no unit is provided).
-                    if key in all_event_units:
-                        unit = parse_astropy_unit(all_event_units[key])
-                    else:
-                        unit = u.dimensionless_unscaled
-                    all_event_astropy_units[key] = unit
+                all_event_astropy_units = self._get_header_astropy_units(
+                    self.all_event_keys, all_event_units
+                )
 
                 # Add the unity to dictionary with the parameters and turn it into
                 # astropy.Quantities.
-                for i_key, key in enumerate(self.all_event_keys[1:]):
+                for i_key, key in enumerate(self.all_event_keys[1:]):  # starting at the second
+                    # element to avoid the non-numeric (e.g. 'EVTH') key.
                     self.event_information[key] = (
                         np.array(self.event_information[key]) * all_event_astropy_units[key]
                     )
+
+    def _get_header_astropy_units(self, parameters, non_astropy_units):
+        """
+        Return the dictionary with astropy units from the given list of parameters.
+
+        Parameters
+        ----------
+        parameters: list
+            The list of parameters to extract the astropy units.
+        non_astropy_units: dict
+            A dictionary with the parameter units (in strings).
+
+        Returns
+        -------
+        dict:
+            A dictionary with the astropy units.
+        """
+
+        # Build a dictionary with astropy units for the unit of the event's (header's) parameters.
+        all_event_astropy_units = {}
+        for i_key, key in enumerate(parameters[1:]):  # starting at the second
+            # element to avoid the non-numeric (e.g. 'EVTH') key.
+
+            # We extract the astropy unit (dimensionless in case no unit is provided).
+            if key in non_astropy_units:
+                unit = parse_astropy_unit(non_astropy_units[key])
+            else:
+                unit = u.dimensionless_unscaled
+            all_event_astropy_units[key] = unit
+        return all_event_astropy_units
 
     @property
     def telescope_indices(self):
