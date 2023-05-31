@@ -785,7 +785,7 @@ def _kernel_plot_2D_photons(corsika_output_instance, property_name, log_z=False)
         fig.colorbar(mesh)
         all_figs.append(fig)
         if corsika_output_instance.individual_telescopes is False:
-            fig.savefig("histogram_" + property_name + "_2D_all_tels.png", bbox_inches="tight")
+            fig.savefig(f"histogram_{property_name}_2D_all_tels.png", bbox_inches="tight")
         else:
             ax.text(
                 0.99,
@@ -797,11 +797,8 @@ def _kernel_plot_2D_photons(corsika_output_instance, property_name, log_z=False)
                 color="white",
             )
             fig.savefig(
-                "histogram_"
-                + property_name
-                + "_2D_tel_"
-                + str(corsika_output_instance.telescope_indices[i_hist])
-                + ".png",
+                f"histogram_{property_name}_2D_tel_"
+                f"{str(corsika_output_instance.telescope_indices[i_hist])}.png",
                 bbox_inches="tight",
             )
         plt.close()
@@ -949,14 +946,11 @@ def _kernel_plot_1D_photons(corsika_output_instance, property_name, log_y=True):
         if log_y is True:
             ax.set_yscale("log")
         if corsika_output_instance.individual_telescopes is False:
-            fig.savefig("histogram_" + property_name + "_tels.png", bbox_inches="tight")
+            fig.savefig(f"histogram_{property_name}_tels.png", bbox_inches="tight")
         else:
             fig.savefig(
-                "histogram_"
-                + property_name
-                + "_tel_"
-                + str(corsika_output_instance.telescope_indices[i_hist])
-                + ".png",
+                f"histogram_{property_name}_tel_"
+                f"{str(corsika_output_instance.telescope_indices[i_hist])}.png",
                 bbox_inches="tight",
             )
         all_figs.append(fig)
