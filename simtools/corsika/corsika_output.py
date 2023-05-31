@@ -7,12 +7,13 @@ from pathlib import Path
 import boost_histogram as bh
 import numpy as np
 from astropy import units as u
-from corsikaio.subblocks import event_header, run_header
+from corsikaio.subblocks import event_header, get_units_from_fields, run_header
 from eventio import IACTFile
 
 from simtools.util.general import (
     collect_data_from_yaml_or_dict,
     convert_2D_to_radial_distr,
+    parse_astropy_unit,
     rotate,
 )
 
@@ -143,12 +144,37 @@ class CorsikaOutput:
                 self.all_event_keys = list(
                     event_header.event_header_types[np.trunc(self.version * 10) / 10].names
                 )
+                all_event_units = get_units_from_fields(
+                    event_header.event_header_fields[np.trunc(self.version * 10) / 10]
+                )
+                all_event_astropy_units = {}
                 self.event_information = {key: [] for key in self.all_event_keys}
+
                 self.num_events = 0
+                # Build a dictionary with the parameters for the events.
                 for event in self.iact_file:
-                    for i_key, key in enumerate(self.all_event_keys):
-                        self.event_information[key].append((event.header[i_key]))
+                    for i_key, key in enumerate(self.all_event_keys[1:]):
+                        self.event_information[key].append(event.header[i_key + 1])
+
                     self.num_events += 1
+
+                # Build a dictionary with astropy units for the unit of the event's parameters.
+                for i_key, key in enumerate(self.all_event_keys[1:]):  # starting at the second
+                    # element to avoid the non-numeric 'EVTH' key.
+
+                    # We extract the astropy unit (dimensionless in case no unit is provided).
+                    if key in all_event_units:
+                        unit = parse_astropy_unit(all_event_units[key])
+                    else:
+                        unit = u.dimensionless_unscaled
+                    all_event_astropy_units[key] = unit
+
+                # Add the unity to dictionary with the parameters and turn it into
+                # astropy.Quantities.
+                for i_key, key in enumerate(self.all_event_keys[1:]):
+                    self.event_information[key] = (
+                        np.array(self.event_information[key]) * all_event_astropy_units[key]
+                    )
 
     @property
     def telescope_indices(self):
@@ -916,7 +942,7 @@ class CorsikaOutput:
         if self._event_zenith_angles is None:
 
             self._event_zenith_angles = np.around(
-                (self.event_information["zenith"] * u.rad).to(u.deg),
+                (self.event_information["zenith"]).to(u.deg),
                 4,
             )
         return self._event_zenith_angles
@@ -933,7 +959,7 @@ class CorsikaOutput:
         """
         if self._event_azimuth_angles is None:
             self._event_azimuth_angles = np.around(
-                (self.event_information["azimuth"] * u.rad).to(u.deg),
+                (self.event_information["azimuth"]).to(u.deg),
                 4,
             )
         return self._event_azimuth_angles
@@ -950,7 +976,7 @@ class CorsikaOutput:
         """
         if self._event_total_energies is None:
             self._event_total_energies = np.around(
-                (self.event_information["total_energy"] * u.GeV).to(u.TeV),
+                (self.event_information["total_energy"]).to(u.TeV),
                 4,
             )
         return self._event_total_energies
@@ -969,7 +995,7 @@ class CorsikaOutput:
         """
         if self._event_first_interaction_heights is None:
             self._event_first_interaction_heights = np.around(
-                (self.event_information["first_interaction_height"] * u.cm).to(u.km),
+                (self.event_information["first_interaction_height"]).to(u.km),
                 4,
             )
         return self._event_first_interaction_heights
@@ -987,9 +1013,9 @@ class CorsikaOutput:
             The Earth magnetic field in the y direction used for each event.
         """
         if self._magnetic_field_x is None:
-            self._magnetic_field_x = self.event_information["earth_magnetic_field_x"] * 1e-6 * u.T
+            self._magnetic_field_x = (self.event_information["earth_magnetic_field_x"]).to(u.uT)
         if self._magnetic_field_y is None:
-            self._magnetic_field_x = self.event_information["earth_magnetic_field_z"] * 1e-6 * u.T
+            self._magnetic_field_x = (self.event_information["earth_magnetic_field_z"]).to(u.uT)
         return self._magnetic_field_x, self._magnetic_field_y
 
     def get_event_info(self, parameter):
@@ -1004,6 +1030,11 @@ class CorsikaOutput:
         parameter: str
             The parameter of interest. Available options are to be found under
             `self.all_event_keys`.
+
+        Returns
+        -------
+        astropy.Quantity
+            The array with the event information as required by the parameter.
 
         Raises
         ------
@@ -1074,7 +1105,7 @@ class CorsikaOutput:
             self._logger.error(msg)
             raise KeyError
         hist, edges = np.histogram(
-            self.event_information[key],
+            self.event_information[key].value,
             bins=bins,
             range=range,
         )
@@ -1120,8 +1151,8 @@ class CorsikaOutput:
                 self._logger.error(msg)
                 raise KeyError
         hist, x_edges, y_edges = np.histogram2d(
-            self.event_information[key_1],
-            self.event_information[key_2],
+            self.event_information[key_1].value,
+            self.event_information[key_2].value,
             bins=bins,
             range=range,
         )
