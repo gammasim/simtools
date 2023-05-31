@@ -1,6 +1,7 @@
 import copy
 import logging
 import mmap
+import operator
 import os
 import pickle
 import re
@@ -9,6 +10,7 @@ from pathlib import Path
 
 import astropy.units as u
 import numpy as np
+from astropy import constants as const
 from astropy.coordinates.errors import UnitsError
 from astropy.io.misc import yaml
 
@@ -854,3 +856,41 @@ def save_dict_to_file(dictionary, file_name):
     """
     with open(file_name, "wb") as f:
         pickle.dump(dictionary, f)
+
+
+def parse_astropy_unit(unit_in_string):
+    """
+    Convert units passed in form of a string to astropy.units.Unity.
+
+    Parameters
+    ----------
+    unit_in_string: str
+        Unit to be parsed, e.g. GeV/c
+    """
+
+    try:
+        astropy_unit = u.Unit(unit_in_string)
+    except ValueError:
+        # Define the possible math operatos present in the string
+        ops_symbol = {
+            "+": operator.add,
+            "-": operator.sub,
+            "/": operator.truediv,
+            "*": operator.mul,
+            "^": operator.pow,
+        }
+        # Define the initial unit as dimensionless
+        astropy_unit = u.dimensionless_unscaled
+        for symbol in ops_symbol:
+            # Split the given string according to the math operators
+            splitted_unit_string = unit_in_string.split(symbol)
+            # If it was indeed split into more than 1 piece, we handle it below
+            if len(splitted_unit_string) > 1:
+                for unit in splitted_unit_string:
+                    # For now, `c` is the only constant that needed this manual adjustment.
+                    if unit == "c":
+                        unit = const.c
+                    # For each unit element we use the current operator to bring it to the final
+                    # unit.
+                    astropy_unit = ops_symbol[symbol](astropy_unit, u.Unit(unit))
+    return astropy_unit
