@@ -969,7 +969,7 @@ class CorsikaOutput:
     @property
     def event_zenith_angles(self):
         """
-        Get the zenith angles of the simulated events in degrees.
+        Get the zenith angles of the simulated events in astropy units of degrees.
 
         Returns
         -------
@@ -987,7 +987,7 @@ class CorsikaOutput:
     @property
     def event_azimuth_angles(self):
         """
-        Get the azimuth angles of the simulated events in degrees.
+        Get the azimuth angles of the simulated events in astropy units of degrees.
 
         Returns
         -------
@@ -1004,7 +1004,7 @@ class CorsikaOutput:
     @property
     def event_energies(self):
         """
-        Get the energy of the simulated events in TeV.
+        Get the energy of the simulated events in astropy units of TeV.
 
         Returns
         -------
@@ -1021,7 +1021,7 @@ class CorsikaOutput:
     @property
     def event_first_interaction_heights(self):
         """
-        Get the height of the first interaction in km.
+        Get the height of the first interaction in astropy units of km.
         If negative, tracking starts at margin of atmosphere, see TSTART in the CORSIKA 7 user guide
         .
 
@@ -1040,7 +1040,8 @@ class CorsikaOutput:
     @property
     def magnetic_field(self):
         """
-        Get the Earth magnetic field from the events header in microT.
+        Get the Earth magnetic field from the events header in astropy units of microT.
+        A tuple with Earth's magnetic field in the x and z directions are returned.
 
         Returns
         -------
