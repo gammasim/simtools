@@ -31,12 +31,6 @@
 #     MST: !astropy.units.Quantity
 #       unit: *id002
 #       value: 9.6
-#     SCT: !astropy.units.Quantity
-#       unit: *id002
-#       value: 7.15
-#     SST: !astropy.units.Quantity
-#       unit: *id002
-#       value: 3.0
 #   corsika_sphere_center:
 #     LST: !astropy.units.Quantity
 #       unit: *id002
@@ -44,12 +38,6 @@
 #     MST: !astropy.units.Quantity
 #       unit: *id002
 #       value: 9.0
-#     SCT: !astropy.units.Quantity
-#       unit: *id002
-#       value: 6.1
-#     SST: !astropy.units.Quantity
-#       unit: *id002
-#       value: 3.25
 #   comments: |
 #       Prod6 sub-array from CTAO North
 #       UTM Zone 28N
