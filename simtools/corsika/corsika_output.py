@@ -7,13 +7,13 @@ from pathlib import Path
 import boost_histogram as bh
 import numpy as np
 from astropy import units as u
+from astropy.units import cds
 from corsikaio.subblocks import event_header, get_units_from_fields, run_header
 from eventio import IACTFile
 
 from simtools.util.general import (
     collect_data_from_yaml_or_dict,
     convert_2D_to_radial_distr,
-    parse_astropy_unit,
     rotate,
 )
 
@@ -150,8 +150,6 @@ class CorsikaOutput:
         if self.event_information is None:
 
             with IACTFile(self.input_file) as self.iact_file:
-                # print(self.version)
-                print(self.header)
                 self.telescope_positions = np.array(self.iact_file.telescope_positions)
                 self.num_telescopes = np.size(self.telescope_positions, axis=0)
                 self.all_event_keys = list(
@@ -207,7 +205,8 @@ class CorsikaOutput:
 
             # We extract the astropy unit (dimensionless in case no unit is provided).
             if key in non_astropy_units:
-                unit = parse_astropy_unit(non_astropy_units[key])
+                with cds.enable():
+                    unit = u.Unit(non_astropy_units[key])
             else:
                 unit = u.dimensionless_unscaled
             all_event_astropy_units[key] = unit
