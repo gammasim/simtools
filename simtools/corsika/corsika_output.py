@@ -965,7 +965,8 @@ class CorsikaOutput:
 
     # In the next five functions, we provide dedicated functions to retrieve specific information
     # about the runs, i.e. zenith, azimuth, total energy, interaction height and Earth magnetic
-    # field defined for the run. For other information, please use the `get_event_info` function.
+    # field defined for the run. For other information, please use the `get_event_parameter_info`
+    # function.
     @property
     def event_zenith_angles(self):
         """
@@ -1056,7 +1057,7 @@ class CorsikaOutput:
             self._magnetic_field_x = (self.event_information["earth_magnetic_field_z"]).to(u.uT)
         return self._magnetic_field_x, self._magnetic_field_y
 
-    def get_event_info(self, parameter):
+    def get_event_parameter_info(self, parameter):
         """
         Get specific information (i.e. any parameter) of the events. The parameter is passed through
         the key word `parameter`. Available options are to be found under `self.all_event_keys`.
