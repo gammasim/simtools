@@ -135,7 +135,7 @@ class CorsikaOutput:
 
             # Fill the header dictionary
             for i_key, key in enumerate(self.all_run_keys[1:]):  # starting at the second
-                # element to avoid the non-numeric (e.g. 'EVTH') key.
+                # element to avoid the non-numeric key.
                 self._header[key] = self.iact_file.header[i_key + 1] * all_header_astropy_units[key]
         return self._header
 
