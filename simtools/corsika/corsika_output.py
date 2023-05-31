@@ -499,7 +499,6 @@ class CorsikaOutput:
                 )
 
             if self.individual_telescopes is False:
-                hist_num = 0
                 # Adding the position of the telescopes to the relative position of the photons
                 # such that we have a common coordinate system.
                 photon_x = -i_tel_info["x"] + photon_x
@@ -515,7 +514,8 @@ class CorsikaOutput:
             self.hist_time_altitude[hist_num].fill(
                 photons_info["time"] * u.ns, (photons_info["zem"] * u.cm).to(u.km)
             )
-            hist_num += 1
+            if self.individual_telescopes is True:
+                hist_num += 1
 
     def set_histograms(self, telescope_indices=None, individual_telescopes=False):
         """
