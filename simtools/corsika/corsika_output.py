@@ -601,7 +601,7 @@ class CorsikaOutput:
         """
 
         if label not in self._allowed_2D_labels:
-            msg = "label is not valid. Valid entries are {}".format(self._allowed_2D_labels)
+            msg = f"label is not valid. Valid entries are {self._allowed_2D_labels}"
             self._logger.error(msg)
             raise ValueError
         self._raise_if_no_histogram()
@@ -729,7 +729,7 @@ class CorsikaOutput:
         """
 
         if label not in self._allowed_1D_labels:
-            msg = "`label` is not valid. Valid entries are {}".format(self._allowed_1D_labels)
+            msg = f"`label` is not valid. Valid entries are {self._allowed_1D_labels}"
             self._logger.error(msg)
             raise ValueError
         self._raise_if_no_histogram()
@@ -1082,7 +1082,7 @@ class CorsikaOutput:
         """
 
         if parameter not in self.all_event_keys:
-            msg = "`key` is not valid. Valid entries are {}".format(self.all_event_keys)
+            msg = f"`key` is not valid. Valid entries are {self.all_event_keys}"
             self._logger.error(msg)
             raise KeyError
         return self.event_information[parameter]
@@ -1107,7 +1107,7 @@ class CorsikaOutput:
         """
 
         if parameter not in self.all_run_keys:
-            msg = "`key` is not valid. Valid entries are {}".format(self.all_run_keys)
+            msg = f"`key` is not valid. Valid entries are {self.all_run_keys}"
             self._logger.error(msg)
             raise KeyError
         return self.header[parameter]
@@ -1140,7 +1140,7 @@ class CorsikaOutput:
             If key is not valid.
         """
         if key not in self.all_event_keys:
-            msg = "`key` is not valid. Valid entries are {}".format(self.all_event_keys)
+            msg = f"`key` is not valid. Valid entries are {self.all_event_keys}"
             self._logger.error(msg)
             raise KeyError
         hist, edges = np.histogram(
@@ -1184,8 +1184,9 @@ class CorsikaOutput:
         """
         for key in [key_1, key_2]:
             if key not in self.all_event_keys:
-                msg = "At least one of the keys given is not valid. Valid entries are {}".format(
-                    self.all_event_keys
+                msg = (
+                    f"At least one of the keys given is not valid. Valid entries are "
+                    f"{self.all_event_keys}"
                 )
                 self._logger.error(msg)
                 raise KeyError
