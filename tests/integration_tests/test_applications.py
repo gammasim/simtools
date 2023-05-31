@@ -368,7 +368,7 @@ APP_LIST = {
             "corsika",
         ],
     ],
-    "print_array_elements::print_compact_cors_telescopeheights": [
+    "print_array_elements::print_compact_corsika_telescopeheights": [
         [
             "--array_element_list",
             "tests/resources/telescope_positions-North-utm.ecsv",
