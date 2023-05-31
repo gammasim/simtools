@@ -483,9 +483,8 @@ class CorsikaOutput:
         """
 
         hist_num = 0
-        telescope_mask = np.isin(self.all_telescope_indices, self.telescope_indices)
         for i_tel_info, photons_info in np.array(list(zip(self.telescope_positions, photons)))[
-            telescope_mask
+            self.telescope_indices
         ]:
 
             if azimuth_angle is None or zenith_angle is None:
