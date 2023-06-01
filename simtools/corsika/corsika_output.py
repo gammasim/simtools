@@ -532,6 +532,10 @@ class CorsikaOutput:
         -------
         list: list of boost_histogram.Histogram instances.
 
+        Raises
+        ------
+        AttributeError:
+            if event has not photon saved.
         """
         self.all_telescope_indices = np.arange(self.num_telescopes)
         if telescope_indices is None:
@@ -547,10 +551,17 @@ class CorsikaOutput:
             event_counter = 0
             for event in f:
                 for i_telescope in self.telescope_indices:
+
+                    if hasattr(event, "photon_bunches"):
+                        photons = list(event.photon_bunches.values())
+                    else:
+                        msg = "The event has no associated photon bunches saved. "
+                        self._logger.error(msg)
+                        raise AttributeError
+
                     # Count photons only from the telescopes given by self.telescope_indices.
                     num_photons_per_event_per_telescope_to_set.append(event.n_photons[i_telescope])
 
-                photons = list(event.photon_bunches.values())
                 self._fill_histograms(
                     photons,
                     self.event_azimuth_angles[event_counter],
