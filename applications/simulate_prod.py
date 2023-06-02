@@ -67,7 +67,6 @@
 """
 
 import logging
-import os
 from copy import copy
 
 import astropy.units as u
@@ -281,10 +280,6 @@ def main():
         },
         "LST-01": "1",
     }
-    os.environ[
-        "SIMTEL_MULTI_CFG_PATH"
-    ] = "/workdir/external/gammasim-tools/simtools-output/TEST/corsika_simtel/"
-    # print(os.getenv("SIMTEL_MULTI_CFG_PATH", "Could not get SIMTEL_MULTI_CFG_PATH"))
 
     simulator = Simulator(
         label=label,
