@@ -412,9 +412,8 @@ class CorsikaConfig:
 
             file.write("\n* [ OUTUPUT FILE ]\n")
             if use_multipipe:
-                run_cta_script = Path(self._simtel_source_path).joinpath("sim_telarray/run_sim_cta")
+                run_cta_script = Path(self._config_file_path.parent).joinpath("run_cta_multipipe")
                 file.write(f"TELFIL |{str(run_cta_script)}\n")
-                file.write(f"IACT TELOPT -c {self.get_file_name('multipipe')}\n")
             else:
                 file.write(f"TELFIL {self._output_generic_file_name}\n")
 
@@ -484,7 +483,7 @@ class CorsikaConfig:
             )
             return file_name
         if file_type == "multipipe":
-            return f"cta-{self.site}-{self.layout_name}"
+            return f"multi_cta-{self.site}-{self.layout_name}.cfg"
 
         raise ValueError(f"The requested file type ({file_type}) is unknown")
 
