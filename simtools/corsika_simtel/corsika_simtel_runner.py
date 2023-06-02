@@ -78,7 +78,6 @@ class CorsikaSimtelRunner(CorsikaRunner, SimtelRunnerArray):
             Full path of the run script file.
         """
         self.export_multipipe_script(**kwargs)
-        # SimtelRunnerArray.array_model.export_all_simtel_config_files(self)
         return CorsikaRunner.get_run_script(self, use_pfp=False, **kwargs)
 
     def export_multipipe_script(self, **kwargs):
