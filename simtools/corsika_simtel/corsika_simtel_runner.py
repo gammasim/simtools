@@ -160,6 +160,8 @@ class CorsikaSimtelRunner(CorsikaRunner, SimtelRunnerArray):
             self, file_type="output", **info_for_file_name
         )
 
+        # TODO: Implement the weak pointing for divergent pointing
+        # TODO: Think how to create multiple run commands for various pipes (e.g., NSB levels)
         # Array
         command = str(self._simtel_source_path.joinpath("sim_telarray/bin/sim_telarray"))
         command += f" -c {self.array_model.get_config_file()}"
