@@ -74,6 +74,7 @@ class CorsikaOutput:
         self._version = None
         self._header = None
         self.event_information = None
+        self.individual_telescopes = None
         self._allowed_histograms = {"hist_position", "hist_direction", "hist_time_altitude"}
         self._allowed_1D_labels = {"wavelength", "time", "altitude"}
         self._allowed_2D_labels = {"counts", "density", "direction", "time_altitude"}
@@ -410,11 +411,18 @@ class CorsikaOutput:
             )
         return boost_axes
 
-    def _create_histograms(self):
+    def _create_histograms(self, individual_telescopes=False):
         """
         Create the histogram instances.
-        """
 
+        Parameters
+        ----------
+        individual_telescopes: bool
+            if False, the histograms are supposed to be filled for all telescopes.
+            if True, one histogram is set for each telescope sepparately.
+        """
+        if self.individual_telescopes is None:
+            self.individual_telescopes = individual_telescopes
         self.num_of_hist = len(self.telescope_indices) if self.individual_telescopes is True else 1
 
         self.hist_position, self.hist_direction, self.hist_time_altitude = [], [], []
@@ -542,7 +550,7 @@ class CorsikaOutput:
             telescope_indices = self.all_telescope_indices.tolist()
         self.telescope_indices = telescope_indices
         self.individual_telescopes = individual_telescopes
-        self._create_histograms()
+        self._create_histograms(individual_telescopes=individual_telescopes)
 
         num_photons_per_event_per_telescope_to_set = []
         start_time = time.time()
