@@ -12,15 +12,17 @@
     which are piped directly to sim_telarray using the sim_telarray multipipe mechanism.
     This script assumes that all the necessary configuration files for CORISKA and
     sim_telarray are available.
-    The multipipe and/or the generic run scripts are either assumed to be available
-    or will be produced as part of this script FIXME - decide and update this docstring.
+    The multipipe scripts will be produced as part of this script.
 
     This script does not provide a mechanism to submit jobs to a batch system like others
     in gammasim-tools since it is meant to be executed on a grid node
-    (distributed to it by the worload management system).
+    (distributed to it by the workload management system).
 
     Command line arguments
     ----------------------
+    production_config (str, Path, required)
+        Simulation configuration file
+        (contains the default setup which can be overwritten by the command line options)
     prod_tag (str, required)
         The production tag (ID) to use (e.g., Prod5)
     site (str, required)
@@ -32,6 +34,8 @@
         Should be one of North, South, East, West (case insensitive)
     zenith_angle (float, required)
         Zenith angle in degrees
+    nshow (int, optional)
+        Number of showers to simulate
     log_level (str, optional)
         Log level to print (default=INFO).
 
@@ -53,7 +57,7 @@
 
     .. code-block:: console
 
-        python applications/production.py --task simulate --productionconfig prod_config_test.yml \
+        python applications/production.py --task simulate --production_config prod_config_test.yml \
         --test --showers_only --submit_command local
 
     The output is saved in simtools-output/test-production.
@@ -95,6 +99,15 @@ def _parse(description=None):
     """
 
     config = configurator.Configurator(description=description)
+    config.parser.add_argument(
+        "--production_config",
+        help=(
+            "Simulation configuration file "
+            "(contains the default setup which can be overwritten by the command line options)"
+        ),
+        type=str,
+        required=True,
+    )
     config.parser.add_argument(
         "--prod_tag",
         help="The production tag (ID) to use (e.g., Prod5)",
@@ -147,6 +160,12 @@ def _parse(description=None):
         required=True,
     )
     config.parser.add_argument(
+        "--nshow",
+        help="Number of showers to simulate",
+        type=int,
+        required=False,
+    )
+    config.parser.add_argument(
         "--start_run",
         help=(
             "Start run number such that the actual run number will be 'start_run' + 'run'. "
@@ -196,10 +215,8 @@ def _proccess_simulation_config_file(config_file, primary_config, logger):
         logger.error(f"Error loading simulation configuration file from {config_file}")
         raise
 
-    label = config_data.pop("label", dict())
-    default_data = config_data.pop("default", dict())
-    config_showers = dict()
-    config_arrays = dict()
+    label = config_data.pop("label", {})
+    default_data = config_data.pop("default", {})
 
     for primary, primary_data in config_data.items():
 
@@ -208,32 +225,65 @@ def _proccess_simulation_config_file(config_file, primary_config, logger):
 
         this_default = copy(default_data)
 
-        config_showers[primary] = copy(this_default.pop("showers", dict()))
-        config_arrays[primary] = copy(this_default.pop("array", dict()))
+        config_showers = copy(this_default.pop("showers", {}))
+        config_arrays = copy(this_default.pop("array", {}))
 
         # Grabbing common entries for showers and array
         for key, value in primary_data.items():
             if key in ["showers", "array"]:
                 continue
-            config_showers[primary][key] = value
-            config_arrays[primary][key] = value
+            config_showers[key] = value
+            config_arrays[key] = value
 
         # Grabbing showers entries
-        for key, value in primary_data.get("showers", dict()).items():
-            config_showers[primary][key] = value
-        config_showers[primary]["primary"] = primary
+        for key, value in primary_data.get("showers", {}).items():
+            config_showers[key] = value
+        config_showers["primary"] = primary
 
         # Grabbing array entries
-        for key, value in primary_data.get("array", dict()).items():
-            config_arrays[primary][key] = value
-        config_arrays[primary]["primary"] = primary
+        for key, value in primary_data.get("array", {}).items():
+            config_arrays[key] = value
+        config_arrays["primary"] = primary
 
         # Filling in the remaining default keys
         for key, value in this_default.items():
-            config_showers[primary][key] = value
-            config_arrays[primary][key] = value
+            config_showers[key] = value
+            config_arrays[key] = value
+
+    config_arrays["data_directory"] = config_showers["data_directory"]
+    config_arrays["site"] = config_showers["site"]
+    config_arrays["layout_name"] = config_showers["layout_name"]
 
     return label, config_showers, config_arrays
+
+
+def _translate_from_direction_to_azimuth(logger, from_direction):
+    """
+    Translate the direction particles are coming from to an azimuth angle
+
+    Attributes
+    ----------
+    from_direction: str (north, south, east, west)
+        The direction particles are coming from
+
+    Returns
+    -------
+    float (Astropy.Quantity)
+        The phi angle for CORSIKA configuration
+
+    """
+
+    if from_direction == "north":
+        return 0 * u.deg
+    if from_direction == "south":
+        return 180 * u.deg
+    if from_direction == "east":
+        return 90 * u.deg
+    if from_direction == "west":
+        return 270 * u.deg
+
+    logger.error(f"The direction {from_direction} to simulate from was not recognised")
+    raise ValueError
 
 
 def main():
@@ -243,88 +293,32 @@ def main():
     logger = logging.getLogger()
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
-    # label, shower_configs, array_configs = _proccess_simulation_config_file(
-    #     args_dict["productionconfig"], args_dict["primary"], logger
-    # )
-    # if args_dict["label"] is None:
-    #     args_dict["label"] = label
+    label, shower_configs, array_configs = _proccess_simulation_config_file(
+        args_dict["production_config"], args_dict["primary"], logger
+    )
 
-    # FIXME - temp stuff
-    label = "TEST"
-
-    corsika_config_data = {
-        "data_directory": ".",
-        "site": "North",
-        "layout_name": "test-layout",
-        "primary": args_dict["primary"],
-        "nshow": 10,
-        "nrun": 1,
-        "zenith": args_dict["zenith_angle"] * u.deg,
-        "viewcone": [0 * u.deg, 0 * u.deg],
-        "erange": [3 * u.GeV, 300 * u.TeV],
-        "eslope": -2,
-        "phi": 0 * u.deg,
-        "cscat": [5, 1500 * u.m, 0],
-        "run_range": [1, 1],
-    }
-    simtel_config_data = {
-        "data_directory": ".",
-        "site": "North",
-        "layout_name": "test-layout",
-        "zenith": args_dict["zenith_angle"] * u.deg,
-        "phi": 0 * u.deg,
-        "model_version": args_dict["prod_tag"],
-        "default": {
-            "LST": "D234",
-            "MST": "NectarCam-D",
-        },
-        "LST-01": "1",
-    }
+    # Overwrite default and optional settings
+    array_configs["site"] = shower_configs["site"] = args_dict["site"]
+    array_configs["zenith"] = shower_configs["zenith"] = args_dict["zenith_angle"] * u.deg
+    array_configs["phi"] = shower_configs["phi"] = _translate_from_direction_to_azimuth(
+        logger, args_dict["from_direction"]
+    )
+    if args_dict["nshow"] is not None:
+        shower_configs["nshow"] = args_dict["nshow"]
+    if args_dict["label"] is None:
+        args_dict["label"] = "TEST"
 
     simulator = Simulator(
         label=label,
         simulator="corsika_simtel",
         simulator_source_path=args_dict["simtel_path"],
-        config_data=corsika_config_data | simtel_config_data,
+        config_data=shower_configs | array_configs,
         submit_command="local",
         test=args_dict["test"],
         mongo_db_config=db_config,
     )
 
     simulator.simulate()
-
-    # shower_simulators = dict()
-    # for primary, config_data in shower_configs.items():
-    #     shower_simulators[primary] = Simulator(
-    #         label=label,
-    #         simulator="corsika_simtel",
-    #         simulator_source_path=args_dict["simtel_path"],
-    #         config_data=config_data,
-    #         submit_command="local",
-    #         test=args_dict["test"],
-    #         mongo_db_config=db_config,
-    #     )
-
-    # if args_dict["showers_only"]:
-    #     for primary, shower in shower_simulators.items():
-    #         _task_function = getattr(shower, args_dict["task"])
-    #         _task_function()
-
-    # if args_dict["array_only"]:
-    #     array_simulators = dict()
-    #     for primary, config_data in array_configs.items():
-    #         array_simulators[primary] = Simulator(
-    #             label=label,
-    #             simulator="simtel",
-    #             simulator_source_path=args_dict["simtel_path"],
-    #             config_data=config_data,
-    #             submit_command=args_dict["submit_command"],
-    #             mongo_db_config=db_config,
-    #         )
-    #     for primary, array in array_simulators.items():
-    #         input_list = shower_simulators[primary].get_list_of_output_files()
-    #         _task_function = getattr(array, args_dict["task"])
-    #         _task_function(input_file_list=input_list)
 
 
 if __name__ == "__main__":
