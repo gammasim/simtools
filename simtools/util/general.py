@@ -2,6 +2,7 @@ import copy
 import logging
 import mmap
 import os
+import pickle
 import re
 from collections import namedtuple
 from pathlib import Path
@@ -343,7 +344,7 @@ def collect_data_from_yaml_or_dict(in_yaml, in_dict, allow_empty=False):
     if in_dict is not None:
         return dict(in_dict)
 
-    msg = "config_data has not been provided (by yaml file neither by dict)"
+    msg = "Input has not been provided (neither by yaml file, nor by dict)"
     if allow_empty:
         _logger.debug(msg)
         return None
@@ -679,22 +680,25 @@ def change_dict_keys_case(data_dict, lower_case=True):
     return _return_dict
 
 
-@u.quantity_input(rotation_angle=u.rad)
-def rotate(rotation_angle, x, y):
+@u.quantity_input(rotation_angle_phi=u.rad, rotation_angle_theta=u.rad)
+def rotate(x, y, rotation_angle_phi, rotation_angle_theta=0 * u.rad):
     """
-    Rotate x and y by the rotation angle given in rotation_angle, in radians (astropy.units.rad),
-    or in degrees (astropy.units.deg).
+    Transform the x and y coordinates of the telescopes according to two rotations in spherical
+    coordinates: `rotation_angle_phi` gives the rotation on the observation plane (x, y)
+     and `rotation_angle_theta` allows to rotate observation plane in space.
     The function returns the rotated x and y values in the same unit given.
-    The direction of rotation of the elements is counterclockwise.
+    The direction of rotation of the elements in the plane is counterclockwise.
 
     Parameters
     ----------
-    rotation_angle: astropy.units.rad
-        Angle to rotate the array in radians.
     x: numpy.array or list
         x positions of the telescopes, usually in meters.
     y: numpy.array or list
         y positions of the telescopes, usually in meters.
+    rotation_angle_phi: astropy.units.rad
+        Angle to rotate the array in the observation plane in radians.
+    rotation_angle_theta: astropy.units.rad
+        Angle to rotate the observation plane in radians.
 
     Returns
     -------
@@ -738,11 +742,12 @@ def rotate(rotation_angle, x, y):
                 "Cannot perform coordinate transformation when x and y have different units."
             )
 
-    x_trans, y_trans = [np.zeros_like(x).astype(float) for i in range(2)]
-
-    for step, _ in enumerate(x):
-        x_trans[step] = x[step] * np.cos(rotation_angle) - y[step] * np.sin(rotation_angle)
-        y_trans[step] = x[step] * np.sin(rotation_angle) + y[step] * np.cos(rotation_angle)
+    x_trans = np.cos(rotation_angle_theta) * (
+        x * np.cos(rotation_angle_phi) - y * np.sin(rotation_angle_phi)
+    )
+    y_trans = np.cos(rotation_angle_theta) * (
+        x * np.sin(rotation_angle_phi) + y * np.cos(rotation_angle_phi)
+    )
     return x_trans, y_trans
 
 
@@ -770,3 +775,82 @@ def get_log_excerpt(log_file, n_last_lines=30):
         f"{collect_final_lines(log_file, n_last_lines)}\n\n"
         "====================================================================\n"
     )
+
+
+def convert_2D_to_radial_distr(xaxis, yaxis, hist2d, bin_size=50, max_dist=1000):
+    """
+    Convert a 2D histogram of positions, e.g. photon positions on the ground, to a 1D distribution.
+
+    Parameters
+    ----------
+    xaxis: numpy.array
+        The values of the x axis (histogram edges) on the ground.
+    yaxis: numpy.array
+        The values of the y axis (histogram edges) on the ground.
+    hist2d: numpy.ndarray
+        The histogram counts.
+    bin_size: float
+        Size of the step in distance, usually in meters.
+    max_dist: float
+       Maximum distance to consider in the 1D histogram, usually in meters.
+
+    Returns
+    -------
+    np.array
+        The edges of the 1D histogram with size = int(max_dist/bin_size) + 1.
+    np.array
+        The values of the 1D histogram with size = int(max_dist/bin_size).
+    """
+
+    grid_2d_x, grid_2d_y = np.meshgrid(xaxis[:-1], yaxis[:-1])  # [:-1], since xaxis and yaxis are
+    # the hist edges (n + 1).
+    # radial_distance_map maps the distance to the center from each element in a square matrix.
+    radial_distance_map = np.sqrt(grid_2d_x**2 + grid_2d_y**2)
+
+    # The sorting and divmod give us the two indices for the position of the sorted element in the
+    # original 2d matrix
+    x_indices_sorted, y_indices_sorted = np.divmod(
+        np.argsort(radial_distance_map, axis=None), np.size(radial_distance_map, axis=0)
+    )
+    # We construct a 1D array with the histogram counts sorted according to the distance to the
+    # center.
+    hist_sorted = np.array(
+        [hist2d[i_x, i_y] for i_x, i_y in zip(x_indices_sorted, y_indices_sorted)]
+    )
+    distance_sorted = np.sort(radial_distance_map, axis=None)
+    # For larger distances, we have more elements in a slice 'dr' in radius, hence, we need to
+    # acount for it using weights below.
+    weights, radial_edges = np.histogram(
+        distance_sorted, bins=int(max_dist / bin_size), range=(0, max_dist)
+    )
+
+    histogram_1D = np.empty_like(weights)
+    for i_radial, _ in enumerate(radial_edges[:-1]):
+        # Here we sum all the events within a radial interval 'dr' and then divide by the number of
+        # bins that fit this interval.
+        indices_to_sum = (distance_sorted >= radial_edges[i_radial]) * (
+            distance_sorted < radial_edges[i_radial + 1]
+        )
+        # In case there is no event in any bin, according to the defined bin size,
+        # we assign the histogram count to be zero. In this case, it is wise to increase the bin
+        # size of your analysis.
+        try:
+            histogram_1D[i_radial] = np.sum(hist_sorted[indices_to_sum]) / weights[i_radial]
+        except ValueError:
+            histogram_1D[i_radial] = 0
+    return radial_edges, histogram_1D
+
+
+def save_dict_to_file(dictionary, file_name):
+    """
+    Save dictionary to a file.
+
+    Parameters
+    ----------
+    dictionary: dict
+        Dictionary to be saved into a file.
+    file_name: str
+        Name of file to be saved.
+    """
+    with open(file_name, "wb") as f:
+        pickle.dump(dictionary, f)
