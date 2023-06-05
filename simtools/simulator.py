@@ -541,7 +541,7 @@ class Simulator:
         self._results["log"].append(
             str(self._simulation_runner.get_file_name(file_type="log", **info_for_file_name))
         )
-        if self.simulator == "simtel":
+        if self.simulator in ["simtel", "corsika_simtel"]:
             self._results["input"].append(str(file))
             self._results["hist"].append(
                 str(
@@ -571,7 +571,7 @@ class Simulator:
 
         fig_name = None
 
-        if self.simulator == "simtel":
+        if self.simulator in ["simtel", "corsika_simtel"]:
             if len(self._results["hist"]) == 0 and input_file_list is not None:
                 self._fill_results_without_run(input_file_list)
 
