@@ -242,7 +242,7 @@ class CorsikaOutput:
             if the indices passed through telescope_index are not of type int.
         """
 
-        if telescope_new_indices is not None and self._telescope_indices is None:
+        if telescope_new_indices is not None:
             if not isinstance(telescope_new_indices, list):
                 telescope_new_indices = [telescope_new_indices]
             for i_telescope in telescope_new_indices:
