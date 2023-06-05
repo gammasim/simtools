@@ -11,7 +11,7 @@
     The entire simulation chain is performed, i.e., shower simulations with CORSIKA
     which are piped directly to sim_telarray using the sim_telarray multipipe mechanism.
     This script assumes that all the necessary configuration files for CORISKA and
-    sim_telarray are available.
+    sim_telarray are available. FIXME - This is not true at the moment, need to fix I guess.
     The multipipe scripts will be produced as part of this script.
 
     This script does not provide a mechanism to submit jobs to a batch system like others
@@ -28,7 +28,7 @@
     site (str, required)
         Paranal or LaPalma (case insensitive)
     primary (str, required)
-        Name of the primary particla to simulate. The available options are
+        Name of the primary particle to simulate. The available options are
         gamma, gamma_diffuse, electron, proton, muon, helium, nitrogen, silicon, and iron.
     from_direction (str, required)
         Should be one of North, South, East, West (case insensitive)
@@ -36,38 +36,48 @@
         Zenith angle in degrees
     nshow (int, optional)
         Number of showers to simulate
+    start_run (int, required)
+        Start run number such that the actual run number will be 'start_run' + 'run'.
+        This is useful in case a new transform is submitted for the same production.
+        It allows the transformation system to keep using sequential run numbers without repetition.
+    run (int, required)
+        Run number (actual run number will be 'start_run' + 'run')
     log_level (str, optional)
         Log level to print (default=INFO).
 
     Example
     -------
     FIXME
-    Write an example
-
-    .. code-block:: console
-
-        python applications/simulate_prod.py --prod_tag Prod5 --site paranal --primary gamma \
-        --from_direction north --zenith_angle 20 --start_run 0 --run 1
-
-    .. code-block:: console
-
-        python applications/get_file_from_db.py --file_name prod_config_test.yml
-
     Run the application:
 
     .. code-block:: console
 
-        python applications/production.py --task simulate --production_config prod_config_test.yml \
-        --test --showers_only --submit_command local
+        python applications/simulate_prod.py \
+        --production_config tests/resources/prod_multi_config_test.yml --prod_tag Prod5 \
+        --site lapalma --primary gamma --from_direction north --zenith_angle 20 \
+         --start_run 0 --run 1
 
-    The output is saved in simtools-output/test-production.
+    By default the configuration is saved in simtools-output/test-production
+    and the output in corsika-data and simtel-data (can be set to a different location via
+    the option --data_directory) TODO!!
 
     Expected final print-out message:
 
     .. code-block:: console
 
-        INFO::job_manager(l124)::_submit_local::Running script locally
-        INFO::job_manager(l133)::_submit_local::Testing (local)
+        INFO::layout_array(l569)::read_telescope_list_file::Reading array elements from ...
+        WARNING::corsika_runner(l127)::_load_corsika_config_data::data_directory not given
+        in corsika_config - default output directory will be set.
+        INFO::layout_array(l569)::read_telescope_list_file::Reading array elements from ...
+        INFO::corsika_config(l493)::_set_output_file_and_directory::Creating directory
+        INFO::simulator(l405)::simulate::Submission command: local
+        INFO::simulator(l410)::simulate::Starting submission for 1 runs
+        INFO::array_model(l315)::export_simtel_array_config_file::Writing array config file into
+        INFO::job_manager(l95)::submit::Submitting script
+        INFO::job_manager(l96)::submit::Job output stream
+        INFO::job_manager(l97)::submit::Job error stream
+        INFO::job_manager(l98)::submit::Job log stream
+        INFO::job_manager(l119)::_submit_local::Running script locally
 """
 
 import logging
