@@ -177,3 +177,38 @@ class CorsikaSimtelRunner(CorsikaRunner, SimtelRunnerArray):
         command += " > " + str(self._log_file) + " 2>&1"
 
         return command
+
+    def get_file_name(self, file_type, run_number=None, **kwargs):
+        """
+        Get a CORSIKA or sim_telarray style file name for various file types.
+        See the implementations in CorsikaRunner and SimtelRunnerArray for details.
+        """
+
+        if file_type == "histogram":
+            return SimtelRunnerArray.get_file_name(self, file_type=file_type, **kwargs)
+        else:
+            return CorsikaRunner.get_file_name(
+                self, file_type=file_type, run_number=run_number, **kwargs
+            )
+
+    def get_info_for_file_name(self, run_number):
+        """
+        Get a dictionary with the info necessary for building
+        a CORSIKA or sim_telarray runner file names.
+
+        Returns
+        -------
+        dict
+            Dictionary with the keys necessary for building
+            a CORSIKA or sim_telarray runner file names.
+        """
+        run_number = self._validate_run_number(run_number)
+        return {
+            "run": run_number,
+            "primary": self.corsika_config.primary,
+            "array_name": self.layout_name,
+            "site": self.site,
+            "label": self.label,
+            "zenith": self.config.zenith_angle,
+            "azimuth": self.config.azimuth_angle,
+        }
