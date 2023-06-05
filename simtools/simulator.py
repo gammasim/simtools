@@ -337,15 +337,17 @@ class Simulator:
             "corsika_parameters_file": self._corsika_parameters_file,
             "corsika_config_data": self._corsika_config_data,
         }
-        simtel_args = {
-            "array_model": self.array_model,
-            "config_data": {
-                "simtel_data_directory": self.config.data_directory,
-                "primary": self.config.primary,
-                "zenith_angle": self.config.zenith_angle * u.deg,
-                "azimuth_angle": self.config.azimuth_angle * u.deg,
-            },
-        }
+        # TODO: This is not very elegant, find a nicer solution?
+        if self.simulator in ["simtel", "corsika_simtel"]:
+            simtel_args = {
+                "array_model": self.array_model,
+                "config_data": {
+                    "simtel_data_directory": self.config.data_directory,
+                    "primary": self.config.primary,
+                    "zenith_angle": self.config.zenith_angle * u.deg,
+                    "azimuth_angle": self.config.azimuth_angle * u.deg,
+                },
+            }
         if self.simulator == "corsika":
             self._set_corsika_runner(common_args | corsika_args)
         if self.simulator == "simtel":
