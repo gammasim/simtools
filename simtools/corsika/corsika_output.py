@@ -6,11 +6,13 @@ from pathlib import Path
 
 import boost_histogram as bh
 import numpy as np
+import yaml
 from astropy import units as u
 from astropy.units import cds
 from corsikaio.subblocks import event_header, get_units_from_fields, run_header
 from eventio import IACTFile
 
+from simtools import io_handler
 from simtools.util.general import (
     collect_data_from_yaml_or_dict,
     convert_2D_to_radial_distr,
@@ -30,14 +32,17 @@ class CorsikaOutput:
     ----------
     input_file: str or Path
         Input file (IACT file) provided by the CORSIKA simulation.
+    label: str
+        Instance label.
+
     Raises
     ------
     FileNotFoundError:
         if the input file given does not exist.
     """
 
-    def __init__(self, input_file):
-
+    def __init__(self, input_file, label=None):
+        self.label = label
         self._logger = logging.getLogger(__name__)
         self._logger.debug("Init CorsikaOutput")
         self.input_file = input_file
@@ -47,6 +52,8 @@ class CorsikaOutput:
             msg = f"file {self.input_file} does not exist."
             self._logger.error(msg)
             raise FileNotFoundError
+
+        self.io_handler = io_handler.IOHandler()
 
         self._initialize_attributes()
         self.read_event_information()
@@ -288,6 +295,26 @@ class CorsikaOutput:
             Dictionary with the configuration parameters to create the histograms.
         """
         self._hist_config = collect_data_from_yaml_or_dict(in_yaml, in_dict, allow_empty=True)
+
+    def hist_config_to_yaml(self, file_name=None):
+        """
+        Save the histogram configuration dictionary to a yaml file.
+
+        Parameters
+        ----------
+        file_name: str
+            Name of the output file, in which to save the histogram configuration.
+
+        """
+        if file_name is None:
+            file_name = "hist_config"
+        if file_name[-4:] != ".yml":
+            file_name = f"{file_name}.yml"
+        output_config_path = self.io_handler.get_output_directory(self.label, "corsika")
+        output_config_file = output_config_path.joinpath(file_name)
+        self._logger.info(f"Exporting histogram configuration to {output_config_file}")
+        with open(output_config_file, "w") as file:
+            yaml.dump(self.hist_config, file)
 
     def _create_histogram_default_config(self):
         """
