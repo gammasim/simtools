@@ -171,7 +171,7 @@ class Camera:
         self._logger.debug(f"Rotating pixels by {rotate_angle.to(u.deg)} (clockwise rotation)")
 
         if rotate_angle != 0:
-            pixels["x"], pixels["y"] = rotate(rotate_angle, pixels["x"], pixels["y"])
+            pixels["x"], pixels["y"] = rotate(pixels["x"], pixels["y"], rotate_angle)
 
         pixels["orientation"] = 0
         if pixels["pixel_shape"] == 1 or pixels["pixel_shape"] == 3:
