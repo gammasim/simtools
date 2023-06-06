@@ -313,9 +313,6 @@ class CorsikaOutput:
         output_config_path = self.io_handler.get_output_directory(self.label, "corsika")
         output_config_file = output_config_path.joinpath(file_name)
         self._logger.info(f"Exporting histogram configuration to {output_config_file}")
-        print(f"Exporting histogram configuration to {output_config_file}")
-        print(type(self.hist_config))
-        print(self.hist_config)
         with open(output_config_file, "w") as file:
             yaml.dump(self.hist_config, file)
 
