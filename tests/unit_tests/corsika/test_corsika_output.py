@@ -140,11 +140,13 @@ def test_hist_config_save_and_read_yml(corsika_output_instance, io_handler):
 
 
 def test_create_regular_axes_valid_label(corsika_output_instance):
-    label = "hist_position"
-    axes = corsika_output_instance._create_regular_axes(label)
-    assert len(axes) == 3
-    for i_axis in range(3):
-        assert isinstance(axes[i_axis], bh.axis.Regular)
+    hists = ["hist_position", "hist_direction", "hist_time_altitude"]
+    num_of_axes = [3, 2, 2]
+    for i_hist in range(len(hists)):
+        axes = corsika_output_instance._create_regular_axes(hists[i_hist])
+        assert len(axes) == num_of_axes[i_hist]
+        for i_axis in range(num_of_axes[i_hist]):
+            assert isinstance(axes[i_axis], bh.axis.Regular)
 
 
 def test_create_regular_axes_invalid_label(corsika_output_instance):
