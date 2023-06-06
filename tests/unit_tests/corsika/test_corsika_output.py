@@ -1,7 +1,9 @@
 #!/usr/bin/python3
 
+
 import pytest
 from astropy import units as u
+from astropy.io.misc import yaml
 
 import simtools.util.general as gen
 from simtools.corsika.corsika_output import CorsikaOutput
@@ -123,3 +125,14 @@ def test_hist_config_no_config_warning(corsika_output_instance, caplog):
             in caplog.text
         )
     assert hist_config == corsika_output_instance._create_histogram_default_config()
+
+
+def test_hist_config_save_and_read_yml(corsika_output_instance, io_handler):
+    # Test producing the yaml file
+    corsika_output_instance.hist_config_to_yaml()
+    output_file = io_handler.get_output_file(file_name="hist_config.yml", dir_type="corsika")
+    assert output_file.exists()
+    # Test reading the correct yaml file
+    with open(output_file) as file:
+        hist_config = yaml.load(file)
+        assert hist_config == corsika_output_instance.hist_config
