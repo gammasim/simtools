@@ -451,8 +451,7 @@ class CorsikaOutput:
             if False, the histograms are supposed to be filled for all telescopes.
             if True, one histogram is set for each telescope sepparately.
         """
-        if self.individual_telescopes is None:
-            self.individual_telescopes = individual_telescopes
+        self.individual_telescopes = individual_telescopes
         self.num_of_hist = len(self.telescope_indices) if self.individual_telescopes is True else 1
 
         self.hist_position, self.hist_direction, self.hist_time_altitude = [], [], []
