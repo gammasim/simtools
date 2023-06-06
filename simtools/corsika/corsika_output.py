@@ -6,8 +6,8 @@ from pathlib import Path
 
 import boost_histogram as bh
 import numpy as np
-import yaml
 from astropy import units as u
+from astropy.io.misc import yaml
 from astropy.units import cds
 from corsikaio.subblocks import event_header, get_units_from_fields, run_header
 from eventio import IACTFile
@@ -313,6 +313,9 @@ class CorsikaOutput:
         output_config_path = self.io_handler.get_output_directory(self.label, "corsika")
         output_config_file = output_config_path.joinpath(file_name)
         self._logger.info(f"Exporting histogram configuration to {output_config_file}")
+        print(f"Exporting histogram configuration to {output_config_file}")
+        print(type(self.hist_config))
+        print(self.hist_config)
         with open(output_config_file, "w") as file:
             yaml.dump(self.hist_config, file)
 
