@@ -2,6 +2,7 @@
 
 
 import boost_histogram as bh
+import numpy as np
 import pytest
 from astropy import units as u
 from astropy.io.misc import yaml
@@ -142,7 +143,7 @@ def test_hist_config_save_and_read_yml(corsika_output_instance, io_handler):
 def test_create_regular_axes_valid_label(corsika_output_instance):
     hists = ["hist_position", "hist_direction", "hist_time_altitude"]
     num_of_axes = [3, 2, 2]
-    for i_hist in range(len(hists)):
+    for i_hist, _ in enumerate(hists):
         axes = corsika_output_instance._create_regular_axes(hists[i_hist])
         assert len(axes) == num_of_axes[i_hist]
         for i_axis in range(num_of_axes[i_hist]):
@@ -169,3 +170,87 @@ def test_create_histograms(corsika_output_instance):
         assert isinstance(corsika_output_instance.hist_position[0], bh.Histogram)
         assert isinstance(corsika_output_instance.hist_direction[0], bh.Histogram)
         assert isinstance(corsika_output_instance.hist_time_altitude[0], bh.Histogram)
+
+
+def test_fill_histograms_no_rotation():
+    # Sample test of photons: 1 telescope, 2 photons
+    photons = [
+        {
+            "x": 722.6629,
+            "y": 972.66925,
+            "cx": 0.34438822,
+            "cy": -0.01040812,
+            "time": -115.58354,
+            "zem": 1012681.8,
+            "photons": 2.2303813,
+            "wavelength": -428.27454,
+        },
+        {
+            "x": 983.2037,
+            "y": 809.2618,
+            "cosx": 0.34259367,
+            "cosy": -0.00547006,
+            "time": -113.36441,
+            "zem": 1193760.8,
+            "photons": 2.4614816,
+            "wavelength": -522.7789,
+        },
+    ]
+
+    azimuth_angle = None
+    zenith_angle = None
+
+    corsika_output_instance_fill = CorsikaOutput(test_file_name)
+    corsika_output_instance_fill.individual_telescopes = False
+    corsika_output_instance_fill.telescope_indices = [0]
+
+    corsika_output_instance_fill._create_histograms(individual_telescopes=False)
+
+    # No count in the histogram before filling it
+    assert np.count_nonzero(corsika_output_instance_fill.hist_direction[0].values()) == 0
+    corsika_output_instance_fill._fill_histograms(photons, azimuth_angle, zenith_angle)
+    # At least one count in the histogram after filling it
+    assert np.count_nonzero(corsika_output_instance_fill.hist_direction[0].values()) > 0
+
+
+def test_set_histograms_all_telescopes_1_histogram(corsika_output_instance):
+    # all telescopes, but 1 histogram
+    corsika_output_instance.set_histograms(telescope_indices=None, individual_telescopes=False)
+    assert np.shape(corsika_output_instance.hist_position[0].values()) == (100, 100, 80)
+    # assert that the histograms are filled
+    assert np.count_nonzero(corsika_output_instance.hist_position[0][:, :, sum].view().T) == 162
+    # and the sum is what we expect
+    assert np.sum(corsika_output_instance.hist_position[0].view()) == 10031.0
+
+    # check log
+    assert (
+        "Finished reading the file and creating the histograms in "
+        in corsika_output_instance._logger
+    )
+
+
+def test_set_histograms_3_telescopes_1_histogram(corsika_output_instance):
+    # 3 telescopes, but 1 histogram
+    corsika_output_instance.set_histograms(telescope_indices=[0, 1, 2], individual_telescopes=False)
+    assert np.shape(corsika_output_instance.hist_position[0].values()) == (100, 100, 80)
+    # assert that the histograms are filled
+    assert np.count_nonzero(corsika_output_instance.hist_position[0][:, :, sum].view().T) == 12
+    # and the sum is what we expect
+    assert np.sum(corsika_output_instance.hist_position[0].view()) == 3177.0
+
+
+def test_set_histograms_3_telescopes_3_histograms(corsika_output_instance):
+    # 3 telescopes and 3 histograms
+    corsika_output_instance.set_histograms(telescope_indices=[0, 1, 2], individual_telescopes=True)
+
+    hist_non_zero_bins = [859, 933, 975]
+    hist_sum = [959.0, 1062.0, 1156.0]
+    for i_hist in range(3):
+        assert np.shape(corsika_output_instance.hist_position[i_hist].values()) == (64, 64, 80)
+        # assert that the histograms are filled
+        assert (
+            np.count_nonzero(corsika_output_instance.hist_position[i_hist][:, :, sum].view().T)
+            == hist_non_zero_bins[i_hist]
+        )
+        # and the sum is what we expect
+        assert np.sum(corsika_output_instance.hist_position[i_hist].view()) == hist_sum[i_hist]
