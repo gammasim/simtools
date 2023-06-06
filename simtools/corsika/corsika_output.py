@@ -598,7 +598,7 @@ class CorsikaOutput:
 
                     # Count photons only from the telescopes given by self.telescope_indices.
                     num_photons_per_event_per_telescope_to_set.append(event.n_photons[i_telescope])
-
+                print("test", (photons[0][:2]))
                 self._fill_histograms(
                     photons,
                     self.event_azimuth_angles[event_counter],
@@ -607,9 +607,8 @@ class CorsikaOutput:
                 event_counter += 1
         self.num_photons_per_event_per_telescope = num_photons_per_event_per_telescope_to_set
         self._logger.debug(
-            "Finished reading the file and creating the histograms in {} seconds".format(
-                time.time() - start_time
-            )
+            f"Finished reading the file and creating the histograms in {time.time() - start_time} "
+            f"seconds"
         )
 
     def _raise_if_no_histogram(self):
