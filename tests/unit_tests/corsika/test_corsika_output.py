@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 
+import boost_histogram as bh
 import pytest
 from astropy import units as u
 from astropy.io.misc import yaml
@@ -136,3 +137,33 @@ def test_hist_config_save_and_read_yml(corsika_output_instance, io_handler):
     with open(output_file) as file:
         hist_config = yaml.load(file)
         assert hist_config == corsika_output_instance.hist_config
+
+
+def test_create_regular_axes_valid_label(corsika_output_instance):
+    label = "hist_position"
+    axes = corsika_output_instance._create_regular_axes(label)
+    assert len(axes) == 3
+    for i_axis in range(3):
+        assert isinstance(axes[i_axis], bh.axis.Regular)
+
+
+def test_create_regular_axes_invalid_label(corsika_output_instance):
+    label = "invalid_label"
+    with pytest.raises(ValueError):
+        corsika_output_instance._create_regular_axes(label)
+
+
+def test_create_histograms(corsika_output_instance):
+    # Test once for individual_telescopes True and once false
+    individual_telescopes = [True, False]
+    corsika_output_instance.telescope_indices = [0, 1, 2, 3]
+    num_of_expected_hists = [4, 1]
+    for i_test in range(2):
+        corsika_output_instance._create_histograms(individual_telescopes[i_test])
+        assert corsika_output_instance.num_of_hist == num_of_expected_hists[i_test]
+        assert len(corsika_output_instance.hist_position) == num_of_expected_hists[i_test]
+        assert len(corsika_output_instance.hist_direction) == num_of_expected_hists[i_test]
+        assert len(corsika_output_instance.hist_time_altitude) == num_of_expected_hists[i_test]
+        assert isinstance(corsika_output_instance.hist_position[0], bh.Histogram)
+        assert isinstance(corsika_output_instance.hist_direction[0], bh.Histogram)
+        assert isinstance(corsika_output_instance.hist_time_altitude[0], bh.Histogram)
