@@ -598,7 +598,6 @@ class CorsikaOutput:
 
                     # Count photons only from the telescopes given by self.telescope_indices.
                     num_photons_per_event_per_telescope_to_set.append(event.n_photons[i_telescope])
-                print("test", (photons[0][:2]))
                 self._fill_histograms(
                     photons,
                     self.event_azimuth_angles[event_counter],
