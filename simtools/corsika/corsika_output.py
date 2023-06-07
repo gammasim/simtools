@@ -572,9 +572,14 @@ class CorsikaOutput:
             if event has not photon saved.
         """
         self.all_telescope_indices = np.arange(self.num_telescopes)
+        # It changes the attribute if any value different than None is passed but it only sets
+        # the attribute to all telescopes if both the attribute `self.telescope_indices` and the
+        # parameter `telescope_indices` are None, otherwise it keeps the attribute value as before.
         if telescope_indices is None:
-            telescope_indices = self.all_telescope_indices.tolist()
-        self.telescope_indices = telescope_indices
+            if self.telescope_indices is None:
+                self.telescope_indices = self.all_telescope_indices.tolist()
+        else:
+            self.telescope_indices = telescope_indices
         self.individual_telescopes = individual_telescopes
         self._create_histograms(individual_telescopes=individual_telescopes)
 
