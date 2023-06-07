@@ -281,3 +281,15 @@ def test_get_hist_2D_projection(corsika_output_instance):
         assert np.shape(x_edges) == (1, 101)
         assert np.shape(y_edges) == (1, 101)
         assert np.shape(hist_values) == (1, 100, 100)
+
+
+def test_get_2D_photon_position_distr(corsika_output_instance):
+    corsika_output_instance.set_histograms()
+    density = corsika_output_instance.get_2D_photon_position_distr(density=True)
+
+    assert pytest.approx(np.sum(density[2]), 1) == 29
+    counts = corsika_output_instance.get_2D_photon_position_distr(density=False)
+    assert pytest.approx(np.sum(counts[2]), 1) == 11633
+
+    assert (counts[0] == density[0]).all()
+    assert (counts[1] == density[1]).all()
