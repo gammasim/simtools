@@ -8,7 +8,7 @@ from astropy import units as u
 from astropy.io.misc import yaml
 
 import simtools.util.general as gen
-from simtools.corsika.corsika_output import CorsikaOutput
+from simtools.corsika.corsika_output import CorsikaOutput, HistogramNotCreated
 
 test_file_name = "tel_output_10GeV-2-gamma-20deg-CTAO-South.dat"
 # test_file_name = "tel_output.dat"
@@ -254,3 +254,30 @@ def test_set_histograms_3_telescopes_3_histograms(corsika_output_instance):
         )
         # and the sum is what we expect
         assert np.sum(corsika_output_instance.hist_position[i_hist].view()) == hist_sum[i_hist]
+
+
+def test_raise_if_no_histogram():
+    corsika_output_instance_not_hist = CorsikaOutput(test_file_name)
+    with pytest.raises(HistogramNotCreated):
+        corsika_output_instance_not_hist._raise_if_no_histogram()
+        assert (
+            "The histograms were not created. Please, use `create_histograms` to create "
+            "histograms from the CORSIKA output file." in corsika_output_instance_not_hist._logger
+        )
+
+
+def test_get_hist_2D_projection(corsika_output_instance):
+    label = "hist_non_existent"
+    with pytest.raises(ValueError):
+        corsika_output_instance._get_hist_2D_projection(label)
+        assert (
+            f"label is not valid. Valid entries are "
+            f"{corsika_output_instance._allowed_2D_labels}" in corsika_output_instance._logger
+        )
+
+    corsika_output_instance.set_histograms()
+    for label in ["counts", "density", "direction", "time_altitude"]:
+        x_edges, y_edges, hist_values = corsika_output_instance._get_hist_2D_projection(label)
+        assert np.shape(x_edges) == (1, 101)
+        assert np.shape(y_edges) == (1, 101)
+        assert np.shape(hist_values) == (1, 100, 100)
