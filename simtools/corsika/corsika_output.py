@@ -752,7 +752,11 @@ class CorsikaOutput:
             The counts of the histogram.
         """
         num_events_array = np.arange(self.num_events + 1)
-        telescope_indices_array = np.arange(len(self.telescope_indices) + 1)
+        # It passes only the telescope indices given by self.telescope_indices. The + 1 closes
+        # the last edge and can be any value larger than all the indices.
+        telescope_indices_array = np.array(
+            [tel for tel in self.telescope_indices].append(np.amax(self.telescope_indices) + 1)
+        )
         return (
             num_events_array,
             telescope_indices_array,
