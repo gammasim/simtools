@@ -579,7 +579,7 @@ class CorsikaOutput:
             if self.telescope_indices is None:
                 self.telescope_indices = self.all_telescope_indices.tolist()
         else:
-            self.telescope_indices = telescope_indices
+            self.telescope_indices = np.sort(telescope_indices)
         self.individual_telescopes = individual_telescopes
         self._create_histograms(individual_telescopes=individual_telescopes)
 
