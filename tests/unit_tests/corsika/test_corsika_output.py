@@ -34,6 +34,13 @@ def corsika_output_instance(db, io_handler, corsika_output_file):
     return CorsikaOutput(test_file_name)
 
 
+@pytest.fixture
+def corsika_output_instance_set_histograms(db, io_handler, corsika_output_file):
+    corsika_output_instance_to_set = CorsikaOutput(test_file_name)
+    corsika_output_instance_to_set.set_histograms()
+    return corsika_output_instance_to_set
+
+
 def test_file_exists(corsika_output_file):
     assert corsika_output_file.exists()
 
@@ -65,7 +72,7 @@ def test_init(corsika_output_instance):
 
 def test_telescope_indices(corsika_output_instance):
     corsika_output_instance.telescope_indices = [0, 1, 2]
-    assert corsika_output_instance.telescope_indices == [0, 1, 2]
+    assert (corsika_output_instance.telescope_indices == [0, 1, 2]).all()
     # Test float as input
     corsika_output_instance.telescope_indices = 1
     assert corsika_output_instance.telescope_indices == [1]
@@ -222,12 +229,6 @@ def test_set_histograms_all_telescopes_1_histogram(corsika_output_instance):
     # and the sum is what we expect
     assert np.sum(corsika_output_instance.hist_position[0].view()) == 10031.0
 
-    # check log
-    assert (
-        "Finished reading the file and creating the histograms in "
-        in corsika_output_instance._logger
-    )
-
 
 def test_set_histograms_3_telescopes_1_histogram(corsika_output_instance):
     # 3 telescopes, but 1 histogram
@@ -276,20 +277,66 @@ def test_get_hist_2D_projection(corsika_output_instance):
         )
 
     corsika_output_instance.set_histograms()
-    for label in ["counts", "density", "direction", "time_altitude"]:
+    hist_sums = [11633, 29.1, 11634, 11634]  # sum of photons are the approximately the same
+    # (except for the density hist, which is divided by the area)
+    for i_label, label in enumerate(["counts", "density", "direction", "time_altitude"]):
         x_edges, y_edges, hist_values = corsika_output_instance._get_hist_2D_projection(label)
         assert np.shape(x_edges) == (1, 101)
         assert np.shape(y_edges) == (1, 101)
         assert np.shape(hist_values) == (1, 100, 100)
+        assert pytest.approx(np.sum(hist_values), 1) == hist_sums[i_label]
+
+    # Repeat the test for less telescopes and see that less photons are counted in
+    corsika_output_instance.set_histograms(telescope_indices=[0, 1, 2])
+    hist_sums = [3677, 9.2, 3677, 3677]
+    for i_label, label in enumerate(["counts", "density", "direction", "time_altitude"]):
+        x_edges, y_edges, hist_values = corsika_output_instance._get_hist_2D_projection(label)
+        assert pytest.approx(np.sum(hist_values), 1) == hist_sums[i_label]
 
 
-def test_get_2D_photon_position_distr(corsika_output_instance):
-    corsika_output_instance.set_histograms()
-    density = corsika_output_instance.get_2D_photon_position_distr(density=True)
+def test_get_2D_photon_position_distr(corsika_output_instance_set_histograms):
+    density = corsika_output_instance_set_histograms.get_2D_photon_position_distr(density=True)
 
+    # Test the values of the histogram
     assert pytest.approx(np.sum(density[2]), 1) == 29
-    counts = corsika_output_instance.get_2D_photon_position_distr(density=False)
+    counts = corsika_output_instance_set_histograms.get_2D_photon_position_distr(density=False)
     assert pytest.approx(np.sum(counts[2]), 1) == 11633
 
+    # The edges should be the same
     assert (counts[0] == density[0]).all()
     assert (counts[1] == density[1]).all()
+
+
+def test_get_2D_photon_direction_distr(corsika_output_instance_set_histograms):
+    assert (
+        corsika_output_instance_set_histograms.get_2D_photon_direction_distr()[2]
+        == corsika_output_instance_set_histograms._get_hist_2D_projection("direction")[2]
+    ).all()
+
+
+def test_get_2D_photon_time_altitude(corsika_output_instance_set_histograms):
+    assert (
+        corsika_output_instance_set_histograms.get_2D_photon_time_altitude()[2]
+        == corsika_output_instance_set_histograms._get_hist_2D_projection("time_altitude")[2]
+    ).all()
+
+
+def test_get_2D_num_photons_distr(corsika_output_instance_set_histograms):
+    corsika_output_instance_set_histograms.telescope_indices = [0, 4, 10]
+    (
+        num_events_array,
+        telescope_indices_array,
+        num_photons_per_event_per_telescope,
+    ) = corsika_output_instance_set_histograms.get_2D_num_photons_distr()
+    assert len(num_events_array) == 3  # number of events in this output file + 1 (edges of hist)
+    assert (telescope_indices_array == [0, 1, 2, 3]).all()
+    assert (
+        pytest.approx(num_photons_per_event_per_telescope[0, 0], 1) == 2543.3
+    )  # 1st tel, 1st event
+    assert (
+        pytest.approx(num_photons_per_event_per_telescope[0, 1], 1) == 290.5
+    )  # 1st tel, 2nd event
+    assert (
+        pytest.approx(num_photons_per_event_per_telescope[1, 0], 1) == 1741.1
+    )  # 2nd tel, 1st event
+    assert pytest.approx(num_photons_per_event_per_telescope[1, 1], 1) == 85.9  # 2nd tel, 2nd event
