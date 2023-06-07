@@ -745,21 +745,19 @@ class CorsikaOutput:
         Returns
         -------
         numpy.array
-            Number of photons per event per telescope.
+            Number of photons per event per telescope in self.telescope_indices.
         numpy.array
-            Indices of the telescopes.
+            An array that counts the telescopes in self.telescope_indices
         numpy.ndarray
             The counts of the histogram.
         """
         num_events_array = np.arange(self.num_events + 1)
-        # It passes only the telescope indices given by self.telescope_indices. The + 1 closes
-        # the last edge and can be any value larger than all the indices.
-        telescope_indices_array = np.array(
-            [tel for tel in self.telescope_indices].append(np.amax(self.telescope_indices) + 1)
-        )
+        # It counts only the telescope indices given by self.telescope_indices.
+        # The + 1 closes the last edge.
+        telescope_counter = np.arange(len(self.telescope_indices) + 1)
         return (
             num_events_array,
-            telescope_indices_array,
+            telescope_counter,
             np.array(self.num_photons_per_event_per_telescope),
         )
 
