@@ -260,7 +260,7 @@ class CorsikaOutput:
                     raise TypeError
         # if self.individual_telescopes is True, the indices of the telescopes passed are analyzed
         # individually (different histograms for each telescope) even if all telescopes are listed.
-        self._telescope_indices = telescope_new_indices
+        self._telescope_indices = np.sort(telescope_new_indices)
 
     @property
     def hist_config(self):
@@ -579,7 +579,7 @@ class CorsikaOutput:
             if self.telescope_indices is None:
                 self.telescope_indices = self.all_telescope_indices.tolist()
         else:
-            self.telescope_indices = np.sort(telescope_indices)
+            self.telescope_indices = telescope_indices
         self.individual_telescopes = individual_telescopes
         self._create_histograms(individual_telescopes=individual_telescopes)
 
