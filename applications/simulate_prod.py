@@ -58,8 +58,8 @@
          --start_run 0 --run 1
 
     By default the configuration is saved in simtools-output/test-production
-    and the output in corsika-data and simtel-data (can be set to a different location via
-    the option --data_directory) TODO!!
+    and the output in corsika-data and simtel-data. The location of the latter directories
+    can be set to a different location via the option --data_directory)
 
     Expected final print-out message:
 
@@ -192,6 +192,13 @@ def _parse(description=None):
         type=int,
         required=True,
     )
+    config.parser.add_argument(
+        "--data_directory",
+        help="The directory where to save the corsika-data and simtel-data output directories.",
+        type=str.lower,
+        required=False,
+        default="./",
+    )
     return config.initialize(db_config=True)
 
 
@@ -225,7 +232,7 @@ def _proccess_simulation_config_file(config_file, primary_config, logger):
         logger.error(f"Error loading simulation configuration file from {config_file}")
         raise
 
-    label = config_data.pop("label", {})
+    label = config_data.pop("label", "test_run")
     default_data = config_data.pop("default", {})
 
     for primary, primary_data in config_data.items():
@@ -315,8 +322,12 @@ def main():
     )
     if args_dict["nshow"] is not None:
         shower_configs["nshow"] = args_dict["nshow"]
-    if args_dict["label"] is None:
-        args_dict["label"] = "TEST"
+    if "label" in args_dict:
+        label = args_dict["label"]
+    if "data_directory" in args_dict:
+        array_configs["data_directory"] = shower_configs["data_directory"] = args_dict[
+            "data_directory"
+        ]
 
     simulator = Simulator(
         label=label,
