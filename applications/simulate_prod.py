@@ -47,7 +47,6 @@
 
     Example
     -------
-    FIXME
     Run the application:
 
     .. code-block:: console
