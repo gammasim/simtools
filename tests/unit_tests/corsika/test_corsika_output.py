@@ -340,3 +340,28 @@ def test_get_2D_num_photons_distr(corsika_output_instance_set_histograms):
         pytest.approx(num_photons_per_event_per_telescope[1, 0], 1) == 1741.1
     )  # 2nd tel, 1st event
     assert pytest.approx(num_photons_per_event_per_telescope[1, 1], 1) == 85.9  # 2nd tel, 2nd event
+
+
+def test_get_hist_1D_projection(corsika_output_instance_set_histograms):
+
+    with pytest.raises(ValueError):
+        corsika_output_instance_set_histograms._get_hist_1D_projection("label_not_valid")
+        assert (
+            f"label_not_valid is not valid. Valid entries are"
+            f"{corsika_output_instance_set_histograms._allowed_1D_labels}"
+            in corsika_output_instance_set_histograms._logger
+        )
+
+    labels = ["wavelength", "time", "altitude"]
+    expected_shape_of_edges = [(1, 81), (1, 101), (1, 101)]
+    expected_shape_of_values = [(1, 80), (1, 100), (1, 100)]
+    expected_mean = [125.4, 116.3, 116.3]
+    expected_std = [153.4, 378, 2, 312.0]
+    for i_hist, hist_label in enumerate(labels):
+        x_edges_list, hist_1D_list = corsika_output_instance_set_histograms._get_hist_1D_projection(
+            hist_label
+        )
+        assert np.shape(x_edges_list) == expected_shape_of_edges[i_hist]
+        assert np.shape(hist_1D_list) == expected_shape_of_values[i_hist]
+        assert pytest.approx(np.mean(hist_1D_list), 1) == expected_mean[i_hist]
+        assert pytest.approx(np.std(hist_1D_list), 1) == expected_std[i_hist]
