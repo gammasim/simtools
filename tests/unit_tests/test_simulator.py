@@ -33,10 +33,10 @@ def array_config_data(tmp_test_directory):
         "viewcone": [0 * u.deg, 0 * u.deg],
         # ArrayModel
         "site": "North",
-        "layout_name": "1LST",
+        "layout_name": "test-layout",
         "model_version": "Prod5",
-        "default": {"LST": "1"},
-        "MST-01": "FlashCam-D",
+        "default": {"LST": "D234", "MST": "NectarCam-D"},
+        "LST-01": "1",
     }
 
 
@@ -49,7 +49,7 @@ def input_file_list():
 def shower_config_data():
     return {
         "data_directory": ".",
-        "site": "South",
+        "site": "North",
         "layout_name": "test-layout",
         "run_list": [3, 4],
         "run_range": [6, 10],
@@ -59,9 +59,16 @@ def shower_config_data():
         "eslope": -2,
         "zenith": 20 * u.deg,
         "azimuth": 0 * u.deg,
-        "viewcone": 0 * u.deg,
+        "viewcone": [0 * u.deg, 0 * u.deg],
         "cscat": [10, 1500 * u.m, 0],
     }
+
+
+@pytest.fixture
+def shower_array_config_data(shower_config_data, array_config_data):
+
+    # Any common entries are taken from the array_config_data
+    return array_config_data | shower_config_data
 
 
 @pytest.fixture
@@ -95,6 +102,19 @@ def shower_simulator(label, shower_config_data, io_handler, db_config, simtel_pa
     return shower_simulator
 
 
+@pytest.fixture
+def shower_array_simulator(label, shower_array_config_data, io_handler, db_config, simtel_path):
+
+    shower_array_simulator = Simulator(
+        label=label,
+        simulator="corsika_simtel",
+        simulator_source_path=simtel_path,
+        config_data=shower_array_config_data,
+        mongo_db_config=db_config,
+    )
+    return shower_array_simulator
+
+
 def test_guess_run_from_file(array_simulator):
 
     assert array_simulator._guess_run_from_file("run12345_bla_ble") == 12345
@@ -112,13 +132,16 @@ def test_guess_run_from_file(array_simulator):
     # (not sure how to test a failed mkdir)
 
 
-def test_set_simulator(array_simulator, shower_simulator):
+def test_set_simulator(array_simulator, shower_simulator, shower_array_simulator):
 
     array_simulator._set_simulator("simtel")
     assert array_simulator.simulator == "simtel"
 
     shower_simulator._set_simulator("corsika")
     assert shower_simulator.simulator == "corsika"
+
+    shower_array_simulator._set_simulator("corsika_simtel")
+    assert shower_array_simulator.simulator == "corsika_simtel"
 
     with pytest.raises(gen.InvalidConfigData):
         shower_simulator._set_simulator("this_simulator_is_not_there")
@@ -134,7 +157,7 @@ def test_load_corsika_config_and_model(shower_simulator, shower_config_data):
 
     shower_simulator._load_corsika_config_and_model(config_data=shower_config_data)
 
-    assert shower_simulator.site == "South"
+    assert shower_simulator.site == "North"
 
     assert "site" not in shower_simulator._corsika_config_data
 
