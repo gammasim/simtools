@@ -127,11 +127,11 @@ def validate_config_data(config_data, parameters, ignore_unidentified=False):
 
         # Raising error for an unidentified input.
         if not is_identified:
-            msg = f"Entry {key_data} in config_data cannot be identified."
+            msg = f"Entry {key_data} in config_data cannot be identified"
             if ignore_unidentified:
-                logger.warning(msg)
+                logger.debug(f"{msg}, ignoring.")
             else:
-                logger.error(msg)
+                logger.error(f"{msg}, stopping.")
                 raise UnableToIdentifyConfigEntry(msg)
 
     # Checking for parameters with default option.
