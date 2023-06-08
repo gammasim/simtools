@@ -15,36 +15,22 @@ class CorsikaSimtelRunner(CorsikaRunner, SimtelRunnerArray):
     """
     CorsikaSimtelRunner is responsible for running CORSIKA and piping it to sim_telarray
     using the multipipe functionality. CORSIKA is set up using corsika_autoinputs program
-    provided by the sim_telarray package. It provides shell scripts to be run externally or by
-    the module simulator. Same instance can be used to generate scripts for any given run number.
+    provided by the sim_telarray package. It creates the multipipe script and sim_telarray command
+    corresponding to the requested configuration.
 
-    It uses CorsikaConfig to manage the CORSIKA configuration. User parameters must be given by the
-    corsika_config_data or corsika_config_file arguments. An example of corsika_config_data follows
-    below.
+    It uses CorsikaConfig to manage the CORSIKA configuration and SimtelRunnerArray
+    for the sim_telarray configuration. User parameters must be given by the
+    common_args, corsika_args and simtel_args arguments.
+    The corsika_args and simtel_args are explained in
+    CorsikaRunner and SimtelRunnerArray respectively.
+    An example of the common_args is given below.
 
     .. code-block:: python
 
-        corsika_config_data = {
-            'data_directory': .
-            'primary': 'proton',
-            'nshow': 10000,
-            'nrun': 1,
-            'zenith': 20 * u.deg,
-            'viewcone': 5 * u.deg,
-            'erange': [10 * u.GeV, 100 * u.TeV],
-            'eslope': -2,
-            'phi': 0 * u.deg,
-            'cscat': [10, 1500 * u.m, 0]
+        common_args = {
+            'label': 'test-production',
+            'simtel_source_path': '/workdir/sim_telarray/',
         }
-
-    The remaining CORSIKA parameters can be set as a yaml file, using the argument
-    corsika_parameters_file. When not given, corsika_parameters will be loaded from
-    data/parameters/corsika_parameters.yml.
-
-    The CORSIKA output directory must be set by the data_directory entry. The following directories
-    will be created to store the logs and input file:
-    {data_directory}/corsika/$site/$primary/logs
-    {data_directory}/corsika/$site/$primary/scripts
 
     Parameters
     ----------
