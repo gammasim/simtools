@@ -308,17 +308,25 @@ def test_get_2D_photon_position_distr(corsika_output_instance_set_histograms):
 
 
 def test_get_2D_photon_direction_distr(corsika_output_instance_set_histograms):
-    assert (
-        corsika_output_instance_set_histograms.get_2D_photon_direction_distr()[2]
-        == corsika_output_instance_set_histograms._get_hist_2D_projection("direction")[2]
-    ).all()
+    for returned_variable in range(3):
+        assert (
+            corsika_output_instance_set_histograms.get_2D_photon_direction_distr()[
+                returned_variable
+            ]
+            == corsika_output_instance_set_histograms._get_hist_2D_projection("direction")[
+                returned_variable
+            ]
+        ).all()
 
 
 def test_get_2D_photon_time_altitude(corsika_output_instance_set_histograms):
-    assert (
-        corsika_output_instance_set_histograms.get_2D_photon_time_altitude()[2]
-        == corsika_output_instance_set_histograms._get_hist_2D_projection("time_altitude")[2]
-    ).all()
+    for returned_variable in range(3):
+        assert (
+            corsika_output_instance_set_histograms.get_2D_photon_time_altitude()[returned_variable]
+            == corsika_output_instance_set_histograms._get_hist_2D_projection("time_altitude")[
+                returned_variable
+            ]
+        ).all()
 
 
 def test_get_2D_num_photons_distr(corsika_output_instance_set_histograms):
@@ -365,3 +373,80 @@ def test_get_hist_1D_projection(corsika_output_instance_set_histograms):
         assert np.shape(hist_1D_list) == expected_shape_of_values[i_hist]
         assert pytest.approx(np.mean(hist_1D_list), 1) == expected_mean[i_hist]
         assert pytest.approx(np.std(hist_1D_list), 1) == expected_std[i_hist]
+
+
+def test_get_photon_altitude_distr(corsika_output_instance_set_histograms):
+    for returned_variable in range(2):
+        assert (
+            corsika_output_instance_set_histograms._get_hist_1D_projection("altitude")[
+                returned_variable
+            ]
+            == corsika_output_instance_set_histograms.get_photon_altitude_distr()[returned_variable]
+        ).all()
+
+
+def test_get_photon_time_distr(corsika_output_instance_set_histograms):
+    for returned_variable in range(2):
+        assert (
+            corsika_output_instance_set_histograms._get_hist_1D_projection("time")[
+                returned_variable
+            ]
+            == corsika_output_instance_set_histograms.get_photon_time_distr()[returned_variable]
+        ).all()
+
+
+def test_get_photon_wavelength_distr(corsika_output_instance_set_histograms):
+    for returned_variable in range(2):
+        assert (
+            corsika_output_instance_set_histograms._get_hist_1D_projection("wavelength")[
+                returned_variable
+            ]
+            == corsika_output_instance_set_histograms.get_photon_wavelength_distr()[
+                returned_variable
+            ]
+        ).all()
+
+
+def test_get_photon_radial_distr_individual_telescopes(corsika_output_instance):
+    corsika_output_instance.individual_telescopes = False
+    corsika_output_instance.set_histograms()
+
+    # Default values
+    x_edges_list, hist_1D_list = corsika_output_instance.get_photon_radial_distr()
+    assert np.amax(x_edges_list) == 1000
+    assert np.size(x_edges_list) == 21
+
+    # Retrive input values
+    x_edges_list, hist_1D_list = corsika_output_instance.get_photon_radial_distr(
+        bin_size=100, max_dist=500
+    )
+    assert np.amax(x_edges_list) == 500
+    assert np.size(x_edges_list) == 6
+    print(hist_1D_list)
+
+    # Test density
+    x_edges_list_dens, hist_1D_list_dens = corsika_output_instance.get_photon_radial_distr(
+        density=True
+    )
+    assert x_edges_list_dens == x_edges_list
+    print(np.sum(hist_1D_list_dens), np.sum(hist_1D_list))
+    assert False
+    assert np.sum(hist_1D_list_dens) == np.sum(hist_1D_list)
+
+
+def test_get_photon_radial_distr_all_telescopes(corsika_output_instance):
+    corsika_output_instance.set_histograms(telescope_indices=[1, 2, 3], individual_telescopes=True)
+
+    # Default input values
+    x_edges_list, hist_1D_list = corsika_output_instance.get_photon_radial_distr()
+    for i_tel, _ in enumerate(corsika_output_instance.telescope_indices):
+        assert np.amax(x_edges_list[i_tel]) == 10
+        assert np.size(x_edges_list[i_tel]) == 11
+
+    # Input values
+    x_edges_list, hist_1D_list = corsika_output_instance.get_photon_radial_distr(
+        bin_size=0.5, max_dist=10
+    )
+    for i_tel, _ in enumerate(corsika_output_instance.telescope_indices):
+        assert np.amax(x_edges_list[i_tel]) == 10
+        assert np.size(x_edges_list[i_tel]) == 21

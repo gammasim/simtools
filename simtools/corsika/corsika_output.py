@@ -818,7 +818,7 @@ class CorsikaOutput:
         """
         if self.individual_telescopes is False:
             if bin_size is None:
-                bin_size = 40
+                bin_size = 50
             if max_dist is None:
                 max_dist = 1000
         else:
