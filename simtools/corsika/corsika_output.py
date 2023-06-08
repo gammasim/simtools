@@ -777,7 +777,7 @@ class CorsikaOutput:
         """
 
         if label not in self._allowed_1D_labels:
-            msg = f"`label` is not valid. Valid entries are {self._allowed_1D_labels}"
+            msg = f"{label} is not valid. Valid entries are {self._allowed_1D_labels}"
             self._logger.error(msg)
             raise ValueError
         self._raise_if_no_histogram()
