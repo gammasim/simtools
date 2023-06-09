@@ -59,7 +59,7 @@ def shower_config_data():
         "eslope": -2,
         "zenith": 20 * u.deg,
         "azimuth": 0 * u.deg,
-        "viewcone": [0 * u.deg, 0 * u.deg],
+        "viewcone": 0 * u.deg,
         "cscat": [10, 1500 * u.m, 0],
     }
 
@@ -68,7 +68,7 @@ def shower_config_data():
 def shower_array_config_data(shower_config_data, array_config_data):
 
     # Any common entries are taken from the array_config_data
-    return array_config_data | shower_config_data
+    return shower_config_data | array_config_data
 
 
 @pytest.fixture
@@ -174,9 +174,23 @@ def test_load_sim_tel_config_and_model(array_simulator, array_config_data):
     assert isinstance(array_simulator.array_model, ArrayModel)
 
 
-def test_validate_run_list_and_range(shower_simulator):
+def test_load_shower_array_config_and_model(shower_array_simulator, shower_array_config_data):
+
+    shower_array_simulator._load_corsika_config_and_model(config_data=shower_array_config_data)
+
+    assert shower_array_simulator.site == "North"
+
+    assert "site" not in shower_array_simulator._corsika_config_data
+    assert shower_array_simulator.config.primary == "gamma"
+    assert (
+        shower_array_simulator.config.data_directory == shower_array_config_data["data_directory"]
+    )
+
+
+def test_validate_run_list_and_range(shower_simulator, shower_array_simulator):
 
     assert not shower_simulator._validate_run_list_and_range(None, None)
+    assert not shower_array_simulator._validate_run_list_and_range(None, None)
 
     run_list = [1, 24, 3]
 
@@ -185,9 +199,17 @@ def test_validate_run_list_and_range(shower_simulator):
         3,
         24,
     ]
+    assert shower_array_simulator._validate_run_list_and_range(
+        run_list=run_list, run_range=None
+    ) == [
+        1,
+        3,
+        24,
+    ]
 
     with pytest.raises(InvalidRunsToSimulate):
         shower_simulator._validate_run_list_and_range(run_list=[1, "a", 4], run_range=None)
+        shower_array_simulator._validate_run_list_and_range(run_list=[1, "a", 4], run_range=None)
 
     assert shower_simulator._validate_run_list_and_range(run_list=None, run_range=[3, 6]) == [
         3,
@@ -195,14 +217,25 @@ def test_validate_run_list_and_range(shower_simulator):
         5,
         6,
     ]
+    assert shower_array_simulator._validate_run_list_and_range(run_list=None, run_range=[3, 6]) == [
+        3,
+        4,
+        5,
+        6,
+    ]
 
     assert shower_simulator._validate_run_list_and_range(run_list=None, run_range=[6, 3]) == []
+    assert (
+        shower_array_simulator._validate_run_list_and_range(run_list=None, run_range=[6, 3]) == []
+    )
 
     with pytest.raises(InvalidRunsToSimulate):
         shower_simulator._validate_run_list_and_range(run_list=None, run_range=[3, "b"])
+        shower_array_simulator._validate_run_list_and_range(run_list=None, run_range=[3, "b"])
 
     with pytest.raises(InvalidRunsToSimulate):
         shower_simulator._validate_run_list_and_range(run_list=None, run_range=[3, 4, 5])
+        shower_array_simulator._validate_run_list_and_range(run_list=None, run_range=[3, 4, 5])
 
 
 def test_collect_array_model_parameters(array_simulator, array_config_data):
@@ -214,7 +247,7 @@ def test_collect_array_model_parameters(array_simulator, array_config_data):
     assert isinstance(_array_model_data, dict)
     assert isinstance(_rest_data, dict)
     assert _array_model_data["site"] == "North"
-    assert _array_model_data["MST-01"] == "FlashCam-D"
+    assert _array_model_data["LST-01"] == "1"
     new_array_config_data = copy(array_config_data)
     new_array_config_data.pop("site")
 
