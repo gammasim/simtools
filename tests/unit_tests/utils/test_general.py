@@ -50,7 +50,9 @@ def test_validate_config_data(args_dict, io_handler, caplog):
         "dict_par": {"blah": 10, "bleh": 5 * u.m},
     }
 
-    validated_data = gen.validate_config_data(config_data=config_data, parameters=parameters)
+    with caplog.at_level(logging.DEBUG):
+        validated_data = gen.validate_config_data(config_data=config_data, parameters=parameters)
+        assert "in config_data cannot be identified" not in caplog.text
 
     # Testing undefined len
     assert len(validated_data.off_axis_angle) == 3
@@ -63,10 +65,6 @@ def test_validate_config_data(args_dict, io_handler, caplog):
 
     # Testing dict par
     assert validated_data.dict_par["bleh"] == 500
-
-    with caplog.at_level(logging.DEBUG):
-        gen.validate_config_data(config_data=config_data, parameters=parameters)
-        assert "in config_data cannot be identified" not in caplog.text
 
     with caplog.at_level(logging.DEBUG):
         gen.validate_config_data(
