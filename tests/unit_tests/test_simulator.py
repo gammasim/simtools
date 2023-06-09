@@ -155,8 +155,6 @@ def test_load_configuration_and_simulation_model(array_simulator):
 
 def test_load_corsika_config_and_model(shower_simulator, shower_config_data):
 
-    shower_simulator._load_corsika_config_and_model(config_data=shower_config_data)
-
     assert shower_simulator.site == "North"
 
     assert "site" not in shower_simulator._corsika_config_data
@@ -167,16 +165,24 @@ def test_load_corsika_config_and_model(shower_simulator, shower_config_data):
         shower_simulator._load_corsika_config_and_model(config_data=_temp_shower_data)
 
 
-def test_load_sim_tel_config_and_model(array_simulator, array_config_data):
+def test_load_sim_tel_config_and_model(
+    array_simulator, array_config_data, shower_array_simulator, shower_array_config_data, caplog
+):
 
-    array_simulator._load_sim_tel_config_and_model(array_config_data)
+    with caplog.at_level(logging.DEBUG):
+        array_simulator._load_sim_tel_config_and_model(array_config_data)
+    assert "in config_data cannot be identified" not in caplog.text
 
     assert isinstance(array_simulator.array_model, ArrayModel)
 
+    with caplog.at_level(logging.DEBUG):
+        shower_array_simulator._load_sim_tel_config_and_model(config_data=shower_array_config_data)
+    assert "in config_data cannot be identified" in caplog.text
+
+    assert isinstance(shower_array_simulator.array_model, ArrayModel)
+
 
 def test_load_shower_array_config_and_model(shower_array_simulator, shower_array_config_data):
-
-    shower_array_simulator._load_corsika_config_and_model(config_data=shower_array_config_data)
 
     assert shower_array_simulator.site == "North"
 
