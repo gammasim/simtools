@@ -72,6 +72,7 @@ def test_get_run_script(corsika_runner):
         assert "/usr/bin/bash" in script_content
         assert "corsika_autoinputs" in script_content
         assert "sim_telarray/bin/pfp" in script_content
+        assert "-R 3" in script_content
 
 
 def test_get_run_script_with_invalid_run(corsika_runner):
