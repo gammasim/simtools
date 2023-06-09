@@ -8,7 +8,6 @@ default:
     eslope: -2
     zenith: 20 deg
     phi: 0 deg
-    run_range: [1, 1]
   array:
     model_version: Prod5
     zenith: 20 deg
