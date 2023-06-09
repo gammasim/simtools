@@ -10,6 +10,7 @@ import pytest
 
 import simtools.util.general as gen
 from simtools.corsika.corsika_runner import CorsikaRunner
+from simtools.corsika_simtel.corsika_simtel_runner import CorsikaSimtelRunner
 from simtools.model.array_model import ArrayModel
 from simtools.simtel.simtel_runner_array import SimtelRunnerArray
 from simtools.simulator import InvalidRunsToSimulate, Simulator
@@ -195,53 +196,34 @@ def test_load_shower_array_config_and_model(shower_array_simulator, shower_array
 
 def test_validate_run_list_and_range(shower_simulator, shower_array_simulator):
 
-    assert not shower_simulator._validate_run_list_and_range(None, None)
-    assert not shower_array_simulator._validate_run_list_and_range(None, None)
+    for simulator_now in [shower_simulator, shower_array_simulator]:
+        assert not simulator_now._validate_run_list_and_range(None, None)
 
-    run_list = [1, 24, 3]
+        run_list = [1, 24, 3]
 
-    assert shower_simulator._validate_run_list_and_range(run_list=run_list, run_range=None) == [
-        1,
-        3,
-        24,
-    ]
-    assert shower_array_simulator._validate_run_list_and_range(
-        run_list=run_list, run_range=None
-    ) == [
-        1,
-        3,
-        24,
-    ]
+        assert simulator_now._validate_run_list_and_range(run_list=run_list, run_range=None) == [
+            1,
+            3,
+            24,
+        ]
 
-    with pytest.raises(InvalidRunsToSimulate):
-        shower_simulator._validate_run_list_and_range(run_list=[1, "a", 4], run_range=None)
-        shower_array_simulator._validate_run_list_and_range(run_list=[1, "a", 4], run_range=None)
+        with pytest.raises(InvalidRunsToSimulate):
+            simulator_now._validate_run_list_and_range(run_list=[1, "a", 4], run_range=None)
 
-    assert shower_simulator._validate_run_list_and_range(run_list=None, run_range=[3, 6]) == [
-        3,
-        4,
-        5,
-        6,
-    ]
-    assert shower_array_simulator._validate_run_list_and_range(run_list=None, run_range=[3, 6]) == [
-        3,
-        4,
-        5,
-        6,
-    ]
+        assert simulator_now._validate_run_list_and_range(run_list=None, run_range=[3, 6]) == [
+            3,
+            4,
+            5,
+            6,
+        ]
 
-    assert shower_simulator._validate_run_list_and_range(run_list=None, run_range=[6, 3]) == []
-    assert (
-        shower_array_simulator._validate_run_list_and_range(run_list=None, run_range=[6, 3]) == []
-    )
+        assert simulator_now._validate_run_list_and_range(run_list=None, run_range=[6, 3]) == []
 
-    with pytest.raises(InvalidRunsToSimulate):
-        shower_simulator._validate_run_list_and_range(run_list=None, run_range=[3, "b"])
-        shower_array_simulator._validate_run_list_and_range(run_list=None, run_range=[3, "b"])
+        with pytest.raises(InvalidRunsToSimulate):
+            simulator_now._validate_run_list_and_range(run_list=None, run_range=[3, "b"])
 
-    with pytest.raises(InvalidRunsToSimulate):
-        shower_simulator._validate_run_list_and_range(run_list=None, run_range=[3, 4, 5])
-        shower_array_simulator._validate_run_list_and_range(run_list=None, run_range=[3, 4, 5])
+        with pytest.raises(InvalidRunsToSimulate):
+            simulator_now._validate_run_list_and_range(run_list=None, run_range=[3, 4, 5])
 
 
 def test_collect_array_model_parameters(array_simulator, array_config_data):
@@ -261,11 +243,13 @@ def test_collect_array_model_parameters(array_simulator, array_config_data):
         _, _ = array_simulator._collect_array_model_parameters(config_data=new_array_config_data)
 
 
-def test_set_simulation_runner(array_simulator, shower_simulator):
+def test_set_simulation_runner(array_simulator, shower_simulator, shower_array_simulator):
 
     assert isinstance(array_simulator._simulation_runner, SimtelRunnerArray)
 
     assert isinstance(shower_simulator._simulation_runner, CorsikaRunner)
+
+    assert isinstance(shower_array_simulator._simulation_runner, CorsikaSimtelRunner)
 
 
 def test_fill_results_without_run(array_simulator, input_file_list):
@@ -298,7 +282,9 @@ def test_submitting(shower_simulator, array_simulator, corsika_file):
     assert str(input_files[0]) == str(corsika_file)
 
 
-def test_get_runs_and_files_to_submit(array_simulator, shower_simulator, input_file_list):
+def test_get_runs_and_files_to_submit(
+    array_simulator, shower_simulator, shower_array_simulator, input_file_list
+):
 
     assert array_simulator._get_runs_and_files_to_submit(input_file_list=None) == dict()
 
@@ -308,15 +294,16 @@ def test_get_runs_and_files_to_submit(array_simulator, shower_simulator, input_f
         22: "abc_run22",
     }
 
-    assert shower_simulator._get_runs_and_files_to_submit(input_file_list=None) == {
-        3: None,
-        4: None,
-        6: None,
-        7: None,
-        8: None,
-        9: None,
-        10: None,
-    }
+    for simulator_now in [shower_simulator, shower_array_simulator]:
+        assert simulator_now._get_runs_and_files_to_submit(input_file_list=None) == {
+            3: None,
+            4: None,
+            6: None,
+            7: None,
+            8: None,
+            9: None,
+            10: None,
+        }
 
 
 def test_enforce_list_type(array_simulator):
@@ -328,16 +315,16 @@ def test_enforce_list_type(array_simulator):
     assert array_simulator._enforce_list_type(5) == [5]
 
 
-def test_fill_results(array_simulator, shower_simulator, input_file_list):
+def test_fill_results(array_simulator, shower_simulator, shower_array_simulator, input_file_list):
 
-    array_simulator._fill_results_without_run(input_file_list)
-
-    assert len(array_simulator._results["output"]) == 3
-    assert len(array_simulator._results["sub_out"]) == 3
-    assert len(array_simulator._results["log"]) == 3
-    assert len(array_simulator._results["input"]) == 3
-    assert len(array_simulator._results["hist"]) == 3
-    assert array_simulator._results["input"][1] == "abc_run22"
+    for simulator_now in [array_simulator, shower_array_simulator]:
+        simulator_now._fill_results_without_run(input_file_list)
+        assert len(simulator_now._results["output"]) == 3
+        assert len(simulator_now._results["sub_out"]) == 3
+        assert len(simulator_now._results["log"]) == 3
+        assert len(simulator_now._results["input"]) == 3
+        assert len(simulator_now._results["hist"]) == 3
+        assert simulator_now._results["input"][1] == "abc_run22"
 
     shower_simulator._fill_results_without_run(input_file_list)
     assert len(shower_simulator._results["output"]) == 3
