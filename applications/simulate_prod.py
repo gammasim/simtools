@@ -314,6 +314,7 @@ def main():
     )
 
     # Overwrite default and optional settings
+    shower_configs["run_list"] = args_dict["run"] + args_dict["start_run"]
     array_configs["site"] = shower_configs["site"] = args_dict["site"]
     array_configs["zenith"] = shower_configs["zenith"] = args_dict["zenith_angle"] * u.deg
     array_configs["phi"] = shower_configs["phi"] = _translate_from_direction_to_azimuth(
@@ -321,7 +322,7 @@ def main():
     )
     if args_dict["nshow"] is not None:
         shower_configs["nshow"] = args_dict["nshow"]
-    if "label" in args_dict:
+    if args_dict["label"] is not None:
         label = args_dict["label"]
     if "data_directory" in args_dict:
         array_configs["data_directory"] = shower_configs["data_directory"] = args_dict[
