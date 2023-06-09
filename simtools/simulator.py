@@ -269,6 +269,8 @@ class Simulator:
 
         validated_runs = list()
         if run_list is not None:
+            if not isinstance(run_list, list):
+                run_list = [run_list]
             if not all(isinstance(r, int) for r in run_list):
                 msg = "run_list must contain only integers."
                 self._logger.error(msg)
