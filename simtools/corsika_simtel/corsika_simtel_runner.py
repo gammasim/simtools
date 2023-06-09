@@ -55,8 +55,6 @@ class CorsikaSimtelRunner(CorsikaRunner, SimtelRunnerArray):
         ----------
         run_number: int
             Run number.
-        extra_commands: str
-            Additional commands for running simulations.
 
         Returns
         -------
@@ -74,8 +72,6 @@ class CorsikaSimtelRunner(CorsikaRunner, SimtelRunnerArray):
         ----------
         run_number: int
             Run number.
-        extra_commands: str
-            Additional commands for running simulations.
 
         Returns
         -------
@@ -83,8 +79,14 @@ class CorsikaSimtelRunner(CorsikaRunner, SimtelRunnerArray):
             Full path of the run script file.
         """
 
+        kwargs = {
+            "run_number": None,
+            **kwargs,
+        }
+        run_number = self._validate_run_number(kwargs["run_number"])
+
         run_command = self._make_run_command(
-            run_number=kwargs["run_number"],
+            run_number=run_number,
             input_file="-",  # Tell sim_telarray to take the input from standard output
         )
         multipipe_file = Path(self.corsika_config._config_file_path.parent).joinpath(
@@ -126,16 +128,16 @@ class CorsikaSimtelRunner(CorsikaRunner, SimtelRunnerArray):
         kwargs: dict
             The dictionary must include the following parameters (unless listed as optional):
                 input_file: str
-                    Full path of the input CORSIKA file
-                run_number: int (optional)
+                    Full path of the input CORSIKA file.
+                    Use '-' to tell sim_telarray to read from standard output
+                run_number: int
                     run number
 
         """
 
         # TODO: These definitions of the files can probably be separated from
         # the the run command and put back into the parent class.
-        run_number = kwargs["run_number"] if "run_number" in kwargs else 1
-        info_for_file_name = SimtelRunnerArray.get_info_for_file_name(self, run_number)
+        info_for_file_name = SimtelRunnerArray.get_info_for_file_name(self, kwargs["run_number"])
         self._log_file = SimtelRunnerArray.get_file_name(
             self, file_type="log", **info_for_file_name
         )
