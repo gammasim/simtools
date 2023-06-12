@@ -81,7 +81,7 @@ class CorsikaOutput:
         self._version = None
         self._header = None
         self.event_information = None
-        self.individual_telescopes = None
+        self._individual_telescopes = None
         self._allowed_histograms = {"hist_position", "hist_direction", "hist_time_altitude"}
         self._allowed_1D_labels = {"wavelength", "time", "altitude"}
         self._allowed_2D_labels = {"counts", "density", "direction", "time_altitude"}
@@ -550,7 +550,7 @@ class CorsikaOutput:
             if self.individual_telescopes is True:
                 hist_num += 1
 
-    def set_histograms(self, telescope_indices=None, individual_telescopes=False):
+    def set_histograms(self, telescope_indices=None, individual_telescopes=None):
         """
         Extract the information of the Cherenkov photons from a CORSIKA output IACT file, create
          and fill the histograms
@@ -560,7 +560,7 @@ class CorsikaOutput:
         telescope_indices: int or list of int
             The indices of the specific telescopes to be inspected.
         individual_telescopes: bool
-            if False, the histograms are supposed to be filled for all telescopes.
+            if False, the histograms are supposed to be filled for all telescopes. Default is False.
             if True, one histogram is set for each telescope sepparately.
 
         Returns
@@ -572,16 +572,10 @@ class CorsikaOutput:
         AttributeError:
             if event has not photon saved.
         """
-        self.all_telescope_indices = np.arange(self.num_telescopes)
-        # It changes the attribute if any value different than None is passed but it only sets
-        # the attribute to all telescopes if both the attribute `self.telescope_indices` and the
-        # parameter `telescope_indices` are None, otherwise it keeps the attribute value as before.
-        if telescope_indices is None:
-            if self.telescope_indices is None:
-                self.telescope_indices = self.all_telescope_indices.tolist()
-        else:
-            self.telescope_indices = telescope_indices
+        self.telescope_indices = telescope_indices
+
         self.individual_telescopes = individual_telescopes
+
         self._create_histograms(individual_telescopes=individual_telescopes)
 
         num_photons_per_event_per_telescope_to_set = []
@@ -612,6 +606,59 @@ class CorsikaOutput:
             f"Finished reading the file and creating the histograms in {time.time() - start_time} "
             f"seconds"
         )
+
+    @property
+    def telescope_indices(self):
+        """
+        Return the telescope indices.
+        """
+        return self._telescope_indices
+
+    @telescope_indices.setter
+    def telescope_indices(self, telescope_indices):
+        """
+        Set the telescope indices.
+        It changes the attribute if any value different than None is passed but it only sets the
+        attribute to all telescopes if both the attribute `self.telescope_indices` and the parameter
+        `telescope_indices` are None, otherwise it keeps the attribute value as before.
+
+        Parameters
+        ----------
+        telescope_indices: int or list of int
+            The indices of the specific telescopes to be inspected.
+        """
+
+        self.all_telescope_indices = np.arange(self.num_telescopes)
+        if telescope_indices is None:
+            if self._telescope_indices is None:
+                self._telescope_indices = self.all_telescope_indices.tolist()
+        else:
+            self._telescope_indices = telescope_indices
+
+    @property
+    def individual_telescopes(self):
+        """
+        Return the individual telescopes as property.
+        """
+        return self._individual_telescopes
+
+    @individual_telescopes.setter
+    def individual_telescopes(self, new_individual_telescopes):
+        """
+        The following lines allow `individual_telescopes` to be defined before using this function
+        but if any parameter is passed in this function, it overwrites the class attribute.
+
+        Parameters
+        ----------
+        new_individual_telescopes: bool
+            if False, the histograms are supposed to be filled for all telescopes.
+            if True, one histogram is set for each telescope sepparately.
+        """
+        if new_individual_telescopes is None:
+            if self._individual_telescopes is None:
+                self._individual_telescopes = False
+        else:
+            self._individual_telescopes = new_individual_telescopes
 
     def _raise_if_no_histogram(self):
         """
