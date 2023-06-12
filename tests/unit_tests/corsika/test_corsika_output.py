@@ -407,31 +407,50 @@ def test_get_photon_wavelength_distr(corsika_output_instance_set_histograms):
         ).all()
 
 
-def test_get_photon_radial_distr_individual_telescopes(corsika_output_instance):
-    corsika_output_instance.individual_telescopes = False
-    corsika_output_instance.set_histograms()
+def test_get_photon_radial_distr_individual_telescopes(corsika_output_instance_set_histograms):
 
-    # Default values
-    x_edges_list, hist_1D_list = corsika_output_instance.get_photon_radial_distr()
+    # Individual telescopes
+    corsika_output_instance_set_histograms.set_histograms(
+        telescope_indices=[2, 3, 4], individual_telescopes=True, hist_config=None
+    )
+    x_edges_list, hist_1D_list = corsika_output_instance_set_histograms.get_photon_radial_distr()
+
+    for i_hist, _ in enumerate(corsika_output_instance_set_histograms.telescope_indices):
+        assert np.amax(x_edges_list[i_hist]) == 10
+        assert np.size(x_edges_list[i_hist]) == 11
+
+    # All given telescopes together
+    corsika_output_instance_set_histograms.set_histograms(
+        telescope_indices=[2, 3, 4], individual_telescopes=False, hist_config=None
+    )
+    x_edges_list, hist_1D_list = corsika_output_instance_set_histograms.get_photon_radial_distr()
     assert np.amax(x_edges_list) == 1000
     assert np.size(x_edges_list) == 21
 
-    # Retrive input values
-    x_edges_list, hist_1D_list = corsika_output_instance.get_photon_radial_distr(
-        bin_size=100, max_dist=500
+    # Retrieve input values
+    corsika_output_instance_set_histograms.set_histograms(
+        telescope_indices=None, individual_telescopes=False, hist_config=None
     )
-    assert np.amax(x_edges_list) == 500
-    assert np.size(x_edges_list) == 6
-    print(hist_1D_list)
+    x_edges_list, hist_1D_list = corsika_output_instance_set_histograms.get_photon_radial_distr(
+        bin_size=60, max_dist=1200
+    )
+    assert np.amax(x_edges_list) == 1200
+    assert np.size(x_edges_list) == 21
 
-    # Test density
-    x_edges_list_dens, hist_1D_list_dens = corsika_output_instance.get_photon_radial_distr(
-        density=True
+    # Test if the keyword density changes the output as it should
+    (
+        x_edges_list_dens,
+        hist_1D_list_dens,
+    ) = corsika_output_instance_set_histograms.get_photon_radial_distr(
+        density=True,
+        bin_size=60,
+        max_dist=1200,
     )
-    assert x_edges_list_dens == x_edges_list
+    assert (x_edges_list_dens == x_edges_list).all()
     print(np.sum(hist_1D_list_dens), np.sum(hist_1D_list))
-    assert False
+
     assert np.sum(hist_1D_list_dens) == np.sum(hist_1D_list)
+    assert False
 
 
 def test_get_photon_radial_distr_all_telescopes(corsika_output_instance):
