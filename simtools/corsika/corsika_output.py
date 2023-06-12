@@ -251,10 +251,11 @@ class CorsikaOutput:
         """
 
         if telescope_new_indices is not None:
-            if not isinstance(telescope_new_indices, list):
+
+            if not isinstance(telescope_new_indices, (list, np.ndarray)):
                 telescope_new_indices = [telescope_new_indices]
             for i_telescope in telescope_new_indices:
-                if not isinstance(i_telescope, int):
+                if not isinstance(i_telescope, (int, np.int32, np.int64)):
                     msg = "The index or indices given are not of type int."
                     self._logger.error(msg)
                     raise TypeError
