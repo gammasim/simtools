@@ -236,10 +236,12 @@ class CorsikaOutput:
     def telescope_indices(self, telescope_new_indices):
         """
         Set the telescope index (or indices).
+        If self.individual_telescopes is True, the indices of the telescopes passed are analyzed
+        individually (different histograms for each telescope) even if all telescopes are listed.
 
         Parameters
         ----------
-        telescope_new_indices: int or list of int
+        telescope_new_indices: int or list of int or np.array of int
             The indices of the specific telescopes to be inspected. If not specified, all telescopes
             are treated together in one histogram and the value of self._telescope_indices is a list
             of all telescope indices.
@@ -250,18 +252,18 @@ class CorsikaOutput:
             if the indices passed through telescope_index are not of type int.
         """
 
-        if telescope_new_indices is not None:
-
+        if telescope_new_indices is None:
+            if self._telescope_indices is None:
+                self._telescope_indices = np.arange(self.num_telescopes)
+        else:
             if not isinstance(telescope_new_indices, (list, np.ndarray)):
-                telescope_new_indices = [telescope_new_indices]
+                telescope_new_indices = np.array([telescope_new_indices])
             for i_telescope in telescope_new_indices:
                 if not isinstance(i_telescope, (int, np.int32, np.int64)):
                     msg = "The index or indices given are not of type int."
                     self._logger.error(msg)
                     raise TypeError
-        # if self.individual_telescopes is True, the indices of the telescopes passed are analyzed
-        # individually (different histograms for each telescope) even if all telescopes are listed.
-        self._telescope_indices = np.sort(telescope_new_indices)
+            self._telescope_indices = np.sort(telescope_new_indices)
 
     @property
     def hist_config(self):
@@ -280,22 +282,26 @@ class CorsikaOutput:
         return self._hist_config
 
     @hist_config.setter
-    def hist_config(self, in_yaml, in_dict):
+    def hist_config(self, input_config):
         """
         Set the configuration for the histograms (e.g., bin size, min and max values, etc).
-        The inputs are allowed either through a yaml file or a dictionary. If nothing is given,
+        The input is allowed either through a yaml file or a dictionary. If nothing is given,
         the dictionary is created with default values.
 
         Parameters
         ----------
-        in_yaml: str or Path
+        input_config: str, Path, dict or NoneType
             yaml file with the configuration parameters to create the histograms. For the correct
             format, please look at the docstring at `_create_histogram_default_config`.
-
-        in_dict: dict
-            Dictionary with the configuration parameters to create the histograms.
+            Alternatively, it can be a dictionary with the configuration parameters to create
+            the histograms.
         """
-        self._hist_config = collect_data_from_yaml_or_dict(in_yaml, in_dict, allow_empty=True)
+        input_dict, input_yaml = None, None
+        if isinstance(input_config, dict):
+            input_dict = input_config
+        elif isinstance(input_config, (type(Path("")), str)):
+            input_yaml = input_config
+        self._hist_config = collect_data_from_yaml_or_dict(input_yaml, input_dict, allow_empty=True)
 
     def hist_config_to_yaml(self, file_name=None):
         """
@@ -550,7 +556,7 @@ class CorsikaOutput:
             if self.individual_telescopes is True:
                 hist_num += 1
 
-    def set_histograms(self, telescope_indices=None, individual_telescopes=None):
+    def set_histograms(self, telescope_indices=None, individual_telescopes=None, hist_config=None):
         """
         Extract the information of the Cherenkov photons from a CORSIKA output IACT file, create
          and fill the histograms
@@ -562,6 +568,11 @@ class CorsikaOutput:
         individual_telescopes: bool
             if False, the histograms are supposed to be filled for all telescopes. Default is False.
             if True, one histogram is set for each telescope sepparately.
+        hist_config:
+            yaml file with the configuration parameters to create the histograms. For the correct
+            format, please look at the docstring at `_create_histogram_default_config`.
+            Alternatively, it can be a dictionary with the configuration parameters to create
+            the histograms.
 
         Returns
         -------
@@ -573,10 +584,9 @@ class CorsikaOutput:
             if event has not photon saved.
         """
         self.telescope_indices = telescope_indices
-
         self.individual_telescopes = individual_telescopes
-
-        self._create_histograms(individual_telescopes=individual_telescopes)
+        self.hist_config = hist_config
+        self._create_histograms(individual_telescopes=self.individual_telescopes)
 
         num_photons_per_event_per_telescope_to_set = []
         start_time = time.time()
@@ -608,34 +618,6 @@ class CorsikaOutput:
         )
 
     @property
-    def telescope_indices(self):
-        """
-        Return the telescope indices.
-        """
-        return self._telescope_indices
-
-    @telescope_indices.setter
-    def telescope_indices(self, telescope_indices):
-        """
-        Set the telescope indices.
-        It changes the attribute if any value different than None is passed but it only sets the
-        attribute to all telescopes if both the attribute `self.telescope_indices` and the parameter
-        `telescope_indices` are None, otherwise it keeps the attribute value as before.
-
-        Parameters
-        ----------
-        telescope_indices: int or list of int
-            The indices of the specific telescopes to be inspected.
-        """
-
-        self.all_telescope_indices = np.arange(self.num_telescopes)
-        if telescope_indices is None:
-            if self._telescope_indices is None:
-                self._telescope_indices = self.all_telescope_indices.tolist()
-        else:
-            self._telescope_indices = telescope_indices
-
-    @property
     def individual_telescopes(self):
         """
         Return the individual telescopes as property.
@@ -653,12 +635,26 @@ class CorsikaOutput:
         new_individual_telescopes: bool
             if False, the histograms are supposed to be filled for all telescopes.
             if True, one histogram is set for each telescope sepparately.
+
+        Raises
+        ------
+        TypeError:
+            if new_individual_telescopes passed are not of type bool.
         """
+
         if new_individual_telescopes is None:
             if self._individual_telescopes is None:
                 self._individual_telescopes = False
         else:
-            self._individual_telescopes = new_individual_telescopes
+            if isinstance(new_individual_telescopes, bool):
+                self._individual_telescopes = new_individual_telescopes
+            else:
+                msg = (
+                    f"`individual_telescopes` passed {new_individual_telescopes} is not of type "
+                    f"bool."
+                )
+                self._logger.error(msg)
+                raise TypeError
 
     def _raise_if_no_histogram(self):
         """
@@ -875,6 +871,7 @@ class CorsikaOutput:
             if max_dist is None:
                 max_dist = 10
         edges_1D_list, hist1D_list = [], []
+
         x_position_list, y_position_list, hist2D_values_list = self.get_2D_photon_position_distr(
             density=density
         )
