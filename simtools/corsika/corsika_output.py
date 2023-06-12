@@ -642,8 +642,7 @@ class CorsikaOutput:
         """
 
         if new_individual_telescopes is None:
-            if self._individual_telescopes is None:
-                self._individual_telescopes = False
+            self._individual_telescopes = False
         else:
             if isinstance(new_individual_telescopes, bool):
                 self._individual_telescopes = new_individual_telescopes
