@@ -253,8 +253,7 @@ class CorsikaOutput:
         """
 
         if telescope_new_indices is None:
-            if self._telescope_indices is None:
-                self._telescope_indices = np.arange(self.num_telescopes)
+            self._telescope_indices = np.arange(self.num_telescopes)
         else:
             if not isinstance(telescope_new_indices, (list, np.ndarray)):
                 telescope_new_indices = np.array([telescope_new_indices])
