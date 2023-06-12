@@ -801,7 +801,6 @@ def convert_2D_to_radial_distr(xaxis, yaxis, hist2d, bin_size=50, max_dist=1000)
     np.array
         The values of the 1D histogram with size = int(max_dist/bin_size).
     """
-
     grid_2d_x, grid_2d_y = np.meshgrid(xaxis[:-1], yaxis[:-1])  # [:-1], since xaxis and yaxis are
     # the hist edges (n + 1).
     # radial_distance_map maps the distance to the center from each element in a square matrix.
@@ -820,6 +819,7 @@ def convert_2D_to_radial_distr(xaxis, yaxis, hist2d, bin_size=50, max_dist=1000)
     distance_sorted = np.sort(radial_distance_map, axis=None)
     # For larger distances, we have more elements in a slice 'dr' in radius, hence, we need to
     # acount for it using weights below.
+
     weights, radial_edges = np.histogram(
         distance_sorted, bins=int(max_dist / bin_size), range=(0, max_dist)
     )
@@ -834,7 +834,9 @@ def convert_2D_to_radial_distr(xaxis, yaxis, hist2d, bin_size=50, max_dist=1000)
         # In case there is no event in any bin, according to the defined bin size,
         # we assign the histogram count to be zero. In this case, it is wise to increase the bin
         # size of your analysis.
+
         try:
+
             histogram_1D[i_radial] = np.sum(hist_sorted[indices_to_sum]) / weights[i_radial]
         except ValueError:
             histogram_1D[i_radial] = 0
