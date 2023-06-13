@@ -801,30 +801,41 @@ def convert_2D_to_radial_distr(xaxis, yaxis, hist2d, bin_size=50, max_dist=1000)
     np.array
         The values of the 1D histogram with size = int(max_dist/bin_size).
     """
+    logger = logging.getLogger(__name__)
+    # Check if the histogram will make sense
+    warn = False
+    for axis in [xaxis, yaxis]:
+        if (bin_size < np.diff(axis)).any():
+            warn = True
+    if warn:
+        msg = (
+            f"Bin size {bin_size} is smaller than the steps in the original array. Please"
+            f" increase the bin size to avoid producing np.nan in your distribution"
+        )
+        logger.warning(msg)
+
     grid_2d_x, grid_2d_y = np.meshgrid(xaxis[:-1], yaxis[:-1])  # [:-1], since xaxis and yaxis are
     # the hist edges (n + 1).
     # radial_distance_map maps the distance to the center from each element in a square matrix.
     radial_distance_map = np.sqrt(grid_2d_x**2 + grid_2d_y**2)
-
     # The sorting and unravel_index give us the two indices for the position of the sorted element
     # in the original 2d matrix
     x_indices_sorted, y_indices_sorted = np.unravel_index(
         np.argsort(radial_distance_map, axis=None), np.shape(radial_distance_map)
     )
-    print(x_indices_sorted, y_indices_sorted)
     # We construct a 1D array with the histogram counts sorted according to the distance to the
     # center.
     hist_sorted = np.array(
         [hist2d[i_x, i_y] for i_x, i_y in zip(x_indices_sorted, y_indices_sorted)]
     )
     distance_sorted = np.sort(radial_distance_map, axis=None)
+
     # For larger distances, we have more elements in a slice 'dr' in radius, hence, we need to
     # acount for it using weights below.
 
     weights, radial_edges = np.histogram(
         distance_sorted, bins=int(max_dist / bin_size), range=(0, max_dist)
     )
-
     histogram_1D = np.empty_like(weights)
     for i_radial, _ in enumerate(radial_edges[:-1]):
         # Here we sum all the events within a radial interval 'dr' and then divide by the number of
@@ -837,10 +848,9 @@ def convert_2D_to_radial_distr(xaxis, yaxis, hist2d, bin_size=50, max_dist=1000)
         # size of your analysis.
 
         try:
-
             histogram_1D[i_radial] = np.sum(hist_sorted[indices_to_sum]) / weights[i_radial]
         except ValueError:
-            histogram_1D[i_radial] = 0
+            histogram_1D[i_radial] = np.nan
     return radial_edges, histogram_1D
 
 
