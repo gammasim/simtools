@@ -837,15 +837,15 @@ class CorsikaOutput:
             hist_1D_list.append(mini_hist.view().T)
         return np.array(x_edges_list), np.array(hist_1D_list)
 
-    def get_photon_radial_distr(self, bin_size=None, max_dist=None, density=True):
+    def get_photon_radial_distr(self, num_bins=None, max_dist=None, density=True):
         """
         Get the radial distribution of the photons on the ground in relation to the center of the
         array.
 
         Parameters
         ----------
-        bin_size: float
-            Bin size of the radial distribution (in meters).
+        num_bins: float
+            Number of bins of the radial distribution.
         max_dist: float
             Maximum distance to consider in the 1D histogram (in meters).
         density: bool
@@ -858,27 +858,39 @@ class CorsikaOutput:
         np.array
             The counts of the 1D histogram with size = int(max_dist/bin_size).
         """
-        if self.individual_telescopes is False:
-            if bin_size is None:
-                bin_size = 50
-            if max_dist is None:
-                max_dist = 1000
-        else:
-            if bin_size is None:
-                bin_size = 1
-            if max_dist is None:
-                max_dist = 10
+
+        if max_dist is None:
+            max_dist = np.amax(
+                [
+                    self.hist_config["hist_position"]["x axis"]["start"].to(u.m).value,
+                    self.hist_config["hist_position"]["x axis"]["stop"].to(u.m).value,
+                    self.hist_config["hist_position"]["y axis"]["start"].to(u.m).value,
+                    self.hist_config["hist_position"]["y axis"]["stop"].to(u.m).value,
+                ]
+            )
+        if num_bins is None:
+            num_bins = (
+                np.amax(
+                    [
+                        self.hist_config["hist_position"]["x axis"]["bins"],
+                        self.hist_config["hist_position"]["y axis"]["bins"],
+                    ]
+                )
+                // 2
+            )  # //2 because of the 2D array going into the negative and
+            # positive axis
         edges_1D_list, hist1D_list = [], []
 
         x_position_list, y_position_list, hist2D_values_list = self.get_2D_photon_position_distr(
             density=density
         )
+
         for i_hist, _ in enumerate(x_position_list):
             edges_1D, hist1D = convert_2D_to_radial_distr(
                 x_position_list[i_hist],
                 y_position_list[i_hist],
                 hist2D_values_list[i_hist],
-                bin_size=bin_size,
+                num_bins=num_bins,
                 max_dist=max_dist,
             )
             edges_1D_list.append(edges_1D)
