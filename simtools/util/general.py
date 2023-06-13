@@ -810,7 +810,7 @@ def convert_2D_to_radial_distr(xaxis, yaxis, hist2d, bin_size=50, max_dist=1000)
     if warn:
         msg = (
             f"Bin size {bin_size} is smaller than the steps in the original array. Please"
-            f" increase the bin size to avoid producing np.nan in your distribution"
+            f" increase the bin size to avoid introducing artificial gaps in your distribution"
         )
         logger.warning(msg)
 
@@ -850,7 +850,7 @@ def convert_2D_to_radial_distr(xaxis, yaxis, hist2d, bin_size=50, max_dist=1000)
         try:
             histogram_1D[i_radial] = np.sum(hist_sorted[indices_to_sum]) / weights[i_radial]
         except ValueError:
-            histogram_1D[i_radial] = np.nan
+            histogram_1D[i_radial] = 0
     return radial_edges, histogram_1D
 
 
