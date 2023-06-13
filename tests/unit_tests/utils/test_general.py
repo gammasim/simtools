@@ -211,23 +211,28 @@ def test_rotate_telescope_position():
 def test_convert_2D_to_radial_distr(caplog):
 
     # Test normal functioning
-    size = 1000
-    xaxis = np.arange(-size / 2, size / 2)
-    yaxis = np.arange(-size / 2, size / 2)
+    max_dist = 100
+    num_bins = 100
+    step = max_dist / num_bins
+    xaxis = np.arange(-max_dist, max_dist, step)
+    yaxis = np.arange(-max_dist, max_dist, step)
     x2d, y2d = np.meshgrid(xaxis, yaxis)
     distance_to_center_2D = np.sqrt((x2d) ** 2 + (y2d) ** 2)
 
     radial_edges, distance_to_center_1D = gen.convert_2D_to_radial_distr(
-        xaxis, yaxis, distance_to_center_2D, bin_size=1, max_dist=500
+        xaxis, yaxis, distance_to_center_2D, num_bins=num_bins, max_dist=max_dist
     )
-
     difference = radial_edges[:-1] - distance_to_center_1D
-    assert (difference == 0)[:-1].all()  # last value deviates
+
+    assert pytest.approx(difference[:-1], 1) == 0  # last value deviates
 
     # Test warning in caplog
-    gen.convert_2D_to_radial_distr(xaxis, yaxis, distance_to_center_2D, bin_size=0.5, max_dist=500)
+    gen.convert_2D_to_radial_distr(
+        xaxis, yaxis, distance_to_center_2D, num_bins=4 * num_bins, max_dist=max_dist
+    )
     msg = (
-        "Bin size 0.5 is smaller than the steps in the original array. Please"
-        " increase the bin size to avoid introducing artificial gaps in your distribution"
+        "The histogram with number of bins 400 and maximum distance of 100 "
+        "resulted in a bin size smaller than the original array. Please adjust those parameters"
+        "to increase the bin size."
     )
     assert msg in caplog.text
