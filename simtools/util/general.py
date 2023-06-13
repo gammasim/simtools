@@ -806,11 +806,12 @@ def convert_2D_to_radial_distr(xaxis, yaxis, hist2d, bin_size=50, max_dist=1000)
     # radial_distance_map maps the distance to the center from each element in a square matrix.
     radial_distance_map = np.sqrt(grid_2d_x**2 + grid_2d_y**2)
 
-    # The sorting and divmod give us the two indices for the position of the sorted element in the
-    # original 2d matrix
-    x_indices_sorted, y_indices_sorted = np.divmod(
-        np.argsort(radial_distance_map, axis=None), np.size(radial_distance_map, axis=0)
+    # The sorting and unravel_index give us the two indices for the position of the sorted element
+    # in the original 2d matrix
+    x_indices_sorted, y_indices_sorted = np.unravel_index(
+        np.argsort(radial_distance_map, axis=None), np.shape(radial_distance_map)
     )
+    print(x_indices_sorted, y_indices_sorted)
     # We construct a 1D array with the histogram counts sorted according to the distance to the
     # center.
     hist_sorted = np.array(
