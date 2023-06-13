@@ -777,7 +777,7 @@ def get_log_excerpt(log_file, n_last_lines=30):
     )
 
 
-def convert_2D_to_radial_distr(xaxis, yaxis, hist2d, bin_size=50, max_dist=1000):
+def convert_2D_to_radial_distr(xaxis, yaxis, hist2d, num_bins=50, max_dist=1000):
     """
     Convert a 2D histogram of positions, e.g. photon positions on the ground, to a 1D distribution.
 
@@ -789,8 +789,8 @@ def convert_2D_to_radial_distr(xaxis, yaxis, hist2d, bin_size=50, max_dist=1000)
         The values of the y axis (histogram edges) on the ground.
     hist2d: numpy.ndarray
         The histogram counts.
-    bin_size: float
-        Size of the step in distance, usually in meters.
+    num_bins: float
+        Number of bins in distance.
     max_dist: float
        Maximum distance to consider in the 1D histogram, usually in meters.
 
@@ -803,14 +803,18 @@ def convert_2D_to_radial_distr(xaxis, yaxis, hist2d, bin_size=50, max_dist=1000)
     """
     logger = logging.getLogger(__name__)
     # Check if the histogram will make sense
+    bins_step = (
+        2 * max_dist / num_bins
+    )  # in the 2D array, the positive and negative direction count.
     warn = False
     for axis in [xaxis, yaxis]:
-        if (bin_size < np.diff(axis)).any():
+        if (bins_step < np.diff(axis)).any():
             warn = True
     if warn:
         msg = (
-            f"Bin size {bin_size} is smaller than the steps in the original array. Please"
-            f" increase the bin size to avoid introducing artificial gaps in your distribution"
+            f"The histogram with number of bins {num_bins} and maximum distance of {max_dist} "
+            f"resulted in a bin size smaller than the original array. Please adjust those "
+            f"parameters to increase the bin size."
         )
         logger.warning(msg)
 
@@ -823,6 +827,7 @@ def convert_2D_to_radial_distr(xaxis, yaxis, hist2d, bin_size=50, max_dist=1000)
     x_indices_sorted, y_indices_sorted = np.unravel_index(
         np.argsort(radial_distance_map, axis=None), np.shape(radial_distance_map)
     )
+
     # We construct a 1D array with the histogram counts sorted according to the distance to the
     # center.
     hist_sorted = np.array(
@@ -833,24 +838,17 @@ def convert_2D_to_radial_distr(xaxis, yaxis, hist2d, bin_size=50, max_dist=1000)
     # For larger distances, we have more elements in a slice 'dr' in radius, hence, we need to
     # acount for it using weights below.
 
-    weights, radial_edges = np.histogram(
-        distance_sorted, bins=int(max_dist / bin_size), range=(0, max_dist)
-    )
-    histogram_1D = np.empty_like(weights)
+    weights, radial_edges = np.histogram(distance_sorted, bins=num_bins, range=(0, max_dist))
+    histogram_1D = np.empty_like(weights, dtype=float)
+
     for i_radial, _ in enumerate(radial_edges[:-1]):
+
         # Here we sum all the events within a radial interval 'dr' and then divide by the number of
         # bins that fit this interval.
         indices_to_sum = (distance_sorted >= radial_edges[i_radial]) * (
             distance_sorted < radial_edges[i_radial + 1]
         )
-        # In case there is no event in any bin, according to the defined bin size,
-        # we assign the histogram count to be zero. In this case, it is wise to increase the bin
-        # size of your analysis.
-
-        try:
-            histogram_1D[i_radial] = np.sum(hist_sorted[indices_to_sum]) / weights[i_radial]
-        except ValueError:
-            histogram_1D[i_radial] = 0
+        histogram_1D[i_radial] = np.sum(hist_sorted[indices_to_sum]) / weights[i_radial]
     return radial_edges, histogram_1D
 
 
