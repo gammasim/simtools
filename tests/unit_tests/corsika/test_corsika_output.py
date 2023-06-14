@@ -654,3 +654,15 @@ def test_telescope_positions(corsika_output_instance_set_histograms):
     new_telescope_positions[0][0] = -400.0
     corsika_output_instance_set_histograms.telescope_positions = new_telescope_positions
     assert corsika_output_instance_set_histograms.telescope_positions[0][0] == -400.0
+
+
+def test_event_zenith_angles(corsika_output_instance_set_histograms):
+    assert (corsika_output_instance_set_histograms.event_zenith_angles.value == [20, 20]).all()
+    assert corsika_output_instance_set_histograms.event_zenith_angles.unit == u.deg
+
+
+def test_event_azimuth_angles(corsika_output_instance_set_histograms):
+    assert (
+        np.around(corsika_output_instance_set_histograms.event_azimuth_angles.value) == [-5, -5]
+    ).all()
+    assert corsika_output_instance_set_histograms.event_azimuth_angles.unit == u.deg

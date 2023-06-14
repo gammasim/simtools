@@ -1075,7 +1075,7 @@ class CorsikaOutput:
         Returns
         -------
         astropy.Quantity
-            The zenith angles for each event, usually in degrees.
+            The zenith angles for each event.
         """
         if self._event_zenith_angles is None:
 
