@@ -750,3 +750,12 @@ def test_event_1D_histogram(corsika_output_instance_set_histograms):
     assert np.size(edges) == 6
     assert np.sum(hist) == 2
     assert hist[2] == 2
+
+
+def test_event_2D_histogram(corsika_output_instance_set_histograms):
+    x_edges, y_edges, hist = corsika_output_instance_set_histograms.event_2D_histogram(
+        "total_energy", "first_interaction_height", bins=(5, 5), range=[[5, 15], [-60e5, -5e5]]
+    )
+    assert np.size(x_edges) == 6
+    assert np.sum(hist) == 2
+    assert np.shape(hist) == (5, 5)
