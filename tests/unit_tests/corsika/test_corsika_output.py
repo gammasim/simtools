@@ -666,3 +666,8 @@ def test_event_azimuth_angles(corsika_output_instance_set_histograms):
         np.around(corsika_output_instance_set_histograms.event_azimuth_angles.value) == [-5, -5]
     ).all()
     assert corsika_output_instance_set_histograms.event_azimuth_angles.unit == u.deg
+
+
+def test_event_energies(corsika_output_instance_set_histograms):
+    assert pytest.approx(corsika_output_instance_set_histograms.event_energies.value[0], 2) == 0.01
+    assert corsika_output_instance_set_histograms.event_energies.unit == u.TeV
