@@ -741,3 +741,12 @@ def test_get_run_info(corsika_output_instance_set_histograms, caplog):
             f"`key` is not valid. Valid entries are "
             f"{corsika_output_instance_set_histograms.all_run_keys}" in caplog.text
         )
+
+
+def test_event_1D_histogram(corsika_output_instance_set_histograms):
+    edges, hist = corsika_output_instance_set_histograms.event_1D_histogram(
+        "total_energy", bins=5, range=(5, 15)
+    )
+    assert np.size(edges) == 6
+    assert np.sum(hist) == 2
+    assert hist[2] == 2
