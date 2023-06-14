@@ -1017,10 +1017,9 @@ class CorsikaOutput:
         numpy.array
             Number of photons per telescope.
         """
-        if self._num_photons_per_telescope is None:
-            self._num_photons_per_telescope = np.sum(
-                np.array(self.num_photons_per_event_per_telescope), axis=0
-            )
+        self._num_photons_per_telescope = np.sum(
+            np.array(self.num_photons_per_event_per_telescope), axis=1
+        )
         return self._num_photons_per_telescope
 
     @property
