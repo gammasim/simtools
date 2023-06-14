@@ -75,7 +75,7 @@ class CorsikaOutput:
         self._hist_config = None
         self._total_num_photons = None
         self._magnetic_field_x = None
-        self._magnetic_field_y = None
+        self._magnetic_field_z = None
         self._event_total_energies = None
         self._event_first_interaction_heights = None
         self._version = None
@@ -1153,9 +1153,9 @@ class CorsikaOutput:
         """
         if self._magnetic_field_x is None:
             self._magnetic_field_x = (self.event_information["earth_magnetic_field_x"]).to(u.uT)
-        if self._magnetic_field_y is None:
-            self._magnetic_field_x = (self.event_information["earth_magnetic_field_z"]).to(u.uT)
-        return self._magnetic_field_x, self._magnetic_field_y
+        if self._magnetic_field_z is None:
+            self._magnetic_field_z = (self.event_information["earth_magnetic_field_z"]).to(u.uT)
+        return self._magnetic_field_x, self._magnetic_field_z
 
     def get_event_parameter_info(self, parameter):
         """
