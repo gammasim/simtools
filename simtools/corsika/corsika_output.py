@@ -966,8 +966,7 @@ class CorsikaOutput:
         numpy.array
             Number of photons per event.
         """
-        if self._num_photons_per_event is None:
-            self._num_photons_per_event = np.sum(self.num_photons_per_event_per_telescope, axis=1)
+        self._num_photons_per_event = np.sum(self.num_photons_per_event_per_telescope, axis=1)
         return self._num_photons_per_event
 
     def get_num_photons_distr(self, bins=50, range=None, event_or_telescope="event"):
