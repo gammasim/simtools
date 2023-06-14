@@ -514,6 +514,10 @@ def test_get_photon_radial_distr_input_all_tel(corsika_output_instance):
 def test_num_photons_per_event_per_telescope(corsika_output_instance_set_histograms):
 
     # Test number of photons in the first event
+    assert np.shape(corsika_output_instance_set_histograms.num_photons_per_event_per_telescope) == (
+        87,
+        2,
+    )
     assert (
         pytest.approx(
             np.sum(
@@ -536,6 +540,10 @@ def test_num_photons_per_event_per_telescope(corsika_output_instance_set_histogr
 
     # Decrease the number of telescopes and measure the number of photons on the ground again
     corsika_output_instance_set_histograms.set_histograms(telescope_indices=[3, 4, 5, 6])
+    assert np.shape(corsika_output_instance_set_histograms.num_photons_per_event_per_telescope) == (
+        4,
+        2,
+    )
     assert (
         pytest.approx(
             np.sum(
@@ -553,4 +561,15 @@ def test_num_photons_per_event_per_telescope(corsika_output_instance_set_histogr
             1,
         )
         == 340.7
+    )
+    # Return the fixture to previous values
+    corsika_output_instance_set_histograms.set_histograms()
+
+
+def test_num_photons_per_event(corsika_output_instance_set_histograms):
+    assert (
+        pytest.approx(corsika_output_instance_set_histograms.num_photons_per_event[0], 1) == 25425.8
+    )
+    assert (
+        pytest.approx(corsika_output_instance_set_histograms.num_photons_per_event[1], 1) == 4582.9
     )
