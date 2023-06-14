@@ -635,3 +635,16 @@ def test_get_num_photons_distr(corsika_output_instance_set_histograms, caplog):
         )
         msg = "`event_or_telescope` has to be either 'event' or 'telescope'."
         msg in caplog.text
+
+
+def test_total_num_photons(corsika_output_instance_set_histograms):
+    assert pytest.approx(corsika_output_instance_set_histograms.total_num_photons, 1) == 30008.7
+
+
+def test_telescope_positions(corsika_output_instance_set_histograms):
+    telescope_positions = corsika_output_instance_set_histograms.telescope_positions
+    assert np.size(telescope_positions, axis=0) == 87
+    coords_tel_0 = [-2064.0, -6482.0, 3400.0, 1250.0]
+
+    for i_coord in range(4):
+        assert telescope_positions[0][i_coord] == coords_tel_0[i_coord]
