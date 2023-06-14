@@ -693,3 +693,20 @@ def test_event_first_interaction_heights(corsika_output_instance_set_histograms)
             == first_height[i_event]
         )
     assert corsika_output_instance_set_histograms.event_first_interaction_heights.unit == u.km
+
+
+def test_magnetic_field(corsika_output_instance_set_histograms):
+    for i_event in range(corsika_output_instance_set_histograms.num_events):
+        assert (
+            pytest.approx(
+                corsika_output_instance_set_histograms.magnetic_field[0].value[i_event], 1
+            )
+            == 20.5
+        )
+        assert (
+            pytest.approx(
+                corsika_output_instance_set_histograms.magnetic_field[1].value[i_event], 1
+            )
+            == -9.4
+        )
+    assert corsika_output_instance_set_histograms.magnetic_field[0].unit == u.uT
