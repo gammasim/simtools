@@ -949,12 +949,11 @@ class CorsikaOutput:
         """
         Set the number of photons per event per telescope.
         """
-        if self._num_photons_per_event_per_telescope is None:
-            self._num_photons_per_event_per_telescope = (
-                np.array(num_photons_per_event_per_telescope_to_set)
-                .reshape(self.num_events, len(self.telescope_indices))
-                .T
-            )
+        self._num_photons_per_event_per_telescope = (
+            np.array(num_photons_per_event_per_telescope_to_set)
+            .reshape(self.num_events, len(self.telescope_indices))
+            .T
+        )
 
     @property
     def num_photons_per_event(self):
