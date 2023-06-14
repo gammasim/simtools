@@ -1033,8 +1033,7 @@ class CorsikaOutput:
         float
             Total number photons.
         """
-        if self._total_num_photons is None:
-            self._total_num_photons = np.sum(self.num_photons_per_event)
+        self._total_num_photons = np.sum(self.num_photons_per_event)
         return self._total_num_photons
 
     @property
