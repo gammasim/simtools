@@ -57,6 +57,7 @@ class CorsikaOutput:
 
         self._initialize_attributes()
         self.read_event_information()
+        self.initialize_header()
 
     def _initialize_attributes(self):
         """
@@ -79,12 +80,12 @@ class CorsikaOutput:
         self._event_total_energies = None
         self._event_first_interaction_heights = None
         self._version = None
-        self._header = None
         self.event_information = None
         self._individual_telescopes = None
         self._allowed_histograms = {"hist_position", "hist_direction", "hist_time_altitude"}
         self._allowed_1D_labels = {"wavelength", "time", "altitude"}
         self._allowed_2D_labels = {"counts", "density", "direction", "time_altitude"}
+        self._header = None
 
     @property
     def version(self):
@@ -117,6 +118,24 @@ class CorsikaOutput:
                     break
         return self._version
 
+    def initialize_header(self):
+        """
+        Initialize the header.
+        """
+        self.all_run_keys = list(run_header.run_header_types[np.around(self.version, 1)].names)
+        self._header = {}
+
+        # Get units of the header
+        all_run_units = get_units_from_fields(
+            run_header.run_header_fields[np.trunc(self.version * 10) / 10]
+        )
+        all_header_astropy_units = self._get_header_astropy_units(self.all_run_keys, all_run_units)
+
+        # Fill the header dictionary
+        for i_key, key in enumerate(self.all_run_keys[1:]):  # starting at the second
+            # element to avoid the non-numeric key.
+            self._header[key] = self.iact_file.header[i_key + 1] * all_header_astropy_units[key]
+
     @property
     def header(self):
         """
@@ -127,24 +146,6 @@ class CorsikaOutput:
         dict:
             The run header.
         """
-
-        # Get keys in the header
-        if self._header is None:
-            self.all_run_keys = list(run_header.run_header_types[np.around(self.version, 1)].names)
-            self._header = {}
-
-            # Get units of the header
-            all_run_units = get_units_from_fields(
-                run_header.run_header_fields[np.trunc(self.version * 10) / 10]
-            )
-            all_header_astropy_units = self._get_header_astropy_units(
-                self.all_run_keys, all_run_units
-            )
-
-            # Fill the header dictionary
-            for i_key, key in enumerate(self.all_run_keys[1:]):  # starting at the second
-                # element to avoid the non-numeric key.
-                self._header[key] = self.iact_file.header[i_key + 1] * all_header_astropy_units[key]
         return self._header
 
     def read_event_information(self):
@@ -1205,7 +1206,6 @@ class CorsikaOutput:
         KeyError:
             If parameter is not valid.
         """
-
         if parameter not in self.all_run_keys:
             msg = f"`key` is not valid. Valid entries are {self.all_run_keys}"
             self._logger.error(msg)
