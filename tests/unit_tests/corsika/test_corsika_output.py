@@ -581,3 +581,57 @@ def test_num_photons_per_telescope(corsika_output_instance_set_histograms):
         pytest.approx(np.sum(corsika_output_instance_set_histograms.num_photons_per_telescope), 1)
         == 25425.8 + 4582.9
     )
+
+
+def test_get_num_photons_distr(corsika_output_instance_set_histograms, caplog):
+
+    # Test range and bins for event
+    edges, hist = corsika_output_instance_set_histograms.get_num_photons_distr(
+        bins=50, range=None, event_or_telescope="event"
+    )
+    assert np.size(edges) == 51
+    edges, hist = corsika_output_instance_set_histograms.get_num_photons_distr(
+        bins=100, range=None, event_or_telescope="event"
+    )
+    assert np.size(edges) == 101
+    edges, hist = corsika_output_instance_set_histograms.get_num_photons_distr(
+        bins=100, range=(0, 500), event_or_telescope="event"
+    )
+    assert edges[0] == 0
+    assert edges[-1] == 500
+
+    # Test number of events simulated
+    edges, hist = corsika_output_instance_set_histograms.get_num_photons_distr(
+        bins=2, range=None, event_or_telescope="event"
+    )
+    # Assert that the integration of the histogram resembles the known total number of events.
+    assert (
+        pytest.approx(
+            np.sum(edges[:-1] * hist)
+            / np.sum(corsika_output_instance_set_histograms.num_photons_per_event),
+            1,
+        )
+        == 1
+    )
+
+    # Test telescope
+    edges, hist = corsika_output_instance_set_histograms.get_num_photons_distr(
+        bins=87, range=None, event_or_telescope="telescope"
+    )
+    print(hist)
+    # Assert that the integration of the histogram resembles the known total number of events.
+    assert (
+        pytest.approx(
+            np.sum(edges[:-1] * hist)
+            / np.sum(corsika_output_instance_set_histograms.num_photons_per_telescope),
+            1,
+        )
+        == 1
+    )
+
+    with pytest.raises(ValueError):
+        corsika_output_instance_set_histograms.get_num_photons_distr(
+            bins=50, range=None, event_or_telescope="not_valid_name"
+        )
+        msg = "`event_or_telescope` has to be either 'event' or 'telescope'."
+        msg in caplog.text

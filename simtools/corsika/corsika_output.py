@@ -971,7 +971,8 @@ class CorsikaOutput:
 
     def get_num_photons_distr(self, bins=50, range=None, event_or_telescope="event"):
         """
-        Get the distribution of photons per event.
+        Get the distribution of photons per event or per telescope, depending on the string
+        passed through `event_or_telescope`.
 
         Parameters
         ----------
