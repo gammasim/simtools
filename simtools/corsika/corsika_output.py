@@ -7,7 +7,6 @@ from pathlib import Path
 import boost_histogram as bh
 import numpy as np
 from astropy import units as u
-from astropy.io.misc import yaml
 from astropy.units import cds
 from corsikaio.subblocks import event_header, get_units_from_fields, run_header
 from eventio import IACTFile
@@ -17,6 +16,7 @@ from simtools.util.general import (
     collect_data_from_yaml_or_dict,
     convert_2D_to_radial_distr,
     rotate,
+    save_dict_to_file,
 )
 
 
@@ -319,9 +319,7 @@ class CorsikaOutput:
             file_name = f"{file_name}.yml"
         output_config_path = self.io_handler.get_output_directory(self.label, "corsika")
         output_config_file = output_config_path.joinpath(file_name)
-        self._logger.info(f"Exporting histogram configuration to {output_config_file}")
-        with open(output_config_file, "w") as file:
-            yaml.dump(self.hist_config, file)
+        save_dict_to_file(self.hist_config, output_config_file)
 
     def _create_histogram_default_config(self):
         """
