@@ -725,3 +725,19 @@ def test_get_event_parameter_info(corsika_output_instance_set_histograms, caplog
             f"`key` is not valid. Valid entries are "
             f"{corsika_output_instance_set_histograms.all_event_keys}" in caplog.text
         )
+
+
+def test_get_run_info(corsika_output_instance_set_histograms, caplog):
+    for parameter in corsika_output_instance_set_histograms.all_run_keys[1:]:
+        print(corsika_output_instance_set_histograms.get_run_info(parameter))
+        assert isinstance(
+            corsika_output_instance_set_histograms.get_run_info(parameter),
+            u.quantity.Quantity,
+        )
+
+    with pytest.raises(KeyError):
+        corsika_output_instance_set_histograms.get_run_info("non_existent_parameter")
+        assert (
+            f"`key` is not valid. Valid entries are "
+            f"{corsika_output_instance_set_histograms.all_run_keys}" in caplog.text
+        )
