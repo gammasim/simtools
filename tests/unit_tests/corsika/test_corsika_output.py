@@ -573,3 +573,11 @@ def test_num_photons_per_event(corsika_output_instance_set_histograms):
     assert (
         pytest.approx(corsika_output_instance_set_histograms.num_photons_per_event[1], 1) == 4582.9
     )
+
+
+def test_num_photons_per_telescope(corsika_output_instance_set_histograms):
+    assert np.size(corsika_output_instance_set_histograms.num_photons_per_telescope) == 87
+    assert (
+        pytest.approx(np.sum(corsika_output_instance_set_histograms.num_photons_per_telescope), 1)
+        == 25425.8 + 4582.9
+    )
