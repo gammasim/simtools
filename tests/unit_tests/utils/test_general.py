@@ -7,8 +7,8 @@ from pathlib import Path
 import astropy.units as u
 import numpy as np
 import pytest
-import yaml
 from astropy.coordinates.errors import UnitsError
+from astropy.io.misc import yaml
 
 import simtools.util.general as gen
 from simtools.util.general import InvalidConfigEntry
@@ -22,7 +22,7 @@ def test_collect_dict_data(args_dict, io_handler):
     test_yaml_file = io_handler.get_output_file(file_name="test_collect_dict_data.yml", test=True)
     if not Path(test_yaml_file).exists():
         with open(test_yaml_file, "w") as output:
-            yaml.safe_dump(dict_for_yaml, output, sort_keys=False)
+            yaml.dump(dict_for_yaml, output, sort_keys=False)
 
     d1 = gen.collect_data_from_yaml_or_dict(None, in_dict)
     assert "k2" in d1.keys()
@@ -236,3 +236,24 @@ def test_convert_2D_to_radial_distr(caplog):
         f"parameters to increase the bin size and avoid nan in the histogram values."
     )
     assert msg in caplog.text
+
+
+def test_save_dict_to_file():
+
+    # str
+    paths = ["test_file", "test_file.yml"]
+    example_dict = {"key": 12}
+    for path in paths:
+        gen.save_dict_to_file(example_dict, path)
+        with open("test_file.yml") as file:
+            new_example_dict = yaml.load(file)
+            assert new_example_dict == example_dict
+        Path("test_file.yml").unlink()
+
+    # Path
+    path = Path("test_file_2.yml")
+    example_dict = {"key": 12}
+    gen.save_dict_to_file(example_dict, path)
+    with open(path) as file:
+        new_example_dict = yaml.load(file)
+        assert new_example_dict == example_dict
