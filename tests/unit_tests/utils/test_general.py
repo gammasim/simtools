@@ -233,6 +233,6 @@ def test_convert_2D_to_radial_distr(caplog):
     msg = (
         f"The histogram with number of bins {4 * num_bins} and maximum distance of {max_dist} "
         f"resulted in a bin size smaller than the original array. Please adjust those "
-        f"parameters to increase the bin size."
+        f"parameters to increase the bin size and avoid nan in the histogram values."
     )
     assert msg in caplog.text
