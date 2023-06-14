@@ -231,7 +231,7 @@ def test_set_histograms_all_telescopes_1_histogram(corsika_output_instance):
     corsika_output_instance.set_histograms(telescope_indices=None, individual_telescopes=False)
     assert np.shape(corsika_output_instance.hist_position[0].values()) == (100, 100, 80)
     # assert that the histograms are filled
-    assert np.count_nonzero(corsika_output_instance.hist_position[0][:, :, sum].view().T) == 157
+    assert np.count_nonzero(corsika_output_instance.hist_position[0][:, :, sum].view().T) == 159
     # and the sum is what we expect
     assert np.sum(corsika_output_instance.hist_position[0].view()) == 10031.0
 
@@ -250,7 +250,7 @@ def test_set_histograms_3_telescopes_3_histograms(corsika_output_instance):
     # 3 telescopes and 3 histograms
     corsika_output_instance.set_histograms(telescope_indices=[0, 1, 2], individual_telescopes=True)
 
-    hist_non_zero_bins = [831, 904, 937]
+    hist_non_zero_bins = [827, 911, 966]
     hist_sum = [959.0, 1062.0, 1156.0]
     for i_hist in range(3):
         assert np.shape(corsika_output_instance.hist_position[i_hist].values()) == (64, 64, 80)

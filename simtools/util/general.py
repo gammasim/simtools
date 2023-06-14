@@ -743,12 +743,17 @@ def rotate(x, y, rotation_angle_phi, rotation_angle_theta=0 * u.rad):
                 "Cannot perform coordinate transformation when x and y have different units."
             )
 
-    x_trans = np.cos(rotation_angle_theta) * (
+    """x_trans = np.cos(rotation_angle_theta) * (
         x * np.cos(rotation_angle_phi) - y * np.sin(rotation_angle_phi)
     )
     y_trans = np.cos(rotation_angle_theta) * (
         x * np.sin(rotation_angle_phi) + y * np.cos(rotation_angle_phi)
-    )
+    )"""
+    x_trans = x * np.cos(rotation_angle_theta) * np.cos(rotation_angle_phi) - y * np.cos(
+        rotation_angle_theta
+    ) * np.sin(rotation_angle_phi)
+    y_trans = x * np.sin(rotation_angle_phi) + y * np.cos(rotation_angle_phi)
+
     return x_trans, y_trans
 
 
