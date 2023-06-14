@@ -1,6 +1,8 @@
 #!/usr/bin/python3
 
 
+import copy
+
 import boost_histogram as bh
 import numpy as np
 import pytest
@@ -255,6 +257,36 @@ def test_set_histograms_3_telescopes_3_histograms(corsika_output_instance):
         )
         # and the sum is what we expect
         assert np.sum(corsika_output_instance.hist_position[i_hist].view()) == hist_sum[i_hist]
+
+
+def test_set_histograms_passing_config(corsika_output_instance):
+    new_hist_config = copy.copy(corsika_output_instance.hist_config)
+    xy_maximum = 500 * u.m
+    xy_bin = 100
+    new_hist_config["hist_position"] = {
+        "x axis": {
+            "bins": xy_bin,
+            "start": -xy_maximum,
+            "stop": xy_maximum,
+            "scale": "linear",
+        },
+        "y axis": {
+            "bins": xy_bin,
+            "start": -xy_maximum,
+            "stop": xy_maximum,
+            "scale": "linear",
+        },
+        "z axis": {
+            "bins": 80,
+            "start": 200 * u.nm,
+            "stop": 1000 * u.nm,
+            "scale": "linear",
+        },
+    }
+    corsika_output_instance.set_histograms(individual_telescopes=False, hist_config=new_hist_config)
+    assert corsika_output_instance.hist_position[0][:, :, sum].shape == (100, 100)
+    assert corsika_output_instance.hist_position[0][:, :, sum].axes[0].edges[0] == -500
+    assert corsika_output_instance.hist_position[0][:, :, sum].axes[0].edges[-1] == 500
 
 
 def test_raise_if_no_histogram():
