@@ -1039,7 +1039,8 @@ class CorsikaOutput:
     @property
     def telescope_positions(self):
         """
-        The telescope positions.
+        The telescope positions found in the CORSIKA output file.
+        It does not depend on the `telescope_indices` attribute.
 
         Returns
         -------
