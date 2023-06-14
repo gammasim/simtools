@@ -72,6 +72,10 @@ def test_init(corsika_output_instance):
     assert corsika_output_instance.version == 7.741
 
 
+def test_initialize_header(corsika_output_instance):
+    assert hasattr(corsika_output_instance, "header")
+
+
 def test_telescope_indices(corsika_output_instance):
     corsika_output_instance.telescope_indices = [0, 1, 2]
     assert (corsika_output_instance.telescope_indices == [0, 1, 2]).all()
