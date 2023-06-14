@@ -2,7 +2,6 @@ import copy
 import logging
 import mmap
 import os
-import pickle
 import re
 from collections import namedtuple
 from pathlib import Path
@@ -27,6 +26,8 @@ __all__ = [
     "sort_arrays",
     "validate_config_data",
     "get_log_excerpt",
+    "convert_2D_to_radial_distr",
+    "save_dict_to_file",
 ]
 
 
@@ -860,8 +861,13 @@ def save_dict_to_file(dictionary, file_name):
     ----------
     dictionary: dict
         Dictionary to be saved into a file.
-    file_name: str
-        Name of file to be saved.
+    file_name: str or Path
+        Name of file to be saved with path.
     """
-    with open(file_name, "wb") as f:
-        pickle.dump(dictionary, f)
+    logger = logging.getLogger(__name__)
+    if isinstance(file_name, str) and file_name[-4:] != ".yml":
+        file_name = f"{file_name}.yml"
+    file_name = Path(file_name)
+    logger.info(f"Exporting histogram configuration to {file_name}")
+    with open(file_name, "w") as file:
+        yaml.dump(dictionary, file)
