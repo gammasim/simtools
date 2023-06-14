@@ -657,17 +657,39 @@ def test_telescope_positions(corsika_output_instance_set_histograms):
 
 
 def test_event_zenith_angles(corsika_output_instance_set_histograms):
-    assert (corsika_output_instance_set_histograms.event_zenith_angles.value == [20, 20]).all()
+    for i_event in range(corsika_output_instance_set_histograms.num_events):
+        assert corsika_output_instance_set_histograms.event_zenith_angles.value[i_event] == 20
     assert corsika_output_instance_set_histograms.event_zenith_angles.unit == u.deg
 
 
 def test_event_azimuth_angles(corsika_output_instance_set_histograms):
-    assert (
-        np.around(corsika_output_instance_set_histograms.event_azimuth_angles.value) == [-5, -5]
-    ).all()
+    for i_event in range(corsika_output_instance_set_histograms.num_events):
+        assert (
+            np.around(corsika_output_instance_set_histograms.event_azimuth_angles.value)[i_event]
+            == -5
+        )
     assert corsika_output_instance_set_histograms.event_azimuth_angles.unit == u.deg
 
 
 def test_event_energies(corsika_output_instance_set_histograms):
-    assert pytest.approx(corsika_output_instance_set_histograms.event_energies.value[0], 2) == 0.01
+    for i_event in range(corsika_output_instance_set_histograms.num_events):
+        assert (
+            pytest.approx(corsika_output_instance_set_histograms.event_energies.value[i_event], 2)
+            == 0.01
+        )
     assert corsika_output_instance_set_histograms.event_energies.unit == u.TeV
+
+
+def test_event_first_interaction_heights(corsika_output_instance_set_histograms):
+    first_height = [-10.3, -39.7]
+    for i_event in range(corsika_output_instance_set_histograms.num_events):
+        assert (
+            pytest.approx(
+                corsika_output_instance_set_histograms.event_first_interaction_heights.value[
+                    i_event
+                ],
+                1,
+            )
+            == first_height[i_event]
+        )
+    assert corsika_output_instance_set_histograms.event_first_interaction_heights.unit == u.km
