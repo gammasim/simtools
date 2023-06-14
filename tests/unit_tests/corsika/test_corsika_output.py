@@ -648,3 +648,9 @@ def test_telescope_positions(corsika_output_instance_set_histograms):
 
     for i_coord in range(4):
         assert telescope_positions[0][i_coord] == coords_tel_0[i_coord]
+
+    # Test setting telescope position
+    new_telescope_positions = copy.copy(telescope_positions)
+    new_telescope_positions[0][0] = -400.0
+    corsika_output_instance_set_histograms.telescope_positions = new_telescope_positions
+    assert corsika_output_instance_set_histograms.telescope_positions[0][0] == -400.0
