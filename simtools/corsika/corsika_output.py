@@ -427,7 +427,6 @@ class CorsikaOutput:
 
         boost_axes = []
         for axis in all_axes:
-
             if isinstance(self.hist_config[label][axis]["start"], u.quantity.Quantity):
                 start = self.hist_config[label][axis]["start"].value
                 stop = self.hist_config[label][axis]["stop"].value
