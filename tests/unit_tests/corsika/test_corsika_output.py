@@ -710,3 +710,18 @@ def test_magnetic_field(corsika_output_instance_set_histograms):
             == -9.4
         )
     assert corsika_output_instance_set_histograms.magnetic_field[0].unit == u.uT
+
+
+def test_get_event_parameter_info(corsika_output_instance_set_histograms, caplog):
+    for parameter in corsika_output_instance_set_histograms.all_event_keys[1:]:
+        assert isinstance(
+            corsika_output_instance_set_histograms.get_event_parameter_info(parameter),
+            u.quantity.Quantity,
+        )
+
+    with pytest.raises(KeyError):
+        corsika_output_instance_set_histograms.get_event_parameter_info("non_existent_parameter")
+        assert (
+            f"`key` is not valid. Valid entries are "
+            f"{corsika_output_instance_set_histograms.all_event_keys}" in caplog.text
+        )
