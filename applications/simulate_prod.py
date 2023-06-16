@@ -22,18 +22,18 @@
     ----------------------
     production_config (str, Path, required)
         Simulation configuration file
-        (contains the default setup which can be overwritten by the command line options)
+        (contains the default setup which can be overwritten by the command line options).
     prod_tag (str, required)
-        The production tag (ID) to use (e.g., Prod5)
+        The production tag (ID) to use (e.g., Prod5).
     site (str, required)
-        Paranal or LaPalma (case insensitive)
+        Paranal or LaPalma (case insensitive).
     primary (str, required)
         Name of the primary particle to simulate. The available options are
         gamma, gamma_diffuse, electron, proton, muon, helium, nitrogen, silicon, and iron.
     from_azimuth_direction (str, required)
-        Should be one of North, South, East, West (case insensitive)
+        Should be one of North, South, East, West (case insensitive).
     zenith_angle (float, required)
-        Zenith angle in degrees
+        Zenith angle in degrees.
     nshow (int, optional)
         Number of showers to simulate.
         The Number of simulated events depends on the number of times a shower is re-used in the
@@ -43,7 +43,7 @@
         This is useful in case a new transform is submitted for the same production.
         It allows the transformation system to keep using sequential run numbers without repetition.
     run (int, required)
-        Run number (actual run number will be 'start_run' + 'run')
+        Run number (actual run number will be 'start_run' + 'run').
     log_level (str, optional)
         Log level to print (default=INFO).
 
@@ -60,7 +60,7 @@
 
     By default the configuration is saved in simtools-output/test-production
     and the output in corsika-data and simtel-data. The location of the latter directories
-    can be set to a different location via the option --data_directory)
+    can be set to a different location via the option --data_directory).
 
     Expected final print-out message:
 
@@ -95,17 +95,17 @@ from simtools.simulator import Simulator
 
 def _parse(description=None):
     """
-    Parse command line configuration
+    Parse the command line configuration.
 
     Parameters
     ----------
     description: str
-        description of application.
+        Description of the application.
 
     Returns
     -------
     CommandLineParser
-        command line parser object
+        Command line parser object.
 
     """
 
@@ -205,24 +205,24 @@ def _parse(description=None):
 
 def _proccess_simulation_config_file(config_file, primary_config, logger):
     """
-    Read simulation configuration file with details on shower
-    and array simulations
+    Read the simulation configuration file with all the details
+    on shower and array simulations.
 
     Attributes
     ----------
     config_file: str
-        Name of simulation configuration file
+        Name of simulation configuration file.
     primary_config: str
         Name of the primary selected from the configuration file.
 
     Returns
     -------
     str
-        label of simulation configuration
+        Label of simulation configuration.
     dict
-        configuration of shower simulations
+        Configuration of shower simulations.
     dict
-        configuration of array simulations
+        Configuration of array simulations.
 
     """
 
@@ -277,17 +277,17 @@ def _proccess_simulation_config_file(config_file, primary_config, logger):
 
 def _translate_from_azimuth_direction_to_phi(logger, from_azimuth_direction):
     """
-    Translate the direction particles are coming from to an azimuth angle
+    Translate the direction particles are coming from to an azimuth angle.
 
     Attributes
     ----------
     from_azimuth_direction: str (north, south, east, west)
-        The direction particles are coming from
+        The direction particles are coming from.
 
     Returns
     -------
     float (Astropy.Quantity)
-        The phi angle for CORSIKA configuration
+        The phi angle for CORSIKA configuration.
 
     """
 
