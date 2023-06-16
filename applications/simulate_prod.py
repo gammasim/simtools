@@ -4,7 +4,7 @@
     Summary
     -------
     This application is used to run simulations for productions (typically on the grid).
-    It allows to run a Paranal (CTA-South) or La Palma (CTA-North) array layout simulation
+    It allows to run a Paranal (CTAO-South) or La Palma (CTAO-North) array layout simulation
     with the provided "prod_tag" simulation configuration (e.g., Prod6)
     for a given primary particle, azimuth, and zenith angle.
 
@@ -23,10 +23,10 @@
     production_config (str, Path, required)
         Simulation configuration file
         (contains the default setup which can be overwritten by the command line options).
-    prod_tag (str, required)
-        The production tag (ID) to use (e.g., Prod5).
+    model_version (str, required)
+        The telescope model version to use (e.g., Prod5).
     site (str, required)
-        Paranal or LaPalma (case insensitive).
+        North or South (case insensitive).
     primary (str, required)
         Name of the primary particle to simulate. The available options are
         gamma, gamma_diffuse, electron, proton, muon, helium, nitrogen, silicon, and iron.
@@ -54,8 +54,8 @@
     .. code-block:: console
 
         python applications/simulate_prod.py \
-        --production_config tests/resources/prod_multi_config_test.yml --prod_tag Prod5 \
-        --site lapalma --primary gamma --from_azimuth_direction north --zenith_angle 20 \
+        --production_config tests/resources/prod_multi_config_test.yml --model_version Prod5 \
+        --site north --primary gamma --from_azimuth_direction north --zenith_angle 20 \
          --start_run 0 --run 1
 
     By default the configuration is saved in simtools-output/test-production
@@ -72,7 +72,7 @@
         INFO::layout_array(l569)::read_telescope_list_file::Reading array elements from ...
         INFO::corsika_config(l493)::_set_output_file_and_directory::Creating directory
         INFO::simulator(l405)::simulate::Submission command: local
-        INFO::simulator(l410)::simulate::Starting submission for 1 runs
+        INFO::simulator(l410)::simulate::Starting submission for 1 run
         INFO::array_model(l315)::export_simtel_array_config_file::Writing array config file into
         INFO::job_manager(l95)::submit::Submitting script
         INFO::job_manager(l96)::submit::Job output stream
@@ -118,22 +118,6 @@ def _parse(description=None):
         ),
         type=str,
         required=True,
-    )
-    config.parser.add_argument(
-        "--prod_tag",
-        help="The production tag (ID) to use (e.g., Prod5)",
-        type=str,
-        required=True,
-    )
-    config.parser.add_argument(
-        "--site",
-        help="CTAO site (e.g., Paranal or LaPalma, case insensitive)",
-        type=str.lower,
-        required=True,
-        choices=[
-            "paranal",
-            "lapalma",
-        ],
     )
     config.parser.add_argument(
         "--primary",
@@ -200,7 +184,7 @@ def _parse(description=None):
         required=False,
         default="./",
     )
-    return config.initialize(db_config=True)
+    return config.initialize(db_config=True, telescope_model=True)
 
 
 def _proccess_simulation_config_file(config_file, primary_config, logger):
