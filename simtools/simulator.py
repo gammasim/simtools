@@ -411,7 +411,10 @@ class Simulator:
         runs_and_files_to_submit = self._get_runs_and_files_to_submit(
             input_file_list=input_file_list
         )
-        self._logger.info(f"Starting submission for {len(runs_and_files_to_submit)} runs")
+        self._logger.info(
+            f"Starting submission for {len(runs_and_files_to_submit)} "
+            f"run{'s' if len(runs_and_files_to_submit) > 1 else ''}"
+        )
 
         for run, file in runs_and_files_to_submit.items():
 
