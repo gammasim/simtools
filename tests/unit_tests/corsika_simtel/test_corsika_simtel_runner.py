@@ -97,10 +97,10 @@ def corsika_simtel_runner(common_args, corsika_args, simtel_args):
 #     return corsika_file
 
 
-def test_get_run_script(corsika_simtel_runner):
+def test_prepare_run_script(corsika_simtel_runner):
     # No run number is given
 
-    script = corsika_simtel_runner.get_run_script()
+    script = corsika_simtel_runner.prepare_run_script()
 
     assert script.exists()
     with open(script, "r") as f:
@@ -111,7 +111,7 @@ def test_get_run_script(corsika_simtel_runner):
 
     # Run number is given
     run_number = 3
-    script = corsika_simtel_runner.get_run_script(run_number=run_number)
+    script = corsika_simtel_runner.prepare_run_script(run_number=run_number)
 
     assert script.exists()
     with open(script, "r") as f:
@@ -122,10 +122,10 @@ def test_get_run_script(corsika_simtel_runner):
         assert "-R 3" in script_content
 
 
-def test_get_run_script_with_invalid_run(corsika_simtel_runner):
+def test_prepare_run_script_with_invalid_run(corsika_simtel_runner):
     for run in [-2, "test"]:
         with pytest.raises(ValueError):
-            _ = corsika_simtel_runner.get_run_script(run_number=run)
+            _ = corsika_simtel_runner.prepare_run_script(run_number=run)
 
 
 def test_export_multipipe_script(corsika_simtel_runner):

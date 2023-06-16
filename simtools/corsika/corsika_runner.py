@@ -172,7 +172,7 @@ class CorsikaRunner:
         self._corsika_log_dir = corsika_base_dir.joinpath("log")
         self._corsika_log_dir.mkdir(parents=True, exist_ok=True)
 
-    def get_run_script(self, use_pfp=True, **kwargs):
+    def prepare_run_script(self, use_pfp=True, **kwargs):
         """
         Get the full path of the run script file for a given run number.
 

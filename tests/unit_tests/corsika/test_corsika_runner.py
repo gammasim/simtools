@@ -50,10 +50,10 @@ def corsika_file(io_handler):
     return corsika_file
 
 
-def test_get_run_script(corsika_runner):
+def test_prepare_run_script(corsika_runner):
     # No run number is given
 
-    script = corsika_runner.get_run_script()
+    script = corsika_runner.prepare_run_script()
 
     assert script.exists()
     with open(script, "r") as f:
@@ -64,7 +64,7 @@ def test_get_run_script(corsika_runner):
 
     # Run number is given
     run_number = 3
-    script = corsika_runner.get_run_script(run_number=run_number)
+    script = corsika_runner.prepare_run_script(run_number=run_number)
 
     assert script.exists()
     with open(script, "r") as f:
@@ -75,16 +75,16 @@ def test_get_run_script(corsika_runner):
         assert "-R 3" in script_content
 
 
-def test_get_run_script_with_invalid_run(corsika_runner):
+def test_prepare_run_script_with_invalid_run(corsika_runner):
     for run in [-2, "test"]:
         with pytest.raises(ValueError):
-            _ = corsika_runner.get_run_script(run_number=run)
+            _ = corsika_runner.prepare_run_script(run_number=run)
 
 
-def test_get_run_script_with_extra(corsika_runner):
+def test_prepare_run_script_with_extra(corsika_runner):
 
     extra = ["testing", "testing-extra-2"]
-    script = corsika_runner.get_run_script(run_number=3, extra_commands=extra)
+    script = corsika_runner.prepare_run_script(run_number=3, extra_commands=extra)
 
     assert gen.file_has_text(script, "testing-extra-2")
     with open(script, "r") as f:
@@ -94,9 +94,9 @@ def test_get_run_script_with_extra(corsika_runner):
         assert "sim_telarray/bin/pfp" in script_content
 
 
-def test_get_run_script_without_pfp(corsika_runner):
+def test_prepare_run_script_without_pfp(corsika_runner):
 
-    script = corsika_runner.get_run_script(use_pfp=False)
+    script = corsika_runner.prepare_run_script(use_pfp=False)
 
     assert script.exists()
     with open(script, "r") as f:
