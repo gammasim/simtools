@@ -235,8 +235,6 @@ class Simulator:
             "parameters", "array-simulator_parameters.yml"
         )
         _parameters = gen.collect_data_from_yaml_or_dict(_parameter_file, None)
-        # The solution below with ignore_unidentified might be temporary
-        # TODO - Think if there's a better solution
         self.config = gen.validate_config_data(_rest_config, _parameters, ignore_unidentified=True)
 
         self.array_model = ArrayModel(
