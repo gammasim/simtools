@@ -35,7 +35,9 @@
     zenith_angle (float, required)
         Zenith angle in degrees
     nshow (int, optional)
-        Number of showers to simulate
+        Number of showers to simulate.
+        The Number of simulated events depends on the number of times a shower is re-used in the
+        telescope simulation. The number provided here is before any reuse factors.
     start_run (int, required)
         Start run number such that the actual run number will be 'start_run' + 'run'.
         This is useful in case a new transform is submitted for the same production.
