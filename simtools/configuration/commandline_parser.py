@@ -198,9 +198,9 @@ class CommandLineParser(argparse.ArgumentParser):
         Parameters
         ----------
         add_model_version: bool
-            Set if to allow a simulation model argument.
+            Set to allow a simulation model argument.
         add_telescope: bool
-            Set if to allow a telescope name argument.
+            Set to allow a telescope name argument.
         """
 
         _job_group = self.add_argument_group("telescope model")
