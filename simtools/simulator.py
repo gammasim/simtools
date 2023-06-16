@@ -418,7 +418,7 @@ class Simulator:
 
         for run, file in runs_and_files_to_submit.items():
 
-            run_script = self._simulation_runner.get_run_script(
+            run_script = self._simulation_runner.prepare_run_script(
                 run_number=run, input_file=file, extra_commands=self._extra_commands
             )
 

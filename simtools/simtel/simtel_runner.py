@@ -91,7 +91,7 @@ class SimtelRunner:
         self._logger.error(msg)
         raise ValueError(msg)
 
-    def get_run_script(self, test=False, input_file=None, run_number=None, extra_commands=None):
+    def prepare_run_script(self, test=False, input_file=None, run_number=None, extra_commands=None):
         """
         Builds and returns the full path of the bash run script containing the sim_telarray command.
 
