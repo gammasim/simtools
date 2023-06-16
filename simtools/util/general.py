@@ -87,6 +87,9 @@ def validate_config_data(config_data, parameters, ignore_unidentified=False):
         Input config data.
     parameters: dict
         Parameter information necessary for validation.
+    ignore_unidentified: bool
+        If set to True, unidentified parameters provided in config_data are ignored
+        and a debug message is printed. Otherwise, an unidentified parameter leads to an error.
 
     Raises
     ------
