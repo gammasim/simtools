@@ -1,24 +1,24 @@
 [build-system]
-requires = ["setuptools>=61.0"]
+requires = ["setuptools>=65"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "gammasim-tools"
+name = "simtools"
+description = "Tools for the Simulation System of the CTA Observatory"
+readme = "README.rst"
+license = { file="LICENSE" }
 version = "0.4.0"
 authors = [
   { name="Orel Gueta", email="orel.gueta@desy.de" },
   { name="Victor Barbosa Martins", email="victor.barbosa.martins@desy.de" },
   { name="Gernot Maier", email="gernot.maier@desy.de" },
 ]
-description = "Tools for the Simulation System of the CTA Observatory"
-readme = "README.rst"
-license = { file="LICENSE" }
-requires-python = ">=3.8"
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: BSD-3-Clause",
     "Operating System :: OS Independent",
 ]
+requires-python = ">=3.9"
 dependencies = [
     "astropy",
     "matplotlib",
