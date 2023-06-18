@@ -1,0 +1,47 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "gammasim-tools"
+version = "0.4.0"
+authors = [
+  { name="Orel Gueta", email="orel.gueta@desy.de" },
+  { name="Victor Barbosa Martins", email="victor.barbosa.martins@desy.de" },
+  { name="Gernot Maier", email="gernot.maier@desy.de" },
+]
+description = "Tools for the Simulation System of the CTA Observatory"
+readme = "README.rst"
+license = { file="LICENSE" }
+requires-python = ">=3.8"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: BSD-3-Clause",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "astropy",
+    "matplotlib",
+    "numpy",
+    "pyyaml",
+    "scipy",
+    "pymongo",
+    "pyproj",
+    "zstandard",
+]
+
+[project.optional-dependencies]
+"tests" = [
+    "pytest",
+    "pytest-cov",
+]
+
+[project.urls]
+"documentation" = "https://gammasim.github.io/gammasim-tools/"
+"repository" = "https://github.com/gammasim/gammasim-tools"
+"bug tracker" = "https://github.com/gammasim/gammasim-tools/issues"
+
+[project.scripts]
+print_array_elements = "applications.print_array_elements:main"
+[tool.setuptools.packages.find]
+where = ["simtools"]
