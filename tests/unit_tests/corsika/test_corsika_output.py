@@ -12,7 +12,7 @@ from astropy.io.misc import yaml
 
 from simtools.corsika.corsika_output import CorsikaOutput, HistogramNotCreated
 
-test_file_name = "tests/resources/tel_output_10GeV-2-gamma-20deg-CTAO-South.dat"
+test_file_name = "tests/resources/tel_output_10GeV-2-gamma-20deg-CTAO-South"
 
 
 @pytest.fixture
