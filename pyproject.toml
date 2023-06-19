@@ -21,12 +21,13 @@ classifiers = [
 requires-python = ">=3.9"
 dependencies = [
     "astropy",
+    "eventio",
     "matplotlib",
     "numpy",
     "pyyaml",
-    "scipy",
     "pymongo",
     "pyproj",
+    "scipy",
     "zstandard",
 ]
 
@@ -34,6 +35,15 @@ dependencies = [
 "tests" = [
     "pytest",
     "pytest-cov",
+]
+"dev" = [
+    "pre-commit",
+    "pyflakes",
+]
+"doc" = [
+    "numpydoc",
+    "sphinx",
+    "sphinx_rtd_theme",
 ]
 
 [project.urls]
