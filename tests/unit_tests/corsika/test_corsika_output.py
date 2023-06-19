@@ -16,10 +16,14 @@ test_file_name = "tests/resources/tel_output_10GeV-2-gamma-20deg-CTAO-South.dat"
 
 
 @pytest.fixture
-def corsika_output_instance_set_histograms(db, io_handler, corsika_output_file):
-    corsika_output_instance_to_set = CorsikaOutput(test_file_name)
-    corsika_output_instance_to_set.set_histograms()
-    return corsika_output_instance_to_set
+def corsika_output_instance(db, io_handler, corsika_output_file):
+    # db.export_file_db(
+    #    db_name="test-data",
+    #    dest=io_handler.get_output_directory(dir_type="corsika_output", test=True),
+    #    file_name=test_file_name,
+    # )
+    # return CorsikaOutput(corsika_output_file)
+    return CorsikaOutput("tests/resources/tel_output_10GeV-2-gamma-20deg-CTAO-South")
 
 
 def test_file_exists(corsika_output_file):
