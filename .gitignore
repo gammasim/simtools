@@ -18,3 +18,8 @@ set_env_db.sh
 .DS_Store
 
 telarray_rand.conf*
+
+# Distribution / packaging
+build/
+*.egg-info/
+.egg
