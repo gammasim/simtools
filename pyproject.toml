@@ -42,6 +42,6 @@ dependencies = [
 "bug tracker" = "https://github.com/gammasim/gammasim-tools/issues"
 
 [project.scripts]
-print_array_elements = "applications.print_array_elements:main"
+print_array_elements = "simtools.applications.print_array_elements:main"
 [tool.setuptools.packages.find]
 where = ["simtools"]
