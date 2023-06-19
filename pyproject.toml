@@ -44,4 +44,3 @@ dependencies = [
 [project.scripts]
 print_array_elements = "simtools.applications.print_array_elements:main"
 [tool.setuptools.packages.find]
-where = ["simtools"]
