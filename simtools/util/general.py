@@ -682,29 +682,30 @@ def change_dict_keys_case(data_dict, lower_case=True):
 
 
 @u.quantity_input(rotation_angle_phi=u.rad, rotation_angle_theta=u.rad)
-def rotate(x, y, rotation_angle_phi, rotation_angle_theta=0 * u.rad):
+def rotate(x, y, rotation_around_z_axis, rotation_around_y_axis=0 * u.rad):
     """
-    Transform the x and y coordinates of the telescopes according to two rotations in spherical
-    coordinates: `rotation_angle_phi` gives the rotation on the observation plane (x, y)
-     and `rotation_angle_theta` allows to rotate observation plane in space.
+    Transform the x and y coordinates of the telescopes according to two rotations:
+     `rotation_angle_around_z_axis` gives the rotation on the observation plane (x, y)
+     and `rotation_angle_around_y_axis` allows to rotate the observation plane in space.
     The function returns the rotated x and y values in the same unit given.
-    The direction of rotation of the elements in the plane is counterclockwise.
+    The direction of rotation of the elements in the plane is counterclockwise, i.e.,
+    the rotation of the coordinate system is clockwise.
 
     Parameters
     ----------
     x: numpy.array or list
-        x positions of the telescopes, usually in meters.
+        x positions of the entries (e.g. telescopes), usually in meters.
     y: numpy.array or list
-        y positions of the telescopes, usually in meters.
-    rotation_angle_phi: astropy.units.rad
-        Angle to rotate the array in the observation plane in radians.
-    rotation_angle_theta: astropy.units.rad
-        Angle to rotate the observation plane in radians.
+        y positions of the entries (e.g. telescopes), usually in meters.
+    rotation_angle_around_z_axis: astropy.units.rad
+        Angle to rotate the array in the observation plane (around z axis) in radians.
+    rotation_angle_around_y_axis: astropy.units.rad
+        Angle to rotate the observation plane around the y axis in radians.
 
     Returns
     -------
     2-tuple of list
-        x and y positions of the rotated telescopes positions.
+        x and y positions of the rotated entry (e.g. telescopes) positions.
 
     Raises
     ------
@@ -743,16 +744,10 @@ def rotate(x, y, rotation_angle_phi, rotation_angle_theta=0 * u.rad):
                 "Cannot perform coordinate transformation when x and y have different units."
             )
 
-    """x_trans = np.cos(rotation_angle_theta) * (
-        x * np.cos(rotation_angle_phi) - y * np.sin(rotation_angle_phi)
-    )
-    y_trans = np.cos(rotation_angle_theta) * (
-        x * np.sin(rotation_angle_phi) + y * np.cos(rotation_angle_phi)
-    )"""
-    x_trans = x * np.cos(rotation_angle_theta) * np.cos(rotation_angle_phi) - y * np.cos(
-        rotation_angle_theta
-    ) * np.sin(rotation_angle_phi)
-    y_trans = x * np.sin(rotation_angle_phi) + y * np.cos(rotation_angle_phi)
+    x_trans = x * np.cos(rotation_around_y_axis) * np.cos(rotation_around_z_axis) - y * np.cos(
+        rotation_around_y_axis
+    ) * np.sin(rotation_around_z_axis)
+    y_trans = x * np.sin(rotation_around_z_axis) + y * np.cos(rotation_around_z_axis)
 
     return x_trans, y_trans
 
