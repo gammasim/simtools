@@ -748,9 +748,10 @@ def _kernel_plot_2D_photons(corsika_output_instance, property_name, log_z=False)
         "time_altitude": "Altitude of emission (km)",
         "num_photons_per_telescope": "Telescope index",
     }
+    _logger = logging.getLogger(__name__)
     if property_name not in x_label:
         msg = f"property_name must be one of {list(x_label.keys())}"
-        corsika_output_instance._logger.error(msg)
+        _logger.error(msg)
         raise ValueError(msg)
 
     if property_name == "counts":
@@ -912,9 +913,10 @@ def _kernel_plot_1D_photons(corsika_output_instance, property_name, log_y=True):
         "altitude": "Altitude of emission (km)",
         "num_photons": "Number of photons per event",
     }
+    _logger = logging.getLogger(__name__)
     if property_name not in x_label:
-        msg = f"results: status must be one of {x_label}"
-        corsika_output_instance._logger.error(msg)
+        msg = f"results: status must be one of {list(x_label.keys())}"
+        _logger.error(msg)
         raise ValueError(msg)
 
     if property_name == "wavelength":
