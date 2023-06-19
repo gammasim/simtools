@@ -154,4 +154,12 @@ def test_kernel_plot_2D_photons(corsika_output_instance_set_histograms):
             corsika_output_instance_set_histograms, property_name
         )
         for i_hist, _ in enumerate(corsika_output_instance_set_histograms.telescope_indices):
-            assert isinstance(all_figs[i_hist], type(plt.figure()))
+            assert isinstance(all_figs[i_hist], plt.Figure)
+
+
+def test_plot_2Ds(corsika_output_instance_set_histograms):
+    for function_label in ["plot_2D_counts", "plot_2D_density", "plot_2D_direction"]:
+        function = getattr(visualize, function_label)
+        figs = function(corsika_output_instance_set_histograms)
+        assert isinstance(figs, list)
+        assert all(isinstance(fig, plt.Figure) for fig in figs)
