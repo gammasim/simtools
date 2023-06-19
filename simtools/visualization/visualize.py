@@ -749,7 +749,7 @@ def _kernel_plot_2D_photons(corsika_output_instance, property_name, log_z=False)
         "num_photons_per_telescope": "Telescope index",
     }
     if property_name not in x_label:
-        msg = f"property_name must be one of {x_label}"
+        msg = f"property_name must be one of {list(x_label.keys())}"
         corsika_output_instance._logger.error(msg)
         raise ValueError(msg)
 
