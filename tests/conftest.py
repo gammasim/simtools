@@ -251,18 +251,21 @@ def telescope_south_test_file():
 
 
 @pytest.fixture
-def corsika_output_file(io_handler):
+def corsika_output_file_name_string():
+    return "tests/resources/tel_output_10GeV-2-gamma-20deg-CTAO-South"
+
+
+@pytest.fixture
+def corsika_output_file_name(io_handler, corsika_output_file_name_string):
     corsika_output = gen.find_file(
-        "tests/resources/tel_output_10GeV-2-gamma-20deg-CTAO-South",
+        corsika_output_file_name_string,
         io_handler.get_output_directory(dir_type="corsika_output", test=True),
     )
     return corsika_output
 
 
 @pytest.fixture
-def corsika_output_instance_set_histograms(db, io_handler, corsika_output_file):
-    corsika_output_instance_to_set = CorsikaOutput(
-        "tests/resources/tel_output_10GeV-2-gamma-20deg-CTAO-South"
-    )
+def corsika_output_instance_set_histograms(db, io_handler, corsika_output_file_name):
+    corsika_output_instance_to_set = CorsikaOutput(corsika_output_file_name)
     corsika_output_instance_to_set.set_histograms()
     return corsika_output_instance_to_set

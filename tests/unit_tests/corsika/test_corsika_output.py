@@ -12,26 +12,24 @@ from astropy.io.misc import yaml
 
 from simtools.corsika.corsika_output import CorsikaOutput, HistogramNotCreated
 
-test_file_name = "tests/resources/tel_output_10GeV-2-gamma-20deg-CTAO-South"
-
 
 @pytest.fixture
-def corsika_output_instance(db, io_handler, corsika_output_file):
+def corsika_output_instance(db, io_handler, corsika_output_file_name_string):
     # db.export_file_db(
     #    db_name="test-data",
     #    dest=io_handler.get_output_directory(dir_type="corsika_output", test=True),
-    #    file_name=test_file_name,
+    #    file_name=corsika_output_file_name_string,
     # )
     # return CorsikaOutput(corsika_output_file)
-    return CorsikaOutput("tests/resources/tel_output_10GeV-2-gamma-20deg-CTAO-South")
+    return CorsikaOutput(corsika_output_file_name_string)
 
 
-def test_file_exists(corsika_output_file):
-    assert corsika_output_file.exists()
+def test_file_exists(corsika_output_file_name):
+    assert corsika_output_file_name.exists()
 
 
-def test_init(corsika_output_instance):
-    assert corsika_output_instance.input_file.name == Path(test_file_name).name
+def test_init(corsika_output_instance, corsika_output_file_name_string):
+    assert corsika_output_instance.input_file.name == Path(corsika_output_file_name_string).name
     with pytest.raises(FileNotFoundError):
         CorsikaOutput("wrong_file_name")
     assert len(corsika_output_instance.event_information) > 15
@@ -168,7 +166,7 @@ def test_create_histograms(corsika_output_instance):
         assert isinstance(corsika_output_instance.hist_time_altitude[0], bh.Histogram)
 
 
-def test_fill_histograms_no_rotation():
+def test_fill_histograms_no_rotation(corsika_output_file_name_string):
     # Sample test of photons: 1 telescope, 2 photons
     photons = [
         {
@@ -196,7 +194,7 @@ def test_fill_histograms_no_rotation():
     azimuth_angle = None
     zenith_angle = None
 
-    corsika_output_instance_fill = CorsikaOutput(test_file_name)
+    corsika_output_instance_fill = CorsikaOutput(corsika_output_file_name_string)
     corsika_output_instance_fill.individual_telescopes = False
     corsika_output_instance_fill.telescope_indices = [0]
 
@@ -276,8 +274,8 @@ def test_set_histograms_passing_config(corsika_output_instance):
     assert corsika_output_instance.hist_position[0][:, :, sum].axes[0].edges[-1] == 500
 
 
-def test_raise_if_no_histogram():
-    corsika_output_instance_not_hist = CorsikaOutput(test_file_name)
+def test_raise_if_no_histogram(corsika_output_file_name_string):
+    corsika_output_instance_not_hist = CorsikaOutput(corsika_output_file_name_string)
     with pytest.raises(HistogramNotCreated):
         corsika_output_instance_not_hist._raise_if_no_histogram()
         assert (
