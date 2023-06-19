@@ -131,7 +131,7 @@ def test_plot_array(
     test_one_site(telescope_south_test_file, layout_array_south_instance)
 
 
-def test_kernel_plot_2D_photons(corsika_output_instance_set_histograms):
+def test_kernel_plot_2D_photons(corsika_output_instance_set_histograms, caplog):
     corsika_output_instance_set_histograms.set_histograms(individual_telescopes=False)
     for property_name in [
         "counts",
@@ -156,6 +156,13 @@ def test_kernel_plot_2D_photons(corsika_output_instance_set_histograms):
         for i_hist, _ in enumerate(corsika_output_instance_set_histograms.telescope_indices):
             assert isinstance(all_figs[i_hist], plt.Figure)
 
+    with pytest.raises(ValueError):
+        all_figs = visualize._kernel_plot_2D_photons(
+            corsika_output_instance_set_histograms, "this_property_does_not_exist"
+        )
+        msg = "results: status must be one of "
+        assert msg in caplog.text
+
 
 def test_plot_2Ds(corsika_output_instance_set_histograms):
     for function_label in [
@@ -170,7 +177,7 @@ def test_plot_2Ds(corsika_output_instance_set_histograms):
         assert all(isinstance(fig, plt.Figure) for fig in figs)
 
 
-def test_kernel_plot_1D_photons(corsika_output_instance_set_histograms):
+def test_kernel_plot_1D_photons(corsika_output_instance_set_histograms, caplog):
     corsika_output_instance_set_histograms.set_histograms(individual_telescopes=False)
     labels = ["wavelength", "counts", "density", "time", "altitude"]
 
@@ -190,6 +197,13 @@ def test_kernel_plot_1D_photons(corsika_output_instance_set_histograms):
         )
         for i_hist, _ in enumerate(corsika_output_instance_set_histograms.telescope_indices):
             assert isinstance(all_figs[i_hist], plt.Figure)
+
+    with pytest.raises(ValueError):
+        all_figs = visualize._kernel_plot_1D_photons(
+            corsika_output_instance_set_histograms, "this_property_does_not_exist"
+        )
+        msg = "results: status must be one of "
+        assert msg in caplog.text
 
 
 def test_plot_1Ds(corsika_output_instance_set_histograms):
