@@ -485,6 +485,8 @@ class CorsikaOutput:
     def _fill_histograms(self, photons, azimuth_angle=None, zenith_angle=None):
         """Fill all the histograms created by self._create_histogram with the information of the
          photons on the ground.
+         If the azimuth and zenith angles are given the Cherenkov photon's coordinates are given in
+         the plane perpendicular to the incoming direction of the particle.
 
         Parameters
         ----------
