@@ -192,28 +192,10 @@ def test_rotate_telescope_position():
     # Testing with radians
     check_results(x_new_array, y_new_array, x_rot_new_array, y_rot_new_array, angle_deg.to(u.rad))
 
-    """# Testing rotation in theta (3D space)
-
-    import matplotlib.pyplot as plt
-    import matplotlib.patches as patches
-    fig, ax = plt.subplots()
-
-    x_rot_theta_manual, y_rot_theta_manual = gen.rotate(x, y, 0 * u.deg,
-                                                        50 * u.deg)
-    rect = patches.Rectangle((x[0], y[0]),
-                             x[-1] - x[0],
-                             y[-1] - y[0],
-                             linewidth=1, edgecolor='r', facecolor='r', alpha=0.5)
-    ax.add_patch(rect)
-    rect = patches.Rectangle((x_rot_theta_manual[0], y_rot_theta_manual[0]),
-                             x_rot_theta_manual[-1] - x_rot_theta_manual[0],
-                             y_rot_theta_manual[-1] - y_rot_theta_manual[0],
-                             linewidth=1, edgecolor='b', facecolor='b', alpha=0.5)
-    ax.set_xlim(-15, 15)
-    ax.set_ylim(-15, 15)
-    plt.plot(x_rot_theta_manual, y_rot_theta_manual)
-    fig.savefig('test_rotation.png')
-    check_results(x, y, x_rot_theta_manual, y_rot_theta_manual, 30 * u.deg, 45 * u.deg)"""
+    # Testing rotation in theta, around Y (3D)
+    x_rot_theta_manual = np.array([-2.6, -9.7, 9.7, 2.6])
+    y_rot_theta_manual = np.array([-13.7, 3.7, -3.7, 13.7])
+    check_results(x, y, x_rot_theta_manual, y_rot_theta_manual, angle_deg, 45 * u.deg)
 
     with pytest.raises(TypeError):
         gen.rotate(x, y[0], angle_deg)
