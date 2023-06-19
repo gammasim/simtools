@@ -168,3 +168,40 @@ def test_plot_2Ds(corsika_output_instance_set_histograms):
         figs = function(corsika_output_instance_set_histograms)
         assert isinstance(figs, list)
         assert all(isinstance(fig, plt.Figure) for fig in figs)
+
+
+def test_kernel_plot_1D_photons(corsika_output_instance_set_histograms):
+    corsika_output_instance_set_histograms.set_histograms(individual_telescopes=False)
+    labels = ["wavelength", "counts", "density", "time", "altitude"]
+
+    for property_name in np.append(labels, "num_photons"):
+        all_figs = visualize._kernel_plot_1D_photons(
+            corsika_output_instance_set_histograms, property_name
+        )
+        assert np.size(all_figs) == 1
+        assert isinstance(all_figs[0], type(plt.figure()))
+
+    corsika_output_instance_set_histograms.set_histograms(
+        individual_telescopes=True, telescope_indices=[0, 1, 2]
+    )
+    for property_name in labels:
+        all_figs = visualize._kernel_plot_1D_photons(
+            corsika_output_instance_set_histograms, property_name
+        )
+        for i_hist, _ in enumerate(corsika_output_instance_set_histograms.telescope_indices):
+            assert isinstance(all_figs[i_hist], plt.Figure)
+
+
+def test_plot_1Ds(corsika_output_instance_set_histograms):
+    for function_label in [
+        "plot_wavelength_distr",
+        "plot_counts_distr",
+        "plot_density_distr",
+        "plot_time_distr",
+        "plot_altitude_distr",
+        "plot_num_photons_distr",
+    ]:
+        function = getattr(visualize, function_label)
+        figs = function(corsika_output_instance_set_histograms)
+        assert isinstance(figs, list)
+        assert all(isinstance(fig, plt.Figure) for fig in figs)
