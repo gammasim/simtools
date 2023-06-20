@@ -1,5 +1,5 @@
 # A conda environment with all useful package for simtools developers
-name: simsools-dev
+name: simtools-dev
 channels:
   - conda-forge
 dependencies:
