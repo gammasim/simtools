@@ -30,6 +30,8 @@ __all__ = [
     "save_dict_to_file",
 ]
 
+_logger = logging.getLogger(__name__)
+
 
 class UnableToIdentifyConfigEntry(Exception):
     """Exception for unable to indentify configuration entry."""
@@ -334,7 +336,6 @@ def collect_data_from_yaml_or_dict(in_yaml, in_dict, allow_empty=False):
     data: dict
         Data as dict.
     """
-    _logger = logging.getLogger(__name__)
 
     if in_yaml is not None:
         if in_dict is not None:
@@ -601,7 +602,6 @@ def find_file(name, loc):
     FileNotFoundError
         If the desired file is not found.
     """
-    _logger = logging.getLogger(__name__)
 
     all_locations = copy.copy(loc)
     all_locations = [all_locations] if not isinstance(all_locations, list) else all_locations
