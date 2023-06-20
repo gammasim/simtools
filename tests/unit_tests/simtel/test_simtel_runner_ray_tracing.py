@@ -55,7 +55,7 @@ def test_load_required_files(simtel_runner_ray_tracing):
 
     simtel_runner_ray_tracing._load_required_files(force_simulate=False)
 
-    # This file is not actually needed and does not exist in gammasim-tools.
+    # This file is not actually needed and does not exist in simtools.
     # However, its name is needed too provide the name of a CORSIKA input file to sim_telarray
     # so here we check the it does not actually exist.
     assert not simtel_runner_ray_tracing._corsika_file.exists()
