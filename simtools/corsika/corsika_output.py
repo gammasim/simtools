@@ -682,6 +682,15 @@ class CorsikaOutput:
         label: str
             Label to indicate which histogram.
 
+        Returns
+        -------
+        numpy.ndarray
+            The counts of the histogram.
+        numpy.array
+            The x edges of the direction histograms in cos(x).
+        numpy.array
+            The y edges of the direction histograms in cos(y)
+
         Raises
         ------
         ValueError:
@@ -716,7 +725,7 @@ class CorsikaOutput:
             x_edges.append(mini_hist.axes.edges[0].flatten())
             y_edges.append(mini_hist.axes.edges[1].flatten())
 
-        return np.array(x_edges), np.array(y_edges), np.array(hist_values)
+        return np.array(hist_values), np.array(x_edges), np.array(y_edges)
 
     def get_2D_photon_position_distr(self, density=True):
         """
@@ -730,12 +739,12 @@ class CorsikaOutput:
 
         Returns
         -------
+        numpy.ndarray
+            The counts of the histogram.
         numpy.array
             The x edges of the density/count histograms in x, usually in meters.
         numpy.array
             The y edges of the density/count histograms in y, usually in meters.
-        numpy.ndarray
-            The counts of the histogram.
         """
         if density is True:
             return self._get_hist_2D_projection("density")
@@ -748,12 +757,12 @@ class CorsikaOutput:
 
         Returns
         -------
+        numpy.ndarray
+            The counts of the histogram.
         numpy.array
             The x edges of the direction histograms in cos(x).
         numpy.array
             The y edges of the direction histograms in cos(y)
-        numpy.ndarray
-            The counts of the histogram.
         """
         return self._get_hist_2D_projection("direction")
 
@@ -763,12 +772,12 @@ class CorsikaOutput:
 
         Returns
         -------
+        numpy.ndarray
+            The counts of the histogram.
         numpy.array
             The x edges of the time_altitude histograms, usually in ns.
         numpy.array
             The y edges of the time_altitude histograms, usually in km.
-        numpy.ndarray
-            The counts of the histogram.
         """
         return self._get_hist_2D_projection("time_altitude")
 
@@ -779,21 +788,21 @@ class CorsikaOutput:
 
         Returns
         -------
+        numpy.ndarray
+            The counts of the histogram.
         numpy.array
             Number of photons per event per telescope in self.telescope_indices.
         numpy.array
             An array that counts the telescopes in self.telescope_indices
-        numpy.ndarray
-            The counts of the histogram.
         """
         num_events_array = np.arange(self.num_events + 1)
         # It counts only the telescope indices given by self.telescope_indices.
         # The + 1 closes the last edge.
         telescope_counter = np.arange(len(self.telescope_indices) + 1)
         return (
+            np.array(self.num_photons_per_event_per_telescope),
             num_events_array,
             telescope_counter,
-            np.array(self.num_photons_per_event_per_telescope),
         )
 
     def _get_hist_1D_projection(self, label):
@@ -807,10 +816,10 @@ class CorsikaOutput:
 
         Returns
         -------
-        numpy.array
-            The edges of the histogram.
         numpy.ndarray
             The counts of the histogram.
+        numpy.array
+            The edges of the histogram.
 
         Raises
         ------
@@ -835,7 +844,7 @@ class CorsikaOutput:
 
             x_edges_list.append(mini_hist.axes.edges.T.flatten()[0])
             hist_1D_list.append(mini_hist.view().T)
-        return np.array(x_edges_list), np.array(hist_1D_list)
+        return np.array(hist_1D_list), np.array(x_edges_list)
 
     def get_photon_radial_distr(self, bins=None, max_dist=None, density=True):
         """
@@ -854,9 +863,9 @@ class CorsikaOutput:
         Returns
         -------
         np.array
-            The edges of the 1D histogram in meters with size = int(max_dist/bin_size) + 1.
-        np.array
             The counts of the 1D histogram with size = int(max_dist/bin_size).
+        np.array
+            The edges of the 1D histogram in meters with size = int(max_dist/bin_size) + 1.
         """
 
         if max_dist is None:
@@ -881,21 +890,21 @@ class CorsikaOutput:
             # positive axis
         edges_1D_list, hist1D_list = [], []
 
-        x_position_list, y_position_list, hist2D_values_list = self.get_2D_photon_position_distr(
+        hist2D_values_list, x_position_list, y_position_list = self.get_2D_photon_position_distr(
             density=density
         )
 
         for i_hist, _ in enumerate(x_position_list):
-            edges_1D, hist1D = convert_2D_to_radial_distr(
+            hist1D, edges_1D = convert_2D_to_radial_distr(
+                hist2D_values_list[i_hist],
                 x_position_list[i_hist],
                 y_position_list[i_hist],
-                hist2D_values_list[i_hist],
                 bins=bins,
                 max_dist=max_dist,
             )
             edges_1D_list.append(edges_1D)
             hist1D_list.append(hist1D)
-        return np.array(edges_1D_list), np.array(hist1D_list)
+        return np.array(hist1D_list), np.array(edges_1D_list)
 
     def get_photon_wavelength_distr(self):
         """
@@ -904,9 +913,10 @@ class CorsikaOutput:
         Returns
         -------
         np.array
-            The edges of the wavelength histogram in nanometers.
-        np.array
             The counts of the wavelength histogram.
+        np.array
+            The edges of the wavelength histogram in nanometers.
+
         """
         return self._get_hist_1D_projection("wavelength")
 
@@ -918,10 +928,11 @@ class CorsikaOutput:
 
         Returns
         -------
-        numpy.array
-            The edges of the time histograms in ns.
         numpy.ndarray
             The counts of the histogram.
+        numpy.array
+            The edges of the time histograms in ns.
+
         """
         return self._get_hist_1D_projection("time")
 
@@ -931,10 +942,11 @@ class CorsikaOutput:
 
         Returns
         -------
-        numpy.array
-            The edges of the photon altitude histograms in km.
         numpy.ndarray
             The counts of the histogram.
+        numpy.array
+            The edges of the photon altitude histograms in km.
+
         """
         return self._get_hist_1D_projection("altitude")
 
@@ -988,10 +1000,11 @@ class CorsikaOutput:
 
         Returns
         -------
-        numpy.array
-            Number of photons per event.
         numpy.ndarray
             The counts of the histogram.
+        numpy.array
+            Number of photons per event.
+
 
         Raises
         ------
@@ -1006,7 +1019,7 @@ class CorsikaOutput:
             msg = "`event_or_telescope` has to be either 'event' or 'telescope'."
             self._logger.error(msg)
             raise ValueError
-        return edges, hist
+        return hist, edges
 
     @property
     def num_photons_per_telescope(self):
@@ -1229,10 +1242,11 @@ class CorsikaOutput:
 
         Returns
         -------
-        numpy.array
-            Edges of the histogram.
         numpy.ndarray
             The counts of the histogram.
+        numpy.array
+            Edges of the histogram.
+
 
         Raises
         ------
@@ -1248,7 +1262,7 @@ class CorsikaOutput:
             bins=bins,
             range=range,
         )
-        return edges, hist
+        return hist, edges
 
     def event_2D_histogram(self, key_1, key_2, bins=50, range=None):
         """
@@ -1270,12 +1284,13 @@ class CorsikaOutput:
 
         Returns
         -------
+        numpy.ndarray
+            The counts of the histogram.
         numpy.array
             x Edges of the histogram.
         numpy.array
             y Edges of the histogram.
-        numpy.ndarray
-            The counts of the histogram.
+
 
         Raises
         ------
@@ -1296,4 +1311,4 @@ class CorsikaOutput:
             bins=bins,
             range=range,
         )
-        return x_edges, y_edges, hist
+        return hist, x_edges, y_edges

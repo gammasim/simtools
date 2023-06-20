@@ -778,18 +778,18 @@ def get_log_excerpt(log_file, n_last_lines=30):
     )
 
 
-def convert_2D_to_radial_distr(xaxis, yaxis, hist2d, bins=50, max_dist=1000):
+def convert_2D_to_radial_distr(hist2d, xaxis, yaxis, bins=50, max_dist=1000):
     """
     Convert a 2D histogram of positions, e.g. photon positions on the ground, to a 1D distribution.
 
     Parameters
     ----------
+    hist2d: numpy.ndarray
+        The histogram counts.
     xaxis: numpy.array
         The values of the x axis (histogram edges) on the ground.
     yaxis: numpy.array
         The values of the y axis (histogram edges) on the ground.
-    hist2d: numpy.ndarray
-        The histogram counts.
     bins: float
         Number of bins in distance.
     max_dist: float
@@ -798,9 +798,10 @@ def convert_2D_to_radial_distr(xaxis, yaxis, hist2d, bins=50, max_dist=1000):
     Returns
     -------
     np.array
-        The edges of the 1D histogram with size = int(max_dist/bin_size) + 1.
-    np.array
         The values of the 1D histogram with size = int(max_dist/bin_size).
+    np.array
+        The edges of the 1D histogram with size = int(max_dist/bin_size) + 1.
+
     """
     logger = logging.getLogger(__name__)
     # Check if the histogram will make sense
@@ -848,7 +849,7 @@ def convert_2D_to_radial_distr(xaxis, yaxis, hist2d, bins=50, max_dist=1000):
             distance_sorted < radial_edges[i_radial + 1]
         )
         histogram_1D[i_radial] = np.sum(hist_sorted[indices_to_sum]) / weights[i_radial]
-    return radial_edges, histogram_1D
+    return histogram_1D, radial_edges
 
 
 def save_dict_to_file(dictionary, file_name):
