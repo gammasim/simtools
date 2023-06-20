@@ -7,11 +7,11 @@ Model Database Access
 ---------------------
 
 Simulation model parameters are stored in a MongoDB-type database.
-Many gammasim-tools applications depend on access to this database; ask one of the developers for the credentials.
+Many simtools applications depend on access to this database; ask one of the developers for the credentials.
 
-Credentials for database access are passed on to gammasim-tools applications using environmental variables.
+Credentials for database access are passed on to simtools applications using environmental variables.
 For database access, copy \
-`set_DB_environ_template.sh <https://github.com/gammasim/gammasim-tools/blob/master/set_DB_environ_template.sh>`_ to a new file named ``set_DB_environ.sh``, and update it with the credentials:
+`set_DB_environ_template.sh <https://github.com/gammasim/simtools/blob/master/set_DB_environ_template.sh>`_ to a new file named ``set_DB_environ.sh``, and update it with the credentials:
 
 .. code-block::
 
@@ -25,7 +25,7 @@ See below for the usage of this script.
 Installation for Users
 ----------------------
 
-gammasim-tools is under rapid development and not ready for production use.
+simtools is under rapid development and not ready for production use.
 It will be made available in future using the conda packaging system.
 For now, expert users should follow the installation procedures for developers.
 
@@ -33,27 +33,27 @@ For now, expert users should follow the installation procedures for developers.
 Installation for Developers
 ---------------------------
 
-Developers install gammasim-tools directly from the GitHub repository:
+Developers install simtools directly from the GitHub repository:
 
 ++++++++++++++++++++
-Clone gammasim-tools
+Clone simtools
 ++++++++++++++++++++
 
 .. code-block:: console
 
-    $ git clone https://github.com/gammasim/gammasim-tools.git
+    $ git clone https://github.com/gammasim/simtools.git
 
 ++++++++++++++++++++
 Install dependencies
 ++++++++++++++++++++
 
-Create a conda virtual environment with the gammasim-tools dependencies installed:
+Create a conda virtual environment with the simtools dependencies installed:
 
 .. code-block:: console
 
     $ conda env create -f environment.yml
 
-    $ conda activate gammasim-tools-dev
+    $ conda activate simtools-dev
 
     $ pip install -e .
 
@@ -61,7 +61,7 @@ Create a conda virtual environment with the gammasim-tools dependencies installe
 Install CORSIKA and sim_telarray
 ++++++++++++++++++++++++++++++++
 
-CORSIKA and sim_telarray are external tools to gammasim-tools and are used by several gammasim-tools applications.
+CORSIKA and sim_telarray are external tools to simtools and are used by several simtools applications.
 Follow the instruction provided by the CORSIKA/sim_telarray authors for installation.
 CTA users can download both packages from `here <https://www.mpi-hd.mpg.de/hfm/CTA/MC/Software/Testing/>`_ and install the package with e.g.:
 
@@ -97,11 +97,11 @@ Docker Environment for Developers
 ---------------------------------
 
 A docker container is made available for developers, see the
-`gammasim-tools container repository <https://github.com/gammasim/containers/tree/main/dev>`_ for the Docker files.
-Images are uploaded to `package section <https://github.com/orgs/gammasim/packages?repo_name=containershttps://github.com/orgs/gammasim/packages?repo_name=containers>`_ of this repository (at this point a private container repository; ask the gammasim-tools developers for access).
+`simtools container repository <https://github.com/gammasim/containers/tree/main/dev>`_ for the Docker files.
+Images are uploaded to `package section <https://github.com/orgs/gammasim/packages?repo_name=containershttps://github.com/orgs/gammasim/packages?repo_name=containers>`_ of this repository (at this point a private container repository; ask the simtools developers for access).
 
 The container has python packages, CORSIKA, and sim_telarray pre-installed.
-Setting up a system to run gammasim-tools applications or tests should be a matter of minutes.
+Setting up a system to run simtools applications or tests should be a matter of minutes.
 
 +++++++++++++++++++
 Docker Installation
@@ -112,17 +112,17 @@ Install Docker and start the Docker application (see
 Apptainer, Singularity, Buildah/Podman, etc should work, but are not thoroughly tested.
 
 ++++++++++++++++++++
-Clone gammasim-tools
+Clone simtools
 ++++++++++++++++++++
 
-Clone gammasim-tools from GitHub into ``external/gammasim-tools``:
+Clone simtools from GitHub into ``external/simtools``:
 
 .. code-block::
 
     # create a working directory
     mkdir external
-    # clone gammasim-tools repository
-    git clone https://github.com/gammasim/gammasim-tools.git external/gammasim-tools
+    # clone simtools repository
+    git clone https://github.com/gammasim/simtools.git external/simtools
 
 +++++++++++++++++++++
 Spin-up the container
@@ -132,7 +132,7 @@ Start up a container (the image will we downloaded, if it is not available in yo
 
 .. code-block::
 
-    docker run --rm -it -v "$(pwd)/external:/workdir/external" ghcr.io/gammasim/containers/gammasim-tools-dev:v0.3.0-dev1 bash -c "$(cat ./entrypoint.sh) && bash"
+    docker run --rm -it -v "$(pwd)/external:/workdir/external" ghcr.io/gammasim/containers/simtools-dev:v0.3.0-dev1 bash -c "$(cat ./entrypoint.sh) && bash"
 
 The entry script of the container will source the ``set_DB_environ.sh`` script and set the DB access parameters (see `Model Database Access`_).
 The container includes a CORSIKA and sim_telarray installation; the environmental variable ``$SIM_TELPATH`` is set.
