@@ -224,15 +224,15 @@ def test_convert_2D_to_radial_distr(caplog):
     x2d, y2d = np.meshgrid(xaxis, yaxis)
     distance_to_center_2D = np.sqrt((x2d) ** 2 + (y2d) ** 2)
 
-    radial_edges, distance_to_center_1D = gen.convert_2D_to_radial_distr(
-        xaxis, yaxis, distance_to_center_2D, bins=bins, max_dist=max_dist
+    distance_to_center_1D, radial_edges = gen.convert_2D_to_radial_distr(
+        distance_to_center_2D, xaxis, yaxis, bins=bins, max_dist=max_dist
     )
     difference = radial_edges[:-1] - distance_to_center_1D
     assert pytest.approx(difference[:-1], abs=1) == 0  # last value deviates
 
     # Test warning in caplog
     gen.convert_2D_to_radial_distr(
-        xaxis, yaxis, distance_to_center_2D, bins=4 * bins, max_dist=max_dist
+        distance_to_center_2D, xaxis, yaxis, bins=4 * bins, max_dist=max_dist
     )
     msg = "The histogram with number of bins"
     assert msg in caplog.text
