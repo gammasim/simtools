@@ -259,7 +259,7 @@ class CorsikaOutput:
             if not isinstance(telescope_new_indices, (list, np.ndarray)):
                 telescope_new_indices = np.array([telescope_new_indices])
             for i_telescope in telescope_new_indices:
-                if not isinstance(i_telescope, (int, np.int32, np.int64)):
+                if not isinstance(i_telescope, (int, np.integer)):
                     msg = "The index or indices given are not of type int."
                     self._logger.error(msg)
                     raise TypeError
@@ -313,10 +313,10 @@ class CorsikaOutput:
             Name of the output file, in which to save the histogram configuration.
 
         """
+
         if file_name is None:
             file_name = "hist_config"
-        if file_name[-4:] != ".yml":
-            file_name = f"{file_name}.yml"
+        file_name = Path(file_name).with_suffix(".yml")
         output_config_path = self.io_handler.get_output_directory(self.label, "corsika")
         output_config_file = output_config_path.joinpath(file_name)
         save_dict_to_file(self.hist_config, output_config_file)
@@ -449,8 +449,8 @@ class CorsikaOutput:
         Parameters
         ----------
         individual_telescopes: bool
-            if False, the histograms are supposed to be filled for all telescopes.
-            if True, one histogram is set for each telescope sepparately.
+            if False, the histograms are filled for all given telescopes together.
+            if True, one histogram is set for each telescope separately.
         """
         self.individual_telescopes = individual_telescopes
         self.num_of_hist = len(self.telescope_indices) if self.individual_telescopes is True else 1
@@ -485,8 +485,8 @@ class CorsikaOutput:
     def _fill_histograms(self, photons, azimuth_angle=None, zenith_angle=None):
         """Fill all the histograms created by self._create_histogram with the information of the
          photons on the ground.
-         If the azimuth and zenith angles are given the Cherenkov photon's coordinates are given in
-         the plane perpendicular to the incoming direction of the particle.
+         If the azimuth and zenith angles are provided, the Cherenkov photon's coordinates are
+         filled in the plane perpendicular to the incoming direction of the particle.
 
         Parameters
         ----------
@@ -569,7 +569,7 @@ class CorsikaOutput:
             if True, one histogram is set for each telescope sepparately.
         hist_config:
             yaml file with the configuration parameters to create the histograms. For the correct
-            format, please look at the docstring at `_create_histogram_default_config`.
+            format, please look at the docstring of `_create_histogram_default_config`.
             Alternatively, it can be a dictionary with the configuration parameters to create
             the histograms.
 
@@ -624,7 +624,7 @@ class CorsikaOutput:
         return self._individual_telescopes
 
     @individual_telescopes.setter
-    def individual_telescopes(self, new_individual_telescopes):
+    def individual_telescopes(self, new_individual_telescopes: bool):
         """
         The following lines allow `individual_telescopes` to be defined before using this function
         but if any parameter is passed in this function, it overwrites the class attribute.
@@ -777,13 +777,6 @@ class CorsikaOutput:
         Get the distribution of Cherenkov photons per event per telescope. It returns the 2D array
         accounting for the events from the telescopes given by `self.telescope_indices`.
 
-        Parameters
-        ----------
-        bins: float
-            Number of bins for the histogram.
-        range: 2-tuple
-            Tuple to define the range of the histogram.
-
         Returns
         -------
         numpy.array
@@ -812,6 +805,13 @@ class CorsikaOutput:
         label: str
             Label to indicate which histogram.
 
+        Returns
+        -------
+        numpy.array
+            The edges of the histogram.
+        numpy.ndarray
+            The counts of the histogram.
+
         Raises
         ------
         ValueError:
@@ -837,14 +837,14 @@ class CorsikaOutput:
             hist_1D_list.append(mini_hist.view().T)
         return np.array(x_edges_list), np.array(hist_1D_list)
 
-    def get_photon_radial_distr(self, num_bins=None, max_dist=None, density=True):
+    def get_photon_radial_distr(self, bins=None, max_dist=None, density=True):
         """
         Get the radial distribution of the photons on the ground in relation to the center of the
         array.
 
         Parameters
         ----------
-        num_bins: float
+        bins: float
             Number of bins of the radial distribution.
         max_dist: float
             Maximum distance to consider in the 1D histogram (in meters).
@@ -868,8 +868,8 @@ class CorsikaOutput:
                     self.hist_config["hist_position"]["y axis"]["stop"].to(u.m).value,
                 ]
             )
-        if num_bins is None:
-            num_bins = (
+        if bins is None:
+            bins = (
                 np.amax(
                     [
                         self.hist_config["hist_position"]["x axis"]["bins"],
@@ -890,7 +890,7 @@ class CorsikaOutput:
                 x_position_list[i_hist],
                 y_position_list[i_hist],
                 hist2D_values_list[i_hist],
-                num_bins=num_bins,
+                bins=bins,
                 max_dist=max_dist,
             )
             edges_1D_list.append(edges_1D)
@@ -1150,7 +1150,7 @@ class CorsikaOutput:
         astropy.Quantity
             The Earth magnetic field in the x direction used for each event.
         astropy.Quantity
-            The Earth magnetic field in the y direction used for each event.
+            The Earth magnetic field in the z direction used for each event.
         """
         if self._magnetic_field_x is None:
             self._magnetic_field_x = (self.event_information["earth_magnetic_field_x"]).to(u.uT)
