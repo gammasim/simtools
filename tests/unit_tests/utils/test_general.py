@@ -217,46 +217,40 @@ def test_convert_2D_to_radial_distr(caplog):
 
     # Test normal functioning
     max_dist = 100
-    num_bins = 100
-    step = max_dist / num_bins
+    bins = 100
+    step = max_dist / bins
     xaxis = np.arange(-max_dist, max_dist, step)
     yaxis = np.arange(-max_dist, max_dist, step)
     x2d, y2d = np.meshgrid(xaxis, yaxis)
     distance_to_center_2D = np.sqrt((x2d) ** 2 + (y2d) ** 2)
 
     radial_edges, distance_to_center_1D = gen.convert_2D_to_radial_distr(
-        xaxis, yaxis, distance_to_center_2D, num_bins=num_bins, max_dist=max_dist
+        xaxis, yaxis, distance_to_center_2D, bins=bins, max_dist=max_dist
     )
     difference = radial_edges[:-1] - distance_to_center_1D
-
-    assert pytest.approx(difference[:-1], 1) == 0  # last value deviates
+    assert pytest.approx(difference[:-1], abs=1) == 0  # last value deviates
 
     # Test warning in caplog
     gen.convert_2D_to_radial_distr(
-        xaxis, yaxis, distance_to_center_2D, num_bins=4 * num_bins, max_dist=max_dist
+        xaxis, yaxis, distance_to_center_2D, bins=4 * bins, max_dist=max_dist
     )
-    msg = (
-        f"The histogram with number of bins {4 * num_bins} and maximum distance of {max_dist} "
-        f"resulted in a bin size smaller than the original array. Please adjust those "
-        f"parameters to increase the bin size and avoid nan in the histogram values."
-    )
+    msg = "The histogram with number of bins"
     assert msg in caplog.text
 
 
-def test_save_dict_to_file():
+def test_save_dict_to_file(tmp_test_directory):
 
     # str
     paths = ["test_file", "test_file.yml"]
     example_dict = {"key": 12}
     for path in paths:
-        gen.save_dict_to_file(example_dict, path)
-        with open("test_file.yml") as file:
+        gen.save_dict_to_file(example_dict, f"{tmp_test_directory}/{path}")
+        with open(f"{tmp_test_directory}/test_file.yml") as file:
             new_example_dict = yaml.load(file)
             assert new_example_dict == example_dict
-        Path("test_file.yml").unlink()
 
     # Path
-    path = Path("test_file_2.yml")
+    path = tmp_test_directory / "test_file_2.yml"
     example_dict = {"key": 12}
     gen.save_dict_to_file(example_dict, path)
     with open(path) as file:

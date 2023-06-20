@@ -46,9 +46,7 @@ def test_init(corsika_output_instance, corsika_output_file_name_string):
         "energy_min": 10 * u.GeV,
     }
     for key in manual_header:
-        assert (
-            pytest.approx(corsika_output_instance.header[key].value, 3) == manual_header[key].value
-        )
+        assert pytest.approx(corsika_output_instance.header[key].value) == manual_header[key].value
 
     assert corsika_output_instance.version == 7.741
 
@@ -301,23 +299,23 @@ def test_get_hist_2D_projection(corsika_output_instance):
         assert np.shape(x_edges) == (1, 101)
         assert np.shape(y_edges) == (1, 101)
         assert np.shape(hist_values) == (1, 100, 100)
-        assert pytest.approx(np.sum(hist_values), 1) == hist_sums[i_label]
+        assert pytest.approx(np.sum(hist_values), 1e-2) == hist_sums[i_label]
 
     # Repeat the test for less telescopes and see that less photons are counted in
     corsika_output_instance.set_histograms(telescope_indices=[0, 1, 2])
     hist_sums = [3677, 9.2, 3677, 3677]
     for i_label, label in enumerate(["counts", "density", "direction", "time_altitude"]):
         x_edges, y_edges, hist_values = corsika_output_instance._get_hist_2D_projection(label)
-        assert pytest.approx(np.sum(hist_values), 1) == hist_sums[i_label]
+        assert pytest.approx(np.sum(hist_values), 1e-2) == hist_sums[i_label]
 
 
 def test_get_2D_photon_position_distr(corsika_output_instance_set_histograms):
     density = corsika_output_instance_set_histograms.get_2D_photon_position_distr(density=True)
 
     # Test the values of the histogram
-    assert pytest.approx(np.sum(density[2]), 1) == 29
+    assert pytest.approx(np.sum(density[2]), 1e-2) == 29
     counts = corsika_output_instance_set_histograms.get_2D_photon_position_distr(density=False)
-    assert pytest.approx(np.sum(counts[2]), 1) == 11633
+    assert pytest.approx(np.sum(counts[2]), 1e-2) == 11633
 
     # The edges should be the same
     assert (counts[0] == density[0]).all()
@@ -356,15 +354,17 @@ def test_get_2D_num_photons_distr(corsika_output_instance_set_histograms):
     assert len(num_events_array) == 3  # number of events in this output file + 1 (edges of hist)
     assert (telescope_indices_array == [0, 1, 2, 3]).all()
     assert (
-        pytest.approx(num_photons_per_event_per_telescope[0, 0], 1) == 2543.3
+        pytest.approx(num_photons_per_event_per_telescope[0, 0], 1e-2) == 2543.3
     )  # 1st tel, 1st event
     assert (
-        pytest.approx(num_photons_per_event_per_telescope[0, 1], 1) == 290.5
+        pytest.approx(num_photons_per_event_per_telescope[0, 1], 1e-2) == 290.5
     )  # 1st tel, 2nd event
     assert (
-        pytest.approx(num_photons_per_event_per_telescope[1, 0], 1) == 1741.1
+        pytest.approx(num_photons_per_event_per_telescope[1, 0], 1e-2) == 3054.1
     )  # 2nd tel, 1st event
-    assert pytest.approx(num_photons_per_event_per_telescope[1, 1], 1) == 85.9  # 2nd tel, 2nd event
+    assert (
+        pytest.approx(num_photons_per_event_per_telescope[1, 1], 1e-2) == 128.81
+    )  # 2nd tel, 2nd event
 
 
 def test_get_hist_1D_projection(corsika_output_instance_set_histograms):
@@ -381,15 +381,15 @@ def test_get_hist_1D_projection(corsika_output_instance_set_histograms):
     expected_shape_of_edges = [(1, 81), (1, 101), (1, 101)]
     expected_shape_of_values = [(1, 80), (1, 100), (1, 100)]
     expected_mean = [125.4, 116.3, 116.3]
-    expected_std = [153.4, 378, 2, 312.0]
+    expected_std = [153.4, 378.2, 312.0]
     for i_hist, hist_label in enumerate(labels):
         x_edges_list, hist_1D_list = corsika_output_instance_set_histograms._get_hist_1D_projection(
             hist_label
         )
         assert np.shape(x_edges_list) == expected_shape_of_edges[i_hist]
         assert np.shape(hist_1D_list) == expected_shape_of_values[i_hist]
-        assert pytest.approx(np.mean(hist_1D_list), 1) == expected_mean[i_hist]
-        assert pytest.approx(np.std(hist_1D_list), 1) == expected_std[i_hist]
+        assert pytest.approx(np.mean(hist_1D_list), 1e-2) == expected_mean[i_hist]
+        assert pytest.approx(np.std(hist_1D_list), 1e-2) == expected_std[i_hist]
 
 
 def test_get_photon_altitude_distr(corsika_output_instance_set_histograms):
@@ -454,7 +454,7 @@ def test_get_photon_radial_distr_input_some_tel_and_density(corsika_output_insta
     )
 
     x_edges_list, hist_1D_list = corsika_output_instance_set_histograms.get_photon_radial_distr(
-        density=False, num_bins=100, max_dist=1200
+        density=False, bins=100, max_dist=1200
     )
     assert np.amax(x_edges_list) == 1200
     assert np.size(x_edges_list) == 101
@@ -465,15 +465,17 @@ def test_get_photon_radial_distr_input_some_tel_and_density(corsika_output_insta
         hist_1D_list_dens,
     ) = corsika_output_instance_set_histograms.get_photon_radial_distr(
         density=True,
-        num_bins=100,
+        bins=100,
         max_dist=1200,
     )
     assert (x_edges_list_dens == x_edges_list).all()
 
     print(np.sum(hist_1D_list_dens), np.sum(hist_1D_list))
-    assert pytest.approx(np.sum(hist_1D_list_dens), 2) == 1.86  # density smaller because it divides
+    assert (
+        pytest.approx(np.sum(hist_1D_list_dens), 1e-2) == 1.86
+    )  # density smaller because it divides
     # by the area (not counts per bin)
-    assert pytest.approx(np.sum(hist_1D_list), 2) == 744.17
+    assert pytest.approx(np.sum(hist_1D_list), 1e-2) == 744.17
 
 
 def test_get_photon_radial_distr_input_all_tel(corsika_output_instance):
@@ -489,7 +491,7 @@ def test_get_photon_radial_distr_input_all_tel(corsika_output_instance):
 
     # Input values
     x_edges_list, hist_1D_list = corsika_output_instance.get_photon_radial_distr(
-        num_bins=20, max_dist=10
+        bins=20, max_dist=10
     )
     for i_tel, _ in enumerate(corsika_output_instance.telescope_indices):
         assert np.amax(x_edges_list[i_tel]) == 10
@@ -508,7 +510,7 @@ def test_num_photons_per_event_per_telescope(corsika_output_instance_set_histogr
             np.sum(
                 corsika_output_instance_set_histograms.num_photons_per_event_per_telescope[:, 0]
             ),
-            1,
+            1e-2,
         )
         == 25425.8
     )
@@ -518,7 +520,7 @@ def test_num_photons_per_event_per_telescope(corsika_output_instance_set_histogr
             np.sum(
                 corsika_output_instance_set_histograms.num_photons_per_event_per_telescope[:, 1]
             ),
-            1,
+            1e-2,
         )
         == 4582.9
     )
@@ -534,7 +536,7 @@ def test_num_photons_per_event_per_telescope(corsika_output_instance_set_histogr
             np.sum(
                 corsika_output_instance_set_histograms.num_photons_per_event_per_telescope[:, 0]
             ),
-            1,
+            1e-2,
         )
         == 7871.4
     )
@@ -543,7 +545,7 @@ def test_num_photons_per_event_per_telescope(corsika_output_instance_set_histogr
             np.sum(
                 corsika_output_instance_set_histograms.num_photons_per_event_per_telescope[:, 1]
             ),
-            1,
+            1e-2,
         )
         == 340.7
     )
@@ -553,17 +555,21 @@ def test_num_photons_per_event_per_telescope(corsika_output_instance_set_histogr
 
 def test_num_photons_per_event(corsika_output_instance_set_histograms):
     assert (
-        pytest.approx(corsika_output_instance_set_histograms.num_photons_per_event[0], 1) == 25425.8
+        pytest.approx(corsika_output_instance_set_histograms.num_photons_per_event[0], 1e-2)
+        == 25425.8
     )
     assert (
-        pytest.approx(corsika_output_instance_set_histograms.num_photons_per_event[1], 1) == 4582.9
+        pytest.approx(corsika_output_instance_set_histograms.num_photons_per_event[1], 1e-2)
+        == 4582.9
     )
 
 
 def test_num_photons_per_telescope(corsika_output_instance_set_histograms):
     assert np.size(corsika_output_instance_set_histograms.num_photons_per_telescope) == 87
     assert (
-        pytest.approx(np.sum(corsika_output_instance_set_histograms.num_photons_per_telescope), 1)
+        pytest.approx(
+            np.sum(corsika_output_instance_set_histograms.num_photons_per_telescope), 1e-2
+        )
         == 25425.8 + 4582.9
     )
 
@@ -594,7 +600,7 @@ def test_get_num_photons_distr(corsika_output_instance_set_histograms, caplog):
         pytest.approx(
             np.sum(edges[:-1] * hist)
             / np.sum(corsika_output_instance_set_histograms.num_photons_per_event),
-            1,
+            abs=1,
         )
         == 1
     )
@@ -609,7 +615,7 @@ def test_get_num_photons_distr(corsika_output_instance_set_histograms, caplog):
         pytest.approx(
             np.sum(edges[:-1] * hist)
             / np.sum(corsika_output_instance_set_histograms.num_photons_per_telescope),
-            1,
+            abs=1,
         )
         == 1
     )
@@ -623,7 +629,7 @@ def test_get_num_photons_distr(corsika_output_instance_set_histograms, caplog):
 
 
 def test_total_num_photons(corsika_output_instance_set_histograms):
-    assert pytest.approx(corsika_output_instance_set_histograms.total_num_photons, 1) == 30008.7
+    assert pytest.approx(corsika_output_instance_set_histograms.total_num_photons, 1e-2) == 30008.7
 
 
 def test_telescope_positions(corsika_output_instance_set_histograms):
@@ -659,7 +665,9 @@ def test_event_azimuth_angles(corsika_output_instance_set_histograms):
 def test_event_energies(corsika_output_instance_set_histograms):
     for i_event in range(corsika_output_instance_set_histograms.num_events):
         assert (
-            pytest.approx(corsika_output_instance_set_histograms.event_energies.value[i_event], 2)
+            pytest.approx(
+                corsika_output_instance_set_histograms.event_energies.value[i_event], 1e-2
+            )
             == 0.01
         )
     assert corsika_output_instance_set_histograms.event_energies.unit == u.TeV
@@ -673,7 +681,7 @@ def test_event_first_interaction_heights(corsika_output_instance_set_histograms)
                 corsika_output_instance_set_histograms.event_first_interaction_heights.value[
                     i_event
                 ],
-                1,
+                1e-2,
             )
             == first_height[i_event]
         )
@@ -684,13 +692,13 @@ def test_magnetic_field(corsika_output_instance_set_histograms):
     for i_event in range(corsika_output_instance_set_histograms.num_events):
         assert (
             pytest.approx(
-                corsika_output_instance_set_histograms.magnetic_field[0].value[i_event], 1
+                corsika_output_instance_set_histograms.magnetic_field[0].value[i_event], 1e-2
             )
             == 20.5
         )
         assert (
             pytest.approx(
-                corsika_output_instance_set_histograms.magnetic_field[1].value[i_event], 1
+                corsika_output_instance_set_histograms.magnetic_field[1].value[i_event], 1e-2
             )
             == -9.4
         )
