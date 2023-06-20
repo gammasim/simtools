@@ -454,7 +454,7 @@ def test_get_photon_radial_distr_input_some_tel_and_density(corsika_output_insta
     )
 
     x_edges_list, hist_1D_list = corsika_output_instance_set_histograms.get_photon_radial_distr(
-        density=False, num_bins=100, max_dist=1200
+        density=False, bins=100, max_dist=1200
     )
     assert np.amax(x_edges_list) == 1200
     assert np.size(x_edges_list) == 101
@@ -465,7 +465,7 @@ def test_get_photon_radial_distr_input_some_tel_and_density(corsika_output_insta
         hist_1D_list_dens,
     ) = corsika_output_instance_set_histograms.get_photon_radial_distr(
         density=True,
-        num_bins=100,
+        bins=100,
         max_dist=1200,
     )
     assert (x_edges_list_dens == x_edges_list).all()
@@ -489,7 +489,7 @@ def test_get_photon_radial_distr_input_all_tel(corsika_output_instance):
 
     # Input values
     x_edges_list, hist_1D_list = corsika_output_instance.get_photon_radial_distr(
-        num_bins=20, max_dist=10
+        bins=20, max_dist=10
     )
     for i_tel, _ in enumerate(corsika_output_instance.telescope_indices):
         assert np.amax(x_edges_list[i_tel]) == 10
