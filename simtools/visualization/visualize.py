@@ -755,20 +755,20 @@ def _kernel_plot_2D_photons(corsika_output_instance, property_name, log_z=False)
         raise ValueError(msg)
 
     if property_name == "counts":
-        x_edges, y_edges, hist_values = corsika_output_instance.get_2D_photon_position_distr(
+        hist_values, x_edges, y_edges = corsika_output_instance.get_2D_photon_position_distr(
             density=False
         )
     elif property_name == "density":
-        x_edges, y_edges, hist_values = corsika_output_instance.get_2D_photon_position_distr(
+        hist_values, x_edges, y_edges = corsika_output_instance.get_2D_photon_position_distr(
             density=True
         )
     elif property_name == "direction":
-        x_edges, y_edges, hist_values = corsika_output_instance.get_2D_photon_direction_distr()
+        hist_values, x_edges, y_edges = corsika_output_instance.get_2D_photon_direction_distr()
     elif property_name == "time_altitude":
-        x_edges, y_edges, hist_values = corsika_output_instance.get_2D_photon_time_altitude()
+        hist_values, x_edges, y_edges = corsika_output_instance.get_2D_photon_time_altitude()
     elif property_name == "num_photons_per_telescope":
-        x_edges, y_edges, hist_values = corsika_output_instance.get_2D_num_photons_distr()
-        x_edges, y_edges, hist_values = [x_edges], [y_edges], [hist_values]
+        hist_values, x_edges, y_edges = corsika_output_instance.get_2D_num_photons_distr()
+        hist_values, x_edges, y_edges = [hist_values], [x_edges], [y_edges]
 
     all_figs = []
     for i_hist, _ in enumerate(x_edges):
@@ -919,18 +919,18 @@ def _kernel_plot_1D_photons(corsika_output_instance, property_name, log_y=True):
         raise ValueError(msg)
 
     if property_name == "wavelength":
-        edges, hist_values = corsika_output_instance.get_photon_wavelength_distr()
+        hist_values, edges = corsika_output_instance.get_photon_wavelength_distr()
     elif property_name == "counts":
-        edges, hist_values = corsika_output_instance.get_photon_radial_distr(density=False)
+        hist_values, edges = corsika_output_instance.get_photon_radial_distr(density=False)
     elif property_name == "density":
-        edges, hist_values = corsika_output_instance.get_photon_radial_distr(density=True)
+        hist_values, edges = corsika_output_instance.get_photon_radial_distr(density=True)
     elif property_name == "time":
-        edges, hist_values = corsika_output_instance.get_photon_time_distr()
+        hist_values, edges = corsika_output_instance.get_photon_time_distr()
     elif property_name == "altitude":
-        edges, hist_values = corsika_output_instance.get_photon_altitude_distr()
+        hist_values, edges = corsika_output_instance.get_photon_altitude_distr()
     elif property_name == "num_photons":
-        edges, hist_values = corsika_output_instance.get_num_photons_distr()
-        edges, hist_values = [edges], [hist_values]
+        hist_values, edges = corsika_output_instance.get_num_photons_distr()
+        hist_values, edges = [hist_values], [edges]
 
     all_figs = []
     for i_hist, _ in enumerate(edges):
