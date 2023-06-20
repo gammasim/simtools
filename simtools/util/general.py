@@ -744,9 +744,9 @@ def rotate(x, y, rotation_around_z_axis, rotation_around_y_axis=0 * u.rad):
                 "Cannot perform coordinate transformation when x and y have different units."
             )
 
-    x_trans = x * np.cos(rotation_around_y_axis) * np.cos(rotation_around_z_axis) - y * np.cos(
-        rotation_around_y_axis
-    ) * np.sin(rotation_around_z_axis)
+    x_trans = np.cos(rotation_around_y_axis) * (
+        x * np.cos(rotation_around_z_axis) - y * np.sin(rotation_around_z_axis)
+    )
     y_trans = x * np.sin(rotation_around_z_axis) + y * np.cos(rotation_around_z_axis)
 
     return x_trans, y_trans
@@ -778,7 +778,7 @@ def get_log_excerpt(log_file, n_last_lines=30):
     )
 
 
-def convert_2D_to_radial_distr(xaxis, yaxis, hist2d, num_bins=50, max_dist=1000):
+def convert_2D_to_radial_distr(xaxis, yaxis, hist2d, bins=50, max_dist=1000):
     """
     Convert a 2D histogram of positions, e.g. photon positions on the ground, to a 1D distribution.
 
@@ -790,7 +790,7 @@ def convert_2D_to_radial_distr(xaxis, yaxis, hist2d, num_bins=50, max_dist=1000)
         The values of the y axis (histogram edges) on the ground.
     hist2d: numpy.ndarray
         The histogram counts.
-    num_bins: float
+    bins: float
         Number of bins in distance.
     max_dist: float
        Maximum distance to consider in the 1D histogram, usually in meters.
@@ -804,16 +804,14 @@ def convert_2D_to_radial_distr(xaxis, yaxis, hist2d, num_bins=50, max_dist=1000)
     """
     logger = logging.getLogger(__name__)
     # Check if the histogram will make sense
-    bins_step = (
-        2 * max_dist / num_bins
-    )  # in the 2D array, the positive and negative direction count.
+    bins_step = 2 * max_dist / bins  # in the 2D array, the positive and negative direction count.
     warn = False
     for axis in [xaxis, yaxis]:
         if (bins_step < np.diff(axis)).any():
             warn = True
     if warn:
         msg = (
-            f"The histogram with number of bins {num_bins} and maximum distance of {max_dist} "
+            f"The histogram with number of bins {bins} and maximum distance of {max_dist} "
             f"resulted in a bin size smaller than the original array. Please adjust those "
             f"parameters to increase the bin size and avoid nan in the histogram values."
         )
@@ -839,7 +837,7 @@ def convert_2D_to_radial_distr(xaxis, yaxis, hist2d, num_bins=50, max_dist=1000)
     # For larger distances, we have more elements in a slice 'dr' in radius, hence, we need to
     # acount for it using weights below.
 
-    weights, radial_edges = np.histogram(distance_sorted, bins=num_bins, range=(0, max_dist))
+    weights, radial_edges = np.histogram(distance_sorted, bins=bins, range=(0, max_dist))
     histogram_1D = np.empty_like(weights, dtype=float)
 
     for i_radial, _ in enumerate(radial_edges[:-1]):
@@ -865,9 +863,7 @@ def save_dict_to_file(dictionary, file_name):
         Name of file to be saved with path.
     """
     logger = logging.getLogger(__name__)
-    if isinstance(file_name, str) and file_name[-4:] != ".yml":
-        file_name = f"{file_name}.yml"
-    file_name = Path(file_name)
+    file_name = Path(file_name).with_suffix(".yml")
     logger.info(f"Exporting histogram configuration to {file_name}")
     with open(file_name, "w") as file:
         yaml.dump(dictionary, file)
