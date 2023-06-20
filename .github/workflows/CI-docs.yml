@@ -30,9 +30,9 @@ jobs:
           conda update -q conda
           sed -i -e "s/- python=3.9/- python=$PYTHON_VERSION/g" environment.yml
           conda env create -f environment.yml
-          conda activate gammasim-tools-dev
+          conda activate simtools-dev
           echo 'source $CONDA/etc/profile.d/conda.sh' >> ~/.bash_profile
-          echo 'conda activate gammasim-tools-dev' >> ~/.bash_profile
+          echo 'conda activate simtools-dev' >> ~/.bash_profile
           echo 'pip install -e .' >> ~/.bash_profile
           python --version
 
