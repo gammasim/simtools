@@ -430,7 +430,7 @@ def test_get_photon_radial_distr_individual_telescopes(corsika_output_instance_s
     corsika_output_instance_set_histograms.set_histograms(
         telescope_indices=[0, 1, 2], individual_telescopes=True, hist_config=None
     )
-    x_edges_list, hist_1D_list = corsika_output_instance_set_histograms.get_photon_radial_distr()
+    x_edges_list, _ = corsika_output_instance_set_histograms.get_photon_radial_distr()
     for i_hist, _ in enumerate(corsika_output_instance_set_histograms.telescope_indices):
         assert np.amax(x_edges_list[i_hist]) == 16
         assert np.size(x_edges_list[i_hist]) == 33
@@ -482,7 +482,7 @@ def test_get_photon_radial_distr_input_all_tel(corsika_output_instance):
     )
 
     # Default input values
-    x_edges_list, hist_1D_list = corsika_output_instance.get_photon_radial_distr()
+    x_edges_list, _ = corsika_output_instance.get_photon_radial_distr()
     for i_tel, _ in enumerate(corsika_output_instance.telescope_indices):
         assert np.amax(x_edges_list[i_tel]) == 16
         assert np.size(x_edges_list[i_tel]) == 33
@@ -619,7 +619,7 @@ def test_get_num_photons_distr(corsika_output_instance_set_histograms, caplog):
             bins=50, range=None, event_or_telescope="not_valid_name"
         )
         msg = "`event_or_telescope` has to be either 'event' or 'telescope'."
-        msg in caplog.text
+        assert msg in caplog.text
 
 
 def test_total_num_photons(corsika_output_instance_set_histograms):
@@ -738,7 +738,7 @@ def test_event_1D_histogram(corsika_output_instance_set_histograms):
 
 
 def test_event_2D_histogram(corsika_output_instance_set_histograms):
-    x_edges, y_edges, hist = corsika_output_instance_set_histograms.event_2D_histogram(
+    x_edges, _, hist = corsika_output_instance_set_histograms.event_2D_histogram(
         "total_energy", "first_interaction_height", bins=(5, 5), range=[[5, 15], [-60e5, -5e5]]
     )
     assert np.size(x_edges) == 6
