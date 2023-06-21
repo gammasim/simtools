@@ -51,7 +51,7 @@ def test_telescope_indices(corsika_output_instance):
         corsika_output_instance.telescope_indices = [1.5, 2, 2.5]
 
 
-def test_event_information(corsika_output_instance):
+def test_read_event_information(corsika_output_instance):
     # Check some of the event info
     manual_event_info = {
         "event_number": [1, 2] * u.dimensionless_unscaled,
