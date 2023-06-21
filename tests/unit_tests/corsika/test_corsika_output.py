@@ -73,10 +73,16 @@ def test_get_header_astropy_units(corsika_output_instance):
         assert isinstance(astropy_unit, u.core.CompositeUnit)
 
 
-def test_hist_config_default_config(corsika_output_instance):
+def test_hist_config_default_config(corsika_output_instance, caplog):
     hist_config = corsika_output_instance.hist_config
     assert isinstance(hist_config, dict)
     assert hist_config == corsika_output_instance._create_histogram_default_config()
+    with caplog.at_level("WARNING"):
+        hist_config = corsika_output_instance.hist_config
+        assert (
+            "No configuration was defined before. The default config is being created now."
+            in caplog.text
+        )
 
 
 def test_hist_config_custom_config(corsika_output_instance):
@@ -94,16 +100,6 @@ def test_hist_config_custom_config(corsika_output_instance):
     corsika_output_instance._hist_config = custom_config
     hist_config = corsika_output_instance.hist_config
     assert hist_config == custom_config
-
-
-def test_hist_config_no_config_warning(corsika_output_instance, caplog):
-    with caplog.at_level("WARNING"):
-        hist_config = corsika_output_instance.hist_config
-        assert (
-            "No configuration was defined before. The default config is being created now."
-            in caplog.text
-        )
-    assert hist_config == corsika_output_instance._create_histogram_default_config()
 
 
 def test_hist_config_save_and_read_yml(corsika_output_instance, io_handler):
@@ -276,7 +272,7 @@ def test_get_hist_2D_projection(corsika_output_instance):
 
     corsika_output_instance.set_histograms()
     labels = ["counts", "density", "direction", "time_altitude"]
-    hist_sums = [11633, 29.1, 11634, 11634]  # sum of photons are the approximately the same
+    hist_sums = [11633, 29.1, 11634, 11634]  # sum of photons are approximately the same
     # (except for the density hist, which is divided by the area)
     for i_label, label in enumerate(labels):
         hist_values, x_edges, y_edges = corsika_output_instance._get_hist_2D_projection(label)
@@ -285,7 +281,7 @@ def test_get_hist_2D_projection(corsika_output_instance):
         assert np.shape(hist_values) == (1, 100, 100)
         assert pytest.approx(np.sum(hist_values), 1e-2) == hist_sums[i_label]
 
-    # Repeat the test for less telescopes and see that less photons are counted in
+    # Repeat the test for fewer telescopes and see that less photons are counted in
     corsika_output_instance.set_histograms(telescope_indices=[0, 1, 2])
     hist_sums = [3677, 9.2, 3677, 3677]
     for i_label, label in enumerate(labels):
@@ -592,7 +588,6 @@ def test_get_num_photons_distr(corsika_output_instance_set_histograms, caplog):
     hist, edges = corsika_output_instance_set_histograms.get_num_photons_distr(
         bins=87, range=None, event_or_telescope="telescope"
     )
-    print(hist)
     # Assert that the integration of the histogram resembles the known total number of events.
     assert (
         pytest.approx(

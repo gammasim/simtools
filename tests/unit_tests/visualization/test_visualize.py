@@ -132,7 +132,9 @@ def test_plot_array(
 
 
 def test_kernel_plot_2D_photons(corsika_output_instance_set_histograms, caplog):
-    corsika_output_instance_set_histograms.set_histograms(individual_telescopes=False)
+    corsika_output_instance_set_histograms.set_histograms(
+        individual_telescopes=False, telescope_indices=[0, 1, 2]
+    )
     for property_name in [
         "counts",
         "density",
@@ -157,7 +159,7 @@ def test_kernel_plot_2D_photons(corsika_output_instance_set_histograms, caplog):
             assert isinstance(all_figs[i_hist], plt.Figure)
 
     with pytest.raises(ValueError):
-        all_figs = visualize._kernel_plot_2D_photons(
+        visualize._kernel_plot_2D_photons(
             corsika_output_instance_set_histograms, "this_property_does_not_exist"
         )
         msg = "results: status must be one of "
@@ -178,7 +180,9 @@ def test_plot_2Ds(corsika_output_instance_set_histograms):
 
 
 def test_kernel_plot_1D_photons(corsika_output_instance_set_histograms, caplog):
-    corsika_output_instance_set_histograms.set_histograms(individual_telescopes=False)
+    corsika_output_instance_set_histograms.set_histograms(
+        individual_telescopes=False, telescope_indices=[0, 1, 2]
+    )
     labels = ["wavelength", "counts", "density", "time", "altitude"]
 
     for property_name in np.append(labels, "num_photons"):
@@ -199,7 +203,7 @@ def test_kernel_plot_1D_photons(corsika_output_instance_set_histograms, caplog):
             assert isinstance(all_figs[i_hist], plt.Figure)
 
     with pytest.raises(ValueError):
-        all_figs = visualize._kernel_plot_1D_photons(
+        visualize._kernel_plot_1D_photons(
             corsika_output_instance_set_histograms, "this_property_does_not_exist"
         )
         msg = "results: status must be one of "
