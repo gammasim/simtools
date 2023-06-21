@@ -634,25 +634,12 @@ class CorsikaOutput:
         new_individual_telescopes: bool
             if False, the histograms are supposed to be filled for all telescopes.
             if True, one histogram is set for each telescope sepparately.
-
-        Raises
-        ------
-        TypeError:
-            if new_individual_telescopes passed are not of type bool.
         """
 
         if new_individual_telescopes is None:
             self._individual_telescopes = False
         else:
-            if isinstance(new_individual_telescopes, bool):
-                self._individual_telescopes = new_individual_telescopes
-            else:
-                msg = (
-                    f"`individual_telescopes` passed {new_individual_telescopes} is not of type "
-                    f"bool."
-                )
-                self._logger.error(msg)
-                raise TypeError
+            self._individual_telescopes = new_individual_telescopes
 
     def _raise_if_no_histogram(self):
         """
