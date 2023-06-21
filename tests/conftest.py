@@ -265,7 +265,11 @@ def corsika_output_file_name(io_handler, corsika_output_file_name_string):
 
 
 @pytest.fixture
-def corsika_output_instance_set_histograms(db, io_handler, corsika_output_file_name):
-    corsika_output_instance_to_set = CorsikaOutput(corsika_output_file_name)
-    corsika_output_instance_to_set.set_histograms()
-    return corsika_output_instance_to_set
+def corsika_output_instance(db, io_handler, corsika_output_file_name_string):
+    return CorsikaOutput(corsika_output_file_name_string)
+
+
+@pytest.fixture
+def corsika_output_instance_set_histograms(db, io_handler, corsika_output_instance):
+    corsika_output_instance.set_histograms()
+    return corsika_output_instance
