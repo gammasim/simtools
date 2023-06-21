@@ -57,7 +57,7 @@ class CorsikaOutput:
 
         self._initialize_attributes()
         self.read_event_information()
-        self.initialize_header()
+        self._initialize_header()
 
     def _initialize_attributes(self):
         """
@@ -118,7 +118,7 @@ class CorsikaOutput:
                     break
         return self._version
 
-    def initialize_header(self):
+    def _initialize_header(self):
         """
         Initialize the header.
         """
