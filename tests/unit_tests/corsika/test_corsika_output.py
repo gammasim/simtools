@@ -168,9 +168,6 @@ def test_fill_histograms_no_rotation(corsika_output_file_name):
         },
     ]
 
-    azimuth_angle = None
-    zenith_angle = None
-
     corsika_output_instance_fill = CorsikaOutput(corsika_output_file_name)
     corsika_output_instance_fill.individual_telescopes = False
     corsika_output_instance_fill.telescope_indices = [0]
@@ -179,7 +176,7 @@ def test_fill_histograms_no_rotation(corsika_output_file_name):
 
     # No count in the histogram before filling it
     assert np.count_nonzero(corsika_output_instance_fill.hist_direction[0].values()) == 0
-    corsika_output_instance_fill._fill_histograms(photons, azimuth_angle, zenith_angle)
+    corsika_output_instance_fill._fill_histograms(photons, azimuth_angle=None, zenith_angle=None)
     # At least one count in the histogram after filling it
     assert np.count_nonzero(corsika_output_instance_fill.hist_direction[0].values()) > 0
 
