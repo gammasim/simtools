@@ -8,7 +8,6 @@ import boost_histogram as bh
 import numpy as np
 import pytest
 from astropy import units as u
-from astropy.io.misc import yaml
 
 from simtools.corsika.corsika_output import CorsikaOutput, HistogramNotCreated
 
@@ -58,7 +57,7 @@ def test_initialize_header(corsika_output_instance):
 def test_telescope_indices(corsika_output_instance):
     corsika_output_instance.telescope_indices = [0, 1, 2]
     assert (corsika_output_instance.telescope_indices == [0, 1, 2]).all()
-    # Test float as input
+    # Test int as input
     corsika_output_instance.telescope_indices = 1
     assert corsika_output_instance.telescope_indices == [1]
     # Test non-integer indices
@@ -123,13 +122,11 @@ def test_hist_config_no_config_warning(corsika_output_instance, caplog):
 
 def test_hist_config_save_and_read_yml(corsika_output_instance, io_handler):
     # Test producing the yaml file
+    temp_hist_config = corsika_output_instance.hist_config
     corsika_output_instance.hist_config_to_yaml()
     output_file = io_handler.get_output_file(file_name="hist_config.yml", dir_type="corsika")
-    assert output_file.exists()
-    # Test reading the correct yaml file
-    with open(output_file) as file:
-        hist_config = yaml.load(file)
-        assert hist_config == corsika_output_instance.hist_config
+    corsika_output_instance.hist_config = output_file
+    assert corsika_output_instance.hist_config == temp_hist_config
 
 
 def test_create_regular_axes_valid_label(corsika_output_instance):
