@@ -23,7 +23,7 @@ __all__ = [
 
 
 class InvalidRunsToSimulate(Exception):
-    pass
+    """Exception for invalid runs to simulate."""
 
 
 class Simulator:
@@ -94,23 +94,6 @@ class Simulator:
         MongoDB configuration.
     test: bool
         If True, no jobs are submitted; only run scripts are prepared
-
-    Attributes
-    ----------
-    array_model : ArrayModel
-        Instance of ArrayModel.
-    config : namedtuple
-        Configurable parameters.
-    io_handler: IOHandler
-        Instance of IOHandler
-    label : str
-        Instance label.
-    simulator: str
-        Which simulator to use. Choices are: simtel, corsika
-    site: str
-        Validated site name.
-    runs: list of Path
-        List with the simulation file names
     """
 
     def __init__(
@@ -129,13 +112,21 @@ class Simulator:
         Initialize Simulator class.
         """
         self._logger = logging.getLogger(__name__)
-        self._logger.debug("Init Simulator {}".format(simulator))
+        self._logger.debug(f"Init Simulator {simulator}")
 
         self.label = label
         self._set_simulator(simulator)
         self.runs = list()
         self._results = defaultdict(list)
         self.test = test
+
+        self._corsika_config_data = None
+        self.site = None
+        self.layout_name = None
+        self._corsika_parameters_file = None
+        self.config = None
+        self.array_model = None
+        self._simulation_runner = None
 
         self.io_handler = io_handler.IOHandler()
         self._output_directory = self.io_handler.get_output_directory(self.label, self.simulator)
@@ -269,19 +260,19 @@ class Simulator:
                 msg = "run_list must contain only integers."
                 self._logger.error(msg)
                 raise InvalidRunsToSimulate
-            else:
-                self._logger.debug("run_list: {}".format(run_list))
-                validated_runs = list(run_list)
+
+            self._logger.debug(f"run_list: {run_list}")
+            validated_runs = list(run_list)
 
         if run_range is not None:
             if not all(isinstance(r, int) for r in run_range) or len(run_range) != 2:
                 msg = "run_range must contain two integers only."
                 self._logger.error(msg)
                 raise InvalidRunsToSimulate
-            else:
-                run_range = np.arange(run_range[0], run_range[1] + 1)
-                self._logger.debug("run_range: {}".format(run_range))
-                validated_runs.extend(list(run_range))
+
+            run_range = np.arange(run_range[0], run_range[1] + 1)
+            self._logger.debug(f"run_range: {run_range}")
+            validated_runs.extend(list(run_range))
 
         validated_runs_unique = sorted(set(validated_runs))
         return list(validated_runs_unique)
@@ -333,6 +324,7 @@ class Simulator:
 
         """
         self._simulation_runner = CorsikaRunner(
+            mongo_db_config=self._mongo_db_config,
             label=self.label,
             site=self.site,
             layout_name=self.layout_name,
@@ -386,12 +378,12 @@ class Simulator:
 
         """
 
-        self._logger.info("Submission command: {}".format(self._submit_command))
+        self._logger.info(f"Submission command: {self._submit_command}")
 
         runs_and_files_to_submit = self._get_runs_and_files_to_submit(
             input_file_list=input_file_list
         )
-        self._logger.info("Starting submission for {} runs".format(len(runs_and_files_to_submit)))
+        self._logger.info(f"Starting submission for {len(runs_and_files_to_submit)} runs")
 
         for run, file in runs_and_files_to_submit.items():
 
@@ -403,9 +395,11 @@ class Simulator:
             job_manager.submit(
                 run_script=run_script,
                 run_out_file=self._simulation_runner.get_file_name(
-                    file_type="sub_log",
+                    file_type="sub_log", **self._simulation_runner.get_info_for_file_name(run)
+                ),
+                log_file=self._simulation_runner.get_file_name(
+                    file_type="log",
                     **self._simulation_runner.get_info_for_file_name(run),
-                    mode="",
                 ),
             )
 
@@ -468,7 +462,7 @@ class Simulator:
         """Enforce the input list to be a list."""
         if not input_file_list:
             return list()
-        elif not isinstance(input_file_list, list):
+        if not isinstance(input_file_list, list):
             return [input_file_list]
 
         return input_file_list
@@ -492,7 +486,7 @@ class Simulator:
             run_str = re.search("run[0-9]*", file_name).group()
             return int(run_str[3:])
         except (ValueError, AttributeError):
-            msg = "Run number could not be guessed from {} using run = 1".format(file_name)
+            msg = f"Run number could not be guessed from {file_name} using run = 1"
             self._logger.warning(msg)
             return 1
 
@@ -704,9 +698,9 @@ class Simulator:
         """
         resources = self._make_resources_report(input_file_list)
         print("-----------------------------")
-        print("Computing Resources Report - {} Simulations".format(self.simulator))
+        print(f"Computing Resources Report - {self.simulator} Simulations")
         for key, value in resources.items():
-            print("{} = {:.2f}".format(key, value))
+            print(f"{key} = {value:.2f}")
         print("-----------------------------")
 
     def _get_runs_to_simulate(self, run_list=None, run_range=None):
@@ -728,16 +722,13 @@ class Simulator:
         """
         if run_list is None and run_range is None:
             if self.runs is None:
-                msg = (
-                    "Runs to simulate were not given as arguments nor "
-                    + "in config_data - aborting"
-                )
+                msg = "Runs to simulate were not given as arguments nor in config_data - aborting"
                 self._logger.error(msg)
                 return list()
-            else:
-                return self.runs
-        else:
-            return self._validate_run_list_and_range(run_list, run_range)
+
+            return self.runs
+
+        return self._validate_run_list_and_range(run_list, run_range)
 
     def _print_list_of_files(self, which):
         """
@@ -751,7 +742,7 @@ class Simulator:
         """
 
         if which not in self._results:
-            self._logger.error("Invalid file type {}".format(which))
+            self._logger.error(f"Invalid file type {which}")
             raise KeyError
-        for f in self._results[which]:
-            print(f)
+        for file in self._results[which]:
+            print(file)

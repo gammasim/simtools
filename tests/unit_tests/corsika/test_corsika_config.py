@@ -33,9 +33,10 @@ def corsika_config_data():
 
 
 @pytest.fixture
-def corsika_config(io_handler, corsika_config_data):
+def corsika_config(io_handler, db_config, corsika_config_data):
 
     corsika_config = CorsikaConfig(
+        mongo_db_config=db_config,
         site="Paranal",
         layout_name="4LST",
         label="test-corsika-config",
@@ -75,13 +76,14 @@ def test_export_input_file(corsika_config):
     assert input_file.exists()
 
 
-def test_wrong_par_in_config_data(corsika_config_data):
+def test_wrong_par_in_config_data(corsika_config_data, db_config):
 
     logger.info("test_wrong_primary_name")
     new_config_data = copy(corsika_config_data)
     new_config_data["wrong_par"] = 20 * u.m
     with pytest.raises(InvalidCorsikaInput):
         corsika_test_Config = CorsikaConfig(
+            mongo_db_config=db_config,
             site="LaPalma",
             layout_name="1LST",
             label="test-corsika-config",
@@ -90,13 +92,14 @@ def test_wrong_par_in_config_data(corsika_config_data):
         corsika_test_Config.print_user_parameters()
 
 
-def test_units_of_config_data(corsika_config_data):
+def test_units_of_config_data(corsika_config_data, db_config):
 
     logger.info("test_units_of_config_data")
     new_config_data = copy(corsika_config_data)
     new_config_data["zenith"] = 20 * u.m
     with pytest.raises(InvalidCorsikaInput):
         corsika_test_Config = CorsikaConfig(
+            mongo_db_config=db_config,
             site="LaPalma",
             layout_name="1LST",
             label="test-corsika-config",
@@ -105,13 +108,14 @@ def test_units_of_config_data(corsika_config_data):
         corsika_test_Config.print_user_parameters()
 
 
-def test_len_of_config_data(corsika_config_data):
+def test_len_of_config_data(corsika_config_data, db_config):
 
     logger.info("test_len_of_config_data")
     new_config_data = copy(corsika_config_data)
     new_config_data["erange"] = [20 * u.TeV]
     with pytest.raises(InvalidCorsikaInput):
         corsika_test_Config = CorsikaConfig(
+            mongo_db_config=db_config,
             site="LaPalma",
             layout_name="1LST",
             label="test-corsika-config",
@@ -120,13 +124,14 @@ def test_len_of_config_data(corsika_config_data):
         corsika_test_Config.print_user_parameters()
 
 
-def test_wrong_primary_name(corsika_config_data):
+def test_wrong_primary_name(corsika_config_data, db_config):
 
     logger.info("test_wrong_primary_name")
     new_config_data = copy(corsika_config_data)
     new_config_data["primary"] = "rock"
     with pytest.raises(InvalidCorsikaInput):
         corsika_test_Config = CorsikaConfig(
+            mongo_db_config=db_config,
             site="LaPalma",
             layout_name="1LST",
             label="test-corsika-config",
@@ -135,13 +140,14 @@ def test_wrong_primary_name(corsika_config_data):
         corsika_test_Config.print_user_parameters()
 
 
-def test_missing_input(corsika_config_data):
+def test_missing_input(corsika_config_data, db_config):
 
     logger.info("test_missing_input")
     new_config_data = copy(corsika_config_data)
     new_config_data.pop("primary")
     with pytest.raises(MissingRequiredInputInCorsikaConfigData):
         corsika_test_Config = CorsikaConfig(
+            mongo_db_config=db_config,
             site="LaPalma",
             layout_name="1LST",
             label="test-corsika-config",
@@ -160,7 +166,7 @@ def test_set_user_parameters(corsika_config_data, corsika_config):
     assert new_corsika_config.get_user_parameter("thetap") == [0, 0]
 
 
-def test_config_data_from_yaml_file(db, io_handler):
+def test_config_data_from_yaml_file(db, io_handler, db_config):
 
     logger.info("test_config_data_from_yaml_file")
     test_file_name = "corsikaConfigTest.yml"
@@ -174,6 +180,7 @@ def test_config_data_from_yaml_file(db, io_handler):
         test_file_name, io_handler.get_output_directory(dir_type="model", test=True)
     )
     cc = CorsikaConfig(
+        mongo_db_config=db_config,
         site="Paranal",
         layout_name="4LST",
         label="test-corsika-config",
@@ -214,3 +221,40 @@ def test_get_file_name(corsika_config, io_handler):
     )
     with pytest.raises(ValueError):
         corsika_config.get_file_name("foobar")
+
+
+def test_load_corsika_parameters_file(corsika_config, io_handler, caplog):
+    corsika_parameters_file = io_handler.get_input_data_file("parameters", "corsika_parameters.yml")
+    corsika_dict = corsika_config.load_corsika_parameters_file(corsika_parameters_file)
+    assert "Loading CORSIKA parameters from file" in caplog.text
+    sphere_center = {
+        "LST": {"value": 16, "unit": "m"},
+        "MST": {"value": 9, "unit": "m"},
+        "SCT": {"value": 6.1, "unit": "m"},
+        "SST": {"value": 3.25, "unit": "m"},
+    }
+    sphere_radius = {
+        "LST": {"value": 12.5, "unit": "m"},
+        "MST": {"value": 9.15, "unit": "m"},
+        "SCT": {"value": 7.15, "unit": "m"},
+        "SST": {"value": 3, "unit": "m"},
+    }
+    assert isinstance(corsika_dict, dict)
+    for tel_type in sphere_center:
+        assert (
+            sphere_center[tel_type]["value"]
+            == corsika_dict["corsika_sphere_center"][tel_type]["value"]
+        )
+        assert (
+            sphere_center[tel_type]["unit"]
+            == corsika_dict["corsika_sphere_center"][tel_type]["unit"]
+        )
+    for tel_type in sphere_radius:
+        assert (
+            sphere_radius[tel_type]["value"]
+            == corsika_dict["corsika_sphere_radius"][tel_type]["value"]
+        )
+        assert (
+            sphere_radius[tel_type]["unit"]
+            == corsika_dict["corsika_sphere_radius"][tel_type]["unit"]
+        )

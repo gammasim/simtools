@@ -23,7 +23,7 @@
     .. code-block:: console
 
         python applications/plot_simtel_histograms.py \
-            -file_lists list_test1.txt list_test2.txt --figure_name histograms_comparison
+            --file_lists list_test1.txt list_test2.txt --figure_name histograms_comparison
 
 """
 
@@ -99,7 +99,7 @@ def main():
 
         title = simtel_histograms[0].get_histogram_title(i_hist)
 
-        logger.debug("Processing: {}".format(title))
+        logger.debug(f"Processing: {title}")
 
         fig, axs = plt.subplots(1, n_lists, figsize=(6 * n_lists, 6))
 
