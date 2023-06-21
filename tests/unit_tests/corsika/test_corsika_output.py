@@ -181,6 +181,27 @@ def test_fill_histograms_no_rotation(corsika_output_file_name):
     assert np.count_nonzero(corsika_output_instance_fill.hist_direction[0].values()) > 0
 
 
+def test_get_hist_1D_projection(corsika_output_instance_set_histograms, caplog):
+
+    with pytest.raises(ValueError):
+        corsika_output_instance_set_histograms._get_hist_1D_projection("label_not_valid")
+        assert "label_not_valid is not valid." in caplog.text
+
+    labels = ["wavelength", "time", "altitude"]
+    expected_shape_of_edges = [(1, 81), (1, 101), (1, 101)]
+    expected_shape_of_values = [(1, 80), (1, 100), (1, 100)]
+    expected_mean = [125.4, 116.3, 116.3]
+    expected_std = [153.4, 378.2, 312.0]
+    for i_hist, hist_label in enumerate(labels):
+        hist_1D_list, x_edges_list = corsika_output_instance_set_histograms._get_hist_1D_projection(
+            hist_label
+        )
+        assert np.shape(x_edges_list) == expected_shape_of_edges[i_hist]
+        assert np.shape(hist_1D_list) == expected_shape_of_values[i_hist]
+        assert pytest.approx(np.mean(hist_1D_list), 1e-2) == expected_mean[i_hist]
+        assert pytest.approx(np.std(hist_1D_list), 1e-2) == expected_std[i_hist]
+
+
 def test_set_histograms_all_telescopes_1_histogram(corsika_output_instance):
     # all telescopes, but 1 histogram
     corsika_output_instance.set_histograms(telescope_indices=None, individual_telescopes=False)
@@ -248,26 +269,22 @@ def test_set_histograms_passing_config(corsika_output_instance):
     assert corsika_output_instance.hist_position[0][:, :, sum].axes[0].edges[-1] == 500
 
 
-def test_raise_if_no_histogram(corsika_output_file_name):
+def test_raise_if_no_histogram(corsika_output_file_name, caplog):
     corsika_output_instance_not_hist = CorsikaOutput(corsika_output_file_name)
     with pytest.raises(HistogramNotCreated):
         corsika_output_instance_not_hist._raise_if_no_histogram()
-        assert (
-            "The histograms were not created. Please, use `create_histograms` to create "
-            "histograms from the CORSIKA output file." in corsika_output_instance_not_hist._logger
-        )
+        assert "The histograms were not created." in caplog
 
 
-def test_get_hist_2D_projection(corsika_output_instance):
+def test_get_hist_2D_projection(corsika_output_instance, caplog):
+
+    corsika_output_instance.set_histograms()
+
     label = "hist_non_existent"
     with pytest.raises(ValueError):
         corsika_output_instance._get_hist_2D_projection(label)
-        assert (
-            f"label is not valid. Valid entries are "
-            f"{corsika_output_instance._allowed_2D_labels}" in corsika_output_instance._logger
-        )
+        assert "label is not valid." in caplog.text
 
-    corsika_output_instance.set_histograms()
     labels = ["counts", "density", "direction", "time_altitude"]
     hist_sums = [11633, 29.1, 11634, 11634]  # sum of photons are approximately the same
     # (except for the density hist, which is divided by the area)
@@ -342,31 +359,6 @@ def test_get_2D_num_photons_distr(corsika_output_instance_set_histograms):
     assert (
         pytest.approx(num_photons_per_event_per_telescope[1, 1], 1e-2) == 128.81
     )  # 2nd tel, 2nd event
-
-
-def test_get_hist_1D_projection(corsika_output_instance_set_histograms):
-
-    with pytest.raises(ValueError):
-        corsika_output_instance_set_histograms._get_hist_1D_projection("label_not_valid")
-        assert (
-            f"label_not_valid is not valid. Valid entries are"
-            f"{corsika_output_instance_set_histograms._allowed_1D_labels}"
-            in corsika_output_instance_set_histograms._logger
-        )
-
-    labels = ["wavelength", "time", "altitude"]
-    expected_shape_of_edges = [(1, 81), (1, 101), (1, 101)]
-    expected_shape_of_values = [(1, 80), (1, 100), (1, 100)]
-    expected_mean = [125.4, 116.3, 116.3]
-    expected_std = [153.4, 378.2, 312.0]
-    for i_hist, hist_label in enumerate(labels):
-        hist_1D_list, x_edges_list = corsika_output_instance_set_histograms._get_hist_1D_projection(
-            hist_label
-        )
-        assert np.shape(x_edges_list) == expected_shape_of_edges[i_hist]
-        assert np.shape(hist_1D_list) == expected_shape_of_values[i_hist]
-        assert pytest.approx(np.mean(hist_1D_list), 1e-2) == expected_mean[i_hist]
-        assert pytest.approx(np.std(hist_1D_list), 1e-2) == expected_std[i_hist]
 
 
 def test_get_photon_altitude_distr(corsika_output_instance_set_histograms):
