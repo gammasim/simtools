@@ -7,7 +7,6 @@ import pytest
 from astropy import units as u
 
 import simtools.io_handler
-import simtools.util.general as gen
 from simtools import db_handler
 from simtools.configuration.configurator import Configurator
 from simtools.corsika.corsika_output import CorsikaOutput
@@ -251,22 +250,13 @@ def telescope_south_test_file():
 
 
 @pytest.fixture
-def corsika_output_file_name_string():
+def corsika_output_file_name():
     return "tests/resources/tel_output_10GeV-2-gamma-20deg-CTAO-South.dat"
 
 
 @pytest.fixture
-def corsika_output_file_name(io_handler, corsika_output_file_name_string):
-    corsika_output = gen.find_file(
-        corsika_output_file_name_string,
-        io_handler.get_output_directory(dir_type="corsika_output", test=True),
-    )
-    return corsika_output
-
-
-@pytest.fixture
-def corsika_output_instance(db, io_handler, corsika_output_file_name_string):
-    return CorsikaOutput(corsika_output_file_name_string)
+def corsika_output_instance(db, io_handler, corsika_output_file_name):
+    return CorsikaOutput(corsika_output_file_name)
 
 
 @pytest.fixture
