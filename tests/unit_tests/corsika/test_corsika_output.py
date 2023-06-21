@@ -18,8 +18,14 @@ def test_init(corsika_output_instance, corsika_output_file_name):
         CorsikaOutput("wrong_file_name")
     assert len(corsika_output_instance.event_information) > 15
     assert "zenith" in corsika_output_instance.event_information
-    assert len(corsika_output_instance.header) > 10
 
+
+def test_version(corsika_output_instance):
+    assert corsika_output_instance.version == 7.741
+
+
+def test_initialize_header(corsika_output_instance):
+    corsika_output_instance._initialize_header()
     # Check the some elements of the header
     manual_header = {
         "run_number": 1 * u.dimensionless_unscaled,
@@ -29,14 +35,9 @@ def test_init(corsika_output_instance, corsika_output_file_name):
         "observation_height": [214700.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0] * u.cm,
         "energy_min": 10 * u.GeV,
     }
+    assert len(corsika_output_instance.header) > 10
     for key in manual_header:
         assert pytest.approx(corsika_output_instance.header[key].value) == manual_header[key].value
-
-    assert corsika_output_instance.version == 7.741
-
-
-def test_initialize_header(corsika_output_instance):
-    assert hasattr(corsika_output_instance, "header")
 
 
 def test_telescope_indices(corsika_output_instance):
