@@ -23,4 +23,4 @@ gammasim-tools is composed of the following modules and module groups:
   sim_telarray
   simulators
   util
-  visualize
+  visualization

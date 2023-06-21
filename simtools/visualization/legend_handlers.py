@@ -2,33 +2,89 @@ import matplotlib.colors as mcolors
 import matplotlib.patches as mpatches
 import numpy as np
 
+from simtools.corsika.corsika_config import CorsikaConfig
+from simtools.io_handler import IOHandler
+from simtools.util import names
+from simtools.util.names import lst, mst, sct, sst
+
+__all__ = [
+    "EdgePixelObject",
+    "HexEdgePixelHandler",
+    "HexOffPixelHandler",
+    "HexPixelHandler",
+    "LSTHandler",
+    "LSTObject",
+    "MSTHandler",
+    "MSTObject",
+    "MeanRadiusOuterEdgeHandler",
+    "MeanRadiusOuterEdgeObject",
+    "OffPixelObject",
+    "PixelObject",
+    "SCTHandler",
+    "SCTObject",
+    "SSTHandler",
+    "SSTObject",
+    "SquareEdgePixelHandler",
+    "SquareOffPixelHandler",
+    "SquarePixelHandler",
+    "TelescopeHandler",
+]
+
+
+class TelescopeHandler(object):
+    """
+    Telescope handler that centralizes the telescope information. Individual telescopes handlers
+    inherit from this class.
+    """
+
+    def __init__(self):
+        io_handler = IOHandler()
+        corsika_parameters_file = io_handler.get_input_data_file(
+            "parameters", "corsika_parameters.yml"
+        )
+        corsika_info = CorsikaConfig.load_corsika_parameters_file(corsika_parameters_file)
+
+        self.radius_dict = {}
+        self.colors_dict = {
+            lst: "darkorange",
+            mst: "dodgerblue",
+            sct: "black",
+            sst: "darkgreen",
+        }
+        for tel_type in names.all_telescope_class_names:
+            self.radius_dict[tel_type] = corsika_info["corsika_sphere_radius"][tel_type]["value"]
+
 
 class PixelObject(object):
-    pass
+    """Pixel Object."""
 
 
 class EdgePixelObject(object):
-    pass
+    """Edge-Pixel Object."""
 
 
 class OffPixelObject(object):
-    pass
+    """Off-Pixel Object."""
 
 
 class LSTObject(object):
-    pass
+    """LST Object."""
 
 
 class MSTObject(object):
-    pass
+    """MST Object."""
+
+
+class SCTObject(object):
+    """SCT Object."""
 
 
 class SSTObject(object):
-    pass
+    """SST Object."""
 
 
 class MeanRadiusOuterEdgeObject(object):
-    pass
+    """Object for Mean radius outer edge."""
 
 
 class HexPixelHandler(object):
@@ -166,13 +222,12 @@ class SquareOffPixelHandler(object):
         return patch
 
 
-class LSTHandler(object):
+class LSTHandler(TelescopeHandler):
     """
     Legend handler class to plot a representation of an LST in an array layout.
     """
 
-    @staticmethod
-    def legend_artist(legend, orig_handle, fontsize, handlebox):
+    def legend_artist(self, legend, orig_handle, fontsize, handlebox):
         center = (
             handlebox.xdescent + 0.3 * handlebox.width,
             handlebox.ydescent + 0.5 * handlebox.height,
@@ -180,43 +235,21 @@ class LSTHandler(object):
         radius = handlebox.height
         patch = mpatches.Circle(
             xy=center,
-            radius=radius,
+            radius=radius * self.radius_dict[lst] / self.radius_dict[lst],
             facecolor="none",
-            edgecolor="darkorange",
+            edgecolor=self.colors_dict[lst],
             transform=handlebox.get_transform(),
         )
         handlebox.add_artist(patch)
         return patch
 
 
-class MSTHandler(object):
+class MSTHandler(TelescopeHandler):
     """
     Legend handler class to plot a representation of an MST in an array layout.
     """
 
-    @staticmethod
-    def legend_artist(legend, orig_handle, fontsize, handlebox):
-        x0, y0 = handlebox.xdescent + 0.1 * handlebox.width, handlebox.ydescent
-        width = height = handlebox.height
-        patch = mpatches.Rectangle(
-            [x0, y0],
-            width,
-            height,
-            facecolor="dodgerblue",
-            edgecolor="dodgerblue",
-            transform=handlebox.get_transform(),
-        )
-        handlebox.add_artist(patch)
-        return patch
-
-
-class SSTHandler(object):
-    """
-    Legend handler class to plot a representation of an SST in an array layout.
-    """
-
-    @staticmethod
-    def legend_artist(legend, orig_handle, fontsize, handlebox):
+    def legend_artist(self, legend, orig_handle, fontsize, handlebox):
         center = (
             handlebox.xdescent + 0.25 * handlebox.width,
             handlebox.ydescent + 0.5 * handlebox.height,
@@ -224,9 +257,51 @@ class SSTHandler(object):
         radius = handlebox.height
         patch = mpatches.Circle(
             xy=center,
-            radius=radius * (2.8 / 12),
-            facecolor="black",
-            edgecolor="black",
+            radius=radius * self.radius_dict[mst] / self.radius_dict[lst],
+            facecolor=self.colors_dict[mst],
+            edgecolor=self.colors_dict[mst],
+            transform=handlebox.get_transform(),
+        )
+        handlebox.add_artist(patch)
+        return patch
+
+
+class SSTHandler(TelescopeHandler):
+    """
+    Legend handler class to plot a representation of an SST in an array layout.
+    """
+
+    def legend_artist(self, legend, orig_handle, fontsize, handlebox):
+        center = (
+            handlebox.xdescent + 0.25 * handlebox.width,
+            handlebox.ydescent + 0.5 * handlebox.height,
+        )
+        radius = handlebox.height
+        patch = mpatches.Circle(
+            xy=center,
+            radius=radius * self.radius_dict[sst] / self.radius_dict[lst],
+            facecolor=self.colors_dict[sst],
+            edgecolor=self.colors_dict[sst],
+            transform=handlebox.get_transform(),
+        )
+        handlebox.add_artist(patch)
+        return patch
+
+
+class SCTHandler(object):
+    """
+    Legend handler class to plot a representation of an SCT in an array layout.
+    """
+
+    def legend_artist(self, legend, orig_handle, fontsize, handlebox):
+        x0, y0 = handlebox.xdescent + 0.1 * handlebox.width, handlebox.ydescent
+        width = height = handlebox.height
+        patch = mpatches.Rectangle(
+            [x0, y0],
+            width,
+            height,
+            facecolor=self.colors_dict[sct],
+            edgecolor=self.colors_dict[sct],
             transform=handlebox.get_transform(),
         )
         handlebox.add_artist(patch)
@@ -254,3 +329,10 @@ class MeanRadiusOuterEdgeHandler(object):
         )
         handlebox.add_artist(patch)
         return patch
+
+
+all_telescope_objects = {lst: LSTObject, mst: MSTObject, sct: SCTObject, sst: SSTObject}
+all_telescope_handlers = {lst: LSTHandler, mst: MSTHandler, sct: SCTHandler, sst: SSTHandler}
+legend_handler_map = {}
+for tel_type in names.all_telescope_class_names:
+    legend_handler_map[all_telescope_objects[tel_type]] = all_telescope_handlers[tel_type]

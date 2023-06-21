@@ -170,7 +170,7 @@ def _proccess_simulation_config_file(config_file, primary_config, logger):
         with open(config_file) as file:
             config_data = yaml.load(file)
     except FileNotFoundError:
-        logger.error("Error loading simulation configuration file from {}".format(config_file))
+        logger.error(f"Error loading simulation configuration file from {config_file}")
         raise
 
     label = config_data.pop("label", dict())
@@ -235,6 +235,7 @@ def main():
             config_data=config_data,
             submit_command=args_dict["submit_command"],
             test=args_dict["test"],
+            mongo_db_config=db_config,
         )
 
     if args_dict["showers_only"]:

@@ -88,8 +88,7 @@ def main():
         layout_center_data[site]["center_alt"] = (
             float(site_pars_db[site]["altitude"]["Value"]) * u.m
         )
-        # TEMPORARY TODO should go into DB
-        layout_center_data[site]["EPSG"] = corsika_pars["SITE_PARAMETERS"][site]["EPSG"][0]
+        layout_center_data[site]["EPSG"] = site_pars_db[site]["EPSG"]["Value"]
         corsika_telescope_data[site] = dict()
         corsika_telescope_data[site]["corsika_obs_level"] = layout_center_data[site]["center_alt"]
         corsika_telescope_data[site]["corsika_sphere_center"] = corsika_pars[
@@ -105,21 +104,22 @@ def main():
 
     for site in ["South", "North"]:
         for array_name in ["1SST", "4SST", "1MST", "4MST", "1LST", "4LST"]:
-            logger.info("Processing array {}".format(array_name))
+            logger.info(f"Processing array {array_name}")
             layout = LayoutArray(
+                site=site,
+                mongo_db_config=db_config,
                 label=label,
-                name=site + "-" + array_name,
+                name=f"{site}-{array_name}",
                 layout_center_data=layout_center_data[site],
                 corsika_telescope_data=corsika_telescope_data[site],
             )
 
-            tel_name_root = array_name[1]
             tel_size = array_name[1:4]
 
             # Single telescope at the center
             if array_name[0] == "1":
                 layout.add_telescope(
-                    telescope_name=tel_name_root + "-01",
+                    telescope_name=tel_size + "-01",
                     crs_name="corsika",
                     xx=0 * u.m,
                     yy=0 * u.m,
@@ -128,28 +128,28 @@ def main():
             # 4 telescopes in a regular square grid
             else:
                 layout.add_telescope(
-                    telescope_name=tel_name_root + "-01",
+                    telescope_name=tel_size + "-01",
                     crs_name="corsika",
                     xx=telescope_distance[tel_size],
                     yy=telescope_distance[tel_size],
                     tel_corsika_z=0 * u.m,
                 )
                 layout.add_telescope(
-                    telescope_name=tel_name_root + "-02",
+                    telescope_name=tel_size + "-02",
                     crs_name="corsika",
                     xx=-telescope_distance[tel_size],
                     yy=telescope_distance[tel_size],
                     tel_corsika_z=0 * u.m,
                 )
                 layout.add_telescope(
-                    telescope_name=tel_name_root + "-03",
+                    telescope_name=tel_size + "-03",
                     crs_name="corsika",
                     xx=telescope_distance[tel_size],
                     yy=-telescope_distance[tel_size],
                     tel_corsika_z=0 * u.m,
                 )
                 layout.add_telescope(
-                    telescope_name=tel_name_root + "-04",
+                    telescope_name=tel_size + "-04",
                     crs_name="corsika",
                     xx=-telescope_distance[tel_size],
                     yy=-telescope_distance[tel_size],

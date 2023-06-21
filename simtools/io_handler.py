@@ -21,20 +21,11 @@ class IOHandlerSingleton(type):
 class IOHandler(metaclass=IOHandlerSingleton):
     """
     Handle input and output paths.
-
-    Attributes
-    ----------
-    output_path: str or Path
-        Parent path of the output files created by this class.
-    data_path: str or Path
-        Parent path of the data files.
-    model_path: str or Path
-        Parent path of the output files created by this class.
     """
 
     def __init__(self):
         """
-        IOHandler init.
+        Initialize IOHandler.
 
         """
         self._logger = logging.getLogger(__name__)
@@ -98,7 +89,7 @@ class IOHandler(metaclass=IOHandlerSingleton):
         try:
             path.mkdir(parents=True, exist_ok=True)
         except FileNotFoundError:
-            self._logger.error("Error creating directory {}".format(str(path)))
+            self._logger.error(f"Error creating directory {str(path)}")
             raise
 
         return path.absolute()

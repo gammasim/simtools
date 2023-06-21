@@ -70,6 +70,11 @@ plot_simtel_histograms
 .. automodule:: plot_simtel_histograms
    :members:
 
+plot_layout_array
+======================
+
+.. automodule:: plot_layout_array
+   :members:
 
 print_array_elements
 ====================
