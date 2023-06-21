@@ -12,17 +12,6 @@ from astropy import units as u
 from simtools.corsika.corsika_output import CorsikaOutput, HistogramNotCreated
 
 
-@pytest.fixture
-def corsika_output_instance(db, io_handler, corsika_output_file_name_string):
-    # db.export_file_db(
-    #    db_name="test-data",
-    #    dest=io_handler.get_output_directory(dir_type="corsika_output", test=True),
-    #    file_name=corsika_output_file_name_string,
-    # )
-    # return CorsikaOutput(corsika_output_file)
-    return CorsikaOutput(corsika_output_file_name_string)
-
-
 def test_file_exists(corsika_output_file_name):
     assert corsika_output_file_name.exists()
 
