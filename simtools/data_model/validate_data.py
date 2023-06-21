@@ -5,41 +5,24 @@ from astropy import units as u
 from astropy.table import Table, unique
 from astropy.utils.diff import report_diff_values
 
+__all__ = ["DataValidator"]
+
 
 class DataValidator:
     """
-    Simulation model data transformation for data validation.
-    Validate input data for type and units; converts or transform
-    data if required.
+    Simulation model data transformation for data validation. Validate input data for type and \
+    units; converts or transform data if required.
 
-    Attributes
+    Parameters
     ----------
     workflow: WorkflowDescription
-        workflow configuration
-
-    Methods
-    -------
-    transform()
-        Apply transformations to data columns.
-    validate()
-        Data value and data file validation.
-    validate_data_file()
-        Open data file and check for file consistency.
-    validate_data_columns()
-        Check each data column for correct units and data ranges.
+        workflow description.
 
     """
 
     def __init__(self, workflow=None):
         """
-        Initalize validation class and read required
-        reference data columns
-
-        Parameters
-        ----------
-        workflow: WorkflowDescription
-            workflow description
-
+        Initalize validation class and read required reference data columns
         """
 
         self._logger = logging.getLogger(__name__)
@@ -54,14 +37,10 @@ class DataValidator:
         """
         Data and data file validation
 
-        Parameters
-        ----------
-        (none)
-
         Returns
         -------
         data_table: astropy.table
-            data table
+            Data table
 
         """
 
@@ -76,14 +55,10 @@ class DataValidator:
         - duplication removal
         - sorting according to axes
 
-        Parameters
-        ----------
-        (none)
-
         Returns
         -------
         data_table: astropy.table
-            data table
+            Data table
 
         """
 
@@ -95,19 +70,16 @@ class DataValidator:
     def validate_data_file(self):
         """
         Open data file and read data from file
-
         """
 
-        self._logger.info("Reading data from {}".format(self._data_file_name))
+        self._logger.info(f"Reading data from {self._data_file_name}")
         self.data_table = Table.read(self._data_file_name, guess=True, delimiter=r"\s")
 
     def validate_data_columns(self):
         """
-        Validate that required data columns are available,
-        columns are in the correct units (if necessary apply a
-        unit conversion), and check ranges (minimum, maximum)
-
-        This is not applied to columns of type 'string'
+        Validate that required data columns are available, columns are in the correct units (if \
+        necessary apply a unit conversion), and check ranges (minimum, maximum). This is not \
+        applied to columns of type 'string'
 
         """
 
@@ -122,8 +94,7 @@ class DataValidator:
 
     def _check_required_columns(self):
         """
-        Check that all required data columns are available
-        in the input data table
+        Check that all required data columns are available in the input data table
 
         Raises
         ------
@@ -135,16 +106,14 @@ class DataValidator:
         for key, value in self._reference_data_columns.items():
             if "required_column" in value and value["required_column"] is True:
                 if key in self.data_table.columns:
-                    self._logger.debug("Found required data column '{}'".format(key))
+                    self._logger.debug(f"Found required data column '{key}'")
                 else:
-                    raise KeyError("Missing required column '{}'".format(key))
+                    raise KeyError(f"Missing required column '{key}'")
 
     def _sort_data(self):
         """
-        Sort data according to one data column
-        (if required by any column attribute)
-
-        Data is either sorted or reverse sorted
+        Sort data according to one data column (if required by any column attribute). Data is \
+         either sorted or reverse sorted
 
         Raises
         ------
@@ -163,16 +132,14 @@ class DataValidator:
                     _columns_by_which_to_reverse_sort.append(key)
 
         if len(_columns_by_which_to_sort) > 0:
-            self._logger.debug("Sorting data columns: {}".format(_columns_by_which_to_sort))
+            self._logger.debug(f"Sorting data columns: {_columns_by_which_to_sort}")
             try:
                 self.data_table.sort(_columns_by_which_to_sort)
             except AttributeError:
                 self._logger.error("No data table defined for sorting")
                 raise
         elif len(_columns_by_which_to_reverse_sort) > 0:
-            self._logger.debug(
-                "Reverse sorting data columns: {}".format(_columns_by_which_to_reverse_sort)
-            )
+            self._logger.debug(f"Reverse sorting data columns: {_columns_by_which_to_reverse_sort}")
             try:
                 self.data_table.sort(_columns_by_which_to_reverse_sort, reverse=True)
             except AttributeError:
@@ -181,14 +148,12 @@ class DataValidator:
 
     def _check_data_for_duplicates(self):
         """
-        Remove duplicates from data columns as defined
-        in the data columns description
+        Remove duplicates from data columns as defined in the data columns description
 
         Raises
         ------
-            if row values are different for
-            those rows with duplications in the data columns
-            to be checked for unique values.
+            if row values are different for those rows with duplications in the data columns to be \
+            checked for unique values.
 
         """
 
@@ -209,9 +174,8 @@ class DataValidator:
                 self.data_table = unique(self.data_table)
             else:
                 self._logger.error(
-                    "Failed removal of duplication for column {}, values are not unqiue".format(
-                        _column_with_unique_requirement
-                    )
+                    "Failed removal of duplication for column "
+                    f"{_column_with_unique_requirement}, values are not unqiue"
                 )
                 raise ValueError
 
@@ -230,16 +194,15 @@ class DataValidator:
 
         for key, value in self._reference_data_columns.items():
             if "attribute" in value and "remove_duplicates" in value["attribute"]:
-                self._logger.debug("Removing duplicates for column '{}'".format(key))
+                self._logger.debug(f"Removing duplicates for column '{key}'")
                 _unique_required_column.append(key)
 
-        self._logger.debug("Unique required columns: {}".format(_unique_required_column))
+        self._logger.debug(f"Unique required columns: {_unique_required_column}")
         return _unique_required_column
 
     def _get_reference_unit(self, column_name):
         """
-        Return reference column unit.
-        Includes correct treatment of dimensionless units
+        Return reference column unit. Includes correct treatment of dimensionless units
 
         Parameters
         ----------
@@ -262,7 +225,7 @@ class DataValidator:
             reference_unit = self._reference_data_columns[column_name]["unit"]
         except KeyError:
             self._logger.error(
-                "Data column '{}' not found in reference column definition".format(column_name)
+                f"Data column '{column_name}' not found in reference column definition"
             )
             raise
 
@@ -273,10 +236,9 @@ class DataValidator:
 
     def _column_status(self, col_name):
         """
-        Check that column is defined in reference schema (additional
-        data columns are allowed in the input data, but are ignored)
-        and that column type is not string (string-type columns ignored
-        for range checks)
+        Check that column is defined in reference schema (additional data columns are allowed in\
+        the input data, but are ignored) and that column type is not string (string-type columns\
+        ignored for range checks)
 
         """
 
@@ -292,12 +254,13 @@ class DataValidator:
 
     def _check_and_convert_units(self, col):
         """
-        Check that all columns have an allowed units.
-        Convert to reference unit (e.g., Angstrom to nm).
+        Check that all columns have an allowed units. Convert to reference unit (e.g., Angstrom to\
+         nm).
 
         Note on dimensionless columns:
+
         - should be given in unit descriptor as unit: ''
-        - be forgiving and assume that in cases no unit is given in the data files
+        - be forgiving and assume that in cases no unit is given in the data files\
           means that it should be dimensionless (e.g., for a efficiency)
 
         Parameters
@@ -317,7 +280,7 @@ class DataValidator:
 
         """
 
-        self._logger.debug("Checking data column '{}'".format(col.name))
+        self._logger.debug(f"Checking data column '{col.name}'")
 
         try:
             reference_unit = self._get_reference_unit(col.name)
@@ -326,18 +289,16 @@ class DataValidator:
                 return col
 
             self._logger.debug(
-                "Data column '{}' with reference unit '{}' and data unit '{}'".format(
-                    col.name, reference_unit, col.unit
-                )
+                f"Data column '{col.name}' with reference unit "
+                f"'{reference_unit}' and data unit '{col.unit}'"
             )
 
             col.convert_unit_to(reference_unit)
 
         except u.core.UnitConversionError:
             self._logger.error(
-                "Invalid unit in data column '{}'. Expected type '{}', found '{}'".format(
-                    col.name, reference_unit, col.unit
-                )
+                f"Invalid unit in data column '{col.name}'. "
+                f"Expected type '{reference_unit}', found '{col.unit}'"
             )
             raise
 
@@ -345,10 +306,8 @@ class DataValidator:
 
     def _check_range(self, col_name, col_min, col_max, range_type="allowed_range"):
         """
-        Check that column data is within allowed range
-        or required range.
-
-        Assume that column and ranges have the same units
+        Check that column data is within allowed range or required range. Assumes that column and \
+        ranges have the same units.
 
         Parameters
         ----------
@@ -371,15 +330,15 @@ class DataValidator:
             range columns
 
         """
-        self._logger.debug("Checking data in column '{}' for '{}'".format(col_name, range_type))
+        self._logger.debug(f"Checking data in column '{col_name}' for '{range_type}'")
 
         try:
-            if range_type != "allowed_range" and range_type != "required_range":
+            if range_type not in ("allowed_range", "required_range"):
                 raise KeyError
             if range_type not in self._reference_data_columns[col_name]:
                 return None
-        except KeyError:
-            raise KeyError(f"Missing column '{col_name} in reference range'")
+        except KeyError as e:
+            raise KeyError(f"Missing column '{col_name} in reference range'") from e
 
         try:
             if not self._interval_check(
@@ -392,19 +351,13 @@ class DataValidator:
             ):
                 raise ValueError
         except KeyError:
-            self._logger.error(
-                "Invalid range ('{}') definition for column '{}'".format(range_type, col_name)
-            )
+            self._logger.error(f"Invalid range ('{range_type}') definition for column '{col_name}'")
         except ValueError:
             self._logger.error(
-                "Value for column '{}' out of range. [[{}, {}], {}: [[{}, {}]".format(
-                    col_name,
-                    col_min,
-                    col_max,
-                    range_type,
-                    self._reference_data_columns[col_name][range_type]["min"],
-                    self._reference_data_columns[col_name][range_type]["max"],
-                )
+                f"Value for column '{col_name}' out of range. "
+                f"[[{col_min}, {col_max}], {range_type}: "
+                f"[[{self._reference_data_columns[col_name][range_type]['min']}, "
+                f"{self._reference_data_columns[col_name][range_type]['max']}]"
             )
             raise
 
@@ -413,8 +366,8 @@ class DataValidator:
     @staticmethod
     def _interval_check(data, axis_range, range_type):
         """
-        Check that values are inside allowed range (range_type='allowed_range')
-        or span at least the given inveral (range_type='required_range').
+        Check that values are inside allowed range (range_type='allowed_range') or span at least \
+         the given inveral (range_type='required_range').
 
         Parameters
         ----------

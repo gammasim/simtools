@@ -18,7 +18,7 @@ logger.setLevel(logging.DEBUG)
 
 
 APP_LIST = {
-    # Opticas
+    # Optics
     "compare_cumulative_psf": [
         [
             "--site",
@@ -165,6 +165,84 @@ APP_LIST = {
     ],
     # Layout
     "make_regular_arrays": [[]],
+    "plot_layout_array::one_file": [
+        [
+            "--telescope_list data/layout/telescope_positions-North-TestLayout.ecsv",
+        ]
+    ],
+    "plot_layout_array::one_file_with_name": [
+        [
+            "--telescope_list data/layout/telescope_positions-North-TestLayout.ecsv",
+            "--figure_name test",
+        ]
+    ],
+    "plot_layout_array::one_file_with_name_and_extension": [
+        [
+            "--telescope_list data/layout/telescope_positions-North-TestLayout.ecsv",
+            "--figure_name test.png",
+        ]
+    ],
+    "plot_layout_array::one_file_one_angle": [
+        [
+            "--telescope_list data/layout/telescope_positions-North-TestLayout.ecsv",
+            "--rotate_angle 20",
+        ]
+    ],
+    "plot_layout_array::one_file_two_angles": [
+        [
+            "--telescope_list data/layout/telescope_positions-North-TestLayout.ecsv",
+            "--rotate_angle 20 30",
+        ]
+    ],
+    "plot_layout_array::two_files": [
+        [
+            "--telescope_list data/layout/telescope_positions-North-TestLayout.ecsv "
+            "data/layout/telescope_positions-South-TestLayout.ecsv",
+        ]
+    ],
+    "plot_layout_array::two_files_one_angle": [
+        [
+            "--telescope_list data/layout/telescope_positions-North-TestLayout.ecsv "
+            "data/layout/telescope_positions-South-TestLayout.ecsv",
+            "--rotate_angle 20",
+        ]
+    ],
+    "plot_layout_array::two_files_two_angles": [
+        [
+            "--telescope_list data/layout/telescope_positions-North-TestLayout.ecsv "
+            "data/layout/telescope_positions-South-TestLayout.ecsv",
+            "--rotate_angle 20 30",
+        ]
+    ],
+    "plot_layout_array::layout_name": [
+        [
+            "--layout_array_name North-4LST",
+        ]
+    ],
+    "plot_layout_array::layout_name_one_angle": [
+        [
+            "--layout_array_name North-4LST",
+            "--rotate_angle 20",
+        ]
+    ],
+    "plot_layout_array::layout_name_two_angles": [
+        [
+            "--layout_array_name North-4LST",
+            "--rotate_angle 20 30",
+        ]
+    ],
+    "plot_layout_array::layout_two_names_one_angle": [
+        [
+            "--layout_array_name North-4LST South-4LST",
+            "--rotate_angle 20",
+        ]
+    ],
+    "plot_layout_array::layout_two_names_two_angles": [
+        [
+            "--layout_array_name North-4LST South-4LST",
+            "--rotate_angle 20 30",
+        ]
+    ],
     # Production
     "produce_array_config": [["--array_config", "./tests/resources/array_config_test.yml"]],
     # Trigger
@@ -290,13 +368,22 @@ APP_LIST = {
             "corsika",
         ],
     ],
+    "print_array_elements::print_compact_corsika_telescopeheights": [
+        [
+            "--array_element_list",
+            "tests/resources/telescope_positions-North-utm.ecsv",
+            "--export",
+            "corsika",
+            "--use_corsika_telescope_height",
+        ],
+    ],
 }
 
 
 @pytest.mark.parametrize("application", APP_LIST.keys())
 def test_applications(application, io_handler, monkeypatch, db):
 
-    logger.info("Testing {}".format(application))
+    logger.info(f"Testing {application}")
 
     # The add_file_to_db.py application requires a user confirmation.
     # With this line we mock the user confirmation to be y for the test
@@ -324,9 +411,9 @@ def test_applications(application, io_handler, monkeypatch, db):
 
     for args in APP_LIST[application]:
         app_name = application.partition("::")[0]
-        logger.info("Running with args: {}".format(args))
+        logger.info(f"Running with args: {args}")
         cmd = make_command(app_name, args)
-        logger.info("Running command: {}".format(cmd))
+        logger.info(f"Running command: {cmd}")
         out = os.system(cmd)
         is_output_valid = out == 0
         assert is_output_valid

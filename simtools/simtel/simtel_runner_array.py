@@ -29,24 +29,18 @@ class SimtelRunnerArray(SimtelRunner):
             unit: deg
             default: 0 deg
 
-    Attributes
+    Parameters
     ----------
-    label: str, optional
-        Instance label.
-    array_model: ArrayModel
-        Instance of the ArrayModel class.
-    config: namedtuple
-        Contains the configurable parameters (zenith_angle).
-
-    Methods
-    -------
-    run(test=False, force=False, input_file=None, run_number=None)
-        Run sim_telarray. test=True will make it faster and force=True will remove existing files
-        and run again.
-    get_info_for_file_name()
-        Get a dictionary with the info necessary for building the sim_telarray file names.
-    get_file_name()
-        Get a sim_telarray style file name for various file types.
+    array_model: str
+        Instance of TelescopeModel class.
+    label: str
+        Instance label. Important for output file naming.
+    simtel_source_path: str or Path
+        Location of sim_telarray installation.
+    config_data: dict
+        Dict containing the configurable parameters.
+    config_file: str or Path
+        Path of the yaml file containing the configurable parameters.
     """
 
     def __init__(
@@ -58,20 +52,7 @@ class SimtelRunnerArray(SimtelRunner):
         config_file=None,
     ):
         """
-        SimtelRunnerArray.
-
-        Parameters
-        ----------
-        array_model: str
-            Instance of TelescopeModel class.
-        label: str, optional
-            Instance label. Important for output file naming.
-        simtel_source_path: str (or Path), optional
-            Location of sim_telarray installation.
-        config_data: dict.
-            Dict containing the configurable parameters.
-        config_file: str or Path
-            Path of the yaml file containing the configurable parameters.
+        Initialize SimtelRunnerArray.
         """
         self._logger = logging.getLogger(__name__)
         self._logger.debug("Init SimtelRunnerArray")
@@ -80,6 +61,7 @@ class SimtelRunnerArray(SimtelRunner):
 
         self.array_model = self._validate_array_model(array_model)
         self.label = label if label is not None else self.array_model.label
+        self._log_file = None
 
         self.io_handler = io_handler.IOHandler()
 
@@ -147,8 +129,8 @@ class SimtelRunnerArray(SimtelRunner):
         Parameters
         ----------
         file_type: str
-            The type of file (determines the file suffix).
-            Choices are log, histogram, output or sub_log.
+            The type of file (determines the file suffix). Choices are log, histogram, output or\
+             sub_log.
         kwargs: dict
             The dictionary must include the following parameters (unless listed as optional):
                 run: int
@@ -212,7 +194,8 @@ class SimtelRunnerArray(SimtelRunner):
             Choices are log, histogram, output or sub_log.
         run_number: int
             Run number.
-
+        mode: str
+            Mode.
         """
 
         info_for_file_name = self.get_info_for_file_name(run_number)
@@ -231,14 +214,14 @@ class SimtelRunnerArray(SimtelRunner):
         Returns
         -------
         dict
-            run time of job in seconds
+            run time of job in seconds.
 
         """
 
         info_for_file_name = self.get_info_for_file_name(run_number)
         sub_log_file = self.get_file_name("sub_log", **info_for_file_name, mode="out")
 
-        self._logger.debug("Reading resources from {}".format(sub_log_file))
+        self._logger.debug(f"Reading resources from {sub_log_file}")
 
         _resources = {}
 
@@ -265,7 +248,7 @@ class SimtelRunnerArray(SimtelRunner):
         """
         Builds and returns the command to run simtel_array.
 
-        Attributes
+        Parameters
         ----------
         kwargs: dict
             The dictionary must include the following parameters (unless listed as optional):
@@ -284,8 +267,8 @@ class SimtelRunnerArray(SimtelRunner):
 
         # Array
         command = str(self._simtel_source_path.joinpath("sim_telarray/bin/sim_telarray"))
-        command += " -c {}".format(self.array_model.get_config_file())
-        command += " -I{}".format(self.array_model.get_config_directory())
+        command += f" -c {self.array_model.get_config_file()}"
+        command += f" -I{self.array_model.get_config_directory()}"
         command += super()._config_option("telescope_theta", self.config.zenith_angle)
         command += super()._config_option("telescope_phi", self.config.azimuth_angle)
         command += super()._config_option("power_law", "2.5")
@@ -307,5 +290,5 @@ class SimtelRunnerArray(SimtelRunner):
             msg = "sim_telarray output file does not exist."
             self._logger.error(msg)
             raise InvalidOutputFile(msg)
-        else:
-            self._logger.debug("Everything looks fine with the sim_telarray output file.")
+
+        self._logger.debug("Everything looks fine with the sim_telarray output file.")

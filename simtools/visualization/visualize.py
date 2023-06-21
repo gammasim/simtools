@@ -6,11 +6,28 @@ from collections import OrderedDict
 
 import astropy.units as u
 import matplotlib.gridspec as gridspec
+import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 from astropy.table import QTable
 from cycler import cycler
+from matplotlib.collections import PatchCollection
 
-__all__ = ["set_style", "plot_1D", "plot_table"]
+from simtools.util import general as gen
+from simtools.util import names
+from simtools.util.names import mst, sct
+from simtools.visualization import legend_handlers as leg_h
+
+__all__ = [
+    "get_colors",
+    "get_lines",
+    "get_markers",
+    "get_telescope_patch",
+    "plot_1D",
+    "plot_array",
+    "plot_hist_2D",
+    "plot_table",
+    "set_style",
+]
 
 COLORS = dict()
 COLORS["classic"] = [
@@ -105,12 +122,11 @@ LINES = [
 
 def _add_unit(title, array):
     """
-    A function to add a unit to "title" (presumably an axis title).
-    The unit is extracted from the unit field of the array, in case array is an astropy quantity.
-    If a unit is found, it is added to title in the form [unit].
-    If a unit already is present in title (in the same form),
-    a warning is printed and no unit is added.
-    The function assumes array not to be empty and returns the modified title.
+    A function to add a unit to "title" (presumably an axis title). The unit is extracted from the\
+    unit field of the array, in case array is an astropy quantity. If a unit is found, it is added \
+    to title in the form [unit]. If a unit already is present in title (in the same form), a \
+    warning is printed and no unit is added. The function assumes array not to be empty and returns\
+    the modified title.
 
     Parameters
     ----------
@@ -128,7 +144,7 @@ def _add_unit(title, array):
     if isinstance(array, u.Quantity):
         unit = str(array[0].unit)
         if len(unit) > 0:
-            unit = " [{}]".format(unit)
+            unit = f" [{unit}]"
         if re.search(r"\d", unit):
             unit = re.sub(r"(\d)", r"^\1", unit)
             unit = unit.replace("[", r"$[").replace("]", r"]$")
@@ -139,16 +155,15 @@ def _add_unit(title, array):
             )
             unit = ""
 
-    return "{}{}".format(title, unit)
+    return f"{title}{unit}"
 
 
 def set_style(palette="default", big_plot=False):
     """
-    A function to set the plotting style as part of an effort to
-    homogenize plot style across the framework.
-    The function receives the colour palette name and whether it is
-    a big plot or not. The latter sets the fonts and marker to be bigger in case it is a big plot.
-    The available colour palettes are as follows:
+    A function to set the plotting style as part of an effort to homogenize plot style across the \
+    framework. The function receives the colour palette name and whether it is a big plot or not.\
+    The latter sets the fonts and marker to be bigger in case it is a big plot. The available \
+    colour palettes are as follows:
 
     - classic (default): A classic colourful palette with strong colours and contrast.
     - modified classic: Similar to the classic, with slightly different colours.
@@ -156,22 +171,25 @@ def set_style(palette="default", big_plot=False):
     - purples: A pseudo sequential purple colour palette (not great for contrast).
     - greens: A pseudo sequential green colour palette (not great for contrast).
 
-    To use the function, simply call it before plotting anything.
-    The function is made public, so that it can be used outside the visualize module.
-    However, it is highly recommended to create plots only through the visualize module.
+    To use the function, simply call it before plotting anything. The function is made public, so \
+    that it can be used outside the visualize module. However, it is highly recommended to create\
+    plots only through the visualize module.
 
     Parameters
     ----------
     palette: str
+        Colour palette.
     big_plot: bool
+        Flag to set fonts and marker bigger. If True, it sets them bigger.
 
     Raises
     ------
-    KeyError if provided palette does not exist.
+    KeyError
+        if provided palette does not exist.
     """
 
     if palette not in COLORS:
-        raise KeyError("palette must be one of {}".format(", ".join(COLORS)))
+        raise KeyError(f"palette must be one of {', '.join(COLORS)}")
 
     fontsize = {"default": 17, "big_plot": 30}
     markersize = {"default": 8, "big_plot": 18}
@@ -204,24 +222,27 @@ def set_style(palette="default", big_plot=False):
 
 def get_colors(palette="default"):
     """
-    Get the colour list of the palette requested.
-    If no palette is provided, the default is returned.
+    Get the colour list of the palette requested. If no palette is provided, the default is \
+    returned.
 
     Parameters
     ----------
     palette: str
-
-    Raises
-    ------
-    KeyError if provided palette does not exist.
+        Colour palette.
 
     Returns
     -------
-    list: colour list
+    list
+        Colour list.
+
+    Raises
+    ------
+    KeyError
+        if provided palette does not exist.
     """
 
     if palette not in COLORS:
-        raise KeyError("palette must be one of {}".format(", ".join(COLORS)))
+        raise KeyError(f"palette must be one of {', '.join(COLORS)}")
 
     return COLORS[palette]
 
@@ -232,7 +253,8 @@ def get_markers():
 
     Returns
     -------
-    list: marker list
+    list
+        List with markers.
     """
 
     return MARKERS
@@ -244,7 +266,8 @@ def get_lines():
 
     Returns
     -------
-    list: line style list
+    list
+        List with line styles.
     """
 
     return LINES
@@ -252,15 +275,14 @@ def get_lines():
 
 def plot_1D(data, **kwargs):
     """
-    Produce a high contrast one dimensional plot from multiple data sets.
-    A ratio plot can be added at the bottom to allow easy comparison.
-    Additional options, such as plot title, plot legend, etc., are given in kwargs.
-    Any option that can be changed after plotting (e.g., axes limits, log scale, etc.) should be
-    done using the returned plt instance.
+    Produce a high contrast one dimensional plot from multiple data sets. A ratio plot can be \
+    added at the bottom to allow easy comparison. Additional options, such as plot title, plot
+    legend, etc., are given in kwargs. Any option that can be changed after plotting (e.g., axes\
+    limits, log scale, etc.) should be done using the returned plt instance.
 
     Parameters
     ----------
-    data: numpy structured array or a dictionary of structured arrays.
+    data: numpy structured array or a dictionary of structured arrays
           Each structured array has two columns, the first is the x-axis and the second the y-axis.
           The titles of the columns are set as the axes titles.
           The labels of each dataset set are given in the dictionary keys
@@ -291,7 +313,7 @@ def plot_1D(data, **kwargs):
     Returns
     -------
     pyplot.figure
-        A pyplot.figure instance in which the plot was produced
+        Instance of pyplot.figure in which the plot was produced
 
     Raises
     ------
@@ -395,11 +417,11 @@ def plot_1D(data, **kwargs):
                 plt.plot(data_now[x_title], y_values, **kwargs)
 
         plt.xlabel(x_title_unit)
-        y_title_ratio = "Ratio to {}".format(data_ref_name)
+        y_title_ratio = f"Ratio to {data_ref_name}"
         if len(y_title_ratio) > 20:
             y_title_ratio = "Ratio"
         if plot_difference:
-            y_title_ratio = "Difference to {}".format(data_ref_name)
+            y_title_ratio = f"Difference to {data_ref_name}"
         plt.ylabel(y_title_ratio)
 
         ylim = plt.gca().get_ylim()
@@ -411,18 +433,17 @@ def plot_1D(data, **kwargs):
 
 def plot_table(table, y_title, **kwargs):
     """
-    Produce a high contrast one dimensional plot from the data in an astropy.Table.
-    A ratio plot can be added at the bottom to allow easy comparison.
-    Additional options, such as plot title, plot legend, etc., are given in kwargs.
-    Any option that can be changed after plotting (e.g., axes limits, log scale, etc.) should be
-    done using the returned plt instance.
+    Produce a high contrast one dimensional plot from the data in an astropy.Table. A ratio plot\
+    can be added at the bottom to allow easy comparison. Additional options, such as plot title,
+    plot legend, etc., are given in kwargs. Any option that can be changed after plotting (e.g.,\
+    axes limits, log scale, etc.) should be done using the returned plt instance.
 
     Parameters
     ----------
-    table: astropy.Table or astropy.QTable.
-           The first column of the table is the x-axis and the second column is the y-axis.
-           Any additional columns will be treated as additional data to plot.
-           The column titles are used in the legend (except for the first column).
+    table: astropy.Table or astropy.QTable
+           The first column of the table is the x-axis and the second column is the y-axis. Any \
+           additional columns will be treated as additional data to plot. The column titles are \
+           used in the legend (except for the first column).
     y_title: str
            The y-axis title.
 
@@ -434,18 +455,19 @@ def plot_table(table, y_title, **kwargs):
         * no_markers: do not print markers.
         * empty_markers: print empty (hollow) markers
         * plot_ratio: bool
-          Add a ratio plot at the bottom. The first entry in the data dictionary
-          is used as the reference for the ratio.
-          If data dictionary is not an OrderedDict, the reference will be random.
+          Add a ratio plot at the bottom. The first entry in the data dictionary is used as the \
+          reference for the ratio. If data dictionary is not an OrderedDict, the reference will be\
+          random.
         * plot_difference: bool
-          Add a difference plot at the bottom. The first entry in the data dictionary
-          is used as the reference for the difference.
-          If data dictionary is not an OrderedDict, the reference will be random.
+          Add a difference plot at the bottom. The first entry in the data dictionary is used as \
+          the reference for the difference. If data dictionary is not an OrderedDict, the reference\
+          will be random.
         * Any additional kwargs for plt.plot
 
     Returns
     -------
     pyplot.fig
+        Instance of pyplot.fig.
 
     Raises
     ------
@@ -466,9 +488,8 @@ def plot_table(table, y_title, **kwargs):
 
 def plot_hist_2D(data, **kwargs):
     """
-    Produce a two dimensional histogram plot.
-    Any option that can be changed after plotting (e.g., axes limits, log scale, etc.) should be
-    done using the returned plt instance.
+    Produce a two dimensional histogram plot. Any option that can be changed after plotting (e.g.,\
+    axes limits, log scale, etc.) should be done using the returned plt instance.
 
     Parameters
     ----------
@@ -481,7 +502,7 @@ def plot_hist_2D(data, **kwargs):
     Returns
     -------
     pyplot.figure
-        A pyplot.figure instance in which the plot was produced
+        Instance of pyplot.figure in which the plot was produced.
 
     """
 
@@ -518,5 +539,163 @@ def plot_hist_2D(data, **kwargs):
         plt.title(title, y=1.02)
 
     fig.tight_layout()
+
+    return fig
+
+
+@u.quantity_input(x=u.m, y=u.m, radius=u.m)
+def get_telescope_patch(name, x, y, radius):
+    """
+    Collect the patch of one telescope to be plotted by plot_array.
+
+    Parameters
+    ----------
+    name: str
+        Name of the telescope (type).
+    x: astropy.units.Quantity
+        x position of the telescope usually in meters.
+    y: astropy.units.Quantity
+        y position of the telescope usually in meters.
+    radius: astropy.units.Quantity
+        Radius of the telescope sphere usually in meters.
+
+    Returns
+    -------
+    patch
+        Instance of mpatches.Circle.
+    """
+    tel_obj = leg_h.TelescopeHandler()
+    valid_name = names.get_telescope_type(name)
+    fill_flag = False
+
+    x = x.to(u.m)
+    y = y.to(u.m)
+    radius = radius.to(u.m)
+
+    if valid_name == mst:
+        fill_flag = True
+    if valid_name == sct:
+        patch = mpatches.Rectangle(
+            ((x - radius / 2).value, (y - radius / 2).value),
+            width=radius.value,
+            height=radius.value,
+            fill=False,
+            color=tel_obj.colors_dict[sct],
+        )
+    else:
+        patch = mpatches.Circle(
+            (x.value, y.value),
+            radius=radius.value,
+            fill=fill_flag,
+            color=tel_obj.colors_dict[valid_name],
+        )
+    return patch
+
+
+@u.quantity_input(rotate_angle=u.deg)
+def plot_array(telescopes, rotate_angle=0, show_tel_label=False):
+    """
+    Plot the array of telescopes. The x axis gives the easting direction and y axis gives the
+    northing direction.
+    Note that in order to convert from the CORSIKA coordinate system to the 'conventional' system
+    of North/East, a 90 degree rotation is always applied.
+    Rotation of the array elements is possible through the 'rotate_angle' given either in degrees,
+    or in radians.
+    The direction of rotation of the array elements is counterclockwise.
+    The rotation does not change Telescope instance attributes.
+
+    Parameters
+    ----------
+    telescopes: dict
+        Dictionary with the telescope position and names. Coordinates are given in the CORSIKA
+        coordinate system, i.e., the x positive axis points toward north
+        and the y positive axis points toward west.
+    rotate_angle:
+        Angle to rotate the plot. For rotate_angle = 0 the resulting plot will have
+        the x-axis pointing towards the east, and the y-axis pointing towards the North.
+    show_tel_label: bool
+        If True it will print the label of the individual telescopes in the plot.
+        While it works well for the smaller arrays, it gets crowded for larger arrays.
+
+    Returns
+    -------
+    plt.figure
+        Instance of plt.figure with the array of telescopes plotted.
+
+    """
+
+    fig, ax = plt.subplots(1)
+    legend_objects = []
+    legend_labels = []
+    tel_counters = {one_telescope: 0 for one_telescope in names.all_telescope_class_names}
+    if rotate_angle != 0:
+        pos_x_rotated, pos_y_rotated = gen.rotate(
+            rotate_angle, telescopes["pos_x"], telescopes["pos_y"]
+        )
+    else:
+        pos_x_rotated, pos_y_rotated = telescopes["pos_x"], telescopes["pos_y"]
+
+    pos_x_rotated, pos_y_rotated = gen.rotate(90 * u.deg, pos_x_rotated, pos_y_rotated)
+
+    if len(pos_x_rotated) > 30:
+        fontsize = 4
+        scale = 2
+    else:
+        fontsize = 8
+        scale = 1
+
+    patches = []
+    for i_tel, tel_now in enumerate(telescopes):
+        for tel_type in tel_counters:
+            if tel_type in tel_now["telescope_name"]:
+                tel_counters[tel_type] += 1
+        i_tel_name = names.get_telescope_type(telescopes[i_tel]["telescope_name"])
+        patches.append(
+            get_telescope_patch(
+                i_tel_name,
+                pos_x_rotated[i_tel],
+                pos_y_rotated[i_tel],
+                scale * telescopes[i_tel]["radius"],
+            )
+        )
+        if show_tel_label:
+            ax.text(
+                pos_x_rotated[i_tel].value,
+                pos_y_rotated[i_tel].value + scale * telescopes[i_tel]["radius"].value,
+                telescopes[i_tel]["telescope_name"],
+                horizontalalignment="center",
+                verticalalignment="bottom",
+                fontsize=fontsize,
+            )
+
+    for _, one_telescope in enumerate(names.all_telescope_class_names):
+        if tel_counters[one_telescope] > 0:
+            legend_objects.append(leg_h.all_telescope_objects[one_telescope]())
+            legend_labels.append(f"{one_telescope} ({tel_counters[one_telescope]})")
+
+    plt.gca().add_collection(PatchCollection(patches, match_original=True))
+
+    x_title = "Easting [m]"
+    y_title = "Northing [m]"
+    plt.axis("square")
+    plt.grid(True)
+    plt.gca().set_axisbelow(True)
+    plt.xlabel(x_title, fontsize=18, labelpad=0)
+    plt.ylabel(y_title, fontsize=18, labelpad=0)
+    plt.tick_params(axis="both", which="major", labelsize=15)
+
+    legend_handler_map = {
+        list(leg_h.legend_handler_map.keys())[step]: list(leg_h.legend_handler_map.values())[step]()
+        for step, _ in enumerate(leg_h.legend_handler_map)
+    }
+    plt.legend(
+        legend_objects,
+        legend_labels,
+        handler_map=legend_handler_map,
+        prop={"size": 11},
+        loc="best",
+    )
+
+    plt.tight_layout()
 
     return fig

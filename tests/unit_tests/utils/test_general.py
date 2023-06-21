@@ -5,8 +5,10 @@ from copy import copy
 from pathlib import Path
 
 import astropy.units as u
+import numpy as np
 import pytest
 import yaml
+from astropy.coordinates.errors import UnitsError
 
 import simtools.util.general as gen
 from simtools.util.general import InvalidConfigEntry
@@ -140,13 +142,16 @@ def test_program_is_executable():
 
 def test_change_dict_keys_case():
 
+    # note that ist entries in DATA_COLUMNS:ATTRIBUTE should not be changed (not keys)
     _upper_dict = {
         "REFERENCE": {"VERSION": "0.1.0"},
         "ACTIVITY": {"NAME": "submit", "ID": "84890304", "DESCRIPTION": "Set data"},
+        "DATA_COLUMNS": {"ATTRIBUTE": ["remove_duplicates", "SORT"]},
     }
     _lower_dict = {
         "reference": {"version": "0.1.0"},
         "activity": {"name": "submit", "id": "84890304", "description": "Set data"},
+        "data_columns": {"attribute": ["remove_duplicates", "SORT"]},
     }
     _no_change_dict_upper = gen.change_dict_keys_case(copy(_upper_dict), False)
     assert _no_change_dict_upper == _upper_dict
@@ -159,3 +164,45 @@ def test_change_dict_keys_case():
 
     _changed_to_upper = gen.change_dict_keys_case(copy(_lower_dict), False)
     assert _changed_to_upper == _upper_dict
+
+
+def test_rotate_telescope_position():
+    x = np.array([-10, -10, 10, 10]).astype(int)
+    y = np.array([-10.0, 10.0, -10.0, 10.0]).astype(float)
+    angle_deg = 30 * u.deg
+    x_rot_manual = np.array([-3.7, -13.7, 13.7, 3.7])
+    y_rot_manual = np.array([-13.7, 3.7, -3.7, 13.7])
+
+    def check_results(x_to_test, y_to_test, x_right, y_right, angle):
+        x_rot, y_rot = gen.rotate(angle, x_to_test, y_to_test)
+        x_rot, y_rot = np.around(x_rot, 1), np.around(y_rot, 1)
+        for element, _ in enumerate(x):
+            assert x_right[element] == x_rot[element]
+            assert y_right[element] == y_rot[element]
+
+    # Testing without units
+    check_results(x, y, x_rot_manual, y_rot_manual, angle_deg)
+
+    x_new_array, y_new_array = x * u.m, y * u.m
+    x_rot_new_array, y_rot_new_array = x_rot_manual * u.m, y_rot_manual * u.m
+
+    # Testing with units
+    check_results(x_new_array, y_new_array, x_rot_new_array, y_rot_new_array, angle_deg)
+
+    # Testing with radians
+    check_results(x_new_array, y_new_array, x_rot_new_array, y_rot_new_array, angle_deg.to(u.rad))
+
+    with pytest.raises(TypeError):
+        gen.rotate(angle_deg, x, y[0])
+    with pytest.raises(TypeError):
+        gen.rotate(angle_deg, str(x[0]), y[0])
+    with pytest.raises(TypeError):
+        gen.rotate(angle_deg, u.Quantity(10), 10)
+    with pytest.raises(TypeError):
+        gen.rotate(angle_deg, x[0], str(y[0]))
+    with pytest.raises(RuntimeError):
+        gen.rotate(angle_deg, x[:-1], y)
+    with pytest.raises(UnitsError):
+        gen.rotate(angle_deg, x_new_array.to(u.cm), y_new_array)
+    with pytest.raises(u.core.UnitsError):
+        gen.rotate(30 * u.m, x_new_array, y_new_array)

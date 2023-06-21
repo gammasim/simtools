@@ -2,46 +2,26 @@ import logging
 
 from astropy.table import Table
 
-__all__ = ["Mirrors"]
+__all__ = ["InvalidMirrorListFile", "Mirrors"]
 
 
 class InvalidMirrorListFile(Exception):
-    pass
+    """Exception for invalid mirror list file."""
 
 
 class Mirrors:
     """
     Mirrors class, created from a mirror list file.
 
-    Attributes
+    Parameters
     ----------
-    mirrors: dict
-        A dictionary with the mirror positions [cm], diameters, focal length and shape.
-    shape: int
-        Single shape code (0=circular, 1=hex. with flat side parallel to y, 2=square,
-        3=other hex.)
-    diameter: float
-        Single diameter in cm.
-    number_of_mirrors: int
-        Number of mirrors.
-
-    Methods
-    -------
-    read_mirror_list(mirror_list_file)
-        Read the mirror list and store the data.
-    plot_mirror_layout()
-        Plot the mirror layout (to be implemented).
+    mirror_list_file: str
+        mirror list in sim_telarray or ecsv format (with panel focal length only).
     """
 
     def __init__(self, mirror_list_file):
         """
-        Mirrors.
-
-        Parameters
-        ----------
-        mirror_list_file: str
-            mirror list in sim_telarray or ecsv format (with
-            panel focal length only)
+        Initialize Mirrors.
         """
         self._logger = logging.getLogger(__name__)
         self._logger.debug("Mirrors Init")
@@ -56,11 +36,8 @@ class Mirrors:
 
     def _read_mirror_list(self):
         """
-        Read the mirror lists from disk and store the data
-
-        Allow reading of mirro lists in sim_telarray and ecsv
-        format
-
+        Read the mirror lists from disk and store the data. Allow reading of mirro lists in \
+        sim_telarray and ecsv format
         """
 
         if str(self._mirror_list_file).find("ecsv") > 0:
@@ -74,17 +51,18 @@ class Mirrors:
 
         Raises
         ------
-
+        InvalidMirrorListFile
+            If number of mirrors is 0.
         """
 
         # TODO - temporary hard wired geopars - should come from DB
         self.diameter = 120
         self.shape = 1
-        self._logger.debug("Shape = {}".format(self.shape))
-        self._logger.debug("Diameter = {}".format(self.diameter))
+        self._logger.debug(f"Shape = {self.shape}")
+        self._logger.debug(f"Diameter = {self.diameter}")
 
         _mirror_table = Table.read(self._mirror_list_file, format="ascii.ecsv")
-        self._logger.debug("Reading mirror properties from {}".format(self._mirror_list_file))
+        self._logger.debug(f"Reading mirror properties from {self._mirror_list_file}")
         try:
             self._mirrors["flen"] = list(_mirror_table["mirror_panel_radius"].to("cm").value / 2.0)
             self.number_of_mirrors = len(self._mirrors["flen"])
@@ -95,9 +73,7 @@ class Mirrors:
             self._mirrors["shape"] = [self.shape] * self.number_of_mirrors
         except KeyError:
             self._logger.debug(
-                "Missing column for mirror panel focal length (flen) in {}".format(
-                    self._mirror_list_file
-                )
+                f"Missing column for mirror panel focal length (flen) in {self._mirror_list_file}"
             )
 
         if self.number_of_mirrors == 0:
@@ -133,8 +109,8 @@ class Mirrors:
                     self.diameter = float(line[2])
                     self.shape = int(line[4])
                     collect_geo_pars = False
-                    self._logger.debug("Shape = {}".format(self.shape))
-                    self._logger.debug("Diameter = {}".format(self.diameter))
+                    self._logger.debug(f"Shape = {self.shape}")
+                    self._logger.debug(f"Diameter = {self.diameter}")
 
                 self._mirrors["number"].append(mirror_counter)
                 self._mirrors["pos_x"].append(float(line[0]))
@@ -160,8 +136,10 @@ class Mirrors:
 
         Returns
         -------
-        (pos_x, pos_y, diameter, flen, shape)
+        (pos_x, pos_y, diameter, flen, shape): tuple of float
+            X, Y positions, diameter, focal length and shape.
         """
+
         if number > self.number_of_mirrors - 1:
             self._logger.error("Mirror number is out range")
             return None

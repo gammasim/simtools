@@ -28,7 +28,7 @@ def crs_local():
     center_lon = -17.8920302
     center_lat = 28.7621661
     proj4_string = "+proj=tmerc +ellps=WGS84 +datum=WGS84"
-    proj4_string += " +lon_0={} +lat_0={}".format(center_lon, center_lat)
+    proj4_string += f" +lon_0={center_lon} +lat_0={center_lat}"
     proj4_string += " +axis=nwu +units=m +k_0=1.0"
     return pyproj.CRS.from_proj4(proj4_string)
 
@@ -47,8 +47,8 @@ def position_for_testing():
         "altitude": 2.177 * u.km,
         "center_lon": -17.8920302 * u.deg,
         "center_lat": 28.7621661 * u.deg,
-        "utm_east": 217611 * u.m,
-        "utm_north": 3185066 * u.m,
+        "utm_east": 217611.227 * u.m,
+        "utm_north": 3185066.278 * u.m,
     }
 
 

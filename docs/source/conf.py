@@ -50,11 +50,9 @@ def get_authors_from_citation_file(file_name):
 project = "gammasim-tools"
 copyright = "2022, gammasim-tools developers"
 author = get_authors_from_citation_file("../CITATION.cff")
-rst_epilog = """
+rst_epilog = f"""
 .. |author| replace:: {author}
-""".format(
-    author=author
-)
+"""
 
 # The short X.Y version
 version = str(simtools.version.__version__)
@@ -83,6 +81,8 @@ extensions = [
 ]
 
 autosectionlabel_prefix_document = True
+
+# autodoc_default_options = {"members": True, "undoc-members": True, "private-members": True}
 
 # Display todos by setting to True
 todo_include_todos = True

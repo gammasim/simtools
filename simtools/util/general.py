@@ -7,34 +7,42 @@ from collections import namedtuple
 from pathlib import Path
 
 import astropy.units as u
+import numpy as np
+from astropy.coordinates.errors import UnitsError
 from astropy.io.misc import yaml
 
 __all__ = [
-    "validate_config_data",
     "collect_data_from_yaml_or_dict",
+    "collect_final_lines",
     "collect_kwargs",
+    "InvalidConfigData",
+    "InvalidConfigEntry",
+    "MissingRequiredConfigEntry",
+    "UnableToIdentifyConfigEntry",
+    "get_log_level_from_user",
+    "rotate",
+    "separate_args_and_config_data",
     "set_default_kwargs",
     "sort_arrays",
-    "collect_final_lines",
-    "get_log_level_from_user",
-    "separate_args_and_config_data",
+    "validate_config_data",
+    "get_log_excerpt",
 ]
 
 
 class UnableToIdentifyConfigEntry(Exception):
-    pass
+    """Exception for unable to indentify configuration entry."""
 
 
 class MissingRequiredConfigEntry(Exception):
-    pass
+    """Exception for missing required configuration entry."""
 
 
 class InvalidConfigEntry(Exception):
-    pass
+    """Exception for invalid configuration entry."""
 
 
 class InvalidConfigData(Exception):
-    pass
+    """Exception for invalid configuration data."""
 
 
 def file_has_text(file, text):
@@ -51,6 +59,7 @@ def file_has_text(file, text):
     Returns
     -------
     bool
+        True if file has text.
     """
     with open(file, "rb", 0) as string_file, mmap.mmap(
         string_file.fileno(), 0, access=mmap.ACCESS_READ
@@ -59,8 +68,8 @@ def file_has_text(file, text):
         search_result_1 = re_search_1.search(text_file_input)
         if search_result_1 is None:
             return False
-        else:
-            return True
+
+        return True
 
 
 def validate_config_data(config_data, parameters):
@@ -118,7 +127,7 @@ def validate_config_data(config_data, parameters):
 
         # Raising error for an unidentified input.
         if not is_identified:
-            msg = "Entry {} in config_data cannot be identified.".format(key_data)
+            msg = f"Entry {key_data} in config_data cannot be identified."
             logger.error(msg)
             raise UnableToIdentifyConfigEntry(msg)
 
@@ -127,15 +136,14 @@ def validate_config_data(config_data, parameters):
     for par_name, par_info in parameters.items():
         if par_name in out_data:
             continue
-        elif "default" in par_info.keys() and par_info["default"] is not None:
+        if "default" in par_info.keys() and par_info["default"] is not None:
             validated_value = _validate_and_convert_value(par_name, par_info, par_info["default"])
             out_data[par_name] = validated_value
         elif "default" in par_info.keys() and par_info["default"] is None:
             out_data[par_name] = None
         else:
             msg = (
-                "Required entry in config_data {} ".format(par_name)
-                + "was not given (there may be more)."
+                f"Required entry in config_data {par_name} " + "was not given (there may be more)."
             )
             logger.error(msg)
             raise MissingRequiredConfigEntry(msg)
@@ -151,11 +159,13 @@ def _validate_and_convert_value_without_units(value, value_keys, par_name, par_i
     Parameters
     ----------
     value: list
-       list of user input values
+       list of user input values.
     value_keys: list
-       list of keys if user input was a dict; otherwise None
+       list of keys if user input was a dict; otherwise None.
     par_name: str
-       name of parameter
+       name of parameter.
+    par_info: dict
+        dictionary with parameter info.
 
     Returns
     -------
@@ -168,17 +178,17 @@ def _validate_and_convert_value_without_units(value, value_keys, par_name, par_i
     _, undefined_length = _check_value_entry_length(value, par_name, par_info)
 
     # Checking if values have unit and raising error, if so.
-    if all([isinstance(v, str) for v in value]):
+    if all(isinstance(v, str) for v in value):
         # In case values are string, e.g. mirror_numbers = 'all'
         # This is needed otherwise the elif condition will break
         pass
-    elif any([u.Quantity(v).unit != u.dimensionless_unscaled for v in value]):
-        msg = "Config entry {} should not have units".format(par_name)
+    elif any(u.Quantity(v).unit != u.dimensionless_unscaled for v in value):
+        msg = f"Config entry {par_name} should not have units"
         logger.error(msg)
         raise InvalidConfigEntry(msg)
 
     if value_keys:
-        return {k: v for (k, v) in zip(value_keys, value)}
+        return dict(zip(value_keys, value))
     return value if len(value) > 1 or undefined_length else value[0]
 
 
@@ -207,13 +217,13 @@ def _check_value_entry_length(value, par_name, par_info):
 
     # Checking the entry length
     value_length = len(value)
-    logger.debug("Value len of {}: {}".format(par_name, value_length))
+    logger.debug(f"Value len of {par_name}: {value_length}")
     undefined_length = False
     try:
         if par_info["len"] is None:
             undefined_length = True
         elif value_length != par_info["len"]:
-            msg = "Config entry with wrong len: {}".format(par_name)
+            msg = f"Config entry with wrong len: {par_name}"
             logger.error(msg)
             raise InvalidConfigEntry(msg)
     except KeyError:
@@ -249,10 +259,10 @@ def _validate_and_convert_value_with_units(value, value_keys, par_name, par_info
     par_unit = copy_as_list(par_info["unit"])
 
     if undefined_length and len(par_unit) != 1:
-        msg = "Config entry with undefined length should have a single unit: {}".format(par_name)
+        msg = f"Config entry with undefined length should have a single unit: {par_name}"
         logger.error(msg)
         raise InvalidConfigEntry(msg)
-    elif len(par_unit) == 1:
+    if len(par_unit) == 1:
         par_unit *= value_length
 
     # Checking units and converting them, if needed.
@@ -268,18 +278,17 @@ def _validate_and_convert_value_with_units(value, value_keys, par_name, par_info
             arg = u.quantity.Quantity(arg)
 
         if not isinstance(arg, u.quantity.Quantity):
-            msg = "Config entry given without unit: {}".format(par_name)
+            msg = f"Config entry given without unit: {par_name}"
             logger.error(msg)
             raise InvalidConfigEntry(msg)
-        elif not arg.unit.is_equivalent(unit):
-            msg = "Config entry given with wrong unit: {}".format(par_name)
+        if not arg.unit.is_equivalent(unit):
+            msg = f"Config entry given with wrong unit: {par_name}"
             logger.error(msg)
             raise InvalidConfigEntry(msg)
-        else:
-            value_with_units.append(arg.to(unit).value)
+        value_with_units.append(arg.to(unit).value)
 
     if value_keys:
-        return {k: v for (k, v) in zip(value_keys, value_with_units)}
+        return dict(zip(value_keys, value_with_units))
 
     return (
         value_with_units if len(value_with_units) > 1 or undefined_length else value_with_units[0]
@@ -307,13 +316,12 @@ def _validate_and_convert_value(par_name, par_info, value_in):
 
 def collect_data_from_yaml_or_dict(in_yaml, in_dict, allow_empty=False):
     """
-    Collect input data that can be given either as a dict
-    or as a yaml file.
+    Collect input data that can be given either as a dict or as a yaml file.
 
     Parameters
     ----------
     in_yaml: str
-        Name of the Yaml file.
+        Name of the yaml file.
     in_dict: dict
         Data as dict.
     allow_empty: bool
@@ -332,16 +340,16 @@ def collect_data_from_yaml_or_dict(in_yaml, in_dict, allow_empty=False):
         with open(in_yaml) as file:
             data = yaml.load(file)
         return data
-    elif in_dict is not None:
+    if in_dict is not None:
         return dict(in_dict)
-    else:
-        msg = "config_data has not been provided (by yaml file neither by dict)"
-        if allow_empty:
-            _logger.debug(msg)
-            return None
-        else:
-            _logger.error(msg)
-            raise InvalidConfigData(msg)
+
+    msg = "config_data has not been provided (by yaml file neither by dict)"
+    if allow_empty:
+        _logger.debug(msg)
+        return None
+
+    _logger.error(msg)
+    raise InvalidConfigData(msg)
 
 
 def collect_kwargs(label, in_kwargs):
@@ -351,11 +359,13 @@ def collect_kwargs(label, in_kwargs):
     Parameters
     ----------
     label: str
+        Label to be collected in kwargs.
     in_kwargs: dict
-
+        kwargs.
     Returns
     -------
-    Dict with the collected kwargs.
+    dict
+        Dictionary with the collected kwargs.
     """
     out_kwargs = dict()
     for key, value in in_kwargs.items():
@@ -377,7 +387,8 @@ def set_default_kwargs(in_kwargs, **kwargs):
 
     Returns
     -------
-    Dict containing the default kwargs.
+    dict
+        Dictionary containing the default kwargs.
     """
     for par, value in kwargs.items():
         if par not in in_kwargs.keys():
@@ -386,16 +397,30 @@ def set_default_kwargs(in_kwargs, **kwargs):
 
 
 def sort_arrays(*args):
+    """Sort arrays
+
+    Parameters
+    ----------
+    *args
+        Arguments to be sorted.
+    Returns
+    -------
+    list
+        Sorted args.
+    """
+
     order_array = copy.copy(args[0])
     new_args = list()
     for arg in args:
-        _, a = zip(*sorted(zip(order_array, arg)))
-        new_args.append(list(a))
+        _, value = zip(*sorted(zip(order_array, arg)))
+        new_args.append(list(value))
     return new_args
 
 
 def collect_final_lines(file, n_lines):
     """
+    Collect final lines.
+
     Parameters
     ----------
     file: str or Path
@@ -405,17 +430,42 @@ def collect_final_lines(file, n_lines):
 
     Returns
     -------
-    str: lines
+    str
+        Final lines collected.
     """
-    file_in_lines = list()
-    with open(file, "r") as f:
-        for line in f:
-            file_in_lines.append(line)
-    collected_lines = file_in_lines[-n_lines:-1]
-    out = ""
-    for ll in collected_lines:
-        out += ll
-    return out
+    list_of_lines = []
+    with open(file, "rb") as read_obj:
+        # Move the cursor to the end of the file
+        read_obj.seek(0, os.SEEK_END)
+        # Create a buffer to keep the last read line
+        buffer = bytearray()
+        # Get the current position of pointer i.e eof
+        pointer_location = read_obj.tell()
+        # Loop till pointer reaches the top of the file
+        while pointer_location >= 0:
+            # Move the file pointer to the location pointed by pointer_location
+            read_obj.seek(pointer_location)
+            # Shift pointer location by -1
+            pointer_location = pointer_location - 1
+            # read that byte / character
+            new_byte = read_obj.read(1)
+            # If the read byte is new line character then it means one line is read
+            if new_byte == b"\n":
+                # Save the line in list of lines
+                list_of_lines.append(buffer.decode()[::-1])
+                # If the size of list reaches n_lines, then return the reversed list
+                if len(list_of_lines) == n_lines:
+                    return "".join(list(reversed(list_of_lines)))
+                # Reinitialize the byte array to save next line
+                buffer = bytearray()
+            else:
+                # If last read character is not eol then add it in buffer
+                buffer.extend(new_byte)
+        # As file is read completely, if there is still data in buffer, then its first line.
+        if len(buffer) > 0:
+            list_of_lines.append(buffer.decode()[::-1])
+
+    return "".join(list(reversed(list_of_lines)))
 
 
 def get_log_level_from_user(log_level):
@@ -425,12 +475,12 @@ def get_log_level_from_user(log_level):
     Parameters
     ----------
     log_level: str
-        Log level from the user
+        Log level from the user.
 
     Returns
     -------
     logging.LEVEL
-        The requested logging level to be used as input to logging.setLevel()
+        The requested logging level to be used as input to logging.setLevel().
     """
 
     possible_levels = {
@@ -444,12 +494,11 @@ def get_log_level_from_user(log_level):
     log_level_lower = log_level.lower()
     if log_level_lower not in possible_levels:
         raise ValueError(
-            '"{}" is not a logging level, only possible ones are {}'.format(
-                log_level, list(possible_levels.keys())
-            )
+            f"'{log_level}' is not a logging level, "
+            f"only possible ones are {list(possible_levels.keys())}"
         )
-    else:
-        return possible_levels[log_level_lower]
+
+    return possible_levels[log_level_lower]
 
 
 def copy_as_list(value):
@@ -458,7 +507,7 @@ def copy_as_list(value):
 
     Parameters
     ----------
-    value: single variable of any type, or list
+    value single variable of any type or list
 
     Returns
     -------
@@ -467,25 +516,24 @@ def copy_as_list(value):
     """
     if isinstance(value, str):
         return [value]
-    else:
-        try:
-            return list(value)
-        except Exception:
-            return [value]
+
+    try:
+        return list(value)
+    except Exception:
+        return [value]
 
 
 def separate_args_and_config_data(expected_args, **kwargs):
     """
-    Separate kwargs into the arguments expected for instancing a class and
-    the dict to be given as config_data.
-    This function is specific for methods from_kwargs in classes which use the
+    Separate kwargs into the arguments expected for instancing a class and the dict to be given as\
+    config_data. This function is specific for methods from_kwargs in classes which use the \
     validate_config_data system.
 
     Parameters
     ----------
     expected_args: list of str
         List of arguments expected for the class.
-    **kwargs:
+    **kwargs
 
     Returns
     -------
@@ -538,12 +586,13 @@ def find_file(name, loc):
     ----------
     name: str
         File name to be searched for.
-    loc: Path, optional
+    loc: Path
         Location of where to search for the file.
 
     Returns
     -------
-    Full path of the file to be found if existing. Otherwise, None
+    Path
+        Full path of the file to be found if existing. Otherwise, None.
 
     Raises
     ------
@@ -557,67 +606,167 @@ def find_file(name, loc):
 
     def _search_directory(directory, filename, rec=False):
         if not Path(directory).exists():
-            msg = "Directory {} does not exist".format(directory)
+            msg = f"Directory {directory} does not exist"
             _logger.debug(msg)
             return None
 
-        f = Path(directory).joinpath(filename)
-        if f.exists():
-            _logger.debug("File {} found in {}".format(filename, directory))
-            return f
+        file = Path(directory).joinpath(filename)
+        if file.exists():
+            _logger.debug(f"File {filename} found in {directory}")
+            return file
         if not rec:  # Not recursively
             return None
 
         for subdir in Path(directory).iterdir():
             if not subdir.is_dir():
                 continue
-            f = _search_directory(subdir, filename, True)
-            if f is not None:
-                return f
+            file = _search_directory(subdir, filename, True)
+            if file is not None:
+                return file
         return None
 
     # Searching file locally
-    ff = _search_directory(".", name)
-    if ff is not None:
-        return ff
+    file = _search_directory(".", name)
+    if file is not None:
+        return file
     # Searching file in given locations
-    for ll in all_locations:
-        ff = _search_directory(ll, name, True)
-        if ff is not None:
-            return ff
-    msg = "File {} could not be found in {}".format(name, all_locations)
+    for location_now in all_locations:
+        file = _search_directory(location_now, name, True)
+        if file is not None:
+            return file
+    msg = f"File {name} could not be found in {all_locations}"
     _logger.error(msg)
     raise FileNotFoundError(msg)
 
 
 def change_dict_keys_case(data_dict, lower_case=True):
     """
-    Change keys of a dictionary to lower or upper case.
-    Crawls throught the dictionary and changes all keys.
-    Takes into account list of dictionaries, as e.g. found in the top level data model.
+    Change keys of a dictionary to lower or upper case. Crawls through the dictionary and changes\
+    all keys. Takes into account list of dictionaries, as e.g. found in the top level data model.
 
     Parameters
     ----------
     data_dict: dict
         Dictionary to be converted.
     lower_case: bool
-        Change keys to lower (upper) case if True (False)
-
-
+        Change keys to lower (upper) case if True (False).
     """
+
     _return_dict = {}
-    for key in data_dict.keys():
-        if lower_case:
-            _key_changed = key.lower()
-        else:
-            _key_changed = key.upper()
-        if isinstance(data_dict[key], dict):
-            _return_dict[_key_changed] = change_dict_keys_case(data_dict[key], lower_case)
-        elif isinstance(data_dict[key], list):
-            _tmp_list = []
-            for _list_entry in data_dict[key]:
-                _tmp_list.append(change_dict_keys_case(_list_entry, lower_case))
-            _return_dict[_key_changed] = _tmp_list
-        else:
-            _return_dict[_key_changed] = data_dict[key]
+    try:
+        for key in data_dict.keys():
+            if lower_case:
+                _key_changed = key.lower()
+            else:
+                _key_changed = key.upper()
+            if isinstance(data_dict[key], dict):
+                _return_dict[_key_changed] = change_dict_keys_case(data_dict[key], lower_case)
+            elif isinstance(data_dict[key], list):
+                _tmp_list = []
+                for _list_entry in data_dict[key]:
+                    if isinstance(_list_entry, dict):
+                        _tmp_list.append(change_dict_keys_case(_list_entry, lower_case))
+                    else:
+                        _tmp_list.append(_list_entry)
+                _return_dict[_key_changed] = _tmp_list
+            else:
+                _return_dict[_key_changed] = data_dict[key]
+    except AttributeError:
+        logger = logging.getLogger(__name__)
+        logger.error(f"Invalid method argument: {data_dict}")
+        raise
+
     return _return_dict
+
+
+@u.quantity_input(rotation_angle=u.rad)
+def rotate(rotation_angle, x, y):
+    """
+    Rotate x and y by the rotation angle given in rotation_angle, in radians (astropy.units.rad),
+    or in degrees (astropy.units.deg).
+    The function returns the rotated x and y values in the same unit given.
+    The direction of rotation of the elements is counterclockwise.
+
+    Parameters
+    ----------
+    rotation_angle: astropy.units.rad
+        Angle to rotate the array in radians.
+    x: numpy.array or list
+        x positions of the telescopes, usually in meters.
+    y: numpy.array or list
+        y positions of the telescopes, usually in meters.
+
+    Returns
+    -------
+    2-tuple of list
+        x and y positions of the rotated telescopes positions.
+
+    Raises
+    ------
+    TypeError:
+        If type of x and y parameters are not valid.
+    RuntimeError:
+        If the length of x and y are different.
+    UnitsError:
+        If the unit of x and y are different.
+    """
+    allowed_types = (list, np.ndarray, u.Quantity, float, int)
+    if not all(isinstance(variable, allowed_types) for variable in [x, y]):
+        raise TypeError("x and y types are not valid! Cannot perform transformation.")
+
+    if (
+        np.sum(
+            np.array([isinstance(x, type_now) for type_now in allowed_types[:-2]])
+            * np.array([isinstance(y, type_now) for type_now in allowed_types[:-2]])
+        )
+        == 0
+    ):
+        raise TypeError("x and y are not from the same type! Cannot perform transformation.")
+
+    if not isinstance(x, (list, np.ndarray)):
+        x = [x]
+    if not isinstance(y, (list, np.ndarray)):
+        y = [y]
+
+    if len(x) != len(y):
+        raise RuntimeError(
+            "Cannot perform coordinate transformation when x and y have different lengths."
+        )
+    if all(isinstance(variable, (u.Quantity)) for variable in [x, y]):
+        if not isinstance(x[0].unit, type(y[0].unit)):
+            raise UnitsError(
+                "Cannot perform coordinate transformation when x and y have different units."
+            )
+
+    x_trans, y_trans = [np.zeros_like(x).astype(float) for i in range(2)]
+
+    for step, _ in enumerate(x):
+        x_trans[step] = x[step] * np.cos(rotation_angle) - y[step] * np.sin(rotation_angle)
+        y_trans[step] = x[step] * np.sin(rotation_angle) + y[step] * np.cos(rotation_angle)
+    return x_trans, y_trans
+
+
+def get_log_excerpt(log_file, n_last_lines=30):
+    """
+    Get an excerpt from a log file, namely the n_last_lines of the file.
+
+    Parameters
+    ----------
+    log_file: str or Path
+        Log file to get the excerpt from.
+    n_last_lines: int
+        Number of last lines of the file to get.
+
+    Returns
+    -------
+    str
+        Excerpt from log file with header/footer
+    """
+
+    return (
+        "\n\nRuntime error - See below the relevant part of the log file.\n\n"
+        f"{log_file}\n"
+        "====================================================================\n\n"
+        f"{collect_final_lines(log_file, n_last_lines)}\n\n"
+        "====================================================================\n"
+    )

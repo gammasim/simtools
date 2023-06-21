@@ -7,9 +7,14 @@ import yaml
 import simtools.configuration.commandline_parser as argparser
 from simtools import io_handler
 
+__all__ = [
+    "Configurator",
+    "InvalidConfigurationParameter",
+]
+
 
 class InvalidConfigurationParameter(Exception):
-    pass
+    """Exception for Invalid configuration parameter."""
 
 
 class Configurator:
@@ -17,6 +22,7 @@ class Configurator:
     Configuration handling application configuration.
 
     Allow to set configuration parameters by
+
     - command line arguments
     - configuration file (yml file)
     - configuration dict when calling the class
@@ -24,33 +30,23 @@ class Configurator:
 
     Configuration parameter names are converted always to lower case.
 
-    Methods
-    -------
-    default_config(arg_list=None, add_db_config=False)
-        Returns dictionary of default configuration
-    initialize(paths=True, telescope_model=False, workflow_config=False, db_config=False, \
-        job_submission=False)
-       Initialize configuration from command line, configuration file, class config, or env.
-
+    Parameters
+    ----------
+    config: dict
+        Configuration parameters as dict.
+    label: str
+        Class label.
+    usage: str
+        Application usage description.
+    description: str
+        Text displayed as description.
+    epilog: str
+        Text display after all arguments.
     """
 
     def __init__(self, config=None, label=None, usage=None, description=None, epilog=None):
         """
-        Configurator init.
-
-        Parameters
-        ----------
-        config: dict
-            Configuration parameters as dict.
-        label: str
-            Class label.
-        usage: str
-            Application usage description.
-        description: str
-            Text displayed as description
-        epilog: str
-            Text display after all arguments.
-
+        Initialize Configurator.
         """
 
         self._logger = logging.getLogger(__name__)
@@ -67,7 +63,19 @@ class Configurator:
         """
         Returns dictionary of default configuration
 
+        Parameters
+        ----------
+        arg_list: list
+            List of arguments.
+        add_db_config: bool
+            Add DB configuration file.
+
+        Returns
+        -------
+        dict
+            Configuration parameters as dict.
         """
+
         self.parser.initialize_default_arguments()
         if arg_list and "--site" in arg_list:
             self.parser.initialize_telescope_model_arguments(True, "--telescope" in arg_list)
@@ -86,8 +94,8 @@ class Configurator:
         job_submission=False,
     ):
         """
-        Initialize configuration from command line, configuration file, class config, \
-        or environmental variable.
+        Initialize configuration from command line, configuration file, class config, or \
+         environmental variable.
 
         Priorities in parameter settings.
         1. command line; 2. yaml file; 3. class init; 4. env variables.
@@ -113,6 +121,8 @@ class Configurator:
         -------
         dict
             Configuration parameters as dict.
+        dict
+            Dictionary with DB parameters
 
         Raises
         ------
@@ -161,8 +171,8 @@ class Configurator:
 
     def _fill_from_config_dict(self, _input_dict):
         """
-        Fill configuration parameters from dictionary.
-        Enforce that configuration parameter names are lower case.
+        Fill configuration parameters from dictionary. Enforce that configuration parameter names\
+         are lower case.
 
         Parameters
         ----------
@@ -182,8 +192,8 @@ class Configurator:
 
     def _check_parameter_configuration_status(self, key, value):
         """
-        Check if a parameter is already configured and not still set to the default value.
-        Allow configuration of None values.
+        Check if a parameter is already configured and not still set to the default value. Allow \
+        configuration with None values.
 
         Parameters
         ----------
@@ -205,18 +215,16 @@ class Configurator:
         # parameter already set
         if key in self.config and self.config[key] != value:
             self._logger.error(
-                "Inconsistent configuration parameter ({}) definition ({} vs {})".format(
-                    key, self.config[key], value
-                )
+                f"Inconsistent configuration parameter ({key}) definition "
+                f"({self.config[key]} vs {value})"
             )
             raise InvalidConfigurationParameter
 
     def _fill_from_config_file(self, config_file):
         """
-        Read and fill configuration parameters from yaml file.
-        Take into account that this could be a CTASIMPIPE workflow configuration file.
-        (CTASIMPIPE:CONFIGURATION is optional, therefore no error raised when this key
-         is not found)
+        Read and fill configuration parameters from yaml file. Take into account that this could be\
+        a CTASIMPIPE workflow configuration file. (CTASIMPIPE:CONFIGURATION is optional, therefore,\
+        no error is raised when this key is not found)
 
         Parameters
         ----------
@@ -232,28 +240,26 @@ class Configurator:
         """
 
         try:
-            self._logger.debug("Reading configuration from {}".format(config_file))
+            self._logger.debug(f"Reading configuration from {config_file}")
             with open(config_file, "r") as stream:
                 _config_dict = yaml.safe_load(stream)
             if "CTASIMPIPE" in _config_dict:
                 try:
                     self._fill_from_config_dict(_config_dict["CTASIMPIPE"]["CONFIGURATION"])
                 except KeyError:
-                    self._logger.info(
-                        "No CTASIMPIPE:CONFIGURATION dict found in {}.".format(config_file)
-                    )
+                    self._logger.info(f"No CTASIMPIPE:CONFIGURATION dict found in {config_file}.")
             else:
                 self._fill_from_config_dict(_config_dict)
         # TypeError is raised for config_file=None
         except TypeError:
             pass
         except FileNotFoundError:
-            self._logger.error("Configuration file not found: {}".format(config_file))
+            self._logger.error(f"Configuration file not found: {config_file}")
             raise
 
     def _fill_from_environmental_variables(self):
         """
-        Fill any unconfigured configuration parameters (parameter is None) \
+        Fill any unconfigured configuration parameters (i.e., parameter is None) \
         from environmental variables.
 
         """

@@ -68,10 +68,10 @@ from pathlib import Path
 
 import astropy.units as u
 
-import simtools.util.general as gen
 from simtools import io_handler
 from simtools.configuration import configurator
 from simtools.simulator import Simulator
+from simtools.util import general as gen
 
 
 def _parse(label=None, description=None):
@@ -124,13 +124,13 @@ def _parse(label=None, description=None):
         type=str,
         default=None,
     )
-    return config.initialize(telescope_model=True, job_submission=True)
+    return config.initialize(telescope_model=True, job_submission=True, db_config=True)
 
 
 def main():
 
     label = Path(__file__).stem
-    args_dict, _ = _parse(
+    args_dict, db_config = _parse(
         label=label, description="Simulate showers to be used for trigger rate calculations"
     )
 
@@ -163,6 +163,7 @@ def main():
         config_data=shower_config_data,
         submit_command=args_dict.get("submit_command", ""),
         test=args_dict["test"],
+        mongo_db_config=db_config,
     )
 
     if not args_dict["test"]:
@@ -173,17 +174,17 @@ def main():
         shower_simulator.simulate()
 
     # Exporting the list of output/log/input files into the application folder
-    output_file_list = output_dir.joinpath("output_files_{}.list".format(args_dict["primary"]))
-    log_file_list = output_dir.joinpath("log_files_{}.list".format(args_dict["primary"]))
+    output_file_list = output_dir.joinpath(f"output_files_{args_dict['primary']}.list")
+    log_file_list = output_dir.joinpath(f"log_files_{args_dict['primary']}.list")
 
     def print_list_into_file(list_of_files, file_name):
         with open(file_name, "w") as f:
             for line in list_of_files:
                 f.write(line + "\n")
 
-    logger.info("List of output files exported to {}".format(output_file_list))
+    logger.info(f"List of output files exported to {output_file_list}")
     print_list_into_file(shower_simulator.get_list_of_output_files(), output_file_list)
-    logger.info("List of log files exported to {}".format(log_file_list))
+    logger.info(f"List of log files exported to {log_file_list}")
     print_list_into_file(shower_simulator.get_list_of_log_files(), log_file_list)
 
 

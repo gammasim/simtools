@@ -56,10 +56,19 @@ def _parse(label, description, usage):
     """
     Parse command line configuration
 
+    Parameters
+    ----------
+    label: str
+        Label describing application.
+    description: str
+        Description of application.
+    usage: str
+        Example on how to use the application.
+
     Returns
     -------
     CommandLineParser
-        command line parser object
+        Command line parser object
 
     """
 
