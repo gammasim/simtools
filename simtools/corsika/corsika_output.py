@@ -299,7 +299,7 @@ class CorsikaOutput:
         input_dict, input_yaml = None, None
         if isinstance(input_config, dict):
             input_dict = input_config
-        elif isinstance(input_config, (type(Path("")), str)):
+        else:
             input_yaml = input_config
         self._hist_config = collect_data_from_yaml_or_dict(input_yaml, input_dict, allow_empty=True)
 
