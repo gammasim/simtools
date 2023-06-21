@@ -7,48 +7,34 @@ from eventio import EventIOFile, Histograms
 from eventio.search_utils import yield_toplevel_of_type
 from matplotlib.backends.backend_pdf import PdfPages
 
-__all__ = ["SimtelHistograms"]
+__all__ = ["BadHistogramFormat", "SimtelHistograms"]
 
 
 class BadHistogramFormat(Exception):
-    pass
+    """Exception for bad histogram format."""
 
 
 class SimtelHistograms:
     """
-    This class handle sim_telarray histograms.
-    Histogram files are handled by using eventio library.
+    This class handle sim_telarray histograms. Histogram files are handled by using eventio library.
 
-    Methods
-    -------
-    plot_and_save_figures(fig_name)
-        Plot all histograms and save a single pdf file.
-    plot_one_histogram(i_hist, ax)
-        Plot a single histogram referent to the index i_hist.
-
-    Attributes
+    Parameters
     ----------
-    number_of_histograms
-        Number of histograms
-    combined_histograms
-        List of histogram data.
+    histogram_files: list
+        List of sim_telarray histogram files (str of Path).
+    test: bool
+        If True, only a fraction of the histograms will be processed, leading to a much shorter\
+         runtime.
     """
 
     def __init__(self, histogram_files, test=False):
         """
-        SimtelHistograms
-
-        Parameters
-        ----------
-        histogram_files: list
-            List of sim_telarray histogram files (str of Path).
-        test: bool
-            If True, only a fraction of the histograms will be processed, leading to \
-        a much shorter runtime.
+        Initialize SimtelHistograms
         """
         self._logger = logging.getLogger(__name__)
         self._histogram_files = histogram_files
         self._is_test = test
+        self.combined_hists = None
 
     def plot_and_save_figures(self, fig_name):
         """
@@ -80,7 +66,8 @@ class SimtelHistograms:
 
         Returns
         -------
-        str: histogram title
+        str
+            Histogram title.
         """
         if not hasattr(self, "combined_hists"):
             self._combine_histogram_files()
@@ -101,7 +88,7 @@ class SimtelHistograms:
                     try:
                         hists = o.parse()
                     except Exception:
-                        self._logger.warning("Problematic file {}".format(file))
+                        self._logger.warning(f"Problematic file {file}")
                         count_file = False
                         continue
 
@@ -131,9 +118,7 @@ class SimtelHistograms:
 
                     n_files += int(count_file)
 
-        self._logger.debug("End of reading {} files".format(n_files))
-
-        return
+        self._logger.debug(f"End of reading {n_files} files")
 
     def _plot_combined_histograms(self, fig_name):
         """
@@ -150,10 +135,10 @@ class SimtelHistograms:
 
             # Test case: processing only 1/10 of the histograms
             if self._is_test and i_hist % 10 != 0:
-                self._logger.debug("Skipping (test=True): {}".format(histo["title"]))
+                self._logger.debug(f"Skipping (test=True): {histo['title']}")
                 continue
 
-            self._logger.debug("Processing: {}".format(histo["title"]))
+            self._logger.debug(f"Processing: {histo['title']}")
 
             fig = plt.figure(figsize=(8, 6))
             ax = plt.gca()
@@ -175,7 +160,7 @@ class SimtelHistograms:
         i_hist: int
             Index of the histogram to be plotted.
         ax: matplotlib.axes.Axes
-            Axes in which to plot the histogram.
+            Instance of matplotlib.axes.Axes in which to plot the histogram.
         """
 
         hist = self.combined_hists[i_hist]

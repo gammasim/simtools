@@ -4,13 +4,15 @@ import astropy.units as u
 import numpy as np
 import pyproj
 
+__all__ = ["InvalidCoordSystem", "MissingInputForConvertion", "TelescopePosition"]
+
 
 class InvalidCoordSystem(Exception):
-    pass
+    """Exception for invalid coordinate system."""
 
 
 class MissingInputForConvertion(Exception):
-    pass
+    """Exception for missing input for convertion."""
 
 
 class TelescopePosition:
@@ -21,49 +23,16 @@ class TelescopePosition:
     coordinate system (e.g., (x_coord, y_coord) == (UTM_east, UTM_north)). \
     Altitude describes always the element height above sea level.
 
-    Attributes
+    Parameters
     ----------
     name: str
-        Name of the array element (e.g LST-01, SST-05, ...).
+        Name of the telescope (e.g LST-01, SST-05, ...).
 
-    Methods
-    -------
-    get_coordinates(self, crs_name)
-        Get spatial coordinates (x, y)
-    set_coordinates(self, pos_x, pos_y, pos_z):
-        Set spatial coordinates (x, y) and altitude of element
-    has_coordinates(crs_name, crs_check)
-        Return True if tel
-    get_altitude(self)
-        Get altitude.
-    set_altitude(self, altitude)
-        Set altitude.
-    has_altitude(self, crs_name):
-        Return True if tel has altitude.
-    convert_telescope_altitude_to_corsika_system(
-        tel_altitude,
-        corsika_obs_level,
-        corsika_sphere_center
-    )
-        Convert telescope altitude to CORSIKA system (pos_z).
-    convert_telescope_altitude_from_corsika_system(
-        tel_corsika_z,
-        corsika_obs_level,
-        corsika_sphere_center
-    ):
-        Convert Corsika (pos_z) to altitude.
-    convert_all(crs_local, wgs84, crs_utm)
-        Perform conversions and fill coordinate variables.
     """
 
     def __init__(self, name=None):
         """
-        TelescopePosition init.
-
-        Parameters
-        ----------
-        name: str
-            Name of the telescope (e.g LST-01, SST-05, ...)
+        Initialize TelescopePosition.
         """
 
         self._logger = logging.getLogger(__name__)
@@ -77,20 +46,23 @@ class TelescopePosition:
     def __str__(self):
         telstr = self.name
         if self.has_coordinates("corsika"):
-            telstr += "\t CORSIKA x(->North): {0:0.2f} y(->West): {1:0.2f}".format(
-                self.crs["corsika"]["xx"]["value"], self.crs["corsika"]["yy"]["value"]
+            telstr += (
+                f"\t CORSIKA x(->North): {self.crs['corsika']['xx']['value']:0.2f} "
+                f"y(->West): {self.crs['corsika']['yy']['value']:0.2f}"
             )
         if self.has_coordinates("utm"):
-            telstr += "\t UTM East: {0:0.2f} UTM North: {1:0.2f}".format(
-                self.crs["utm"]["xx"]["value"], self.crs["utm"]["yy"]["value"]
+            telstr += (
+                f"\t UTM East: {self.crs['utm']['xx']['value']:0.2f} "
+                f"UTM North: {self.crs['utm']['yy']['value']:0.2f}"
             )
         if self.has_coordinates("mercator"):
-            telstr += "\t Longitude: {0:0.5f} Latitude: {1:0.5f}".format(
-                self.crs["mercator"]["xx"]["value"], self.crs["mercator"]["yy"]["value"]
+            telstr += (
+                f"\t Longitude: {self.crs['mercator']['xx']['value']:0.5f} "
+                f"Latitude: {self.crs['mercator']['yy']['value']:0.5f}"
             )
-        for _crs_name in self.crs:
+        for _crs_name, _crs_now in self.crs.items():
             if self.has_altitude(_crs_name):
-                telstr += "\t Alt: {:0.2f}".format(self.crs[_crs_name]["zz"]["value"])
+                telstr += f"\t Alt: {_crs_now['zz']['value']:0.2f}"
                 break
 
         return telstr
@@ -115,9 +87,9 @@ class TelescopePosition:
         Raises
         ------
         InvalidCoordSystem
-           if coordinate system is not defined
-
+           if coordinate system is not defined.
         """
+
         try:
             _zz = self.crs[crs_name]["zz"]["value"]
             _zz_header = self.crs[crs_name]["zz"]["name"]
@@ -136,51 +108,45 @@ class TelescopePosition:
                 _zz_header = "pos_z"
 
             if crs_name == "mercator":
-                telstr = "{0} {1:10.8f} {2:10.8f} {3:10.2f}".format(
-                    self.name,
-                    self.crs[crs_name]["xx"]["value"],
-                    self.crs[crs_name]["yy"]["value"],
-                    _zz,
+                telstr = (
+                    f"{self.name} {self.crs[crs_name]['xx']['value']:10.8f} "
+                    f"{self.crs[crs_name]['yy']['value']:10.8f} {_zz:10.2f}"
                 )
             else:
-                telstr = "{0} {1:10.2f} {2:10.2f} {3:10.2f}".format(
-                    self.name,
-                    self.crs[crs_name]["xx"]["value"],
-                    self.crs[crs_name]["yy"]["value"],
-                    _zz,
+                telstr = (
+                    f"{self.name} {self.crs[crs_name]['xx']['value']:10.2f} "
+                    f"{self.crs[crs_name]['yy']['value']:10.2f} {_zz:10.2f}"
                 )
-            headerstr = "{0} {1} {2} {3}".format(
-                "telescope_name",
-                self.crs[crs_name]["xx"]["name"],
-                self.crs[crs_name]["yy"]["name"],
-                _zz_header,
+            headerstr = (
+                f"telescope_name {self.crs[crs_name]['xx']['name']} "
+                f"{self.crs[crs_name]['yy']['name']} {_zz_header}"
             )
 
             if self.geo_code is not None:
-                telstr += "  {0}".format(self.geo_code)
+                telstr += f"  {self.geo_code}"
                 headerstr += "  geo_code"
             if print_header:
                 print(headerstr)
             print(telstr)
-        except KeyError:
-            self._logger.error("Invalid coordinate system ({})".format(crs_name))
-            raise InvalidCoordSystem
+        except KeyError as e:
+            self._logger.error(f"Invalid coordinate system ({crs_name})")
+            raise InvalidCoordSystem from e
 
     def get_coordinates(self, crs_name, coordinate_field=None):
         """
         Get coordinates in a given coordinate system.
 
-        Attributes
+        Parameters
         ----------
         crs_name: str
-            name of coordinate system
+            name of coordinate system.
         coordinate_field: str
-            return specified field of coordinate descriptor
-            (default: None, return value x unit)
+            return specified field of coordinate descriptor.
 
         Returns
         -------
-        x, y, z coordinate including corresponding unit (or coordinate field)
+        x, y, z coordinate including corresponding unit (or coordinate field). If coordinate_field \
+        is None, returns value x unit.
 
         Raises
         ------
@@ -195,9 +161,9 @@ class TelescopePosition:
                     self.crs[crs_name]["yy"]["value"] * self.crs[crs_name]["yy"]["unit"],
                     self.crs[crs_name]["zz"]["value"] * self.crs[crs_name]["zz"]["unit"],
                 )
-            except KeyError:
-                self._logger.error("Invalid coordinate system ({})".format(crs_name))
-                raise InvalidCoordSystem
+            except KeyError as e:
+                self._logger.error(f"Invalid coordinate system ({crs_name})")
+                raise InvalidCoordSystem from e
         else:
             try:
                 return (
@@ -205,13 +171,12 @@ class TelescopePosition:
                     self.crs[crs_name]["yy"][coordinate_field],
                     self.crs[crs_name]["zz"][coordinate_field],
                 )
-            except KeyError:
+            except KeyError as e:
                 self._logger.error(
-                    "Invalid coordinate system ({}) or coordinate field ({})".format(
-                        crs_name, coordinate_field
-                    )
+                    f"Invalid coordinate system ({crs_name}) "
+                    f"or coordinate field ({coordinate_field})"
                 )
-                raise InvalidCoordSystem
+                raise InvalidCoordSystem from e
 
     def _get_coordinate_value(self, value, unit):
         """
@@ -225,7 +190,7 @@ class TelescopePosition:
             try:
                 return value.to(unit).value
             except u.UnitsError:
-                self._logger.error("Invalid unit given ({}) for value: {})".format(unit, value))
+                self._logger.error(f"Invalid unit given ({unit}) for value: {value})")
                 raise
 
         return value
@@ -237,18 +202,18 @@ class TelescopePosition:
         Attributes
         ----------
         crs_name: str
-            Name of coordinate system
+            Name of coordinate system.
         xx: float
-            x-coordinate
+            x-coordinate.
         yy: float
-            y-coordinate
+            y-coordinate.
         zz: float
-            z-coordinate (altitude)
+            z-coordinate (altitude).
 
         Raises
         ------
         InvalidCoordSystem
-            If coordinate system is not known
+            If coordinate system is not known.
 
         """
 
@@ -263,9 +228,9 @@ class TelescopePosition:
                 self.crs[crs_name]["zz"]["value"] = self._get_coordinate_value(
                     zz, self.crs[crs_name]["zz"]["unit"]
                 )
-        except KeyError:
-            self._logger.error("Invalid coordinate system ({})".format(crs_name))
-            raise InvalidCoordSystem
+        except KeyError as e:
+            self._logger.error(f"Invalid coordinate system ({crs_name})")
+            raise InvalidCoordSystem from e
 
     def get_altitude(self):
         """ "
@@ -274,23 +239,23 @@ class TelescopePosition:
         Returns
         -------
         astropy.Quantity
-            telescope altitidue
+            telescope altitude.
 
         """
         for _crs in self.crs.values():
             if _crs["zz"]["value"]:
                 return _crs["zz"]["value"] * u.Unit(_crs["zz"]["unit"])
 
+        return np.nan
+
     def set_altitude(self, tel_altitude):
         """
-        Set altitude of an array element.
-        Assume that all coordinate system have same altitude definition,
-        meaning altitude is set for all systems here.
+        Set altitude of an array element. Assume that all coordinate system have same altitude \
+        definition, meaning altitude is set for all systems here.
 
         Attributes
         ----------
         tel_altitude: astropy.Quantity
-
         """
 
         for _crs in self.crs.values():
@@ -298,8 +263,8 @@ class TelescopePosition:
 
     def _convert(self, crs_from, crs_to, xx, yy):
         """
-        Coordinate transformation of telescope positions.
-        Returns np.nan for failed transformations (and not inf, as pyproj does)
+        Coordinate transformation of telescope positions. Returns np.nan for failed transformations\
+        (and not inf, as pyproj does)
 
         Parameters
         ----------
@@ -339,8 +304,8 @@ class TelescopePosition:
 
     def _get_reference_system_from(self):
         """
-        Return coordinate system and coordinatee for a fully defined system.
-        The first fully defined system from self.crs is returned.
+        Return coordinate system and coordinatee for a fully defined system. The first fully\
+        defined system from self.crs is returned.
 
         Returns
         -------
@@ -363,26 +328,26 @@ class TelescopePosition:
         Attributes
         ----------
         crs_name: str
-            Name of coordinate system
+            Name of coordinate system.
         crs_check: bool
-            Check that projection system is defined
+            Check that projection system is defined.
 
         Returns
         -------
         bool
-            True if coordinate system is defined
+            True if coordinate system is defined.
 
         Raises
         ------
         InvalidCoordSystem
-            If coordinate system is not known
+            If coordinate system is not known.
         """
         try:
             if not self.crs[crs_name]["crs"] and crs_check:
                 return False
-        except KeyError:
-            self._logger.error("Invalid coordinate system ({})".format(crs_name))
-            raise InvalidCoordSystem
+        except KeyError as e:
+            self._logger.error(f"Invalid coordinate system ({crs_name})")
+            raise InvalidCoordSystem from e
 
         return (
             self.crs[crs_name]["xx"]["value"] is not np.nan
@@ -395,11 +360,11 @@ class TelescopePosition:
         """
         Return True if array element has altitude defined.
 
-        Attributes
+        Parameters
         ----------
         crs_name: str
-            Name of coordinate system to be checked for altitude.
-            If None: check if altitude is define for any system.
+            Name of coordinate system to be checked for altitude. If None: check if altitude is \
+            define for any system.
 
         Returns
         -------
@@ -423,9 +388,9 @@ class TelescopePosition:
                 self.crs[crs_name]["zz"]["value"] is not np.nan
                 and self.crs[crs_name]["zz"]["value"] is not None
             )
-        except KeyError:
-            self._logger.error("Invalid coordinate system ({})".format(crs_name))
-            raise InvalidCoordSystem
+        except KeyError as e:
+            self._logger.error(f"Invalid coordinate system ({crs_name})")
+            raise InvalidCoordSystem from e
 
     def _set_coordinate_system(self, crs_name, crs_system):
         """
@@ -434,21 +399,21 @@ class TelescopePosition:
         Attributes
         ----------
         crs_name: str
-            Name of coordinate system
+            Name of coordinate system.
         crs_system: pyproj.crs.crs.CRS
-             Project of coordinate system
+             Project of coordinate system.
 
         Raises
         ------
         InvalidCoordSystem
-            If coordinate system is not known
+            If coordinate system is not known.
 
         """
         try:
             self.crs[crs_name]["crs"] = crs_system
-        except KeyError:
-            self._logger.error("Invalid coordinate system ({})".format(crs_name))
-            raise InvalidCoordSystem
+        except KeyError as e:
+            self._logger.error(f"Invalid coordinate system ({crs_name})")
+            raise InvalidCoordSystem from e
 
     @staticmethod
     @u.quantity_input(tel_altitude=u.m, corsika_obs_level=u.m, corsika_sphere_center=u.m)
@@ -458,7 +423,7 @@ class TelescopePosition:
         """
         Convert telescope altitude to CORSIKA system (pos_z).
 
-        Attributes
+        Parameters
         ----------
         tel_altitude: astropy.Quantity
             Telescope altitude in equivalent units of meter.
@@ -469,7 +434,8 @@ class TelescopePosition:
 
         Returns
         -------
-        Z-position of a telescope in CORSIKA system
+        astropy.units.m
+            Z-position of a telescope in CORSIKA system.
         """
 
         return (tel_altitude - corsika_obs_level + corsika_sphere_center).to(u.m)
@@ -482,7 +448,7 @@ class TelescopePosition:
         """
         Convert Corsika (pos_z) to altitude.
 
-        Attributes
+        Parameters
         ----------
         tel_corsika_z: astropy.Quantity
             Telescope z-position in CORSIKA system in equivalent units of meter.
@@ -493,9 +459,9 @@ class TelescopePosition:
 
         Returns
         -------
-        Telescope altitude (above sea level)
+        astropy.units.m
+            Telescope altitude (above sea level)
         """
-
         return tel_corsika_z + corsika_obs_level - corsika_sphere_center
 
     def convert_all(self, crs_local=None, crs_wgs84=None, crs_utm=None):
@@ -504,12 +470,17 @@ class TelescopePosition:
 
         Parameters
         ----------
-        crs_utm: pyproj.crs.crs.CRS
-            Pyproj CRS of the utm coordinate system
         crs_local: pyproj.crs.crs.CRS
-            Pyproj CRS of the local coordinate system
+            Pyproj CRS of the local coordinate system.
         crs_wgs84: pyproj.crs.crs.CRS
-            Pyproj CRS of the mercator coordinate system
+            Pyproj CRS of the mercator coordinate system.
+        crs_utm: pyproj.crs.crs.CRS
+            Pyproj CRS of the utm coordinate system.
+
+        Raises
+        ------
+        MissingInputForConvertion
+            if the coordinate system is invalid.
         """
 
         self._set_coordinate_system("corsika", crs_local)
@@ -532,15 +503,15 @@ class TelescopePosition:
                     self.set_coordinates(
                         _crs_to_name, _x, _y, _crs_from["zz"]["value"] * _crs_from["zz"]["unit"]
                     )
-        except (InvalidCoordSystem, TypeError):
+        except (InvalidCoordSystem, TypeError) as e:
             self._logger.error("No reference coordinate system defined")
-            raise MissingInputForConvertion
+            raise MissingInputForConvertion from e
 
     @staticmethod
     def _default_coordinate_system_definition():
         """
-        Definition of coordinate system including axes and default axes units.
-        Follows convention from pyproj for x and y coordinates.
+        Definition of coordinate system including axes and default axes units. Follows convention\
+        from pyproj for x and y coordinates.
 
         Returns
         -------

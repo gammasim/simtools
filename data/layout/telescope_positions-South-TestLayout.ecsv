@@ -1,123 +1,128 @@
-# %ECSV 0.9
+# %ECSV 1.0
 # ---
 # datatype:
-# - {name: telescope_name, datatype: string, description: common telescope name}
-# - {name: pos_x, unit: m, datatype: float32, description: telescope position towards North relative to MST01 (central MST)}
-# - {name: pos_y, unit: m, datatype: float32, description: telescope position towards West relative to MST01 (central MST)}
-# - {name: pos_z, unit: m, datatype: float32, description: telescope position (centre of sphere) upwards relative to NNN}
-# meta: !!omap
-# - data_type: positionfile
-# - description: "telescope positions for CTA South (Paranal)"
-# - center_lon: "-70.316345 deg"
-# - center_lat: "-24.683429 deg"
-# - center_alt: "2162.35 m"
-# - center_northing: "7269466.0 m"
-# - center_easting: "366822.0 m"
-# - corsika_obs_level: "2147 m"
-# - corsika_sphere_radius: {LST: 12.5 m, MST: 9.6 m, SST: 3 m}
-# - corsika_sphere_center: {LST: 16 m, MST: 9 m, SST: 3.25 m}
-# - EPSG: 32719
-# - comments: |
-#       version 0.1
+# - {name: telescope_name, datatype: string, description: telescope name}
+# - {name: pos_x, unit: m, datatype: float32, description: telescope position towards North relative to the array center.}
+# - {name: pos_y, unit: m, datatype: float32, description: telescope position towards West relative to the array center.}
+# - {name: pos_z, unit: m, datatype: float32, description: telescope position upwards relative to the CORSIKA observation level.}
+# meta:
+#   data_type: positionfile
+#   description: "telescope positions for CTAO South"
+#   EPSG: 32719
+#   center_lon: !astropy.units.Quantity
+#     unit: &id001 !astropy.units.Unit {unit: deg}
+#     value: -70.316345
+#   center_lat: !astropy.units.Quantity
+#     unit: *id001
+#     value: -24.683429
+#   center_alt: !astropy.units.Quantity
+#     unit: &id002 !astropy.units.Unit {unit: m}
+#     value: 2162.35
+#   center_northing: !astropy.units.Quantity
+#     unit: *id002
+#     value: 7269466.999
+#   center_easting: !astropy.units.Quantity
+#     unit: *id002
+#     value: 366822.017
+#   corsika_obs_level: !astropy.units.Quantity
+#     unit: *id002
+#     value: 2147
+#   corsika_sphere_radius:
+#     LST: !astropy.units.Quantity
+#       unit: *id002
+#       value: 12.5
+#     MST: !astropy.units.Quantity
+#       unit: *id002
+#       value: 9.6
+#     SCT: !astropy.units.Quantity
+#       unit: *id002
+#       value: 7.15
+#     SST: !astropy.units.Quantity
+#       unit: *id002
+#       value: 3.0
+#   corsika_sphere_center:
+#     LST: !astropy.units.Quantity
+#       unit: *id002
+#       value: 16.0
+#     MST: !astropy.units.Quantity
+#       unit: *id002
+#       value: 9.0
+#     SCT: !astropy.units.Quantity
+#       unit: *id002
+#       value: 6.1
+#     SST: !astropy.units.Quantity
+#       unit: *id002
+#       value: 3.25
+#   comments: |
+#       Prod6 array definition for CTAO South
 #       UTM Zone 19 (S)
-#       prod5
+# schema: astropy-2.0
 telescope_name    pos_x    pos_y   pos_z
-LST-01      -20.643       -64.817      34.30
-LST-02       79.994        -0.768      29.40
-LST-03      -19.396        65.200      31.00
-LST-04     -120.033         1.151      33.10
-MST-01       -0.017        -0.001      24.35
-MST-02       -1.468      -151.221      31.00
-MST-03       -3.138      -325.245      39.00
-MST-04        1.434       151.220      25.00
-MST-05        3.104       325.243      23.50
-MST-06      156.493       237.052      24.00
-MST-07      147.428        74.202      21.00
-MST-08      145.977       -77.019      26.00
-MST-09      151.915      -240.013      30.00
-MST-10     -151.949       240.011      27.00
-MST-11     -146.011        77.017      28.00
-MST-12     -147.462       -74.203      28.00
-MST-13     -156.527      -237.053      38.50
-MST-14      295.343       447.467      25.00
-MST-15      317.086       159.593      18.50
-MST-16      308.425        -2.960      19.50
-MST-17      313.965      -165.650      22.50
-MST-18      286.702      -453.054      38.50
-MST-19     -286.835       453.054      17.00
-MST-20     -313.599       165.646      30.50
-MST-21     -308.459         2.959      29.50
-MST-22     -316.720      -159.598      35.00
-MST-23     -295.477      -447.468      52.00
-MST-24      582.262        -5.588      13.50
-MST-25     -582.296         5.587      36.00
-SST-01      207.036       156.949      14.25
-SST-02      203.986      -160.894      19.75
-SST-03     -204.020       160.893      22.25
-SST-04     -207.070      -156.950      28.25
-SST-05      168.882       423.275      18.25
-SST-06      160.729      -426.440      33.25
-SST-07     -160.762       426.438      10.25
-SST-08     -168.916      -423.277      42.25
-SST-09        4.972       519.869      11.75
-SST-10       -5.006      -519.871      41.25
-SST-11      395.510       399.996      11.25
-SST-12      387.762      -407.513      28.25
-SST-13     -387.795       407.512      13.25
-SST-14     -395.545      -399.997      50.25
-SST-15      495.605       105.269       9.25
-SST-16      493.494      -114.761      11.75
-SST-17     -493.528       114.760      28.25
-SST-18     -495.640      -105.269      30.25
-SST-19        6.927       723.596      11.75
-SST-20       -6.961      -723.599      59.75
-SST-21      621.223       312.711       7.25
-SST-22      615.114      -324.075      19.25
-SST-23     -615.142       324.575      19.75
-SST-24     -621.259      -312.711      49.25
-SST-25      441.802       669.112      30.25
-SST-26      428.882      -677.470      47.25
-SST-27     -428.914       677.467       7.25
-SST-28     -441.838      -669.114      70.25
-SST-29      820.094        -7.869       4.25
-SST-30     -820.128         7.870      30.75
-SST-31      228.460       794.887      25.25
-SST-32      213.165      -799.128      56.25
-SST-33     -213.198       799.125      10.25
-SST-34     -228.495      -794.890      68.25
-SST-35        9.046       944.425      27.25
-SST-36       -9.080      -944.430      75.25
-SST-37      668.034       562.918      13.25
-SST-38      657.111      -575.635      43.25
-SST-39     -657.142       575.635       8.25
-SST-40     -668.070      -562.919      66.25
-SST-41      885.687       219.253       6.25
-SST-42      881.318      -236.208       9.25
-SST-43     -881.350       236.210      24.25
-SST-44     -885.722      -219.252      42.25
-SST-45      920.537       463.474      12.75
-SST-46      911.476      -481.054      26.25
-SST-47     -911.507       481.054      11.25
-SST-48     -920.574      -463.473      59.25
-SST-49      480.366       966.809      56.25
-SST-50      461.727      -975.853      65.75
-SST-51     -461.758       975.849      16.75
-SST-52     -480.403      -966.813      87.25
-SST-53      714.732       843.133      49.25
-SST-54      698.425      -856.696      53.75
-SST-55     -698.455       856.694      14.75
-SST-56     -714.770      -843.135      84.75
-SST-57     1100.131       -10.556       3.75
-SST-58    -1100.165        10.558      27.75
-SST-59      249.865      1107.552      55.25
-SST-60      228.566     -1112.148      77.75
-SST-61     -227.398      1112.131      25.25
-SST-62     -249.900     -1107.557      89.25
-SST-63      964.010       730.717      27.25
-SST-64      949.814      -749.083      46.25
-SST-65     -949.844       749.082      17.25
-SST-66     -964.048      -730.717      83.25
-SST-67     1199.684       357.573      10.25
-SST-68     1192.605      -380.527      19.25
-SST-69    -1192.635       380.530      12.75
-SST-70    -1199.721      -357.570      47.25
+LST-01     -20.64     -64.82      34.00
+LST-02      79.99      -0.77      29.00
+LST-03     -19.40      65.20      31.00
+LST-04    -120.03       1.15      33.00
+MST-01      -0.02      0.00      24.00
+MST-02       1.43     151.02      25.00
+MST-03      -1.47    -151.02      31.00
+MST-04     150.72      73.57      21.00
+MST-05     149.28     -76.45      26.00
+MST-06     152.31     238.59      24.00
+MST-07     147.70    -241.47      30.00
+MST-08     313.03      -3.00      19.00
+MST-09    -150.76     -73.57      28.00
+MST-10    -149.32      76.45      28.00
+MST-11    -152.34    -238.59      38.50
+MST-12    -147.73     241.47      27.00
+MST-13    -314.61    -159.02      35.00
+MST-14    -311.50     165.03      30.50
+SST-01     199.01      -1.91      16.25
+SST-02    -230.05       2.21      22.75
+SST-03    -252.17    -322.65      40.75
+SST-04    -245.93     327.43      17.25
+SST-05    -254.59    -574.69      54.25
+SST-06    -243.51     579.47       8.25
+SST-07    -227.70    -795.00      68.25
+SST-08    -212.40     799.22      10.25
+SST-09      -4.81    -499.07      39.75
+SST-10       4.77     499.07      11.75
+SST-11      -7.21    -749.10      62.25
+SST-12       7.17     749.10      12.75
+SST-13     245.90    -327.43      27.25
+SST-14     252.14     322.65      16.75
+SST-15     243.48    -579.47      41.25
+SST-16     254.55     574.69      17.75
+SST-17     212.36    -799.22      56.25
+SST-18     227.66     794.99      25.25
+SST-19    -500.33    -125.23      31.25
+SST-20    -497.84     134.81      28.25
+SST-21    -503.87    -494.28      59.25
+SST-22    -494.29     503.86      10.25
+SST-23    -473.80    -799.64      76.25
+SST-24    -458.36     808.58      17.25
+SST-25     497.80    -134.81      12.25
+SST-26     500.30     125.23       9.25
+SST-27     494.26    -503.86      30.25
+SST-28     503.84     494.28      10.25
+SST-29     458.33    -808.58      54.25
+SST-30     473.76     799.63      37.25
+SST-31    -791.12       7.59      30.25
+SST-32    -744.59     374.23      17.25
+SST-33    -751.64    -359.87      54.25
+SST-34    -810.91     655.93      10.25
+SST-35    -823.35    -640.25      74.25
+SST-36     790.09      -7.58       4.25
+SST-37     744.56    -374.23       4.25
+SST-38     751.61     359.87       6.25
+SST-39     809.88    -655.92      41.25
+SST-40     822.31     640.26      18.75
+SST-41       9.10     950.13      28.25
+SST-42      -9.13    -950.13      75.25
+SST-43    -957.06    -189.86      39.25
+SST-44    -953.24     208.19      22.75
+SST-45     953.20    -208.19       7.75
+SST-46     957.02     189.86       5.25
+SST-47   -1025.15    -510.28      59.25
+SST-48   -1015.16     529.86      13.25
+SST-49    1015.13    -529.86      31.25
+SST-50    1025.11     510.28      25.25

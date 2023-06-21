@@ -4,10 +4,13 @@ import logging
 
 import astropy.io.ascii
 import astropy.units as u
+import matplotlib.patches as mpatches
+import matplotlib.pyplot as plt
 import numpy as np
+import pytest
 
 import simtools.util.general as gen
-from simtools import visualize
+from simtools.visualization import visualize
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -42,7 +45,7 @@ def test_plot_1D(db, io_handler):
     for i in range(5):
         new_data = np.copy(data_in)
         new_data[y_title] = new_data[y_title] * (1 - 0.1 * (i + 1))
-        data["{}%% reflectivity".format(100 * (1 - 0.1 * (i + 1)))] = new_data
+        data[f"{100 * (1 - 0.1 * (i + 1))}%% reflectivity"] = new_data
 
     plt = visualize.plot_1D(data, title=title, palette="autumn")
 
@@ -51,7 +54,7 @@ def test_plot_1D(db, io_handler):
         plot_file.unlink()
     plt.savefig(plot_file)
 
-    logger.debug("Produced 1D plot ({}).".format(plot_file))
+    logger.debug(f"Produced 1D plot ({plot_file}).")
 
     assert plot_file.exists()
 
@@ -80,7 +83,7 @@ def test_plot_table(db, io_handler):
         plot_file.unlink()
     plt.savefig(plot_file)
 
-    logger.debug("Produced 1D plot ({}).".format(plot_file))
+    logger.debug(f"Produced 1D plot ({plot_file}).")
 
     assert plot_file.exists()
 
@@ -91,3 +94,38 @@ def test_add_unit():
     assert visualize._add_unit("Wavelength", value_with_unit) == "Wavelength [nm]"
     value_without_unit = [30, 40]
     assert visualize._add_unit("Wavelength", value_without_unit) == "Wavelength"
+
+
+def test_get_telescope_patch(manual_corsika_dict_north, manual_corsika_dict_south, io_handler):
+    def test_one_site(corsika_dict, x, y):
+        for tel_type in np.array(list(corsika_dict["corsika_sphere_radius"].keys())):
+            radius = corsika_dict["corsika_sphere_radius"][tel_type].value
+            patch = visualize.get_telescope_patch(tel_type, x, y, radius * u.m)
+            if mpatches.Circle == type(patch):
+                assert patch.radius == corsika_dict["corsika_sphere_radius"][tel_type].value
+            else:
+                assert isinstance(patch, mpatches.Rectangle)
+
+    test_one_site(manual_corsika_dict_north, 0 * u.m, 0 * u.m)
+    test_one_site(manual_corsika_dict_south, 0 * u.m, 0 * u.m)
+    # Test passing other units
+    test_one_site(manual_corsika_dict_north, 0 * u.m, 0 * u.km)
+    test_one_site(manual_corsika_dict_south, 0 * u.cm, 0 * u.km)
+    with pytest.raises(TypeError):
+        test_one_site(manual_corsika_dict_south, 0, 0)
+
+
+def test_plot_array(
+    telescope_north_test_file,
+    layout_array_north_instance,
+    telescope_south_test_file,
+    layout_array_south_instance,
+):
+    def test_one_site(test_file, instance):
+        telescope_table = instance.read_telescope_list_file(test_file)
+        telescopes_dict = instance.include_radius_into_telescope_table(telescope_table)
+        fig_out = visualize.plot_array(telescopes_dict, rotate_angle=0 * u.deg)
+        assert isinstance(fig_out, type(plt.figure()))
+
+    test_one_site(telescope_north_test_file, layout_array_north_instance)
+    test_one_site(telescope_south_test_file, layout_array_south_instance)

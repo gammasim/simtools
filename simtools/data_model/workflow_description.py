@@ -6,8 +6,10 @@ from pathlib import Path
 import simtools.util.general as gen
 import simtools.version
 from simtools import io_handler
-from simtools.data_model import data_model, validate_schema
+from simtools.data_model import meta_data_model, validate_schema
 from simtools.util import names
+
+__all__ = ["WorkflowDescription"]
 
 
 class WorkflowDescription:
@@ -15,47 +17,23 @@ class WorkflowDescription:
     Workflow description, configuration and metadata class.
     Assigns uuid to workflow in ACIVITY:ID
 
-    Attributes
+    Parameters
     ----------
-    args_dict: dict
-        configuration parameters
-
-    Methods
-    -------
-    collect_product_meta_data()
-        Collect product meta data information and add activity information
-    get_configuration_parameter()
-        Returns workflow configuration parameter (entry of configuration:key)
-    set_configuration_parameter()
-        Sets workflow configuration parameter (entry of configuration:key)
-    product_data_directory()
-        Return product data directory
-    product_data_file_format()
-        Return product data file format
-    product_data_file_name()
-        Return product data file name
-    reference_data_columns()
-        Return reference data columns expected in input data
-
+    args: argparse.Namespace
+        Command line parameters
 
     """
 
     def __init__(self, args_dict):
         """
         Initialize workflow configuration.
-
-        Parameters
-        ----------
-        args: argparse.Namespace
-            command line parameters
-
         """
 
         self._logger = logging.getLogger(__name__)
         self.io_handler = io_handler.IOHandler()
 
         self.args_dict = args_dict
-        self.workflow_config = data_model.workflow_configuration_schema()
+        self.workflow_config = meta_data_model.workflow_configuration_schema()
         self.workflow_config["activity"]["name"] = args_dict["label"]
         self.workflow_config["activity"]["id"] = str(uuid.uuid4())
 
@@ -63,7 +41,7 @@ class WorkflowDescription:
         self.workflow_config["configuration"] = self.args_dict
 
         self.top_level_meta = gen.change_dict_keys_case(
-            data_model.top_level_reference_schema(), True
+            meta_data_model.top_level_reference_schema(), True
         )
         self.collect_product_meta_data()
 
@@ -89,21 +67,33 @@ class WorkflowDescription:
         """
         Set value of workflow configuration parameter.
 
+        Parameters
+        ----------
+        key: (str,required)
+            Key of the workflow configuration dict.
+        value: (str,required)
+            Value of the workflow configuration dict associated to 'key'.
+
         Raises
         ------
         KeyError
-            if configuration does not exist in workflow
+            if configuration does not exist in workflow.
 
         """
         try:
             self.workflow_config["configuration"][key] = value
         except KeyError:
-            self._logger.error("Missing key {} in configuration".format(key))
+            self._logger.error(f"Missing key {key} in configuration")
             raise
 
     def get_configuration_parameter(self, key):
         """
         Return value of workflow configuration parameter.
+
+        Parameters
+        ----------
+        key: (str,required)
+            Key of the workflow configuration dict.
 
         Returns
         -------
@@ -114,30 +104,27 @@ class WorkflowDescription:
         ------
         KeyError
             if configuration does not exist in workflow
-
         """
 
         try:
             return self.workflow_config["configuration"][key]
         except KeyError:
-            self._logger.error("Missing key {} in configuration".format(key))
+            self._logger.error(f"Missing key {key} in configuration")
             raise
 
     def reference_data_columns(self):
         """
-        Return reference data column definition expected
-        in input data
+        Return reference data column definition expected in input data.
 
         Returns
         -------
         data_columns dict
-            reference data columns
+            Reference data columns
 
         Raises
         ------
         KeyError
-            if data_columns does not exist in workflow
-            configuration
+            if data_columns does not exist in workflow configuration.
 
         """
 
@@ -162,9 +149,9 @@ class WorkflowDescription:
         Parameters
         ----------
         suffix: str
-            file name extension (if none: use product_data_file_format()
+            file name extension (if None: use product_data_file_format())
         full_path: bool
-            if true: return path + file name, otherwise file name only
+            if True: return path + file name, otherwise file name only.
 
         Returns
         -------
@@ -174,10 +161,9 @@ class WorkflowDescription:
         Raises
         ------
         KeyError
-            if data file name is not defined in workflow configuration
-            or in product metadata dict
+            if data file name is not defined in workflow configuration or in product metadata dict.
         TypeError
-            if activity:name and product:filename is None
+            if activity:name and product:filename is None.
 
         """
 
@@ -211,20 +197,18 @@ class WorkflowDescription:
         Parameters
         ----------
         suffix: bool
-            return the ecsv suffix (if format is ascii.ecsv)
-            return file format (if false)
+            Return the ecsv suffix (if format is ascii.ecsv),
+            Return file format (if false)
 
         Returns
         -------
         str
-            file format of data product; default file format is 'ascii.ecsv'
+            File format of data product; default file format is 'ascii.ecsv'.
 
         Raises
         ------
         KeyError
-            if relevant fields are not defined in top level metadata
-            dictionary
-
+            if relevant fields are not defined in top level metadata dictionary.
         """
 
         _file_format = "ascii.ecsv"
@@ -253,7 +237,7 @@ class WorkflowDescription:
         _output_dir = self.io_handler.get_output_directory(
             self.workflow_config["activity"]["name"], "product-data"
         )
-        self._logger.debug("Outputdirectory {}".format(_output_dir))
+        self._logger.debug(f"Outputdirectory {_output_dir}")
         return _output_dir
 
     def _fill_association_meta_from_args(self, association_dict):
@@ -267,11 +251,13 @@ class WorkflowDescription:
 
         Raises
         ------
+        AttributeError
+            if error reading association meta data from args.
         KeyError
-            if metadata description cannot be filled
+            if metadata description cannot be filled.
 
         """
-        self._logger.debug("Fill metadata from args: {}".format(self.args_dict))
+        self._logger.debug(f"Fill metadata from args: {self.args_dict}")
 
         _association = {}
         try:
@@ -286,7 +272,7 @@ class WorkflowDescription:
             self._logger.error("Error reading association meta data from args")
             raise
         except AttributeError as e:
-            self._logger.debug("Missing parameter on command line, use defaults ({})".format(e))
+            self._logger.debug(f"Missing parameter on command line, use defaults ({e})")
 
         self._fill_context_sim_list(association_dict, _association)
 
@@ -297,13 +283,12 @@ class WorkflowDescription:
         Parameters
         ----------
         top_level_dict: dict
-            Dictionary for top level metadata
+            Dictionary for top level metadata.
 
         Raises
         ------
         KeyError
-            if corresponding fields cannot by accessed in the
-            top-level or metadata dictionaries
+            if corresponding fields cannot by accessed in the top-level or metadata dictionaries.
 
         """
 
@@ -327,8 +312,11 @@ class WorkflowDescription:
             self._fill_context_sim_list(
                 top_level_dict["context"]["sim"]["association"], association
             )
-        for document in _input_meta["product"]["document"]:
-            self._fill_context_sim_list(top_level_dict["context"]["sim"]["document"], document)
+        try:
+            for document in _input_meta["context"]["document"]:
+                self._fill_context_sim_list(top_level_dict["context"]["sim"]["document"], document)
+        except KeyError:
+            top_level_dict["context"]["sim"].pop("document")
 
     def _fill_product_meta(self, product_dict):
         """
@@ -342,14 +330,18 @@ class WorkflowDescription:
         Raises
         ------
         KeyError
-            if relevant fields are not defined in top level metadata
-            dictionary
+            if relevant fields are not defined in top level metadata dictionary.
 
         """
 
         product_dict["id"] = self.workflow_config["activity"]["id"]
-        self._logger.debug("Assigned ACTIVITY UUID {}".format(product_dict["id"]))
+        self._logger.debug(f"Assigned ACTIVITY UUID {product_dict['id']}")
 
+        product_dict["data"]["category"] = "SIM"
+        product_dict["data"]["level"] = "R0"
+        product_dict["data"]["type"] = "service"
+        product_dict["data"]["model"]["name"] = "simpipe-table"
+        product_dict["data"]["model"]["version"] = "0.1.0"
         product_dict["format"] = self.product_data_file_format()
         product_dict["filename"] = str(self.product_data_file_name(full_path=False))
 
@@ -395,6 +387,7 @@ class WorkflowDescription:
             activity_dict["name"] = self.workflow_config["activity"]["name"]
             activity_dict["start"] = datetime.datetime.now().isoformat(timespec="seconds")
             activity_dict["end"] = activity_dict["start"]
+            activity_dict["software"]["name"] = "gammasim-tools"
             activity_dict["software"]["version"] = simtools.version.__version__
         except KeyError:
             self._logger.error("Error ACTIVITY meta from input meta data")
@@ -402,13 +395,13 @@ class WorkflowDescription:
 
     def _read_workflow_configuration(self, workflow_config_file):
         """
-        Read workflow configuration from file and merge it with existing workflow config.
-        Keys are changed to lower case.
+        Read workflow configuration from file and merge it with existing workflow config. Keys are \
+         changed to lower case.
 
         Parameters
         ----------
         workflow_config_file
-            name of configuration file describing this workflow
+            name of configuration file describing this workflow.
 
         """
 
@@ -418,9 +411,7 @@ class WorkflowDescription:
                     gen.collect_data_from_yaml_or_dict(workflow_config_file, None)["CTASIMPIPE"],
                     True,
                 )
-                self._logger.debug(
-                    "Reading workflow configuration from {}".format(workflow_config_file)
-                )
+                self._logger.debug(f"Reading workflow configuration from {workflow_config_file}")
             except KeyError:
                 self._logger.debug("Error reading CTASIMPIPE workflow configuration")
 
@@ -428,8 +419,8 @@ class WorkflowDescription:
 
     def _merge_config_dicts(self, dict_high, dict_low, add_new_fields=False):
         """
-        Merge two config dicts and replace values in dict_high which are Nonetype.
-        Priority to dict_high in case of conflicting entries.
+        Merge two config dicts and replace values in dict_high which are Nonetype. Priority to \
+         dict_high in case of conflicting entries.
 
         Parameters
         ----------
@@ -454,9 +445,8 @@ class WorkflowDescription:
                     dict_high[k] = dict_low[k]
                 elif dict_high[k] != dict_low[k] and dict_low[k] is not None:
                     self._logger.debug(
-                        "Conflicting entries between dict: {} vs {} (use {})".format(
-                            dict_high[k], dict_low[k], dict_high[k]
-                        )
+                        f"Conflicting entries between dict: {dict_high[k]} vs {dict_low[k]} "
+                        f"(use {dict_high[k]})"
                     )
             elif add_new_fields:
                 dict_high[k] = dict_low[k]
@@ -469,6 +459,11 @@ class WorkflowDescription:
         -------
         str
             Input data file (full path).
+
+        Raises
+        ------
+        KeyError
+            if missing description of CONFIGURATON:INPUT_DATA
         """
 
         try:
@@ -480,18 +475,18 @@ class WorkflowDescription:
     @staticmethod
     def _fill_context_sim_list(product_list, new_entry_dict):
         """
-        Fill list-type entries into metadata.
-        Take into account the first list entry is the default value filled with Nones.
+        Fill list-type entries into metadata. Take into account the first list entry is the default\
+        value filled with Nones.
 
         Returns
         -------
         list
             Updated product list.
 
-
         """
+
         if len(new_entry_dict) == 0:
-            return
+            return []
         try:
             if any(v is not None for v in product_list[0].values()):
                 product_list.append(new_entry_dict)

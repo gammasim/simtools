@@ -86,10 +86,11 @@ import numpy as np
 import yaml
 
 import simtools.util.general as gen
-from simtools import io_handler, visualize
+from simtools import io_handler
 from simtools.configuration import configurator
 from simtools.model.telescope_model import TelescopeModel
 from simtools.ray_tracing import RayTracing
+from simtools.visualization import visualize
 
 
 def load_data(datafile):
@@ -164,7 +165,7 @@ def main():
     # Plotting cumulative PSF
     im = ray.images()[0]
 
-    print("d80 in cm = {}".format(im.get_psf()))
+    print(f"d80 in cm = {im.get_psf()}")
 
     # Plotting cumulative PSF
     # Measured cumulative PSF

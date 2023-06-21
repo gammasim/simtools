@@ -5,36 +5,24 @@ import yaml
 import simtools.util.general as gen
 from simtools.data_model import workflow_description
 
+__all__ = ["ModelDataWriter"]
+
 
 class ModelDataWriter:
     """
     Writer for simulation model data and metadata.
 
-    Attributes
+    Parameters
     ----------
     workflow_config: WorkflowDescription
-        workflow configuration
-
-    Methods
-    -------
-    write_data()
-        Write model data to file.
-    write_metadata()
-        Write metadata to file.
-
+        Workflow configuration.
+    args_dict: Dictionary
+        Dictionary with configuration parameters.
     """
 
     def __init__(self, workflow_config=None, args_dict=None):
         """
         Initialize model data
-
-        Parameters
-        ----------
-        workflow_config: WorkflowDescription
-            Workflow configuration
-        args_dict: Dictionary
-            Dictionary with configuration parameters.
-
         """
 
         self._logger = logging.getLogger(__name__)
@@ -50,40 +38,50 @@ class ModelDataWriter:
         product_data: astropy Table
             Model data.
 
+        Raises
+        ------
+        FileNotFoundError
+            if Workflow configuration file not found.
         """
 
         _file = self.workflow_config.product_data_file_name()
         try:
-            self._logger.info("Writing data to {}".format(_file))
+            self._logger.info(f"Writing data to {_file}")
             product_data.write(
                 _file, format=self.workflow_config.product_data_file_format(), overwrite=True
             )
         except FileNotFoundError:
-            self._logger.error("Error writing model data to {}".format(_file))
+            self._logger.error(f"Error writing model data to {_file}")
             raise
 
     def write_metadata(self, ymlfile=None, keys_lower_case=False):
         """
         Write model metadata file (yaml file format).
 
-        Attributes
+        Parameters
         ----------
-        ymlfile str
-            name of output file (default=None)
+        ymlfile: str
+            Name of output file.
         keys_lower_case: bool
-            write yaml key in lower case
+            Write yaml key in lower case.
 
         Returns
         -------
         str
-            name of output file
+            Name of output file
 
+        Raises
+        ------
+        FileNotFoundError
+            If ymlfile not found.
+        AttributeError
+            If no metadata defined for writing.
         """
 
         try:
             if not ymlfile:
                 ymlfile = self.workflow_config.product_data_file_name(".yml")
-            self._logger.info("Writing metadata to {}".format(ymlfile))
+            self._logger.info(f"Writing metadata to {ymlfile}")
             with open(ymlfile, "w", encoding="UTF-8") as file:
                 yaml.safe_dump(
                     gen.change_dict_keys_case(self.workflow_config.top_level_meta, keys_lower_case),
@@ -92,7 +90,7 @@ class ModelDataWriter:
                 )
             return ymlfile
         except FileNotFoundError:
-            self._logger.error("Error writing model data to {}".format(ymlfile))
+            self._logger.error(f"Error writing model data to {ymlfile}")
             raise
         except AttributeError:
             self._logger.error("No metadata defined for writing")

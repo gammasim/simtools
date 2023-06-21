@@ -14,9 +14,9 @@ def test_validate_telescope_name():
     telescopes = {"sst-d": "SST-D", "mst-flashcam-d": "MST-FlashCam-D", "sct-d": "SCT-D"}
 
     for key, value in telescopes.items():
-        logging.getLogger().info("Validating {}".format(key))
+        logging.getLogger().info(f"Validating {key}")
         new_name = names.validate_telescope_model_name(key)
-        logging.getLogger().info("New name {}".format(new_name))
+        logging.getLogger().info(f"New name {new_name}")
 
         assert value == new_name
 
@@ -30,9 +30,9 @@ def test_validate_telescope_name_db():
     }
 
     for key, value in telescopes.items():
-        logging.getLogger().info("Validating {}".format(key))
+        logging.getLogger().info(f"Validating {key}")
         new_name = names.validate_telescope_name_db(key)
-        logging.getLogger().info("New name {}".format(new_name))
+        logging.getLogger().info(f"New name {new_name}")
 
         assert value == new_name
 
@@ -43,7 +43,7 @@ def test_validate_telescope_name_db():
     }
 
     for key, value in telescopes.items():
-        logging.getLogger().info("Validating {}".format(key))
+        logging.getLogger().info(f"Validating {key}")
         with pytest.raises(ValueError):
             names.validate_telescope_name_db(key)
 
@@ -64,3 +64,17 @@ def test_simtools_instrument_name():
 
     with pytest.raises(ValueError):
         names.simtools_instrument_name("West", "MST", "FlashCam", "D")
+
+
+def test_translate_corsika_to_simtools():
+    corsika_pars = ["OBSLEV", "corsika_sphere_radius", "corsika_sphere_center"]
+    simtools_pars = ["corsika_obs_level", "corsika_sphere_radius", "corsika_sphere_center"]
+    for step, corsika_par in enumerate(corsika_pars):
+        assert names.translate_corsika_to_simtools(corsika_par) == simtools_pars[step]
+
+
+def test_translate_simtools_to_corsika():
+    corsika_pars = ["OBSLEV", "corsika_sphere_radius", "corsika_sphere_center"]
+    simtools_pars = ["corsika_obs_level", "corsika_sphere_radius", "corsika_sphere_center"]
+    for step, simtools_par in enumerate(simtools_pars):
+        assert names.translate_simtools_to_corsika(simtools_par) == corsika_pars[step]

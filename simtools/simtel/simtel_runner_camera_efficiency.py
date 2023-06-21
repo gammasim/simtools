@@ -7,17 +7,21 @@ __all__ = ["SimtelRunnerCameraEfficiency"]
 
 class SimtelRunnerCameraEfficiency(SimtelRunner):
     """
-    SimtelRunnerCameraEfficiency is the interface with the testeff tool of sim_telarray
-    to perform camera efficiency simulations.
+    SimtelRunnerCameraEfficiency is the interface with the testeff tool of sim_telarray to perform\
+    camera efficiency simulations.
 
-    Attributes
+    Parameters
     ----------
-    label: str, optional
-        Instance label.
-    telescope_model: TelescopeModel
-        Instance of the TelescopeModel class.
-    config: namedtuple
-        Contains the configurable parameters (zenith_angle).
+    telescope_model: str
+        Instance of TelescopeModel class.
+    label: str
+        Instance label. Important for output file naming.
+    simtel_source_path: str or Path
+        Location of sim_telarray installation.
+    file_simtel: str or Path
+        location of the sim_telarray testeff tool output file.
+    zenith_angle: float
+        The zenith angle given in the config to CameraEfficiency.
     """
 
     def __init__(
@@ -30,20 +34,7 @@ class SimtelRunnerCameraEfficiency(SimtelRunner):
         zenith_angle=None,
     ):
         """
-        SimtelRunner.
-
-        Parameters
-        ----------
-        telescope_model: str
-            Instance of TelescopeModel class.
-        label: str, optional
-            Instance label. Important for output file naming.
-        simtel_source_path: str (or Path)
-            Location of sim_telarray installation.
-        file_simtel: str (or Path)
-            location of the sim_telarray testeff tool output file
-        zenith_angle: float
-            The zenith angle given in the config to CameraEfficiency
+        Initialize SimtelRunner.
         """
         self._logger = logging.getLogger(__name__)
         self._logger.debug("Init SimtelRunnerCameraEfficiency")
@@ -51,17 +42,17 @@ class SimtelRunnerCameraEfficiency(SimtelRunner):
         super().__init__(label=label, simtel_source_path=simtel_source_path)
 
         self._telescope_model = telescope_model
-        self.label = label if label is not None else self.telescope_model.label
+        self.label = label if label is not None else self._telescope_model.label
 
         self._file_simtel = file_simtel
         self._file_log = file_log
         self.zenith_angle = zenith_angle
 
-    def _shall_run(self, **kwargs):
+    def _shall_run(self, **kwargs):  # pylint: disable=unused-argument; applies only to this line
         """Tells if simulations should be run again based on the existence of output files."""
         return not self._file_simtel.exists()
 
-    def _make_run_command(self, **kwargs):
+    def _make_run_command(self, **kwargs):  # pylint: disable=unused-argument
         """
         Prepare the command used to run testeff
         """
@@ -143,14 +134,21 @@ class SimtelRunnerCameraEfficiency(SimtelRunner):
 
         return command
 
-    def _check_run_result(self, **kwargs):
+    def _check_run_result(self, **kwargs):  # pylint: disable=unused-argument
+        """Checking run results
+
+        Raises
+        ------
+        RuntimeError
+            if camera efficiency simulation results file does not exist.
+        """
         # Checking run
         if not self._file_simtel.exists():
             msg = "Camera efficiency simulation results file does not exist"
             self._logger.error(msg)
             raise RuntimeError(msg)
-        else:
-            self._logger.debug("Everything looks fine with output file.")
+
+        self._logger.debug("Everything looks fine with output file.")
 
     def _get_one_dim_distribution(self, two_dim_parameter, weighting_distribution_parameter):
         """

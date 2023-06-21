@@ -4,10 +4,12 @@ from pathlib import Path
 from unittest import mock
 
 import pytest
+from astropy import units as u
 
 import simtools.io_handler
 from simtools import db_handler
 from simtools.configuration.configurator import Configurator
+from simtools.layout.layout_array import LayoutArray
 from simtools.model.telescope_model import TelescopeModel
 
 logger = logging.getLogger()
@@ -186,3 +188,61 @@ def telescope_model_sst(db, db_config, io_handler):
         label="test-telescope-model-sst",
     )
     return telescope_model_SST
+
+
+@pytest.fixture
+def layout_array_north_instance(io_handler, db_config):
+    return LayoutArray(site="North", mongo_db_config=db_config, name="test_layout")
+
+
+@pytest.fixture
+def layout_array_south_instance(io_handler, db_config):
+    return LayoutArray(site="South", mongo_db_config=db_config, name="test_layout")
+
+
+@pytest.fixture
+def manual_corsika_dict_north():
+    return {
+        "corsika_sphere_radius": {
+            "LST": 12.5 * u.m,
+            "MST": 9.15 * u.m,
+            "SCT": 7.15 * u.m,
+            "SST": 3 * u.m,
+        },
+        "corsika_sphere_center": {
+            "LST": 16 * u.m,
+            "MST": 9 * u.m,
+            "SCT": 6.1 * u.m,
+            "SST": 3.25 * u.m,
+        },
+        "corsika_obs_level": 2158 * u.m,
+    }
+
+
+@pytest.fixture
+def manual_corsika_dict_south():
+    return {
+        "corsika_sphere_radius": {
+            "LST": 12.5 * u.m,
+            "MST": 9.15 * u.m,
+            "SCT": 7.15 * u.m,
+            "SST": 3 * u.m,
+        },
+        "corsika_sphere_center": {
+            "LST": 16 * u.m,
+            "MST": 9 * u.m,
+            "SCT": 6.1 * u.m,
+            "SST": 3.25 * u.m,
+        },
+        "corsika_obs_level": 2147 * u.m,
+    }
+
+
+@pytest.fixture
+def telescope_north_test_file():
+    return "data/layout/telescope_positions-North-TestLayout.ecsv"
+
+
+@pytest.fixture
+def telescope_south_test_file():
+    return "data/layout/telescope_positions-South-TestLayout.ecsv"
