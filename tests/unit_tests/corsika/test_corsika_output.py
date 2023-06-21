@@ -289,9 +289,10 @@ def test_get_hist_2D_projection(corsika_output_instance):
         )
 
     corsika_output_instance.set_histograms()
+    labels = ["counts", "density", "direction", "time_altitude"]
     hist_sums = [11633, 29.1, 11634, 11634]  # sum of photons are the approximately the same
     # (except for the density hist, which is divided by the area)
-    for i_label, label in enumerate(["counts", "density", "direction", "time_altitude"]):
+    for i_label, label in enumerate(labels):
         hist_values, x_edges, y_edges = corsika_output_instance._get_hist_2D_projection(label)
         assert np.shape(x_edges) == (1, 101)
         assert np.shape(y_edges) == (1, 101)
@@ -301,7 +302,7 @@ def test_get_hist_2D_projection(corsika_output_instance):
     # Repeat the test for less telescopes and see that less photons are counted in
     corsika_output_instance.set_histograms(telescope_indices=[0, 1, 2])
     hist_sums = [3677, 9.2, 3677, 3677]
-    for i_label, label in enumerate(["counts", "density", "direction", "time_altitude"]):
+    for i_label, label in enumerate(labels):
         hist_values, x_edges, y_edges = corsika_output_instance._get_hist_2D_projection(label)
         assert pytest.approx(np.sum(hist_values), 1e-2) == hist_sums[i_label]
 
