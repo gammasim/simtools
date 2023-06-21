@@ -12,12 +12,8 @@ from astropy import units as u
 from simtools.corsika.corsika_output import CorsikaOutput, HistogramNotCreated
 
 
-def test_file_exists(corsika_output_file_name):
-    assert corsika_output_file_name.exists()
-
-
-def test_init(corsika_output_instance, corsika_output_file_name_string):
-    assert corsika_output_instance.input_file.name == Path(corsika_output_file_name_string).name
+def test_init(corsika_output_instance, corsika_output_file_name):
+    assert corsika_output_instance.input_file.name == Path(corsika_output_file_name).name
     with pytest.raises(FileNotFoundError):
         CorsikaOutput("wrong_file_name")
     assert len(corsika_output_instance.event_information) > 15
@@ -150,7 +146,7 @@ def test_create_histograms(corsika_output_instance):
         assert isinstance(corsika_output_instance.hist_time_altitude[0], bh.Histogram)
 
 
-def test_fill_histograms_no_rotation(corsika_output_file_name_string):
+def test_fill_histograms_no_rotation(corsika_output_file_name):
     # Sample test of photons: 1 telescope, 2 photons
     photons = [
         {
@@ -178,7 +174,7 @@ def test_fill_histograms_no_rotation(corsika_output_file_name_string):
     azimuth_angle = None
     zenith_angle = None
 
-    corsika_output_instance_fill = CorsikaOutput(corsika_output_file_name_string)
+    corsika_output_instance_fill = CorsikaOutput(corsika_output_file_name)
     corsika_output_instance_fill.individual_telescopes = False
     corsika_output_instance_fill.telescope_indices = [0]
 
@@ -258,8 +254,8 @@ def test_set_histograms_passing_config(corsika_output_instance):
     assert corsika_output_instance.hist_position[0][:, :, sum].axes[0].edges[-1] == 500
 
 
-def test_raise_if_no_histogram(corsika_output_file_name_string):
-    corsika_output_instance_not_hist = CorsikaOutput(corsika_output_file_name_string)
+def test_raise_if_no_histogram(corsika_output_file_name):
+    corsika_output_instance_not_hist = CorsikaOutput(corsika_output_file_name)
     with pytest.raises(HistogramNotCreated):
         corsika_output_instance_not_hist._raise_if_no_histogram()
         assert (
