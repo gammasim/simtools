@@ -806,17 +806,15 @@ def convert_2D_to_radial_distr(hist2d, xaxis, yaxis, bins=50, max_dist=1000):
     logger = logging.getLogger(__name__)
     # Check if the histogram will make sense
     bins_step = 2 * max_dist / bins  # in the 2D array, the positive and negative direction count.
-    warn = False
     for axis in [xaxis, yaxis]:
         if (bins_step < np.diff(axis)).any():
-            warn = True
-    if warn:
-        msg = (
-            f"The histogram with number of bins {bins} and maximum distance of {max_dist} "
-            f"resulted in a bin size smaller than the original array. Please adjust those "
-            f"parameters to increase the bin size and avoid nan in the histogram values."
-        )
-        logger.warning(msg)
+            msg = (
+                f"The histogram with number of bins {bins} and maximum distance of {max_dist} "
+                f"resulted in a bin size smaller than the original array. Please adjust those "
+                f"parameters to increase the bin size and avoid nan in the histogram values."
+            )
+            logger.warning(msg)
+            break
 
     grid_2d_x, grid_2d_y = np.meshgrid(xaxis[:-1], yaxis[:-1])  # [:-1], since xaxis and yaxis are
     # the hist edges (n + 1).
