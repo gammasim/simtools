@@ -20,7 +20,7 @@ dependencies:
   - pyproj
   - pyflakes
   - corsikaio>=0.3.3
-  - eventio>=1.11.0
+  - eventio
   - boost-histogram
 
 # cheatsheet
