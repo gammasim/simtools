@@ -18,9 +18,8 @@ dependencies:
   - sphinx
   - sphinx_rtd_theme
   - pyproj
-  - conda-forge::eventio>=1.5.0
   - pyflakes
-  - pyeventio
+  - eventio>=1.11.1
   - boost-histogram
 
 # cheatsheet
