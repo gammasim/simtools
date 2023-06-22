@@ -238,7 +238,7 @@ def test_convert_2D_to_radial_distr(caplog):
     assert msg in caplog.text
 
 
-def test_save_dict_to_file(tmp_test_directory):
+def test_save_dict_to_file(tmp_test_directory, caplog):
 
     # str
     paths = ["test_file", "test_file.yml"]
@@ -256,3 +256,10 @@ def test_save_dict_to_file(tmp_test_directory):
     with open(path) as file:
         new_example_dict = yaml.load(file)
         assert new_example_dict == example_dict
+
+    # Test error
+    path = tmp_test_directory / "non_existing_path/test_file_2.yml"
+    example_dict = {"key": 12}
+    with pytest.raises(IOError):
+        gen.save_dict_to_file(example_dict, path)
+        assert "Failed to write to" in caplog.text

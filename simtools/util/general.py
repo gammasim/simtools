@@ -860,9 +860,19 @@ def save_dict_to_file(dictionary, file_name):
         Dictionary to be saved into a file.
     file_name: str or Path
         Name of file to be saved with path.
+
+    Raises
+    ------
+    IOError:
+        if writing to file_name fails.
     """
     logger = logging.getLogger(__name__)
     file_name = Path(file_name).with_suffix(".yml")
     logger.info(f"Exporting histogram configuration to {file_name}")
-    with open(file_name, "w") as file:
-        yaml.dump(dictionary, file)
+    try:
+        with open(file_name, "w") as file:
+            yaml.dump(dictionary, file)
+    except IOError:
+        msg = f"Failed to write to {file_name}."
+        _logger.error(msg)
+        raise
