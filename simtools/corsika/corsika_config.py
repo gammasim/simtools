@@ -342,7 +342,16 @@ class CorsikaConfig:
             print(f"{par} = {value}")
 
     def export_input_file(self, use_multipipe=False):
-        """Create and export CORSIKA input file."""
+        """
+        Create and export CORSIKA input file.
+
+        Parameters
+        ----------
+        use_multipipe: bool
+            Whether to set the CORSIKA Inputs file to pipe
+            the output directly to sim_telarray or not.
+        """
+
         dir_type = "corsika_simtel" if use_multipipe else "corsika"
         self._set_output_file_and_directory(dir_type)
         self._logger.debug(f"Exporting CORSIKA input file to {self._config_file_path}")
