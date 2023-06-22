@@ -1,5 +1,6 @@
 import logging
 import os
+from pathlib import Path
 
 import simtools.util.general as gen
 from simtools.model.array_model import ArrayModel
@@ -39,7 +40,7 @@ class SimtelRunner:
 
         self._logger = logging.getLogger(__name__)
 
-        self._simtel_source_path = simtel_source_path
+        self._simtel_source_path = Path(simtel_source_path)
         self.label = label
         self._script_dir = None
         self._script_file = None
