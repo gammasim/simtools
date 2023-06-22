@@ -255,7 +255,7 @@ def corsika_output_file_name():
 
 
 @pytest.fixture
-def corsika_output_instance(db, io_handler, corsika_output_file_name):
+def corsika_output_instance(io_handler, corsika_output_file_name):
     return CorsikaOutput(corsika_output_file_name)
 
 
