@@ -268,7 +268,7 @@ def _translate_from_azimuth_direction_to_phi(logger, from_azimuth_direction):
     """
     Translate the direction particles are coming from to an azimuth angle.
 
-    Attributes
+    Parameters
     ----------
     from_azimuth_direction: str (north, south, east, west)
         The direction particles are coming from.
