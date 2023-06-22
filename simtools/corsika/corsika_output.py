@@ -209,7 +209,7 @@ class CorsikaOutput:
 
         # Build a dictionary with astropy units for the unit of the event's (header's) parameters.
         all_event_astropy_units = {}
-        for i_key, key in enumerate(parameters[1:]):  # starting at the second
+        for key in parameters[1:]:  # starting at the second
             # element to avoid the non-numeric (e.g. 'EVTH') key.
 
             # We extract the astropy unit (dimensionless in case no unit is provided).
@@ -969,7 +969,7 @@ class CorsikaOutput:
         self._num_photons_per_event = np.sum(self.num_photons_per_event_per_telescope, axis=0)
         return self._num_photons_per_event
 
-    def get_num_photons_distr(self, bins=50, range=None, event_or_telescope="event"):
+    def get_num_photons_distr(self, bins=50, hist_range=None, event_or_telescope="event"):
         """
         Get the distribution of photons per event or per telescope, depending on the string
         passed through `event_or_telescope`.
@@ -978,7 +978,7 @@ class CorsikaOutput:
         ----------
         bins: float
             Number of bins for the histogram.
-        range: 2-tuple
+        hist_range: 2-tuple
             Tuple to define the range of the histogram.
         event_or_telescope: str
             Indicates if the distribution of photons is given for the events, or for the telescopes.
@@ -999,9 +999,9 @@ class CorsikaOutput:
             if event_or_telescope not valid.
         """
         if event_or_telescope == "event":
-            hist, edges = np.histogram(self.num_photons_per_event, bins=bins, range=range)
+            hist, edges = np.histogram(self.num_photons_per_event, bins=bins, range=hist_range)
         elif event_or_telescope == "telescope":
-            hist, edges = np.histogram(self.num_photons_per_telescope, bins=bins, range=range)
+            hist, edges = np.histogram(self.num_photons_per_telescope, bins=bins, range=hist_range)
         else:
             msg = "`event_or_telescope` has to be either 'event' or 'telescope'."
             self._logger.error(msg)
@@ -1212,7 +1212,7 @@ class CorsikaOutput:
             raise KeyError
         return self.header[parameter]
 
-    def event_1D_histogram(self, key, bins=50, range=None):
+    def event_1D_histogram(self, key, bins=50, hist_range=None):
         """
         Create a histogram for the all events using `key` as parameter.
         Valid keys are stored in `self.all_event_keys` (CORSIKA defined).
@@ -1224,7 +1224,7 @@ class CorsikaOutput:
             first_interaction_height.
         bins: float
             Number of bins for the histogram.
-        range: 2-tuple
+        hist_range: 2-tuple
             Tuple to define the range of the histogram.
 
         Returns
@@ -1247,11 +1247,11 @@ class CorsikaOutput:
         hist, edges = np.histogram(
             self.event_information[key].value,
             bins=bins,
-            range=range,
+            range=hist_range,
         )
         return hist, edges
 
-    def event_2D_histogram(self, key_1, key_2, bins=50, range=None):
+    def event_2D_histogram(self, key_1, key_2, bins=50, hist_range=None):
         """
         Create a 2D histogram for the all events using `key_1` and `key_2` as parameters.
         Valid keys are stored in `self.all_event_keys` (CORSIKA defined).
@@ -1266,7 +1266,7 @@ class CorsikaOutput:
             first_interaction_height.
         bins: float
             Number of bins for the histogram.
-        range: 2-tuple
+        hist_range: 2-tuple
             Tuple to define the range of the histogram.
 
         Returns
@@ -1296,6 +1296,6 @@ class CorsikaOutput:
             self.event_information[key_1].value,
             self.event_information[key_2].value,
             bins=bins,
-            range=range,
+            range=hist_range,
         )
         return hist, x_edges, y_edges
