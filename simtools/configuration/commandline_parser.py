@@ -231,6 +231,11 @@ class CommandLineParser(argparse.ArgumentParser):
         value: str
             site name
 
+        Returns
+        -------
+        str
+            Validated site name
+
         Raises
         ------
         argparse.ArgumentTypeError
@@ -252,6 +257,11 @@ class CommandLineParser(argparse.ArgumentParser):
         ----------
         value: str
             telescope name
+
+        Returns
+        -------
+        str
+            Validated telescope name
 
         Raises
         ------
@@ -275,6 +285,11 @@ class CommandLineParser(argparse.ArgumentParser):
         ----------
         value: float
             value provided through the command line
+
+        Returns
+        -------
+        float
+            Validated efficiency interval
 
         Raises
         ------
@@ -301,6 +316,11 @@ class CommandLineParser(argparse.ArgumentParser):
         ----------
         angle: float
             zenith angle to verify
+
+        Returns
+        -------
+        float
+            Validated zenith angle
 
         Raises
         ------
