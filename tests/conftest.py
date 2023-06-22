@@ -251,7 +251,7 @@ def telescope_south_test_file():
 
 @pytest.fixture
 def corsika_output_file_name():
-    return "tests/resources/tel_output_10GeV-2-gamma-20deg-CTAO-South.dat"
+    return "tests/resources/tel_output_10GeV-2-gamma-20deg-CTAO-South.corsikaio"
 
 
 @pytest.fixture
