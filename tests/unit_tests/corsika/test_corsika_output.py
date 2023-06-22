@@ -74,15 +74,11 @@ def test_get_header_astropy_units(corsika_output_instance):
 
 
 def test_hist_config_default_config(corsika_output_instance, caplog):
-    hist_config = corsika_output_instance.hist_config
-    assert isinstance(hist_config, dict)
-    assert hist_config == corsika_output_instance._create_histogram_default_config()
     with caplog.at_level("WARNING"):
         hist_config = corsika_output_instance.hist_config
-        assert (
-            "No configuration was defined before. The default config is being created now."
-            in caplog.text
-        )
+        assert "No histogram configuration was defined before." in caplog.text
+    assert isinstance(hist_config, dict)
+    assert hist_config == corsika_output_instance._create_histogram_default_config()
 
 
 def test_hist_config_custom_config(corsika_output_instance):
@@ -176,7 +172,9 @@ def test_fill_histograms_no_rotation(corsika_output_file_name):
 
     # No count in the histogram before filling it
     assert np.count_nonzero(corsika_output_instance_fill.hist_direction[0].values()) == 0
-    corsika_output_instance_fill._fill_histograms(photons, azimuth_angle=None, zenith_angle=None)
+    corsika_output_instance_fill._fill_histograms(
+        photons, rotation_around_z_axis=None, rotation_around_y_axis=None
+    )
     # At least one count in the histogram after filling it
     assert np.count_nonzero(corsika_output_instance_fill.hist_direction[0].values()) > 0
 
@@ -191,7 +189,7 @@ def test_get_hist_1D_projection(corsika_output_instance_set_histograms, caplog):
     expected_shape_of_edges = [(1, 81), (1, 101), (1, 101)]
     expected_shape_of_values = [(1, 80), (1, 100), (1, 100)]
     expected_mean = [125.4, 116.3, 116.3]
-    expected_std = [153.4, 378.2, 312.0]
+    expected_std = [153.4, 378.2, 483.8]
     for i_hist, hist_label in enumerate(labels):
         hist_1D_list, x_edges_list = corsika_output_instance_set_histograms._get_hist_1D_projection(
             hist_label
@@ -546,22 +544,22 @@ def test_get_num_photons_distr(corsika_output_instance_set_histograms, caplog):
 
     # Test range and bins for event
     hist, edges = corsika_output_instance_set_histograms.get_num_photons_distr(
-        bins=50, range=None, event_or_telescope="event"
+        bins=50, hist_range=None, event_or_telescope="event"
     )
     assert np.size(edges) == 51
     hist, edges = corsika_output_instance_set_histograms.get_num_photons_distr(
-        bins=100, range=None, event_or_telescope="event"
+        bins=100, hist_range=None, event_or_telescope="event"
     )
     assert np.size(edges) == 101
     hist, edges = corsika_output_instance_set_histograms.get_num_photons_distr(
-        bins=100, range=(0, 500), event_or_telescope="event"
+        bins=100, hist_range=(0, 500), event_or_telescope="event"
     )
     assert edges[0] == 0
     assert edges[-1] == 500
 
     # Test number of events simulated
     hist, edges = corsika_output_instance_set_histograms.get_num_photons_distr(
-        bins=2, range=None, event_or_telescope="event"
+        bins=2, hist_range=None, event_or_telescope="event"
     )
     # Assert that the integration of the histogram resembles the known total number of events.
     assert (
@@ -575,7 +573,7 @@ def test_get_num_photons_distr(corsika_output_instance_set_histograms, caplog):
 
     # Test telescope
     hist, edges = corsika_output_instance_set_histograms.get_num_photons_distr(
-        bins=87, range=None, event_or_telescope="telescope"
+        bins=87, hist_range=None, event_or_telescope="telescope"
     )
     # Assert that the integration of the histogram resembles the known total number of events.
     assert (
@@ -589,7 +587,7 @@ def test_get_num_photons_distr(corsika_output_instance_set_histograms, caplog):
 
     with pytest.raises(ValueError):
         corsika_output_instance_set_histograms.get_num_photons_distr(
-            bins=50, range=None, event_or_telescope="not_valid_name"
+            bins=50, hist_range=None, event_or_telescope="not_valid_name"
         )
         msg = "`event_or_telescope` has to be either 'event' or 'telescope'."
         assert msg in caplog.text
@@ -705,7 +703,7 @@ def test_get_run_info(corsika_output_instance_set_histograms, caplog):
 
 def test_event_1D_histogram(corsika_output_instance_set_histograms):
     hist, edges = corsika_output_instance_set_histograms.event_1D_histogram(
-        "total_energy", bins=5, range=(5, 15)
+        "total_energy", bins=5, hist_range=(5, 15)
     )
     assert np.size(edges) == 6
     assert np.sum(hist) == 2
@@ -714,7 +712,7 @@ def test_event_1D_histogram(corsika_output_instance_set_histograms):
 
 def test_event_2D_histogram(corsika_output_instance_set_histograms):
     hist, x_edges, _ = corsika_output_instance_set_histograms.event_2D_histogram(
-        "total_energy", "first_interaction_height", bins=(5, 5), range=[[5, 15], [-60e5, -5e5]]
+        "total_energy", "first_interaction_height", bins=(5, 5), hist_range=[[5, 15], [-60e5, -5e5]]
     )
     assert np.size(x_edges) == 6
     assert np.sum(hist) == 2
