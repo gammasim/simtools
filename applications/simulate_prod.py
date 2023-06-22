@@ -210,6 +210,9 @@ def _proccess_simulation_config_file(config_file, primary_config, logger):
     dict
         Configuration of array simulations.
 
+    Raises
+    ------
+    FileNotFoundError
     """
 
     try:
@@ -275,6 +278,9 @@ def _translate_from_azimuth_direction_to_phi(logger, from_azimuth_direction):
     float (Astropy.Quantity)
         The phi angle for CORSIKA configuration.
 
+    Raises
+    ------
+    ValueError
     """
 
     if from_azimuth_direction == "north":
