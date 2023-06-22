@@ -60,7 +60,7 @@
 
     By default the configuration is saved in simtools-output/test-production
     and the output in corsika-data and simtel-data. The location of the latter directories
-    can be set to a different location via the option --data_directory).
+    can be set to a different location via the option --data_directory.
 
     Expected final print-out message:
 
