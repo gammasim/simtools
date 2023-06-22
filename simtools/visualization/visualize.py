@@ -925,7 +925,7 @@ def _kernel_plot_1D_photons(corsika_output_instance, property_name, log_y=True):
     elif property_name == "density":
         hist_values, edges = corsika_output_instance.get_photon_radial_distr(density=True)
     elif property_name == "time":
-        hist_values, edges = corsika_output_instance.get_photon_time_distr()
+        hist_values, edges = corsika_output_instance.get_photon_time_of_emission_distr()
     elif property_name == "altitude":
         hist_values, edges = corsika_output_instance.get_photon_altitude_distr()
     elif property_name == "num_photons":
