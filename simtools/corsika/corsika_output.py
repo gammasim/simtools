@@ -25,13 +25,13 @@ class HistogramNotCreated(Exception):
 
 
 class CorsikaOutput:
-    """CorsikaOutput extracts the Cherenkov photons information from a CORSIKA output file
-    (IACT file) using pyeventio.
+    """CorsikaOutput extracts the Cherenkov photons information from a CORSIKA IACT file
+     using pyeventio.
 
     Parameters
     ----------
     input_file: str or Path
-        Input file (IACT file) provided by the CORSIKA simulation.
+        CORSIKA IACT file provided by the CORSIKA simulation.
     label: str
         Instance label.
 
