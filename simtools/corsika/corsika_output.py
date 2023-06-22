@@ -573,7 +573,7 @@ class CorsikaOutput:
             The indices of the specific telescopes to be inspected.
         individual_telescopes: bool
             if False, the histograms are supposed to be filled for all telescopes. Default is False.
-            if True, one histogram is set for each telescope sepparately.
+            if True, one histogram is set for each telescope separately.
         hist_config:
             yaml file with the configuration parameters to create the histograms. For the correct
             format, please look at the docstring of `_create_histogram_default_config`.
@@ -914,7 +914,7 @@ class CorsikaOutput:
         """
         return self._get_hist_1D_projection("wavelength")
 
-    def get_photon_time_distr(self):
+    def get_photon_time_of_emission_distr(self):
         """
         Get the distribution of the emitted time of the Cherenkov photons. The clock starts when the
          particle crosses the top of the atmosphere (CORSIKA-defined) if
