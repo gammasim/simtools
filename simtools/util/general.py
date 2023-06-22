@@ -2,7 +2,6 @@ import copy
 import logging
 import mmap
 import os
-import pickle
 import re
 from collections import namedtuple
 from pathlib import Path
@@ -27,7 +26,11 @@ __all__ = [
     "sort_arrays",
     "validate_config_data",
     "get_log_excerpt",
+    "convert_2D_to_radial_distr",
+    "save_dict_to_file",
 ]
+
+_logger = logging.getLogger(__name__)
 
 
 class UnableToIdentifyConfigEntry(Exception):
@@ -333,7 +336,6 @@ def collect_data_from_yaml_or_dict(in_yaml, in_dict, allow_empty=False):
     data: dict
         Data as dict.
     """
-    _logger = logging.getLogger(__name__)
 
     if in_yaml is not None:
         if in_dict is not None:
@@ -600,7 +602,6 @@ def find_file(name, loc):
     FileNotFoundError
         If the desired file is not found.
     """
-    _logger = logging.getLogger(__name__)
 
     all_locations = copy.copy(loc)
     all_locations = [all_locations] if not isinstance(all_locations, list) else all_locations
@@ -681,29 +682,30 @@ def change_dict_keys_case(data_dict, lower_case=True):
 
 
 @u.quantity_input(rotation_angle_phi=u.rad, rotation_angle_theta=u.rad)
-def rotate(x, y, rotation_angle_phi, rotation_angle_theta=0 * u.rad):
+def rotate(x, y, rotation_around_z_axis, rotation_around_y_axis=0 * u.rad):
     """
-    Transform the x and y coordinates of the telescopes according to two rotations in spherical
-    coordinates: `rotation_angle_phi` gives the rotation on the observation plane (x, y)
-     and `rotation_angle_theta` allows to rotate observation plane in space.
+    Transform the x and y coordinates of the telescopes according to two rotations:
+     `rotation_angle_around_z_axis` gives the rotation on the observation plane (x, y)
+     and `rotation_angle_around_y_axis` allows to rotate the observation plane in space.
     The function returns the rotated x and y values in the same unit given.
-    The direction of rotation of the elements in the plane is counterclockwise.
+    The direction of rotation of the elements in the plane is counterclockwise, i.e.,
+    the rotation of the coordinate system is clockwise.
 
     Parameters
     ----------
     x: numpy.array or list
-        x positions of the telescopes, usually in meters.
+        x positions of the entries (e.g. telescopes), usually in meters.
     y: numpy.array or list
-        y positions of the telescopes, usually in meters.
-    rotation_angle_phi: astropy.units.rad
-        Angle to rotate the array in the observation plane in radians.
-    rotation_angle_theta: astropy.units.rad
-        Angle to rotate the observation plane in radians.
+        y positions of the entries (e.g. telescopes), usually in meters.
+    rotation_angle_around_z_axis: astropy.units.rad
+        Angle to rotate the array in the observation plane (around z axis) in radians.
+    rotation_angle_around_y_axis: astropy.units.rad
+        Angle to rotate the observation plane around the y axis in radians.
 
     Returns
     -------
     2-tuple of list
-        x and y positions of the rotated telescopes positions.
+        x and y positions of the rotated entry (e.g. telescopes) positions.
 
     Raises
     ------
@@ -742,12 +744,11 @@ def rotate(x, y, rotation_angle_phi, rotation_angle_theta=0 * u.rad):
                 "Cannot perform coordinate transformation when x and y have different units."
             )
 
-    x_trans = np.cos(rotation_angle_theta) * (
-        x * np.cos(rotation_angle_phi) - y * np.sin(rotation_angle_phi)
+    x_trans = np.cos(rotation_around_y_axis) * (
+        x * np.cos(rotation_around_z_axis) - y * np.sin(rotation_around_z_axis)
     )
-    y_trans = np.cos(rotation_angle_theta) * (
-        x * np.sin(rotation_angle_phi) + y * np.cos(rotation_angle_phi)
-    )
+    y_trans = x * np.sin(rotation_around_z_axis) + y * np.cos(rotation_around_z_axis)
+
     return x_trans, y_trans
 
 
@@ -777,68 +778,76 @@ def get_log_excerpt(log_file, n_last_lines=30):
     )
 
 
-def convert_2D_to_radial_distr(xaxis, yaxis, hist2d, bin_size=50, max_dist=1000):
+def convert_2D_to_radial_distr(hist2d, xaxis, yaxis, bins=50, max_dist=1000):
     """
     Convert a 2D histogram of positions, e.g. photon positions on the ground, to a 1D distribution.
 
     Parameters
     ----------
+    hist2d: numpy.ndarray
+        The histogram counts.
     xaxis: numpy.array
         The values of the x axis (histogram edges) on the ground.
     yaxis: numpy.array
         The values of the y axis (histogram edges) on the ground.
-    hist2d: numpy.ndarray
-        The histogram counts.
-    bin_size: float
-        Size of the step in distance, usually in meters.
+    bins: float
+        Number of bins in distance.
     max_dist: float
        Maximum distance to consider in the 1D histogram, usually in meters.
 
     Returns
     -------
     np.array
-        The edges of the 1D histogram with size = int(max_dist/bin_size) + 1.
-    np.array
         The values of the 1D histogram with size = int(max_dist/bin_size).
+    np.array
+        The edges of the 1D histogram with size = int(max_dist/bin_size) + 1.
+
     """
+    logger = logging.getLogger(__name__)
+    # Check if the histogram will make sense
+    bins_step = 2 * max_dist / bins  # in the 2D array, the positive and negative direction count.
+    for axis in [xaxis, yaxis]:
+        if (bins_step < np.diff(axis)).any():
+            msg = (
+                f"The histogram with number of bins {bins} and maximum distance of {max_dist} "
+                f"resulted in a bin size smaller than the original array. Please adjust those "
+                f"parameters to increase the bin size and avoid nan in the histogram values."
+            )
+            logger.warning(msg)
+            break
 
     grid_2d_x, grid_2d_y = np.meshgrid(xaxis[:-1], yaxis[:-1])  # [:-1], since xaxis and yaxis are
     # the hist edges (n + 1).
     # radial_distance_map maps the distance to the center from each element in a square matrix.
     radial_distance_map = np.sqrt(grid_2d_x**2 + grid_2d_y**2)
-
-    # The sorting and divmod give us the two indices for the position of the sorted element in the
-    # original 2d matrix
-    x_indices_sorted, y_indices_sorted = np.divmod(
-        np.argsort(radial_distance_map, axis=None), np.size(radial_distance_map, axis=0)
+    # The sorting and unravel_index give us the two indices for the position of the sorted element
+    # in the original 2d matrix
+    x_indices_sorted, y_indices_sorted = np.unravel_index(
+        np.argsort(radial_distance_map, axis=None), np.shape(radial_distance_map)
     )
+
     # We construct a 1D array with the histogram counts sorted according to the distance to the
     # center.
     hist_sorted = np.array(
         [hist2d[i_x, i_y] for i_x, i_y in zip(x_indices_sorted, y_indices_sorted)]
     )
     distance_sorted = np.sort(radial_distance_map, axis=None)
+
     # For larger distances, we have more elements in a slice 'dr' in radius, hence, we need to
     # acount for it using weights below.
-    weights, radial_edges = np.histogram(
-        distance_sorted, bins=int(max_dist / bin_size), range=(0, max_dist)
-    )
 
-    histogram_1D = np.empty_like(weights)
+    weights, radial_edges = np.histogram(distance_sorted, bins=bins, range=(0, max_dist))
+    histogram_1D = np.empty_like(weights, dtype=float)
+
     for i_radial, _ in enumerate(radial_edges[:-1]):
+
         # Here we sum all the events within a radial interval 'dr' and then divide by the number of
         # bins that fit this interval.
         indices_to_sum = (distance_sorted >= radial_edges[i_radial]) * (
             distance_sorted < radial_edges[i_radial + 1]
         )
-        # In case there is no event in any bin, according to the defined bin size,
-        # we assign the histogram count to be zero. In this case, it is wise to increase the bin
-        # size of your analysis.
-        try:
-            histogram_1D[i_radial] = np.sum(hist_sorted[indices_to_sum]) / weights[i_radial]
-        except ValueError:
-            histogram_1D[i_radial] = 0
-    return radial_edges, histogram_1D
+        histogram_1D[i_radial] = np.sum(hist_sorted[indices_to_sum]) / weights[i_radial]
+    return histogram_1D, radial_edges
 
 
 def save_dict_to_file(dictionary, file_name):
@@ -849,8 +858,11 @@ def save_dict_to_file(dictionary, file_name):
     ----------
     dictionary: dict
         Dictionary to be saved into a file.
-    file_name: str
-        Name of file to be saved.
+    file_name: str or Path
+        Name of file to be saved with path.
     """
-    with open(file_name, "wb") as f:
-        pickle.dump(dictionary, f)
+    logger = logging.getLogger(__name__)
+    file_name = Path(file_name).with_suffix(".yml")
+    logger.info(f"Exporting histogram configuration to {file_name}")
+    with open(file_name, "w") as file:
+        yaml.dump(dictionary, file)
