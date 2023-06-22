@@ -24,7 +24,7 @@ repos:
       - id: end-of-file-fixer
   # https://github.com/HunterMcGushion/docstr_coverage
   - repo: https://github.com/HunterMcGushion/docstr_coverage
-    rev: v2.2.0 # most recent docstr-coverage release or commit sha
+    rev: v2.3.0 # most recent docstr-coverage release or commit sha
     hooks:
       - id: docstr-coverage
-        args: ["--verbose", "2", "--fail-under", "10.", "applications", "simtools"]
+        args: ["--verbose", "2", "--fail-under", "70.", "simtools"]
