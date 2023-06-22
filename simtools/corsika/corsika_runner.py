@@ -100,7 +100,7 @@ class CorsikaRunner:
 
         self._keep_seeds = keep_seeds
 
-        self._simtel_source_path = simtel_source_path
+        self._simtel_source_path = Path(simtel_source_path)
         self.io_handler = io_handler.IOHandler()
         _runner_directory = "corsika_simtel" if use_multipipe else "corsika"
         self._output_directory = self.io_handler.get_output_directory(self.label, _runner_directory)
