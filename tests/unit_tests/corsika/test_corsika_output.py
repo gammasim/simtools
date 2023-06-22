@@ -371,13 +371,15 @@ def test_get_photon_altitude_distr(corsika_output_instance_set_histograms):
         ).all()
 
 
-def test_get_photon_time_distr(corsika_output_instance_set_histograms):
+def test_get_photon_time_of_emission_distr(corsika_output_instance_set_histograms):
     for returned_variable in range(2):
         assert (
             corsika_output_instance_set_histograms._get_hist_1D_projection("time")[
                 returned_variable
             ]
-            == corsika_output_instance_set_histograms.get_photon_time_distr()[returned_variable]
+            == corsika_output_instance_set_histograms.get_photon_time_of_emission_distr()[
+                returned_variable
+            ]
         ).all()
 
 
