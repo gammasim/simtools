@@ -19,7 +19,7 @@ dependencies:
   - sphinx_rtd_theme
   - pyproj
   - pyflakes
-  - eventio>=1.11.1
+  - eventio>=1.11.0
   - boost-histogram
 
 # cheatsheet
