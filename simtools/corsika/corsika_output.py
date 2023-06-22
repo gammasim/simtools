@@ -90,12 +90,12 @@ class CorsikaOutput:
     @property
     def version(self):
         """
-        Get the version of the Corsika output file.
+        Get the version of the CORSIKA IACT file.
 
         Returns
         -------
         float:
-            The version of CORSIKA used to produce the output given by `self.input_file`.
+            The version of CORSIKA used to produce the CORSIKA IACT file given by `self.input_file`.
         """
 
         if self._version is None:
@@ -182,7 +182,7 @@ class CorsikaOutput:
                     self.all_event_keys, all_event_units
                 )
 
-                # Add the unity to dictionary with the parameters and turn it into
+                # Add the unities to dictionary with the parameters and turn it into
                 # astropy.Quantities.
                 for i_key, key in enumerate(self.all_event_keys[1:]):  # starting at the second
                     # element to avoid the non-numeric (e.g. 'EVTH') key.
@@ -276,7 +276,10 @@ class CorsikaOutput:
             the dictionary with the histogram configuration.
         """
         if self._hist_config is None:
-            msg = "No configuration was defined before. The default config is being created now."
+            msg = (
+                "No histogram configuration was defined before. The default config is being "
+                "created now."
+            )
             self._logger.warning(msg)
             self._hist_config = self._create_histogram_default_config()
         return self._hist_config
@@ -335,8 +338,9 @@ class CorsikaOutput:
         "bins": the number of bins,
         "start": the first element of the histogram,
         "stop": the last element of the histogram, and
-        "scale" to define the scale of the bins which can be "linear" or "log". If "log",
-            the start and stop values have to be valid, i.e., >0.
+        "scale" to define the scale of the bins which can be "linear" or "log". If "log", the
+         common logarithm (log10) is applied to the axes. The start and stop values have to be
+         valid, i.e., >0.
 
         Returns
         -------
@@ -394,7 +398,7 @@ class CorsikaOutput:
                     "stop": 2000 * u.ns,
                     "scale": "linear",
                 },
-                "y axis": {"bins": 100, "start": 50 * u.km, "stop": 0 * u.km, "scale": "linear"},
+                "y axis": {"bins": 100, "start": 120 * u.km, "stop": 0 * u.km, "scale": "linear"},
             },
         }
         return histogram_config
@@ -482,7 +486,7 @@ class CorsikaOutput:
                 )
             )
 
-    def _fill_histograms(self, photons, azimuth_angle=None, zenith_angle=None):
+    def _fill_histograms(self, photons, rotation_around_z_axis=None, rotation_around_y_axis=None):
         """Fill all the histograms created by self._create_histogram with the information of the
          photons on the ground.
          If the azimuth and zenith angles are provided, the Cherenkov photon's coordinates are
@@ -506,14 +510,17 @@ class CorsikaOutput:
              zem: altitude where the photon was generated in cm,
              photons: number of photons associated to this bunch,
              wavelength: the wavelength of the photons in nm.
-        azimuth_angle: astropy.Quantity
-            Azimuth angle to rotate the observational plane and obtain it perpendicular to the
-            incoming event. It can be passed in radians or degrees.
+        rotation_around_z_axis: astropy.Quantity
+            Angle to rotate the observational plane around the Z axis.
+            It can be passed in radians or degrees.
             If not given, no rotation is performed.
-        zenith_angle: astropy.Quantity
-            Zenith angle to rotate the observational plane and obtain it perpendicular to the
-            incoming event. It can be passed in radians or degrees.
+        rotation_around_y_axis: astropy.Quantity
+            Angle to rotate the observational plane around the Y axis.
+            It can be passed in radians or degrees.
             If not given, no rotation is performed.
+            rotation_around_z_axis and rotation_around_y_axis are used to align the observational
+            plane normal to the incoming direction of the shower particles for the individual
+             telescopes (useful for fixed targets).
 
         Raises
         ------
@@ -526,14 +533,14 @@ class CorsikaOutput:
             self.telescope_indices
         ]:
 
-            if azimuth_angle is None or zenith_angle is None:
+            if rotation_around_z_axis is None or rotation_around_y_axis is None:
                 photon_x, photon_y = photons_info["x"], photons_info["y"]
             else:
                 photon_x, photon_y = rotate(
                     photons_info["x"],
                     photons_info["y"],
-                    azimuth_angle,
-                    zenith_angle,
+                    rotation_around_z_axis,
+                    rotation_around_y_axis,
                 )
 
             if self.individual_telescopes is False:
