@@ -192,12 +192,14 @@ def _proccess_simulation_config_file(config_file, primary_config, logger):
     Read the simulation configuration file with all the details
     on shower and array simulations.
 
-    Attributes
+    Parameters
     ----------
     config_file: str
         Name of simulation configuration file.
     primary_config: str
         Name of the primary selected from the configuration file.
+    logger: logging.logger
+        The logger to use to record log calls.
 
     Returns
     -------
