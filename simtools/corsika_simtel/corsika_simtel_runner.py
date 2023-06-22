@@ -7,10 +7,6 @@ from simtools.simtel.simtel_runner_array import SimtelRunnerArray
 __all__ = ["CorsikaSimtelRunner"]
 
 
-class MissingRequiredEntryInCorsikaConfig(Exception):
-    """Exception for missing required entry in corsika config."""
-
-
 class CorsikaSimtelRunner(CorsikaRunner, SimtelRunnerArray):
     """
     CorsikaSimtelRunner is responsible for running CORSIKA and piping it to sim_telarray
