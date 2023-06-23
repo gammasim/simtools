@@ -74,6 +74,18 @@ def test_export_input_file(corsika_config):
     corsika_config.export_input_file()
     input_file = corsika_config.get_input_file()
     assert input_file.exists()
+    with open(input_file, "r") as f:
+        assert "TELFIL |" not in f.read()
+
+
+def test_export_input_file_multipipe(corsika_config):
+
+    logger.info("test_export_input_file")
+    corsika_config.export_input_file(use_multipipe=True)
+    input_file = corsika_config.get_input_file()
+    assert input_file.exists()
+    with open(input_file, "r") as f:
+        assert "TELFIL |" in f.read()
 
 
 def test_wrong_par_in_config_data(corsika_config_data, db_config):
@@ -219,6 +231,7 @@ def test_get_file_name(corsika_config, io_handler):
         "corsika_run${RUNNR}_${PRMNAME}_za${ZA}deg_azm${AZM}deg"
         "_South_4LST_test-corsika-config.zst"
     )
+    assert corsika_config.get_file_name("multipipe") == "multi_cta-South-4LST.cfg"
     with pytest.raises(ValueError):
         corsika_config.get_file_name("foobar")
 
