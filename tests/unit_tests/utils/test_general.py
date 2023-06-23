@@ -7,8 +7,8 @@ from pathlib import Path
 import astropy.units as u
 import numpy as np
 import pytest
-import yaml
 from astropy.coordinates.errors import UnitsError
+from astropy.io.misc import yaml
 
 import simtools.util.general as gen
 from simtools.util.general import InvalidConfigEntry, UnableToIdentifyConfigEntry
@@ -22,7 +22,7 @@ def test_collect_dict_data(args_dict, io_handler):
     test_yaml_file = io_handler.get_output_file(file_name="test_collect_dict_data.yml", test=True)
     if not Path(test_yaml_file).exists():
         with open(test_yaml_file, "w") as output:
-            yaml.safe_dump(dict_for_yaml, output, sort_keys=False)
+            yaml.dump(dict_for_yaml, output, sort_keys=False)
 
     d1 = gen.collect_data_from_yaml_or_dict(None, in_dict)
     assert "k2" in d1.keys()
@@ -180,14 +180,14 @@ def test_change_dict_keys_case():
 
 
 def test_rotate_telescope_position():
-    x = np.array([-10, -10, 10, 10]).astype(int)
+    x = np.array([-10, -10, 10, 10]).astype(float)
     y = np.array([-10.0, 10.0, -10.0, 10.0]).astype(float)
     angle_deg = 30 * u.deg
     x_rot_manual = np.array([-3.7, -13.7, 13.7, 3.7])
     y_rot_manual = np.array([-13.7, 3.7, -3.7, 13.7])
 
-    def check_results(x_to_test, y_to_test, x_right, y_right, angle):
-        x_rot, y_rot = gen.rotate(angle, x_to_test, y_to_test)
+    def check_results(x_to_test, y_to_test, x_right, y_right, angle, theta=0 * u.deg):
+        x_rot, y_rot = gen.rotate(x_to_test, y_to_test, angle, theta)
         x_rot, y_rot = np.around(x_rot, 1), np.around(y_rot, 1)
         for element, _ in enumerate(x):
             assert x_right[element] == x_rot[element]
@@ -205,17 +205,74 @@ def test_rotate_telescope_position():
     # Testing with radians
     check_results(x_new_array, y_new_array, x_rot_new_array, y_rot_new_array, angle_deg.to(u.rad))
 
+    # Testing rotation in theta, around Y (3D)
+    x_rot_theta_manual = np.array([-2.6, -9.7, 9.7, 2.6])
+    y_rot_theta_manual = np.array([-13.7, 3.7, -3.7, 13.7])
+    check_results(x, y, x_rot_theta_manual, y_rot_theta_manual, angle_deg, 45 * u.deg)
+
     with pytest.raises(TypeError):
-        gen.rotate(angle_deg, x, y[0])
+        gen.rotate(x, y[0], angle_deg)
     with pytest.raises(TypeError):
-        gen.rotate(angle_deg, str(x[0]), y[0])
+        gen.rotate(str(x[0]), y[0], angle_deg)
     with pytest.raises(TypeError):
-        gen.rotate(angle_deg, u.Quantity(10), 10)
+        gen.rotate(u.Quantity(10), 10, angle_deg)
     with pytest.raises(TypeError):
-        gen.rotate(angle_deg, x[0], str(y[0]))
+        gen.rotate(x[0], str(y[0]), angle_deg)
     with pytest.raises(RuntimeError):
-        gen.rotate(angle_deg, x[:-1], y)
+        gen.rotate(x[:-1], y, angle_deg)
     with pytest.raises(UnitsError):
-        gen.rotate(angle_deg, x_new_array.to(u.cm), y_new_array)
+        gen.rotate(x_new_array.to(u.cm), y_new_array, angle_deg)
     with pytest.raises(u.core.UnitsError):
-        gen.rotate(30 * u.m, x_new_array, y_new_array)
+        gen.rotate(x_new_array, y_new_array, 30 * u.m)
+
+
+def test_convert_2D_to_radial_distr(caplog):
+
+    # Test normal functioning
+    max_dist = 100
+    bins = 100
+    step = max_dist / bins
+    xaxis = np.arange(-max_dist, max_dist, step)
+    yaxis = np.arange(-max_dist, max_dist, step)
+    x2d, y2d = np.meshgrid(xaxis, yaxis)
+    distance_to_center_2D = np.sqrt((x2d) ** 2 + (y2d) ** 2)
+
+    distance_to_center_1D, radial_edges = gen.convert_2D_to_radial_distr(
+        distance_to_center_2D, xaxis, yaxis, bins=bins, max_dist=max_dist
+    )
+    difference = radial_edges[:-1] - distance_to_center_1D
+    assert pytest.approx(difference[:-1], abs=1) == 0  # last value deviates
+
+    # Test warning in caplog
+    gen.convert_2D_to_radial_distr(
+        distance_to_center_2D, xaxis, yaxis, bins=4 * bins, max_dist=max_dist
+    )
+    msg = "The histogram with number of bins"
+    assert msg in caplog.text
+
+
+def test_save_dict_to_file(tmp_test_directory, caplog):
+
+    # str
+    paths = ["test_file", "test_file.yml"]
+    example_dict = {"key": 12}
+    for path in paths:
+        gen.save_dict_to_file(example_dict, f"{tmp_test_directory}/{path}")
+        with open(f"{tmp_test_directory}/test_file.yml") as file:
+            new_example_dict = yaml.load(file)
+            assert new_example_dict == example_dict
+
+    # Path
+    path = tmp_test_directory / "test_file_2.yml"
+    example_dict = {"key": 12}
+    gen.save_dict_to_file(example_dict, path)
+    with open(path) as file:
+        new_example_dict = yaml.load(file)
+        assert new_example_dict == example_dict
+
+    # Test error
+    path = tmp_test_directory / "non_existing_path/test_file_2.yml"
+    example_dict = {"key": 12}
+    with pytest.raises(IOError):
+        gen.save_dict_to_file(example_dict, path)
+        assert "Failed to write to" in caplog.text
