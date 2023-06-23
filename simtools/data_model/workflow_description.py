@@ -387,7 +387,7 @@ class WorkflowDescription:
             activity_dict["name"] = self.workflow_config["activity"]["name"]
             activity_dict["start"] = datetime.datetime.now().isoformat(timespec="seconds")
             activity_dict["end"] = activity_dict["start"]
-            activity_dict["software"]["name"] = "gammasim-tools"
+            activity_dict["software"]["name"] = "simtools"
             activity_dict["software"]["version"] = simtools.version.__version__
         except KeyError:
             self._logger.error("Error ACTIVITY meta from input meta data")

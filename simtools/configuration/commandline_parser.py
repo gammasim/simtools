@@ -73,7 +73,7 @@ class CommandLineParser(argparse.ArgumentParser):
         _job_group = self.add_argument_group("configuration")
         _job_group.add_argument(
             "--config",
-            help="gammasim-tools configuration file",
+            help="simtools configuration file",
             default=None,
             type=str,
             required=False,
