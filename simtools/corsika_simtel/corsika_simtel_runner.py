@@ -49,8 +49,12 @@ class CorsikaSimtelRunner(CorsikaRunner, SimtelRunnerArray):
 
         Parameters
         ----------
-        run_number: int
-            Run number.
+        use_pfp: bool
+            Whether to use the preprocessor in preparing the CORSIKA input file
+        kwargs: dict
+            The following optional parameters can be provided:
+                run_number: int
+                    Run number.
 
         Returns
         -------
@@ -66,8 +70,10 @@ class CorsikaSimtelRunner(CorsikaRunner, SimtelRunnerArray):
 
         Parameters
         ----------
-        run_number: int
-            Run number.
+        kwargs: dict
+            The following optional parameters can be provided:
+                run_number: int
+                    Run number.
 
         Returns
         -------
