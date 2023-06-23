@@ -135,17 +135,17 @@ def test_guess_run_from_file(array_simulator):
 
 def test_set_simulator(array_simulator, shower_simulator, shower_array_simulator):
 
-    array_simulator._set_simulator("simtel")
+    array_simulator.simulator = "simtel"
     assert array_simulator.simulator == "simtel"
 
-    shower_simulator._set_simulator("corsika")
+    shower_simulator.simulator = "corsika"
     assert shower_simulator.simulator == "corsika"
 
-    shower_array_simulator._set_simulator("corsika_simtel")
+    shower_array_simulator.simulator = "corsika_simtel"
     assert shower_array_simulator.simulator == "corsika_simtel"
 
     with pytest.raises(gen.InvalidConfigData):
-        shower_simulator._set_simulator("this_simulator_is_not_there")
+        shower_simulator.simulator = "this_simulator_is_not_there"
 
 
 def test_load_configuration_and_simulation_model(array_simulator):
