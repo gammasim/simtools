@@ -1,5 +1,6 @@
 import copy
 import logging
+from pathlib import Path
 
 import astropy.units as u
 import numpy as np
@@ -64,6 +65,8 @@ class CorsikaConfig:
         data/parameters/corsika_parameters.yml will be used.
     corsika_parameters_file: str
         Name of the yaml file to set remaining CORSIKA parameters.
+    simtel_source_path: str or Path
+        Location of source of the sim_telarray/CORSIKA package.
     """
 
     def __init__(
@@ -75,6 +78,7 @@ class CorsikaConfig:
         corsika_config_data=None,
         corsika_config_file=None,
         corsika_parameters_file=None,
+        simtel_source_path=None,
     ):
         """
         Initialize CorsikaConfig.
@@ -88,6 +92,7 @@ class CorsikaConfig:
         self.primary = None
         self._config_file_path = None
         self._output_generic_file_name = None
+        self._simtel_source_path = simtel_source_path
 
         self.io_handler = io_handler.IOHandler()
 
@@ -336,9 +341,19 @@ class CorsikaConfig:
         for par, value in self._user_parameters.items():
             print(f"{par} = {value}")
 
-    def export_input_file(self):
-        """Create and export CORSIKA input file."""
-        self._set_output_file_and_directory()
+    def export_input_file(self, use_multipipe=False):
+        """
+        Create and export CORSIKA input file.
+
+        Parameters
+        ----------
+        use_multipipe: bool
+            Whether to set the CORSIKA Inputs file to pipe
+            the output directly to sim_telarray or not.
+        """
+
+        dir_type = "corsika_simtel" if use_multipipe else "corsika"
+        self._set_output_file_and_directory(dir_type)
         self._logger.debug(f"Exporting CORSIKA input file to {self._config_file_path}")
 
         def _get_text_single_line(pars):
@@ -405,7 +420,11 @@ class CorsikaConfig:
             file.write(text_debugging)
 
             file.write("\n* [ OUTUPUT FILE ]\n")
-            file.write(f"TELFIL {self._output_generic_file_name}\n")
+            if use_multipipe:
+                run_cta_script = Path(self._config_file_path.parent).joinpath("run_cta_multipipe")
+                file.write(f"TELFIL |{str(run_cta_script)}\n")
+            else:
+                file.write(f"TELFIL {self._output_generic_file_name}\n")
 
             file.write("\n* [ IACT TUNING PARAMETERS ]\n")
             text_iact = _get_text_multiple_lines(self._corsika_parameters["IACT_TUNING_PARAMETERS"])
@@ -437,6 +456,8 @@ class CorsikaConfig:
                 Get a general CORSIKA config inputs file.
             for file_type="output_generic"
                 Get a generic file name for the TELFIL option in the CORSIKA inputs file.
+            for file_type="multipipe"
+                Get a multipipe "file name" for the TELFIL option in the CORSIKA inputs file.
 
         Raises
         ------
@@ -470,14 +491,16 @@ class CorsikaConfig:
                 f"_{self.site}_{self.layout_name}{file_label}.zst"
             )
             return file_name
+        if file_type == "multipipe":
+            return f"multi_cta-{self.site}-{self.layout_name}.cfg"
 
         raise ValueError(f"The requested file type ({file_type}) is unknown")
 
-    def _set_output_file_and_directory(self):
+    def _set_output_file_and_directory(self, dir_type="corsika"):
         config_file_name = self.get_file_name(file_type="config")
-        file_directory = self.io_handler.get_output_directory(label=self.label, dir_type="corsika")
-        file_directory.mkdir(parents=True, exist_ok=True)
+        file_directory = self.io_handler.get_output_directory(label=self.label, dir_type=dir_type)
         self._logger.info(f"Creating directory {file_directory}, if needed.")
+        file_directory.mkdir(parents=True, exist_ok=True)
         self._config_file_path = file_directory.joinpath(config_file_name)
 
         self._output_generic_file_name = self.get_file_name(file_type="output_generic")
@@ -498,7 +521,7 @@ class CorsikaConfig:
         for s in corsika_seeds:
             file.write(f"SEED {s} 0 0\n")
 
-    def get_input_file(self):
+    def get_input_file(self, use_multipipe=False):
         """
         Get the full path of the CORSIKA input file.
 
@@ -508,5 +531,5 @@ class CorsikaConfig:
             Full path of the CORSIKA input file.
         """
         if not self._is_file_updated:
-            self.export_input_file()
+            self.export_input_file(use_multipipe)
         return self._config_file_path
