@@ -47,10 +47,28 @@ dependencies = [
 ]
 
 [project.urls]
-"documentation" = "https://gammasim.github.io/gammasim-tools/"
-"repository" = "https://github.com/gammasim/gammasim-tools"
-"bug tracker" = "https://github.com/gammasim/gammasim-tools/issues"
+"documentation" = "https://gammasim.github.io/simtools/"
+"repository" = "https://github.com/gammasim/simtools"
+"bug tracker" = "https://github.com/gammasim/simtools/issues"
 
 [project.scripts]
+simtools-add-file-to-db = "simtools.applications.add_file_to_db:main"
+simtools-compare-cumulative-psf = "simtools.applications.compare_cumulative_psf:main"
+simtools-db-development-tools = "simtools.applications.db_development_tools:main"
+simtools-derive-mirror-rnda = "simtools.applications.derive_mirror_rnda:main"
+simtools-get-file-from-db = "simtools.applications.get_file_from_db:main"
+simtools-get-parameter = "simtools.applications.get_parameter:main"
+simtools-make-regular-arrays = "simtools.applications.make_regular_arrays:main"
+simtools-plot-layout-array = "simtools.applications.plot_layout_array:main"
+simtools-plot-simtel-histograms = "simtools.applications.plot_simtel_histograms:main"
 simtools-print-array-elements = "simtools.applications.print_array_elements:main"
+simtools-produce-array-config = "simtools.applications.produce_array_config:main"
+simtools-production = "simtools.applications.production:main"
+simtools-sim_showers-for-trigger-rates = "simtools.applications.sim_showers_for_trigger_rates:main"
+simtools-simulate-prod = "simtools.applications.simulate_prod:main"
+simtools-submit-data-from-external = "simtools.applications.submit_data_from_external:main"
+simtools-tune-psf = "simtools.applications.tune_psf:main"
+simtools-validate-camera-efficiency = "simtools.applications.validate_camera_efficiency:main"
+simtools-validate-camera-fov = "simtools.applications.validate_camera_fov:main"
+simtools-validate-optics = "simtools.applications.validate_optics:main"
 [tool.setuptools.packages.find]
