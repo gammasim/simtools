@@ -100,7 +100,7 @@ class CorsikaOutput:
 
         if self._version is None:
             all_corsika_versions = list(run_header.run_header_types.keys())
-            header = np.array(list(self.iact_file.header))
+            header = list(self.iact_file.header)
 
             for i_version in reversed(all_corsika_versions):
                 # Get the event header for this software version being tested.
@@ -111,10 +111,10 @@ class CorsikaOutput:
                 )[0]
 
                 # Check if version tested is the same as the version written in the file header.
-                if i_version == np.trunc(float(header[version_index_position]) * 10) / 10:
+                if i_version == np.trunc(float(header[version_index_position[0]]) * 10) / 10:
                     # If the version found is the same as the initial guess, leave the loop,
                     # otherwise, iterate until we find the correct version.
-                    self._version = np.around(float(header[version_index_position]), 3)
+                    self._version = np.around(float(header[version_index_position[0]]), 3)
                     break
         return self._version
 
