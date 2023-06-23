@@ -41,7 +41,7 @@ class SchemaValidator:
             be validated (might also be given as
             dictionary during initialization of the class).
         lower_case: bool
-            compare schema keys in lower case only (gammasim-tools convention).
+            compare schema keys in lower case only (simtools convention).
 
         Returns
         -------
