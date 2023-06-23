@@ -1,5 +1,7 @@
 import logging
 
+_logger = logging.getLogger(__name__)
+
 __all__ = [
     "camera_efficiency_log_file_name",
     "camera_efficiency_results_file_name",
@@ -165,7 +167,6 @@ def validate_telescope_id_name(name):
     if name == "D" or name.isdigit():
         return name
 
-    _logger = logging.getLogger(__name__)
     msg = f"Invalid telescope ID name {name}"
     _logger.error(msg)
     raise ValueError(msg)
@@ -260,8 +261,6 @@ def validate_name(name, all_names):
     ValueError
         If name is not valid.
     """
-
-    _logger = logging.getLogger(__name__)
 
     if not is_valid_name(name, all_names):
         msg = f"Invalid name {name}"
@@ -799,7 +798,6 @@ def translate_corsika_to_simtools(corsika_par):
     try:
         return corsika_to_simtools_names[corsika_par]
     except KeyError:
-        _logger = logging.getLogger(__name__)
         msg = f"Translation not found. We will proceed with the original parameter name:\
             {corsika_par}."
         _logger.debug(msg)
@@ -822,7 +820,6 @@ def translate_simtools_to_corsika(simtools_par):
     try:
         return simtools_to_corsika_names[simtools_par]
     except KeyError:
-        _logger = logging.getLogger(__name__)
         msg = f"Translation not found. We will proceed with the original parameter name:\
             {simtools_par}."
         _logger.debug(msg)
