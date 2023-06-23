@@ -18,7 +18,7 @@ default:
     phi: 0 deg
 
 proton:
-  viewcone: [10 deg, 10 deg]
+  viewcone: [0 deg, 10 deg]
   showers:
     run_range: [1, 20]
     nshow: 10000

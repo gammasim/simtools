@@ -7,7 +7,7 @@ __all__ = ["SimtelConfigWriter"]
 
 class SimtelConfigWriter:
     """
-    SimtelConfigWriter writes sim_telarray configuration files. It is designed to be used by model\
+    SimtelConfigWriter writes sim_telarray configuration files. It is designed to be used by model
     classes (TelescopeModel and ArrayModel) only.
 
     Parameters
