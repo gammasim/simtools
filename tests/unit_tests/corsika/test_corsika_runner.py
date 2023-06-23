@@ -29,13 +29,13 @@ def corsika_config_data():
 
 
 @pytest.fixture
-def corsika_runner(corsika_config_data, io_handler, simtel_path, db_config):
+def corsika_runner(corsika_config_data, io_handler, simtel_path_no_mock, db_config):
 
     corsika_runner = CorsikaRunner(
         mongo_db_config=db_config,
         site="south",
         layout_name="test-layout",
-        simtel_source_path=simtel_path,
+        simtel_source_path=simtel_path_no_mock,
         label="test-corsika-runner",
         corsika_config_data=corsika_config_data,
     )
@@ -50,32 +50,60 @@ def corsika_file(io_handler):
     return corsika_file
 
 
-def test_get_run_script(corsika_runner):
+def test_prepare_run_script(corsika_runner):
     # No run number is given
 
-    script = corsika_runner.get_run_script()
+    script = corsika_runner.prepare_run_script()
 
     assert script.exists()
+    with open(script, "r") as f:
+        script_content = f.read()
+        assert "/usr/bin/bash" in script_content
+        assert "corsika_autoinputs" in script_content
+        assert "sim_telarray/bin/pfp" in script_content
 
     # Run number is given
     run_number = 3
-    script = corsika_runner.get_run_script(run_number=run_number)
+    script = corsika_runner.prepare_run_script(run_number=run_number)
 
     assert script.exists()
+    with open(script, "r") as f:
+        script_content = f.read()
+        assert "/usr/bin/bash" in script_content
+        assert "corsika_autoinputs" in script_content
+        assert "sim_telarray/bin/pfp" in script_content
+        assert "-R 3" in script_content
 
 
-def test_get_run_script_with_invalid_run(corsika_runner):
+def test_prepare_run_script_with_invalid_run(corsika_runner):
     for run in [-2, "test"]:
         with pytest.raises(ValueError):
-            _ = corsika_runner.get_run_script(run_number=run)
+            _ = corsika_runner.prepare_run_script(run_number=run)
 
 
-def test_run_script_with_extra(corsika_runner):
+def test_prepare_run_script_with_extra(corsika_runner):
 
     extra = ["testing", "testing-extra-2"]
-    script = corsika_runner.get_run_script(run_number=3, extra_commands=extra)
+    script = corsika_runner.prepare_run_script(run_number=3, extra_commands=extra)
 
     assert gen.file_has_text(script, "testing-extra-2")
+    with open(script, "r") as f:
+        script_content = f.read()
+        assert "/usr/bin/bash" in script_content
+        assert "corsika_autoinputs" in script_content
+        assert "sim_telarray/bin/pfp" in script_content
+
+
+def test_prepare_run_script_without_pfp(corsika_runner):
+
+    script = corsika_runner.prepare_run_script(use_pfp=False)
+
+    assert script.exists()
+    with open(script, "r") as f:
+        script_content = f.read()
+        assert "/usr/bin/bash" in script_content
+        assert "corsika_autoinputs" in script_content
+        assert "sim_telarray/bin/pfp" not in script_content
 
 
 def test_get_info_for_file_name(corsika_runner):
