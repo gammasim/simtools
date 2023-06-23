@@ -30,7 +30,7 @@
     .. code-block:: console
 
         INFO::layout_array(l608)::export_telescope_list::Exporting telescope list to /workdir/exter\
-        nal/simtools/simtools-output/make_regular_arrays/layout/telescope_positions-North-4LS\
+        nal/gammasim-tools/simtools-output/make_regular_arrays/layout/telescope_positions-North-4LS\
         T-corsika.ecsv
 """
 

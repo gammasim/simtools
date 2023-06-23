@@ -1,7 +1,7 @@
-.. _simtools:
+.. _gammasimtools:
 
 ==============
-simtools
+gammasim-tools
 ==============
 
 Prototype implementation of tools for the Simulation Pipeline of the `CTA Observatory <www.cta-observatory.org>`_:
@@ -11,16 +11,16 @@ Prototype implementation of tools for the Simulation Pipeline of the `CTA Observ
 * standardized interfaces and data products independent of the underlying simulation software (e.g., `CORSIKA <https://www.iap.kit.edu/corsika/>`_, `sim_telarray <https://www.mpi-hd.mpg.de/hfm/~bernlohr/sim_telarray/>`_);
 * I/O and reporting tools for the MC simulation model parameter and production database.
 
-simtools is one part of the CTAO Simulation Pipeline, which consist of the following components:
+gammasim-tools is one part of the CTAO Simulation Pipeline, which consist of the following components:
 
 - `CORSIKA <https://www.iap.kit.edu/corsika/>`_ air shower simulation code and the `sim_telarray <https://www.mpi-hd.mpg.de/hfm/~bernlohr/sim_telarray/>`_ telescope simulation code.
-- simtools for tools and application for model parameter and configuration management, database interfaces, validation, and production preparations.
+- gammasim-tools for tools and application for model parameter and configuration management, database interfaces, validation, and production preparations.
 - databases, especially the model parameter database.
 
 This code is under rapid development. Please contact the developers if you want to use it.
 
-- Code: https://github.com/gammasim/simtools
-- Documentation: https://gammasim.github.io/simtools/
+- Code: https://github.com/gammasim/gammasim-tools
+- Documentation: https://gammasim.github.io/gammasim-tools/
 - Model database access: contact developers.
 
 Authors
@@ -32,7 +32,7 @@ Citing this Software
 ====================
 
 Please cite this software if you use it for a publication.
-Please cite the `Zenodo record <https://doi.org/10.5281/zenodo.6346696>`_, see the `CITATION.cff <https://github.com/gammasim/simtools/blob/master/CITATION.cff>`_ file.
+Please cite the `Zenodo record <https://doi.org/10.5281/zenodo.6346696>`_, see the `CITATION.cff <https://github.com/gammasim/gammasim-tools/blob/master/CITATION.cff>`_ file.
 
 Documentation
 =============
@@ -42,7 +42,7 @@ Documentation
   :glob:
 
   getting_started
-  simtools-configuration
+  gammasim-tools-configuration
   applications
   library
   auxiliary_files
