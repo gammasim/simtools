@@ -17,7 +17,7 @@ simtools
 .. image:: https://app.codacy.com/project/badge/Grade/717d4dc06dfa45d3ad0d61499ffc0e2e
    :target: https://www.codacy.com/gh/gammasim/simtools/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=gammasim/gammasim-tools&amp;utm_campaign=Badge_Grade
 
-.. image:: https://codecov.io/gh/gammasim/simtools/branch/master/graph/badge.svg?token=AYAIRPARCH
+.. image:: https://codecov.io/gh/gammasim/simtools/branch/main/graph/badge.svg?token=AYAIRPARCH
    :target: https://codecov.io/gh/gammasim/simtools
 
 
@@ -52,7 +52,7 @@ Citing this Software
 ====================
 
 Please cite this software if you use it for a publication.
-Please cite the `Zenodo record <https://doi.org/10.5281/zenodo.6346696>`_, see the `CITATION.cff <https://github.com/gammasim/simtools/blob/master/CITATION.cff>`_ file.
+Please cite the `Zenodo record <https://doi.org/10.5281/zenodo.6346696>`_, see the `CITATION.cff <https://github.com/gammasim/simtools/blob/main/CITATION.cff>`_ file.
 
 INSTALLATION:
 =============
