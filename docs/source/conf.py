@@ -139,7 +139,7 @@ pygments_style = "sphinx"
 # a list of builtin themes.
 #
 # html_theme = "sphinx_rtd_theme"
-html_theme = "classic"
+html_theme = "bizstyle"
 
 html_title = f"{project} v{version} Manual"
 
@@ -235,7 +235,7 @@ texinfo_documents = [
 # -- Options for intersphinx extension ---------------------------------------
 
 # Example configuration for intersphinx: refer to the Python standard library.
-# intersphinx_mapping = {"https://docs.python.org/": None}
+intersphinx_mapping = {'python': ('https://docs.python.org/3', None)}
 
 
 # -- Raul: making sphinx add classes' __init__ always
