@@ -91,7 +91,7 @@
     .. code-block:: console
 
         INFO::array_model(l361)::export_simtel_array_config_file::Writing array config file into \
-        /workdir/external/simtools/simtools-output/test/model/CTA-TestLayout-North-2020-06-\
+        /workdir/external/gammasim-tools/simtools-output/test/model/CTA-TestLayout-North-2020-06-\
         28_test.cfg
 """
 

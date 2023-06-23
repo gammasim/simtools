@@ -1,5 +1,5 @@
-# A conda environment with all useful package for simtools developers
-name: simtools-dev
+# A conda environment with all useful package for gammasim-tools developers
+name: gammasim-tools-dev
 channels:
   - conda-forge
 dependencies:
@@ -18,10 +18,11 @@ dependencies:
   - sphinx
   - sphinx_rtd_theme
   - pyproj
+  - zstandard
   - conda-forge::eventio>=1.5.0
   - pyflakes
 
 # cheatsheet
 # create: conda env create -f environment.yml
-# activate: conda activate simtools-dev
+# activate: conda activate gammasim-tools-dev
 # update: conda env update -f environment.yml --prune
