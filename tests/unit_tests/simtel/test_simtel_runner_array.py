@@ -55,7 +55,7 @@ def corsika_file(io_handler):
 
 
 def test_run_script(simtel_runner, corsika_file):
-    script = simtel_runner.get_run_script(run_number=1, input_file=corsika_file)
+    script = simtel_runner.prepare_run_script(run_number=1, input_file=corsika_file)
     assert Path(script).exists()
 
 

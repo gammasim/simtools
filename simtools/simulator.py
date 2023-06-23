@@ -10,6 +10,7 @@ import numpy as np
 import simtools.util.general as gen
 from simtools import io_handler
 from simtools.corsika.corsika_runner import CorsikaRunner
+from simtools.corsika_simtel.corsika_simtel_runner import CorsikaSimtelRunner
 from simtools.job_execution.job_manager import JobManager
 from simtools.model.array_model import ArrayModel
 from simtools.simtel.simtel_histograms import SimtelHistograms
@@ -115,7 +116,7 @@ class Simulator:
         self._logger.debug(f"Init Simulator {simulator}")
 
         self.label = label
-        self._set_simulator(simulator)
+        self.simulator = simulator
         self.runs = list()
         self._results = defaultdict(list)
         self.test = test
@@ -139,14 +140,21 @@ class Simulator:
 
         self._set_simulation_runner()
 
-    def _set_simulator(self, simulator):
+    @property
+    def simulator(self):
+        """The attribute simulator"""
+        return self._simulator
+
+    @simulator.setter
+    def simulator(self, simulator):
         """
         Set and test simulator type
 
         Parameters
         ----------
-        simulator: choices: [simtel, corsika]
-            implemented are sim_telarray and CORSIKA
+        simulator: choices: [simtel, corsika, corsika_simtel]
+            implemented are sim_telarray and CORSIKA or corsika_simtel
+            (running CORSIKA and piping it directly to sim_telarray)
 
         Raises
         ------
@@ -154,9 +162,9 @@ class Simulator:
 
         """
 
-        if simulator not in ["simtel", "corsika"]:
+        if simulator not in ["simtel", "corsika", "corsika_simtel"]:
             raise gen.InvalidConfigData
-        self.simulator = simulator.lower()
+        self._simulator = simulator.lower()
 
     def _load_configuration_and_simulation_model(self, config_data=None, config_file=None):
         """
@@ -171,10 +179,13 @@ class Simulator:
 
         """
         config_data = gen.collect_data_from_yaml_or_dict(config_file, config_data)
+        if self.simulator == "corsika":
+            self._load_corsika_config_and_model(config_data)
         if self.simulator == "simtel":
             self._load_sim_tel_config_and_model(config_data)
-        elif self.simulator == "corsika":
+        if self.simulator == "corsika_simtel":
             self._load_corsika_config_and_model(config_data)
+            self._load_sim_tel_config_and_model(config_data)
 
     def _load_corsika_config_and_model(self, config_data):
         """
@@ -208,6 +219,12 @@ class Simulator:
             "corsika_parameters_file", None
         )
 
+        # Remove sim_telarray parameters from the CORSIKA config dictionary
+        # TODO - Replace this with a more elegant solution!
+        tel_keys = [k for k in self._corsika_config_data.keys() if k[1:4] in ["ST-", "CT-"]]
+        for key in ["model_version", "default"] + tel_keys:
+            self._corsika_config_data.pop(key, None)
+
     def _load_sim_tel_config_and_model(self, config_data):
         """
         Load array model and configuration parameters for array simulations
@@ -224,7 +241,7 @@ class Simulator:
             "parameters", "array-simulator_parameters.yml"
         )
         _parameters = gen.collect_data_from_yaml_or_dict(_parameter_file, None)
-        self.config = gen.validate_config_data(_rest_config, _parameters)
+        self.config = gen.validate_config_data(_rest_config, _parameters, ignore_unidentified=True)
 
         self.array_model = ArrayModel(
             label=self.label,
@@ -256,6 +273,8 @@ class Simulator:
 
         validated_runs = list()
         if run_list is not None:
+            if not isinstance(run_list, list):
+                run_list = [run_list]
             if not all(isinstance(r, int) for r in run_list):
                 msg = "run_list must contain only integers."
                 self._logger.error(msg)
@@ -313,42 +332,55 @@ class Simulator:
         Set simulation runners
 
         """
+        common_args = {
+            "label": self.label,
+            "simtel_source_path": self._simulator_source_path,
+        }
+        corsika_args = {
+            "mongo_db_config": self._mongo_db_config,
+            "site": self.site,
+            "layout_name": self.layout_name,
+            "corsika_parameters_file": self._corsika_parameters_file,
+            "corsika_config_data": self._corsika_config_data,
+        }
+        # TODO: This is not very elegant, find a nicer solution?
+        if self.simulator in ["simtel", "corsika_simtel"]:
+            simtel_args = {
+                "array_model": self.array_model,
+                "config_data": {
+                    "simtel_data_directory": self.config.data_directory,
+                    "primary": self.config.primary,
+                    "zenith_angle": self.config.zenith_angle * u.deg,
+                    "azimuth_angle": self.config.azimuth_angle * u.deg,
+                },
+            }
+        if self.simulator == "corsika":
+            self._set_corsika_runner(common_args | corsika_args)
         if self.simulator == "simtel":
-            self._set_simtel_runner()
-        elif self.simulator == "corsika":
-            self._set_corsika_runner()
+            self._set_simtel_runner(common_args | simtel_args)
+        if self.simulator == "corsika_simtel":
+            self._set_corsika_simtel_runner(common_args, corsika_args, simtel_args)
 
-    def _set_corsika_runner(self):
+    def _set_corsika_runner(self, simulator_args):
         """
         Creating CorsikaRunner.
 
         """
-        self._simulation_runner = CorsikaRunner(
-            mongo_db_config=self._mongo_db_config,
-            label=self.label,
-            site=self.site,
-            layout_name=self.layout_name,
-            simtel_source_path=self._simulator_source_path,
-            corsika_parameters_file=self._corsika_parameters_file,
-            corsika_config_data=self._corsika_config_data,
-        )
+        self._simulation_runner = CorsikaRunner(**simulator_args)
 
-    def _set_simtel_runner(self):
+    def _set_simtel_runner(self, simulator_args):
         """
         Creating a SimtelRunnerArray.
 
         """
-        self._simulation_runner = SimtelRunnerArray(
-            label=self.label,
-            array_model=self.array_model,
-            simtel_source_path=self._simulator_source_path,
-            config_data={
-                "simtel_data_directory": self.config.data_directory,
-                "primary": self.config.primary,
-                "zenith_angle": self.config.zenith_angle * u.deg,
-                "azimuth_angle": self.config.azimuth_angle * u.deg,
-            },
-        )
+        self._simulation_runner = SimtelRunnerArray(**simulator_args)
+
+    def _set_corsika_simtel_runner(self, common_args, corsika_args, simtel_args):
+        """
+        Creating CorsikaRunner.
+
+        """
+        self._simulation_runner = CorsikaSimtelRunner(common_args, corsika_args, simtel_args)
 
     def _fill_results_without_run(self, input_file_list):
         """
@@ -383,11 +415,14 @@ class Simulator:
         runs_and_files_to_submit = self._get_runs_and_files_to_submit(
             input_file_list=input_file_list
         )
-        self._logger.info(f"Starting submission for {len(runs_and_files_to_submit)} runs")
+        self._logger.info(
+            f"Starting submission for {len(runs_and_files_to_submit)} "
+            f"run{'s' if len(runs_and_files_to_submit) > 1 else ''}"
+        )
 
         for run, file in runs_and_files_to_submit.items():
 
-            run_script = self._simulation_runner.get_run_script(
+            run_script = self._simulation_runner.prepare_run_script(
                 run_number=run, input_file=file, extra_commands=self._extra_commands
             )
 
@@ -450,7 +485,7 @@ class Simulator:
             _file_list = self._enforce_list_type(input_file_list)
             for file in _file_list:
                 _runs_and_files[self._guess_run_from_file(file)] = file
-        elif self.simulator == "corsika":
+        if self.simulator in ["corsika", "corsika_simtel"]:
             _run_list = self._get_runs_to_simulate()
             for run in _run_list:
                 _runs_and_files[run] = None
@@ -517,7 +552,7 @@ class Simulator:
         self._results["log"].append(
             str(self._simulation_runner.get_file_name(file_type="log", **info_for_file_name))
         )
-        if self.simulator == "simtel":
+        if self.simulator in ["simtel", "corsika_simtel"]:
             self._results["input"].append(str(file))
             self._results["hist"].append(
                 str(
@@ -547,7 +582,7 @@ class Simulator:
 
         fig_name = None
 
-        if self.simulator == "simtel":
+        if self.simulator in ["simtel", "corsika_simtel"]:
             if len(self._results["hist"]) == 0 and input_file_list is not None:
                 self._fill_results_without_run(input_file_list)
 

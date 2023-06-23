@@ -85,6 +85,7 @@ class CorsikaRunner:
         corsika_parameters_file=None,
         corsika_config_data=None,
         corsika_config_file=None,
+        use_multipipe=False,
     ):
         """
         CorsikaRunner init.
@@ -99,19 +100,21 @@ class CorsikaRunner:
 
         self._keep_seeds = keep_seeds
 
-        self._simtel_source_path = simtel_source_path
+        self._simtel_source_path = Path(simtel_source_path)
         self.io_handler = io_handler.IOHandler()
-        self._output_directory = self.io_handler.get_output_directory(self.label, "corsika")
+        _runner_directory = "corsika_simtel" if use_multipipe else "corsika"
+        self._output_directory = self.io_handler.get_output_directory(self.label, _runner_directory)
         self._logger.debug(f"Creating output dir {self._output_directory}, if needed,")
 
         corsika_config_data = collect_data_from_yaml_or_dict(
             corsika_config_file, corsika_config_data
         )
-        self._load_corsika_config_data(mongo_db_config, corsika_config_data)
+        self._load_corsika_config_data(corsika_config_data)
+        self._define_corsika_config(mongo_db_config, use_multipipe)
 
         self._load_corsika_data_directories()
 
-    def _load_corsika_config_data(self, mongo_db_config, corsika_config_data):
+    def _load_corsika_config_data(self, corsika_config_data):
         """Reads corsika_config_data, creates corsika_config and corsika_input_file."""
 
         corsika_data_directory_from_config = corsika_config_data.get("data_directory", None)
@@ -134,8 +137,12 @@ class CorsikaRunner:
         self._corsika_config_data = copy(corsika_config_data)
         self._corsika_config_data.pop("data_directory", None)
 
-        # Creating corsika_config - this will also validate the input given
-        # in corsika_config_data
+    def _define_corsika_config(self, mongo_db_config, use_multipipe=False):
+        """
+        Create the CORSIKA config instance.
+        This validates the input given in corsika_config_data as well.
+        """
+
         try:
             self.corsika_config = CorsikaConfig(
                 mongo_db_config=mongo_db_config,
@@ -143,9 +150,10 @@ class CorsikaRunner:
                 label=self.label,
                 layout_name=self.layout_name,
                 corsika_config_data=self._corsika_config_data,
+                simtel_source_path=self._simtel_source_path,
             )
             # CORSIKA input file used as template for all runs
-            self._corsika_input_file = self.corsika_config.get_input_file()
+            self._corsika_input_file = self.corsika_config.get_input_file(use_multipipe)
         except MissingRequiredInputInCorsikaConfigData:
             msg = "corsika_config_data is missing required entries."
             self._logger.error(msg)
@@ -164,16 +172,20 @@ class CorsikaRunner:
         self._corsika_log_dir = corsika_base_dir.joinpath("log")
         self._corsika_log_dir.mkdir(parents=True, exist_ok=True)
 
-    def get_run_script(self, **kwargs):
+    def prepare_run_script(self, use_pfp=True, **kwargs):
         """
         Get the full path of the run script file for a given run number.
 
         Parameters
         ----------
-        run_number: int
-            Run number.
-        extra_commands: str
-            Additional commands for running simulations.
+        use_pfp: bool
+            Whether to use the preprocessor in preparing the CORSIKA input file
+        kwargs: dict
+            The following optional parameters can be provided:
+                run_number: int
+                    Run number.
+                extra_commands: str
+                    Additional commands for running simulations.
 
         Returns
         -------
@@ -197,7 +209,8 @@ class CorsikaRunner:
         )
         corsika_input_tmp_file = self._corsika_input_dir.joinpath(corsika_input_tmp_name)
 
-        pfp_command = self._get_pfp_command(corsika_input_tmp_file)
+        if use_pfp:
+            pfp_command = self._get_pfp_command(corsika_input_tmp_file)
         autoinputs_command = self._get_autoinputs_command(run_number, corsika_input_tmp_file)
 
         extra_commands = kwargs["extra_commands"]
@@ -219,8 +232,12 @@ class CorsikaRunner:
             file.write("\n# Creating CORSIKA_DATA\n")
             file.write(f"mkdir -p {self._corsika_data_dir}\n")
             file.write(f"cd {self._corsika_data_dir} || exit 2\n")
-            file.write("\n# Running pfp\n")
-            file.write(pfp_command)
+            if use_pfp:
+                file.write("\n# Running pfp\n")
+                file.write(pfp_command)
+            else:
+                file.write("\n# Copying CORSIKA input file to run location\n")
+                file.write(f"cp {self._corsika_input_file} {corsika_input_tmp_file}")
             file.write("\n# Running corsika_autoinputs\n")
             file.write(autoinputs_command)
 

@@ -11,7 +11,7 @@ from astropy.coordinates.errors import UnitsError
 from astropy.io.misc import yaml
 
 import simtools.util.general as gen
-from simtools.util.general import InvalidConfigEntry
+from simtools.util.general import InvalidConfigEntry, UnableToIdentifyConfigEntry
 
 logging.getLogger().setLevel(logging.DEBUG)
 
@@ -36,7 +36,7 @@ def test_collect_dict_data(args_dict, io_handler):
     assert d3 == d2
 
 
-def test_validate_config_data(args_dict, io_handler):
+def test_validate_config_data(args_dict, io_handler, caplog):
 
     parameter_file = io_handler.get_input_data_file(file_name="test_parameters.yml", test=True)
     parameters = gen.collect_data_from_yaml_or_dict(parameter_file, None)
@@ -50,7 +50,9 @@ def test_validate_config_data(args_dict, io_handler):
         "dict_par": {"blah": 10, "bleh": 5 * u.m},
     }
 
-    validated_data = gen.validate_config_data(config_data=config_data, parameters=parameters)
+    with caplog.at_level(logging.DEBUG):
+        validated_data = gen.validate_config_data(config_data=config_data, parameters=parameters)
+        assert "in config_data cannot be identified" not in caplog.text
 
     # Testing undefined len
     assert len(validated_data.off_axis_angle) == 3
@@ -63,6 +65,17 @@ def test_validate_config_data(args_dict, io_handler):
 
     # Testing dict par
     assert validated_data.dict_par["bleh"] == 500
+
+    with caplog.at_level(logging.DEBUG):
+        gen.validate_config_data(
+            config_data=config_data | {"test": "blah"},
+            parameters=parameters,
+            ignore_unidentified=True,
+        )
+        assert "in config_data cannot be identified" in caplog.text
+
+    with pytest.raises(UnableToIdentifyConfigEntry):
+        gen.validate_config_data(config_data=config_data | {"test": "blah"}, parameters=parameters)
 
 
 def test_check_value_entry_length():
