@@ -16,7 +16,7 @@ Project setup
 
 The main code repository for simtools is on GitHub:
 
-`https://github.com/gammasim/simtools <https://github.com/gammasim/gammasim-tools>`_
+`https://github.com/gammasim/simtools <https://github.com/gammasim/simtools>`_
 
 The main directories for developers are the
 `simtools <https://github.com/gammasim/simtools/tree/master/simtools>`_,
