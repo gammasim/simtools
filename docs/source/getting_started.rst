@@ -61,7 +61,7 @@ Create a conda virtual environment with the simtools dependencies installed:
 Install CORSIKA and sim_telarray
 ++++++++++++++++++++++++++++++++
 
-CORSIKA and sim_telarray are external tools to simtools and are used by several gammasim-tools applications.
+CORSIKA and sim_telarray are external tools to simtools and are used by several simtools applications.
 Follow the instruction provided by the CORSIKA/sim_telarray authors for installation.
 CTA users can download both packages from `here <https://www.mpi-hd.mpg.de/hfm/CTA/MC/Software/Testing/>`_ and install the package with e.g.:
 
@@ -115,14 +115,14 @@ Apptainer, Singularity, Buildah/Podman, etc should work, but are not thoroughly 
 Clone simtools
 ++++++++++++++++++++
 
-Clone simtools from GitHub into ``external/gammasim-tools``:
+Clone simtools from GitHub into ``external/simtools``:
 
 .. code-block::
 
     # create a working directory
     mkdir external
     # clone simtools repository
-    git clone https://github.com/gammasim/simtools.git external/gammasim-tools
+    git clone https://github.com/gammasim/simtools.git external/simtools
 
 +++++++++++++++++++++
 Spin-up the container
