@@ -19,10 +19,10 @@ The main code repository for simtools is on GitHub:
 `https://github.com/gammasim/simtools <https://github.com/gammasim/simtools>`_
 
 The main directories for developers are the
-`simtools <https://github.com/gammasim/simtools/tree/master/simtools>`_,
-`applications <https://github.com/gammasim/simtools/tree/master/applications>`_,
-`tests <https://github.com/gammasim/simtools/tree/master/tests>`_,
-and `docs <https://github.com/gammasim/simtools/tree/master/docs>`_ folders.
+`simtools <https://github.com/gammasim/simtools/tree/main/simtools>`_,
+`applications <https://github.com/gammasim/simtools/tree/main/applications>`_,
+`tests <https://github.com/gammasim/simtools/tree/main/tests>`_,
+and `docs <https://github.com/gammasim/simtools/tree/main/docs>`_ folders.
 
 
 Python version
@@ -45,7 +45,7 @@ It is recommended for developers to install ``pre-commit``:
     pre-commit install
 
 The configuration of ``pre-commit`` is defined in
-`.pre-commit-config.yaml <https://github.com/gammasim/simtools/blob/master/.pre-commit-config
+`.pre-commit-config.yaml <https://github.com/gammasim/simtools/blob/main/.pre-commit-config
 .yaml>`_.
 
 For testing, pre-commit can be applied locally without commit:
@@ -79,7 +79,7 @@ Testing
 
 pytest framework is used for unit testing.
 The test modules are located in
-`simtools/tests <https://github.com/gammasim/simtools/tree/master/tests>`_ modules separated
+`simtools/tests <https://github.com/gammasim/simtools/tree/main/tests>`_ modules separated
 by unit and integration tests.
 Every module should have a reasonable unit test, ideally all functions should be covered by tests.
 Applications should be tested using integration tests.
@@ -87,7 +87,7 @@ It is important to write the tests in parallel with the modules
 to assure that the code is testable.
 
 General service functions for tests (e.g., DB connection) can be found in
-`conftest.py <https://github.com/gammasim/simtools/blob/master/tests/conftest.py>`_.
+`conftest.py <https://github.com/gammasim/simtools/blob/main/tests/conftest.py>`_.
 This should be used to avoid duplication.
 
 
@@ -98,10 +98,10 @@ Documentation
 =============
 
 Sphinx is used to create this documentation from the files in the
-`docs <https://github.com/gammasim/simtools/tree/master/docs>`_ directory and from the
+`docs <https://github.com/gammasim/simtools/tree/main/docs>`_ directory and from the
 docstrings in the code.
-This is done automatically with each merge into the master branch, see the
-`GitHub Action workflow CI-docs <https://github.com/gammasim/simtools/blob/master/.github/
+This is done automatically with each merge into the main branch, see the
+`GitHub Action workflow CI-docs <https://github.com/gammasim/simtools/blob/main/.github/
 workflows/CI-docs.yml>`_.
 
 Docstrings following the Numpy style must be added to any public function, class or method.
@@ -190,7 +190,7 @@ Dependencies
 ============
 
 Dependencies on python packages are listed in the
-`environment file <https://github.com/gammasim/simtools/blob/master/environment.yml>`_.
+`environment file <https://github.com/gammasim/simtools/blob/main/environment.yml>`_.
 Some of the packages installed are used for the development only and not needed for executing
 simtools applications.
 
@@ -205,7 +205,7 @@ tools should be connected to the rest of the package through interfaces. This wa
 will be easier to replace these tools in the future.
 
 One example of this approach is
-`simulator module <https://github.com/gammasim/simtools/blob/master/simtools/simulator.py>`_,
+`simulator module <https://github.com/gammasim/simtools/blob/main/simtools/simulator.py>`_,
 which connects to the tools used to manage and run simulations.
 
 
@@ -216,7 +216,7 @@ Handling data files
 
 Data files should be kept outside of the simtools repository.
 Some auxiliary files can be found in the
-`data directory <https://github.com/gammasim/simtools/tree/master/data>`_.
+`data directory <https://github.com/gammasim/simtools/tree/main/data>`_.
 Note that this is under review and might go away in near future.
 
 
