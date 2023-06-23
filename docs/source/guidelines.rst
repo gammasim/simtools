@@ -3,10 +3,10 @@
 Developer Guidelines
 ********************
 
-This section provides help and guidelines for developers of gammasim-tools.
-If you want to contribute to gammasim-tools, please use one of the contact points listed at the
+This section provides help and guidelines for developers of simtools.
+If you want to contribute to simtools, please use one of the contact points listed at the
 entry page of this documentation. In general, please take note of the `ctapipe Development
-Guidelines <https://cta-observatory.github.io/ctapipe/development/index.html>`_. gammasim-tools
+Guidelines <https://cta-observatory.github.io/ctapipe/development/index.html>`_. simtools
 follows the same `style <https://cta-observatory.github.io/ctapipe/development/style-guide.html#>`_
 and `code guidelines <https://cta-observatory.github.io/ctapipe/development/code-guidelines.html>`_
 as `ctapipe <https://github.com/cta-observatory/ctapipe/>`_.
@@ -14,21 +14,21 @@ as `ctapipe <https://github.com/cta-observatory/ctapipe/>`_.
 Project setup
 =============
 
-The main code repository for gammasim-tools is on GitHub:
+The main code repository for simtools is on GitHub:
 
-`https://github.com/gammasim/gammasim-tools <https://github.com/gammasim/gammasim-tools>`_
+`https://github.com/gammasim/simtools <https://github.com/gammasim/gammasim-tools>`_
 
 The main directories for developers are the
-`simtools <https://github.com/gammasim/gammasim-tools/tree/master/simtools>`_,
-`applications <https://github.com/gammasim/gammasim-tools/tree/master/applications>`_,
-`tests <https://github.com/gammasim/gammasim-tools/tree/master/tests>`_,
-and `docs <https://github.com/gammasim/gammasim-tools/tree/master/docs>`_ folders.
+`simtools <https://github.com/gammasim/simtools/tree/master/simtools>`_,
+`applications <https://github.com/gammasim/simtools/tree/master/applications>`_,
+`tests <https://github.com/gammasim/simtools/tree/master/tests>`_,
+and `docs <https://github.com/gammasim/simtools/tree/master/docs>`_ folders.
 
 
 Python version
 ==============
 
-The gammasim-tools package is currently developed for Python 3.9.
+The simtools package is currently developed for Python 3.9.
 
 
 Code formatting
@@ -45,7 +45,7 @@ It is recommended for developers to install ``pre-commit``:
     pre-commit install
 
 The configuration of ``pre-commit`` is defined in
-`.pre-commit-config.yaml <https://github.com/gammasim/gammasim-tools/blob/master/.pre-commit-config
+`.pre-commit-config.yaml <https://github.com/gammasim/simtools/blob/master/.pre-commit-config
 .yaml>`_.
 
 For testing, pre-commit can be applied locally without commit:
@@ -79,7 +79,7 @@ Testing
 
 pytest framework is used for unit testing.
 The test modules are located in
-`simtools/tests <https://github.com/gammasim/gammasim-tools/tree/master/tests>`_ modules separated
+`simtools/tests <https://github.com/gammasim/simtools/tree/master/tests>`_ modules separated
 by unit and integration tests.
 Every module should have a reasonable unit test, ideally all functions should be covered by tests.
 Applications should be tested using integration tests.
@@ -87,7 +87,7 @@ It is important to write the tests in parallel with the modules
 to assure that the code is testable.
 
 General service functions for tests (e.g., DB connection) can be found in
-`conftest.py <https://github.com/gammasim/gammasim-tools/blob/master/tests/conftest.py>`_.
+`conftest.py <https://github.com/gammasim/simtools/blob/master/tests/conftest.py>`_.
 This should be used to avoid duplication.
 
 
@@ -98,10 +98,10 @@ Documentation
 =============
 
 Sphinx is used to create this documentation from the files in the
-`docs <https://github.com/gammasim/gammasim-tools/tree/master/docs>`_ directory and from the
+`docs <https://github.com/gammasim/simtools/tree/master/docs>`_ directory and from the
 docstrings in the code.
 This is done automatically with each merge into the master branch, see the
-`GitHub Action workflow CI-docs <https://github.com/gammasim/gammasim-tools/blob/master/.github/
+`GitHub Action workflow CI-docs <https://github.com/gammasim/simtools/blob/master/.github/
 workflows/CI-docs.yml>`_.
 
 Docstrings following the Numpy style must be added to any public function, class or method.
@@ -152,7 +152,7 @@ file ``./build/html/index.html``.
 Writing Applications
 ====================
 
-Applications are command lines tools that should be built off of the gammasim-tools library.
+Applications are command lines tools that should be built off of the simtools library.
 Application should not include complex algorithm, this should be done at the module level.
 
 All applications should follow the same structure:
@@ -190,22 +190,22 @@ Dependencies
 ============
 
 Dependencies on python packages are listed in the
-`environment file <https://github.com/gammasim/gammasim-tools/blob/master/environment.yml>`_.
+`environment file <https://github.com/gammasim/simtools/blob/master/environment.yml>`_.
 Some of the packages installed are used for the development only and not needed for executing
-gammasim-tools applications.
+simtools applications.
 
 
 Integration with CORSIKA and sim_telarray
 =========================================
 
-CORSIKA and sim_telarray are external tools to gammasim-tools.
+CORSIKA and sim_telarray are external tools to simtools.
 Their integration should be
 minimally coupled with the rest of the package. The modules that depend directly on these
 tools should be connected to the rest of the package through interfaces. This way, it
 will be easier to replace these tools in the future.
 
 One example of this approach is
-`simulator module <https://github.com/gammasim/gammasim-tools/blob/master/simtools/simulator.py>`_,
+`simulator module <https://github.com/gammasim/simtools/blob/master/simtools/simulator.py>`_,
 which connects to the tools used to manage and run simulations.
 
 
@@ -214,9 +214,9 @@ Handling data files
 
 .. warning:: Requires review
 
-Data files should be kept outside of the gammasim-tools repository.
+Data files should be kept outside of the simtools repository.
 Some auxiliary files can be found in the
-`data directory <https://github.com/gammasim/gammasim-tools/tree/master/data>`_.
+`data directory <https://github.com/gammasim/simtools/tree/master/data>`_.
 Note that this is under review and might go away in near future.
 
 
@@ -226,7 +226,7 @@ Naming
 Telescope Names
 ---------------
 
-The telescope names as used by gammasim-tools follow the pattern "Site-Class-Type", where:
+The telescope names as used by simtools follow the pattern "Site-Class-Type", where:
 
 * "Site" is either "North" or "South";
 * "Class" is either "LST", "MST", "SCT" or "SST";
