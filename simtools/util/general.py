@@ -76,7 +76,7 @@ def file_has_text(file, text):
         return True
 
 
-def validate_config_data(config_data, parameters):
+def validate_config_data(config_data, parameters, ignore_unidentified=False):
     """
     Validate a generic config_data dict by using the info
     given by the parameters dict. The entries will be validated
@@ -91,6 +91,9 @@ def validate_config_data(config_data, parameters):
         Input config data.
     parameters: dict
         Parameter information necessary for validation.
+    ignore_unidentified: bool
+        If set to True, unidentified parameters provided in config_data are ignored
+        and a debug message is printed. Otherwise, an unidentified parameter leads to an error.
 
     Raises
     ------
@@ -110,10 +113,10 @@ def validate_config_data(config_data, parameters):
     logger = logging.getLogger(__name__)
 
     # Dict to be filled and returned
-    out_data = dict()
+    out_data = {}
 
     if config_data is None:
-        config_data = dict()
+        config_data = {}
 
     # Collecting all entries given as in config_data.
     for key_data, value_data in config_data.items():
@@ -131,9 +134,12 @@ def validate_config_data(config_data, parameters):
 
         # Raising error for an unidentified input.
         if not is_identified:
-            msg = f"Entry {key_data} in config_data cannot be identified."
-            logger.error(msg)
-            raise UnableToIdentifyConfigEntry(msg)
+            msg = f"Entry {key_data} in config_data cannot be identified"
+            if ignore_unidentified:
+                logger.debug(f"{msg}, ignoring.")
+            else:
+                logger.error(f"{msg}, stopping.")
+                raise UnableToIdentifyConfigEntry(msg)
 
     # Checking for parameters with default option.
     # If it is not given, filling it with the default value.
@@ -146,9 +152,7 @@ def validate_config_data(config_data, parameters):
         elif "default" in par_info.keys() and par_info["default"] is None:
             out_data[par_name] = None
         else:
-            msg = (
-                f"Required entry in config_data {par_name} " + "was not given (there may be more)."
-            )
+            msg = f"Required entry in config_data {par_name} was not given (there may be more)."
             logger.error(msg)
             raise MissingRequiredConfigEntry(msg)
 
