@@ -180,10 +180,12 @@ class CorsikaRunner:
         ----------
         use_pfp: bool
             Whether to use the preprocessor in preparing the CORSIKA input file
-        run_number: int
-            Run number.
-        extra_commands: str
-            Additional commands for running simulations.
+        kwargs: dict
+            The following optional parameters can be provided:
+                run_number: int
+                    Run number.
+                extra_commands: str
+                    Additional commands for running simulations.
 
         Returns
         -------
