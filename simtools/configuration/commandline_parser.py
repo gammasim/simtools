@@ -197,20 +197,20 @@ class CommandLineParser(argparse.ArgumentParser):
 
         Parameters
         ----------
-        add_model_version: str
-            Model version.
-        add_telescope: str
-            Telescope model name (e.g. LST-1, SST-D, ...).
+        add_model_version: bool
+            Set to allow a simulation model argument.
+        add_telescope: bool
+            Set to allow a telescope name argument.
         """
 
         _job_group = self.add_argument_group("telescope model")
         _job_group.add_argument(
-            "--site", help="CTAO site (e.g. North, South)", type=self.site, required=False
+            "--site", help="CTAO site (e.g., North, South)", type=self.site, required=False
         )
         if add_telescope:
             _job_group.add_argument(
                 "--telescope",
-                help="telescope model name (e.g. LST-1, SST-D, ...)",
+                help="telescope model name (e.g., LST-1, SST-D, ...)",
                 type=self.telescope,
             )
         if add_model_version:
@@ -230,6 +230,11 @@ class CommandLineParser(argparse.ArgumentParser):
         ----------
         value: str
             site name
+
+        Returns
+        -------
+        str
+            Validated site name
 
         Raises
         ------
@@ -252,6 +257,11 @@ class CommandLineParser(argparse.ArgumentParser):
         ----------
         value: str
             telescope name
+
+        Returns
+        -------
+        str
+            Validated telescope name
 
         Raises
         ------
@@ -276,6 +286,11 @@ class CommandLineParser(argparse.ArgumentParser):
         value: float
             value provided through the command line
 
+        Returns
+        -------
+        float
+            Validated efficiency interval
+
         Raises
         ------
         argparse.ArgumentTypeError
@@ -288,3 +303,37 @@ class CommandLineParser(argparse.ArgumentParser):
             raise argparse.ArgumentTypeError(f"{value} outside of allowed [0,1] interval")
 
         return fvalue
+
+    @staticmethod
+    def zenith_angle(angle):
+        """
+        Argument parser type to check that the zenith angle provided is in the interval [0, 180].
+        We allow here zenith angles larger than 90 degrees in the improbable case
+        such simulations are requested. It is not guaranteed that the actual simulation software
+        supports such angles!
+
+        Parameters
+        ----------
+        angle: float
+            zenith angle to verify
+
+        Returns
+        -------
+        float
+            Validated zenith angle
+
+        Raises
+        ------
+        argparse.ArgumentTypeError
+            When angle is outside of the interval [0, 180]
+
+
+        """
+        fangle = float(angle)
+        if fangle < 0.0 or fangle > 180.0:
+            raise argparse.ArgumentTypeError(
+                f"The provided zenith angle, {angle:.1f}, "
+                "is outside of the allowed [0, 180] interval"
+            )
+
+        return fangle
