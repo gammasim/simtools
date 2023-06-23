@@ -11,7 +11,7 @@ Many simtools applications depend on access to this database; ask one of the dev
 
 Credentials for database access are passed on to simtools applications using environmental variables.
 For database access, copy \
-`set_DB_environ_template.sh <https://github.com/gammasim/simtools/blob/master/set_DB_environ_template.sh>`_ to a new file named ``set_DB_environ.sh``, and update it with the credentials:
+`set_DB_environ_template.sh <https://github.com/gammasim/simtools/blob/main/set_DB_environ_template.sh>`_ to a new file named ``set_DB_environ.sh``, and update it with the credentials:
 
 .. code-block::
 
