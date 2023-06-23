@@ -6,13 +6,13 @@ Applications
 
 Applications are python scripts built on the :ref:`Library` that execute a well defined task.
 Applications are the building blocks of Simulation System Workflows.
-Application scripts can be found in simtools/applications.
+Application scripts can be found in gammasim-tools/applications.
 
 Each application is configured as described in :ref:`Configuration`.
 The available arguments can be access by calling the ``python applications/<application name> --help``.
 
 Some applications require one or multiple file names as input in the command line. The system will
-first search on main simtools directory for these files, and in case it is not found, it will
+first search on main gammasim-tools directory for these files, and in case it is not found, it will
 search into the directories given by the config parameter *model_path*.
 
 Output files of applications are written to $output_path/$label, where

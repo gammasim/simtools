@@ -431,7 +431,7 @@ def convert_telescope_model_name_to_yaml(name):
 
 def simtools_instrument_name(site, telescope_class_name, sub_system_name, telescope_id_name):
     """
-    Instrument name following simtools naming convention
+    Instrument name following gammasim-tools naming convention
 
     Parameters
     ----------

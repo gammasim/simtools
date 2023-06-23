@@ -46,7 +46,7 @@
 
     .. code-block:: console
 
-        Saved camera plot in /workdir/external/simtools/simtools-output/validate_camera_fov\
+        Saved camera plot in /workdir/external/gammasim-tools/simtools-output/validate_camera_fov\
         /application-plots/validate_camera_fov_LST-1_pixel_layout.png
 
     .. todo::
