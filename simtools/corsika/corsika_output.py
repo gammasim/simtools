@@ -529,9 +529,9 @@ class CorsikaOutput:
         """
 
         hist_num = 0
-        for i_tel_info, photons_info in np.array(list(zip(self.telescope_positions, photons)))[
-            self.telescope_indices
-        ]:
+        for i_tel_info, photons_info in np.array(
+            list(zip(self.telescope_positions, photons)), dtype=object
+        )[self.telescope_indices]:
 
             if rotation_around_z_axis is None or rotation_around_y_axis is None:
                 photon_x, photon_y = photons_info["x"], photons_info["y"]
