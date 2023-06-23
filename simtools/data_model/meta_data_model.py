@@ -1,5 +1,5 @@
 """
-Definition of metadata model for input to and output of gammasim-tools.
+Definition of metadata model for input to and output of simtools.
 Follows CTA top-level data model definition.
 Metadata is broken into hierarchical categories in this module.
 
@@ -153,7 +153,7 @@ def top_level_reference_schema():
     """
     Reference schema following the CTA Top-Level Data Model.
 
-    This metadata schema is used for gammasim-tools data products.
+    This metadata schema is used for simtools data products.
 
     Returns
     -------
@@ -189,7 +189,7 @@ def top_level_reference_schema():
 def metadata_input_reference_schema():
     """
     Reference data model scheme for input metadata.
-    Describes metadata provided for input to gammasim-tools applications.
+    Describes metadata provided for input to simtools applications.
 
     Returns
     -------
@@ -232,7 +232,7 @@ def metadata_input_reference_document_list(schema_list):
 
 def workflow_configuration_schema():
     """
-    Reference schmema for gammasim-tools workflow configuration.
+    Reference schmema for simtools workflow configuration.
 
     Returns
     -------
