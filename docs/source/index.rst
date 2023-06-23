@@ -32,7 +32,7 @@ Citing this Software
 ====================
 
 Please cite this software if you use it for a publication.
-Please cite the `Zenodo record <https://doi.org/10.5281/zenodo.6346696>`_, see the `CITATION.cff <https://github.com/gammasim/simtools/blob/master/CITATION.cff>`_ file.
+Please cite the `Zenodo record <https://doi.org/10.5281/zenodo.6346696>`_, see the `CITATION.cff <https://github.com/gammasim/simtools/blob/main/CITATION.cff>`_ file.
 
 Documentation
 =============
