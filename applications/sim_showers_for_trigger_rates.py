@@ -57,7 +57,7 @@
     .. code-block:: console
 
         INFO::sim_showers_for_trigger_rates(l174)::main::List of log files exported to \
-        /workdir/external/simtools/simtools-output/sim_showers_for_trigger_rates/application-\
+        /workdir/external/gammasim-tools/simtools-output/sim_showers_for_trigger_rates/application-\
         plots/log_files_proton.list
         INFO::simulator(l646)::get_list_of_log_files::Getting list of log files
 

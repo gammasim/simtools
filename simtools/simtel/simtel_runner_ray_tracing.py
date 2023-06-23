@@ -103,7 +103,7 @@ class SimtelRunnerRayTracing(SimtelRunner):
         Here we define and write some information into these files. Log files are always required.
         """
 
-        # This file is not actually needed and does not exist in simtools.
+        # This file is not actually needed and does not exist in gammasim-tools.
         # However, we need to provide the name of a CORSIKA input file to sim_telarray
         # so it is set up here.
         self._corsika_file = self._simtel_source_path.joinpath("run9991.corsika.gz")

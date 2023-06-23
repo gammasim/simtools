@@ -37,7 +37,7 @@
 
     .. code-block:: console
 
-        INFO::model_data_writer(l57)::write_data::Writing data to /workdir/external/simtools/\
+        INFO::model_data_writer(l57)::write_data::Writing data to /workdir/external/gammasim-tools/\
         simtools-output/submit_data_from_external/product-data/TEST-submit_data_from_external.ecsv
 
 """

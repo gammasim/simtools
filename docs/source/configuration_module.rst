@@ -3,7 +3,7 @@
 Configuration
 =============
 
-Reference documentation for the configuration of simtools applications.
+Reference documentation for the configuration of gammasim-tools applications.
 
 .. _configurationconfigurator:
 
