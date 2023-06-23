@@ -8,7 +8,8 @@ import boost_histogram as bh
 import numpy as np
 from astropy import units as u
 from astropy.units import cds
-from corsikaio.subblocks import event_header, get_units_from_fields, run_header
+from corsikaio.subblocks import __init__ as io_blocks
+from corsikaio.subblocks import event_header, run_header
 from eventio import IACTFile
 
 from simtools import io_handler
@@ -126,7 +127,7 @@ class CorsikaOutput:
         self._header = {}
 
         # Get units of the header
-        all_run_units = get_units_from_fields(
+        all_run_units = io_blocks.get_units_from_fields(
             run_header.run_header_fields[np.trunc(self.version * 10) / 10]
         )
         all_header_astropy_units = self._get_header_astropy_units(self.all_run_keys, all_run_units)
@@ -164,7 +165,7 @@ class CorsikaOutput:
                 self.all_event_keys = list(
                     event_header.event_header_types[np.trunc(self.version * 10) / 10].names
                 )
-                all_event_units = get_units_from_fields(
+                all_event_units = io_blocks.get_units_from_fields(
                     event_header.event_header_fields[np.trunc(self.version * 10) / 10]
                 )
 
