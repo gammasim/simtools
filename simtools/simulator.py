@@ -116,7 +116,7 @@ class Simulator:
         self._logger.debug(f"Init Simulator {simulator}")
 
         self.label = label
-        self._set_simulator(simulator)
+        self.simulator = simulator
         self.runs = list()
         self._results = defaultdict(list)
         self.test = test
@@ -140,7 +140,13 @@ class Simulator:
 
         self._set_simulation_runner()
 
-    def _set_simulator(self, simulator):
+    @property
+    def simulator(self):
+        """The attribute simulator"""
+        return self._simulator
+
+    @simulator.setter
+    def simulator(self, simulator):
         """
         Set and test simulator type
 
@@ -158,7 +164,7 @@ class Simulator:
 
         if simulator not in ["simtel", "corsika", "corsika_simtel"]:
             raise gen.InvalidConfigData
-        self.simulator = simulator.lower()
+        self._simulator = simulator.lower()
 
     def _load_configuration_and_simulation_model(self, config_data=None, config_file=None):
         """
