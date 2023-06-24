@@ -17,9 +17,9 @@ dependencies:
   - sphinx
   - sphinx_rtd_theme
   - pyproj
-  - zstandard
-  - conda-forge::eventio>=1.5.0
   - pyflakes
+  - eventio
+  - boost-histogram
 
 # cheatsheet
 # create: conda env create -f environment.yml
