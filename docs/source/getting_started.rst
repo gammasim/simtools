@@ -44,7 +44,7 @@ Clone simtools project:
 
     $ git clone https://github.com/gammasim/simtools.git
 
-Install simtools:
+Install simtools including dependencies:
 
 .. code-block:: console
 
