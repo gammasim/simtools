@@ -9,6 +9,7 @@ from astropy import units as u
 import simtools.io_handler
 from simtools import db_handler
 from simtools.configuration.configurator import Configurator
+from simtools.corsika.corsika_output import CorsikaOutput
 from simtools.layout.layout_array import LayoutArray
 from simtools.model.telescope_model import TelescopeModel
 
@@ -246,3 +247,19 @@ def telescope_north_test_file():
 @pytest.fixture
 def telescope_south_test_file():
     return "data/layout/telescope_positions-South-TestLayout.ecsv"
+
+
+@pytest.fixture
+def corsika_output_file_name():
+    return "tests/resources/tel_output_10GeV-2-gamma-20deg-CTAO-South.corsikaio"
+
+
+@pytest.fixture
+def corsika_output_instance(io_handler, corsika_output_file_name):
+    return CorsikaOutput(corsika_output_file_name)
+
+
+@pytest.fixture
+def corsika_output_instance_set_histograms(db, io_handler, corsika_output_instance):
+    corsika_output_instance.set_histograms()
+    return corsika_output_instance
