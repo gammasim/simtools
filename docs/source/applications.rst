@@ -8,7 +8,7 @@ Applications are python scripts built on the :ref:`Library` that execute a well 
 Applications are the building blocks of `Simulation System Workflows <https://github.com/gammasim/workflows>`_.
 Application scripts can be found in ``simtools/applications``.
 
-Important: depending on the installation type, applications are executed differently:
+Important: depending on the installation type, applications are named differently:
 
 * developers (see :ref:`InstallationForDevelopers`) call applications as described throughout this documentation: ``python applications/<application name> ....``
 * users (see :ref:`InstallationForUsers`) call applications directly as command line tool. Applications names ``simtools-<application name`` (with all ``_`` replaced by ``-``)
