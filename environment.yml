@@ -8,7 +8,6 @@ dependencies:
   - numpy
   - astropy
   - matplotlib-base
-  - sphinx
   - pre-commit
   - pytest
   - pytest-cov
