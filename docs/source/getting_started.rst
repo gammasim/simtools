@@ -22,13 +22,37 @@ For database access, copy \
 
 See below for the usage of this script.
 
+.. _InstallationForUsers:
+
 Installation for Users
 ----------------------
 
 simtools is under rapid development and not ready for production use.
 It will be made available in future using the conda packaging system.
-For now, expert users should follow the installation procedures for developers.
+For now, the following installation procedure is foreseen:
 
+Install a simple python environment:
+
+.. code-block:: console
+
+    $ mamba create --name simtools-prod python=3.9
+    $ mamba activate simtools-prod
+
+Clone simtools project:
+
+.. code-block:: console
+
+    $ git clone https://github.com/gammasim/simtools.git
+
+Install simtools including dependencies:
+
+.. code-block:: console
+
+    $ pip install .
+
+All simtools applications are now available as command line tools. Note the naming of the tool, starting with ``simtools-`` followed by the application name. See :ref:`Applications` for more details.
+
+.. _InstallationForDevelopers:
 
 Installation for Developers
 ---------------------------
