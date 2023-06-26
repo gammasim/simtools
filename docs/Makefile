@@ -4,7 +4,7 @@
 # You can set these variables from the command line.
 SPHINXOPTS    =
 SPHINXBUILD   = sphinx-build
-SPHINXPROJ    = gammasim-tools
+SPHINXPROJ    = simtools
 SOURCEDIR     = source
 BUILDDIR      = build
 
