@@ -401,7 +401,7 @@ def test_applications(application, io_handler, monkeypatch, db):
     prepare_one_file("MLTdata-preproduction.ecsv")
 
     def make_command(app, args):
-        cmd = "python applications/" + app + ".py"
+        cmd = "python simtools/applications/" + app + ".py"
         for aa in args:
             aa = aa.replace(
                 "TESTMODELDIR", str(io_handler.get_output_directory(dir_type="model", test=True))
