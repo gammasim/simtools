@@ -15,7 +15,7 @@
     The multipipe scripts will be produced as part of this script.
 
     This script does not provide a mechanism to submit jobs to a batch system like others
-    in gammasim-tools since it is meant to be executed on a grid node
+    in simtools since it is meant to be executed on a grid node
     (distributed to it by the workload management system).
 
     Command line arguments

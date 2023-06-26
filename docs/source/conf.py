@@ -20,7 +20,7 @@ import yaml
 import simtools.version
 
 sys.path.insert(0, os.path.abspath("../../simtools"))
-sys.path.insert(0, os.path.abspath("../../applications"))
+sys.path.insert(0, os.path.abspath("../../simtools/applications"))
 sys.path.insert(0, os.path.abspath("../.."))
 
 
@@ -47,8 +47,8 @@ def get_authors_from_citation_file(file_name):
 
 # -- Project information -----------------------------------------------------
 
-project = "gammasim-tools"
-copyright = "2022, gammasim-tools developers"
+project = "simtools"
+copyright = "2022, gammasim-tools, simtools developers"
 author = get_authors_from_citation_file("../CITATION.cff")
 rst_epilog = f"""
 .. |author| replace:: {author}
@@ -171,7 +171,7 @@ html_sidebars = {
 # -- Options for HTMLHelp output ---------------------------------------------
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = "gammasimdoc"
+htmlhelp_basename = "simtoolsdoc"
 
 
 # -- Options for LaTeX output ------------------------------------------------
@@ -197,8 +197,8 @@ latex_elements = {
 latex_documents = [
     (
         master_doc,
-        "gammasim-tools.tex",
-        "gammasim-tools Documentation",
+        "simtools.tex",
+        "simtools Documentation",
         author,
         "manual",
     ),
@@ -209,7 +209,7 @@ latex_documents = [
 
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
-man_pages = [(master_doc, "gammasim-tools", "gammasim-tools Documentation", [author], 1)]
+man_pages = [(master_doc, "simtools", "simtools Documentation", [author], 1)]
 
 
 # -- Options for Texinfo output ----------------------------------------------
@@ -220,10 +220,10 @@ man_pages = [(master_doc, "gammasim-tools", "gammasim-tools Documentation", [aut
 texinfo_documents = [
     (
         master_doc,
-        "gammasim-tools",
-        "gammasim-tools Documentation",
+        "simtools",
+        "simtools Documentation",
         author,
-        "gammasim-tools",
+        "simtools",
         "Prototype of a software package for the Simulation System of CTA Observatory"
         "Miscellaneous",
     ),
