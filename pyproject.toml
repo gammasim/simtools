@@ -54,7 +54,6 @@ dependencies = [
 [project.scripts]
 simtools-add-file-to-db = "simtools.applications.add_file_to_db:main"
 simtools-compare-cumulative-psf = "simtools.applications.compare_cumulative_psf:main"
-simtools-db-development-tools = "simtools.applications.db_development_tools:main"
 simtools-derive-mirror-rnda = "simtools.applications.derive_mirror_rnda:main"
 simtools-get-file-from-db = "simtools.applications.get_file_from_db:main"
 simtools-get-parameter = "simtools.applications.get_parameter:main"
