@@ -44,7 +44,7 @@
     .. code-block:: console
 
         INFO::validate_camera_efficiency(l118)::main::Plotted NSB efficiency in /workdir/external/\
-        gammasim-tools/simtools-output/validate_camera_efficiency/application-plots/validate_camera\
+        simtools/simtools-output/validate_camera_efficiency/application-plots/validate_camera\
         _efficiency_MST-NectarCam-D_nsb
 
     .. todo::
