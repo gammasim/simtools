@@ -3,7 +3,7 @@
 
 cff-version: 1.2.0
 title: >-
-  gammasim-tools - a prototype implementation of
+  simtools - a prototype implementation of
   tools for the Simulation System of the CTA
   Observatory
 message: Please cite this software using these metadata.
@@ -26,6 +26,6 @@ authors:
     family-names: Maier
     affiliation: DESY
     orcid: 'https://orcid.org/0000-0001-9868-4700'
-repository-code: 'https://github.com/gammasim/gammasim-tools'
+repository-code: 'https://github.com/gammasim/simtools'
 doi: 10.5281/zenodo.6346697
 license: BSD-3-Clause
