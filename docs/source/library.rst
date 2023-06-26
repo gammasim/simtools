@@ -3,7 +3,7 @@
 API
 ***
 
-gammasim-tools is composed of the following modules and module groups:
+simtools is composed of the following modules and module groups:
 
 .. toctree::
   :maxdepth: 1
