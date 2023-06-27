@@ -12,6 +12,7 @@ simtools is composed of the following modules and module groups:
   camera_efficiency
   configuration_module
   corsika
+  corsika_simtel
   data_model
   db_handler
   io_handler
