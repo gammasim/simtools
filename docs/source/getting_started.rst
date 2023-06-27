@@ -50,6 +50,13 @@ Install simtools including dependencies:
 
     $ pip install .
 
+Source the ``set_DB_environ.sh`` script in order to run the applications (see `Model Database Access`_ and `Set environmental variables`_)
+
+.. code-block:: console
+
+    $ source set_DB_environ.sh
+
+
 All simtools applications are now available as command line tools. Note the naming of the tool, starting with ``simtools-`` followed by the application name. See :ref:`Applications` for more details.
 
 .. _InstallationForDevelopers:
