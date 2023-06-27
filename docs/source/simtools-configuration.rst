@@ -3,7 +3,7 @@
 Configuration
 -------------
 
-Applications in gammasim-tools can be configured by the following four approaches, which are all equivalent:
+Applications in simtools can be configured by the following four approaches, which are all equivalent:
 
 #. command line arguments;
 #. configuration file (in yaml format);
