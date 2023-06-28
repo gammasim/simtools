@@ -686,7 +686,7 @@ def change_dict_keys_case(data_dict, lower_case=True):
 
 
 @u.quantity_input(rotation_angle_phi=u.rad, rotation_angle_theta=u.rad)
-def rotate(x, y, rotation_around_z_axis, rotation_around_y_axis=0 * u.rad):
+def rotate(x, y, rotation_around_z_axis, rotation_around_y_axis=0):
     """
     Transform the x and y coordinates of the telescopes according to two rotations:
      `rotation_angle_around_z_axis` gives the rotation on the observation plane (x, y)
