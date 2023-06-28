@@ -11,11 +11,11 @@ env:
 
 on:
   pull_request:
-    branches: [master]
+    branches: [main]
     types: [opened, synchronize]
   push:
     branches:
-    - master
+    - main
 
 jobs:
 
