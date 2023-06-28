@@ -689,8 +689,8 @@ def change_dict_keys_case(data_dict, lower_case=True):
 def rotate(x, y, rotation_around_z_axis, rotation_around_y_axis=0):
     """
     Transform the x and y coordinates of the telescopes according to two rotations:
-     `rotation_angle_around_z_axis` gives the rotation on the observation plane (x, y)
-     and `rotation_angle_around_y_axis` allows to rotate the observation plane in space.
+    `rotation_angle_around_z_axis` gives the rotation on the observation plane (x, y) and
+    `rotation_angle_around_y_axis` allows to rotate the observation plane in space.
     The function returns the rotated x and y values in the same unit given.
     The direction of rotation of the elements in the plane is counterclockwise, i.e.,
     the rotation of the coordinate system is clockwise.
@@ -720,6 +720,7 @@ def rotate(x, y, rotation_around_z_axis, rotation_around_y_axis=0):
     UnitsError:
         If the unit of x and y are different.
     """
+
     allowed_types = (list, np.ndarray, u.Quantity, float, int)
     if not all(isinstance(variable, allowed_types) for variable in [x, y]):
         raise TypeError("x and y types are not valid! Cannot perform transformation.")
