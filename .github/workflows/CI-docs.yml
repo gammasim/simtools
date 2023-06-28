@@ -4,7 +4,7 @@ name: CI-docs
 
 on:
   pull_request:
-    branches: [master]
+    branches: [main]
     types: [opened, closed, synchronize]
 
 jobs:
