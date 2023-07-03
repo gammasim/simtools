@@ -63,13 +63,13 @@
 
     .. code-block:: console
 
-        python applications/get_file_from_db.py --file_name PSFcurve_data_v2.txt
+        simtools-get-file-from_db --file_name PSFcurve_data_v2.txt
 
     Run the application:
 
     .. code-block:: console
 
-        python applications/tune_psf.py --site North --telescope LST-1 \
+        simtools-tune-psf --site North --telescope LST-1 \
             --model_version prod5 --data PSFcurve_data_v2.txt --plot_all --test
 
     The output is saved in simtools-output/tune_psf.
