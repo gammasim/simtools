@@ -26,7 +26,7 @@
 
     .. code-block:: console
 
-        python applications/get_file_from_db.py --file_name mirror_CTA-N-LST1_v2019-03-31.dat
+        simtools-get-file-from-db --file_name mirror_CTA-N-LST1_v2019-03-31.dat
 
     Expected final print-out message:
 
