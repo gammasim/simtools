@@ -32,7 +32,7 @@
     -------
     .. code-block:: console
 
-        python applications/plot_layout_array.py --figure_name northern_array_alpha \
+        simtools-plot-layout-array --figure_name northern_array_alpha \
         --layout_array_name North-TestLayout
 
 """

@@ -49,13 +49,13 @@
 
     .. code-block:: console
 
-        python applications/get_file_from_db.py --file_name prod_config_test.yml
+        simtools-get-file-from_db --file_name prod_config_test.yml
 
     Run the application:
 
     .. code-block:: console
 
-        python applications/production.py --task simulate --productionconfig prod_config_test.yml \
+        simtools-production --task simulate --productionconfig prod_config_test.yml \
         --test --showers_only --submit_command local
 
     The output is saved in simtools-output/test-production.
