@@ -85,13 +85,13 @@
 
      .. code-block:: console
 
-        python applications/get_file_from_db.py --file_name MLTdata-preproduction.ecsv
+        simtools-get-file-from-db --file_name MLTdata-preproduction.ecsv
 
     Run the application. Runtime about 4 min.
 
     .. code-block:: console
 
-        python applications/derive_mirror_rnda.py --site North --telescope MST-FlashCam-D \
+        simtools-derive-mirror-rnda --site North --telescope MST-FlashCam-D \
             --containment_fraction 0.8 --mirror_list MLTdata-preproduction.ecsv
             --psf_measurement MLTdata-preproduction.ecsv --rnda 0.0063 --test
 

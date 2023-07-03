@@ -21,7 +21,7 @@
 
     .. code-block:: console
 
-        python applications/make_regular_arrays.py
+        simtools-make-regular-arrays
 
     The output is saved in simtools-output/make_regular_arrays.
 

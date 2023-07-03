@@ -3,12 +3,18 @@ requires = ["setuptools>=65"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "simtools"
+name = "gammasimtools"
 description = "Tools for the Simulation System of the CTA Observatory"
 readme = "README.rst"
 license = { file="LICENSE" }
 version = "0.4.0"
 authors = [
+  { name="Orel Gueta", email="orel.gueta@desy.de" },
+  { name="Victor Barbosa Martins", email="victor.barbosa.martins@desy.de" },
+  { name="Gernot Maier", email="gernot.maier@desy.de" },
+  { name="Raul Prado" },
+]
+maintainers = [
   { name="Orel Gueta", email="orel.gueta@desy.de" },
   { name="Victor Barbosa Martins", email="victor.barbosa.martins@desy.de" },
   { name="Gernot Maier", email="gernot.maier@desy.de" },
