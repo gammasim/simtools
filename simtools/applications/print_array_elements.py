@@ -33,7 +33,7 @@
 
     .. code-block:: console
 
-        python applications/print_array_elements.py \
+        simtools-print-array-elements \
             --array_element_list tests/resources/telescope_positions-South-4MST.ecsv \
             --compact corsika
 
