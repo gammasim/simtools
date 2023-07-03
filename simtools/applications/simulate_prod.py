@@ -53,7 +53,7 @@
 
     .. code-block:: console
 
-        python applications/simulate_prod.py \
+        simtools-simulate-prod \
         --production_config tests/resources/prod_multi_config_test.yml --model_version Prod5 \
         --site north --primary gamma --from_azimuth_direction north --zenith_angle 20 \
          --start_run 0 --run 1
