@@ -335,6 +335,13 @@ def main():
 
     simulator.simulate()
 
+    logger.info(
+        f"Production run is complete for primary {shower_configs['primary']} showers "
+        f"coming from {shower_configs['phi']} azimuth and zenith angle of "
+        f"{shower_configs['zenith']} at the {args_dict['site']} site, "
+        f"using the {array_configs['model']} telescope model."
+    )
+
 
 if __name__ == "__main__":
     main()
