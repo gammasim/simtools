@@ -165,7 +165,7 @@ class SimtelRunnerArray(SimtelRunner):
             f"_{kwargs['label']}" if "label" in kwargs and kwargs["label"] is not None else ""
         )
         file_name = (
-            f"run{kwargs['run']}_{kwargs['primary']}_"
+            f"run{kwargs['run']:06}_{kwargs['primary']}_"
             f"za{round(kwargs['zenith']):03}deg_azm{round(kwargs['azimuth']):03}deg_"
             f"{kwargs['site']}_{kwargs['array_name']}{file_label}"
         )

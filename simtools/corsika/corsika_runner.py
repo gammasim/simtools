@@ -329,7 +329,7 @@ class CorsikaRunner:
             f"_{kwargs['label']}" if "label" in kwargs and kwargs["label"] is not None else ""
         )
         file_name = (
-            f"corsika_run{kwargs['run']}_{kwargs['primary']}_"
+            f"corsika_run{kwargs['run']:06}_{kwargs['primary']}_"
             f"{kwargs['site']}_{kwargs['array_name']}{file_label}"
         )
 
@@ -337,7 +337,7 @@ class CorsikaRunner:
             return self._corsika_log_dir.joinpath(f"log_{file_name}.log")
         if file_type == "corsika_log":
             run_dir = self._get_run_directory(kwargs["run"])
-            return self._corsika_data_dir.joinpath(run_dir).joinpath(f"run{kwargs['run']}.log")
+            return self._corsika_data_dir.joinpath(run_dir).joinpath(f"run{kwargs['run']:06}.log")
         if file_type == "script":
             script_file_dir = self._output_directory.joinpath("scripts")
             script_file_dir.mkdir(parents=True, exist_ok=True)
@@ -346,7 +346,7 @@ class CorsikaRunner:
             zenith = self.corsika_config.get_user_parameter("THETAP")[0]
             azimuth = self.corsika_config.get_user_parameter("AZM")[0]
             file_name = (
-                f"corsika_run{kwargs['run']}_{kwargs['primary']}_"
+                f"corsika_run{kwargs['run']:06}_{kwargs['primary']}_"
                 f"za{round(zenith):03}deg_azm{round(azimuth):03}deg_"
                 f"{kwargs['site']}_{kwargs['array_name']}{file_label}"
             )
