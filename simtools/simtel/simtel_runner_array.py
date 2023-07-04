@@ -166,7 +166,7 @@ class SimtelRunnerArray(SimtelRunner):
         )
         file_name = (
             f"run{kwargs['run']}_{kwargs['primary']}_"
-            f"za{int(kwargs['zenith']):d}deg_azm{int(kwargs['azimuth']):d}deg_"
+            f"za{round(kwargs['zenith']):03}deg_azm{round(kwargs['azimuth']):03}deg_"
             f"{kwargs['site']}_{kwargs['array_name']}{file_label}"
         )
         if file_type == "log":
