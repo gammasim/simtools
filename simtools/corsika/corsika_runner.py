@@ -347,7 +347,7 @@ class CorsikaRunner:
             azimuth = self.corsika_config.get_user_parameter("AZM")[0]
             file_name = (
                 f"corsika_run{kwargs['run']}_{kwargs['primary']}_"
-                f"za{int(zenith):d}deg_azm{int(azimuth):d}deg_"
+                f"za{round(zenith):03}deg_azm{round(azimuth):03}deg_"
                 f"{kwargs['site']}_{kwargs['array_name']}{file_label}"
             )
             run_dir = self._get_run_directory(kwargs["run"])
