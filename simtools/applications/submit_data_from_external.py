@@ -21,14 +21,14 @@
 
     .. code-block:: console
 
-        python applications/get_file_from_DB.py --file_name \
+        simtools-get-file-from_DB --file_name \
         set_MST_mirror_2f_measurements_from_external.config.yml
 
     Run the application:
 
     .. code-block:: console
 
-        python applications/submit_data_from_external.py --workflow_config \
+        simtools-submit-data-from-external --workflow_config \
         set_MST_mirror_2f_measurements_from_external.config.yml
 
     The output is saved in simtools-output/submit_data_from_external.

@@ -31,7 +31,7 @@
 
     .. code-block:: console
 
-        python applications/add_file_to_db.py --file_name test_application.dat --db test-data
+        simtools-add-file-to-db --file_name test_application.dat --db test-data
 
     Expected final print-out message:
 
