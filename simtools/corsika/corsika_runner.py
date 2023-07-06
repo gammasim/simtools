@@ -339,7 +339,7 @@ class CorsikaRunner:
             return self._corsika_log_dir.joinpath(f"log_{file_name}.log.gz")
         if file_type == "corsika_log":
             run_dir = self._get_run_directory(kwargs["run"])
-            return self._corsika_data_dir.joinpath(run_dir).joinpath(f"run{kwargs['run']:06}.log")
+            return self._corsika_data_dir.joinpath(run_dir).joinpath(f"run{kwargs['run']}.log")
         if file_type == "script":
             script_file_dir = self._output_directory.joinpath("scripts")
             script_file_dir.mkdir(parents=True, exist_ok=True)
