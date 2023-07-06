@@ -89,14 +89,6 @@ def corsika_simtel_runner(common_args, corsika_args, simtel_args):
     return corsika_simtel_runner
 
 
-# @pytest.fixture
-# def corsika_file(io_handler):
-#     corsika_file = io_handler.get_input_data_file(
-#         file_name="run1_proton_za20deg_azm0deg_North_1LST_test-lst-array.corsika.zst", test=True
-#     )
-#     return corsika_file
-
-
 def test_prepare_run_script(corsika_simtel_runner):
     # No run number is given
 
@@ -170,7 +162,7 @@ def test_make_run_command(corsika_simtel_runner):
     assert "-C telescope_theta=20" in command
     assert "-C telescope_phi=0" in command
     assert "-C show=all" in command
-    assert "run1_gamma_za20deg_azm0deg_North_TestLayout_test" in command
+    assert "run000001_gamma_za020deg_azm000deg_North_TestLayout_test" in command
 
 
 def test_get_info_for_file_name(corsika_simtel_runner):
@@ -187,13 +179,13 @@ def test_get_file_name(corsika_simtel_runner, io_handler):
     info_for_file_name = corsika_simtel_runner.get_info_for_file_name(run_number=1)
 
     # Test one case of a CORSIKA file. Other cases are tested in the corsika_runner tests
-    file_name = "corsika_run1_gamma_North_TestLayout_test-corsika-simtel-runner"
+    file_name = "corsika_run000001_gamma_North_TestLayout_test-corsika-simtel-runner"
     assert corsika_simtel_runner.get_file_name(
-        "log", **info_for_file_name
-    ) == corsika_simtel_runner._corsika_log_dir.joinpath(f"log_{file_name}.log")
+        "corsika_autoinputs_log", **info_for_file_name
+    ) == corsika_simtel_runner._corsika_log_dir.joinpath(f"log_{file_name}.log.gz")
 
     # Test the histogram case which calls the simtel_runner_array internally
-    file_name = "run1_gamma_za20deg_azm0deg_North_TestLayout_test-corsika-simtel-runner"
+    file_name = "run000001_gamma_za020deg_azm000deg_North_TestLayout_test-corsika-simtel-runner"
     assert corsika_simtel_runner.get_file_name(
         "histogram", **info_for_file_name
     ) == corsika_simtel_runner._simtel_log_dir.joinpath(f"{file_name}.hdata.zst")

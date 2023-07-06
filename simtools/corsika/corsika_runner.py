@@ -260,7 +260,9 @@ class CorsikaRunner:
         """Get autoinputs command."""
         corsika_bin_path = self._simtel_source_path.joinpath("corsika-run/corsika")
 
-        log_file = self.get_file_name(file_type="log", **self.get_info_for_file_name(run_number))
+        log_file = self.get_file_name(
+            file_type="corsika_autoinputs_log", **self.get_info_for_file_name(run_number)
+        )
 
         cmd = self._simtel_source_path.joinpath("sim_telarray/bin/corsika_autoinputs")
         cmd = str(cmd) + f" --run {corsika_bin_path}"
@@ -268,7 +270,7 @@ class CorsikaRunner:
         cmd += f" -p {self._corsika_data_dir}"
         if self._keep_seeds:
             cmd += " --keep-seeds"
-        cmd += f" {input_tmp_file} > {log_file} 2>&1"
+        cmd += f" {input_tmp_file} 2>&1 | gzip > {log_file}"
         cmd += " || exit 1\n"
         return cmd
 
@@ -298,7 +300,7 @@ class CorsikaRunner:
         ----------
         file_type: str
             The type of file (determines the file suffix).
-            Choices are log, corsika_log, script, output or sub_log.
+            Choices are corsika_autoinputs_log, corsika_log, script, output or sub_log.
         kwargs: dict
             The dictionary must include the following parameters (unless listed as optional):
                 run: int
@@ -329,12 +331,12 @@ class CorsikaRunner:
             f"_{kwargs['label']}" if "label" in kwargs and kwargs["label"] is not None else ""
         )
         file_name = (
-            f"corsika_run{kwargs['run']}_{kwargs['primary']}_"
+            f"corsika_run{kwargs['run']:06}_{kwargs['primary']}_"
             f"{kwargs['site']}_{kwargs['array_name']}{file_label}"
         )
 
-        if file_type == "log":
-            return self._corsika_log_dir.joinpath(f"log_{file_name}.log")
+        if file_type == "corsika_autoinputs_log":
+            return self._corsika_log_dir.joinpath(f"log_{file_name}.log.gz")
         if file_type == "corsika_log":
             run_dir = self._get_run_directory(kwargs["run"])
             return self._corsika_data_dir.joinpath(run_dir).joinpath(f"run{kwargs['run']}.log")
@@ -346,8 +348,8 @@ class CorsikaRunner:
             zenith = self.corsika_config.get_user_parameter("THETAP")[0]
             azimuth = self.corsika_config.get_user_parameter("AZM")[0]
             file_name = (
-                f"corsika_run{kwargs['run']}_{kwargs['primary']}_"
-                f"za{int(zenith):d}deg_azm{int(azimuth):d}deg_"
+                f"corsika_run{kwargs['run']:06}_{kwargs['primary']}_"
+                f"za{round(zenith):03}deg_azm{round(azimuth):03}deg_"
                 f"{kwargs['site']}_{kwargs['array_name']}{file_label}"
             )
             run_dir = self._get_run_directory(kwargs["run"])
@@ -370,7 +372,7 @@ class CorsikaRunner:
         ----------
         file_type: str
             File type to check.
-            Choices are log, corsika_log, script, output or sub_log.
+            Choices are corsika_autoinputs_log, corsika_log, script, output or sub_log.
         run_number: int
             Run number.
 

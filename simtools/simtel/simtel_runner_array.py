@@ -165,12 +165,12 @@ class SimtelRunnerArray(SimtelRunner):
             f"_{kwargs['label']}" if "label" in kwargs and kwargs["label"] is not None else ""
         )
         file_name = (
-            f"run{kwargs['run']}_{kwargs['primary']}_"
-            f"za{int(kwargs['zenith']):d}deg_azm{int(kwargs['azimuth']):d}deg_"
+            f"run{kwargs['run']:06}_{kwargs['primary']}_"
+            f"za{round(kwargs['zenith']):03}deg_azm{round(kwargs['azimuth']):03}deg_"
             f"{kwargs['site']}_{kwargs['array_name']}{file_label}"
         )
         if file_type == "log":
-            return self._simtel_log_dir.joinpath(f"{file_name}.log")
+            return self._simtel_log_dir.joinpath(f"{file_name}.log.gz")
         if file_type == "histogram":
             return self._simtel_log_dir.joinpath(f"{file_name}.hdata.zst")
         if file_type == "output":
@@ -276,8 +276,8 @@ class SimtelRunnerArray(SimtelRunner):
         command += super()._config_option("output_file", output_file)
         command += super()._config_option("random_state", "auto")
         command += super()._config_option("show", "all")
-        command += " " + str(kwargs["input_file"])
-        command += " > " + str(self._log_file) + " 2>&1"
+        command += f" {kwargs['input_file']}"
+        command += f" 2>&1 > {self._log_file}"
 
         return command
 
