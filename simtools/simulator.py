@@ -433,7 +433,7 @@ class Simulator:
                     file_type="sub_log", **self._simulation_runner.get_info_for_file_name(run)
                 ),
                 log_file=self._simulation_runner.get_file_name(
-                    file_type="log",
+                    file_type="corsika_autoinputs_log" if self.simulator == "corsika" else "log",
                     **self._simulation_runner.get_info_for_file_name(run),
                 ),
             )
