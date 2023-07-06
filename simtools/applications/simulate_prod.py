@@ -82,7 +82,9 @@
 """
 
 import logging
+import tarfile
 from copy import copy
+from pathlib import Path
 
 import astropy.units as u
 from astropy.io.misc import yaml
@@ -183,6 +185,13 @@ def _parse(description=None):
         type=str.lower,
         required=False,
         default="./",
+    )
+    config.parser.add_argument(
+        "--pack_for_grid_register",
+        help="Set whether to prepare a tarball for registering the output files on the grid.",
+        action="store_true",
+        required=False,
+        default=False,
     )
     return config.initialize(db_config=True, telescope_model=True)
 
@@ -339,8 +348,29 @@ def main():
         f"Production run is complete for primary {shower_configs['primary']} showers "
         f"coming from {shower_configs['phi']} azimuth and zenith angle of "
         f"{shower_configs['zenith']} at the {args_dict['site']} site, "
-        f"using the {array_configs['model']} telescope model."
+        f"using the {array_configs['model_version']} telescope model."
     )
+
+    if args_dict["pack_for_grid_register"]:
+        logger.info("Packing the output files for registering on the grid")
+        output_files = simulator.get_list_of_output_files()
+        log_files = simulator.get_list_of_log_files()
+        histogram_files = simulator.get_list_of_histogram_files()
+        tar_file_name = Path(log_files[0]).name.replace("log.gz", "log_hist.tar.gz")
+        with tarfile.open(tar_file_name, "w:gz") as tar:
+            files_to_tar = log_files[:1] + histogram_files[:1]
+            for file_to_tar in files_to_tar:
+                tar.add(file_to_tar, arcname=Path(file_to_tar).name)
+        directory_for_grid_upload = Path("directory_for_grid_upload")
+        directory_for_grid_upload.mkdir(parents=True, exist_ok=True)
+        for file_to_move in [*output_files, tar_file_name]:
+            source_file = Path(file_to_move)
+            destination_file = directory_for_grid_upload / source_file.name
+            # Note that this will overwrite previous files which exist in the directory
+            # It should be fine for normal production since each run is on a separate node
+            # so no files are expected there.
+            source_file.replace(destination_file)
+        logger.info(f"Output files for the grid placed in {str(directory_for_grid_upload)}")
 
 
 if __name__ == "__main__":
