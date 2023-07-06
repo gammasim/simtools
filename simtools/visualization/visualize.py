@@ -1042,5 +1042,3 @@ def plot_num_photons_distr(corsika_output_instance, log_y=True):
         if True, the intensity of the Y axis is given in logarithmic scale.
     """
     return _kernel_plot_1D_photons(corsika_output_instance, "num_photons", log_y=log_y)
-=======
->>>>>>> main
