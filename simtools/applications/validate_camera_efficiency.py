@@ -34,7 +34,7 @@
 
     .. code-block:: console
 
-        python applications/validate_camera_efficiency.py --site North \
+        simtools-validate-camera-efficiency --site North \
             --telescope MST-NectarCam-D --model_version prod5
 
     The output is saved in simtools-output/validate_camera_efficiency.
