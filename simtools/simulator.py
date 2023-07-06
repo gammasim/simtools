@@ -549,10 +549,10 @@ class Simulator:
                 )
             )
         )
-        self._results["log"].append(
-            str(self._simulation_runner.get_file_name(file_type="log", **info_for_file_name))
-        )
         if self.simulator in ["simtel", "corsika_simtel"]:
+            self._results["log"].append(
+                str(self._simulation_runner.get_file_name(file_type="log", **info_for_file_name))
+            )
             self._results["input"].append(str(file))
             self._results["hist"].append(
                 str(
@@ -562,8 +562,16 @@ class Simulator:
                 )
             )
         else:
+            self._results["corsika_autoinputs_log"].append(
+                str(
+                    self._simulation_runner.get_file_name(
+                        file_type="corsika_autoinputs_log", **info_for_file_name
+                    )
+                )
+            )
             self._results["input"].append(None)
             self._results["hist"].append(None)
+            self._results["log"].append(None)
 
     def print_histograms(self, input_file_list=None):
         """
@@ -658,7 +666,10 @@ class Simulator:
             List with the full path of all the log files.
         """
         self._logger.info("Getting list of log files")
-        return self._results["log"]
+        if self.simulator in ["simtel", "corsika_simtel"]:
+            return self._results["log"]
+        else:
+            return self._results["corsika_autoinputs_log"]
 
     def print_list_of_output_files(self):
         """Print list of output files."""
@@ -678,7 +689,10 @@ class Simulator:
     def print_list_of_log_files(self):
         """Print list of log files."""
         self._logger.info("Printing list of log files")
-        self._print_list_of_files(which="log")
+        if self.simulator in ["simtel", "corsika_simtel"]:
+            self._print_list_of_files(which="log")
+        else:
+            self._print_list_of_files(which="corsika_autoinputs_log")
 
     def _make_resources_report(self, input_file_list):
         """
