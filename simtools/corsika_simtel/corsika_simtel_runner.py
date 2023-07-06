@@ -163,8 +163,8 @@ class CorsikaSimtelRunner(CorsikaRunner, SimtelRunnerArray):
         command += super()._config_option("output_file", output_file)
         command += super()._config_option("random_state", "auto")
         command += super()._config_option("show", "all")
-        command += " " + str(kwargs["input_file"])
-        command += " > " + str(self._log_file) + " 2>&1"
+        command += f" {kwargs['input_file']}"
+        command += f" 2>&1 | gzip > {self._log_file}"
 
         return command
 
@@ -174,7 +174,7 @@ class CorsikaSimtelRunner(CorsikaRunner, SimtelRunnerArray):
         See the implementations in CorsikaRunner and SimtelRunnerArray for details.
         """
 
-        if file_type == "histogram":
+        if file_type in ["output", "log", "histogram"]:
             return SimtelRunnerArray.get_file_name(self, file_type=file_type, **kwargs)
         else:
             return CorsikaRunner.get_file_name(
