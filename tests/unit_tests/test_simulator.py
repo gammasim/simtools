@@ -267,13 +267,13 @@ def test_submitting(shower_simulator, array_simulator, corsika_file):
     shower_simulator._submit_command = "local"
     shower_simulator.simulate()
 
-    run_script = shower_simulator._simulation_runner.prepare_run_script(run_number=2)
-
-    assert Path(run_script).exists()
-
     shower_simulator.print_list_of_output_files()
     shower_simulator.print_list_of_log_files()
     shower_simulator.print_list_of_input_files()
+
+    run_script = shower_simulator._simulation_runner.prepare_run_script(run_number=2)
+
+    assert Path(run_script).exists()
 
     array_simulator._submit_command = "local"
     array_simulator.simulate(input_file_list=corsika_file)
