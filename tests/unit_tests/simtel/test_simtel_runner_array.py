@@ -72,10 +72,10 @@ def test_get_info_for_file_name(simtel_runner):
 
 def test_get_file_name(simtel_runner):
     info_for_file_name = simtel_runner.get_info_for_file_name(run_number=1)
-    file_name = "run1_proton_za20deg_azm0deg_North_1LST_test-lst-array"
+    file_name = "run000001_proton_za020deg_azm000deg_North_1LST_test-lst-array"
     assert simtel_runner.get_file_name(
         "log", **info_for_file_name
-    ) == simtel_runner._simtel_log_dir.joinpath(f"{file_name}.log")
+    ) == simtel_runner._simtel_log_dir.joinpath(f"{file_name}.log.gz")
     assert simtel_runner.get_file_name(
         "histogram", **info_for_file_name
     ) == simtel_runner._simtel_log_dir.joinpath(f"{file_name}.hdata.zst")
@@ -99,7 +99,7 @@ def test_has_file(simtel_runner, corsika_file):
     shutil.copy(
         corsika_file,
         simtel_runner._simtel_data_dir.joinpath(
-            "run1_proton_za20deg_azm0deg_North_1LST_test-lst-array.simtel.zst"
+            "run000001_proton_za020deg_azm000deg_North_1LST_test-lst-array.simtel.zst"
         ),
     )
     assert simtel_runner.has_file(file_type="output", run_number=1)
