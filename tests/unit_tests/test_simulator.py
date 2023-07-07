@@ -267,6 +267,10 @@ def test_submitting(shower_simulator, array_simulator, corsika_file):
     shower_simulator._submit_command = "local"
     shower_simulator.simulate()
 
+    shower_simulator.print_list_of_output_files()
+    shower_simulator.print_list_of_log_files()
+    shower_simulator.print_list_of_input_files()
+
     run_script = shower_simulator._simulation_runner.prepare_run_script(run_number=2)
 
     assert Path(run_script).exists()
@@ -319,16 +323,17 @@ def test_fill_results(array_simulator, shower_simulator, shower_array_simulator,
 
     for simulator_now in [array_simulator, shower_array_simulator]:
         simulator_now._fill_results_without_run(input_file_list)
-        assert len(simulator_now._results["output"]) == 3
+        assert len(simulator_now.get_list_of_output_files()) == 3
         assert len(simulator_now._results["sub_out"]) == 3
-        assert len(simulator_now._results["log"]) == 3
-        assert len(simulator_now._results["input"]) == 3
-        assert len(simulator_now._results["hist"]) == 3
-        assert simulator_now._results["input"][1] == "abc_run22"
+        assert len(simulator_now.get_list_of_log_files()) == 3
+        assert len(simulator_now.get_list_of_input_files()) == 3
+        assert len(simulator_now.get_list_of_histogram_files()) == 3
+        assert simulator_now.get_list_of_input_files()[1] == "abc_run22"
 
     shower_simulator._fill_results_without_run(input_file_list)
-    assert len(shower_simulator._results["output"]) == 3
-    assert shower_simulator._results["hist"][1] is None
+    assert len(shower_simulator.get_list_of_output_files()) == 3
+    assert len(shower_simulator.get_list_of_log_files()) == 3
+    assert shower_simulator.get_list_of_histogram_files()[1] is None
 
 
 def test_print_histograms(
