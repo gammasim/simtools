@@ -106,6 +106,12 @@ class CommandLineParser(argparse.ArgumentParser):
             required=False,
         )
         _job_group.add_argument(
+            "--no_simtools_output_path_naming",
+            help="do not add date and tool name to output path",
+            action="store_false",
+            required=False,
+        )
+        _job_group.add_argument(
             "--model_path",
             help="path pointing towards simulation model file directory",
             type=Path,

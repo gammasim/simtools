@@ -282,6 +282,7 @@ class Configurator:
         _io_handler = io_handler.IOHandler()
         _io_handler.set_paths(
             output_path=self.config.get("output_path", None),
+            output_path_simtools_naming=self.config.get("no_simtools_output_path_naming", True),
             data_path=self.config.get("data_path", None),
             model_path=self.config.get("model_path", None),
         )
