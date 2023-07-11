@@ -32,7 +32,7 @@ class IOHandler(metaclass=IOHandlerSingleton):
         self._logger.debug("Init IOHandler")
 
         self.output_path = None
-        self.output_path_simtools_naming = True
+        self.plain_output_path = False
         self.data_path = None
         self.model_path = None
 
@@ -40,7 +40,7 @@ class IOHandler(metaclass=IOHandlerSingleton):
                   output_path=None,
                   data_path=None,
                   model_path=None,
-                  output_path_simtools_naming=True):
+                  plain_output_path=False):
         """
         Set paths for input and output.
 
@@ -55,7 +55,7 @@ class IOHandler(metaclass=IOHandlerSingleton):
 
         """
         self.output_path = output_path
-        self.output_path_simtools_naming = output_path_simtools_naming
+        self.plain_output_path = plain_output_path
         self.data_path = data_path
         self.model_path = model_path
 
@@ -82,7 +82,9 @@ class IOHandler(metaclass=IOHandlerSingleton):
             if error creating directory
         """
 
-        if self.output_path_simtools_naming:
+        if self.plain_output_path:
+            path = Path(self.output_path)
+        else:
             if test:
                 output_directory_prefix = Path(self.output_path).joinpath("test-output")
             else:
@@ -93,8 +95,6 @@ class IOHandler(metaclass=IOHandlerSingleton):
             path = output_directory_prefix.joinpath(label_dir)
             if dir_type is not None:
                 path = path.joinpath(dir_type)
-        else:
-            path = Path(self.output_path)
 
         try:
             path.mkdir(parents=True, exist_ok=True)
