@@ -25,6 +25,20 @@ def test_get_output_directory(args_dict, io_handler):
         label="test-io-handler", dir_type="model", test=True
     ) == Path(f"{args_dict['output_path']}/output/test-output/test-io-handler/model")
 
+    io_handler.output_path_simtools_naming = False
+
+    assert io_handler.get_output_directory(label="test-io-handler") == Path(
+        f"{args_dict['output_path']}/output"
+    )
+
+    assert io_handler.get_output_directory(label="test-io-handler", test=True) == Path(
+        f"{args_dict['output_path']}/output"
+    )
+
+    assert io_handler.get_output_directory(label="test-io-handler", dir_type="model") == Path(
+        f"{args_dict['output_path']}/output"
+    )
+
 
 def test_get_output_file(args_dict, io_handler):
 

@@ -32,10 +32,15 @@ class IOHandler(metaclass=IOHandlerSingleton):
         self._logger.debug("Init IOHandler")
 
         self.output_path = None
+        self.output_path_simtools_naming = True
         self.data_path = None
         self.model_path = None
 
-    def set_paths(self, output_path=None, data_path=None, model_path=None):
+    def set_paths(self,
+                  output_path=None,
+                  data_path=None,
+                  model_path=None,
+                  output_path_simtools_naming=True):
         """
         Set paths for input and output.
 
@@ -50,6 +55,7 @@ class IOHandler(metaclass=IOHandlerSingleton):
 
         """
         self.output_path = output_path
+        self.output_path_simtools_naming = output_path_simtools_naming
         self.data_path = data_path
         self.model_path = model_path
 
@@ -76,16 +82,20 @@ class IOHandler(metaclass=IOHandlerSingleton):
             if error creating directory
         """
 
-        if test:
-            output_directory_prefix = Path(self.output_path).joinpath("test-output")
-        else:
-            output_directory_prefix = Path(self.output_path).joinpath("simtools-output")
+        if self.output_path_simtools_naming:
+            if test:
+                output_directory_prefix = Path(self.output_path).joinpath("test-output")
+            else:
+                output_directory_prefix = Path(self.output_path).joinpath("simtools-output")
 
-        today = datetime.date.today()
-        label_dir = label if label is not None else "d-" + str(today)
-        path = output_directory_prefix.joinpath(label_dir)
-        if dir_type is not None:
-            path = path.joinpath(dir_type)
+            today = datetime.date.today()
+            label_dir = label if label is not None else "d-" + str(today)
+            path = output_directory_prefix.joinpath(label_dir)
+            if dir_type is not None:
+                path = path.joinpath(dir_type)
+        else:
+            path = Path(self.output_path)
+
         try:
             path.mkdir(parents=True, exist_ok=True)
         except FileNotFoundError:
