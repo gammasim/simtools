@@ -106,9 +106,9 @@ class CommandLineParser(argparse.ArgumentParser):
             required=False,
         )
         _job_group.add_argument(
-            "--no_simtools_output_path_naming",
-            help="do not add date and tool name to output path",
-            action="store_false",
+            "--plain_output_path",
+            help="use plain output path (without adding the tool name and dates)",
+            action="store_true",
             required=False,
         )
         _job_group.add_argument(
