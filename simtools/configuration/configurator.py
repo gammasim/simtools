@@ -282,7 +282,7 @@ class Configurator:
         _io_handler = io_handler.IOHandler()
         _io_handler.set_paths(
             output_path=self.config.get("output_path", None),
-            plain_output_path=self.config.get("plain_output_path", False),
+            use_plain_output_path=self.config.get("use_plain_output_path", False),
             data_path=self.config.get("data_path", None),
             model_path=self.config.get("model_path", None),
         )

@@ -106,7 +106,7 @@ class CommandLineParser(argparse.ArgumentParser):
             required=False,
         )
         _job_group.add_argument(
-            "--plain_output_path",
+            "--_use_plain_output_path",
             help="use plain output path (without adding the tool name and dates)",
             action="store_true",
             required=False,

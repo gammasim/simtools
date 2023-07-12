@@ -32,7 +32,7 @@ class IOHandler(metaclass=IOHandlerSingleton):
         self._logger.debug("Init IOHandler")
 
         self.output_path = None
-        self.plain_output_path = False
+        self.use_plain_output_path = False
         self.data_path = None
         self.model_path = None
 
@@ -40,7 +40,7 @@ class IOHandler(metaclass=IOHandlerSingleton):
                   output_path=None,
                   data_path=None,
                   model_path=None,
-                  plain_output_path=False):
+                  use_plain_output_path=False):
         """
         Set paths for input and output.
 
@@ -52,10 +52,12 @@ class IOHandler(metaclass=IOHandlerSingleton):
             Parent path of the data files.
         model_path: str or Path
             Parent path of the output files created by this class.
+        use_plain_output_path: bool
+            Use plain output path without adding tool name and date
 
         """
         self.output_path = output_path
-        self.plain_output_path = plain_output_path
+        self.use_plain_output_path = use_plain_output_path
         self.data_path = data_path
         self.model_path = model_path
 
@@ -82,7 +84,7 @@ class IOHandler(metaclass=IOHandlerSingleton):
             if error creating directory
         """
 
-        if self.plain_output_path:
+        if self.use_plain_output_path:
             path = Path(self.output_path)
         else:
             if test:
