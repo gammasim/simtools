@@ -232,7 +232,7 @@ def metadata_input_reference_document_list(schema_list):
 
 def workflow_configuration_schema():
     """
-    Reference schmema for simtools workflow configuration.
+    Reference schema for simtools workflow configuration.
 
     Returns
     -------
