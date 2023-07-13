@@ -7,11 +7,12 @@ from pathlib import Path
 import boost_histogram as bh
 import numpy as np
 from astropy import units as u
+from astropy.table import QTable
 from astropy.units import cds
 from corsikaio.subblocks import event_header, get_units_from_fields, run_header
 from eventio import IACTFile
 
-from simtools import io_handler
+from simtools import io_handler, version
 from simtools.util.general import (
     collect_data_from_yaml_or_dict,
     convert_2D_to_radial_distr,
@@ -719,7 +720,7 @@ class CorsikaOutput:
             x_edges.append(mini_hist.axes.edges[0].flatten())
             y_edges.append(mini_hist.axes.edges[1].flatten())
 
-        return np.array(hist_values), np.array(x_edges), np.array(y_edges)
+        return np.array(hist_values), np.array(x_edges) * u.m, np.array(y_edges) * u.m
 
     def get_2D_photon_position_distr(self, density=True):
         """
@@ -1014,6 +1015,59 @@ class CorsikaOutput:
             self._logger.error(msg)
             raise ValueError
         return hist, edges
+
+    def export_histograms(self):
+        """
+        Export the histograms to ecsv files.
+        """
+
+        get_1D_distribution_function_names = {
+            "get_photon_wavelength_distr": "Wavelength distribution",
+            "get_photon_time_of_emission_distr": "Time of arrival",
+            "get_photon_altitude_distr": "Altitude of emission",
+            "get_photon_radial_distr": "Radial distribution on the ground",
+        }
+        get_1D_units = {
+            "get_photon_wavelength_distr": self.hist_config["hist_position"]["z axis"][
+                "start"
+            ].unit,
+            "get_photon_time_of_emission_distr": self.hist_config["hist_time_altitude"]["x axis"][
+                "start"
+            ].unit,
+            "get_photon_altitude_distr": self.hist_config["hist_time_altitude"]["y axis"][
+                "start"
+            ].unit,
+            "get_photon_radial_distr": self.hist_config["hist_position"]["x axis"]["start"].unit,
+        }
+
+        get_2D_distribution_function_names = [
+            "get_2D_photon_direction_distr",
+            "get_2D_photon_time_altitude",
+            "get_2D_num_photons_distr",
+            "get_2D_photon_position_distr",
+        ]
+        print(get_2D_distribution_function_names)
+
+        meta_dict = {
+            "CORSIKA version": self.version,
+            "simtools version": version.__version__,
+            "Original IACT file": self.input_file.name,
+            "telescope_indices": list(self.telescope_indices),
+            "individual_telescopes": self.individual_telescopes,
+            "msg": "Only lower bin edges are given.",
+        }
+
+        for function_name, function_title in get_1D_distribution_function_names.items():
+            meta_dict["Title"] = function_title
+            function = getattr(self, function_name)
+            hist_1D_list, x_edges_list = function()
+            # Only the start of each bin is saved
+            x_edges_list = x_edges_list[0, :-1] * get_1D_units[function_name]
+            hist_1D_list = hist_1D_list[0, :] * u.dimensionless_unscaled
+            ecsv_file = f"{function_name}.ecsv"
+            table = QTable([x_edges_list, hist_1D_list], names=("Edges", "Values"), meta=meta_dict)
+            self._logger.info(f"Exporting telescope list to {ecsv_file}")
+            table.write(ecsv_file, format="ascii.ecsv", overwrite=True)
 
     @property
     def num_photons_per_telescope(self):
