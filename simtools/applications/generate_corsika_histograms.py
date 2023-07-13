@@ -103,6 +103,11 @@
                   unit: *id005
                   value: 0.0
 
+    output_directory (str, optional)
+        Output directory where to save the histograms.
+        If the argument is not given, the histograms are saved in
+        `simtools-output/generate_corsika_histograms/application-plots`.
+
     Example
     -------
     Generate the histograms for a test IACT file:
@@ -125,6 +130,7 @@ import time
 from pathlib import Path
 
 import simtools.util.general as gen
+from simtools import io_handler
 from simtools.configuration import configurator
 from simtools.corsika import corsika_output_visualize
 from simtools.corsika.corsika_output import CorsikaOutput
@@ -181,27 +187,29 @@ def _parse(label, description, usage):
         required=False,
         default=None,
     )
+
+    config.parser.add_argument(
+        "--output_directory",
+        help="Output directory where to save the histograms.",
+        type=str,
+        required=False,
+        default=None,
+    )
+
     return config.initialize()
 
 
-def main():
+def _plot(instance, output_dir):
+    """
+    Auxiliary function to centralize the plotting functions.
 
-    label = Path(__file__).stem
-    description = "Generate histograms for the Cherenkov photons saved in the CORSIKA IACT file."
-    usage = ""
-    args_dict, _ = _parse(label, description, usage)
-
-    logger = logging.getLogger()
-    logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
-    initial_time = time.time()
-    logger.info("Starting the application.")
-
-    instance = CorsikaOutput(args_dict["IACT_file"])
-    instance.set_histograms(
-        telescope_indices=args_dict["telescope_indices"],
-        individual_telescopes=args_dict["individual_telescopes"],
-        hist_config=args_dict["hist_config"],
-    )
+    Parameters
+    ----------
+    instance: `CorsikaOutput` instance.
+        The CorsikaOutput instance created in main.
+    output_dir: str
+        The output directory where to save the histograms.
+    """
 
     plot_function_names = [
         "plot_wavelength_distr",
@@ -218,7 +226,11 @@ def main():
 
     for function_name in plot_function_names:
         function = getattr(corsika_output_visualize, function_name)
-        function(instance)
+        figures, figure_names = function(instance)
+        for figure, figure_name in zip(figures, figure_names):
+            output_file_name = output_dir.joinpath(figure_name)
+            print(output_file_name)
+            figure.savefig(output_file_name, bbox_inches="tight")
 
     corsika_output_visualize.plot_num_photons_distr(
         instance, log_y=True, event_or_telescope="event"
@@ -226,6 +238,34 @@ def main():
     corsika_output_visualize.plot_num_photons_distr(
         instance, log_y=True, event_or_telescope="telescope"
     )
+
+
+def main():
+
+    label = Path(__file__).stem
+    description = "Generate histograms for the Cherenkov photons saved in the CORSIKA IACT file."
+    usage = ""
+    args_dict, _ = _parse(label, description, usage)
+    io_handler_instance = io_handler.IOHandler()
+
+    logger = logging.getLogger()
+    logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
+    initial_time = time.time()
+    logger.info("Starting the application.")
+
+    instance = CorsikaOutput(args_dict["IACT_file"])
+    instance.set_histograms(
+        telescope_indices=args_dict["telescope_indices"],
+        individual_telescopes=args_dict["individual_telescopes"],
+        hist_config=args_dict["hist_config"],
+    )
+
+    if args_dict["output_directory"] is None:
+        output_dir = io_handler_instance.get_output_directory(label, dir_type="application-plots")
+    else:
+        output_dir = args_dict["output_directory"]
+
+    _plot(instance=instance, output_dir=output_dir)
 
     instance.event_1D_histogram("first_interaction_height")
     instance.event_2D_histogram("first_interaction_height", "total_energy")
