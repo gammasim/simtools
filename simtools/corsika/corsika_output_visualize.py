@@ -29,6 +29,8 @@ def _kernel_plot_2D_photons(corsika_output_instance, property_name, log_z=False)
     -------
     list
         List of figures for the given telescopes.
+    list
+        List of the figure names.
 
     Raises
     ------
@@ -72,6 +74,7 @@ def _kernel_plot_2D_photons(corsika_output_instance, property_name, log_z=False)
         hist_values, x_edges, y_edges = [hist_values], [x_edges], [y_edges]
 
     all_figs = []
+    fig_names = []
     for i_hist, _ in enumerate(x_edges):
         fig, ax = plt.subplots()
         if log_z is True:
@@ -87,7 +90,7 @@ def _kernel_plot_2D_photons(corsika_output_instance, property_name, log_z=False)
         fig.colorbar(mesh)
         all_figs.append(fig)
         if corsika_output_instance.individual_telescopes is False:
-            fig.savefig(f"histogram_{property_name}_2D_all_tels.png", bbox_inches="tight")
+            fig_names.append(f"histogram_{property_name}_2D_all_tels.png")
         else:
             ax.text(
                 0.99,
@@ -98,14 +101,13 @@ def _kernel_plot_2D_photons(corsika_output_instance, property_name, log_z=False)
                 transform=ax.transAxes,
                 color="white",
             )
-            fig.savefig(
+            fig_names.append(
                 f"histogram_{property_name}_2D_tel_"
                 f"{str(corsika_output_instance.telescope_indices[i_hist])}.png",
-                bbox_inches="tight",
             )
         plt.close()
 
-    return all_figs
+    return all_figs, fig_names
 
 
 def plot_2D_counts(corsika_output_instance, log_z=True):
@@ -118,6 +120,14 @@ def plot_2D_counts(corsika_output_instance, log_z=True):
         instance of corsika.corsika_output.corsikaOutput.
     log_z: bool
         if True, the intensity of the color bar is given in logarithmic scale.
+
+    Returns
+    -------
+    list
+        List of figures for the given telescopes.
+    list
+        List of the figure names.
+
     """
     return _kernel_plot_2D_photons(corsika_output_instance, "counts", log_z=log_z)
 
@@ -132,6 +142,14 @@ def plot_2D_density(corsika_output_instance, log_z=True):
         instance of corsika.corsika_output.corsikaOutput.
     log_z: bool
         if True, the intensity of the color bar is given in logarithmic scale.
+
+    Returns
+    -------
+    list
+        List of figures for the given telescopes.
+    list
+        List of the figure names.
+
     """
     return _kernel_plot_2D_photons(corsika_output_instance, "density", log_z=log_z)
 
@@ -146,6 +164,14 @@ def plot_2D_direction(corsika_output_instance, log_z=True):
         instance of corsika.corsika_output.corsikaOutput.
     log_z: bool
         if True, the intensity of the color bar is given in logarithmic scale.
+
+    Returns
+    -------
+    list
+        List of figures for the given telescopes.
+    list
+        List of the figure names.
+
     """
     return _kernel_plot_2D_photons(corsika_output_instance, "direction", log_z=log_z)
 
@@ -160,6 +186,14 @@ def plot_2D_time_altitude(corsika_output_instance, log_z=True):
         instance of corsika.corsika_output.corsikaOutput.
     log_z: bool
         if True, the intensity of the color bar is given in logarithmic scale.
+
+    Returns
+    -------
+    list
+        List of figures for the given telescopes.
+    list
+        List of the figure names.
+
     """
     return _kernel_plot_2D_photons(corsika_output_instance, "time_altitude", log_z=log_z)
 
@@ -174,6 +208,14 @@ def plot_2D_num_photons_per_telescope(corsika_output_instance, log_z=True):
         instance of corsika.corsika_output.corsikaOutput.
     log_z: bool
         if True, the intensity of the color bar is given in logarithmic scale.
+
+    Returns
+    -------
+    list
+        List of figures for the given telescopes.
+    list
+        List of the figure names.
+
     """
     return _kernel_plot_2D_photons(
         corsika_output_instance, "num_photons_per_telescope", log_z=log_z
@@ -199,6 +241,8 @@ def _kernel_plot_1D_photons(corsika_output_instance, property_name, log_y=True):
     -------
     list
         List of figures for the given telescopes.
+    list
+        List of the figure names.
 
     Raises
     ------
@@ -242,6 +286,7 @@ def _kernel_plot_1D_photons(corsika_output_instance, property_name, log_y=True):
         hist_values, edges = [hist_values], [edges]
 
     all_figs = []
+    fig_names = []
     for i_hist, _ in enumerate(edges):
         fig, ax = plt.subplots()
         ax.bar(
@@ -256,15 +301,14 @@ def _kernel_plot_1D_photons(corsika_output_instance, property_name, log_y=True):
         if log_y is True:
             ax.set_yscale("log")
         if corsika_output_instance.individual_telescopes is False:
-            fig.savefig(f"histogram_{property_name}_tels.png", bbox_inches="tight")
+            fig_names.append(f"histogram_{property_name}_tels.png")
         else:
-            fig.savefig(
+            fig_names.append(
                 f"histogram_{property_name}_tel_"
                 f"{str(corsika_output_instance.telescope_indices[i_hist])}.png",
-                bbox_inches="tight",
             )
         all_figs.append(fig)
-    return all_figs
+    return all_figs, fig_names
 
 
 def plot_wavelength_distr(corsika_output_instance, log_y=True):
@@ -278,6 +322,12 @@ def plot_wavelength_distr(corsika_output_instance, log_y=True):
     log_y: bool
         if True, the intensity of the Y axis is given in logarithmic scale.
 
+    Returns
+    -------
+    list
+        List of figures for the given telescopes.
+    list
+        List of the figure names.
     """
     return _kernel_plot_1D_photons(corsika_output_instance, "wavelength", log_y=log_y)
 
@@ -292,6 +342,13 @@ def plot_counts_distr(corsika_output_instance, log_y=True):
         instance of corsika.corsika_output.corsikaOutput.
     log_y: bool
         if True, the intensity of the Y axis is given in logarithmic scale.
+
+    Returns
+    -------
+    list
+        List of figures for the given telescopes.
+    list
+        List of the figure names.
     """
     return _kernel_plot_1D_photons(corsika_output_instance, "counts", log_y=log_y)
 
@@ -307,6 +364,12 @@ def plot_density_distr(corsika_output_instance, log_y=True):
     log_y: bool
         if True, the intensity of the Y axis is given in logarithmic scale.
 
+    Returns
+    -------
+    list
+        List of figures for the given telescopes.
+    list
+        List of the figure names.
     """
     return _kernel_plot_1D_photons(corsika_output_instance, "density", log_y=log_y)
 
@@ -321,6 +384,13 @@ def plot_time_distr(corsika_output_instance, log_y=True):
         instance of corsika.corsika_output.corsikaOutput.
     log_y: bool
         if True, the intensity of the Y axis is given in logarithmic scale.
+
+    Returns
+    -------
+    list
+        List of figures for the given telescopes.
+    list
+        List of the figure names.
     """
     return _kernel_plot_1D_photons(corsika_output_instance, "time", log_y=log_y)
 
@@ -335,6 +405,13 @@ def plot_altitude_distr(corsika_output_instance, log_y=True):
         instance of corsika.corsika_output.corsikaOutput.
     log_y: bool
         if True, the intensity of the Y axis is given in logarithmic scale.
+
+    Returns
+    -------
+    list
+        List of figures for the given telescopes.
+    list
+        List of the figure names.
     """
     return _kernel_plot_1D_photons(corsika_output_instance, "altitude", log_y=log_y)
 
@@ -352,6 +429,13 @@ def plot_num_photons_distr(corsika_output_instance, log_y=True, event_or_telesco
     event_or_telescope: str
         Indicates if the distribution of photons is given for the events, or for the telescopes.
         Allowed values are: "event" or "telescope".
+
+    Returns
+    -------
+    list
+        List of figures for the given telescopes.
+    list
+        List of the figure names.
 
     Raises
     ------
