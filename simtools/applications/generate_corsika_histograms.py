@@ -116,7 +116,8 @@
     Expected final print-out message:
 
     .. code-block:: console
-
+        INFO::generate_corsika_histograms(l226)::main::Finalizing the application.
+        Total time needed: 6s.
 """
 
 import logging
@@ -161,7 +162,7 @@ def _parse(label, description, usage):
         "--telescope_indices",
         help="Name of the CORSIKA IACT file from which to generate the histograms.",
         type=str,
-        required=True,
+        required=False,
     )
 
     config.parser.add_argument(
@@ -202,16 +203,23 @@ def main():
         hist_config=args_dict["hist_config"],
     )
 
-    corsika_output_visualize.plot_wavelength_distr(instance)
-    corsika_output_visualize.plot_counts_distr(instance)
-    corsika_output_visualize.plot_density_distr(instance)
-    corsika_output_visualize.plot_2D_counts(instance)
-    corsika_output_visualize.plot_2D_density(instance)
-    corsika_output_visualize.plot_2D_direction(instance)
-    corsika_output_visualize.plot_2D_time_altitude(instance)
-    corsika_output_visualize.plot_2D_num_photons_per_telescope(instance)
-    corsika_output_visualize.plot_time_distr(instance)
-    corsika_output_visualize.plot_altitude_distr(instance)
+    plot_function_names = [
+        "plot_wavelength_distr",
+        "plot_counts_distr",
+        "plot_density_distr",
+        "plot_2D_counts",
+        "plot_2D_density",
+        "plot_2D_direction",
+        "plot_2D_time_altitude",
+        "plot_2D_num_photons_per_telescope",
+        "plot_time_distr",
+        "plot_altitude_distr",
+    ]
+
+    for function_name in plot_function_names:
+        function = getattr(corsika_output_visualize, function_name)
+        function(instance)
+
     corsika_output_visualize.plot_num_photons_distr(
         instance, log_y=True, event_or_telescope="event"
     )
@@ -223,7 +231,9 @@ def main():
     instance.event_2D_histogram("first_interaction_height", "total_energy")
 
     final_time = time.time()
-    logger.info(f"Finalizing the application. Total time needed: {final_time - initial_time}.")
+    logger.info(
+        f"Finalizing the application. Total time needed: {round(final_time - initial_time)}s."
+    )
 
 
 if __name__ == "__main__":
