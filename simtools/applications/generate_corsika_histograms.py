@@ -6,7 +6,7 @@
     This application produces a set of histograms for the distribution of Cherenkov photons on the
     ground (at observation level) read from the given CORSIKA IACT output file.
 
-    The histograms can be saved both in a png and in a yaml file. By default, it saves in both
+    The histograms can be saved both in a png and in a ecsv file. By default, it saves in both
     formats.
 
     The following 2D histograms are produced:
@@ -42,7 +42,7 @@
         If the argument is not given, the Cherenkov photons from the given telescopes are considered
          together in the same histograms.
 
-    hist_config (yaml or dict, optional)
+    hist_config (ecsv or dict, optional)
         The configuration used for generating the histograms.
         It includes information about the bin sizes, the ranges, scale of the plot and units.
         By construction, three major histograms are created to start with:
@@ -108,6 +108,12 @@
         If the argument is not given, the histograms are saved in
         `simtools-output/generate_corsika_histograms/application-plots`.
 
+    png (bool, optional)
+        If true, histograms are saved into png files.
+
+    ecsv (bool, optional)
+        If true, histograms are saved into ecsv files.
+
     Example
     -------
     Generate the histograms for a test IACT file:
@@ -115,7 +121,7 @@
      .. code-block:: console
 
         simtools-generate-corsika-histograms --IACT_file /workdir/external/gammasim-tools/tests/\
-            resources/tel_output_10GeV-2-gamma-20deg-CTAO-South.corsikaio
+            resources/tel_output_10GeV-2-gamma-20deg-CTAO-South.corsikaio --png --ecsv
 
 
     Expected final print-out message:
@@ -182,7 +188,7 @@ def _parse(label, description, usage):
 
     config.parser.add_argument(
         "--hist_config",
-        help="Yaml file with the configuration parameters to create the histograms.",
+        help="ecsv file with the configuration parameters to create the histograms.",
         type=str,
         required=False,
         default=None,
@@ -196,10 +202,23 @@ def _parse(label, description, usage):
         default=None,
     )
 
-    return config.initialize()
+    config.parser.add_argument(
+        "--png", help="Save histograms into png files.", action="store_true", required=False
+    )
+
+    config.parser.add_argument(
+        "--ecsv", help="Save histograms into ecsv files.", action="store_true", required=False
+    )
+
+    config_parser, _ = config.initialize()
+
+    if not config_parser["png"] and not config_parser["ecsv"]:
+        config.parser.error("At least one argument between `--png` and `--ecsv` is required.")
+
+    return config_parser, _
 
 
-def _plot(instance, output_dir):
+def _plot_figures(instance, output_dir):
     """
     Auxiliary function to centralize the plotting functions.
 
@@ -240,12 +259,28 @@ def _plot(instance, output_dir):
     )
 
 
+def _save_distributions(instance, output_dir):
+    """
+    Auxiliary function to save the histograms to ecsv files.
+
+    Parameters
+    ----------
+    instance: `CorsikaOutput` instance.
+        The CorsikaOutput instance created in main.
+    output_dir: str
+        The output directory where to save the histograms.
+    """
+
+    instance.export_histograms()
+
+
 def main():
 
     label = Path(__file__).stem
     description = "Generate histograms for the Cherenkov photons saved in the CORSIKA IACT file."
     usage = ""
     args_dict, _ = _parse(label, description, usage)
+
     io_handler_instance = io_handler.IOHandler()
 
     logger = logging.getLogger()
@@ -265,7 +300,11 @@ def main():
     else:
         output_dir = args_dict["output_directory"]
 
-    _plot(instance=instance, output_dir=output_dir)
+    if args_dict["png"]:
+        _plot_figures(instance=instance, output_dir=output_dir)
+
+    if args_dict["ecsv"]:
+        _save_distributions(instance=instance, output_dir=output_dir)
 
     instance.event_1D_histogram("first_interaction_height")
     instance.event_2D_histogram("first_interaction_height", "total_energy")
