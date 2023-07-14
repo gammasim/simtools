@@ -76,13 +76,13 @@ def _parse(label, description, usage):
 
     config.parser.add_argument(
         "--input_meta",
-        help="Meta data file describing input data",
+        help="meta data file describing input data",
         type=str,
         required=False,
     )
     config.parser.add_argument(
         "--input_data",
-        help="Input data file",
+        help="input data file",
         type=str,
         required=False,
     )
