@@ -43,14 +43,14 @@ def _kernel_plot_2D_photons(corsika_output_instance, property_name, log_z=False)
         "density": "x (m)",
         "direction": "cos(x)",
         "time_altitude": "Time since 1st interaction (ns)",
-        "num_photons_per_telescope": "Event number",
+        "num_photons_per_telescope": "Telescope index",
     }
     y_label = {
         "counts": "y (m)",
         "density": "y (m)",
         "direction": "cos(y)",
         "time_altitude": "Altitude of emission (km)",
-        "num_photons_per_telescope": "Telescope index",
+        "num_photons_per_telescope": "Event number",
     }
     if property_name not in x_label:
         msg = f"property_name must be one of {list(x_label.keys())}"
