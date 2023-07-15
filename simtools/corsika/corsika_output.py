@@ -74,6 +74,7 @@ class CorsikaOutput:
         self._num_photons_per_telescope = None
         self.__meta_dict = None
         self.__dict_2D_distributions = None
+        self.__dict_1D_distributions = None
         self._event_azimuth_angles = None
         self._event_zenith_angles = None
         self._hist_config = None
@@ -1052,46 +1053,50 @@ class CorsikaOutput:
             }
         return self.__meta_dict
 
-    def _export_1D_histograms(self):
+    @property
+    def _dict_1D_distributions(self):
         """
-        Auxiliary function to export only the 1D histograms.
+        Dictionary to label the 1D distributions according to the class methods.
+
+        Returns
+        -------
+        dict:
+            The dictionary with information about the 1D distributions.
         """
-        get_1D_distribution_function_names = {
+        self.__dict_1D_distributions = {
             "get_photon_wavelength_distr": {
                 "title": "Wavelength distribution",
                 "edges": "Wavelength",
+                "edges unit": self.hist_config["hist_position"]["z axis"]["start"].unit,
             },
             "get_photon_time_of_emission_distr": {
                 "title": "Time of arrival distribution",
                 "edges": "Time of arrival",
+                "edges unit": self.hist_config["hist_time_altitude"]["x axis"]["start"].unit,
             },
             "get_photon_altitude_distr": {
                 "title": "Altitude of emission distribution",
                 "edges": "Altitude of emission",
+                "edges unit": self.hist_config["hist_time_altitude"]["y axis"]["start"].unit,
             },
             "get_photon_radial_distr": {
                 "title": "Radial distribution on the ground",
                 "edges": "Distance to center",
+                "edges unit": self.hist_config["hist_position"]["x axis"]["start"].unit,
             },
         }
-        get_1D_units = {
-            "get_photon_wavelength_distr": self.hist_config["hist_position"]["z axis"][
-                "start"
-            ].unit,
-            "get_photon_time_of_emission_distr": self.hist_config["hist_time_altitude"]["x axis"][
-                "start"
-            ].unit,
-            "get_photon_altitude_distr": self.hist_config["hist_time_altitude"]["y axis"][
-                "start"
-            ].unit,
-            "get_photon_radial_distr": self.hist_config["hist_position"]["x axis"]["start"].unit,
-        }
+        return self.__dict_1D_distributions
 
-        for function_name, function_dict in get_1D_distribution_function_names.items():
+    def _export_1D_histograms(self):
+        """
+        Auxiliary function to export only the 1D histograms.
+        """
+
+        for function_name, function_dict in self._dict_1D_distributions.items():
             self._meta_dict["Title"] = function_dict["title"]
             function = getattr(self, function_name)
             hist_1D_list, x_edges_list = function()
-            x_edges_list = x_edges_list * get_1D_units[function_name]
+            x_edges_list = x_edges_list * self._dict_1D_distributions[function_name]["edges unit"]
             hist_1D_list = hist_1D_list * u.dimensionless_unscaled
             for i_histogram, _ in enumerate(x_edges_list):
                 if self.individual_telescopes:
@@ -1100,10 +1105,13 @@ class CorsikaOutput:
                     )
                 else:
                     ecsv_file = f"{function_name}_all_tels.ecsv"
-                table = QTable(
-                    [x_edges_list[i_histogram][:-1], hist_1D_list[i_histogram]],
-                    names=(function_dict["edges"], "Values"),
-                    meta=self._meta_dict,
+
+                table = self._fill_ecsv_table(
+                    hist_1D_list[i_histogram],
+                    x_edges_list[i_histogram],
+                    None,
+                    function_dict["edges"],
+                    None,
                 )
                 self._logger.info(f"Exporting histogram to {ecsv_file}")
                 table.write(ecsv_file, format="ascii.ecsv", overwrite=True)
@@ -1189,7 +1197,7 @@ class CorsikaOutput:
                 self._logger.info(f"Exporting histogram to {ecsv_file}")
                 table.write(ecsv_file, format="ascii.ecsv", overwrite=True)
 
-    def _fill_ecsv_table(self, hist_2D, x_edges, y_edges, x_label, y_label):
+    def _fill_ecsv_table(self, hist, x_edges, y_edges, x_label, y_label):
         """
         Create and fill an ecsv table with the histogram information.
 
@@ -1206,22 +1214,31 @@ class CorsikaOutput:
         str
             Y edges label.
         """
-
-        x_edges_2D, y_edges_2D = np.meshgrid(x_edges[:-1], y_edges[:-1])
-        x_edges_2D_flattened, y_edges_2D_flattened, hist_2D_flattened = (
-            x_edges_2D.flatten(),
-            y_edges_2D.flatten(),
-            hist_2D.flatten(),
-        )
-        table = QTable(
-            [
-                x_edges_2D_flattened,
-                y_edges_2D_flattened,
-                hist_2D_flattened,
-            ],
-            names=(x_label, y_label, "Values"),
-            meta=self._meta_dict,
-        )
+        try:
+            x_edges_2D, y_edges_2D = np.meshgrid(x_edges[:-1], y_edges[:-1])
+            x_edges_2D_flattened, y_edges_2D_flattened, hist_2D_flattened = (
+                x_edges_2D.flatten(),
+                y_edges_2D.flatten(),
+                hist.flatten(),
+            )
+            table = QTable(
+                [
+                    x_edges_2D_flattened,
+                    y_edges_2D_flattened,
+                    hist_2D_flattened,
+                ],
+                names=(x_label, y_label, "Values"),
+                meta=self._meta_dict,
+            )
+        except TypeError:
+            table = QTable(
+                [
+                    x_edges[:-1],
+                    hist,
+                ],
+                names=(x_label, "Values"),
+                meta=self._meta_dict,
+            )
         return table
 
     @property
