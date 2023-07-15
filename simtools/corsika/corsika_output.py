@@ -1056,10 +1056,22 @@ class CorsikaOutput:
         Auxiliary function to export only the 1D histograms.
         """
         get_1D_distribution_function_names = {
-            "get_photon_wavelength_distr": "Wavelength distribution",
-            "get_photon_time_of_emission_distr": "Time of arrival",
-            "get_photon_altitude_distr": "Altitude of emission",
-            "get_photon_radial_distr": "Radial distribution on the ground",
+            "get_photon_wavelength_distr": {
+                "title": "Wavelength distribution",
+                "edges": "Wavelength",
+            },
+            "get_photon_time_of_emission_distr": {
+                "title": "Time of arrival distribution",
+                "edges": "Time of arrival",
+            },
+            "get_photon_altitude_distr": {
+                "title": "Altitude of emission distribution",
+                "edges": "Altitude of emission",
+            },
+            "get_photon_radial_distr": {
+                "title": "Radial distribution on the ground",
+                "edges": "Distance to center",
+            },
         }
         get_1D_units = {
             "get_photon_wavelength_distr": self.hist_config["hist_position"]["z axis"][
@@ -1074,8 +1086,8 @@ class CorsikaOutput:
             "get_photon_radial_distr": self.hist_config["hist_position"]["x axis"]["start"].unit,
         }
 
-        for function_name, function_title in get_1D_distribution_function_names.items():
-            self._meta_dict["Title"] = function_title
+        for function_name, function_dict in get_1D_distribution_function_names.items():
+            self._meta_dict["Title"] = function_dict["title"]
             function = getattr(self, function_name)
             hist_1D_list, x_edges_list = function()
             # Only the start of each bin is saved
@@ -1090,7 +1102,7 @@ class CorsikaOutput:
                     ecsv_file = f"{function_name}_all_tels.ecsv"
                 table = QTable(
                     [x_edges_list[i_histogram][:-1], hist_1D_list[i_histogram]],
-                    names=("Edges", "Values"),
+                    names=(function_dict["edges"], "Values"),
                     meta=self._meta_dict,
                 )
                 self._logger.info(f"Exporting histogram to {ecsv_file}")
@@ -1101,10 +1113,26 @@ class CorsikaOutput:
         Auxiliary function to export only the 2D histograms.
         """
         get_2D_distribution_function_names = {
-            "get_2D_photon_direction_distr": "Incoming directive cosines",
-            "get_2D_photon_time_altitude": "Time of arrival vs altitude of emission",
-            "get_2D_num_photons_distr": "Number of photons per telescope and per event",
-            "get_2D_photon_position_distr": "Photon distribution on the ground",
+            "get_2D_photon_direction_distr": {
+                "title": "Incoming directive cosines",
+                "x edges": "x directive cosinus",
+                "y edges": "y directive cosinus",
+            },
+            "get_2D_photon_time_altitude": {
+                "title": "Time of arrival vs altitude of emission",
+                "x edges": "Time of arrival",
+                "y edges": "Altitude of emission",
+            },
+            "get_2D_num_photons_distr": {
+                "title": "Number of photons per telescope and per event",
+                "x edges": "Telescope counter",
+                "y edges": "Event counter",
+            },
+            "get_2D_photon_position_distr": {
+                "title": "Photon distribution on the ground",
+                "x edges": "x position on the ground",
+                "y edges": "y position on the ground",
+            },
         }
 
         get_2D_units = {
@@ -1120,8 +1148,8 @@ class CorsikaOutput:
             ),
         }
 
-        for function_name, function_title in get_2D_distribution_function_names.items():
-            self._meta_dict["Title"] = function_title
+        for function_name, function_dict in get_2D_distribution_function_names.items():
+            self._meta_dict["Title"] = function_dict["title"]
             function = getattr(self, function_name)
             hist_2D_list, x_edges_list, y_edges_list = function()
 
@@ -1140,18 +1168,13 @@ class CorsikaOutput:
                     y_edges_2D.flatten(),
                     hist_2D_list[i_histogram].flatten(),
                 )
-                print(
-                    np.shape(x_edges_2D_flattened),
-                    np.shape(y_edges_2D_flattened),
-                    np.shape(hist_2D_flattened),
-                )
                 table = QTable(
                     [
                         x_edges_2D_flattened * get_2D_units[function_name][0],
                         y_edges_2D_flattened * get_2D_units[function_name][1],
                         hist_2D_flattened * u.dimensionless_unscaled,
                     ],
-                    names=("Edges x", "Edges y", "Values"),
+                    names=(function_dict["x edges"], function_dict["y edges"], "Values"),
                     meta=self._meta_dict,
                 )
                 self._logger.info(f"Exporting histogram to {ecsv_file}")
