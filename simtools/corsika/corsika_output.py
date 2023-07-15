@@ -72,6 +72,7 @@ class CorsikaOutput:
         self._num_photons_per_event_per_telescope = None
         self._num_photons_per_event = None
         self._num_photons_per_telescope = None
+        self.__meta_dict = None
         self._event_azimuth_angles = None
         self._event_zenith_angles = None
         self._hist_config = None
@@ -786,16 +787,20 @@ class CorsikaOutput:
         numpy.ndarray
             The counts of the histogram.
         numpy.array
-            Number of photons per event per telescope in self.telescope_indices.
-        numpy.array
             An array that counts the telescopes in self.telescope_indices
+        numpy.array
+            Number of photons per event per telescope in self.telescope_indices.
         """
-        num_events_array = np.arange(self.num_events + 1)
+        num_events_array = np.arange(self.num_events + 1).reshape(1, self.num_events + 1)
         # It counts only the telescope indices given by self.telescope_indices.
         # The + 1 closes the last edge.
-        telescope_counter = np.arange(len(self.telescope_indices) + 1)
+        telescope_counter = np.arange(len(self.telescope_indices) + 1).reshape(
+            1, len(self.telescope_indices) + 1
+        )
         return (
-            np.array(self.num_photons_per_event_per_telescope),
+            np.array(self.num_photons_per_event_per_telescope).reshape(
+                1, np.size(telescope_counter, axis=1) - 1, np.size(num_events_array, axis=1) - 1
+            ),
             num_events_array,
             telescope_counter,
         )
@@ -1021,6 +1026,35 @@ class CorsikaOutput:
         Export the histograms to ecsv files.
         """
 
+        self._export_1D_histograms()
+        self._export_2D_histograms()
+
+    @property
+    def _meta_dict(self):
+        """
+        Define the meta dictionary for exporting the histograms.
+
+        Returns
+        -------
+        dict
+            Meta dictionary for the ECSV files with the histograms.
+        """
+
+        if self.__meta_dict is None:
+            self.__meta_dict = {
+                "CORSIKA version": self.version,
+                "simtools version": version.__version__,
+                "Original IACT file": self.input_file.name,
+                "telescope_indices": list(self.telescope_indices),
+                "individual_telescopes": self.individual_telescopes,
+                "msg": "Only lower bin edges are given.",
+            }
+        return self.__meta_dict
+
+    def _export_1D_histograms(self):
+        """
+        Auxiliary function to export only the 1D histograms.
+        """
         get_1D_distribution_function_names = {
             "get_photon_wavelength_distr": "Wavelength distribution",
             "get_photon_time_of_emission_distr": "Time of arrival",
@@ -1040,34 +1074,88 @@ class CorsikaOutput:
             "get_photon_radial_distr": self.hist_config["hist_position"]["x axis"]["start"].unit,
         }
 
-        get_2D_distribution_function_names = [
-            "get_2D_photon_direction_distr",
-            "get_2D_photon_time_altitude",
-            "get_2D_num_photons_distr",
-            "get_2D_photon_position_distr",
-        ]
-        print(get_2D_distribution_function_names)
-
-        meta_dict = {
-            "CORSIKA version": self.version,
-            "simtools version": version.__version__,
-            "Original IACT file": self.input_file.name,
-            "telescope_indices": list(self.telescope_indices),
-            "individual_telescopes": self.individual_telescopes,
-            "msg": "Only lower bin edges are given.",
-        }
-
         for function_name, function_title in get_1D_distribution_function_names.items():
-            meta_dict["Title"] = function_title
+            self._meta_dict["Title"] = function_title
             function = getattr(self, function_name)
             hist_1D_list, x_edges_list = function()
             # Only the start of each bin is saved
-            x_edges_list = x_edges_list[0, :-1] * get_1D_units[function_name]
-            hist_1D_list = hist_1D_list[0, :] * u.dimensionless_unscaled
-            ecsv_file = f"{function_name}.ecsv"
-            table = QTable([x_edges_list, hist_1D_list], names=("Edges", "Values"), meta=meta_dict)
-            self._logger.info(f"Exporting telescope list to {ecsv_file}")
-            table.write(ecsv_file, format="ascii.ecsv", overwrite=True)
+            x_edges_list = x_edges_list * get_1D_units[function_name]
+            hist_1D_list = hist_1D_list * u.dimensionless_unscaled
+            for i_histogram, _ in enumerate(x_edges_list):
+                if self.individual_telescopes:
+                    ecsv_file = (
+                        f"{function_name}_tel_index_{self.telescope_indices[i_histogram]}.ecsv"
+                    )
+                else:
+                    ecsv_file = f"{function_name}_all_tels.ecsv"
+                table = QTable(
+                    [x_edges_list[i_histogram][:-1], hist_1D_list[i_histogram]],
+                    names=("Edges", "Values"),
+                    meta=self._meta_dict,
+                )
+                self._logger.info(f"Exporting histogram to {ecsv_file}")
+                table.write(ecsv_file, format="ascii.ecsv", overwrite=True)
+
+    def _export_2D_histograms(self):
+        """
+        Auxiliary function to export only the 2D histograms.
+        """
+        get_2D_distribution_function_names = {
+            "get_2D_photon_direction_distr": "Incoming directive cosines",
+            "get_2D_photon_time_altitude": "Time of arrival vs altitude of emission",
+            "get_2D_num_photons_distr": "Number of photons per telescope and per event",
+            "get_2D_photon_position_distr": "Photon distribution on the ground",
+        }
+
+        get_2D_units = {
+            "get_2D_photon_direction_distr": (u.dimensionless_unscaled, u.dimensionless_unscaled),
+            "get_2D_photon_time_altitude": (
+                self.hist_config["hist_time_altitude"]["x axis"]["start"].unit,
+                self.hist_config["hist_time_altitude"]["y axis"]["start"].unit,
+            ),
+            "get_2D_num_photons_distr": (u.dimensionless_unscaled, u.dimensionless_unscaled),
+            "get_2D_photon_position_distr": (
+                self.hist_config["hist_position"]["x axis"]["start"].unit,
+                self.hist_config["hist_position"]["y axis"]["start"].unit,
+            ),
+        }
+
+        for function_name, function_title in get_2D_distribution_function_names.items():
+            self._meta_dict["Title"] = function_title
+            function = getattr(self, function_name)
+            hist_2D_list, x_edges_list, y_edges_list = function()
+
+            for i_histogram, _ in enumerate(x_edges_list):
+                if self.individual_telescopes:
+                    ecsv_file = (
+                        f"{function_name}_tel_index_{self.telescope_indices[i_histogram]}.ecsv"
+                    )
+                else:
+                    ecsv_file = f"{function_name}_all_tels.ecsv"
+                x_edges_2D, y_edges_2D = np.meshgrid(
+                    x_edges_list[i_histogram][:-1], y_edges_list[i_histogram][:-1]
+                )
+                x_edges_2D_flattened, y_edges_2D_flattened, hist_2D_flattened = (
+                    x_edges_2D.flatten(),
+                    y_edges_2D.flatten(),
+                    hist_2D_list[i_histogram].flatten(),
+                )
+                print(
+                    np.shape(x_edges_2D_flattened),
+                    np.shape(y_edges_2D_flattened),
+                    np.shape(hist_2D_flattened),
+                )
+                table = QTable(
+                    [
+                        x_edges_2D_flattened * get_2D_units[function_name][0],
+                        y_edges_2D_flattened * get_2D_units[function_name][1],
+                        hist_2D_flattened * u.dimensionless_unscaled,
+                    ],
+                    names=("Edges x", "Edges y", "Values"),
+                    meta=self._meta_dict,
+                )
+                self._logger.info(f"Exporting histogram to {ecsv_file}")
+                table.write(ecsv_file, format="ascii.ecsv", overwrite=True)
 
     @property
     def num_photons_per_telescope(self):
