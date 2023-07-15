@@ -73,6 +73,7 @@ class CorsikaOutput:
         self._num_photons_per_event = None
         self._num_photons_per_telescope = None
         self.__meta_dict = None
+        self.__dict_2D_distributions = None
         self._event_azimuth_angles = None
         self._event_zenith_angles = None
         self._hist_config = None
@@ -683,9 +684,9 @@ class CorsikaOutput:
         numpy.ndarray
             The counts of the histogram.
         numpy.array
-            The x edges of the direction histograms in cos(x).
+            The x edges of the histograms.
         numpy.array
-            The y edges of the direction histograms in cos(y)
+            The y edges of the histograms.
 
         Raises
         ------
@@ -1090,7 +1091,6 @@ class CorsikaOutput:
             self._meta_dict["Title"] = function_dict["title"]
             function = getattr(self, function_name)
             hist_1D_list, x_edges_list = function()
-            # Only the start of each bin is saved
             x_edges_list = x_edges_list * get_1D_units[function_name]
             hist_1D_list = hist_1D_list * u.dimensionless_unscaled
             for i_histogram, _ in enumerate(x_edges_list):
@@ -1108,50 +1108,68 @@ class CorsikaOutput:
                 self._logger.info(f"Exporting histogram to {ecsv_file}")
                 table.write(ecsv_file, format="ascii.ecsv", overwrite=True)
 
+    @property
+    def _dict_2D_distributions(self):
+        """
+        Dictionary to label the 2D distributions according to the class methods.
+
+        Returns
+        -------
+        dict:
+            The dictionary with information about the 2D distributions.
+        """
+        if self.__dict_2D_distributions is None:
+            self.__dict_2D_distributions = {
+                "get_2D_photon_direction_distr": {
+                    "title": "Incoming directive cosines",
+                    "x edges": "x directive cosinus",
+                    "x edges unit": u.dimensionless_unscaled,
+                    "y edges": "y directive cosinus",
+                    "y edges unit": u.dimensionless_unscaled,
+                },
+                "get_2D_photon_time_altitude": {
+                    "title": "Time of arrival vs altitude of emission",
+                    "x edges": "Time of arrival",
+                    "x edges unit": self.hist_config["hist_time_altitude"]["x axis"]["start"].unit,
+                    "y edges": "Altitude of emission",
+                    "y edges unit": self.hist_config["hist_time_altitude"]["y axis"]["start"].unit,
+                },
+                "get_2D_num_photons_distr": {
+                    "title": "Number of photons per telescope and per event",
+                    "x edges": "Telescope counter",
+                    "x edges unit": u.dimensionless_unscaled,
+                    "y edges": "Event counter",
+                    "y edges unit": u.dimensionless_unscaled,
+                },
+                "get_2D_photon_position_distr": {
+                    "title": "Photon distribution on the ground",
+                    "x edges": "x position on the ground",
+                    "x edges unit": self.hist_config["hist_position"]["x axis"]["start"].unit,
+                    "y edges": "y position on the ground",
+                    "y edges unit": self.hist_config["hist_position"]["y axis"]["start"].unit,
+                },
+            }
+        return self.__dict_2D_distributions
+
     def _export_2D_histograms(self):
         """
         Auxiliary function to export only the 2D histograms.
         """
-        get_2D_distribution_function_names = {
-            "get_2D_photon_direction_distr": {
-                "title": "Incoming directive cosines",
-                "x edges": "x directive cosinus",
-                "y edges": "y directive cosinus",
-            },
-            "get_2D_photon_time_altitude": {
-                "title": "Time of arrival vs altitude of emission",
-                "x edges": "Time of arrival",
-                "y edges": "Altitude of emission",
-            },
-            "get_2D_num_photons_distr": {
-                "title": "Number of photons per telescope and per event",
-                "x edges": "Telescope counter",
-                "y edges": "Event counter",
-            },
-            "get_2D_photon_position_distr": {
-                "title": "Photon distribution on the ground",
-                "x edges": "x position on the ground",
-                "y edges": "y position on the ground",
-            },
-        }
 
-        get_2D_units = {
-            "get_2D_photon_direction_distr": (u.dimensionless_unscaled, u.dimensionless_unscaled),
-            "get_2D_photon_time_altitude": (
-                self.hist_config["hist_time_altitude"]["x axis"]["start"].unit,
-                self.hist_config["hist_time_altitude"]["y axis"]["start"].unit,
-            ),
-            "get_2D_num_photons_distr": (u.dimensionless_unscaled, u.dimensionless_unscaled),
-            "get_2D_photon_position_distr": (
-                self.hist_config["hist_position"]["x axis"]["start"].unit,
-                self.hist_config["hist_position"]["y axis"]["start"].unit,
-            ),
-        }
-
-        for function_name, function_dict in get_2D_distribution_function_names.items():
+        for function_name, function_dict in self._dict_2D_distributions.items():
             self._meta_dict["Title"] = function_dict["title"]
             function = getattr(self, function_name)
+
             hist_2D_list, x_edges_list, y_edges_list = function()
+            hist_2D_list, x_edges_list, y_edges_list = (
+                hist_2D_list * u.dimensionless_unscaled,
+                x_edges_list * self._dict_2D_distributions[function_name]["x edges unit"],
+                y_edges_list * self._dict_2D_distributions[function_name]["y edges unit"],
+            )
+            """# Histogram for the count and for the density distributions
+            if function_name is "get_2D_photon_position_distr":
+                for density_flag in [True, False]:
+                    hist_2D_list, x_edges_list, y_edges_list = function(density=density_flag)"""
 
             for i_histogram, _ in enumerate(x_edges_list):
                 if self.individual_telescopes:
@@ -1160,25 +1178,51 @@ class CorsikaOutput:
                     )
                 else:
                     ecsv_file = f"{function_name}_all_tels.ecsv"
-                x_edges_2D, y_edges_2D = np.meshgrid(
-                    x_edges_list[i_histogram][:-1], y_edges_list[i_histogram][:-1]
-                )
-                x_edges_2D_flattened, y_edges_2D_flattened, hist_2D_flattened = (
-                    x_edges_2D.flatten(),
-                    y_edges_2D.flatten(),
-                    hist_2D_list[i_histogram].flatten(),
-                )
-                table = QTable(
-                    [
-                        x_edges_2D_flattened * get_2D_units[function_name][0],
-                        y_edges_2D_flattened * get_2D_units[function_name][1],
-                        hist_2D_flattened * u.dimensionless_unscaled,
-                    ],
-                    names=(function_dict["x edges"], function_dict["y edges"], "Values"),
-                    meta=self._meta_dict,
+
+                table = self._fill_ecsv_table(
+                    hist_2D_list[i_histogram],
+                    x_edges_list[i_histogram],
+                    y_edges_list[i_histogram],
+                    function_dict["x edges"],
+                    function_dict["y edges"],
                 )
                 self._logger.info(f"Exporting histogram to {ecsv_file}")
                 table.write(ecsv_file, format="ascii.ecsv", overwrite=True)
+
+    def _fill_ecsv_table(self, hist_2D, x_edges, y_edges, x_label, y_label):
+        """
+        Create and fill an ecsv table with the histogram information.
+
+        Parameters
+        ----------
+        numpy.ndarray
+            The counts of the histogram.
+        numpy.array
+            The x edges of the histograms.
+        numpy.array
+            The y edges of the histograms.
+        str
+            X edges label.
+        str
+            Y edges label.
+        """
+
+        x_edges_2D, y_edges_2D = np.meshgrid(x_edges[:-1], y_edges[:-1])
+        x_edges_2D_flattened, y_edges_2D_flattened, hist_2D_flattened = (
+            x_edges_2D.flatten(),
+            y_edges_2D.flatten(),
+            hist_2D.flatten(),
+        )
+        table = QTable(
+            [
+                x_edges_2D_flattened,
+                y_edges_2D_flattened,
+                hist_2D_flattened,
+            ],
+            names=(x_label, y_label, "Values"),
+            meta=self._meta_dict,
+        )
+        return table
 
     @property
     def num_photons_per_telescope(self):
