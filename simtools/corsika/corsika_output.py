@@ -1083,13 +1083,18 @@ class CorsikaOutput:
         hist, edges = np.histogram(self.num_photons_per_telescope, bins=bins, range=hist_range)
         return hist.reshape(1, bins), edges.reshape(1, bins + 1)
 
-    def export_histograms(self):
+    def export_histograms(self, output_dir="./"):
         """
         Export the histograms to ecsv files.
+
+        Parameters
+        ----------
+        output_dir: str
+            Output directory, where to save the histograms.
         """
 
-        self._export_1D_histograms()
-        self._export_2D_histograms()
+        self._export_1D_histograms(output_dir=output_dir)
+        self._export_2D_histograms(output_dir=output_dir)
 
     @property
     def _meta_dict(self):
@@ -1176,13 +1181,17 @@ class CorsikaOutput:
         }
         return self.__dict_1D_distributions
 
-    def _export_1D_histograms(self):
+    def _export_1D_histograms(self, output_dir="./"):
         """
         Auxiliary function to export only the 1D histograms.
+
+        Parameters
+        ----------
+        output_dir: str
+            Output directory, where to save the histograms.
         """
 
         for property_dict, function_dict in self._dict_1D_distributions.items():
-            print(property_dict)
             self._meta_dict["Title"] = function_dict["title"]
             function = getattr(self, function_dict["function"])
             hist_1D_list, x_edges_list = function()
@@ -1208,7 +1217,8 @@ class CorsikaOutput:
                     function_dict["edges"],
                     None,
                 )
-                self._logger.info(f"Exporting histogram to {ecsv_file}")
+                ecsv_file = Path(output_dir).joinpath(ecsv_file)
+                self._logger.info(f"Exporting histogram to {ecsv_file}.")
                 table.write(ecsv_file, format="ascii.ecsv", overwrite=True)
 
     @property
@@ -1271,9 +1281,14 @@ class CorsikaOutput:
             }
         return self.__dict_2D_distributions
 
-    def _export_2D_histograms(self):
+    def _export_2D_histograms(self, output_dir="./"):
         """
         Auxiliary function to export only the 2D histograms.
+
+        Parameters
+        ----------
+        output_dir: str
+            Output directory, where to save the histograms.
         """
 
         for property, function_dict in self._dict_2D_distributions.items():
@@ -1313,7 +1328,8 @@ class CorsikaOutput:
                     function_dict["x edges"],
                     function_dict["y edges"],
                 )
-                self._logger.info(f"Exporting histogram to {ecsv_file}")
+                ecsv_file = Path(output_dir).joinpath(ecsv_file)
+                self._logger.info(f"Exporting histogram to {ecsv_file}.")
                 table.write(ecsv_file, format="ascii.ecsv", overwrite=True)
 
     def _fill_ecsv_table(self, hist, x_edges, y_edges, x_label, y_label):
@@ -1351,7 +1367,6 @@ class CorsikaOutput:
                 meta=self._meta_dict,
             )
         except TypeError:
-            print(x_edges)
             table = QTable(
                 [
                     x_edges[:-1],
