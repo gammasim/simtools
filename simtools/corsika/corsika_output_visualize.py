@@ -196,7 +196,7 @@ def plot_2D_num_photons_per_telescope(corsika_output_instance, log_z=True):
     )
 
 
-def _kernel_plot_1D_photons(corsika_output_instance, property_name, log_y=True):
+def _kernel_plot_1D_photons(corsika_output_instance, property, log_y=True):
     """
     Create the figure of a 1D plot. The parameter `name` indicate which plot. Choices are
     "counts", "density", "direction".
@@ -205,7 +205,7 @@ def _kernel_plot_1D_photons(corsika_output_instance, property_name, log_y=True):
     ----------
     corsika_output_instance: corsika.corsika_output.corsikaOutput
         instance of corsika.corsika_output.corsikaOutput.
-    property_name: string
+    property: string
         Name of the quantity. Options are: "wavelength", "counts", "density", "time", "altitude",
         "num_photons".
     log_y: bool
@@ -223,42 +223,11 @@ def _kernel_plot_1D_photons(corsika_output_instance, property_name, log_y=True):
     ValueError
         if `name` is not allowed.
     """
-
-    x_label = {
-        "wavelength": "Wavelength (nm)",
-        "counts": "Distance to center (m)",
-        "density": "Distance to center (m)",
-        "time": "Time since 1st interaction (ns)",
-        "altitude": "Altitude of emission (km)",
-        "num_photons_per_telescope": "Number of photons per telescope",
-        "num_photons_per_event": "Number of photons per event",
-    }
-    if property_name not in x_label:
-        msg = f"results: status must be one of {list(x_label.keys())}"
-        _logger.error(msg)
-        raise ValueError(msg)
-
-    if property_name == "wavelength":
-        hist_values, edges = corsika_output_instance.get_photon_wavelength_distr()
-    elif property_name == "counts":
-        hist_values, edges = corsika_output_instance.get_photon_radial_distr()
-    elif property_name == "density":
-        hist_values, edges = corsika_output_instance.get_photon_density_distr()
-    elif property_name == "time":
-        hist_values, edges = corsika_output_instance.get_photon_time_of_emission_distr()
-    elif property_name == "altitude":
-        hist_values, edges = corsika_output_instance.get_photon_altitude_distr()
-    elif property_name == "num_photons_per_event":
-        hist_values, edges = corsika_output_instance.get_num_photons_distr(
-            event_or_telescope="event"
-        )
-        hist_values, edges = [hist_values], [edges]
-    elif property_name == "num_photons_per_telescope":
-        hist_values, edges = corsika_output_instance.get_num_photons_distr(
-            event_or_telescope="telescope"
-        )
-        hist_values, edges = [hist_values], [edges]
-
+    function = getattr(
+        corsika_output_instance,
+        corsika_output_instance._dict_1D_distributions[property]["function"],
+    )
+    hist_values, edges = function()
     all_figs = []
     fig_names = []
     for i_hist, _ in enumerate(edges):
@@ -269,17 +238,23 @@ def _kernel_plot_1D_photons(corsika_output_instance, property_name, log_y=True):
             align="edge",
             width=np.abs(np.diff(edges[i_hist])),
         )
-        ax.set_xlabel(x_label[property_name])
+        ax.set_xlabel(
+            f"{corsika_output_instance._dict_1D_distributions[property]['edges']} "
+            f"({corsika_output_instance._dict_1D_distributions[property]['edges unit']})"
+        )
         ax.set_ylabel("Counts")
 
         if log_y is True:
             ax.set_yscale("log")
         if corsika_output_instance.individual_telescopes is False:
-            fig_names.append(f"histogram_{property_name}_tels.png")
+            fig_names.append(
+                f"{corsika_output_instance._dict_1D_distributions[property]['file name']}"
+                f"_all_tels.png"
+            )
         else:
             fig_names.append(
-                f"histogram_{property_name}_tel_"
-                f"{str(corsika_output_instance.telescope_indices[i_hist])}.png",
+                f"{corsika_output_instance._dict_1D_distributions[property]['file name']}"
+                f"_tel_index_{corsika_output_instance.telescope_indices[i_hist]}.png",
             )
         all_figs.append(fig)
     return all_figs, fig_names
@@ -390,7 +365,7 @@ def plot_altitude_distr(corsika_output_instance, log_y=True):
     return _kernel_plot_1D_photons(corsika_output_instance, "altitude", log_y=log_y)
 
 
-def plot_num_photons_distr(corsika_output_instance, log_y=True, event_or_telescope="event"):
+def plot_photon_per_event_distr(corsika_output_instance, log_y=True):
     """
     Plots the distribution of the number of Cherenkov photons per event.
 
@@ -400,9 +375,6 @@ def plot_num_photons_distr(corsika_output_instance, log_y=True, event_or_telesco
         instance of corsika.corsika_output.corsikaOutput.
     log_y: bool
         if True, the intensity of the Y axis is given in logarithmic scale.
-    event_or_telescope: str
-        Indicates if the distribution of photons is given for the events, or for the telescopes.
-        Allowed values are: "event" or "telescope".
 
     Returns
     -------
@@ -411,21 +383,31 @@ def plot_num_photons_distr(corsika_output_instance, log_y=True, event_or_telesco
     list
         List of the figure names.
 
-    Raises
-    ------
-    ValueError:
-        if input `event_or_telescope` is not valid.
     """
 
-    if event_or_telescope == "event":
-        return _kernel_plot_1D_photons(
-            corsika_output_instance, "num_photons_per_event", log_y=log_y
-        )
-    elif event_or_telescope == "telescope":
-        return _kernel_plot_1D_photons(
-            corsika_output_instance, "num_photons_per_telescope", log_y=log_y
-        )
-    else:
-        msg = f"Option {event_or_telescope} not valid. Valid options are 'event' and 'telescope'."
-        _logger.error(msg)
-        raise ValueError
+    return _kernel_plot_1D_photons(corsika_output_instance, "num_photons_per_event", log_y=log_y)
+
+
+def plot_photon_per_telescope_distr(corsika_output_instance, log_y=True):
+    """
+    Plots the distribution of the number of Cherenkov photons per telescope.
+
+    Parameters
+    ----------
+    corsika_output_instance: corsika.corsika_output.corsikaOutput
+        instance of corsika.corsika_output.corsikaOutput.
+    log_y: bool
+        if True, the intensity of the Y axis is given in logarithmic scale.
+
+    Returns
+    -------
+    list
+        List of figures for the given telescopes.
+    list
+        List of the figure names.
+
+    """
+
+    return _kernel_plot_1D_photons(
+        corsika_output_instance, "num_photons_per_telescope", log_y=log_y
+    )
