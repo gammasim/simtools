@@ -1040,10 +1040,9 @@ class CorsikaOutput:
         self._num_photons_per_event = np.sum(self.num_photons_per_event_per_telescope, axis=0)
         return self._num_photons_per_event
 
-    def get_num_photons_distr(self, bins=50, hist_range=None, event_or_telescope="event"):
+    def get_num_photons_per_event_distr(self, bins=50, hist_range=None):
         """
-        Get the distribution of photons per event or per telescope, depending on the string
-        passed through `event_or_telescope`.
+        Get the distribution of photons per event.
 
         Parameters
         ----------
@@ -1051,10 +1050,6 @@ class CorsikaOutput:
             Number of bins for the histogram.
         hist_range: 2-tuple
             Tuple to define the range of the histogram.
-        event_or_telescope: str
-            Indicates if the distribution of photons is given for the events, or for the telescopes.
-            Allowed values are: "event" or "telescope".
-
 
         Returns
         -------
@@ -1062,22 +1057,31 @@ class CorsikaOutput:
             The counts of the histogram.
         numpy.array
             Number of photons per event.
-
-
-        Raises
-        ------
-        ValueError:
-            if event_or_telescope not valid.
         """
-        if event_or_telescope == "event":
-            hist, edges = np.histogram(self.num_photons_per_event, bins=bins, range=hist_range)
-        elif event_or_telescope == "telescope":
-            hist, edges = np.histogram(self.num_photons_per_telescope, bins=bins, range=hist_range)
-        else:
-            msg = "`event_or_telescope` has to be either 'event' or 'telescope'."
-            self._logger.error(msg)
-            raise ValueError
-        return hist, edges
+        hist, edges = np.histogram(self.num_photons_per_event, bins=bins, range=hist_range)
+        return hist.reshape(1, bins), edges.reshape(1, bins + 1)
+
+    def get_num_photons_per_telescope_distr(self, bins=50, hist_range=None):
+        """
+        Get the distribution of photons per telescope.
+
+        Parameters
+        ----------
+        bins: float
+            Number of bins for the histogram.
+        hist_range: 2-tuple
+            Tuple to define the range of the histogram.
+
+        Returns
+        -------
+        numpy.ndarray
+            The counts of the histogram.
+        numpy.array
+            Number of photons per telescope.
+        """
+
+        hist, edges = np.histogram(self.num_photons_per_telescope, bins=bins, range=hist_range)
+        return hist.reshape(1, bins), edges.reshape(1, bins + 1)
 
     def export_histograms(self):
         """
@@ -1120,35 +1124,54 @@ class CorsikaOutput:
             The dictionary with information about the 1D distributions.
         """
         self.__dict_1D_distributions = {
-            "get_photon_wavelength_distr": {
+            "wavelength": {
+                "function": "get_photon_wavelength_distr",
                 "file name": "hist_1D_photon_wavelength_distr",
                 "title": "Wavelength distribution",
                 "edges": "Wavelength",
                 "edges unit": self.hist_config["hist_position"]["z axis"]["start"].unit,
             },
-            "get_photon_time_of_emission_distr": {
-                "file name": "hist_1D_photon_time_distr",
-                "title": "Time of arrival distribution",
-                "edges": "Time of arrival",
-                "edges unit": self.hist_config["hist_time_altitude"]["x axis"]["start"].unit,
-            },
-            "get_photon_altitude_distr": {
-                "file name": "hist_1D_photon_altitude_distr",
-                "title": "Altitude of emission distribution",
-                "edges": "Altitude of emission",
-                "edges unit": self.hist_config["hist_time_altitude"]["y axis"]["start"].unit,
-            },
-            "get_photon_radial_distr": {
+            "counts": {
+                "function": "get_photon_radial_distr",
                 "file name": "hist_1D_photon_radial_distr",
                 "title": "Radial distribution on the ground",
                 "edges": "Distance to center",
                 "edges unit": self.hist_config["hist_position"]["x axis"]["start"].unit,
             },
-            "get_photon_density_distr": {
+            "density": {
+                "function": "get_photon_density_distr",
                 "file name": "hist_1D_photon_density_distr",
                 "title": "Density distribution on the ground",
                 "edges": "Distance to center",
                 "edges unit": self.hist_config["hist_position"]["x axis"]["start"].unit,
+            },
+            "time": {
+                "function": "get_photon_time_of_emission_distr",
+                "file name": "hist_1D_photon_time_distr",
+                "title": "Time of arrival distribution",
+                "edges": "Time of arrival",
+                "edges unit": self.hist_config["hist_time_altitude"]["x axis"]["start"].unit,
+            },
+            "altitude": {
+                "function": "get_photon_altitude_distr",
+                "file name": "hist_1D_photon_time_distr",
+                "title": "Altitude of emission distribution",
+                "edges": "Altitude of emission",
+                "edges unit": self.hist_config["hist_time_altitude"]["y axis"]["start"].unit,
+            },
+            "num_photons_per_event": {
+                "function": "get_num_photons_per_event_distr",
+                "file name": "hist_1D_photon_per_event_distr",
+                "title": "Photons per event distribution",
+                "edges": "Event counter",
+                "edges unit": u.dimensionless_unscaled,
+            },
+            "num_photons_per_telescope": {
+                "function": "get_num_photons_per_telescope_distr",
+                "file name": "hist_1D_photon_per_telescope_distr",
+                "title": "Photons per telescope distribution",
+                "edges": "Telescope counter",
+                "edges unit": u.dimensionless_unscaled,
             },
         }
         return self.__dict_1D_distributions
@@ -1158,28 +1181,25 @@ class CorsikaOutput:
         Auxiliary function to export only the 1D histograms.
         """
 
-        for function_name, function_dict in self._dict_1D_distributions.items():
+        for property_dict, function_dict in self._dict_1D_distributions.items():
+            print(property_dict)
             self._meta_dict["Title"] = function_dict["title"]
-            function = getattr(self, function_name)
+            function = getattr(self, function_dict["function"])
             hist_1D_list, x_edges_list = function()
-            x_edges_list = x_edges_list * self._dict_1D_distributions[function_name]["edges unit"]
-            if function_name == "get_photon_density_distr":
-                histogram_value_unit = 1 / (
-                    self._dict_1D_distributions[function_name]["edges unit"] ** 2
-                )
+            x_edges_list = x_edges_list * function_dict["edges unit"]
+            if function_dict["function"] == "get_photon_density_distr":
+                histogram_value_unit = 1 / (function_dict["edges unit"] ** 2)
             else:
                 histogram_value_unit = u.dimensionless_unscaled
             hist_1D_list = hist_1D_list * histogram_value_unit
             for i_histogram, _ in enumerate(x_edges_list):
                 if self.individual_telescopes:
                     ecsv_file = (
-                        f"{self._dict_1D_distributions[function_name]['file name']}_"
+                        f"{function_dict['file name']}_"
                         f"tel_index_{self.telescope_indices[i_histogram]}.ecsv"
                     )
                 else:
-                    ecsv_file = (
-                        f"{self._dict_1D_distributions[function_name]['file name']}_all_tels.ecsv"
-                    )
+                    ecsv_file = f"{function_dict['file name']}_all_tels.ecsv"
 
                 table = self._fill_ecsv_table(
                     hist_1D_list[i_histogram],
@@ -1331,6 +1351,7 @@ class CorsikaOutput:
                 meta=self._meta_dict,
             )
         except TypeError:
+            print(x_edges)
             table = QTable(
                 [
                     x_edges[:-1],
