@@ -234,13 +234,15 @@ def _plot_figures(instance, output_dir):
         "plot_wavelength_distr",
         "plot_counts_distr",
         "plot_density_distr",
+        "plot_time_distr",
+        "plot_altitude_distr",
+        "plot_photon_per_event_distr",
+        "plot_photon_per_telescope_distr",
         "plot_2D_counts",
         "plot_2D_density",
         "plot_2D_direction",
         "plot_2D_time_altitude",
         "plot_2D_num_photons_per_telescope",
-        "plot_time_distr",
-        "plot_altitude_distr",
     ]
 
     for function_name in plot_function_names:
@@ -250,13 +252,6 @@ def _plot_figures(instance, output_dir):
             output_file_name = output_dir.joinpath(figure_name)
             print(output_file_name)
             figure.savefig(output_file_name, bbox_inches="tight")
-
-    corsika_output_visualize.plot_num_photons_distr(
-        instance, log_y=True, event_or_telescope="event"
-    )
-    corsika_output_visualize.plot_num_photons_distr(
-        instance, log_y=True, event_or_telescope="telescope"
-    )
 
 
 def _save_distributions(instance, output_dir):
