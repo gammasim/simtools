@@ -114,10 +114,21 @@
     ecsv (bool, optional)
         If true, histograms are saved into ecsv files.
 
-    header_elements (str, optional)
-        get the histograms for elements given in `--header_elements` from the CORSIKA event header.
-        It allows more than one argument, separated by simple spaces, e.g.
-        `--header_elements first_interaction_height total_energy`.
+    event_1D_histograms (str, optional)
+        Produce 1D histograms for elements given in `--event_1D_histograms` from the CORSIKA event
+        header and save into ecsv files.
+        It allows more than one argument, separated by simple spaces.
+        Usage: `--event_1D_histograms first_interaction_height total_energy`.
+
+    event_2D_histograms (str, optional)
+        Produce 2D histograms for elements given in `--event_2D_histograms` from the CORSIKA event
+        header and save into ecsv files.
+        It allows more than one argument, separated by simple spaces.
+        The elements are grouped into pairs and the 2D histograms are produced always for two
+        subsequent elements.
+        For example, `--event_2D_histograms first_interaction_height total_energy zenith azimuth`
+        will produce one 2D histogram for `first_interaction_height` `total_energy` and another 2D
+        histogram for `zenith` and `azimuth`.
 
     Example
     -------
@@ -210,20 +221,27 @@ def _parse(label, description, usage):
     )
 
     config.parser.add_argument(
-        "--header_elements",
-        help="List with arguments to extract the histograms."
-        "Possible inputs are the keys for the CORSIKA event header.",
+        "--png", help="Save histograms into png files.", action="store_true", required=False
+    )
+
+    config.parser.add_argument(
+        "--ecsv", help="Save histograms into ecsv files.", action="store_true", required=False
+    )
+
+    config.parser.add_argument(
+        "--event_1D_histograms",
+        help="Arguments from the CORSIKA event header to extract 1D histograms.",
         required=False,
         default=None,
         nargs="*",
     )
 
     config.parser.add_argument(
-        "--png", help="Save histograms into png files.", action="store_true", required=False
-    )
-
-    config.parser.add_argument(
-        "--ecsv", help="Save histograms into ecsv files.", action="store_true", required=False
+        "--event_2D_histograms",
+        help="Arguments from the CORSIKA event header to extract 2D histograms.",
+        required=False,
+        default=None,
+        nargs="*",
     )
 
     config_parser, _ = config.initialize()
@@ -301,9 +319,10 @@ def main():
     if args_dict["ecsv"]:
         instance.export_histograms(output_dir=output_dir)
 
-    if args_dict["header_elements"] is not None:
-
-        print(args_dict["header_elements"])
+    if args_dict["event_1D_histograms"] is not None:
+        print(args_dict["event_1D_histograms"])
+    if args_dict["event_2D_histograms"] is not None:
+        print(args_dict["event_2D_histograms"])
     """instance.event_1D_histogram("first_interaction_height")
     instance.event_2D_histogram("first_interaction_height", "total_energy")"""
 
