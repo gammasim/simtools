@@ -723,31 +723,38 @@ class CorsikaOutput:
             x_edges.append(mini_hist.axes.edges[0].flatten())
             y_edges.append(mini_hist.axes.edges[1].flatten())
 
-        return np.array(hist_values), np.array(x_edges) * u.m, np.array(y_edges) * u.m
+        return np.array(hist_values), np.array(x_edges), np.array(y_edges)
 
-    def get_2D_photon_position_distr(self, density=True):
+    def get_2D_photon_position_distr(self):
         """
-        Get 2D histograms of position of the Cherenkov photons on the ground. If density is True,
-        it returns the photon density per square meter.
-
-        Parameters
-        ----------
-        density: bool
-            If True, returns the density distribution. If False, returns the distribution of counts.
+        Get 2D histograms of position of the Cherenkov photons on the ground.
 
         Returns
         -------
         numpy.ndarray
             The counts of the histogram.
         numpy.array
+            The x edges of the count histograms in x, usually in meters.
+        numpy.array
+            The y edges of the count histograms in y, usually in meters.
+        """
+        return self._get_hist_2D_projection("counts")
+
+    def get_2D_photon_density_distr(self):
+        """
+        Get 2D histograms of position of the Cherenkov photons on the ground. It returns the photon
+        density per square meter.
+
+        Returns
+        -------
+        numpy.ndarray
+            The values of the histogram, usually in $m^{-2}$
+        numpy.array
             The x edges of the density/count histograms in x, usually in meters.
         numpy.array
             The y edges of the density/count histograms in y, usually in meters.
         """
-        if density is True:
-            return self._get_hist_2D_projection("density")
-        else:
-            return self._get_hist_2D_projection("counts")
+        return self._get_hist_2D_projection("density")
 
     def get_2D_photon_direction_distr(self):
         """
@@ -848,10 +855,9 @@ class CorsikaOutput:
             hist_1D_list.append(mini_hist.view().T)
         return np.array(hist_1D_list), np.array(x_edges_list)
 
-    def get_photon_radial_distr(self, bins=None, max_dist=None, density=True):
-        """
-        Get the radial distribution of the photons on the ground in relation to the center of the
-        array.
+    def _get_bins_max_dist(self, bins=None, max_dist=None):
+        """Auxiliary function to get the number of bins and the max distance to generate the
+        radial and the density histograms
 
         Parameters
         ----------
@@ -859,17 +865,7 @@ class CorsikaOutput:
             Number of bins of the radial distribution.
         max_dist: float
             Maximum distance to consider in the 1D histogram (in meters).
-        density: bool
-            If True, returns the density distribution. If False, returns the distribution of counts.
-
-        Returns
-        -------
-        np.array
-            The counts of the 1D histogram with size = int(max_dist/bin_size).
-        np.array
-            The edges of the 1D histogram in meters with size = int(max_dist/bin_size) + 1.
         """
-
         if max_dist is None:
             max_dist = np.amax(
                 [
@@ -890,11 +886,71 @@ class CorsikaOutput:
                 // 2
             )  # //2 because of the 2D array going into the negative and
             # positive axis
+        return bins, max_dist
+
+    def get_photon_radial_distr(self, bins=None, max_dist=None):
+        """
+        Get the radial distribution of the photons on the ground in relation to the center of the
+        array.
+
+        Parameters
+        ----------
+        bins: float
+            Number of bins of the radial distribution.
+        max_dist: float
+            Maximum distance to consider in the 1D histogram (in meters).
+
+        Returns
+        -------
+        np.array
+            The counts of the 1D histogram with size = int(max_dist/bin_size).
+        np.array
+            The edges of the 1D histogram in meters with size = int(max_dist/bin_size) + 1,
+            usually in meter.
+        """
+
+        bins, max_dist = self._get_bins_max_dist(bins=bins, max_dist=max_dist)
         edges_1D_list, hist1D_list = [], []
 
-        hist2D_values_list, x_position_list, y_position_list = self.get_2D_photon_position_distr(
-            density=density
-        )
+        hist2D_values_list, x_position_list, y_position_list = self.get_2D_photon_position_distr()
+
+        for i_hist, _ in enumerate(x_position_list):
+            hist1D, edges_1D = convert_2D_to_radial_distr(
+                hist2D_values_list[i_hist],
+                x_position_list[i_hist],
+                y_position_list[i_hist],
+                bins=bins,
+                max_dist=max_dist,
+            )
+            edges_1D_list.append(edges_1D)
+            hist1D_list.append(hist1D)
+        return np.array(hist1D_list), np.array(edges_1D_list)
+
+    def get_photon_density_distr(self, bins=None, max_dist=None):
+        """
+        Get the density distribution of the photons on the ground in relation to the center of the
+        array.
+
+        Parameters
+        ----------
+        bins: float
+            Number of bins of the radial distribution.
+        max_dist: float
+            Maximum distance to consider in the 1D histogram (in meters).
+
+        Returns
+        -------
+        np.array
+            The density distribution of the 1D histogram with size = int(max_dist/bin_size),
+            usually in $m^{-2}$.
+        np.array
+            The edges of the 1D histogram in meters with size = int(max_dist/bin_size) + 1,
+            usually in meter.
+        """
+        bins, max_dist = self._get_bins_max_dist(bins=bins, max_dist=max_dist)
+        edges_1D_list, hist1D_list = [], []
+
+        hist2D_values_list, x_position_list, y_position_list = self.get_2D_photon_density_distr()
 
         for i_hist, _ in enumerate(x_position_list):
             hist1D, edges_1D = convert_2D_to_radial_distr(
@@ -1088,6 +1144,12 @@ class CorsikaOutput:
                 "edges": "Distance to center",
                 "edges unit": self.hist_config["hist_position"]["x axis"]["start"].unit,
             },
+            "get_photon_density_distr": {
+                "file name": "hist_1D_photon_density_distr",
+                "title": "Density distribution on the ground",
+                "edges": "Distance to center",
+                "edges unit": self.hist_config["hist_position"]["x axis"]["start"].unit,
+            },
         }
         return self.__dict_1D_distributions
 
@@ -1101,7 +1163,13 @@ class CorsikaOutput:
             function = getattr(self, function_name)
             hist_1D_list, x_edges_list = function()
             x_edges_list = x_edges_list * self._dict_1D_distributions[function_name]["edges unit"]
-            hist_1D_list = hist_1D_list * u.dimensionless_unscaled
+            if function_name == "get_photon_density_distr":
+                histogram_value_unit = 1 / (
+                    self._dict_1D_distributions[function_name]["edges unit"] ** 2
+                )
+            else:
+                histogram_value_unit = u.dimensionless_unscaled
+            hist_1D_list = hist_1D_list * histogram_value_unit
             for i_histogram, _ in enumerate(x_edges_list):
                 if self.individual_telescopes:
                     ecsv_file = (
@@ -1160,7 +1228,15 @@ class CorsikaOutput:
                     "y edges unit": u.dimensionless_unscaled,
                 },
                 "get_2D_photon_position_distr": {
-                    "file name": "hist_2D_photon_distr",
+                    "file name": "hist_2D_photon_count_distr",
+                    "title": "Photon distribution on the ground",
+                    "x edges": "x position on the ground",
+                    "x edges unit": self.hist_config["hist_position"]["x axis"]["start"].unit,
+                    "y edges": "y position on the ground",
+                    "y edges unit": self.hist_config["hist_position"]["y axis"]["start"].unit,
+                },
+                "get_2D_photon_density_distr": {
+                    "file name": "hist_2D_photon_density_distr",
                     "title": "Photon distribution on the ground",
                     "x edges": "x position on the ground",
                     "x edges unit": self.hist_config["hist_position"]["x axis"]["start"].unit,
@@ -1180,15 +1256,19 @@ class CorsikaOutput:
             function = getattr(self, function_name)
 
             hist_2D_list, x_edges_list, y_edges_list = function()
+            if function_name == "get_2D_photon_density_distr":
+                histogram_value_unit = 1 / (
+                    self._dict_2D_distributions[function_name]["x edges unit"]
+                    * self._dict_2D_distributions[function_name]["y edges unit"]
+                )
+            else:
+                histogram_value_unit = u.dimensionless_unscaled
+
             hist_2D_list, x_edges_list, y_edges_list = (
-                hist_2D_list * u.dimensionless_unscaled,
+                hist_2D_list * histogram_value_unit,
                 x_edges_list * self._dict_2D_distributions[function_name]["x edges unit"],
                 y_edges_list * self._dict_2D_distributions[function_name]["y edges unit"],
             )
-            """# Histograms for the count and for the density distributions
-            if function_name is "get_2D_photon_position_distr":
-                for density_flag in [True, False]:
-                    hist_2D_list, x_edges_list, y_edges_list = function(density=density_flag)"""
 
             for i_histogram, _ in enumerate(x_edges_list):
                 if self.individual_telescopes:
