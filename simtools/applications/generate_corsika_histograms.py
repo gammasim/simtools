@@ -14,7 +14,7 @@
         - Density of Cherenkov photons on the ground;
         - Incoming direction (directive cosinus) of the Cherenkov photons;
         - Time of arrival (ns) vs altitude of production (km);
-        - Number of Cherenkov photons per telescope.
+        - Number of Cherenkov photons per event per telescope.
 
     The following 1D histograms are produced:
         - Wavelength;
@@ -114,6 +114,11 @@
     ecsv (bool, optional)
         If true, histograms are saved into ecsv files.
 
+    header_elements (str, optional)
+        get the histograms for elements given in `--header_elements` from the CORSIKA event header.
+        It allows more than one argument, separated by simple spaces, e.g.
+        `--header_elements first_interaction_height total_energy`.
+
     Example
     -------
     Generate the histograms for a test IACT file:
@@ -205,6 +210,15 @@ def _parse(label, description, usage):
     )
 
     config.parser.add_argument(
+        "--header_elements",
+        help="List with arguments to extract the histograms."
+        "Possible inputs are the keys for the CORSIKA event header.",
+        required=False,
+        default=None,
+        nargs="*",
+    )
+
+    config.parser.add_argument(
         "--png", help="Save histograms into png files.", action="store_true", required=False
     )
 
@@ -286,6 +300,12 @@ def main():
 
     if args_dict["ecsv"]:
         instance.export_histograms(output_dir=output_dir)
+
+    if args_dict["header_elements"] is not None:
+
+        print(args_dict["header_elements"])
+    """instance.event_1D_histogram("first_interaction_height")
+    instance.event_2D_histogram("first_interaction_height", "total_energy")"""
 
     final_time = time.time()
     logger.info(
