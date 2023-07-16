@@ -141,6 +141,8 @@ from simtools.configuration import configurator
 from simtools.corsika import corsika_output_visualize
 from simtools.corsika.corsika_output import CorsikaOutput
 
+logger = logging.getLogger()
+
 
 def _parse(label, description, usage):
     """
@@ -249,24 +251,9 @@ def _plot_figures(instance, output_dir):
         function = getattr(corsika_output_visualize, function_name)
         figures, figure_names = function(instance)
         for figure, figure_name in zip(figures, figure_names):
-            output_file_name = output_dir.joinpath(figure_name)
-            print(output_file_name)
+            output_file_name = Path(output_dir).joinpath(figure_name)
+            logger.info(f"Saving histogram to {output_file_name}")
             figure.savefig(output_file_name, bbox_inches="tight")
-
-
-def _save_distributions(instance, output_dir):
-    """
-    Auxiliary function to save the histograms to ecsv files.
-
-    Parameters
-    ----------
-    instance: `CorsikaOutput` instance.
-        The CorsikaOutput instance created in main.
-    output_dir: str
-        The output directory where to save the histograms.
-    """
-
-    instance.export_histograms()
 
 
 def main():
@@ -278,7 +265,6 @@ def main():
 
     io_handler_instance = io_handler.IOHandler()
 
-    logger = logging.getLogger()
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
     initial_time = time.time()
     logger.info("Starting the application.")
@@ -299,10 +285,7 @@ def main():
         _plot_figures(instance=instance, output_dir=output_dir)
 
     if args_dict["ecsv"]:
-        _save_distributions(instance=instance, output_dir=output_dir)
-
-    instance.event_1D_histogram("first_interaction_height")
-    instance.event_2D_histogram("first_interaction_height", "total_energy")
+        instance.export_histograms(output_dir=output_dir)
 
     final_time = time.time()
     logger.info(
