@@ -1065,21 +1065,25 @@ class CorsikaOutput:
         """
         self.__dict_1D_distributions = {
             "get_photon_wavelength_distr": {
+                "file name": "hist_1D_photon_wavelength_distr",
                 "title": "Wavelength distribution",
                 "edges": "Wavelength",
                 "edges unit": self.hist_config["hist_position"]["z axis"]["start"].unit,
             },
             "get_photon_time_of_emission_distr": {
+                "file name": "hist_1D_photon_time_distr",
                 "title": "Time of arrival distribution",
                 "edges": "Time of arrival",
                 "edges unit": self.hist_config["hist_time_altitude"]["x axis"]["start"].unit,
             },
             "get_photon_altitude_distr": {
+                "file name": "hist_1D_photon_altitude_distr",
                 "title": "Altitude of emission distribution",
                 "edges": "Altitude of emission",
                 "edges unit": self.hist_config["hist_time_altitude"]["y axis"]["start"].unit,
             },
             "get_photon_radial_distr": {
+                "file name": "hist_1D_photon_radial_distr",
                 "title": "Radial distribution on the ground",
                 "edges": "Distance to center",
                 "edges unit": self.hist_config["hist_position"]["x axis"]["start"].unit,
@@ -1101,10 +1105,13 @@ class CorsikaOutput:
             for i_histogram, _ in enumerate(x_edges_list):
                 if self.individual_telescopes:
                     ecsv_file = (
-                        f"{function_name}_tel_index_{self.telescope_indices[i_histogram]}.ecsv"
+                        f"{self._dict_1D_distributions[function_name]['file name']}_"
+                        f"tel_index_{self.telescope_indices[i_histogram]}.ecsv"
                     )
                 else:
-                    ecsv_file = f"{function_name}_all_tels.ecsv"
+                    ecsv_file = (
+                        f"{self._dict_1D_distributions[function_name]['file name']}_all_tels.ecsv"
+                    )
 
                 table = self._fill_ecsv_table(
                     hist_1D_list[i_histogram],
@@ -1129,6 +1136,7 @@ class CorsikaOutput:
         if self.__dict_2D_distributions is None:
             self.__dict_2D_distributions = {
                 "get_2D_photon_direction_distr": {
+                    "file name": "hist_2D_photon_direction_distr",
                     "title": "Incoming directive cosines",
                     "x edges": "x directive cosinus",
                     "x edges unit": u.dimensionless_unscaled,
@@ -1136,6 +1144,7 @@ class CorsikaOutput:
                     "y edges unit": u.dimensionless_unscaled,
                 },
                 "get_2D_photon_time_altitude": {
+                    "file name": "hist_2D_photon_time_altitude_distr",
                     "title": "Time of arrival vs altitude of emission",
                     "x edges": "Time of arrival",
                     "x edges unit": self.hist_config["hist_time_altitude"]["x axis"]["start"].unit,
@@ -1143,6 +1152,7 @@ class CorsikaOutput:
                     "y edges unit": self.hist_config["hist_time_altitude"]["y axis"]["start"].unit,
                 },
                 "get_2D_num_photons_distr": {
+                    "file name": "hist_2D_photon_telescope_event_distr",
                     "title": "Number of photons per telescope and per event",
                     "x edges": "Telescope counter",
                     "x edges unit": u.dimensionless_unscaled,
@@ -1150,6 +1160,7 @@ class CorsikaOutput:
                     "y edges unit": u.dimensionless_unscaled,
                 },
                 "get_2D_photon_position_distr": {
+                    "file name": "hist_2D_photon_distr",
                     "title": "Photon distribution on the ground",
                     "x edges": "x position on the ground",
                     "x edges unit": self.hist_config["hist_position"]["x axis"]["start"].unit,
@@ -1174,7 +1185,7 @@ class CorsikaOutput:
                 x_edges_list * self._dict_2D_distributions[function_name]["x edges unit"],
                 y_edges_list * self._dict_2D_distributions[function_name]["y edges unit"],
             )
-            """# Histogram for the count and for the density distributions
+            """# Histograms for the count and for the density distributions
             if function_name is "get_2D_photon_position_distr":
                 for density_flag in [True, False]:
                     hist_2D_list, x_edges_list, y_edges_list = function(density=density_flag)"""
@@ -1182,10 +1193,13 @@ class CorsikaOutput:
             for i_histogram, _ in enumerate(x_edges_list):
                 if self.individual_telescopes:
                     ecsv_file = (
-                        f"{function_name}_tel_index_{self.telescope_indices[i_histogram]}.ecsv"
+                        f"{self._dict_2D_distributions[function_name]['file name']}"
+                        f"_tel_index_{self.telescope_indices[i_histogram]}.ecsv"
                     )
                 else:
-                    ecsv_file = f"{function_name}_all_tels.ecsv"
+                    ecsv_file = (
+                        f"{self._dict_2D_distributions[function_name]['file name']}_all_tels.ecsv"
+                    )
 
                 table = self._fill_ecsv_table(
                     hist_2D_list[i_histogram],
@@ -1200,6 +1214,7 @@ class CorsikaOutput:
     def _fill_ecsv_table(self, hist, x_edges, y_edges, x_label, y_label):
         """
         Create and fill an ecsv table with the histogram information.
+        It works for both 1D and 2D distributions.
 
         Parameters
         ----------
