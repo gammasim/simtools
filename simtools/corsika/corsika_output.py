@@ -1203,7 +1203,8 @@ class CorsikaOutput:
         """
         if self.__dict_2D_distributions is None:
             self.__dict_2D_distributions = {
-                "get_2D_photon_direction_distr": {
+                "counts": {
+                    "function": "get_2D_photon_direction_distr",
                     "file name": "hist_2D_photon_direction_distr",
                     "title": "Incoming directive cosines",
                     "x edges": "x directive cosinus",
@@ -1211,7 +1212,8 @@ class CorsikaOutput:
                     "y edges": "y directive cosinus",
                     "y edges unit": u.dimensionless_unscaled,
                 },
-                "get_2D_photon_time_altitude": {
+                "density": {
+                    "function": "get_2D_photon_time_altitude",
                     "file name": "hist_2D_photon_time_altitude_distr",
                     "title": "Time of arrival vs altitude of emission",
                     "x edges": "Time of arrival",
@@ -1219,7 +1221,8 @@ class CorsikaOutput:
                     "y edges": "Altitude of emission",
                     "y edges unit": self.hist_config["hist_time_altitude"]["y axis"]["start"].unit,
                 },
-                "get_2D_num_photons_distr": {
+                "direction": {
+                    "function": "get_2D_num_photons_distr",
                     "file name": "hist_2D_photon_telescope_event_distr",
                     "title": "Number of photons per telescope and per event",
                     "x edges": "Telescope counter",
@@ -1227,7 +1230,8 @@ class CorsikaOutput:
                     "y edges": "Event counter",
                     "y edges unit": u.dimensionless_unscaled,
                 },
-                "get_2D_photon_position_distr": {
+                "time_altitude": {
+                    "function": "get_2D_photon_position_distr",
                     "file name": "hist_2D_photon_count_distr",
                     "title": "Photon distribution on the ground",
                     "x edges": "x position on the ground",
@@ -1235,7 +1239,8 @@ class CorsikaOutput:
                     "y edges": "y position on the ground",
                     "y edges unit": self.hist_config["hist_position"]["y axis"]["start"].unit,
                 },
-                "get_2D_photon_density_distr": {
+                "num_photons_per_telescope": {
+                    "function": "get_2D_photon_density_distr",
                     "file name": "hist_2D_photon_density_distr",
                     "title": "Photon distribution on the ground",
                     "x edges": "x position on the ground",
@@ -1251,34 +1256,34 @@ class CorsikaOutput:
         Auxiliary function to export only the 2D histograms.
         """
 
-        for function_name, function_dict in self._dict_2D_distributions.items():
+        for property, function_dict in self._dict_2D_distributions.items():
             self._meta_dict["Title"] = function_dict["title"]
-            function = getattr(self, function_name)
+            function = getattr(self, function_dict["function"])
 
             hist_2D_list, x_edges_list, y_edges_list = function()
-            if function_name == "get_2D_photon_density_distr":
+            if function_dict["function"] == "get_2D_photon_density_distr":
                 histogram_value_unit = 1 / (
-                    self._dict_2D_distributions[function_name]["x edges unit"]
-                    * self._dict_2D_distributions[function_name]["y edges unit"]
+                    self._dict_2D_distributions[property]["x edges unit"]
+                    * self._dict_2D_distributions[property]["y edges unit"]
                 )
             else:
                 histogram_value_unit = u.dimensionless_unscaled
 
             hist_2D_list, x_edges_list, y_edges_list = (
                 hist_2D_list * histogram_value_unit,
-                x_edges_list * self._dict_2D_distributions[function_name]["x edges unit"],
-                y_edges_list * self._dict_2D_distributions[function_name]["y edges unit"],
+                x_edges_list * self._dict_2D_distributions[property]["x edges unit"],
+                y_edges_list * self._dict_2D_distributions[property]["y edges unit"],
             )
 
             for i_histogram, _ in enumerate(x_edges_list):
                 if self.individual_telescopes:
                     ecsv_file = (
-                        f"{self._dict_2D_distributions[function_name]['file name']}"
+                        f"{self._dict_2D_distributions[property]['file name']}"
                         f"_tel_index_{self.telescope_indices[i_histogram]}.ecsv"
                     )
                 else:
                     ecsv_file = (
-                        f"{self._dict_2D_distributions[function_name]['file name']}_all_tels.ecsv"
+                        f"{self._dict_2D_distributions[property]['file name']}_all_tels.ecsv"
                     )
 
                 table = self._fill_ecsv_table(

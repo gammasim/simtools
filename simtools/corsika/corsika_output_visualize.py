@@ -7,7 +7,7 @@ import numpy as np
 _logger = logging.getLogger(__name__)
 
 
-def _kernel_plot_2D_photons(corsika_output_instance, property_name, log_z=False):
+def _kernel_plot_2D_photons(corsika_output_instance, property, log_z=False):
     """
     The next functions below are used by the the corsikaOutput class to plot all sort of information
     from the Cherenkov photons saved.
@@ -19,7 +19,7 @@ def _kernel_plot_2D_photons(corsika_output_instance, property_name, log_z=False)
     ----------
     corsika_output_instance: corsika.corsika_output.corsikaOutput
         instance of corsika.corsika_output.corsikaOutput.
-    property_name: string
+    property: string
         Name of the quantity. Options are: "counts", "density", "direction", "time_altitude" and
         "num_photons_per_telescope".
     log_z: bool
@@ -31,47 +31,12 @@ def _kernel_plot_2D_photons(corsika_output_instance, property_name, log_z=False)
         List of figures for the given telescopes.
     list
         List of the figure names.
-
-    Raises
-    ------
-    ValueError
-        if `name` is not allowed.
-
     """
-    x_label = {
-        "counts": "x (m)",
-        "density": "x (m)",
-        "direction": "cos(x)",
-        "time_altitude": "Time since 1st interaction (ns)",
-        "num_photons_per_telescope": "Telescope index",
-    }
-    y_label = {
-        "counts": "y (m)",
-        "density": "y (m)",
-        "direction": "cos(y)",
-        "time_altitude": "Altitude of emission (km)",
-        "num_photons_per_telescope": "Event number",
-    }
-    if property_name not in x_label:
-        msg = f"property_name must be one of {list(x_label.keys())}"
-        _logger.error(msg)
-        raise ValueError(msg)
-
-    if property_name == "counts":
-        hist_values, x_edges, y_edges = corsika_output_instance.get_2D_photon_position_distr(
-            density=False
-        )
-    elif property_name == "density":
-        hist_values, x_edges, y_edges = corsika_output_instance.get_2D_photon_position_distr(
-            density=True
-        )
-    elif property_name == "direction":
-        hist_values, x_edges, y_edges = corsika_output_instance.get_2D_photon_direction_distr()
-    elif property_name == "time_altitude":
-        hist_values, x_edges, y_edges = corsika_output_instance.get_2D_photon_time_altitude()
-    elif property_name == "num_photons_per_telescope":
-        hist_values, x_edges, y_edges = corsika_output_instance.get_2D_num_photons_distr()
-        hist_values, x_edges, y_edges = [hist_values], [x_edges], [y_edges]
+    function = getattr(
+        corsika_output_instance,
+        corsika_output_instance._dict_2D_distributions[property]["function"],
+    )
+    hist_values, x_edges, y_edges = function()
 
     all_figs = []
     fig_names = []
@@ -82,15 +47,24 @@ def _kernel_plot_2D_photons(corsika_output_instance, property_name, log_z=False)
         else:
             norm = None
         mesh = ax.pcolormesh(x_edges[i_hist], y_edges[i_hist], hist_values[i_hist], norm=norm)
-        ax.set_xlabel(x_label[property_name])
-        ax.set_ylabel(y_label[property_name])
+        ax.set_xlabel(
+            f"{corsika_output_instance._dict_2D_distributions[property]['x edges']} "
+            f"({corsika_output_instance._dict_2D_distributions[property]['x edges unit']})"
+        )
+        ax.set_ylabel(
+            f"{corsika_output_instance._dict_2D_distributions[property]['y edges']} "
+            f"({corsika_output_instance._dict_2D_distributions[property]['y edges unit']})"
+        )
         ax.set_xlim(np.amin(x_edges[i_hist]), np.amax(x_edges[i_hist]))
         ax.set_ylim(np.amin(y_edges[i_hist]), np.amax(y_edges[i_hist]))
         ax.set_facecolor("xkcd:black")
         fig.colorbar(mesh)
         all_figs.append(fig)
         if corsika_output_instance.individual_telescopes is False:
-            fig_names.append(f"histogram_{property_name}_2D_all_tels.png")
+            fig_names.append(
+                f"{corsika_output_instance._dict_2D_distributions[property]['file name']}"
+                f"_all_tels.png"
+            )
         else:
             ax.text(
                 0.99,
@@ -102,8 +76,8 @@ def _kernel_plot_2D_photons(corsika_output_instance, property_name, log_z=False)
                 color="white",
             )
             fig_names.append(
-                f"histogram_{property_name}_2D_tel_"
-                f"{str(corsika_output_instance.telescope_indices[i_hist])}.png",
+                f"{corsika_output_instance._dict_2D_distributions[property]['file name']}"
+                f"_tel_index_{corsika_output_instance.telescope_indices[i_hist]}.png",
             )
         plt.close()
 
@@ -267,9 +241,9 @@ def _kernel_plot_1D_photons(corsika_output_instance, property_name, log_y=True):
     if property_name == "wavelength":
         hist_values, edges = corsika_output_instance.get_photon_wavelength_distr()
     elif property_name == "counts":
-        hist_values, edges = corsika_output_instance.get_photon_radial_distr(density=False)
+        hist_values, edges = corsika_output_instance.get_photon_radial_distr()
     elif property_name == "density":
-        hist_values, edges = corsika_output_instance.get_photon_radial_distr(density=True)
+        hist_values, edges = corsika_output_instance.get_photon_density_distr()
     elif property_name == "time":
         hist_values, edges = corsika_output_instance.get_photon_time_of_emission_distr()
     elif property_name == "altitude":
