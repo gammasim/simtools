@@ -3,6 +3,7 @@ import logging
 import matplotlib.colors as colors
 import matplotlib.pyplot as plt
 import numpy as np
+from astropy import units as u
 
 _logger = logging.getLogger(__name__)
 
@@ -411,3 +412,129 @@ def plot_photon_per_telescope_distr(corsika_output_instance, log_y=True):
     return _kernel_plot_1D_photons(
         corsika_output_instance, "num_photons_per_telescope", log_y=log_y
     )
+
+
+def plot_1D_event_header_distribution(
+    corsika_output_instance, event_header_element, log_y=True, bins=50, hist_range=None
+):
+    """
+    Plots the distribution of the quantity given by .
+
+    Parameters
+    ----------
+    corsika_output_instance: corsika.corsika_output.corsikaOutput
+        instance of corsika.corsika_output.corsikaOutput.
+    event_header_element: str
+        The key to the CORSIKA event header element.
+    log_y: bool
+        if True, the intensity of the Y axis is given in logarithmic scale.
+    bins: float
+        Number of bins for the histogram.
+    hist_range: 2-tuple
+        Tuple to define the range of the histogram.
+
+    Returns
+    -------
+    list
+        List of figures for the given telescopes.
+    list
+        List of the figure names.
+
+    """
+    hist_values, edges = corsika_output_instance.event_1D_histogram(
+        event_header_element, bins=bins, hist_range=hist_range
+    )
+    fig, ax = plt.subplots()
+    ax.bar(
+        edges[:-1],
+        hist_values,
+        align="edge",
+        width=np.abs(np.diff(edges)),
+    )
+    if (
+        corsika_output_instance.event_information[event_header_element].unit
+        is not u.dimensionless_unscaled
+    ):
+        ax.set_xlabel(
+            f"{event_header_element} ("
+            f"{corsika_output_instance.event_information[event_header_element].unit})"
+        )
+    else:
+        ax.set_xlabel(f"{event_header_element}")
+    ax.set_ylabel("Counts")
+
+    if log_y is True:
+        ax.set_yscale("log")
+    fig_name = f"hist_1D_{event_header_element}"
+    return fig, fig_name
+
+
+def plot_2D_event_header_distribution(
+    corsika_output_instance,
+    event_header_element_1,
+    event_header_element_2,
+    log_z=True,
+    bins=50,
+    hist_range=None,
+):
+    """
+    Plots the distribution of the quantity given by .
+
+    Parameters
+    ----------
+    corsika_output_instance: corsika.corsika_output.corsikaOutput
+        instance of corsika.corsika_output.corsikaOutput.
+    event_header_element_1: str
+        The first key to the CORSIKA event header element
+    event_header_element_2: str
+        The second key to the CORSIKA event header element.
+    log_z: bool
+        if True, the intensity of the Y axis is given in logarithmic scale.
+    bins: float
+        Number of bins for the histogram.
+    hist_range: 2-tuple
+        Tuple to define the range of the histogram.
+
+    Returns
+    -------
+    list
+        List of figures for the given telescopes.
+    list
+        List of the figure names.
+
+    """
+    hist_values, x_edges, y_edges = corsika_output_instance.event_2D_histogram(
+        event_header_element_1, event_header_element_2, bins=bins, hist_range=hist_range
+    )
+    fig, ax = plt.subplots()
+    if log_z is True:
+        norm = colors.LogNorm(vmin=1, vmax=np.amax([np.amax(hist_values), 2]))
+    else:
+        norm = None
+    mesh = ax.pcolormesh(x_edges, y_edges, hist_values, norm=norm)
+
+    if (
+        corsika_output_instance.event_information[event_header_element_1].unit
+        is not u.dimensionless_unscaled
+    ):
+        ax.set_xlabel(
+            f"{event_header_element_1} ("
+            f"{corsika_output_instance.event_information[event_header_element_1].unit})"
+        )
+    else:
+        ax.set_xlabel(f"{event_header_element_2}")
+    if (
+        corsika_output_instance.event_information[event_header_element_2].unit
+        is not u.dimensionless_unscaled
+    ):
+        ax.set_ylabel(
+            f"{event_header_element_2} ("
+            f"{corsika_output_instance.event_information[event_header_element_2].unit})"
+        )
+    else:
+        ax.set_ylabel(f"{event_header_element_2}")
+
+    ax.set_facecolor("xkcd:black")
+    fig.colorbar(mesh)
+    fig_name = f"hist_2D_{event_header_element_1}_{event_header_element_2}"
+    return fig, fig_name
