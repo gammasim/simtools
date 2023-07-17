@@ -48,14 +48,26 @@ def _kernel_plot_2D_photons(corsika_output_instance, property, log_z=False):
         else:
             norm = None
         mesh = ax.pcolormesh(x_edges[i_hist], y_edges[i_hist], hist_values[i_hist], norm=norm)
-        ax.set_xlabel(
-            f"{corsika_output_instance._dict_2D_distributions[property]['x edges']} "
-            f"({corsika_output_instance._dict_2D_distributions[property]['x edges unit']})"
-        )
-        ax.set_ylabel(
-            f"{corsika_output_instance._dict_2D_distributions[property]['y edges']} "
-            f"({corsika_output_instance._dict_2D_distributions[property]['y edges unit']})"
-        )
+        if (
+            corsika_output_instance._dict_2D_distributions[property]["x edges unit"]
+            is not u.dimensionless_unscaled
+        ):
+            ax.set_xlabel(
+                f"{corsika_output_instance._dict_2D_distributions[property]['x edges']} "
+                f"({corsika_output_instance._dict_2D_distributions[property]['x edges unit']})"
+            )
+        else:
+            ax.set_xlabel(f"{corsika_output_instance._dict_2D_distributions[property]['x edges']} ")
+        if (
+            corsika_output_instance._dict_2D_distributions[property]["y edges"]
+            is not u.dimensionless_unscaled
+        ):
+            ax.set_ylabel(
+                f"{corsika_output_instance._dict_2D_distributions[property]['y edges']} "
+                f"({corsika_output_instance._dict_2D_distributions[property]['y edges unit']})"
+            )
+        else:
+            ax.set_ylabel(f"{corsika_output_instance._dict_2D_distributions[property]['y edges']} ")
         ax.set_xlim(np.amin(x_edges[i_hist]), np.amax(x_edges[i_hist]))
         ax.set_ylim(np.amin(y_edges[i_hist]), np.amax(y_edges[i_hist]))
         ax.set_facecolor("xkcd:black")
@@ -239,10 +251,16 @@ def _kernel_plot_1D_photons(corsika_output_instance, property, log_y=True):
             align="edge",
             width=np.abs(np.diff(edges[i_hist])),
         )
-        ax.set_xlabel(
-            f"{corsika_output_instance._dict_1D_distributions[property]['edges']} "
-            f"({corsika_output_instance._dict_1D_distributions[property]['edges unit']})"
-        )
+        if (
+            corsika_output_instance._dict_1D_distributions[property]["edges unit"]
+            is not u.dimensionless_unscaled
+        ):
+            ax.set_xlabel(
+                f"{corsika_output_instance._dict_1D_distributions[property]['edges']} "
+                f"({corsika_output_instance._dict_1D_distributions[property]['edges unit']})"
+            )
+        else:
+            ax.set_xlabel(f"{corsika_output_instance._dict_1D_distributions[property]['edges']} ")
         ax.set_ylabel("Counts")
 
         if log_y is True:
