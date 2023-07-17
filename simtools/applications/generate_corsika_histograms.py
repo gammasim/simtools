@@ -313,18 +313,45 @@ def main():
     else:
         output_dir = args_dict["output_directory"]
 
+    # Cherenkov photons
     if args_dict["png"]:
         _plot_figures(instance=instance, output_dir=output_dir)
-
     if args_dict["ecsv"]:
         instance.export_histograms(output_dir=output_dir)
 
+    # Event information
     if args_dict["event_1D_histograms"] is not None:
-        print(args_dict["event_1D_histograms"])
+        for event_header_element in args_dict["event_1D_histograms"]:
+            if args_dict["png"]:
+                figure, figure_name = corsika_output_visualize.plot_1D_event_header_distribution(
+                    instance, event_header_element
+                )
+                output_file_name = Path(output_dir).joinpath(figure_name)
+                logger.info(f"Saving histogram to {output_file_name}")
+                figure.savefig(output_file_name, bbox_inches="tight")
+            if args_dict["ecsv"]:
+                instance.export_event_header_1D_histogram(
+                    event_header_element, bins=50, hist_range=None
+                )
+
     if args_dict["event_2D_histograms"] is not None:
-        print(args_dict["event_2D_histograms"])
-    """instance.event_1D_histogram("first_interaction_height")
-    instance.event_2D_histogram("first_interaction_height", "total_energy")"""
+        for i_event_header_element, _ in enumerate(args_dict["event_2D_histograms"][::2]):
+            if args_dict["png"]:
+                figure, figure_name = corsika_output_visualize.plot_2D_event_header_distribution(
+                    instance,
+                    args_dict["event_2D_histograms"][i_event_header_element],
+                    args_dict["event_2D_histograms"][i_event_header_element + 1],
+                )
+                output_file_name = Path(output_dir).joinpath(figure_name)
+                logger.info(f"Saving histogram to {output_file_name}")
+                figure.savefig(output_file_name, bbox_inches="tight")
+            if args_dict["ecsv"]:
+                instance.export_event_header_2D_histogram(
+                    args_dict["event_2D_histograms"][i_event_header_element],
+                    args_dict["event_2D_histograms"][i_event_header_element + 1],
+                    bins=50,
+                    hist_range=None,
+                )
 
     final_time = time.time()
     logger.info(
