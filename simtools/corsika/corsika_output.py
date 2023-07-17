@@ -1210,7 +1210,7 @@ class CorsikaOutput:
                 else:
                     ecsv_file = f"{function_dict['file name']}_all_tels.ecsv"
 
-                table = self._fill_ecsv_table(
+                table = self.fill_ecsv_table(
                     hist_1D_list[i_histogram],
                     x_edges_list[i_histogram],
                     None,
@@ -1321,7 +1321,7 @@ class CorsikaOutput:
                         f"{self._dict_2D_distributions[property]['file name']}_all_tels.ecsv"
                     )
 
-                table = self._fill_ecsv_table(
+                table = self.fill_ecsv_table(
                     hist_2D_list[i_histogram],
                     x_edges_list[i_histogram],
                     y_edges_list[i_histogram],
@@ -1332,7 +1332,7 @@ class CorsikaOutput:
                 self._logger.info(f"Exporting histogram to {ecsv_file}.")
                 table.write(ecsv_file, format="ascii.ecsv", overwrite=True)
 
-    def _fill_ecsv_table(self, hist, x_edges, y_edges, x_label, y_label):
+    def fill_ecsv_table(self, hist, x_edges, y_edges, x_label, y_label):
         """
         Create and fill an ecsv table with the histogram information.
         It works for both 1D and 2D distributions.
@@ -1376,6 +1376,79 @@ class CorsikaOutput:
                 meta=self._meta_dict,
             )
         return table
+
+    def export_event_header_1D_histogram(
+        self, event_header_element, output_dir="./", bins=50, hist_range=None
+    ):
+        """
+        Export to a ecsv file the 1D histogram for the key `event_header_element` from the CORSIKA
+        event header.
+
+        Parameters
+        ----------
+        event_header_element: str
+            The key to the CORSIKA event header element.
+            Possible choices are stored in `self.all_event_keys`.
+        output_dir: str
+            Output directory, where to save the histograms.
+        bins: float
+            Number of bins for the histogram.
+        hist_range: 2-tuple
+            Tuple to define the range of the histogram.
+        """
+
+        hist, edges = self.event_1D_histogram(
+            event_header_element, bins=bins, hist_range=hist_range
+        )
+        edges *= self.event_information[event_header_element].unit
+        table = self.fill_ecsv_table(hist, edges, None, event_header_element, None)
+        ecsv_file = Path(output_dir).joinpath(f"event_1D_histograms_{event_header_element}.ecsv")
+        self._logger.info(f"Exporting histogram to {ecsv_file}.")
+        table.write(ecsv_file, format="ascii.ecsv", overwrite=True)
+
+    def export_event_header_2D_histogram(
+        self,
+        event_header_element_1,
+        event_header_element_2,
+        output_dir="./",
+        bins=50,
+        hist_range=None,
+    ):
+        """
+        Export to a ecsv file the 2D histogram for the key `event_header_element_1` and
+        `event_header_element_2`from the CORSIKA event header.
+
+        Parameters
+        ----------
+        event_header_element_1: str
+            The key to the CORSIKA event header element.
+        event_header_element_2: str
+            The key to the CORSIKA event header element.
+            Possible choices for `event_header_element_1` and `event_header_element_2` are stored
+            in `self.all_event_keys`.
+        output_dir: str
+            Output directory, where to save the histograms.
+        bins: float
+            Number of bins for the histogram.
+        hist_range: 2-tuple
+            Tuple to define the range of the histogram.
+        """
+        hist, x_edges, y_edges = self.event_2D_histogram(
+            event_header_element_1, event_header_element_2, bins=bins, hist_range=hist_range
+        )
+        x_edges *= self.event_information[event_header_element_1].unit
+        y_edges *= self.event_information[event_header_element_2].unit
+
+        table = self.fill_ecsv_table(
+            hist, x_edges, y_edges, event_header_element_1, event_header_element_2
+        )
+
+        ecsv_file = Path(output_dir).joinpath(
+            f"event_2D_histograms_{event_header_element_1}" f"_{event_header_element_2}.ecsv"
+        )
+
+        self._logger.info(f"Exporting histogram to {ecsv_file}.")
+        table.write(ecsv_file, format="ascii.ecsv", overwrite=True)
 
     @property
     def num_photons_per_telescope(self):
