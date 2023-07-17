@@ -116,13 +116,13 @@
 
     event_1D_histograms (str, optional)
         Produce 1D histograms for elements given in `--event_1D_histograms` from the CORSIKA event
-        header and save into ecsv files.
+        header and save into ecsv/png files.
         It allows more than one argument, separated by simple spaces.
         Usage: `--event_1D_histograms first_interaction_height total_energy`.
 
     event_2D_histograms (str, optional)
         Produce 2D histograms for elements given in `--event_2D_histograms` from the CORSIKA event
-        header and save into ecsv files.
+        header and save into ecsv/png files.
         It allows more than one argument, separated by simple spaces.
         The elements are grouped into pairs and the 2D histograms are produced always for two
         subsequent elements.
@@ -138,13 +138,14 @@
 
         simtools-generate-corsika-histograms --IACT_file /workdir/external/gammasim-tools/tests/\
             resources/tel_output_10GeV-2-gamma-20deg-CTAO-South.corsikaio --png --ecsv
+            --event_2D_histograms zenith azimuth --event_1D_histograms total_energy
 
 
     Expected final print-out message:
 
     .. code-block:: console
-        INFO::generate_corsika_histograms(l226)::main::Finalizing the application.
-        Total time needed: 6s.
+        INFO::generate_corsika_histograms(l358)::main::Finalizing the application.
+        Total time needed: 8s.
 """
 
 import logging
@@ -288,6 +289,75 @@ def _plot_figures(instance, output_dir):
             figure.savefig(output_file_name, bbox_inches="tight")
 
 
+def _run_event_1D_histograms(instance, output_dir, event_1D_header_keys, png, ecsv):
+    """
+    Auxiliary function to run the histograms for the arguments given by event_1D_histograms.
+
+    Parameters
+    ----------
+    instance: `CorsikaOutput` instance.
+        The CorsikaOutput instance created in main.
+    output_dir: str
+        The output directory where to save the histograms.
+    event_1D_header_keys: str
+        Produce 1D histograms for elements given in `event_1D_header_keys` from the CORSIKA event
+        header and save into ecsv/png files.
+    png: bool
+        If true, histograms are saved into png files.
+    ecsv: bool
+        If true, histograms are saved into ecsv files.
+    """
+    for event_header_element in event_1D_header_keys:
+        if png:
+            figure, figure_name = corsika_output_visualize.plot_1D_event_header_distribution(
+                instance, event_header_element
+            )
+            output_file_name = Path(output_dir).joinpath(figure_name)
+            logger.info(f"Saving histogram to {output_file_name}")
+            figure.savefig(output_file_name, bbox_inches="tight")
+        if ecsv:
+            instance.export_event_header_1D_histogram(
+                event_header_element, bins=50, hist_range=None
+            )
+
+
+def _run_event_2D_histograms(instance, output_dir, event_2D_header_keys, png, ecsv):
+    """
+    Auxiliary function to run the histograms for the arguments given by event_1D_histograms.
+
+    Parameters
+    ----------
+    instance: `CorsikaOutput` instance.
+        The CorsikaOutput instance created in main.
+    output_dir: str
+        The output directory where to save the histograms.
+    event_2D_header_keys: str
+        Produce 1D histograms for elements given in `event_1D_header_keys` from the CORSIKA event
+        header and save into ecsv/png files.
+    png: bool
+        If true, histograms are saved into png files.
+    ecsv: bool
+        If true, histograms are saved into ecsv files.
+    """
+    for i_event_header_element, _ in enumerate(event_2D_header_keys[::2]):
+        if png:
+            figure, figure_name = corsika_output_visualize.plot_2D_event_header_distribution(
+                instance,
+                event_2D_header_keys[i_event_header_element],
+                event_2D_header_keys[i_event_header_element + 1],
+            )
+            output_file_name = Path(output_dir).joinpath(figure_name)
+            logger.info(f"Saving histogram to {output_file_name}")
+            figure.savefig(output_file_name, bbox_inches="tight")
+        if ecsv:
+            instance.export_event_header_2D_histogram(
+                event_2D_header_keys[i_event_header_element],
+                event_2D_header_keys[i_event_header_element + 1],
+                bins=50,
+                hist_range=None,
+            )
+
+
 def main():
 
     label = Path(__file__).stem
@@ -321,37 +391,21 @@ def main():
 
     # Event information
     if args_dict["event_1D_histograms"] is not None:
-        for event_header_element in args_dict["event_1D_histograms"]:
-            if args_dict["png"]:
-                figure, figure_name = corsika_output_visualize.plot_1D_event_header_distribution(
-                    instance, event_header_element
-                )
-                output_file_name = Path(output_dir).joinpath(figure_name)
-                logger.info(f"Saving histogram to {output_file_name}")
-                figure.savefig(output_file_name, bbox_inches="tight")
-            if args_dict["ecsv"]:
-                instance.export_event_header_1D_histogram(
-                    event_header_element, bins=50, hist_range=None
-                )
-
+        _run_event_1D_histograms(
+            instance,
+            output_dir,
+            args_dict["event_1D_histograms"],
+            args_dict["png"],
+            args_dict["ecsv"],
+        )
     if args_dict["event_2D_histograms"] is not None:
-        for i_event_header_element, _ in enumerate(args_dict["event_2D_histograms"][::2]):
-            if args_dict["png"]:
-                figure, figure_name = corsika_output_visualize.plot_2D_event_header_distribution(
-                    instance,
-                    args_dict["event_2D_histograms"][i_event_header_element],
-                    args_dict["event_2D_histograms"][i_event_header_element + 1],
-                )
-                output_file_name = Path(output_dir).joinpath(figure_name)
-                logger.info(f"Saving histogram to {output_file_name}")
-                figure.savefig(output_file_name, bbox_inches="tight")
-            if args_dict["ecsv"]:
-                instance.export_event_header_2D_histogram(
-                    args_dict["event_2D_histograms"][i_event_header_element],
-                    args_dict["event_2D_histograms"][i_event_header_element + 1],
-                    bins=50,
-                    hist_range=None,
-                )
+        _run_event_2D_histograms(
+            instance,
+            output_dir,
+            args_dict["event_2D_histograms"],
+            args_dict["png"],
+            args_dict["ecsv"],
+        )
 
     final_time = time.time()
     logger.info(
