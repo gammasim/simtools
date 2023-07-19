@@ -27,6 +27,7 @@ classifiers = [
 requires-python = ">=3.9"
 dependencies = [
     "astropy",
+    "boost-histogram",
     "eventio",
     "matplotlib",
     "numpy",
