@@ -6,7 +6,7 @@ from pathlib import Path
 import simtools.util.general as gen
 import simtools.version
 from simtools import io_handler
-from simtools.data_model import meta_data_model, validate_schema
+from simtools.data_model import metadata_model, validate_schema
 from simtools.util import names
 
 __all__ = ["WorkflowDescription"]
@@ -33,7 +33,7 @@ class WorkflowDescription:
         self.io_handler = io_handler.IOHandler()
 
         self.args_dict = args_dict
-        self.workflow_config = meta_data_model.workflow_configuration_schema()
+        self.workflow_config = metadata_model.workflow_configuration_schema()
         self.workflow_config["activity"]["name"] = args_dict["label"]
         self.workflow_config["activity"]["id"] = str(uuid.uuid4())
 
@@ -41,7 +41,7 @@ class WorkflowDescription:
         self.workflow_config["configuration"] = self.args_dict
 
         self.top_level_meta = gen.change_dict_keys_case(
-            meta_data_model.top_level_reference_schema(), True
+            metadata_model.top_level_reference_schema(), True
         )
         self.collect_product_meta_data()
 
