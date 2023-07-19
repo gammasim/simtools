@@ -19,7 +19,7 @@ on:
 jobs:
 
   unittests:
-
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         include:
