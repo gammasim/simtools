@@ -31,7 +31,7 @@ jobs:
           - python-version: "3.9"
             install-method: pip
 
-    default:
+    defaults:
       run:
         shell: bash -leo pipefail {0}
 
