@@ -15,17 +15,26 @@ on:
     types: [opened, synchronize]
   push:
     branches:
-    - main
+      - main
 
 jobs:
 
   integrationtests:
-    runs-on: ubuntu-latest
-
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        #        python-version: [3.8, 3.9, 3.10.4]
-        python-version: [3.9]
+        include:
+          - os: ubuntu-latest
+            python-version: "3.9"
+            install-method: conda
+
+          - os: ubuntu-latest
+            python-version: "3.9"
+            install-method: pip
+
+    defaults:
+      run:
+        shell: bash -leo pipefail {0}
 
     steps:
       - name: checkout
@@ -37,19 +46,20 @@ jobs:
           python-version: ${{ matrix.python-version }}
 
       - name: Install conda dependencies
-        env:
-          PYTHON_VERSION: ${{ matrix.python-version }}
+        if: matrix.install-method == 'conda'
+        uses: mamba-org/provision-with-micromamba@v14
+
+      - name: Python setup
+        if: matrix.install-method == 'pip'
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+          check-latest: true
+
+      - name: Python dependencies
         run: |
-          source $CONDA/etc/profile.d/conda.sh
-          conda config --set always_yes yes --set changeps1 no
-          conda update -q conda
-          # sed -i -e "s/- python/- python=$PYTHON_VERSION/g" environment.yml
-          conda env create -f environment.yml
-          conda activate simtools-dev
-          echo 'source $CONDA/etc/profile.d/conda.sh' >> ~/.bash_profile
-          echo 'conda activate simtools-dev' >> ~/.bash_profile
-          echo 'pip install -e .' >> ~/.bash_profile
           python --version
+          pip install '.[tests,dev,doc]'
 
       - name: simteldependencies
         run: |
