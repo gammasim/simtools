@@ -3,7 +3,7 @@ import logging
 import re
 
 import simtools.util.general as gen
-from simtools.data_model import meta_data_model
+from simtools.data_model import metadata_model
 
 
 class SchemaValidator:
@@ -26,7 +26,7 @@ class SchemaValidator:
         self._logger = logging.getLogger(__name__)
 
         self._reference_schema = gen.change_dict_keys_case(
-            meta_data_model.metadata_input_reference_schema(), lower_case=True
+            metadata_model.metadata_input_reference_schema(), lower_case=True
         )
         self.data_dict = data_dict
 
@@ -228,7 +228,7 @@ class SchemaValidator:
         """
 
         _ref_schema = gen.change_dict_keys_case(
-            meta_data_model.metadata_input_reference_document_list(schema_type), lower_case=True
+            metadata_model.metadata_input_reference_document_list(schema_type), lower_case=True
         )
         for entry in data_list:
             self._validate_schema(_ref_schema, entry)
