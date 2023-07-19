@@ -23,22 +23,21 @@ jobs:
     strategy:
       matrix:
         include:
-          - runs-on: ubuntu-latest
+          - os: ubuntu-latest
             python-version: "3.9"
             install-method: conda
 
-          - runs-on: ubuntu-latest
+          - os: ubuntu-latest
             python-version: "3.9"
             install-method: pip
 
-          - runs-on: macos-latest
+          - os: macos-latest
             python-version: "3.9"
             install-method: conda
 
-          - runs-on: macos-latest
+          - os: macos-latest
             python-version: "3.9"
             install-method: pip
-
 
     defaults:
       run:
