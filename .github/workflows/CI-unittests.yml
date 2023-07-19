@@ -54,18 +54,7 @@ jobs:
 
       - name: Install conda dependencies
         if: matrix.install-method == 'conda'
-        env:
-          PYTHON_VERSION: ${{ matrix.python-version }}
-        run: |
-          source $CONDA/etc/profile.d/conda.sh
-          conda config --set always_yes yes --set changeps1 no
-          conda update -q conda
-          sed -i -e "s/- python=.*/- python=$PYTHON_VERSION/g" environment.yml
-          conda env create -f environment.yml
-          conda activate simtools-dev
-          echo 'source $CONDA/etc/profile.d/conda.sh' >> ~/.bash_profile
-          echo 'conda activate simtools-dev' >> ~/.bash_profile
-          conda install -q pyflakes
+        uses: mamba-org/provision-with-micromamba@v14
 
       - name: Python setup
         if: matrix.install-method == 'pip'
@@ -84,6 +73,11 @@ jobs:
         run: |
           python --version
           pip install '.[tests,dev,doc]'
+
+      - name: Install pyflakes for conda
+        if: matrix.install-method == 'conda'
+        run: |
+          mamba install -q pyflakes
 
       - name: pyflakes liniting
         run: |
