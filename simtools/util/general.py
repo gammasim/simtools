@@ -146,7 +146,7 @@ def validate_config_data(config_data, parameters, ignore_unidentified=False):
             continue
         if "default" in par_info.keys() and par_info["default"] is not None:
             default_value = par_info["default"]
-            if "unit" in par_info:
+            if not isinstance(default_value, u.Quantity) and "unit" in par_info:
                 default_value *= par_info["unit"]
             validated_value = _validate_and_convert_value(par_name, par_info, default_value)
             out_data[par_name] = validated_value
