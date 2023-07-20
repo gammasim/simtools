@@ -86,7 +86,6 @@ import tarfile
 from copy import copy
 from pathlib import Path
 
-import astropy.units as u
 from astropy.io.misc import yaml
 
 import simtools.util.general as gen
@@ -140,25 +139,22 @@ def _parse(description=None):
     )
     config.parser.add_argument(
         "--from_azimuth_direction",
-        help="Direction from which the primary reaches the atmosphere",
-        type=str.lower,
+        help=(
+            "Direction from which the primary reaches the atmosphere."
+            "It can be in degrees between 0 and 360 or one of (north, south, east, west)."
+        ),
+        type=CommandLineParser.azimuth_angle,
         required=True,
-        choices=[
-            "north",
-            "south",
-            "east",
-            "west",
-        ],
     )
     config.parser.add_argument(
         "--zenith_angle",
-        help="Zenith angle in degrees",
+        help="Zenith angle in degrees (between 0 and 180).",
         type=CommandLineParser.zenith_angle,
         required=True,
     )
     config.parser.add_argument(
         "--nshow",
-        help="Number of showers to simulate",
+        help="Number of showers to simulate.",
         type=int,
         required=False,
     )
@@ -273,38 +269,6 @@ def _proccess_simulation_config_file(config_file, primary_config, logger):
     return label, config_showers, config_arrays
 
 
-def _translate_from_azimuth_direction_to_phi(logger, from_azimuth_direction):
-    """
-    Translate the direction particles are coming from to an azimuth angle.
-
-    Parameters
-    ----------
-    from_azimuth_direction: str (north, south, east, west)
-        The direction particles are coming from.
-
-    Returns
-    -------
-    float (Astropy.Quantity)
-        The phi angle for CORSIKA configuration.
-
-    Raises
-    ------
-    ValueError
-    """
-
-    if from_azimuth_direction == "north":
-        return 0 * u.deg
-    if from_azimuth_direction == "south":
-        return 180 * u.deg
-    if from_azimuth_direction == "east":
-        return 90 * u.deg
-    if from_azimuth_direction == "west":
-        return 270 * u.deg
-
-    logger.error(f"The direction {from_azimuth_direction} to simulate from was not recognised")
-    raise ValueError
-
-
 def main():
 
     args_dict, db_config = _parse(description=("Run simulations for productions"))
@@ -319,10 +283,9 @@ def main():
     # Overwrite default and optional settings
     shower_configs["run_list"] = args_dict["run"] + args_dict["start_run"]
     array_configs["site"] = shower_configs["site"] = args_dict["site"]
-    array_configs["zenith"] = shower_configs["zenith"] = args_dict["zenith_angle"] * u.deg
-    array_configs["phi"] = shower_configs["phi"] = _translate_from_azimuth_direction_to_phi(
-        logger, args_dict["from_azimuth_direction"]
-    )
+    array_configs["zenith"] = shower_configs["zenith"] = args_dict["zenith_angle"]
+    array_configs["phi"] = shower_configs["phi"] = args_dict["from_azimuth_direction"]
+
     if args_dict["nshow"] is not None:
         shower_configs["nshow"] = args_dict["nshow"]
     if args_dict["label"] is not None:
