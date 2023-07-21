@@ -25,8 +25,13 @@
 zenith_angle:
   len: 1
   unit: !astropy.units.Unit {unit: deg}
-  default: 20
+  default: 20.0
   names: ['zenith', 'theta']
+azimuth_angle:
+  len: 1
+  unit: !astropy.units.Unit {unit: deg}
+  default: null # No default is given for the sake of the test
+  names: ['azimuth', 'phi']
 off_axis_angle: # Parameter with undefined length
   len: null
   unit: !astropy.units.Unit {unit: deg}

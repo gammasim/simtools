@@ -145,7 +145,10 @@ def validate_config_data(config_data, parameters, ignore_unidentified=False):
         if par_name in out_data:
             continue
         if "default" in par_info.keys() and par_info["default"] is not None:
-            validated_value = _validate_and_convert_value(par_name, par_info, par_info["default"])
+            default_value = par_info["default"]
+            if not isinstance(default_value, u.Quantity) and "unit" in par_info:
+                default_value *= par_info["unit"]
+            validated_value = _validate_and_convert_value(par_name, par_info, default_value)
             out_data[par_name] = validated_value
         elif "default" in par_info.keys() and par_info["default"] is None:
             out_data[par_name] = None
@@ -179,6 +182,7 @@ def _validate_and_convert_value_without_units(value, value_keys, par_name, par_i
         validated and converted input data
 
     """
+
     _, undefined_length = _check_value_entry_length(value, par_name, par_info)
 
     # Checking if values have unit and raising error, if so.
@@ -672,13 +676,14 @@ def change_dict_keys_case(data_dict, lower_case=True):
             else:
                 _return_dict[_key_changed] = data_dict[key]
     except AttributeError:
+        _logger = logging.getLogger(__name__)
         _logger.error(f"Invalid method argument: {data_dict}")
         raise
 
     return _return_dict
 
 
-@u.quantity_input(rotation_angle_around_z_axis=u.rad, rotation_angle_around_y_axis=u.rad)
+@u.quantity_input(rotation_angle_phi=u.rad, rotation_angle_theta=u.rad)
 def rotate(x, y, rotation_around_z_axis, rotation_around_y_axis=0):
     """
     Transform the x and y coordinates of the telescopes according to two rotations:
@@ -801,11 +806,10 @@ def convert_2D_to_radial_distr(hist2d, xaxis, yaxis, bins=50, max_dist=1000):
         The edges of the 1D histogram with size = int(max_dist/bin_size) + 1.
 
     """
+
     # Check if the histogram will make sense
     bins_step = 2 * max_dist / bins  # in the 2D array, the positive and negative direction count.
     for axis in [xaxis, yaxis]:
-        if isinstance(axis, u.Quantity):
-            axis = axis.value
         if (bins_step < np.diff(axis)).any():
             msg = (
                 f"The histogram with number of bins {bins} and maximum distance of {max_dist} "
@@ -865,8 +869,9 @@ def save_dict_to_file(dictionary, file_name):
     IOError:
         if writing to file_name fails.
     """
+
     file_name = Path(file_name).with_suffix(".yml")
-    _logger.info(f"Exporting dictionary to {file_name}")
+    _logger.info(f"Exporting histogram configuration to {file_name}")
     try:
         with open(file_name, "w") as file:
             yaml.dump(dictionary, file)
