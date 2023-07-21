@@ -269,7 +269,7 @@ def _kernel_plot_1D_photons(corsika_output_instance, property_name, log_y=True):
         )
         if (
                 corsika_output_instance._dict_1D_distributions[property_name]["edges unit"]
-            is not u.dimensionless_unscaled
+                is not u.dimensionless_unscaled
         ):
             ax.set_xlabel(
                 f"{corsika_output_instance._dict_1D_distributions[property_name]['edges']} "
