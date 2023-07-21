@@ -8,7 +8,7 @@ from astropy import units as u
 _logger = logging.getLogger(__name__)
 
 
-def _kernel_plot_2D_photons(corsika_output_instance, property, log_z=False):
+def _kernel_plot_2D_photons(corsika_output_instance, property_name, log_z=False):
     """
     The next functions below are used by the the corsikaOutput class to plot all sort of information
     from the Cherenkov photons saved.
@@ -20,7 +20,7 @@ def _kernel_plot_2D_photons(corsika_output_instance, property, log_z=False):
     ----------
     corsika_output_instance: corsika.corsika_output.corsikaOutput
         instance of corsika.corsika_output.corsikaOutput.
-    property: string
+    property_name: string
         Name of the quantity. Options are: "counts", "density", "direction", "time_altitude" and
         "num_photons_per_telescope".
     log_z: bool
@@ -38,13 +38,13 @@ def _kernel_plot_2D_photons(corsika_output_instance, property, log_z=False):
     ValueError
         if `property` is not allowed.
     """
-    if property not in corsika_output_instance._dict_2D_distributions:
+    if property_name not in corsika_output_instance._dict_2D_distributions:
         msg = f"This property does not exist. The valid entries are {corsika_output_instance._dict_2D_distributions}"
         _logger.error(msg)
         raise ValueError
     function = getattr(
         corsika_output_instance,
-        corsika_output_instance._dict_2D_distributions[property]["function"],
+        corsika_output_instance._dict_2D_distributions[property_name]["function"],
     )
     hist_values, x_edges, y_edges = function()
 
@@ -58,25 +58,27 @@ def _kernel_plot_2D_photons(corsika_output_instance, property, log_z=False):
             norm = None
         mesh = ax.pcolormesh(x_edges[i_hist], y_edges[i_hist], hist_values[i_hist], norm=norm)
         if (
-            corsika_output_instance._dict_2D_distributions[property]["x edges unit"]
+                corsika_output_instance._dict_2D_distributions[property_name]["x edges unit"]
             is not u.dimensionless_unscaled
         ):
             ax.set_xlabel(
-                f"{corsika_output_instance._dict_2D_distributions[property]['x edges']} "
-                f"({corsika_output_instance._dict_2D_distributions[property]['x edges unit']})"
+                f"{corsika_output_instance._dict_2D_distributions[property_name]['x edges']} "
+                f"({corsika_output_instance._dict_2D_distributions[property_name]['x edges unit']})"
             )
         else:
-            ax.set_xlabel(f"{corsika_output_instance._dict_2D_distributions[property]['x edges']} ")
+            ax.set_xlabel(
+                f"{corsika_output_instance._dict_2D_distributions[property_name]['x edges']} ")
         if (
-            corsika_output_instance._dict_2D_distributions[property]["y edges"]
+                corsika_output_instance._dict_2D_distributions[property_name]["y edges"]
             is not u.dimensionless_unscaled
         ):
             ax.set_ylabel(
-                f"{corsika_output_instance._dict_2D_distributions[property]['y edges']} "
-                f"({corsika_output_instance._dict_2D_distributions[property]['y edges unit']})"
+                f"{corsika_output_instance._dict_2D_distributions[property_name]['y edges']} "
+                f"({corsika_output_instance._dict_2D_distributions[property_name]['y edges unit']})"
             )
         else:
-            ax.set_ylabel(f"{corsika_output_instance._dict_2D_distributions[property]['y edges']} ")
+            ax.set_ylabel(
+                f"{corsika_output_instance._dict_2D_distributions[property_name]['y edges']} ")
         ax.set_xlim(np.amin(x_edges[i_hist]), np.amax(x_edges[i_hist]))
         ax.set_ylim(np.amin(y_edges[i_hist]), np.amax(y_edges[i_hist]))
         ax.set_facecolor("xkcd:black")
@@ -84,7 +86,7 @@ def _kernel_plot_2D_photons(corsika_output_instance, property, log_z=False):
         all_figs.append(fig)
         if corsika_output_instance.individual_telescopes is False:
             fig_names.append(
-                f"{corsika_output_instance._dict_2D_distributions[property]['file name']}"
+                f"{corsika_output_instance._dict_2D_distributions[property_name]['file name']}"
                 f"_all_tels.png"
             )
         else:
@@ -98,7 +100,7 @@ def _kernel_plot_2D_photons(corsika_output_instance, property, log_z=False):
                 color="white",
             )
             fig_names.append(
-                f"{corsika_output_instance._dict_2D_distributions[property]['file name']}"
+                f"{corsika_output_instance._dict_2D_distributions[property_name]['file name']}"
                 f"_tel_index_{corsika_output_instance.telescope_indices[i_hist]}.png",
             )
         plt.close()
@@ -218,7 +220,7 @@ def plot_2D_num_photons_per_telescope(corsika_output_instance, log_z=True):
     )
 
 
-def _kernel_plot_1D_photons(corsika_output_instance, property, log_y=True):
+def _kernel_plot_1D_photons(corsika_output_instance, property_name, log_y=True):
     """
     Create the figure of a 1D plot. The parameter `property` indicate which plot.
 
@@ -226,7 +228,7 @@ def _kernel_plot_1D_photons(corsika_output_instance, property, log_y=True):
     ----------
     corsika_output_instance: corsika.corsika_output.corsikaOutput
         instance of corsika.corsika_output.corsikaOutput.
-    property: string
+    property_name: string
         Name of the quantity. Choices are
         "counts", "density", "direction", "time", "altitude", "num_photons_per_event", and
         "num_photons_per_telescope".
@@ -245,14 +247,14 @@ def _kernel_plot_1D_photons(corsika_output_instance, property, log_y=True):
     ValueError
         if `property` is not allowed.
     """
-    if property not in corsika_output_instance._dict_1D_distributions:
+    if property_name not in corsika_output_instance._dict_1D_distributions:
         msg = f"This property does not exist. The valid entries are {corsika_output_instance._dict_1D_distributions}"
         _logger.error(msg)
         raise ValueError
 
     function = getattr(
         corsika_output_instance,
-        corsika_output_instance._dict_1D_distributions[property]["function"],
+        corsika_output_instance._dict_1D_distributions[property_name]["function"],
     )
     hist_values, edges = function()
     all_figs = []
@@ -266,27 +268,28 @@ def _kernel_plot_1D_photons(corsika_output_instance, property, log_y=True):
             width=np.abs(np.diff(edges[i_hist])),
         )
         if (
-            corsika_output_instance._dict_1D_distributions[property]["edges unit"]
+                corsika_output_instance._dict_1D_distributions[property_name]["edges unit"]
             is not u.dimensionless_unscaled
         ):
             ax.set_xlabel(
-                f"{corsika_output_instance._dict_1D_distributions[property]['edges']} "
-                f"({corsika_output_instance._dict_1D_distributions[property]['edges unit']})"
+                f"{corsika_output_instance._dict_1D_distributions[property_name]['edges']} "
+                f"({corsika_output_instance._dict_1D_distributions[property_name]['edges unit']})"
             )
         else:
-            ax.set_xlabel(f"{corsika_output_instance._dict_1D_distributions[property]['edges']} ")
+            ax.set_xlabel(
+                f"{corsika_output_instance._dict_1D_distributions[property_name]['edges']} ")
         ax.set_ylabel("Counts")
 
         if log_y is True:
             ax.set_yscale("log")
         if corsika_output_instance.individual_telescopes is False:
             fig_names.append(
-                f"{corsika_output_instance._dict_1D_distributions[property]['file name']}"
+                f"{corsika_output_instance._dict_1D_distributions[property_name]['file name']}"
                 f"_all_tels.png"
             )
         else:
             fig_names.append(
-                f"{corsika_output_instance._dict_1D_distributions[property]['file name']}"
+                f"{corsika_output_instance._dict_1D_distributions[property_name]['file name']}"
                 f"_tel_index_{corsika_output_instance.telescope_indices[i_hist]}.png",
             )
         all_figs.append(fig)

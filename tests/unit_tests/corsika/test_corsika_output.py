@@ -341,6 +341,7 @@ def test_get_2D_num_photons_distr(corsika_output_instance_set_histograms):
     num_photons_per_event_per_telescope, num_events_array, telescope_indices_array = corsika_output_instance_set_histograms.get_2D_num_photons_distr()
     assert np.shape(num_events_array) == (1,3)  # number of events in this output file + 1 (edges of hist)
     assert (telescope_indices_array == [0, 1, 2, 3]).all()
+    print(np.shape(num_photons_per_event_per_telescope))
     assert (
         pytest.approx(num_photons_per_event_per_telescope[0][0, 0], 1e-2) == 2543.3
     )  # 1st tel, 1st event
