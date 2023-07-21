@@ -287,7 +287,7 @@ APP_LIST = {
           "corsikaio",
           "--png", "--ecsv",
           "--telescope_indices",
-          "0, 1, 2",
+          "0 1 2",
           "--individual_telescopes"]],
 
     "generate_corsika_histograms::telescope_indices":
