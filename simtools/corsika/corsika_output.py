@@ -806,13 +806,9 @@ class CorsikaOutput:
         telescope_counter = np.arange(len(self.telescope_indices) + 1).reshape(
             1, len(self.telescope_indices) + 1
         )
-        return (
-            np.array(self.num_photons_per_event_per_telescope).reshape(
-                1, np.size(telescope_counter, axis=1) - 1, np.size(num_events_array, axis=1) - 1
-            ),
-            num_events_array,
-            telescope_counter,
-        )
+        hist_2D = np.array(self.num_photons_per_event_per_telescope)
+        hist_2D.reshape((1, len(self.telescope_indices), self.num_events))
+        return (hist_2D, num_events_array, telescope_counter)
 
     def _get_hist_1D_projection(self, label):
         """
@@ -1191,7 +1187,7 @@ class CorsikaOutput:
             Output directory, where to save the histograms.
         """
 
-        for property_dict, function_dict in self._dict_1D_distributions.items():
+        for _, function_dict in self._dict_1D_distributions.items():
             self._meta_dict["Title"] = function_dict["title"]
             function = getattr(self, function_dict["function"])
             hist_1D_list, x_edges_list = function()
@@ -1291,34 +1287,34 @@ class CorsikaOutput:
             Output directory, where to save the histograms.
         """
 
-        for property, function_dict in self._dict_2D_distributions.items():
+        for property_name, function_dict in self._dict_2D_distributions.items():
             self._meta_dict["Title"] = function_dict["title"]
             function = getattr(self, function_dict["function"])
 
             hist_2D_list, x_edges_list, y_edges_list = function()
             if function_dict["function"] == "get_2D_photon_density_distr":
                 histogram_value_unit = 1 / (
-                    self._dict_2D_distributions[property]["x edges unit"]
-                    * self._dict_2D_distributions[property]["y edges unit"]
+                        self._dict_2D_distributions[property_name]["x edges unit"]
+                        * self._dict_2D_distributions[property_name]["y edges unit"]
                 )
             else:
                 histogram_value_unit = u.dimensionless_unscaled
 
             hist_2D_list, x_edges_list, y_edges_list = (
                 hist_2D_list * histogram_value_unit,
-                x_edges_list * self._dict_2D_distributions[property]["x edges unit"],
-                y_edges_list * self._dict_2D_distributions[property]["y edges unit"],
+                x_edges_list * self._dict_2D_distributions[property_name]["x edges unit"],
+                y_edges_list * self._dict_2D_distributions[property_name]["y edges unit"],
             )
 
             for i_histogram, _ in enumerate(x_edges_list):
                 if self.individual_telescopes:
                     ecsv_file = (
-                        f"{self._dict_2D_distributions[property]['file name']}"
+                        f"{self._dict_2D_distributions[property_name]['file name']}"
                         f"_tel_index_{self.telescope_indices[i_histogram]}.ecsv"
                     )
                 else:
                     ecsv_file = (
-                        f"{self._dict_2D_distributions[property]['file name']}_all_tels.ecsv"
+                        f"{self._dict_2D_distributions[property_name]['file name']}_all_tels.ecsv"
                     )
 
                 table = self.fill_ecsv_table(
