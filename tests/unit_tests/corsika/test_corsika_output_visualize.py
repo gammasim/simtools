@@ -55,13 +55,13 @@ def test_plot_2Ds(corsika_output_instance_set_histograms):
         assert isinstance(fig_names, list)
         assert all(isinstance(fig, plt.Figure) for fig in figs)
         assert all(isinstance(fig_names, str) for fig_names in fig_names)
-    print("test")
 
 def test_kernel_plot_1D_photons(corsika_output_instance_set_histograms, caplog):
     corsika_output_instance_set_histograms.set_histograms(
         individual_telescopes=False, telescope_indices=[0, 1, 2]
     )
-    labels = ["wavelength", "counts", "density", "time", "altitude", "num_photons_per_event", "num_photons_per_telescope"]
+    labels = ["wavelength", "counts", "density", "time", "altitude", "num_photons_per_event",
+              "nnum_photons_per_telescope"]
 
     for property_name in labels:
         all_figs, all_fig_names = corsika_output_visualize._kernel_plot_1D_photons(
