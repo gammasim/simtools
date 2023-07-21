@@ -45,15 +45,34 @@ def test_validate_config_data(args_dict, io_handler, caplog):
     parameter_file = io_handler.get_input_data_file(file_name="test_parameters.yml", test=True)
     parameters = gen.collect_data_from_yaml_or_dict(parameter_file, None)
 
+    # Test missing entry
     config_data = {
-        "zenith": 0 * u.deg,
-        "azimuth": 0 * u.deg,
-        "offaxis": [0 * u.deg, 0.2 * u.rad, 3 * u.deg],
         "cscat": [0, 10 * u.m, 3 * u.km],
         "source_distance": 20000 * u.m,
         "test_name": 10,
         "dict_par": {"blah": 10, "bleh": 5 * u.m},
     }
+    with pytest.raises(MissingRequiredConfigEntry):
+        validated_data = gen.validate_config_data(config_data=config_data, parameters=parameters)
+        assert "Required entry in config_data" in caplog.text
+
+    # Test that a default value is set for a missing parameter.
+    config_data["offaxis"] = [0 * u.deg, 0.2 * u.rad, 3 * u.deg]
+
+    validated_data = gen.validate_config_data(
+        config_data=config_data | {"azimuth": 0 * u.deg}, parameters=parameters
+    )
+    assert "zenith_angle" in validated_data._fields
+    assert pytest.approx(validated_data.zenith_angle) == 20
+
+    # Test that a None default value is set for a missing parameter.
+    config_data["zenith"] = 0 * u.deg
+    validated_data = gen.validate_config_data(config_data=config_data, parameters=parameters)
+    assert "azimuth_angle" in validated_data._fields
+    assert validated_data.azimuth_angle is None
+
+    # Test a full dictionary
+    config_data["azimuth"] = 0 * u.deg
 
     with caplog.at_level(logging.DEBUG):
         validated_data = gen.validate_config_data(config_data=config_data, parameters=parameters)
@@ -81,43 +100,6 @@ def test_validate_config_data(args_dict, io_handler, caplog):
 
     with pytest.raises(UnableToIdentifyConfigEntry):
         gen.validate_config_data(config_data=config_data | {"test": "blah"}, parameters=parameters)
-
-    # Test that a default value is set for a missing parameter.
-    config_data = {
-        "azimuth": 0 * u.deg,
-        "offaxis": [0 * u.deg, 0.2 * u.rad, 3 * u.deg],
-        "cscat": [0, 10 * u.m, 3 * u.km],
-        "source_distance": 20000 * u.m,
-        "test_name": 10,
-        "dict_par": {"blah": 10, "bleh": 5 * u.m},
-    }
-    validated_data = gen.validate_config_data(config_data=config_data, parameters=parameters)
-    assert "zenith_angle" in validated_data._fields
-    assert pytest.approx(validated_data.zenith_angle) == 20
-
-    # Test that a None default value is set for a missing parameter.
-    config_data = {
-        "zenith": 0 * u.deg,
-        "offaxis": [0 * u.deg, 0.2 * u.rad, 3 * u.deg],
-        "cscat": [0, 10 * u.m, 3 * u.km],
-        "source_distance": 20000 * u.m,
-        "test_name": 10,
-        "dict_par": {"blah": 10, "bleh": 5 * u.m},
-    }
-    validated_data = gen.validate_config_data(config_data=config_data, parameters=parameters)
-    assert "azimuth_angle" in validated_data._fields
-    assert validated_data.azimuth_angle is None
-
-    # Test missing entry
-    config_data = {
-        "cscat": [0, 10 * u.m, 3 * u.km],
-        "source_distance": 20000 * u.m,
-        "test_name": 10,
-        "dict_par": {"blah": 10, "bleh": 5 * u.m},
-    }
-    with pytest.raises(MissingRequiredConfigEntry):
-        validated_data = gen.validate_config_data(config_data=config_data, parameters=parameters)
-        assert "Required entry in config_data" in caplog.text
 
 
 def test_check_value_entry_length():
