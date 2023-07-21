@@ -55,7 +55,7 @@ def test_plot_2Ds(corsika_output_instance_set_histograms):
         assert isinstance(fig_names, list)
         assert all(isinstance(fig, plt.Figure) for fig in figs)
         assert all(isinstance(fig_names, str) for fig_names in fig_names)
-
+    print("test")
 
 def test_kernel_plot_1D_photons(corsika_output_instance_set_histograms, caplog):
     corsika_output_instance_set_histograms.set_histograms(
