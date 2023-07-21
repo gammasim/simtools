@@ -705,3 +705,25 @@ def test_event_2D_histogram(corsika_output_instance_set_histograms):
     assert np.size(x_edges) == 6
     assert np.sum(hist) == 2
     assert np.shape(hist) == (5, 5)
+
+
+def test_get_bins_max_dist(corsika_output_instance):
+    # Test when bins and max_dist are None
+    bins, max_dist = corsika_output_instance._get_bins_max_dist()
+    assert bins == 32  # half of the maximum bins
+    assert max_dist == 16  # maximum stop value
+
+    # Test when bins and max_dist are provided
+    bins, max_dist = corsika_output_instance._get_bins_max_dist(bins=5, max_dist=15)
+    assert bins == 5
+    assert max_dist == 15
+
+    # Test when only bins is provided
+    bins, max_dist = corsika_output_instance._get_bins_max_dist(bins=7)
+    assert bins == 7
+    assert max_dist == 16  # maximum stop value
+
+    # Test when only max_dist is provided
+    bins, max_dist = corsika_output_instance._get_bins_max_dist(max_dist=12)
+    assert bins == 32  # half of the maximum bins
+    assert max_dist == 12
