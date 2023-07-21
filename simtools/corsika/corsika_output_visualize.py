@@ -68,8 +68,8 @@ def _kernel_plot_2D_photons(corsika_output_instance, property_name, log_z=False)
             ax.set_xlabel(
                 f"{corsika_output_instance._dict_2D_distributions[property_name]['x edges']} ")
         if (
-                corsika_output_instance._dict_2D_distributions[property_name]["y edges"]
-            is not u.dimensionless_unscaled
+                corsika_output_instance._dict_2D_distributions[property_name]["y edges"] \
+                is not u.dimensionless_unscaled
         ):
             ax.set_ylabel(
                 f"{corsika_output_instance._dict_2D_distributions[property_name]['y edges']} "
