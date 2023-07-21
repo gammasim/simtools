@@ -1325,6 +1325,7 @@ class CorsikaOutput:
                     function_dict["y edges"],
                 )
                 ecsv_file = Path(output_dir).joinpath(ecsv_file)
+                print(ecsv_file)
                 self._logger.info(f"Exporting histogram to {ecsv_file}.")
                 table.write(ecsv_file, format="ascii.ecsv", overwrite=True)
 
