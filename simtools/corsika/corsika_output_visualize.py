@@ -13,8 +13,8 @@ def _kernel_plot_2D_photons(corsika_output_instance, property, log_z=False):
     The next functions below are used by the the corsikaOutput class to plot all sort of information
     from the Cherenkov photons saved.
 
-    Create the figure of a 2D plot. The parameter `name` indicate which plot. Choices are
-    "counts", "density", "direction".
+    Create the figure of a 2D plot. The parameter `name` indicate which plot.
+    Choices are "counts", "density", "direction", "time_altitude", and "num_photons_per_telescope".
 
     Parameters
     ----------
@@ -211,16 +211,16 @@ def plot_2D_num_photons_per_telescope(corsika_output_instance, log_z=True):
 
 def _kernel_plot_1D_photons(corsika_output_instance, property, log_y=True):
     """
-    Create the figure of a 1D plot. The parameter `name` indicate which plot. Choices are
-    "counts", "density", "direction".
+    Create the figure of a 1D plot. The parameter `property` indicate which plot.
 
     Parameters
     ----------
     corsika_output_instance: corsika.corsika_output.corsikaOutput
         instance of corsika.corsika_output.corsikaOutput.
     property: string
-        Name of the quantity. Options are: "wavelength", "counts", "density", "time", "altitude",
-        "num_photons".
+        Name of the quantity. Choices are
+        "counts", "density", "direction", "time", "altitude", "num_photons_per_event", and
+        "num_photons_per_telescope".
     log_y: bool
         if True, the intensity of the Y axis is given in logarithmic scale.
 
@@ -234,8 +234,13 @@ def _kernel_plot_1D_photons(corsika_output_instance, property, log_y=True):
     Raises
     ------
     ValueError
-        if `name` is not allowed.
+        if `property` is not allowed.
     """
+    if property not in corsika_output_instance._dict_1D_distributions:
+        msg = f"This property does not exist. The valid entries are {corsika_output_instance._dict_1D_distributions}"
+        _logger.error(msg)
+        raise ValueError
+
     function = getattr(
         corsika_output_instance,
         corsika_output_instance._dict_1D_distributions[property]["function"],
