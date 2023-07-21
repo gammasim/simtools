@@ -196,7 +196,8 @@ def _parse(label, description, usage):
         help="Name of the CORSIKA IACT file from which to generate the histograms.",
         type=str,
         required=False,
-        nargs='+'
+        nargs='+',
+        default=None
     )
 
     config.parser.add_argument(
@@ -375,7 +376,10 @@ def main():
     logger.info("Starting the application.")
 
     instance = CorsikaOutput(args_dict["IACT_file"])
-    indices = np.array(args_dict["telescope_indices"]).astype(int)
+    if args_dict["telescope_indices"] is not None:
+        indices = np.array(args_dict["telescope_indices"]).astype(int)
+    else:
+        indices = None
     instance.set_histograms(
         telescope_indices=indices,
         individual_telescopes=args_dict["individual_telescopes"],
