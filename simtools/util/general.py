@@ -6,7 +6,6 @@ import re
 from collections import namedtuple
 from pathlib import Path
 
-import astropy.units
 import astropy.units as u
 import numpy as np
 from astropy.coordinates.errors import UnitsError
@@ -679,7 +678,7 @@ def change_dict_keys_case(data_dict, lower_case=True):
     return _return_dict
 
 
-@u.quantity_input(rotation_angle_phi=u.rad, rotation_angle_theta=u.rad)
+@u.quantity_input(rotation_angle_around_z_axis=u.rad, rotation_angle_around_y_axis=u.rad)
 def rotate(x, y, rotation_around_z_axis, rotation_around_y_axis=0):
     """
     Transform the x and y coordinates of the telescopes according to two rotations:
@@ -805,7 +804,7 @@ def convert_2D_to_radial_distr(hist2d, xaxis, yaxis, bins=50, max_dist=1000):
     # Check if the histogram will make sense
     bins_step = 2 * max_dist / bins  # in the 2D array, the positive and negative direction count.
     for axis in [xaxis, yaxis]:
-        if isinstance(axis, astropy.units.Quantity):
+        if isinstance(axis, u.Quantity):
             axis = axis.value
         if (bins_step < np.diff(axis)).any():
             msg = (

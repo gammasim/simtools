@@ -30,7 +30,7 @@ def test_kernel_plot_2D_photons(corsika_output_instance_set_histograms, caplog):
         all_figs, all_fig_names = corsika_output_visualize._kernel_plot_2D_photons(
             corsika_output_instance_set_histograms, property_name
         )
-        for i_hist, _ in enumerate(corsika_output_instance_set_histograms.telescope_indices):
+        for _, _ in enumerate(corsika_output_instance_set_histograms.telescope_indices):
             assert isinstance(all_figs[0], plt.Figure)
             assert isinstance(all_fig_names[0], str)
 
