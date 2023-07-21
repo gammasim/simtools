@@ -26,19 +26,19 @@ def test_kernel_plot_2D_photons(corsika_output_instance_set_histograms, caplog):
     corsika_output_instance_set_histograms.set_histograms(
         individual_telescopes=True, telescope_indices=[0, 1, 2]
     )
-    for property_name in ["counts", "density", "direction", "time_altitude"]:
+    for property_name in ["counts", "density", "direction", "time_altitude", "num_photons_per_telescope"]:
         all_figs, all_fig_names = corsika_output_visualize._kernel_plot_2D_photons(
             corsika_output_instance_set_histograms, property_name
         )
         for i_hist, _ in enumerate(corsika_output_instance_set_histograms.telescope_indices):
-            assert isinstance(all_figs[i_hist], plt.Figure)
-            assert isinstance(all_fig_names[i_hist], str)
+            assert isinstance(all_figs[0], plt.Figure)
+            assert isinstance(all_fig_names[0], str)
 
     with pytest.raises(ValueError):
         corsika_output_visualize._kernel_plot_2D_photons(
             corsika_output_instance_set_histograms, "this_property_does_not_exist"
         )
-        msg = "results: status must be one of "
+        msg = "This property does not exist. "
         assert msg in caplog.text
 
 

@@ -32,7 +32,16 @@ def _kernel_plot_2D_photons(corsika_output_instance, property, log_z=False):
         List of figures for the given telescopes.
     list
         List of the figure names.
+
+    Raises
+    ------
+    ValueError
+        if `property` is not allowed.
     """
+    if property not in corsika_output_instance._dict_2D_distributions:
+        msg = f"This property does not exist. The valid entries are {corsika_output_instance._dict_2D_distributions}"
+        _logger.error(msg)
+        raise ValueError
     function = getattr(
         corsika_output_instance,
         corsika_output_instance._dict_2D_distributions[property]["function"],
