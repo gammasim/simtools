@@ -302,11 +302,11 @@ def test_get_hist_2D_projection(corsika_output_instance, caplog):
 
 
 def test_get_2D_photon_position_distr(corsika_output_instance_set_histograms):
-    density = corsika_output_instance_set_histograms.get_2D_photon_position_distr(density=True)
+    density = corsika_output_instance_set_histograms.get_2D_photon_density_distr()
 
     # Test the values of the histogram
     assert pytest.approx(np.sum(density[0]), 1e-2) == 29
-    counts = corsika_output_instance_set_histograms.get_2D_photon_position_distr(density=False)
+    counts = corsika_output_instance_set_histograms.get_2D_photon_position_distr()
     assert pytest.approx(np.sum(counts[0]), 1e-2) == 11633
 
     # The edges should be the same
@@ -337,25 +337,21 @@ def test_get_2D_photon_time_altitude(corsika_output_instance_set_histograms):
 
 
 def test_get_2D_num_photons_distr(corsika_output_instance_set_histograms):
-    corsika_output_instance_set_histograms.telescope_indices = [0, 4, 10]
-    (
-        num_photons_per_event_per_telescope,
-        num_events_array,
-        telescope_indices_array,
-    ) = corsika_output_instance_set_histograms.get_2D_num_photons_distr()
-    assert len(num_events_array) == 3  # number of events in this output file + 1 (edges of hist)
+    corsika_output_instance_set_histograms.set_histograms(telescope_indices=[0, 4, 10])
+    num_photons_per_event_per_telescope, num_events_array, telescope_indices_array = corsika_output_instance_set_histograms.get_2D_num_photons_distr()
+    assert np.shape(num_events_array) == (1,3)  # number of events in this output file + 1 (edges of hist)
     assert (telescope_indices_array == [0, 1, 2, 3]).all()
     assert (
-        pytest.approx(num_photons_per_event_per_telescope[0, 0], 1e-2) == 2543.3
+        pytest.approx(num_photons_per_event_per_telescope[0][0, 0], 1e-2) == 2543.3
     )  # 1st tel, 1st event
     assert (
-        pytest.approx(num_photons_per_event_per_telescope[0, 1], 1e-2) == 290.5
+        pytest.approx(num_photons_per_event_per_telescope[0][0, 1], 1e-2) == 290.4
     )  # 1st tel, 2nd event
     assert (
-        pytest.approx(num_photons_per_event_per_telescope[1, 0], 1e-2) == 3054.1
+        pytest.approx(num_photons_per_event_per_telescope[0][1, 0], 1e-2) == 1741
     )  # 2nd tel, 1st event
     assert (
-        pytest.approx(num_photons_per_event_per_telescope[1, 1], 1e-2) == 128.81
+        pytest.approx(num_photons_per_event_per_telescope[0][1, 1], 1e-2) == 85.9
     )  # 2nd tel, 2nd event
 
 
@@ -422,9 +418,7 @@ def test_get_photon_radial_distr_input_some_tel_and_density(corsika_output_insta
         telescope_indices=None, individual_telescopes=False, hist_config=None
     )
 
-    hist_1D_list, x_edges_list = corsika_output_instance_set_histograms.get_photon_radial_distr(
-        density=False, bins=100, max_dist=1200
-    )
+    hist_1D_list, x_edges_list = corsika_output_instance_set_histograms.get_photon_radial_distr(bins=100, max_dist=1200)
     assert np.amax(x_edges_list) == 1200
     assert np.size(x_edges_list) == 101
 
@@ -432,8 +426,7 @@ def test_get_photon_radial_distr_input_some_tel_and_density(corsika_output_insta
     (
         hist_1D_list_dens,
         x_edges_list_dens,
-    ) = corsika_output_instance_set_histograms.get_photon_radial_distr(
-        density=True,
+    ) = corsika_output_instance_set_histograms.get_photon_density_distr(
         bins=100,
         max_dist=1200,
     )
@@ -543,28 +536,29 @@ def test_num_photons_per_telescope(corsika_output_instance_set_histograms):
 def test_get_num_photons_distr(corsika_output_instance_set_histograms, caplog):
 
     # Test range and bins for event
-    hist, edges = corsika_output_instance_set_histograms.get_num_photons_distr(
-        bins=50, hist_range=None, event_or_telescope="event"
+    hist, edges = corsika_output_instance_set_histograms.get_num_photons_per_event_distr(
+        bins=50, hist_range=None
     )
     assert np.size(edges) == 51
-    hist, edges = corsika_output_instance_set_histograms.get_num_photons_distr(
-        bins=100, hist_range=None, event_or_telescope="event"
+    hist, edges = corsika_output_instance_set_histograms.get_num_photons_per_event_distr(
+        bins=100, hist_range=None
     )
     assert np.size(edges) == 101
-    hist, edges = corsika_output_instance_set_histograms.get_num_photons_distr(
-        bins=100, hist_range=(0, 500), event_or_telescope="event"
+    hist, edges = corsika_output_instance_set_histograms.get_num_photons_per_event_distr(
+        bins=100, hist_range=(0, 500)
     )
-    assert edges[0] == 0
-    assert edges[-1] == 500
+    assert edges[0][0] == 0
+    assert edges[0][-1] == 500
 
     # Test number of events simulated
-    hist, edges = corsika_output_instance_set_histograms.get_num_photons_distr(
-        bins=2, hist_range=None, event_or_telescope="event"
+    hist, edges = corsika_output_instance_set_histograms.get_num_photons_per_event_distr(
+        bins=2, hist_range=None
     )
     # Assert that the integration of the histogram resembles the known total number of events.
+    print(np.sum(corsika_output_instance_set_histograms.num_photons_per_event))
     assert (
         pytest.approx(
-            np.sum(edges[:-1] * hist)
+            np.sum(edges[0,:-1] * hist[0])
             / np.sum(corsika_output_instance_set_histograms.num_photons_per_event),
             abs=1,
         )
@@ -572,25 +566,18 @@ def test_get_num_photons_distr(corsika_output_instance_set_histograms, caplog):
     )
 
     # Test telescope
-    hist, edges = corsika_output_instance_set_histograms.get_num_photons_distr(
-        bins=87, hist_range=None, event_or_telescope="telescope"
+    hist, edges = corsika_output_instance_set_histograms.get_num_photons_per_telescope_distr(
+        bins=87, hist_range=None
     )
     # Assert that the integration of the histogram resembles the known total number of events.
     assert (
         pytest.approx(
-            np.sum(edges[:-1] * hist)
+            np.sum(edges[0,:-1] * hist[0])
             / np.sum(corsika_output_instance_set_histograms.num_photons_per_telescope),
             abs=1,
         )
         == 1
     )
-
-    with pytest.raises(ValueError):
-        corsika_output_instance_set_histograms.get_num_photons_distr(
-            bins=50, hist_range=None, event_or_telescope="not_valid_name"
-        )
-        msg = "`event_or_telescope` has to be either 'event' or 'telescope'."
-        assert msg in caplog.text
 
 
 def test_total_num_photons(corsika_output_instance_set_histograms):
