@@ -49,6 +49,7 @@ def test_plot_2Ds(corsika_output_instance_set_histograms):
         "plot_2D_direction",
         "plot_2D_num_photons_per_telescope",
     ]:
+        print(function_label)
         function = getattr(corsika_output_visualize, function_label)
         figs, fig_names = function(corsika_output_instance_set_histograms)
         assert isinstance(figs, list)

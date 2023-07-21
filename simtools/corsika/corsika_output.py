@@ -807,7 +807,7 @@ class CorsikaOutput:
             1, len(self.telescope_indices) + 1
         )
         hist_2D = np.array(self.num_photons_per_event_per_telescope)
-        hist_2D.reshape((1, len(self.telescope_indices), self.num_events))
+        hist_2D = hist_2D.reshape((1, len(self.telescope_indices), self.num_events))
         return (hist_2D, num_events_array, telescope_counter)
 
     def _get_hist_1D_projection(self, label):
