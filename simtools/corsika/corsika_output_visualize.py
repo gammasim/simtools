@@ -59,7 +59,7 @@ def _kernel_plot_2D_photons(corsika_output_instance, property_name, log_z=False)
         mesh = ax.pcolormesh(x_edges[i_hist], y_edges[i_hist], hist_values[i_hist], norm=norm)
         if (
                 corsika_output_instance._dict_2D_distributions[property_name]["x edges unit"]
-            is not u.dimensionless_unscaled
+                is not u.dimensionless_unscaled
         ):
             ax.set_xlabel(
                 f"{corsika_output_instance._dict_2D_distributions[property_name]['x edges']} "
