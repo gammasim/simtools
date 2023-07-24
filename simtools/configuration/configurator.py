@@ -89,7 +89,6 @@ class Configurator:
         self,
         paths=True,
         telescope_model=False,
-        workflow_config=False,
         db_config=False,
         job_submission=False,
     ):
@@ -110,8 +109,6 @@ class Configurator:
             Add path configuration to list of args.
         telescope_model: bool
             Add telescope model configuration to list of args.
-        workflow_config: bool
-            Add workflow configuration to list of args.
         db_config: bool
             Add database configuration parameters to list of args.
         job_submission: bool
@@ -134,16 +131,11 @@ class Configurator:
         self.parser.initialize_default_arguments(
             paths=paths,
             telescope_model=telescope_model,
-            workflow_config=workflow_config,
             db_config=db_config,
             job_submission=job_submission,
         )
 
         self._fill_from_command_line()
-        try:
-            self._fill_from_config_file(self.config["workflow_config"])
-        except KeyError:
-            pass
         try:
             self._fill_from_config_file(self.config["config"])
         except KeyError:
@@ -222,15 +214,12 @@ class Configurator:
 
     def _fill_from_config_file(self, config_file):
         """
-        Read and fill configuration parameters from yaml file. Take into account that this could be\
-        a CTASIMPIPE workflow configuration file. (CTASIMPIPE:CONFIGURATION is optional, therefore,\
-        no error is raised when this key is not found)
+        Read and fill configuration parameters from yaml file.
 
         Parameters
         ----------
         config file: str
             Name of configuration file name
-
 
         Raises
         ------
