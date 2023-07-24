@@ -14,9 +14,10 @@ __all__ = ["MetadataCollector"]
 
 class MetadataCollector:
     """
-    Collects and combines metadata associated with this activity
+    Collects and combines metadata associated with the current activity
     (e.g., the executation of an application).
-    Assigns uuid and stores it ACIVITY:ID
+    Assigns uuid and stores it in ACIVITY:ID.
+    Follows CTAO top-level metadata definition.
 
     Parameters
     ----------
@@ -27,19 +28,15 @@ class MetadataCollector:
 
     def __init__(self, args_dict):
         """
-        Initialize workflow configuration.
+        Initialize metadata collector.
+
         """
 
         self._logger = logging.getLogger(__name__)
         self.io_handler = io_handler.IOHandler()
 
         self.args_dict = args_dict
-        self.workflow_config = metadata_model.workflow_configuration_schema()
-        self.workflow_config["activity"]["name"] = args_dict["label"]
-        self.workflow_config["activity"]["id"] = str(uuid.uuid4())
-
-        self.workflow_config["configuration"] = self.args_dict
-
+        self.activity_id = str(uuid.uuid4())
         self.top_level_meta = gen.change_dict_keys_case(
             metadata_model.top_level_reference_schema(), True
         )
@@ -62,78 +59,6 @@ class MetadataCollector:
         self._fill_association_id(self.top_level_meta["cta"]["context"]["sim"]["association"])
 
         self._fill_activity_meta(self.top_level_meta["cta"]["activity"])
-
-    def set_configuration_parameter(self, key, value):
-        """
-        Set value of workflow configuration parameter.
-
-        Parameters
-        ----------
-        key: (str,required)
-            Key of the workflow configuration dict.
-        value: (str,required)
-            Value of the workflow configuration dict associated to 'key'.
-
-        Raises
-        ------
-        KeyError
-            if configuration does not exist in workflow.
-
-        """
-        try:
-            self.workflow_config["configuration"][key] = value
-        except KeyError:
-            self._logger.error(f"Missing key {key} in configuration")
-            raise
-
-    def get_configuration_parameter(self, key):
-        """
-        Return value of workflow configuration parameter.
-
-        Parameters
-        ----------
-        key: (str,required)
-            Key of the workflow configuration dict.
-
-        Returns
-        -------
-        configuration  value
-           value of configuration parameter
-
-        Raises
-        ------
-        KeyError
-            if configuration does not exist in workflow
-        """
-
-        try:
-            return self.workflow_config["configuration"][key]
-        except KeyError:
-            self._logger.error(f"Missing key {key} in configuration")
-            raise
-
-    def reference_data_columns(self):
-        """
-        Return reference data column definition expected in input data.
-
-        Returns
-        -------
-        data_columns dict
-            Reference data columns
-
-        Raises
-        ------
-        KeyError
-            if data_columns does not exist in workflow configuration.
-
-        """
-
-        try:
-            return self.workflow_config["data_columns"]
-        except KeyError:
-            self._logger.error("Missing data_columns entry in workflow configuration")
-            print(self.workflow_config)
-            raise
 
     def product_data_file_name(self, suffix=None, full_path=True):
         """
@@ -161,29 +86,22 @@ class MetadataCollector:
         Raises
         ------
         KeyError
-            if data file name is not defined in workflow configuration or in product metadata dict.
+            if data file name is not defined in product metadata dict.
         TypeError
             if activity:name and product:filename is None.
 
         """
 
-        try:
-            if self.workflow_config["configuration"]["test"]:
-                _filename = "TEST"
-            else:
-                _filename = self.workflow_config["activity"]["id"]
-            if self.workflow_config["product"]["filename"]:
-                _filename += "-" + self.workflow_config["product"]["filename"]
-            else:
-                _filename += "-" + self.workflow_config["activity"]["name"]
-        except KeyError:
-            self._logger.error("Missing cta:product:id in metadata")
-            raise
-        except TypeError:
-            self._logger.error("Missing activity:name in metadata")
-            raise
+        if self.args_dict.get("test", None):
+            _filename = "TEST"
+        else:
+            _filename = self.activity_id
+        if self.args_dict.get("output_file", None):
+            _filename += "-" + self.args_dict["output_file"]
+        elif self.args_dict.get("label", None):
+            _filename += "-" + self.args_dict["label"]
 
-        if not suffix:
+        if not suffix and self.product_data_file_format(suffix=True):
             suffix = "." + self.product_data_file_format(suffix=True)
 
         if full_path:
@@ -211,12 +129,7 @@ class MetadataCollector:
             if relevant fields are not defined in top level metadata dictionary.
         """
 
-        _file_format = "ascii.ecsv"
-        try:
-            if self.workflow_config["product"]["format"] is not None:
-                _file_format = self.workflow_config["product"]["format"]
-        except KeyError:
-            self._logger.info("Using default file format for model file: ascii.ecsv")
+        _file_format = self.args_dict.get("output_file_format", None) or "ascii.ecsv"
 
         if suffix and _file_format == "ascii.ecsv":
             _file_format = "ecsv"
@@ -235,7 +148,7 @@ class MetadataCollector:
         """
 
         _output_dir = self.io_handler.get_output_directory(
-            self.workflow_config["activity"]["name"], "product-data"
+            self.args_dict["label"], "product-data"
         )
         self._logger.debug(f"Outputdirectory {_output_dir}")
         return _output_dir
@@ -295,7 +208,7 @@ class MetadataCollector:
         _schema_validator = validate_schema.SchemaValidator()
         try:
             _input_meta = _schema_validator.validate_and_transform(
-                meta_file_name=self.workflow_config["configuration"]["input_meta"],
+                meta_file_name=self.args_dict["input_meta"],
                 lower_case=True,
             )
         except KeyError:
@@ -334,7 +247,7 @@ class MetadataCollector:
 
         """
 
-        product_dict["id"] = self.workflow_config["activity"]["id"]
+        product_dict["id"] = self.activity_id
         self._logger.debug(f"Assigned ACTIVITY UUID {product_dict['id']}")
 
         product_dict["data"]["category"] = "SIM"
@@ -384,7 +297,7 @@ class MetadataCollector:
 
         """
         try:
-            activity_dict["name"] = self.workflow_config["activity"]["name"]
+            activity_dict["name"] = self.args_dict.get("label", None)
             activity_dict["start"] = datetime.datetime.now().isoformat(timespec="seconds")
             activity_dict["end"] = activity_dict["start"]
             activity_dict["software"]["name"] = "simtools"
@@ -439,13 +352,13 @@ class MetadataCollector:
         Raises
         ------
         KeyError
-            if missing description of CONFIGURATON:INPUT_DATA
+            if missing description of INPUT_DATA
         """
 
         try:
-            return self.workflow_config["configuration"]["input_data"]
+            return self.args_dict["input_data"]
         except KeyError:
-            self._logger.error("Missing description of CONFIGURATON:INPUT_DATA")
+            self._logger.error("Missing description of INPUT_DATA")
             raise
 
     @staticmethod
