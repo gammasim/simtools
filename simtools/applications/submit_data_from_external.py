@@ -70,7 +70,7 @@ def _parse(label, description, usage):
 
     config.parser.add_argument(
         "--input_meta",
-        help="meta data file describing input data",
+        help="meta data file associated to input data",
         type=str,
         required=False,
     )
@@ -80,7 +80,25 @@ def _parse(label, description, usage):
         type=str,
         required=False,
     )
-    return config.initialize(workflow_config=True)
+    config.parser.add_argument(
+        "--input_data_schema",
+        help="schema file describing input data",
+        type=str,
+        required=False,
+    )
+    config.parser.add_argument(
+        "--output_file",
+        help="output data file",
+        type=str,
+        required=False,
+    )
+    config.parser.add_argument(
+        "--output_file_format",
+        help="file format of output data",
+        type=str,
+        required=False,
+    )
+    return config.initialize()
 
 
 def main():
@@ -96,14 +114,19 @@ def main():
     logger = logging.getLogger()
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
-    workflow = MetadataCollector(args_dict=args_dict)
+    activity_metadata = MetadataCollector(args_dict=args_dict)
 
-    data_validator = validate_data.DataValidator(workflow)
-    data_validator.validate()
+    print("AAAAAAAAAAAAAAAAAAAAA")
+    print(activity_metadata.top_level_meta)
 
-    file_writer = writer.ModelDataWriter(workflow)
-    file_writer.write_metadata()
-    file_writer.write_data(data_validator.transform())
+#    data_validator = validate_data.DataValidator(args_dict["input_data_schema"])
+#    data_validator.validate()
+
+#    file_writer = writer.ModelDataWriter(args_dict)
+#    file_writer.write(
+#        metadata=activity_metadata.top_level_meta,
+#        data=None
+#    )
 
 
 if __name__ == "__main__":
