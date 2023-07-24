@@ -9,13 +9,14 @@ from simtools import io_handler
 from simtools.data_model import metadata_model, validate_schema
 from simtools.util import names
 
-__all__ = ["WorkflowDescription"]
+__all__ = ["MetadataCollector"]
 
 
-class WorkflowDescription:
+class MetadataCollector:
     """
-    Workflow description, configuration and metadata class.
-    Assigns uuid to workflow in ACIVITY:ID
+    Collects and combines metadata associated with this activity
+    (e.g., the executation of an application).
+    Assigns uuid and stores it ACIVITY:ID
 
     Parameters
     ----------
@@ -37,7 +38,6 @@ class WorkflowDescription:
         self.workflow_config["activity"]["name"] = args_dict["label"]
         self.workflow_config["activity"]["id"] = str(uuid.uuid4())
 
-        self._read_workflow_configuration(self.args_dict.get("workflow_config", None))
         self.workflow_config["configuration"] = self.args_dict
 
         self.top_level_meta = gen.change_dict_keys_case(
@@ -392,30 +392,6 @@ class WorkflowDescription:
         except KeyError:
             self._logger.error("Error ACTIVITY meta from input meta data")
             raise
-
-    def _read_workflow_configuration(self, workflow_config_file):
-        """
-        Read workflow configuration from file and merge it with existing workflow config. Keys are \
-         changed to lower case.
-
-        Parameters
-        ----------
-        workflow_config_file
-            name of configuration file describing this workflow.
-
-        """
-
-        if workflow_config_file:
-            try:
-                _workflow_from_file = gen.change_dict_keys_case(
-                    gen.collect_data_from_yaml_or_dict(workflow_config_file, None)["CTASIMPIPE"],
-                    True,
-                )
-                self._logger.debug(f"Reading workflow configuration from {workflow_config_file}")
-            except KeyError:
-                self._logger.debug("Error reading CTASIMPIPE workflow configuration")
-
-            self._merge_config_dicts(self.workflow_config, _workflow_from_file, True)
 
     def _merge_config_dicts(self, dict_high, dict_low, add_new_fields=False):
         """
