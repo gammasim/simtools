@@ -7,7 +7,7 @@ import pytest
 
 import simtools.data_model.workflow_description as workflow
 import simtools.util.general as gen
-from simtools.data_model import meta_data_model
+from simtools.data_model import metadata_model
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
@@ -17,7 +17,7 @@ def test_fill_association_id(args_dict_site):
 
     workflow_1 = workflow.WorkflowDescription(args_dict=args_dict_site)
     workflow_1.top_level_meta = gen.change_dict_keys_case(
-        meta_data_model.top_level_reference_schema(), True
+        metadata_model.top_level_reference_schema(), True
     )
     workflow_1.top_level_meta["cta"]["context"]["sim"]["association"] = get_generic_input_meta()[
         "product"
@@ -103,13 +103,13 @@ def test_fill_activity_meta(args_dict_site):
 
     file_writer_1 = workflow.WorkflowDescription(args_dict=args_dict_site)
     file_writer_1.top_level_meta = gen.change_dict_keys_case(
-        meta_data_model.top_level_reference_schema(), True
+        metadata_model.top_level_reference_schema(), True
     )
     file_writer_1._fill_activity_meta(file_writer_1.top_level_meta["cta"]["activity"])
 
     file_writer_2 = workflow.WorkflowDescription(args_dict=args_dict_site)
     file_writer_2.top_level_meta = gen.change_dict_keys_case(
-        meta_data_model.top_level_reference_schema(), True
+        metadata_model.top_level_reference_schema(), True
     )
 
     del file_writer_2.workflow_config["activity"]["name"]
