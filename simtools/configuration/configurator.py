@@ -1,7 +1,7 @@
 import logging
 import os
 import sys
-
+import uuid
 import yaml
 
 import simtools.configuration.commandline_parser as argparser
@@ -19,7 +19,7 @@ class InvalidConfigurationParameter(Exception):
 
 class Configurator:
     """
-    Configuration handling application configuration.
+    Configuration handling of application configuration.
 
     Allow to set configuration parameters by
 
@@ -27,6 +27,8 @@ class Configurator:
     - configuration file (yml file)
     - configuration dict when calling the class
     - environmental variables
+
+    Assigned unique ACIVITY_ID to this configuration (uuid).
 
     Configuration parameter names are converted always to lower case.
 
@@ -94,7 +96,7 @@ class Configurator:
     ):
         """
         Initialize configuration from command line, configuration file, class config, or \
-         environmental variable.
+        environmental variable.
 
         Priorities in parameter settings.
         1. command line; 2. yaml file; 3. class init; 4. env variables.
@@ -145,6 +147,8 @@ class Configurator:
         self._initialize_io_handler()
         _db_dict = self._get_db_parameters()
 
+        if self.config.get("activity_id", None) is None:
+            self.config["activity_id"] = str(uuid.uuid4())
         if self.config["label"] is None:
             self.config["label"] = self.label
 

@@ -230,38 +230,6 @@ def metadata_input_reference_document_list(schema_list):
     raise InvalidSchemaList(msg)
 
 
-def workflow_configuration_schema():
-    """
-    Reference schema for simtools workflow configuration.
-
-    Returns
-    -------
-    dict with workflow configuration
-
-    """
-
-    return {
-        "reference": {"version": "0.1.0"},
-        "activity": {
-            "name": None,
-            "id": None,
-            "description": None,
-        },
-        "datamodel": {
-            "inputschema": None,
-        },
-        "product": {
-            "description": None,
-            "format": None,
-            "filename": None,
-        },
-        "configuration": {
-            "log_level": "INFO",
-            "test": False,
-        },
-    }
-
-
 def _metadata_dict_with_defaults(meta_dict):
     """
     Prepare dictionary with default values filled and removal of all type/required/default dicts.
