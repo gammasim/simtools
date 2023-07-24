@@ -11,7 +11,7 @@ __all__ = [
 
 class CommandLineParser(argparse.ArgumentParser):
     """
-    Command line parser for application and workflows.
+    Command line parser for application.
 
     Wrapper around standard python argparse.ArgumentParser.
 
@@ -28,7 +28,6 @@ class CommandLineParser(argparse.ArgumentParser):
         self,
         paths=True,
         telescope_model=False,
-        workflow_config=False,
         db_config=False,
         job_submission=False,
     ):
@@ -41,8 +40,6 @@ class CommandLineParser(argparse.ArgumentParser):
             Add path configuration to list of args.
         telescope_model: bool
             Add telescope model configuration to list of args.
-        workflow_config: bool
-            Add workflow configuration to list of args.
         db_config: bool
             Add database configuration parameters to list of args.
         job_submission: bool
@@ -57,17 +54,13 @@ class CommandLineParser(argparse.ArgumentParser):
             self.initialize_db_config_arguments()
         if paths:
             self.initialize_path_arguments()
-        self.initialize_config_files(workflow_config)
+        self.initialize_config_files()
         self.initialize_application_execution_arguments()
 
-    def initialize_config_files(self, workflow_config=False):
+    def initialize_config_files(self):
         """
-        Initialize configuration and workflow files.
+        Initialize configuration files.
 
-        Parameters
-        ----------
-        workflow_config: str
-            workflow configuration file.
         """
 
         _job_group = self.add_argument_group("configuration")
@@ -78,13 +71,6 @@ class CommandLineParser(argparse.ArgumentParser):
             type=str,
             required=False,
         )
-        if workflow_config:
-            _job_group.add_argument(
-                "--workflow_config",
-                help="workflow configuration file",
-                type=str,
-                required=False,
-            )
 
     def initialize_path_arguments(self):
         """
