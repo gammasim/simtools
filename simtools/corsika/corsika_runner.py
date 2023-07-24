@@ -218,7 +218,7 @@ class CorsikaRunner:
 
         with open(script_file_path, "w") as file:
             # shebang
-            file.write("#!/usr/bin/bash\n")
+            file.write("#!/usr/bin/env bash\n")
 
             # Setting SECONDS variable to measure runtime
             file.write("\nSECONDS=0\n")
@@ -253,7 +253,7 @@ class CorsikaRunner:
         """Get pfp pre-processor command."""
         cmd = self._simtel_source_path.joinpath("sim_telarray/bin/pfp")
         cmd = str(cmd) + f" -V -DWITHOUT_MULTIPIPE - < {self._corsika_input_file}"
-        cmd += f" > {input_tmp_file}\n"
+        cmd += f" > {input_tmp_file} || exit\n"
         return cmd
 
     def _get_autoinputs_command(self, run_number, input_tmp_file):

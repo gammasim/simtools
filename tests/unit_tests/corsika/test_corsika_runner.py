@@ -58,7 +58,7 @@ def test_prepare_run_script(corsika_runner):
     assert script.exists()
     with open(script, "r") as f:
         script_content = f.read()
-        assert "/usr/bin/bash" in script_content
+        assert "/usr/bin/env bash" in script_content
         assert "corsika_autoinputs" in script_content
         assert "sim_telarray/bin/pfp" in script_content
 
@@ -69,7 +69,7 @@ def test_prepare_run_script(corsika_runner):
     assert script.exists()
     with open(script, "r") as f:
         script_content = f.read()
-        assert "/usr/bin/bash" in script_content
+        assert "/usr/bin/env bash" in script_content
         assert "corsika_autoinputs" in script_content
         assert "sim_telarray/bin/pfp" in script_content
         assert "-R 3" in script_content
@@ -89,7 +89,7 @@ def test_prepare_run_script_with_extra(corsika_runner):
     assert gen.file_has_text(script, "testing-extra-2")
     with open(script, "r") as f:
         script_content = f.read()
-        assert "/usr/bin/bash" in script_content
+        assert "/usr/bin/env bash" in script_content
         assert "corsika_autoinputs" in script_content
         assert "sim_telarray/bin/pfp" in script_content
 
@@ -101,7 +101,7 @@ def test_prepare_run_script_without_pfp(corsika_runner):
     assert script.exists()
     with open(script, "r") as f:
         script_content = f.read()
-        assert "/usr/bin/bash" in script_content
+        assert "/usr/bin/env bash" in script_content
         assert "corsika_autoinputs" in script_content
         assert "sim_telarray/bin/pfp" not in script_content
 

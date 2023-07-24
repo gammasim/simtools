@@ -277,7 +277,7 @@ class SimtelRunnerArray(SimtelRunner):
         command += super()._config_option("random_state", "auto")
         command += super()._config_option("show", "all")
         command += f" {kwargs['input_file']}"
-        command += f" 2>&1 > {self._log_file}"
+        command += f" 2>&1 > {self._log_file} || exit"
 
         return command
 
