@@ -2,10 +2,10 @@
 """
     Summary
     -------
-    Submit model parameter (value, table) through an external interface.
+    Submit model parameter (value, table) through the command line.
 
-    Prototype implementation allowing to submit metadata and
-    data through the command line.
+    Input data and metadata is validated, and if necessary enriched
+    and converted following predescribed schema.
 
     Command line arguments
     ----------------------
@@ -17,19 +17,13 @@
     Example
     -------
 
-    Get workflow configuration from the DB:
+    Submit mirror measurements with associated metadata:
 
     .. code-block:: console
 
-        simtools-get-file-from_DB --file_name \
-        set_MST_mirror_2f_measurements_from_external.config.yml
-
-    Run the application:
-
-    .. code-block:: console
-
-        simtools-submit-data-from-external --workflow_config \
-        set_MST_mirror_2f_measurements_from_external.config.yml
+        simtools-submit-data-from-external \
+            --input_meta ./tests/resources/MLTdata-preproduction.meta.yml \
+            --input_data ./tests/resources/MLTdata-preproduction.ecsv
 
     The output is saved in simtools-output/submit_data_from_external.
 
@@ -49,7 +43,7 @@ import simtools.data_model.model_data_writer as writer
 import simtools.util.general as gen
 from simtools.configuration import configurator
 from simtools.data_model import validate_data
-from simtools.data_model.workflow_description import WorkflowDescription
+from simtools.data_model.metadata_collector import MetadataCollector
 
 
 def _parse(label, description, usage):
@@ -102,7 +96,7 @@ def main():
     logger = logging.getLogger()
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
-    workflow = WorkflowDescription(args_dict=args_dict)
+    workflow = MetadataCollector(args_dict=args_dict)
 
     data_validator = validate_data.DataValidator(workflow)
     data_validator.validate()
