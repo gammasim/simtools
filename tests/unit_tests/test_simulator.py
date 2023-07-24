@@ -275,6 +275,7 @@ def test_submitting(shower_simulator, array_simulator, corsika_file):
 
     assert Path(run_script).exists()
 
+    array_simulator.test = True
     array_simulator._submit_command = "local"
     array_simulator.simulate(input_file_list=corsika_file)
 
