@@ -1,6 +1,5 @@
 import datetime
 import logging
-import uuid
 from pathlib import Path
 
 import simtools.util.general as gen
@@ -16,7 +15,6 @@ class MetadataCollector:
     """
     Collects and combines metadata associated with the current activity
     (e.g., the executation of an application).
-    Assigns uuid and stores it in ACIVITY:ID.
     Follows CTAO top-level metadata definition.
 
     Parameters
@@ -36,7 +34,6 @@ class MetadataCollector:
         self.io_handler = io_handler.IOHandler()
 
         self.args_dict = args_dict
-        self.activity_id = str(uuid.uuid4())
         self.top_level_meta = gen.change_dict_keys_case(
             metadata_model.top_level_reference_schema(), True
         )
@@ -59,99 +56,6 @@ class MetadataCollector:
         self._fill_association_id(self.top_level_meta["cta"]["context"]["sim"]["association"])
 
         self._fill_activity_meta(self.top_level_meta["cta"]["activity"])
-
-    def product_data_file_name(self, suffix=None, full_path=True):
-        """
-        Return name of product data file.
-
-        File name is the combination of activity id (or 'TEST' if CONFIGURATION:TEST is set) and:
-        a. Top-level meta ['product']['name']
-        or
-        b. Top-level meta ['activity']['name']
-
-        (depending which one is set)
-
-        Parameters
-        ----------
-        suffix: str
-            file name extension (if None: use product_data_file_format())
-        full_path: bool
-            if True: return path + file name, otherwise file name only.
-
-        Returns
-        -------
-        Path
-            data file path and name
-
-        Raises
-        ------
-        KeyError
-            if data file name is not defined in product metadata dict.
-        TypeError
-            if activity:name and product:filename is None.
-
-        """
-
-        if self.args_dict.get("test", None):
-            _filename = "TEST"
-        else:
-            _filename = self.activity_id
-        if self.args_dict.get("output_file", None):
-            _filename += "-" + self.args_dict["output_file"]
-        elif self.args_dict.get("label", None):
-            _filename += "-" + self.args_dict["label"]
-
-        if not suffix and self.product_data_file_format(suffix=True):
-            suffix = "." + self.product_data_file_format(suffix=True)
-
-        if full_path:
-            return Path(self.product_data_directory()).joinpath(_filename + suffix)
-        return Path(_filename + suffix)
-
-    def product_data_file_format(self, suffix=False):
-        """
-        Return file format for product data.
-
-        Parameters
-        ----------
-        suffix: bool
-            Return the ecsv suffix (if format is ascii.ecsv),
-            Return file format (if false)
-
-        Returns
-        -------
-        str
-            File format of data product; default file format is 'ascii.ecsv'.
-
-        Raises
-        ------
-        KeyError
-            if relevant fields are not defined in top level metadata dictionary.
-        """
-
-        _file_format = self.args_dict.get("output_file_format", None) or "ascii.ecsv"
-
-        if suffix and _file_format == "ascii.ecsv":
-            _file_format = "ecsv"
-
-        return _file_format
-
-    def product_data_directory(self):
-        """
-        Output directory for data products.
-
-        Returns
-        -------
-        path
-            output directory for data products
-
-        """
-
-        _output_dir = self.io_handler.get_output_directory(
-            self.args_dict["label"], "product-data"
-        )
-        self._logger.debug(f"Outputdirectory {_output_dir}")
-        return _output_dir
 
     def _fill_association_meta_from_args(self, association_dict):
         """
@@ -247,7 +151,7 @@ class MetadataCollector:
 
         """
 
-        product_dict["id"] = self.activity_id
+        product_dict["id"] = self.args_dict.get("activity_id", "123456789")
         self._logger.debug(f"Assigned ACTIVITY UUID {product_dict['id']}")
 
         product_dict["data"]["category"] = "SIM"
@@ -255,8 +159,8 @@ class MetadataCollector:
         product_dict["data"]["type"] = "service"
         product_dict["data"]["model"]["name"] = "simpipe-table"
         product_dict["data"]["model"]["version"] = "0.1.0"
-        product_dict["format"] = self.product_data_file_format()
-        product_dict["filename"] = str(self.product_data_file_name(full_path=False))
+        product_dict["format"] = self.args_dict.get("output_file_format", None)
+        product_dict["filename"] = str(self.args_dict.get("output_file", None))
 
     @staticmethod
     def _fill_association_id(association_dict):
@@ -296,15 +200,12 @@ class MetadataCollector:
             dictionary
 
         """
-        try:
-            activity_dict["name"] = self.args_dict.get("label", None)
-            activity_dict["start"] = datetime.datetime.now().isoformat(timespec="seconds")
-            activity_dict["end"] = activity_dict["start"]
-            activity_dict["software"]["name"] = "simtools"
-            activity_dict["software"]["version"] = simtools.version.__version__
-        except KeyError:
-            self._logger.error("Error ACTIVITY meta from input meta data")
-            raise
+
+        activity_dict["name"] = self.args_dict.get("label", None)
+        activity_dict["start"] = datetime.datetime.now().isoformat(timespec="seconds")
+        activity_dict["end"] = activity_dict["start"]
+        activity_dict["software"]["name"] = "simtools"
+        activity_dict["software"]["version"] = simtools.version.__version__
 
     def _merge_config_dicts(self, dict_high, dict_low, add_new_fields=False):
         """

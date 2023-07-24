@@ -26,16 +26,6 @@ def test_metadata_input_reference_schema():
     assert "VERSION" in _top_ref["REFERENCE"]
 
 
-def test_workflow_configuration_schema():
-
-    _config = metadata_model.workflow_configuration_schema()
-
-    assert isinstance(_config, dict)
-    assert len(_config) > 0
-
-    assert "configuration" in _config
-
-
 def test_metadata_input_reference_document_list():
 
     assert "SITE" in metadata_model.metadata_input_reference_document_list("instrumentlist")
