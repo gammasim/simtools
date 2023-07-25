@@ -10,7 +10,6 @@ import pytest
 
 from simtools.layout.telescope_position import (
     InvalidCoordSystem,
-    MissingInputForConvertion,
     TelescopePosition,
 )
 
