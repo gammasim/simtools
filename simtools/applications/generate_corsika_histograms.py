@@ -257,13 +257,13 @@ def _parse(label, description, usage):
     return config_parser, _
 
 
-def _plot_figures(instance, output_dir):
+def _plot_figures(corsika_output_instance, output_dir):
     """
     Auxiliary function to centralize the plotting functions.
 
     Parameters
     ----------
-    instance: `CorsikaOutput` instance.
+    corsika_output_instance: `CorsikaOutput` instance.
         The CorsikaOutput instance created in main.
     output_dir: str
         The output directory where to save the histograms.
@@ -278,20 +278,20 @@ def _plot_figures(instance, output_dir):
 
     for function_name in plot_function_names:
         function = getattr(corsika_output_visualize, function_name)
-        figures, figure_names = function(instance)
+        figures, figure_names = function(corsika_output_instance)
         for figure, figure_name in zip(figures, figure_names):
             output_file_name = Path(output_dir).joinpath(figure_name)
             logger.info(f"Saving histogram to {output_file_name}")
             figure.savefig(output_file_name, bbox_inches="tight")
 
 
-def _run_event_1D_histograms(instance, output_dir, event_1D_header_keys, png, ecsv):
+def _run_event_1D_histograms(corsika_output_instance, output_dir, event_1D_header_keys, png, ecsv):
     """
     Auxiliary function to run the histograms for the arguments given by event_1D_histograms.
 
     Parameters
     ----------
-    instance: `CorsikaOutput` instance.
+    corsika_output_instance: `CorsikaOutput` instance.
         The CorsikaOutput instance created in main.
     output_dir: str
         The output directory where to save the histograms.
@@ -306,24 +306,24 @@ def _run_event_1D_histograms(instance, output_dir, event_1D_header_keys, png, ec
     for event_header_element in event_1D_header_keys:
         if png:
             figure, figure_name = corsika_output_visualize.plot_1D_event_header_distribution(
-                instance, event_header_element
+                corsika_output_instance, event_header_element
             )
             output_file_name = Path(output_dir).joinpath(figure_name)
             logger.info(f"Saving histogram to {output_file_name}")
             figure.savefig(output_file_name, bbox_inches="tight")
         if ecsv:
-            instance.export_event_header_1D_histogram(
+            corsika_output_instance.export_event_header_1D_histogram(
                 event_header_element, bins=50, hist_range=None
             )
 
 
-def _run_event_2D_histograms(instance, output_dir, event_2D_header_keys, png, ecsv):
+def _run_event_2D_histograms(corsika_output_instance, output_dir, event_2D_header_keys, png, ecsv):
     """
     Auxiliary function to run the histograms for the arguments given by event_1D_histograms.
 
     Parameters
     ----------
-    instance: `CorsikaOutput` instance.
+    corsika_output_instance: `CorsikaOutput` instance.
         The CorsikaOutput instance created in main.
     output_dir: str
         The output directory where to save the histograms.
@@ -338,7 +338,7 @@ def _run_event_2D_histograms(instance, output_dir, event_2D_header_keys, png, ec
     for i_event_header_element, _ in enumerate(event_2D_header_keys[::2]):
         if png:
             figure, figure_name = corsika_output_visualize.plot_2D_event_header_distribution(
-                instance,
+                corsika_output_instance,
                 event_2D_header_keys[i_event_header_element],
                 event_2D_header_keys[i_event_header_element + 1],
             )
@@ -346,7 +346,7 @@ def _run_event_2D_histograms(instance, output_dir, event_2D_header_keys, png, ec
             logger.info(f"Saving histogram to {output_file_name}")
             figure.savefig(output_file_name, bbox_inches="tight")
         if ecsv:
-            instance.export_event_header_2D_histogram(
+            corsika_output_instance.export_event_header_2D_histogram(
                 event_2D_header_keys[i_event_header_element],
                 event_2D_header_keys[i_event_header_element + 1],
                 bins=50,
@@ -367,12 +367,12 @@ def main():
     initial_time = time.time()
     logger.info("Starting the application.")
 
-    instance = CorsikaOutput(args_dict["IACT_file"])
+    corsika_output_instance = CorsikaOutput(args_dict["IACT_file"])
     if args_dict["telescope_indices"] is not None:
         indices = np.array(args_dict["telescope_indices"]).astype(int)
     else:
         indices = None
-    instance.set_histograms(
+    corsika_output_instance.set_histograms(
         telescope_indices=indices,
         individual_telescopes=args_dict["individual_telescopes"],
         hist_config=args_dict["hist_config"],
@@ -385,14 +385,14 @@ def main():
 
     # Cherenkov photons
     if args_dict["png"]:
-        _plot_figures(instance=instance, output_dir=output_dir)
+        _plot_figures(corsika_output_instance=corsika_output_instance, output_dir=output_dir)
     if args_dict["ecsv"]:
-        instance.export_histograms(output_dir=output_dir)
+        corsika_output_instance.export_histograms(output_dir=output_dir)
 
     # Event information
     if args_dict["event_1D_histograms"] is not None:
         _run_event_1D_histograms(
-            instance,
+            corsika_output_instance,
             output_dir,
             args_dict["event_1D_histograms"],
             args_dict["png"],
@@ -400,7 +400,7 @@ def main():
         )
     if args_dict["event_2D_histograms"] is not None:
         _run_event_2D_histograms(
-            instance,
+            corsika_output_instance,
             output_dir,
             args_dict["event_2D_histograms"],
             args_dict["png"],
