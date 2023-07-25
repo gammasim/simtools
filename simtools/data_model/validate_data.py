@@ -1,5 +1,6 @@
 import logging
 import os
+import yaml
 
 from astropy import units as u
 from astropy.table import Table, unique
@@ -10,48 +11,33 @@ __all__ = ["DataValidator"]
 
 class DataValidator:
     """
-    Simulation model data transformation for data validation. Validate input data for type and \
-    units; converts or transform data if required.
+    Validate data for type and units following a describing schema; converts or \
+    transform data if required.
 
     Parameters
     ----------
-    workflow: WorkflowDescription
-        workflow description.
+    schema_file: Path
+        Schema file describing input data and transformations.
+    data_file: Path
+        Input data file.
 
     """
 
-    def __init__(self, workflow=None):
+    def __init__(self, schema_file=None, data_file=None):
         """
         Initalize validation class and read required reference data columns
         """
 
         self._logger = logging.getLogger(__name__)
 
-        if workflow:
-            self._reference_data_columns = workflow.reference_data_columns()
-            self._data_file_name = workflow.input_data_file_name()
+        self._reference_data_columns = self._read_validation_schema(schema_file)
+        self._data_file_name = data_file
 
         self.data_table = None
 
-    def validate(self):
+    def validate_and_transform(self):
         """
-        Data and data file validation
-
-        Returns
-        -------
-        data_table: astropy.table
-            Data table
-
-        """
-
-        self.validate_data_file()
-        self.validate_data_columns()
-
-        return self.data_table
-
-    def transform(self):
-        """
-        Apply transformations to data columns:
+        Data and data file validation.  Apply transformations to data columns:
         - duplication removal
         - sorting according to axes
 
@@ -62,14 +48,20 @@ class DataValidator:
 
         """
 
-        self._check_data_for_duplicates()
-        self._sort_data()
+        self.validate_data_file()
+        if self._reference_data_columns is not None:
+            self.validate_data_columns()
+            self._check_data_for_duplicates()
+            self._sort_data()
 
         return self.data_table
 
     def validate_data_file(self):
         """
         Open data file and read data from file
+        (doing this successfully is understood as
+        file validation).
+
         """
 
         self._logger.info(f"Reading data from {self._data_file_name}")
@@ -79,7 +71,7 @@ class DataValidator:
         """
         Validate that required data columns are available, columns are in the correct units (if \
         necessary apply a unit conversion), and check ranges (minimum, maximum). This is not \
-        applied to columns of type 'string'
+        applied to columns of type 'string'.
 
         """
 
@@ -94,7 +86,7 @@ class DataValidator:
 
     def _check_required_columns(self):
         """
-        Check that all required data columns are available in the input data table
+        Check that all required data columns are available in the input data table.
 
         Raises
         ------
@@ -148,7 +140,7 @@ class DataValidator:
 
     def _check_data_for_duplicates(self):
         """
-        Remove duplicates from data columns as defined in the data columns description
+        Remove duplicates from data columns as defined in the data columns description.
 
         Raises
         ------
@@ -181,7 +173,7 @@ class DataValidator:
 
     def _get_unique_column_requirement(self):
         """
-        Return data column name with unique value requirement
+        Return data column name with unique value requirement.
 
         Returns
         -------
@@ -202,7 +194,7 @@ class DataValidator:
 
     def _get_reference_unit(self, column_name):
         """
-        Return reference column unit. Includes correct treatment of dimensionless units
+        Return reference column unit. Includes correct treatment of dimensionless units.
 
         Parameters
         ----------
@@ -238,7 +230,7 @@ class DataValidator:
         """
         Check that column is defined in reference schema (additional data columns are allowed in\
         the input data, but are ignored) and that column type is not string (string-type columns\
-        ignored for range checks)
+        ignored for range checks).
 
         """
 
@@ -255,7 +247,7 @@ class DataValidator:
     def _check_and_convert_units(self, col):
         """
         Check that all columns have an allowed units. Convert to reference unit (e.g., Angstrom to\
-         nm).
+        nm).
 
         Note on dimensionless columns:
 
@@ -393,3 +385,32 @@ class DataValidator:
                 return True
 
         return False
+
+    def _read_validation_schema(self, schema_file):
+        """
+        Read validation schema from file.
+
+        Parameters
+        ----------
+        schema_file: Path
+            Schema file describing input data
+
+        Returns
+        -------
+        dict
+           validation schema
+
+        """
+
+        _schema_dict = {}
+        try:
+            self._logger.info(f"Reading validation schema from {schema_file}")
+            with open(schema_file, "r") as stream:
+                _schema_dict = yaml.safe_load(stream)
+        except TypeError:
+            pass
+        except FileNotFoundError:
+            self._logger.error(f"Schema file not found: {schema_file}")
+            raise
+
+        return _schema_dict.get("data_columns", None)

@@ -114,17 +114,18 @@ def main():
     logger = logging.getLogger()
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
-
-#    data_validator = validate_data.DataValidator(args_dict["input_data_schema"])
-#    data_validator.validate()
+    data_validator = validate_data.DataValidator(
+        schema_file=args_dict.get("input_data_schema", None),
+        data_file=args_dict["input_data"],
+    )
 
     file_writer = writer.ModelDataWriter(
         product_data_file=args_dict["output_file"],
         product_data_format=args_dict["output_file_format"]
     )
     file_writer.write(
-        metadata=MetadataCollector(args_dict=args_dict),
-        product_data=None
+        metadata=MetadataCollector(args_dict=args_dict).top_level_meta,
+        product_data=data_validator.validate_and_transform()
     )
 
 
