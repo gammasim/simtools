@@ -493,23 +493,19 @@ class TelescopePosition:
         if _crs_from is None:
             return
 
-        try:
-            for _crs_to_name, _crs_to in self.crs.items():
-                if _crs_to_name == _crs_from_name:
-                    continue
-                if not self.has_coordinates(_crs_to_name) and _crs_to["crs"] is not None:
-                    _x, _y = self._convert(
-                        crs_from=_crs_from["crs"],
-                        crs_to=_crs_to["crs"],
-                        xx=_crs_from["xx"]["value"],
-                        yy=_crs_from["yy"]["value"],
+        for _crs_to_name, _crs_to in self.crs.items():
+            if _crs_to_name == _crs_from_name:
+                continue
+            if not self.has_coordinates(_crs_to_name) and _crs_to["crs"] is not None:
+                _x, _y = self._convert(
+                    crs_from=_crs_from["crs"],
+                    crs_to=_crs_to["crs"],
+                    xx=_crs_from["xx"]["value"],
+                    yy=_crs_from["yy"]["value"],
+                )
+                self.set_coordinates(
+                    _crs_to_name, _x, _y, _crs_from["zz"]["value"] * _crs_from["zz"]["unit"]
                     )
-                    self.set_coordinates(
-                        _crs_to_name, _x, _y, _crs_from["zz"]["value"] * _crs_from["zz"]["unit"]
-                    )
-        except (InvalidCoordSystem, TypeError) as e:
-            self._logger.error("No reference coordinate system defined")
-            raise MissingInputForConvertion from e
 
     @staticmethod
     def _default_coordinate_system_definition():
