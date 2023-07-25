@@ -243,6 +243,59 @@ APP_LIST = {
             "--rotate_angle 20 30",
         ]
     ],
+
+    # CORSIKA photons
+    "generate_corsika_histograms::figures":
+        [["--IACT_file",
+          "./tests/resources/tel_output_10GeV-2-gamma-20deg-CTAO-South."
+          "corsikaio", "--png"]],
+    "generate_corsika_histograms::tables":
+        [["--IACT_file",
+          "./tests/resources/tel_output_10GeV-2-gamma-20deg-CTAO-South."
+          "corsikaio", "--ecsv"]],
+    "generate_corsika_histograms::figures_and_tables":
+        [["--IACT_file", "./tests/resources/"
+                         "tel_output_10GeV-2-gamma-20deg-CTAO-South.corsikaio", "--png", "--ecsv"]],
+    "generate_corsika_histograms::output":
+        [["--IACT_file", "./tests/resources/"
+                         "tel_output_10GeV-2-gamma-20deg-CTAO-South.corsikaio",
+          "--png", "--ecsv", "--output_directory", "."]],
+    "generate_corsika_histograms::1D_and_2D_run_header":
+        [["--IACT_file",
+          "./tests/resources/tel_output_10GeV-2-gamma-20deg-CTAO-South."
+          "corsikaio",
+          "--png", "--ecsv",
+          "--event_2D_histograms", "zenith",
+          "azimuth", "--event_1D_histograms",
+          "total_energy"]],
+    "generate_corsika_histograms::1D_run_header":
+        [["--IACT_file",
+          "./tests/resources/tel_output_10GeV-2-gamma-20deg-CTAO-South."
+          "corsikaio",
+          "--png", "--ecsv", "--event_1D_histograms",
+          "total_energy"]],
+    "generate_corsika_histograms::2D_run_header":
+        [["--IACT_file",
+          "./tests/resources/tel_output_10GeV-2-gamma-20deg-CTAO-South."
+          "corsikaio",
+          "--png", "--ecsv",
+          "--event_2D_histograms", "zenith",
+          "azimuth"]],
+    "generate_corsika_histograms::individual_telescopes_and_indices":
+        [["--IACT_file",
+          "./tests/resources/tel_output_10GeV-2-gamma-20deg-CTAO-South."
+          "corsikaio",
+          "--png", "--ecsv",
+          "--telescope_indices",
+          "0 1 2",
+          "--individual_telescopes"]],
+
+    "generate_corsika_histograms::telescope_indices":
+        [["--IACT_file",
+          "./tests/resources/tel_output_10GeV-2-gamma-20deg-CTAO-South."
+          "corsikaio",
+          "--png", "--ecsv", "--telescope_indices", "0 1 2"]],
+
     # Production
     "produce_array_config": [["--array_config", "./tests/resources/array_config_test.yml"]],
     # Trigger

@@ -136,7 +136,7 @@
 
      .. code-block:: console
 
-        simtools-generate-corsika-histograms --IACT_file /workdir/external/gammasim-tools/tests/\
+        simtools-generate-corsika-histograms --IACT_file /workdir/external/simtools/tests/\
             resources/tel_output_10GeV-2-gamma-20deg-CTAO-South.corsikaio --png --ecsv
             --event_2D_histograms zenith azimuth --event_1D_histograms total_energy
 
@@ -151,6 +151,8 @@
 import logging
 import time
 from pathlib import Path
+
+import numpy as np
 
 import simtools.util.general as gen
 from simtools import io_handler
@@ -194,13 +196,15 @@ def _parse(label, description, usage):
         help="Name of the CORSIKA IACT file from which to generate the histograms.",
         type=str,
         required=False,
+        nargs='+',
+        default=None
     )
 
     config.parser.add_argument(
         "--individual_telescopes",
         help="if False, the histograms are filled for all given telescopes together, otherwise"
-        "one histogram is set for each telescope separately.",
-        type=bool,
+             "one histogram is set for each telescope separately.",
+        action='store_true',
         required=False,
         default=False,
     )
@@ -372,8 +376,12 @@ def main():
     logger.info("Starting the application.")
 
     instance = CorsikaOutput(args_dict["IACT_file"])
+    if args_dict["telescope_indices"] is not None:
+        indices = np.array(args_dict["telescope_indices"]).astype(int)
+    else:
+        indices = None
     instance.set_histograms(
-        telescope_indices=args_dict["telescope_indices"],
+        telescope_indices=indices,
         individual_telescopes=args_dict["individual_telescopes"],
         hist_config=args_dict["hist_config"],
     )
