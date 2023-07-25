@@ -39,7 +39,8 @@ def _kernel_plot_2D_photons(corsika_output_instance, property_name, log_z=False)
         if `property` is not allowed.
     """
     if property_name not in corsika_output_instance._dict_2D_distributions:
-        msg = f"This property does not exist. The valid entries are {corsika_output_instance._dict_2D_distributions}"
+        msg = f"This property does not exist. The valid entries are " \
+              f"{corsika_output_instance._dict_2D_distributions}"
         _logger.error(msg)
         raise ValueError
     function = getattr(
@@ -58,8 +59,8 @@ def _kernel_plot_2D_photons(corsika_output_instance, property_name, log_z=False)
             norm = None
         mesh = ax.pcolormesh(x_edges[i_hist], y_edges[i_hist], hist_values[i_hist], norm=norm)
         if (
-                corsika_output_instance._dict_2D_distributions[property_name]["x edges unit"]
-                is not u.dimensionless_unscaled
+                corsika_output_instance._dict_2D_distributions[property_name]["x edges unit"] is \
+                not u.dimensionless_unscaled
         ):
             ax.set_xlabel(
                 f"{corsika_output_instance._dict_2D_distributions[property_name]['x edges']} "
@@ -68,10 +69,8 @@ def _kernel_plot_2D_photons(corsika_output_instance, property_name, log_z=False)
         else:
             ax.set_xlabel(
                 f"{corsika_output_instance._dict_2D_distributions[property_name]['x edges']} ")
-        if (
-                corsika_output_instance._dict_2D_distributions[property_name]["y edges"]
-            is not u.dimensionless_unscaled
-        ):
+        if (corsika_output_instance._dict_2D_distributions[property_name]["y edges"] is not \
+                u.dimensionless_unscaled):
             ax.set_ylabel(
                 f"{corsika_output_instance._dict_2D_distributions[property_name]['y edges']} "
                 f"({corsika_output_instance._dict_2D_distributions[property_name]['y edges unit']})"
@@ -248,7 +247,8 @@ def _kernel_plot_1D_photons(corsika_output_instance, property_name, log_y=True):
         if `property` is not allowed.
     """
     if property_name not in corsika_output_instance._dict_1D_distributions:
-        msg = f"This property does not exist. The valid entries are {corsika_output_instance._dict_1D_distributions}"
+        msg = f"This property does not exist. The valid entries are " \
+              f"{corsika_output_instance._dict_1D_distributions}"
         _logger.error(msg)
         raise ValueError
 
@@ -269,7 +269,7 @@ def _kernel_plot_1D_photons(corsika_output_instance, property_name, log_y=True):
         )
         if (
                 corsika_output_instance._dict_1D_distributions[property_name]["edges unit"]
-            is not u.dimensionless_unscaled
+                is not u.dimensionless_unscaled
         ):
             ax.set_xlabel(
                 f"{corsika_output_instance._dict_1D_distributions[property_name]['edges']} "
