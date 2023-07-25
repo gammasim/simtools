@@ -25,7 +25,7 @@ class ModelDataWriter:
 
         self._logger = logging.getLogger(__name__)
         self.product_data_file = product_data_file
-        self.product_data_format = product_data_format
+        self.product_data_format = self._astropy_data_format(product_data_format)
 
     def write(self, metadata=None, product_data=None):
         """
@@ -122,3 +122,19 @@ class ModelDataWriter:
         except TypeError:
             self._logger.error("No output file for metadata defined")
             raise
+
+    @staticmethod
+    def _astropy_data_format(product_data_format):
+        """
+        Ensure conformance with astropy data format naming.
+
+        Parameters
+        ----------
+        product_data_format: string
+            format identifier
+
+        """
+
+        if product_data_format == "ecsv":
+            product_data_format = "ascii.ecsv"
+        return product_data_format
