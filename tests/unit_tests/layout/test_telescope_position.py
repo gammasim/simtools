@@ -10,7 +10,6 @@ import pytest
 
 from simtools.layout.telescope_position import (
     InvalidCoordSystem,
-    MissingInputForConvertion,
     TelescopePosition,
 )
 
@@ -291,9 +290,6 @@ def test_convert_all(crs_wgs84, crs_local, crs_utm):
 
     tel = TelescopePosition(name="LST-01")
 
-    with pytest.raises(MissingInputForConvertion):
-        tel.convert_all(crs_wgs84=crs_wgs84, crs_local=crs_local, crs_utm=crs_utm)
-
     tel.set_coordinates("corsika", 0.0, 0.0, 2158.0 * u.m)
     tel.convert_all(crs_wgs84=crs_wgs84, crs_local=crs_local, crs_utm=crs_utm)
 
@@ -303,3 +299,11 @@ def test_convert_all(crs_wgs84, crs_local, crs_utm):
     assert 217609.2270142641 == pytest.approx(tel.crs["utm"]["xx"]["value"], 1.0e-9)
     assert 3185067.2783240844 == pytest.approx(tel.crs["utm"]["yy"]["value"], 1.0e-9)
     assert 2158.0 == pytest.approx(tel.crs["utm"]["zz"]["value"], 1.0e-9)
+
+    tel_nan = TelescopePosition(name="LST-02")
+    tel_nan.set_coordinates("corsika", np.nan, np.nan, 2158.0 * u.m)
+    tel_nan.convert_all(crs_wgs84=crs_wgs84, crs_local=crs_local, crs_utm=crs_utm)
+    assert np.isnan(tel_nan.crs["mercator"]["xx"]["value"])
+    assert np.isnan(tel_nan.crs["mercator"]["yy"]["value"])
+    assert np.isnan(tel_nan.crs["utm"]["xx"]["value"])
+    assert np.isnan(tel_nan.crs["utm"]["yy"]["value"])

@@ -4,15 +4,11 @@ import astropy.units as u
 import numpy as np
 import pyproj
 
-__all__ = ["InvalidCoordSystem", "MissingInputForConvertion", "TelescopePosition"]
+__all__ = ["InvalidCoordSystem", "TelescopePosition"]
 
 
 class InvalidCoordSystem(Exception):
     """Exception for invalid coordinate system."""
-
-
-class MissingInputForConvertion(Exception):
-    """Exception for missing input for convertion."""
 
 
 class TelescopePosition:
@@ -350,10 +346,12 @@ class TelescopePosition:
             raise InvalidCoordSystem from e
 
         return (
-            self.crs[crs_name]["xx"]["value"] is not np.nan
-            and self.crs[crs_name]["yy"]["value"] is not np.nan
-            and self.crs[crs_name]["xx"]["value"] is not None
-            and self.crs[crs_name]["yy"]["value"] is not None
+            np.all(np.isfinite(
+                    np.array(
+                        [self.crs[crs_name]["xx"]["value"], self.crs[crs_name]["yy"]["value"]],
+                        dtype=float)
+                )
+            )
         )
 
     def has_altitude(self, crs_name=None):
@@ -477,10 +475,6 @@ class TelescopePosition:
         crs_utm: pyproj.crs.crs.CRS
             Pyproj CRS of the utm coordinate system.
 
-        Raises
-        ------
-        MissingInputForConvertion
-            if the coordinate system is invalid.
         """
 
         self._set_coordinate_system("corsika", crs_local)
@@ -488,24 +482,22 @@ class TelescopePosition:
         self._set_coordinate_system("mercator", crs_wgs84)
 
         _crs_from_name, _crs_from = self._get_reference_system_from()
+        if _crs_from is None:
+            return
 
-        try:
-            for _crs_to_name, _crs_to in self.crs.items():
-                if _crs_to_name == _crs_from_name:
-                    continue
-                if not self.has_coordinates(_crs_to_name) and _crs_to["crs"] is not None:
-                    _x, _y = self._convert(
-                        crs_from=_crs_from["crs"],
-                        crs_to=_crs_to["crs"],
-                        xx=_crs_from["xx"]["value"],
-                        yy=_crs_from["yy"]["value"],
+        for _crs_to_name, _crs_to in self.crs.items():
+            if _crs_to_name == _crs_from_name:
+                continue
+            if not self.has_coordinates(_crs_to_name) and _crs_to["crs"] is not None:
+                _x, _y = self._convert(
+                    crs_from=_crs_from["crs"],
+                    crs_to=_crs_to["crs"],
+                    xx=_crs_from["xx"]["value"],
+                    yy=_crs_from["yy"]["value"],
+                )
+                self.set_coordinates(
+                    _crs_to_name, _x, _y, _crs_from["zz"]["value"] * _crs_from["zz"]["unit"]
                     )
-                    self.set_coordinates(
-                        _crs_to_name, _x, _y, _crs_from["zz"]["value"] * _crs_from["zz"]["unit"]
-                    )
-        except (InvalidCoordSystem, TypeError) as e:
-            self._logger.error("No reference coordinate system defined")
-            raise MissingInputForConvertion from e
 
     @staticmethod
     def _default_coordinate_system_definition():
