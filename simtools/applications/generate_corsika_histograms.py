@@ -273,6 +273,7 @@ def _plot_figures(instance, output_dir):
         plotting_method
         for plotting_method in dir(corsika_output_visualize)
         if plotting_method.startswith("plot_")
+        and "event_header_distribution" not in plotting_method
     ]
 
     for function_name in plot_function_names:
