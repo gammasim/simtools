@@ -196,15 +196,15 @@ def _parse(label, description, usage):
         help="Name of the CORSIKA IACT file from which to generate the histograms.",
         type=str,
         required=False,
-        nargs='+',
-        default=None
+        nargs="+",
+        default=None,
     )
 
     config.parser.add_argument(
         "--individual_telescopes",
         help="if False, the histograms are filled for all given telescopes together, otherwise"
-             "one histogram is set for each telescope separately.",
-        action='store_true',
+        "one histogram is set for each telescope separately.",
+        action="store_true",
         required=False,
         default=False,
     )
@@ -270,18 +270,9 @@ def _plot_figures(instance, output_dir):
     """
 
     plot_function_names = [
-        "plot_wavelength_distr",
-        "plot_counts_distr",
-        "plot_density_distr",
-        "plot_time_distr",
-        "plot_altitude_distr",
-        "plot_photon_per_event_distr",
-        "plot_photon_per_telescope_distr",
-        "plot_2D_counts",
-        "plot_2D_density",
-        "plot_2D_direction",
-        "plot_2D_time_altitude",
-        "plot_2D_num_photons_per_telescope",
+        plotting_method
+        for plotting_method in dir(corsika_output_visualize)
+        if plotting_method.startswith("plot_")
     ]
 
     for function_name in plot_function_names:
