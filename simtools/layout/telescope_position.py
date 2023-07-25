@@ -4,15 +4,11 @@ import astropy.units as u
 import numpy as np
 import pyproj
 
-__all__ = ["InvalidCoordSystem", "MissingInputForConvertion", "TelescopePosition"]
+__all__ = ["InvalidCoordSystem", "TelescopePosition"]
 
 
 class InvalidCoordSystem(Exception):
     """Exception for invalid coordinate system."""
-
-
-class MissingInputForConvertion(Exception):
-    """Exception for missing input for convertion."""
 
 
 class TelescopePosition:
@@ -479,10 +475,6 @@ class TelescopePosition:
         crs_utm: pyproj.crs.crs.CRS
             Pyproj CRS of the utm coordinate system.
 
-        Raises
-        ------
-        MissingInputForConvertion
-            if the coordinate system is invalid.
         """
 
         self._set_coordinate_system("corsika", crs_local)
