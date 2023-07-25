@@ -3,8 +3,8 @@
 """
     Summary
     -------
-    This application produces a set of histograms for the distribution of Cherenkov photons on the
-    ground (at observation level) read from the given CORSIKA IACT output file.
+    This application produces a set of histograms of the distribution of Cherenkov photons on the
+    ground (at observation level) read from the CORSIKA IACT output file provided as input.
 
     The histograms can be saved both in a png and in a ecsv file. By default, it saves in both
     formats.
