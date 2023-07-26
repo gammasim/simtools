@@ -1,4 +1,5 @@
 import argparse
+import logging
 from pathlib import Path
 
 import astropy.units as u
@@ -331,7 +332,11 @@ class CommandLineParser(argparse.ArgumentParser):
 
 
         """
-        fangle = float(angle)
+
+        try:
+            fangle = float(angle)
+        except ValueError:
+            raise ("The zenith angle provided is not a valid numeric value.")
         if fangle < 0.0 or fangle > 180.0:
             raise argparse.ArgumentTypeError(
                 f"The provided zenith angle, {angle:.1f}, "
@@ -365,7 +370,21 @@ class CommandLineParser(argparse.ArgumentParser):
 
         """
 
-        print("first -", angle, type(angle))
+        logger = logging.getLogger(__name__)
+        try:
+            fangle = float(angle)
+            if fangle < 0.0 or fangle > 360.0:
+                raise argparse.ArgumentTypeError(
+                    f"The provided zenith angle, {angle:.1f}, "
+                    "is outside of the allowed [0, 360] interval"
+                )
+
+            return fangle * u.deg
+        except ValueError:
+            logger.debug(
+                "The azimuth angle provided is not a valid numeric value. "
+                "Will check if it is (north, south, east, west) instead"
+            )
         if isinstance(angle, str):
             from_azimuth_direction = angle.lower()
             if from_azimuth_direction == "north":
@@ -377,14 +396,11 @@ class CommandLineParser(argparse.ArgumentParser):
             if from_azimuth_direction == "west":
                 return 270 * u.deg
             raise argparse.ArgumentTypeError(
-                f"The azimuth angle can only be one of (north, south, east, west), not {angle}"
+                "The azimuth angle can only be a number or one of "
+                f"(north, south, east, west), not {angle}"
             )
-        else:
-            fangle = float(angle)
-            if fangle < 0.0 or fangle > 360.0:
-                raise argparse.ArgumentTypeError(
-                    f"The provided zenith angle, {angle:.1f}, "
-                    "is outside of the allowed [0, 360] interval"
-                )
-
-            return fangle * u.deg
+        logger.error(
+            f"The azimuth value provided, {angle}, is not a valid number "
+            "nor one of (north, south, east, west), quitting"
+        )
+        raise ValueError
