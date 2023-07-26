@@ -27,6 +27,7 @@ classifiers = [
 requires-python = ">=3.9"
 dependencies = [
     "astropy",
+    "boost-histogram",
     "eventio",
     "matplotlib",
     "numpy",
@@ -69,7 +70,7 @@ simtools-plot-simtel-histograms = "simtools.applications.plot_simtel_histograms:
 simtools-print-array-elements = "simtools.applications.print_array_elements:main"
 simtools-produce-array-config = "simtools.applications.produce_array_config:main"
 simtools-production = "simtools.applications.production:main"
-simtools-sim_showers-for-trigger-rates = "simtools.applications.sim_showers_for_trigger_rates:main"
+simtools-sim-showers-for-trigger-rates = "simtools.applications.sim_showers_for_trigger_rates:main"
 simtools-simulate-prod = "simtools.applications.simulate_prod:main"
 simtools-submit-data-from-external = "simtools.applications.submit_data_from_external:main"
 simtools-tune-psf = "simtools.applications.tune_psf:main"
