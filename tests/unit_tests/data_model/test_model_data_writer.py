@@ -1,7 +1,6 @@
 #!/usr/bin/python3
 
 import logging
-import re
 from pathlib import Path
 
 import pytest

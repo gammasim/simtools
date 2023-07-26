@@ -3,8 +3,6 @@
 import copy
 import logging
 
-import pytest
-
 import simtools.data_model.metadata_collector as metadata_collector
 import simtools.util.general as gen
 from simtools.data_model import metadata_model
@@ -40,11 +38,6 @@ def test_fill_association_id(args_dict_site):
     metadata_1._fill_association_id(
         metadata_1.top_level_meta["cta"]["context"]["sim"]["association"]
     )
-
-    # TODO
-    # with pytest.raises(ValueError):
-    #    workflow_1._fill_association_id(
-    #        workflow_1.top_level_meta["cta"]["context"]["sim"]["association"])
 
 
 def test_merge_config_dicts(args_dict_site):
