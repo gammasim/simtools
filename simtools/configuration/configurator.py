@@ -19,7 +19,7 @@ class InvalidConfigurationParameter(Exception):
 
 class Configurator:
     """
-    Configuration handling of application configuration.
+    Application configuration.
 
     Allow to set configuration parameters by
 
@@ -28,7 +28,7 @@ class Configurator:
     - configuration dict when calling the class
     - environmental variables
 
-    Assigned unique ACIVITY_ID to this configuration (uuid).
+    Assigns unique ACIVITY_ID to this configuration (uuid).
 
     Configuration parameter names are converted always to lower case.
 
