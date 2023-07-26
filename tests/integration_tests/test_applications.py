@@ -41,8 +41,14 @@ APP_LIST = {
     ],
     "submit_data_from_external::submit": [
         [
-            "--workflow_config",
-            "tests/resources/set_MST_mirror_2f_measurements_from_external.config.yml",
+            "--input_meta",
+            "./tests/resources/MLTdata-preproduction.meta.yml",
+            "--input_data",
+            "./tests/resources/MLTdata-preproduction.ecsv",
+            "--input_data_schema",
+            "./tests/resources/schema_MST_mirror_2f_measurements.yml",
+            "--output_file",
+            "test-submit-data.ecsv",
         ]
     ],
     "derive_mirror_rnda::help": [
