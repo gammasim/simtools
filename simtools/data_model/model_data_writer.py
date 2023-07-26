@@ -1,6 +1,7 @@
 import logging
 from pathlib import Path
 
+import astropy
 import yaml
 
 import simtools.util.general as gen
@@ -60,7 +61,6 @@ class ModelDataWriter:
         """
 
         try:
-            # TODO - not nice
             if product_data is not None:
                 self._logger.info(f"Writing data to {self.product_data_file}")
                 product_data.write(
@@ -68,11 +68,8 @@ class ModelDataWriter:
                     format=self.product_data_format,
                     overwrite=True
                 )
-        except FileNotFoundError:
-            self._logger.error(f"Error writing model data to {self.product_data_file}.")
-            raise
-        except AttributeError:
-            self._logger.error("Error writing model data, no output file defined.")
+        except astropy.io.registry.base.IORegistryError:
+            self._logger.error("Error writing model data to {self.product_data_file}.")
             raise
 
     def write_metadata(self, metadata, ymlfile=None, keys_lower_case=False):

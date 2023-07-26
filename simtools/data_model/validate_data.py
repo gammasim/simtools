@@ -79,10 +79,8 @@ class DataValidator:
 
         self._check_required_columns()
 
-        return
-
         for col in self.data_table.itercols():
-            if not self._column_status(col.name):
+            if not self._get_reference_data_column(col.name, status_test=True):
                 continue
             self._check_and_convert_units(col)
             self._check_range(col.name, col.min(), col.max(), "allowed_range")
@@ -217,38 +215,11 @@ class DataValidator:
 
         """
 
-        for entry in self._reference_data_columns:
-            if entry[column_name] == column_name:
-                reference_unit = entry.get("units", None)
-
-        try:
-            if reference_unit == "dimensionless" or reference_unit is None:
-                return u.dimensionless_unscaled
-        except NameError:
-            self._logger.error(
-                f"Data column '{column_name}' not found in reference column definition"
-            )
-            raise
+        reference_unit = self._get_reference_data_column(column_name).get("units", None)
+        if reference_unit == "dimensionless" or reference_unit is None:
+            return u.dimensionless_unscaled
 
         return u.Unit(reference_unit)
-
-    def _column_status(self, col_name):
-        """
-        Check that column is defined in reference schema (additional data columns are allowed in\
-        the input data, but are ignored) and that column type is not string (string-type columns\
-        ignored for range checks).
-
-        """
-
-        if col_name not in self._reference_data_columns:
-            return False
-        if (
-            "type" in self._reference_data_columns[col_name]
-            and self._reference_data_columns[col_name]["type"] == "string"
-        ):
-            return False
-
-        return True
 
     def _check_and_convert_units(self, col):
         """
@@ -333,17 +304,20 @@ class DataValidator:
         try:
             if range_type not in ("allowed_range", "required_range"):
                 raise KeyError
-            if range_type not in self._reference_data_columns[col_name]:
-                return None
-        except KeyError as e:
-            raise KeyError(f"Missing column '{col_name} in reference range'") from e
+        except KeyError:
+            self._logger.error("Allowed range types are 'allowed_range', 'required_range'")
+            raise
+
+        _entry = self._get_reference_data_column(col_name)
+        if range_type not in _entry:
+            return None
 
         try:
             if not self._interval_check(
                 (col_min, col_max),
                 (
-                    self._reference_data_columns[col_name][range_type]["min"],
-                    self._reference_data_columns[col_name][range_type]["max"],
+                    _entry[col_name][range_type]["min"],
+                    _entry[col_name][range_type]["max"],
                 ),
                 range_type,
             ):
@@ -395,6 +369,7 @@ class DataValidator:
     def _read_validation_schema(self, schema_file, data_model=None):
         """
         Read validation schema from file.
+        Returns 'None' in case no schema file is given.
 
         Parameters
         ----------
@@ -417,7 +392,7 @@ class DataValidator:
             with open(schema_file, "r") as stream:
                 _schema_dict = yaml.safe_load(stream)
         except TypeError:
-            pass
+            return None
         except FileNotFoundError:
             self._logger.error(f"Schema file not found: {schema_file}")
             raise
@@ -435,3 +410,35 @@ class DataValidator:
             raise
 
         return _data_dict.get("table_columns", None)
+
+    def _get_reference_data_column(self, column_name, status_test=False):
+        """
+        Return entry in reference data for a given column name.
+
+        Parameters
+        ----------
+        column_name: str
+            Column name.
+
+        Returns
+        -------
+        dict
+            Reference schema column.
+
+        Raises
+        ------
+        IndexError
+            If data column is not found.
+
+        """
+
+        _entry = [item for item in self._reference_data_columns if item["name"] == column_name]
+        if status_test:
+            return len(_entry) > 0
+        try:
+            return _entry[0]
+        except IndexError:
+            self._logger.error(
+                f"Data column '{column_name}' not found in reference column definition"
+            )
+            raise IndexError

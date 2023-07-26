@@ -47,19 +47,6 @@ def test_fill_association_id(args_dict_site):
     #        workflow_1.top_level_meta["cta"]["context"]["sim"]["association"])
 
 
-def test_product_data_file_format(args_dict_site):
-
-    metadata_1 = metadata_collector.MetadataCollector(args_dict=args_dict_site)
-
-    assert metadata_1.product_data_file_format(False) == "ascii.ecsv"
-    assert metadata_1.product_data_file_format(True) == "ecsv"
-
-    metadata_1.args_dict["output_file_format"] = "hdf5"
-
-    assert metadata_1.product_data_file_format(False) == "hdf5"
-    assert metadata_1.product_data_file_format(True) == "hdf5"
-
-
 def test_merge_config_dicts(args_dict_site):
 
     d_low_priority = {

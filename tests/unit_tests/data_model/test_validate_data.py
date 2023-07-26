@@ -39,7 +39,7 @@ def test_sort_data():
     )
 
     reverse_sorted_data_columns = get_reference_columns()
-    reverse_sorted_data_columns["wavelength"]["attribute"] = ["remove_duplicates", "reversesort"]
+    reverse_sorted_data_columns[0]["input_processing"] = ["remove_duplicates", "reversesort"]
     data_validator_reverse = validate_data.DataValidator()
     data_validator_reverse._reference_data_columns = reverse_sorted_data_columns
 
@@ -129,7 +129,7 @@ def test_check_range():
     data_validator._check_range(col_w.name, col_w.min(), col_w.max(), "required_range")
 
     col_2 = Column(name="key_error", data=[0.1, 0.5], dtype="float32")
-    with pytest.raises(KeyError):
+    with pytest.raises(IndexError):
         data_validator._check_range(col_2.name, col_2.min(), col_2.max(), "allowed_range")
 
     with pytest.raises(KeyError):
@@ -154,7 +154,7 @@ def test_column_units():
     table_2["wavelength"] = Column([300.0, 350.0], unit="nm", dtype="float32")
     table_2["wrong_column"] = Column([0.1, 0.5], dtype="float32")
 
-    with pytest.raises(KeyError, match=r"'wrong_column'"):
+    with pytest.raises(IndexError):
         for col in table_2.itercols():
             data_validator._check_and_convert_units(col)
 
@@ -183,8 +183,34 @@ def test_check_required_columns():
 
     data_validator.data_table = table_2
 
-    with pytest.raises(KeyError, match=r"'qe'"):
+    with pytest.raises(KeyError, match=r"'Missing required column qe'"):
         data_validator._check_required_columns()
+
+def test_get_reference_data_column():
+
+    data_validator = validate_data.DataValidator()
+    data_validator._reference_data_columns = get_reference_columns()
+
+    assert isinstance(data_validator._get_reference_data_column("wavelength"), dict)
+
+    _entry = data_validator._get_reference_data_column("wavelength")
+    assert _entry["name"] == "wavelength"
+
+    with pytest.raises(IndexError):
+        data_validator._get_reference_data_column("wrong_column")
+
+    assert data_validator._get_reference_data_column("wavelength", status_test=True) == True
+    assert data_validator._get_reference_data_column("wrong_column", status_test=True) == False
+
+
+def test_get_reference_unit():
+
+    data_validator = validate_data.DataValidator()
+    data_validator._reference_data_columns = get_reference_columns()
+
+    assert data_validator._get_reference_unit("wavelength") == "nm"
+    assert data_validator._get_reference_unit("qe") == u.dimensionless_unscaled
+    assert data_validator._get_reference_unit("no_units") == u.dimensionless_unscaled
 
 
 def get_reference_columns():
@@ -192,42 +218,36 @@ def get_reference_columns():
     return a test reference data column definition
 
     """
-    return {
-        "wavelength": {
+    return [
+        {
+            "name": "wavelength",
             "description": "wavelength",
             "required_column": True,
-            "unit": "nm",
-            "type": "float32",
+            "units": "nm",
+            "type": "double",
             "required_range": {"unit": "nm", "min": 300, "max": 700},
-            "attribute": ["remove_duplicates", "sort"],
+            "input_processing": ["remove_duplicates", "sort"],
         },
-        "qe": {
+        {
+            "name": "qe",
             "description": "average quantum or photon detection efficiency",
             "required_column": True,
-            "unit": "dimensionless",
-            "type": "float32",
+            "units": "dimensionless",
+            "type": "double",
             "allowed_range": {"unit": "unitless", "min": 0.0, "max": 1.0},
         },
-        "abc": {
+        {
+            "name": "abc",
             "description": "not required",
             "required_column": False,
-            "unit": "kg",
-            "type": "float32",
+            "units": "kg",
+            "type": "double",
             "allowed_range": {"unit": "kg", "min": 0.0, "max": 100.0},
         },
-    }
-
-
-def get_generic_workflow_config():
-
-    return {
-        "CTASIMPIPE": {
-            "ACTIVITY": {"NAME": "workflow_name"},
-            "DATAMODEL": {
-                "USERINPUTSCHEMA": "schema",
-                "TOPLEVELMODEL": "model",
-                "SCHEMADIRECTORY": "directory",
-            },
-            "PRODUCT": {"DIRECTORY": None},
-        }
-    }
+        {
+            "name": "no_units",
+            "description": "not required",
+            "required_column": False,
+            "type": "double",
+        },
+    ]
