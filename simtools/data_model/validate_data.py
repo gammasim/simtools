@@ -20,17 +20,19 @@ class DataValidator:
         Schema file describing input data and transformations.
     data_file: Path
         Input data file.
+    data_model: dict
+        Data model description
 
     """
 
-    def __init__(self, schema_file=None, data_file=None):
+    def __init__(self, schema_file=None, data_file=None, data_model=None):
         """
         Initalize validation class and read required reference data columns
         """
 
         self._logger = logging.getLogger(__name__)
 
-        self._reference_data_columns = self._read_validation_schema(schema_file)
+        self._reference_data_columns = self._read_validation_schema(schema_file, data_model)
         self._data_file_name = data_file
 
         self.data_table = None
@@ -50,7 +52,7 @@ class DataValidator:
 
         self.validate_data_file()
         if self._reference_data_columns is not None:
-            self.validate_data_columns()
+            self._validate_data_columns()
             self._check_data_for_duplicates()
             self._sort_data()
 
@@ -67,7 +69,7 @@ class DataValidator:
         self._logger.info(f"Reading data from {self._data_file_name}")
         self.data_table = Table.read(self._data_file_name, guess=True, delimiter=r"\s")
 
-    def validate_data_columns(self):
+    def _validate_data_columns(self):
         """
         Validate that required data columns are available, columns are in the correct units (if \
         necessary apply a unit conversion), and check ranges (minimum, maximum). This is not \
@@ -76,6 +78,8 @@ class DataValidator:
         """
 
         self._check_required_columns()
+
+        return
 
         for col in self.data_table.itercols():
             if not self._column_status(col.name):
@@ -95,12 +99,12 @@ class DataValidator:
 
         """
 
-        for key, value in self._reference_data_columns.items():
-            if "required_column" in value and value["required_column"] is True:
-                if key in self.data_table.columns:
-                    self._logger.debug(f"Found required data column '{key}'")
+        for entry in self._reference_data_columns:
+            if entry.get("required_column", False):
+                if entry["name"] in self.data_table.columns:
+                    self._logger.debug(f"Found required data column {entry['name']}")
                 else:
-                    raise KeyError(f"Missing required column '{key}'")
+                    raise KeyError(f"Missing required column {entry['name']}")
 
     def _sort_data(self):
         """
@@ -116,12 +120,12 @@ class DataValidator:
 
         _columns_by_which_to_sort = []
         _columns_by_which_to_reverse_sort = []
-        for key, value in self._reference_data_columns.items():
-            if "attribute" in value:
-                if "sort" in value["attribute"]:
-                    _columns_by_which_to_sort.append(key)
-                elif "reversesort" in value["attribute"]:
-                    _columns_by_which_to_reverse_sort.append(key)
+        for entry in self._reference_data_columns:
+            if "input_processing" in entry:
+                if "sort" in entry["input_processing"]:
+                    _columns_by_which_to_sort.append(entry["name"])
+                elif "reversesort" in entry["input_processing"]:
+                    _columns_by_which_to_reverse_sort.append(entry["name"])
 
         if len(_columns_by_which_to_sort) > 0:
             self._logger.debug(f"Sorting data columns: {_columns_by_which_to_sort}")
@@ -184,10 +188,10 @@ class DataValidator:
 
         _unique_required_column = []
 
-        for key, value in self._reference_data_columns.items():
-            if "attribute" in value and "remove_duplicates" in value["attribute"]:
-                self._logger.debug(f"Removing duplicates for column '{key}'")
-                _unique_required_column.append(key)
+        for entry in self._reference_data_columns:
+            if "input_processing" in entry and "remove_duplicates" in entry["input_processing"]:
+                self._logger.debug(f"Removing duplicates for column {entry['name']}")
+                _unique_required_column.append(entry['name'])
 
         self._logger.debug(f"Unique required columns: {_unique_required_column}")
         return _unique_required_column
@@ -213,16 +217,18 @@ class DataValidator:
 
         """
 
+        for entry in self._reference_data_columns:
+            if entry[column_name] == column_name:
+                reference_unit = entry.get("units", None)
+
         try:
-            reference_unit = self._reference_data_columns[column_name]["unit"]
-        except KeyError:
+            if reference_unit == "dimensionless" or reference_unit is None:
+                return u.dimensionless_unscaled
+        except NameError:
             self._logger.error(
                 f"Data column '{column_name}' not found in reference column definition"
             )
             raise
-
-        if reference_unit == "dimensionless" or reference_unit is None:
-            return u.dimensionless_unscaled
 
         return u.Unit(reference_unit)
 
@@ -386,7 +392,7 @@ class DataValidator:
 
         return False
 
-    def _read_validation_schema(self, schema_file):
+    def _read_validation_schema(self, schema_file, data_model=None):
         """
         Read validation schema from file.
 
@@ -394,6 +400,8 @@ class DataValidator:
         ----------
         schema_file: Path
             Schema file describing input data
+        data_model: dict
+            Data model description
 
         Returns
         -------
@@ -403,6 +411,7 @@ class DataValidator:
         """
 
         _schema_dict = {}
+        _data_dict = {}
         try:
             self._logger.info(f"Reading validation schema from {schema_file}")
             with open(schema_file, "r") as stream:
@@ -413,4 +422,16 @@ class DataValidator:
             self._logger.error(f"Schema file not found: {schema_file}")
             raise
 
-        return _schema_dict.get("data_columns", None)
+        try:
+            for entry in _schema_dict['data']:
+                if entry.get('name', None) == data_model.get("type", None):
+                    # TODO - first entry in list; need to look into more
+                    # complicated descriptor to see what logic is needed.
+                    # This is the most generic case and should work for
+                    # almost all use cases.
+                    _data_dict = entry["data"][0]
+        except KeyError:
+            self._logger.error(f"Error reading validation schema from {_schema_dict}")
+            raise
+
+        return _data_dict.get("table_columns", None)

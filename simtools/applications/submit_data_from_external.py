@@ -114,8 +114,16 @@ def main():
     logger = logging.getLogger()
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
+    _metadata = MetadataCollector(args_dict=args_dict)
+    try:
+        _input_data_model = _metadata.top_level_meta["cta"]["product"]["data"]["model"]
+    except KeyError:
+        logger.error("No data model given to describe input data")
+        raise
+
     data_validator = validate_data.DataValidator(
         schema_file=args_dict.get("input_data_schema", None),
+        data_model=_input_data_model,
         data_file=args_dict["input_data"],
     )
 
@@ -124,7 +132,7 @@ def main():
         product_data_format=args_dict["output_file_format"]
     )
     file_writer.write(
-        metadata=MetadataCollector(args_dict=args_dict).top_level_meta,
+        metadata=_metadata.top_level_meta,
         product_data=data_validator.validate_and_transform()
     )
 
