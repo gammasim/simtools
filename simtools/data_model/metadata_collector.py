@@ -1,6 +1,5 @@
 import datetime
 import logging
-from pathlib import Path
 
 import simtools.util.general as gen
 import simtools.version
