@@ -2,7 +2,7 @@
 REFERENCE:
   VERSION: 0.1.0
 ACTIVITY:
-  NAME: set_MST_mirror_2f_measurements_from_external
+  NAME: mirror_2f_measurement
 # Organisation and person submitting these data
 CONTACT:
   ORGANIZATION: 'MST Consortium'
@@ -29,6 +29,12 @@ PRODUCT:
     START: '2020-03-20 12:00:00'
     END: '2024-03-20 12:00:00'
   FORMAT: ascii.ecsv
+  DATA:
+    MODEL:
+      NAME: simpipe-io
+      VERSION: 0.1.0
+      URL: null
+      TYPE: mirror_2f_measurement
   ASSOCIATION:
     - SITE: South
       CLASS: MST

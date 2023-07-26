@@ -1,0 +1,42 @@
+---
+title: Mirror panel 2F measurements description
+description: |-
+  Data description of mirror panel 2F measurements used as
+  input to SimPipe.
+version: 0.1.0
+
+data:
+
+  - name: mirror_2f_measurement
+    description: |-
+      Mirror panel 2F measurements determining
+      panel radius and panel PSF.
+    data:
+      - type: datatable
+        table_columns:
+          - name: mirror_panel_id
+            description: |-
+              Mirror panel ID.
+            required_column: true
+            units: dimensionless
+            type: string
+          - name: mirror_panel_radius
+            description: |-
+              Mirror panel radius.
+            required_column: true
+            units: cm
+            type: double
+          - name: psf
+            description: |-
+              Spot size of mirror panel PSF at nominal distance.
+            required_column: true
+            units: cm
+            type: double
+          - name: psf_opt
+            description: |-
+              Spot size of mirror panel PSF
+              (best value, not at nominal distance).
+            required_column: false
+            units: cm
+            type: double
+...
