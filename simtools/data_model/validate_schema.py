@@ -157,7 +157,7 @@ class SchemaValidator:
             try:
                 if isinstance(data_field, (int, str)):
                     convert[schema["type"]](data_field)
-                else:
+                elif data_field is not None:
                     raise ValueError
             except ValueError as error:
                 raise ValueError(
