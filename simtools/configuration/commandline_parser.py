@@ -11,7 +11,7 @@ __all__ = [
 
 class CommandLineParser(argparse.ArgumentParser):
     """
-    Command line parser for application.
+    Command line parser for applications.
 
     Wrapper around standard python argparse.ArgumentParser.
 
