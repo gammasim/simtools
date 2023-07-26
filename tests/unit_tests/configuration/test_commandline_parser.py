@@ -61,3 +61,8 @@ def test_zenith_angle():
         match=r"The provided zenith angle, 190.0, is outside of the allowed \[0, 180\] interval",
     ):
         parser.CommandLineParser.zenith_angle(190)
+    with pytest.raises(
+        ValueError,
+        match="The zenith angle provided is not a valid numeric value",
+    ):
+        parser.CommandLineParser.zenith_angle("North")
