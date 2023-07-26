@@ -31,9 +31,9 @@ PRODUCT:
   FORMAT: ascii.ecsv
   DATA:
     MODEL:
-      NAME: simpipe-io
+      NAME: simpipe-schema
       VERSION: 0.1.0
-      URL: null
+      URL: https://github.com/gammasim/workflows/schema
       TYPE: mirror_2f_measurement
   ASSOCIATION:
     - SITE: South
