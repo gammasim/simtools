@@ -5,6 +5,7 @@ import astropy
 import yaml
 
 import simtools.util.general as gen
+from simtools import io_handler
 
 __all__ = ["ModelDataWriter"]
 
@@ -25,7 +26,8 @@ class ModelDataWriter:
         """
 
         self._logger = logging.getLogger(__name__)
-        self.product_data_file = product_data_file
+        self.io_handler = io_handler.IOHandler()
+        self.product_data_file = self.io_handler.get_output_file(file_name=product_data_file)
         self.product_data_format = self._astropy_data_format(product_data_format)
 
     def write(self, metadata=None, product_data=None):
