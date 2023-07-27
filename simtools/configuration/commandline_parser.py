@@ -339,10 +339,13 @@ class CommandLineParser(argparse.ArgumentParser):
 
         """
 
+        logger = logging.getLogger(__name__)
+
         try:
             fangle = float(angle)
         except ValueError:
-            raise ("The zenith angle provided is not a valid numeric value.")
+            logger.error("The zenith angle provided is not a valid numeric value.")
+            raise
         if fangle < 0.0 or fangle > 180.0:
             raise argparse.ArgumentTypeError(
                 f"The provided zenith angle, {angle:.1f}, "
@@ -381,7 +384,7 @@ class CommandLineParser(argparse.ArgumentParser):
             fangle = float(angle)
             if fangle < 0.0 or fangle > 360.0:
                 raise argparse.ArgumentTypeError(
-                    f"The provided zenith angle, {angle:.1f}, "
+                    f"The provided azimuth angle, {angle:.1f}, "
                     "is outside of the allowed [0, 360] interval"
                 )
 
