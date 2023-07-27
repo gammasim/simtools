@@ -32,10 +32,15 @@ class IOHandler(metaclass=IOHandlerSingleton):
         self._logger.debug("Init IOHandler")
 
         self.output_path = None
+        self.use_plain_output_path = False
         self.data_path = None
         self.model_path = None
 
-    def set_paths(self, output_path=None, data_path=None, model_path=None):
+    def set_paths(self,
+                  output_path=None,
+                  data_path=None,
+                  model_path=None,
+                  use_plain_output_path=False):
         """
         Set paths for input and output.
 
@@ -47,9 +52,12 @@ class IOHandler(metaclass=IOHandlerSingleton):
             Parent path of the data files.
         model_path: str or Path
             Parent path of the output files created by this class.
+        use_plain_output_path: bool
+            Use plain output path without adding tool name and date
 
         """
         self.output_path = output_path
+        self.use_plain_output_path = use_plain_output_path
         self.data_path = data_path
         self.model_path = model_path
 
@@ -76,16 +84,20 @@ class IOHandler(metaclass=IOHandlerSingleton):
             if error creating directory
         """
 
-        if test:
-            output_directory_prefix = Path(self.output_path).joinpath("test-output")
+        if self.use_plain_output_path:
+            path = Path(self.output_path)
         else:
-            output_directory_prefix = Path(self.output_path).joinpath("simtools-output")
+            if test:
+                output_directory_prefix = Path(self.output_path).joinpath("test-output")
+            else:
+                output_directory_prefix = Path(self.output_path).joinpath("simtools-output")
 
-        today = datetime.date.today()
-        label_dir = label if label is not None else "d-" + str(today)
-        path = output_directory_prefix.joinpath(label_dir)
-        if dir_type is not None:
-            path = path.joinpath(dir_type)
+            today = datetime.date.today()
+            label_dir = label if label is not None else "d-" + str(today)
+            path = output_directory_prefix.joinpath(label_dir)
+            if dir_type is not None:
+                path = path.joinpath(dir_type)
+
         try:
             path.mkdir(parents=True, exist_ok=True)
         except FileNotFoundError:
