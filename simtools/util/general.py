@@ -1,4 +1,5 @@
 import copy
+import gzip
 import logging
 import mmap
 import os
@@ -441,7 +442,7 @@ def collect_final_lines(file, n_lines):
         Final lines collected.
     """
     list_of_lines = []
-    with open(file, "rb") as read_obj:
+    with gzip.open(file, "rb") as read_obj:
         # Move the cursor to the end of the file
         read_obj.seek(0, os.SEEK_END)
         # Create a buffer to keep the last read line
