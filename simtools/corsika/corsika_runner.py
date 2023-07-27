@@ -220,6 +220,10 @@ class CorsikaRunner:
             # shebang
             file.write("#!/usr/bin/bash\n")
 
+            # Make sure to exit on failed comands and report their error code
+            file.write("set -e\n")
+            file.write("set -o pipefail\n")
+
             # Setting SECONDS variable to measure runtime
             file.write("\nSECONDS=0\n")
 
