@@ -412,4 +412,4 @@ class CommandLineParser(argparse.ArgumentParser):
             f"The azimuth value provided, {angle}, is not a valid number "
             "nor one of (north, south, east, west), quitting"
         )
-        raise ValueError
+        raise TypeError
