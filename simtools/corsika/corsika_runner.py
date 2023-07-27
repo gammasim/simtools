@@ -274,7 +274,7 @@ class CorsikaRunner:
         cmd += f" -p {self._corsika_data_dir}"
         if self._keep_seeds:
             cmd += " --keep-seeds"
-        cmd += f" {input_tmp_file} 2>&1 | gzip > {log_file}"
+        cmd += f" {input_tmp_file} | gzip > {log_file} 2>&1"
         cmd += " || exit 1\n"
         return cmd
 
