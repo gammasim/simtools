@@ -111,8 +111,6 @@ def validate_config_data(config_data, parameters, ignore_unidentified=False):
         Containing the validated config data entries.
     """
 
-    logger = logging.getLogger(__name__)
-
     # Dict to be filled and returned
     out_data = {}
 
@@ -137,9 +135,9 @@ def validate_config_data(config_data, parameters, ignore_unidentified=False):
         if not is_identified:
             msg = f"Entry {key_data} in config_data cannot be identified"
             if ignore_unidentified:
-                logger.debug(f"{msg}, ignoring.")
+                _logger.debug(f"{msg}, ignoring.")
             else:
-                logger.error(f"{msg}, stopping.")
+                _logger.error(f"{msg}, stopping.")
                 raise UnableToIdentifyConfigEntry(msg)
 
     # Checking for parameters with default option.
@@ -148,13 +146,16 @@ def validate_config_data(config_data, parameters, ignore_unidentified=False):
         if par_name in out_data:
             continue
         if "default" in par_info.keys() and par_info["default"] is not None:
-            validated_value = _validate_and_convert_value(par_name, par_info, par_info["default"])
+            default_value = par_info["default"]
+            if not isinstance(default_value, u.Quantity) and "unit" in par_info:
+                default_value *= par_info["unit"]
+            validated_value = _validate_and_convert_value(par_name, par_info, default_value)
             out_data[par_name] = validated_value
         elif "default" in par_info.keys() and par_info["default"] is None:
             out_data[par_name] = None
         else:
             msg = f"Required entry in config_data {par_name} was not given (there may be more)."
-            logger.error(msg)
+            _logger.error(msg)
             raise MissingRequiredConfigEntry(msg)
 
     configuration_data = namedtuple("configuration_data", out_data)
@@ -182,7 +183,6 @@ def _validate_and_convert_value_without_units(value, value_keys, par_name, par_i
         validated and converted input data
 
     """
-    logger = logging.getLogger(__name__)
 
     _, undefined_length = _check_value_entry_length(value, par_name, par_info)
 
@@ -193,7 +193,7 @@ def _validate_and_convert_value_without_units(value, value_keys, par_name, par_i
         pass
     elif any(u.Quantity(v).unit != u.dimensionless_unscaled for v in value):
         msg = f"Config entry {par_name} should not have units"
-        logger.error(msg)
+        _logger.error(msg)
         raise InvalidConfigEntry(msg)
 
     if value_keys:
@@ -222,21 +222,20 @@ def _check_value_entry_length(value, par_name, par_info):
         state of input list
 
     """
-    logger = logging.getLogger(__name__)
 
     # Checking the entry length
     value_length = len(value)
-    logger.debug(f"Value len of {par_name}: {value_length}")
+    _logger.debug(f"Value len of {par_name}: {value_length}")
     undefined_length = False
     try:
         if par_info["len"] is None:
             undefined_length = True
         elif value_length != par_info["len"]:
             msg = f"Config entry with wrong len: {par_name}"
-            logger.error(msg)
+            _logger.error(msg)
             raise InvalidConfigEntry(msg)
     except KeyError:
-        logger.error("Missing len entry in par_info")
+        _logger.error("Missing len entry in par_info")
         raise
 
     return value_length, undefined_length
@@ -261,7 +260,6 @@ def _validate_and_convert_value_with_units(value, value_keys, par_name, par_info
         validated and converted input data
 
     """
-    logger = logging.getLogger(__name__)
 
     value_length, undefined_length = _check_value_entry_length(value, par_name, par_info)
 
@@ -269,7 +267,7 @@ def _validate_and_convert_value_with_units(value, value_keys, par_name, par_info
 
     if undefined_length and len(par_unit) != 1:
         msg = f"Config entry with undefined length should have a single unit: {par_name}"
-        logger.error(msg)
+        _logger.error(msg)
         raise InvalidConfigEntry(msg)
     if len(par_unit) == 1:
         par_unit *= value_length
@@ -288,11 +286,11 @@ def _validate_and_convert_value_with_units(value, value_keys, par_name, par_info
 
         if not isinstance(arg, u.quantity.Quantity):
             msg = f"Config entry given without unit: {par_name}"
-            logger.error(msg)
+            _logger.error(msg)
             raise InvalidConfigEntry(msg)
         if not arg.unit.is_equivalent(unit):
             msg = f"Config entry given with wrong unit: {par_name}"
-            logger.error(msg)
+            _logger.error(msg)
             raise InvalidConfigEntry(msg)
         value_with_units.append(arg.to(unit).value)
 
@@ -679,8 +677,8 @@ def change_dict_keys_case(data_dict, lower_case=True):
             else:
                 _return_dict[_key_changed] = data_dict[key]
     except AttributeError:
-        logger = logging.getLogger(__name__)
-        logger.error(f"Invalid method argument: {data_dict}")
+        _logger = logging.getLogger(__name__)
+        _logger.error(f"Invalid method argument: {data_dict}")
         raise
 
     return _return_dict
@@ -809,7 +807,7 @@ def convert_2D_to_radial_distr(hist2d, xaxis, yaxis, bins=50, max_dist=1000):
         The edges of the 1D histogram with size = int(max_dist/bin_size) + 1.
 
     """
-    logger = logging.getLogger(__name__)
+
     # Check if the histogram will make sense
     bins_step = 2 * max_dist / bins  # in the 2D array, the positive and negative direction count.
     for axis in [xaxis, yaxis]:
@@ -819,7 +817,7 @@ def convert_2D_to_radial_distr(hist2d, xaxis, yaxis, bins=50, max_dist=1000):
                 f"resulted in a bin size smaller than the original array. Please adjust those "
                 f"parameters to increase the bin size and avoid nan in the histogram values."
             )
-            logger.warning(msg)
+            _logger.warning(msg)
             break
 
     grid_2d_x, grid_2d_y = np.meshgrid(xaxis[:-1], yaxis[:-1])  # [:-1], since xaxis and yaxis are
@@ -872,9 +870,9 @@ def save_dict_to_file(dictionary, file_name):
     IOError:
         if writing to file_name fails.
     """
-    logger = logging.getLogger(__name__)
+
     file_name = Path(file_name).with_suffix(".yml")
-    logger.info(f"Exporting histogram configuration to {file_name}")
+    _logger.info(f"Exporting histogram configuration to {file_name}")
     try:
         with open(file_name, "w") as file:
             yaml.dump(dictionary, file)
