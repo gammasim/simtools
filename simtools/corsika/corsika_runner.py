@@ -220,7 +220,7 @@ class CorsikaRunner:
             # shebang
             file.write("#!/usr/bin/env bash\n")
 
-            # Make sure to exit on failed comands and report their error code
+            # Make sure to exit on failed commands and report their error code
             file.write("set -e\n")
             file.write("set -o pipefail\n")
 
