@@ -86,20 +86,7 @@ def _parse(label, description, usage):
         type=str,
         required=False,
     )
-    config.parser.add_argument(
-        "--output_file",
-        help="output data file",
-        type=str,
-        required=False,
-    )
-    config.parser.add_argument(
-        "--output_file_format",
-        help="file format of output data",
-        type=str,
-        default="ecsv",
-        required=False,
-    )
-    return config.initialize()
+    return config.initialize(outputs=True)
 
 
 def main():

@@ -71,7 +71,7 @@ class ModelDataWriter:
                     overwrite=True
                 )
         except astropy.io.registry.base.IORegistryError:
-            self._logger.error("Error writing model data to {self.product_data_file}.")
+            self._logger.error(f"Error writing model data to {self.product_data_file}.")
             raise
 
     def write_metadata(self, metadata, ymlfile=None, keys_lower_case=False):

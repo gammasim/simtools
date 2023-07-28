@@ -90,6 +90,7 @@ class Configurator:
     def initialize(
         self,
         paths=True,
+        outputs=False,
         telescope_model=False,
         db_config=False,
         job_submission=False,
@@ -109,6 +110,8 @@ class Configurator:
         ----------
         paths: bool
             Add path configuration to list of args.
+        outputs: bool
+            Add output file configuration to list of args.
         telescope_model: bool
             Add telescope model configuration to list of args.
         db_config: bool
@@ -132,6 +135,7 @@ class Configurator:
 
         self.parser.initialize_default_arguments(
             paths=paths,
+            outputs=outputs,
             telescope_model=telescope_model,
             db_config=db_config,
             job_submission=job_submission,
@@ -144,13 +148,15 @@ class Configurator:
             pass
         self._fill_from_config_dict(self.config_class_init)
         self._fill_from_environmental_variables()
-        self._initialize_io_handler()
-        _db_dict = self._get_db_parameters()
-
+        
         if self.config.get("activity_id", None) is None:
             self.config["activity_id"] = str(uuid.uuid4())
         if self.config["label"] is None:
             self.config["label"] = self.label
+
+        self._initialize_io_handler()
+        self._initialize_output()
+        _db_dict = self._get_db_parameters()
 
         return self.config, _db_dict
 
@@ -279,6 +285,20 @@ class Configurator:
             data_path=self.config.get("data_path", None),
             model_path=self.config.get("model_path", None),
         )
+
+    def _initialize_output(self):
+        """
+        Initialize default output file names (in out output_file is not configured).
+        """
+        if self.config.get("output_file", None) is None:
+            if self.config.get("test", False):
+                self.config["output_file"] = "TEST"
+            else:
+                self.config["output_file"] = self.config["activity_id"]
+                if len(self.config.get("label", "")) > 0:
+                    self.config["output_file"] += "-" + self.config["label"]
+            if len(self.config.get("output_file_format", "")) > 0:
+                self.config["output_file"] += "." + self.config["output_file_format"]
 
     @staticmethod
     def _arglist_from_config(input_var):
