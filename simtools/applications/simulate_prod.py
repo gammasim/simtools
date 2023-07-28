@@ -30,9 +30,11 @@
     primary (str, required)
         Name of the primary particle to simulate. The available options are
         gamma, gamma_diffuse, electron, proton, muon, helium, nitrogen, silicon, and iron.
-    azimuth_angle (str, required)
-        Can be an angle in degrees between zero and 360
-        or one of North, South, East, West (case insensitive).
+    azimuth_angle (str or float, required)
+        Telescope pointing direction in azimuth.
+        It can be in degrees between 0 and 360 or one of north, south, east or west
+        (case insensitive). Note that North is 0 degrees and the azimuth grows clockwise,
+        so East is 90 degrees.
     zenith_angle (float, required)
         Zenith angle in degrees.
     nshow (int, optional)
@@ -141,8 +143,10 @@ def _parse(description=None):
     config.parser.add_argument(
         "--azimuth_angle",
         help=(
-            "Direction from which the primary reaches the atmosphere."
-            "It can be in degrees between 0 and 360 or one of (north, south, east, west)."
+            "Telescope pointing direction in azimuth. "
+            "It can be in degrees between 0 and 360 or one of north, south, east or west "
+            "(case insensitive). Note that North is 0 degrees and "
+            "the azimuth grows clockwise, so East is 90 degrees."
         ),
         type=CommandLineParser.azimuth_angle,
         required=True,
