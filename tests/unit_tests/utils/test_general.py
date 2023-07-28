@@ -304,7 +304,7 @@ def test_save_dict_to_file(tmp_test_directory, caplog):
 
 
 def test_get_file_age(tmp_test_directory):
-    # Create a temporary file and wait for 2 seconds before accessing it
+    # Create a temporary file and wait for 1 seconds before accessing it
     with open(tmp_test_directory / "test_file.txt", "w") as file:
         file.write("Test data")
 
