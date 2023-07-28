@@ -30,8 +30,9 @@
     primary (str, required)
         Name of the primary particle to simulate. The available options are
         gamma, gamma_diffuse, electron, proton, muon, helium, nitrogen, silicon, and iron.
-    from_azimuth_direction (str, required)
-        Should be one of North, South, East, West (case insensitive).
+    azimuth_angle (str, required)
+        Can be an angle in degrees between zero and 360
+        or one of North, South, East, West (case insensitive).
     zenith_angle (float, required)
         Zenith angle in degrees.
     nshow (int, optional)
@@ -55,7 +56,7 @@
 
         simtools-simulate-prod \
         --production_config tests/resources/prod_multi_config_test.yml --model_version Prod5 \
-        --site north --primary gamma --from_azimuth_direction north --zenith_angle 20 \
+        --site north --primary gamma --azimuth_angle north --zenith_angle 20 \
          --start_run 0 --run 1
 
     By default the configuration is saved in simtools-output/test-production
@@ -138,7 +139,7 @@ def _parse(description=None):
         ],
     )
     config.parser.add_argument(
-        "--from_azimuth_direction",
+        "--azimuth_angle",
         help=(
             "Direction from which the primary reaches the atmosphere."
             "It can be in degrees between 0 and 360 or one of (north, south, east, west)."
@@ -284,7 +285,7 @@ def main():
     shower_configs["run_list"] = args_dict["run"] + args_dict["start_run"]
     array_configs["site"] = shower_configs["site"] = args_dict["site"]
     array_configs["zenith"] = shower_configs["zenith"] = args_dict["zenith_angle"]
-    array_configs["phi"] = shower_configs["phi"] = args_dict["from_azimuth_direction"]
+    array_configs["phi"] = shower_configs["phi"] = args_dict["azimuth_angle"]
 
     if args_dict["nshow"] is not None:
         shower_configs["nshow"] = args_dict["nshow"]

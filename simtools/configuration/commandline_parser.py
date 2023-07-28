@@ -395,14 +395,14 @@ class CommandLineParser(argparse.ArgumentParser):
                 "Will check if it is (north, south, east, west) instead"
             )
         if isinstance(angle, str):
-            from_azimuth_direction = angle.lower()
-            if from_azimuth_direction == "north":
+            azimuth_angle = angle.lower()
+            if azimuth_angle == "north":
                 return 0 * u.deg
-            if from_azimuth_direction == "south":
+            if azimuth_angle == "south":
                 return 180 * u.deg
-            if from_azimuth_direction == "east":
+            if azimuth_angle == "east":
                 return 90 * u.deg
-            if from_azimuth_direction == "west":
+            if azimuth_angle == "west":
                 return 270 * u.deg
             raise argparse.ArgumentTypeError(
                 "The azimuth angle can only be a number or one of "
