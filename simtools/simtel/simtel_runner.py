@@ -127,7 +127,7 @@ class SimtelRunner:
         with self._script_file.open("w") as file:
             file.write("#!/usr/bin/env bash\n\n")
 
-            # Make sure to exit on failed comands and report their error code
+            # Make sure to exit on failed commands and report their error code
             file.write("set -e\n")
             file.write("set -o pipefail\n")
 
