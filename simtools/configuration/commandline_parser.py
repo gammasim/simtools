@@ -27,6 +27,7 @@ class CommandLineParser(argparse.ArgumentParser):
     def initialize_default_arguments(
         self,
         paths=True,
+        outputs=False,
         telescope_model=False,
         db_config=False,
         job_submission=False,
@@ -38,6 +39,8 @@ class CommandLineParser(argparse.ArgumentParser):
         ----------
         paths: bool
             Add path configuration to list of args.
+        outputs: bool
+            Add output file configuration to list of args.
         telescope_model: bool
             Add telescope model configuration to list of args.
         db_config: bool
@@ -54,6 +57,8 @@ class CommandLineParser(argparse.ArgumentParser):
             self.initialize_db_config_arguments()
         if paths:
             self.initialize_path_arguments()
+        if outputs:
+            self.initialize_output_arguments()
         self.initialize_config_files()
         self.initialize_application_execution_arguments()
 
@@ -108,6 +113,26 @@ class CommandLineParser(argparse.ArgumentParser):
             "--simtel_path",
             help="path pointing to sim_telarray installation",
             type=Path,
+            required=False,
+        )
+
+    def initialize_output_arguments(self):
+        """
+        Initialize application output files(s)
+        """
+
+        _job_group = self.add_argument_group("output")
+        _job_group.add_argument(
+            "--output_file",
+            help="output data file",
+            type=str,
+            required=False,
+        )
+        _job_group.add_argument(
+            "--output_file_format",
+            help="file format of output data",
+            type=str,
+            default="ecsv",
             required=False,
         )
 

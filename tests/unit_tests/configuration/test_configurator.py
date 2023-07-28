@@ -181,3 +181,20 @@ def test_get_db_parameters(configurator, args_dict):
     args_dict["db_api_authentication_database"] = "admin"
 
     assert configurator.config == args_dict
+
+def test_initialize_output(configurator, args_dict):
+
+    configurator.parser.initialize_output_arguments()
+    configurator._fill_from_command_line(arg_list=[])
+
+    print(configurator.config)
+    # outputfile for testing
+    configurator.config["test"] = True
+    configurator._initialize_output()
+    assert configurator.config["output_file"] == "TEST.ecsv"
+
+    # output file is configured
+    configurator.config["test"] = False
+    configurator.config["output_file"] = "unit_test.txt"
+    configurator._initialize_output()
+    assert configurator.config["output_file"] == "unit_test.txt"
