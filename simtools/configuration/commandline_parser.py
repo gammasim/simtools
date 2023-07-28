@@ -410,6 +410,6 @@ class CommandLineParser(argparse.ArgumentParser):
             )
         logger.error(
             f"The azimuth value provided, {angle}, is not a valid number "
-            "nor one of (north, south, east, west), quitting"
+            "nor one of (north, south, east, west)."
         )
         raise TypeError
