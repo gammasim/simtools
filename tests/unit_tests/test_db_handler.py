@@ -318,24 +318,26 @@ def test_export_file_db(db, io_handler):
     assert file_to_export.exists()
 
 
-def test_insert_files_db(db, io_handler, db_cleanup_file_sandbox, caplog):
+def test_insert_files_db(db, io_handler, db_cleanup_file_sandbox, random_id, caplog):
 
     logger.info("----Testing inserting files to the DB-----")
     logger.info(
         "Creating a temporary file in "
         f"{io_handler.get_output_directory(dir_type='model', test=True)}"
     )
-    file_name = io_handler.get_output_directory(dir_type="model", test=True) / "test_file.dat"
+    file_name = (
+        io_handler.get_output_directory(dir_type="model", test=True) / f"test_file_{random_id}.dat"
+    )
     with open(file_name, "w") as f:
         f.write("# This is a test file")
 
     file_id = db.insert_file_to_db(file_name, "sandbox")
-    assert file_id == db._get_file_mongo_db("sandbox", "test_file.dat")._id
+    assert file_id == db._get_file_mongo_db("sandbox", f"test_file_{random_id}.dat")._id
     logger.info("Now test inserting the same file again, this time expect a warning")
     with caplog.at_level(logging.WARNING):
         file_id = db.insert_file_to_db(file_name, "sandbox")
     assert "exists in the DB. Returning its ID" in caplog.text
-    assert file_id == db._get_file_mongo_db("sandbox", "test_file.dat")._id
+    assert file_id == db._get_file_mongo_db("sandbox", f"test_file_{random_id}.dat")._id
 
 
 def test_get_all_versions(db):
