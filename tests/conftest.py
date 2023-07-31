@@ -158,15 +158,6 @@ def db_no_config_file():
     return db
 
 
-@pytest.fixture()
-def db_cleanup_file_sandbox(db_no_config_file):
-    yield
-    # Cleanup
-    logger.info("Dropping the temporary files in the sandbox")
-    db_no_config_file.db_client["sandbox"]["fs.chunks"].drop()
-    db_no_config_file.db_client["sandbox"]["fs.files"].drop()
-
-
 @pytest.fixture
 def telescope_model_lst(db, db_config, io_handler):
     telescope_model_LST = TelescopeModel(
