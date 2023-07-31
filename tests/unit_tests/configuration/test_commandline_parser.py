@@ -3,6 +3,7 @@
 import argparse
 import logging
 
+import astropy.units as u
 import pytest
 
 import simtools.configuration.commandline_parser as parser
@@ -45,11 +46,12 @@ def test_efficiency_interval():
         parser.CommandLineParser.efficiency_interval(-8.5)
 
 
-def test_zenith_angle():
+def test_zenith_angle(caplog):
 
-    assert parser.CommandLineParser.zenith_angle(0) == pytest.approx(0.0)
-    assert parser.CommandLineParser.zenith_angle(45) == pytest.approx(45.0)
-    assert parser.CommandLineParser.zenith_angle(90) == pytest.approx(90.0)
+    assert parser.CommandLineParser.zenith_angle(0).value == pytest.approx(0.0)
+    assert parser.CommandLineParser.zenith_angle(45).value == pytest.approx(45.0)
+    assert parser.CommandLineParser.zenith_angle(90).value == pytest.approx(90.0)
+    assert isinstance(parser.CommandLineParser.zenith_angle(0), u.Quantity)
 
     with pytest.raises(
         argparse.ArgumentTypeError,
@@ -61,3 +63,36 @@ def test_zenith_angle():
         match=r"The provided zenith angle, 190.0, is outside of the allowed \[0, 180\] interval",
     ):
         parser.CommandLineParser.zenith_angle(190)
+    with pytest.raises(ValueError):
+        parser.CommandLineParser.zenith_angle("North")
+        assert "The zenith angle provided is not a valid numeric value" in caplog.text
+
+
+def test_azimuth_angle(caplog):
+
+    assert parser.CommandLineParser.azimuth_angle(0).value == pytest.approx(0.0)
+    assert parser.CommandLineParser.azimuth_angle(45).value == pytest.approx(45.0)
+    assert parser.CommandLineParser.azimuth_angle(90).value == pytest.approx(90.0)
+    assert isinstance(parser.CommandLineParser.azimuth_angle(0), u.Quantity)
+
+    assert parser.CommandLineParser.azimuth_angle("North").value == pytest.approx(0.0)
+    assert parser.CommandLineParser.azimuth_angle("South").value == pytest.approx(180.0)
+    assert parser.CommandLineParser.azimuth_angle("East").value == pytest.approx(90.0)
+    assert parser.CommandLineParser.azimuth_angle("West").value == pytest.approx(270.0)
+
+    with pytest.raises(
+        argparse.ArgumentTypeError,
+        match=r"The provided azimuth angle, -1.0, is outside of the allowed \[0, 360\] interval",
+    ):
+        parser.CommandLineParser.azimuth_angle(-1)
+    with pytest.raises(
+        argparse.ArgumentTypeError,
+        match=r"The provided azimuth angle, 370.0, is outside of the allowed \[0, 360\] interval",
+    ):
+        parser.CommandLineParser.azimuth_angle(370)
+    with pytest.raises(argparse.ArgumentTypeError):
+        parser.CommandLineParser.azimuth_angle("TEST")
+        assert "The azimuth angle can only be a number or one of" in caplog.text
+    with pytest.raises(TypeError):
+        parser.CommandLineParser.azimuth_angle([0, 10])
+        assert "is not a valid number nor one of (north, south, east, west)" in caplog.text

@@ -2,6 +2,8 @@ import logging
 import os
 import sys
 import uuid
+
+import astropy.units as u
 import yaml
 
 import simtools.configuration.commandline_parser as argparser
@@ -308,8 +310,8 @@ class Configurator:
         Special cases:
         - lists as arguments (using e.g., nargs="+") are expanded
         - boolean are expected to be handled as action="store_true" or "store_false"
-        - None values or zero length values are ignored (this means setting a parameter \
-            to none or "" is not allowed.
+        - None values or zero length values are ignored (this means setting a parameter
+          to none or "" is not allowed).
 
 
         Ignore values which are None or of zero length.
@@ -332,6 +334,9 @@ class Configurator:
                 if isinstance(value, list):
                     _list_args.append("--" + key)
                     _list_args += value
+                elif isinstance(value, u.Quantity):
+                    _list_args.append("--" + key)
+                    _list_args.append(str(value.value))
                 elif not isinstance(value, bool) and value is not None and len(str(value)) > 0:
                     _list_args.append("--" + key)
                     _list_args.append(str(value))

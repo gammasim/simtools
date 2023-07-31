@@ -220,6 +220,10 @@ class CorsikaRunner:
             # shebang
             file.write("#!/usr/bin/env bash\n")
 
+            # Make sure to exit on failed commands and report their error code
+            file.write("set -e\n")
+            file.write("set -o pipefail\n")
+
             # Setting SECONDS variable to measure runtime
             file.write("\nSECONDS=0\n")
 
@@ -270,7 +274,7 @@ class CorsikaRunner:
         cmd += f" -p {self._corsika_data_dir}"
         if self._keep_seeds:
             cmd += " --keep-seeds"
-        cmd += f" {input_tmp_file} 2>&1 | gzip > {log_file}"
+        cmd += f" {input_tmp_file} | gzip > {log_file} 2>&1"
         cmd += " || exit 1\n"
         return cmd
 
