@@ -27,7 +27,10 @@ class ModelDataWriter:
 
         self._logger = logging.getLogger(__name__)
         self.io_handler = io_handler.IOHandler()
-        self.product_data_file = self.io_handler.get_output_file(file_name=product_data_file)
+        try:
+            self.product_data_file = self.io_handler.get_output_file(file_name=product_data_file)
+        except TypeError:
+            self.product_data_file = None
         self.product_data_format = self._astropy_data_format(product_data_format)
 
     def write(self, metadata=None, product_data=None):
