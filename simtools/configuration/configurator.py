@@ -295,7 +295,7 @@ class Configurator:
                 self.config["output_file"] = "TEST"
             else:
                 self.config["output_file"] = self.config["activity_id"]
-                if len(self.config.get("label", "")) > 0:
+                if self.config.get("label", "") and len(self.config.get("label", "")) > 0:
                     self.config["output_file"] += "-" + self.config["label"]
             if len(self.config.get("output_file_format", "")) > 0:
                 self.config["output_file"] += "." + self.config["output_file_format"]
