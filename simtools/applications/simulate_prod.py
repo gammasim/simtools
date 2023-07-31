@@ -30,8 +30,11 @@
     primary (str, required)
         Name of the primary particle to simulate. The available options are
         gamma, gamma_diffuse, electron, proton, muon, helium, nitrogen, silicon, and iron.
-    from_azimuth_direction (str, required)
-        Should be one of North, South, East, West (case insensitive).
+    azimuth_angle (str or float, required)
+        Telescope pointing direction in azimuth.
+        It can be in degrees between 0 and 360 or one of north, south, east or west
+        (case insensitive). Note that North is 0 degrees and the azimuth grows clockwise,
+        so East is 90 degrees.
     zenith_angle (float, required)
         Zenith angle in degrees.
     nshow (int, optional)
@@ -55,7 +58,7 @@
 
         simtools-simulate-prod \
         --production_config tests/resources/prod_multi_config_test.yml --model_version Prod5 \
-        --site north --primary gamma --from_azimuth_direction north --zenith_angle 20 \
+        --site north --primary gamma --azimuth_angle north --zenith_angle 20 \
          --start_run 0 --run 1
 
     By default the configuration is saved in simtools-output/test-production
@@ -86,7 +89,6 @@ import tarfile
 from copy import copy
 from pathlib import Path
 
-import astropy.units as u
 from astropy.io.misc import yaml
 
 import simtools.util.general as gen
@@ -139,26 +141,25 @@ def _parse(description=None):
         ],
     )
     config.parser.add_argument(
-        "--from_azimuth_direction",
-        help="Direction from which the primary reaches the atmosphere",
-        type=str.lower,
+        "--azimuth_angle",
+        help=(
+            "Telescope pointing direction in azimuth. "
+            "It can be in degrees between 0 and 360 or one of north, south, east or west "
+            "(case insensitive). Note that North is 0 degrees and "
+            "the azimuth grows clockwise, so East is 90 degrees."
+        ),
+        type=CommandLineParser.azimuth_angle,
         required=True,
-        choices=[
-            "north",
-            "south",
-            "east",
-            "west",
-        ],
     )
     config.parser.add_argument(
         "--zenith_angle",
-        help="Zenith angle in degrees",
+        help="Zenith angle in degrees (between 0 and 180).",
         type=CommandLineParser.zenith_angle,
         required=True,
     )
     config.parser.add_argument(
         "--nshow",
-        help="Number of showers to simulate",
+        help="Number of showers to simulate.",
         type=int,
         required=False,
     )
@@ -273,38 +274,6 @@ def _proccess_simulation_config_file(config_file, primary_config, logger):
     return label, config_showers, config_arrays
 
 
-def _translate_from_azimuth_direction_to_phi(logger, from_azimuth_direction):
-    """
-    Translate the direction particles are coming from to an azimuth angle.
-
-    Parameters
-    ----------
-    from_azimuth_direction: str (north, south, east, west)
-        The direction particles are coming from.
-
-    Returns
-    -------
-    float (Astropy.Quantity)
-        The phi angle for CORSIKA configuration.
-
-    Raises
-    ------
-    ValueError
-    """
-
-    if from_azimuth_direction == "north":
-        return 0 * u.deg
-    if from_azimuth_direction == "south":
-        return 180 * u.deg
-    if from_azimuth_direction == "east":
-        return 90 * u.deg
-    if from_azimuth_direction == "west":
-        return 270 * u.deg
-
-    logger.error(f"The direction {from_azimuth_direction} to simulate from was not recognised")
-    raise ValueError
-
-
 def main():
 
     args_dict, db_config = _parse(description=("Run simulations for productions"))
@@ -319,10 +288,9 @@ def main():
     # Overwrite default and optional settings
     shower_configs["run_list"] = args_dict["run"] + args_dict["start_run"]
     array_configs["site"] = shower_configs["site"] = args_dict["site"]
-    array_configs["zenith"] = shower_configs["zenith"] = args_dict["zenith_angle"] * u.deg
-    array_configs["phi"] = shower_configs["phi"] = _translate_from_azimuth_direction_to_phi(
-        logger, args_dict["from_azimuth_direction"]
-    )
+    array_configs["zenith"] = shower_configs["zenith"] = args_dict["zenith_angle"]
+    array_configs["phi"] = shower_configs["phi"] = args_dict["azimuth_angle"]
+
     if args_dict["nshow"] is not None:
         shower_configs["nshow"] = args_dict["nshow"]
     if args_dict["label"] is not None:

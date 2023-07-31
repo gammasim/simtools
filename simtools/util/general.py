@@ -3,6 +3,7 @@ import logging
 import mmap
 import os
 import re
+import time
 from collections import namedtuple
 from pathlib import Path
 
@@ -439,7 +440,14 @@ def collect_final_lines(file, n_lines):
         Final lines collected.
     """
     list_of_lines = []
-    with open(file, "rb") as read_obj:
+
+    if Path(file).suffix == ".gz":
+        import gzip
+
+        file_open_function = gzip.open
+    else:
+        file_open_function = open
+    with file_open_function(file, "rb") as read_obj:
         # Move the cursor to the end of the file
         read_obj.seek(0, os.SEEK_END)
         # Create a buffer to keep the last read line
@@ -773,12 +781,27 @@ def get_log_excerpt(log_file, n_last_lines=30):
     """
 
     return (
-        "\n\nRuntime error - See below the relevant part of the log file.\n\n"
+        "\n\nRuntime error - See below the relevant part of the log/err file.\n\n"
         f"{log_file}\n"
         "====================================================================\n\n"
         f"{collect_final_lines(log_file, n_last_lines)}\n\n"
         "====================================================================\n"
     )
+
+
+def get_file_age(file_path):
+    """
+    Get the age of a file in seconds since the last modification.
+    """
+    if not Path(file_path).is_file():
+        raise FileNotFoundError(f"'{file_path}' does not exist or is not a file.")
+
+    file_stats = os.stat(file_path)
+    modification_time = file_stats.st_mtime
+    current_time = time.time()
+
+    file_age_minutes = (current_time - modification_time) / 60
+    return file_age_minutes
 
 
 def convert_2D_to_radial_distr(hist2d, xaxis, yaxis, bins=50, max_dist=1000):

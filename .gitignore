@@ -23,3 +23,7 @@ telarray_rand.conf*
 build/
 *.egg-info/
 .egg
+
+# Generic output path of
+# simtools data products
+simtools-output
