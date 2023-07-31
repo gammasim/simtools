@@ -23,7 +23,9 @@
 
         simtools-submit-data-from-external \
             --input_meta ./tests/resources/MLTdata-preproduction.meta.yml \
-            --input_data ./tests/resources/MLTdata-preproduction.ecsv
+            --input_data ./tests/resources/MLTdata-preproduction.ecsv \
+            --input_data_schema ./tests/resources/schema_MST_mirror_2f_measurements.yml \
+            --output_file TEST-submit_data_from_external.ecsv
 
     The output is saved in simtools-output/submit_data_from_external.
 
@@ -31,8 +33,8 @@
 
     .. code-block:: console
 
-        INFO::model_data_writer(l57)::write_data::Writing data to /workdir/external/simtools/\
-        simtools-output/submit_data_from_external/product-data/TEST-submit_data_from_external.ecsv
+        INFO::model_data_writer(l70)::write_data::Writing data to\
+            /simtools/simtools-output/d-2023-07-31/TEST-submit_data_from_external.ecsv
 
 """
 
