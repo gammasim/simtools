@@ -1,5 +1,8 @@
 import argparse
+import logging
 from pathlib import Path
+
+import astropy.units as u
 
 import simtools.version
 from simtools.util import names
@@ -325,8 +328,8 @@ class CommandLineParser(argparse.ArgumentParser):
 
         Returns
         -------
-        float
-            Validated zenith angle
+        Astropy.Quantity
+            Validated zenith angle in degrees
 
         Raises
         ------
@@ -335,11 +338,78 @@ class CommandLineParser(argparse.ArgumentParser):
 
 
         """
-        fangle = float(angle)
+
+        logger = logging.getLogger(__name__)
+
+        try:
+            fangle = float(angle)
+        except ValueError:
+            logger.error("The zenith angle provided is not a valid numeric value.")
+            raise
         if fangle < 0.0 or fangle > 180.0:
             raise argparse.ArgumentTypeError(
                 f"The provided zenith angle, {angle:.1f}, "
                 "is outside of the allowed [0, 180] interval"
             )
 
-        return fangle
+        return fangle * u.deg
+
+    @staticmethod
+    def azimuth_angle(angle):
+        """
+        Argument parser type to check that the azimuth angle provided is in the interval [0, 360].
+        Other allowed options are north, south, east or west which will be translated to an angle
+        where north corresponds to zero.
+
+        Parameters
+        ----------
+        angle: float or str
+            azimuth angle to verify or convert
+
+        Returns
+        -------
+        Astropy.Quantity
+            Validated/Converted aziumth angle in degrees
+
+        Raises
+        ------
+        argparse.ArgumentTypeError
+            When angle is outside of the interval [0, 360] or not in (north, south, east, west)
+
+
+        """
+
+        logger = logging.getLogger(__name__)
+        try:
+            fangle = float(angle)
+            if fangle < 0.0 or fangle > 360.0:
+                raise argparse.ArgumentTypeError(
+                    f"The provided azimuth angle, {angle:.1f}, "
+                    "is outside of the allowed [0, 360] interval"
+                )
+
+            return fangle * u.deg
+        except ValueError:
+            logger.debug(
+                "The azimuth angle provided is not a valid numeric value. "
+                "Will check if it is (north, south, east, west) instead"
+            )
+        if isinstance(angle, str):
+            azimuth_angle = angle.lower()
+            if azimuth_angle == "north":
+                return 0 * u.deg
+            if azimuth_angle == "south":
+                return 180 * u.deg
+            if azimuth_angle == "east":
+                return 90 * u.deg
+            if azimuth_angle == "west":
+                return 270 * u.deg
+            raise argparse.ArgumentTypeError(
+                "The azimuth angle can only be a number or one of "
+                f"(north, south, east, west), not {angle}"
+            )
+        logger.error(
+            f"The azimuth value provided, {angle}, is not a valid number "
+            "nor one of (north, south, east, west)."
+        )
+        raise TypeError
