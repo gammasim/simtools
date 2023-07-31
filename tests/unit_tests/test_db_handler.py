@@ -341,13 +341,16 @@ def test_insert_files_db(db, io_handler, db_cleanup_file_sandbox, random_id, cap
         f.write("# This is a test file")
 
     file_id = db.insert_file_to_db(file_name, f"sandbox_{random_id}")
-    file_id_in_db = db._get_file_mongo_db(f"sandbox_{random_id}", f"test_file_{random_id}.dat")
-    assert file_id == file_id_in_db._id
+    assert (
+        file_id == db._get_file_mongo_db(f"sandbox_{random_id}", f"test_file_{random_id}.dat")._id
+    )
     logger.info("Now test inserting the same file again, this time expect a warning")
     with caplog.at_level(logging.WARNING):
         file_id = db.insert_file_to_db(file_name, f"sandbox_{random_id}")
     assert "exists in the DB. Returning its ID" in caplog.text
-    assert file_id == file_id_in_db._id
+    assert (
+        file_id == db._get_file_mongo_db(f"sandbox_{random_id}", f"test_file_{random_id}.dat")._id
+    )
 
 
 def test_get_all_versions(db):
