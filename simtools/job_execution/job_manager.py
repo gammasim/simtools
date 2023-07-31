@@ -123,8 +123,11 @@ class JobManager:
         if not self.test:
             sys_output = os.system(shell_command)
             if sys_output != 0:
-                msg = gen.get_log_excerpt(log_file)
+                msg = gen.get_log_excerpt(f"{self.run_out_file}.err")
                 self._logger.error(msg)
+                if log_file.exists() and gen.get_file_age(log_file) < 5:
+                    msg = gen.get_log_excerpt(log_file)
+                    self._logger.error(msg)
                 raise JobExecutionError("See excerpt from log file above\n")
         else:
             self._logger.info("Testing (local)")

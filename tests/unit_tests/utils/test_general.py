@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 import logging
+import time
 from copy import copy
 from pathlib import Path
 
@@ -300,3 +301,22 @@ def test_save_dict_to_file(tmp_test_directory, caplog):
     with pytest.raises(IOError):
         gen.save_dict_to_file(example_dict, path)
         assert "Failed to write to" in caplog.text
+
+
+def test_get_file_age(tmp_test_directory):
+    # Create a temporary file and wait for 1 seconds before accessing it
+    with open(tmp_test_directory / "test_file.txt", "w") as file:
+        file.write("Test data")
+
+    time.sleep(1)
+
+    try:
+        age_in_minutes = gen.get_file_age(tmp_test_directory / "test_file.txt")
+        # Age should be within an acceptable range (0 to 0.05 minutes or 3 seconds)
+        assert 0 <= age_in_minutes <= 0.05
+    except FileNotFoundError:
+        pytest.fail("get_file_age raised FileNotFoundError for an existing file.")
+
+    # Ensure that the function raises FileNotFoundError for a non-existent file
+    with pytest.raises(FileNotFoundError):
+        gen.get_file_age(tmp_test_directory / "nonexistent_file.txt")
