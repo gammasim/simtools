@@ -148,7 +148,7 @@ class Configurator:
             pass
         self._fill_from_config_dict(self.config_class_init)
         self._fill_from_environmental_variables()
-        
+
         if self.config.get("activity_id", None) is None:
             self.config["activity_id"] = str(uuid.uuid4())
         if self.config["label"] is None:
