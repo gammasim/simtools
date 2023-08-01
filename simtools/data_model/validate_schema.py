@@ -8,7 +8,7 @@ from simtools.data_model import metadata_model
 
 class SchemaValidator:
     """
-    Validate a dictionary against a reference schema.
+    Validate a dictionary against the simpipe reference schema.
     Used e.g., to validate metadata provided as input.
 
     Parameters
@@ -52,7 +52,8 @@ class SchemaValidator:
         """
         try:
             self._logger.debug(f"Reading meta data from {meta_file_name}")
-            self.data_dict = gen.collect_data_from_yaml_or_dict(meta_file_name, None)
+            self.data_dict = gen.collect_data_from_yaml_or_dict(
+                meta_file_name, self.data_dict)
         except gen.InvalidConfigData:
             self._logger.debug("Failed reading metadata from file.")
             return None

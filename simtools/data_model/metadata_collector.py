@@ -151,12 +151,14 @@ class MetadataCollector:
         """
 
         product_dict["id"] = self.args_dict.get("activity_id", "UNDEFINED_ACTIVITY_ID")
-        self._logger.debug(f"Assigned ACTIVITY UUID {product_dict['id']}")
+        self._logger.debug(f"Assigning ACTIVITY UUID {product_dict['id']}")
 
         product_dict["data"]["category"] = "SIM"
         product_dict["data"]["level"] = "R0"
         product_dict["data"]["type"] = "service"
         product_dict["data"]["model"]["name"] = "simpipe-schema"
+        # TODO Should version number of data model be set somewhere differently?
+        #      This indicates schema version this code is written for.
         product_dict["data"]["model"]["version"] = "0.1.0"
         product_dict["format"] = self.args_dict.get("output_file_format", None)
         product_dict["filename"] = str(self.args_dict.get("output_file", None))
