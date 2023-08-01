@@ -66,6 +66,8 @@ def _category_product():
                 "NAME": {"type": "str", "required": False, "default": None},
                 "VERSION": {"type": "str", "required": False, "default": None},
                 "URL": {"type": "str", "required": False, "default": None},
+                "TYPE": {"type": "str", "required": False, "default": None},
+                "SUBTYPE": {"type": "str", "required": False, "default": None},
             },
         },
         "FORMAT": {"type": "str", "required": False, "default": "ecsv"},
