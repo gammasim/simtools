@@ -47,19 +47,26 @@ class SchemaValidator:
         -------
         dict
             Complete set of metadata following the CTA top-level metadata defintion
+            (None if meta_file_name is undefined)
 
         """
-        if meta_file_name:
+        try:
             self._logger.debug(f"Reading meta data from {meta_file_name}")
             self.data_dict = gen.collect_data_from_yaml_or_dict(meta_file_name, None)
+        except gen.InvalidConfigData:
+            self._logger.debug("Failed reading metadata from file.")
+            return None
 
-        if lower_case:
-            self.data_dict = gen.change_dict_keys_case(self.data_dict, True)
+        try:
+            if lower_case:
+                self.data_dict = gen.change_dict_keys_case(self.data_dict, True)
 
-        self._validate_schema(self._reference_schema, self.data_dict)
-        self._process_schema()
+            self._validate_schema(self._reference_schema, self.data_dict)
+            self._process_schema()
 
-        return self.data_dict
+            return self.data_dict
+        except AttributeError:
+            pass
 
     def _validate_schema(self, ref_schema, data_dict):
         """
