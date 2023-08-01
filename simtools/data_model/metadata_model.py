@@ -113,6 +113,7 @@ def _category_document():
         "TYPE": {"type": "str", "required": False, "default": None},
         "ID": {"type": "str", "required": False, "default": None},
         "LINK": {"type": "str", "required": False, "default": None},
+        "TITLE": {"type": "str", "required": False, "default": None},
     }
 
 
