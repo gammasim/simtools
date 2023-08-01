@@ -156,7 +156,7 @@ class MetadataCollector:
         product_dict["data"]["category"] = "SIM"
         product_dict["data"]["level"] = "R0"
         product_dict["data"]["type"] = "service"
-        product_dict["data"]["model"]["name"] = "simpipe-table"
+        product_dict["data"]["model"]["name"] = "simpipe-schema"
         product_dict["data"]["model"]["version"] = "0.1.0"
         product_dict["format"] = self.args_dict.get("output_file_format", None)
         product_dict["filename"] = str(self.args_dict.get("output_file", None))
