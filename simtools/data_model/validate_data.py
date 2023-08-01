@@ -85,9 +85,10 @@ class DataValidator:
                 continue
             if not np.issubdtype(col.dtype, np.number):
                 continue
+            self._check_for_numbers(col)
             self._check_and_convert_units(col)
-            self._check_range(col.name, col.min(), col.max(), "allowed_range")
-            self._check_range(col.name, col.min(), col.max(), "required_range")
+            self._check_range(col.name, np.nanmin(col.data), np.nanmax(col.data), "allowed_range")
+            self._check_range(col.name, np.nanmin(col.data), np.nanmax(col.data), "required_range")
 
     def _check_required_columns(self):
         """
@@ -224,6 +225,32 @@ class DataValidator:
 
         return u.Unit(reference_unit)
 
+    def _check_for_numbers(self, col):
+        """
+        Check that column values are finite and not NaN.
+
+        TODO - prints at this point information to screen.
+               should be an activitiy (e.g., allow_nan)
+
+        Parameters
+        ----------
+        col: astropy.column
+            data column to be converted
+
+        Returns
+        -------
+        bool
+            if at least one column value is NaN or Inf.
+
+        """
+
+        if np.isnan(col.data).any():
+            self._logger.info(f"Column {col.name} contains NaN.")
+        if np.isinf(col.data).any():
+            self._logger.info(f"Column {col.name} contains infinite value.")
+
+        return np.isnan(col.data).any() or np.isinf(col.data).any()
+
     def _check_and_convert_units(self, col):
         """
         Check that all columns have an allowed units. Convert to reference unit (e.g., Angstrom to\
@@ -319,8 +346,8 @@ class DataValidator:
             if not self._interval_check(
                 (col_min, col_max),
                 (
-                    _entry[col_name][range_type]["min"],
-                    _entry[col_name][range_type]["max"],
+                    _entry[range_type].get("min", np.NINF),
+                    _entry[range_type].get("max", np.Inf)
                 ),
                 range_type,
             ):
@@ -330,9 +357,9 @@ class DataValidator:
         except ValueError:
             self._logger.error(
                 f"Value for column '{col_name}' out of range. "
-                f"[[{col_min}, {col_max}], {range_type}: "
-                f"[[{self._reference_data_columns[col_name][range_type]['min']}, "
-                f"{self._reference_data_columns[col_name][range_type]['max']}]"
+                f"([{col_min}, {col_max}], {range_type}: "
+                f"[{_entry[range_type].get('min', np.NINF)}, "
+                f"{_entry[range_type].get('max', np.Inf)}])"
             )
             raise
 
@@ -404,7 +431,7 @@ class DataValidator:
         #        description (index [0]). This might change in future,
         #        and we keep for now the list definition.
         try:
-            _data_dict = _schema_dict['data'][0]
+            _data_dict = _schema_dict['schema'][0]['data'][0]
         except (KeyError, IndexError):
             self._logger.error(f"Error reading validation schema from {_schema_dict}")
             raise
