@@ -3,9 +3,10 @@ title: Mirror panel 2F measurements description
 description: |-
   Data description of mirror panel 2F measurements used as
   input to SimPipe.
+name: simpipe-schema
 version: 0.1.0
 
-data:
+schema:
 
   - name: mirror_2f_measurement
     description: |-
