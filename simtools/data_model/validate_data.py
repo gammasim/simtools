@@ -1,4 +1,5 @@
 import logging
+import numpy as np
 import os
 import yaml
 
@@ -81,6 +82,8 @@ class DataValidator:
 
         for col in self.data_table.itercols():
             if not self._get_reference_data_column(col.name, status_test=True):
+                continue
+            if not np.issubdtype(col.dtype, np.number):
                 continue
             self._check_and_convert_units(col)
             self._check_range(col.name, col.min(), col.max(), "allowed_range")
@@ -399,7 +402,7 @@ class DataValidator:
 
         try:
             for entry in _schema_dict['data']:
-                if entry.get('name', None) == data_model.get("type", None):
+                if entry.get('name', None) == data_model.get("subtype", None):
                     # TODO - first entry in list; need to look into more
                     # complicated descriptor to see what logic is needed.
                     # This is the most generic case and should work for
