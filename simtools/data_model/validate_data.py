@@ -400,18 +400,19 @@ class DataValidator:
             self._logger.error(f"Schema file not found: {schema_file}")
             raise
 
+        # Note - assume that schema files contain a single data / schema
+        #        description (index [0]). This might change in future,
+        #        and we keep for now the list definition.
         try:
-            for entry in _schema_dict['data']:
-                if entry.get('name', None) == data_model.get("subtype", None):
-                    # TODO - first entry in list; need to look into more
-                    # complicated descriptor to see what logic is needed.
-                    # This is the most generic case and should work for
-                    # almost all use cases.
-                    _data_dict = entry["data"][0]
-        except KeyError:
+            _data_dict = _schema_dict['data'][0]
+        except (KeyError, IndexError):
             self._logger.error(f"Error reading validation schema from {_schema_dict}")
             raise
 
+        if _data_dict is None:
+            self._logger.info("No validation schema found in {schema_file}")
+
+        # TODO - returning table columns only; should also work for non-tabled description
         return _data_dict.get("table_columns", None)
 
     def _get_reference_data_column(self, column_name, status_test=False):
