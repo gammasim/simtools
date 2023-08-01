@@ -75,13 +75,13 @@ def _parse(label, description):
         required=False,
     )
     config.parser.add_argument(
-        "--input_data",
+        "--input",
         help="input data file",
         type=str,
         required=False,
     )
     config.parser.add_argument(
-        "--input_data_schema",
+        "--schema",
         help="schema file describing input data",
         type=str,
         required=False,
@@ -107,9 +107,9 @@ def main():
         raise
 
     data_validator = validate_data.DataValidator(
-        schema_file=args_dict.get("input_data_schema", None),
+        schema_file=args_dict.get("schema", None),
         data_model=_input_data_model,
-        data_file=args_dict["input_data"],
+        data_file=args_dict["input"],
     )
 
     file_writer = writer.ModelDataWriter(
