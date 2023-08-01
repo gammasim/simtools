@@ -108,15 +108,15 @@ class MetadataCollector:
 
         """
 
-        _schema_validator = validate_schema.SchemaValidator()
-        try:
-            _input_meta = _schema_validator.validate_and_transform(
-                meta_file_name=self.args_dict["input_meta"],
-                lower_case=True,
-            )
-        except KeyError:
-            self._logger.debug("No input metadata file defined")
+        if self.args_dict.get("input_meta", None) is None:
+            self._logger.debug("Skipping metadata reading; no metadata file defined.")
             return
+
+        _schema_validator = validate_schema.SchemaValidator()
+        _input_meta = _schema_validator.validate_and_transform(
+            meta_file_name=self.args_dict["input_meta"],
+            lower_case=True,
+        )
 
         try:
             self._merge_config_dicts(top_level_dict, _input_meta)
@@ -150,7 +150,7 @@ class MetadataCollector:
 
         """
 
-        product_dict["id"] = self.args_dict.get("activity_id", "123456789")
+        product_dict["id"] = self.args_dict.get("activity_id", "UNDEFINED_ACTIVITY_ID")
         self._logger.debug(f"Assigned ACTIVITY UUID {product_dict['id']}")
 
         product_dict["data"]["category"] = "SIM"
