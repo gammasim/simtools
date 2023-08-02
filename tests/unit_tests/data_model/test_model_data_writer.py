@@ -30,11 +30,23 @@ def test_write_metadata(tmp_test_directory):
     with pytest.raises(FileNotFoundError):
         w_1.write_metadata(
             metadata=_metadata,
-            ymlfile="./this_directory_is_not_theta/test_file.yml"
+            ymlfile="./this_directory_is_not_there/test_file.yml"
+        )
+
+    with pytest.raises(AttributeError):
+        w_1.write_metadata(
+            metadata=None,
+            ymlfile=tmp_test_directory.join("test_file.yml")
+        )
+
+    with pytest.raises(TypeError):
+        w_1.write_metadata(
+            metadata=_metadata,
+            ymlfile=None,
         )
 
 
-def test_write_data():
+def test_write_data(tmp_test_directory):
 
     w_2 = writer.ModelDataWriter()
     w_2.write_data(None)
@@ -43,7 +55,12 @@ def test_write_data():
     with pytest.raises(astropy.io.registry.base.IORegistryError):
         w_2.write_data(empty_table)
 
+    w_2.product_data_file = tmp_test_directory.join("test_file.ecsv")
+    w_2.write_data(empty_table)
+
+
 def test_astropy_data_format():
 
     assert writer.ModelDataWriter._astropy_data_format("hdf5") == "hdf5"
     assert writer.ModelDataWriter._astropy_data_format("ecsv") == "ascii.ecsv"
+    assert writer.ModelDataWriter._astropy_data_format("ascii.ecsv") == "ascii.ecsv"
