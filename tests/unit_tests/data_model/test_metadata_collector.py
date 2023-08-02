@@ -20,30 +20,22 @@ def test_fill_association_meta_from_args(args_dict_site):
         metadata_model.top_level_reference_schema(), True
     )
     metadata_1._fill_association_meta_from_args(
-        metadata_1.top_level_meta["cta"]["context"]["sim"]["association"])
+        metadata_1.top_level_meta["cta"]["context"]["sim"]["association"]
+    )
 
+    assert metadata_1.top_level_meta["cta"]["context"]["sim"]["association"][0]["site"] == "South"
+    assert metadata_1.top_level_meta["cta"]["context"]["sim"]["association"][0]["class"] == "MST"
     assert (
-       metadata_1.top_level_meta["cta"]["context"]["sim"]["association"][0]["site"] 
-       == "South"
+        metadata_1.top_level_meta["cta"]["context"]["sim"]["association"][0]["type"] == "NectarCam"
     )
-    assert (
-       metadata_1.top_level_meta["cta"]["context"]["sim"]["association"][0]["class"] 
-       == "MST"
-    )
-    assert (
-       metadata_1.top_level_meta["cta"]["context"]["sim"]["association"][0]["type"] 
-       == "NectarCam"
-    )
-    assert (
-       metadata_1.top_level_meta["cta"]["context"]["sim"]["association"][0]["subtype"] 
-       == "D"
-    )
+    assert metadata_1.top_level_meta["cta"]["context"]["sim"]["association"][0]["subtype"] == "D"
 
     metadata_1.args_dict = None
     with pytest.raises(TypeError):
         metadata_1._fill_association_meta_from_args(
             metadata_1.top_level_meta["cta"]["context"]["sim"]["association"]
         )
+
 
 def test_fill_top_level_meta_from_file(args_dict_site):
 
@@ -58,9 +50,7 @@ def test_fill_top_level_meta_from_file(args_dict_site):
     metadata_1.args_dict["input_meta"] = "tests/resources/MLTdata-preproduction.meta.yml"
     metadata_1._fill_top_level_meta_from_file(metadata_1.top_level_meta["cta"])
 
-    assert (
-        metadata_1.top_level_meta["cta"]["activity"]["name"] == "mirror_2f_measurement"
-    )
+    assert metadata_1.top_level_meta["cta"]["activity"]["name"] == "mirror_2f_measurement"
     assert (
         metadata_1.top_level_meta["cta"]["context"]["sim"]["association"][0]["type"] == "FlashCam"
     )
@@ -87,21 +77,15 @@ def test_fill_product_meta(args_dict_site):
     _product_dict["data"]["model"] = {}
     metadata_1._fill_product_meta(product_dict=metadata_1.top_level_meta["cta"]["product"])
 
-    assert (
-       metadata_1.top_level_meta["cta"]["product"]["id"] == "UNDEFINED_ACTIVITY_ID"
-    )
+    assert metadata_1.top_level_meta["cta"]["product"]["id"] == "UNDEFINED_ACTIVITY_ID"
 
-    assert (
-        metadata_1.top_level_meta["cta"]["product"]["data"]["model"]["version"] == "0.0.0"
-    )
+    assert metadata_1.top_level_meta["cta"]["product"]["data"]["model"]["version"] == "0.0.0"
 
     # read product metadata from schema file
     metadata_1.args_dict["schema"] = "tests/resources/MST_mirror_2f_measurements.schema.yml"
     metadata_1._fill_product_meta(product_dict=metadata_1.top_level_meta["cta"]["product"])
 
-    assert (
-        metadata_1.top_level_meta["cta"]["product"]["data"]["model"]["version"] == "0.1.0"
-    )
+    assert metadata_1.top_level_meta["cta"]["product"]["data"]["model"]["version"] == "0.1.0"
 
 
 def test_fill_association_id(args_dict_site):
@@ -203,10 +187,14 @@ def test_fill_context_sim_list(args_dict_site):
 
     # add one new entry to non-existing list -> add
     _test_none = None
-    _test_none = metadata_collector.MetadataCollector._fill_context_sim_list(_test_none, _new_element)
+    _test_none = metadata_collector.MetadataCollector._fill_context_sim_list(
+        _test_none, _new_element
+    )
     assert _test_none == [_new_element]
     _test_none = []
-    _test_none = metadata_collector.MetadataCollector._fill_context_sim_list(_test_none, _new_element)
+    _test_none = metadata_collector.MetadataCollector._fill_context_sim_list(
+        _test_none, _new_element
+    )
     assert _test_none == [_new_element]
 
     # one entry with Nones only

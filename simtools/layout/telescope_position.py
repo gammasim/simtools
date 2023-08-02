@@ -345,11 +345,11 @@ class TelescopePosition:
             self._logger.error(f"Invalid coordinate system ({crs_name})")
             raise InvalidCoordSystem from e
 
-        return (
-            np.all(np.isfinite(
-                    np.array(
-                        [self.crs[crs_name]["xx"]["value"], self.crs[crs_name]["yy"]["value"]],
-                        dtype=float)
+        return np.all(
+            np.isfinite(
+                np.array(
+                    [self.crs[crs_name]["xx"]["value"], self.crs[crs_name]["yy"]["value"]],
+                    dtype=float,
                 )
             )
         )
@@ -497,7 +497,7 @@ class TelescopePosition:
                 )
                 self.set_coordinates(
                     _crs_to_name, _x, _y, _crs_from["zz"]["value"] * _crs_from["zz"]["unit"]
-                    )
+                )
 
     @staticmethod
     def _default_coordinate_system_definition():

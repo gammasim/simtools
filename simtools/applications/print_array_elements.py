@@ -113,6 +113,13 @@ def _parse(label=None, description=None):
         default=False,
         action="store_true",
     )
+    config.parser.add_argument(
+        "--select_assets",
+        "select a subset of assets (e.g., MSTN, LSTN)",
+        required=False,
+        default=None,
+        nargs="+",
+    )
     return config.initialize()
 
 

@@ -182,6 +182,7 @@ def test_get_db_parameters(configurator, args_dict):
 
     assert configurator.config == args_dict
 
+
 def test_initialize_output(configurator, args_dict):
 
     configurator.parser.initialize_output_arguments()

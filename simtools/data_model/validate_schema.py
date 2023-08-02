@@ -50,8 +50,7 @@ class SchemaValidator:
         """
         try:
             self._logger.debug(f"Reading meta data from {meta_file_name}")
-            self.data_dict = gen.collect_data_from_yaml_or_dict(
-                meta_file_name, self.data_dict)
+            self.data_dict = gen.collect_data_from_yaml_or_dict(meta_file_name, self.data_dict)
         except gen.InvalidConfigData:
             self._logger.debug("Failed reading metadata from file.")
             return None

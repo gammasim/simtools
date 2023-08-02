@@ -1,8 +1,8 @@
 import logging
-import numpy as np
 import os
-import yaml
 
+import numpy as np
+import yaml
 from astropy import units as u
 from astropy.table import Table, unique
 from astropy.utils.diff import report_diff_values
@@ -191,7 +191,7 @@ class DataValidator:
         for entry in self._reference_data_columns:
             if "input_processing" in entry and "remove_duplicates" in entry["input_processing"]:
                 self._logger.debug(f"Removing duplicates for column {entry['name']}")
-                _unique_required_column.append(entry['name'])
+                _unique_required_column.append(entry["name"])
 
         self._logger.debug(f"Unique required columns: {_unique_required_column}")
         return _unique_required_column
@@ -256,7 +256,7 @@ class DataValidator:
         if np.isnan(col.data).any() or np.isinf(col.data).any():
             self._logger.error("NaN or Inf values found in data columns")
             raise ValueError
-        
+
         return False
 
     def _check_and_convert_units(self, col):
@@ -353,10 +353,7 @@ class DataValidator:
         try:
             if not self._interval_check(
                 (col_min, col_max),
-                (
-                    _entry[range_type].get("min", np.NINF),
-                    _entry[range_type].get("max", np.Inf)
-                ),
+                (_entry[range_type].get("min", np.NINF), _entry[range_type].get("max", np.Inf)),
                 range_type,
             ):
                 raise ValueError
@@ -437,7 +434,7 @@ class DataValidator:
         #        description (index [0]). This might change in future,
         #        and we keep for now the list definition.
         try:
-            _data_dict = _schema_dict['schema'][0]['data'][0]
+            _data_dict = _schema_dict["schema"][0]["data"][0]
         except (KeyError, IndexError):
             self._logger.error(f"Error reading validation schema from {_schema_dict}")
             raise

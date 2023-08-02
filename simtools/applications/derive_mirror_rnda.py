@@ -197,8 +197,7 @@ def _parse(label):
         action="store_true",
         required=False,
     )
-    return config.initialize(
-        db_config=True, outputs=True, telescope_model=True)
+    return config.initialize(db_config=True, outputs=True, telescope_model=True)
 
 
 def _define_telescope_model(label, args_dict, db_config):
@@ -288,11 +287,10 @@ def _print_and_write_results(
     )
     file_writer = writer.ModelDataWriter(
         product_data_file=args_dict.get("output_file", None),
-        product_data_format=args_dict.get("output_file_format", None)
+        product_data_format=args_dict.get("output_file_format", None),
     )
     file_writer.write(
-        metadata=MetadataCollector(args_dict=args_dict).top_level_meta,
-        product_data=result_table
+        metadata=MetadataCollector(args_dict=args_dict).top_level_meta, product_data=result_table
     )
 
 

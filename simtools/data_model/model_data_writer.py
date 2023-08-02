@@ -69,9 +69,7 @@ class ModelDataWriter:
             if product_data is not None:
                 self._logger.info(f"Writing data to {self.product_data_file}")
                 product_data.write(
-                    self.product_data_file,
-                    format=self.product_data_format,
-                    overwrite=True
+                    self.product_data_file, format=self.product_data_format, overwrite=True
                 )
         except astropy.io.registry.base.IORegistryError:
             self._logger.error(f"Error writing model data to {self.product_data_file}.")
@@ -106,7 +104,7 @@ class ModelDataWriter:
         """
 
         try:
-            ymlfile = Path(ymlfile or self.product_data_file).with_suffix('.metadata.yml')
+            ymlfile = Path(ymlfile or self.product_data_file).with_suffix(".metadata.yml")
             self._logger.info(f"Writing metadata to {ymlfile}")
             with open(ymlfile, "w", encoding="UTF-8") as file:
                 yaml.safe_dump(

@@ -155,8 +155,12 @@ class MetadataCollector:
         product_dict["data"]["category"] = "SIM"
         product_dict["data"]["level"] = "R0"
         product_dict["data"]["type"] = "service"
-        _schema_dict = gen.collect_data_from_yaml_or_dict(
-            in_yaml=self.args_dict.get("schema", None), in_dict=None, allow_empty=True) or {}
+        _schema_dict = (
+            gen.collect_data_from_yaml_or_dict(
+                in_yaml=self.args_dict.get("schema", None), in_dict=None, allow_empty=True
+            )
+            or {}
+        )
         product_dict["data"]["model"]["name"] = _schema_dict.get("name", "simpipe-schema")
         product_dict["data"]["model"]["version"] = _schema_dict.get("version", "0.0.0")
         product_dict["format"] = self.args_dict.get("output_file_format", None)

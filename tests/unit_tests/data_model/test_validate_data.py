@@ -1,12 +1,11 @@
 #!/usr/bin/python3
 
 import logging
-import numpy as np
 import sys
 
-import pytest
-
 import astropy.io.registry
+import numpy as np
+import pytest
 from astropy import units as u
 from astropy.table import Column, Table
 from astropy.utils.diff import report_diff_values
@@ -15,6 +14,7 @@ from simtools.data_model import validate_data
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
+
 
 def test_validate_and_transform():
 
@@ -31,7 +31,7 @@ def test_validate_data_file():
     with pytest.raises(astropy.io.registry.base.IORegistryError):
         data_validator.validate_data_file()
 
-    data_validator._data_file_name="tests/resources/MLTdata-preproduction.ecsv"
+    data_validator._data_file_name = "tests/resources/MLTdata-preproduction.ecsv"
     data_validator.validate_data_file()
 
 
@@ -229,6 +229,7 @@ def test_check_required_columns():
     with pytest.raises(KeyError, match=r"'Missing required column qe'"):
         data_validator._check_required_columns()
 
+
 def test_get_reference_data_column():
 
     data_validator = validate_data.DataValidator()
@@ -261,48 +262,53 @@ def test_get_unique_column_requirements():
     data_validator = validate_data.DataValidator()
     data_validator._reference_data_columns = get_reference_columns()
 
-    assert data_validator._get_unique_column_requirement() == [
-        "wavelength"
-    ]
+    assert data_validator._get_unique_column_requirement() == ["wavelength"]
 
 
 def test_check_for_not_a_number():
 
-    data_validator = validate_data.DataValidator() 
+    data_validator = validate_data.DataValidator()
     data_validator._reference_data_columns = get_reference_columns()
 
     assert (
         data_validator._check_for_not_a_number(
-            Column([300.0, 350.0, 315.0], dtype="float32", name="wavelength")) 
-            == False
+            Column([300.0, 350.0, 315.0], dtype="float32", name="wavelength")
+        )
+        == False
     )
 
     # wavelenght does not allow for nan
     with pytest.raises(ValueError):
         data_validator._check_for_not_a_number(
-            Column([np.nan, 350.0, 315.0], dtype="float32", name="wavelength"))
+            Column([np.nan, 350.0, 315.0], dtype="float32", name="wavelength")
+        )
     with pytest.raises(ValueError):
         data_validator._check_for_not_a_number(
-            Column([np.nan, 350.0, np.inf], dtype="float32", name="wavelength"))
+            Column([np.nan, 350.0, np.inf], dtype="float32", name="wavelength")
+        )
     with pytest.raises(ValueError):
         data_validator._check_for_not_a_number(
-            Column([300.0, 350.0, np.inf], dtype="float32", name="wavelength"))
+            Column([300.0, 350.0, np.inf], dtype="float32", name="wavelength")
+        )
 
     # pos_x allows for nan
     assert (
         data_validator._check_for_not_a_number(
-            Column([300.0, 350.0, 315.0], dtype="float32", name="pos_x"))
-            == False
+            Column([300.0, 350.0, 315.0], dtype="float32", name="pos_x")
+        )
+        == False
     )
     assert (
         data_validator._check_for_not_a_number(
-            Column([np.nan, 350.0, 315.0], dtype="float32", name="pos_x"))
-            == True
+            Column([np.nan, 350.0, 315.0], dtype="float32", name="pos_x")
+        )
+        == True
     )
     assert (
         data_validator._check_for_not_a_number(
-            Column([333., np.inf , 315.0], dtype="float32", name="pos_x"))
-            == True
+            Column([333.0, np.inf, 315.0], dtype="float32", name="pos_x")
+        )
+        == True
     )
 
 
@@ -313,7 +319,8 @@ def test_read_validation_schema():
     data_validator._read_validation_schema(schema_file=None)
 
     data_validator._read_validation_schema(
-        schema_file="tests/resources/MST_mirror_2f_measurements.schema.yml")
+        schema_file="tests/resources/MST_mirror_2f_measurements.schema.yml"
+    )
 
     with pytest.raises(FileNotFoundError):
         data_validator._read_validation_schema(schema_file="this_file_does_not_exist.yml")
