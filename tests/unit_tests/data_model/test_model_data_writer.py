@@ -3,9 +3,8 @@
 import logging
 from pathlib import Path
 
-import pytest
-
 import astropy
+import pytest
 
 import simtools.data_model.model_data_writer as writer
 
@@ -16,28 +15,23 @@ logger.setLevel(logging.DEBUG)
 def test_write_metadata(tmp_test_directory):
 
     # test writer of metadata
-    _metadata = {'name': 'test_metadata'}
+    _metadata = {"name": "test_metadata"}
     w_1 = writer.ModelDataWriter()
     with pytest.raises(TypeError):
         w_1.write_metadata(metadata=_metadata)
 
     yml_file = w_1.write_metadata(
-        metadata=_metadata,
-        ymlfile=tmp_test_directory.join("test_file.yml")
+        metadata=_metadata, ymlfile=tmp_test_directory.join("test_file.yml")
     )
     assert Path(yml_file).exists()
 
     with pytest.raises(FileNotFoundError):
         w_1.write_metadata(
-            metadata=_metadata,
-            ymlfile="./this_directory_is_not_there/test_file.yml"
+            metadata=_metadata, ymlfile="./this_directory_is_not_there/test_file.yml"
         )
 
     with pytest.raises(AttributeError):
-        w_1.write_metadata(
-            metadata=None,
-            ymlfile=tmp_test_directory.join("test_file.yml")
-        )
+        w_1.write_metadata(metadata=None, ymlfile=tmp_test_directory.join("test_file.yml"))
 
     with pytest.raises(TypeError):
         w_1.write_metadata(

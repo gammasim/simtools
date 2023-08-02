@@ -111,11 +111,11 @@ def test_process_schema():
     data_validator.data_dict = {}
     data_validator._process_schema()
 
-    data_validator.data_dict["product"] = { "description": "test" }
+    data_validator.data_dict["product"] = {"description": "test"}
     data_validator._process_schema()
     assert data_validator.data_dict["product"]["description"] == "test"
 
-    data_validator.data_dict["product"] = { "description": "test\ntest" }
+    data_validator.data_dict["product"] = {"description": "test\ntest"}
     data_validator._process_schema()
     assert data_validator.data_dict["product"]["description"] == "test test"
 
@@ -127,8 +127,10 @@ def test_validate_and_transform():
 
     with pytest.raises(FileNotFoundError):
         date_validator.validate_and_transform(meta_file_name="this_file_is_not_there.yml")
-    
-    date_validator.validate_and_transform(meta_file_name="tests/resources/MLTdata-preproduction.meta.yml")
+
+    date_validator.validate_and_transform(
+        meta_file_name="tests/resources/MLTdata-preproduction.meta.yml"
+    )
     assert date_validator.data_dict["activity"]["name"] == "mirror_2f_measurement"
 
 
