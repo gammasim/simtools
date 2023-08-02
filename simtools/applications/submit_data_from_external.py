@@ -27,8 +27,6 @@
             --input_data_schema ./tests/resources/schema_MST_mirror_2f_measurements.yml \
             --output_file TEST-submit_data_from_external.ecsv
 
-    The output is saved in simtools-output/submit_data_from_external.
-
     Expected final print-out message:
 
     .. code-block:: console
@@ -100,15 +98,10 @@ def main():
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
     _metadata = MetadataCollector(args_dict=args_dict)
-    try:
-        _input_data_model = _metadata.top_level_meta["cta"]["product"]["data"]["model"]
-    except KeyError:
-        logger.error("No data model given to describe input data")
-        raise
 
     data_validator = validate_data.DataValidator(
         schema_file=args_dict.get("schema", None),
-        data_model=_input_data_model,
+        data_model=_metadata.top_level_meta["cta"]["product"]["data"]["model"],
         data_file=args_dict["input"],
     )
 
