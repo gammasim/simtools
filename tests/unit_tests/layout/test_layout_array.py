@@ -193,7 +193,7 @@ def test_select_assets(telescope_north_test_file):
 
     assert len(layout._telescope_list) == 19
 
-    layout.select_assets(["MST", "SST"]) 
+    layout.select_assets(["MST", "SST"])
     assert len(layout._telescope_list) == 15
 
     layout.select_assets(["NOT_AN_ASSET", "ALSO_NOT_AN_ASSET"])
