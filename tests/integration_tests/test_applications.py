@@ -46,7 +46,7 @@ APP_LIST = {
             "--input",
             "./tests/resources/MLTdata-preproduction.ecsv",
             "--schema",
-            "./tests/resources/schema_MST_mirror_2f_measurements.yml",
+            "./tests/resources/MST_mirror_2f_measurements.schema.yml",
             "--output_file",
             "test-submit-data.ecsv",
         ]
