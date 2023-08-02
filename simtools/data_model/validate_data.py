@@ -21,19 +21,17 @@ class DataValidator:
         Schema file describing input data and transformations.
     data_file: Path
         Input data file.
-    data_model: dict
-        Data model description
 
     """
 
-    def __init__(self, schema_file=None, data_file=None, data_model=None):
+    def __init__(self, schema_file=None, data_file=None):
         """
         Initalize validation class and read required reference data columns
         """
 
         self._logger = logging.getLogger(__name__)
 
-        self._reference_data_columns = self._read_validation_schema(schema_file, data_model)
+        self._reference_data_columns = self._read_validation_schema(schema_file)
         self._data_file_name = data_file
 
         self.data_table = None
@@ -85,7 +83,7 @@ class DataValidator:
                 continue
             if not np.issubdtype(col.dtype, np.number):
                 continue
-            self._check_for_numbers(col)
+            self._check_for_not_a_number(col)
             self._check_and_convert_units(col)
             self._check_range(col.name, np.nanmin(col.data), np.nanmax(col.data), "allowed_range")
             self._check_range(col.name, np.nanmin(col.data), np.nanmax(col.data), "required_range")
@@ -225,12 +223,9 @@ class DataValidator:
 
         return u.Unit(reference_unit)
 
-    def _check_for_numbers(self, col):
+    def _check_for_not_a_number(self, col):
         """
         Check that column values are finite and not NaN.
-
-        TODO - prints at this point information to screen.
-               should be an activitiy (e.g., allow_nan)
 
         Parameters
         ----------
@@ -242,6 +237,11 @@ class DataValidator:
         bool
             if at least one column value is NaN or Inf.
 
+        Raises
+        ------
+        ValueError
+            if at least one column value is NaN or Inf.
+
         """
 
         if np.isnan(col.data).any():
@@ -249,7 +249,15 @@ class DataValidator:
         if np.isinf(col.data).any():
             self._logger.info(f"Column {col.name} contains infinite value.")
 
-        return np.isnan(col.data).any() or np.isinf(col.data).any()
+        entry = self._get_reference_data_column(col.name)
+        if "allow_nan" in entry.get("input_processing", {}):
+            return np.isnan(col.data).any() or np.isinf(col.data).any()
+
+        if np.isnan(col.data).any() or np.isinf(col.data).any():
+            self._logger.error("NaN or Inf values found in data columns")
+            raise ValueError
+        
+        return False
 
     def _check_and_convert_units(self, col):
         """
@@ -396,7 +404,7 @@ class DataValidator:
 
         return False
 
-    def _read_validation_schema(self, schema_file, data_model=None):
+    def _read_validation_schema(self, schema_file):
         """
         Read validation schema from file.
         Returns 'None' in case no schema file is given.
@@ -405,8 +413,6 @@ class DataValidator:
         ----------
         schema_file: Path
             Schema file describing input data
-        data_model: dict
-            Data model description
 
         Returns
         -------
