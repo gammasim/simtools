@@ -957,6 +957,9 @@ class LayoutArray:
 
         """
 
-        self._logger.info(f"Selecting assets from originally {len(self._telescope_list)} telescopes ({asset_list})")
-        self._telescope_list= [tel for tel in self._telescope_list if tel.asset_code in asset_list]
+        self._logger.info(
+            f"Selecting assets from originally {len(self._telescope_list)} "
+            f"telescopes ({asset_list})"
+        )
+        self._telescope_list = [tel for tel in self._telescope_list if tel.asset_code in asset_list]
         self._logger.info(f"Selected {len(self._telescope_list)} telescopes")
