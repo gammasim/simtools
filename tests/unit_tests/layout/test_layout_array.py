@@ -68,7 +68,6 @@ def layout_array_south_four_LST_instance(
 
 
 def test_from_layout_array_name(io_handler, db_config):
-
     layout = LayoutArray.from_layout_array_name(
         mongo_db_config=db_config, layout_array_name="south-TestLayout"
     )
@@ -132,7 +131,6 @@ def test_initialize_corsika_telescope_from_file(
 
 
 def test_read_telescope_list_file(telescope_north_test_file, telescope_south_test_file, db_config):
-
     pos_x_north = [-70.99, -35.38, 75.22, 30.78, -211.61, -153.34]
     pos_y_north = [-52.08, 66.14, 50.45, -64.51, 5.67, 169.04]
     pos_z_north = [43.00, 28.90, 24.40, 30.60, 46.50, 26.70]
@@ -188,9 +186,9 @@ def test_initialize_layout_array_from_telescope_file(
 
 
 def test_select_assets(telescope_north_test_file):
-
     layout = LayoutArray(name="test_layout", telescope_list_file=telescope_north_test_file)
 
+    layout.select_assets(None)
     assert len(layout._telescope_list) == 19
 
     layout.select_assets(["MST", "SST"])
@@ -274,7 +272,6 @@ def test_build_layout(
 
 
 def test_converting_center_coordinates_north(layout_array_north_four_LST_instance):
-
     layout = layout_array_north_four_LST_instance
 
     _lat, _lon, _ = layout._array_center.get_coordinates("mercator")
@@ -289,7 +286,6 @@ def test_converting_center_coordinates_north(layout_array_north_four_LST_instanc
 
 
 def test_converting_center_coordinates_south(layout_array_south_four_LST_instance):
-
     layout = layout_array_south_four_LST_instance
 
     _lat, _lon, _ = layout._array_center.get_coordinates("mercator")
@@ -307,7 +303,6 @@ def test_get_corsika_input_list(
     layout_array_north_four_LST_instance, layout_array_south_four_LST_instance
 ):
     def test_one_site(layout):
-
         layout.add_telescope(
             telescope_name="LST-01",
             crs_name="corsika",
@@ -330,7 +325,6 @@ def test_altitude_from_corsika_z(
     layout_array_north_four_LST_instance, layout_array_south_four_LST_instance
 ):
     def test_one_site(instance, result1, result2):
-
         instance.add_telescope(
             telescope_name="LST-01",
             crs_name="corsika",
@@ -353,7 +347,6 @@ def test_altitude_from_corsika_z(
 
 
 def test_include_radius_into_telescope_table(telescope_north_test_file, telescope_south_test_file):
-
     values_from_file_north = [20.29, -352.48, 60.00, 9.6]
     values_from_file_south = [-149.32, 76.45, 28.00]
 
