@@ -30,7 +30,7 @@ class SchemaValidator:
         )
         self.data_dict = data_dict
 
-    def validate_and_transform(self, meta_file_name=None, lower_case=True):
+    def validate_and_transform(self, meta_file_name=None):
         """
         Schema validation and processing.
 
@@ -40,8 +40,6 @@ class SchemaValidator:
             file name for file with meta data to
             be validated (might also be given as
             dictionary during initialization of the class).
-        lower_case: bool
-            compare schema keys in lower case only (simtools convention).
 
         Returns
         -------
@@ -58,16 +56,10 @@ class SchemaValidator:
             self._logger.debug("Failed reading metadata from file.")
             return None
 
-        try:
-            if lower_case:
-                self.data_dict = gen.change_dict_keys_case(self.data_dict, True)
-
-            self._validate_schema(self._reference_schema, self.data_dict)
-            self._process_schema()
-
-            return self.data_dict
-        except AttributeError:
-            pass
+        self.data_dict = gen.change_dict_keys_case(self.data_dict, True)
+        self._validate_schema(self._reference_schema, self.data_dict)
+        self._process_schema()
+        return self.data_dict
 
     def _validate_schema(self, ref_schema, data_dict):
         """

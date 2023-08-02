@@ -101,7 +101,6 @@ def main():
 
     data_validator = validate_data.DataValidator(
         schema_file=args_dict.get("schema", None),
-        data_model=_metadata.top_level_meta["cta"]["product"]["data"]["model"],
         data_file=args_dict["input"],
     )
 

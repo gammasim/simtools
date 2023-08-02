@@ -76,6 +76,7 @@ class MetadataCollector:
         self._logger.debug(f"Fill metadata from args: {self.args_dict}")
 
         _association = {}
+
         try:
             if "site" in self.args_dict:
                 _association["site"] = self.args_dict["site"]
@@ -84,11 +85,9 @@ class MetadataCollector:
                 _association["class"] = _split_telescope_name[0]
                 _association["type"] = _split_telescope_name[1]
                 _association["subtype"] = _split_telescope_name[2]
-        except KeyError:
+        except (TypeError, KeyError):
             self._logger.error("Error reading association metadata from args")
             raise
-        except AttributeError as exception:
-            self._logger.debug(f"Missing parameter on command line, use defaults ({exception})")
 
         self._fill_context_sim_list(association_dict, _association)
 
@@ -115,12 +114,11 @@ class MetadataCollector:
         _schema_validator = validate_schema.SchemaValidator()
         _input_meta = _schema_validator.validate_and_transform(
             meta_file_name=self.args_dict["input_meta"],
-            lower_case=True,
         )
 
         try:
             self._merge_config_dicts(top_level_dict, _input_meta)
-        except KeyError:
+        except (KeyError, TypeError):
             self._logger.error("Error reading input metadata")
             raise
         # list entry copies
@@ -129,7 +127,7 @@ class MetadataCollector:
                 top_level_dict["context"]["sim"]["association"], association
             )
         try:
-            for document in _input_meta["context"]["document"]:
+            for document in _input_meta["product"]["document"]:
                 self._fill_context_sim_list(top_level_dict["context"]["sim"]["document"], document)
         except KeyError:
             top_level_dict["context"]["sim"].pop("document")
@@ -158,7 +156,7 @@ class MetadataCollector:
         product_dict["data"]["level"] = "R0"
         product_dict["data"]["type"] = "service"
         _schema_dict = gen.collect_data_from_yaml_or_dict(
-            in_yaml=self.args_dict.get("schema", None), in_dict=None, allow_empty=True)
+            in_yaml=self.args_dict.get("schema", None), in_dict=None, allow_empty=True) or {}
         product_dict["data"]["model"]["name"] = _schema_dict.get("name", "simpipe-schema")
         product_dict["data"]["model"]["version"] = _schema_dict.get("version", "0.0.0")
         product_dict["format"] = self.args_dict.get("output_file_format", None)
