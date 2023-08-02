@@ -968,4 +968,3 @@ class LayoutArray:
             self._logger.info(f"Selected {len(self._telescope_list)} telescopes")
         except TypeError:
             self._logger.info("No asset list provided, keeping all telescopes")
-            pass
