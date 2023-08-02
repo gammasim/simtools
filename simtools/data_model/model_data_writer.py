@@ -62,7 +62,7 @@ class ModelDataWriter:
         ------
         FileNotFoundError
             if data writing was not sucessfull.
-        TODO - check if this error makes sense
+
         """
 
         try:
