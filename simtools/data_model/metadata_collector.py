@@ -40,7 +40,7 @@ class MetadataCollector:
 
     def collect_product_meta_data(self):
         """
-        Collect and verify product metadata.
+        Collect and verify product metadata from different sources.
 
         """
 
@@ -58,7 +58,7 @@ class MetadataCollector:
 
     def _fill_association_meta_from_args(self, association_dict):
         """
-        Append association meta data set through configurator.
+        Append association metadata set through configurator.
 
         Parameters
         ----------
@@ -68,7 +68,7 @@ class MetadataCollector:
         Raises
         ------
         AttributeError
-            if error reading association meta data from args.
+            if error reading association metadata from args.
         KeyError
             if metadata description cannot be filled.
 
@@ -85,10 +85,10 @@ class MetadataCollector:
                 _association["type"] = _split_telescope_name[1]
                 _association["subtype"] = _split_telescope_name[2]
         except KeyError:
-            self._logger.error("Error reading association meta data from args")
+            self._logger.error("Error reading association metadata from args")
             raise
-        except AttributeError as e:
-            self._logger.debug(f"Missing parameter on command line, use defaults ({e})")
+        except AttributeError as exception:
+            self._logger.debug(f"Missing parameter on command line, use defaults ({exception})")
 
         self._fill_context_sim_list(association_dict, _association)
 
@@ -121,7 +121,7 @@ class MetadataCollector:
         try:
             self._merge_config_dicts(top_level_dict, _input_meta)
         except KeyError:
-            self._logger.error("Error reading input meta data")
+            self._logger.error("Error reading input metadata")
             raise
         # list entry copies
         for association in _input_meta["product"]["association"]:
@@ -136,7 +136,8 @@ class MetadataCollector:
 
     def _fill_product_meta(self, product_dict):
         """
-        Fill metadata for data products fields.
+        Fill metadata for data products fields. If a schema file is given for the data products,
+        try and read product:data:model metadata from there.
 
         Parameters
         ----------
@@ -151,15 +152,15 @@ class MetadataCollector:
         """
 
         product_dict["id"] = self.args_dict.get("activity_id", "UNDEFINED_ACTIVITY_ID")
-        self._logger.debug(f"Assigning ACTIVITY UUID {product_dict['id']}")
+        self._logger.debug(f"Reading activitiy UUID {product_dict['id']}")
 
         product_dict["data"]["category"] = "SIM"
         product_dict["data"]["level"] = "R0"
         product_dict["data"]["type"] = "service"
-        product_dict["data"]["model"]["name"] = "simpipe-schema"
-        # TODO Should version number of data model be set somewhere differently?
-        #      This indicates schema version this code is written for.
-        product_dict["data"]["model"]["version"] = "0.1.0"
+        _schema_dict = gen.collect_data_from_yaml_or_dict(
+            in_yaml=self.args_dict.get("schema", None), in_dict=None, allow_empty=True)
+        product_dict["data"]["model"]["name"] = _schema_dict.get("name", "simpipe-schema")
+        product_dict["data"]["model"]["version"] = _schema_dict.get("version", "0.0.0")
         product_dict["format"] = self.args_dict.get("output_file_format", None)
         product_dict["filename"] = str(self.args_dict.get("output_file", None))
 
@@ -187,12 +188,12 @@ class MetadataCollector:
 
     def _fill_activity_meta(self, activity_dict):
         """
-        Fill activity (software) related meta data
+        Fill activity (software) related metadata
 
         Parameters
         ----------
         activity_dict: dict
-            Dictionary for top-level activitiy meta data.
+            Dictionary for top-level activitiy metadata.
 
         Raises
         ------
