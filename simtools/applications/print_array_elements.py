@@ -115,7 +115,7 @@ def _parse(label=None, description=None):
     )
     config.parser.add_argument(
         "--select_assets",
-        "select a subset of assets (e.g., MSTN, LSTN)",
+        help="select a subset of assets (e.g., MSTN, LSTN)",
         required=False,
         default=None,
         nargs="+",
@@ -132,6 +132,7 @@ def main():
     _logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
     layout = layout_array.LayoutArray(telescope_list_file=args_dict["array_element_list"])
+    layout.select_assets(args_dict["select_assets"])
     layout.convert_coordinates()
     if args_dict["export"] is not None:
         layout.export_telescope_list(

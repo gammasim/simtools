@@ -187,6 +187,19 @@ def test_initialize_layout_array_from_telescope_file(
     test_one_site(layout_array_south_instance, telescope_south_test_file, 68, "South")
 
 
+def test_select_assets(telescope_north_test_file):
+
+    layout = LayoutArray(name="test_layout", telescope_list_file=telescope_north_test_file)
+
+    assert len(layout._telescope_list) == 19
+
+    layout.select_assets(["MST", "SST"]) 
+    assert len(layout._telescope_list) == 15
+
+    layout.select_assets(["NOT_AN_ASSET", "ALSO_NOT_AN_ASSET"])
+    assert len(layout._telescope_list) == 0
+
+
 def test_add_tel(
     telescope_north_test_file,
     layout_array_north_instance,
