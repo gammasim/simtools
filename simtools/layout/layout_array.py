@@ -940,3 +940,23 @@ class LayoutArray:
             for tel_name_now in telescope_table["telescope_name"]
         ]
         return telescope_table
+
+    def select_assets(self, asset_list=None):
+        """
+        Select a subsets of telescopes / assets from the layout.
+
+        Parameters
+        ----------
+        asset_list: list
+            List of assets to be selected.
+
+        Raises
+        ------
+        ValueError
+            If the asset list is empty.
+
+        """
+
+        self._logger.info(f"Selecting assets from originally {len(self._telescope_list)} telescopes ({asset_list})")
+        self._telescope_list= [tel for tel in self._telescope_list if tel.asset_code in asset_list]
+        self._logger.info(f"Selected {len(self._telescope_list)} telescopes")
