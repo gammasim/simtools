@@ -94,6 +94,10 @@ from simtools.visualization import visualize
 
 
 def load_data(datafile):
+    """
+    Load the data file with the measured PSF vs radius [cm].
+
+    """
     d_type = {"names": ("Radius [cm]", "Relative intensity"), "formats": ("f8", "f8")}
     # test_data_file = io.get_test_data_file('PSFcurve_data_v2.txt')
     data = np.loadtxt(datafile, dtype=d_type, usecols=(0, 2))
@@ -103,7 +107,6 @@ def load_data(datafile):
 
 
 def main():
-
     label = Path(__file__).stem
     config = configurator.Configurator(
         label=label,
