@@ -377,12 +377,20 @@ APP_LIST = {
             "--use_corsika_telescope_height",
         ],
     ],
+    # validate_schema_files
+    "validate_schema_files": [
+        [
+            "--schema",
+            "TESTMODELDIR/jsonschema.yml",
+            "--file_name",
+            "tests/resources/MST_mirror_2f_measurements.schema.yml",
+        ]
+    ],
 }
 
 
 @pytest.mark.parametrize("application", APP_LIST.keys())
 def test_applications(application, io_handler, monkeypatch, db):
-
     logger.info(f"Testing {application}")
 
     # The add_file_to_db.py application requires a user confirmation.
@@ -399,6 +407,7 @@ def test_applications(application, io_handler, monkeypatch, db):
 
     prepare_one_file("PSFcurve_data_v2.txt")
     prepare_one_file("MLTdata-preproduction.ecsv")
+    prepare_one_file("jsonschema.yml")
 
     def make_command(app, args):
         cmd = "python simtools/applications/" + app + ".py"
