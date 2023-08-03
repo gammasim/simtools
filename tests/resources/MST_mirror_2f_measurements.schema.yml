@@ -1,0 +1,44 @@
+---
+# Follows schema https://github.com/gammasim/workflows/schema/jsonschema.yml
+title: Mirror panel 2F measurements description
+description: |-
+  Data description of mirror panel 2F measurements used as
+  input to SimPipe.
+name: simpipe-schema
+version: 0.1.0
+
+schema:
+
+  - name: mirror_2f_measurement
+    description: |-
+      Mirror panel 2F measurements determining
+      panel radius and panel PSF.
+    data:
+      - type: datatable
+        table_columns:
+          - name: mirror_panel_id
+            description: |-
+              Mirror panel ID.
+            required: true
+            units: dimensionless
+            type: string
+          - name: mirror_panel_radius
+            description: |-
+              Mirror panel radius.
+            required: true
+            units: cm
+            type: double
+          - name: psf
+            description: |-
+              Spot size of mirror panel PSF at nominal distance.
+            required: true
+            units: cm
+            type: double
+          - name: psf_opt
+            description: |-
+              Spot size of mirror panel PSF
+              (best value, not at nominal distance).
+            required: false
+            units: cm
+            type: double
+...
