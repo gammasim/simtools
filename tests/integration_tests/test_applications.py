@@ -3,6 +3,7 @@
 
 import logging
 import os
+import subprocess
 from io import StringIO
 
 import pytest
@@ -382,7 +383,6 @@ APP_LIST = {
 
 @pytest.mark.parametrize("application", APP_LIST.keys())
 def test_applications(application, io_handler, monkeypatch, db):
-
     logger.info(f"Testing {application}")
 
     # The add_file_to_db.py application requires a user confirmation.
@@ -401,7 +401,10 @@ def test_applications(application, io_handler, monkeypatch, db):
     prepare_one_file("MLTdata-preproduction.ecsv")
 
     def make_command(app, args):
-        cmd = "python simtools/applications/" + app + ".py"
+        if app.find("simtools-") < 0:
+            cmd = "python simtools/applications/" + app + ".py"
+        else:
+            cmd = app
         for aa in args:
             aa = aa.replace(
                 "TESTMODELDIR", str(io_handler.get_output_directory(dir_type="model", test=True))
@@ -409,8 +412,25 @@ def test_applications(application, io_handler, monkeypatch, db):
             cmd += " " + aa
         return cmd
 
+    def get_application_name(app):
+        """
+        Get the application name from the app string.
+        Return name of command line tool in case pip installation
+        is used.
+        """
+
+        # check if conda is installed on this machine
+        try:
+            subprocess.check_output(["conda", "--version"])
+            return app.partition("::")[0]
+        except FileNotFoundError:
+            pass
+
+        app_name = app.partition("::")[0]
+        return "simtools-" + app_name.replace("_", "-")
+
     for args in APP_LIST[application]:
-        app_name = application.partition("::")[0]
+        app_name = get_application_name(application)
         logger.info(f"Running with args: {args}")
         cmd = make_command(app_name, args)
         logger.info(f"Running command: {cmd}")
