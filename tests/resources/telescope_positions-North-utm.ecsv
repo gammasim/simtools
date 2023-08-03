@@ -5,8 +5,8 @@
 # - {name: sequence_number, datatype: string, description: sequence number}
 # - {name: utm_east, unit: m, datatype: float32}
 # - {name: utm_north, unit: m, datatype: float32}
-# - {name: alt, unit: m, datatype: float32, description: telescope position upwards relative to the CORSIKA observation level}
-# - {name: geo_code, datatype: string, description: Geographical Position Code}
+# - {name: alt, unit: m, datatype: float32, description: altitude of the array element}
+# - {name: geo_code, datatype: string, description: geographical position code}
 # meta:
 #   EPSG: 32628
 #   center_lon: !astropy.units.Quantity
