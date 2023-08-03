@@ -183,7 +183,7 @@ class MetadataCollector:
                     association["site"],
                     association["class"],
                     association["type"],
-                    association["subtype"],
+                    association.get("subtype", None),
                 )
             except ValueError:
                 association["id"] = None
