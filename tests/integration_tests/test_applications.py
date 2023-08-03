@@ -3,7 +3,7 @@
 
 import logging
 import os
-import subprocess
+import shutil
 from io import StringIO
 
 import pytest
@@ -420,11 +420,9 @@ def test_applications(application, io_handler, monkeypatch, db):
         """
 
         # check if conda is installed on this machine
-        try:
-            subprocess.check_output(["conda", "--version"])
+
+        if shutil.which("conda") is not None:
             return app.partition("::")[0]
-        except FileNotFoundError:
-            pass
 
         app_name = app.partition("::")[0]
         return "simtools-" + app_name.replace("_", "-")
