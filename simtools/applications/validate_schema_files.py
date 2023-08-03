@@ -70,6 +70,11 @@ def load_schema(schema_file):
     parameter_schema (dict)
         parameter schema
 
+    Raises
+    ------
+    FileNotFoundError
+        if schema file is not found
+
     """
 
     try:
@@ -85,6 +90,18 @@ def load_schema(schema_file):
 def validate_schema_file(input_file, schema):
     """
     Validate parameter file against schema.
+
+    Parameters
+    ----------
+    input_file (str)
+        input file to be validated
+    schema (dict)
+        schema used for validation
+
+    Raises
+    ------
+    FileNotFoundError
+        if input file is not found
 
     """
 
@@ -106,7 +123,7 @@ def validate_schema_file(input_file, schema):
 
 def main():
     label = Path(__file__).stem
-    args_dict, _ = _parse(label, description=("Parameter file schema checking"))
+    args_dict, _ = _parse(label, description="Parameter file schema checking")
     logger = logging.getLogger()
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
