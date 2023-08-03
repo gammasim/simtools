@@ -179,7 +179,6 @@ def _proccess_simulation_config_file(config_file, primary_config, logger):
     config_arrays = dict()
 
     for primary, primary_data in config_data.items():
-
         if primary_config is not None and primary != primary_config:
             continue
 
@@ -214,8 +213,7 @@ def _proccess_simulation_config_file(config_file, primary_config, logger):
 
 
 def main():
-
-    args_dict, db_config = _parse(description=("Air shower and array simulations"))
+    args_dict, db_config = _parse(description="Air shower and array simulations")
 
     logger = logging.getLogger()
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))

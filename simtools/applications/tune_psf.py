@@ -103,6 +103,14 @@ from simtools.visualization import visualize
 
 
 def load_data(datafile):
+    """
+    Load data from file txt file.
+
+    Parameters
+    ----------
+    datafile: str
+        Name of the data file with the measured cumulative PSF.
+    """
     d_type = {"names": ("Radius [cm]", "Cumulative PSF"), "formats": ("f8", "f8")}
     data = np.loadtxt(datafile, dtype=d_type, usecols=(0, 2))
     data["Radius [cm]"] *= 0.1
@@ -111,7 +119,6 @@ def load_data(datafile):
 
 
 def main():
-
     config = configurator.Configurator(
         description=(
             "Tune mirror_reflection_random_angle, mirror_align_random_horizontal "

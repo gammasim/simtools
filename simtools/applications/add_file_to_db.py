@@ -65,11 +65,11 @@ def _user_confirm():
             answer = input("Is this OK? [y/n]").lower()
             return answer == "y"
         except EOFError:
-            return False
+            pass
+    return False
 
 
 def main():
-
     _db_tmp = db_handler.DatabaseHandler(mongo_db_config=None)
 
     config = configurator.Configurator(
@@ -135,7 +135,7 @@ def main():
     plural = "s"
     if len(files_to_insert) < 1:
         raise ValueError("No files were provided to upload")
-    elif len(files_to_insert) == 1:
+    if len(files_to_insert) == 1:
         plural = ""
     else:
         pass

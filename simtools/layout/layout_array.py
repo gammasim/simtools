@@ -64,6 +64,7 @@ class LayoutArray:
         self.site = None if site is None else names.validate_site_name(site)
         self.io_handler = io_handler.IOHandler()
 
+        self.telescope_list_file = None
         self._telescope_list = []
         self._epsg = None
         if telescope_list_file is None:
@@ -450,13 +451,12 @@ class LayoutArray:
             if isinstance(value.unit, type(unit)):
                 self._logger.debug(f"Quantity {value} has already unit {unit}. Returning {value}")
                 return value
-            else:
-                try:
-                    value = value.to(unit)
-                    return value
-                except u.UnitConversionError:
-                    self._logger.error(f"Cannot convert {value.unit} to {unit}.")
-                    raise
+            try:
+                value = value.to(unit)
+                return value
+            except u.UnitConversionError:
+                self._logger.error(f"Cannot convert {value.unit} to {unit}.")
+                raise
         return value * unit
 
     def _try_set_coordinate(self, row, tel, table, crs_name, key1, key2):
