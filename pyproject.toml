@@ -20,9 +20,11 @@ maintainers = [
   { name="Gernot Maier", email="gernot.maier@desy.de" },
 ]
 classifiers = [
+    "Intended Audience :: Science/Research",
     "Programming Language :: Python :: 3",
-    "License :: OSI Approved :: BSD-3-Clause",
+    "License :: OSI Approved :: BSD License",
     "Operating System :: OS Independent",
+    "Topic :: Scientific/Engineering :: Astronomy",
 ]
 requires-python = ">=3.9"
 dependencies = [
