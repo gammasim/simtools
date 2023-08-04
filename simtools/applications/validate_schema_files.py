@@ -6,7 +6,7 @@
 
     Command line arguments
     ----------------------
-    file-name (str)
+    file_name (str)
       input file to be validated
     schema (str)
       schema file (jsonschema format) used for validation
@@ -17,7 +17,7 @@
     .. code-block:: console
 
         simtools-validate-schema-file \
-         --file-name tests/resources/MST_mirror_2f_measurements.schema.yml \
+         --file_name tests/resources/MST_mirror_2f_measurements.schema.yml \
          --schema jsonschema.yml
 
 """
