@@ -26,7 +26,7 @@ class Mirrors:
         self._logger = logging.getLogger(__name__)
         self._logger.debug("Mirrors Init")
 
-        self._mirrors = dict()
+        self._mirrors = {}
         self.diameter = None
         self.shape = None
         self.number_of_mirrors = 0
@@ -91,16 +91,16 @@ class Mirrors:
             If number of mirrors is 0.
         """
 
-        self._mirrors["number"] = list()
-        self._mirrors["pos_x"] = list()
-        self._mirrors["pos_y"] = list()
-        self._mirrors["diameter"] = list()
-        self._mirrors["flen"] = list()
-        self._mirrors["shape"] = list()
+        self._mirrors["number"] = []
+        self._mirrors["pos_x"] = []
+        self._mirrors["pos_y"] = []
+        self._mirrors["diameter"] = []
+        self._mirrors["flen"] = []
+        self._mirrors["shape"] = []
 
         mirror_counter = 0
         collect_geo_pars = True
-        with open(self._mirror_list_file, "r") as file:
+        with open(self._mirror_list_file, "r", encoding="utf-8") as file:
             for line in file:
                 line = line.split()
                 if "#" in line[0] or "$" in line[0]:

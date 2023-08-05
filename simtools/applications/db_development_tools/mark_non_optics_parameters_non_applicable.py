@@ -22,7 +22,6 @@ from simtools.configuration import configurator
 
 
 def main():
-
     config = configurator.Configurator(
         description=(
             "Mark all non-structure related parameters in the MST-Structure "
@@ -45,7 +44,7 @@ def main():
 
     db = db_handler.DatabaseHandler(mongo_db_config=db_config)
 
-    with open(args_dict["sections"], "r") as stream:
+    with open(args_dict["sections"], "r", encoding="utf-8") as stream:
         parameter_catogeries = yaml.safe_load(stream)
 
     non_optic_catagories = [
@@ -55,7 +54,7 @@ def main():
         "Camera",
         "Unnecessary",
     ]
-    non_optic_parameters = list()
+    non_optic_parameters = []
     for category in non_optic_catagories:
         for par_now in parameter_catogeries[category]:
             non_optic_parameters.append(par_now)

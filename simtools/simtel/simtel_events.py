@@ -42,7 +42,7 @@ class SimtelEvents:
             List of sim_telarray files (str or Path).
         """
         if not hasattr(self, "input_files"):
-            self.input_files = list()
+            self.input_files = []
 
         if files is None:
             msg = "No input file was given"
@@ -85,10 +85,10 @@ class SimtelEvents:
             "spectral_index",
             "B_total",
         ]
-        self._mc_header = dict()
+        self._mc_header = {}
 
         def _are_headers_consistent(header0, header1):
-            comparison = dict()
+            comparison = {}
             for k in keys_to_grab:
                 value = header0[k] == header1[k]
                 comparison[k] = value if isinstance(value, bool) else all(value)
@@ -97,10 +97,9 @@ class SimtelEvents:
 
         is_first_file = True
         number_of_triggered_events = 0
-        summary_energy, summary_rcore = list(), list()
+        summary_energy, summary_rcore = [], []
         for file in self.input_files:
             with SimTelFile(file) as f:
-
                 for event in f:
                     en = event["mc_shower"]["energy"]
                     rc = math.sqrt(
@@ -184,10 +183,9 @@ class SimtelEvents:
         energy_range = self._validate_energy_range(energy_range)
         core_max = self._validate_core_max(core_max)
 
-        selected_events = list()
+        selected_events = []
         for file in self.input_files:
             with SimTelFile(file) as f:
-
                 for event in f:
                     energy = event["mc_shower"]["energy"]
                     if energy < energy_range[0] or energy > energy_range[1]:

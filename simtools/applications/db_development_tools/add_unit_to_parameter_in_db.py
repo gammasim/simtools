@@ -18,8 +18,7 @@ from simtools.configuration import configurator
 
 
 def main():
-
-    config = configurator.Configurator(description=("Add a unit field to a parameter in the DB."))
+    config = configurator.Configurator(description="Add a unit field to a parameter in the DB.")
     args_dict, db_config = config.initialize(db_config=True, telescope_model=True)
 
     logger = logging.getLogger()

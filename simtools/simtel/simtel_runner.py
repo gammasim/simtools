@@ -124,7 +124,7 @@ class SimtelRunner:
         self._logger.debug(f"Extra commands to be added to the run script {extra_commands}")
 
         command = self._make_run_command(input_file=input_file, run_number=run_number)
-        with self._script_file.open("w") as file:
+        with self._script_file.open("w", encoding="utf-8") as file:
             file.write("#!/usr/bin/env bash\n\n")
 
             # Make sure to exit on failed commands and report their error code

@@ -317,7 +317,6 @@ def _get_psf_containment(logger, args_dict):
 
 
 def main():
-
     label = Path(__file__).stem
 
     args_dict, db_config = _parse(label)
@@ -361,9 +360,9 @@ def main():
 
     logger.info(f"Start value for mirror_reflection_random_angle: {rnda_start}")
 
-    results_rnda = list()
-    results_mean = list()
-    results_sig = list()
+    results_rnda = []
+    results_mean = []
+    results_sig = []
     if args_dict["no_tuning"]:
         rnda_opt = rnda_start
     else:

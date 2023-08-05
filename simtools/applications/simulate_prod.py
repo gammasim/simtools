@@ -226,7 +226,7 @@ def _proccess_simulation_config_file(config_file, primary_config, logger):
     """
 
     try:
-        with open(config_file) as file:
+        with open(config_file, encoding="utf-8") as file:
             config_data = yaml.load(file)
     except FileNotFoundError:
         logger.error(f"Error loading simulation configuration file from {config_file}")

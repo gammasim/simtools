@@ -177,7 +177,7 @@ def main():
     # }
     # tel_model.change_multiple_parameters(**pars_to_change)
 
-    all_parameters = list()
+    all_parameters = []
 
     def add_parameters(
         mirror_reflection, mirror_align, mirror_reflection_fraction=0.15, mirror_reflection_2=0.035
@@ -186,7 +186,7 @@ def main():
         Transform the parameters to the proper format and add a new set of
         parameters to the all_parameters list.
         """
-        pars = dict()
+        pars = {}
         mrra = f"{mirror_reflection:.4f},{mirror_reflection_fraction:.2f},{mirror_reflection_2:.4f}"
         pars["mirror_reflection_random_angle"] = mrra
         mar = f"{mirror_align:.4f},28.,0.,0."
