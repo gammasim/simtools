@@ -2,6 +2,9 @@
 requires = ["setuptools>=65", "setuptools_scm[toml]>=6.2"]
 build-backend = "setuptools.build_meta"
 
+[tool.setuptools]
+packages=["simtools"]
+
 [tool.setuptools_scm]
 write_to = "simtools/_version.py"
 
@@ -57,9 +60,6 @@ dependencies = [
     "sphinx",
     "sphinx_rtd_theme",
 ]
-
-[tool.setuptools.dynamic]
-version = {attr = "simtools.__version__"}
 
 [project.urls]
 "documentation" = "https://gammasim.github.io/simtools/"
