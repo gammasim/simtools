@@ -15,7 +15,7 @@ authors = [
   { name="Orel Gueta", email="orel.gueta@desy.de" },
   { name="Victor Barbosa Martins", email="victor.barbosa.martins@desy.de" },
   { name="Gernot Maier", email="gernot.maier@desy.de" },
-  { name="Raul Prado" },
+  { name="Raul Prado", email="raul.prado@desy.de" },
 ]
 maintainers = [
   { name="Orel Gueta", email="orel.gueta@desy.de" },
