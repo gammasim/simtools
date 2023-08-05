@@ -5,11 +5,11 @@ import re
 from collections import OrderedDict
 
 import astropy.units as u
-import matplotlib.gridspec as gridspec
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 from astropy.table import QTable
 from cycler import cycler
+from matplotlib import gridspec
 from matplotlib.collections import PatchCollection
 
 from simtools.util import general as gen
@@ -29,7 +29,7 @@ __all__ = [
     "set_style",
 ]
 
-COLORS = dict()
+COLORS = {}
 COLORS["classic"] = [
     "#ba2c54",
     "#5B90DC",
@@ -218,8 +218,6 @@ def set_style(palette="default", big_plot=False):
     plt.rc("legend", loc="best", shadow=False, fontsize="medium")
     plt.rc("font", family="serif", size=fontsize[plot_size])
 
-    return
-
 
 def get_colors(palette="default"):
     """
@@ -345,7 +343,7 @@ def plot_1D(data, **kwargs):
     set_style(palette, big_plot)
 
     if not isinstance(data, dict):
-        data_dict = dict()
+        data_dict = {}
         data_dict["_default"] = data
     else:
         data_dict = data
@@ -408,14 +406,13 @@ def plot_1D(data, **kwargs):
         for label, data_now in data_dict.items():
             if label == data_ref_name:
                 continue
+            x_title, y_title = data_now.dtype.names[0], data_now.dtype.names[1]
+            x_title_unit = _add_unit(x_title, data_now[x_title])
+            if plot_ratio:
+                y_values = data_now[y_title] / data_dict[data_ref_name][y_title]
             else:
-                x_title, y_title = data_now.dtype.names[0], data_now.dtype.names[1]
-                x_title_unit = _add_unit(x_title, data_now[x_title])
-                if plot_ratio:
-                    y_values = data_now[y_title] / data_dict[data_ref_name][y_title]
-                else:
-                    y_values = data_now[y_title] - data_dict[data_ref_name][y_title]
-                plt.plot(data_now[x_title], y_values, **kwargs)
+                y_values = data_now[y_title] - data_dict[data_ref_name][y_title]
+            plt.plot(data_now[x_title], y_values, **kwargs)
 
         plt.xlabel(x_title_unit)
         y_title_ratio = f"Ratio to {data_ref_name}"

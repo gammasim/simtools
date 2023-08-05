@@ -86,7 +86,7 @@ class SchemaValidator:
                 _this_data = data_dict[key]
             else:
                 if self._field_is_optional(value):
-                    self._logger.debug("Optional field %s", key)
+                    self._logger.debug(f"Optional field {key}")
                     continue
                 msg = f"Missing required field '{key}'"
                 raise ValueError(msg)
@@ -97,7 +97,7 @@ class SchemaValidator:
                     try:
                         self._validate_data_type(value, key, _this_data)
                     except UnboundLocalError:
-                        self._logger.error("No data for `%s` key", key)
+                        self._logger.error(f"No data for {key} key")
                         raise
                 else:
                     self._validate_schema(value, _this_data)

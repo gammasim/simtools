@@ -72,7 +72,7 @@ class TelescopeModel:
         self.io_handler = io_handler.IOHandler()
         self.mongo_db_config = mongo_db_config
 
-        self._parameters = dict()
+        self._parameters = {}
 
         self._load_parameters_from_db()
 
@@ -150,7 +150,7 @@ class TelescopeModel:
         TelescopeModel
             Instance of TelescopeModel.
         """
-        parameters = dict()
+        parameters = {}
         tel = cls(
             site=site,
             telescope_model_name=telescope_model_name,
@@ -186,7 +186,7 @@ class TelescopeModel:
             par_value = par_value.rstrip().lstrip()  # Removing trailing spaces (left and right)
             return par_name, par_value
 
-        with open(config_file_name, "r") as file:
+        with open(config_file_name, "r", encoding="utf-8") as file:
             for line in file:
                 words = line.split()
                 if len(words) == 0:
@@ -369,7 +369,7 @@ class TelescopeModel:
             raise InvalidParameter(msg)
 
         self._logger.info(f"Adding {par_name}={value} to the model")
-        self._parameters[par_name] = dict()
+        self._parameters[par_name] = {}
         self._parameters[par_name]["Value"] = value
         self._parameters[par_name]["Type"] = type(value)
         self._parameters[par_name]["Applicable"] = is_aplicable
@@ -488,7 +488,7 @@ class TelescopeModel:
             Path of the file to be added to the config file directory.
         """
         if self._added_parameter_files is None:
-            self._added_parameter_files = list()
+            self._added_parameter_files = []
         self._added_parameter_files.append(par_name)
         shutil.copy(file_path, self._config_file_directory)
 
@@ -611,7 +611,7 @@ class TelescopeModel:
             self.site, self.name, self.model_version, mirror_number, self.label
         )
         if self._single_mirror_list_file_paths is None:
-            self._single_mirror_list_file_paths = dict()
+            self._single_mirror_list_file_paths = {}
         self._single_mirror_list_file_paths[mirror_number] = self._config_file_directory.joinpath(
             file_name
         )
@@ -728,7 +728,7 @@ class TelescopeModel:
 
         file_name = self.get_parameter_value(par)
         file = self.get_config_directory().joinpath(file_name)
-        with open(file, "r") as f:
+        with open(file, "r", encoding="utf-8") as f:
             is2D = "@RPOL@" in f.read()
         return is2D
 
@@ -751,7 +751,7 @@ class TelescopeModel:
 
         _file = self.get_config_directory().joinpath(file_name)
         line_to_start_from = 0
-        with open(_file, "r") as f:
+        with open(_file, "r", encoding="utf-8") as f:
             for i_line, line in enumerate(f):
                 if line.startswith("ANGLE"):
                     degrees = np.array(line.strip().split("=")[1].split(), dtype=np.float16)
@@ -822,7 +822,7 @@ class TelescopeModel:
             Instance of astropy.table.Table with the averaged curve.
         """
 
-        weights = list()
+        weights = []
         for angle_now in curves["Angle"]:
             weights.append(
                 incidence_angle_dist["Fraction"][

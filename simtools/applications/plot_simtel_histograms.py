@@ -39,7 +39,6 @@ from simtools.simtel.simtel_histograms import SimtelHistograms
 
 
 def main():
-
     config = configurator.Configurator(
         label=Path(__file__).stem,
         description=("Plots sim_telarray histograms."),
@@ -61,11 +60,11 @@ def main():
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
     n_lists = len(args_dict["file_lists"])
-    simtel_histograms = list()
+    simtel_histograms = []
     for this_list_of_files in args_dict["file_lists"]:
         # Collecting hist files
-        histogram_files = list()
-        with open(this_list_of_files) as file:
+        histogram_files = []
+        with open(this_list_of_files, encoding="utf-8") as file:
             for line in file:
                 # Removing '\n' from filename, in case it is left there.
                 histogram_files.append(line.replace("\n", ""))
@@ -96,7 +95,6 @@ def main():
 
     pdf_pages = PdfPages(fig_name)
     for i_hist in range(number_of_hists[0]):
-
         title = simtel_histograms[0].get_histogram_title(i_hist)
 
         logger.debug(f"Processing: {title}")

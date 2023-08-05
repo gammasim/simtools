@@ -39,7 +39,6 @@ class CorsikaSimtelRunner(CorsikaRunner, SimtelRunnerArray):
     """
 
     def __init__(self, common_args=None, corsika_args=None, simtel_args=None):
-
         CorsikaRunner.__init__(self, use_multipipe=True, **(common_args | corsika_args))
         SimtelRunnerArray.__init__(self, **(common_args | simtel_args))
 
@@ -94,7 +93,7 @@ class CorsikaSimtelRunner(CorsikaRunner, SimtelRunnerArray):
         multipipe_file = Path(self.corsika_config._config_file_path.parent).joinpath(
             self.corsika_config.get_file_name("multipipe")
         )
-        with open(multipipe_file, "w") as file:
+        with open(multipipe_file, "w", encoding="utf-8") as file:
             file.write(f"{run_command}")
         self._export_multipipe_executable(multipipe_file)
 
@@ -111,7 +110,7 @@ class CorsikaSimtelRunner(CorsikaRunner, SimtelRunnerArray):
         multipipe_executable = Path(self.corsika_config._config_file_path.parent).joinpath(
             "run_cta_multipipe"
         )
-        with open(multipipe_executable, "w") as file:
+        with open(multipipe_executable, "w", encoding="utf-8") as file:
             multipipe_command = Path(self._simtel_source_path).joinpath(
                 "sim_telarray/bin/multipipe_corsika "
                 f"-c {multipipe_file}"
@@ -176,10 +175,9 @@ class CorsikaSimtelRunner(CorsikaRunner, SimtelRunnerArray):
 
         if file_type in ["output", "log", "histogram"]:
             return SimtelRunnerArray.get_file_name(self, file_type=file_type, **kwargs)
-        else:
-            return CorsikaRunner.get_file_name(
-                self, file_type=file_type, run_number=run_number, **kwargs
-            )
+        return CorsikaRunner.get_file_name(
+            self, file_type=file_type, run_number=run_number, **kwargs
+        )
 
     def get_info_for_file_name(self, run_number):
         """

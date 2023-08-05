@@ -118,7 +118,7 @@ def main():
 
     db = db_handler.DatabaseHandler(mongo_db_config=db_config)
 
-    files_to_insert = list()
+    files_to_insert = []
     if args_dict.get("file_name", None) is not None:
         for file_now in args_dict["file_name"]:
             if Path(file_now).suffix in db.ALLOWED_FILE_EXTENSIONS:

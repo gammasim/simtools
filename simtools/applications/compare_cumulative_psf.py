@@ -150,7 +150,7 @@ def main():
 
     # New parameters
     if args_dict.get("pars", None):
-        with open(args_dict["pars"]) as file:
+        with open(args_dict["pars"], encoding="utf-8") as file:
             new_pars = yaml.safe_load(file)
         tel_model.change_multiple_parameters(**new_pars)
 

@@ -1,11 +1,13 @@
 [MESSAGES CONTROL]
 # Disable some specific checks
 disable=
-    W1203,  # Use % formatting in logging functions and pass the % parameters as arguments
+    C0103,  # Variable name "..." doesn't conform to snake_case naming style
+    C0114,  # Missing module docstring
     E0401,  # Unable to import
     R0902,  # Too many instance attributes
     R0913,  # Too many arguments
     R0914,  # Too many local variables
+    W1203,  # Use % formatting in logging functions and pass the % parameters as arguments
 
 [BASIC]
 # Maximum line length
@@ -42,6 +44,9 @@ module-naming-style=snake_case
 
 # Naming style matching correct variable names.
 variable-naming-style=snake_case
+
+# Logging style
+logging-format-style=new
 
 # Regular expression which should only match function or class names that do
 # not require a docstring (especially do not require a docstr for main).

@@ -141,7 +141,7 @@ class JobManager:
         _condor_file = self.run_script + ".condor"
         self._logger.info(f"Submitting script to HTCondor ({_condor_file})")
         try:
-            with open(_condor_file, "w") as file:
+            with open(_condor_file, "w", encoding="utf-8") as file:
                 file.write(f"Executable = {self.run_script}\n")
                 file.write(f"Output = {self.run_out_file + '.out'}\n")
                 file.write(f"Error = {self.run_out_file + '.err'}\n")

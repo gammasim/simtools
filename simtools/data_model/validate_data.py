@@ -165,7 +165,7 @@ class DataValidator:
             self.data_table, keys=_column_with_unique_requirement
         )
         _data_table_unique_for_all_columns = unique(self.data_table, keys=None)
-        with open(os.devnull, "w") as devnull:
+        with open(os.devnull, "w", encoding="utf-8") as devnull:
             if report_diff_values(
                 _data_table_unique_for_key_column,
                 _data_table_unique_for_all_columns,

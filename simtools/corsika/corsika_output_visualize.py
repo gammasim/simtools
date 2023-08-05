@@ -1,8 +1,8 @@
 import logging
 
-import matplotlib.colors as colors
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib import colors
 
 _logger = logging.getLogger(__name__)
 

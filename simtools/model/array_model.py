@@ -150,9 +150,9 @@ class ArrayModel:
         )
 
         # Building telescope models
-        self._telescope_model = list()  # List of telescope models
-        _all_telescope_model_names = list()  # List of telescope names without repetition
-        _all_pars_to_change = dict()
+        self._telescope_model = []  # List of telescope models
+        _all_telescope_model_names = []  # List of telescope names without repetition
+        _all_pars_to_change = {}
         for tel in self.layout:
             tel_size = names.get_telescope_type(tel.name)
 
@@ -247,7 +247,7 @@ class ArrayModel:
             if isinstance(data, str):
                 # Case 1: data is string (only name)
                 tel_name = tel_size + "-" + data
-                return tel_name, dict()
+                return tel_name, {}
 
             # Case 2: data has a wrong type
             msg = "ArrayConfig has wrong input for a telescope"
@@ -286,7 +286,7 @@ class ArrayModel:
         Export sim_telarray config files for all the telescopes into the output model directory.
         """
 
-        exported_models = list()
+        exported_models = []
         for tel_model in self._telescope_model:
             name = tel_model.name + (
                 "_" + tel_model.extra_label if tel_model.extra_label != "" else ""

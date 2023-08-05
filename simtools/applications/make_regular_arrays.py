@@ -46,7 +46,6 @@ from simtools.layout.layout_array import LayoutArray
 
 
 def main():
-
     config = configurator.Configurator(
         label=Path(__file__).stem,
         description=(
@@ -72,13 +71,13 @@ def main():
     # Reading site parameters from DB
     db = db_handler.DatabaseHandler(mongo_db_config=db_config)
 
-    site_pars_db = dict()
-    layout_center_data = dict()
-    corsika_telescope_data = dict()
+    site_pars_db = {}
+    layout_center_data = {}
+    corsika_telescope_data = {}
     for site in ["North", "South"]:
         site_pars_db[site] = db.get_site_parameters(site=site, model_version="prod5")
 
-        layout_center_data[site] = dict()
+        layout_center_data[site] = {}
         layout_center_data[site]["center_lat"] = (
             float(site_pars_db[site]["ref_lat"]["Value"]) * u.deg
         )
@@ -89,7 +88,7 @@ def main():
             float(site_pars_db[site]["altitude"]["Value"]) * u.m
         )
         layout_center_data[site]["EPSG"] = site_pars_db[site]["EPSG"]["Value"]
-        corsika_telescope_data[site] = dict()
+        corsika_telescope_data[site] = {}
         corsika_telescope_data[site]["corsika_obs_level"] = layout_center_data[site]["center_alt"]
         corsika_telescope_data[site]["corsika_sphere_center"] = corsika_pars[
             "corsika_sphere_center"

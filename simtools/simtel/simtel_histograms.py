@@ -76,14 +76,12 @@ class SimtelHistograms:
     def _combine_histogram_files(self):
         """Combine histograms from all files into one single list of histograms."""
         # Processing and combining histograms from multiple files
-        self.combined_hists = list()
+        self.combined_hists = []
 
         n_files = 0
         for file in self._histogram_files:
-
             count_file = True
             with EventIOFile(file) as f:
-
                 for o in yield_toplevel_of_type(f, Histograms):
                     try:
                         hists = o.parse()
@@ -99,7 +97,6 @@ class SimtelHistograms:
                     else:
                         # Remaining files
                         for hist, this_combined_hist in zip(hists, self.combined_hists):
-
                             # Checking consistency of histograms
                             for key_to_test in [
                                 "lower_x",
@@ -132,7 +129,6 @@ class SimtelHistograms:
 
         pdf_pages = PdfPages(fig_name)
         for i_hist, histo in enumerate(self.combined_hists):
-
             # Test case: processing only 1/10 of the histograms
             if self._is_test and i_hist % 10 != 0:
                 self._logger.debug(f"Skipping (test=True): {histo['title']}")

@@ -89,19 +89,19 @@ class Camera:
         clockwise by 30 degrees with respect to those denoted as 1.
         """
 
-        pixels = dict()
+        pixels = {}
         pixels["pixel_diameter"] = 9999
         pixels["pixel_shape"] = 9999
         pixels["pixel_spacing"] = 9999
         pixels["lightguide_efficiency_angle_file"] = "none"
         pixels["lightguide_efficiency_wavelength_file"] = "none"
         pixels["rotate_angle"] = 0
-        pixels["x"] = list()
-        pixels["y"] = list()
-        pixels["pix_id"] = list()
-        pixels["pix_on"] = list()
+        pixels["x"] = []
+        pixels["y"] = []
+        pixels["pix_id"] = []
+        pixels["pix_on"] = []
 
-        with open(camera_config_file, "r") as dat_file:
+        with open(camera_config_file, "r", encoding="utf-8") as dat_file:
             for line in dat_file:
                 pix_info = line.split()
                 if line.startswith("PixType"):
@@ -502,7 +502,7 @@ class Camera:
 
         self._logger.debug("Searching for edge pixels")
 
-        edge_pixel_indices = list()
+        edge_pixel_indices = []
 
         for i_pix, _ in enumerate(pixels["x"]):
             if pixels["pixel_shape"] == 1 or pixels["pixel_shape"] == 3:
@@ -699,7 +699,7 @@ class Camera:
             if not camera_in_sky_coor:
                 self._pixels["y"] = [(-1) * y_val for y_val in self._pixels["y"]]
 
-        on_pixels, edge_pixels, off_pixels = list(), list(), list()
+        on_pixels, edge_pixels, off_pixels = [], [], []
 
         for i_pix, xy_pix_pos in enumerate(zip(self._pixels["x"], self._pixels["y"])):
             if self._pixels["pixel_shape"] == 1 or self._pixels["pixel_shape"] == 3:

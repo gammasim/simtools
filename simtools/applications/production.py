@@ -167,16 +167,16 @@ def _proccess_simulation_config_file(config_file, primary_config, logger):
     """
 
     try:
-        with open(config_file) as file:
+        with open(config_file, encoding="utf-8") as file:
             config_data = yaml.load(file)
     except FileNotFoundError:
         logger.error(f"Error loading simulation configuration file from {config_file}")
         raise
 
-    label = config_data.pop("label", dict())
-    default_data = config_data.pop("default", dict())
-    config_showers = dict()
-    config_arrays = dict()
+    label = config_data.pop("label", {})
+    default_data = config_data.pop("default", {})
+    config_showers = {}
+    config_arrays = {}
 
     for primary, primary_data in config_data.items():
         if primary_config is not None and primary != primary_config:
@@ -184,8 +184,8 @@ def _proccess_simulation_config_file(config_file, primary_config, logger):
 
         this_default = copy(default_data)
 
-        config_showers[primary] = copy(this_default.pop("showers", dict()))
-        config_arrays[primary] = copy(this_default.pop("array", dict()))
+        config_showers[primary] = copy(this_default.pop("showers", {}))
+        config_arrays[primary] = copy(this_default.pop("array", {}))
 
         # Grabbing common entries for showers and array
         for key, value in primary_data.items():
@@ -195,12 +195,12 @@ def _proccess_simulation_config_file(config_file, primary_config, logger):
             config_arrays[primary][key] = value
 
         # Grabbing showers entries
-        for key, value in primary_data.get("showers", dict()).items():
+        for key, value in primary_data.get("showers", {}).items():
             config_showers[primary][key] = value
         config_showers[primary]["primary"] = primary
 
         # Grabbing array entries
-        for key, value in primary_data.get("array", dict()).items():
+        for key, value in primary_data.get("array", {}).items():
             config_arrays[primary][key] = value
         config_arrays[primary]["primary"] = primary
 
@@ -224,7 +224,7 @@ def main():
     if args_dict["label"] is None:
         args_dict["label"] = label
 
-    shower_simulators = dict()
+    shower_simulators = {}
     for primary, config_data in shower_configs.items():
         shower_simulators[primary] = Simulator(
             label=label,
@@ -242,7 +242,7 @@ def main():
             _task_function()
 
     if args_dict["array_only"]:
-        array_simulators = dict()
+        array_simulators = {}
         for primary, config_data in array_configs.items():
             array_simulators[primary] = Simulator(
                 label=label,

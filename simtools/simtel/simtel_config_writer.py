@@ -73,7 +73,7 @@ class SimtelConfigWriter:
         parameters: dict
             Model parameters in the same structure as used by the TelescopeModel class.
         """
-        with open(config_file_path, "w") as file:
+        with open(config_file_path, "w", encoding="utf-8") as file:
             self._write_header(file, "TELESCOPE CONFIGURATION FILE")
 
             file.write("#ifdef TELESCOPE\n")
@@ -104,7 +104,7 @@ class SimtelConfigWriter:
         site_parameters: dict
             Site parameters.
         """
-        with open(config_file_path, "w") as file:
+        with open(config_file_path, "w", encoding="utf-8") as file:
             self._write_header(file, "ARRAY CONFIGURATION FILE")
 
             # Be careful with the formatting - simtel is sensitive
@@ -157,7 +157,7 @@ class SimtelConfigWriter:
         """
         __, __, diameter, flen, shape = mirrors.get_single_mirror_parameters(mirror_number)
 
-        with open(single_mirror_list_file, "w") as file:
+        with open(single_mirror_list_file, "w", encoding="utf-8") as file:
             self._write_header(file, "MIRROR LIST FILE", "#")
 
             file.write("# Column 1: X pos. [cm] (North/Down)\n")
