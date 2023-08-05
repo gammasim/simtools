@@ -51,8 +51,8 @@ def _parse(label, description):
     """
 
     config = configurator.Configurator(label=label, description=description)
-    config.parser.add_argument("-f", "--file_name", help="file to be validated", required=True)
-    config.parser.add_argument("-s", "--schema", help="json schema file", required=True)
+    config.parser.add_argument("--file_name", help="file to be validated", required=True)
+    config.parser.add_argument("--schema", help="json schema file", required=True)
     return config.initialize()
 
 
@@ -87,7 +87,7 @@ def load_schema(schema_file):
     return parameter_schema
 
 
-def validate_schema_file(input_file, schema):
+def validate_schema_file(input_file, schema, logger):
     """
     Validate parameter file against schema.
 
@@ -109,25 +109,26 @@ def validate_schema_file(input_file, schema):
         with open(input_file, "r", encoding="utf-8") as file:
             data = yaml.safe_load(file)
     except FileNotFoundError:
-        logging.error(f"Input file {input_file} not found")
+        logger.error(f"Input file {input_file} not found")
         raise
 
     try:
         jsonschema.validate(data, schema=schema)
     except jsonschema.exceptions.ValidationError:
-        logging.error(f"Schema validation failed for {input_file} using {schema}")
+        logger.error(f"Schema validation failed for {input_file} using {schema}")
         raise
 
-    print(f"Schema validation successful for {input_file}")
+    logger.info(f"Schema validation successful for {input_file}")
 
 
 def main():
     label = Path(__file__).stem
     args_dict, _ = _parse(label, description="Parameter file schema checking")
+
     logger = logging.getLogger()
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
-    validate_schema_file(args_dict["file_name"], load_schema(args_dict["schema"]))
+    validate_schema_file(args_dict["file_name"], load_schema(args_dict["schema"]), logger)
 
 
 if __name__ == "__main__":
