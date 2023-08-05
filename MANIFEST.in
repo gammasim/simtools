@@ -1,7 +1,0 @@
-include README.rst
-include environment.yml
-include LICENSE
-
-prune build
-prune simtools/_dev_version
-prune .github
