@@ -11,8 +11,10 @@
     ----------------------
     input_meta (str, optional)
         input meta data file (yml format)
-    input_data (str, optional)
+    input (str, optional)
         input data file
+    schema (str, optional)
+        Schema describing input data
 
     Example
     -------
@@ -23,8 +25,8 @@
 
         simtools-submit-data-from-external \
             --input_meta ./tests/resources/MLTdata-preproduction.meta.yml \
-            --input_data ./tests/resources/MLTdata-preproduction.ecsv \
-            --input_data_schema ./tests/resources/schema_MST_mirror_2f_measurements.yml \
+            --input ./tests/resources/MLTdata-preproduction.ecsv \
+            --schema ./tests/resources/schema_MST_mirror_2f_measurements.yml \
             --output_file TEST-submit_data_from_external.ecsv
 
     Expected final print-out message:
