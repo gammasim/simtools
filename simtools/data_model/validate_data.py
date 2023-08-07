@@ -57,7 +57,6 @@ class DataValidator:
         self.validate_data_file()
         if isinstance(self.data, dict):
             self._validate_table_dict()
-            return self.data_table
         else:
             self._validate_data_table()
 
@@ -83,7 +82,8 @@ class DataValidator:
 
     def _validate_table_dict(self):
         """
-        Create astropy table from data dict.
+        Validate values. Creates first astropy table from data dict and then uses the same
+        methods as for tabled data.
 
         """
 
