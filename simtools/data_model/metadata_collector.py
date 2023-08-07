@@ -1,5 +1,6 @@
 import datetime
 import logging
+from pathlib import Path
 
 import simtools.util.general as gen
 import simtools.version
@@ -155,16 +156,55 @@ class MetadataCollector:
         product_dict["data"]["category"] = "SIM"
         product_dict["data"]["level"] = "R0"
         product_dict["data"]["type"] = "service"
-        _schema_dict = (
-            gen.collect_data_from_yaml_or_dict(
-                in_yaml=self.args_dict.get("schema", None), in_dict=None, allow_empty=True
-            )
-            or {}
-        )
+
+        _schema_dict = self._collect_schema_dict()
+
         product_dict["data"]["model"]["name"] = _schema_dict.get("name", "simpipe-schema")
         product_dict["data"]["model"]["version"] = _schema_dict.get("version", "0.0.0")
         product_dict["format"] = self.args_dict.get("output_file_format", None)
         product_dict["filename"] = str(self.args_dict.get("output_file", None))
+
+    def _collect_schema_dict(self):
+        """
+        Read schema from file.
+
+        The schema configuration parameter points to a directory or a file.
+        For the case of a directory, the schema file is assumed to be named
+        <parameter_name>.schema.yml.
+
+        Returns
+        -------
+        dict
+            Dictionary containing schema metadata.
+
+        """
+
+        _schema_dict = {}
+        try:
+            _schema_dict = (
+                gen.collect_data_from_yaml_or_dict(
+                    in_yaml=self.args_dict.get("schema", None), in_dict=None, allow_empty=True
+                )
+                or {}
+            )
+        except IsADirectoryError:
+            try:
+                _data_dict = gen.collect_data_from_yaml_or_dict(
+                    in_yaml=self.args_dict.get("input", None), in_dict=None, allow_empty=True
+                )
+                _schema_file = Path(self.args_dict["schema"]).joinpath(
+                    _data_dict["name"] + ".schema.yml"
+                )
+                _schema_dict = (
+                    gen.collect_data_from_yaml_or_dict(
+                        in_yaml=_schema_file, in_dict=None, allow_empty=True
+                    )
+                    or {}
+                )
+            except KeyError:
+                pass
+
+        return _schema_dict
 
     @staticmethod
     def _fill_association_id(association_dict):
