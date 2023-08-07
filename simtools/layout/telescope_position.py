@@ -293,7 +293,10 @@ class TelescopePosition:
             raise
         if xx is None or yy is None:
             return np.nan, np.nan
-        _to_x, _to_y = transformer.transform(xx, yy)
+        (
+            _to_x,
+            _to_y,
+        ) = transformer.transform(xx=xx, yy=yy)
         if np.isinf(_to_x) or np.isinf(_to_y):
             return np.nan, np.nan
         return _to_x, _to_y
