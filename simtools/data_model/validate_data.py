@@ -71,12 +71,15 @@ class DataValidator:
 
         """
 
-        if self._data_file_name.find("yaml") > 0 or self._data_file_name.find("yml") > 0:
-            self.data = gen.collect_data_from_yaml_or_dict(self._data_file_name, None)
-            self._logger.info("Reading data from yaml file: %s", self._data_file_name)
-        else:
-            self.data_table = Table.read(self._data_file_name, guess=True, delimiter=r"\s")
-            self._logger.info("Reading tabled data from file: %s", self._data_file_name)
+        try:
+            if self._data_file_name.find("yaml") > 0 or self._data_file_name.find("yml") > 0:
+                self.data = gen.collect_data_from_yaml_or_dict(self._data_file_name, None)
+                self._logger.info("Reading data from yaml file: %s", self._data_file_name)
+            else:
+                self.data_table = Table.read(self._data_file_name, guess=True, delimiter=r"\s")
+                self._logger.info("Reading tabled data from file: %s", self._data_file_name)
+        except AttributeError:
+            pass
 
     def _validate_table_dict(self):
         """
@@ -482,8 +485,12 @@ class DataValidator:
         """
 
         _schema_dict = {}
-        if schema_file.find(".schema.yml") < 0 and par is not None:
-            schema_file += par + ".schema.yml"
+        try:
+            if schema_file.find(".schema.yml") < 0 and par is not None:
+                schema_file += par + ".schema.yml"
+        except AttributeError:
+            self._logger.error("No schema file given")
+            raise
         try:
             self._logger.info(f"Reading validation schema from {schema_file}")
             _schema_dict = gen.collect_data_from_yaml_or_dict(schema_file, None)

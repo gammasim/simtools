@@ -3,7 +3,6 @@
 import logging
 import sys
 
-import astropy.io.registry
 import numpy as np
 import pytest
 from astropy import units as u
@@ -17,48 +16,43 @@ logger.setLevel(logging.DEBUG)
 
 
 def test_validate_and_transform():
-
     data_validator = validate_data.DataValidator()
-    # no input file defined, should raise reading error
-    with pytest.raises(astropy.io.registry.base.IORegistryError):
+    # no input file defined
+    with pytest.raises(AttributeError):
         data_validator.validate_and_transform()
 
 
 def test_validate_data_file():
-
     data_validator = validate_data.DataValidator()
-    # no input file defined, should raise reading error
-    with pytest.raises(astropy.io.registry.base.IORegistryError):
-        data_validator.validate_data_file()
+    # no input file defined, should pass
+    data_validator.validate_data_file()
 
     data_validator._data_file_name = "tests/resources/MLTdata-preproduction.ecsv"
     data_validator.validate_data_file()
 
 
 def test_validate_data_columns():
-
     data_validator = validate_data.DataValidator()
-    with pytest.raises(TypeError):
-        data_validator._validate_data_columns()
+    with pytest.raises(AttributeError):
+        data_validator._validate_data_table()
 
     data_validator_1 = validate_data.DataValidator(
         schema_file=None,
         data_file="tests/resources/MLTdata-preproduction.ecsv",
     )
     data_validator_1.validate_data_file()
-    with pytest.raises(TypeError):
-        data_validator_1._validate_data_columns()
+    with pytest.raises(AttributeError):
+        data_validator_1._validate_data_table()
 
     data_validator_3 = validate_data.DataValidator(
         schema_file="tests/resources/MST_mirror_2f_measurements.schema.yml",
         data_file="tests/resources/MLTdata-preproduction.ecsv",
     )
     data_validator_3.validate_data_file()
-    data_validator_3._validate_data_columns()
+    data_validator_3._validate_data_table()
 
 
 def test_sort_data():
-
     data_validator = validate_data.DataValidator()
     data_validator._reference_data_columns = get_reference_columns()
 
@@ -98,7 +92,6 @@ def test_sort_data():
 
 
 def test_check_data_for_duplicates():
-
     data_validator = validate_data.DataValidator()
     data_validator._reference_data_columns = get_reference_columns()
 
@@ -138,7 +131,6 @@ def test_check_data_for_duplicates():
 
 
 def test_interval_check_allow_range():
-
     data_validator = validate_data.DataValidator()
 
     assert data_validator._interval_check((0.1, 0.9), (0.0, 1.0), "allowed_range") == True
@@ -150,7 +142,6 @@ def test_interval_check_allow_range():
 
 
 def test_interval_check_required_range():
-
     data_validator = validate_data.DataValidator()
 
     assert data_validator._interval_check((250.0, 700.0), (300.0, 600), "required_range") == True
@@ -162,7 +153,6 @@ def test_interval_check_required_range():
 
 
 def test_check_range():
-
     data_validator = validate_data.DataValidator()
     data_validator._reference_data_columns = get_reference_columns()
 
@@ -180,7 +170,6 @@ def test_check_range():
 
 
 def test_check_and_convert_units():
-
     data_validator = validate_data.DataValidator()
     data_validator._reference_data_columns = get_reference_columns()
 
@@ -210,7 +199,6 @@ def test_check_and_convert_units():
 
 
 def test_check_required_columns():
-
     data_validator = validate_data.DataValidator()
     data_validator._reference_data_columns = get_reference_columns()
 
@@ -231,7 +219,6 @@ def test_check_required_columns():
 
 
 def test_get_reference_data_column():
-
     data_validator = validate_data.DataValidator()
     data_validator._reference_data_columns = get_reference_columns()
 
@@ -248,7 +235,6 @@ def test_get_reference_data_column():
 
 
 def test_get_reference_unit():
-
     data_validator = validate_data.DataValidator()
     data_validator._reference_data_columns = get_reference_columns()
 
@@ -258,7 +244,6 @@ def test_get_reference_unit():
 
 
 def test_get_unique_column_requirements():
-
     data_validator = validate_data.DataValidator()
     data_validator._reference_data_columns = get_reference_columns()
 
@@ -266,7 +251,6 @@ def test_get_unique_column_requirements():
 
 
 def test_check_for_not_a_number():
-
     data_validator = validate_data.DataValidator()
     data_validator._reference_data_columns = get_reference_columns()
 
@@ -313,10 +297,10 @@ def test_check_for_not_a_number():
 
 
 def test_read_validation_schema():
-
     data_validator = validate_data.DataValidator()
 
-    data_validator._read_validation_schema(schema_file=None)
+    with pytest.raises(AttributeError):
+        data_validator._read_validation_schema(schema_file=None)
 
     data_validator._read_validation_schema(
         schema_file="tests/resources/MST_mirror_2f_measurements.schema.yml"
