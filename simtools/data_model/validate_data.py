@@ -57,10 +57,11 @@ class DataValidator:
         self.validate_data_file()
         if isinstance(self.data, dict):
             self._validate_table_dict()
+            return self.data_table
         else:
             self._validate_data_table()
 
-        return self.data
+        return self.data_table
 
     def validate_data_file(self):
         """
@@ -94,6 +95,7 @@ class DataValidator:
                 except ValueError:
                     _quantities.append(value)
             self.data_table = Table(rows=[_quantities])
+            self.data_table.meta["name"] = self.data["name"]
         except KeyError as exc:
             raise KeyError("Data dict does not contain a 'name' or 'value' key.") from exc
 
