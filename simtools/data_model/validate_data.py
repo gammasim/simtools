@@ -1,11 +1,13 @@
 import logging
 import os
+import re
 
 import numpy as np
-import yaml
 from astropy import units as u
 from astropy.table import Table, unique
 from astropy.utils.diff import report_diff_values
+
+import simtools.util.general as gen
 
 __all__ = ["DataValidator"]
 
@@ -14,6 +16,9 @@ class DataValidator:
     """
     Validate data for type and units following a describing schema; converts or \
     transform data if required.
+
+    Data can be of table or list format
+    (internally, all data is converted to astropy tables).
 
     Parameters
     ----------
@@ -27,35 +32,35 @@ class DataValidator:
     def __init__(self, schema_file=None, data_file=None):
         """
         Initalize validation class and read required reference data columns
+
         """
 
         self._logger = logging.getLogger(__name__)
 
-        self._reference_data_columns = self._read_validation_schema(schema_file)
         self._data_file_name = data_file
-
+        self._schema_file_name = schema_file
+        self._reference_data_columns = None
+        self.data = None
         self.data_table = None
 
     def validate_and_transform(self):
         """
-        Data and data file validation.  Apply transformations to data columns:
-        - duplication removal
-        - sorting according to axes
+        Data and data file validation.
 
         Returns
         -------
-        data_table: astropy.table
-            Data table
+        data: dict or astropy.table
+            Data dict or table
 
         """
 
         self.validate_data_file()
-        if self._reference_data_columns is not None:
-            self._validate_data_columns()
-            self._check_data_for_duplicates()
-            self._sort_data()
+        if isinstance(self.data, dict):
+            self._validate_table_dict()
+        else:
+            self._validate_data_table()
 
-        return self.data_table
+        return self.data
 
     def validate_data_file(self):
         """
@@ -65,14 +70,63 @@ class DataValidator:
 
         """
 
-        self._logger.info(f"Reading data from {self._data_file_name}")
-        self.data_table = Table.read(self._data_file_name, guess=True, delimiter=r"\s")
+        if self._data_file_name.find("yaml") > 0 or self._data_file_name.find("yml") > 0:
+            self.data = gen.collect_data_from_yaml_or_dict(self._data_file_name, None)
+            self._logger.info("Reading data from yaml file: %s", self._data_file_name)
+        else:
+            self.data_table = Table.read(self._data_file_name, guess=True, delimiter=r"\s")
+            self._logger.info("Reading tabled data from file: %s", self._data_file_name)
+
+    def _validate_table_dict(self):
+        """
+        Create astropy table from data dict.
+
+        """
+
+        try:
+            self._reference_data_columns = self._read_validation_schema(
+                self._schema_file_name, self.data["name"]
+            )
+            _quantities = []
+            for value, unit in zip(self.data["value"], self.data["units"]):
+                try:
+                    _quantities.append(value * u.Unit(unit))
+                except ValueError:
+                    _quantities.append(value)
+            self.data_table = Table(rows=[_quantities])
+        except KeyError as exc:
+            raise KeyError("Data dict does not contain a 'name' or 'value' key.") from exc
+
+        if self._reference_data_columns is not None:
+            self._validate_data_columns()
+
+    def _validate_data_table(self):
+        """
+        Validate tabled data.
+
+        """
+
+        try:
+            self._reference_data_columns = self._read_validation_schema(self._schema_file_name)[
+                0
+            ].get("table_columns", None)
+        except IndexError:
+            self._logger.error("Error reading validation schema from %s", self._schema_file_name)
+            raise
+
+        if self._reference_data_columns is not None:
+            self._validate_data_columns()
+            self._check_data_for_duplicates()
+            self._sort_data()
 
     def _validate_data_columns(self):
         """
-        Validate that required data columns are available, columns are in the correct units (if \
-        necessary apply a unit conversion), and check ranges (minimum, maximum). This is not \
-        applied to columns of type 'string'.
+        Validate that
+        - required data columns are available
+        -  columns are in the correct units (if necessary apply a unit conversion)
+        -  ranges (minimum, maximum) are correct.
+
+        This is not applied to columns of type 'string'.
 
         """
 
@@ -287,7 +341,7 @@ class DataValidator:
 
         """
 
-        self._logger.debug(f"Checking data column '{col.name}'")
+        self._logger.debug("Checking data column '%s'", col.name)
 
         try:
             reference_unit = self._get_reference_unit(col.name)
@@ -337,7 +391,7 @@ class DataValidator:
             range columns
 
         """
-        self._logger.debug(f"Checking data in column '{col_name}' for '{range_type}'")
+        self._logger.debug("Checking data in column '%s' for '%s' ", col_name, range_type)
 
         try:
             if range_type not in ("allowed_range", "required_range"):
@@ -358,7 +412,9 @@ class DataValidator:
             ):
                 raise ValueError
         except KeyError:
-            self._logger.error(f"Invalid range ('{range_type}') definition for column '{col_name}'")
+            self._logger.error(
+                "Invalid range ('%s') definition for column ''%s", range_type, col_name
+            )
         except ValueError:
             self._logger.error(
                 f"Value for column '{col_name}' out of range. "
@@ -401,7 +457,7 @@ class DataValidator:
 
         return False
 
-    def _read_validation_schema(self, schema_file):
+    def _read_validation_schema(self, schema_file, par=None):
         """
         Read validation schema from file.
         Returns 'None' in case no schema file is given.
@@ -409,7 +465,12 @@ class DataValidator:
         Parameters
         ----------
         schema_file: Path
-            Schema file describing input data
+            Schema file describing input data.
+            If this is a directory, a filename of
+            '<par>.schema.yml' is assumed.
+        par: str
+            Parameter name of required schema
+            (if None, return first schema in file)
 
         Returns
         -------
@@ -419,35 +480,30 @@ class DataValidator:
         """
 
         _schema_dict = {}
-        _data_dict = {}
+        if schema_file.find(".schema.yml") < 0 and par is not None:
+            schema_file += par + ".schema.yml"
         try:
             self._logger.info(f"Reading validation schema from {schema_file}")
-            with open(schema_file, "r") as stream:
-                _schema_dict = yaml.safe_load(stream)
-        except TypeError:
-            return None
+            _schema_dict = gen.collect_data_from_yaml_or_dict(schema_file, None)
         except FileNotFoundError:
             self._logger.error(f"Schema file not found: {schema_file}")
             raise
-
-        # Note - assume that schema files contain a single data / schema
-        #        description (index [0]). This might change in future,
-        #        and we keep for now the list definition.
+        # Note: assume data there is only one schema in the schema file
+        if len(_schema_dict["schema"]) > 1:
+            self._logger.warning(
+                f"More than one schema found in {schema_file}. "
+                f"Using first schema in file: {_schema_dict['schema'][0]['name']}"
+            )
         try:
-            _data_dict = _schema_dict["schema"][0]["data"][0]
+            return _schema_dict["schema"][0]["data"]
         except (KeyError, IndexError):
             self._logger.error(f"Error reading validation schema from {_schema_dict}")
             raise
 
-        if _data_dict is None:
-            self._logger.info("No validation schema found in {schema_file}")
-
-        # TODO - returning table columns only; should also work for non-tabled description
-        return _data_dict.get("table_columns", None)
-
     def _get_reference_data_column(self, column_name, status_test=False):
         """
         Return entry in reference data for a given column name.
+        For columns named 'colX' return the Xth column in the reference data.
 
         Parameters
         ----------
@@ -466,13 +522,18 @@ class DataValidator:
 
         """
 
-        _entry = [item for item in self._reference_data_columns if item["name"] == column_name]
+        _index = 0
+        if bool(re.match(r"^col\d$", column_name)):
+            _index = int(column_name[3:])
+            _entry = self._reference_data_columns
+        else:
+            _entry = [item for item in self._reference_data_columns if item["name"] == column_name]
         if status_test:
             return len(_entry) > 0
         try:
-            return _entry[0]
+            return _entry[_index]
         except IndexError:
             self._logger.error(
-                f"Data column '{column_name}' not found in reference column definition"
+                "Data column '%s' not found in reference column definition", column_name
             )
-            raise IndexError
+            raise
