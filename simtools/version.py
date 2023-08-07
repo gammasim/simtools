@@ -1,5 +1,17 @@
-# preliminary simtools versioning; should be replaced by
-# cleaner way of automatically retrieve the version. e.g.,
-# https://github.com/cta-observatory/ctapipe/blob/master/ctapipe/version.py
+# this is adapted from https://github.com/cta-observatory/ctapipe/blob/main/ctapipe/version.py
+# which is adapted from https://github.com/astropy/astropy/blob/master/astropy/version.py
+# see https://github.com/astropy/astropy/pull/10774 for a discussion on why this needed.
 
-__version__ = "0.4.0-dev"
+try:
+    try:
+        from ._dev_version import version
+    except ImportError:
+        from ._version import version
+except Exception:
+    import warnings
+
+    warnings.warn("Could not determine simtools version; this indicates a broken installation.")
+    del warnings
+    version = "0.0.0"
+
+__version__ = version
