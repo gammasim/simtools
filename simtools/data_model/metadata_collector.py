@@ -158,7 +158,6 @@ class MetadataCollector:
         product_dict["data"]["type"] = "service"
 
         _schema_dict = self._collect_schema_dict()
-
         product_dict["data"]["model"]["name"] = _schema_dict.get("name", "simpipe-schema")
         product_dict["data"]["model"]["version"] = _schema_dict.get("version", "0.0.0")
         product_dict["format"] = self.args_dict.get("output_file_format", None)
