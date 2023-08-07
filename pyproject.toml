@@ -80,3 +80,6 @@ simtools-validate-camera-fov = "simtools.applications.validate_camera_fov:main"
 simtools-validate-optics = "simtools.applications.validate_optics:main"
 simtools-validate-schema-files = "simtools.applications.validate_schema_files:main"
 [tool.setuptools.packages.find]
+
+[tool.setuptools_scm]
+write_to = "simtools/_version.py"
