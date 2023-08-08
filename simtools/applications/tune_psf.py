@@ -102,17 +102,17 @@ from simtools.ray_tracing import RayTracing
 from simtools.visualization import visualize
 
 
-def load_data(datafile):
+def load_data(data_file):
     """
     Load data from file txt file.
 
     Parameters
     ----------
-    datafile: str
+    data_file: str
         Name of the data file with the measured cumulative PSF.
     """
     d_type = {"names": ("Radius [cm]", "Cumulative PSF"), "formats": ("f8", "f8")}
-    data = np.loadtxt(datafile, dtype=d_type, usecols=(0, 2))
+    data = np.loadtxt(data_file, dtype=d_type, usecols=(0, 2))
     data["Radius [cm]"] *= 0.1
     data["Cumulative PSF"] /= np.max(np.abs(data["Cumulative PSF"]))
     return data
