@@ -1,18 +1,24 @@
 [build-system]
-requires = ["setuptools>=65"]
+requires = ["setuptools>=65", "setuptools_scm[toml]>=6.2"]
 build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages=["simtools"]
+
+[tool.setuptools_scm]
+write_to = "simtools/_version.py"
 
 [project]
 name = "gammasimtools"
+dynamic = ["version"]
 description = "Tools for the Simulation System of the CTA Observatory"
 readme = "README.rst"
 license = { file="LICENSE" }
-version = "0.4.0"
 authors = [
   { name="Orel Gueta", email="orel.gueta@desy.de" },
   { name="Victor Barbosa Martins", email="victor.barbosa.martins@desy.de" },
   { name="Gernot Maier", email="gernot.maier@desy.de" },
-  { name="Raul Prado" },
+  { name="Raul Prado", email="raul.prado@desy.de" },
 ]
 maintainers = [
   { name="Orel Gueta", email="orel.gueta@desy.de" },
@@ -20,9 +26,11 @@ maintainers = [
   { name="Gernot Maier", email="gernot.maier@desy.de" },
 ]
 classifiers = [
+    "Intended Audience :: Science/Research",
     "Programming Language :: Python :: 3",
-    "License :: OSI Approved :: BSD-3-Clause",
+    "License :: OSI Approved :: BSD License",
     "Operating System :: OS Independent",
+    "Topic :: Scientific/Engineering :: Astronomy",
 ]
 requires-python = ">=3.9"
 dependencies = [
@@ -79,10 +87,6 @@ simtools-validate-camera-efficiency = "simtools.applications.validate_camera_eff
 simtools-validate-camera-fov = "simtools.applications.validate_camera_fov:main"
 simtools-validate-optics = "simtools.applications.validate_optics:main"
 simtools-validate-schema-files = "simtools.applications.validate_schema_files:main"
-[tool.setuptools.packages.find]
-
-[tool.setuptools_scm]
-write_to = "simtools/_version.py"
 
 [tool.pylint.main]
 # Explicit list of all pylint options (generated with --generate-toml-config)
@@ -621,3 +625,11 @@ ignored-argument-names = "_.*|^ignored_|^unused_"
 # List of qualified module names which can have objects that can redefine
 # builtins.
 redefining-builtins-modules = ["six.moves", "past.builtins", "future.builtins", "builtins", "io"]
+
+[tool.pytest.ini_options]
+minversion="6.0"
+norecursedirs=["build", "docs/_build"]
+addopts="-v"
+testpaths="tests/unit_tests/"
+# Ignore the warning about fontTools.misc.py23
+filterwarnings="ignore:The py23 module has been deprecated:DeprecationWarning"

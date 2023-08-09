@@ -4,7 +4,7 @@
 
 try:
     try:
-        from ._dev_version import version
+        from ._dev.scm_version import version
     except ImportError:
         from ._version import version
 except Exception:
