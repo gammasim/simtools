@@ -14,7 +14,7 @@
     input (str, optional)
         input data file
     schema (str, optional)
-        Schema describing input data
+        Schema describing the input data
 
     Example
     -------
