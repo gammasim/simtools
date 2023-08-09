@@ -37,6 +37,7 @@ dependencies = [
     "astropy",
     "boost-histogram",
     "eventio",
+    "jsonschema",
     "matplotlib",
     "numpy",
     "pyyaml",
@@ -85,6 +86,8 @@ simtools-tune-psf = "simtools.applications.tune_psf:main"
 simtools-validate-camera-efficiency = "simtools.applications.validate_camera_efficiency:main"
 simtools-validate-camera-fov = "simtools.applications.validate_camera_fov:main"
 simtools-validate-optics = "simtools.applications.validate_optics:main"
+simtools-validate-schema-files = "simtools.applications.validate_schema_files:main"
+[tool.setuptools.packages.find]
 
 [tool.pytest.ini_options]
 minversion="6.0"

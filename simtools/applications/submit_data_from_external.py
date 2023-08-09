@@ -52,7 +52,7 @@ from simtools.data_model import validate_data
 from simtools.data_model.workflow_description import WorkflowDescription
 
 
-def _parse(label, description, usage):
+def _parse(label, description):
     """
     Parse command line configuration
 
@@ -62,8 +62,6 @@ def _parse(label, description, usage):
         Label describing application.
     description: str
         Description of application.
-    usage: str
-        Example on how to use the application.
 
     Returns
     -------
@@ -72,7 +70,7 @@ def _parse(label, description, usage):
 
     """
 
-    config = configurator.Configurator(label=label, description=description, usage=usage)
+    config = configurator.Configurator(label=label, description=description)
 
     config.parser.add_argument(
         "--input_meta",
@@ -90,13 +88,10 @@ def _parse(label, description, usage):
 
 
 def main():
-
     label = Path(__file__).stem
     args_dict, _ = _parse(
         label,
         description="Submit model parameter (value, table) through an external interface.",
-        usage=" python applications/submit_data_from_external.py "
-        "--workflow_config <workflow configuration file>",
     )
 
     logger = logging.getLogger()
