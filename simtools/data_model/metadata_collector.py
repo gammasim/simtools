@@ -270,7 +270,7 @@ class MetadataCollector:
     @staticmethod
     def _fill_context_sim_list(product_list, new_entry_dict):
         """
-        Fill list-type entries into metadata. Take into account the first list entry is the default\
+        Fill list-type entries into metadata. Take into account the first list entry is the default
         value filled with Nones.
 
         Returns
