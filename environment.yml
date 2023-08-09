@@ -20,6 +20,7 @@ dependencies:
   - pyflakes
   - eventio
   - boost-histogram
+  - jsonschema
 
 # cheatsheet
 # create: conda env create -f environment.yml
