@@ -34,7 +34,8 @@ class MetadataCollector:
 
         self.args_dict = args_dict
         self.top_level_meta = gen.change_dict_keys_case(
-            metadata_model.top_level_reference_schema(), True
+            data_dict=metadata_model.top_level_reference_schema(),
+            lower_case=True
         )
         self.collect_product_meta_data()
 
