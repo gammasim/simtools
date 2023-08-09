@@ -19,26 +19,26 @@ schema:
           - name: mirror_panel_id
             description: |-
               Mirror panel ID.
-            required_column: true
+            required: true
             units: dimensionless
             type: string
           - name: mirror_panel_radius
             description: |-
               Mirror panel radius.
-            required_column: true
+            required: true
             units: cm
             type: double
           - name: psf
             description: |-
               Spot size of mirror panel PSF at nominal distance.
-            required_column: true
+            required: true
             units: cm
             type: double
           - name: psf_opt
             description: |-
               Spot size of mirror panel PSF
               (best value, not at nominal distance).
-            required_column: false
+            required: false
             units: cm
             type: double
 ...
