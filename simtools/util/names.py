@@ -264,7 +264,6 @@ def validate_name(name, all_names):
 
     if not is_valid_name(name, all_names):
         msg = f"Invalid name {name}"
-        _logger.error(msg)
         raise ValueError(msg)
     for main_name, list_of_names in all_names.items():
         if name.lower() in list_of_names + [main_name.lower()]:

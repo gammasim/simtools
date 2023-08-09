@@ -141,3 +141,9 @@ validate_optics
 
 .. automodule:: validate_optics
    :members:
+
+validate_schema_files
+=====================
+
+.. automodule:: validate_schema_files
+   :members:

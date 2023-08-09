@@ -1,4 +1,5 @@
 ---
+# Follows schema https://github.com/gammasim/workflows/schema/jsonschema.yml
 title: Mirror panel 2F measurements description
 description: |-
   Data description of mirror panel 2F measurements used as
