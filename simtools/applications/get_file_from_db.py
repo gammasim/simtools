@@ -45,11 +45,9 @@ from simtools.configuration import configurator
 
 
 def main():
-
     config = configurator.Configurator(
-        label="Get file(s) from the DB.",
-        description="python applications/get_file_from_db.py "
-        " --file_name mirror_CTA-S-LST_v2020-04-07.dat",
+        description="Get file(s) from the DB.",
+        usage="simtools-get-file-from-db --file_name mirror_CTA-S-LST_v2020-04-07.dat",
     )
 
     config.parser.add_argument(

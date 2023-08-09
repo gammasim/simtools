@@ -378,6 +378,15 @@ APP_LIST = {
             "--use_corsika_telescope_height",
         ],
     ],
+    # validate_schema_files
+    "validate_schema_files": [
+        [
+            "--schema",
+            "TESTMODELDIR/jsonschema.yml",
+            "--file_name",
+            "tests/resources/MST_mirror_2f_measurements.schema.yml",
+        ]
+    ],
 }
 
 
@@ -399,6 +408,7 @@ def test_applications(application, io_handler, monkeypatch, db):
 
     prepare_one_file("PSFcurve_data_v2.txt")
     prepare_one_file("MLTdata-preproduction.ecsv")
+    prepare_one_file("jsonschema.yml")
 
     def make_command(app, args):
         if app.find("simtools-") < 0:
