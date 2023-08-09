@@ -3,6 +3,7 @@
 
 import logging
 import os
+import shutil
 from io import StringIO
 
 import pytest
@@ -383,12 +384,20 @@ APP_LIST = {
             "--use_corsika_telescope_height",
         ],
     ],
+    # validate_schema_files
+    "validate_schema_files": [
+        [
+            "--schema",
+            "TESTMODELDIR/jsonschema.yml",
+            "--file_name",
+            "tests/resources/MST_mirror_2f_measurements.schema.yml",
+        ]
+    ],
 }
 
 
 @pytest.mark.parametrize("application", APP_LIST.keys())
 def test_applications(application, io_handler, monkeypatch, db):
-
     logger.info(f"Testing {application}")
 
     # The add_file_to_db.py application requires a user confirmation.
@@ -405,9 +414,13 @@ def test_applications(application, io_handler, monkeypatch, db):
 
     prepare_one_file("PSFcurve_data_v2.txt")
     prepare_one_file("MLTdata-preproduction.ecsv")
+    prepare_one_file("jsonschema.yml")
 
     def make_command(app, args):
-        cmd = "python simtools/applications/" + app + ".py"
+        if app.find("simtools-") < 0:
+            cmd = "python simtools/applications/" + app + ".py"
+        else:
+            cmd = app
         for aa in args:
             aa = aa.replace(
                 "TESTMODELDIR", str(io_handler.get_output_directory(dir_type="model", test=True))
@@ -415,8 +428,23 @@ def test_applications(application, io_handler, monkeypatch, db):
             cmd += " " + aa
         return cmd
 
+    def get_application_name(app):
+        """
+        Get the application name from the app string.
+        Return name of command line tool in case pip installation
+        is used.
+        """
+
+        # check if conda is installed on this machine
+
+        if shutil.which("conda") is not None:
+            return app.partition("::")[0]
+
+        app_name = app.partition("::")[0]
+        return "simtools-" + app_name.replace("_", "-")
+
     for args in APP_LIST[application]:
-        app_name = application.partition("::")[0]
+        app_name = get_application_name(application)
         logger.info(f"Running with args: {args}")
         cmd = make_command(app_name, args)
         logger.info(f"Running command: {cmd}")
