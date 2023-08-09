@@ -1,0 +1,35 @@
+# Derived from https://github.com/cta-observatory/project-template-python-pure/blob/main/.github/workflows/pypi.yml
+name: Deploy to PyPi
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      # make sure we have version info
+      - run: git fetch --tags
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.9"
+
+      - name: Install dependencies
+        run: |
+          python --version
+          pip install -U build
+          python -m build
+
+      - name: Publish package
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          user: __token__
+          password: ${{ secrets.pypi_test_token }}
+          # remove next line for actual publishing to real pypi
+          repository_url: https://test.pypi.org/legacy/
