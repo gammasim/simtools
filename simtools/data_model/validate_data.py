@@ -12,7 +12,7 @@ __all__ = ["DataValidator"]
 
 class DataValidator:
     """
-    Validate data for type and units following a describing schema; converts or \
+    Validate data for type and units following a describing schema; converts or
     transform data if required.
 
     Parameters
