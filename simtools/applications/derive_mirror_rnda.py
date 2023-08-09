@@ -138,7 +138,9 @@ def _parse(label):
     Parse command line configuration
     """
 
-    config = configurator.Configurator(label=label)
+    config = configurator.Configurator(
+        description="Derive mirror random reflection angle.", label=label
+    )
     psf_group = config.parser.add_mutually_exclusive_group()
     psf_group.add_argument(
         "--psf_measurement_containment_mean",
@@ -322,7 +324,6 @@ def _get_psf_containment(logger, args_dict):
 
 
 def main():
-
     label = Path(__file__).stem
 
     args_dict, db_config = _parse(label)
