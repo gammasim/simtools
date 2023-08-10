@@ -196,7 +196,7 @@ class MetadataCollector:
                     )
                     or {}
                 )
-            except KeyError:
+            except (TypeError, KeyError):
                 pass
 
         return _schema_dict
