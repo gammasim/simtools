@@ -1,6 +1,8 @@
 #!/usr/bin/python3
 
 import logging
+
+# import pathlib as Path
 import sys
 
 import numpy as np
@@ -233,6 +235,17 @@ def test_get_reference_data_column():
     assert data_validator._get_reference_data_column("wavelength", status_test=True) == True
     assert data_validator._get_reference_data_column("wrong_column", status_test=True) == False
 
+    data_validator._reference_data_columns = get_reference_columns_name_colx()
+
+    assert isinstance(data_validator._get_reference_data_column("col1"), dict)
+
+    with pytest.raises(IndexError):
+        data_validator._get_reference_data_column("col3")
+
+    assert data_validator._get_reference_data_column("col1", status_test=True) == True
+
+    assert data_validator._get_reference_data_column("col1") == {"name": "col1"}
+
 
 def test_get_reference_unit():
     data_validator = validate_data.DataValidator()
@@ -296,7 +309,7 @@ def test_check_for_not_a_number():
     )
 
 
-def test_read_validation_schema():
+def test_read_validation_schema(tmp_test_directory):
     data_validator = validate_data.DataValidator()
 
     with pytest.raises(AttributeError):
@@ -308,6 +321,41 @@ def test_read_validation_schema():
 
     with pytest.raises(FileNotFoundError):
         data_validator._read_validation_schema(schema_file="this_file_does_not_exist.yml")
+
+    data_validator._read_validation_schema(
+        schema_file="tests/resources/MST_mirror_2f_measurements.schema.yml",
+        parameter="mirror_2f_measurement",
+    )
+
+    # copy the schema file to a temporary file
+
+
+#    with tempfile.NamedTemporaryFile() as tmpfile:
+#       shutil.copyfile(
+#           "tests/resources/MST_mirror_2f_measurements.schema.yml",
+#           Path(tmp_test_directory).join("mirror_2f_measurement.schema.yml"),
+#       )
+#
+#        data_validator._read_validation_schema(schema_file=tmpfile.name)
+
+
+def get_reference_columns_name_colx():
+    """
+    return a test reference data column definition
+    with columns named col0, col1, col3
+
+    """
+    return [
+        {
+            "name": "col0",
+        },
+        {
+            "name": "col1",
+        },
+        {
+            "name": "col2",
+        },
+    ]
 
 
 def get_reference_columns():
