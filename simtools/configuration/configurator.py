@@ -290,17 +290,20 @@ class Configurator:
 
     def _initialize_output(self):
         """
-        Initialize default output file names (in case output_file is not configured).
+        Initialize default output file names (in out output_file is not configured).
+
         """
         if self.config.get("output_file", None) is None:
-            if self.config.get("test", False):
-                self.config["output_file"] = "TEST"
-            else:
-                self.config["output_file"] = self.config["activity_id"]
+            prefix = "TEST"
+            label = extention = ""
+            if not self.config.get("test", False):
+                prefix = self.config["activity_id"]
                 if self.config.get("label", "") and len(self.config.get("label", "")) > 0:
-                    self.config["output_file"] += "-" + self.config["label"]
+                    label = f"-{self.config['label']}"
             if len(self.config.get("output_file_format", "")) > 0:
-                self.config["output_file"] += "." + self.config["output_file_format"]
+                extention = f".{self.config['output_file_format']}"
+
+            self.config["output_file"] = f"{prefix}{label}{extention}"
 
     @staticmethod
     def _arglist_from_config(input_var):
