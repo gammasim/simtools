@@ -2,8 +2,10 @@
 
 import copy
 import logging
+from pathlib import Path
 
 import pytest
+import yaml
 
 import simtools.data_model.metadata_collector as metadata_collector
 import simtools.util.general as gen
@@ -14,7 +16,6 @@ logger.setLevel(logging.DEBUG)
 
 
 def test_fill_association_meta_from_args(args_dict_site):
-
     metadata_1 = metadata_collector.MetadataCollector(args_dict=args_dict_site)
     metadata_1.top_level_meta = gen.change_dict_keys_case(
         metadata_model.top_level_reference_schema(), True
@@ -38,7 +39,6 @@ def test_fill_association_meta_from_args(args_dict_site):
 
 
 def test_fill_top_level_meta_from_file(args_dict_site):
-
     metadata_1 = metadata_collector.MetadataCollector(args_dict=args_dict_site)
     metadata_1.top_level_meta = gen.change_dict_keys_case(
         metadata_model.top_level_reference_schema(), True
@@ -60,7 +60,6 @@ def test_fill_top_level_meta_from_file(args_dict_site):
 
 
 def test_fill_product_meta(args_dict_site):
-
     metadata_1 = metadata_collector.MetadataCollector(args_dict=args_dict_site)
     metadata_1.top_level_meta = gen.change_dict_keys_case(
         metadata_model.top_level_reference_schema(), True
@@ -89,7 +88,6 @@ def test_fill_product_meta(args_dict_site):
 
 
 def test_fill_association_id(args_dict_site):
-
     metadata_1 = metadata_collector.MetadataCollector(args_dict=args_dict_site)
     metadata_1.top_level_meta = gen.change_dict_keys_case(
         metadata_model.top_level_reference_schema(), True
@@ -118,7 +116,6 @@ def test_fill_association_id(args_dict_site):
 
 
 def test_merge_config_dicts(args_dict_site):
-
     d_low_priority = {
         "reference": {"version": "0.1.0"},
         "activity": {"name": "SetParameterFromExternal", "description": "Set data columns"},
@@ -157,7 +154,6 @@ def test_merge_config_dicts(args_dict_site):
 
 
 def test_fill_activity_meta(args_dict_site):
-
     file_writer_1 = metadata_collector.MetadataCollector(args_dict=args_dict_site)
     file_writer_1.top_level_meta = gen.change_dict_keys_case(
         metadata_model.top_level_reference_schema(), True
@@ -171,7 +167,6 @@ def test_fill_activity_meta(args_dict_site):
 
 
 def test_fill_context_sim_list(args_dict_site):
-
     _test_dict_1 = copy.copy(get_generic_input_meta()["product"]["association"])
 
     # empty dict -> return same dict
@@ -204,7 +199,6 @@ def test_fill_context_sim_list(args_dict_site):
 
 
 def test_input_data_file_name(args_dict_site):
-
     metadata_1 = metadata_collector.MetadataCollector(args_dict=args_dict_site)
 
     with pytest.raises(KeyError):
@@ -214,8 +208,35 @@ def test_input_data_file_name(args_dict_site):
     assert metadata_1.input_data_file_name() == "test.hdf5"
 
 
-def get_generic_input_meta():
+def test_collect_schema_dict(args_dict_site, tmp_test_directory):
+    _tmp_schema = get_example_input_schema_single_parameter()
+    # write _tmp_schema to a yml file in tmp_test_directory
+    _tmp_schema_file = Path(tmp_test_directory).joinpath("ref_long.schema.yml")
+    with open(_tmp_schema_file, "w") as outfile:
+        yaml.dump(_tmp_schema, outfile, default_flow_style=False)
 
+    metadata_1 = metadata_collector.MetadataCollector(args_dict=args_dict_site)
+
+    assert metadata_1._collect_schema_dict() == {}
+
+    # test when full schema file name is given
+    metadata_1.args_dict["schema"] = _tmp_schema_file
+    assert metadata_1._collect_schema_dict() == _tmp_schema
+
+    # test when directory including schema file is given, but no parameter name
+    metadata_1.args_dict["schema"] = tmp_test_directory
+    assert metadata_1._collect_schema_dict() == {}
+
+    # test when directory including schema file is given, and parameter name
+    _tmp_parameter = {"name": "ref_long", "value": 1.0}
+    _tmp_parameter_file = Path(tmp_test_directory).joinpath("ref_long.yml")
+    with open(_tmp_parameter_file, "w") as outfile:
+        yaml.dump(_tmp_parameter, outfile, default_flow_style=False)
+    metadata_1.args_dict["input"] = _tmp_parameter_file
+    assert metadata_1._collect_schema_dict() == _tmp_schema
+
+
+def get_generic_input_meta():
     return {
         "contact": "my_name",
         "instrument": "my_instrument",
@@ -228,4 +249,23 @@ def get_generic_input_meta():
             ],
         },
         "process": "process_description",
+    }
+
+
+def get_example_input_schema_single_parameter():
+    return {
+        "title": "Model parameter schema description",
+        "description": "Model parameter schema description.",
+        "name": "simpipe-schema",
+        "version": "0.1.0",
+        "schema": [
+            {
+                "name": "ref_lat",
+                "description": "Latitude of site centre.",
+                "short_description": "Latitude of site centre.",
+                "data": [
+                    {"type": "double", "units": "deg", "allowed_range": {"min": -90.0, "max": 90.0}}
+                ],
+            }
+        ],
     }
