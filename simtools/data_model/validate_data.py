@@ -462,7 +462,7 @@ class DataValidator:
 
         return False
 
-    def _read_validation_schema(self, schema_file, par=None):
+    def _read_validation_schema(self, schema_file, parameter=None):
         """
         Read validation schema from file.
         Returns 'None' in case no schema file is given.
@@ -473,7 +473,7 @@ class DataValidator:
             Schema file describing input data.
             If this is a directory, a filename of
             '<par>.schema.yml' is assumed.
-        par: str
+        parameter: str
             Parameter name of required schema
             (if None, return first schema in file)
 
@@ -486,8 +486,8 @@ class DataValidator:
 
         _schema_dict = {}
         try:
-            if schema_file.find(".schema.yml") < 0 and par is not None:
-                schema_file += par + ".schema.yml"
+            if schema_file.find(".schema.yml") < 0 and parameter is not None:
+                schema_file += parameter + ".schema.yml"
         except AttributeError:
             self._logger.error("No schema file given")
             raise
