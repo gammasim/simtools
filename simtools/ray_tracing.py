@@ -143,6 +143,9 @@ class RayTracing:
         return cls(**args, config_data=config_data)
 
     def __repr__(self):
+        """
+        String representation of RayTracing class.
+        """
         return f"RayTracing(label={self.label})\n"
 
     def _validate_telescope_model(self, tel):
