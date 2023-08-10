@@ -3,6 +3,8 @@
 import logging
 import sys
 
+import astropy
+import numpy as np
 import pytest
 from astropy import units as u
 from astropy.table import Column, Table
@@ -14,8 +16,45 @@ logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 
-def test_sort_data():
+def test_validate_and_transform():
+    data_validator = validate_data.DataValidator()
+    # no input file defined, should raise reading error
+    with pytest.raises(astropy.io.registry.base.IORegistryError):
+        data_validator.validate_and_transform()
 
+
+def test_validate_data_file():
+    data_validator = validate_data.DataValidator()
+    # no input file defined, should raise reading error
+    with pytest.raises(astropy.io.registry.base.IORegistryError):
+        data_validator.validate_data_file()
+
+    data_validator._data_file_name = "tests/resources/MLTdata-preproduction.ecsv"
+    data_validator.validate_data_file()
+
+
+def test_validate_data_columns():
+    data_validator = validate_data.DataValidator()
+    with pytest.raises(TypeError):
+        data_validator._validate_data_columns()
+
+    data_validator_1 = validate_data.DataValidator(
+        schema_file=None,
+        data_file="tests/resources/MLTdata-preproduction.ecsv",
+    )
+    data_validator_1.validate_data_file()
+    with pytest.raises(TypeError):
+        data_validator_1._validate_data_columns()
+
+    data_validator_3 = validate_data.DataValidator(
+        schema_file="tests/resources/MST_mirror_2f_measurements.schema.yml",
+        data_file="tests/resources/MLTdata-preproduction.ecsv",
+    )
+    data_validator_3.validate_data_file()
+    data_validator_3._validate_data_columns()
+
+
+def test_sort_data():
     data_validator = validate_data.DataValidator()
     data_validator._reference_data_columns = get_reference_columns()
 
@@ -39,7 +78,7 @@ def test_sort_data():
     )
 
     reverse_sorted_data_columns = get_reference_columns()
-    reverse_sorted_data_columns["wavelength"]["attribute"] = ["remove_duplicates", "reversesort"]
+    reverse_sorted_data_columns[0]["input_processing"] = ["remove_duplicates", "reversesort"]
     data_validator_reverse = validate_data.DataValidator()
     data_validator_reverse._reference_data_columns = reverse_sorted_data_columns
 
@@ -55,7 +94,6 @@ def test_sort_data():
 
 
 def test_check_data_for_duplicates():
-
     data_validator = validate_data.DataValidator()
     data_validator._reference_data_columns = get_reference_columns()
 
@@ -95,7 +133,6 @@ def test_check_data_for_duplicates():
 
 
 def test_interval_check_allow_range():
-
     data_validator = validate_data.DataValidator()
 
     assert data_validator._interval_check((0.1, 0.9), (0.0, 1.0), "allowed_range") == True
@@ -107,7 +144,6 @@ def test_interval_check_allow_range():
 
 
 def test_interval_check_required_range():
-
     data_validator = validate_data.DataValidator()
 
     assert data_validator._interval_check((250.0, 700.0), (300.0, 600), "required_range") == True
@@ -119,7 +155,6 @@ def test_interval_check_required_range():
 
 
 def test_check_range():
-
     data_validator = validate_data.DataValidator()
     data_validator._reference_data_columns = get_reference_columns()
 
@@ -129,15 +164,14 @@ def test_check_range():
     data_validator._check_range(col_w.name, col_w.min(), col_w.max(), "required_range")
 
     col_2 = Column(name="key_error", data=[0.1, 0.5], dtype="float32")
-    with pytest.raises(KeyError):
+    with pytest.raises(IndexError):
         data_validator._check_range(col_2.name, col_2.min(), col_2.max(), "allowed_range")
 
     with pytest.raises(KeyError):
         data_validator._check_range(col_w.name, col_w.min(), col_w.max(), "failed_range")
 
 
-def test_column_units():
-
+def test_check_and_convert_units():
     data_validator = validate_data.DataValidator()
     data_validator._reference_data_columns = get_reference_columns()
 
@@ -154,7 +188,7 @@ def test_column_units():
     table_2["wavelength"] = Column([300.0, 350.0], unit="nm", dtype="float32")
     table_2["wrong_column"] = Column([0.1, 0.5], dtype="float32")
 
-    with pytest.raises(KeyError, match=r"'wrong_column'"):
+    with pytest.raises(IndexError):
         for col in table_2.itercols():
             data_validator._check_and_convert_units(col)
 
@@ -167,7 +201,6 @@ def test_column_units():
 
 
 def test_check_required_columns():
-
     data_validator = validate_data.DataValidator()
     data_validator._reference_data_columns = get_reference_columns()
 
@@ -183,8 +216,99 @@ def test_check_required_columns():
 
     data_validator.data_table = table_2
 
-    with pytest.raises(KeyError, match=r"'qe'"):
+    with pytest.raises(KeyError, match=r"'Missing required column qe'"):
         data_validator._check_required_columns()
+
+
+def test_get_reference_data_column():
+    data_validator = validate_data.DataValidator()
+    data_validator._reference_data_columns = get_reference_columns()
+
+    assert isinstance(data_validator._get_reference_data_column("wavelength"), dict)
+
+    _entry = data_validator._get_reference_data_column("wavelength")
+    assert _entry["name"] == "wavelength"
+
+    with pytest.raises(IndexError):
+        data_validator._get_reference_data_column("wrong_column")
+
+    assert data_validator._get_reference_data_column("wavelength", status_test=True) == True
+    assert data_validator._get_reference_data_column("wrong_column", status_test=True) == False
+
+
+def test_get_reference_unit():
+    data_validator = validate_data.DataValidator()
+    data_validator._reference_data_columns = get_reference_columns()
+
+    assert data_validator._get_reference_unit("wavelength") == "nm"
+    assert data_validator._get_reference_unit("qe") == u.dimensionless_unscaled
+    assert data_validator._get_reference_unit("no_units") == u.dimensionless_unscaled
+
+
+def test_get_unique_column_requirements():
+    data_validator = validate_data.DataValidator()
+    data_validator._reference_data_columns = get_reference_columns()
+
+    assert data_validator._get_unique_column_requirement() == ["wavelength"]
+
+
+def test_check_for_not_a_number():
+    data_validator = validate_data.DataValidator()
+    data_validator._reference_data_columns = get_reference_columns()
+
+    assert (
+        data_validator._check_for_not_a_number(
+            Column([300.0, 350.0, 315.0], dtype="float32", name="wavelength")
+        )
+        == False
+    )
+
+    # wavelenght does not allow for nan
+    with pytest.raises(ValueError):
+        data_validator._check_for_not_a_number(
+            Column([np.nan, 350.0, 315.0], dtype="float32", name="wavelength")
+        )
+    with pytest.raises(ValueError):
+        data_validator._check_for_not_a_number(
+            Column([np.nan, 350.0, np.inf], dtype="float32", name="wavelength")
+        )
+    with pytest.raises(ValueError):
+        data_validator._check_for_not_a_number(
+            Column([300.0, 350.0, np.inf], dtype="float32", name="wavelength")
+        )
+
+    # pos_x allows for nan
+    assert (
+        data_validator._check_for_not_a_number(
+            Column([300.0, 350.0, 315.0], dtype="float32", name="pos_x")
+        )
+        == False
+    )
+    assert (
+        data_validator._check_for_not_a_number(
+            Column([np.nan, 350.0, 315.0], dtype="float32", name="pos_x")
+        )
+        == True
+    )
+    assert (
+        data_validator._check_for_not_a_number(
+            Column([333.0, np.inf, 315.0], dtype="float32", name="pos_x")
+        )
+        == True
+    )
+
+
+def test_read_validation_schema():
+    data_validator = validate_data.DataValidator()
+
+    data_validator._read_validation_schema(schema_file=None)
+
+    data_validator._read_validation_schema(
+        schema_file="tests/resources/MST_mirror_2f_measurements.schema.yml"
+    )
+
+    with pytest.raises(FileNotFoundError):
+        data_validator._read_validation_schema(schema_file="this_file_does_not_exist.yml")
 
 
 def get_reference_columns():
@@ -192,42 +316,45 @@ def get_reference_columns():
     return a test reference data column definition
 
     """
-    return {
-        "wavelength": {
+    return [
+        {
+            "name": "wavelength",
             "description": "wavelength",
             "required_column": True,
-            "unit": "nm",
-            "type": "float32",
+            "units": "nm",
+            "type": "double",
             "required_range": {"unit": "nm", "min": 300, "max": 700},
-            "attribute": ["remove_duplicates", "sort"],
+            "input_processing": ["remove_duplicates", "sort"],
         },
-        "qe": {
+        {
+            "name": "qe",
             "description": "average quantum or photon detection efficiency",
             "required_column": True,
-            "unit": "dimensionless",
-            "type": "float32",
+            "units": "dimensionless",
+            "type": "double",
             "allowed_range": {"unit": "unitless", "min": 0.0, "max": 1.0},
         },
-        "abc": {
+        {
+            "name": "pos_x",
+            "description": "x position",
+            "required_column": False,
+            "units": "dimensionless",
+            "type": "double",
+            "allowed_range": {"unit": "m", "min": 0.0, "max": 1.0},
+            "input_processing": ["allow_nan"],
+        },
+        {
+            "name": "abc",
             "description": "not required",
             "required_column": False,
-            "unit": "kg",
-            "type": "float32",
+            "units": "kg",
+            "type": "double",
             "allowed_range": {"unit": "kg", "min": 0.0, "max": 100.0},
         },
-    }
-
-
-def get_generic_workflow_config():
-
-    return {
-        "CTASIMPIPE": {
-            "ACTIVITY": {"NAME": "workflow_name"},
-            "DATAMODEL": {
-                "USERINPUTSCHEMA": "schema",
-                "TOPLEVELMODEL": "model",
-                "SCHEMADIRECTORY": "directory",
-            },
-            "PRODUCT": {"DIRECTORY": None},
-        }
-    }
+        {
+            "name": "no_units",
+            "description": "not required",
+            "required_column": False,
+            "type": "double",
+        },
+    ]
