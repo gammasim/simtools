@@ -555,7 +555,8 @@ contextmanager-decorators = ["contextlib.contextmanager"]
 # List of members which are set dynamically and missed by pylint inference
 # system, and so shouldn't trigger E1101 when accessed. Python regular
 # expressions are accepted.
-# generated-members =
+# see https://github.com/pylint-dev/pylint/issues/2289
+generated-members = ["gist_heat_r"]
 
 # Tells whether missing members accessed in mixin class should be ignored. A
 # class is considered mixin if its name matches the mixin-class-rgx option.

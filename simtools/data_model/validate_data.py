@@ -422,7 +422,7 @@ class DataValidator:
         _data_dict = {}
         try:
             self._logger.info(f"Reading validation schema from {schema_file}")
-            with open(schema_file, "r") as stream:
+            with open(schema_file, "r", encoding="utf-8") as stream:
                 _schema_dict = yaml.safe_load(stream)
         except TypeError:
             return None
@@ -475,4 +475,4 @@ class DataValidator:
             self._logger.error(
                 f"Data column '{column_name}' not found in reference column definition"
             )
-            raise IndexError
+            raise
