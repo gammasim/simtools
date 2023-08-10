@@ -40,6 +40,10 @@ class TelescopePosition:
         self.crs = self._default_coordinate_system_definition()
 
     def __str__(self):
+        """
+        String representation of TelescopePosition.
+
+        """
         telstr = self.name
         if self.has_coordinates("corsika"):
             telstr += (
