@@ -75,7 +75,7 @@ class ModelDataWriter:
             self._logger.error(f"Error writing model data to {self.product_data_file}.")
             raise
 
-    def write_metadata(self, metadata, ymlfile=None, keys_lower_case=False):
+    def write_metadata(self, metadata, yml_file=None, keys_lower_case=False):
         """
         Write model metadata file (yaml file format).
 
@@ -83,7 +83,7 @@ class ModelDataWriter:
         ----------
         metadata: dict
             Metadata to be stored
-        ymlfile: str
+        yml_file: str
             Name of output file.
         keys_lower_case: bool
             Write yaml keys in lower case.
@@ -96,25 +96,25 @@ class ModelDataWriter:
         Raises
         ------
         FileNotFoundError
-            If ymlfile not found.
+            If yml_file not found.
         AttributeError
             If no metadata defined for writing.
         TypeError
-            If ymlfile is not defined.
+            If yml_file is not defined.
         """
 
         try:
-            ymlfile = Path(ymlfile or self.product_data_file).with_suffix(".metadata.yml")
-            self._logger.info(f"Writing metadata to {ymlfile}")
-            with open(ymlfile, "w", encoding="UTF-8") as file:
+            yml_file = Path(yml_file or self.product_data_file).with_suffix(".metadata.yml")
+            self._logger.info(f"Writing metadata to {yml_file}")
+            with open(yml_file, "w", encoding="UTF-8") as file:
                 yaml.safe_dump(
                     gen.change_dict_keys_case(metadata, keys_lower_case),
                     file,
                     sort_keys=False,
                 )
-            return ymlfile
+            return yml_file
         except FileNotFoundError:
-            self._logger.error(f"Error writing model data to {ymlfile}")
+            self._logger.error(f"Error writing model data to {yml_file}")
             raise
         except AttributeError:
             self._logger.error("No metadata defined for writing")
