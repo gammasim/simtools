@@ -40,7 +40,7 @@ APP_LIST = {
             "--help",
         ]
     ],
-    "submit_data_from_external::submit": [
+    "submit_data_from_external::submit_table": [
         [
             "--input_meta",
             "./tests/resources/MLTdata-preproduction.meta.yml",
@@ -48,6 +48,16 @@ APP_LIST = {
             "./tests/resources/MLTdata-preproduction.ecsv",
             "--schema",
             "./tests/resources/MST_mirror_2f_measurements.schema.yml",
+            "--output_file",
+            "test-submit-data.ecsv",
+        ]
+    ],
+    "submit_data_from_external::submit_values": [
+        [
+            "--input",
+            "./tests/resources/reference_position_mercator.yml",
+            "--schema",
+            "tests/resources/reference_position_mercator.schema.yml",
             "--output_file",
             "test-submit-data.ecsv",
         ]
