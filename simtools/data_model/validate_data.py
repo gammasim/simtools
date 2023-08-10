@@ -56,7 +56,7 @@ class DataValidator:
 
         self.validate_data_file()
         if isinstance(self.data, dict):
-            self._validate_table_dict()
+            self._validate_data_dict()
         else:
             self._validate_data_table()
 
@@ -80,7 +80,7 @@ class DataValidator:
         except AttributeError:
             pass
 
-    def _validate_table_dict(self):
+    def _validate_data_dict(self):
         """
         Validate values. Creates first astropy table from data dict and then uses the same
         methods as for tabled data.
@@ -487,7 +487,7 @@ class DataValidator:
         _schema_dict = {}
         try:
             if schema_file.find(".schema.yml") < 0 and parameter is not None:
-                schema_file += parameter + ".schema.yml"
+                schema_file += "/" + parameter + ".schema.yml"
         except AttributeError:
             self._logger.error("No schema file given")
             raise
