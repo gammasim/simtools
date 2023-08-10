@@ -531,7 +531,7 @@ def copy_as_list(value):
 
     try:
         return list(value)
-    except Exception:
+    except TypeError:
         return [value]
 
 
