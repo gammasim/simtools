@@ -625,8 +625,6 @@ class TelescopeModel:
             set_focal_length_to_zero,
         )
 
-    # END of export_single_mirror_list_file
-
     def get_single_mirror_list_file(self, mirror_number, set_focal_length_to_zero=False):
         """
         Get the path to the single mirror list file.
@@ -700,6 +698,10 @@ class TelescopeModel:
         )
 
     def _load_simtel_config_writer(self):
+        """
+        Load the SimtelConfigWriter object.
+
+        """
         if self.simtel_config_writer is None:
             self.simtel_config_writer = SimtelConfigWriter(
                 site=self.site,
