@@ -86,7 +86,7 @@ def _parse(label, description):
         type=str,
         required=False,
     )
-    return config.initialize(outputs=True)
+    return config.initialize(output=True)
 
 
 def main():
