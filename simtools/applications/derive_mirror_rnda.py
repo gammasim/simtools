@@ -199,7 +199,7 @@ def _parse(label):
         action="store_true",
         required=False,
     )
-    return config.initialize(db_config=True, outputs=True, telescope_model=True)
+    return config.initialize(db_config=True, output=True, telescope_model=True)
 
 
 def _define_telescope_model(label, args_dict, db_config):

@@ -34,8 +34,7 @@ class MetadataCollector:
 
         self.args_dict = args_dict
         self.top_level_meta = gen.change_dict_keys_case(
-            data_dict=metadata_model.top_level_reference_schema(),
-            lower_case=True
+            data_dict=metadata_model.top_level_reference_schema(), lower_case=True
         )
         self.collect_product_meta_data()
 
@@ -68,7 +67,7 @@ class MetadataCollector:
 
         Raises
         ------
-        AttributeError
+        TypeError, KeyError
             if error reading association metadata from args.
         KeyError
             if metadata description cannot be filled.
@@ -117,11 +116,7 @@ class MetadataCollector:
             meta_file_name=self.args_dict["input_meta"],
         )
 
-        try:
-            self._merge_config_dicts(top_level_dict, _input_meta)
-        except (KeyError, TypeError):
-            self._logger.error("Error reading input metadata")
-            raise
+        self._merge_config_dicts(top_level_dict, _input_meta)
         # list entry copies
         for association in _input_meta["product"]["association"]:
             self._fill_context_sim_list(
@@ -154,7 +149,7 @@ class MetadataCollector:
         self._logger.debug(f"Reading activitiy UUID {product_dict['id']}")
 
         product_dict["data"]["category"] = "SIM"
-        product_dict["data"]["level"] = "R0"
+        product_dict["data"]["level"] = "R1"
         product_dict["data"]["type"] = "service"
         _schema_dict = (
             gen.collect_data_from_yaml_or_dict(
@@ -181,10 +176,10 @@ class MetadataCollector:
         for association in association_dict:
             try:
                 association["id"] = names.simtools_instrument_name(
-                    association["site"],
-                    association["class"],
-                    association["type"],
-                    association.get("subtype", None),
+                    site=association["site"],
+                    telescope_class_name=association["class"],
+                    sub_system_name=association["type"],
+                    telescope_id_name=association.get("subtype", "D"),
                 )
             except ValueError:
                 association["id"] = None
@@ -197,12 +192,6 @@ class MetadataCollector:
         ----------
         activity_dict: dict
             Dictionary for top-level activitiy metadata.
-
-        Raises
-        ------
-        KeyError
-            if relevant fields are not defined in top level metadata
-            dictionary
 
         """
 
@@ -232,19 +221,23 @@ class MetadataCollector:
             dict_high = dict_low
             return
 
-        for k in dict_low:
-            if k in dict_high:
-                if isinstance(dict_low[k], dict):
-                    self._merge_config_dicts(dict_high[k], dict_low[k], add_new_fields)
-                elif dict_high[k] is None:
+        try:
+            for k in dict_low:
+                if k in dict_high:
+                    if isinstance(dict_low[k], dict):
+                        self._merge_config_dicts(dict_high[k], dict_low[k], add_new_fields)
+                    elif dict_high[k] is None:
+                        dict_high[k] = dict_low[k]
+                    elif dict_high[k] != dict_low[k] and dict_low[k] is not None:
+                        self._logger.debug(
+                            f"Conflicting entries between dict: {dict_high[k]} vs {dict_low[k]} "
+                            f"(use {dict_high[k]})"
+                        )
+                elif add_new_fields:
                     dict_high[k] = dict_low[k]
-                elif dict_high[k] != dict_low[k] and dict_low[k] is not None:
-                    self._logger.debug(
-                        f"Conflicting entries between dict: {dict_high[k]} vs {dict_low[k]} "
-                        f"(use {dict_high[k]})"
-                    )
-            elif add_new_fields:
-                dict_high[k] = dict_low[k]
+        except (KeyError, TypeError):
+            self._logger.error("Error merging dictionaries")
+            raise
 
     def input_data_file_name(self):
         """

@@ -191,6 +191,9 @@ def test_select_assets(telescope_north_test_file):
     layout.select_assets(None)
     assert len(layout._telescope_list) == 19
 
+    layout.select_assets([])
+    assert len(layout._telescope_list) == 19
+
     layout.select_assets(["MST", "SST"])
     assert len(layout._telescope_list) == 15
 
