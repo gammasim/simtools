@@ -660,9 +660,13 @@ class Camera:
             ha="center",
             va="center",
             size="xx-large",
-            arrowprops=dict(
-                arrowstyle="<|-", shrinkA=0, shrinkB=0, fc=kwargs["fc"], ec=kwargs["ec"]
-            ),
+            arrowprops={
+                "arrowstyle": "<|-",
+                "shrinkA": 0,
+                "shrinkB": 0,
+                "fc": kwargs["fc"],
+                "ec": kwargs["ec"],
+            },
         )
 
         plot.gca().annotate(
@@ -673,9 +677,13 @@ class Camera:
             ha="center",
             va="center",
             size="xx-large",
-            arrowprops=dict(
-                arrowstyle="<|-", shrinkA=0, shrinkB=0, fc=kwargs["fc"], ec=kwargs["ec"]
-            ),
+            arrowprops={
+                "arrowstyle": "<|-",
+                "shrinkA": 0,
+                "shrinkB": 0,
+                "fc": kwargs["fc"],
+                "ec": kwargs["ec"],
+            },
         )
 
     def plot_pixel_layout(self, camera_in_sky_coor=False, pixels_id_to_print=50):
