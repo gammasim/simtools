@@ -1,8 +1,7 @@
 #!/usr/bin/python3
 
 import logging
-
-# import pathlib as Path
+import shutil
 import sys
 
 import numpy as np
@@ -312,31 +311,35 @@ def test_check_for_not_a_number():
 def test_read_validation_schema(tmp_test_directory):
     data_validator = validate_data.DataValidator()
 
+    # no file given
     with pytest.raises(AttributeError):
         data_validator._read_validation_schema(schema_file=None)
 
+    # file given
     data_validator._read_validation_schema(
         schema_file="tests/resources/MST_mirror_2f_measurements.schema.yml"
     )
 
+    # file does not exist
     with pytest.raises(FileNotFoundError):
         data_validator._read_validation_schema(schema_file="this_file_does_not_exist.yml")
 
+    # file given and parameter name given
     data_validator._read_validation_schema(
         schema_file="tests/resources/MST_mirror_2f_measurements.schema.yml",
         parameter="mirror_2f_measurement",
     )
 
-    # copy the schema file to a temporary file
-
-
-#    with tempfile.NamedTemporaryFile() as tmpfile:
-#       shutil.copyfile(
-#           "tests/resources/MST_mirror_2f_measurements.schema.yml",
-#           Path(tmp_test_directory).join("mirror_2f_measurement.schema.yml"),
-#       )
-#
-#        data_validator._read_validation_schema(schema_file=tmpfile.name)
+    # copy the schema file to a temporary directory; this is to test
+    # that the schema file is read from the temporary directory with the
+    # correct path / name
+    shutil.copy(
+        "tests/resources/MST_mirror_2f_measurements.schema.yml",
+        tmp_test_directory / "mirror_2f_measurement.schema.yml",
+    )
+    data_validator._read_validation_schema(
+        schema_file=str(tmp_test_directory), parameter="mirror_2f_measurement"
+    )
 
 
 def get_reference_columns_name_colx():
