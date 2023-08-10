@@ -114,9 +114,16 @@ class LayoutArray:
         return layout
 
     def __len__(self):
+        """
+        Return number of telescopes in the layout.
+        """
         return len(self._telescope_list)
 
     def __getitem__(self, i):
+        """
+        Return telescope at list position i.
+
+        """
         return self._telescope_list[i]
 
     def _initialize_corsika_telescope(self, corsika_dict=None):
@@ -964,9 +971,8 @@ class LayoutArray:
                     tel for tel in self._telescope_list if tel.asset_code in asset_list
                 ]
             self._logger.info(
-                "Selected %d telescopes (from originally %d)",
-                len(self._telescope_list),
-                _n_telescopes,
+                f"Selected {len(self._telescope_list)} telescopes"
+                f" (from originally {_n_telescopes})"
             )
         except TypeError:
             self._logger.info("No asset list provided, keeping all telescopes")
