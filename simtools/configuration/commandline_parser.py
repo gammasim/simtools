@@ -30,7 +30,7 @@ class CommandLineParser(argparse.ArgumentParser):
     def initialize_default_arguments(
         self,
         paths=True,
-        outputs=False,
+        output=False,
         telescope_model=False,
         db_config=False,
         job_submission=False,
@@ -42,7 +42,7 @@ class CommandLineParser(argparse.ArgumentParser):
         ----------
         paths: bool
             Add path configuration to list of args.
-        outputs: bool
+        output: bool
             Add output file configuration to list of args.
         telescope_model: bool
             Add telescope model configuration to list of args.
@@ -60,7 +60,7 @@ class CommandLineParser(argparse.ArgumentParser):
             self.initialize_db_config_arguments()
         if paths:
             self.initialize_path_arguments()
-        if outputs:
+        if output:
             self.initialize_output_arguments()
         self.initialize_config_files()
         self.initialize_application_execution_arguments()

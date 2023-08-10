@@ -92,7 +92,7 @@ class Configurator:
     def initialize(
         self,
         paths=True,
-        outputs=False,
+        output=False,
         telescope_model=False,
         db_config=False,
         job_submission=False,
@@ -112,7 +112,7 @@ class Configurator:
         ----------
         paths: bool
             Add path configuration to list of args.
-        outputs: bool
+        output: bool
             Add output file configuration to list of args.
         telescope_model: bool
             Add telescope model configuration to list of args.
@@ -137,7 +137,7 @@ class Configurator:
 
         self.parser.initialize_default_arguments(
             paths=paths,
-            outputs=outputs,
+            output=output,
             telescope_model=telescope_model,
             db_config=db_config,
             job_submission=job_submission,
@@ -290,7 +290,7 @@ class Configurator:
 
     def _initialize_output(self):
         """
-        Initialize default output file names (in out output_file is not configured).
+        Initialize default output file names (in case output_file is not configured).
         """
         if self.config.get("output_file", None) is None:
             if self.config.get("test", False):

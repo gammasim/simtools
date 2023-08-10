@@ -5,7 +5,7 @@
     Submit model parameter (value, table) through the command line.
 
     Input data and metadata is validated, and if necessary enriched
-    and converted following predescribed schema.
+    and converted following a predescribed schema.
 
     Command line arguments
     ----------------------
@@ -14,7 +14,7 @@
     input (str, optional)
         input data file
     schema (str, optional)
-        Schema describing input data
+        Schema describing the input data
 
     Example
     -------
@@ -86,7 +86,7 @@ def _parse(label, description):
         type=str,
         required=False,
     )
-    return config.initialize(outputs=True)
+    return config.initialize(output=True)
 
 
 def main():
