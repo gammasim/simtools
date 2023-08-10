@@ -56,7 +56,7 @@
 import logging
 from pathlib import Path
 
-import simtools.util.general as gen
+import simtools.utils.general as gen
 from simtools import io_handler
 from simtools.camera_efficiency import CameraEfficiency
 from simtools.configuration import configurator
@@ -79,7 +79,6 @@ def _parse(label):
 
 
 def main():
-
     label = Path(__file__).stem
     args_dict, _db_config = _parse(label)
 

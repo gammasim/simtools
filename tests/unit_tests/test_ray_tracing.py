@@ -2,13 +2,12 @@
 
 import astropy.units as u
 
-import simtools.util.general as gen
+import simtools.utils.general as gen
 from simtools.model.telescope_model import TelescopeModel
 from simtools.ray_tracing import RayTracing
 
 
 def test_config_data_from_dict(db_config, simtel_path, io_handler):
-
     label = "test-config-data"
     version = "prod5"
 
@@ -37,7 +36,6 @@ def test_config_data_from_dict(db_config, simtel_path, io_handler):
 
 
 def test_from_kwargs(db, io_handler, simtel_path):
-
     label = "test-from-kwargs"
 
     source_distance = 10 * u.km

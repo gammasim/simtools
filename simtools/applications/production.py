@@ -73,7 +73,7 @@ from copy import copy
 
 from astropy.io.misc import yaml
 
-import simtools.util.general as gen
+import simtools.utils.general as gen
 from simtools.configuration import configurator
 from simtools.simulator import Simulator
 
@@ -179,7 +179,6 @@ def _proccess_simulation_config_file(config_file, primary_config, logger):
     config_arrays = dict()
 
     for primary, primary_data in config_data.items():
-
         if primary_config is not None and primary != primary_config:
             continue
 
@@ -214,7 +213,6 @@ def _proccess_simulation_config_file(config_file, primary_config, logger):
 
 
 def main():
-
     args_dict, db_config = _parse(description=("Air shower and array simulations"))
 
     logger = logging.getLogger()
