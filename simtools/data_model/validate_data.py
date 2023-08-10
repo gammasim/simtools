@@ -1,6 +1,8 @@
 import logging
 import os
 
+import numpy as np
+import yaml
 from astropy import units as u
 from astropy.table import Table, unique
 from astropy.utils.diff import report_diff_values
@@ -10,48 +12,33 @@ __all__ = ["DataValidator"]
 
 class DataValidator:
     """
-    Simulation model data transformation for data validation. Validate input data for type and \
-    units; converts or transform data if required.
+    Validate data for type and units following a describing schema; converts or
+    transform data if required.
 
     Parameters
     ----------
-    workflow: WorkflowDescription
-        workflow description.
+    schema_file: Path
+        Schema file describing input data and transformations.
+    data_file: Path
+        Input data file.
 
     """
 
-    def __init__(self, workflow=None):
+    def __init__(self, schema_file=None, data_file=None):
         """
         Initalize validation class and read required reference data columns
         """
 
         self._logger = logging.getLogger(__name__)
 
-        if workflow:
-            self._reference_data_columns = workflow.reference_data_columns()
-            self._data_file_name = workflow.input_data_file_name()
+        self._reference_data_columns = self._read_validation_schema(schema_file)
+        self._data_file_name = data_file
 
         self.data_table = None
 
-    def validate(self):
+    def validate_and_transform(self):
         """
-        Data and data file validation
-
-        Returns
-        -------
-        data_table: astropy.table
-            Data table
-
-        """
-
-        self.validate_data_file()
-        self.validate_data_columns()
-
-        return self.data_table
-
-    def transform(self):
-        """
-        Apply transformations to data columns:
+        Data and data file validation.  Apply transformations to data columns:
         - duplication removal
         - sorting according to axes
 
@@ -62,39 +49,48 @@ class DataValidator:
 
         """
 
-        self._check_data_for_duplicates()
-        self._sort_data()
+        self.validate_data_file()
+        if self._reference_data_columns is not None:
+            self._validate_data_columns()
+            self._check_data_for_duplicates()
+            self._sort_data()
 
         return self.data_table
 
     def validate_data_file(self):
         """
         Open data file and read data from file
+        (doing this successfully is understood as
+        file validation).
+
         """
 
         self._logger.info(f"Reading data from {self._data_file_name}")
         self.data_table = Table.read(self._data_file_name, guess=True, delimiter=r"\s")
 
-    def validate_data_columns(self):
+    def _validate_data_columns(self):
         """
-        Validate that required data columns are available, columns are in the correct units (if \
-        necessary apply a unit conversion), and check ranges (minimum, maximum). This is not \
-        applied to columns of type 'string'
+        Validate that required data columns are available, columns are in the correct units (if
+        necessary apply a unit conversion), and check ranges (minimum, maximum). This is not
+        applied to columns of type 'string'.
 
         """
 
         self._check_required_columns()
 
         for col in self.data_table.itercols():
-            if not self._column_status(col.name):
+            if not self._get_reference_data_column(col.name, status_test=True):
                 continue
+            if not np.issubdtype(col.dtype, np.number):
+                continue
+            self._check_for_not_a_number(col)
             self._check_and_convert_units(col)
-            self._check_range(col.name, col.min(), col.max(), "allowed_range")
-            self._check_range(col.name, col.min(), col.max(), "required_range")
+            self._check_range(col.name, np.nanmin(col.data), np.nanmax(col.data), "allowed_range")
+            self._check_range(col.name, np.nanmin(col.data), np.nanmax(col.data), "required_range")
 
     def _check_required_columns(self):
         """
-        Check that all required data columns are available in the input data table
+        Check that all required data columns are available in the input data table.
 
         Raises
         ------
@@ -103,16 +99,16 @@ class DataValidator:
 
         """
 
-        for key, value in self._reference_data_columns.items():
-            if "required_column" in value and value["required_column"] is True:
-                if key in self.data_table.columns:
-                    self._logger.debug(f"Found required data column '{key}'")
+        for entry in self._reference_data_columns:
+            if entry.get("required_column", False):
+                if entry["name"] in self.data_table.columns:
+                    self._logger.debug(f"Found required data column {entry['name']}")
                 else:
-                    raise KeyError(f"Missing required column '{key}'")
+                    raise KeyError(f"Missing required column {entry['name']}")
 
     def _sort_data(self):
         """
-        Sort data according to one data column (if required by any column attribute). Data is \
+        Sort data according to one data column (if required by any column attribute). Data is
          either sorted or reverse sorted
 
         Raises
@@ -124,12 +120,12 @@ class DataValidator:
 
         _columns_by_which_to_sort = []
         _columns_by_which_to_reverse_sort = []
-        for key, value in self._reference_data_columns.items():
-            if "attribute" in value:
-                if "sort" in value["attribute"]:
-                    _columns_by_which_to_sort.append(key)
-                elif "reversesort" in value["attribute"]:
-                    _columns_by_which_to_reverse_sort.append(key)
+        for entry in self._reference_data_columns:
+            if "input_processing" in entry:
+                if "sort" in entry["input_processing"]:
+                    _columns_by_which_to_sort.append(entry["name"])
+                elif "reversesort" in entry["input_processing"]:
+                    _columns_by_which_to_reverse_sort.append(entry["name"])
 
         if len(_columns_by_which_to_sort) > 0:
             self._logger.debug(f"Sorting data columns: {_columns_by_which_to_sort}")
@@ -148,11 +144,11 @@ class DataValidator:
 
     def _check_data_for_duplicates(self):
         """
-        Remove duplicates from data columns as defined in the data columns description
+        Remove duplicates from data columns as defined in the data columns description.
 
         Raises
         ------
-            if row values are different for those rows with duplications in the data columns to be \
+            if row values are different for those rows with duplications in the data columns to be
             checked for unique values.
 
         """
@@ -181,7 +177,7 @@ class DataValidator:
 
     def _get_unique_column_requirement(self):
         """
-        Return data column name with unique value requirement
+        Return data column name with unique value requirement.
 
         Returns
         -------
@@ -192,17 +188,17 @@ class DataValidator:
 
         _unique_required_column = []
 
-        for key, value in self._reference_data_columns.items():
-            if "attribute" in value and "remove_duplicates" in value["attribute"]:
-                self._logger.debug(f"Removing duplicates for column '{key}'")
-                _unique_required_column.append(key)
+        for entry in self._reference_data_columns:
+            if "input_processing" in entry and "remove_duplicates" in entry["input_processing"]:
+                self._logger.debug(f"Removing duplicates for column {entry['name']}")
+                _unique_required_column.append(entry["name"])
 
         self._logger.debug(f"Unique required columns: {_unique_required_column}")
         return _unique_required_column
 
     def _get_reference_unit(self, column_name):
         """
-        Return reference column unit. Includes correct treatment of dimensionless units
+        Return reference column unit. Includes correct treatment of dimensionless units.
 
         Parameters
         ----------
@@ -221,46 +217,57 @@ class DataValidator:
 
         """
 
-        try:
-            reference_unit = self._reference_data_columns[column_name]["unit"]
-        except KeyError:
-            self._logger.error(
-                f"Data column '{column_name}' not found in reference column definition"
-            )
-            raise
-
+        reference_unit = self._get_reference_data_column(column_name).get("units", None)
         if reference_unit == "dimensionless" or reference_unit is None:
             return u.dimensionless_unscaled
 
         return u.Unit(reference_unit)
 
-    def _column_status(self, col_name):
+    def _check_for_not_a_number(self, col):
         """
-        Check that column is defined in reference schema (additional data columns are allowed in\
-        the input data, but are ignored) and that column type is not string (string-type columns\
-        ignored for range checks)
+        Check that column values are finite and not NaN.
+
+        Parameters
+        ----------
+        col: astropy.column
+            data column to be converted
+
+        Returns
+        -------
+        bool
+            if at least one column value is NaN or Inf.
+
+        Raises
+        ------
+        ValueError
+            if at least one column value is NaN or Inf.
 
         """
 
-        if col_name not in self._reference_data_columns:
-            return False
-        if (
-            "type" in self._reference_data_columns[col_name]
-            and self._reference_data_columns[col_name]["type"] == "string"
-        ):
-            return False
+        if np.isnan(col.data).any():
+            self._logger.info(f"Column {col.name} contains NaN.")
+        if np.isinf(col.data).any():
+            self._logger.info(f"Column {col.name} contains infinite value.")
 
-        return True
+        entry = self._get_reference_data_column(col.name)
+        if "allow_nan" in entry.get("input_processing", {}):
+            return np.isnan(col.data).any() or np.isinf(col.data).any()
+
+        if np.isnan(col.data).any() or np.isinf(col.data).any():
+            self._logger.error("NaN or Inf values found in data columns")
+            raise ValueError
+
+        return False
 
     def _check_and_convert_units(self, col):
         """
-        Check that all columns have an allowed units. Convert to reference unit (e.g., Angstrom to\
-         nm).
+        Check that all columns have an allowed unit. Convert to reference unit (e.g., Angstrom to
+        nm).
 
         Note on dimensionless columns:
 
         - should be given in unit descriptor as unit: ''
-        - be forgiving and assume that in cases no unit is given in the data files\
+        - be forgiving and assume that in cases no unit is given in the data files
           means that it should be dimensionless (e.g., for a efficiency)
 
         Parameters
@@ -306,7 +313,7 @@ class DataValidator:
 
     def _check_range(self, col_name, col_min, col_max, range_type="allowed_range"):
         """
-        Check that column data is within allowed range or required range. Assumes that column and \
+        Check that column data is within allowed range or required range. Assumes that column and
         ranges have the same units.
 
         Parameters
@@ -335,18 +342,18 @@ class DataValidator:
         try:
             if range_type not in ("allowed_range", "required_range"):
                 raise KeyError
-            if range_type not in self._reference_data_columns[col_name]:
-                return None
-        except KeyError as e:
-            raise KeyError(f"Missing column '{col_name} in reference range'") from e
+        except KeyError:
+            self._logger.error("Allowed range types are 'allowed_range', 'required_range'")
+            raise
+
+        _entry = self._get_reference_data_column(col_name)
+        if range_type not in _entry:
+            return None
 
         try:
             if not self._interval_check(
                 (col_min, col_max),
-                (
-                    self._reference_data_columns[col_name][range_type]["min"],
-                    self._reference_data_columns[col_name][range_type]["max"],
-                ),
+                (_entry[range_type].get("min", np.NINF), _entry[range_type].get("max", np.Inf)),
                 range_type,
             ):
                 raise ValueError
@@ -355,9 +362,9 @@ class DataValidator:
         except ValueError:
             self._logger.error(
                 f"Value for column '{col_name}' out of range. "
-                f"[[{col_min}, {col_max}], {range_type}: "
-                f"[[{self._reference_data_columns[col_name][range_type]['min']}, "
-                f"{self._reference_data_columns[col_name][range_type]['max']}]"
+                f"([{col_min}, {col_max}], {range_type}: "
+                f"[{_entry[range_type].get('min', np.NINF)}, "
+                f"{_entry[range_type].get('max', np.Inf)}])"
             )
             raise
 
@@ -366,7 +373,7 @@ class DataValidator:
     @staticmethod
     def _interval_check(data, axis_range, range_type):
         """
-        Check that values are inside allowed range (range_type='allowed_range') or span at least \
+        Check that values are inside allowed range (range_type='allowed_range') or span at least
          the given inveral (range_type='required_range').
 
         Parameters
@@ -393,3 +400,79 @@ class DataValidator:
                 return True
 
         return False
+
+    def _read_validation_schema(self, schema_file):
+        """
+        Read validation schema from file.
+        Returns 'None' in case no schema file is given.
+
+        Parameters
+        ----------
+        schema_file: Path
+            Schema file describing input data
+
+        Returns
+        -------
+        dict
+           validation schema
+
+        """
+
+        _schema_dict = {}
+        _data_dict = {}
+        try:
+            self._logger.info(f"Reading validation schema from {schema_file}")
+            with open(schema_file, "r") as stream:
+                _schema_dict = yaml.safe_load(stream)
+        except TypeError:
+            return None
+        except FileNotFoundError:
+            self._logger.error(f"Schema file not found: {schema_file}")
+            raise
+
+        # Note - assume that schema files contain a single data / schema
+        #        description (index [0]). This might change in future,
+        #        and we keep for now the list definition.
+        try:
+            _data_dict = _schema_dict["schema"][0]["data"][0]
+        except (KeyError, IndexError):
+            self._logger.error(f"Error reading validation schema from {_schema_dict}")
+            raise
+
+        if _data_dict is None:
+            self._logger.info("No validation schema found in {schema_file}")
+
+        # TODO - returning table columns only; should also work for non-tabled description
+        return _data_dict.get("table_columns", None)
+
+    def _get_reference_data_column(self, column_name, status_test=False):
+        """
+        Return entry in reference data for a given column name.
+
+        Parameters
+        ----------
+        column_name: str
+            Column name.
+
+        Returns
+        -------
+        dict
+            Reference schema column.
+
+        Raises
+        ------
+        IndexError
+            If data column is not found.
+
+        """
+
+        _entry = [item for item in self._reference_data_columns if item["name"] == column_name]
+        if status_test:
+            return len(_entry) > 0
+        try:
+            return _entry[0]
+        except IndexError:
+            self._logger.error(
+                f"Data column '{column_name}' not found in reference column definition"
+            )
+            raise IndexError

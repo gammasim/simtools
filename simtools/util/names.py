@@ -440,7 +440,7 @@ def simtools_instrument_name(site, telescope_class_name, sub_system_name, telesc
     sub_system_name: str
         FlashCam, NectarCam
     telescope_id_name: str
-        telescope ID (e.g., D, numerial value)
+        telescope ID (e.g., D, numerical value)
 
     Returns
     -------

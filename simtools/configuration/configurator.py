@@ -1,6 +1,7 @@
 import logging
 import os
 import sys
+import uuid
 
 import astropy.units as u
 import yaml
@@ -20,7 +21,7 @@ class InvalidConfigurationParameter(Exception):
 
 class Configurator:
     """
-    Configuration handling application configuration.
+    Application configuration.
 
     Allow to set configuration parameters by
 
@@ -28,6 +29,8 @@ class Configurator:
     - configuration file (yml file)
     - configuration dict when calling the class
     - environmental variables
+
+    Assigns unique ACIVITY_ID to this configuration (uuid).
 
     Configuration parameter names are converted always to lower case.
 
@@ -89,14 +92,14 @@ class Configurator:
     def initialize(
         self,
         paths=True,
+        output=False,
         telescope_model=False,
-        workflow_config=False,
         db_config=False,
         job_submission=False,
     ):
         """
         Initialize configuration from command line, configuration file, class config, or \
-         environmental variable.
+        environmental variable.
 
         Priorities in parameter settings.
         1. command line; 2. yaml file; 3. class init; 4. env variables.
@@ -109,10 +112,10 @@ class Configurator:
         ----------
         paths: bool
             Add path configuration to list of args.
+        output: bool
+            Add output file configuration to list of args.
         telescope_model: bool
             Add telescope model configuration to list of args.
-        workflow_config: bool
-            Add workflow configuration to list of args.
         db_config: bool
             Add database configuration parameters to list of args.
         job_submission: bool
@@ -134,28 +137,28 @@ class Configurator:
 
         self.parser.initialize_default_arguments(
             paths=paths,
+            output=output,
             telescope_model=telescope_model,
-            workflow_config=workflow_config,
             db_config=db_config,
             job_submission=job_submission,
         )
 
         self._fill_from_command_line()
         try:
-            self._fill_from_config_file(self.config["workflow_config"])
-        except KeyError:
-            pass
-        try:
             self._fill_from_config_file(self.config["config"])
         except KeyError:
             pass
         self._fill_from_config_dict(self.config_class_init)
         self._fill_from_environmental_variables()
-        self._initialize_io_handler()
-        _db_dict = self._get_db_parameters()
 
+        if self.config.get("activity_id", None) is None:
+            self.config["activity_id"] = str(uuid.uuid4())
         if self.config["label"] is None:
             self.config["label"] = self.label
+
+        self._initialize_io_handler()
+        self._initialize_output()
+        _db_dict = self._get_db_parameters()
 
         return self.config, _db_dict
 
@@ -223,15 +226,12 @@ class Configurator:
 
     def _fill_from_config_file(self, config_file):
         """
-        Read and fill configuration parameters from yaml file. Take into account that this could be\
-        a CTASIMPIPE workflow configuration file. (CTASIMPIPE:CONFIGURATION is optional, therefore,\
-        no error is raised when this key is not found)
+        Read and fill configuration parameters from yaml file.
 
         Parameters
         ----------
         config file: str
             Name of configuration file name
-
 
         Raises
         ------
@@ -287,6 +287,23 @@ class Configurator:
             data_path=self.config.get("data_path", None),
             model_path=self.config.get("model_path", None),
         )
+
+    def _initialize_output(self):
+        """
+        Initialize default output file names (in out output_file is not configured).
+
+        """
+        if self.config.get("output_file", None) is None:
+            prefix = "TEST"
+            label = extention = ""
+            if not self.config.get("test", False):
+                prefix = self.config["activity_id"]
+                if self.config.get("label", "") and len(self.config.get("label", "")) > 0:
+                    label = f"-{self.config['label']}"
+            if len(self.config.get("output_file_format", "")) > 0:
+                extention = f".{self.config['output_file_format']}"
+
+            self.config["output_file"] = f"{prefix}{label}{extention}"
 
     @staticmethod
     def _arglist_from_config(input_var):

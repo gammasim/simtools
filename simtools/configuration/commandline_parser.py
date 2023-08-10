@@ -14,7 +14,7 @@ __all__ = [
 
 class CommandLineParser(argparse.ArgumentParser):
     """
-    Command line parser for application and workflows.
+    Command line parser for applications.
 
     Wrapper around standard python argparse.ArgumentParser.
 
@@ -30,8 +30,8 @@ class CommandLineParser(argparse.ArgumentParser):
     def initialize_default_arguments(
         self,
         paths=True,
+        output=False,
         telescope_model=False,
-        workflow_config=False,
         db_config=False,
         job_submission=False,
     ):
@@ -42,10 +42,10 @@ class CommandLineParser(argparse.ArgumentParser):
         ----------
         paths: bool
             Add path configuration to list of args.
+        output: bool
+            Add output file configuration to list of args.
         telescope_model: bool
             Add telescope model configuration to list of args.
-        workflow_config: bool
-            Add workflow configuration to list of args.
         db_config: bool
             Add database configuration parameters to list of args.
         job_submission: bool
@@ -60,17 +60,15 @@ class CommandLineParser(argparse.ArgumentParser):
             self.initialize_db_config_arguments()
         if paths:
             self.initialize_path_arguments()
-        self.initialize_config_files(workflow_config)
+        if output:
+            self.initialize_output_arguments()
+        self.initialize_config_files()
         self.initialize_application_execution_arguments()
 
-    def initialize_config_files(self, workflow_config=False):
+    def initialize_config_files(self):
         """
-        Initialize configuration and workflow files.
+        Initialize configuration files.
 
-        Parameters
-        ----------
-        workflow_config: str
-            workflow configuration file.
         """
 
         _job_group = self.add_argument_group("configuration")
@@ -81,13 +79,6 @@ class CommandLineParser(argparse.ArgumentParser):
             type=str,
             required=False,
         )
-        if workflow_config:
-            _job_group.add_argument(
-                "--workflow_config",
-                help="workflow configuration file",
-                type=str,
-                required=False,
-            )
 
     def initialize_path_arguments(self):
         """
@@ -128,6 +119,26 @@ class CommandLineParser(argparse.ArgumentParser):
             required=False,
         )
 
+    def initialize_output_arguments(self):
+        """
+        Initialize application output files(s)
+        """
+
+        _job_group = self.add_argument_group("output")
+        _job_group.add_argument(
+            "--output_file",
+            help="output data file",
+            type=str,
+            required=False,
+        )
+        _job_group.add_argument(
+            "--output_file_format",
+            help="file format of output data",
+            type=str,
+            default="ecsv",
+            required=False,
+        )
+
     def initialize_application_execution_arguments(self):
         """
         Initialize application execution arguments.
@@ -142,7 +153,7 @@ class CommandLineParser(argparse.ArgumentParser):
         )
         _job_group.add_argument(
             "--label",
-            help="Job label",
+            help="job label",
             required=False,
         )
         _job_group.add_argument(
@@ -184,7 +195,7 @@ class CommandLineParser(argparse.ArgumentParser):
         _job_group = self.add_argument_group("job submission")
         _job_group.add_argument(
             "--submit_command",
-            help="Job submission command",
+            help="job submission command",
             type=str,
             required=True,
             choices=[
@@ -195,7 +206,7 @@ class CommandLineParser(argparse.ArgumentParser):
         )
         _job_group.add_argument(
             "--extra_submit_options",
-            help="Additional options for submission command",
+            help="additional options for submission command",
             type=str,
             required=False,
         )
