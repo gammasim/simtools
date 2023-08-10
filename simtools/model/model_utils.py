@@ -3,7 +3,7 @@
 import logging
 import math
 
-from simtools.util import names
+from simtools.utils import names
 
 __all__ = [
     "compute_telescope_transmission",

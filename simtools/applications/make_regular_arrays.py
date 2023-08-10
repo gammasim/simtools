@@ -39,14 +39,13 @@ from pathlib import Path
 
 import astropy.units as u
 
-import simtools.util.general as gen
+import simtools.utils.general as gen
 from simtools import db_handler, io_handler
 from simtools.configuration import configurator
 from simtools.layout.layout_array import LayoutArray
 
 
 def main():
-
     config = configurator.Configurator(
         label=Path(__file__).stem,
         description=(

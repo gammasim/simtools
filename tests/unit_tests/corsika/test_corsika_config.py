@@ -6,7 +6,7 @@ from copy import copy
 import pytest
 from astropy import units as u
 
-import simtools.util.general as gen
+import simtools.utils.general as gen
 from simtools.corsika.corsika_config import (
     CorsikaConfig,
     InvalidCorsikaInput,
@@ -34,7 +34,6 @@ def corsika_config_data():
 
 @pytest.fixture
 def corsika_config(io_handler, db_config, corsika_config_data):
-
     corsika_config = CorsikaConfig(
         mongo_db_config=db_config,
         site="Paranal",
@@ -46,7 +45,6 @@ def corsika_config(io_handler, db_config, corsika_config_data):
 
 
 def test_repr(corsika_config):
-
     logger.info("test_repr")
     text = repr(corsika_config)
 
@@ -54,7 +52,6 @@ def test_repr(corsika_config):
 
 
 def test_user_parameters(corsika_config):
-
     logger.info("test_user_parameters")
 
     assert corsika_config.get_user_parameter("nshow") == 100
@@ -69,7 +66,6 @@ def test_user_parameters(corsika_config):
 
 
 def test_export_input_file(corsika_config):
-
     logger.info("test_export_input_file")
     corsika_config.export_input_file()
     input_file = corsika_config.get_input_file()
@@ -79,7 +75,6 @@ def test_export_input_file(corsika_config):
 
 
 def test_export_input_file_multipipe(corsika_config):
-
     logger.info("test_export_input_file")
     corsika_config.export_input_file(use_multipipe=True)
     input_file = corsika_config.get_input_file()
@@ -89,7 +84,6 @@ def test_export_input_file_multipipe(corsika_config):
 
 
 def test_wrong_par_in_config_data(corsika_config_data, db_config):
-
     logger.info("test_wrong_primary_name")
     new_config_data = copy(corsika_config_data)
     new_config_data["wrong_par"] = 20 * u.m
@@ -105,7 +99,6 @@ def test_wrong_par_in_config_data(corsika_config_data, db_config):
 
 
 def test_units_of_config_data(corsika_config_data, db_config):
-
     logger.info("test_units_of_config_data")
     new_config_data = copy(corsika_config_data)
     new_config_data["zenith"] = 20 * u.m
@@ -121,7 +114,6 @@ def test_units_of_config_data(corsika_config_data, db_config):
 
 
 def test_len_of_config_data(corsika_config_data, db_config):
-
     logger.info("test_len_of_config_data")
     new_config_data = copy(corsika_config_data)
     new_config_data["erange"] = [20 * u.TeV]
@@ -137,7 +129,6 @@ def test_len_of_config_data(corsika_config_data, db_config):
 
 
 def test_wrong_primary_name(corsika_config_data, db_config):
-
     logger.info("test_wrong_primary_name")
     new_config_data = copy(corsika_config_data)
     new_config_data["primary"] = "rock"
@@ -153,7 +144,6 @@ def test_wrong_primary_name(corsika_config_data, db_config):
 
 
 def test_missing_input(corsika_config_data, db_config):
-
     logger.info("test_missing_input")
     new_config_data = copy(corsika_config_data)
     new_config_data.pop("primary")
@@ -179,7 +169,6 @@ def test_set_user_parameters(corsika_config_data, corsika_config):
 
 
 def test_config_data_from_yaml_file(db, io_handler, db_config):
-
     logger.info("test_config_data_from_yaml_file")
     test_file_name = "corsikaConfigTest.yml"
     db.export_file_db(

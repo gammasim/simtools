@@ -53,13 +53,12 @@
 import logging
 from pprint import pprint
 
-import simtools.util.general as gen
+import simtools.utils.general as gen
 from simtools import db_handler
 from simtools.configuration import configurator
 
 
 def main():
-
     config = configurator.Configurator(
         description=(
             "Get a parameter entry from DB for a specific telescope or a site. "

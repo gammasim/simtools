@@ -33,13 +33,12 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 
-import simtools.util.general as gen
+import simtools.utils.general as gen
 from simtools.configuration import configurator
 from simtools.simtel.simtel_histograms import SimtelHistograms
 
 
 def main():
-
     config = configurator.Configurator(
         label=Path(__file__).stem,
         description=("Plots sim_telarray histograms."),
@@ -96,7 +95,6 @@ def main():
 
     pdf_pages = PdfPages(fig_name)
     for i_hist in range(number_of_hists[0]):
-
         title = simtel_histograms[0].get_histogram_title(i_hist)
 
         logger.debug(f"Processing: {title}")
