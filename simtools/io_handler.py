@@ -36,11 +36,9 @@ class IOHandler(metaclass=IOHandlerSingleton):
         self.data_path = None
         self.model_path = None
 
-    def set_paths(self,
-                  output_path=None,
-                  data_path=None,
-                  model_path=None,
-                  use_plain_output_path=False):
+    def set_paths(
+        self, output_path=None, data_path=None, model_path=None, use_plain_output_path=False
+    ):
         """
         Set paths for input and output.
 

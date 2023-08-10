@@ -8,10 +8,7 @@ import numpy as np
 import pyproj
 import pytest
 
-from simtools.layout.telescope_position import (
-    InvalidCoordSystem,
-    TelescopePosition,
-)
+from simtools.layout.telescope_position import InvalidCoordSystem, TelescopePosition
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
