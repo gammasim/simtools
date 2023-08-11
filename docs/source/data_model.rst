@@ -9,7 +9,7 @@ Data products ingested or produced by simtools generally follows the CTA data mo
 .. _datamodelmetadatamodel:
 
 metadata_model
----------------
+--------------
 
 .. automodule:: data_model.metadata_model
    :members:
@@ -25,7 +25,7 @@ model_data_writer
 .. _datamodelvalidatedata:
 
 validate_data
---------------
+-------------
 
 .. automodule:: data_model.validate_data
    :members:
