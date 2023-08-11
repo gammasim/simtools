@@ -23,6 +23,8 @@ jobs:
 
       - name: Install conda dependencies
         uses: mamba-org/setup-micromamba@v1
+        with:
+          init-shell: bash
 
       - name: Python dependencies
         run: |
