@@ -14,27 +14,20 @@ jobs:
 
     steps:
       - name: checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Set up Python 3.10.4
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           python-version: 3.10.4
 
       - name: Install conda dependencies
-        env:
-          PYTHON_VERSION: 3.10.4
+        uses: mamba-org/setup-micromamba@v1
+
+      - name: Python dependencies
         run: |
-          source $CONDA/etc/profile.d/conda.sh
-          conda config --set always_yes yes --set changeps1 no
-          conda update -q conda
-          sed -i -e "s/- python=3.9/- python=$PYTHON_VERSION/g" environment.yml
-          conda env create -f environment.yml
-          conda activate simtools-dev
-          echo 'source $CONDA/etc/profile.d/conda.sh' >> ~/.bash_profile
-          echo 'conda activate simtools-dev' >> ~/.bash_profile
-          echo 'pip install -e .' >> ~/.bash_profile
           python --version
+          pip install -e .
 
       - name: Build docs
         shell: bash -l {0}
@@ -45,7 +38,7 @@ jobs:
       - name: Deploy to gihub pages
         # only run when PR is merged
         if: github.event.pull_request.merged
-        uses: JamesIves/github-pages-deploy-action@3.7.1
+        uses: JamesIves/github-pages-deploy-action@4
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           BRANCH: gh-pages
