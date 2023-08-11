@@ -71,6 +71,7 @@ jobs:
       - name: Install conda dependencies
         if: matrix.install-method == 'conda'
         uses: mamba-org/setup-micromamba@v1
+        create-args: python=${{ matrix.python-version }}
 
       - name: Python setup
         if: matrix.install-method == 'pip'
