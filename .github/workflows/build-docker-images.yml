@@ -64,6 +64,6 @@ jobs:
           platforms: linux/amd64,linux/arm64/v8
           push:
             ${{ github.event_name == 'pull_request' || github.event_name == 'release' || github.event_name == 'workflow_dispatch' }}
-          file: ./simtools/docker/Dockerfile-${{ matrix.type }}
+          file: ./docker/Dockerfile-${{ matrix.type }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}-${{ matrix.type }}
