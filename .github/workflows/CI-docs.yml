@@ -21,15 +21,16 @@ jobs:
         with:
           python-version: 3.10.4
 
-      - name: Install conda dependencies
-        uses: mamba-org/setup-micromamba@v1
-        with:
-          init-shell: bash
+            #      - name: Install conda dependencies
+            #        uses: mamba-org/setup-micromamba@v1
+            #        with:
+            #          create-args: python=3.10
+            #          init-shell: bash
 
       - name: Python dependencies
         run: |
           python --version
-          pip install -e .
+          pip install '[doc]'
 
       - name: Build docs
         shell: bash -l {0}
