@@ -72,6 +72,7 @@ jobs:
         if: matrix.install-method == 'conda'
         uses: mamba-org/setup-micromamba@v1
         with:
+          environment-file: environment.yml
           create-args: python=${{ matrix.python-version }}
           init-shell: bash
 

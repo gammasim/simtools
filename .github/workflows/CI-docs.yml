@@ -30,7 +30,7 @@ jobs:
       - name: Python dependencies
         run: |
           python --version
-          pip install '[doc]'
+          pip install '.[doc]'
 
       - name: Build docs
         shell: bash -l {0}
