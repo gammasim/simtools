@@ -25,7 +25,7 @@ jobs:
         include:
           - os: ubuntu-latest
             python-version: "3.9"
-            install-method: conda
+            install-method: mamba
 
           - os: ubuntu-latest
             python-version: "3.9"
@@ -33,7 +33,7 @@ jobs:
 
           - os: macos-latest
             python-version: "3.9"
-            install-method: conda
+            install-method: mamba
 
           - os: macos-latest
             python-version: "3.9"
@@ -41,7 +41,7 @@ jobs:
 
           - os: ubuntu-latest
             python-version: "3.10"
-            install-method: conda
+            install-method: mamba
 
           - os: ubuntu-latest
             python-version: "3.10"
@@ -49,7 +49,7 @@ jobs:
 
           - os: ubuntu-latest
             python-version: "3.11"
-            install-method: conda
+            install-method: mamba
 
           - os: ubuntu-latest
             python-version: "3.11"
@@ -68,8 +68,16 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Install conda dependencies
-        if: matrix.install-method == 'conda'
+      - name: Prepare mamba installation
+        if: matrix.install-method == 'mamba'
+        env:
+          PYTHON_VERSION: ${{ matrix.python-version }}
+        run: |
+          # setup correct python version
+          sed -i -e "s/- python=.*/- python=$PYTHON_VERSION/g" environment.yml
+
+      - name: Install mamba dependencies
+        if: matrix.install-method == 'mamba'
         uses: mamba-org/setup-micromamba@v1
         with:
           environment-file: environment.yml
