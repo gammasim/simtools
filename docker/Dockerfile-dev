@@ -28,5 +28,4 @@ RUN cd /workdir/ && \
 ENV SIMTEL_PATH="/workdir/sim_telarray/"
 SHELL ["/bin/bash", "-c"]
 
-
 WORKDIR /workdir/external

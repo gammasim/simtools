@@ -21,11 +21,11 @@ Container includes installation of:
 - corsika and sim\_telarray
 - packages required by simtools (from pyproject.toml)
 
-The container does not include the simtools code, which should be cloned in the ./external directory (see below).
+The container does not include the simtools code, which should be cloned in a separate directory (see below).
 
 There are two options on how to use this container:
 
-1. Download from [simtools container repository](https://github.com/gammasim/containers/pkgs/container/simtools-dev) **TODO**
+1. Download from [simtools container repository](https://github.com/gammasim/containers/pkgs/container/simtools-dev) **TODO - fix link**
 2. Build a new container from the available Dockerfile (requires access to sim\_telarray package)
 
 ### Run a container using the prepared Docker image available from repository
@@ -101,4 +101,4 @@ Run the newly build container:
 docker run --rm -it -v "$(pwd)/external:/workdir/external" simtelarray bash
 ```
 
-__Apple silicon users, notice you should add --platform=linux/amd64 to the run command above.__
+**Apple silicon users, notice you should add --platform=linux/amd64 to the run command above.**
