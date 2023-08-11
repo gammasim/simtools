@@ -1,6 +1,6 @@
 # Docker files for simtools
 
-Docker files for [simtools](https://github.com/gammasim/simtools) development and applications.
+Docker files for [simtools](https://github.com/gammasim/simtools) development and applications. Prepared packages are available through the [simtools package registry](https://github.com/orgs/gammasim/packages?repo_name=simtools).
 
 [Docker](https://www.docker.com/community-edition#/download) or any compatible software are required to run or build these images.
 
@@ -68,7 +68,7 @@ The container does not include the simtools code, which should be cloned in a se
 
 ### Run a container using the prepared Docker image available from repository
 
-Packages are available from the [simtools container repository](https://github.com/gammasim/containers/pkgs/container/simtools-dev)**TODO**
+Packages are available from the [simtools container repository](https://github.com/orgs/gammasim/packages?repo_name=simtools).
 
 **Preparation:**
 
