@@ -3,6 +3,8 @@ name: docker-corsika-simtelarray
 
 on:
   workflow_dispatch:
+  pull_request:
+    branches: ["main"]
 
 env:
   REGISTRY: ghcr.io
