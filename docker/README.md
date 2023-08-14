@@ -23,16 +23,12 @@ Provide a container for simtools users, which includes:
 To run the container in bash
 
 ```bash
-docker run ghcr.io/gammasim/simtools-prod:latest bash
+docker run --rm -it -v "$(pwd):/workdir/external" ghcr.io/gammasim/simtools-prod:latest bash
 ```
 
 In the container, simtools applications are installed and can be called directly (e.g., `simtools-print-array-elements -h`).
+This example uses the docker syntax to mount your local directory.
 
-In case file exchange with the local file system is required, use the docker syntax to mount a directory. Example:
-
-```bash
-docker run --rm -it -v "$(pwd):/workdir/external" ghcr.io/gammasim/simtools-prod:latest bash
-```
 
 The following example runs an application inside the container and writes the output into a directory of the local files system,
 
@@ -49,7 +45,7 @@ Output files can be found `./simtools-output/`.
 
 ### Building a simtools-prod container
 
-To build a new container locally run:
+To build a new container locally run in the [simtools/docker](simtools/docker) directory::
 
 ```bash
 docker build -f Dockerfile-prod  -t simtools-prod .
@@ -75,7 +71,7 @@ Packages are available from the [simtools container repository](https://github.c
 Create a new directory for your development and clone simtools into a subdirectory:
 
 ```bash
-mkdir -p simtools-dev && simtools-dev
+mkdir -p simtools-dev && cd simtools-dev
 git clone git@github.com:gammasim/simtools.git
 ```
 
@@ -85,13 +81,13 @@ To download and run a prepared container in bash:
 docker run --rm -it -v "$(pwd)/:/workdir/external" ghcr.io/gammasim/simtools-dev:latest bash -c "$(cat ./simtools/docker/entrypoint.sh) && bash"
 ```
 
-This additionally executes the `entrypoint.sh` script (e.g., for pip install or to set the database environment).
+This additionally executes the `entrypoint.sh` script (e.g., for pip install or to set the database environment). For access to the simulation model database, a script named `set_DB_environ.sh` to set the DB access vales is required (see simtools documentation).
 
 Remember you need to `docker login` to the GitHub package repository with a personal token in order to download an image (follow [these instructions](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry)).
 
 ### Build a new developers container locally
 
-To build a new container locally run:
+To build a new container locally run in the [simtools/docker](simtools/docker) directory:
 
 ```bash
 docker build -f Dockerfile-dev -t simtools-dev .
@@ -118,7 +114,7 @@ docker run --rm -it -v "$(pwd)/external:/workdir/external" ghcr.io/gammasim/simt
 To build a new container locally run:
 
 ```bash
-docker build -f Dockerfile-simtelarray  -t sim_telarray .
+docker build -f Dockerfile-simtelarray  -t simtelarray .
 ```
 
 Building expects that a tar ball of corsika/sim\_telarray (named corsika7.7\_simtelarray.tar.gz) is available in the building directory.
