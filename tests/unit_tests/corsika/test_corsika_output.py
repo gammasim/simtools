@@ -10,13 +10,13 @@ import pytest
 from astropy import units as u
 
 from simtools import version
-from simtools.corsika.corsika_output import CorsikaOutput, HistogramNotCreated
+from simtools.corsika.corsika_output import corsikaOutput, HistogramNotCreated
 
 
 def test_init(corsika_output_instance, corsika_output_file_name):
     assert corsika_output_instance.input_file.name == Path(corsika_output_file_name).name
     with pytest.raises(FileNotFoundError):
-        CorsikaOutput("wrong_file_name")
+        corsikaOutput("wrong_file_name")
     assert len(corsika_output_instance.event_information) > 15
     assert "zenith" in corsika_output_instance.event_information
 
@@ -165,7 +165,7 @@ def test_fill_histograms_no_rotation(corsika_output_file_name):
         },
     ]
 
-    corsika_output_instance_fill = CorsikaOutput(corsika_output_file_name)
+    corsika_output_instance_fill = corsikaOutput(corsika_output_file_name)
     corsika_output_instance_fill.individual_telescopes = False
     corsika_output_instance_fill.telescope_indices = [0]
 
@@ -269,7 +269,7 @@ def test_set_histograms_passing_config(corsika_output_instance):
 
 
 def test_raise_if_no_histogram(corsika_output_file_name, caplog):
-    corsika_output_instance_not_hist = CorsikaOutput(corsika_output_file_name)
+    corsika_output_instance_not_hist = corsikaOutput(corsika_output_file_name)
     with pytest.raises(HistogramNotCreated):
         corsika_output_instance_not_hist._raise_if_no_histogram()
         assert "The histograms were not created." in caplog
@@ -340,17 +340,19 @@ def test_get_2D_photon_time_altitude_distr(corsika_output_instance_set_histogram
 
 def test_get_2D_num_photons_distr(corsika_output_instance_set_histograms):
     corsika_output_instance_set_histograms.set_histograms(telescope_indices=[0, 4, 10])
-    num_photons_per_event_per_telescope, num_events_array, telescope_indices_array = corsika_output_instance_set_histograms.get_2D_num_photons_distr()
-    assert np.shape(num_events_array) == (1,3)  # number of events in this output file + 1 (edges of hist)
+    num_photons_per_event_per_telescope, num_events_array, telescope_indices_array = (
+        corsika_output_instance_set_histograms.get_2D_num_photons_distr())
+    assert np.shape(num_events_array) == (1, 3)  # number of events in this output file + 1
+    # (edges of hist)
     assert (telescope_indices_array == [0, 1, 2, 3]).all()
     assert (
-        pytest.approx(num_photons_per_event_per_telescope[0][0, 0], 1e-2) == 2543.3
+            pytest.approx(num_photons_per_event_per_telescope[0][0, 0], 1e-2) == 2543.3
     )  # 1st tel, 1st event
     assert (
-        pytest.approx(num_photons_per_event_per_telescope[0][0, 1], 1e-2) == 290.4
+            pytest.approx(num_photons_per_event_per_telescope[0][0, 1], 1e-2) == 290.4
     )  # 1st tel, 2nd event
     assert (
-        pytest.approx(num_photons_per_event_per_telescope[0][1, 0], 1e-2) == 1741
+            pytest.approx(num_photons_per_event_per_telescope[0][1, 0], 1e-2) == 1741
     )  # 2nd tel, 1st event
     assert (
         pytest.approx(num_photons_per_event_per_telescope[0][1, 1], 1e-2) == 85.9
@@ -420,7 +422,8 @@ def test_get_photon_radial_distr_input_some_tel_and_density(corsika_output_insta
         telescope_indices=None, individual_telescopes=False, hist_config=None
     )
 
-    hist_1D_list, x_edges_list = corsika_output_instance_set_histograms.get_photon_radial_distr(bins=100, max_dist=1200)
+    hist_1D_list, x_edges_list = corsika_output_instance_set_histograms.get_photon_radial_distr(
+        bins=100, max_dist=1200)
     assert np.amax(x_edges_list) == 1200
     assert np.size(x_edges_list) == 101
 
@@ -730,7 +733,7 @@ def test_get_bins_max_dist(corsika_output_instance):
 
 def test_meta_dict(corsika_output_instance_set_histograms):
     expected_meta_dict = {
-        "CORSIKA version": corsika_output_instance_set_histograms.version,
+        "corsika version": corsika_output_instance_set_histograms.version,
         "simtools version": version.__version__,
         "Original IACT file": corsika_output_instance_set_histograms.input_file.name,
         "telescope_indices": list(corsika_output_instance_set_histograms.telescope_indices),
@@ -752,8 +755,8 @@ def test_dict_1D_distributions(corsika_output_instance_set_histograms):
                     "start"].unit
         }
     }
-    assert corsika_output_instance_set_histograms._dict_1D_distributions["wavelength"] == \
-           expected_dict_1D_distributions["wavelength"]
+    assert (corsika_output_instance_set_histograms._dict_1D_distributions["wavelength"] ==
+            expected_dict_1D_distributions["wavelength"])
 
 
 def test_export_1D_histograms(corsika_output_instance_set_histograms, io_handler):
@@ -815,8 +818,8 @@ def test_dict_2D_distributions(corsika_output_instance_set_histograms):
             "y edges unit": u.dimensionless_unscaled,
         }
     }
-    assert corsika_output_instance_set_histograms._dict_2D_distributions["counts"] == \
-           expected_dict_2D_distributions["counts"]
+    assert (corsika_output_instance_set_histograms._dict_2D_distributions["counts"] ==
+            expected_dict_2D_distributions["counts"])
 
 
 def test_fill_ecsv_table_1D(corsika_output_instance_set_histograms):
@@ -849,13 +852,13 @@ def test_fill_ecsv_table_2D(corsika_output_instance_set_histograms):
 
 
 def test_export_event_header_1D_histogram(corsika_output_instance_set_histograms, io_handler):
-    CORSIKA_event_header_example = {
+    corsika_event_header_example = {
         "total_energy": "event_1D_histograms_total_energy.ecsv",
         "azimuth": "event_1D_histograms_azimuth.ecsv",
         "zenith": "event_1D_histograms_zenith.ecsv",
         "first_interaction_height": "event_1D_histograms_first_interaction_height.ecsv"
     }
-    for event_header_element, file_name in CORSIKA_event_header_example.items():
+    for event_header_element, file_name in corsika_event_header_example.items():
         corsika_output_instance_set_histograms.export_event_header_1D_histogram(
             event_header_element, output_path=io_handler.get_output_directory(test=True), bins=50,
             hist_range=None)
@@ -863,10 +866,10 @@ def test_export_event_header_1D_histogram(corsika_output_instance_set_histograms
 
 
 def test_export_event_header_2D_histogram(corsika_output_instance_set_histograms, io_handler):
-    CORSIKA_event_header_example = {
+    corsika_event_header_example = {
         ("azimuth", "zenith"): "event_2D_histograms_azimuth_zenith.ecsv",
     }
-    for event_header_element, file_name in CORSIKA_event_header_example.items():
+    for event_header_element, file_name in corsika_event_header_example.items():
         corsika_output_instance_set_histograms.export_event_header_2D_histogram(
             event_header_element[0], event_header_element[1],
             output_path=io_handler.get_output_directory(test=True), bins=50,
