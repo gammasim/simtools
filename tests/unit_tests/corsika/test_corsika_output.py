@@ -327,13 +327,14 @@ def test_get_2D_photon_direction_distr(corsika_output_instance_set_histograms):
         ).all()
 
 
-def test_get_2D_photon_time_altitude(corsika_output_instance_set_histograms):
+def test_get_2D_photon_time_altitude_distr(corsika_output_instance_set_histograms):
     for returned_variable in range(3):
         assert (
-            corsika_output_instance_set_histograms.get_2D_photon_time_altitude()[returned_variable]
-            == corsika_output_instance_set_histograms._get_hist_2D_projection("time_altitude")[
-                returned_variable
-            ]
+                corsika_output_instance_set_histograms.get_2D_photon_time_altitude_distr()[
+                    returned_variable]
+                == corsika_output_instance_set_histograms._get_hist_2D_projection("time_altitude")[
+                    returned_variable
+                ]
         ).all()
 
 
