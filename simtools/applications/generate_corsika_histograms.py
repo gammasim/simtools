@@ -372,7 +372,13 @@ def main():
 
     instance = CorsikaOutput(args_dict["IACT_file"])
     if args_dict["telescope_indices"] is not None:
-        indices = np.array(args_dict["telescope_indices"]).astype(int)
+        try:
+            indices = np.array(args_dict["telescope_indices"]).astype(int)
+        except ValueError:
+            msg = f"{args_dict['telescope_indices']} not a valid input. " \
+                  f"Please use integer numbers for `telescope_indices`"
+            logger.error(msg)
+            raise
     else:
         indices = None
     instance.set_histograms(
