@@ -80,7 +80,7 @@ def _kernel_plot_2D_photons(corsika_output_instance, property_name, log_z=False)
                 f"{corsika_output_instance._dict_2D_distributions[property_name]['y edges']} ")
         ax.set_xlim(np.amin(x_edges[i_hist]), np.amax(x_edges[i_hist]))
         ax.set_ylim(np.amin(y_edges[i_hist]), np.amax(y_edges[i_hist]))
-        ax.set_facecolor("xkcd:black")
+        ax.set_facecolor("black")
         fig.colorbar(mesh)
         all_figs.append(fig)
         if corsika_output_instance.individual_telescopes is False:
