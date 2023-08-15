@@ -760,7 +760,7 @@ def test_dict_1D_distributions(corsika_output_instance_set_histograms):
 
 def test_export_1D_histograms(corsika_output_instance_set_histograms, io_handler):
     corsika_output_instance_set_histograms._export_1D_histograms(
-        output_dir=io_handler.get_output_directory(test=True))
+        output_path=io_handler.get_output_directory(test=True))
 
     for file_name in ["hist_1D_photon_wavelength_distr_all_tels.ecsv",
                       "hist_1D_photon_radial_distr_all_tels.ecsv",
@@ -775,7 +775,7 @@ def test_export_1D_histograms(corsika_output_instance_set_histograms, io_handler
 
 def test_export_2D_histograms(corsika_output_instance_set_histograms, io_handler):
     corsika_output_instance_set_histograms._export_2D_histograms(
-        output_dir=io_handler.get_output_directory(test=True))
+        output_path=io_handler.get_output_directory(test=True))
 
     for file_name in ["hist_2D_photon_direction_distr_all_tels.ecsv",
                       "hist_2D_photon_time_altitude_distr_all_tels.ecsv",
@@ -785,6 +785,25 @@ def test_export_2D_histograms(corsika_output_instance_set_histograms, io_handler
                       ]:
         assert io_handler.get_output_directory(test=True).joinpath(file_name).exists()
 
+
+def test_export_histograms(corsika_output_instance_set_histograms, io_handler):
+    corsika_output_instance_set_histograms.export_histograms(
+        output_path=io_handler.get_output_directory(test=True))
+
+    for file_name in ["hist_1D_photon_wavelength_distr_all_tels.ecsv",
+                      "hist_1D_photon_radial_distr_all_tels.ecsv",
+                      "hist_1D_photon_density_distr_all_tels.ecsv",
+                      "hist_1D_photon_time_distr_all_tels.ecsv",
+                      "hist_1D_photon_time_distr_all_tels.ecsv",
+                      "hist_1D_photon_per_event_distr_all_tels.ecsv",
+                      "hist_1D_photon_per_telescope_distr_all_tels.ecsv",
+                      "hist_2D_photon_direction_distr_all_tels.ecsv",
+                      "hist_2D_photon_time_altitude_distr_all_tels.ecsv",
+                      "hist_2D_photon_telescope_event_distr_all_tels.ecsv",
+                      "hist_2D_photon_count_distr_all_tels.ecsv",
+                      "hist_2D_photon_density_distr_all_tels.ecsv",
+                      ]:
+        assert io_handler.get_output_directory(test=True).joinpath(file_name).exists()
 
 def test_dict_2D_distributions(corsika_output_instance_set_histograms):
     expected_dict_2D_distributions = {
@@ -840,7 +859,7 @@ def test_export_event_header_1D_histogram(corsika_output_instance_set_histograms
     }
     for event_header_element, file_name in CORSIKA_event_header_example.items():
         corsika_output_instance_set_histograms.export_event_header_1D_histogram(
-            event_header_element, output_dir=io_handler.get_output_directory(test=True), bins=50,
+            event_header_element, output_path=io_handler.get_output_directory(test=True), bins=50,
             hist_range=None)
         assert io_handler.get_output_directory(test=True).joinpath(file_name).exists()
 
@@ -852,6 +871,6 @@ def test_export_event_header_2D_histogram(corsika_output_instance_set_histograms
     for event_header_element, file_name in CORSIKA_event_header_example.items():
         corsika_output_instance_set_histograms.export_event_header_2D_histogram(
             event_header_element[0], event_header_element[1],
-            output_dir=io_handler.get_output_directory(test=True), bins=50,
+            output_path=io_handler.get_output_directory(test=True), bins=50,
             hist_range=None)
         assert io_handler.get_output_directory(test=True).joinpath(file_name).exists()
