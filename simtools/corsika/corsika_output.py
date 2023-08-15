@@ -55,7 +55,7 @@ class CorsikaOutput:
             raise FileNotFoundError
 
         self.io_handler = io_handler.IOHandler()
-
+        self.output_path = self.io_handler.get_output_directory(self.label, "corsika")
         self._initialize_attributes()
         self.read_event_information()
         self._initialize_header()
@@ -324,8 +324,7 @@ class CorsikaOutput:
         if file_name is None:
             file_name = "hist_config"
         file_name = Path(file_name).with_suffix(".yml")
-        output_config_path = self.io_handler.get_output_directory(self.label, "corsika")
-        output_config_file = output_config_path.joinpath(file_name)
+        output_config_file = self.output_path.joinpath(file_name)
         save_dict_to_file(self.hist_config, output_config_file)
 
     def _create_histogram_default_config(self):
@@ -1079,18 +1078,12 @@ class CorsikaOutput:
         hist, edges = np.histogram(self.num_photons_per_telescope, bins=bins, range=hist_range)
         return hist.reshape(1, bins), edges.reshape(1, bins + 1)
 
-    def export_histograms(self, output_path="./"):
+    def export_histograms(self):
         """
         Export the histograms to ecsv files.
-
-        Parameters
-        ----------
-        output_path: str
-            Output directory, where to save the histograms.
         """
-
-        self._export_1D_histograms(output_path=output_path)
-        self._export_2D_histograms(output_path=output_path)
+        self._export_1D_histograms(output_path=self.output_path)
+        self._export_2D_histograms(output_path=self.output_path)
 
     @property
     def _meta_dict(self):
@@ -1177,14 +1170,9 @@ class CorsikaOutput:
         }
         return self.__dict_1D_distributions
 
-    def _export_1D_histograms(self, output_path="./"):
+    def _export_1D_histograms(self):
         """
         Auxiliary function to export only the 1D histograms.
-
-        Parameters
-        ----------
-        output_path: str
-            Output directory, where to save the histograms.
         """
 
         for _, function_dict in self._dict_1D_distributions.items():
@@ -1213,7 +1201,7 @@ class CorsikaOutput:
                     function_dict["edges"],
                     None,
                 )
-                ecsv_file = Path(output_path).joinpath(ecsv_file)
+                ecsv_file = Path(self.output_path).joinpath(ecsv_file)
                 self._logger.info(f"Exporting histogram to {ecsv_file}.")
                 table.write(ecsv_file, format="ascii.ecsv", overwrite=True)
 
@@ -1277,14 +1265,9 @@ class CorsikaOutput:
             }
         return self.__dict_2D_distributions
 
-    def _export_2D_histograms(self, output_path="./"):
+    def _export_2D_histograms(self):
         """
         Auxiliary function to export only the 2D histograms.
-
-        Parameters
-        ----------
-        output_path: str
-            Output directory, where to save the histograms.
         """
 
         for property_name, function_dict in self._dict_2D_distributions.items():
@@ -1324,7 +1307,7 @@ class CorsikaOutput:
                     function_dict["x edges"],
                     function_dict["y edges"],
                 )
-                ecsv_file = Path(output_path).joinpath(ecsv_file)
+                ecsv_file = Path(self.output_path).joinpath(ecsv_file)
                 self._logger.info(f"Exporting histogram to {ecsv_file}.")
                 table.write(ecsv_file, format="ascii.ecsv", overwrite=True)
 
@@ -1374,7 +1357,7 @@ class CorsikaOutput:
         return table
 
     def export_event_header_1D_histogram(
-        self, event_header_element, output_path="./", bins=50, hist_range=None
+            self, event_header_element, bins=50, hist_range=None
     ):
         """
         Export to a ecsv file the 1D histogram for the key `event_header_element` from the CORSIKA
@@ -1385,8 +1368,6 @@ class CorsikaOutput:
         event_header_element: str
             The key to the CORSIKA event header element.
             Possible choices are stored in `self.all_event_keys`.
-        output_path: str
-            Output directory, where to save the histograms.
         bins: float
             Number of bins for the histogram.
         hist_range: 2-tuple
@@ -1398,7 +1379,8 @@ class CorsikaOutput:
         )
         edges *= self.event_information[event_header_element].unit
         table = self.fill_ecsv_table(hist, edges, None, event_header_element, None)
-        ecsv_file = Path(output_path).joinpath(f"event_1D_histograms_{event_header_element}.ecsv")
+        ecsv_file = Path(self.output_path).joinpath(
+            f"event_1D_histograms_{event_header_element}.ecsv")
         self._logger.info(f"Exporting histogram to {ecsv_file}.")
         table.write(ecsv_file, format="ascii.ecsv", overwrite=True)
 
@@ -1406,7 +1388,6 @@ class CorsikaOutput:
         self,
         event_header_element_1,
         event_header_element_2,
-        output_path="./",
         bins=50,
         hist_range=None,
     ):
@@ -1422,8 +1403,6 @@ class CorsikaOutput:
             The key to the CORSIKA event header element.
             Possible choices for `event_header_element_1` and `event_header_element_2` are stored
             in `self.all_event_keys`.
-        output_path: str
-            Output directory, where to save the histograms.
         bins: float
             Number of bins for the histogram.
         hist_range: 2-tuple
@@ -1439,7 +1418,7 @@ class CorsikaOutput:
             hist, x_edges, y_edges, event_header_element_1, event_header_element_2
         )
 
-        ecsv_file = Path(output_path).joinpath(
+        ecsv_file = Path(self.output_path).joinpath(
             f"event_2D_histograms_{event_header_element_1}" f"_{event_header_element_2}.ecsv"
         )
 
