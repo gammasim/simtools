@@ -286,9 +286,9 @@ def _plot_figures(instance, output_path):
             figure.savefig(output_file_name, bbox_inches="tight")
 
 
-def _run_event_1D_histograms(instance, output_path, event_1D_header_keys, png, ecsv):
+def _derive_event_1D_histograms(instance, output_path, event_1D_header_keys, png, ecsv):
     """
-    Auxiliary function to run the histograms for the arguments given by event_1D_histograms.
+    Auxiliary function to derive the histograms for the arguments given by event_1D_histograms.
 
     Parameters
     ----------
@@ -318,9 +318,10 @@ def _run_event_1D_histograms(instance, output_path, event_1D_header_keys, png, e
             )
 
 
-def _run_event_2D_histograms(instance, output_path, event_2D_header_keys, png, ecsv):
+def _derive_event_2D_histograms(instance, output_path, event_2D_header_keys, png, ecsv):
     """
-    Auxiliary function to run the histograms for the arguments given by event_1D_histograms.
+    Auxiliary function to derive the histograms for the arguments given by event_1D_histograms.
+    If an odd number of event header keys are given, the last one is discarded.
 
     Parameters
     ----------
@@ -337,6 +338,7 @@ def _run_event_2D_histograms(instance, output_path, event_2D_header_keys, png, e
         If true, histograms are saved into ecsv files.
     """
     for i_event_header_element, _ in enumerate(event_2D_header_keys[::2]):
+        # [::2] to discard the last one in case an odd number of keys are passed
         if png:
             figure, figure_name = corsika_output_visualize.plot_2D_event_header_distribution(
                 instance,
@@ -392,7 +394,7 @@ def main():
 
     # Event information
     if args_dict["event_1D_histograms"] is not None:
-        _run_event_1D_histograms(
+        _derive_event_1D_histograms(
             instance,
             output_path,
             args_dict["event_1D_histograms"],
@@ -400,7 +402,7 @@ def main():
             args_dict["ecsv"],
         )
     if args_dict["event_2D_histograms"] is not None:
-        _run_event_2D_histograms(
+        _derive_event_2D_histograms(
             instance,
             output_path,
             args_dict["event_2D_histograms"],
