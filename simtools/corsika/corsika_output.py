@@ -334,7 +334,7 @@ class CorsikaOutput:
         only in case the configuration is not provided in a yaml file or dict.
 
         Three histograms are created: hist_position with 3 dimensions (x, y positions and the
-        wavelength), hist_direction with 2 dimensions (directive cosinus in x and y directions),
+        wavelength), hist_direction with 2 dimensions (direction cosines in x and y directions),
         hist_time_altitude with 2 dimensions (time and altitude of emission).
 
         Four arguments are passed to each dimension in the dictionary:
@@ -1250,10 +1250,10 @@ class CorsikaOutput:
                 "direction": {
                     "function": "get_2D_photon_direction_distr",
                     "file name": "hist_2D_photon_direction_distr",
-                    "title": "Photon counts",
-                    "x edges": "x position",
+                    "title": "Photon arrival direction",
+                    "x edges": "x direction cosine",
                     "x edges unit": u.dimensionless_unscaled,
-                    "y edges": "y position",
+                    "y edges": "y direction cosine",
                     "y edges unit": u.dimensionless_unscaled,
                 },
                 "time_altitude": {
@@ -1325,7 +1325,6 @@ class CorsikaOutput:
                     function_dict["y edges"],
                 )
                 ecsv_file = Path(output_path).joinpath(ecsv_file)
-                print(ecsv_file)
                 self._logger.info(f"Exporting histogram to {ecsv_file}.")
                 table.write(ecsv_file, format="ascii.ecsv", overwrite=True)
 

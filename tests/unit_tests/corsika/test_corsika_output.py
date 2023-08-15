@@ -343,7 +343,6 @@ def test_get_2D_num_photons_distr(corsika_output_instance_set_histograms):
     num_photons_per_event_per_telescope, num_events_array, telescope_indices_array = corsika_output_instance_set_histograms.get_2D_num_photons_distr()
     assert np.shape(num_events_array) == (1,3)  # number of events in this output file + 1 (edges of hist)
     assert (telescope_indices_array == [0, 1, 2, 3]).all()
-    print(np.shape(num_photons_per_event_per_telescope))
     assert (
         pytest.approx(num_photons_per_event_per_telescope[0][0, 0], 1e-2) == 2543.3
     )  # 1st tel, 1st event
@@ -558,7 +557,6 @@ def test_get_num_photons_distr(corsika_output_instance_set_histograms, caplog):
         bins=2, hist_range=None
     )
     # Assert that the integration of the histogram resembles the known total number of events.
-    print(np.sum(corsika_output_instance_set_histograms.num_photons_per_event))
     assert (
         pytest.approx(
             np.sum(edges[0,:-1] * hist[0])
@@ -677,7 +675,6 @@ def test_get_event_parameter_info(corsika_output_instance_set_histograms, caplog
 
 def test_get_run_info(corsika_output_instance_set_histograms, caplog):
     for parameter in corsika_output_instance_set_histograms.all_run_keys[1:]:
-        print(corsika_output_instance_set_histograms.get_run_info(parameter))
         assert isinstance(
             corsika_output_instance_set_histograms.get_run_info(parameter),
             u.quantity.Quantity,
@@ -738,7 +735,7 @@ def test_meta_dict(corsika_output_instance_set_histograms):
         "Original IACT file": corsika_output_instance_set_histograms.input_file.name,
         "telescope_indices": list(corsika_output_instance_set_histograms.telescope_indices),
         "individual_telescopes": corsika_output_instance_set_histograms.individual_telescopes,
-        "msg": "Only lower bin edges are given.",
+        "Note": "Only lower bin edges are given.",
     }
     assert corsika_output_instance_set_histograms._meta_dict == expected_meta_dict
 
