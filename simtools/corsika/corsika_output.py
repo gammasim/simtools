@@ -1110,7 +1110,7 @@ class CorsikaOutput:
                 "Original IACT file": self.input_file.name,
                 "telescope_indices": list(self.telescope_indices),
                 "individual_telescopes": self.individual_telescopes,
-                "msg": "Only lower bin edges are given.",
+                "Note": "Only lower bin edges are given.",
             }
         return self.__meta_dict
 
