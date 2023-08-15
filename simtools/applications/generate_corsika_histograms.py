@@ -103,7 +103,7 @@
                   unit: *id005
                   value: 0.0
 
-    output_directory (str, optional)
+    output_path (str, optional)
         Output directory where to save the histograms.
         If the argument is not given, the histograms are saved in
         `simtools-output/generate_corsika_histograms/application-plots`.
@@ -157,6 +157,7 @@ import numpy as np
 import simtools.util.general as gen
 from simtools import io_handler
 from simtools.configuration import configurator
+from simtools.configuration.commandline_parser import CommandLineParser
 from simtools.corsika import corsika_output_visualize
 from simtools.corsika.corsika_output import CorsikaOutput
 
@@ -218,14 +219,6 @@ def _parse(label, description, usage):
     )
 
     config.parser.add_argument(
-        "--output_directory",
-        help="Output directory where to save the histograms.",
-        type=str,
-        required=False,
-        default=None,
-    )
-
-    config.parser.add_argument(
         "--png", help="Save histograms into png files.", action="store_true", required=False
     )
 
@@ -249,7 +242,7 @@ def _parse(label, description, usage):
         nargs="*",
     )
 
-    config_parser, _ = config.initialize()
+    config_parser, _ = config.initialize(db_config=False)
 
     if not config_parser["png"] and not config_parser["ecsv"]:
         config.parser.error("At least one argument between `--png` and `--ecsv` is required.")
@@ -257,7 +250,7 @@ def _parse(label, description, usage):
     return config_parser, _
 
 
-def _plot_figures(instance, output_dir):
+def _plot_figures(instance, output_path):
     """
     Auxiliary function to centralize the plotting functions.
 
@@ -265,7 +258,7 @@ def _plot_figures(instance, output_dir):
     ----------
     instance: `CorsikaOutput` instance.
         The CorsikaOutput instance created in main.
-    output_dir: str
+    output_path: str
         The output directory where to save the histograms.
     """
 
@@ -288,12 +281,12 @@ def _plot_figures(instance, output_dir):
         function = getattr(corsika_output_visualize, function_name)
         figures, figure_names = function(instance)
         for figure, figure_name in zip(figures, figure_names):
-            output_file_name = Path(output_dir).joinpath(figure_name)
+            output_file_name = Path(output_path).joinpath(figure_name)
             logger.info(f"Saving histogram to {output_file_name}")
             figure.savefig(output_file_name, bbox_inches="tight")
 
 
-def _run_event_1D_histograms(instance, output_dir, event_1D_header_keys, png, ecsv):
+def _run_event_1D_histograms(instance, output_path, event_1D_header_keys, png, ecsv):
     """
     Auxiliary function to run the histograms for the arguments given by event_1D_histograms.
 
@@ -301,7 +294,7 @@ def _run_event_1D_histograms(instance, output_dir, event_1D_header_keys, png, ec
     ----------
     instance: `CorsikaOutput` instance.
         The CorsikaOutput instance created in main.
-    output_dir: str
+    output_path: str
         The output directory where to save the histograms.
     event_1D_header_keys: str
         Produce 1D histograms for elements given in `event_1D_header_keys` from the CORSIKA event
@@ -316,7 +309,7 @@ def _run_event_1D_histograms(instance, output_dir, event_1D_header_keys, png, ec
             figure, figure_name = corsika_output_visualize.plot_1D_event_header_distribution(
                 instance, event_header_element
             )
-            output_file_name = Path(output_dir).joinpath(figure_name)
+            output_file_name = Path(output_path).joinpath(figure_name)
             logger.info(f"Saving histogram to {output_file_name}")
             figure.savefig(output_file_name, bbox_inches="tight")
         if ecsv:
@@ -325,7 +318,7 @@ def _run_event_1D_histograms(instance, output_dir, event_1D_header_keys, png, ec
             )
 
 
-def _run_event_2D_histograms(instance, output_dir, event_2D_header_keys, png, ecsv):
+def _run_event_2D_histograms(instance, output_path, event_2D_header_keys, png, ecsv):
     """
     Auxiliary function to run the histograms for the arguments given by event_1D_histograms.
 
@@ -333,7 +326,7 @@ def _run_event_2D_histograms(instance, output_dir, event_2D_header_keys, png, ec
     ----------
     instance: `CorsikaOutput` instance.
         The CorsikaOutput instance created in main.
-    output_dir: str
+    output_path: str
         The output directory where to save the histograms.
     event_2D_header_keys: str
         Produce 1D histograms for elements given in `event_1D_header_keys` from the CORSIKA event
@@ -350,7 +343,7 @@ def _run_event_2D_histograms(instance, output_dir, event_2D_header_keys, png, ec
                 event_2D_header_keys[i_event_header_element],
                 event_2D_header_keys[i_event_header_element + 1],
             )
-            output_file_name = Path(output_dir).joinpath(figure_name)
+            output_file_name = Path(output_path).joinpath(figure_name)
             logger.info(f"Saving histogram to {output_file_name}")
             figure.savefig(output_file_name, bbox_inches="tight")
         if ecsv:
@@ -386,22 +379,22 @@ def main():
         hist_config=args_dict["hist_config"],
     )
 
-    if args_dict["output_directory"] is None:
-        output_dir = io_handler_instance.get_output_directory(label, dir_type="application-plots")
+    if args_dict["output_path"] is None:
+        output_path = io_handler_instance.get_output_directory(label, dir_type="application-plots")
     else:
-        output_dir = args_dict["output_directory"]
+        output_path = args_dict["output_path"]
 
     # Cherenkov photons
     if args_dict["png"]:
-        _plot_figures(instance=instance, output_dir=output_dir)
+        _plot_figures(instance=instance, output_path=output_path)
     if args_dict["ecsv"]:
-        instance.export_histograms(output_dir=output_dir)
+        instance.export_histograms(output_path=output_path)
 
     # Event information
     if args_dict["event_1D_histograms"] is not None:
         _run_event_1D_histograms(
             instance,
-            output_dir,
+            output_path,
             args_dict["event_1D_histograms"],
             args_dict["png"],
             args_dict["ecsv"],
@@ -409,7 +402,7 @@ def main():
     if args_dict["event_2D_histograms"] is not None:
         _run_event_2D_histograms(
             instance,
-            output_dir,
+            output_path,
             args_dict["event_2D_histograms"],
             args_dict["png"],
             args_dict["ecsv"],
