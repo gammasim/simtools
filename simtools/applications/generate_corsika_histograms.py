@@ -150,6 +150,7 @@ from pathlib import Path
 import numpy as np
 
 import simtools.util.general as gen
+from simtools import io_handler
 from simtools.configuration import configurator
 from simtools.corsika import corsika_output_visualize
 from simtools.corsika.corsika_output import CorsikaOutput
@@ -233,14 +234,6 @@ def _parse(label, description, usage):
         required=False,
         default=None,
         nargs="*",
-    )
-
-    config.parser.add_argument(
-        "--output_corsika_path",
-        help="Output directory.",
-        required=False,
-        default=None,
-        type=str,
     )
 
     config_parser, _ = config.initialize(db_config=False, paths=True)
@@ -355,13 +348,12 @@ def main():
     label = Path(__file__).stem
     description = "Generate histograms for the Cherenkov photons saved in the CORSIKA IACT file."
     usage = ""
+    io_handler_instance = io_handler.IOHandler()
     args_dict, _ = _parse(label, description, usage)
 
-    if args_dict["output_corsika_path"] is None:
-        # if the user did not set the path, we use the path set by the configuration module
-        output_path = args_dict["output_path"]
-    else:
-        output_path = args_dict["output_corsika_path"]
+    output_path = io_handler_instance.get_output_directory(
+        label, dir_type="application-plots"
+    )
 
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
     initial_time = time.time()
