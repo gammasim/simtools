@@ -12,9 +12,9 @@ from astropy.table import QTable
 from cycler import cycler
 from matplotlib.collections import PatchCollection
 
-from simtools.util import general as gen
-from simtools.util import names
-from simtools.util.names import mst, sct
+from simtools.utils import general as gen
+from simtools.utils import names
+from simtools.utils.names import mst, sct
 from simtools.visualization import legend_handlers as leg_h
 
 __all__ = [
