@@ -1,13 +1,14 @@
 import logging
 import os
 import re
+from pathlib import Path
 
 import numpy as np
 from astropy import units as u
 from astropy.table import Table, unique
 from astropy.utils.diff import report_diff_values
 
-import simtools.util.general as gen
+import simtools.utils.general as gen
 
 __all__ = ["DataValidator"]
 
@@ -71,12 +72,13 @@ class DataValidator:
         """
 
         try:
-            if self._data_file_name.find("yaml") > 0 or self._data_file_name.find("yml") > 0:
+            _file_extension = os.path.splitext(self._data_file_name)[1]
+            if _file_extension == ".yml" or _file_extension == ".yaml":
                 self.data = gen.collect_data_from_yaml_or_dict(self._data_file_name, None)
-                self._logger.info("Reading data from yaml file: %s", self._data_file_name)
+                self._logger.info(f"Reading data from yaml file: {self._data_file_name}")
             else:
                 self.data_table = Table.read(self._data_file_name, guess=True, delimiter=r"\s")
-                self._logger.info("Reading tabled data from file: %s", self._data_file_name)
+                self._logger.info(f"Reading tabled data from file: {self._data_file_name}")
         except AttributeError:
             pass
 
@@ -100,14 +102,14 @@ class DataValidator:
             self.data_table = Table(rows=[_quantities])
             self.data_table.meta["name"] = self.data["name"]
         except KeyError as exc:
-            raise KeyError("Data dict does not contain a 'name' or 'value' key.") from exc
+            raise KeyError("Data dict does not contain a 'name', 'value', or 'value' key.") from exc
 
         if self._reference_data_columns is not None:
             self._validate_data_columns()
 
     def _validate_data_table(self):
         """
-        Validate tabled data.
+        Validate tabulated data.
 
         """
 
@@ -116,7 +118,7 @@ class DataValidator:
                 0
             ].get("table_columns", None)
         except IndexError:
-            self._logger.error("Error reading validation schema from %s", self._schema_file_name)
+            self._logger.error(f"Error reading validation schema from {self._schema_file_name}")
             raise
 
         if self._reference_data_columns is not None:
@@ -346,7 +348,7 @@ class DataValidator:
 
         """
 
-        self._logger.debug("Checking data column '%s'", col.name)
+        self._logger.debug(f"Checking data column '{col.name}'")
 
         try:
             reference_unit = self._get_reference_unit(col.name)
@@ -396,7 +398,7 @@ class DataValidator:
             range columns
 
         """
-        self._logger.debug("Checking data in column '%s' for '%s' ", col_name, range_type)
+        self._logger.debug(f"Checking data in column '{col_name}' for '{range_type}' ")
 
         try:
             if range_type not in ("allowed_range", "required_range"):
@@ -417,9 +419,7 @@ class DataValidator:
             ):
                 raise ValueError
         except KeyError:
-            self._logger.error(
-                "Invalid range ('%s') definition for column ''%s", range_type, col_name
-            )
+            self._logger.error(f"Invalid range ('{range_type}') definition for column '{col_name}'")
         except ValueError:
             self._logger.error(
                 f"Value for column '{col_name}' out of range. "
@@ -487,7 +487,7 @@ class DataValidator:
         _schema_dict = {}
         try:
             if schema_file.find(".schema.yml") < 0 and parameter is not None:
-                schema_file += "/" + parameter + ".schema.yml"
+                Path(schema_file).joinpath(parameter + ".schema.yml")
         except AttributeError:
             self._logger.error("No schema file given")
             raise
@@ -543,6 +543,6 @@ class DataValidator:
             return _entry[_index]
         except IndexError:
             self._logger.error(
-                "Data column '%s' not found in reference column definition", column_name
+                f"Data column '{column_name}' not found in reference column definition"
             )
             raise
