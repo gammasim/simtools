@@ -256,8 +256,8 @@ def corsika_output_file_name():
 
 @pytest.fixture
 def corsika_output_instance(io_handler, corsika_output_file_name):
-    return CorsikaOutput(corsika_output_file_name)
-
+    return CorsikaOutput(corsika_output_file_name,
+                         output_path=io_handler.get_output_directory(test=True))
 
 @pytest.fixture
 def corsika_output_instance_set_histograms(db, io_handler, corsika_output_instance):

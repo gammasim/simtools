@@ -102,7 +102,7 @@ class CommandLineParser(argparse.ArgumentParser):
             "--output_path",
             help="path pointing towards output directory",
             type=Path,
-            default="./",
+            default="./simtools-output/",
             required=False,
         )
         _job_group.add_argument(
