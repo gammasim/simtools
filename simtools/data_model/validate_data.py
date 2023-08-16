@@ -1,7 +1,6 @@
 import logging
 import os
 import re
-from pathlib import Path
 
 import numpy as np
 from astropy import units as u
@@ -79,7 +78,7 @@ class DataValidator:
             else:
                 self.data_table = Table.read(self._data_file_name, guess=True, delimiter=r"\s")
                 self._logger.info(f"Reading tabled data from file: {self._data_file_name}")
-        except AttributeError:
+        except (AttributeError, TypeError):
             pass
 
     def _validate_data_dict(self):
@@ -487,7 +486,7 @@ class DataValidator:
         _schema_dict = {}
         try:
             if schema_file.find(".schema.yml") < 0 and parameter is not None:
-                Path(schema_file).joinpath(parameter + ".schema.yml")
+                schema_file += "/" + parameter + ".schema.yml"
         except AttributeError:
             self._logger.error("No schema file given")
             raise
