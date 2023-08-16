@@ -13,7 +13,7 @@ import astropy.units as u
 import matplotlib.pyplot as plt
 import numpy as np
 
-from simtools.util.general import collect_kwargs, set_default_kwargs
+from simtools.utils.general import collect_kwargs, set_default_kwargs
 
 __all__ = ["PSFImage"]
 

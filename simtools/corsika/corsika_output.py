@@ -12,7 +12,7 @@ from corsikaio.subblocks import event_header, get_units_from_fields, run_header
 from eventio import IACTFile
 
 from simtools import io_handler
-from simtools.util.general import (
+from simtools.utils.general import (
     collect_data_from_yaml_or_dict,
     convert_2D_to_radial_distr,
     rotate,

@@ -8,12 +8,12 @@ import numpy as np
 from astropy import units as u
 from astropy.table import Table
 
-import simtools.util.general as gen
+import simtools.utils.general as gen
 from simtools import db_handler, io_handler
 from simtools.model.camera import Camera
 from simtools.model.mirrors import Mirrors
 from simtools.simtel.simtel_config_writer import SimtelConfigWriter
-from simtools.util import names
+from simtools.utils import names
 
 __all__ = ["InvalidParameter", "TelescopeModel"]
 

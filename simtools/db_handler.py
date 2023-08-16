@@ -11,10 +11,10 @@ from bson.objectid import ObjectId
 from pymongo import MongoClient
 from pymongo.errors import BulkWriteError
 
-import simtools.util.general as gen
+import simtools.utils.general as gen
 from simtools import io_handler
 from simtools.model.model_utils import get_telescope_class
-from simtools.util import names
+from simtools.utils import names
 
 __all__ = ["DatabaseHandler"]
 

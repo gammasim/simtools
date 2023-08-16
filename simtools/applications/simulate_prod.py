@@ -91,7 +91,7 @@ from pathlib import Path
 
 from astropy.io.misc import yaml
 
-import simtools.util.general as gen
+import simtools.utils.general as gen
 from simtools.configuration import configurator
 from simtools.configuration.commandline_parser import CommandLineParser
 from simtools.simulator import Simulator
