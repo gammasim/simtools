@@ -11,8 +11,8 @@ import pytest
 from astropy.coordinates.errors import UnitsError
 from astropy.io.misc import yaml
 
-import simtools.util.general as gen
-from simtools.util.general import (
+import simtools.utils.general as gen
+from simtools.utils.general import (
     InvalidConfigEntry,
     MissingRequiredConfigEntry,
     UnableToIdentifyConfigEntry,
@@ -42,7 +42,6 @@ def test_collect_dict_data(args_dict, io_handler):
 
 
 def test_validate_config_data(args_dict, io_handler, caplog):
-
     parameter_file = io_handler.get_input_data_file(file_name="test_parameters.yml", test=True)
     parameters = gen.collect_data_from_yaml_or_dict(parameter_file, None)
 
@@ -104,7 +103,6 @@ def test_validate_config_data(args_dict, io_handler, caplog):
 
 
 def test_check_value_entry_length():
-
     _par_info = {}
     _par_info["len"] = 2
     assert gen._check_value_entry_length([1, 4], "test_1", _par_info) == (2, False)
@@ -119,7 +117,6 @@ def test_check_value_entry_length():
 
 
 def test_validate_and_convert_value_with_units():
-
     _parname = "cscat"
     _parinfo = {"len": 4, "unit": [None, u.Unit("m"), u.Unit("m"), None], "names": ["scat"]}
     _value = [0, 10 * u.m, 3 * u.km, None]
@@ -148,7 +145,6 @@ def test_validate_and_convert_value_with_units():
 
 
 def test_validate_and_convert_value_without_units():
-
     _parname = "cscat"
     _parinfo = {"len": 3, "names": ["scat"]}
     _value = [0, 10.0, 3.0]
@@ -172,14 +168,12 @@ def test_validate_and_convert_value_without_units():
 
 
 def test_program_is_executable():
-
     # (assume 'ls' exist on any system the test is running)
     assert gen.program_is_executable("ls") is not None
     assert gen.program_is_executable("this_program_probably_does_not_exist") is None
 
 
 def test_change_dict_keys_case():
-
     # note that ist entries in DATA_COLUMNS:ATTRIBUTE should not be changed (not keys)
     _upper_dict = {
         "REFERENCE": {"VERSION": "0.1.0"},
@@ -252,7 +246,6 @@ def test_rotate_telescope_position():
 
 
 def test_convert_2D_to_radial_distr(caplog):
-
     # Test normal functioning
     max_dist = 100
     bins = 100
@@ -277,7 +270,6 @@ def test_convert_2D_to_radial_distr(caplog):
 
 
 def test_save_dict_to_file(tmp_test_directory, caplog):
-
     # str
     paths = ["test_file", "test_file.yml"]
     example_dict = {"key": 12}

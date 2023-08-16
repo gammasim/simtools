@@ -54,7 +54,7 @@
 import logging
 from pathlib import Path
 
-import simtools.util.general as gen
+import simtools.utils.general as gen
 from simtools.configuration import configurator
 from simtools.layout import layout_array
 
@@ -124,7 +124,6 @@ def _parse(label=None, description=None):
 
 
 def main():
-
     label = Path(__file__).stem
     args_dict, _ = _parse(label, description=("Print a list of array element positions"))
 

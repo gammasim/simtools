@@ -6,7 +6,7 @@ import pytest
 
 from simtools.layout.layout_array import LayoutArray
 from simtools.simtel.simtel_config_writer import SimtelConfigWriter
-from simtools.util.general import file_has_text
+from simtools.utils.general import file_has_text
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
@@ -14,7 +14,6 @@ logger.setLevel(logging.DEBUG)
 
 @pytest.fixture
 def simtel_config_writer():
-
     simtel_config_writer = SimtelConfigWriter(
         site="North",
         model_version="Current",
