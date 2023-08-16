@@ -58,7 +58,7 @@ class CorsikaOutput:
 
         self.io_handler = io_handler.IOHandler()
         _default_output_path = self.io_handler.get_output_directory(self.label, "corsika")
-        if output_path is None or output_path == Path('.'):
+        if output_path is None:
             self.output_path = _default_output_path
         else:
             self.output_path = Path(output_path)
