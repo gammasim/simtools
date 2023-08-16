@@ -71,7 +71,6 @@ release = version
 extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.intersphinx",
-    # "sphinx.ext.ifconfig",
     "sphinx.ext.viewcode",
     "sphinx.ext.githubpages",
     # 'sphinx.ext.napoleon',  # make sphinx understand google docstring format
