@@ -6,7 +6,7 @@ import logging
 import pytest
 
 import simtools.data_model.metadata_collector as metadata_collector
-import simtools.util.general as gen
+import simtools.utils.general as gen
 from simtools.data_model import metadata_model
 
 logger = logging.getLogger()
@@ -14,7 +14,6 @@ logger.setLevel(logging.DEBUG)
 
 
 def test_fill_association_meta_from_args(args_dict_site):
-
     metadata_1 = metadata_collector.MetadataCollector(args_dict=args_dict_site)
     metadata_1.top_level_meta = gen.change_dict_keys_case(
         metadata_model.top_level_reference_schema(), True
@@ -38,7 +37,6 @@ def test_fill_association_meta_from_args(args_dict_site):
 
 
 def test_fill_top_level_meta_from_file(args_dict_site):
-
     metadata_1 = metadata_collector.MetadataCollector(args_dict=args_dict_site)
     metadata_1.top_level_meta = gen.change_dict_keys_case(
         metadata_model.top_level_reference_schema(), True
@@ -60,7 +58,6 @@ def test_fill_top_level_meta_from_file(args_dict_site):
 
 
 def test_fill_product_meta(args_dict_site):
-
     metadata_1 = metadata_collector.MetadataCollector(args_dict=args_dict_site)
     metadata_1.top_level_meta = gen.change_dict_keys_case(
         metadata_model.top_level_reference_schema(), True
@@ -89,7 +86,6 @@ def test_fill_product_meta(args_dict_site):
 
 
 def test_fill_association_id(args_dict_site):
-
     metadata_1 = metadata_collector.MetadataCollector(args_dict=args_dict_site)
     metadata_1.top_level_meta = gen.change_dict_keys_case(
         metadata_model.top_level_reference_schema(), True
@@ -118,7 +114,6 @@ def test_fill_association_id(args_dict_site):
 
 
 def test_merge_config_dicts(args_dict_site):
-
     d_low_priority = {
         "reference": {"version": "0.1.0"},
         "activity": {"name": "SetParameterFromExternal", "description": "Set data columns"},
@@ -157,7 +152,6 @@ def test_merge_config_dicts(args_dict_site):
 
 
 def test_fill_activity_meta(args_dict_site):
-
     file_writer_1 = metadata_collector.MetadataCollector(args_dict=args_dict_site)
     file_writer_1.top_level_meta = gen.change_dict_keys_case(
         metadata_model.top_level_reference_schema(), True
@@ -171,7 +165,6 @@ def test_fill_activity_meta(args_dict_site):
 
 
 def test_fill_context_sim_list(args_dict_site):
-
     _test_dict_1 = copy.copy(get_generic_input_meta()["product"]["association"])
 
     # empty dict -> return same dict
@@ -204,7 +197,6 @@ def test_fill_context_sim_list(args_dict_site):
 
 
 def test_input_data_file_name(args_dict_site):
-
     metadata_1 = metadata_collector.MetadataCollector(args_dict=args_dict_site)
 
     with pytest.raises(KeyError):
@@ -215,7 +207,6 @@ def test_input_data_file_name(args_dict_site):
 
 
 def get_generic_input_meta():
-
     return {
         "contact": "my_name",
         "instrument": "my_instrument",

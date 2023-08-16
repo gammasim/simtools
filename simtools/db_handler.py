@@ -11,10 +11,10 @@ from bson.objectid import ObjectId
 from pymongo import MongoClient
 from pymongo.errors import BulkWriteError
 
-import simtools.util.general as gen
+import simtools.utils.general as gen
 from simtools import io_handler
 from simtools.model.model_utils import get_telescope_class
-from simtools.util import names
+from simtools.utils import names
 
 __all__ = ["DatabaseHandler"]
 
@@ -246,7 +246,6 @@ class DatabaseHandler:
         else:
             self._logger.debug("Exporting model files from local model file directories")
             for value in parameters.values():
-
                 if not self._is_file(value):
                     continue
                 self._write_model_file_yaml(value, dest, no_file_ok=True)
@@ -325,7 +324,6 @@ class DatabaseHandler:
             _select_only_applicable = only_applicable or (_tel in ["MST-optics", "SST-Structure"])
 
             for par_name_in, par_info in _all_pars.items():
-
                 if not par_info["Applicable"] and _select_only_applicable:
                     continue
 
@@ -571,7 +569,6 @@ class DatabaseHandler:
 
         _pars = dict()
         for par_name, par_info in _all_pars_versions.items():
-
             if not par_info["Applicable"] and only_applicable:
                 continue
             if site_yaml in par_name:

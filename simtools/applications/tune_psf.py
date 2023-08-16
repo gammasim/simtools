@@ -93,7 +93,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.backends.backend_pdf import PdfPages
 
-import simtools.util.general as gen
+import simtools.utils.general as gen
 from simtools import io_handler
 from simtools.configuration import configurator
 from simtools.model.model_utils import split_simtel_parameter
@@ -111,7 +111,6 @@ def load_data(datafile):
 
 
 def main():
-
     config = configurator.Configurator(
         description=(
             "Tune mirror_reflection_random_angle, mirror_align_random_horizontal "

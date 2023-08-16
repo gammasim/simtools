@@ -91,7 +91,7 @@ from pathlib import Path
 
 from astropy.io.misc import yaml
 
-import simtools.util.general as gen
+import simtools.utils.general as gen
 from simtools.configuration import configurator
 from simtools.configuration.commandline_parser import CommandLineParser
 from simtools.simulator import Simulator
@@ -236,7 +236,6 @@ def _proccess_simulation_config_file(config_file, primary_config, logger):
     default_data = config_data.pop("default", {})
 
     for primary, primary_data in config_data.items():
-
         if primary_config is not None and primary != primary_config:
             continue
 
@@ -275,7 +274,6 @@ def _proccess_simulation_config_file(config_file, primary_config, logger):
 
 
 def main():
-
     args_dict, db_config = _parse(description=("Run simulations for productions"))
 
     logger = logging.getLogger()

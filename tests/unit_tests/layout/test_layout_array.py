@@ -6,7 +6,7 @@ import astropy.units as u
 import numpy as np
 import pytest
 
-import simtools.util.general as gen
+import simtools.utils.general as gen
 from simtools.layout.layout_array import LayoutArray
 
 logger = logging.getLogger()

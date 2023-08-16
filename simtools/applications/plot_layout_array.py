@@ -43,7 +43,7 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 from astropy import units as u
 
-import simtools.util.general as gen
+import simtools.utils.general as gen
 from simtools import io_handler
 from simtools.configuration import configurator
 from simtools.layout.layout_array import LayoutArray
@@ -115,7 +115,6 @@ def _parse(label, description, usage):
 
 
 def main():
-
     label = Path(__file__).stem
     description = "Plots layout array."
     usage = "python applications/plot_layout_array.py --layout_array_name test_layout"
@@ -146,7 +145,6 @@ def main():
         ]
 
     for one_file in telescope_file:
-
         logger.debug(f"Processing: {one_file}.")
         for one_angle in rotate_angles:
             logger.debug(f"Processing: {one_angle}.")
