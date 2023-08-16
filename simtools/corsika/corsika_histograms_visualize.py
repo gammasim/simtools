@@ -561,9 +561,9 @@ def plot_2D_event_header_distribution(
         ax.set_xlabel(f"{event_header_element_2}")
     if (corsika_histograms_instance.event_information[
         event_header_element_2].unit is not u.dimensionless_unscaled):
-        ax.set_ylabel(
-            f"{event_header_element_2} "
-            f"({corsika_histograms_instance.event_information[event_header_element_2].unit})")
+            ax.set_ylabel(
+                f"{event_header_element_2} "
+                f"({corsika_histograms_instance.event_information[event_header_element_2].unit})")
     else:
         ax.set_ylabel(f"{event_header_element_2}")
 
