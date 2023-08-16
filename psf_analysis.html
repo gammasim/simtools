@@ -1,0 +1,329 @@
+
+
+<!doctype html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+    <title>PSF Analysis &#8212; simtools v0.1.dev1+g59e41a4.d20230816 Manual</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/bizstyle.css" />
+    
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/bizstyle.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Ray Tracing" href="ray_tracing.html" />
+    <link rel="prev" title="MC Model" href="mc_model.html" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <!--[if lt IE 9]>
+    <script src="_static/css3-mediaqueries.js"></script>
+    <![endif]-->
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="ray_tracing.html" title="Ray Tracing"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="mc_model.html" title="MC Model"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">simtools v0.1.dev1+g59e41a4.d20230816 Manual</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="library.html" accesskey="U">API</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">PSF Analysis</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="psf-analysis">
+<span id="psfanalysis"></span><h1>PSF Analysis<a class="headerlink" href="#psf-analysis" title="Permalink to this heading">¶</a></h1>
+<p>The PSF analysis module supports the Ray Tracing module provided algorithm for the analysis of the optical point-spread function.
+Its main class PSFImage receives the focal length and the list of photons positions to calculate the PSF characteristics and plot results.</p>
+<section id="module-psf_analysis">
+<span id="id1"></span><span id="psfanalysismodule"></span><h2>psf_analysis<a class="headerlink" href="#module-psf_analysis" title="Permalink to this heading">¶</a></h2>
+<p>Module to analyse psf images (e.g. results from ray tracing simulations).
+Main functionalities are: computing centroids, psf containers etc.</p>
+<p>Author: Raul R Prado</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="psf_analysis.PSFImage">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">psf_analysis.</span></span><span class="sig-name descname"><span class="pre">PSFImage</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">focal_length</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">total_scattered_area</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/psf_analysis.html#PSFImage"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#psf_analysis.PSFImage" title="Permalink to this definition">¶</a></dt>
+<dd><p>Image composed of list of photon positions (2D).</p>
+<p>Load photon list from sim_telarray file and compute centroids, psf containers, effective area,
+as well as plot the image as a 2D histogram.
+Internal units: photon positions in cm internally.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>focal_length: float, optional</strong></dt><dd><p>Focal length of the system in cm. If not given, PSF can only be computed in cm.</p>
+</dd>
+<dt><strong>total_scattered_area: float, optional</strong></dt><dd><p>Scatter area of all photons in cm^2. If not given, effective area cannot be computed.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="psf_analysis.PSFImage.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">focal_length</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">total_scattered_area</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/psf_analysis.html#PSFImage.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#psf_analysis.PSFImage.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize PSFImage class.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="psf_analysis.PSFImage.get_cumulative_data">
+<span class="sig-name descname"><span class="pre">get_cumulative_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">radius</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/psf_analysis.html#PSFImage.get_cumulative_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#psf_analysis.PSFImage.get_cumulative_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Provide cumulative data (intensity vs radius).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>radius: array</strong></dt><dd><p>Array with radius calculate the cumulative PSF in distance units.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>(radius, intensity)</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="psf_analysis.PSFImage.get_effective_area">
+<span class="sig-name descname"><span class="pre">get_effective_area</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/psf_analysis.html#PSFImage.get_effective_area"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#psf_analysis.PSFImage.get_effective_area" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return effective area pre calculated</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>float</dt><dd><p>Pre-calculated effective area. None if it could not be calculated (e.g because the total
+scattering area was not set).</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="psf_analysis.PSFImage.get_image_data">
+<span class="sig-name descname"><span class="pre">get_image_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">centralized</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/psf_analysis.html#PSFImage.get_image_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#psf_analysis.PSFImage.get_image_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Provide image data (2D photon positions in cm) as lists.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>centralized: bool</strong></dt><dd><p>Centroid of the image is set to (0, 0) if True.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>(x, y), the photons positions in cm.</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="psf_analysis.PSFImage.get_psf">
+<span class="sig-name descname"><span class="pre">get_psf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fraction</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'cm'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/psf_analysis.html#PSFImage.get_psf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#psf_analysis.PSFImage.get_psf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return PSF</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>fraction: float</strong></dt><dd><p>Fraction of photons within the containing radius.</p>
+</dd>
+<dt><strong>unit: str</strong></dt><dd><p>‘cm’ or ‘deg’. ‘deg’ will not work if focal length was not set.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>float:</dt><dd><p>Containing diameter for a certain intensity fraction (PSF).</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="psf_analysis.PSFImage.plot_cumulative">
+<span class="sig-name descname"><span class="pre">plot_cumulative</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/psf_analysis.html#PSFImage.plot_cumulative"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#psf_analysis.PSFImage.plot_cumulative" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plot cumulative data (intensity vs radius).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>**kwargs:</strong></dt><dd><p>image_* for the histogram plot and psf_* for the psf circle.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="psf_analysis.PSFImage.plot_image">
+<span class="sig-name descname"><span class="pre">plot_image</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">centralized</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/psf_analysis.html#PSFImage.plot_image"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#psf_analysis.PSFImage.plot_image" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plot 2D image as histogram (in cm).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>centralized: bool</strong></dt><dd><p>Centroid of the image is set to (0, 0) if True.</p>
+</dd>
+<dt><strong>**kwargs:</strong></dt><dd><p>image_* for the histogram plot and psf_* for the psf circle.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="psf_analysis.PSFImage.read_photon_list_from_simtel_file">
+<span class="sig-name descname"><span class="pre">read_photon_list_from_simtel_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/psf_analysis.html#PSFImage.read_photon_list_from_simtel_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#psf_analysis.PSFImage.read_photon_list_from_simtel_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read photon list file generated by sim_telarray and store the photon positions (2D).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>file: str</strong></dt><dd><p>Name of sim_telarray file with photon list.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>RuntimeError</dt><dd><p>If photon positions X and Y are not compatible or are empty.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="psf_analysis.PSFImage.set_effective_area">
+<span class="sig-name descname"><span class="pre">set_effective_area</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/psf_analysis.html#PSFImage.set_effective_area"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#psf_analysis.PSFImage.set_effective_area" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set effective area</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>value: float</strong></dt><dd><p>Effective area</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="psf_analysis.PSFImage.set_psf">
+<span class="sig-name descname"><span class="pre">set_psf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fraction</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'cm'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/psf_analysis.html#PSFImage.set_psf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#psf_analysis.PSFImage.set_psf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set PSF calculated from other methods.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>value: float</strong></dt><dd><p>PSF value to be set</p>
+</dd>
+<dt><strong>fraction: float</strong></dt><dd><p>Fraction of photons within the containing radius.</p>
+</dd>
+<dt><strong>unit: str</strong></dt><dd><p>‘cm’ or ‘deg’. ‘deg’ will not work if focal length was not set.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="index.html">Table of Contents</a></h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="simtools-configuration.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="applications.html">Applications</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="library.html">API</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="camera_efficiency.html">Camera Efficiency</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configuration_module.html">Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="corsika.html">CORSIKA</a></li>
+<li class="toctree-l2"><a class="reference internal" href="corsika_simtel.html">CORSIKA and sim_telarray</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_model.html">Data Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="db_handler.html">Database support</a></li>
+<li class="toctree-l2"><a class="reference internal" href="io_handler.html">I/O</a></li>
+<li class="toctree-l2"><a class="reference internal" href="job_execution.html">Job execution and submission</a></li>
+<li class="toctree-l2"><a class="reference internal" href="layout_array.html">Layout</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mc_model.html">MC Model</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">PSF Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ray_tracing.html">Ray Tracing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sim_telarray.html">sim_telarray</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulators.html">Simulator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="visualization.html">Visualization</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="auxiliary_files.html">Auxiliary Files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="databases.html">Databases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="simulation_software.html">Simulation Software</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guidelines.html">Developer Guidelines</a></li>
+</ul>
+
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/psf_analysis.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="ray_tracing.html" title="Ray Tracing"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="mc_model.html" title="MC Model"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">simtools v0.1.dev1+g59e41a4.d20230816 Manual</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="library.html" >API</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">PSF Analysis</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2022, gammasim-tools, simtools developers.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 6.2.1.
+    </div>
+  </body>
+</html>

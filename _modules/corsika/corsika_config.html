@@ -1,0 +1,633 @@
+
+
+<!doctype html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>corsika.corsika_config &#8212; simtools v0.1.dev1+g59e41a4.d20230816 Manual</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/bizstyle.css" />
+    
+    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/sphinx_highlight.js"></script>
+    <script src="../../_static/bizstyle.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <!--[if lt IE 9]>
+    <script src="_static/css3-mediaqueries.js"></script>
+    <![endif]-->
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">simtools v0.1.dev1+g59e41a4.d20230816 Manual</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">corsika.corsika_config</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for corsika.corsika_config</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">copy</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+
+<span class="kn">import</span> <span class="nn">astropy.units</span> <span class="k">as</span> <span class="nn">u</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">astropy.io.misc</span> <span class="kn">import</span> <span class="n">yaml</span>
+
+<span class="kn">import</span> <span class="nn">simtools.utils.general</span> <span class="k">as</span> <span class="nn">gen</span>
+<span class="kn">from</span> <span class="nn">simtools</span> <span class="kn">import</span> <span class="n">io_handler</span>
+<span class="kn">from</span> <span class="nn">simtools.layout.layout_array</span> <span class="kn">import</span> <span class="n">LayoutArray</span>
+<span class="kn">from</span> <span class="nn">simtools.utils</span> <span class="kn">import</span> <span class="n">names</span>
+<span class="kn">from</span> <span class="nn">simtools.utils.general</span> <span class="kn">import</span> <span class="n">collect_data_from_yaml_or_dict</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">&quot;CorsikaConfig&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;MissingRequiredInputInCorsikaConfigData&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;InvalidCorsikaInput&quot;</span><span class="p">,</span>
+<span class="p">]</span>
+
+
+<div class="viewcode-block" id="MissingRequiredInputInCorsikaConfigData"><a class="viewcode-back" href="../../corsika.html#corsika.corsika_config.MissingRequiredInputInCorsikaConfigData">[docs]</a><span class="k">class</span> <span class="nc">MissingRequiredInputInCorsikaConfigData</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Exception for missing required input in corsika config data.&quot;&quot;&quot;</span></div>
+
+
+<div class="viewcode-block" id="InvalidCorsikaInput"><a class="viewcode-back" href="../../corsika.html#corsika.corsika_config.InvalidCorsikaInput">[docs]</a><span class="k">class</span> <span class="nc">InvalidCorsikaInput</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Exception for invalid corsika input.&quot;&quot;&quot;</span></div>
+
+
+<div class="viewcode-block" id="CorsikaConfig"><a class="viewcode-back" href="../../corsika.html#corsika.corsika_config.CorsikaConfig">[docs]</a><span class="k">class</span> <span class="nc">CorsikaConfig</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    CorsikaConfig deals with configuration for running CORSIKA. User parameters must be given by \</span>
+<span class="sd">    the corsika_config_data or corsika_config_file arguments. An example of corsika_config_data</span>
+<span class="sd">    follows below.</span>
+
+<span class="sd">    .. code-block:: python</span>
+
+<span class="sd">        corsika_config_data = {</span>
+<span class="sd">            &#39;data_directory&#39;: .</span>
+<span class="sd">            &#39;primary&#39;: &#39;proton&#39;,</span>
+<span class="sd">            &#39;nshow&#39;: 10000,</span>
+<span class="sd">            &#39;nrun&#39;: 1,</span>
+<span class="sd">            &#39;zenith&#39;: 20 * u.deg,</span>
+<span class="sd">            &#39;viewcone&#39;: 5 * u.deg,</span>
+<span class="sd">            &#39;erange&#39;: [10 * u.GeV, 100 * u.TeV],</span>
+<span class="sd">            &#39;eslope&#39;: -2,</span>
+<span class="sd">            &#39;phi&#39;: 0 * u.deg,</span>
+<span class="sd">            &#39;cscat&#39;: [10, 1500 * u.m, 0]</span>
+<span class="sd">        }</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    mongo_db_config: dict</span>
+<span class="sd">        MongoDB configuration.</span>
+<span class="sd">    site: str</span>
+<span class="sd">        North or South.</span>
+<span class="sd">    layout_name: str</span>
+<span class="sd">        Name of the layout.</span>
+<span class="sd">    label: str</span>
+<span class="sd">        Instance label.</span>
+<span class="sd">    corsika_config_data: dict</span>
+<span class="sd">        CORSIKA user parameters.</span>
+<span class="sd">    corsika_config_file: str</span>
+<span class="sd">        Name of the yaml configuration file. If not provided, \</span>
+<span class="sd">        data/parameters/corsika_parameters.yml will be used.</span>
+<span class="sd">    corsika_parameters_file: str</span>
+<span class="sd">        Name of the yaml file to set remaining CORSIKA parameters.</span>
+<span class="sd">    simtel_source_path: str or Path</span>
+<span class="sd">        Location of source of the sim_telarray/CORSIKA package.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="CorsikaConfig.__init__"><a class="viewcode-back" href="../../corsika.html#corsika.corsika_config.CorsikaConfig.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">mongo_db_config</span><span class="p">,</span>
+        <span class="n">site</span><span class="p">,</span>
+        <span class="n">layout_name</span><span class="p">,</span>
+        <span class="n">label</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">corsika_config_data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">corsika_config_file</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">corsika_parameters_file</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">simtel_source_path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize CorsikaConfig.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Init CorsikaConfig&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">label</span> <span class="o">=</span> <span class="n">label</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">site</span> <span class="o">=</span> <span class="n">names</span><span class="o">.</span><span class="n">validate_site_name</span><span class="p">(</span><span class="n">site</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">primary</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_config_file_path</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_output_generic_file_name</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_simtel_source_path</span> <span class="o">=</span> <span class="n">simtel_source_path</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">io_handler</span> <span class="o">=</span> <span class="n">io_handler</span><span class="o">.</span><span class="n">IOHandler</span><span class="p">()</span>
+
+        <span class="c1"># Grabbing layout name and building LayoutArray</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">layout_name</span> <span class="o">=</span> <span class="n">names</span><span class="o">.</span><span class="n">validate_layout_array_name</span><span class="p">(</span><span class="n">layout_name</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">layout</span> <span class="o">=</span> <span class="n">LayoutArray</span><span class="o">.</span><span class="n">from_layout_array_name</span><span class="p">(</span>
+            <span class="n">mongo_db_config</span><span class="o">=</span><span class="n">mongo_db_config</span><span class="p">,</span>
+            <span class="n">layout_array_name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">site</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">layout_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="n">label</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Load parameters</span>
+        <span class="k">if</span> <span class="n">corsika_parameters_file</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">corsika_parameters_file</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">io_handler</span><span class="o">.</span><span class="n">get_input_data_file</span><span class="p">(</span>
+                <span class="s2">&quot;parameters&quot;</span><span class="p">,</span> <span class="s2">&quot;corsika_parameters.yml&quot;</span>
+            <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_corsika_parameters</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">load_corsika_parameters_file</span><span class="p">(</span><span class="n">corsika_parameters_file</span><span class="p">)</span>
+
+        <span class="n">corsika_config_data</span> <span class="o">=</span> <span class="n">collect_data_from_yaml_or_dict</span><span class="p">(</span>
+            <span class="n">corsika_config_file</span><span class="p">,</span> <span class="n">corsika_config_data</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_user_parameters</span><span class="p">(</span><span class="n">corsika_config_data</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_is_file_updated</span> <span class="o">=</span> <span class="kc">False</span></div>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">text</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;&lt;class </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&gt; &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;(site=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">site</span><span class="si">}</span><span class="s2">, layout=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">layout_name</span><span class="si">}</span><span class="s2">, label=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="si">}</span><span class="s2">)&quot;</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">text</span>
+
+<div class="viewcode-block" id="CorsikaConfig.load_corsika_parameters_file"><a class="viewcode-back" href="../../corsika.html#corsika.corsika_config.CorsikaConfig.load_corsika_parameters_file">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">load_corsika_parameters_file</span><span class="p">(</span><span class="n">corsika_parameters_file</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Load CORSIKA parameters from the provided corsika_parameters_file.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        corsika_parameters_file: str or Path</span>
+<span class="sd">            File with CORSIKA parameters.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        corsika_parameters: dict</span>
+<span class="sd">            Dictionary with CORSIKA parameters.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Loading CORSIKA parameters from file </span><span class="si">{</span><span class="n">corsika_parameters_file</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">corsika_parameters_file</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">corsika_parameters</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">corsika_parameters</span></div>
+
+<div class="viewcode-block" id="CorsikaConfig.set_user_parameters"><a class="viewcode-back" href="../../corsika.html#corsika.corsika_config.CorsikaConfig.set_user_parameters">[docs]</a>    <span class="k">def</span> <span class="nf">set_user_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">corsika_config_data</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set user parameters from a dict.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        corsika_config_data: dict</span>
+<span class="sd">            Contains the user parameters. Ex.</span>
+
+<span class="sd">            .. code-block:: python</span>
+
+<span class="sd">                corsika_config_data = {</span>
+<span class="sd">                    &#39;primary&#39;: &#39;proton&#39;,</span>
+<span class="sd">                    &#39;nshow&#39;: 10000,</span>
+<span class="sd">                    &#39;nrun&#39;: 1,</span>
+<span class="sd">                    &#39;zenith&#39;: 20 * u.deg,</span>
+<span class="sd">                    &#39;viewcone&#39;: 5 * u.deg,</span>
+<span class="sd">                    &#39;erange&#39;: [10 * u.GeV, 100 * u.TeV],</span>
+<span class="sd">                    &#39;eslope&#39;: -2,</span>
+<span class="sd">                    &#39;phi&#39;: 0 * u.deg,</span>
+<span class="sd">                    &#39;cscat&#39;: [10, 1500 * u.m, 0]</span>
+<span class="sd">                }</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        InvalidCorsikaInput</span>
+<span class="sd">            If any parameter given as input has wrong len, unit or</span>
+<span class="sd">            an invalid name.</span>
+<span class="sd">        MissingRequiredInputInCorsikaConfigData</span>
+<span class="sd">            If any required user parameter is missing.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Setting user parameters from corsika_config_data&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_user_parameters</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+
+        <span class="n">user_pars</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_corsika_parameters</span><span class="p">[</span><span class="s2">&quot;USER_PARAMETERS&quot;</span><span class="p">]</span>
+
+        <span class="c1"># Collecting all parameters given as arguments</span>
+        <span class="k">for</span> <span class="n">key_args</span><span class="p">,</span> <span class="n">value_args</span> <span class="ow">in</span> <span class="n">corsika_config_data</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="c1"># Looping over USER_PARAMETERS and searching for a match</span>
+            <span class="n">is_identified</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">for</span> <span class="n">par_name</span><span class="p">,</span> <span class="n">par_info</span> <span class="ow">in</span> <span class="n">user_pars</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="k">if</span> <span class="n">key_args</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="o">!=</span> <span class="n">par_name</span> <span class="ow">and</span> <span class="n">key_args</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">par_info</span><span class="p">[</span><span class="s2">&quot;names&quot;</span><span class="p">]:</span>
+                    <span class="k">continue</span>
+                <span class="c1"># Matched parameter</span>
+                <span class="n">validated_value_args</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_validate_and_convert_argument</span><span class="p">(</span>
+                    <span class="n">par_name</span><span class="p">,</span> <span class="n">par_info</span><span class="p">,</span> <span class="n">value_args</span>
+                <span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_user_parameters</span><span class="p">[</span><span class="n">par_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">validated_value_args</span>
+                <span class="n">is_identified</span> <span class="o">=</span> <span class="kc">True</span>
+
+            <span class="c1"># Raising error for an unidentified input.</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">is_identified</span><span class="p">:</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Argument </span><span class="si">{</span><span class="n">key_args</span><span class="si">}</span><span class="s2"> cannot be identified.&quot;</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="n">InvalidCorsikaInput</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+        <span class="c1"># Checking for parameters with default option</span>
+        <span class="c1"># If it is not given, filling it with the default value</span>
+        <span class="k">for</span> <span class="n">par_name</span><span class="p">,</span> <span class="n">par_info</span> <span class="ow">in</span> <span class="n">user_pars</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">par_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_user_parameters</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="k">if</span> <span class="s2">&quot;default&quot;</span> <span class="ow">in</span> <span class="n">par_info</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="n">validated_value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_validate_and_convert_argument</span><span class="p">(</span>
+                    <span class="n">par_name</span><span class="p">,</span> <span class="n">par_info</span><span class="p">,</span> <span class="n">par_info</span><span class="p">[</span><span class="s2">&quot;default&quot;</span><span class="p">]</span>
+                <span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_user_parameters</span><span class="p">[</span><span class="n">par_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">validated_value</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Required parameters </span><span class="si">{</span><span class="n">par_name</span><span class="si">}</span><span class="s2"> was not given (there may be more).&quot;</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="n">MissingRequiredInputInCorsikaConfigData</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+        <span class="c1"># Converting AZM to CORSIKA reference (PHIP)</span>
+        <span class="n">phip</span> <span class="o">=</span> <span class="mf">180.0</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_user_parameters</span><span class="p">[</span><span class="s2">&quot;AZM&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">phip</span> <span class="o">=</span> <span class="n">phip</span> <span class="o">+</span> <span class="mf">360.0</span> <span class="k">if</span> <span class="n">phip</span> <span class="o">&lt;</span> <span class="mf">0.0</span> <span class="k">else</span> <span class="n">phip</span>
+        <span class="n">phip</span> <span class="o">=</span> <span class="n">phip</span> <span class="o">-</span> <span class="mf">360.0</span> <span class="k">if</span> <span class="n">phip</span> <span class="o">&gt;=</span> <span class="mf">360.0</span> <span class="k">else</span> <span class="n">phip</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_user_parameters</span><span class="p">[</span><span class="s2">&quot;PHIP&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">phip</span><span class="p">,</span> <span class="n">phip</span><span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_is_file_updated</span> <span class="o">=</span> <span class="kc">False</span></div>
+
+    <span class="k">def</span> <span class="nf">_validate_and_convert_argument</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">par_name</span><span class="p">,</span> <span class="n">par_info</span><span class="p">,</span> <span class="n">value_args_in</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Validate input user parameter and convert it to the right units, if needed.</span>
+<span class="sd">        Returns the validated arguments in a list.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Turning value_args into a list, if it is not.</span>
+        <span class="n">value_args</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">copy_as_list</span><span class="p">(</span><span class="n">value_args_in</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">value_args</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">par_name</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;THETAP&quot;</span><span class="p">,</span> <span class="s2">&quot;AZM&quot;</span><span class="p">]:</span>
+            <span class="c1"># Fixing single value zenith or azimuth angle.</span>
+            <span class="c1"># THETAP and AZM should be written as a 2 values range in the CORSIKA input file</span>
+            <span class="n">value_args</span> <span class="o">=</span> <span class="n">value_args</span> <span class="o">*</span> <span class="mi">2</span>
+        <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">value_args</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">par_name</span> <span class="o">==</span> <span class="s2">&quot;VIEWCONE&quot;</span><span class="p">:</span>
+            <span class="c1"># Fixing single value viewcone.</span>
+            <span class="c1"># VIEWCONE should be written as a 2 values range in the CORSIKA input file</span>
+            <span class="n">value_args</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span> <span class="o">*</span> <span class="n">par_info</span><span class="p">[</span><span class="s2">&quot;unit&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="n">value_args</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+        <span class="k">elif</span> <span class="n">par_name</span> <span class="o">==</span> <span class="s2">&quot;PRMPAR&quot;</span><span class="p">:</span>
+            <span class="n">value_args</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_convert_primary_input_and_store_primary_name</span><span class="p">(</span><span class="n">value_args</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">value_args</span><span class="p">)</span> <span class="o">!=</span> <span class="n">par_info</span><span class="p">[</span><span class="s2">&quot;len&quot;</span><span class="p">]:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;CORSIKA input entry with wrong len: </span><span class="si">{</span><span class="n">par_name</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">InvalidCorsikaInput</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="s2">&quot;unit&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">par_info</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="k">return</span> <span class="n">value_args</span>
+
+        <span class="c1"># Turning par_info[&#39;unit&#39;] into a list, if it is not.</span>
+        <span class="n">par_unit</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">copy_as_list</span><span class="p">(</span><span class="n">par_info</span><span class="p">[</span><span class="s2">&quot;unit&quot;</span><span class="p">])</span>
+
+        <span class="c1"># Checking units and converting them, if needed.</span>
+        <span class="n">value_args_with_units</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">arg</span><span class="p">,</span> <span class="n">unit</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">value_args</span><span class="p">,</span> <span class="n">par_unit</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">unit</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">value_args_with_units</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span>
+                <span class="k">continue</span>
+
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+                <span class="n">arg</span> <span class="o">=</span> <span class="n">u</span><span class="o">.</span><span class="n">quantity</span><span class="o">.</span><span class="n">Quantity</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">quantity</span><span class="o">.</span><span class="n">Quantity</span><span class="p">):</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;CORSIKA input given without unit: </span><span class="si">{</span><span class="n">par_name</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="n">InvalidCorsikaInput</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">arg</span><span class="o">.</span><span class="n">unit</span><span class="o">.</span><span class="n">is_equivalent</span><span class="p">(</span><span class="n">unit</span><span class="p">):</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;CORSIKA input given with wrong unit: </span><span class="si">{</span><span class="n">par_name</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="n">InvalidCorsikaInput</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+            <span class="n">value_args_with_units</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">arg</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">unit</span><span class="p">)</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">value_args_with_units</span>
+
+    <span class="k">def</span> <span class="nf">_convert_primary_input_and_store_primary_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Convert a primary name into the proper CORSIKA particle ID and store its name in \</span>
+<span class="sd">        the self.primary attribute.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        value: str</span>
+<span class="sd">            Input primary name (e.g gamma, proton ...)</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        InvalidPrimary</span>
+<span class="sd">            If the input name is not found.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        int</span>
+<span class="sd">            Respective number of the given primary.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">prim_name</span><span class="p">,</span> <span class="n">prim_info</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_corsika_parameters</span><span class="p">[</span><span class="s2">&quot;PRIMARIES&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">value</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="o">==</span> <span class="n">prim_name</span> <span class="ow">or</span> <span class="n">value</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="ow">in</span> <span class="n">prim_info</span><span class="p">[</span><span class="s2">&quot;names&quot;</span><span class="p">]:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">primary</span> <span class="o">=</span> <span class="n">prim_name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+                <span class="k">return</span> <span class="p">[</span><span class="n">prim_info</span><span class="p">[</span><span class="s2">&quot;number&quot;</span><span class="p">]]</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Primary not valid: </span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="n">InvalidCorsikaInput</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+<div class="viewcode-block" id="CorsikaConfig.get_user_parameter"><a class="viewcode-back" href="../../corsika.html#corsika.corsika_config.CorsikaConfig.get_user_parameter">[docs]</a>    <span class="k">def</span> <span class="nf">get_user_parameter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">par_name</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the value of a user parameter.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        par_name: str</span>
+<span class="sd">            Name of the parameter as used in the CORSIKA input file (e.g. PRMPAR, THETAP ...)</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        KeyError</span>
+<span class="sd">            When par_name is not a valid parameter name.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        list</span>
+<span class="sd">            Value(s) of the parameter.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">par_value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_user_parameters</span><span class="p">[</span><span class="n">par_name</span><span class="o">.</span><span class="n">upper</span><span class="p">()]</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Parameter </span><span class="si">{</span><span class="n">par_name</span><span class="si">}</span><span class="s2"> is not a user parameter&quot;</span><span class="p">)</span>
+            <span class="k">raise</span>
+
+        <span class="k">return</span> <span class="n">par_value</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">par_value</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="k">else</span> <span class="n">par_value</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="CorsikaConfig.print_user_parameters"><a class="viewcode-back" href="../../corsika.html#corsika.corsika_config.CorsikaConfig.print_user_parameters">[docs]</a>    <span class="k">def</span> <span class="nf">print_user_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Print user parameters for inspection.&quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">par</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_user_parameters</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">par</span><span class="si">}</span><span class="s2"> = </span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="CorsikaConfig.export_input_file"><a class="viewcode-back" href="../../corsika.html#corsika.corsika_config.CorsikaConfig.export_input_file">[docs]</a>    <span class="k">def</span> <span class="nf">export_input_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">use_multipipe</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create and export CORSIKA input file.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        use_multipipe: bool</span>
+<span class="sd">            Whether to set the CORSIKA Inputs file to pipe</span>
+<span class="sd">            the output directly to sim_telarray or not.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">dir_type</span> <span class="o">=</span> <span class="s2">&quot;corsika_simtel&quot;</span> <span class="k">if</span> <span class="n">use_multipipe</span> <span class="k">else</span> <span class="s2">&quot;corsika&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_set_output_file_and_directory</span><span class="p">(</span><span class="n">dir_type</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Exporting CORSIKA input file to </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_file_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">_get_text_single_line</span><span class="p">(</span><span class="n">pars</span><span class="p">):</span>
+            <span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+            <span class="k">for</span> <span class="n">par</span><span class="p">,</span> <span class="n">values</span> <span class="ow">in</span> <span class="n">pars</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">line</span> <span class="o">=</span> <span class="n">par</span> <span class="o">+</span> <span class="s2">&quot; &quot;</span>
+                <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">values</span><span class="p">:</span>
+                    <span class="n">line</span> <span class="o">+=</span> <span class="nb">str</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot; &quot;</span>
+                <span class="n">line</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
+                <span class="n">text</span> <span class="o">+=</span> <span class="n">line</span>
+            <span class="k">return</span> <span class="n">text</span>
+
+        <span class="k">def</span> <span class="nf">_get_text_multiple_lines</span><span class="p">(</span><span class="n">pars</span><span class="p">):</span>
+            <span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+            <span class="k">for</span> <span class="n">par</span><span class="p">,</span> <span class="n">value_list</span> <span class="ow">in</span> <span class="n">pars</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">value_list</span><span class="p">:</span>
+                    <span class="n">new_pars</span> <span class="o">=</span> <span class="p">{</span><span class="n">par</span><span class="p">:</span> <span class="n">value</span><span class="p">}</span>
+                    <span class="n">text</span> <span class="o">+=</span> <span class="n">_get_text_single_line</span><span class="p">(</span><span class="n">new_pars</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">text</span>
+
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_file_path</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+            <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">* [ RUN PARAMETERS ]</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="c1"># Removing AZM entry first</span>
+            <span class="n">_user_pars_temp</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_user_parameters</span><span class="p">)</span>
+            <span class="n">_user_pars_temp</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;AZM&quot;</span><span class="p">)</span>
+            <span class="n">text_parameters</span> <span class="o">=</span> <span class="n">_get_text_single_line</span><span class="p">(</span><span class="n">_user_pars_temp</span><span class="p">)</span>
+            <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">text_parameters</span><span class="p">)</span>
+
+            <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">* [ SITE PARAMETERS ]</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">text_site_parameters</span> <span class="o">=</span> <span class="n">_get_text_single_line</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_corsika_parameters</span><span class="p">[</span><span class="s2">&quot;SITE_PARAMETERS&quot;</span><span class="p">][</span><span class="bp">self</span><span class="o">.</span><span class="n">site</span><span class="p">]</span>
+            <span class="p">)</span>
+            <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">text_site_parameters</span><span class="p">)</span>
+
+            <span class="c1"># Defining the IACT variables for the output file name</span>
+            <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;IACT setenv PRMNAME </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">primary</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;IACT setenv ZA </span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_user_parameters</span><span class="p">[</span><span class="s1">&#39;THETAP&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;IACT setenv AZM </span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_user_parameters</span><span class="p">[</span><span class="s1">&#39;AZM&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+
+            <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">* [ SEEDS ]</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_write_seeds</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
+
+            <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">* [ TELESCOPES ]</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">telescope_list_text</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">get_corsika_input_list</span><span class="p">()</span>
+            <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">telescope_list_text</span><span class="p">)</span>
+
+            <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">* [ INTERACTION FLAGS ]</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">text_interaction_flags</span> <span class="o">=</span> <span class="n">_get_text_single_line</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_corsika_parameters</span><span class="p">[</span><span class="s2">&quot;INTERACTION_FLAGS&quot;</span><span class="p">]</span>
+            <span class="p">)</span>
+            <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">text_interaction_flags</span><span class="p">)</span>
+
+            <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">* [ CHERENKOV EMISSION PARAMETERS ]</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">text_cherenkov</span> <span class="o">=</span> <span class="n">_get_text_single_line</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_corsika_parameters</span><span class="p">[</span><span class="s2">&quot;CHERENKOV_EMISSION_PARAMETERS&quot;</span><span class="p">]</span>
+            <span class="p">)</span>
+            <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">text_cherenkov</span><span class="p">)</span>
+
+            <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">* [ DEBUGGING OUTPUT PARAMETERS ]</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">text_debugging</span> <span class="o">=</span> <span class="n">_get_text_single_line</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_corsika_parameters</span><span class="p">[</span><span class="s2">&quot;DEBUGGING_OUTPUT_PARAMETERS&quot;</span><span class="p">]</span>
+            <span class="p">)</span>
+            <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">text_debugging</span><span class="p">)</span>
+
+            <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">* [ OUTUPUT FILE ]</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">use_multipipe</span><span class="p">:</span>
+                <span class="n">run_cta_script</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_file_path</span><span class="o">.</span><span class="n">parent</span><span class="p">)</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="s2">&quot;run_cta_multipipe&quot;</span><span class="p">)</span>
+                <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;TELFIL |</span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">run_cta_script</span><span class="p">)</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;TELFIL </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_output_generic_file_name</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+
+            <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">* [ IACT TUNING PARAMETERS ]</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">text_iact</span> <span class="o">=</span> <span class="n">_get_text_multiple_lines</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_corsika_parameters</span><span class="p">[</span><span class="s2">&quot;IACT_TUNING_PARAMETERS&quot;</span><span class="p">])</span>
+            <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">text_iact</span><span class="p">)</span>
+
+            <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">EXIT&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_is_file_updated</span> <span class="o">=</span> <span class="kc">True</span></div>
+
+<div class="viewcode-block" id="CorsikaConfig.get_file_name"><a class="viewcode-back" href="../../corsika.html#corsika.corsika_config.CorsikaConfig.get_file_name">[docs]</a>    <span class="k">def</span> <span class="nf">get_file_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_type</span><span class="p">,</span> <span class="n">run_number</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get a CORSIKA config style file name for various file types.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        file_type: str</span>
+<span class="sd">            The type of file (determines the file suffix).</span>
+<span class="sd">            Choices are config_tmp, config or output_generic.</span>
+<span class="sd">        run_number: int</span>
+<span class="sd">            Run number.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        str</span>
+<span class="sd">            for file_type=&quot;config_tmp&quot;:</span>
+<span class="sd">                Get the CORSIKA input file for one specific run.</span>
+<span class="sd">                This is the input file after being pre-processed by sim_telarray (pfp).</span>
+<span class="sd">            for file_type=&quot;config&quot;:</span>
+<span class="sd">                Get a general CORSIKA config inputs file.</span>
+<span class="sd">            for file_type=&quot;output_generic&quot;</span>
+<span class="sd">                Get a generic file name for the TELFIL option in the CORSIKA inputs file.</span>
+<span class="sd">            for file_type=&quot;multipipe&quot;</span>
+<span class="sd">                Get a multipipe &quot;file name&quot; for the TELFIL option in the CORSIKA inputs file.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            If file_type is unknown or if the run number is not given for file_type==config_tmp.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">file_label</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;_</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">label</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
+        <span class="n">view_cone</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_user_parameters</span><span class="p">[</span><span class="s2">&quot;VIEWCONE&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">0</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_user_parameters</span><span class="p">[</span><span class="s2">&quot;VIEWCONE&quot;</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">view_cone</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;_cone</span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_user_parameters</span><span class="p">[</span><span class="s1">&#39;VIEWCONE&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span><span class="si">:</span><span class="s2">d</span><span class="si">}</span><span class="s2">-&quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_user_parameters</span><span class="p">[</span><span class="s1">&#39;VIEWCONE&#39;</span><span class="p">][</span><span class="mi">1</span><span class="p">])</span><span class="si">:</span><span class="s2">d</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+        <span class="n">file_name</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">primary</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">site</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">layout_name</span><span class="si">}</span><span class="s2">_&quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;za</span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_user_parameters</span><span class="p">[</span><span class="s1">&#39;THETAP&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span><span class="si">:</span><span class="s2">d</span><span class="si">}</span><span class="s2">-&quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_user_parameters</span><span class="p">[</span><span class="s1">&#39;THETAP&#39;</span><span class="p">][</span><span class="mi">1</span><span class="p">])</span><span class="si">:</span><span class="s2">d</span><span class="si">}</span><span class="s2">deg&quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">view_cone</span><span class="si">}{</span><span class="n">file_label</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">file_type</span> <span class="o">==</span> <span class="s2">&quot;config_tmp&quot;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">run_number</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;corsika_config_run</span><span class="si">{</span><span class="n">run_number</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">file_name</span><span class="si">}</span><span class="s2">.txt&quot;</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Must provide a run number for a temporary CORSIKA config file&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">file_type</span> <span class="o">==</span> <span class="s2">&quot;config&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;corsika_config_</span><span class="si">{</span><span class="n">file_name</span><span class="si">}</span><span class="s2">.input&quot;</span>
+        <span class="k">if</span> <span class="n">file_type</span> <span class="o">==</span> <span class="s2">&quot;output_generic&quot;</span><span class="p">:</span>
+            <span class="n">file_name</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="s2">&quot;corsika_run$</span><span class="si">{RUNNR}</span><span class="s2">_$</span><span class="si">{PRMNAME}</span><span class="s2">_za$</span><span class="si">{ZA}</span><span class="s2">deg_azm$</span><span class="si">{AZM}</span><span class="s2">deg&quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;_</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">site</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">layout_name</span><span class="si">}{</span><span class="n">file_label</span><span class="si">}</span><span class="s2">.zst&quot;</span>
+            <span class="p">)</span>
+            <span class="k">return</span> <span class="n">file_name</span>
+        <span class="k">if</span> <span class="n">file_type</span> <span class="o">==</span> <span class="s2">&quot;multipipe&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;multi_cta-</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">site</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">layout_name</span><span class="si">}</span><span class="s2">.cfg&quot;</span>
+
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The requested file type (</span><span class="si">{</span><span class="n">file_type</span><span class="si">}</span><span class="s2">) is unknown&quot;</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_set_output_file_and_directory</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dir_type</span><span class="o">=</span><span class="s2">&quot;corsika&quot;</span><span class="p">):</span>
+        <span class="n">config_file_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_file_name</span><span class="p">(</span><span class="n">file_type</span><span class="o">=</span><span class="s2">&quot;config&quot;</span><span class="p">)</span>
+        <span class="n">file_directory</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">io_handler</span><span class="o">.</span><span class="n">get_output_directory</span><span class="p">(</span><span class="n">label</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">,</span> <span class="n">dir_type</span><span class="o">=</span><span class="n">dir_type</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Creating directory </span><span class="si">{</span><span class="n">file_directory</span><span class="si">}</span><span class="s2">, if needed.&quot;</span><span class="p">)</span>
+        <span class="n">file_directory</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_config_file_path</span> <span class="o">=</span> <span class="n">file_directory</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="n">config_file_name</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_output_generic_file_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_file_name</span><span class="p">(</span><span class="n">file_type</span><span class="o">=</span><span class="s2">&quot;output_generic&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_write_seeds</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generate and write seeds in the CORSIKA input file.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        file: stream</span>
+<span class="sd">            File where the telescope positions will be written.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">random_seed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_user_parameters</span><span class="p">[</span><span class="s2">&quot;PRMPAR&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_user_parameters</span><span class="p">[</span><span class="s2">&quot;RUNNR&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="n">random_seed</span><span class="p">)</span>
+        <span class="n">corsika_seeds</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">rng</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mf">1e7</span><span class="p">))</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">)]</span>
+
+        <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">corsika_seeds</span><span class="p">:</span>
+            <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;SEED </span><span class="si">{</span><span class="n">s</span><span class="si">}</span><span class="s2"> 0 0</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="CorsikaConfig.get_input_file"><a class="viewcode-back" href="../../corsika.html#corsika.corsika_config.CorsikaConfig.get_input_file">[docs]</a>    <span class="k">def</span> <span class="nf">get_input_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">use_multipipe</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the full path of the CORSIKA input file.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Path:</span>
+<span class="sd">            Full path of the CORSIKA input file.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_file_updated</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">export_input_file</span><span class="p">(</span><span class="n">use_multipipe</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config_file_path</span></div></div>
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="../../index.html">Table of Contents</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../simtools-configuration.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../applications.html">Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../library.html">API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../auxiliary_files.html">Auxiliary Files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../databases.html">Databases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../simulation_software.html">Simulation Software</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guidelines.html">Developer Guidelines</a></li>
+</ul>
+
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">simtools v0.1.dev1+g59e41a4.d20230816 Manual</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">corsika.corsika_config</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2022, gammasim-tools, simtools developers.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 6.2.1.
+    </div>
+  </body>
+</html>

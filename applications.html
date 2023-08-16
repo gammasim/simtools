@@ -1,0 +1,1024 @@
+
+
+<!doctype html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+    <title>Applications &#8212; simtools v0.1.dev1+g59e41a4.d20230816 Manual</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/bizstyle.css" />
+    
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/bizstyle.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="API" href="library.html" />
+    <link rel="prev" title="Configuration" href="simtools-configuration.html" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <!--[if lt IE 9]>
+    <script src="_static/css3-mediaqueries.js"></script>
+    <![endif]-->
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="library.html" title="API"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="simtools-configuration.html" title="Configuration"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">simtools v0.1.dev1+g59e41a4.d20230816 Manual</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Applications</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="applications">
+<span id="id1"></span><h1>Applications<a class="headerlink" href="#applications" title="Permalink to this heading">¶</a></h1>
+<p>Applications are python scripts built on the <a class="reference internal" href="library.html#library"><span class="std std-ref">API</span></a> that execute a well defined task.
+Applications are the building blocks of <a class="reference external" href="https://github.com/gammasim/workflows">Simulation System Workflows</a>.
+Application scripts can be found in <code class="docutils literal notranslate"><span class="pre">simtools/applications</span></code>.</p>
+<p>Important: depending on the installation type, applications are named differently:</p>
+<ul class="simple">
+<li><p>developers (see <a class="reference internal" href="getting_started.html#installationfordevelopers"><span class="std std-ref">Installation for Developers</span></a>) call applications as described throughout this documentation: <code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">applications/&lt;application</span> <span class="pre">name&gt;</span> <span class="pre">....</span></code></p></li>
+<li><p>users (see <a class="reference internal" href="getting_started.html#installationforusers"><span class="std std-ref">Installation for Users</span></a>) call applications directly as command line tool. Applications names <code class="docutils literal notranslate"><span class="pre">simtools-&lt;application</span> <span class="pre">name</span></code> (with all <code class="docutils literal notranslate"><span class="pre">_</span></code> replaced by <code class="docutils literal notranslate"><span class="pre">-</span></code>)</p></li>
+</ul>
+<p>Each application is configured as described in <a class="reference internal" href="simtools-configuration.html#configuration"><span class="std std-ref">Configuration</span></a>.
+The available arguments can be access by calling the <code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">applications/&lt;application</span> <span class="pre">name&gt;</span> <span class="pre">--help</span></code>.</p>
+<p>Some applications require one or multiple file names as input in the command line. The system will
+first search on main simtools directory for these files, and in case it is not found, it will
+search into the directories given by the config parameter <em>model_path</em>.</p>
+<p>Output files of applications are written to $output_path/$label, where
+<em>output_path</em> is a config parameter and <em>label</em> is the name of the application. The plots
+produced directly by the application are stored in the sub-directory <em>application-plots</em>.
+High-level data produced intermediately (e.g PSF tables) can be found in the sub-directories relative to
+the specific type of application (e.g <em>ray-tracing</em> for optics related applications,
+<em>camera-efficiency</em> for camera efficiency applications etc). All files related to the simulation model (e.g,
+sim_telarray config files) are stored in the sub-directory <em>model</em>.</p>
+<section id="module-add_file_to_db">
+<span id="add-file-to-db"></span><h2>add_file_to_db<a class="headerlink" href="#module-add_file_to_db" title="Permalink to this heading">¶</a></h2>
+<section id="summary">
+<h3>Summary<a class="headerlink" href="#summary" title="Permalink to this heading">¶</a></h3>
+<p>This application adds a file to a DB.</p>
+<p>The name and location of the file are required.
+This application should complement the ones for updating parameters,     adding entries to the DB and getting files from the DB.</p>
+</section>
+<section id="command-line-arguments">
+<h3>Command line arguments<a class="headerlink" href="#command-line-arguments" title="Permalink to this heading">¶</a></h3>
+<dl class="simple">
+<dt>file_name (str or list of str, required)</dt><dd><p>Name of the file to upload including the full path.         A list of files is also allowed, in which case only one -file_name is necessary,         i.e., python applications/add_file_to_db.py -file_name file_1.dat file_2.dat file_3.dat         If no path is given, the file is assumed to be in the CWD.</p>
+</dd>
+<dt>input_path (str, required if file_name is not given)</dt><dd><p>A directory with files to upload to the DB.         All files in the directory with a predefined list of extensions will be uploaded.</p>
+</dd>
+<dt>db (str)</dt><dd><p>The DB to insert the files to.         The choices are either the default CTA simulation DB or a sandbox for testing.</p>
+</dd>
+<dt>verbosity (str, optional)</dt><dd><p>Log level to print (default=INFO).</p>
+</dd>
+</dl>
+</section>
+<section id="example">
+<h3>Example<a class="headerlink" href="#example" title="Permalink to this heading">¶</a></h3>
+<p>uploading a dummy file.</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-add-file-to-db --file_name test_application.dat --db test-data</span>
+</pre></div>
+</div>
+<p>Expected final print-out message:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">INFO::get_file_from_db(l75)::main::Got file test_application.dat from DB test-data and</span>
+<span class="go">saved into .</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="module-compare_cumulative_psf">
+<span id="compare-cumulative-psf"></span><h2>compare_cumulative_psf<a class="headerlink" href="#module-compare_cumulative_psf" title="Permalink to this heading">¶</a></h2>
+<section id="id2">
+<h3>Summary<a class="headerlink" href="#id2" title="Permalink to this heading">¶</a></h3>
+<p>This application simulates the cumulative PSF and compare with data (if available).</p>
+<p>The telescope zenith angle and the source distance can be set by command line arguments.</p>
+<p>The measured cumulative PSF should be provided by using the command line argument data.     A file name is expected, in which the file should contains 3 columns: radial distance in mm,     differential value of photon intensity and its integral value.</p>
+<p>The MC model can be changed by providing a yaml file with the new parameter values using     the argument pars (see example below).</p>
+<p>Examples of the plots generated by this applications are shown below. On the left,     the cumulative PSF and on the right, the simulated PSF image.</p>
+<a class="reference internal image-reference" href="_images/compare_cumulative_psf_North-LST-1_cumulativePSF.png" id="compare-cumulative-psf-plot"><img alt="_images/compare_cumulative_psf_North-LST-1_cumulativePSF.png" id="compare-cumulative-psf-plot" src="_images/compare_cumulative_psf_North-LST-1_cumulativePSF.png" style="width: 49%;" /></a>
+<a class="reference internal image-reference" href="_images/compare_cumulative_psf_North-LST-1_image.png"><img alt="_images/compare_cumulative_psf_North-LST-1_image.png" src="_images/compare_cumulative_psf_North-LST-1_image.png" style="width: 49%;" /></a>
+</section>
+<section id="id3">
+<h3>Command line arguments<a class="headerlink" href="#id3" title="Permalink to this heading">¶</a></h3>
+<dl class="simple">
+<dt>site (str, required)</dt><dd><p>North or South.</p>
+</dd>
+<dt>telescope (str, required)</dt><dd><p>Telescope model name (e.g. LST-1, SST-D, …).</p>
+</dd>
+<dt>model_version (str, optional)</dt><dd><p>Model version (default=prod4).</p>
+</dd>
+<dt>src_distance (float, optional)</dt><dd><p>Source distance in km (default=10).</p>
+</dd>
+<dt>zenith (float, optional)</dt><dd><p>Zenith angle in deg (default=20).</p>
+</dd>
+<dt>data (str, optional)</dt><dd><p>Name of the data file with the measured cumulative PSF.</p>
+</dd>
+<dt>pars (str, optional)</dt><dd><p>Yaml file with the new model parameters to replace the default ones.</p>
+</dd>
+<dt>test (activation mode, optional)</dt><dd><p>If activated, application will be faster by simulating fewer photons.</p>
+</dd>
+<dt>verbosity (str, optional)</dt><dd><p>Log level to print (default=INFO).</p>
+</dd>
+</dl>
+</section>
+<section id="id4">
+<h3>Example<a class="headerlink" href="#id4" title="Permalink to this heading">¶</a></h3>
+<p>LST-1 Prod5</p>
+<p>Runtime &lt; 1 min.</p>
+<p>Get an example dataset from the DB:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-get-file-from-db --file_name PSFcurve_data_v2.txt</span>
+</pre></div>
+</div>
+<p>Run the application:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-compare-cumulative-psf --site North --telescope LST-1             --model_version prod5 --data PSFcurve_data_v2.txt</span>
+</pre></div>
+</div>
+<p>The output is saved in simtools-output/compare_cumulative_psf</p>
+<p>Expected final print-out message:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">d80 in cm = 3.3662565358159013</span>
+</pre></div>
+</div>
+<div class="admonition-todo admonition" id="id5">
+<p class="admonition-title">Todo</p>
+<ul class="simple">
+<li><p>Change default model to default (after this feature is implemented in db_handler)</p></li>
+</ul>
+</div>
+</section>
+</section>
+<section id="module-derive_mirror_rnda">
+<span id="derive-mirror-rnda"></span><h2>derive_mirror_rnda<a class="headerlink" href="#module-derive_mirror_rnda" title="Permalink to this heading">¶</a></h2>
+<section id="id6">
+<h3>Summary<a class="headerlink" href="#id6" title="Permalink to this heading">¶</a></h3>
+<p>This application derives the parameter mirror_reflection_random_angle     (mirror roughness, also called rnda here)     for a given set of measured photon containment diameter (e.g. 80 percent containment)     of individual mirrors.  The mean value of the measured containment diameters     in cm is required and its sigma can be given optionally but will only be used for plotting. 
+The individual mirror focal length can be taken into account if a mirror list which contains     this information is used from the <a class="reference internal" href="databases.html#model-parameters-db"><span class="std std-ref">Model Parameters DB</span></a> or if a new mirror list is given     through the argument mirror_list. Random focal lengths can be used by turning on the argument     use_random_focal length and a new value for it can be given through the argument random_flen.</p>
+<p>The algorithm works as follow: A starting value of rnda is first defined as the one taken     from the <a class="reference internal" href="databases.html#model-parameters-db"><span class="std std-ref">Model Parameters DB</span></a>     (or alternatively one may want to set it using the argument rnda).    Secondly, ray tracing simulations are performed for single mirror configurations for each     mirror given in the mirror_list. The mean simulated containment diameter for all the mirrors     is compared with the mean measured containment diameter. A new value of rnda is then defined     based on the sign of the difference between measured and simulated containment diameters and a     new set of simulations is performed. This process repeat until the sign of the     difference changes, meaning that the two final values of rnda brackets the optimal. These     two values are used to find the optimal one by a linear     interpolation. Finally, simulations are performed by using the the interpolated value     of rnda, which is defined as the desired optimal.</p>
+<p>A option no_tuning can be used if one only wants to simulate one value of rnda and compare     the results with the measured ones.</p>
+<p>The results of the tuning are plotted. See examples of the containment diameter     D80 vs rnda plot, on the left, and the D80 distributions, on the right.</p>
+<a class="reference internal image-reference" href="_images/derive_mirror_rnda_North-MST-FlashCam-D.png" id="deriva-rnda-plot"><img alt="_images/derive_mirror_rnda_North-MST-FlashCam-D.png" id="deriva-rnda-plot" src="_images/derive_mirror_rnda_North-MST-FlashCam-D.png" style="width: 49%;" /></a>
+<a class="reference internal image-reference" href="_images/derive_mirror_rnda_North-MST-FlashCam-D_D80-distributions.png"><img alt="_images/derive_mirror_rnda_North-MST-FlashCam-D_D80-distributions.png" src="_images/derive_mirror_rnda_North-MST-FlashCam-D_D80-distributions.png" style="width: 49%;" /></a>
+<dl class="simple">
+<dt>This application uses the following simulation software tools:</dt><dd><ul class="simple">
+<li><p>sim_telarray/bin/sim_telarray</p></li>
+<li><p>sim_telarray/bin/rx (optional)</p></li>
+</ul>
+</dd>
+</dl>
+</section>
+<section id="id7">
+<h3>Command line arguments<a class="headerlink" href="#id7" title="Permalink to this heading">¶</a></h3>
+<dl class="simple">
+<dt>telescope (str, required)</dt><dd><p>Telescope name (e.g. North-LST-1, South-SST-D, …)</p>
+</dd>
+<dt>model_version (str, optional)</dt><dd><p>Model version (default=’Current’)</p>
+</dd>
+<dt>psf_measurement (str, optional)</dt><dd><p>Results from PSF measurements for each mirror panel spot size</p>
+</dd>
+<dt>psf_measurement_containment_mean (float, required)</dt><dd><p>Mean of measured containment diameter [cm]</p>
+</dd>
+<dt>psf_measurement_containment_sigma (float, optional)</dt><dd><p>Std dev of measured containment diameter [cm]</p>
+</dd>
+<dt>containment_fraction (float, required)</dt><dd><p>Containment fraction for diameter calculation (typically 0.8)</p>
+</dd>
+<dt>rnda (float, optional)</dt><dd><p>Starting value of mirror_reflection_random_angle. If not given, the value from the         default model will be used.</p>
+</dd>
+<dt>mirror_list (file, optional)</dt><dd><p>Mirror list file to replace the default one. It should be used if measured mirror focal         lengths need to be taken into account. It contains the following information about the         mirrors: ID, panel radius, optical PSF (d80), PSF (d80) and surface reflectivity.</p>
+</dd>
+<dt>use_random_flen (activation mode, optional)</dt><dd><p>Use random focal lengths, instead of the measured ones. The argument random_flen can be         used to replace the default random_focal_length from the model.</p>
+</dd>
+<dt>random_flen (float, optional)</dt><dd><p>Value of the random focal lengths to replace the default random_focal_length. Only used if          use_random_flen is activated.</p>
+</dd>
+<dt>no_tuning (activation mode, optional)</dt><dd><p>Turn off the tuning - A single case will be simulated and plotted.</p>
+</dd>
+<dt>test (activation mode, optional)</dt><dd><p>If activated, application will be faster by simulating only few mirrors.</p>
+</dd>
+<dt>verbosity (str, optional)</dt><dd><p>Log level to print (default=INFO).</p>
+</dd>
+</dl>
+</section>
+<section id="id8">
+<h3>Example<a class="headerlink" href="#id8" title="Permalink to this heading">¶</a></h3>
+<p>MST - Prod5</p>
+<p>Get mirror list and PSF data from DB:</p>
+<blockquote>
+<div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-get-file-from-db --file_name MLTdata-preproduction.ecsv</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>Run the application. Runtime about 4 min.</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-derive-mirror-rnda --site North --telescope MST-FlashCam-D             --containment_fraction 0.8 --mirror_list MLTdata-preproduction.ecsv</span>
+<span class="go">    --psf_measurement MLTdata-preproduction.ecsv --rnda 0.0063 --test</span>
+</pre></div>
+</div>
+<p>The output is saved in simtools-output/derive_mirror_rnda.</p>
+<p>Expected final print-out message:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">Measured D80:</span>
+<span class="go">Mean = 1.403 cm, StdDev = 0.163 cm</span>
+
+<span class="go">Simulated D80:</span>
+<span class="go">Mean = 1.404 cm, StdDev = 0.608 cm</span>
+
+<span class="go">mirror_random_reflection_angle</span>
+<span class="go">Previous value = 0.006300</span>
+<span class="go">New value = 0.004975</span>
+</pre></div>
+</div>
+<div class="admonition-todo admonition" id="id9">
+<p class="admonition-title">Todo</p>
+<ul class="simple">
+<li><p>Change default model to default (after this feature is implemented in db_handler)</p></li>
+<li><p>Fix the set_style. For some reason, sphinx cannot built docs with it on.</p></li>
+</ul>
+</div>
+</section>
+</section>
+<section id="module-get_file_from_db">
+<span id="get-file-from-db"></span><h2>get_file_from_db<a class="headerlink" href="#module-get_file_from_db" title="Permalink to this heading">¶</a></h2>
+<section id="id10">
+<h3>Summary<a class="headerlink" href="#id10" title="Permalink to this heading">¶</a></h3>
+<p>Get a file from the DB.</p>
+<p>The name of the file is required.
+This application complements the ones for getting parameters, adding entries and files     to the DB.</p>
+</section>
+<section id="id11">
+<h3>Command line arguments<a class="headerlink" href="#id11" title="Permalink to this heading">¶</a></h3>
+<dl class="simple">
+<dt>file_name (str or list of str, required)</dt><dd><p>Name of the file to get including its full directory. A list of files is also allowed.
+i.e., python applications/get_file_from_db.py -file_name mirror_CTA-N-LST1_v2019-03-31.dat.</p>
+</dd>
+<dt>output_path (str)</dt><dd><p>Name of the local output directory where to save the files.
+Default it $CWD.</p>
+</dd>
+<dt>verbosity (str, optional)</dt><dd><p>Log level to print (default=INFO).</p>
+</dd>
+</dl>
+</section>
+<section id="id12">
+<h3>Example<a class="headerlink" href="#id12" title="Permalink to this heading">¶</a></h3>
+<p>getting a file from the DB.</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-get-file-from-db --file_name mirror_CTA-N-LST1_v2019-03-31.dat</span>
+</pre></div>
+</div>
+<p>Expected final print-out message:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">INFO::get_file_from_db(l82)::main::Got file mirror_CTA-N-LST1_v2019-03-31.dat from DB         CTA-Simulation-Model and saved into .</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="module-get_parameter">
+<span id="get-parameter"></span><h2>get_parameter<a class="headerlink" href="#module-get_parameter" title="Permalink to this heading">¶</a></h2>
+<section id="id13">
+<h3>Summary<a class="headerlink" href="#id13" title="Permalink to this heading">¶</a></h3>
+<p>Get a parameter entry from DB for a specific telescope or a site.
+The application receives a parameter name, a site, a telescope (if applicable) and     optionally a version. It then prints out the parameter entry.
+If no version is provided, the value of the current model is printed..</p>
+</section>
+<section id="id14">
+<h3>Command line arguments<a class="headerlink" href="#id14" title="Permalink to this heading">¶</a></h3>
+<dl class="simple">
+<dt>parameter (str, required)</dt><dd><p>Parameter name</p>
+</dd>
+<dt>site (str, required)</dt><dd><p>South or North.</p>
+</dd>
+<dt>telescope (str, optional)</dt><dd><p>Telescope model name (e.g. LST-1, SST-D, …)</p>
+</dd>
+<dt>log_level (str, optional)</dt><dd><p>Log level to print (default=INFO).</p>
+</dd>
+</dl>
+</section>
+<section id="raises">
+<h3>Raises<a class="headerlink" href="#raises" title="Permalink to this heading">¶</a></h3>
+<p>KeyError in case the parameter requested does not exist in the model parameters.</p>
+</section>
+<section id="id15">
+<h3>Example<a class="headerlink" href="#id15" title="Permalink to this heading">¶</a></h3>
+<p>Get the mirror_list parameter from the DB.</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-get-parameter --parameter mirror_list --site North --telescope LST-1         --model_version prod5</span>
+</pre></div>
+</div>
+<p>Expected final print-out message:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">{&#39;Applicable&#39;: True,</span>
+<span class="go"> &#39;File&#39;: True,</span>
+<span class="go"> &#39;Type&#39;: &#39;str&#39;,</span>
+<span class="go"> &#39;Value&#39;: &#39;mirror_CTA-N-LST1_v2019-03-31.dat&#39;,</span>
+<span class="go"> &#39;Version&#39;: &#39;2020-06-28&#39;,</span>
+<span class="go"> &#39;_id&#39;: ObjectId(&#39;608834f257df2db2531b8e78&#39;),</span>
+<span class="go"> &#39;entry_date&#39;: datetime.datetime(2021, 4, 27, 15, 59, 46, tzinfo=&lt;bson.tz_util.FixedOffset           object at 0x7f601dd51d80&gt;)}</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="module-make_regular_arrays">
+<span id="make-regular-arrays"></span><h2>make_regular_arrays<a class="headerlink" href="#module-make_regular_arrays" title="Permalink to this heading">¶</a></h2>
+<section id="id16">
+<h3>Summary<a class="headerlink" href="#id16" title="Permalink to this heading">¶</a></h3>
+<p>This application creates the layout array files (ECSV) of regular arrays
+with one telescope at the center of the array and with 4 telescopes
+in a square grid. These arrays are used for trigger rate simulations.</p>
+<p>The array layout files created should be available at the data/layout directory.</p>
+</section>
+<section id="id17">
+<h3>Command line arguments<a class="headerlink" href="#id17" title="Permalink to this heading">¶</a></h3>
+<dl class="simple">
+<dt>verbosity (str, optional)</dt><dd><p>Log level to print (default=INFO).</p>
+</dd>
+</dl>
+</section>
+<section id="id18">
+<h3>Example<a class="headerlink" href="#id18" title="Permalink to this heading">¶</a></h3>
+<p>Runtime &lt; 10 s.</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-make-regular-arrays</span>
+</pre></div>
+</div>
+<p>The output is saved in simtools-output/make_regular_arrays.</p>
+<p>Expected final print-out message:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">INFO::layout_array(l608)::export_telescope_list::Exporting telescope list to /workdir/exter        nal/simtools/simtools-output/make_regular_arrays/layout/telescope_positions-North-4LS        T-corsika.ecsv</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="module-plot_simtel_histograms">
+<span id="plot-simtel-histograms"></span><h2>plot_simtel_histograms<a class="headerlink" href="#module-plot_simtel_histograms" title="Permalink to this heading">¶</a></h2>
+<section id="id19">
+<h3>Summary<a class="headerlink" href="#id19" title="Permalink to this heading">¶</a></h3>
+<p>This application plots and prints sim_telarray histograms into pdf file.
+It accepts multiple lists of histograms files that are plot together,
+side-by-side. Each histogram is plotted in a page of the pdf.</p>
+</section>
+<section id="id20">
+<h3>Command line arguments<a class="headerlink" href="#id20" title="Permalink to this heading">¶</a></h3>
+<dl class="simple">
+<dt>file_lists (str, required)</dt><dd><p>Text file containing the list of sim_telarray histogram files to be plotted.         Multiple text files can be given.</p>
+</dd>
+<dt>figure_name (str, required)</dt><dd><p>File name for the pdf output (without extension).</p>
+</dd>
+<dt>verbosity (str, optional)</dt><dd><p>Log level to print (default=INFO).</p>
+</dd>
+</dl>
+</section>
+<section id="id21">
+<h3>Example<a class="headerlink" href="#id21" title="Permalink to this heading">¶</a></h3>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-plot-simtel-histograms             --file_lists list_test1.txt list_test2.txt --figure_name histograms_comparison</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="module-plot_layout_array">
+<span id="plot-layout-array"></span><h2>plot_layout_array<a class="headerlink" href="#module-plot_layout_array" title="Permalink to this heading">¶</a></h2>
+<section id="id22">
+<h3>Summary<a class="headerlink" href="#id22" title="Permalink to this heading">¶</a></h3>
+<p>This application plots the layout array and saves into disk.</p>
+<p>It accepts as input the telescope list file, the name of the layout, a sequence of arguments
+with the telescope files or a sequence of arguments with the layout names.</p>
+<p>A rotation angle in degrees can be passed in case the array should be rotated before plotting.
+A sequence of arguments for the rotation angle is also permitted, in which case all of them
+are plotted and saved separately.</p>
+</section>
+<section id="id23">
+<h3>Command line arguments<a class="headerlink" href="#id23" title="Permalink to this heading">¶</a></h3>
+<dl class="simple">
+<dt>figure_name (str, optional)</dt><dd><p>File name for the pdf output.</p>
+</dd>
+<dt>telescope_list (str, optional)</dt><dd><p>The telescopes file (.ecsv) with the array information.</p>
+</dd>
+<dt>layout_array_name (str, optional)</dt><dd><p>Name of the layout array (e.g., North-TestLayout, South-TestLayout, North-4LST, etc.).</p>
+</dd>
+<dt>rotate_angle (float, optional)</dt><dd><p>Angle to rotate the array before plotting (in degrees).</p>
+</dd>
+<dt>show_tel_label (bool, optional)</dt><dd><p>Shows the telescope labels in the plot.</p>
+</dd>
+<dt>verbosity (str, optional)</dt><dd><p>Log level to print (default=INFO).</p>
+</dd>
+</dl>
+</section>
+<section id="id24">
+<h3>Example<a class="headerlink" href="#id24" title="Permalink to this heading">¶</a></h3>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-plot-layout-array --figure_name northern_array_alpha         --layout_array_name North-TestLayout</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="module-print_array_elements">
+<span id="print-array-elements"></span><h2>print_array_elements<a class="headerlink" href="#module-print_array_elements" title="Permalink to this heading">¶</a></h2>
+<section id="id25">
+<h3>Summary<a class="headerlink" href="#id25" title="Permalink to this heading">¶</a></h3>
+<p>Print a list of array element positions in different CTAO coordinate     systems.</p>
+<p>Available coordinate systems are:
+1. UTM system
+2. CORSIKA coordinates
+3. Mercator system</p>
+</section>
+<section id="id26">
+<h3>Command line arguments<a class="headerlink" href="#id26" title="Permalink to this heading">¶</a></h3>
+<dl class="simple">
+<dt>array_element_list (str)</dt><dd><p>File name with list of array element positions (ecsv format)</p>
+</dd>
+<dt>compact (str)</dt><dd><p>Compact output (in requested coordinate system; possible are corsika,utm,mercator)</p>
+</dd>
+<dt>export (str)</dt><dd><p>Export array element list to file (in requested coordinate system;             possible are corsika,utm,mercator)</p>
+</dd>
+<dt>use_corsika_telescope_height (bool)</dt><dd><p>Use CORSIKA coordinates for telescope heights (requires CORSIKA observeration level)</p>
+</dd>
+</dl>
+</section>
+<section id="id27">
+<h3>Example<a class="headerlink" href="#id27" title="Permalink to this heading">¶</a></h3>
+<p>Print a list of array elements using a list of telescope positions in UTM coordinates.</p>
+<p>Example:</p>
+<p>Run the application:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-print-array-elements             --array_element_list tests/resources/telescope_positions-South-4MST.ecsv             --compact corsika</span>
+</pre></div>
+</div>
+<p>Expected final print-out message:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span>
+</pre></div>
+</div>
+<p>telescope_name pos_x pos_y altitude
+MST-01      -0.02      -0.00    2162.00
+MST-02       1.43     151.02    2163.00
+MST-03      -1.47    -151.02    2169.00
+MST-04     150.72      73.57    2159.00</p>
+</section>
+</section>
+<section id="module-produce_array_config">
+<span id="produce-array-config"></span><h2>produce_array_config<a class="headerlink" href="#module-produce_array_config" title="Permalink to this heading">¶</a></h2>
+<section id="id28">
+<h3>Summary<a class="headerlink" href="#id28" title="Permalink to this heading">¶</a></h3>
+<p>This application is an example of how to produce sim_telarray config     files for a given array.</p>
+<p>All the input required has to be given as a yaml file by the command     line argument array_config.</p>
+<p>The required entries in the array_config file are:</p>
+<p>‘site’: South or North</p>
+<p>‘layout_name’: name of a valid layout array.</p>
+<p>‘model_version’: name of a valid model version.</p>
+<p>‘default’: telescope model names to be assigned to each telescope size by default.     It must contain entries for ‘LST’ and ‘MST’ (and ‘SST’ in case of South site).</p>
+<p>As optional data, specific telescope models can be assigned to individual telescopes.     This is done by the entries with the name of the telescope (as used by the layout     definition, ex. LST-01, MST-05, SST-10).</p>
+<p>Each telescope model can be set in two ways.</p>
+<p>a) A single str with the name of telescope model.
+Ex. ‘MST-05’: ‘NectarCam-D’</p>
+<p>b) A dict containing a ‘name’ key with the name of the telescope model and further keys     with model parameters to be changed from the original model.
+Ex.:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="s1">&#39;MST-05&#39;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;NectarCam-D&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;fadc_pulse_shape&#39;</span><span class="p">:</span> <span class="s1">&#39;Pulse_template_nectarCam_17042020-noshift.dat&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;discriminator_pulse_shape&#39;</span><span class="p">:</span> <span class="s1">&#39;Pulse_template_nectarCam_17042020-noshift.dat&#39;</span>
+    <span class="p">}</span>
+</pre></div>
+</div>
+<p>This is an example of the content of an array_config file.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">site</span><span class="p">:</span> <span class="n">North</span><span class="p">,</span>
+<span class="n">layout_name</span><span class="p">:</span> <span class="n">Prod5</span>
+<span class="n">model_version</span><span class="p">:</span> <span class="n">Prod5</span>
+<span class="n">default</span><span class="p">:</span>
+    <span class="n">LST</span><span class="p">:</span> <span class="s1">&#39;D234&#39;</span>  <span class="c1"># Design model for the LSTs</span>
+    <span class="n">MST</span><span class="p">:</span> <span class="n">FlashCam</span><span class="o">-</span><span class="n">D</span>  <span class="c1"># Design model for the MST-FlashCam</span>
+<span class="n">LST</span><span class="o">-</span><span class="mi">01</span><span class="p">:</span> <span class="s1">&#39;1&#39;</span>  <span class="c1"># Model of LST-01 in the LaPalma site.</span>
+<span class="n">MST</span><span class="o">-</span><span class="mi">05</span><span class="p">:</span>
+    <span class="n">name</span><span class="p">:</span> <span class="n">NectarCam</span><span class="o">-</span><span class="n">D</span>
+    <span class="c1"># Parameters to be changed</span>
+    <span class="n">fadc_pulse_shape</span><span class="p">:</span> <span class="n">Pulse_template_nectarCam_17042020</span><span class="o">-</span><span class="n">noshift</span><span class="o">.</span><span class="n">dat</span>
+    <span class="n">discriminator_pulse_shape</span><span class="p">:</span> <span class="n">Pulse_template_nectarCam_17042020</span><span class="o">-</span><span class="n">noshift</span><span class="o">.</span><span class="n">dat</span>
+</pre></div>
+</div>
+</section>
+<section id="id29">
+<h3>Command line arguments<a class="headerlink" href="#id29" title="Permalink to this heading">¶</a></h3>
+<dl class="simple">
+<dt>label (str, optional)</dt><dd><p>Label to identify the output files/directories.</p>
+</dd>
+<dt>array_config (str, required)</dt><dd><p>Path to a yaml file with the array config data.</p>
+</dd>
+<dt>verbosity (str, optional)</dt><dd><p>Log level to print (default=INFO).</p>
+</dd>
+</dl>
+</section>
+<section id="id30">
+<h3>Example<a class="headerlink" href="#id30" title="Permalink to this heading">¶</a></h3>
+<p>North - Prod5, simple example</p>
+<p>Get the array configuration from DB:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">python applications/get_file_from_db.py --file_name array_config_test.yml</span>
+</pre></div>
+</div>
+<p>Run the application. Runtime &lt; 1 min.</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-produce-array-config --label test --array_config         array_config_test.yml</span>
+</pre></div>
+</div>
+<p>The output is saved in simtools-output/test/model.</p>
+<p>Expected final print-out message:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">INFO::array_model(l361)::export_simtel_array_config_file::Writing array config file into         /workdir/external/simtools/simtools-output/test/model/CTA-TestLayout-North-2020-06-        28_test.cfg</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="module-production">
+<span id="production"></span><h2>production<a class="headerlink" href="#module-production" title="Permalink to this heading">¶</a></h2>
+<section id="id31">
+<h3>Summary<a class="headerlink" href="#id31" title="Permalink to this heading">¶</a></h3>
+<p>This application perform array simulations.</p>
+<p>The simulations are split into two stages: showers and array.
+Shower simulations are performed with CORSIKA and array simulations     with sim_telarray. Note that either shower or array simulations are     submitted (so typically you first run shower simulations, and then the     array simulations).</p>
+<p>A configuration file is required.</p>
+<p>The workload management system used is given in the configuration file.     Allowed systems are qsub (using gridengine), condor_submit     (using HTcondor), and local (running the script locally).</p>
+</section>
+<section id="id32">
+<h3>Command line arguments<a class="headerlink" href="#id32" title="Permalink to this heading">¶</a></h3>
+<dl class="simple">
+<dt>productionconfig (str, required)</dt><dd><p>Path to the simulation configuration file.</p>
+</dd>
+<dt>primary (str)</dt><dd><p>Name of the primary to be selected from the configuration file. In case it         is not given, all the primaries listed in the configuration file will be simulated.
+The choices are: gamma, electron, proton, helium, nitrogen, silicon, and iron.</p>
+</dd>
+<dt>task (str)</dt><dd><dl class="simple">
+<dt>What task to execute. Options:</dt><dd><p>simulate (perform simulations),
+file_list (print list of output files)
+inspect (plot sim_telarray histograms for quick inspection)
+resources (print quicklook into used computational resources)</p>
+</dd>
+</dl>
+</dd>
+<dt>array_only (activation mode)</dt><dd><p>Simulates only array detector (no showers).</p>
+</dd>
+<dt>showers_only (activation mode)</dt><dd><p>Simulates only showers (no array detector).</p>
+</dd>
+<dt>test (activation mode, optional)</dt><dd><p>If activated, no job will be submitted, but all configuration files         and run scripts will be created.</p>
+</dd>
+<dt>verbosity (str, optional)</dt><dd><p>Log level to print (default=INFO).</p>
+</dd>
+</dl>
+</section>
+<section id="id33">
+<h3>Example<a class="headerlink" href="#id33" title="Permalink to this heading">¶</a></h3>
+<p>Testing a mini-prod5 simulation.</p>
+<p>Get the configuration file from the DB</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-get-file-from_db --file_name prod_config_test.yml</span>
+</pre></div>
+</div>
+<p>Run the application:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-production --task simulate --productionconfig prod_config_test.yml         --test --showers_only --submit_command local</span>
+</pre></div>
+</div>
+<p>The output is saved in simtools-output/test-production.</p>
+<p>Expected final print-out message:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">INFO::job_manager(l124)::_submit_local::Running script locally</span>
+<span class="go">INFO::job_manager(l133)::_submit_local::Testing (local)</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="module-sim_showers_for_trigger_rates">
+<span id="sim-showers-for-trigger-rates"></span><h2>sim_showers_for_trigger_rates<a class="headerlink" href="#module-sim_showers_for_trigger_rates" title="Permalink to this heading">¶</a></h2>
+<section id="id34">
+<h3>Summary<a class="headerlink" href="#id34" title="Permalink to this heading">¶</a></h3>
+<p>This application simulates showers to be used in trigger rate calculations.
+Arrays with one (1MST) or four telescopes (4LST) can be used, in case of     mono or stereo trigger configurations, respectively.</p>
+<p>Simulations are managed by the Simulator module.
+Each run is simulated in a job. Each job is submitted by using the submission     command from the global config settings. The config entry extra_commands can be used     to extra commands to be ran in each job, before the actual simulation.</p>
+<p>At the moment, the shower simulations are performed by CORSIKA, which requires     the zstd package. Please, make sure that the command to set your zstd path is     properly set by the extra_commands in the command line configuration.</p>
+</section>
+<section id="id35">
+<h3>Command line arguments<a class="headerlink" href="#id35" title="Permalink to this heading">¶</a></h3>
+<dl class="simple">
+<dt>array (str, required)</dt><dd><p>Name of the array (1MST, 4LST …).</p>
+</dd>
+<dt>site (str, required)</dt><dd><p>South or North.</p>
+</dd>
+<dt>primary (str, required)</dt><dd><p>Name of the primary particle (proton, helium …).</p>
+</dd>
+<dt>nruns (int, optional)</dt><dd><p>Number of runs to be simulated (default=100).</p>
+</dd>
+<dt>nevents (int, optional)</dt><dd><p>Number of events simulated per run (default=100000).</p>
+</dd>
+<dt>zenith (float, optional)</dt><dd><p>Zenith angle in deg (default=20).</p>
+</dd>
+<dt>azimuth (float, optional)</dt><dd><p>Azimuth angle in deg (default=0).</p>
+</dd>
+<dt>output (str, optional)</dt><dd><p>Path of the directory to store the output simulations. By default,         the standard output directory defined by config will be used.</p>
+</dd>
+<dt>test (activation mode, optional)</dt><dd><p>If activated, no job will be submitted. Instead, an example of the         run script will be printed.</p>
+</dd>
+<dt>verbosity (str, optional)</dt><dd><p>Log level to print (default=INFO).</p>
+</dd>
+</dl>
+</section>
+<section id="id36">
+<h3>Example<a class="headerlink" href="#id36" title="Permalink to this heading">¶</a></h3>
+<p>Producing a set of proton showers for trigger rate simulations of LST.</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-sim-showers-for-trigger_rates --array 4LST --site North --primary         proton --nruns 2 --nevents 10000 --test --submit_command local</span>
+</pre></div>
+</div>
+<p>The output is saved in simtools-output/sim_showers_for_trigger_rates.</p>
+<p>Expected final print-out message:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">INFO::sim_showers_for_trigger_rates(l174)::main::List of log files exported to         /workdir/external/simtools/simtools-output/sim_showers_for_trigger_rates/application-        plots/log_files_proton.list</span>
+<span class="go">INFO::simulator(l646)::get_list_of_log_files::Getting list of log files</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="module-submit_data_from_external">
+<span id="submit-data-from-external"></span><h2>submit_data_from_external<a class="headerlink" href="#module-submit_data_from_external" title="Permalink to this heading">¶</a></h2>
+<section id="id37">
+<h3>Summary<a class="headerlink" href="#id37" title="Permalink to this heading">¶</a></h3>
+<p>Submit model parameter (value, table) through the command line.</p>
+<p>Input data and metadata is validated, and if necessary enriched
+and converted following a predescribed schema.</p>
+</section>
+<section id="id38">
+<h3>Command line arguments<a class="headerlink" href="#id38" title="Permalink to this heading">¶</a></h3>
+<dl class="simple">
+<dt>input_meta (str, optional)</dt><dd><p>input meta data file (yml format)</p>
+</dd>
+<dt>input (str, optional)</dt><dd><p>input data file</p>
+</dd>
+<dt>schema (str, optional)</dt><dd><p>Schema describing the input data</p>
+</dd>
+</dl>
+</section>
+<section id="id39">
+<h3>Example<a class="headerlink" href="#id39" title="Permalink to this heading">¶</a></h3>
+<p>Submit mirror measurements with associated metadata:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-submit-data-from-external             --input_meta ./tests/resources/MLTdata-preproduction.meta.yml             --input ./tests/resources/MLTdata-preproduction.ecsv             --schema ./tests/resources/schema_MST_mirror_2f_measurements.yml             --output_file TEST-submit_data_from_external.ecsv</span>
+</pre></div>
+</div>
+<p>Expected final print-out message:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">INFO::model_data_writer(l70)::write_data::Writing data to            /simtools/simtools-output/d-2023-07-31/TEST-submit_data_from_external.ecsv</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="module-tune_psf">
+<span id="tune-psf"></span><h2>tune_psf<a class="headerlink" href="#module-tune_psf" title="Permalink to this heading">¶</a></h2>
+<section id="id40">
+<h3>Summary<a class="headerlink" href="#id40" title="Permalink to this heading">¶</a></h3>
+<p>This applications tunes the parameters mirror_reflection_random_angle,     mirror_align_random_horizontal and mirror_align_random_vertical using     cumulative PSF measurement.</p>
+<p>The telescope zenith angle and the source distance can be set by command line arguments.</p>
+<p>The measured cumulative PSF should be provided by using the command line argument data.     A file name is expected, in which the file should contain 3 columns: radial distance in mm,     differential value of photon intensity and its integral value.</p>
+<p>The tuning is performed through a random search. A number of random combination of the     parameters are tested and the best ones are selected based on the minimum value of     the Root Mean Squared Deviation between data and simulations. The range in which the     parameter are drawn uniformly are defined based on the previous value on the telescope model.</p>
+<p>The assumption are:</p>
+<ol class="loweralpha simple">
+<li><p>mirror_align_random_horizontal and mirror_align_random_vertical are the same.</p></li>
+<li><p>mirror_align_random_horizontal/vertical have no dependence on the zenith angle.</p></li>
+</ol>
+<p>One example of the plot generated by this applications are shown below.</p>
+<a class="reference internal image-reference" href="_images/tune_psf.png" id="tune-psf-plot"><img alt="_images/tune_psf.png" id="tune-psf-plot" src="_images/tune_psf.png" style="width: 49%;" /></a>
+</section>
+<section id="id41">
+<h3>Command line arguments<a class="headerlink" href="#id41" title="Permalink to this heading">¶</a></h3>
+<dl class="simple">
+<dt>site (str, required)</dt><dd><p>North or South.</p>
+</dd>
+<dt>telescope (str, required)</dt><dd><p>Telescope model name (e.g. LST-1, SST-D, …).</p>
+</dd>
+<dt>model_version (str, optional)</dt><dd><p>Model version (default=”Current”).</p>
+</dd>
+<dt>src_distance (float, optional)</dt><dd><p>Source distance in km (default=10).</p>
+</dd>
+<dt>zenith (float, optional)</dt><dd><p>Zenith angle in deg (default=20).</p>
+</dd>
+<dt>data (str, optional)</dt><dd><p>Name of the data file with the measured cumulative PSF.</p>
+</dd>
+<dt>plot_all (activation mode, optional)</dt><dd><p>If activated, plots will be generated for all values tested during tuning.</p>
+</dd>
+<dt>fixed (activation mode, optional)</dt><dd><p>Keep the first entry of mirror_reflection_random_angle fixed.</p>
+</dd>
+<dt>test (activation mode, optional)</dt><dd><p>If activated, application will be faster by simulating fewer photons.</p>
+</dd>
+<dt>verbosity (str, optional)</dt><dd><p>Log level to print (default=INFO).</p>
+</dd>
+</dl>
+</section>
+<section id="id42">
+<h3>Example<a class="headerlink" href="#id42" title="Permalink to this heading">¶</a></h3>
+<p>LST-1 Prod5</p>
+<p>Runtime &lt; 3 min.</p>
+<p>Get PSF data from the DB:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-get-file-from_db --file_name PSFcurve_data_v2.txt</span>
+</pre></div>
+</div>
+<p>Run the application:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-tune-psf --site North --telescope LST-1             --model_version prod5 --data PSFcurve_data_v2.txt --plot_all --test</span>
+</pre></div>
+</div>
+<p>The output is saved in simtools-output/tune_psf.</p>
+<p>Expected final print-out message:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">Best parameters:</span>
+<span class="go">mirror_reflection_random_angle = 0.0043,0.08,0.0470</span>
+<span class="go">mirror_align_random_horizontal = 0.0047,28.,0.,0.</span>
+<span class="go">mirror_align_random_vertical = 0.0047,28.,0.,0.</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="module-validate_camera_efficiency">
+<span id="validate-camera-efficiency"></span><h2>validate_camera_efficiency<a class="headerlink" href="#module-validate_camera_efficiency" title="Permalink to this heading">¶</a></h2>
+<section id="id43">
+<h3>Summary<a class="headerlink" href="#id43" title="Permalink to this heading">¶</a></h3>
+<p>This application validate the camera efficiency by simulating it using     the testeff program provided by sim_telarray.</p>
+<p>The results of camera efficiency for Cherenkov (left) and NSB light (right) as a function    of wavelength are plotted. See examples below.</p>
+<a class="reference internal image-reference" href="_images/validate_camera_efficiency_North-MST-NectarCam-D_cherenkov.png" id="validate-camera-eff-plot"><img alt="_images/validate_camera_efficiency_North-MST-NectarCam-D_cherenkov.png" id="validate-camera-eff-plot" src="_images/validate_camera_efficiency_North-MST-NectarCam-D_cherenkov.png" style="width: 49%;" /></a>
+<a class="reference internal image-reference" href="_images/validate_camera_efficiency_North-MST-NectarCam-D_nsb.png"><img alt="_images/validate_camera_efficiency_North-MST-NectarCam-D_nsb.png" src="_images/validate_camera_efficiency_North-MST-NectarCam-D_nsb.png" style="width: 49%;" /></a>
+</section>
+<section id="id44">
+<h3>Command line arguments<a class="headerlink" href="#id44" title="Permalink to this heading">¶</a></h3>
+<dl class="simple">
+<dt>site (str, required)</dt><dd><p>North or South.</p>
+</dd>
+<dt>telescope (str, required)</dt><dd><p>Telescope model name (e.g. LST-1, SST-D, …)</p>
+</dd>
+<dt>model_version (str, optional)</dt><dd><p>Model version (default=’Current’)</p>
+</dd>
+<dt>verbosity (str, optional)</dt><dd><p>Log level to print (default=INFO).</p>
+</dd>
+</dl>
+</section>
+<section id="id45">
+<h3>Example<a class="headerlink" href="#id45" title="Permalink to this heading">¶</a></h3>
+<p>MST-NectarCam - Prod5</p>
+<p>Runtime &lt; 1 min.</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-validate-camera-efficiency --site North             --telescope MST-NectarCam-D --model_version prod5</span>
+</pre></div>
+</div>
+<p>The output is saved in simtools-output/validate_camera_efficiency.</p>
+<p>Expected final print-out message:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">INFO::validate_camera_efficiency(l118)::main::Plotted NSB efficiency in /workdir/external/        simtools/simtools-output/validate_camera_efficiency/application-plots/validate_camera        _efficiency_MST-NectarCam-D_nsb</span>
+</pre></div>
+</div>
+<div class="admonition-todo admonition" id="id46">
+<p class="admonition-title">Todo</p>
+<ul class="simple">
+<li><p>Change default model to default (after this feature is implemented in db_handler)</p></li>
+<li><p>Fix the set_style. For some reason, sphinx cannot built docs with it on.</p></li>
+</ul>
+</div>
+</section>
+</section>
+<section id="module-validate_camera_fov">
+<span id="validate-camera-fov"></span><h2>validate_camera_fov<a class="headerlink" href="#module-validate_camera_fov" title="Permalink to this heading">¶</a></h2>
+<section id="id47">
+<h3>Summary<a class="headerlink" href="#id47" title="Permalink to this heading">¶</a></h3>
+<p>This application calculate the camera FoV of the telescope requested and plot the camera     as seen for an observer facing the camera.</p>
+<p>An example of the camera plot can be found below.</p>
+<a class="reference internal image-reference" href="_images/validate_camera_fov_North-LST-1_pixelLayout.png" id="camera-fov-plot"><img alt="_images/validate_camera_fov_North-LST-1_pixelLayout.png" id="camera-fov-plot" src="_images/validate_camera_fov_North-LST-1_pixelLayout.png" style="width: 50%;" /></a>
+</section>
+<section id="id48">
+<h3>Command line arguments<a class="headerlink" href="#id48" title="Permalink to this heading">¶</a></h3>
+<dl class="simple">
+<dt>site (str, required)</dt><dd><p>North or South.</p>
+</dd>
+<dt>telescope (str, required)</dt><dd><p>Telescope model name (e.g. LST-1, SST-D, …)</p>
+</dd>
+<dt>model_version (str, optional)</dt><dd><p>Model version (default=’Current’)</p>
+</dd>
+<dt>camera_in_sky_coor (bool, optional)</dt><dd><p>Plot the camera layout in sky coordinates akin to looking at it from behind for single          mirror telescopes (default=False)</p>
+</dd>
+<dt>print_pixels_id (bool, optional)</dt><dd><p>Up to which pixel ID to print (default=50). To suppress printing of pixel IDs, set to zero         (–print_pixels_id 0). To print all pixels, set to ‘All’.”</p>
+</dd>
+<dt>verbosity (str, optional)</dt><dd><p>Log level to print (default=INFO).</p>
+</dd>
+</dl>
+</section>
+<section id="id49">
+<h3>Example<a class="headerlink" href="#id49" title="Permalink to this heading">¶</a></h3>
+<p>LST - Prod5</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-validate-camera-fov --site North             --telescope LST-1 --model_version prod5</span>
+</pre></div>
+</div>
+<p>The output is saved in simtools-output/validate_camera_fov.</p>
+<p>Expected final print-out message:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">Saved camera plot in /workdir/external/simtools/simtools-output/validate_camera_fov        /application-plots/validate_camera_fov_LST-1_pixel_layout.png</span>
+</pre></div>
+</div>
+<div class="admonition-todo admonition" id="id50">
+<p class="admonition-title">Todo</p>
+<ul class="simple">
+<li><p>Change default model to default (after this feature is implemented in db_handler)</p></li>
+<li><p>Fix the set_style. For some reason, sphinx cannot built docs with it on.</p></li>
+</ul>
+</div>
+</section>
+</section>
+<section id="module-validate_optics">
+<span id="validate-optics"></span><h2>validate_optics<a class="headerlink" href="#module-validate_optics" title="Permalink to this heading">¶</a></h2>
+<section id="id51">
+<h3>Summary<a class="headerlink" href="#id51" title="Permalink to this heading">¶</a></h3>
+<p>This application validates the optical model parameters through ray tracing simulations     of the whole telescope, assuming a point-like light source. The output includes PSF (D80),     effective mirror area and effective focal length as a function of the off-axis angle. 
+The telescope zenith angle and the source distance can be set by command line arguments.</p>
+<p>Examples of the plots generated by this application are shown below. On the top, the D80     vs off-axis is shown in cm (left) and deg (right). On the bottom, the effective mirror     area (left) and the effective focal length (right) vs off-axis angle are shown.</p>
+<a class="reference internal image-reference" href="_images/validate_optics_North-LST-1_d80_cm.png" id="validate-optics-plot"><img alt="_images/validate_optics_North-LST-1_d80_cm.png" id="validate-optics-plot" src="_images/validate_optics_North-LST-1_d80_cm.png" style="width: 49%;" /></a>
+<a class="reference internal image-reference" href="_images/validate_optics_North-LST-1_d80_deg.png"><img alt="_images/validate_optics_North-LST-1_d80_deg.png" src="_images/validate_optics_North-LST-1_d80_deg.png" style="width: 49%;" /></a>
+<a class="reference internal image-reference" href="_images/validate_optics_North-LST-1_eff_area.png"><img alt="_images/validate_optics_North-LST-1_eff_area.png" src="_images/validate_optics_North-LST-1_eff_area.png" style="width: 49%;" /></a>
+<a class="reference internal image-reference" href="_images/validate_optics_North-LST-1_eff_flen.png"><img alt="_images/validate_optics_North-LST-1_eff_flen.png" src="_images/validate_optics_North-LST-1_eff_flen.png" style="width: 49%;" /></a>
+</section>
+<section id="id52">
+<h3>Command line arguments<a class="headerlink" href="#id52" title="Permalink to this heading">¶</a></h3>
+<dl class="simple">
+<dt>site (str, required)</dt><dd><p>North or South.</p>
+</dd>
+<dt>telescope (str, required)</dt><dd><p>Telescope model name (e.g. LST-1, SST-D, …).</p>
+</dd>
+<dt>model_version (str, optional)</dt><dd><p>Model version (default=’Current’).</p>
+</dd>
+<dt>src_distance (float, optional)</dt><dd><p>Source distance in km (default=10).</p>
+</dd>
+<dt>zenith (float, optional)</dt><dd><p>Zenith angle in deg (default=20).</p>
+</dd>
+<dt>max_offset (float, optional)</dt><dd><p>Maximum offset angle in deg (default=4).</p>
+</dd>
+<dt>offset_steps (float, optional)</dt><dd><p>Offset angle step size (default=0.25 deg)</p>
+</dd>
+<dt>plot_images (activation mode, optional)</dt><dd><p>Produce a multiple pages pdf file with the image plots.</p>
+</dd>
+<dt>test (activation mode, optional)</dt><dd><p>If activated, application will be faster by simulating fewer photons.</p>
+</dd>
+<dt>verbosity (str, optional)</dt><dd><p>Log level to print (default=INFO).</p>
+</dd>
+</dl>
+</section>
+<section id="id53">
+<h3>Example<a class="headerlink" href="#id53" title="Permalink to this heading">¶</a></h3>
+<p>LST-1 Prod5</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-validate-optics --site North --telescope LST-1 --max_offset 1.0         --zenith 20 --src_distance 11 --test</span>
+</pre></div>
+</div>
+<p>The output is saved in simtools-output/validate_optics</p>
+<p>Expected final print-out message:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">INFO::ray_tracing(l434)::plot::Plotting eff_area vs off-axis angle</span>
+<span class="go">INFO::ray_tracing(l434)::plot::Plotting eff_flen vs off-axis angle</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="module-validate_schema_files">
+<span id="validate-schema-files"></span><h2>validate_schema_files<a class="headerlink" href="#module-validate_schema_files" title="Permalink to this heading">¶</a></h2>
+<section id="id54">
+<h3>Summary<a class="headerlink" href="#id54" title="Permalink to this heading">¶</a></h3>
+<p>Validate parameter description files using a json schema file.</p>
+</section>
+<section id="id55">
+<h3>Command line arguments<a class="headerlink" href="#id55" title="Permalink to this heading">¶</a></h3>
+<dl class="simple">
+<dt>file_name (str)</dt><dd><p>input file to be validated</p>
+</dd>
+<dt>schema (str)</dt><dd><p>schema file (jsonschema format) used for validation</p>
+</dd>
+</dl>
+</section>
+<section id="id56">
+<h3>Example<a class="headerlink" href="#id56" title="Permalink to this heading">¶</a></h3>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-validate-schema-file          --file_name tests/resources/MST_mirror_2f_measurements.schema.yml          --schema jsonschema.yml</span>
+</pre></div>
+</div>
+</section>
+<dl class="py function">
+<dt class="sig sig-object py" id="validate_schema_files.load_schema">
+<span class="sig-prename descclassname"><span class="pre">validate_schema_files.</span></span><span class="sig-name descname"><span class="pre">load_schema</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">schema_file</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/validate_schema_files.html#load_schema"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#validate_schema_files.load_schema" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load parameter schema from file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>schema_file (str)</strong></dt><dd><p>schema file</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>parameter_schema (dict)</dt><dd><p>parameter schema</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>FileNotFoundError</dt><dd><p>if schema file is not found</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="validate_schema_files.validate_schema_file">
+<span class="sig-prename descclassname"><span class="pre">validate_schema_files.</span></span><span class="sig-name descname"><span class="pre">validate_schema_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">schema</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/validate_schema_files.html#validate_schema_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#validate_schema_files.validate_schema_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Validate parameter file against schema.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>input_file (str)</strong></dt><dd><p>input file to be validated</p>
+</dd>
+<dt><strong>schema (dict)</strong></dt><dd><p>schema used for validation</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>FileNotFoundError</dt><dd><p>if input file is not found</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="index.html">Table of Contents</a></h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="simtools-configuration.html">Configuration</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Applications</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#module-add_file_to_db">add_file_to_db</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-compare_cumulative_psf">compare_cumulative_psf</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-derive_mirror_rnda">derive_mirror_rnda</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-get_file_from_db">get_file_from_db</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-get_parameter">get_parameter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-make_regular_arrays">make_regular_arrays</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-plot_simtel_histograms">plot_simtel_histograms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-plot_layout_array">plot_layout_array</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-print_array_elements">print_array_elements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-produce_array_config">produce_array_config</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-production">production</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-sim_showers_for_trigger_rates">sim_showers_for_trigger_rates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-submit_data_from_external">submit_data_from_external</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-tune_psf">tune_psf</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-validate_camera_efficiency">validate_camera_efficiency</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-validate_camera_fov">validate_camera_fov</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-validate_optics">validate_optics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-validate_schema_files">validate_schema_files</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="library.html">API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="auxiliary_files.html">Auxiliary Files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="databases.html">Databases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="simulation_software.html">Simulation Software</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guidelines.html">Developer Guidelines</a></li>
+</ul>
+
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/applications.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="library.html" title="API"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="simtools-configuration.html" title="Configuration"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">simtools v0.1.dev1+g59e41a4.d20230816 Manual</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Applications</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2022, gammasim-tools, simtools developers.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 6.2.1.
+    </div>
+  </body>
+</html>

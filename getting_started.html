@@ -1,0 +1,250 @@
+
+
+<!doctype html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+    <title>Getting Started &#8212; simtools v0.1.dev1+g59e41a4.d20230816 Manual</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/bizstyle.css" />
+    
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/bizstyle.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Configuration" href="simtools-configuration.html" />
+    <link rel="prev" title="simtools" href="index.html" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <!--[if lt IE 9]>
+    <script src="_static/css3-mediaqueries.js"></script>
+    <![endif]-->
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="simtools-configuration.html" title="Configuration"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="simtools"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">simtools v0.1.dev1+g59e41a4.d20230816 Manual</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Getting Started</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="getting-started">
+<span id="id1"></span><h1>Getting Started<a class="headerlink" href="#getting-started" title="Permalink to this heading">¶</a></h1>
+<section id="model-database-access">
+<h2>Model Database Access<a class="headerlink" href="#model-database-access" title="Permalink to this heading">¶</a></h2>
+<p>Simulation model parameters are stored in a MongoDB-type database.
+Many simtools applications depend on access to this database; ask one of the developers for the credentials.</p>
+<p>Credentials for database access are passed on to simtools applications using environmental variables.
+For database access, copy <a class="reference external" href="https://github.com/gammasim/simtools/blob/main/set_DB_environ_template.sh">set_DB_environ_template.sh</a> to a new file named <code class="docutils literal notranslate"><span class="pre">set_DB_environ.sh</span></code>, and update it with the credentials:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">export</span> <span class="n">DB_API_USER</span><span class="o">=&lt;</span><span class="n">db_user_name</span><span class="o">&gt;</span>
+<span class="n">export</span> <span class="n">DB_API_PW</span><span class="o">=&lt;</span><span class="n">db_password</span><span class="o">&gt;</span>
+<span class="n">export</span> <span class="n">DB_API_PORT</span><span class="o">=&lt;</span><span class="n">db_port</span><span class="o">&gt;</span>
+<span class="n">export</span> <span class="n">DB_SERVER</span><span class="o">=&lt;</span><span class="n">db_server</span><span class="o">&gt;</span>
+</pre></div>
+</div>
+<p>See below for the usage of this script.</p>
+</section>
+<section id="installation-for-users">
+<span id="installationforusers"></span><h2>Installation for Users<a class="headerlink" href="#installation-for-users" title="Permalink to this heading">¶</a></h2>
+<p>simtools is under rapid development and not ready for production use.
+It will be made available in future using the conda packaging system.
+For now, the following installation procedure is foreseen:</p>
+<p>Install a simple python environment:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>mamba<span class="w"> </span>create<span class="w"> </span>--name<span class="w"> </span>simtools-prod<span class="w"> </span><span class="nv">python</span><span class="o">=</span><span class="m">3</span>.9
+<span class="gp">$ </span>mamba<span class="w"> </span>activate<span class="w"> </span>simtools-prod
+</pre></div>
+</div>
+<p>Clone simtools project:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/gammasim/simtools.git
+</pre></div>
+</div>
+<p>Change directory into <code class="docutils literal notranslate"><span class="pre">simtools</span></code> and install simtools including dependencies:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>pip<span class="w"> </span>install<span class="w"> </span>.
+</pre></div>
+</div>
+<p>Source the <code class="docutils literal notranslate"><span class="pre">set_DB_environ.sh</span></code> script in order to run the applications (see <a class="reference internal" href="#model-database-access">Model Database Access</a> and <a class="reference internal" href="#set-environmental-variables">Set environmental variables</a>)</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span><span class="nb">source</span><span class="w"> </span>set_DB_environ.sh
+</pre></div>
+</div>
+<p>All simtools applications are now available as command line tools. Note the naming of the tool, starting with <code class="docutils literal notranslate"><span class="pre">simtools-</span></code> followed by the application name. See <a class="reference internal" href="applications.html#applications"><span class="std std-ref">Applications</span></a> for more details.</p>
+</section>
+<section id="installation-for-developers">
+<span id="installationfordevelopers"></span><h2>Installation for Developers<a class="headerlink" href="#installation-for-developers" title="Permalink to this heading">¶</a></h2>
+<p>Developers install simtools directly from the GitHub repository:</p>
+<section id="clone-simtools">
+<h3>Clone simtools<a class="headerlink" href="#clone-simtools" title="Permalink to this heading">¶</a></h3>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/gammasim/simtools.git
+</pre></div>
+</div>
+</section>
+<section id="install-dependencies">
+<h3>Install dependencies<a class="headerlink" href="#install-dependencies" title="Permalink to this heading">¶</a></h3>
+<p>Create a conda virtual environment with the simtools dependencies installed:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>conda<span class="w"> </span>env<span class="w"> </span>create<span class="w"> </span>-f<span class="w"> </span>environment.yml
+
+<span class="gp">$ </span>conda<span class="w"> </span>activate<span class="w"> </span>simtools-dev
+
+<span class="gp">$ </span>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span>.
+</pre></div>
+</div>
+</section>
+<section id="install-corsika-and-sim-telarray">
+<h3>Install CORSIKA and sim_telarray<a class="headerlink" href="#install-corsika-and-sim-telarray" title="Permalink to this heading">¶</a></h3>
+<p>CORSIKA and sim_telarray are external tools to simtools and are used by several simtools applications.
+Follow the instruction provided by the CORSIKA/sim_telarray authors for installation.
+CTA users can download both packages from <a class="reference external" href="https://www.mpi-hd.mpg.de/hfm/CTA/MC/Software/Testing/">here</a> and install the package with e.g.:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">tar -czf corsika7.7_simtelarray.tar.gz</span>
+<span class="go">./build_all prod5 qgs2 gsl</span>
+</pre></div>
+</div>
+</section>
+<section id="set-environmental-variables">
+<h3>Set environmental variables<a class="headerlink" href="#set-environmental-variables" title="Permalink to this heading">¶</a></h3>
+<p>Source the <code class="docutils literal notranslate"><span class="pre">set_DB_environ.sh</span></code> script (see <a class="reference internal" href="#model-database-access">Model Database Access</a>) to activate set the environmental variables for the DB access:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span><span class="nb">source</span><span class="w"> </span>set_DB_environ.sh
+</pre></div>
+</div>
+<p>The environmental variable <code class="docutils literal notranslate"><span class="pre">$SIM_TELPATH</span></code> should point towards the CORSIKA/sim_telarray installation.</p>
+</section>
+<section id="test-installation">
+<h3>Test installation<a class="headerlink" href="#test-installation" title="Permalink to this heading">¶</a></h3>
+<p>Test your installation by running the unit tests:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>pytest<span class="w"> </span>tests/unit_tests/
+</pre></div>
+</div>
+</section>
+</section>
+<section id="docker-environment-for-developers">
+<h2>Docker Environment for Developers<a class="headerlink" href="#docker-environment-for-developers" title="Permalink to this heading">¶</a></h2>
+<p>A docker container is made available for developers, see the
+<a class="reference external" href="https://github.com/gammasim/containers/tree/main/dev">simtools container repository</a> for the Docker files.
+Images are uploaded to <a class="reference external" href="https://github.com/orgs/gammasim/packages?repo_name=containershttps://github.com/orgs/gammasim/packages?repo_name=containers">package section</a> of this repository (at this point a private container repository; ask the simtools developers for access).</p>
+<p>The container has python packages, CORSIKA, and sim_telarray pre-installed.
+Setting up a system to run simtools applications or tests should be a matter of minutes.</p>
+<section id="docker-installation">
+<h3>Docker Installation<a class="headerlink" href="#docker-installation" title="Permalink to this heading">¶</a></h3>
+<p>Install Docker and start the Docker application (see
+<a class="reference external" href="https://docs.docker.com/engine/install/">Docker installation page</a>). Other container systems like
+Apptainer, Singularity, Buildah/Podman, etc should work, but are not thoroughly tested.</p>
+</section>
+<section id="id2">
+<h3>Clone simtools<a class="headerlink" href="#id2" title="Permalink to this heading">¶</a></h3>
+<p>Clone simtools from GitHub into <code class="docutils literal notranslate"><span class="pre">external/simtools</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># create a working directory</span>
+<span class="n">mkdir</span> <span class="n">external</span>
+<span class="c1"># clone simtools repository</span>
+<span class="n">git</span> <span class="n">clone</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">gammasim</span><span class="o">/</span><span class="n">simtools</span><span class="o">.</span><span class="n">git</span> <span class="n">external</span><span class="o">/</span><span class="n">simtools</span>
+</pre></div>
+</div>
+</section>
+<section id="spin-up-the-container">
+<h3>Spin-up the container<a class="headerlink" href="#spin-up-the-container" title="Permalink to this heading">¶</a></h3>
+<p>Start up a container (the image will we downloaded, if it is not available in your environment):</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">docker</span> <span class="n">run</span> <span class="o">--</span><span class="n">rm</span> <span class="o">-</span><span class="n">it</span> <span class="o">-</span><span class="n">v</span> <span class="s2">&quot;$(pwd)/external:/workdir/external&quot;</span> <span class="n">ghcr</span><span class="o">.</span><span class="n">io</span><span class="o">/</span><span class="n">gammasim</span><span class="o">/</span><span class="n">containers</span><span class="o">/</span><span class="n">simtools</span><span class="o">-</span><span class="n">dev</span><span class="p">:</span><span class="n">v0</span><span class="mf">.3.0</span><span class="o">-</span><span class="n">dev1</span> <span class="n">bash</span> <span class="o">-</span><span class="n">c</span> <span class="s2">&quot;$(cat ./entrypoint.sh) &amp;&amp; bash&quot;</span>
+</pre></div>
+</div>
+<p>The entry script of the container will source the <code class="docutils literal notranslate"><span class="pre">set_DB_environ.sh</span></code> script and set the DB access parameters (see <a class="reference internal" href="#model-database-access">Model Database Access</a>).
+The container includes a CORSIKA and sim_telarray installation; the environmental variable <code class="docutils literal notranslate"><span class="pre">$SIM_TELPATH</span></code> is set.</p>
+</section>
+<section id="id3">
+<h3>Test installation<a class="headerlink" href="#id3" title="Permalink to this heading">¶</a></h3>
+<p>Test your installation by running the unit tests:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>pytest<span class="w"> </span>tests/unit_tests/
+</pre></div>
+</div>
+</section>
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="index.html">Table of Contents</a></h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Getting Started</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#model-database-access">Model Database Access</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#installation-for-users">Installation for Users</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#installation-for-developers">Installation for Developers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#docker-environment-for-developers">Docker Environment for Developers</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="simtools-configuration.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="applications.html">Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="library.html">API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="auxiliary_files.html">Auxiliary Files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="databases.html">Databases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="simulation_software.html">Simulation Software</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guidelines.html">Developer Guidelines</a></li>
+</ul>
+
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/getting_started.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="simtools-configuration.html" title="Configuration"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="simtools"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">simtools v0.1.dev1+g59e41a4.d20230816 Manual</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Getting Started</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2022, gammasim-tools, simtools developers.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 6.2.1.
+    </div>
+  </body>
+</html>

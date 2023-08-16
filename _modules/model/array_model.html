@@ -1,0 +1,462 @@
+
+
+<!doctype html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>model.array_model &#8212; simtools v0.1.dev1+g59e41a4.d20230816 Manual</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/bizstyle.css" />
+    
+    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/sphinx_highlight.js"></script>
+    <script src="../../_static/bizstyle.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <!--[if lt IE 9]>
+    <script src="_static/css3-mediaqueries.js"></script>
+    <![endif]-->
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">simtools v0.1.dev1+g59e41a4.d20230816 Manual</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">model.array_model</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for model.array_model</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">copy</span>
+
+<span class="kn">from</span> <span class="nn">simtools</span> <span class="kn">import</span> <span class="n">db_handler</span><span class="p">,</span> <span class="n">io_handler</span>
+<span class="kn">from</span> <span class="nn">simtools.layout.layout_array</span> <span class="kn">import</span> <span class="n">LayoutArray</span>
+<span class="kn">from</span> <span class="nn">simtools.model.telescope_model</span> <span class="kn">import</span> <span class="n">TelescopeModel</span>
+<span class="kn">from</span> <span class="nn">simtools.simtel.simtel_config_writer</span> <span class="kn">import</span> <span class="n">SimtelConfigWriter</span>
+<span class="kn">from</span> <span class="nn">simtools.utils</span> <span class="kn">import</span> <span class="n">names</span>
+<span class="kn">from</span> <span class="nn">simtools.utils.general</span> <span class="kn">import</span> <span class="n">collect_data_from_yaml_or_dict</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;ArrayModel&quot;</span><span class="p">,</span> <span class="s2">&quot;InvalidArrayConfigData&quot;</span><span class="p">]</span>
+
+
+<div class="viewcode-block" id="InvalidArrayConfigData"><a class="viewcode-back" href="../../mc_model.html#model.array_model.InvalidArrayConfigData">[docs]</a><span class="k">class</span> <span class="nc">InvalidArrayConfigData</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Exception for invalid array configuration data.&quot;&quot;&quot;</span></div>
+
+
+<div class="viewcode-block" id="ArrayModel"><a class="viewcode-back" href="../../mc_model.html#model.array_model.ArrayModel">[docs]</a><span class="k">class</span> <span class="nc">ArrayModel</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    ArrayModel is an abstract representation of the MC model at the array level. It contains the\</span>
+<span class="sd">    list of TelescopeModel&#39;s and a LayoutArray.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    mongo_db_config: dict</span>
+<span class="sd">        MongoDB configuration.</span>
+<span class="sd">    array_config_file: str</span>
+<span class="sd">        Path to a yaml file with the array config data.</span>
+<span class="sd">    array_config_data: dict</span>
+<span class="sd">        Dict with the array config data.</span>
+<span class="sd">    label: str</span>
+<span class="sd">        Instance label. Important for output file naming.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="ArrayModel.__init__"><a class="viewcode-back" href="../../mc_model.html#model.array_model.ArrayModel.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mongo_db_config</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">array_config_file</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">array_config_data</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize ArrayModel.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Init ArrayModel&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mongo_db_config</span> <span class="o">=</span> <span class="n">mongo_db_config</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">label</span> <span class="o">=</span> <span class="n">label</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">site</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">layout</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">layout_name</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model_version</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_config_file_path</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">io_handler</span> <span class="o">=</span> <span class="n">io_handler</span><span class="o">.</span><span class="n">IOHandler</span><span class="p">()</span>
+        <span class="n">array_config_data</span> <span class="o">=</span> <span class="n">collect_data_from_yaml_or_dict</span><span class="p">(</span><span class="n">array_config_file</span><span class="p">,</span> <span class="n">array_config_data</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_load_array_data</span><span class="p">(</span><span class="n">array_config_data</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_set_config_file_directory</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_build_array_model</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model_files_exported</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_array_model_file_exported</span> <span class="o">=</span> <span class="kc">False</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">number_of_telescopes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the number of telescopes.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        int</span>
+<span class="sd">            Number of telescopes.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">get_number_of_telescopes</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_load_array_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array_config_data</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Load parameters from array_data.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        array_config_data: dict</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Validating array_config_data</span>
+        <span class="c1"># Keys &#39;site&#39;, &#39;layout_name&#39; and &#39;default&#39; are mandatory.</span>
+        <span class="c1"># &#39;default&#39; must have &#39;LST&#39;, &#39;MST&#39; and &#39;SST&#39; (for South site) keys.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_validate_array_data</span><span class="p">(</span><span class="n">array_config_data</span><span class="p">)</span>
+
+        <span class="c1"># Site</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">site</span> <span class="o">=</span> <span class="n">names</span><span class="o">.</span><span class="n">validate_site_name</span><span class="p">(</span><span class="n">array_config_data</span><span class="p">[</span><span class="s2">&quot;site&quot;</span><span class="p">])</span>
+
+        <span class="c1"># Grabbing layout name and building LayoutArray</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">layout_name</span> <span class="o">=</span> <span class="n">names</span><span class="o">.</span><span class="n">validate_layout_array_name</span><span class="p">(</span><span class="n">array_config_data</span><span class="p">[</span><span class="s2">&quot;layout_name&quot;</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">layout</span> <span class="o">=</span> <span class="n">LayoutArray</span><span class="o">.</span><span class="n">from_layout_array_name</span><span class="p">(</span>
+            <span class="n">mongo_db_config</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mongo_db_config</span><span class="p">,</span>
+            <span class="n">layout_array_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">site</span> <span class="o">+</span> <span class="s2">&quot;-&quot;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">layout_name</span><span class="p">,</span>
+            <span class="n">label</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Model version</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="s2">&quot;model_version&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">array_config_data</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+            <span class="ow">or</span> <span class="n">array_config_data</span><span class="p">[</span><span class="s2">&quot;model_version&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span>
+        <span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;model_version not given in array_config_data - using current&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">model_version</span> <span class="o">=</span> <span class="s2">&quot;current&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">model_version</span> <span class="o">=</span> <span class="n">names</span><span class="o">.</span><span class="n">validate_model_version_name</span><span class="p">(</span>
+                <span class="n">array_config_data</span><span class="p">[</span><span class="s2">&quot;model_version&quot;</span><span class="p">]</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Removing keys that were stored in attributes and keeping the remaining as a dict</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_array_config_data</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">k</span><span class="p">:</span> <span class="n">v</span>
+            <span class="k">for</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="ow">in</span> <span class="n">array_config_data</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;site&quot;</span><span class="p">,</span> <span class="s2">&quot;layout_name&quot;</span><span class="p">,</span> <span class="s2">&quot;model_version&quot;</span><span class="p">]</span>
+        <span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">_validate_array_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array_config_data</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Validate array_data by checking the existence of the relevant keys. Searching for the keys:\</span>
+<span class="sd">        &#39;site&#39;, &#39;array&#39; and &#39;default&#39;.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">def</span> <span class="nf">run_over_pars</span><span class="p">(</span><span class="n">pars</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;Run over pars and validate it.&quot;&quot;&quot;</span>
+            <span class="n">all_keys</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="k">if</span> <span class="n">parent</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">data</span><span class="p">[</span><span class="n">parent</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">pp</span> <span class="ow">in</span> <span class="n">pars</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">pp</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">all_keys</span><span class="p">:</span>
+                    <span class="n">key</span> <span class="o">=</span> <span class="n">pp</span> <span class="k">if</span> <span class="n">parent</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">parent</span> <span class="o">+</span> <span class="s2">&quot;.&quot;</span> <span class="o">+</span> <span class="n">pp</span>
+                    <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;Key </span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2"> was not found in array_config_data &quot;</span>
+                        <span class="o">+</span> <span class="s2">&quot;- impossible to build array model&quot;</span>
+                    <span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+                    <span class="k">raise</span> <span class="n">InvalidArrayConfigData</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+        <span class="n">run_over_pars</span><span class="p">([</span><span class="s2">&quot;site&quot;</span><span class="p">,</span> <span class="s2">&quot;layout_name&quot;</span><span class="p">,</span> <span class="s2">&quot;default&quot;</span><span class="p">],</span> <span class="n">array_config_data</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_set_config_file_directory</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Define the variable _config_file_directory and create directories, if needed&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_config_file_directory</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">io_handler</span><span class="o">.</span><span class="n">get_output_directory</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">,</span> <span class="s2">&quot;model&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config_file_directory</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_config_file_directory</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Creating directory </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_file_directory</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_build_array_model</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Build the site parameters and the list of telescope models,</span>
+<span class="sd">        including reading the parameters from the DB.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Getting site parameters from DB</span>
+        <span class="n">db</span> <span class="o">=</span> <span class="n">db_handler</span><span class="o">.</span><span class="n">DatabaseHandler</span><span class="p">(</span><span class="n">mongo_db_config</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mongo_db_config</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_site_parameters</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">get_site_parameters</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">site</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_version</span><span class="p">,</span> <span class="n">only_applicable</span><span class="o">=</span><span class="kc">True</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Building telescope models</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>  <span class="c1"># List of telescope models</span>
+        <span class="n">_all_telescope_model_names</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>  <span class="c1"># List of telescope names without repetition</span>
+        <span class="n">_all_pars_to_change</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">tel</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">layout</span><span class="p">:</span>
+            <span class="n">tel_size</span> <span class="o">=</span> <span class="n">names</span><span class="o">.</span><span class="n">get_telescope_type</span><span class="p">(</span><span class="n">tel</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+
+            <span class="c1"># Collecting telescope name and pars to change from array_config_data</span>
+            <span class="n">tel_model_name</span><span class="p">,</span> <span class="n">pars_to_change</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_single_telescope_info_from_array_config</span><span class="p">(</span>
+                <span class="n">tel</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">tel_size</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">pars_to_change</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">_all_pars_to_change</span><span class="p">[</span><span class="n">tel</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">pars_to_change</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;tel_model_name: </span><span class="si">{</span><span class="n">tel_model_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+            <span class="c1"># Building the basic models - no pars to change yet</span>
+            <span class="k">if</span> <span class="n">tel_model_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_all_telescope_model_names</span><span class="p">:</span>
+                <span class="c1"># First time a telescope name is built</span>
+                <span class="n">_all_telescope_model_names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tel_model_name</span><span class="p">)</span>
+                <span class="n">tel_model</span> <span class="o">=</span> <span class="n">TelescopeModel</span><span class="p">(</span>
+                    <span class="n">site</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">site</span><span class="p">,</span>
+                    <span class="n">telescope_model_name</span><span class="o">=</span><span class="n">tel_model_name</span><span class="p">,</span>
+                    <span class="n">model_version</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model_version</span><span class="p">,</span>
+                    <span class="n">label</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">,</span>
+                    <span class="n">mongo_db_config</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mongo_db_config</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Telescope name already exists.</span>
+                <span class="c1"># Finding the TelescopeModel and copying it.</span>
+                <span class="k">for</span> <span class="n">tel_now</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">tel_now</span><span class="o">.</span><span class="n">name</span> <span class="o">!=</span> <span class="n">tel_model_name</span><span class="p">:</span>
+                        <span class="k">continue</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Copying tel model </span><span class="si">{</span><span class="n">tel_now</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> already loaded from DB&quot;</span><span class="p">)</span>
+                    <span class="n">tel_model</span> <span class="o">=</span> <span class="n">copy</span><span class="p">(</span><span class="n">tel_now</span><span class="p">)</span>
+                    <span class="k">break</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tel_model</span><span class="p">)</span>
+
+        <span class="c1"># Checking whether the size of the telescope list and the layout match</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">layout</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="s2">&quot;Number of telescopes in the list of telescope models does &quot;</span>
+                <span class="s2">&quot;not match the number of telescopes in the LayoutArray - something is wrong!&quot;</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Changing parameters, if there are any in all_pars_to_change</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">_all_pars_to_change</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">tel_data</span><span class="p">,</span> <span class="n">tel_model</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">layout</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">tel_data</span><span class="o">.</span><span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_all_pars_to_change</span><span class="p">:</span>
+                    <span class="k">continue</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Changing </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">_all_pars_to_change</span><span class="p">[</span><span class="n">tel_data</span><span class="o">.</span><span class="n">name</span><span class="p">])</span><span class="si">}</span><span class="s2"> pars of a &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">tel_data</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="o">*</span><span class="n">_all_pars_to_change</span><span class="p">[</span><span class="n">tel_data</span><span class="o">.</span><span class="n">name</span><span class="p">],</span><span class="si">}</span><span class="s2">, ...&quot;</span>
+                <span class="p">)</span>
+                <span class="n">tel_model</span><span class="o">.</span><span class="n">change_multiple_parameters</span><span class="p">(</span><span class="o">**</span><span class="n">_all_pars_to_change</span><span class="p">[</span><span class="n">tel_data</span><span class="o">.</span><span class="n">name</span><span class="p">])</span>
+                <span class="n">tel_model</span><span class="o">.</span><span class="n">set_extra_label</span><span class="p">(</span><span class="n">tel_data</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_get_single_telescope_info_from_array_config</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tel_name</span><span class="p">,</span> <span class="n">tel_size</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        array_config_data contains the default telescope models for each telescope size and the \</span>
+<span class="sd">        list of specific telescopes. For each case, the data can be given only as a name or as a \</span>
+<span class="sd">        dict with &#39;name&#39; and parameters to change. This function has to identify these two cases\</span>
+<span class="sd">        and collect the telescope name and the dict with the parameters to change.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        tel_name: str</span>
+<span class="sd">            Name of the telescope at the layout level (LST-01, MST-05, ...).</span>
+<span class="sd">        tel_size: str</span>
+<span class="sd">            LST, MST or SST.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">def</span> <span class="nf">_proccess_single_telescope</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Parameters</span>
+<span class="sd">            ----------</span>
+<span class="sd">            data: dict or str</span>
+<span class="sd">                Piece of the array_config_data for one specific telescope.</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+                <span class="c1"># Case 0: data is dict</span>
+                <span class="k">if</span> <span class="s2">&quot;name&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                    <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;ArrayConfig has no name for a telescope&quot;</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+                    <span class="k">raise</span> <span class="n">InvalidArrayConfigData</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+                <span class="n">tel_name</span> <span class="o">=</span> <span class="n">tel_size</span> <span class="o">+</span> <span class="s2">&quot;-&quot;</span> <span class="o">+</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span>
+                <span class="n">pars_to_change</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="o">!=</span> <span class="s2">&quot;name&quot;</span><span class="p">}</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                    <span class="s2">&quot;Grabbing tel data as dict - &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;name: </span><span class="si">{</span><span class="n">tel_name</span><span class="si">}</span><span class="s2">, &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">pars_to_change</span><span class="p">)</span><span class="si">}</span><span class="s2"> pars to change&quot;</span>
+                <span class="p">)</span>
+                <span class="k">return</span> <span class="n">tel_name</span><span class="p">,</span> <span class="n">pars_to_change</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+                <span class="c1"># Case 1: data is string (only name)</span>
+                <span class="n">tel_name</span> <span class="o">=</span> <span class="n">tel_size</span> <span class="o">+</span> <span class="s2">&quot;-&quot;</span> <span class="o">+</span> <span class="n">data</span>
+                <span class="k">return</span> <span class="n">tel_name</span><span class="p">,</span> <span class="nb">dict</span><span class="p">()</span>
+
+            <span class="c1"># Case 2: data has a wrong type</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;ArrayConfig has wrong input for a telescope&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">InvalidArrayConfigData</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">tel_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_array_config_data</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="c1"># Specific info for this telescope</span>
+            <span class="k">return</span> <span class="n">_proccess_single_telescope</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_array_config_data</span><span class="p">[</span><span class="n">tel_name</span><span class="p">])</span>
+
+        <span class="c1"># Checking if default option exists in array_config_data</span>
+        <span class="n">not_contains_default_key</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="s2">&quot;default&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_array_config_data</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+            <span class="ow">or</span> <span class="n">tel_size</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_array_config_data</span><span class="p">[</span><span class="s2">&quot;default&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">not_contains_default_key</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="s2">&quot;default option was not given in array_config_data &quot;</span>
+                <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;for the telescope </span><span class="si">{</span><span class="n">tel_name</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">InvalidArrayConfigData</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+        <span class="c1"># Grabbing the default option</span>
+        <span class="k">return</span> <span class="n">_proccess_single_telescope</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_array_config_data</span><span class="p">[</span><span class="s2">&quot;default&quot;</span><span class="p">][</span><span class="n">tel_size</span><span class="p">])</span>
+
+<div class="viewcode-block" id="ArrayModel.print_telescope_list"><a class="viewcode-back" href="../../mc_model.html#model.array_model.ArrayModel.print_telescope_list">[docs]</a>    <span class="k">def</span> <span class="nf">print_telescope_list</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Print out the list of telescopes for quick inspection.&quot;&quot;&quot;</span>
+
+        <span class="k">for</span> <span class="n">tel_data</span><span class="p">,</span> <span class="n">tel_model</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">layout</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model</span><span class="p">):</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Name: </span><span class="si">{</span><span class="n">tel_data</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="se">\t</span><span class="s2"> Model: </span><span class="si">{</span><span class="n">tel_model</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ArrayModel.export_simtel_telescope_config_files"><a class="viewcode-back" href="../../mc_model.html#model.array_model.ArrayModel.export_simtel_telescope_config_files">[docs]</a>    <span class="k">def</span> <span class="nf">export_simtel_telescope_config_files</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Export sim_telarray config files for all the telescopes into the output model directory.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">exported_models</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">tel_model</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model</span><span class="p">:</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="n">tel_model</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="p">(</span>
+                <span class="s2">&quot;_&quot;</span> <span class="o">+</span> <span class="n">tel_model</span><span class="o">.</span><span class="n">extra_label</span> <span class="k">if</span> <span class="n">tel_model</span><span class="o">.</span><span class="n">extra_label</span> <span class="o">!=</span> <span class="s2">&quot;&quot;</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">exported_models</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Exporting config file for tel </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="n">tel_model</span><span class="o">.</span><span class="n">export_config_file</span><span class="p">()</span>
+                <span class="n">exported_models</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Config file for tel </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> already exists - skipping&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model_files_exported</span> <span class="o">=</span> <span class="kc">True</span></div>
+
+<div class="viewcode-block" id="ArrayModel.export_simtel_array_config_file"><a class="viewcode-back" href="../../mc_model.html#model.array_model.ArrayModel.export_simtel_array_config_file">[docs]</a>    <span class="k">def</span> <span class="nf">export_simtel_array_config_file</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Export sim_telarray config file for the array into the output model directory.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Setting file name and the location</span>
+        <span class="n">config_file_name</span> <span class="o">=</span> <span class="n">names</span><span class="o">.</span><span class="n">simtel_array_config_file_name</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">layout_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">site</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_version</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">label</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_config_file_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config_file_directory</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="n">config_file_name</span><span class="p">)</span>
+
+        <span class="c1"># Writing parameters to the file</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Writing array config file into </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_file_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">simtel_writer</span> <span class="o">=</span> <span class="n">SimtelConfigWriter</span><span class="p">(</span>
+            <span class="n">site</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">site</span><span class="p">,</span>
+            <span class="n">layout_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">layout_name</span><span class="p">,</span>
+            <span class="n">model_version</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model_version</span><span class="p">,</span>
+            <span class="n">label</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">simtel_writer</span><span class="o">.</span><span class="n">write_array_config_file</span><span class="p">(</span>
+            <span class="n">config_file_path</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_file_path</span><span class="p">,</span>
+            <span class="n">layout</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">layout</span><span class="p">,</span>
+            <span class="n">telescope_model</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model</span><span class="p">,</span>
+            <span class="n">site_parameters</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_site_parameters</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_array_model_file_exported</span> <span class="o">=</span> <span class="kc">True</span></div>
+
+<div class="viewcode-block" id="ArrayModel.export_all_simtel_config_files"><a class="viewcode-back" href="../../mc_model.html#model.array_model.ArrayModel.export_all_simtel_config_files">[docs]</a>    <span class="k">def</span> <span class="nf">export_all_simtel_config_files</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Export sim_telarray config file for the array and for each individual telescope into the \</span>
+<span class="sd">        output model directory.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model_files_exported</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">export_simtel_telescope_config_files</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_array_model_file_exported</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">export_simtel_array_config_file</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="ArrayModel.get_config_file"><a class="viewcode-back" href="../../mc_model.html#model.array_model.ArrayModel.get_config_file">[docs]</a>    <span class="k">def</span> <span class="nf">get_config_file</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the path of the array config file for sim_telarray. The config file is produced if the \</span>
+<span class="sd">        file is not updated.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Path</span>
+<span class="sd">            Path of the exported config file for sim_telarray.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">export_all_simtel_config_files</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config_file_path</span></div>
+
+<div class="viewcode-block" id="ArrayModel.get_config_directory"><a class="viewcode-back" href="../../mc_model.html#model.array_model.ArrayModel.get_config_directory">[docs]</a>    <span class="k">def</span> <span class="nf">get_config_directory</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the path of the array config directory for sim_telarray.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Path</span>
+<span class="sd">            Path of the config directory path for sim_telarray.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config_file_directory</span></div></div>
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="../../index.html">Table of Contents</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../simtools-configuration.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../applications.html">Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../library.html">API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../auxiliary_files.html">Auxiliary Files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../databases.html">Databases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../simulation_software.html">Simulation Software</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guidelines.html">Developer Guidelines</a></li>
+</ul>
+
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">simtools v0.1.dev1+g59e41a4.d20230816 Manual</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">model.array_model</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2022, gammasim-tools, simtools developers.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 6.2.1.
+    </div>
+  </body>
+</html>

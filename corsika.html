@@ -1,0 +1,550 @@
+
+
+<!doctype html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+    <title>CORSIKA &#8212; simtools v0.1.dev1+g59e41a4.d20230816 Manual</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/bizstyle.css" />
+    
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/bizstyle.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="CORSIKA and sim_telarray" href="corsika_simtel.html" />
+    <link rel="prev" title="Configuration" href="configuration_module.html" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <!--[if lt IE 9]>
+    <script src="_static/css3-mediaqueries.js"></script>
+    <![endif]-->
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="corsika_simtel.html" title="CORSIKA and sim_telarray"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="configuration_module.html" title="Configuration"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">simtools v0.1.dev1+g59e41a4.d20230816 Manual</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="library.html" accesskey="U">API</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">CORSIKA</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="corsika">
+<span id="id1"></span><h1>CORSIKA<a class="headerlink" href="#corsika" title="Permalink to this heading">¶</a></h1>
+<p>Support modules for running CORSIKA.</p>
+<section id="corsika-config">
+<h2>corsika_config<a class="headerlink" href="#corsika-config" title="Permalink to this heading">¶</a></h2>
+<span class="target" id="module-corsika.corsika_config"><span id="id2"></span></span><dl class="py class">
+<dt class="sig sig-object py" id="corsika.corsika_config.CorsikaConfig">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">corsika.corsika_config.</span></span><span class="sig-name descname"><span class="pre">CorsikaConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mongo_db_config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">site</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layout_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">corsika_config_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">corsika_config_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">corsika_parameters_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">simtel_source_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/corsika/corsika_config.html#CorsikaConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#corsika.corsika_config.CorsikaConfig" title="Permalink to this definition">¶</a></dt>
+<dd><p>CorsikaConfig deals with configuration for running CORSIKA. User parameters must be given by     the corsika_config_data or corsika_config_file arguments. An example of corsika_config_data
+follows below.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">corsika_config_data</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;data_directory&#39;</span><span class="p">:</span> <span class="o">.</span>
+    <span class="s1">&#39;primary&#39;</span><span class="p">:</span> <span class="s1">&#39;proton&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;nshow&#39;</span><span class="p">:</span> <span class="mi">10000</span><span class="p">,</span>
+    <span class="s1">&#39;nrun&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="s1">&#39;zenith&#39;</span><span class="p">:</span> <span class="mi">20</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">,</span>
+    <span class="s1">&#39;viewcone&#39;</span><span class="p">:</span> <span class="mi">5</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">,</span>
+    <span class="s1">&#39;erange&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mi">10</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">GeV</span><span class="p">,</span> <span class="mi">100</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">TeV</span><span class="p">],</span>
+    <span class="s1">&#39;eslope&#39;</span><span class="p">:</span> <span class="o">-</span><span class="mi">2</span><span class="p">,</span>
+    <span class="s1">&#39;phi&#39;</span><span class="p">:</span> <span class="mi">0</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">,</span>
+    <span class="s1">&#39;cscat&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">1500</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>mongo_db_config: dict</strong></dt><dd><p>MongoDB configuration.</p>
+</dd>
+<dt><strong>site: str</strong></dt><dd><p>North or South.</p>
+</dd>
+<dt><strong>layout_name: str</strong></dt><dd><p>Name of the layout.</p>
+</dd>
+<dt><strong>label: str</strong></dt><dd><p>Instance label.</p>
+</dd>
+<dt><strong>corsika_config_data: dict</strong></dt><dd><p>CORSIKA user parameters.</p>
+</dd>
+<dt><strong>corsika_config_file: str</strong></dt><dd><p>Name of the yaml configuration file. If not provided,         data/parameters/corsika_parameters.yml will be used.</p>
+</dd>
+<dt><strong>corsika_parameters_file: str</strong></dt><dd><p>Name of the yaml file to set remaining CORSIKA parameters.</p>
+</dd>
+<dt><strong>simtel_source_path: str or Path</strong></dt><dd><p>Location of source of the sim_telarray/CORSIKA package.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="corsika.corsika_config.CorsikaConfig.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mongo_db_config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">site</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layout_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">corsika_config_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">corsika_config_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">corsika_parameters_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">simtel_source_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/corsika/corsika_config.html#CorsikaConfig.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#corsika.corsika_config.CorsikaConfig.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize CorsikaConfig.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="corsika.corsika_config.CorsikaConfig.export_input_file">
+<span class="sig-name descname"><span class="pre">export_input_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">use_multipipe</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/corsika/corsika_config.html#CorsikaConfig.export_input_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#corsika.corsika_config.CorsikaConfig.export_input_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create and export CORSIKA input file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>use_multipipe: bool</strong></dt><dd><p>Whether to set the CORSIKA Inputs file to pipe
+the output directly to sim_telarray or not.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="corsika.corsika_config.CorsikaConfig.get_file_name">
+<span class="sig-name descname"><span class="pre">get_file_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">run_number</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/corsika/corsika_config.html#CorsikaConfig.get_file_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#corsika.corsika_config.CorsikaConfig.get_file_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a CORSIKA config style file name for various file types.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>file_type: str</strong></dt><dd><p>The type of file (determines the file suffix).
+Choices are config_tmp, config or output_generic.</p>
+</dd>
+<dt><strong>run_number: int</strong></dt><dd><p>Run number.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>str</dt><dd><dl class="simple">
+<dt>for file_type=”config_tmp”:</dt><dd><p>Get the CORSIKA input file for one specific run.
+This is the input file after being pre-processed by sim_telarray (pfp).</p>
+</dd>
+<dt>for file_type=”config”:</dt><dd><p>Get a general CORSIKA config inputs file.</p>
+</dd>
+<dt>for file_type=”output_generic”</dt><dd><p>Get a generic file name for the TELFIL option in the CORSIKA inputs file.</p>
+</dd>
+<dt>for file_type=”multipipe”</dt><dd><p>Get a multipipe “file name” for the TELFIL option in the CORSIKA inputs file.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>ValueError</dt><dd><p>If file_type is unknown or if the run number is not given for file_type==config_tmp.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="corsika.corsika_config.CorsikaConfig.get_input_file">
+<span class="sig-name descname"><span class="pre">get_input_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">use_multipipe</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/corsika/corsika_config.html#CorsikaConfig.get_input_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#corsika.corsika_config.CorsikaConfig.get_input_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the full path of the CORSIKA input file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>Path:</dt><dd><p>Full path of the CORSIKA input file.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="corsika.corsika_config.CorsikaConfig.get_user_parameter">
+<span class="sig-name descname"><span class="pre">get_user_parameter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">par_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/corsika/corsika_config.html#CorsikaConfig.get_user_parameter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#corsika.corsika_config.CorsikaConfig.get_user_parameter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the value of a user parameter.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>par_name: str</strong></dt><dd><p>Name of the parameter as used in the CORSIKA input file (e.g. PRMPAR, THETAP …)</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>list</dt><dd><p>Value(s) of the parameter.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>KeyError</dt><dd><p>When par_name is not a valid parameter name.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="corsika.corsika_config.CorsikaConfig.load_corsika_parameters_file">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">load_corsika_parameters_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">corsika_parameters_file</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/corsika/corsika_config.html#CorsikaConfig.load_corsika_parameters_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#corsika.corsika_config.CorsikaConfig.load_corsika_parameters_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load CORSIKA parameters from the provided corsika_parameters_file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>corsika_parameters_file: str or Path</strong></dt><dd><p>File with CORSIKA parameters.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>corsika_parameters: dict</dt><dd><p>Dictionary with CORSIKA parameters.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="corsika.corsika_config.CorsikaConfig.print_user_parameters">
+<span class="sig-name descname"><span class="pre">print_user_parameters</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/corsika/corsika_config.html#CorsikaConfig.print_user_parameters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#corsika.corsika_config.CorsikaConfig.print_user_parameters" title="Permalink to this definition">¶</a></dt>
+<dd><p>Print user parameters for inspection.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="corsika.corsika_config.CorsikaConfig.set_user_parameters">
+<span class="sig-name descname"><span class="pre">set_user_parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">corsika_config_data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/corsika/corsika_config.html#CorsikaConfig.set_user_parameters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#corsika.corsika_config.CorsikaConfig.set_user_parameters" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set user parameters from a dict.</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl>
+<dt><strong>corsika_config_data: dict</strong></dt><dd><p>Contains the user parameters. Ex.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">corsika_config_data</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;primary&#39;</span><span class="p">:</span> <span class="s1">&#39;proton&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;nshow&#39;</span><span class="p">:</span> <span class="mi">10000</span><span class="p">,</span>
+    <span class="s1">&#39;nrun&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="s1">&#39;zenith&#39;</span><span class="p">:</span> <span class="mi">20</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">,</span>
+    <span class="s1">&#39;viewcone&#39;</span><span class="p">:</span> <span class="mi">5</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">,</span>
+    <span class="s1">&#39;erange&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mi">10</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">GeV</span><span class="p">,</span> <span class="mi">100</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">TeV</span><span class="p">],</span>
+    <span class="s1">&#39;eslope&#39;</span><span class="p">:</span> <span class="o">-</span><span class="mi">2</span><span class="p">,</span>
+    <span class="s1">&#39;phi&#39;</span><span class="p">:</span> <span class="mi">0</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">,</span>
+    <span class="s1">&#39;cscat&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">1500</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>InvalidCorsikaInput</dt><dd><p>If any parameter given as input has wrong len, unit or
+an invalid name.</p>
+</dd>
+<dt>MissingRequiredInputInCorsikaConfigData</dt><dd><p>If any required user parameter is missing.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="corsika.corsika_config.InvalidCorsikaInput">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">corsika.corsika_config.</span></span><span class="sig-name descname"><span class="pre">InvalidCorsikaInput</span></span><a class="reference internal" href="_modules/corsika/corsika_config.html#InvalidCorsikaInput"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#corsika.corsika_config.InvalidCorsikaInput" title="Permalink to this definition">¶</a></dt>
+<dd><p>Exception for invalid corsika input.</p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="corsika.corsika_config.MissingRequiredInputInCorsikaConfigData">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">corsika.corsika_config.</span></span><span class="sig-name descname"><span class="pre">MissingRequiredInputInCorsikaConfigData</span></span><a class="reference internal" href="_modules/corsika/corsika_config.html#MissingRequiredInputInCorsikaConfigData"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#corsika.corsika_config.MissingRequiredInputInCorsikaConfigData" title="Permalink to this definition">¶</a></dt>
+<dd><p>Exception for missing required input in corsika config data.</p>
+</dd></dl>
+
+</section>
+<section id="corsika-runner">
+<h2>corsika_runner<a class="headerlink" href="#corsika-runner" title="Permalink to this heading">¶</a></h2>
+<span class="target" id="module-corsika.corsika_runner"><span id="id3"></span></span><dl class="py class">
+<dt class="sig sig-object py" id="corsika.corsika_runner.CorsikaRunner">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">corsika.corsika_runner.</span></span><span class="sig-name descname"><span class="pre">CorsikaRunner</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mongo_db_config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">site</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layout_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">simtel_source_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep_seeds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">corsika_parameters_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">corsika_config_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">corsika_config_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_multipipe</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/corsika/corsika_runner.html#CorsikaRunner"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#corsika.corsika_runner.CorsikaRunner" title="Permalink to this definition">¶</a></dt>
+<dd><p>CorsikaRunner is responsible for running CORSIKA, through the corsika_autoinputs program     provided by the sim_telarray package. It provides shell scripts to be run externally or by     the module simulator. Same instance can be used to generate scripts for any given run number.</p>
+<p>It uses CorsikaConfig to manage the CORSIKA configuration. User parameters must be given by the    corsika_config_data or corsika_config_file arguments. An example of corsika_config_data follows    below.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">corsika_config_data</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;data_directory&#39;</span><span class="p">:</span> <span class="o">.</span>
+    <span class="s1">&#39;primary&#39;</span><span class="p">:</span> <span class="s1">&#39;proton&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;nshow&#39;</span><span class="p">:</span> <span class="mi">10000</span><span class="p">,</span>
+    <span class="s1">&#39;nrun&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="s1">&#39;zenith&#39;</span><span class="p">:</span> <span class="mi">20</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">,</span>
+    <span class="s1">&#39;viewcone&#39;</span><span class="p">:</span> <span class="mi">5</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">,</span>
+    <span class="s1">&#39;erange&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mi">10</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">GeV</span><span class="p">,</span> <span class="mi">100</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">TeV</span><span class="p">],</span>
+    <span class="s1">&#39;eslope&#39;</span><span class="p">:</span> <span class="o">-</span><span class="mi">2</span><span class="p">,</span>
+    <span class="s1">&#39;phi&#39;</span><span class="p">:</span> <span class="mi">0</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">,</span>
+    <span class="s1">&#39;cscat&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">1500</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>The remaining CORSIKA parameters can be set as a yaml file, using the argument     corsika_parameters_file. When not given, corsika_parameters will be loaded from     data/parameters/corsika_parameters.yml.</p>
+<p>The CORSIKA output directory must be set by the data_directory entry. The following directories    will be created to store the logs and input file:
+{data_directory}/corsika/$site/$primary/logs
+{data_directory}/corsika/$site/$primary/scripts</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>mongo_db_config: dict</strong></dt><dd><p>MongoDB configuration.</p>
+</dd>
+<dt><strong>site: str</strong></dt><dd><p>South or North.</p>
+</dd>
+<dt><strong>layout_name: str</strong></dt><dd><p>Name of the layout.</p>
+</dd>
+<dt><strong>label: str</strong></dt><dd><p>Instance label.</p>
+</dd>
+<dt><strong>keep_seeds: bool</strong></dt><dd><p>Use seeds based on run number and primary particle.  If False, use sim_telarray seeds.</p>
+</dd>
+<dt><strong>simtel_source_path: str or Path</strong></dt><dd><p>Location of source of the sim_telarray/CORSIKA package.</p>
+</dd>
+<dt><strong>corsika_config_data: dict</strong></dt><dd><p>Dict with CORSIKA config data.</p>
+</dd>
+<dt><strong>corsika_config_file: str or Path</strong></dt><dd><p>Path to yaml file containing CORSIKA config data.</p>
+</dd>
+<dt><strong>corsika_parameters_file: str or Path</strong></dt><dd><p>Path to yaml file containing CORSIKA parameters.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="corsika.corsika_runner.CorsikaRunner.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mongo_db_config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">site</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layout_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">simtel_source_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep_seeds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">corsika_parameters_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">corsika_config_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">corsika_config_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_multipipe</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/corsika/corsika_runner.html#CorsikaRunner.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#corsika.corsika_runner.CorsikaRunner.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>CorsikaRunner init.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="corsika.corsika_runner.CorsikaRunner.get_file_name">
+<span class="sig-name descname"><span class="pre">get_file_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_type</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/corsika/corsika_runner.html#CorsikaRunner.get_file_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#corsika.corsika_runner.CorsikaRunner.get_file_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a CORSIKA style file name for various file types.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>file_type: str</strong></dt><dd><p>The type of file (determines the file suffix).
+Choices are corsika_autoinputs_log, corsika_log, script, output or sub_log.</p>
+</dd>
+<dt><strong>kwargs: dict</strong></dt><dd><dl class="simple">
+<dt>The dictionary must include the following parameters (unless listed as optional):</dt><dd><dl class="simple">
+<dt>run: int</dt><dd><p>Run number.</p>
+</dd>
+<dt>primary: str</dt><dd><p>Primary particle (e.g gamma, proton etc).</p>
+</dd>
+<dt>site: str</dt><dd><p>Site name (usually North/South or Paranal/LaPalma).</p>
+</dd>
+<dt>array_name: str</dt><dd><p>Array name.</p>
+</dd>
+<dt>label: str</dt><dd><p>Instance label (optional).</p>
+</dd>
+<dt>mode: str</dt><dd><p>out or err (optional, relevant only for sub_log).</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>str</dt><dd><p>File name with full path.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>ValueError</dt><dd><p>If file_type is unknown.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="corsika.corsika_runner.CorsikaRunner.get_info_for_file_name">
+<span class="sig-name descname"><span class="pre">get_info_for_file_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">run_number</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/corsika/corsika_runner.html#CorsikaRunner.get_info_for_file_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#corsika.corsika_runner.CorsikaRunner.get_info_for_file_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a dictionary with the info necessary for building the CORSIKA runner file names.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>dict</dt><dd><p>Dictionary with the keys necessary for building the CORSIKA runner file names.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="corsika.corsika_runner.CorsikaRunner.get_resources">
+<span class="sig-name descname"><span class="pre">get_resources</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">run_number</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/corsika/corsika_runner.html#CorsikaRunner.get_resources"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#corsika.corsika_runner.CorsikaRunner.get_resources" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read run time of job from last line of submission log file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>run_number: int</strong></dt><dd><p>Run number.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>dict</dt><dd><p>run time and number of simulated events</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="corsika.corsika_runner.CorsikaRunner.has_file">
+<span class="sig-name descname"><span class="pre">has_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">run_number</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'out'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/corsika/corsika_runner.html#CorsikaRunner.has_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#corsika.corsika_runner.CorsikaRunner.has_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks that the file of file_type for the specified run number exists.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>file_type: str</strong></dt><dd><p>File type to check.
+Choices are corsika_autoinputs_log, corsika_log, script, output or sub_log.</p>
+</dd>
+<dt><strong>run_number: int</strong></dt><dd><p>Run number.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="corsika.corsika_runner.CorsikaRunner.prepare_run_script">
+<span class="sig-name descname"><span class="pre">prepare_run_script</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">use_pfp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/corsika/corsika_runner.html#CorsikaRunner.prepare_run_script"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#corsika.corsika_runner.CorsikaRunner.prepare_run_script" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the full path of the run script file for a given run number.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>use_pfp: bool</strong></dt><dd><p>Whether to use the preprocessor in preparing the CORSIKA input file</p>
+</dd>
+<dt><strong>kwargs: dict</strong></dt><dd><dl class="simple">
+<dt>The following optional parameters can be provided:</dt><dd><dl class="simple">
+<dt>run_number: int</dt><dd><p>Run number.</p>
+</dd>
+<dt>extra_commands: str</dt><dd><p>Additional commands for running simulations.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>Path:</dt><dd><p>Full path of the run script file.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="corsika.corsika_runner.MissingRequiredEntryInCorsikaConfig">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">corsika.corsika_runner.</span></span><span class="sig-name descname"><span class="pre">MissingRequiredEntryInCorsikaConfig</span></span><a class="reference internal" href="_modules/corsika/corsika_runner.html#MissingRequiredEntryInCorsikaConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#corsika.corsika_runner.MissingRequiredEntryInCorsikaConfig" title="Permalink to this definition">¶</a></dt>
+<dd><p>Exception for missing required entry in corsika config.</p>
+</dd></dl>
+
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="index.html">Table of Contents</a></h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="simtools-configuration.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="applications.html">Applications</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="library.html">API</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="camera_efficiency.html">Camera Efficiency</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configuration_module.html">Configuration</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">CORSIKA</a></li>
+<li class="toctree-l2"><a class="reference internal" href="corsika_simtel.html">CORSIKA and sim_telarray</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_model.html">Data Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="db_handler.html">Database support</a></li>
+<li class="toctree-l2"><a class="reference internal" href="io_handler.html">I/O</a></li>
+<li class="toctree-l2"><a class="reference internal" href="job_execution.html">Job execution and submission</a></li>
+<li class="toctree-l2"><a class="reference internal" href="layout_array.html">Layout</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mc_model.html">MC Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="psf_analysis.html">PSF Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ray_tracing.html">Ray Tracing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sim_telarray.html">sim_telarray</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulators.html">Simulator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="visualization.html">Visualization</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="auxiliary_files.html">Auxiliary Files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="databases.html">Databases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="simulation_software.html">Simulation Software</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guidelines.html">Developer Guidelines</a></li>
+</ul>
+
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/corsika.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="corsika_simtel.html" title="CORSIKA and sim_telarray"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="configuration_module.html" title="Configuration"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">simtools v0.1.dev1+g59e41a4.d20230816 Manual</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="library.html" >API</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">CORSIKA</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2022, gammasim-tools, simtools developers.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 6.2.1.
+    </div>
+  </body>
+</html>

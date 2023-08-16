@@ -1,0 +1,1175 @@
+
+
+<!doctype html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+    <title>MC Model &#8212; simtools v0.1.dev1+g59e41a4.d20230816 Manual</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/bizstyle.css" />
+    
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/bizstyle.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="PSF Analysis" href="psf_analysis.html" />
+    <link rel="prev" title="Layout" href="layout_array.html" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <!--[if lt IE 9]>
+    <script src="_static/css3-mediaqueries.js"></script>
+    <![endif]-->
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="psf_analysis.html" title="PSF Analysis"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="layout_array.html" title="Layout"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">simtools v0.1.dev1+g59e41a4.d20230816 Manual</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="library.html" accesskey="U">API</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">MC Model</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="mc-model">
+<span id="mcmodel"></span><h1>MC Model<a class="headerlink" href="#mc-model" title="Permalink to this heading">¶</a></h1>
+<p>The array of imaging atmospheric Cherenkov telescopes is abstracted in the simulation model and divided into the following components:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#id4">telescope_model</a> representing a telescope. Defined by its telescope name, allowing to read model parameters from the <a class="reference internal" href="databases.html#model-parameters-db"><span class="std std-ref">Model Parameters DB</span></a> using this name.</p></li>
+<li><p>sub-elements of the telescope represented by the modules <a class="reference internal" href="#id3">mirrors</a> and <a class="reference internal" href="#id2">camera</a></p></li>
+<li><p>an array of telescopes (especially the telescope arrangement) represented by <a class="reference internal" href="#id1">array_model</a>.</p></li>
+</ul>
+<section id="array-model">
+<h2>array_model<a class="headerlink" href="#array-model" title="Permalink to this heading">¶</a></h2>
+<span class="target" id="module-model.array_model"><span id="id1"></span></span><dl class="py class">
+<dt class="sig sig-object py" id="model.array_model.ArrayModel">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">model.array_model.</span></span><span class="sig-name descname"><span class="pre">ArrayModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mongo_db_config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">array_config_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">array_config_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/model/array_model.html#ArrayModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.array_model.ArrayModel" title="Permalink to this definition">¶</a></dt>
+<dd><p>ArrayModel is an abstract representation of the MC model at the array level. It contains the    list of TelescopeModel’s and a LayoutArray.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>mongo_db_config: dict</strong></dt><dd><p>MongoDB configuration.</p>
+</dd>
+<dt><strong>array_config_file: str</strong></dt><dd><p>Path to a yaml file with the array config data.</p>
+</dd>
+<dt><strong>array_config_data: dict</strong></dt><dd><p>Dict with the array config data.</p>
+</dd>
+<dt><strong>label: str</strong></dt><dd><p>Instance label. Important for output file naming.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="model.array_model.ArrayModel.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mongo_db_config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">array_config_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">array_config_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/model/array_model.html#ArrayModel.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.array_model.ArrayModel.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize ArrayModel.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="model.array_model.ArrayModel.export_all_simtel_config_files">
+<span class="sig-name descname"><span class="pre">export_all_simtel_config_files</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/model/array_model.html#ArrayModel.export_all_simtel_config_files"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.array_model.ArrayModel.export_all_simtel_config_files" title="Permalink to this definition">¶</a></dt>
+<dd><p>Export sim_telarray config file for the array and for each individual telescope into the         output model directory.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="model.array_model.ArrayModel.export_simtel_array_config_file">
+<span class="sig-name descname"><span class="pre">export_simtel_array_config_file</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/model/array_model.html#ArrayModel.export_simtel_array_config_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.array_model.ArrayModel.export_simtel_array_config_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Export sim_telarray config file for the array into the output model directory.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="model.array_model.ArrayModel.export_simtel_telescope_config_files">
+<span class="sig-name descname"><span class="pre">export_simtel_telescope_config_files</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/model/array_model.html#ArrayModel.export_simtel_telescope_config_files"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.array_model.ArrayModel.export_simtel_telescope_config_files" title="Permalink to this definition">¶</a></dt>
+<dd><p>Export sim_telarray config files for all the telescopes into the output model directory.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="model.array_model.ArrayModel.get_config_directory">
+<span class="sig-name descname"><span class="pre">get_config_directory</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/model/array_model.html#ArrayModel.get_config_directory"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.array_model.ArrayModel.get_config_directory" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the path of the array config directory for sim_telarray.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>Path</dt><dd><p>Path of the config directory path for sim_telarray.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="model.array_model.ArrayModel.get_config_file">
+<span class="sig-name descname"><span class="pre">get_config_file</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/model/array_model.html#ArrayModel.get_config_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.array_model.ArrayModel.get_config_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the path of the array config file for sim_telarray. The config file is produced if the         file is not updated.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>Path</dt><dd><p>Path of the exported config file for sim_telarray.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="model.array_model.ArrayModel.number_of_telescopes">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">number_of_telescopes</span></span><a class="headerlink" href="#model.array_model.ArrayModel.number_of_telescopes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the number of telescopes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>int</dt><dd><p>Number of telescopes.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="model.array_model.ArrayModel.print_telescope_list">
+<span class="sig-name descname"><span class="pre">print_telescope_list</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/model/array_model.html#ArrayModel.print_telescope_list"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.array_model.ArrayModel.print_telescope_list" title="Permalink to this definition">¶</a></dt>
+<dd><p>Print out the list of telescopes for quick inspection.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="model.array_model.InvalidArrayConfigData">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">model.array_model.</span></span><span class="sig-name descname"><span class="pre">InvalidArrayConfigData</span></span><a class="reference internal" href="_modules/model/array_model.html#InvalidArrayConfigData"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.array_model.InvalidArrayConfigData" title="Permalink to this definition">¶</a></dt>
+<dd><p>Exception for invalid array configuration data.</p>
+</dd></dl>
+
+</section>
+<section id="camera">
+<h2>camera<a class="headerlink" href="#camera" title="Permalink to this heading">¶</a></h2>
+<span class="target" id="module-model.camera"><span id="id2"></span></span><dl class="py class">
+<dt class="sig sig-object py" id="model.camera.Camera">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">model.camera.</span></span><span class="sig-name descname"><span class="pre">Camera</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">telescope_model_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">camera_config_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">focal_length</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/model/camera.html#Camera"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.camera.Camera" title="Permalink to this definition">¶</a></dt>
+<dd><p>Camera class, defining pixel layout including rotation, finding neighbour pixels, calculating    FoV and plotting the camera.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>telescope_model_name: string</strong></dt><dd><p>As provided by the telescope model method TelescopeModel (ex South-LST-1).</p>
+</dd>
+<dt><strong>camera_config_file: string</strong></dt><dd><p>The sim_telarray file name.</p>
+</dd>
+<dt><strong>focal_length: float</strong></dt><dd><p>The focal length of the camera in (preferably the effective focal length), assumed to be         in the same unit as the pixel positions in the camera_config_file, usually cm.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="model.camera.Camera.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">telescope_model_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">camera_config_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">focal_length</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/model/camera.html#Camera.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.camera.Camera.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize Camera class, defining pixel layout including rotation, finding neighbour pixels,
+calculating FoV and plotting the camera.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="model.camera.Camera.calc_fov">
+<span class="sig-name descname"><span class="pre">calc_fov</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/model/camera.html#Camera.calc_fov"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.camera.Camera.calc_fov" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the FOV of the camera in degrees, taking into account the focal length.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>fov: float</dt><dd><p>The FOV of the camera in the degrees.</p>
+</dd>
+<dt>average_edge_distance: float</dt><dd><p>The average edge distance of the camera.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>The x,y pixel positions and focal length are assumed to have the same unit (usually cm)</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="model.camera.Camera.get_camera_fill_factor">
+<span class="sig-name descname"><span class="pre">get_camera_fill_factor</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/model/camera.html#Camera.get_camera_fill_factor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.camera.Camera.get_camera_fill_factor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the fill factor of the camera, defined as (pixel_diameter/pixel_spacing)**2</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>float</dt><dd><p>The camera fill factor.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="model.camera.Camera.get_edge_pixels">
+<span class="sig-name descname"><span class="pre">get_edge_pixels</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pixels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">neighbours</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/model/camera.html#Camera.get_edge_pixels"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.camera.Camera.get_edge_pixels" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the indices of the edge pixels of the camera.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>pixels: dict</strong></dt><dd><p>The dictionary produced by the read_pixel_list method of this class.</p>
+</dd>
+<dt><strong>neighbours: numpy.array_like</strong></dt><dd><p>Array of neighbour indices in a list for each pixel.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>edge_pixel_indices: numpy.array_like</dt><dd><p>Array of edge pixel indices.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="model.camera.Camera.get_lightguide_efficiency_angle_file_name">
+<span class="sig-name descname"><span class="pre">get_lightguide_efficiency_angle_file_name</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/model/camera.html#Camera.get_lightguide_efficiency_angle_file_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.camera.Camera.get_lightguide_efficiency_angle_file_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the file name of the light guide efficiency as a function of incidence angle.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>str</dt><dd><p>File name of the light guide efficiency as a function of incidence angle.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="model.camera.Camera.get_lightguide_efficiency_wavelength_file_name">
+<span class="sig-name descname"><span class="pre">get_lightguide_efficiency_wavelength_file_name</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/model/camera.html#Camera.get_lightguide_efficiency_wavelength_file_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.camera.Camera.get_lightguide_efficiency_wavelength_file_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the file name of the light guide efficiency as a function of wavelength.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>str</dt><dd><p>File name of the light guide efficiency as a function of wavelength.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="model.camera.Camera.get_neighbour_pixels">
+<span class="sig-name descname"><span class="pre">get_neighbour_pixels</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pixels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/model/camera.html#Camera.get_neighbour_pixels"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.camera.Camera.get_neighbour_pixels" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a list of neighbour pixels by calling calc_neighbour_pixels() when necessary. The         purpose of this function is to ensure the calculation occurs only once and only when         necessary.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>pixels: dict</strong></dt><dd><p>The dictionary produced by the read_pixel_list method of this class.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>neighbours: numpy.array_like</dt><dd><p>Array of neighbour indices in a list for each pixel.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="model.camera.Camera.get_number_of_pixels">
+<span class="sig-name descname"><span class="pre">get_number_of_pixels</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/model/camera.html#Camera.get_number_of_pixels"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.camera.Camera.get_number_of_pixels" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the number of pixels in the camera (all pixels, including those defined as “off”.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>int</dt><dd><p>number of pixels.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="model.camera.Camera.get_pixel_active_solid_angle">
+<span class="sig-name descname"><span class="pre">get_pixel_active_solid_angle</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/model/camera.html#Camera.get_pixel_active_solid_angle"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.camera.Camera.get_pixel_active_solid_angle" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the active solid angle of a pixel in sr.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>float</dt><dd><p>active solid angle of a pixel in sr.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="model.camera.Camera.get_pixel_diameter">
+<span class="sig-name descname"><span class="pre">get_pixel_diameter</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/model/camera.html#Camera.get_pixel_diameter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.camera.Camera.get_pixel_diameter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get pixel diameter contained in _pixels.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>float</dt><dd><p>Pixel diameter (usually in cm).</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="model.camera.Camera.get_pixel_shape">
+<span class="sig-name descname"><span class="pre">get_pixel_shape</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/model/camera.html#Camera.get_pixel_shape"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.camera.Camera.get_pixel_shape" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get pixel shape code 1, 2 or 3, where 1 and 3 are hexagonal pixels, where one is rotated by        30 degrees with respect to the other. A square pixel is denoted as 2.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>int (1, 2 or 3)</dt><dd><p>Pixel shape.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="model.camera.Camera.plot_pixel_layout">
+<span class="sig-name descname"><span class="pre">plot_pixel_layout</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">camera_in_sky_coor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pixels_id_to_print</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">50</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/model/camera.html#Camera.plot_pixel_layout"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.camera.Camera.plot_pixel_layout" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plot the pixel layout for an observer facing the camera. Including in the plot edge pixels,        off pixels, pixel ID for the first 50 pixels, coordinate systems, FOV, focal length and the        average edge radius.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>fig: plt.figure instance</dt><dd><p>Figure with the pixel layout.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="model.camera.Camera.read_pixel_list">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">read_pixel_list</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">camera_config_file</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/model/camera.html#Camera.read_pixel_list"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.camera.Camera.read_pixel_list" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read the pixel layout from the camera config file, assumed to be in a sim_telarray format.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>camera_config_file: string</strong></dt><dd><p>The sim_telarray file name.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>dict: pixels</dt><dd><p>A dictionary with the pixel positions, the camera rotation angle, the pixel shape,             the pixel diameter, the pixel IDs and their “on” status.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>The pixel shape can be hexagonal (denoted as 1 or 3) or a square (denoted as 2).         The hexagonal shapes differ in their orientation, where those denoted as 3 are rotated
+clockwise by 30 degrees with respect to those denoted as 1.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="mirrors">
+<h2>mirrors<a class="headerlink" href="#mirrors" title="Permalink to this heading">¶</a></h2>
+<span class="target" id="module-model.mirrors"><span id="id3"></span></span><dl class="py exception">
+<dt class="sig sig-object py" id="model.mirrors.InvalidMirrorListFile">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">model.mirrors.</span></span><span class="sig-name descname"><span class="pre">InvalidMirrorListFile</span></span><a class="reference internal" href="_modules/model/mirrors.html#InvalidMirrorListFile"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.mirrors.InvalidMirrorListFile" title="Permalink to this definition">¶</a></dt>
+<dd><p>Exception for invalid mirror list file.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="model.mirrors.Mirrors">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">model.mirrors.</span></span><span class="sig-name descname"><span class="pre">Mirrors</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mirror_list_file</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/model/mirrors.html#Mirrors"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.mirrors.Mirrors" title="Permalink to this definition">¶</a></dt>
+<dd><p>Mirrors class, created from a mirror list file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>mirror_list_file: str</strong></dt><dd><p>mirror list in sim_telarray or ecsv format (with panel focal length only).</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="model.mirrors.Mirrors.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mirror_list_file</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/model/mirrors.html#Mirrors.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.mirrors.Mirrors.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize Mirrors.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="model.mirrors.Mirrors.get_single_mirror_parameters">
+<span class="sig-name descname"><span class="pre">get_single_mirror_parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">number</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/model/mirrors.html#Mirrors.get_single_mirror_parameters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.mirrors.Mirrors.get_single_mirror_parameters" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get parameters for a single mirror given by number.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>number: int</strong></dt><dd><p>Mirror number of desired parameters.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>(pos_x, pos_y, diameter, flen, shape): tuple of float</dt><dd><p>X, Y positions, diameter, focal length and shape.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="model.mirrors.Mirrors.plot_mirror_layout">
+<span class="sig-name descname"><span class="pre">plot_mirror_layout</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/model/mirrors.html#Mirrors.plot_mirror_layout"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.mirrors.Mirrors.plot_mirror_layout" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plot the mirror layout.</p>
+<p>TODO</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="model-utilities">
+<h2>model utilities<a class="headerlink" href="#model-utilities" title="Permalink to this heading">¶</a></h2>
+<span class="target" id="module-model.model_utils"><span id="model-utils"></span></span><dl class="py function">
+<dt class="sig sig-object py" id="model.model_utils.compute_telescope_transmission">
+<span class="sig-prename descclassname"><span class="pre">model.model_utils.</span></span><span class="sig-name descname"><span class="pre">compute_telescope_transmission</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pars</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">off_axis</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/model/model_utils.html#compute_telescope_transmission"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.model_utils.compute_telescope_transmission" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute telescope transmission (0 &lt; T &lt; 1) for a given set of parameters as defined by     the MC model and for a given off-axis angle.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>pars: list of float</strong></dt><dd><p>Parameters of the telescope transmission. Len(pars) should be 4.</p>
+</dd>
+<dt><strong>off_axis: float</strong></dt><dd><p>Off-axis angle in deg.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>float</dt><dd><p>Telescope transmission.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="model.model_utils.get_camera_name">
+<span class="sig-prename descclassname"><span class="pre">model.model_utils.</span></span><span class="sig-name descname"><span class="pre">get_camera_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">telescope_model_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/model/model_utils.html#get_camera_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.model_utils.get_camera_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get camera name from the telescope name.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>telescope_model_name: str</strong></dt><dd><p>Telescope model name (e.g., LST-1).</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>str</dt><dd><p>Camera name (validated by util.names).</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="model.model_utils.get_telescope_class">
+<span class="sig-prename descclassname"><span class="pre">model.model_utils.</span></span><span class="sig-name descname"><span class="pre">get_telescope_class</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">telescope_model_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/model/model_utils.html#get_telescope_class"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.model_utils.get_telescope_class" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get telescope class from telescope name.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>telescope_model_name: str</strong></dt><dd><p>Telescope model name (ex. LST-1).</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>str</dt><dd><p>Telescope class (SST, MST, …).</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="model.model_utils.is_two_mirror_telescope">
+<span class="sig-prename descclassname"><span class="pre">model.model_utils.</span></span><span class="sig-name descname"><span class="pre">is_two_mirror_telescope</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">telescope_model_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/model/model_utils.html#is_two_mirror_telescope"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.model_utils.is_two_mirror_telescope" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if the telescope is a two mirror design.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>telescope_model_name: str</strong></dt><dd><p>Telescope model name (ex. LST-1).</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>bool</dt><dd><p>True if the telescope is a two mirror one.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="model.model_utils.split_simtel_parameter">
+<span class="sig-prename descclassname"><span class="pre">model.model_utils.</span></span><span class="sig-name descname"><span class="pre">split_simtel_parameter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/model/model_utils.html#split_simtel_parameter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.model_utils.split_simtel_parameter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Some array parameters are stored in sim_telarray model as string separated by comma or spaces.    This functions turns this string into a list of floats. The delimiter is identified     automatically.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>value: str</strong></dt><dd><p>String with the array of floats separated by comma or spaces.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>list</dt><dd><p>Array of floats.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="telescope-model">
+<h2>telescope_model<a class="headerlink" href="#telescope-model" title="Permalink to this heading">¶</a></h2>
+<span class="target" id="module-model.telescope_model"><span id="id4"></span></span><dl class="py exception">
+<dt class="sig sig-object py" id="model.telescope_model.InvalidParameter">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">model.telescope_model.</span></span><span class="sig-name descname"><span class="pre">InvalidParameter</span></span><a class="reference internal" href="_modules/model/telescope_model.html#InvalidParameter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.telescope_model.InvalidParameter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Exception for invalid parameter.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="model.telescope_model.TelescopeModel">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">model.telescope_model.</span></span><span class="sig-name descname"><span class="pre">TelescopeModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">site</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">telescope_model_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mongo_db_config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Current'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/model/telescope_model.html#TelescopeModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.telescope_model.TelescopeModel" title="Permalink to this definition">¶</a></dt>
+<dd><p>TelescopeModel represents the MC model of an individual telescope. It contains the list of     parameters that can be read from the DB. A set of methods are available to manipulate     parameters (changing, adding, removing etc).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>site: str</strong></dt><dd><p>South or North.</p>
+</dd>
+<dt><strong>telescope_model_name: str</strong></dt><dd><p>Telescope name (ex. LST-1, …).</p>
+</dd>
+<dt><strong>mongo_db_config: dict</strong></dt><dd><p>MongoDB configuration.</p>
+</dd>
+<dt><strong>model_version: str</strong></dt><dd><p>Version of the model (ex. prod5).</p>
+</dd>
+<dt><strong>label: str</strong></dt><dd><p>Instance label. Important for output file naming.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="model.telescope_model.TelescopeModel.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">site</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">telescope_model_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mongo_db_config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Current'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/model/telescope_model.html#TelescopeModel.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.telescope_model.TelescopeModel.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize TelescopeModel.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="model.telescope_model.TelescopeModel.add_parameter">
+<span class="sig-name descname"><span class="pre">add_parameter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">par_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_aplicable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/model/telescope_model.html#TelescopeModel.add_parameter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.telescope_model.TelescopeModel.add_parameter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add a new parameters to the model. This function does not modify the DB, it affects only         the current instance.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>par_name: str</strong></dt><dd><p>Name of the parameter.</p>
+</dd>
+<dt><strong>value:</strong></dt><dd><p>Value of the parameter.</p>
+</dd>
+<dt><strong>is_file: bool</strong></dt><dd><p>Indicates whether the new parameter is a file or not.</p>
+</dd>
+<dt><strong>is_aplicable: bool</strong></dt><dd><p>Indicates whether the new parameter is applicable or not.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>InvalidParameter</dt><dd><p>If an existing parameter is tried to be added.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="model.telescope_model.TelescopeModel.add_parameter_file">
+<span class="sig-name descname"><span class="pre">add_parameter_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">par_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/model/telescope_model.html#TelescopeModel.add_parameter_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.telescope_model.TelescopeModel.add_parameter_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add a file to the config file directory.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>par_name: str</strong></dt><dd><p>Name of the parameter.</p>
+</dd>
+<dt><strong>file_path: str</strong></dt><dd><p>Path of the file to be added to the config file directory.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="model.telescope_model.TelescopeModel.calc_average_curve">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">calc_average_curve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">curves</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">incidence_angle_dist</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/model/telescope_model.html#TelescopeModel.calc_average_curve"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.telescope_model.TelescopeModel.calc_average_curve" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate an average curve from a set of curves, using as weights the distribution of         incidence angles provided in incidence_angle_dist.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>curves: dict</strong></dt><dd><p>dict of with 3 “columns”, Wavelength, Angle and z. The dictionary represents a two             dimensional distribution of wavelengths and angles with the z value being e.g.,             reflectivity, transmission, etc.</p>
+</dd>
+<dt><strong>incidence_angle_dist: astropy.table.Table</strong></dt><dd><p>Instance of astropy.table.Table with the incidence angle distribution. The assumed             columns are “Incidence angle” and “Fraction”.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>average_curve: astropy.table.Table</dt><dd><p>Instance of astropy.table.Table with the averaged curve.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="model.telescope_model.TelescopeModel.camera">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">camera</span></span><a class="headerlink" href="#model.telescope_model.TelescopeModel.camera" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load the camera information if the class instance hasn’t done it yet.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="model.telescope_model.TelescopeModel.change_multiple_parameters">
+<span class="sig-name descname"><span class="pre">change_multiple_parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/model/telescope_model.html#TelescopeModel.change_multiple_parameters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.telescope_model.TelescopeModel.change_multiple_parameters" title="Permalink to this definition">¶</a></dt>
+<dd><p>Change the value of multiple existing parameters in the model. This function does not         modify the DB, it affects only the current instance.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>**kwargs</strong></dt><dd><p>Parameters should be passed as parameter_name=value.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>InvalidParameter</dt><dd><p>If at least one of the parameters to be changed does not exist in this model.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="model.telescope_model.TelescopeModel.change_parameter">
+<span class="sig-name descname"><span class="pre">change_parameter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">par_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/model/telescope_model.html#TelescopeModel.change_parameter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.telescope_model.TelescopeModel.change_parameter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Change the value of an existing parameter to the model. This function does not modify the         DB, it affects only the current instance.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>par_name: str</strong></dt><dd><p>Name of the parameter.</p>
+</dd>
+<dt><strong>value:</strong></dt><dd><p>Value of the parameter.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>InvalidParameter</dt><dd><p>If the parameter to be changed does not exist in this model.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="model.telescope_model.TelescopeModel.derived">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">derived</span></span><a class="headerlink" href="#model.telescope_model.TelescopeModel.derived" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load the derived values and export them if the class instance hasn’t done it yet.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="model.telescope_model.TelescopeModel.export_config_file">
+<span class="sig-name descname"><span class="pre">export_config_file</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/model/telescope_model.html#TelescopeModel.export_config_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.telescope_model.TelescopeModel.export_config_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Export the config file used by sim_telarray.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="model.telescope_model.TelescopeModel.export_derived_files">
+<span class="sig-name descname"><span class="pre">export_derived_files</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/model/telescope_model.html#TelescopeModel.export_derived_files"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.telescope_model.TelescopeModel.export_derived_files" title="Permalink to this definition">¶</a></dt>
+<dd><p>Write to disk a file from the derived values DB.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="model.telescope_model.TelescopeModel.export_model_files">
+<span class="sig-name descname"><span class="pre">export_model_files</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/model/telescope_model.html#TelescopeModel.export_model_files"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.telescope_model.TelescopeModel.export_model_files" title="Permalink to this definition">¶</a></dt>
+<dd><p>Exports the model files into the config file directory.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="model.telescope_model.TelescopeModel.export_single_mirror_list_file">
+<span class="sig-name descname"><span class="pre">export_single_mirror_list_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mirror_number</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">set_focal_length_to_zero</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/model/telescope_model.html#TelescopeModel.export_single_mirror_list_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.telescope_model.TelescopeModel.export_single_mirror_list_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Export a mirror list file with a single mirror in it.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>mirror_number: int</strong></dt><dd><p>Number index of the mirror.</p>
+</dd>
+<dt><strong>set_focal_length_to_zero: bool</strong></dt><dd><p>Set the focal length to zero if True.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="model.telescope_model.TelescopeModel.export_table_to_model_directory">
+<span class="sig-name descname"><span class="pre">export_table_to_model_directory</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">table</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/model/telescope_model.html#TelescopeModel.export_table_to_model_directory"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.telescope_model.TelescopeModel.export_table_to_model_directory" title="Permalink to this definition">¶</a></dt>
+<dd><p>Write out a file with the provided table to the model directory.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>file_name: str</strong></dt><dd><p>File name to write to.</p>
+</dd>
+<dt><strong>table: astropy.table.Table</strong></dt><dd><p>Instance of astropy.table.Table with the values to write to the file.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>Path:</dt><dd><p>Path to the file exported.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="model.telescope_model.TelescopeModel.extra_label">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">extra_label</span></span><a class="headerlink" href="#model.telescope_model.TelescopeModel.extra_label" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the extra label if defined, if not return ‘’.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="model.telescope_model.TelescopeModel.from_config_file">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_config_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config_file_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">site</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">telescope_model_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/model/telescope_model.html#TelescopeModel.from_config_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.telescope_model.TelescopeModel.from_config_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a TelescopeModel from a sim_telarray config file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>config_file_name: str or Path</strong></dt><dd><p>Path to the input config file.</p>
+</dd>
+<dt><strong>site: str</strong></dt><dd><p>South or North.</p>
+</dd>
+<dt><strong>telescope_model_name: str</strong></dt><dd><p>Telescope model name for the base set of parameters (ex. LST-1, …).</p>
+</dd>
+<dt><strong>label: str</strong></dt><dd><p>Instance label. Important for output file naming.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>TelescopeModel</dt><dd><p>Instance of TelescopeModel.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>Todo: Dealing with ifdef/indef etc. By now it just keeps the last version of the parameters
+in the file.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="model.telescope_model.TelescopeModel.get_config_directory">
+<span class="sig-name descname"><span class="pre">get_config_directory</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/model/telescope_model.html#TelescopeModel.get_config_directory"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.telescope_model.TelescopeModel.get_config_directory" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the path where all the configuration files for sim_telarray are written to.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>Path</dt><dd><p>Path where all the configuration files for sim_telarray are written to.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="model.telescope_model.TelescopeModel.get_config_file">
+<span class="sig-name descname"><span class="pre">get_config_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">no_export</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/model/telescope_model.html#TelescopeModel.get_config_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.telescope_model.TelescopeModel.get_config_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the path of the config file for sim_telarray. The config file is produced if the file        is not updated.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>no_export: bool</strong></dt><dd><p>Turn it on if you do not want the file to be exported.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>Path</dt><dd><p>Path of the exported config file for sim_telarray.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="model.telescope_model.TelescopeModel.get_derived_directory">
+<span class="sig-name descname"><span class="pre">get_derived_directory</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/model/telescope_model.html#TelescopeModel.get_derived_directory"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.telescope_model.TelescopeModel.get_derived_directory" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the path where all the files with derived values for are written to.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>Path</dt><dd><p>Path where all the files with derived values are written to.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="model.telescope_model.TelescopeModel.get_on_axis_eff_optical_area">
+<span class="sig-name descname"><span class="pre">get_on_axis_eff_optical_area</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/model/telescope_model.html#TelescopeModel.get_on_axis_eff_optical_area"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.telescope_model.TelescopeModel.get_on_axis_eff_optical_area" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the on-axis effective optical area (derived previously for this telescope).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="model.telescope_model.TelescopeModel.get_parameter">
+<span class="sig-name descname"><span class="pre">get_parameter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">par_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/model/telescope_model.html#TelescopeModel.get_parameter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.telescope_model.TelescopeModel.get_parameter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get an existing parameter of the model, including derived parameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>par_name: str</strong></dt><dd><p>Name of the parameter.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>Value of the parameter</dt><dd></dd>
+</dl>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>InvalidParameter</dt><dd><p>If par_name does not match any parameter in this model.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="model.telescope_model.TelescopeModel.get_parameter_value">
+<span class="sig-name descname"><span class="pre">get_parameter_value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">par_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/model/telescope_model.html#TelescopeModel.get_parameter_value"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.telescope_model.TelescopeModel.get_parameter_value" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the value of an existing parameter of the model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>par_name: str</strong></dt><dd><p>Name of the parameter.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>Value of the parameter.</dt><dd></dd>
+</dl>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>InvalidParameter</dt><dd><p>If par_name does not match any parameter in this model.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="model.telescope_model.TelescopeModel.get_parameter_value_with_unit">
+<span class="sig-name descname"><span class="pre">get_parameter_value_with_unit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">par_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/model/telescope_model.html#TelescopeModel.get_parameter_value_with_unit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.telescope_model.TelescopeModel.get_parameter_value_with_unit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the value of an existing parameter of the model as an Astropy Quantity with its unit.        If no unit is provided in the model, the value is returned without a unit.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>par_name: str</strong></dt><dd><p>Name of the parameter.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>Astropy quantity with the value of the parameter multiplied by its unit. If no unit is         provided in the model, the value is returned without a unit.</dt><dd></dd>
+</dl>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>InvalidParameter</dt><dd><p>If par_name does not match any parameter in this model.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="model.telescope_model.TelescopeModel.get_single_mirror_list_file">
+<span class="sig-name descname"><span class="pre">get_single_mirror_list_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mirror_number</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">set_focal_length_to_zero</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/model/telescope_model.html#TelescopeModel.get_single_mirror_list_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.telescope_model.TelescopeModel.get_single_mirror_list_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the path to the single mirror list file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>mirror_number: int</strong></dt><dd><p>Mirror number.</p>
+</dd>
+<dt><strong>set_focal_length_to_zero: bool</strong></dt><dd><p>Flag to set the focal length to zero.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>Path</dt><dd><p>Path of the single mirror list file.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="model.telescope_model.TelescopeModel.get_telescope_transmission_parameters">
+<span class="sig-name descname"><span class="pre">get_telescope_transmission_parameters</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/model/telescope_model.html#TelescopeModel.get_telescope_transmission_parameters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.telescope_model.TelescopeModel.get_telescope_transmission_parameters" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get tel. transmission pars as a list of floats.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>list of floats</dt><dd><p>List of 4 parameters that describe the tel. transmission vs off-axis.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="model.telescope_model.TelescopeModel.has_parameter">
+<span class="sig-name descname"><span class="pre">has_parameter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">par_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/model/telescope_model.html#TelescopeModel.has_parameter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.telescope_model.TelescopeModel.has_parameter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Verify if the parameter is in the model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>par_name: str</strong></dt><dd><p>Name of the parameter.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>bool</dt><dd><p>True if parameter is in the model.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="model.telescope_model.TelescopeModel.is_file_2D">
+<span class="sig-name descname"><span class="pre">is_file_2D</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">par</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/model/telescope_model.html#TelescopeModel.is_file_2D"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.telescope_model.TelescopeModel.is_file_2D" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if the file referenced by par is a 2D table.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>par: str</strong></dt><dd><p>Name of the parameter.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>bool:</dt><dd><p>True if the file is a 2D map type, False otherwise.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="model.telescope_model.TelescopeModel.mirrors">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">mirrors</span></span><a class="headerlink" href="#model.telescope_model.TelescopeModel.mirrors" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load the mirror information if the class instance hasn’t done it yet.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="model.telescope_model.TelescopeModel.print_parameters">
+<span class="sig-name descname"><span class="pre">print_parameters</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/model/telescope_model.html#TelescopeModel.print_parameters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.telescope_model.TelescopeModel.print_parameters" title="Permalink to this definition">¶</a></dt>
+<dd><p>Print parameters and their values for debugging purposes.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="model.telescope_model.TelescopeModel.read_incidence_angle_distribution">
+<span class="sig-name descname"><span class="pre">read_incidence_angle_distribution</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">incidence_angle_dist_file</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/model/telescope_model.html#TelescopeModel.read_incidence_angle_distribution"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.telescope_model.TelescopeModel.read_incidence_angle_distribution" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read the incidence angle distribution from a file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>incidence_angle_dist_file: str</strong></dt><dd><p>File name of the incidence angle distribution</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>incidence_angle_dist: astropy.table.Table</dt><dd><p>Instance of astropy.table.Table with the incidence angle distribution.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="model.telescope_model.TelescopeModel.read_two_dim_wavelength_angle">
+<span class="sig-name descname"><span class="pre">read_two_dim_wavelength_angle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/model/telescope_model.html#TelescopeModel.read_two_dim_wavelength_angle"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.telescope_model.TelescopeModel.read_two_dim_wavelength_angle" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read a two dimensional distribution of wavelngth and angle (z-axis can be anything). Return        a dictionary with three arrays, wavelength, angles, z (can be transmission, reflectivity,        etc.)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>file_name: str or Path</strong></dt><dd><p>File assumed to be in the model directory.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>dict:</dt><dd><p>dict of three arrays, wavelength, degrees, z.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="model.telescope_model.TelescopeModel.reference_data">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">reference_data</span></span><a class="headerlink" href="#model.telescope_model.TelescopeModel.reference_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load the reference data information if the class instance hasn’t done it yet.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="model.telescope_model.TelescopeModel.remove_parameters">
+<span class="sig-name descname"><span class="pre">remove_parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/model/telescope_model.html#TelescopeModel.remove_parameters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.telescope_model.TelescopeModel.remove_parameters" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remove a set of parameters from the model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>*args</strong></dt><dd><p>Each parameter to be removed has to be passed as args.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>InvalidParameter</dt><dd><p>If at least one of the parameter to be removed is not in this model.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="model.telescope_model.TelescopeModel.set_extra_label">
+<span class="sig-name descname"><span class="pre">set_extra_label</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">extra_label</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/model/telescope_model.html#TelescopeModel.set_extra_label"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.telescope_model.TelescopeModel.set_extra_label" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set an extra label for the name of the config file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>extra_label: str</strong></dt><dd><p>Extra label to be appended to the original label.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>The config file directory name is not affected by the extra label. Only the file name is         changed. This is important for the ArrayModel class to export multiple config files in the        same directory.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="index.html">Table of Contents</a></h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="simtools-configuration.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="applications.html">Applications</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="library.html">API</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="camera_efficiency.html">Camera Efficiency</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configuration_module.html">Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="corsika.html">CORSIKA</a></li>
+<li class="toctree-l2"><a class="reference internal" href="corsika_simtel.html">CORSIKA and sim_telarray</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_model.html">Data Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="db_handler.html">Database support</a></li>
+<li class="toctree-l2"><a class="reference internal" href="io_handler.html">I/O</a></li>
+<li class="toctree-l2"><a class="reference internal" href="job_execution.html">Job execution and submission</a></li>
+<li class="toctree-l2"><a class="reference internal" href="layout_array.html">Layout</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">MC Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="psf_analysis.html">PSF Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ray_tracing.html">Ray Tracing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sim_telarray.html">sim_telarray</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulators.html">Simulator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="visualization.html">Visualization</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="auxiliary_files.html">Auxiliary Files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="databases.html">Databases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="simulation_software.html">Simulation Software</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guidelines.html">Developer Guidelines</a></li>
+</ul>
+
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/mc_model.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="psf_analysis.html" title="PSF Analysis"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="layout_array.html" title="Layout"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">simtools v0.1.dev1+g59e41a4.d20230816 Manual</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="library.html" >API</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">MC Model</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2022, gammasim-tools, simtools developers.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 6.2.1.
+    </div>
+  </body>
+</html>

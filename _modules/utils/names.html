@@ -1,0 +1,923 @@
+
+
+<!doctype html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>utils.names &#8212; simtools v0.1.dev1+g59e41a4.d20230816 Manual</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/bizstyle.css" />
+    
+    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/sphinx_highlight.js"></script>
+    <script src="../../_static/bizstyle.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <!--[if lt IE 9]>
+    <script src="_static/css3-mediaqueries.js"></script>
+    <![endif]-->
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">simtools v0.1.dev1+g59e41a4.d20230816 Manual</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">utils.names</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for utils.names</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">&quot;camera_efficiency_log_file_name&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;camera_efficiency_results_file_name&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;camera_efficiency_simtel_file_name&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;convert_telescope_model_name_to_yaml&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;get_site_from_telescope_name&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;get_telescope_type&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;is_valid_name&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;layout_telescope_list_file_name&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;ray_tracing_file_name&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;ray_tracing_plot_file_name&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;ray_tracing_results_file_name&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;simtel_array_config_file_name&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;simtel_telescope_config_file_name&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;simtools_instrument_name&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;split_telescope_model_name&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;validate_camera_name&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;validate_layout_array_name&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;validate_model_version_name&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;validate_name&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;validate_simtel_mode_name&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;validate_site_name&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;validate_sub_system_name&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;validate_telescope_id_name&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;validate_telescope_model_name&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;validate_telescope_name_db&quot;</span><span class="p">,</span>
+<span class="p">]</span>
+
+<span class="n">lst</span> <span class="o">=</span> <span class="s2">&quot;LST&quot;</span>
+<span class="n">mst</span> <span class="o">=</span> <span class="s2">&quot;MST&quot;</span>
+<span class="n">sct</span> <span class="o">=</span> <span class="s2">&quot;SCT&quot;</span>
+<span class="n">sst</span> <span class="o">=</span> <span class="s2">&quot;SST&quot;</span>
+
+<span class="n">all_telescope_class_names</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="n">lst</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;lst&quot;</span><span class="p">],</span>
+    <span class="n">mst</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;mst&quot;</span><span class="p">],</span>
+    <span class="n">sct</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;sct&quot;</span><span class="p">],</span>
+    <span class="n">sst</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;sst&quot;</span><span class="p">],</span>
+<span class="p">}</span>
+
+<span class="n">all_camera_names</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;SST&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;sst&quot;</span><span class="p">],</span>
+    <span class="s2">&quot;ASTRI&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;astri&quot;</span><span class="p">],</span>
+    <span class="s2">&quot;GCT&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;gct&quot;</span><span class="p">,</span> <span class="s2">&quot;gct-s&quot;</span><span class="p">],</span>
+    <span class="s2">&quot;1M&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;1m&quot;</span><span class="p">],</span>
+    <span class="s2">&quot;FlashCam&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;flashcam&quot;</span><span class="p">,</span> <span class="s2">&quot;flash-cam&quot;</span><span class="p">],</span>
+    <span class="s2">&quot;NectarCam&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;nectarcam&quot;</span><span class="p">,</span> <span class="s2">&quot;nectar-cam&quot;</span><span class="p">],</span>
+    <span class="s2">&quot;SCT&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;sct&quot;</span><span class="p">],</span>
+    <span class="s2">&quot;LST&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;lst&quot;</span><span class="p">],</span>
+<span class="p">}</span>
+
+<span class="n">all_structure_names</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;Structure&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;Structure&quot;</span><span class="p">,</span> <span class="s2">&quot;structure&quot;</span><span class="p">]}</span>
+
+<span class="n">all_site_names</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;South&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;paranal&quot;</span><span class="p">,</span> <span class="s2">&quot;south&quot;</span><span class="p">],</span> <span class="s2">&quot;North&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;lapalma&quot;</span><span class="p">,</span> <span class="s2">&quot;north&quot;</span><span class="p">]}</span>
+
+<span class="n">all_model_version_names</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;2015-07-21&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;&quot;</span><span class="p">],</span>
+    <span class="s2">&quot;2015-10-20-p1&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;&quot;</span><span class="p">],</span>
+    <span class="s2">&quot;prod4-v0.0&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;&quot;</span><span class="p">],</span>
+    <span class="s2">&quot;prod4-v0.1&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;&quot;</span><span class="p">],</span>
+    <span class="s2">&quot;2018-02-16&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;&quot;</span><span class="p">],</span>
+    <span class="s2">&quot;prod3_compatible&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;p3&quot;</span><span class="p">,</span> <span class="s2">&quot;prod3&quot;</span><span class="p">,</span> <span class="s2">&quot;prod3b&quot;</span><span class="p">],</span>
+    <span class="s2">&quot;prod4&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;p4&quot;</span><span class="p">],</span>
+    <span class="s2">&quot;post_prod3_updates&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;&quot;</span><span class="p">],</span>
+    <span class="s2">&quot;2016-12-20&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;&quot;</span><span class="p">],</span>
+    <span class="s2">&quot;2018-11-07&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;&quot;</span><span class="p">],</span>
+    <span class="s2">&quot;2019-02-22&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;&quot;</span><span class="p">],</span>
+    <span class="s2">&quot;2019-05-13&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;&quot;</span><span class="p">],</span>
+    <span class="s2">&quot;2019-11-20&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;&quot;</span><span class="p">],</span>
+    <span class="s2">&quot;2019-12-30&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;&quot;</span><span class="p">],</span>
+    <span class="s2">&quot;2020-02-26&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;&quot;</span><span class="p">],</span>
+    <span class="s2">&quot;2020-06-28&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;prod5&quot;</span><span class="p">],</span>
+    <span class="s2">&quot;prod4-prototype&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;&quot;</span><span class="p">],</span>
+    <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="p">[],</span>
+    <span class="s2">&quot;Current&quot;</span><span class="p">:</span> <span class="p">[],</span>
+    <span class="s2">&quot;Latest&quot;</span><span class="p">:</span> <span class="p">[],</span>
+<span class="p">}</span>
+
+<span class="n">all_simtel_mode_names</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;RayTracing&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;raytracing&quot;</span><span class="p">,</span> <span class="s2">&quot;ray-tracing&quot;</span><span class="p">],</span>
+    <span class="s2">&quot;RayTracingSingleMirror&quot;</span><span class="p">:</span> <span class="p">[</span>
+        <span class="s2">&quot;raytracing-singlemirror&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;ray-tracing-singlemirror&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;ray-tracing-single-mirror&quot;</span><span class="p">,</span>
+    <span class="p">],</span>
+    <span class="s2">&quot;Trigger&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;trigger&quot;</span><span class="p">],</span>
+<span class="p">}</span>
+
+<span class="n">all_layout_array_names</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;4LST&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;4-lst&quot;</span><span class="p">,</span> <span class="s2">&quot;4lst&quot;</span><span class="p">],</span>
+    <span class="s2">&quot;1LST&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;1-lst&quot;</span><span class="p">,</span> <span class="s2">&quot;1lst&quot;</span><span class="p">],</span>
+    <span class="s2">&quot;4MST&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;4-mst&quot;</span><span class="p">,</span> <span class="s2">&quot;4mst&quot;</span><span class="p">],</span>
+    <span class="s2">&quot;1MST&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;1-mst&quot;</span><span class="p">,</span> <span class="s2">&quot;mst&quot;</span><span class="p">],</span>
+    <span class="s2">&quot;4SST&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;4-sst&quot;</span><span class="p">,</span> <span class="s2">&quot;4sst&quot;</span><span class="p">],</span>
+    <span class="s2">&quot;1SST&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;1-sst&quot;</span><span class="p">,</span> <span class="s2">&quot;sst&quot;</span><span class="p">],</span>
+    <span class="s2">&quot;Prod5&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;prod5&quot;</span><span class="p">,</span> <span class="s2">&quot;p5&quot;</span><span class="p">],</span>
+    <span class="s2">&quot;TestLayout&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;test-layout&quot;</span><span class="p">],</span>
+<span class="p">}</span>
+
+<span class="n">corsika_to_simtools_names</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;OBSLEV&quot;</span><span class="p">:</span> <span class="s2">&quot;corsika_obs_level&quot;</span><span class="p">,</span>
+<span class="p">}</span>
+
+
+<div class="viewcode-block" id="validate_sub_system_name"><a class="viewcode-back" href="../../utils.html#utils.names.validate_sub_system_name">[docs]</a><span class="k">def</span> <span class="nf">validate_sub_system_name</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Validate a sub system name (optics structure or camera).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    name: str</span>
+<span class="sd">        Name of the subsystem.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    str</span>
+<span class="sd">        Validated name.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">validate_name</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="p">{</span><span class="o">**</span><span class="n">all_camera_names</span><span class="p">,</span> <span class="o">**</span><span class="n">all_structure_names</span><span class="p">})</span></div>
+
+
+<div class="viewcode-block" id="validate_camera_name"><a class="viewcode-back" href="../../utils.html#utils.names.validate_camera_name">[docs]</a><span class="k">def</span> <span class="nf">validate_camera_name</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Validate a camera name.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    name: str</span>
+<span class="sd">        Camera name</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    str</span>
+<span class="sd">        Validated name.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">validate_name</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">all_camera_names</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="validate_telescope_id_name"><a class="viewcode-back" href="../../utils.html#utils.names.validate_telescope_id_name">[docs]</a><span class="k">def</span> <span class="nf">validate_telescope_id_name</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Validate a telescope ID name</span>
+
+<span class="sd">    Valid names e.g.,</span>
+<span class="sd">    - D</span>
+<span class="sd">    - telescope ID</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    name: str</span>
+<span class="sd">        Telescope ID name.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    str</span>
+<span class="sd">        Validated name.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If name is not valid.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">name</span> <span class="o">==</span> <span class="s2">&quot;D&quot;</span> <span class="ow">or</span> <span class="n">name</span><span class="o">.</span><span class="n">isdigit</span><span class="p">():</span>
+        <span class="k">return</span> <span class="n">name</span>
+
+    <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Invalid telescope ID name </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="validate_model_version_name"><a class="viewcode-back" href="../../utils.html#utils.names.validate_model_version_name">[docs]</a><span class="k">def</span> <span class="nf">validate_model_version_name</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Validate a model version name.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    name: str</span>
+<span class="sd">        Model version name.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    str</span>
+<span class="sd">        Validated name.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">validate_name</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">all_model_version_names</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="validate_simtel_mode_name"><a class="viewcode-back" href="../../utils.html#utils.names.validate_simtel_mode_name">[docs]</a><span class="k">def</span> <span class="nf">validate_simtel_mode_name</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Validate a sim_telarray mode name.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    name: str</span>
+<span class="sd">        sim_telarray mode name.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    str</span>
+<span class="sd">        Validated name.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">validate_name</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">all_simtel_mode_names</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="validate_site_name"><a class="viewcode-back" href="../../utils.html#utils.names.validate_site_name">[docs]</a><span class="k">def</span> <span class="nf">validate_site_name</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Validate a site name.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    name: str</span>
+<span class="sd">        Site name.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    str</span>
+<span class="sd">        Validated name.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">validate_name</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">all_site_names</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="validate_layout_array_name"><a class="viewcode-back" href="../../utils.html#utils.names.validate_layout_array_name">[docs]</a><span class="k">def</span> <span class="nf">validate_layout_array_name</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Validate a layout array name.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    name: str</span>
+<span class="sd">        Layout array name.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    str</span>
+<span class="sd">        Validated name.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">validate_name</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">all_layout_array_names</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="validate_name"><a class="viewcode-back" href="../../utils.html#utils.names.validate_name">[docs]</a><span class="k">def</span> <span class="nf">validate_name</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">all_names</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Validate a name given the all_names options. For each key in all_names, a list of options is \</span>
+<span class="sd">    given. If name is in this list, the key name is returned.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    name: str</span>
+<span class="sd">        Name to validate.</span>
+<span class="sd">    all_names: dict</span>
+<span class="sd">        Dictionary with valid names.</span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    str</span>
+<span class="sd">        Validated name.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If name is not valid.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">is_valid_name</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">all_names</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Invalid name </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">main_name</span><span class="p">,</span> <span class="n">list_of_names</span> <span class="ow">in</span> <span class="n">all_names</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="n">list_of_names</span> <span class="o">+</span> <span class="p">[</span><span class="n">main_name</span><span class="o">.</span><span class="n">lower</span><span class="p">()]:</span>
+            <span class="k">if</span> <span class="n">name</span> <span class="o">!=</span> <span class="n">main_name</span><span class="p">:</span>
+                <span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Correcting name </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> -&gt; </span><span class="si">{</span><span class="n">main_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">main_name</span>
+    <span class="k">return</span> <span class="kc">None</span></div>
+
+
+<div class="viewcode-block" id="is_valid_name"><a class="viewcode-back" href="../../utils.html#utils.names.is_valid_name">[docs]</a><span class="k">def</span> <span class="nf">is_valid_name</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">all_names</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Check if name is valid.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    name:  str</span>
+<span class="sd">        Name to validated.</span>
+<span class="sd">    all_names: dict</span>
+<span class="sd">        Dictionary with valid names.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    bool</span>
+<span class="sd">        True if name is valid. Otherwise, false.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">for</span> <span class="n">main_name</span> <span class="ow">in</span> <span class="n">all_names</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="n">all_names</span><span class="p">[</span><span class="n">main_name</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="n">main_name</span><span class="o">.</span><span class="n">lower</span><span class="p">()]:</span>
+            <span class="k">return</span> <span class="kc">True</span>
+    <span class="k">return</span> <span class="kc">False</span></div>
+
+
+<div class="viewcode-block" id="validate_telescope_model_name"><a class="viewcode-back" href="../../utils.html#utils.names.validate_telescope_model_name">[docs]</a><span class="k">def</span> <span class="nf">validate_telescope_model_name</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Validate a telescope model name.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    name: str</span>
+<span class="sd">        Telescope model name.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    str</span>
+<span class="sd">        Validated name.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">tel_class</span><span class="p">,</span> <span class="n">tel_type</span> <span class="o">=</span> <span class="n">split_telescope_model_name</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+    <span class="n">tel_class</span> <span class="o">=</span> <span class="n">validate_name</span><span class="p">(</span><span class="n">tel_class</span><span class="p">,</span> <span class="n">all_telescope_class_names</span><span class="p">)</span>
+    <span class="k">if</span> <span class="s2">&quot;flashcam&quot;</span> <span class="ow">in</span> <span class="n">tel_type</span><span class="p">:</span>
+        <span class="n">tel_type</span> <span class="o">=</span> <span class="n">tel_type</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;flashcam&quot;</span><span class="p">,</span> <span class="s2">&quot;FlashCam&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="s2">&quot;nectarcam&quot;</span> <span class="ow">in</span> <span class="n">tel_type</span><span class="p">:</span>
+        <span class="n">tel_type</span> <span class="o">=</span> <span class="n">tel_type</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;nectarcam&quot;</span><span class="p">,</span> <span class="s2">&quot;NectarCam&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="s2">&quot;1m&quot;</span> <span class="ow">in</span> <span class="n">tel_type</span><span class="p">:</span>
+        <span class="n">tel_type</span> <span class="o">=</span> <span class="n">tel_type</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;1m&quot;</span><span class="p">,</span> <span class="s2">&quot;1M&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="s2">&quot;gct&quot;</span> <span class="ow">in</span> <span class="n">tel_type</span><span class="p">:</span>
+        <span class="n">tel_type</span> <span class="o">=</span> <span class="n">tel_type</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;gct&quot;</span><span class="p">,</span> <span class="s2">&quot;GCT&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="s2">&quot;astri&quot;</span> <span class="ow">in</span> <span class="n">tel_type</span><span class="p">:</span>
+        <span class="n">tel_type</span> <span class="o">=</span> <span class="n">tel_type</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;astri&quot;</span><span class="p">,</span> <span class="s2">&quot;ASTRI&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="s2">&quot;-d&quot;</span> <span class="ow">in</span> <span class="s2">&quot;-&quot;</span> <span class="o">+</span> <span class="n">tel_type</span><span class="p">:</span>
+        <span class="n">tel_type</span> <span class="o">=</span> <span class="n">tel_type</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;d&quot;</span><span class="p">,</span> <span class="s2">&quot;D&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">tel_class</span> <span class="o">+</span> <span class="s2">&quot;-&quot;</span> <span class="o">+</span> <span class="n">tel_type</span></div>
+
+
+<div class="viewcode-block" id="split_telescope_model_name"><a class="viewcode-back" href="../../utils.html#utils.names.split_telescope_model_name">[docs]</a><span class="k">def</span> <span class="nf">split_telescope_model_name</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Split a telescope name into class and type.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    name: str</span>
+<span class="sd">        Telescope name.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    str, str</span>
+<span class="sd">       class (LST, MST, SST ...) and type (any complement).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">name_parts</span> <span class="o">=</span> <span class="n">name</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;-&quot;</span><span class="p">)</span>
+    <span class="n">tel_class</span> <span class="o">=</span> <span class="n">name_parts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">tel_type</span> <span class="o">=</span> <span class="s2">&quot;-&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">name_parts</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+    <span class="k">return</span> <span class="n">tel_class</span><span class="p">,</span> <span class="n">tel_type</span></div>
+
+
+<div class="viewcode-block" id="get_site_from_telescope_name"><a class="viewcode-back" href="../../utils.html#utils.names.get_site_from_telescope_name">[docs]</a><span class="k">def</span> <span class="nf">get_site_from_telescope_name</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Get site name (South or North) from the (validated) telescope name.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    name: str</span>
+<span class="sd">        Telescope name.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    str</span>
+<span class="sd">        Site name (South or North).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">validate_site_name</span><span class="p">(</span><span class="n">name</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;-&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span></div>
+
+
+<div class="viewcode-block" id="validate_telescope_name_db"><a class="viewcode-back" href="../../utils.html#utils.names.validate_telescope_name_db">[docs]</a><span class="k">def</span> <span class="nf">validate_telescope_name_db</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Validate a telescope DB name.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    name: str</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    str</span>
+<span class="sd">        Validated name.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">site</span> <span class="o">=</span> <span class="n">get_site_from_telescope_name</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+    <span class="n">tel_model_name</span> <span class="o">=</span> <span class="s2">&quot;-&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">name</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;-&quot;</span><span class="p">)[</span><span class="mi">1</span><span class="p">:])</span>
+
+    <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">validate_site_name</span><span class="p">(</span><span class="n">site</span><span class="p">)</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">validate_telescope_model_name</span><span class="p">(</span><span class="n">tel_model_name</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span></div>
+
+
+<div class="viewcode-block" id="convert_telescope_model_name_to_yaml"><a class="viewcode-back" href="../../utils.html#utils.names.convert_telescope_model_name_to_yaml">[docs]</a><span class="k">def</span> <span class="nf">convert_telescope_model_name_to_yaml</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Get telescope name following the old convention (yaml files) from the current telescope name.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    name: str</span>
+<span class="sd">        Telescope model name.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    str</span>
+<span class="sd">        Telescope name (old convention).</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        if name is not valid.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">tel_class</span><span class="p">,</span> <span class="n">tel_type</span> <span class="o">=</span> <span class="n">split_telescope_model_name</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+    <span class="n">new_name</span> <span class="o">=</span> <span class="n">tel_class</span> <span class="o">+</span> <span class="s2">&quot;-&quot;</span> <span class="o">+</span> <span class="n">tel_type</span>
+    <span class="n">old_names</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;SST-D&quot;</span><span class="p">:</span> <span class="s2">&quot;SST&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;SST-1M&quot;</span><span class="p">:</span> <span class="s2">&quot;SST-1M&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;SST-ASTRI&quot;</span><span class="p">:</span> <span class="s2">&quot;SST-2M-ASTRI&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;SST-GCT&quot;</span><span class="p">:</span> <span class="s2">&quot;SST-2M-GCT-S&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;MST-FlashCam-D&quot;</span><span class="p">:</span> <span class="s2">&quot;MST-FlashCam&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;MST-NectarCam-D&quot;</span><span class="p">:</span> <span class="s2">&quot;MST-NectarCam&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;SCT-D&quot;</span><span class="p">:</span> <span class="s2">&quot;SCT&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;LST-D234&quot;</span><span class="p">:</span> <span class="s2">&quot;LST&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;LST-1&quot;</span><span class="p">:</span> <span class="s2">&quot;LST&quot;</span><span class="p">,</span>
+    <span class="p">}</span>
+
+    <span class="k">if</span> <span class="n">new_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">old_names</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Telescope name </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> could not be converted to yml names&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">old_names</span><span class="p">[</span><span class="n">new_name</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="simtools_instrument_name"><a class="viewcode-back" href="../../utils.html#utils.names.simtools_instrument_name">[docs]</a><span class="k">def</span> <span class="nf">simtools_instrument_name</span><span class="p">(</span><span class="n">site</span><span class="p">,</span> <span class="n">telescope_class_name</span><span class="p">,</span> <span class="n">sub_system_name</span><span class="p">,</span> <span class="n">telescope_id_name</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Instrument name following simtools naming convention</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    site: str</span>
+<span class="sd">        South or North.</span>
+<span class="sd">    telescope_class_name: str</span>
+<span class="sd">        LST, MST, ...</span>
+<span class="sd">    sub_system_name: str</span>
+<span class="sd">        FlashCam, NectarCam</span>
+<span class="sd">    telescope_id_name: str</span>
+<span class="sd">        telescope ID (e.g., D, numerical value)</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    instrument: name: str</span>
+<span class="sd">        Instrument name.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">return</span> <span class="p">(</span>
+        <span class="n">validate_site_name</span><span class="p">(</span><span class="n">site</span><span class="p">)</span>
+        <span class="o">+</span> <span class="s2">&quot;-&quot;</span>
+        <span class="o">+</span> <span class="n">validate_name</span><span class="p">(</span><span class="n">telescope_class_name</span><span class="p">,</span> <span class="n">all_telescope_class_names</span><span class="p">)</span>
+        <span class="o">+</span> <span class="s2">&quot;-&quot;</span>
+        <span class="o">+</span> <span class="n">validate_sub_system_name</span><span class="p">(</span><span class="n">sub_system_name</span><span class="p">)</span>
+        <span class="o">+</span> <span class="s2">&quot;-&quot;</span>
+        <span class="o">+</span> <span class="n">validate_telescope_id_name</span><span class="p">(</span><span class="n">telescope_id_name</span><span class="p">)</span>
+    <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="simtel_telescope_config_file_name"><a class="viewcode-back" href="../../utils.html#utils.names.simtel_telescope_config_file_name">[docs]</a><span class="k">def</span> <span class="nf">simtel_telescope_config_file_name</span><span class="p">(</span>
+    <span class="n">site</span><span class="p">,</span> <span class="n">telescope_model_name</span><span class="p">,</span> <span class="n">model_version</span><span class="p">,</span> <span class="n">label</span><span class="p">,</span> <span class="n">extra_label</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    sim_telarray config file name for a telescope.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    site: str</span>
+<span class="sd">        South or North.</span>
+<span class="sd">    telescope_model_name: str</span>
+<span class="sd">        LST-1, MST-FlashCam, ...</span>
+<span class="sd">    model_version: str</span>
+<span class="sd">        Version of the model.</span>
+<span class="sd">    label: str</span>
+<span class="sd">        Instance label.</span>
+<span class="sd">    extra_label: str</span>
+<span class="sd">        Extra label in case of multiple telescope config files.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    str</span>
+<span class="sd">        File name.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;CTA-</span><span class="si">{</span><span class="n">site</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">telescope_model_name</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">model_version</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="n">name</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;_</span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">if</span> <span class="n">label</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
+    <span class="n">name</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;_</span><span class="si">{</span><span class="n">extra_label</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">if</span> <span class="n">extra_label</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
+    <span class="n">name</span> <span class="o">+=</span> <span class="s2">&quot;.cfg&quot;</span>
+    <span class="k">return</span> <span class="n">name</span></div>
+
+
+<div class="viewcode-block" id="simtel_array_config_file_name"><a class="viewcode-back" href="../../utils.html#utils.names.simtel_array_config_file_name">[docs]</a><span class="k">def</span> <span class="nf">simtel_array_config_file_name</span><span class="p">(</span><span class="n">array_name</span><span class="p">,</span> <span class="n">site</span><span class="p">,</span> <span class="n">version</span><span class="p">,</span> <span class="n">label</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    sim_telarray config file name for an array.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    array_name: str</span>
+<span class="sd">        Prod5, ...</span>
+<span class="sd">    site: str</span>
+<span class="sd">        South or North.</span>
+<span class="sd">    version: str</span>
+<span class="sd">        Version of the model.</span>
+<span class="sd">    label: str</span>
+<span class="sd">        Instance label.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    str</span>
+<span class="sd">        File name.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;CTA-</span><span class="si">{</span><span class="n">array_name</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">site</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">version</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="n">name</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;_</span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">if</span> <span class="n">label</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
+    <span class="n">name</span> <span class="o">+=</span> <span class="s2">&quot;.cfg&quot;</span>
+    <span class="k">return</span> <span class="n">name</span></div>
+
+
+<span class="k">def</span> <span class="nf">simtel_single_mirror_list_file_name</span><span class="p">(</span>
+    <span class="n">site</span><span class="p">,</span> <span class="n">telescope_model_name</span><span class="p">,</span> <span class="n">model_version</span><span class="p">,</span> <span class="n">mirror_number</span><span class="p">,</span> <span class="n">label</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    sim_telarray mirror list file with a single mirror.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    site: str</span>
+<span class="sd">        South or North.</span>
+<span class="sd">    telescope_model_name: str</span>
+<span class="sd">        North-LST-1, South-MST-FlashCam, ...</span>
+<span class="sd">    model_version: str</span>
+<span class="sd">        Version of the model.</span>
+<span class="sd">    mirror_number: int</span>
+<span class="sd">        Mirror number.</span>
+<span class="sd">    label: str</span>
+<span class="sd">        Instance label.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    str</span>
+<span class="sd">        File name.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;CTA-single-mirror-list-</span><span class="si">{</span><span class="n">site</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">telescope_model_name</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">model_version</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="n">name</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;-mirror</span><span class="si">{</span><span class="n">mirror_number</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="n">name</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;_</span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">if</span> <span class="n">label</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
+    <span class="n">name</span> <span class="o">+=</span> <span class="s2">&quot;.dat&quot;</span>
+    <span class="k">return</span> <span class="n">name</span>
+
+
+<div class="viewcode-block" id="layout_telescope_list_file_name"><a class="viewcode-back" href="../../utils.html#utils.names.layout_telescope_list_file_name">[docs]</a><span class="k">def</span> <span class="nf">layout_telescope_list_file_name</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">label</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    File name for files required at the RayTracing class.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    name: str</span>
+<span class="sd">        Name of the array.</span>
+<span class="sd">    label: str</span>
+<span class="sd">        Instance label.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    str</span>
+<span class="sd">        File name.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">file_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;telescope_positions-</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="n">file_name</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;_</span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">if</span> <span class="n">label</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
+    <span class="n">file_name</span> <span class="o">+=</span> <span class="s2">&quot;.ecsv&quot;</span>
+    <span class="k">return</span> <span class="n">file_name</span></div>
+
+
+<div class="viewcode-block" id="ray_tracing_file_name"><a class="viewcode-back" href="../../utils.html#utils.names.ray_tracing_file_name">[docs]</a><span class="k">def</span> <span class="nf">ray_tracing_file_name</span><span class="p">(</span>
+    <span class="n">site</span><span class="p">,</span>
+    <span class="n">telescope_model_name</span><span class="p">,</span>
+    <span class="n">source_distance</span><span class="p">,</span>
+    <span class="n">zenith_angle</span><span class="p">,</span>
+    <span class="n">off_axis_angle</span><span class="p">,</span>
+    <span class="n">mirror_number</span><span class="p">,</span>
+    <span class="n">label</span><span class="p">,</span>
+    <span class="n">base</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    File name for files required at the RayTracing class.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    site: str</span>
+<span class="sd">        South or North.</span>
+<span class="sd">    telescope_model_name: str</span>
+<span class="sd">        LST-1, MST-FlashCam, ...</span>
+<span class="sd">    source_distance: float</span>
+<span class="sd">        Source distance (km).</span>
+<span class="sd">    zenith_angle: float</span>
+<span class="sd">        Zenith angle (deg).</span>
+<span class="sd">    off_axis_angle: float</span>
+<span class="sd">        Off-axis angle (deg).</span>
+<span class="sd">    mirror_number: int</span>
+<span class="sd">        Mirror number. None if not single mirror case.</span>
+<span class="sd">    label: str</span>
+<span class="sd">        Instance label.</span>
+<span class="sd">    base: str</span>
+<span class="sd">        Photons, stars or log.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    str</span>
+<span class="sd">        File name.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">base</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">site</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">telescope_model_name</span><span class="si">}</span><span class="s2">-d</span><span class="si">{</span><span class="n">source_distance</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="sa">f</span><span class="s2">&quot;-za</span><span class="si">{</span><span class="n">zenith_angle</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">-off</span><span class="si">{</span><span class="n">off_axis_angle</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="p">)</span>
+    <span class="n">name</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;_mirror</span><span class="si">{</span><span class="n">mirror_number</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">if</span> <span class="n">mirror_number</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
+    <span class="n">name</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;_</span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">if</span> <span class="n">label</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
+    <span class="n">name</span> <span class="o">+=</span> <span class="s2">&quot;.log&quot;</span> <span class="k">if</span> <span class="n">base</span> <span class="o">==</span> <span class="s2">&quot;log&quot;</span> <span class="k">else</span> <span class="s2">&quot;.lis&quot;</span>
+    <span class="k">return</span> <span class="n">name</span></div>
+
+
+<div class="viewcode-block" id="ray_tracing_results_file_name"><a class="viewcode-back" href="../../utils.html#utils.names.ray_tracing_results_file_name">[docs]</a><span class="k">def</span> <span class="nf">ray_tracing_results_file_name</span><span class="p">(</span><span class="n">site</span><span class="p">,</span> <span class="n">telescope_model_name</span><span class="p">,</span> <span class="n">source_distance</span><span class="p">,</span> <span class="n">zenith_angle</span><span class="p">,</span> <span class="n">label</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Ray tracing results file name.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    site: str</span>
+<span class="sd">        South or North.</span>
+<span class="sd">    telescope_model_name: str</span>
+<span class="sd">        LST-1, MST-FlashCam, ...</span>
+<span class="sd">    source_distance: float</span>
+<span class="sd">        Source distance (km).</span>
+<span class="sd">    zenith_angle: float</span>
+<span class="sd">        Zenith angle (deg).</span>
+<span class="sd">    label: str</span>
+<span class="sd">        Instance label.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    str</span>
+<span class="sd">        File name.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;ray-tracing-</span><span class="si">{</span><span class="n">site</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">telescope_model_name</span><span class="si">}</span><span class="s2">-d</span><span class="si">{</span><span class="n">source_distance</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">-za</span><span class="si">{</span><span class="n">zenith_angle</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="n">name</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;_</span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">if</span> <span class="n">label</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
+    <span class="n">name</span> <span class="o">+=</span> <span class="s2">&quot;.ecsv&quot;</span>
+    <span class="k">return</span> <span class="n">name</span></div>
+
+
+<div class="viewcode-block" id="ray_tracing_plot_file_name"><a class="viewcode-back" href="../../utils.html#utils.names.ray_tracing_plot_file_name">[docs]</a><span class="k">def</span> <span class="nf">ray_tracing_plot_file_name</span><span class="p">(</span>
+    <span class="n">key</span><span class="p">,</span> <span class="n">site</span><span class="p">,</span> <span class="n">telescope_model_name</span><span class="p">,</span> <span class="n">source_distance</span><span class="p">,</span> <span class="n">zenith_angle</span><span class="p">,</span> <span class="n">label</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Ray tracing plot file name.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    key: str</span>
+<span class="sd">        Quantity to be plotted (d80_cm, d80_deg, eff_area or eff_flen)</span>
+<span class="sd">    site: str</span>
+<span class="sd">        South or North.</span>
+<span class="sd">    telescope_model_name: str</span>
+<span class="sd">        LST-1, MST-FlashCam, ...</span>
+<span class="sd">    source_distance: float</span>
+<span class="sd">        Source distance (km).</span>
+<span class="sd">    zenith_angle: float</span>
+<span class="sd">        Zenith angle (deg).</span>
+<span class="sd">    label: str</span>
+<span class="sd">        Instance label.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    str</span>
+<span class="sd">        File name.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="sa">f</span><span class="s2">&quot;ray-tracing-</span><span class="si">{</span><span class="n">site</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">telescope_model_name</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">-&quot;</span>
+        <span class="sa">f</span><span class="s2">&quot;d</span><span class="si">{</span><span class="n">source_distance</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">-za</span><span class="si">{</span><span class="n">zenith_angle</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="p">)</span>
+    <span class="n">name</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;_</span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">if</span> <span class="n">label</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
+    <span class="n">name</span> <span class="o">+=</span> <span class="s2">&quot;.pdf&quot;</span>
+    <span class="k">return</span> <span class="n">name</span></div>
+
+
+<div class="viewcode-block" id="camera_efficiency_results_file_name"><a class="viewcode-back" href="../../utils.html#utils.names.camera_efficiency_results_file_name">[docs]</a><span class="k">def</span> <span class="nf">camera_efficiency_results_file_name</span><span class="p">(</span><span class="n">site</span><span class="p">,</span> <span class="n">telescope_model_name</span><span class="p">,</span> <span class="n">zenith_angle</span><span class="p">,</span> <span class="n">label</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Camera efficiency results file name.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    site: str</span>
+<span class="sd">        South or North.</span>
+<span class="sd">    telescope_model_name: str</span>
+<span class="sd">        LST-1, MST-FlashCam, ...</span>
+<span class="sd">    zenith_angle: float</span>
+<span class="sd">        Zenith angle (deg).</span>
+<span class="sd">    label: str</span>
+<span class="sd">        Instance label.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    str</span>
+<span class="sd">        File name.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;camera-efficiency-</span><span class="si">{</span><span class="n">site</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">telescope_model_name</span><span class="si">}</span><span class="s2">-za</span><span class="si">{</span><span class="n">zenith_angle</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="n">name</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;_</span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">if</span> <span class="n">label</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
+    <span class="n">name</span> <span class="o">+=</span> <span class="s2">&quot;.ecsv&quot;</span>
+    <span class="k">return</span> <span class="n">name</span></div>
+
+
+<div class="viewcode-block" id="camera_efficiency_simtel_file_name"><a class="viewcode-back" href="../../utils.html#utils.names.camera_efficiency_simtel_file_name">[docs]</a><span class="k">def</span> <span class="nf">camera_efficiency_simtel_file_name</span><span class="p">(</span><span class="n">site</span><span class="p">,</span> <span class="n">telescope_model_name</span><span class="p">,</span> <span class="n">zenith_angle</span><span class="p">,</span> <span class="n">label</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Camera efficiency simtel output file name.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    site: str</span>
+<span class="sd">        South or North.</span>
+<span class="sd">    telescope_model_name: str</span>
+<span class="sd">        LST-1, MST-FlashCam-D, ...</span>
+<span class="sd">    zenith_angle: float</span>
+<span class="sd">        Zenith angle (deg).</span>
+<span class="sd">    label: str</span>
+<span class="sd">        Instance label.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    str</span>
+<span class="sd">        File name.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;camera-efficiency-</span><span class="si">{</span><span class="n">site</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">telescope_model_name</span><span class="si">}</span><span class="s2">-za</span><span class="si">{</span><span class="n">zenith_angle</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="n">name</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;_</span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">if</span> <span class="n">label</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
+    <span class="n">name</span> <span class="o">+=</span> <span class="s2">&quot;.dat&quot;</span>
+    <span class="k">return</span> <span class="n">name</span></div>
+
+
+<div class="viewcode-block" id="camera_efficiency_log_file_name"><a class="viewcode-back" href="../../utils.html#utils.names.camera_efficiency_log_file_name">[docs]</a><span class="k">def</span> <span class="nf">camera_efficiency_log_file_name</span><span class="p">(</span><span class="n">site</span><span class="p">,</span> <span class="n">telescope_model_name</span><span class="p">,</span> <span class="n">zenith_angle</span><span class="p">,</span> <span class="n">label</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Camera efficiency log file name.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    site: str</span>
+<span class="sd">        South or North.</span>
+<span class="sd">    telescope_model_name: str</span>
+<span class="sd">        LST-1, MST-FlashCam-D, ...</span>
+<span class="sd">    zenith_angle: float</span>
+<span class="sd">        Zenith angle (deg).</span>
+<span class="sd">    label: str</span>
+<span class="sd">        Instance label.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    str</span>
+<span class="sd">        File name.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;camera-efficiency-</span><span class="si">{</span><span class="n">site</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">telescope_model_name</span><span class="si">}</span><span class="s2">-za</span><span class="si">{</span><span class="n">zenith_angle</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="n">name</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;_</span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">if</span> <span class="n">label</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
+    <span class="n">name</span> <span class="o">+=</span> <span class="s2">&quot;.log&quot;</span>
+    <span class="k">return</span> <span class="n">name</span></div>
+
+
+<div class="viewcode-block" id="get_telescope_type"><a class="viewcode-back" href="../../utils.html#utils.names.get_telescope_type">[docs]</a><span class="k">def</span> <span class="nf">get_telescope_type</span><span class="p">(</span><span class="n">telescope_name</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Guess telescope type from name, e.g. &quot;LST&quot;, &quot;MST&quot;, ...</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    telescope_name: str</span>
+<span class="sd">        Telescope name</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    str</span>
+<span class="sd">        Telescope type.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">_class</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">split_telescope_model_name</span><span class="p">(</span><span class="n">telescope_name</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">_class</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">3</span><span class="p">]</span> <span class="ow">in</span> <span class="n">all_telescope_class_names</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">_class</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">3</span><span class="p">]</span>
+
+    <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
+        <span class="k">pass</span>
+
+    <span class="k">return</span> <span class="s2">&quot;&quot;</span></div>
+
+
+<span class="k">def</span> <span class="nf">translate_corsika_to_simtools</span><span class="p">(</span><span class="n">corsika_par</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Translate the name of a CORSIKA parameter to the name used in simtools.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    corsika_par: str</span>
+<span class="sd">        Name of the corsika parameter to be translated.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">corsika_to_simtools_names</span><span class="p">[</span><span class="n">corsika_par</span><span class="p">]</span>
+    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Translation not found. We will proceed with the original parameter name:</span><span class="se">\</span>
+<span class="s2">            </span><span class="si">{</span><span class="n">corsika_par</span><span class="si">}</span><span class="s2">.&quot;</span>
+        <span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">corsika_par</span>
+
+
+<span class="k">def</span> <span class="nf">translate_simtools_to_corsika</span><span class="p">(</span><span class="n">simtools_par</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Translate the name of a simtools parameter to the name used in CORSIKA.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    simtools_par: str</span>
+<span class="sd">        Name of the simtools parameter to be translated.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">simtools_to_corsika_names</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="n">new_key</span><span class="p">:</span> <span class="n">new_value</span> <span class="k">for</span> <span class="n">new_value</span><span class="p">,</span> <span class="n">new_key</span> <span class="ow">in</span> <span class="n">corsika_to_simtools_names</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+    <span class="p">}</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">simtools_to_corsika_names</span><span class="p">[</span><span class="n">simtools_par</span><span class="p">]</span>
+    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Translation not found. We will proceed with the original parameter name:</span><span class="se">\</span>
+<span class="s2">            </span><span class="si">{</span><span class="n">simtools_par</span><span class="si">}</span><span class="s2">.&quot;</span>
+        <span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">simtools_par</span>
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="../../index.html">Table of Contents</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../simtools-configuration.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../applications.html">Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../library.html">API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../auxiliary_files.html">Auxiliary Files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../databases.html">Databases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../simulation_software.html">Simulation Software</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guidelines.html">Developer Guidelines</a></li>
+</ul>
+
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">simtools v0.1.dev1+g59e41a4.d20230816 Manual</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">utils.names</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2022, gammasim-tools, simtools developers.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 6.2.1.
+    </div>
+  </body>
+</html>

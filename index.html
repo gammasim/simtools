@@ -1,0 +1,220 @@
+
+
+<!doctype html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+    <title>simtools &#8212; simtools v0.1.dev1+g59e41a4.d20230816 Manual</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/bizstyle.css" />
+    
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/bizstyle.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Getting Started" href="getting_started.html" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <!--[if lt IE 9]>
+    <script src="_static/css3-mediaqueries.js"></script>
+    <![endif]-->
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="getting_started.html" title="Getting Started"
+             accesskey="N">next</a> |</li>
+        <li class="nav-item nav-item-0"><a href="#">simtools v0.1.dev1+g59e41a4.d20230816 Manual</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">simtools</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="simtools">
+<span id="gammasimtools"></span><h1>simtools<a class="headerlink" href="#simtools" title="Permalink to this heading">¶</a></h1>
+<p>Prototype implementation of tools for the Simulation Pipeline of the <a class="reference external" href="www.cta-observatory.org">CTA Observatory</a>:</p>
+<ul class="simple">
+<li><p>libraries for simulation model management and model database interface;</p></li>
+<li><p>applications for simulation model parameter derivation and validation;</p></li>
+<li><p>standardized interfaces and data products independent of the underlying simulation software (e.g., <a class="reference external" href="https://www.iap.kit.edu/corsika/">CORSIKA</a>, <a class="reference external" href="https://www.mpi-hd.mpg.de/hfm/~bernlohr/sim_telarray/">sim_telarray</a>);</p></li>
+<li><p>I/O and reporting tools for the MC simulation model parameter and production database.</p></li>
+</ul>
+<p>simtools is one part of the CTAO Simulation Pipeline, which consist of the following components:</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://www.iap.kit.edu/corsika/">CORSIKA</a> air shower simulation code and the <a class="reference external" href="https://www.mpi-hd.mpg.de/hfm/~bernlohr/sim_telarray/">sim_telarray</a> telescope simulation code.</p></li>
+<li><p>simtools for tools and application for model parameter and configuration management, database interfaces, validation, and production preparations.</p></li>
+<li><p>databases, especially the model parameter database.</p></li>
+</ul>
+<p>This code is under rapid development. Please contact the developers if you want to use it.</p>
+<ul class="simple">
+<li><p>Code: <a class="reference external" href="https://github.com/gammasim/simtools">https://github.com/gammasim/simtools</a></p></li>
+<li><p>Documentation: <a class="reference external" href="https://gammasim.github.io/simtools/">https://gammasim.github.io/simtools/</a></p></li>
+<li><p>Model database access: contact developers.</p></li>
+</ul>
+<section id="authors">
+<h2>Authors<a class="headerlink" href="#authors" title="Permalink to this heading">¶</a></h2>
+<p>Raul Prado (DESY), Orel Gueta (DESY), Victor Barbosa Martins (DESY), Gernot Maier (DESY)</p>
+</section>
+<section id="citing-this-software">
+<h2>Citing this Software<a class="headerlink" href="#citing-this-software" title="Permalink to this heading">¶</a></h2>
+<p>Please cite this software if you use it for a publication.
+Please cite the <a class="reference external" href="https://doi.org/10.5281/zenodo.6346696">Zenodo record</a>, see the <a class="reference external" href="https://github.com/gammasim/simtools/blob/main/CITATION.cff">CITATION.cff</a> file.</p>
+</section>
+<section id="documentation">
+<h2>Documentation<a class="headerlink" href="#documentation" title="Permalink to this heading">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="getting_started.html#model-database-access">Model Database Access</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting_started.html#installation-for-users">Installation for Users</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting_started.html#installation-for-developers">Installation for Developers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting_started.html#docker-environment-for-developers">Docker Environment for Developers</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="simtools-configuration.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="applications.html">Applications</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="applications.html#module-add_file_to_db">add_file_to_db</a></li>
+<li class="toctree-l2"><a class="reference internal" href="applications.html#module-compare_cumulative_psf">compare_cumulative_psf</a></li>
+<li class="toctree-l2"><a class="reference internal" href="applications.html#module-derive_mirror_rnda">derive_mirror_rnda</a></li>
+<li class="toctree-l2"><a class="reference internal" href="applications.html#module-get_file_from_db">get_file_from_db</a></li>
+<li class="toctree-l2"><a class="reference internal" href="applications.html#module-get_parameter">get_parameter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="applications.html#module-make_regular_arrays">make_regular_arrays</a></li>
+<li class="toctree-l2"><a class="reference internal" href="applications.html#module-plot_simtel_histograms">plot_simtel_histograms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="applications.html#module-plot_layout_array">plot_layout_array</a></li>
+<li class="toctree-l2"><a class="reference internal" href="applications.html#module-print_array_elements">print_array_elements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="applications.html#module-produce_array_config">produce_array_config</a></li>
+<li class="toctree-l2"><a class="reference internal" href="applications.html#module-production">production</a></li>
+<li class="toctree-l2"><a class="reference internal" href="applications.html#module-sim_showers_for_trigger_rates">sim_showers_for_trigger_rates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="applications.html#module-submit_data_from_external">submit_data_from_external</a></li>
+<li class="toctree-l2"><a class="reference internal" href="applications.html#module-tune_psf">tune_psf</a></li>
+<li class="toctree-l2"><a class="reference internal" href="applications.html#module-validate_camera_efficiency">validate_camera_efficiency</a></li>
+<li class="toctree-l2"><a class="reference internal" href="applications.html#module-validate_camera_fov">validate_camera_fov</a></li>
+<li class="toctree-l2"><a class="reference internal" href="applications.html#module-validate_optics">validate_optics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="applications.html#module-validate_schema_files">validate_schema_files</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="library.html">API</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="camera_efficiency.html">Camera Efficiency</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configuration_module.html">Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="corsika.html">CORSIKA</a></li>
+<li class="toctree-l2"><a class="reference internal" href="corsika_simtel.html">CORSIKA and sim_telarray</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_model.html">Data Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="db_handler.html">Database support</a></li>
+<li class="toctree-l2"><a class="reference internal" href="io_handler.html">I/O</a></li>
+<li class="toctree-l2"><a class="reference internal" href="job_execution.html">Job execution and submission</a></li>
+<li class="toctree-l2"><a class="reference internal" href="layout_array.html">Layout</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mc_model.html">MC Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="psf_analysis.html">PSF Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ray_tracing.html">Ray Tracing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sim_telarray.html">sim_telarray</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulators.html">Simulator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="visualization.html">Visualization</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="auxiliary_files.html">Auxiliary Files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="databases.html">Databases</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="databases.html#model-parameters-db">Model Parameters DB</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="simulation_software.html">Simulation Software</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="simulation_software.html#corsika">CORSIKA</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation_software.html#sim-telarray">sim_telarray</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="guidelines.html">Developer Guidelines</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="guidelines.html#project-setup">Project setup</a></li>
+<li class="toctree-l2"><a class="reference internal" href="guidelines.html#python-version">Python version</a></li>
+<li class="toctree-l2"><a class="reference internal" href="guidelines.html#code-formatting">Code formatting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="guidelines.html#logging">Logging</a></li>
+<li class="toctree-l2"><a class="reference internal" href="guidelines.html#testing">Testing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="guidelines.html#documentation">Documentation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="guidelines.html#writing-applications">Writing Applications</a></li>
+<li class="toctree-l2"><a class="reference internal" href="guidelines.html#dependencies">Dependencies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="guidelines.html#integration-with-corsika-and-sim-telarray">Integration with CORSIKA and sim_telarray</a></li>
+<li class="toctree-l2"><a class="reference internal" href="guidelines.html#handling-data-files">Handling data files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="guidelines.html#naming">Naming</a></li>
+<li class="toctree-l2"><a class="reference internal" href="guidelines.html#input-validation">Input validation</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="#">Table of Contents</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="simtools-configuration.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="applications.html">Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="library.html">API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="auxiliary_files.html">Auxiliary Files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="databases.html">Databases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="simulation_software.html">Simulation Software</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guidelines.html">Developer Guidelines</a></li>
+</ul>
+
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/index.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="getting_started.html" title="Getting Started"
+             >next</a> |</li>
+        <li class="nav-item nav-item-0"><a href="#">simtools v0.1.dev1+g59e41a4.d20230816 Manual</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">simtools</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2022, gammasim-tools, simtools developers.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 6.2.1.
+    </div>
+  </body>
+</html>
