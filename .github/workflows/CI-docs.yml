@@ -45,7 +45,7 @@ jobs:
       - name: Deploy to gihub pages
         # only run when PR is merged
         if: github.event.pull_request.merged
-        uses: JamesIves/github-pages-deploy-action@3.7.1
+        uses: JamesIves/github-pages-deploy-action@v4.4.3
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           BRANCH: gh-pages
