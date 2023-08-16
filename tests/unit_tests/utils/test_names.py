@@ -4,13 +4,12 @@ import logging
 
 import pytest
 
-from simtools.util import names
+from simtools.utils import names
 
 logging.getLogger().setLevel(logging.DEBUG)
 
 
 def test_validate_telescope_name():
-
     telescopes = {"sst-d": "SST-D", "mst-flashcam-d": "MST-FlashCam-D", "sct-d": "SCT-D"}
 
     for key, value in telescopes.items():
@@ -22,7 +21,6 @@ def test_validate_telescope_name():
 
 
 def test_validate_telescope_name_db():
-
     telescopes = {
         "south-sst-d": "South-SST-D",
         "north-mst-nectarcam-d": "North-MST-NectarCam-D",
@@ -56,7 +54,6 @@ def test_validate_other_names():
 
 
 def test_simtools_instrument_name():
-
     assert names.simtools_instrument_name("South", "MST", "FlashCam", "D") == "South-MST-FlashCam-D"
     assert (
         names.simtools_instrument_name("North", "MST", "NectarCam", "7") == "North-MST-NectarCam-7"

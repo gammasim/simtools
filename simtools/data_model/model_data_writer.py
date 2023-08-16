@@ -4,7 +4,7 @@ from pathlib import Path
 import astropy
 import yaml
 
-import simtools.util.general as gen
+import simtools.utils.general as gen
 from simtools import io_handler
 
 __all__ = ["ModelDataWriter"]

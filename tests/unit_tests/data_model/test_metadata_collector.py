@@ -8,7 +8,7 @@ import pytest
 import yaml
 
 import simtools.data_model.metadata_collector as metadata_collector
-import simtools.util.general as gen
+import simtools.utils.general as gen
 from simtools.data_model import metadata_model
 
 logger = logging.getLogger()

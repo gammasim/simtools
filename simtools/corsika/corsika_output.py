@@ -12,7 +12,7 @@ from corsikaio.subblocks import event_header, get_units_from_fields, run_header
 from eventio import IACTFile
 
 from simtools import io_handler
-from simtools.util.general import (
+from simtools.utils.general import (
     collect_data_from_yaml_or_dict,
     convert_2D_to_radial_distr,
     rotate,
@@ -157,7 +157,6 @@ class CorsikaOutput:
         """
 
         if self.event_information is None:
-
             with IACTFile(self.input_file) as self.iact_file:
                 self.telescope_positions = np.array(self.iact_file.telescope_positions)
                 self.num_telescopes = np.size(self.telescope_positions, axis=0)
@@ -532,7 +531,6 @@ class CorsikaOutput:
         for i_tel_info, photons_info in np.array(
             list(zip(self.telescope_positions, photons)), dtype=object
         )[self.telescope_indices]:
-
             if rotation_around_z_axis is None or rotation_around_y_axis is None:
                 photon_x, photon_y = photons_info["x"], photons_info["y"]
             else:
@@ -601,7 +599,6 @@ class CorsikaOutput:
             event_counter = 0
             for event in f:
                 for i_telescope in self.telescope_indices:
-
                     if hasattr(event, "photon_bunches"):
                         photons = list(event.photon_bunches.values())
                     else:
@@ -1086,7 +1083,6 @@ class CorsikaOutput:
             The zenith angles for each event.
         """
         if self._event_zenith_angles is None:
-
             self._event_zenith_angles = np.around(
                 (self.event_information["zenith"]).to(u.deg),
                 4,

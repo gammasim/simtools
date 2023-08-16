@@ -119,7 +119,6 @@ def validate_config_data(config_data, parameters, ignore_unidentified=False):
 
     # Collecting all entries given as in config_data.
     for key_data, value_data in config_data.items():
-
         is_identified = False
         # Searching for the key in the parameters.
         for par_name, par_info in parameters.items():
@@ -866,7 +865,6 @@ def convert_2D_to_radial_distr(hist2d, xaxis, yaxis, bins=50, max_dist=1000):
     histogram_1D = np.empty_like(weights, dtype=float)
 
     for i_radial, _ in enumerate(radial_edges[:-1]):
-
         # Here we sum all the events within a radial interval 'dr' and then divide by the number of
         # bins that fit this interval.
         indices_to_sum = (distance_sorted >= radial_edges[i_radial]) * (
