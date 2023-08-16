@@ -235,7 +235,15 @@ def _parse(label, description, usage):
         nargs="*",
     )
 
-    config_parser, _ = config.initialize(paths=True)
+    config.parser.add_argument(
+        "--output_corsika_path",
+        help="Output directory.",
+        required=False,
+        default=None,
+        type=str,
+    )
+
+    config_parser, _ = config.initialize(db_config=False, paths=True)
 
     if not config_parser["png"] and not config_parser["ecsv"]:
         config.parser.error("At least one argument between `--png` and `--ecsv` is required.")
@@ -343,19 +351,23 @@ def _derive_event_2D_histograms(instance, event_2D_header_keys, png, ecsv):
                 hist_range=None,
             )
 
-
 def main():
-
     label = Path(__file__).stem
     description = "Generate histograms for the Cherenkov photons saved in the CORSIKA IACT file."
     usage = ""
     args_dict, _ = _parse(label, description, usage)
 
+    if args_dict["output_corsika_path"] is None:
+        # if the user did not set the path, we use the path set by the configuration module
+        output_path = args_dict["output_path"]
+    else:
+        output_path = args_dict["output_corsika_path"]
+
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
     initial_time = time.time()
     logger.info("Starting the application.")
 
-    instance = CorsikaOutput(args_dict["IACT_file"], label=None)
+    instance = CorsikaOutput(args_dict["IACT_file"], output_path=output_path)
     if args_dict["telescope_indices"] is not None:
         try:
             indices = np.array(args_dict["telescope_indices"]).astype(int)

@@ -22,7 +22,7 @@ def test_init(corsika_output_instance, corsika_output_file_name):
 
 
 def test_version(corsika_output_instance):
-    assert corsika_output_instance.version == 7.741
+    assert corsika_output_instance.corsika_version == 7.741
 
 
 def test_initialize_header(corsika_output_instance):
@@ -103,7 +103,7 @@ def test_hist_config_save_and_read_yml(corsika_output_instance, io_handler):
     # Test producing the yaml file
     temp_hist_config = corsika_output_instance.hist_config
     corsika_output_instance.hist_config_to_yaml()
-    output_file = io_handler.get_output_file(file_name="hist_config.yml", dir_type="corsika")
+    output_file = corsika_output_instance.output_path.joinpath("hist_config.yml")
     corsika_output_instance.hist_config = output_file
     assert corsika_output_instance.hist_config == temp_hist_config
 
@@ -116,7 +116,6 @@ def test_create_regular_axes_valid_label(corsika_output_instance):
         assert len(axes) == num_of_axes[i_hist]
         for i_axis in range(num_of_axes[i_hist]):
             assert isinstance(axes[i_axis], bh.axis.Regular)
-
 
 def test_create_regular_axes_invalid_label(corsika_output_instance):
     label = "invalid_label"
@@ -733,7 +732,7 @@ def test_get_bins_max_dist(corsika_output_instance):
 
 def test_meta_dict(corsika_output_instance_set_histograms):
     expected_meta_dict = {
-        "corsika version": corsika_output_instance_set_histograms.version,
+        "CORSIKA version": corsika_output_instance_set_histograms.corsika_version,
         "simtools version": version.__version__,
         "Original IACT file": corsika_output_instance_set_histograms.input_file.name,
         "telescope_indices": list(corsika_output_instance_set_histograms.telescope_indices),
@@ -748,11 +747,11 @@ def test_dict_1D_distributions(corsika_output_instance_set_histograms):
         "wavelength": {
             "function": "get_photon_wavelength_distr",
             "file name": "hist_1D_photon_wavelength_distr",
-            "title": "Wavelength distribution",
-            "edges": "Wavelength",
+            "title": "Photon wavelength distribution",
+            "edges": "wavelength",
             "edges unit":
                 corsika_output_instance_set_histograms.hist_config["hist_position"]["z axis"][
-                    "start"].unit
+                    "start"].unit,
         }
     }
     assert (corsika_output_instance_set_histograms._dict_1D_distributions["wavelength"] ==
@@ -760,8 +759,7 @@ def test_dict_1D_distributions(corsika_output_instance_set_histograms):
 
 
 def test_export_1D_histograms(corsika_output_instance_set_histograms, io_handler):
-    corsika_output_instance_set_histograms._export_1D_histograms(
-        output_path=io_handler.get_output_directory(test=True))
+    corsika_output_instance_set_histograms._export_1D_histograms()
 
     for file_name in ["hist_1D_photon_wavelength_distr_all_tels.ecsv",
                       "hist_1D_photon_radial_distr_all_tels.ecsv",
@@ -775,8 +773,7 @@ def test_export_1D_histograms(corsika_output_instance_set_histograms, io_handler
 
 
 def test_export_2D_histograms(corsika_output_instance_set_histograms, io_handler):
-    corsika_output_instance_set_histograms._export_2D_histograms(
-        output_path=io_handler.get_output_directory(test=True))
+    corsika_output_instance_set_histograms._export_2D_histograms()
 
     for file_name in ["hist_2D_photon_direction_distr_all_tels.ecsv",
                       "hist_2D_photon_time_altitude_distr_all_tels.ecsv",
@@ -788,8 +785,7 @@ def test_export_2D_histograms(corsika_output_instance_set_histograms, io_handler
 
 
 def test_export_histograms(corsika_output_instance_set_histograms, io_handler):
-    corsika_output_instance_set_histograms.export_histograms(
-        output_path=io_handler.get_output_directory(test=True))
+    corsika_output_instance_set_histograms.export_histograms()
 
     for file_name in ["hist_1D_photon_wavelength_distr_all_tels.ecsv",
                       "hist_1D_photon_radial_distr_all_tels.ecsv",
@@ -809,13 +805,17 @@ def test_export_histograms(corsika_output_instance_set_histograms, io_handler):
 def test_dict_2D_distributions(corsika_output_instance_set_histograms):
     expected_dict_2D_distributions = {
         "counts": {
-            "function": "get_2D_photon_direction_distr",
-            "file name": "hist_2D_photon_direction_distr",
-            "title": "Incoming directive cosines",
-            "x edges": "x directive cosinus",
-            "x edges unit": u.dimensionless_unscaled,
-            "y edges": "y directive cosinus",
-            "y edges unit": u.dimensionless_unscaled,
+            "function": "get_2D_photon_position_distr",
+            "file name": "hist_2D_photon_count_distr",
+            "title": "Photon count distribution on the ground",
+            "x edges": "x position on the ground",
+            "x edges unit":
+                corsika_output_instance_set_histograms.hist_config["hist_position"]["x axis"][
+                    "start"].unit,
+            "y edges": "y position on the ground",
+            "y edges unit":
+                corsika_output_instance_set_histograms.hist_config["hist_position"]["y axis"][
+                    "start"].unit,
         }
     }
     assert (corsika_output_instance_set_histograms._dict_2D_distributions["counts"] ==
@@ -860,7 +860,7 @@ def test_export_event_header_1D_histogram(corsika_output_instance_set_histograms
     }
     for event_header_element, file_name in corsika_event_header_example.items():
         corsika_output_instance_set_histograms.export_event_header_1D_histogram(
-            event_header_element, output_path=io_handler.get_output_directory(test=True), bins=50,
+            event_header_element, bins=50,
             hist_range=None)
         assert io_handler.get_output_directory(test=True).joinpath(file_name).exists()
 
@@ -872,6 +872,6 @@ def test_export_event_header_2D_histogram(corsika_output_instance_set_histograms
     for event_header_element, file_name in corsika_event_header_example.items():
         corsika_output_instance_set_histograms.export_event_header_2D_histogram(
             event_header_element[0], event_header_element[1],
-            output_path=io_handler.get_output_directory(test=True), bins=50,
+            bins=50,
             hist_range=None)
         assert io_handler.get_output_directory(test=True).joinpath(file_name).exists()

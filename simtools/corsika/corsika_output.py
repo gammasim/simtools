@@ -35,6 +35,8 @@ class CorsikaOutput:
         CORSIKA IACT file provided by the CORSIKA simulation.
     label: str
         Instance label.
+    output_path: str
+        Path where to save the output of the class methods.
 
     Raises
     ------
@@ -42,7 +44,7 @@ class CorsikaOutput:
         if the input file given does not exist.
     """
 
-    def __init__(self, input_file, label=None):
+    def __init__(self, input_file, label=None, output_path=None):
         self.label = label
         self._logger = logging.getLogger(__name__)
         self._logger.debug("Init CorsikaOutput")
@@ -55,7 +57,11 @@ class CorsikaOutput:
             raise FileNotFoundError
 
         self.io_handler = io_handler.IOHandler()
-        self.output_path = self.io_handler.get_output_directory(self.label, "corsika")
+        _default_output_path = self.io_handler.get_output_directory(self.label, "corsika")
+        if output_path is None or output_path == Path('./simtools-output/'):
+            self.output_path = _default_output_path
+        else:
+            self.output_path = Path(output_path)
         self._initialize_attributes()
         self.read_event_information()
         self._initialize_header()
@@ -83,7 +89,7 @@ class CorsikaOutput:
         self._magnetic_field_z = None
         self._event_total_energies = None
         self._event_first_interaction_heights = None
-        self._version = None
+        self._corsika_version = None
         self.event_information = None
         self._individual_telescopes = None
         self._allowed_histograms = {"hist_position", "hist_direction", "hist_time_altitude"}
@@ -92,7 +98,7 @@ class CorsikaOutput:
         self._header = None
 
     @property
-    def version(self):
+    def corsika_version(self):
         """
         Get the version of the CORSIKA IACT file.
 
@@ -102,7 +108,7 @@ class CorsikaOutput:
             The version of CORSIKA used to produce the CORSIKA IACT file given by `self.input_file`.
         """
 
-        if self._version is None:
+        if self._corsika_version is None:
             all_corsika_versions = list(run_header.run_header_types.keys())
             header = list(self.iact_file.header)
 
@@ -118,20 +124,21 @@ class CorsikaOutput:
                 if i_version == np.trunc(float(header[version_index_position[0]]) * 10) / 10:
                     # If the version found is the same as the initial guess, leave the loop,
                     # otherwise, iterate until we find the correct version.
-                    self._version = np.around(float(header[version_index_position[0]]), 3)
+                    self._corsika_version = np.around(float(header[version_index_position[0]]), 3)
                     break
-        return self._version
+        return self._corsika_version
 
     def _initialize_header(self):
         """
         Initialize the header.
         """
-        self.all_run_keys = list(run_header.run_header_types[np.around(self.version, 1)].names)
+        self.all_run_keys = list(
+            run_header.run_header_types[np.around(self.corsika_version, 1)].names)
         self._header = {}
 
         # Get units of the header
         all_run_units = get_units_from_fields(
-            run_header.run_header_fields[np.trunc(self.version * 10) / 10]
+            run_header.run_header_fields[np.trunc(self.corsika_version * 10) / 10]
         )
         all_header_astropy_units = self._get_header_astropy_units(self.all_run_keys, all_run_units)
 
@@ -166,10 +173,10 @@ class CorsikaOutput:
                 self.telescope_positions = np.array(self.iact_file.telescope_positions)
                 self.num_telescopes = np.size(self.telescope_positions, axis=0)
                 self.all_event_keys = list(
-                    event_header.event_header_types[np.trunc(self.version * 10) / 10].names
+                    event_header.event_header_types[np.trunc(self.corsika_version * 10) / 10].names
                 )
                 all_event_units = get_units_from_fields(
-                    event_header.event_header_fields[np.trunc(self.version * 10) / 10]
+                    event_header.event_header_fields[np.trunc(self.corsika_version * 10) / 10]
                 )
 
                 self.event_information = {key: [] for key in self.all_event_keys}
@@ -324,7 +331,7 @@ class CorsikaOutput:
         if file_name is None:
             file_name = "hist_config"
         file_name = Path(file_name).with_suffix(".yml")
-        output_config_file = self.output_path.joinpath(file_name)
+        output_config_file = Path(self.output_path).joinpath(file_name)
         save_dict_to_file(self.hist_config, output_config_file)
 
     def _create_histogram_default_config(self):
@@ -1082,8 +1089,8 @@ class CorsikaOutput:
         """
         Export the histograms to ecsv files.
         """
-        self._export_1D_histograms(output_path=self.output_path)
-        self._export_2D_histograms(output_path=self.output_path)
+        self._export_1D_histograms()
+        self._export_2D_histograms()
 
     @property
     def _meta_dict(self):
@@ -1098,7 +1105,7 @@ class CorsikaOutput:
 
         if self.__meta_dict is None:
             self.__meta_dict = {
-                "CORSIKA version": self.version,
+                "CORSIKA version": self.corsika_version,
                 "simtools version": version.__version__,
                 "Original IACT file": self.input_file.name,
                 "telescope_indices": list(self.telescope_indices),
@@ -1318,15 +1325,15 @@ class CorsikaOutput:
 
         Parameters
         ----------
-        numpy.ndarray
+        hist: numpy.ndarray
             The counts of the histogram.
-        numpy.array
+        x_edges: numpy.array
             The x edges of the histograms.
-        numpy.array
+        y_edges: numpy.array
             The y edges of the histograms.
-        str
+        x_label: str
             X edges label.
-        str
+        y_label: str
             Y edges label.
         """
         try:
