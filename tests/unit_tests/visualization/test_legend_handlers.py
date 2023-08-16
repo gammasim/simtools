@@ -1,6 +1,6 @@
 import pytest
 
-from simtools.util import names
+from simtools.utils import names
 from simtools.visualization import legend_handlers as leg_h
 
 

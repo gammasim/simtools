@@ -7,7 +7,7 @@ from pathlib import Path
 import astropy.units as u
 import numpy as np
 
-import simtools.util.general as gen
+import simtools.utils.general as gen
 from simtools import io_handler
 from simtools.corsika.corsika_runner import CorsikaRunner
 from simtools.corsika_simtel.corsika_simtel_runner import CorsikaSimtelRunner
@@ -15,7 +15,7 @@ from simtools.job_execution.job_manager import JobManager
 from simtools.model.array_model import ArrayModel
 from simtools.simtel.simtel_histograms import SimtelHistograms
 from simtools.simtel.simtel_runner_array import SimtelRunnerArray
-from simtools.util import names
+from simtools.utils import names
 
 __all__ = [
     "Simulator",

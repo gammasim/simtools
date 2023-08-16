@@ -8,9 +8,9 @@ from astropy.table import QTable
 
 from simtools import db_handler, io_handler
 from simtools.layout.telescope_position import TelescopePosition
-from simtools.util import names
-from simtools.util.general import collect_data_from_yaml_or_dict
-from simtools.util.names import all_telescope_class_names
+from simtools.utils import names
+from simtools.utils.general import collect_data_from_yaml_or_dict
+from simtools.utils.names import all_telescope_class_names
 
 __all__ = ["InvalidTelescopeListFile", "LayoutArray"]
 

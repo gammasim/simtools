@@ -5,8 +5,8 @@ from simtools import db_handler, io_handler
 from simtools.layout.layout_array import LayoutArray
 from simtools.model.telescope_model import TelescopeModel
 from simtools.simtel.simtel_config_writer import SimtelConfigWriter
-from simtools.util import names
-from simtools.util.general import collect_data_from_yaml_or_dict
+from simtools.utils import names
+from simtools.utils.general import collect_data_from_yaml_or_dict
 
 __all__ = ["ArrayModel", "InvalidArrayConfigData"]
 

@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pytest
 
-import simtools.util.general as gen
+import simtools.utils.general as gen
 from simtools.visualization import visualize
 
 logger = logging.getLogger(__name__)
@@ -17,7 +17,6 @@ logger.setLevel(logging.DEBUG)
 
 
 def test_plot_1D(db, io_handler):
-
     logger.debug("Testing plot_1D")
 
     x_title = "Wavelength [nm]"
@@ -60,7 +59,6 @@ def test_plot_1D(db, io_handler):
 
 
 def test_plot_table(db, io_handler):
-
     logger.debug("Testing plot_table")
 
     title = "Test plot table"
@@ -89,7 +87,6 @@ def test_plot_table(db, io_handler):
 
 
 def test_add_unit():
-
     value_with_unit = [30, 40] << u.nm
     assert visualize._add_unit("Wavelength", value_with_unit) == "Wavelength [nm]"
     value_without_unit = [30, 40]

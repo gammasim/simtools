@@ -16,7 +16,7 @@ import logging
 
 import yaml
 
-import simtools.util.general as gen
+import simtools.utils.general as gen
 from simtools import db_handler
 from simtools.configuration import configurator
 

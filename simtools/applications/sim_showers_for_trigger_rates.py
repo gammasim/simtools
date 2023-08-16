@@ -71,7 +71,7 @@ import astropy.units as u
 from simtools import io_handler
 from simtools.configuration import configurator
 from simtools.simulator import Simulator
-from simtools.util import general as gen
+from simtools.utils import general as gen
 
 
 def _parse(label=None, description=None):

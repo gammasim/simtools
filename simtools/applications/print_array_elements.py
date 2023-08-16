@@ -54,7 +54,7 @@
 import logging
 from pathlib import Path
 
-import simtools.util.general as gen
+import simtools.utils.general as gen
 from simtools.configuration import configurator
 from simtools.layout import layout_array
 

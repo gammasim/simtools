@@ -7,11 +7,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 from astropy.table import Table
 
-import simtools.util.general as gen
+import simtools.utils.general as gen
 from simtools import io_handler
 from simtools.model.telescope_model import TelescopeModel
 from simtools.simtel.simtel_runner_camera_efficiency import SimtelRunnerCameraEfficiency
-from simtools.util import names
+from simtools.utils import names
 from simtools.visualization import visualize
 
 __all__ = ["CameraEfficiency"]
