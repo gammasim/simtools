@@ -152,8 +152,8 @@ import numpy as np
 import simtools.util.general as gen
 from simtools import io_handler
 from simtools.configuration import configurator
-from simtools.corsika import corsika_output_visualize
-from simtools.corsika.corsika_output import CorsikaOutput
+from simtools.corsika import corsika_histograms_visualize
+from simtools.corsika.corsika_histograms import CorsikaHistograms
 
 logger = logging.getLogger()
 
@@ -250,8 +250,8 @@ def _plot_figures(instance):
 
     Parameters
     ----------
-    instance: `CorsikaOutput` instance.
-        The CorsikaOutput instance created in main.
+    instance: `CorsikaHistograms` instance.
+        The CorsikaHistograms instance created in main.
     """
 
     plot_function_names = [
@@ -270,7 +270,7 @@ def _plot_figures(instance):
     ]
 
     for function_name in plot_function_names:
-        function = getattr(corsika_output_visualize, function_name)
+        function = getattr(corsika_histograms_visualize, function_name)
         figures, figure_names = function(instance)
         for figure, figure_name in zip(figures, figure_names):
             output_file_name = Path(instance.output_path).joinpath(figure_name)
@@ -284,8 +284,8 @@ def _derive_event_1D_histograms(instance, event_1D_header_keys, png, ecsv):
 
     Parameters
     ----------
-    instance: `CorsikaOutput` instance.
-        The CorsikaOutput instance created in main.
+    instance: `CorsikaHistograms` instance.
+        The CorsikaHistograms instance created in main.
     event_1D_header_keys: str
         Produce 1D histograms for elements given in `event_1D_header_keys` from the CORSIKA event
         header and save into ecsv/png files.
@@ -296,7 +296,7 @@ def _derive_event_1D_histograms(instance, event_1D_header_keys, png, ecsv):
     """
     for event_header_element in event_1D_header_keys:
         if png:
-            figure, figure_name = corsika_output_visualize.plot_1D_event_header_distribution(
+            figure, figure_name = corsika_histograms_visualize.plot_1D_event_header_distribution(
                 instance, event_header_element
             )
             output_file_name = Path(instance.output_path).joinpath(figure_name)
@@ -315,8 +315,8 @@ def _derive_event_2D_histograms(instance, event_2D_header_keys, png, ecsv):
 
     Parameters
     ----------
-    instance: `CorsikaOutput` instance.
-        The CorsikaOutput instance created in main.
+    instance: `CorsikaHistograms` instance.
+        The CorsikaHistograms instance created in main.
     event_2D_header_keys: str
         Produce 1D histograms for elements given in `event_1D_header_keys` from the CORSIKA event
         header and save into ecsv/png files.
@@ -328,7 +328,7 @@ def _derive_event_2D_histograms(instance, event_2D_header_keys, png, ecsv):
     for i_event_header_element, _ in enumerate(event_2D_header_keys[::2]):
         # [::2] to discard the last one in case an odd number of keys are passed
         if png:
-            figure, figure_name = corsika_output_visualize.plot_2D_event_header_distribution(
+            figure, figure_name = corsika_histograms_visualize.plot_2D_event_header_distribution(
                 instance,
                 event_2D_header_keys[i_event_header_element],
                 event_2D_header_keys[i_event_header_element + 1],
@@ -359,7 +359,7 @@ def main():
     initial_time = time.time()
     logger.info("Starting the application.")
 
-    instance = CorsikaOutput(args_dict["IACT_file"], output_path=output_path)
+    instance = CorsikaHistograms(args_dict["IACT_file"], output_path=output_path)
     if args_dict["telescope_indices"] is not None:
         try:
             indices = np.array(args_dict["telescope_indices"]).astype(int)

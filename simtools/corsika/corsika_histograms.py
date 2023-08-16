@@ -25,8 +25,8 @@ class HistogramNotCreated(Exception):
     """Exception for histogram not created."""
 
 
-class CorsikaOutput:
-    """CorsikaOutput extracts the Cherenkov photons information from a CORSIKA IACT file
+class CorsikaHistograms:
+    """CorsikaHistograms extracts the Cherenkov photons information from a CORSIKA IACT file
      using pyeventio.
 
     Parameters
@@ -47,7 +47,7 @@ class CorsikaOutput:
     def __init__(self, input_file, label=None, output_path=None):
         self.label = label
         self._logger = logging.getLogger(__name__)
-        self._logger.debug("Init CorsikaOutput")
+        self._logger.debug("Init CorsikaHistograms")
         self.input_file = input_file
 
         self.input_file = Path(self.input_file)
