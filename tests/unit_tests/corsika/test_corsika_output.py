@@ -10,13 +10,13 @@ import pytest
 from astropy import units as u
 
 from simtools import version
-from simtools.corsika.corsika_output import corsikaOutput, HistogramNotCreated
+from simtools.corsika.corsika_output import CorsikaOutput, HistogramNotCreated
 
 
 def test_init(corsika_output_instance, corsika_output_file_name):
     assert corsika_output_instance.input_file.name == Path(corsika_output_file_name).name
     with pytest.raises(FileNotFoundError):
-        corsikaOutput("wrong_file_name")
+        CorsikaOutput("wrong_file_name")
     assert len(corsika_output_instance.event_information) > 15
     assert "zenith" in corsika_output_instance.event_information
 
@@ -165,7 +165,7 @@ def test_fill_histograms_no_rotation(corsika_output_file_name):
         },
     ]
 
-    corsika_output_instance_fill = corsikaOutput(corsika_output_file_name)
+    corsika_output_instance_fill = CorsikaOutput(corsika_output_file_name)
     corsika_output_instance_fill.individual_telescopes = False
     corsika_output_instance_fill.telescope_indices = [0]
 
@@ -269,7 +269,7 @@ def test_set_histograms_passing_config(corsika_output_instance):
 
 
 def test_raise_if_no_histogram(corsika_output_file_name, caplog):
-    corsika_output_instance_not_hist = corsikaOutput(corsika_output_file_name)
+    corsika_output_instance_not_hist = CorsikaOutput(corsika_output_file_name)
     with pytest.raises(HistogramNotCreated):
         corsika_output_instance_not_hist._raise_if_no_histogram()
         assert "The histograms were not created." in caplog
