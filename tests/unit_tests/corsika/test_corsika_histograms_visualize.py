@@ -82,8 +82,13 @@ def test_kernel_plot_1D_photons(corsika_histograms_instance_set_histograms, capl
             corsika_histograms_instance_set_histograms, property_name
         )
         for i_hist, _ in enumerate(corsika_histograms_instance_set_histograms.telescope_indices):
-            assert isinstance(all_figs[0], plt.Figure)
-            assert isinstance(all_fig_names[0], str)
+            if property_name in ["num_photons_per_event",
+                                 "num_photons_per_telescope"]:
+                assert isinstance(all_figs[0], plt.Figure)
+                assert isinstance(all_fig_names[0], str)
+            else:
+                assert isinstance(all_figs[i_hist], plt.Figure)
+                assert isinstance(all_fig_names[i_hist], str)
 
     with pytest.raises(ValueError):
         corsika_histograms_visualize._kernel_plot_1D_photons(

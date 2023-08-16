@@ -488,8 +488,8 @@ def plot_1D_event_header_distribution(
         width=np.abs(np.diff(edges)),
     )
     if (
-            corsika_histograms_instance.event_information[event_header_element].unit
-        is not u.dimensionless_unscaled
+            corsika_histograms_instance.event_information[
+                event_header_element].unit is not u.dimensionless_unscaled
     ):
         ax.set_xlabel(
             f"{event_header_element} ("
