@@ -551,7 +551,7 @@ def plot_2D_event_header_distribution(
 
     if (
             corsika_histograms_instance.event_information[event_header_element_1].unit
-        is not u.dimensionless_unscaled
+            is not u.dimensionless_unscaled
     ):
         ax.set_xlabel(
             f"{event_header_element_1} ("
