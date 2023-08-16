@@ -3,7 +3,7 @@ import os
 from copy import copy
 from pathlib import Path
 
-import simtools.util.general as gen
+import simtools.utils.general as gen
 
 __all__ = ["JobManager", "MissingWorkloadManager", "JobExecutionError"]
 

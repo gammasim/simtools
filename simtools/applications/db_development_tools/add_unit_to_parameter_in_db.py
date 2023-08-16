@@ -12,13 +12,12 @@
 
 import logging
 
-import simtools.util.general as gen
+import simtools.utils.general as gen
 from simtools import db_handler
 from simtools.configuration import configurator
 
 
 def main():
-
     config = configurator.Configurator(description=("Add a unit field to a parameter in the DB."))
     args_dict, db_config = config.initialize(db_config=True, telescope_model=True)
 

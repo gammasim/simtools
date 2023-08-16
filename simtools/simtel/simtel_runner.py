@@ -2,7 +2,7 @@ import logging
 import os
 from pathlib import Path
 
-import simtools.util.general as gen
+import simtools.utils.general as gen
 from simtools.model.array_model import ArrayModel
 from simtools.model.telescope_model import TelescopeModel
 
