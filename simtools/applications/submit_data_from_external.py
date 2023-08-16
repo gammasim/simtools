@@ -42,7 +42,7 @@ import logging
 from pathlib import Path
 
 import simtools.data_model.model_data_writer as writer
-import simtools.util.general as gen
+import simtools.utils.general as gen
 from simtools.configuration import configurator
 from simtools.data_model import validate_data
 from simtools.data_model.metadata_collector import MetadataCollector

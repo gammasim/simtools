@@ -8,8 +8,8 @@ from simtools.corsika.corsika_config import (
     CorsikaConfig,
     MissingRequiredInputInCorsikaConfigData,
 )
-from simtools.util import names
-from simtools.util.general import collect_data_from_yaml_or_dict
+from simtools.utils import names
+from simtools.utils.general import collect_data_from_yaml_or_dict
 
 __all__ = ["CorsikaRunner", "MissingRequiredEntryInCorsikaConfig"]
 

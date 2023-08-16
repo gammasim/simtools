@@ -28,7 +28,7 @@ from pathlib import Path
 import jsonschema
 import yaml
 
-import simtools.util.general as gen
+import simtools.utils.general as gen
 from simtools.configuration import configurator
 
 

@@ -6,21 +6,21 @@ Utilities
 In this section you find the reference documentation of the modules contained in
 the util module.
 
-* :ref:`general <utilgeneral>`
-* :ref:`names <utilnames>`
+* :ref:`general <utilsgeneral>`
+* :ref:`names <utilsnames>`
 
-.. _utilgeneral:
+.. _utilsgeneral:
 
 general
 -------
 
-.. automodule:: util.general
+.. automodule:: utils.general
    :members:
 
-.. _utilnames:
+.. _utilsnames:
 
 names
 -----
 
-.. automodule:: util.names
+.. automodule:: utils.names
    :members:

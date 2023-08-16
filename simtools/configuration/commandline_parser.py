@@ -5,7 +5,7 @@ from pathlib import Path
 import astropy.units as u
 
 import simtools.version
-from simtools.util import names
+from simtools.utils import names
 
 __all__ = [
     "CommandLineParser",

@@ -76,7 +76,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.backends.backend_pdf import PdfPages
 
-import simtools.util.general as gen
+import simtools.utils.general as gen
 from simtools import io_handler
 from simtools.configuration import configurator
 from simtools.model.telescope_model import TelescopeModel
@@ -127,7 +127,6 @@ def _parse(label):
 
 
 def main():
-
     label = Path(__file__).stem
     args_dict, db_config = _parse(label)
 
