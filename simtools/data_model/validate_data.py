@@ -72,8 +72,7 @@ class DataValidator:
         """
 
         try:
-            _file_extension = os.path.splitext(self._data_file_name)[1]
-            if _file_extension == ".yml" or _file_extension == ".yaml":
+            if Path(self._data_file_name).suffix in (".yml", ".yaml"):
                 self.data = gen.collect_data_from_yaml_or_dict(self._data_file_name, None)
                 self._logger.info(f"Reading data from yaml file: {self._data_file_name}")
             else:
