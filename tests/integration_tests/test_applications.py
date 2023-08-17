@@ -259,7 +259,7 @@ APP_LIST = {
     "generate_corsika_histograms::output":
         [["--IACT_file", "./tests/resources/"
                          "tel_output_10GeV-2-gamma-20deg-CTAO-South.corsikaio",
-          "--png", "--ecsv", "--output_directory", "."]],
+          "--png", "--ecsv", "--output_path", "."]],
     "generate_corsika_histograms::1D_and_2D_run_header":
         [["--IACT_file",
           "./tests/resources/tel_output_10GeV-2-gamma-20deg-CTAO-South."
