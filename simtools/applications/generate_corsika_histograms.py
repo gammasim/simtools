@@ -371,7 +371,7 @@ def main():
 
     # Cherenkov photons
     if args_dict["png"]:
-        _plot_figures(instance=corsika_histograms_instance)
+        _plot_figures(corsika_histograms_instance=corsika_histograms_instance)
     if args_dict["ecsv"]:
         corsika_histograms_instance.export_histograms()
 
