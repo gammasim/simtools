@@ -27,7 +27,7 @@ def label():
 @pytest.fixture
 def array_config_data(tmp_test_directory):
     return {
-        "data_directory": str(tmp_test_directory) + "/test-output",
+        "data_directory": f"{str(tmp_test_directory)}/test-output",
         "primary": "gamma",
         "zenith": 20 * u.deg,
         "azimuth": 0 * u.deg,
@@ -47,9 +47,9 @@ def input_file_list():
 
 
 @pytest.fixture
-def shower_config_data():
+def shower_config_data(tmp_test_directory):
     return {
-        "data_directory": ".",
+        "data_directory": f"{str(tmp_test_directory)}/test-output",
         "site": "North",
         "layout_name": "test-layout",
         "run_list": [3, 4],
