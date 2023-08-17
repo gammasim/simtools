@@ -2,13 +2,13 @@ import datetime
 import logging
 import re
 
-import simtools.util.general as gen
-from simtools.data_model import meta_data_model
+import simtools.utils.general as gen
+from simtools.data_model import metadata_model
 
 
 class SchemaValidator:
     """
-    Validate a dictionary against a reference schema.
+    Validate a dictionary against the simpipe reference schema.
     Used e.g., to validate metadata provided as input.
 
     Parameters
@@ -26,11 +26,11 @@ class SchemaValidator:
         self._logger = logging.getLogger(__name__)
 
         self._reference_schema = gen.change_dict_keys_case(
-            meta_data_model.metadata_input_reference_schema(), lower_case=True
+            metadata_model.metadata_input_reference_schema(), lower_case=True
         )
         self.data_dict = data_dict
 
-    def validate_and_transform(self, meta_file_name=None, lower_case=True):
+    def validate_and_transform(self, meta_file_name=None):
         """
         Schema validation and processing.
 
@@ -40,25 +40,24 @@ class SchemaValidator:
             file name for file with meta data to
             be validated (might also be given as
             dictionary during initialization of the class).
-        lower_case: bool
-            compare schema keys in lower case only (simtools convention).
 
         Returns
         -------
         dict
             Complete set of metadata following the CTA top-level metadata defintion
+            (None if meta_file_name is undefined)
 
         """
-        if meta_file_name:
+        try:
             self._logger.debug(f"Reading meta data from {meta_file_name}")
-            self.data_dict = gen.collect_data_from_yaml_or_dict(meta_file_name, None)
+            self.data_dict = gen.collect_data_from_yaml_or_dict(meta_file_name, self.data_dict)
+        except gen.InvalidConfigData:
+            self._logger.debug("Failed reading metadata from file.")
+            return None
 
-        if lower_case:
-            self.data_dict = gen.change_dict_keys_case(self.data_dict, True)
-
+        self.data_dict = gen.change_dict_keys_case(self.data_dict, True)
         self._validate_schema(self._reference_schema, self.data_dict)
         self._process_schema()
-
         return self.data_dict
 
     def _validate_schema(self, ref_schema, data_dict):
@@ -157,7 +156,7 @@ class SchemaValidator:
             try:
                 if isinstance(data_field, (int, str)):
                     convert[schema["type"]](data_field)
-                else:
+                elif data_field is not None:
                     raise ValueError
             except ValueError as error:
                 raise ValueError(
@@ -228,7 +227,7 @@ class SchemaValidator:
         """
 
         _ref_schema = gen.change_dict_keys_case(
-            meta_data_model.metadata_input_reference_document_list(schema_type), lower_case=True
+            metadata_model.metadata_input_reference_document_list(schema_type), lower_case=True
         )
         for entry in data_list:
             self._validate_schema(_ref_schema, entry)

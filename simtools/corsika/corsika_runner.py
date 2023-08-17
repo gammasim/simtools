@@ -8,8 +8,8 @@ from simtools.corsika.corsika_config import (
     CorsikaConfig,
     MissingRequiredInputInCorsikaConfigData,
 )
-from simtools.util import names
-from simtools.util.general import collect_data_from_yaml_or_dict
+from simtools.utils import names
+from simtools.utils.general import collect_data_from_yaml_or_dict
 
 __all__ = ["CorsikaRunner", "MissingRequiredEntryInCorsikaConfig"]
 
@@ -218,7 +218,11 @@ class CorsikaRunner:
 
         with open(script_file_path, "w") as file:
             # shebang
-            file.write("#!/usr/bin/bash\n")
+            file.write("#!/usr/bin/env bash\n")
+
+            # Make sure to exit on failed commands and report their error code
+            file.write("set -e\n")
+            file.write("set -o pipefail\n")
 
             # Setting SECONDS variable to measure runtime
             file.write("\nSECONDS=0\n")
@@ -253,7 +257,7 @@ class CorsikaRunner:
         """Get pfp pre-processor command."""
         cmd = self._simtel_source_path.joinpath("sim_telarray/bin/pfp")
         cmd = str(cmd) + f" -V -DWITHOUT_MULTIPIPE - < {self._corsika_input_file}"
-        cmd += f" > {input_tmp_file}\n"
+        cmd += f" > {input_tmp_file} || exit\n"
         return cmd
 
     def _get_autoinputs_command(self, run_number, input_tmp_file):
@@ -270,7 +274,7 @@ class CorsikaRunner:
         cmd += f" -p {self._corsika_data_dir}"
         if self._keep_seeds:
             cmd += " --keep-seeds"
-        cmd += f" {input_tmp_file} 2>&1 | gzip > {log_file}"
+        cmd += f" {input_tmp_file} | gzip > {log_file} 2>&1"
         cmd += " || exit 1\n"
         return cmd
 

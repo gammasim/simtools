@@ -3,7 +3,7 @@ import os
 from copy import copy
 from pathlib import Path
 
-import simtools.util.general as gen
+import simtools.utils.general as gen
 
 __all__ = ["JobManager", "MissingWorkloadManager", "JobExecutionError"]
 
@@ -123,8 +123,11 @@ class JobManager:
         if not self.test:
             sys_output = os.system(shell_command)
             if sys_output != 0:
-                msg = gen.get_log_excerpt(log_file)
+                msg = gen.get_log_excerpt(f"{self.run_out_file}.err")
                 self._logger.error(msg)
+                if log_file.exists() and gen.get_file_age(log_file) < 5:
+                    msg = gen.get_log_excerpt(log_file)
+                    self._logger.error(msg)
                 raise JobExecutionError("See excerpt from log file above\n")
         else:
             self._logger.info("Testing (local)")

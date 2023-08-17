@@ -66,6 +66,8 @@ def _category_product():
                 "NAME": {"type": "str", "required": False, "default": None},
                 "VERSION": {"type": "str", "required": False, "default": None},
                 "URL": {"type": "str", "required": False, "default": None},
+                "TYPE": {"type": "str", "required": False, "default": None},
+                "SUBTYPE": {"type": "str", "required": False, "default": None},
             },
         },
         "FORMAT": {"type": "str", "required": False, "default": "ecsv"},
@@ -111,6 +113,7 @@ def _category_document():
         "TYPE": {"type": "str", "required": False, "default": None},
         "ID": {"type": "str", "required": False, "default": None},
         "LINK": {"type": "str", "required": False, "default": None},
+        "TITLE": {"type": "str", "required": False, "default": None},
     }
 
 
@@ -228,38 +231,6 @@ def metadata_input_reference_document_list(schema_list):
 
     msg = f"Invalid schema list: {schema_list}"
     raise InvalidSchemaList(msg)
-
-
-def workflow_configuration_schema():
-    """
-    Reference schmema for simtools workflow configuration.
-
-    Returns
-    -------
-    dict with workflow configuration
-
-    """
-
-    return {
-        "reference": {"version": "0.1.0"},
-        "activity": {
-            "name": None,
-            "id": None,
-            "description": None,
-        },
-        "datamodel": {
-            "inputschema": None,
-        },
-        "product": {
-            "description": None,
-            "format": None,
-            "filename": None,
-        },
-        "configuration": {
-            "log_level": "INFO",
-            "test": False,
-        },
-    }
 
 
 def _metadata_dict_with_defaults(meta_dict):

@@ -6,7 +6,7 @@ import shutil
 import astropy.units as u
 import pytest
 
-import simtools.util.general as gen
+import simtools.utils.general as gen
 from simtools.corsika.corsika_runner import CorsikaRunner
 
 logger = logging.getLogger()
@@ -30,7 +30,6 @@ def corsika_config_data():
 
 @pytest.fixture
 def corsika_runner(corsika_config_data, io_handler, simtel_path_no_mock, db_config):
-
     corsika_runner = CorsikaRunner(
         mongo_db_config=db_config,
         site="south",
@@ -58,7 +57,7 @@ def test_prepare_run_script(corsika_runner):
     assert script.exists()
     with open(script, "r") as f:
         script_content = f.read()
-        assert "/usr/bin/bash" in script_content
+        assert "/usr/bin/env bash" in script_content
         assert "corsika_autoinputs" in script_content
         assert "sim_telarray/bin/pfp" in script_content
 
@@ -69,7 +68,7 @@ def test_prepare_run_script(corsika_runner):
     assert script.exists()
     with open(script, "r") as f:
         script_content = f.read()
-        assert "/usr/bin/bash" in script_content
+        assert "/usr/bin/env bash" in script_content
         assert "corsika_autoinputs" in script_content
         assert "sim_telarray/bin/pfp" in script_content
         assert "-R 3" in script_content
@@ -82,26 +81,24 @@ def test_prepare_run_script_with_invalid_run(corsika_runner):
 
 
 def test_prepare_run_script_with_extra(corsika_runner):
-
     extra = ["testing", "testing-extra-2"]
     script = corsika_runner.prepare_run_script(run_number=3, extra_commands=extra)
 
     assert gen.file_has_text(script, "testing-extra-2")
     with open(script, "r") as f:
         script_content = f.read()
-        assert "/usr/bin/bash" in script_content
+        assert "/usr/bin/env bash" in script_content
         assert "corsika_autoinputs" in script_content
         assert "sim_telarray/bin/pfp" in script_content
 
 
 def test_prepare_run_script_without_pfp(corsika_runner):
-
     script = corsika_runner.prepare_run_script(use_pfp=False)
 
     assert script.exists()
     with open(script, "r") as f:
         script_content = f.read()
-        assert "/usr/bin/bash" in script_content
+        assert "/usr/bin/env bash" in script_content
         assert "corsika_autoinputs" in script_content
         assert "sim_telarray/bin/pfp" not in script_content
 

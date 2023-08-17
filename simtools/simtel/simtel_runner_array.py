@@ -1,7 +1,7 @@
 import logging
 from pathlib import Path
 
-import simtools.util.general as gen
+import simtools.utils.general as gen
 from simtools import io_handler
 from simtools.simtel.simtel_runner import InvalidOutputFile, SimtelRunner
 
@@ -277,7 +277,7 @@ class SimtelRunnerArray(SimtelRunner):
         command += super()._config_option("random_state", "auto")
         command += super()._config_option("show", "all")
         command += f" {kwargs['input_file']}"
-        command += f" 2>&1 > {self._log_file}"
+        command += f" > {self._log_file} 2>&1 || exit"
 
         return command
 

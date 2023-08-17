@@ -7,7 +7,7 @@ import numpy as np
 import pytest
 from astropy import units as u
 
-import simtools.util.general as gen
+import simtools.utils.general as gen
 from simtools.model.telescope_model import InvalidParameter, TelescopeModel
 
 logger = logging.getLogger()
@@ -31,7 +31,6 @@ def lst_config_file(db, io_handler):
 
 @pytest.fixture
 def telescope_model_from_config_file(lst_config_file):
-
     label = "test-telescope-model"
     tel_model = TelescopeModel.from_config_file(
         site="North",
@@ -43,7 +42,6 @@ def telescope_model_from_config_file(lst_config_file):
 
 
 def test_get_parameter_value_with_unit(telescope_model_lst):
-
     tel_model = telescope_model_lst
 
     assert isinstance(tel_model.get_parameter_value_with_unit("effective_focal_length"), u.Quantity)
@@ -51,7 +49,6 @@ def test_get_parameter_value_with_unit(telescope_model_lst):
 
 
 def test_handling_parameters(telescope_model_lst):
-
     tel_model = telescope_model_lst
 
     logger.info(
@@ -75,7 +72,6 @@ def test_handling_parameters(telescope_model_lst):
 
 
 def test_change_parameter(telescope_model_lst):
-
     tel_model = telescope_model_lst
 
     logger.info(f"Old camera_pixels:{tel_model.get_parameter_value('camera_pixels')}")
@@ -98,7 +94,6 @@ def test_change_parameter(telescope_model_lst):
 
 
 def test_flen_type(telescope_model_lst):
-
     tel_model = telescope_model_lst
     flen_info = tel_model.get_parameter("focal_length")
     logger.info(f"Focal Length = {flen_info['Value']}, type = {flen_info['Type']}")
@@ -107,7 +102,6 @@ def test_flen_type(telescope_model_lst):
 
 
 def test_cfg_file(telescope_model_from_config_file, lst_config_file):
-
     tel_model = telescope_model_from_config_file
 
     tel_model.export_config_file()
@@ -187,14 +181,12 @@ def test_updating_export_model_files(db_config, io_handler):
 
 
 def test_load_reference_data(telescope_model_lst):
-
     tel_model = telescope_model_lst
 
     assert tel_model.reference_data["nsb_reference_value"]["Value"] == pytest.approx(0.24)
 
 
 def test_export_derived_files(telescope_model_lst):
-
     tel_model = telescope_model_lst
 
     _ = tel_model.derived
@@ -206,7 +198,6 @@ def test_export_derived_files(telescope_model_lst):
 
 
 def test_get_on_axis_eff_optical_area(telescope_model_lst):
-
     tel_model = telescope_model_lst
 
     assert tel_model.get_on_axis_eff_optical_area().value == pytest.approx(
@@ -215,7 +206,6 @@ def test_get_on_axis_eff_optical_area(telescope_model_lst):
 
 
 def test_read_two_dim_wavelength_angle(telescope_model_sst):
-
     tel_model = telescope_model_sst
     tel_model.export_config_file()
 
@@ -231,7 +221,6 @@ def test_read_two_dim_wavelength_angle(telescope_model_sst):
 
 
 def test_read_incidence_angle_distribution(telescope_model_sst):
-
     tel_model = telescope_model_sst
 
     _ = tel_model.derived
@@ -246,7 +235,6 @@ def test_read_incidence_angle_distribution(telescope_model_sst):
 
 
 def test_calc_average_curve(telescope_model_sst):
-
     tel_model = telescope_model_sst
     tel_model.export_config_file()
     _ = tel_model.derived
@@ -262,7 +250,6 @@ def test_calc_average_curve(telescope_model_sst):
 
 
 def test_export_table_to_model_directory(telescope_model_sst):
-
     tel_model = telescope_model_sst
     tel_model.export_config_file()
     _ = tel_model.derived

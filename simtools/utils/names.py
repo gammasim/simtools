@@ -264,7 +264,6 @@ def validate_name(name, all_names):
 
     if not is_valid_name(name, all_names):
         msg = f"Invalid name {name}"
-        _logger.error(msg)
         raise ValueError(msg)
     for main_name, list_of_names in all_names.items():
         if name.lower() in list_of_names + [main_name.lower()]:
@@ -441,7 +440,7 @@ def simtools_instrument_name(site, telescope_class_name, sub_system_name, telesc
     sub_system_name: str
         FlashCam, NectarCam
     telescope_id_name: str
-        telescope ID (e.g., D, numerial value)
+        telescope ID (e.g., D, numerical value)
 
     Returns
     -------

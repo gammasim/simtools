@@ -6,11 +6,11 @@ import astropy.units as u
 import numpy as np
 from astropy.io.misc import yaml
 
-import simtools.util.general as gen
+import simtools.utils.general as gen
 from simtools import io_handler
 from simtools.layout.layout_array import LayoutArray
-from simtools.util import names
-from simtools.util.general import collect_data_from_yaml_or_dict
+from simtools.utils import names
+from simtools.utils.general import collect_data_from_yaml_or_dict
 
 __all__ = [
     "CorsikaConfig",

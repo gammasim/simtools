@@ -54,7 +54,7 @@
 import logging
 from pathlib import Path
 
-import simtools.util.general as gen
+import simtools.utils.general as gen
 from simtools.configuration import configurator
 from simtools.layout import layout_array
 
@@ -113,11 +113,17 @@ def _parse(label=None, description=None):
         default=False,
         action="store_true",
     )
+    config.parser.add_argument(
+        "--select_assets",
+        help="select a subset of assets (e.g., MSTN, LSTN)",
+        required=False,
+        default=None,
+        nargs="+",
+    )
     return config.initialize()
 
 
 def main():
-
     label = Path(__file__).stem
     args_dict, _ = _parse(label, description=("Print a list of array element positions"))
 
@@ -125,6 +131,7 @@ def main():
     _logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
     layout = layout_array.LayoutArray(telescope_list_file=args_dict["array_element_list"])
+    layout.select_assets(args_dict["select_assets"])
     layout.convert_coordinates()
     if args_dict["export"] is not None:
         layout.export_telescope_list(

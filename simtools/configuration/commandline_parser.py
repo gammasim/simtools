@@ -1,8 +1,11 @@
 import argparse
+import logging
 from pathlib import Path
 
+import astropy.units as u
+
 import simtools.version
-from simtools.util import names
+from simtools.utils import names
 
 __all__ = [
     "CommandLineParser",
@@ -11,7 +14,7 @@ __all__ = [
 
 class CommandLineParser(argparse.ArgumentParser):
     """
-    Command line parser for application and workflows.
+    Command line parser for applications.
 
     Wrapper around standard python argparse.ArgumentParser.
 
@@ -27,8 +30,8 @@ class CommandLineParser(argparse.ArgumentParser):
     def initialize_default_arguments(
         self,
         paths=True,
+        output=False,
         telescope_model=False,
-        workflow_config=False,
         db_config=False,
         job_submission=False,
     ):
@@ -39,10 +42,10 @@ class CommandLineParser(argparse.ArgumentParser):
         ----------
         paths: bool
             Add path configuration to list of args.
+        output: bool
+            Add output file configuration to list of args.
         telescope_model: bool
             Add telescope model configuration to list of args.
-        workflow_config: bool
-            Add workflow configuration to list of args.
         db_config: bool
             Add database configuration parameters to list of args.
         job_submission: bool
@@ -57,17 +60,15 @@ class CommandLineParser(argparse.ArgumentParser):
             self.initialize_db_config_arguments()
         if paths:
             self.initialize_path_arguments()
-        self.initialize_config_files(workflow_config)
+        if output:
+            self.initialize_output_arguments()
+        self.initialize_config_files()
         self.initialize_application_execution_arguments()
 
-    def initialize_config_files(self, workflow_config=False):
+    def initialize_config_files(self):
         """
-        Initialize configuration and workflow files.
+        Initialize configuration files.
 
-        Parameters
-        ----------
-        workflow_config: str
-            workflow configuration file.
         """
 
         _job_group = self.add_argument_group("configuration")
@@ -78,13 +79,6 @@ class CommandLineParser(argparse.ArgumentParser):
             type=str,
             required=False,
         )
-        if workflow_config:
-            _job_group.add_argument(
-                "--workflow_config",
-                help="workflow configuration file",
-                type=str,
-                required=False,
-            )
 
     def initialize_path_arguments(self):
         """
@@ -125,6 +119,26 @@ class CommandLineParser(argparse.ArgumentParser):
             required=False,
         )
 
+    def initialize_output_arguments(self):
+        """
+        Initialize application output files(s)
+        """
+
+        _job_group = self.add_argument_group("output")
+        _job_group.add_argument(
+            "--output_file",
+            help="output data file",
+            type=str,
+            required=False,
+        )
+        _job_group.add_argument(
+            "--output_file_format",
+            help="file format of output data",
+            type=str,
+            default="ecsv",
+            required=False,
+        )
+
     def initialize_application_execution_arguments(self):
         """
         Initialize application execution arguments.
@@ -139,7 +153,7 @@ class CommandLineParser(argparse.ArgumentParser):
         )
         _job_group.add_argument(
             "--label",
-            help="Job label",
+            help="job label",
             required=False,
         )
         _job_group.add_argument(
@@ -181,7 +195,7 @@ class CommandLineParser(argparse.ArgumentParser):
         _job_group = self.add_argument_group("job submission")
         _job_group.add_argument(
             "--submit_command",
-            help="Job submission command",
+            help="job submission command",
             type=str,
             required=True,
             choices=[
@@ -192,7 +206,7 @@ class CommandLineParser(argparse.ArgumentParser):
         )
         _job_group.add_argument(
             "--extra_submit_options",
-            help="Additional options for submission command",
+            help="additional options for submission command",
             type=str,
             required=False,
         )
@@ -325,8 +339,8 @@ class CommandLineParser(argparse.ArgumentParser):
 
         Returns
         -------
-        float
-            Validated zenith angle
+        Astropy.Quantity
+            Validated zenith angle in degrees
 
         Raises
         ------
@@ -335,11 +349,78 @@ class CommandLineParser(argparse.ArgumentParser):
 
 
         """
-        fangle = float(angle)
+
+        logger = logging.getLogger(__name__)
+
+        try:
+            fangle = float(angle)
+        except ValueError:
+            logger.error("The zenith angle provided is not a valid numeric value.")
+            raise
         if fangle < 0.0 or fangle > 180.0:
             raise argparse.ArgumentTypeError(
                 f"The provided zenith angle, {angle:.1f}, "
                 "is outside of the allowed [0, 180] interval"
             )
 
-        return fangle
+        return fangle * u.deg
+
+    @staticmethod
+    def azimuth_angle(angle):
+        """
+        Argument parser type to check that the azimuth angle provided is in the interval [0, 360].
+        Other allowed options are north, south, east or west which will be translated to an angle
+        where north corresponds to zero.
+
+        Parameters
+        ----------
+        angle: float or str
+            azimuth angle to verify or convert
+
+        Returns
+        -------
+        Astropy.Quantity
+            Validated/Converted aziumth angle in degrees
+
+        Raises
+        ------
+        argparse.ArgumentTypeError
+            When angle is outside of the interval [0, 360] or not in (north, south, east, west)
+
+
+        """
+
+        logger = logging.getLogger(__name__)
+        try:
+            fangle = float(angle)
+            if fangle < 0.0 or fangle > 360.0:
+                raise argparse.ArgumentTypeError(
+                    f"The provided azimuth angle, {angle:.1f}, "
+                    "is outside of the allowed [0, 360] interval"
+                )
+
+            return fangle * u.deg
+        except ValueError:
+            logger.debug(
+                "The azimuth angle provided is not a valid numeric value. "
+                "Will check if it is (north, south, east, west) instead"
+            )
+        if isinstance(angle, str):
+            azimuth_angle = angle.lower()
+            if azimuth_angle == "north":
+                return 0 * u.deg
+            if azimuth_angle == "south":
+                return 180 * u.deg
+            if azimuth_angle == "east":
+                return 90 * u.deg
+            if azimuth_angle == "west":
+                return 270 * u.deg
+            raise argparse.ArgumentTypeError(
+                "The azimuth angle can only be a number or one of "
+                f"(north, south, east, west), not {angle}"
+            )
+        logger.error(
+            f"The azimuth value provided, {angle}, is not a valid number "
+            "nor one of (north, south, east, west)."
+        )
+        raise TypeError
