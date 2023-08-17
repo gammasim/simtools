@@ -158,7 +158,7 @@ from simtools.corsika.corsika_histograms import CorsikaHistograms
 logger = logging.getLogger()
 
 
-def _parse(label, description, usage):
+def _parse(label, description):
     """
     Parse command line configuration
 
@@ -168,8 +168,6 @@ def _parse(label, description, usage):
         Label describing the application.
     description: str
         Description of the application.
-    usage: str
-        Example on how to use the application.
 
     Returns
     -------
@@ -177,7 +175,7 @@ def _parse(label, description, usage):
         Command line parser object
 
     """
-    config = configurator.Configurator(label=label, description=description, usage=usage)
+    config = configurator.Configurator(label=label, description=description)
 
     config.parser.add_argument(
         "--IACT_file",
@@ -348,9 +346,8 @@ def _derive_event_2D_histograms(corsika_histograms_instance, event_2D_header_key
 def main():
     label = Path(__file__).stem
     description = "Generate histograms for the Cherenkov photons saved in the CORSIKA IACT file."
-    usage = None
     io_handler_instance = io_handler.IOHandler()
-    args_dict, _ = _parse(label, description, usage)
+    args_dict, _ = _parse(label, description)
 
     output_path = io_handler_instance.get_output_directory(label, dir_type="application-plots")
 
