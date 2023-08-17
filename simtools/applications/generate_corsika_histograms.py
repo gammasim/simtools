@@ -221,7 +221,8 @@ def _parse(label, description):
     config.parser.add_argument(
         "--event_1D_histograms",
         help="The keys from the CORSIKA event header to be used for the generation of 1D "
-             "histograms.",
+             "histograms. The available choices can been found in the `all_event_keys` attribute of"
+             "the CorsikaHistograms.",
         required=False,
         default=None,
         nargs="*",
@@ -230,7 +231,8 @@ def _parse(label, description):
     config.parser.add_argument(
         "--event_2D_histograms",
         help="The keys from the CORSIKA event header to be used for the generation of 2D "
-             "histograms.",
+             "histograms. The available choices can been found in the `all_event_keys` attribute of"
+             "the CorsikaHistograms.",
         required=False,
         default=None,
         nargs="*",
