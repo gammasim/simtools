@@ -222,7 +222,8 @@ def _parse(label, description, usage):
 
     config.parser.add_argument(
         "--event_1D_histograms",
-        help="Arguments from the CORSIKA event header to extract 1D histograms.",
+        help="The keys from the CORSIKA event header to be used for the generation of 1D "
+             "histograms.",
         required=False,
         default=None,
         nargs="*",
@@ -230,7 +231,8 @@ def _parse(label, description, usage):
 
     config.parser.add_argument(
         "--event_2D_histograms",
-        help="Arguments from the CORSIKA event header to extract 2D histograms.",
+        help="The keys from the CORSIKA event header to be used for the generation of 2D "
+             "histograms.",
         required=False,
         default=None,
         nargs="*",
@@ -319,6 +321,12 @@ def _derive_event_2D_histograms(corsika_histograms_instance, event_2D_header_key
     """
     for i_event_header_element, _ in enumerate(event_2D_header_keys[::2]):
         # [::2] to discard the last one in case an odd number of keys are passed
+
+        if len(event_2D_header_keys) % 2 == 1:  # if odd number of keys
+            msg = "An odd number of keys was passed to produce 2D histograms." \
+                  "The last key is being ignored."
+            logger.warning(msg)
+
         if png:
             figure, figure_name = corsika_histograms_visualize.plot_2D_event_header_distribution(
                 corsika_histograms_instance,
