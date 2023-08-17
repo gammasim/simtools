@@ -5,8 +5,10 @@ import logging
 import os
 import shutil
 from io import StringIO
+from pathlib import Path
 
 import pytest
+import requests
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
@@ -40,7 +42,7 @@ APP_LIST = {
             "--help",
         ]
     ],
-    "submit_data_from_external::submit": [
+    "submit_data_from_external::submit_table": [
         [
             "--input_meta",
             "./tests/resources/MLTdata-preproduction.meta.yml",
@@ -48,6 +50,16 @@ APP_LIST = {
             "./tests/resources/MLTdata-preproduction.ecsv",
             "--schema",
             "./tests/resources/MST_mirror_2f_measurements.schema.yml",
+            "--output_file",
+            "test-submit-data.ecsv",
+        ]
+    ],
+    "submit_data_from_external::submit_values": [
+        [
+            "--input",
+            "./tests/resources/reference_position_mercator.yml",
+            "--schema",
+            "tests/resources/reference_position_mercator.schema.yml",
             "--output_file",
             "test-submit-data.ecsv",
         ]
@@ -412,9 +424,23 @@ def test_applications(application, io_handler, monkeypatch, db):
             file_name=file_name,
         )
 
+    def download_file(url):
+        response = requests.get(url)
+        output_file_path = (
+            io_handler.get_output_directory(dir_type="model", test=True) / Path(url).name
+        )
+        if response.status_code == 200:
+            with open(output_file_path, "wb") as file:
+                file.write(response.content)
+        else:
+            print("Failed to download the file.")
+
     prepare_one_file("PSFcurve_data_v2.txt")
     prepare_one_file("MLTdata-preproduction.ecsv")
-    prepare_one_file("jsonschema.yml")
+    # TODO - temporary path until workflows/documentation PR is merged
+    download_file(
+        "https://raw.githubusercontent.com/gammasim/workflows/documentation/schemas/jsonschema.yml"
+    )
 
     def make_command(app, args):
         if app.find("simtools-") < 0:
