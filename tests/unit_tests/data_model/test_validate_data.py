@@ -1,9 +1,9 @@
 #!/usr/bin/python3
 
 import logging
+import shutil
 import sys
 
-import astropy
 import numpy as np
 import pytest
 from astropy import units as u
@@ -18,16 +18,15 @@ logger.setLevel(logging.DEBUG)
 
 def test_validate_and_transform():
     data_validator = validate_data.DataValidator()
-    # no input file defined, should raise reading error
-    with pytest.raises(astropy.io.registry.base.IORegistryError):
+    # no input file defined
+    with pytest.raises(TypeError):
         data_validator.validate_and_transform()
 
 
 def test_validate_data_file():
     data_validator = validate_data.DataValidator()
-    # no input file defined, should raise reading error
-    with pytest.raises(astropy.io.registry.base.IORegistryError):
-        data_validator.validate_data_file()
+    # no input file defined, should pass
+    data_validator.validate_data_file()
 
     data_validator._data_file_name = "tests/resources/MLTdata-preproduction.ecsv"
     data_validator.validate_data_file()
@@ -36,7 +35,7 @@ def test_validate_data_file():
 def test_validate_data_columns():
     data_validator = validate_data.DataValidator()
     with pytest.raises(TypeError):
-        data_validator._validate_data_columns()
+        data_validator._validate_data_table()
 
     data_validator_1 = validate_data.DataValidator(
         schema_file=None,
@@ -44,14 +43,14 @@ def test_validate_data_columns():
     )
     data_validator_1.validate_data_file()
     with pytest.raises(TypeError):
-        data_validator_1._validate_data_columns()
+        data_validator_1._validate_data_table()
 
     data_validator_3 = validate_data.DataValidator(
         schema_file="tests/resources/MST_mirror_2f_measurements.schema.yml",
         data_file="tests/resources/MLTdata-preproduction.ecsv",
     )
     data_validator_3.validate_data_file()
-    data_validator_3._validate_data_columns()
+    data_validator_3._validate_data_table()
 
 
 def test_sort_data():
@@ -235,6 +234,17 @@ def test_get_reference_data_column():
     assert data_validator._get_reference_data_column("wavelength", status_test=True) == True
     assert data_validator._get_reference_data_column("wrong_column", status_test=True) == False
 
+    data_validator._reference_data_columns = get_reference_columns_name_colx()
+
+    assert isinstance(data_validator._get_reference_data_column("col1"), dict)
+
+    with pytest.raises(IndexError):
+        data_validator._get_reference_data_column("col3")
+
+    assert data_validator._get_reference_data_column("col1", status_test=True) == True
+
+    assert data_validator._get_reference_data_column("col1") == {"name": "col1"}
+
 
 def test_get_reference_unit():
     data_validator = validate_data.DataValidator()
@@ -298,17 +308,57 @@ def test_check_for_not_a_number():
     )
 
 
-def test_read_validation_schema():
+def test_read_validation_schema(tmp_test_directory):
     data_validator = validate_data.DataValidator()
 
-    data_validator._read_validation_schema(schema_file=None)
+    # no file given
+    with pytest.raises(TypeError):
+        data_validator._read_validation_schema(schema_file=None)
 
+    # file given
     data_validator._read_validation_schema(
         schema_file="tests/resources/MST_mirror_2f_measurements.schema.yml"
     )
 
+    # file does not exist
     with pytest.raises(FileNotFoundError):
         data_validator._read_validation_schema(schema_file="this_file_does_not_exist.yml")
+
+    # file given and parameter name given
+    data_validator._read_validation_schema(
+        schema_file="tests/resources/MST_mirror_2f_measurements.schema.yml",
+        parameter="mirror_2f_measurement",
+    )
+
+    # copy the schema file to a temporary directory; this is to test
+    # that the schema file is read from the temporary directory with the
+    # correct path / name
+    shutil.copy(
+        "tests/resources/MST_mirror_2f_measurements.schema.yml",
+        tmp_test_directory / "mirror_2f_measurement.schema.yml",
+    )
+    data_validator._read_validation_schema(
+        schema_file=str(tmp_test_directory), parameter="mirror_2f_measurement"
+    )
+
+
+def get_reference_columns_name_colx():
+    """
+    return a test reference data column definition
+    with columns named col0, col1, col3
+
+    """
+    return [
+        {
+            "name": "col0",
+        },
+        {
+            "name": "col1",
+        },
+        {
+            "name": "col2",
+        },
+    ]
 
 
 def get_reference_columns():
