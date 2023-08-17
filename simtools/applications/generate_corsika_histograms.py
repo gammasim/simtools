@@ -348,7 +348,7 @@ def _derive_event_2D_histograms(corsika_histograms_instance, event_2D_header_key
 def main():
     label = Path(__file__).stem
     description = "Generate histograms for the Cherenkov photons saved in the CORSIKA IACT file."
-    usage = ""
+    usage = None
     io_handler_instance = io_handler.IOHandler()
     args_dict, _ = _parse(label, description, usage)
 
