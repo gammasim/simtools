@@ -569,7 +569,7 @@ def plot_2D_event_header_distribution(
     else:
         ax.set_ylabel(f"{event_header_element_2}")
 
-    ax.set_facecolor("xkcd:black")
+    ax.set_facecolor("black")
     fig.colorbar(mesh)
     fig_name = f"hist_2D_{event_header_element_1}_{event_header_element_2}"
     return fig, fig_name
