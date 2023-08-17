@@ -14,9 +14,9 @@ logger.setLevel(logging.DEBUG)
 
 
 @pytest.fixture
-def corsika_config_data():
+def corsika_config_data(tmp_test_directory):
     return {
-        "data_directory": ".",
+        "data_directory": f"{str(tmp_test_directory)}/test-output",
         "nshow": 10,
         "primary": "gamma",
         "erange": [100 * u.GeV, 1 * u.TeV],
