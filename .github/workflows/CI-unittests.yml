@@ -110,4 +110,4 @@ jobs:
         shell: bash -l {0}
         run: pytest --durations=10 --color=yes --cov --cov-report=xml
 
-      - uses: codecov/codecov-action@v3.1.0
+      - uses: codecov/codecov-action@v3.1.4
