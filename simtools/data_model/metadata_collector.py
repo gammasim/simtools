@@ -182,7 +182,7 @@ class MetadataCollector:
                 )
                 return gen.collect_dict_from_file(
                     file_path=_schema,
-                    file_name=_data_dict["name"] + ".schema.yml",
+                    file_name=f"{_data_dict['name']}.schema.yml",
                 )
             except (TypeError, KeyError):
                 return {}
