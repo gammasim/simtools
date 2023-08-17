@@ -2,8 +2,10 @@
 
 import copy
 import logging
+from pathlib import Path
 
 import pytest
+import yaml
 
 import simtools.data_model.metadata_collector as metadata_collector
 import simtools.utils.general as gen
@@ -206,6 +208,38 @@ def test_input_data_file_name(args_dict_site):
     assert metadata_1.input_data_file_name() == "test.hdf5"
 
 
+def test_collect_schema_dict(args_dict_site, tmp_test_directory):
+    _tmp_schema = get_example_input_schema_single_parameter()
+    # write _tmp_schema to a yml file in tmp_test_directory
+    _tmp_schema_file = Path(tmp_test_directory).joinpath("ref_long.schema.yml")
+    with open(_tmp_schema_file, "w") as outfile:
+        yaml.dump(_tmp_schema, outfile, default_flow_style=False)
+
+    metadata_1 = metadata_collector.MetadataCollector(args_dict=args_dict_site)
+
+    assert metadata_1._collect_schema_dict() == {}
+
+    # test when full schema file name is given
+    metadata_1.args_dict["schema"] = _tmp_schema_file
+    assert metadata_1._collect_schema_dict() == _tmp_schema
+
+    # test when directory including schema file is given, but no parameter name
+    metadata_1.args_dict["schema"] = tmp_test_directory
+    assert metadata_1._collect_schema_dict() == {}
+
+    # test when directory including schema file is given, and parameter name
+    _tmp_parameter = {"name": "ref_long", "value": 1.0}
+    _tmp_parameter_file = Path(tmp_test_directory).joinpath("ref_long.yml")
+    with open(_tmp_parameter_file, "w") as outfile:
+        yaml.dump(_tmp_parameter, outfile, default_flow_style=False)
+    metadata_1.args_dict["input"] = _tmp_parameter_file
+    # compared sorted dicts, because the order of the keys is not guaranteed
+    # (mostly due to above yaml.dump)
+    assert dict(sorted(metadata_1._collect_schema_dict().items())) == dict(
+        sorted(_tmp_schema.items())
+    )
+
+
 def get_generic_input_meta():
     return {
         "contact": "my_name",
@@ -219,4 +253,14 @@ def get_generic_input_meta():
             ],
         },
         "process": "process_description",
+    }
+
+
+def get_example_input_schema_single_parameter():
+    return {
+        "version": "0.1.0",
+        "name": "ref_lat",
+        "description": "Latitude of site centre.",
+        "short_description": "Latitude of site centre.",
+        "data": [{"type": "double", "units": "deg", "allowed_range": {"min": -90.0, "max": 90.0}}],
     }
