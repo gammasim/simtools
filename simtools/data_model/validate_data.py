@@ -470,7 +470,7 @@ class DataValidator:
         schema_file: Path
             Schema file describing input data.
             If this is a directory, a filename of
-            '<par>_schema.yml' is assumed.
+            '<par>.schema.yml' is assumed.
         parameter: str
             Parameter name of required schema
             (if None, return first schema in file)
