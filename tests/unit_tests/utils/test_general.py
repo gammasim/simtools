@@ -41,6 +41,29 @@ def test_collect_dict_data(args_dict, io_handler):
     assert d3 == d2
 
 
+def test_collect_dict_from_file():
+    # Test 1: file_path is a yaml file
+    file_path = "tests/resources/test_parameters.yml"
+    file_name = None
+    _dict = gen.collect_dict_from_file(file_path, file_name)
+    assert isinstance(_dict, dict)
+    assert len(_dict) == 7
+
+    # Test 2: file_path is a directory
+    file_path = "tests/resources/"
+    file_name = "test_parameters.yml"
+    _dict = gen.collect_dict_from_file(file_path, file_name)
+    assert isinstance(_dict, dict)
+    assert len(_dict) == 7
+
+    # Test 3: file_path is a directory, but file_name is not given
+    file_path = "tests/resources/"
+    file_name = None
+    _dict = gen.collect_dict_from_file(file_path, file_name)
+    assert isinstance(_dict, dict)
+    assert len(_dict) == 0
+
+
 def test_validate_config_data(args_dict, io_handler, caplog):
     parameter_file = io_handler.get_input_data_file(file_name="test_parameters.yml", test=True)
     parameters = gen.collect_data_from_yaml_or_dict(parameter_file, None)
