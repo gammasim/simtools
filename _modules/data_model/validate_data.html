@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>data_model.validate_data &#8212; simtools v0.1.dev1+g6444b81 Manual</title>
+    <title>data_model.validate_data &#8212; simtools v0.1.dev1+g6a7a78e Manual</title>
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/bizstyle.css" />
     
@@ -30,7 +30,7 @@
         <li class="right" >
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../index.html">simtools v0.1.dev1+g6444b81 Manual</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">simtools v0.1.dev1+g6a7a78e Manual</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">data_model.validate_data</a></li> 
       </ul>
@@ -44,12 +44,15 @@
   <h1>Source code for data_model.validate_data</h1><div class="highlight"><pre>
 <span></span><span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">yaml</span>
 <span class="kn">from</span> <span class="nn">astropy</span> <span class="kn">import</span> <span class="n">units</span> <span class="k">as</span> <span class="n">u</span>
 <span class="kn">from</span> <span class="nn">astropy.table</span> <span class="kn">import</span> <span class="n">Table</span><span class="p">,</span> <span class="n">unique</span>
 <span class="kn">from</span> <span class="nn">astropy.utils.diff</span> <span class="kn">import</span> <span class="n">report_diff_values</span>
+
+<span class="kn">import</span> <span class="nn">simtools.utils.general</span> <span class="k">as</span> <span class="nn">gen</span>
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;DataValidator&quot;</span><span class="p">]</span>
 
@@ -58,6 +61,9 @@
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Validate data for type and units following a describing schema; converts or</span>
 <span class="sd">    transform data if required.</span>
+
+<span class="sd">    Data can be of table or list format</span>
+<span class="sd">    (internally, all data is converted to astropy tables).</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -70,34 +76,34 @@
 
 <div class="viewcode-block" id="DataValidator.__init__"><a class="viewcode-back" href="../../data_model.html#data_model.validate_data.DataValidator.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">schema_file</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">data_file</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Initalize validation class and read required reference data columns</span>
+<span class="sd">        Initialize validation class and read required reference data columns</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">_reference_data_columns</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read_validation_schema</span><span class="p">(</span><span class="n">schema_file</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_data_file_name</span> <span class="o">=</span> <span class="n">data_file</span>
-
+        <span class="bp">self</span><span class="o">.</span><span class="n">_schema_file_name</span> <span class="o">=</span> <span class="n">schema_file</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_reference_data_columns</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">data_table</span> <span class="o">=</span> <span class="kc">None</span></div>
 
 <div class="viewcode-block" id="DataValidator.validate_and_transform"><a class="viewcode-back" href="../../data_model.html#data_model.validate_data.DataValidator.validate_and_transform">[docs]</a>    <span class="k">def</span> <span class="nf">validate_and_transform</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Data and data file validation.  Apply transformations to data columns:</span>
-<span class="sd">        - duplication removal</span>
-<span class="sd">        - sorting according to axes</span>
+<span class="sd">        Data and data file validation.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        data_table: astropy.table</span>
-<span class="sd">            Data table</span>
+<span class="sd">        data: dict or astropy.table</span>
+<span class="sd">            Data dict or table</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">validate_data_file</span><span class="p">()</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_reference_data_columns</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_validate_data_columns</span><span class="p">()</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_check_data_for_duplicates</span><span class="p">()</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_sort_data</span><span class="p">()</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_validate_data_dict</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_validate_data_table</span><span class="p">()</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_table</span></div>
 
@@ -109,14 +115,68 @@
 
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Reading data from </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_data_file_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">data_table</span> <span class="o">=</span> <span class="n">Table</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_data_file_name</span><span class="p">,</span> <span class="n">guess</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="sa">r</span><span class="s2">&quot;\s&quot;</span><span class="p">)</span></div>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_data_file_name</span><span class="p">)</span><span class="o">.</span><span class="n">suffix</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;.yml&quot;</span><span class="p">,</span> <span class="s2">&quot;.yaml&quot;</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">collect_data_from_yaml_or_dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_data_file_name</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Reading data from yaml file: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_data_file_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">data_table</span> <span class="o">=</span> <span class="n">Table</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_data_file_name</span><span class="p">,</span> <span class="n">guess</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="sa">r</span><span class="s2">&quot;\s&quot;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Reading tabled data from file: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_data_file_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">AttributeError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">):</span>
+            <span class="k">pass</span></div>
+
+    <span class="k">def</span> <span class="nf">_validate_data_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Validate values. Creates first astropy table from data dict and then uses the same</span>
+<span class="sd">        methods as for tabled data.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_reference_data_columns</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read_validation_schema</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_schema_file_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span>
+            <span class="p">)</span>
+            <span class="n">_quantities</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">value</span><span class="p">,</span> <span class="n">unit</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;value&quot;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;units&quot;</span><span class="p">]):</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">_quantities</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">value</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">Unit</span><span class="p">(</span><span class="n">unit</span><span class="p">))</span>
+                <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                    <span class="n">_quantities</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data_table</span> <span class="o">=</span> <span class="n">Table</span><span class="p">(</span><span class="n">rows</span><span class="o">=</span><span class="p">[</span><span class="n">_quantities</span><span class="p">])</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data_table</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s2">&quot;Data dict does not contain a &#39;name&#39;, &#39;value&#39;, or &#39;value&#39; key.&quot;</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">exc</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_reference_data_columns</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_validate_data_columns</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_validate_data_table</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Validate tabulated data.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_reference_data_columns</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read_validation_schema</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_schema_file_name</span><span class="p">)[</span>
+                <span class="mi">0</span>
+            <span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;table_columns&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error reading validation schema from </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_schema_file_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">raise</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_reference_data_columns</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_validate_data_columns</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_check_data_for_duplicates</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_sort_data</span><span class="p">()</span>
 
     <span class="k">def</span> <span class="nf">_validate_data_columns</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Validate that required data columns are available, columns are in the correct units (if</span>
-<span class="sd">        necessary apply a unit conversion), and check ranges (minimum, maximum). This is not</span>
-<span class="sd">        applied to columns of type &#39;string&#39;.</span>
+<span class="sd">        Validate that</span>
+<span class="sd">        - required data columns are available</span>
+<span class="sd">        -  columns are in the correct units (if necessary apply a unit conversion)</span>
+<span class="sd">        -  ranges (minimum, maximum) are correct.</span>
+
+<span class="sd">        This is not applied to columns of type &#39;string&#39;.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
 
@@ -381,7 +441,7 @@
 <span class="sd">            range columns</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Checking data in column &#39;</span><span class="si">{</span><span class="n">col_name</span><span class="si">}</span><span class="s2">&#39; for &#39;</span><span class="si">{</span><span class="n">range_type</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Checking data in column &#39;</span><span class="si">{</span><span class="n">col_name</span><span class="si">}</span><span class="s2">&#39; for &#39;</span><span class="si">{</span><span class="n">range_type</span><span class="si">}</span><span class="s2">&#39; &quot;</span><span class="p">)</span>
 
         <span class="k">try</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">range_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;allowed_range&quot;</span><span class="p">,</span> <span class="s2">&quot;required_range&quot;</span><span class="p">):</span>
@@ -445,15 +505,19 @@
 
         <span class="k">return</span> <span class="kc">False</span>
 
-    <span class="k">def</span> <span class="nf">_read_validation_schema</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">schema_file</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_read_validation_schema</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">schema_file</span><span class="p">,</span> <span class="n">parameter</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Read validation schema from file.</span>
-<span class="sd">        Returns &#39;None&#39; in case no schema file is given.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        schema_file: Path</span>
-<span class="sd">            Schema file describing input data</span>
+<span class="sd">            Schema file describing input data.</span>
+<span class="sd">            If this is a directory, a filename of</span>
+<span class="sd">            &#39;&lt;par&gt;.schema.yml&#39; is assumed.</span>
+<span class="sd">        parameter: str</span>
+<span class="sd">            Parameter name of required schema</span>
+<span class="sd">            (if None, return first schema in file)</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -462,36 +526,21 @@
 
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="n">_schema_dict</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="n">_data_dict</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Reading validation schema from </span><span class="si">{</span><span class="n">schema_file</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">schema_file</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">stream</span><span class="p">:</span>
-                <span class="n">_schema_dict</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">safe_load</span><span class="p">(</span><span class="n">stream</span><span class="p">)</span>
-        <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
-            <span class="k">return</span> <span class="kc">None</span>
-        <span class="k">except</span> <span class="ne">FileNotFoundError</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Schema file not found: </span><span class="si">{</span><span class="n">schema_file</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">Path</span><span class="p">(</span><span class="n">schema_file</span><span class="p">)</span><span class="o">.</span><span class="n">is_dir</span><span class="p">():</span>
+                <span class="k">return</span> <span class="n">gen</span><span class="o">.</span><span class="n">collect_dict_from_file</span><span class="p">(</span>
+                    <span class="n">file_path</span><span class="o">=</span><span class="n">schema_file</span><span class="p">,</span>
+                    <span class="n">file_name</span><span class="o">=</span><span class="n">parameter</span> <span class="o">+</span> <span class="s2">&quot;.schema.yml&quot;</span><span class="p">,</span>
+                <span class="p">)[</span><span class="s2">&quot;data&quot;</span><span class="p">]</span>
+            <span class="k">return</span> <span class="n">gen</span><span class="o">.</span><span class="n">collect_dict_from_file</span><span class="p">(</span><span class="n">schema_file</span><span class="p">)[</span><span class="s2">&quot;data&quot;</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error reading validation schema from </span><span class="si">{</span><span class="n">schema_file</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
             <span class="k">raise</span>
-
-        <span class="c1"># Note - assume that schema files contain a single data / schema</span>
-        <span class="c1">#        description (index [0]). This might change in future,</span>
-        <span class="c1">#        and we keep for now the list definition.</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">_data_dict</span> <span class="o">=</span> <span class="n">_schema_dict</span><span class="p">[</span><span class="s2">&quot;schema&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;data&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
-        <span class="k">except</span> <span class="p">(</span><span class="ne">KeyError</span><span class="p">,</span> <span class="ne">IndexError</span><span class="p">):</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error reading validation schema from </span><span class="si">{</span><span class="n">_schema_dict</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-            <span class="k">raise</span>
-
-        <span class="k">if</span> <span class="n">_data_dict</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;No validation schema found in </span><span class="si">{schema_file}</span><span class="s2">&quot;</span><span class="p">)</span>
-
-        <span class="c1"># TODO - returning table columns only; should also work for non-tabled description</span>
-        <span class="k">return</span> <span class="n">_data_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;table_columns&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_get_reference_data_column</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">column_name</span><span class="p">,</span> <span class="n">status_test</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return entry in reference data for a given column name.</span>
+<span class="sd">        For columns named &#39;colX&#39; return the Xth column in the reference data.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -510,16 +559,21 @@
 
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="n">_entry</span> <span class="o">=</span> <span class="p">[</span><span class="n">item</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_reference_data_columns</span> <span class="k">if</span> <span class="n">item</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">column_name</span><span class="p">]</span>
+        <span class="n">_index</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">if</span> <span class="nb">bool</span><span class="p">(</span><span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;^col\d$&quot;</span><span class="p">,</span> <span class="n">column_name</span><span class="p">)):</span>
+            <span class="n">_index</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">column_name</span><span class="p">[</span><span class="mi">3</span><span class="p">:])</span>
+            <span class="n">_entry</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_reference_data_columns</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">_entry</span> <span class="o">=</span> <span class="p">[</span><span class="n">item</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_reference_data_columns</span> <span class="k">if</span> <span class="n">item</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">column_name</span><span class="p">]</span>
         <span class="k">if</span> <span class="n">status_test</span><span class="p">:</span>
             <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">_entry</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">_entry</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">return</span> <span class="n">_entry</span><span class="p">[</span><span class="n">_index</span><span class="p">]</span>
         <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s2">&quot;Data column &#39;</span><span class="si">{</span><span class="n">column_name</span><span class="si">}</span><span class="s2">&#39; not found in reference column definition&quot;</span>
             <span class="p">)</span>
-            <span class="k">raise</span> <span class="ne">IndexError</span></div>
+            <span class="k">raise</span></div>
 </pre></div>
 
             <div class="clearer"></div>
@@ -563,7 +617,7 @@
         <li class="right" >
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../index.html">simtools v0.1.dev1+g6444b81 Manual</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">simtools v0.1.dev1+g6a7a78e Manual</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">data_model.validate_data</a></li> 
       </ul>

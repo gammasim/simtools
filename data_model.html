@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
-    <title>Data Model &#8212; simtools v0.1.dev1+g6444b81 Manual</title>
+    <title>Data Model &#8212; simtools v0.1.dev1+g6a7a78e Manual</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/bizstyle.css" />
     
@@ -39,7 +39,7 @@
         <li class="right" >
           <a href="corsika_simtel.html" title="CORSIKA and sim_telarray"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">simtools v0.1.dev1+g6444b81 Manual</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">simtools v0.1.dev1+g6a7a78e Manual</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="library.html" accesskey="U">API</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Data Model</a></li> 
       </ul>
@@ -214,6 +214,8 @@ Describes metadata provided for input to simtools applications.</p>
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">data_model.validate_data.</span></span><span class="sig-name descname"><span class="pre">DataValidator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">schema_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/data_model/validate_data.html#DataValidator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_model.validate_data.DataValidator" title="Permalink to this definition">¶</a></dt>
 <dd><p>Validate data for type and units following a describing schema; converts or
 transform data if required.</p>
+<p>Data can be of table or list format
+(internally, all data is converted to astropy tables).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
@@ -227,19 +229,17 @@ transform data if required.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="data_model.validate_data.DataValidator.__init__">
 <span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">schema_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/data_model/validate_data.html#DataValidator.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_model.validate_data.DataValidator.__init__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Initalize validation class and read required reference data columns</p>
+<dd><p>Initialize validation class and read required reference data columns</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="data_model.validate_data.DataValidator.validate_and_transform">
 <span class="sig-name descname"><span class="pre">validate_and_transform</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/data_model/validate_data.html#DataValidator.validate_and_transform"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_model.validate_data.DataValidator.validate_and_transform" title="Permalink to this definition">¶</a></dt>
-<dd><p>Data and data file validation.  Apply transformations to data columns:
-- duplication removal
-- sorting according to axes</p>
+<dd><p>Data and data file validation.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt>data_table: astropy.table</dt><dd><p>Data table</p>
+<dt>data: dict or astropy.table</dt><dd><p>Data dict or table</p>
 </dd>
 </dl>
 </dd>
@@ -310,7 +310,7 @@ dictionary during initialization of the class).</p>
 <dt class="sig sig-object py" id="data_model.metadata_collector.MetadataCollector">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">data_model.metadata_collector.</span></span><span class="sig-name descname"><span class="pre">MetadataCollector</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">args_dict</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/data_model/metadata_collector.html#MetadataCollector"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_model.metadata_collector.MetadataCollector" title="Permalink to this definition">¶</a></dt>
 <dd><p>Collects and combines metadata associated with the current activity
-(e.g., the executation of an application).
+(e.g., the execution of an application).
 Follows CTAO top-level metadata definition.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -429,7 +429,7 @@ Follows CTAO top-level metadata definition.</p>
         <li class="right" >
           <a href="corsika_simtel.html" title="CORSIKA and sim_telarray"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">simtools v0.1.dev1+g6444b81 Manual</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">simtools v0.1.dev1+g6a7a78e Manual</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="library.html" >API</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Data Model</a></li> 
       </ul>

@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>utils.general &#8212; simtools v0.1.dev1+g6444b81 Manual</title>
+    <title>utils.general &#8212; simtools v0.1.dev1+g6a7a78e Manual</title>
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/bizstyle.css" />
     
@@ -30,7 +30,7 @@
         <li class="right" >
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../index.html">simtools v0.1.dev1+g6444b81 Manual</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">simtools v0.1.dev1+g6a7a78e Manual</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">utils.general</a></li> 
       </ul>
@@ -399,6 +399,42 @@
 
     <span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
     <span class="k">raise</span> <span class="n">InvalidConfigData</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span></div>
+
+
+<span class="k">def</span> <span class="nf">collect_dict_from_file</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="n">file_name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Collect input data from a file.</span>
+
+<span class="sd">    File_path can be a yaml file name or a directory.</span>
+<span class="sd">    In the latter case, file_name is used to find the file.</span>
+
+<span class="sd">    Note that this method returns an empty dict if the file is not found</span>
+<span class="sd">    (while gen.collect_data_from_yaml_or_dict returns None).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    file_path: str</span>
+<span class="sd">        Name of the yaml file or directory.</span>
+<span class="sd">    file_name: str</span>
+<span class="sd">        Name of the file to be found in the directory.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">_dict</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">_dict</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">collect_data_from_yaml_or_dict</span><span class="p">(</span><span class="n">in_yaml</span><span class="o">=</span><span class="n">file_path</span><span class="p">,</span> <span class="n">in_dict</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">allow_empty</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
+        <span class="p">)</span>
+    <span class="k">except</span> <span class="ne">IsADirectoryError</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">_file</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">file_path</span><span class="p">)</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span>
+            <span class="n">_dict</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">collect_data_from_yaml_or_dict</span><span class="p">(</span><span class="n">in_yaml</span><span class="o">=</span><span class="n">_file</span><span class="p">,</span> <span class="n">in_dict</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">allow_empty</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
+            <span class="p">)</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="ne">KeyError</span><span class="p">):</span>
+            <span class="k">pass</span>
+
+    <span class="k">return</span> <span class="n">_dict</span>
 
 
 <div class="viewcode-block" id="collect_kwargs"><a class="viewcode-back" href="../../utils.html#utils.general.collect_kwargs">[docs]</a><span class="k">def</span> <span class="nf">collect_kwargs</span><span class="p">(</span><span class="n">label</span><span class="p">,</span> <span class="n">in_kwargs</span><span class="p">):</span>
@@ -987,7 +1023,7 @@
         <li class="right" >
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../index.html">simtools v0.1.dev1+g6444b81 Manual</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">simtools v0.1.dev1+g6a7a78e Manual</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">utils.general</a></li> 
       </ul>
