@@ -19,7 +19,7 @@ logger.setLevel(logging.DEBUG)
 def test_validate_and_transform():
     data_validator = validate_data.DataValidator()
     # no input file defined
-    with pytest.raises(AttributeError):
+    with pytest.raises(TypeError):
         data_validator.validate_and_transform()
 
 
@@ -34,7 +34,7 @@ def test_validate_data_file():
 
 def test_validate_data_columns():
     data_validator = validate_data.DataValidator()
-    with pytest.raises(AttributeError):
+    with pytest.raises(TypeError):
         data_validator._validate_data_table()
 
     data_validator_1 = validate_data.DataValidator(
@@ -42,7 +42,7 @@ def test_validate_data_columns():
         data_file="tests/resources/MLTdata-preproduction.ecsv",
     )
     data_validator_1.validate_data_file()
-    with pytest.raises(AttributeError):
+    with pytest.raises(TypeError):
         data_validator_1._validate_data_table()
 
     data_validator_3 = validate_data.DataValidator(
@@ -312,7 +312,7 @@ def test_read_validation_schema(tmp_test_directory):
     data_validator = validate_data.DataValidator()
 
     # no file given
-    with pytest.raises(AttributeError):
+    with pytest.raises(TypeError):
         data_validator._read_validation_schema(schema_file=None)
 
     # file given

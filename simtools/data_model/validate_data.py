@@ -1,6 +1,7 @@
 import logging
 import os
 import re
+from pathlib import Path
 
 import numpy as np
 from astropy import units as u
@@ -31,7 +32,7 @@ class DataValidator:
 
     def __init__(self, schema_file=None, data_file=None):
         """
-        Initalize validation class and read required reference data columns
+        Initialize validation class and read required reference data columns
 
         """
 
@@ -464,14 +465,13 @@ class DataValidator:
     def _read_validation_schema(self, schema_file, parameter=None):
         """
         Read validation schema from file.
-        Returns 'None' in case no schema file is given.
 
         Parameters
         ----------
         schema_file: Path
             Schema file describing input data.
             If this is a directory, a filename of
-            '<par>.schema.yml' is assumed.
+            '<par>_schema.yml' is assumed.
         parameter: str
             Parameter name of required schema
             (if None, return first schema in file)
@@ -483,29 +483,15 @@ class DataValidator:
 
         """
 
-        _schema_dict = {}
         try:
-            if schema_file.find(".schema.yml") < 0 and parameter is not None:
-                schema_file += "/" + parameter + ".schema.yml"
-        except AttributeError:
-            self._logger.error("No schema file given")
-            raise
-        try:
-            self._logger.info(f"Reading validation schema from {schema_file}")
-            _schema_dict = gen.collect_data_from_yaml_or_dict(schema_file, None)
-        except FileNotFoundError:
-            self._logger.error(f"Schema file not found: {schema_file}")
-            raise
-        # Note: assume data there is only one schema in the schema file
-        if len(_schema_dict["schema"]) > 1:
-            self._logger.warning(
-                f"More than one schema found in {schema_file}. "
-                f"Using first schema in file: {_schema_dict['schema'][0]['name']}"
-            )
-        try:
-            return _schema_dict["schema"][0]["data"]
-        except (KeyError, IndexError):
-            self._logger.error(f"Error reading validation schema from {_schema_dict}")
+            if Path(schema_file).is_dir():
+                return gen.collect_dict_from_file(
+                    file_path=schema_file,
+                    file_name=parameter + ".schema.yml",
+                )["data"]
+            return gen.collect_dict_from_file(schema_file)["data"]
+        except KeyError:
+            self._logger.error(f"Error reading validation schema from {schema_file}")
             raise
 
     def _get_reference_data_column(self, column_name, status_test=False):

@@ -14,7 +14,7 @@ __all__ = ["MetadataCollector"]
 class MetadataCollector:
     """
     Collects and combines metadata associated with the current activity
-    (e.g., the executation of an application).
+    (e.g., the execution of an application).
     Follows CTAO top-level metadata definition.
 
     Parameters
@@ -174,32 +174,19 @@ class MetadataCollector:
 
         """
 
-        _schema_dict = {}
-        try:
-            _schema_dict = (
-                gen.collect_data_from_yaml_or_dict(
-                    in_yaml=self.args_dict.get("schema", None), in_dict=None, allow_empty=True
-                )
-                or {}
-            )
-        except IsADirectoryError:
+        _schema = self.args_dict.get("schema", "")
+        if Path(_schema).is_dir():
             try:
                 _data_dict = gen.collect_data_from_yaml_or_dict(
                     in_yaml=self.args_dict.get("input", None), in_dict=None, allow_empty=True
                 )
-                _schema_file = Path(self.args_dict["schema"]).joinpath(
-                    _data_dict["name"] + ".schema.yml"
-                )
-                _schema_dict = (
-                    gen.collect_data_from_yaml_or_dict(
-                        in_yaml=_schema_file, in_dict=None, allow_empty=True
-                    )
-                    or {}
+                return gen.collect_dict_from_file(
+                    file_path=_schema,
+                    file_name=_data_dict["name"] + ".schema.yml",
                 )
             except (TypeError, KeyError):
-                pass
-
-        return _schema_dict
+                return {}
+        return gen.collect_dict_from_file(_schema)
 
     @staticmethod
     def _fill_association_id(association_dict):
