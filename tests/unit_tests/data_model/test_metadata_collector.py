@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 
+import collections
 import copy
 import logging
 from pathlib import Path
@@ -233,7 +234,11 @@ def test_collect_schema_dict(args_dict_site, tmp_test_directory):
     with open(_tmp_parameter_file, "w") as outfile:
         yaml.dump(_tmp_parameter, outfile, default_flow_style=False)
     metadata_1.args_dict["input"] = _tmp_parameter_file
-    assert metadata_1._collect_schema_dict() == _tmp_schema
+    # compared sorted dicts, because the order of the keys is not guaranteed
+    # (mostly due to above yaml.dump)
+    assert collections.OrderedDict(
+        sorted(metadata_1._collect_schema_dict().items())
+    ) == collections.OrderedDict(sorted(_tmp_schema.items()))
 
 
 def get_generic_input_meta():
@@ -254,18 +259,9 @@ def get_generic_input_meta():
 
 def get_example_input_schema_single_parameter():
     return {
-        "title": "Model parameter schema description",
-        "description": "Model parameter schema description.",
-        "name": "simpipe-schema",
         "version": "0.1.0",
-        "schema": [
-            {
-                "name": "ref_lat",
-                "description": "Latitude of site centre.",
-                "short_description": "Latitude of site centre.",
-                "data": [
-                    {"type": "double", "units": "deg", "allowed_range": {"min": -90.0, "max": 90.0}}
-                ],
-            }
-        ],
+        "name": "ref_lat",
+        "description": "Latitude of site centre.",
+        "short_description": "Latitude of site centre.",
+        "data": [{"type": "double", "units": "deg", "allowed_range": {"min": -90.0, "max": 90.0}}],
     }
