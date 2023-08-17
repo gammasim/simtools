@@ -149,7 +149,7 @@ from pathlib import Path
 
 import numpy as np
 
-import simtools.util.general as gen
+import simtools.utils.general as gen
 from simtools import io_handler
 from simtools.configuration import configurator
 from simtools.corsika import corsika_histograms_visualize
