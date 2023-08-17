@@ -374,7 +374,6 @@ def collect_dict_from_file(file_path, file_name=None):
     file_name: str
         Name of the file to be found in the directory.
 
-
     """
 
     _dict = {}
