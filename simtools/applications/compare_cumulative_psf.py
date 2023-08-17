@@ -85,7 +85,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import yaml
 
-import simtools.util.general as gen
+import simtools.utils.general as gen
 from simtools import io_handler
 from simtools.configuration import configurator
 from simtools.model.telescope_model import TelescopeModel
@@ -103,7 +103,6 @@ def load_data(datafile):
 
 
 def main():
-
     label = Path(__file__).stem
     config = configurator.Configurator(
         label=label,

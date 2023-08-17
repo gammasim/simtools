@@ -45,7 +45,7 @@
 import logging
 from pathlib import Path
 
-import simtools.util.general as gen
+import simtools.utils.general as gen
 from simtools import db_handler
 from simtools.configuration import configurator
 
@@ -69,13 +69,11 @@ def _user_confirm():
 
 
 def main():
-
     _db_tmp = db_handler.DatabaseHandler(mongo_db_config=None)
 
     config = configurator.Configurator(
-        label="Add file to the DB.",
-        description="python applications/add_file_to_db.py --file_name test_application.dat --db \
-         test-data",
+        description="Add file to the DB.",
+        usage="simtools-add-file-to-db --file_name test_application.dat --db test-data",
     )
     group = config.parser.add_mutually_exclusive_group(required=True)
     group.add_argument(

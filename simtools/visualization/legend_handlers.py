@@ -4,8 +4,8 @@ import numpy as np
 
 from simtools.corsika.corsika_config import CorsikaConfig
 from simtools.io_handler import IOHandler
-from simtools.util import names
-from simtools.util.names import lst, mst, sct, sst
+from simtools.utils import names
+from simtools.utils.names import lst, mst, sct, sst
 
 __all__ = [
     "EdgePixelObject",

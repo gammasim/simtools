@@ -20,8 +20,17 @@ def db_cleanup(db, random_id):
     yield
     # Cleanup
     logger.info(f"dropping the telescopes_{random_id} and metadata_{random_id} collections")
-    db.db_client["sandbox"]["telescopes_" + random_id].drop()
-    db.db_client["sandbox"]["metadata_" + random_id].drop()
+    db.db_client[f"sandbox_{random_id}"]["telescopes_" + random_id].drop()
+    db.db_client[f"sandbox_{random_id}"]["metadata_" + random_id].drop()
+
+
+@pytest.fixture()
+def db_cleanup_file_sandbox(db_no_config_file, random_id):
+    yield
+    # Cleanup
+    logger.info("Dropping the temporary files in the sandbox")
+    db_no_config_file.db_client[f"sandbox_{random_id}"]["fs.chunks"].drop()
+    db_no_config_file.db_client[f"sandbox_{random_id}"]["fs.files"].drop()
 
 
 def test_reading_db_lst(db):
@@ -92,18 +101,18 @@ def test_copy_telescope_db(db, random_id, db_cleanup, io_handler):
         version_to_copy="Current",
         new_tel_name="North-LST-Test",
         collection_name="telescopes",
-        db_to_copy_to="sandbox",
+        db_to_copy_to=f"sandbox_{random_id}",
         collection_to_copy_to="telescopes_" + random_id,
     )
     db.copy_documents(
         db_name=db.DB_CTA_SIMULATION_MODEL,
         collection="metadata",
         query={"Entry": "Simulation-Model-Tags"},
-        db_to_copy_to="sandbox",
+        db_to_copy_to=f"sandbox_{random_id}",
         collection_to_copy_to="metadata_" + random_id,
     )
     pars = db.read_mongo_db(
-        db_name="sandbox",
+        db_name=f"sandbox_{random_id}",
         telescope_model_name_db="North-LST-Test",
         model_version="Current",
         run_location=io_handler.get_output_directory(dir_type="model", test=True),
@@ -114,15 +123,15 @@ def test_copy_telescope_db(db, random_id, db_cleanup, io_handler):
 
     logger.info("Testing deleting a query (a whole telescope in this case and metadata)")
     query = {"Telescope": "North-LST-Test"}
-    db.delete_query("sandbox", "telescopes_" + random_id, query)
+    db.delete_query(f"sandbox_{random_id}", "telescopes_" + random_id, query)
     query = {"Entry": "Simulation-Model-Tags"}
-    db.delete_query("sandbox", "metadata_" + random_id, query)
+    db.delete_query(f"sandbox_{random_id}", "metadata_" + random_id, query)
 
     # After deleting the copied telescope
     # we always expect to get a ValueError (query returning zero results)
     with pytest.raises(ValueError):
         db.read_mongo_db(
-            db_name="sandbox",
+            db_name=f"sandbox_{random_id}",
             telescope_model_name_db="North-LST-Test",
             model_version="Current",
             run_location=io_handler.get_output_directory(dir_type="model", test=True),
@@ -140,11 +149,11 @@ def test_adding_parameter_version_db(db, random_id, db_cleanup, io_handler):
         version_to_copy="Current",
         new_tel_name="North-LST-Test",
         collection_name="telescopes",
-        db_to_copy_to="sandbox",
+        db_to_copy_to=f"sandbox_{random_id}",
         collection_to_copy_to="telescopes_" + random_id,
     )
     db.add_parameter(
-        db_name="sandbox",
+        db_name=f"sandbox_{random_id}",
         telescope="North-LST-Test",
         parameter="camera_config_version",
         new_version="test",
@@ -152,7 +161,7 @@ def test_adding_parameter_version_db(db, random_id, db_cleanup, io_handler):
         collection_name="telescopes_" + random_id,
     )
     pars = db.read_mongo_db(
-        db_name="sandbox",
+        db_name=f"sandbox_{random_id}",
         telescope_model_name_db="North-LST-Test",
         model_version="test",
         run_location=io_handler.get_output_directory(dir_type="model", test=True),
@@ -171,11 +180,11 @@ def test_update_parameter_db(db, random_id, db_cleanup, io_handler):
         version_to_copy="Current",
         new_tel_name="North-LST-Test",
         collection_name="telescopes",
-        db_to_copy_to="sandbox",
+        db_to_copy_to=f"sandbox_{random_id}",
         collection_to_copy_to="telescopes_" + random_id,
     )
     db.add_parameter(
-        db_name="sandbox",
+        db_name=f"sandbox_{random_id}",
         telescope="North-LST-Test",
         parameter="camera_config_version",
         new_version="test",
@@ -183,7 +192,7 @@ def test_update_parameter_db(db, random_id, db_cleanup, io_handler):
         collection_name="telescopes_" + random_id,
     )
     db.update_parameter(
-        db_name="sandbox",
+        db_name=f"sandbox_{random_id}",
         telescope="North-LST-Test",
         version="test",
         parameter="camera_config_version",
@@ -191,7 +200,7 @@ def test_update_parameter_db(db, random_id, db_cleanup, io_handler):
         collection_name="telescopes_" + random_id,
     )
     pars = db.read_mongo_db(
-        db_name="sandbox",
+        db_name=f"sandbox_{random_id}",
         telescope_model_name_db="North-LST-Test",
         model_version="test",
         run_location=io_handler.get_output_directory(dir_type="model", test=True),
@@ -210,11 +219,11 @@ def test_adding_new_parameter_db(db, random_id, db_cleanup, io_handler):
         version_to_copy="Current",
         new_tel_name="North-LST-Test",
         collection_name="telescopes",
-        db_to_copy_to="sandbox",
+        db_to_copy_to=f"sandbox_{random_id}",
         collection_to_copy_to="telescopes_" + random_id,
     )
     db.add_new_parameter(
-        db_name="sandbox",
+        db_name=f"sandbox_{random_id}",
         telescope="North-LST-Test",
         version="test",
         parameter="camera_config_version_test",
@@ -222,7 +231,7 @@ def test_adding_new_parameter_db(db, random_id, db_cleanup, io_handler):
         collection_name="telescopes_" + random_id,
     )
     pars = db.read_mongo_db(
-        db_name="sandbox",
+        db_name=f"sandbox_{random_id}",
         telescope_model_name_db="North-LST-Test",
         model_version="test",
         run_location=io_handler.get_output_directory(dir_type="model", test=True),
@@ -241,18 +250,18 @@ def test_update_parameter_field_db(db, random_id, db_cleanup, io_handler):
         version_to_copy="Current",
         new_tel_name="North-LST-Test",
         collection_name="telescopes",
-        db_to_copy_to="sandbox",
+        db_to_copy_to=f"sandbox_{random_id}",
         collection_to_copy_to="telescopes_" + random_id,
     )
     db.copy_documents(
         db_name=db.DB_CTA_SIMULATION_MODEL,
         collection="metadata",
         query={"Entry": "Simulation-Model-Tags"},
-        db_to_copy_to="sandbox",
+        db_to_copy_to=f"sandbox_{random_id}",
         collection_to_copy_to="metadata_" + random_id,
     )
     db.update_parameter_field(
-        db_name="sandbox",
+        db_name=f"sandbox_{random_id}",
         telescope="North-LST-Test",
         version="Current",
         parameter="camera_pixels",
@@ -261,7 +270,7 @@ def test_update_parameter_field_db(db, random_id, db_cleanup, io_handler):
         collection_name="telescopes_" + random_id,
     )
     pars = db.read_mongo_db(
-        db_name="sandbox",
+        db_name=f"sandbox_{random_id}",
         telescope_model_name_db="North-LST-Test",
         model_version="Current",
         run_location=io_handler.get_output_directory(dir_type="model", test=True),
@@ -318,24 +327,30 @@ def test_export_file_db(db, io_handler):
     assert file_to_export.exists()
 
 
-def test_insert_files_db(db, io_handler, db_cleanup_file_sandbox, caplog):
+def test_insert_files_db(db, io_handler, db_cleanup_file_sandbox, random_id, caplog):
 
     logger.info("----Testing inserting files to the DB-----")
     logger.info(
         "Creating a temporary file in "
         f"{io_handler.get_output_directory(dir_type='model', test=True)}"
     )
-    file_name = io_handler.get_output_directory(dir_type="model", test=True) / "test_file.dat"
+    file_name = (
+        io_handler.get_output_directory(dir_type="model", test=True) / f"test_file_{random_id}.dat"
+    )
     with open(file_name, "w") as f:
         f.write("# This is a test file")
 
-    file_id = db.insert_file_to_db(file_name, "sandbox")
-    assert file_id == db._get_file_mongo_db("sandbox", "test_file.dat")._id
+    file_id = db.insert_file_to_db(file_name, f"sandbox_{random_id}")
+    assert (
+        file_id == db._get_file_mongo_db(f"sandbox_{random_id}", f"test_file_{random_id}.dat")._id
+    )
     logger.info("Now test inserting the same file again, this time expect a warning")
     with caplog.at_level(logging.WARNING):
-        file_id = db.insert_file_to_db(file_name, "sandbox")
+        file_id = db.insert_file_to_db(file_name, f"sandbox_{random_id}")
     assert "exists in the DB. Returning its ID" in caplog.text
-    assert file_id == db._get_file_mongo_db("sandbox", "test_file.dat")._id
+    assert (
+        file_id == db._get_file_mongo_db(f"sandbox_{random_id}", f"test_file_{random_id}.dat")._id
+    )
 
 
 def test_get_all_versions(db):

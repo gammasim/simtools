@@ -17,7 +17,6 @@ logger.setLevel(logging.DEBUG)
 
 
 def test_fill_from_command_line(configurator, args_dict):
-
     configurator._fill_from_command_line(arg_list=[])
     assert args_dict == configurator.config
 
@@ -31,7 +30,6 @@ def test_fill_from_command_line(configurator, args_dict):
 
 
 def test_fill_from_config_dict(configurator, args_dict):
-
     # _fill_from_environmental_variables() is always called after _fill_from_command_line()
     configurator._fill_from_command_line(arg_list=[])
 
@@ -47,7 +45,6 @@ def test_fill_from_config_dict(configurator, args_dict):
 
 
 def test_fill_from_environmental_variables(configurator, args_dict):
-
     # _fill_from_environmental_variables() is always called after _fill_from_command_line()
     configurator._fill_from_command_line(arg_list=[])
     configurator._fill_from_environmental_variables()
@@ -55,7 +52,6 @@ def test_fill_from_environmental_variables(configurator, args_dict):
 
 
 def test_fill_from_config_file_not_existing_file(configurator):
-
     # _fill_from_config_file() is always called after _fill_from_command_line()
     configurator._fill_from_command_line(arg_list=[])
 
@@ -65,7 +61,6 @@ def test_fill_from_config_file_not_existing_file(configurator):
 
 
 def test_fill_from_config_file(configurator, args_dict, tmp_test_directory):
-
     _tmp_config = copy(dict(args_dict))
     _tmp_dict = {
         "output_path": "./abc/",
@@ -90,7 +85,6 @@ def test_fill_from_config_file(configurator, args_dict, tmp_test_directory):
 
 
 def test_fill_from_workflow_config_file(configurator, args_dict, tmp_test_directory):
-
     _tmp_config = copy(dict(args_dict))
     _tmp_dict = {
         "output_path": "./abc/",
@@ -115,7 +109,6 @@ def test_fill_from_workflow_config_file(configurator, args_dict, tmp_test_direct
 
 
 def test_check_parameter_configuration_status(configurator, args_dict, tmp_test_directory):
-
     configurator._fill_from_command_line(arg_list=[])
     configurator.config["output_path"] = Path(tmp_test_directory)
 
@@ -135,7 +128,6 @@ def test_check_parameter_configuration_status(configurator, args_dict, tmp_test_
 
 
 def test_arglist_from_config():
-
     _tmp_dict = {"a": 1.0, "b": None, "c": True, "d": ["d1", "d2", "d3"]}
 
     assert ["--a", "1.0", "--c", "--d", "d1", "d2", "d3"] == Configurator._arglist_from_config(
@@ -153,7 +145,6 @@ def test_arglist_from_config():
 
 
 def test_convert_stringnone_to_none():
-
     assert {} == Configurator._convert_stringnone_to_none({})
 
     _tmp_dict = {
@@ -169,7 +160,6 @@ def test_convert_stringnone_to_none():
 
 
 def test_get_db_parameters(configurator, args_dict):
-
     configurator.parser.initialize_db_config_arguments()
     configurator._fill_from_command_line(arg_list=[])
     configurator._fill_from_environmental_variables()
@@ -181,3 +171,19 @@ def test_get_db_parameters(configurator, args_dict):
     args_dict["db_api_authentication_database"] = "admin"
 
     assert configurator.config == args_dict
+
+
+def test_initialize_output(configurator, args_dict):
+    configurator.parser.initialize_output_arguments()
+    configurator._fill_from_command_line(arg_list=[])
+
+    # outputfile for testing
+    configurator.config["test"] = True
+    configurator._initialize_output()
+    assert configurator.config["output_file"] == "TEST.ecsv"
+
+    # output file is configured
+    configurator.config["test"] = False
+    configurator.config["output_file"] = "unit_test.txt"
+    configurator._initialize_output()
+    assert configurator.config["output_file"] == "unit_test.txt"

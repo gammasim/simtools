@@ -126,8 +126,9 @@ import numpy as np
 from astropy.table import QTable, Table
 
 import simtools.data_model.model_data_writer as writer
-import simtools.util.general as gen
+import simtools.utils.general as gen
 from simtools.configuration import configurator
+from simtools.data_model.metadata_collector import MetadataCollector
 from simtools.model.telescope_model import TelescopeModel
 from simtools.ray_tracing import RayTracing
 
@@ -137,7 +138,9 @@ def _parse(label):
     Parse command line configuration
     """
 
-    config = configurator.Configurator(label=label)
+    config = configurator.Configurator(
+        description="Derive mirror random reflection angle.", label=label
+    )
     psf_group = config.parser.add_mutually_exclusive_group()
     psf_group.add_argument(
         "--psf_measurement_containment_mean",
@@ -196,7 +199,7 @@ def _parse(label):
         action="store_true",
         required=False,
     )
-    return config.initialize(db_config=True, telescope_model=True)
+    return config.initialize(db_config=True, output=True, telescope_model=True)
 
 
 def _define_telescope_model(label, args_dict, db_config):
@@ -284,9 +287,13 @@ def _print_and_write_results(
             f"containment_radius_sigma_D{containment_fraction_percent}",
         ),
     )
-    file_writer = writer.ModelDataWriter(args_dict=args_dict)
-    file_writer.write_metadata()
-    file_writer.write_data(result_table)
+    file_writer = writer.ModelDataWriter(
+        product_data_file=args_dict.get("output_file", None),
+        product_data_format=args_dict.get("output_file_format", None),
+    )
+    file_writer.write(
+        metadata=MetadataCollector(args_dict=args_dict).top_level_meta, product_data=result_table
+    )
 
 
 def _get_psf_containment(logger, args_dict):
@@ -317,7 +324,6 @@ def _get_psf_containment(logger, args_dict):
 
 
 def main():
-
     label = Path(__file__).stem
 
     args_dict, db_config = _parse(label)

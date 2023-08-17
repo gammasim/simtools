@@ -11,13 +11,13 @@ import matplotlib.pyplot as plt
 import numpy as np
 from astropy.table import QTable
 
-import simtools.util.general as gen
+import simtools.utils.general as gen
 from simtools import io_handler
 from simtools.model.model_utils import compute_telescope_transmission
 from simtools.model.telescope_model import TelescopeModel
 from simtools.psf_analysis import PSFImage
 from simtools.simtel.simtel_runner_ray_tracing import SimtelRunnerRayTracing
-from simtools.util import names
+from simtools.utils import names
 from simtools.visualization import visualize
 
 __all__ = ["RayTracing"]
