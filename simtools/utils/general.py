@@ -391,7 +391,6 @@ def collect_dict_from_file(file_path, file_name=None):
         except (TypeError, KeyError):
             pass
 
-    print("FFFFFF", _dict)
     return _dict
 
 

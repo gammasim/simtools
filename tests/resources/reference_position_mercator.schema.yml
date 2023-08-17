@@ -1,54 +1,50 @@
+%YAML 1.2
 ---
-# Follows schema https://github.com/gammasim/workflows/schema/jsonschema.yml
-title: Model parameter schema description
-description: |-
-  Model parameter schema description.
-name: simpipe-schema
+title: Schema for reference_position_mercator parameter
 version: 0.1.0
-
-schema:
-
-  - name: reference_position_mercator
+base_schema: simpipe-schema
+base_schema_url: https://github.com/gammasim/workflows/schema/jsonschema.yml
+base_schema_version: 0.1.0
+name: reference_position_mercator
+description: |-
+  Latitude and longitude of site reference position
+  (usually close to site centre).
+  Telescope x,y positions are calculated relative to this
+  position.
+short_description: |-
+  Latitude and longitude of site reference position
+data:
+  - name: ref_lat
     description: |-
-      Latitude and longitude of site reference position
-      (usually close to site centre).
-      Telescope x,y positions are calculated relative to this
-      position.
-    short_description: |-
-      Latitude and longitude of site reference position
-    data:
-      - name: ref_lat
-        description: |-
-          Latitude of site reference position
-        type: double
-        units: deg
-        allowed_range:
-          min: -90.
-          max: 90.
-      - name: ref_long
-        description: |-
-          Longitude of site reference position
-        type: double
-        units: deg
-        allowed_range:
-          min: -180.
-          max: 180.
-    instrument:
-      class: Site
-      type:
-        - Observatory
-      site:
-        - North
-        - South
-    activity:
-      setting:
-        - SetParameterFromExternal
-        - SetArrayElementCoordinates
-      validation:
-        - ValidateParameterByExpert
-        - ValidateArrayElementCoordinates
-    source:
-      - Initial instrument setup
-    simulation_software:
-      - name: corsika
-...
+      Latitude of site reference position
+    type: double
+    units: deg
+    allowed_range:
+      min: -90.
+      max: 90.
+  - name: ref_long
+    description: |-
+      Longitude of site reference position
+    type: double
+    units: deg
+    allowed_range:
+      min: -180.
+      max: 180.
+instrument:
+  class: Site
+  type:
+    - Observatory
+  site:
+    - North
+    - South
+activity:
+  setting:
+    - SetParameterFromExternal
+    - SetArrayElementCoordinates
+  validation:
+    - ValidateParameterByExpert
+    - ValidateArrayElementCoordinates
+source:
+  - Initial instrument setup
+simulation_software:
+  - name: corsika
