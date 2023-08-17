@@ -1,6 +1,5 @@
 #!/usr/bin/python3
 
-import collections
 import copy
 import logging
 from pathlib import Path
@@ -236,9 +235,9 @@ def test_collect_schema_dict(args_dict_site, tmp_test_directory):
     metadata_1.args_dict["input"] = _tmp_parameter_file
     # compared sorted dicts, because the order of the keys is not guaranteed
     # (mostly due to above yaml.dump)
-    assert collections.OrderedDict(
-        sorted(metadata_1._collect_schema_dict().items())
-    ) == collections.OrderedDict(sorted(_tmp_schema.items()))
+    assert dict(sorted(metadata_1._collect_schema_dict().items())) == dict(
+        sorted(_tmp_schema.items())
+    )
 
 
 def get_generic_input_meta():
