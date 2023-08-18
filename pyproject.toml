@@ -15,7 +15,7 @@ description = "Tools for the Simulation System of the CTA Observatory"
 readme = "README.rst"
 license = { file="LICENSE" }
 authors = [
-  { email="simtools-developer@desy.de" }
+  { name="simtools developers", email="simtools-developer@desy.de" }
 ]
 classifiers = [
     "Intended Audience :: Science/Research",
