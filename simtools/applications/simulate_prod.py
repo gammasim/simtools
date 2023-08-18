@@ -49,7 +49,6 @@
         Run number (actual run number will be 'start_run' + 'run').
     data_directory (str, optional)
         The location of the output directories corsika-data and simtel-data
-        (TODO: change to use the usual output_path)
     log_level (str, optional)
         Log level to print (default=INFO).
 
