@@ -15,15 +15,7 @@ description = "Tools for the Simulation System of the CTA Observatory"
 readme = "README.rst"
 license = { file="LICENSE" }
 authors = [
-  { name="Orel Gueta", email="orel.gueta@desy.de" },
-  { name="Victor Barbosa Martins", email="victor.barbosa.martins@desy.de" },
-  { name="Gernot Maier", email="gernot.maier@desy.de" },
-  { name="Raul Prado", email="raul.prado@desy.de" },
-]
-maintainers = [
-  { name="Orel Gueta", email="orel.gueta@desy.de" },
-  { name="Victor Barbosa Martins", email="victor.barbosa.martins@desy.de" },
-  { name="Gernot Maier", email="gernot.maier@desy.de" },
+  { email="simtools-developer@desy.de" }
 ]
 classifiers = [
     "Intended Audience :: Science/Research",
