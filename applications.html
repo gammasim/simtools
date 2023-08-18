@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
-    <title>Applications &#8212; simtools v0.1.dev1+g7db86f0 Manual</title>
+    <title>Applications &#8212; simtools v0.1.dev1+g7aedfe3 Manual</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/bizstyle.css" />
     
@@ -39,7 +39,7 @@
         <li class="right" >
           <a href="simtools-configuration.html" title="Configuration"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">simtools v0.1.dev1+g7db86f0 Manual</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">simtools v0.1.dev1+g7aedfe3 Manual</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Applications</a></li> 
       </ul>
     </div>  
@@ -541,6 +541,9 @@ Ex.:</p>
 <p>This application perform array simulations.</p>
 <p>The simulations are split into two stages: showers and array.
 Shower simulations are performed with CORSIKA and array simulations     with sim_telarray. Note that either shower or array simulations are     submitted (so typically you first run shower simulations, and then the     array simulations).</p>
+<p>By default the configuration is saved in simtools-output/test-production
+and the output in corsika-data and simtel-data. The location of the latter directories
+can be set to a different location via the option –data_directory.</p>
 <p>A configuration file is required.</p>
 <p>The workload management system used is given in the configuration file.     Allowed systems are qsub (using gridengine), condor_submit     (using HTcondor), and local (running the script locally).</p>
 </section>
@@ -565,6 +568,8 @@ resources (print quicklook into used computational resources)</p>
 <dt>showers_only (activation mode)</dt><dd><p>Simulates only showers (no array detector).</p>
 </dd>
 <dt>test (activation mode, optional)</dt><dd><p>If activated, no job will be submitted, but all configuration files         and run scripts will be created.</p>
+</dd>
+<dt>data_directory (str, optional)</dt><dd><p>The location of the output directories corsika-data and simtel-data</p>
 </dd>
 <dt>verbosity (str, optional)</dt><dd><p>Log level to print (default=INFO).</p>
 </dd>
@@ -1032,7 +1037,7 @@ The telescope zenith angle and the source distance can be set by command line ar
         <li class="right" >
           <a href="simtools-configuration.html" title="Configuration"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">simtools v0.1.dev1+g7db86f0 Manual</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">simtools v0.1.dev1+g7aedfe3 Manual</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Applications</a></li> 
       </ul>
     </div>
