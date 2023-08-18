@@ -378,17 +378,16 @@ def test_make_resources_report(label, shower_config_data, io_handler, db_config,
 
     # Copying the corsika log file to the expected location in the test directory.
     # This should not affect the efficacy of this test.
+    log_file_name = "log_sub_corsika_run000001_gamma_North_TestLayout_test-production.out"
     shutil.copy(
-        "tests/resources/log_sub_corsika_run000001_gamma_North_TestLayout_test-production.out",
+        f"tests/resources/{log_file_name}",
         shower_simulator._simulation_runner.get_file_name(
             file_type="sub_log",
             **shower_simulator._simulation_runner.get_info_for_file_name(1),
             mode="out",
         ),
     )
-    _resources_1 = shower_simulator._make_resources_report(
-        input_file_list="log_sub_corsika_run000001_gamma_North_TestLayout_test-production.out"
-    )
+    _resources_1 = shower_simulator._make_resources_report(input_file_list=log_file_name)
     assert _resources_1["Walltime/run [sec]"] == 6
 
     with pytest.raises(FileNotFoundError):
