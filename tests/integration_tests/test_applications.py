@@ -35,6 +35,8 @@ APP_LIST = {
             "--zenith",
             "20",
             "--test",
+            "--output_path",
+            "TESTMODELDIR/",
         ]
     ],
     "submit_data_from_external::help": [
@@ -83,6 +85,8 @@ APP_LIST = {
             "--rnda",
             "0.0063",
             " --test",
+            "--output_path",
+            "TESTMODELDIR/",
         ]
     ],
     "derive_mirror_rnda::psf_measurement": [
@@ -100,6 +104,8 @@ APP_LIST = {
             "--rnda",
             "0.0063",
             " --test",
+            "--output_path",
+            "TESTMODELDIR/",
         ]
     ],
     "derive_mirror_rnda::psf_notuning": [
@@ -118,6 +124,8 @@ APP_LIST = {
             "0.0063",
             "--no_tuning",
             " --test",
+            "--output_path",
+            "TESTMODELDIR/",
         ]
     ],
     "derive_mirror_rnda::psf_mean": [
@@ -135,6 +143,8 @@ APP_LIST = {
             "--rnda",
             "0.0063",
             " --test",
+            "--output_path",
+            "TESTMODELDIR/",
         ]
     ],
     "validate_optics": [
@@ -150,6 +160,8 @@ APP_LIST = {
             "--zenith",
             "20",
             "--test",
+            "--output_path",
+            "TESTMODELDIR/",
         ]
     ],
     "tune_psf": [
@@ -165,17 +177,46 @@ APP_LIST = {
             "--zenith",
             "20",
             "--test",
+            "--output_path",
+            "TESTMODELDIR/",
         ]
     ],
     # Camera
     "validate_camera_efficiency::MST-NectarCam-D": [
-        ["--site", "North", "--telescope", "MST-NectarCam-D", "--model_version", "prod5"]
+        [
+            "--site",
+            "North",
+            "--telescope",
+            "MST-NectarCam-D",
+            "--model_version",
+            "prod5",
+            "--output_path",
+            "TESTMODELDIR/",
+        ]
     ],
     "validate_camera_efficiency::SST-D": [
-        ["--site", "South", "--telescope", "SST-D", "--model_version", "prod5"]
+        [
+            "--site",
+            "South",
+            "--telescope",
+            "SST-D",
+            "--model_version",
+            "prod5",
+            "--output_path",
+            "TESTMODELDIR/",
+        ]
     ],
     "validate_camera_fov": [
-        ["--site", "North", "--telescope", "MST-NectarCam-D", "--model_version", "prod5"]
+        [
+            "--site",
+            "North",
+            "--telescope",
+            "MST-NectarCam-D",
+            "--model_version",
+            "prod5",
+            "--output_path",
+            "TESTMODELDIR/",
+        ]
     ],
     "plot_simtel_histograms::help": [
         [
@@ -183,7 +224,12 @@ APP_LIST = {
         ]
     ],
     # Layout
-    "make_regular_arrays": [[]],
+    "make_regular_arrays": [
+        [
+            "--output_path",
+            "TESTMODELDIR/",
+        ]
+    ],
     "plot_layout_array::one_file": [
         [
             "--telescope_list data/layout/telescope_positions-North-TestLayout.ecsv",
@@ -393,7 +439,14 @@ APP_LIST = {
         ]
     ],
     # Production
-    "produce_array_config": [["--array_config", "./tests/resources/array_config_test.yml"]],
+    "produce_array_config": [
+        [
+            "--array_config",
+            "./tests/resources/array_config_test.yml",
+            "--output_path",
+            "TESTMODELDIR/",
+        ]
+    ],
     # Trigger
     "sim_showers_for_trigger_rates": [
         [
@@ -410,6 +463,8 @@ APP_LIST = {
             "--test",
             "--submit_command",
             "local",
+            "--output_path",
+            "TESTMODELDIR/",
         ]
     ],
     # Database
@@ -467,6 +522,8 @@ APP_LIST = {
             "--test",
             "--submit_command",
             "local",
+            "--data_directory",
+            "TESTMODELDIR/",
         ]
     ],
     "production::array_only": [
@@ -479,6 +536,8 @@ APP_LIST = {
             "--test",
             "--submit_command",
             "local",
+            "--data_directory",
+            "TESTMODELDIR/",
         ]
     ],
     # print_array
@@ -542,6 +601,8 @@ APP_LIST = {
             "TESTMODELDIR/jsonschema.yml",
             "--file_name",
             "tests/resources/MST_mirror_2f_measurements.schema.yml",
+            "--output_path",
+            "TESTMODELDIR/",
         ]
     ],
 }
