@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>model.array_model &#8212; simtools v0.1.dev1+gc0bc562 Manual</title>
+    <title>model.array_model &#8212; simtools v0.1.dev1+g7db86f0 Manual</title>
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/bizstyle.css" />
     
@@ -30,7 +30,7 @@
         <li class="right" >
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../index.html">simtools v0.1.dev1+gc0bc562 Manual</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">simtools v0.1.dev1+g7db86f0 Manual</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">model.array_model</a></li> 
       </ul>
@@ -194,9 +194,9 @@
         <span class="p">)</span>
 
         <span class="c1"># Building telescope models</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>  <span class="c1"># List of telescope models</span>
-        <span class="n">_all_telescope_model_names</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>  <span class="c1"># List of telescope names without repetition</span>
-        <span class="n">_all_pars_to_change</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># List of telescope models</span>
+        <span class="n">_all_telescope_model_names</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># List of telescope names without repetition</span>
+        <span class="n">_all_pars_to_change</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">for</span> <span class="n">tel</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">layout</span><span class="p">:</span>
             <span class="n">tel_size</span> <span class="o">=</span> <span class="n">names</span><span class="o">.</span><span class="n">get_telescope_type</span><span class="p">(</span><span class="n">tel</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
 
@@ -291,7 +291,7 @@
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
                 <span class="c1"># Case 1: data is string (only name)</span>
                 <span class="n">tel_name</span> <span class="o">=</span> <span class="n">tel_size</span> <span class="o">+</span> <span class="s2">&quot;-&quot;</span> <span class="o">+</span> <span class="n">data</span>
-                <span class="k">return</span> <span class="n">tel_name</span><span class="p">,</span> <span class="nb">dict</span><span class="p">()</span>
+                <span class="k">return</span> <span class="n">tel_name</span><span class="p">,</span> <span class="p">{}</span>
 
             <span class="c1"># Case 2: data has a wrong type</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;ArrayConfig has wrong input for a telescope&quot;</span>
@@ -330,7 +330,7 @@
 <span class="sd">        Export sim_telarray config files for all the telescopes into the output model directory.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="n">exported_models</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+        <span class="n">exported_models</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">tel_model</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model</span><span class="p">:</span>
             <span class="n">name</span> <span class="o">=</span> <span class="n">tel_model</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="p">(</span>
                 <span class="s2">&quot;_&quot;</span> <span class="o">+</span> <span class="n">tel_model</span><span class="o">.</span><span class="n">extra_label</span> <span class="k">if</span> <span class="n">tel_model</span><span class="o">.</span><span class="n">extra_label</span> <span class="o">!=</span> <span class="s2">&quot;&quot;</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
@@ -449,7 +449,7 @@
         <li class="right" >
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../index.html">simtools v0.1.dev1+gc0bc562 Manual</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">simtools v0.1.dev1+g7db86f0 Manual</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">model.array_model</a></li> 
       </ul>
