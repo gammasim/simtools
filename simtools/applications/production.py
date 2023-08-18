@@ -140,6 +140,13 @@ def _parse(description=None):
         help="Simulates only array detection, no showers",
         action="store_true",
     )
+    config.parser.add_argument(
+        "--data_directory",
+        help="The directory where to save the corsika-data and simtel-data output directories.",
+        type=str.lower,
+        required=False,
+        default="./",
+    )
     return config.initialize(db_config=True, job_submission=True)
 
 
@@ -223,6 +230,10 @@ def main():
     )
     if args_dict["label"] is None:
         args_dict["label"] = label
+    if "data_directory" in args_dict:
+        array_configs["data_directory"] = shower_configs["data_directory"] = args_dict[
+            "data_directory"
+        ]
 
     shower_simulators = {}
     for primary, config_data in shower_configs.items():
