@@ -187,36 +187,48 @@ APP_LIST = {
     "plot_layout_array::one_file": [
         [
             "--telescope_list data/layout/telescope_positions-North-TestLayout.ecsv",
+            "--output_path",
+            "TESTMODELDIR/",
         ]
     ],
     "plot_layout_array::one_file_with_name": [
         [
             "--telescope_list data/layout/telescope_positions-North-TestLayout.ecsv",
             "--figure_name test",
+            "--output_path",
+            "TESTMODELDIR/",
         ]
     ],
     "plot_layout_array::one_file_with_name_and_extension": [
         [
             "--telescope_list data/layout/telescope_positions-North-TestLayout.ecsv",
             "--figure_name test.png",
+            "--output_path",
+            "TESTMODELDIR/",
         ]
     ],
     "plot_layout_array::one_file_one_angle": [
         [
             "--telescope_list data/layout/telescope_positions-North-TestLayout.ecsv",
             "--rotate_angle 20",
+            "--output_path",
+            "TESTMODELDIR/",
         ]
     ],
     "plot_layout_array::one_file_two_angles": [
         [
             "--telescope_list data/layout/telescope_positions-North-TestLayout.ecsv",
             "--rotate_angle 20 30",
+            "--output_path",
+            "TESTMODELDIR/",
         ]
     ],
     "plot_layout_array::two_files": [
         [
             "--telescope_list data/layout/telescope_positions-North-TestLayout.ecsv "
             "data/layout/telescope_positions-South-TestLayout.ecsv",
+            "--output_path",
+            "TESTMODELDIR/",
         ]
     ],
     "plot_layout_array::two_files_one_angle": [
@@ -224,6 +236,8 @@ APP_LIST = {
             "--telescope_list data/layout/telescope_positions-North-TestLayout.ecsv "
             "data/layout/telescope_positions-South-TestLayout.ecsv",
             "--rotate_angle 20",
+            "--output_path",
+            "TESTMODELDIR/",
         ]
     ],
     "plot_layout_array::two_files_two_angles": [
@@ -231,35 +245,47 @@ APP_LIST = {
             "--telescope_list data/layout/telescope_positions-North-TestLayout.ecsv "
             "data/layout/telescope_positions-South-TestLayout.ecsv",
             "--rotate_angle 20 30",
+            "--output_path",
+            "TESTMODELDIR/",
         ]
     ],
     "plot_layout_array::layout_name": [
         [
             "--layout_array_name North-4LST",
+            "--output_path",
+            "TESTMODELDIR/",
         ]
     ],
     "plot_layout_array::layout_name_one_angle": [
         [
             "--layout_array_name North-4LST",
             "--rotate_angle 20",
+            "--output_path",
+            "TESTMODELDIR/",
         ]
     ],
     "plot_layout_array::layout_name_two_angles": [
         [
             "--layout_array_name North-4LST",
             "--rotate_angle 20 30",
+            "--output_path",
+            "TESTMODELDIR/",
         ]
     ],
     "plot_layout_array::layout_two_names_one_angle": [
         [
             "--layout_array_name North-4LST South-4LST",
             "--rotate_angle 20",
+            "--output_path",
+            "TESTMODELDIR/",
         ]
     ],
     "plot_layout_array::layout_two_names_two_angles": [
         [
             "--layout_array_name North-4LST South-4LST",
             "--rotate_angle 20 30",
+            "--output_path",
+            "TESTMODELDIR/",
         ]
     ],
     # CORSIKA photons
@@ -268,6 +294,8 @@ APP_LIST = {
             "--IACT_file",
             "./tests/resources/tel_output_10GeV-2-gamma-20deg-CTAO-South." "corsikaio",
             "--png",
+            "--output_path",
+            "TESTMODELDIR/",
         ]
     ],
     "generate_corsika_histograms::tables": [
@@ -275,6 +303,8 @@ APP_LIST = {
             "--IACT_file",
             "./tests/resources/tel_output_10GeV-2-gamma-20deg-CTAO-South." "corsikaio",
             "--ecsv",
+            "--output_path",
+            "TESTMODELDIR/",
         ]
     ],
     "generate_corsika_histograms::figures_and_tables": [
@@ -283,6 +313,8 @@ APP_LIST = {
             "./tests/resources/" "tel_output_10GeV-2-gamma-20deg-CTAO-South.corsikaio",
             "--png",
             "--ecsv",
+            "--output_path",
+            "TESTMODELDIR/",
         ]
     ],
     "generate_corsika_histograms::output": [
@@ -292,7 +324,7 @@ APP_LIST = {
             "--png",
             "--ecsv",
             "--output_path",
-            ".",
+            "TESTMODELDIR/",
         ]
     ],
     "generate_corsika_histograms::1D_and_2D_run_header": [
@@ -306,6 +338,8 @@ APP_LIST = {
             "azimuth",
             "--event_1D_histograms",
             "total_energy",
+            "--output_path",
+            "TESTMODELDIR/",
         ]
     ],
     "generate_corsika_histograms::1D_run_header": [
@@ -316,6 +350,8 @@ APP_LIST = {
             "--ecsv",
             "--event_1D_histograms",
             "total_energy",
+            "--output_path",
+            "TESTMODELDIR/",
         ]
     ],
     "generate_corsika_histograms::2D_run_header": [
@@ -327,6 +363,8 @@ APP_LIST = {
             "--event_2D_histograms",
             "zenith",
             "azimuth",
+            "--output_path",
+            "TESTMODELDIR/",
         ]
     ],
     "generate_corsika_histograms::individual_telescopes_and_indices": [
@@ -338,6 +376,8 @@ APP_LIST = {
             "--telescope_indices",
             "0 1 2",
             "--individual_telescopes",
+            "--output_path",
+            "TESTMODELDIR/",
         ]
     ],
     "generate_corsika_histograms::telescope_indices": [
@@ -348,6 +388,8 @@ APP_LIST = {
             "--ecsv",
             "--telescope_indices",
             "0 1 2",
+            "--output_path",
+            "TESTMODELDIR/",
         ]
     ],
     # Production
