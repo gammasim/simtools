@@ -54,6 +54,8 @@ APP_LIST = {
             "./tests/resources/MST_mirror_2f_measurements.schema.yml",
             "--output_file",
             "test-submit-data.ecsv",
+            "--output_path",
+            "TESTMODELDIR/",
         ]
     ],
     "submit_data_from_external::submit_values": [
@@ -64,6 +66,8 @@ APP_LIST = {
             "tests/resources/reference_position_mercator.schema.yml",
             "--output_file",
             "test-submit-data.ecsv",
+            "--output_path",
+            "TESTMODELDIR/",
         ]
     ],
     "derive_mirror_rnda::help": [
@@ -522,8 +526,6 @@ APP_LIST = {
             "--test",
             "--submit_command",
             "local",
-            "--data_directory",
-            "TESTMODELDIR/",
         ]
     ],
     "production::array_only": [
@@ -536,8 +538,6 @@ APP_LIST = {
             "--test",
             "--submit_command",
             "local",
-            "--data_directory",
-            "TESTMODELDIR/",
         ]
     ],
     # print_array
