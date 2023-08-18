@@ -528,6 +528,8 @@ APP_LIST = {
             "local",
             "--data_directory",
             "TESTMODELDIR/",
+            "--output_path",
+            "TESTMODELDIR/",
         ]
     ],
     "production::array_only": [
@@ -541,6 +543,8 @@ APP_LIST = {
             "--submit_command",
             "local",
             "--data_directory",
+            "TESTMODELDIR/",
+            "--output_path",
             "TESTMODELDIR/",
         ]
     ],
