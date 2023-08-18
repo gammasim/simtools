@@ -44,13 +44,13 @@ class PSFImage:
         self._total_photons = None
         self._number_of_detected_photons = None
         self._effective_area = None
-        self.photon_pos_x = list()
-        self.photon_pos_y = list()
-        self.photon_r = list()
+        self.photon_pos_x = []
+        self.photon_pos_y = []
+        self.photon_r = []
         self.centroid_x = None
         self.centroid_y = None
         self._total_area = total_scattered_area
-        self._stored_PSF = dict()
+        self._stored_PSF = {}
         if focal_length is not None:
             self._cm_to_deg = 180.0 / pi / focal_length
             self._has_focal_length = True
@@ -74,7 +74,7 @@ class PSFImage:
         """
         self._logger.info(f"Reading sim_telarray file {file}")
         self._total_photons = 0
-        with open(file, "r") as f:
+        with open(file, "r", encoding="utf-8") as f:
             for line in f:
                 self._process_simtel_line(line)
 
@@ -419,7 +419,7 @@ class PSFImage:
         else:
             radius_all = list(np.linspace(0, 1.6 * self.get_psf(0.8), 30))
 
-        intensity = list()
+        intensity = []
         for rad in radius_all:
             intensity.append(self._sum_photons_in_radius(rad) / self._number_of_detected_photons)
         d_type = {

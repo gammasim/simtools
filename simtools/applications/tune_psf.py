@@ -102,9 +102,17 @@ from simtools.ray_tracing import RayTracing
 from simtools.visualization import visualize
 
 
-def load_data(datafile):
+def load_data(data_file):
+    """
+    Load data from file txt file.
+
+    Parameters
+    ----------
+    data_file: str
+        Name of the data file with the measured cumulative PSF.
+    """
     d_type = {"names": ("Radius [cm]", "Cumulative PSF"), "formats": ("f8", "f8")}
-    data = np.loadtxt(datafile, dtype=d_type, usecols=(0, 2))
+    data = np.loadtxt(data_file, dtype=d_type, usecols=(0, 2))
     data["Radius [cm]"] *= 0.1
     data["Cumulative PSF"] /= np.max(np.abs(data["Cumulative PSF"]))
     return data
@@ -169,7 +177,7 @@ def main():
     # }
     # tel_model.change_multiple_parameters(**pars_to_change)
 
-    all_parameters = list()
+    all_parameters = []
 
     def add_parameters(
         mirror_reflection, mirror_align, mirror_reflection_fraction=0.15, mirror_reflection_2=0.035
@@ -178,7 +186,7 @@ def main():
         Transform the parameters to the proper format and add a new set of
         parameters to the all_parameters list.
         """
-        pars = dict()
+        pars = {}
         mrra = f"{mirror_reflection:.4f},{mirror_reflection_fraction:.2f},{mirror_reflection_2:.4f}"
         pars["mirror_reflection_random_angle"] = mrra
         mar = f"{mirror_align:.4f},28.,0.,0."

@@ -315,7 +315,7 @@ class DatabaseHandler:
             _which_tel_labels = [_tel_name_converted]
 
         # Selecting version and applicable (if on)
-        _pars = dict()
+        _pars = {}
         for _tel in _which_tel_labels:
             _all_pars = self._get_all_model_parameters_yaml(_tel)
 
@@ -379,7 +379,7 @@ class DatabaseHandler:
             _which_tel_labels = [_tel_name_db]
 
         # Selecting version and applicable (if on)
-        _pars = dict()
+        _pars = {}
         for _tel in _which_tel_labels:
             self._logger.debug(f"Getting {_tel} parameters from MongoDB")
 
@@ -449,7 +449,7 @@ class DatabaseHandler:
         """
 
         collection = DatabaseHandler.db_client[db_name][collection_name]
-        _parameters = dict()
+        _parameters = {}
 
         _model_version = self._convert_version_to_tagged(
             model_version, DatabaseHandler.DB_CTA_SIMULATION_MODEL
@@ -500,7 +500,7 @@ class DatabaseHandler:
         _file_name_db = f"parValues-{telescope_name_yaml}.yml"
         _yaml_file = gen.find_file(_file_name_db, self.io_handler.model_path)
         self._logger.debug(f"Reading DB file {_yaml_file}")
-        with open(_yaml_file, "r") as stream:
+        with open(_yaml_file, "r", encoding="utf-8") as stream:
             _all_pars = yaml.safe_load(stream)
         return _all_pars
 
@@ -564,10 +564,10 @@ class DatabaseHandler:
 
         yaml_file = gen.find_file("parValues-Sites.yml", self.io_handler.model_path)
         self._logger.info(f"Reading DB file {yaml_file}")
-        with open(yaml_file, "r") as stream:
+        with open(yaml_file, "r", encoding="utf-8") as stream:
             _all_pars_versions = yaml.safe_load(stream)
 
-        _pars = dict()
+        _pars = {}
         for par_name, par_info in _all_pars_versions.items():
             if not par_info["Applicable"] and only_applicable:
                 continue
@@ -606,7 +606,7 @@ class DatabaseHandler:
 
         _site_validated = names.validate_site_name(site)
         collection = DatabaseHandler.db_client[db_name].sites
-        _parameters = dict()
+        _parameters = {}
 
         _model_version = self._convert_version_to_tagged(
             model_version, DatabaseHandler.DB_CTA_SIMULATION_MODEL
@@ -654,7 +654,7 @@ class DatabaseHandler:
 
         collection = DatabaseHandler.db_client[db_name][collection_name]
 
-        _parameters = dict()
+        _parameters = {}
 
         empty_query = {}
         for post in collection.find(empty_query):
@@ -691,7 +691,7 @@ class DatabaseHandler:
 
         _site_validated = names.validate_site_name(site)
         collection = DatabaseHandler.db_client[DatabaseHandler.DB_REFERENCE_DATA].reference_values
-        _parameters = dict()
+        _parameters = {}
 
         _model_version = self._convert_version_to_tagged(
             names.validate_model_version_name(model_version),
@@ -861,7 +861,7 @@ class DatabaseHandler:
         )
 
         collection = DatabaseHandler.db_client[db_name][collection_name]
-        db_entries = list()
+        db_entries = []
 
         _version_to_copy = self._convert_version_to_tagged(
             version_to_copy, DatabaseHandler.DB_CTA_SIMULATION_MODEL
@@ -918,7 +918,7 @@ class DatabaseHandler:
         _collection = DatabaseHandler.db_client[db_name][collection]
         if collection_to_copy_to is None:
             collection_to_copy_to = collection
-        db_entries = list()
+        db_entries = []
 
         for post in _collection.find(query):
             post.pop("_id", None)
@@ -1271,7 +1271,7 @@ class DatabaseHandler:
 
         collection = DatabaseHandler.db_client[db_name][collection_name]
 
-        db_entry = dict()
+        db_entry = {}
         if "telescopes" in collection_name:
             db_entry["Telescope"] = names.validate_telescope_name_db(telescope)
         elif "sites" in collection_name:

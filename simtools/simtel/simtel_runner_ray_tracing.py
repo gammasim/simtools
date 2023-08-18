@@ -129,7 +129,7 @@ class SimtelRunnerRayTracing(SimtelRunner):
 
         if not file.exists() or force_simulate:
             # Adding header to photon list file.
-            with self._photons_file.open("w") as file:
+            with self._photons_file.open("w", encoding="utf-8") as file:
                 file.write(f"#{50 * '='}\n")
                 file.write("# List of photons for RayTracing simulations\n")
                 file.write(f"#{50 * '='}\n")
@@ -146,7 +146,7 @@ class SimtelRunnerRayTracing(SimtelRunner):
             # - elevation
             # - flux
             # - distance of light source
-            with self._stars_file.open("w") as file:
+            with self._stars_file.open("w", encoding="utf-8") as file:
                 file.write(
                     f"0. {90.0 - self.config.zenith_angle} 1.0 {self.config.source_distance}\n"
                 )
@@ -232,7 +232,7 @@ class SimtelRunnerRayTracing(SimtelRunner):
     def _is_photon_list_file_ok(self):
         """Check if the photon list is valid,"""
         n_lines = 0
-        with open(self._photons_file, "r") as ff:
+        with open(self._photons_file, "r", encoding="utf-8") as ff:
             for _ in ff:
                 n_lines += 1
                 if n_lines > 100:

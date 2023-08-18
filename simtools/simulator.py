@@ -117,7 +117,7 @@ class Simulator:
 
         self.label = label
         self.simulator = simulator
-        self.runs = list()
+        self.runs = []
         self._results = defaultdict(list)
         self.test = test
 
@@ -271,7 +271,7 @@ class Simulator:
             self._logger.debug("Nothing to validate - run_list and run_range not given.")
             return None
 
-        validated_runs = list()
+        validated_runs = []
         if run_list is not None:
             if not isinstance(run_list, list):
                 run_list = [run_list]
@@ -306,7 +306,7 @@ class Simulator:
             Dict with configuration data.
 
         """
-        _array_model_data = dict()
+        _array_model_data = {}
         _rest_data = copy(config_data)
 
         try:
@@ -495,7 +495,7 @@ class Simulator:
     def _enforce_list_type(input_file_list):
         """Enforce the input list to be a list."""
         if not input_file_list:
-            return list()
+            return []
         if not isinstance(input_file_list, list):
             return [input_file_list]
 
@@ -667,8 +667,7 @@ class Simulator:
         self._logger.info("Getting list of log files")
         if self.simulator in ["simtel", "corsika_simtel"]:
             return self._results["log"]
-        else:
-            return self._results["corsika_autoinputs_log"]
+        return self._results["corsika_autoinputs_log"]
 
     def print_list_of_output_files(self):
         """Print list of output files."""
@@ -713,7 +712,7 @@ class Simulator:
         if len(self._results["sub_out"]) == 0 and input_file_list is not None:
             self._fill_results_without_run(input_file_list)
 
-        runtime = list()
+        runtime = []
 
         _resources = {}
         for run in self.runs:
@@ -723,7 +722,7 @@ class Simulator:
 
         mean_runtime = np.mean(runtime)
 
-        resource_summary = dict()
+        resource_summary = {}
         resource_summary["Walltime/run [sec]"] = mean_runtime
         if "n_events" in _resources and _resources["n_events"] > 0:
             resource_summary["#events/run"] = _resources["n_events"]
@@ -772,7 +771,7 @@ class Simulator:
             if self.runs is None:
                 msg = "Runs to simulate were not given as arguments nor in config_data - aborting"
                 self._logger.error(msg)
-                return list()
+                return []
 
             return self.runs
 

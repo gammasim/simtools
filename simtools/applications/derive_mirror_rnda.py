@@ -367,9 +367,9 @@ def main():
 
     logger.info(f"Start value for mirror_reflection_random_angle: {rnda_start}")
 
-    results_rnda = list()
-    results_mean = list()
-    results_sig = list()
+    results_rnda = []
+    results_mean = []
+    results_sig = []
     if args_dict["no_tuning"]:
         rnda_opt = rnda_start
     else:

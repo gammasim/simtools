@@ -143,6 +143,9 @@ class RayTracing:
         return cls(**args, config_data=config_data)
 
     def __repr__(self):
+        """
+        String representation of RayTracing class.
+        """
         return f"RayTracing(label={self.label})\n"
 
     def _validate_telescope_model(self, tel):
@@ -227,9 +230,9 @@ class RayTracing:
 
         cm_to_deg = 180.0 / pi / focal_length
 
-        self._psf_images = dict()
+        self._psf_images = {}
         if do_analyze:
-            _rows = list()
+            _rows = []
         else:
             self._read_results()
 
@@ -323,7 +326,7 @@ class RayTracing:
         """
 
         try:
-            with open(file) as _stdin:
+            with open(file, encoding="utf-8") as _stdin:
                 rx_output = subprocess.Popen(  # pylint: disable=consider-using-with
                     shlex.split(
                         f"{self._simtel_source_path}/sim_telarray/bin/rx "
@@ -484,7 +487,7 @@ class RayTracing:
         -------
         List of PSFImage's
         """
-        images = list()
+        images = []
         for this_off_axis in self.config.off_axis_angle:
             if this_off_axis in self._psf_images:
                 images.append(self._psf_images[this_off_axis])

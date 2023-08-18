@@ -177,7 +177,7 @@ def main():
     log_file_list = output_dir.joinpath(f"log_files_{args_dict['primary']}.list")
 
     def print_list_into_file(list_of_files, file_name):
-        with open(file_name, "w") as f:
+        with open(file_name, "w", encoding="utf-8") as f:
             for line in list_of_files:
                 f.write(line + "\n")
 
