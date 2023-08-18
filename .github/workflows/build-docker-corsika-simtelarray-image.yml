@@ -26,7 +26,7 @@ jobs:
       - name: download corsikasimtelpackage
         run: |
           wget --no-verbose https://syncandshare.desy.de/index.php/s/${{ secrets.CLOUD_SIMTEL }}/download
-          mv download ./docker/corsika7.7_simtelarray.tar.gz
+          mv download corsika7.7_simtelarray.tar.gz
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
