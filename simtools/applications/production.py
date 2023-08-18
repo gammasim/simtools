@@ -11,6 +11,10 @@
     submitted (so typically you first run shower simulations, and then the \
     array simulations).
 
+    By default the configuration is saved in simtools-output/test-production
+    and the output in corsika-data and simtel-data. The location of the latter directories
+    can be set to a different location via the option --data_directory.
+
     A configuration file is required.
 
     The workload management system used is given in the configuration file. \
@@ -38,6 +42,8 @@
     test (activation mode, optional)
         If activated, no job will be submitted, but all configuration files \
         and run scripts will be created.
+    data_directory (str, optional)
+        The location of the output directories corsika-data and simtel-data
     verbosity (str, optional)
         Log level to print (default=INFO).
 
@@ -128,6 +134,13 @@ def _parse(description=None):
             "silicon",
             "iron",
         ],
+    )
+    config.parser.add_argument(
+        "--data_directory",
+        help="The directory where to save the corsika-data and simtel-data output directories.",
+        type=str.lower,
+        required=False,
+        default="./",
     )
     group = config.parser.add_mutually_exclusive_group(required=True)
     group.add_argument(
@@ -226,6 +239,8 @@ def main():
 
     shower_simulators = {}
     for primary, config_data in shower_configs.items():
+        if "data_directory" in args_dict:
+            config_data["data_directory"] = args_dict["data_directory"]
         shower_simulators[primary] = Simulator(
             label=label,
             simulator="corsika",
@@ -244,6 +259,8 @@ def main():
     if args_dict["array_only"]:
         array_simulators = {}
         for primary, config_data in array_configs.items():
+            if "data_directory" in args_dict:
+                config_data["data_directory"] = args_dict["data_directory"]
             array_simulators[primary] = Simulator(
                 label=label,
                 simulator="simtel",
