@@ -397,7 +397,8 @@ class Simulator:
         for file in input_file_list:
             run = self._guess_run_from_file(file)
             self._fill_results(file, run)
-            self.runs.append(run)
+            if run not in self.runs:
+                self.runs.append(run)
 
     def simulate(self, input_file_list=None):
         """
