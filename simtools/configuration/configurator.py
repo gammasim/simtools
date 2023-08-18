@@ -242,7 +242,7 @@ class Configurator:
 
         try:
             self._logger.debug(f"Reading configuration from {config_file}")
-            with open(config_file, "r") as stream:
+            with open(config_file, "r", encoding="utf-8") as stream:
                 _config_dict = yaml.safe_load(stream)
             if "CTASIMPIPE" in _config_dict:
                 try:

@@ -60,11 +60,11 @@ def main():
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
     n_lists = len(args_dict["file_lists"])
-    simtel_histograms = list()
+    simtel_histograms = []
     for this_list_of_files in args_dict["file_lists"]:
         # Collecting hist files
-        histogram_files = list()
-        with open(this_list_of_files) as file:
+        histogram_files = []
+        with open(this_list_of_files, encoding="utf-8") as file:
             for line in file:
                 # Removing '\n' from filename, in case it is left there.
                 histogram_files.append(line.replace("\n", ""))

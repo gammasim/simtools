@@ -133,7 +133,8 @@ class CorsikaHistograms:
         Initialize the header.
         """
         self.all_run_keys = list(
-            run_header.run_header_types[np.around(self.corsika_version, 1)].names)
+            run_header.run_header_types[np.around(self.corsika_version, 1)].names
+        )
         self._header = {}
 
         # Get units of the header
@@ -168,7 +169,6 @@ class CorsikaHistograms:
         """
 
         if self.event_information is None:
-
             with IACTFile(self.input_file) as self.iact_file:
                 self.telescope_positions = np.array(self.iact_file.telescope_positions)
                 self.num_telescopes = np.size(self.telescope_positions, axis=0)
@@ -542,7 +542,6 @@ class CorsikaHistograms:
         for i_tel_info, photons_info in np.array(
             list(zip(self.telescope_positions, photons)), dtype=object
         )[self.telescope_indices]:
-
             if rotation_around_z_axis is None or rotation_around_y_axis is None:
                 photon_x, photon_y = photons_info["x"], photons_info["y"]
             else:
@@ -611,7 +610,6 @@ class CorsikaHistograms:
             event_counter = 0
             for event in f:
                 for i_telescope in self.telescope_indices:
-
                     if hasattr(event, "photon_bunches"):
                         photons = list(event.photon_bunches.values())
                     else:
@@ -1284,8 +1282,8 @@ class CorsikaHistograms:
             hist_2D_list, x_edges_list, y_edges_list = function()
             if function_dict["function"] == "get_2D_photon_density_distr":
                 histogram_value_unit = 1 / (
-                        self._dict_2D_distributions[property_name]["x edges unit"]
-                        * self._dict_2D_distributions[property_name]["y edges unit"]
+                    self._dict_2D_distributions[property_name]["x edges unit"]
+                    * self._dict_2D_distributions[property_name]["y edges unit"]
                 )
             else:
                 histogram_value_unit = u.dimensionless_unscaled
@@ -1363,9 +1361,7 @@ class CorsikaHistograms:
             )
         return table
 
-    def export_event_header_1D_histogram(
-            self, event_header_element, bins=50, hist_range=None
-    ):
+    def export_event_header_1D_histogram(self, event_header_element, bins=50, hist_range=None):
         """
         Export to a ecsv file the 1D histogram for the key `event_header_element` from the CORSIKA
         event header.
@@ -1387,7 +1383,8 @@ class CorsikaHistograms:
         edges *= self.event_information[event_header_element].unit
         table = self.fill_ecsv_table(hist, edges, None, event_header_element, None)
         ecsv_file = Path(self.output_path).joinpath(
-            f"event_1D_histograms_{event_header_element}.ecsv")
+            f"event_1D_histograms_{event_header_element}.ecsv"
+        )
         self._logger.info(f"Exporting histogram to {ecsv_file}.")
         table.write(ecsv_file, format="ascii.ecsv", overwrite=True)
 
@@ -1503,7 +1500,6 @@ class CorsikaHistograms:
             The zenith angles for each event.
         """
         if self._event_zenith_angles is None:
-
             self._event_zenith_angles = np.around(
                 (self.event_information["zenith"]).to(u.deg),
                 4,

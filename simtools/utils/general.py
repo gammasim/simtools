@@ -272,7 +272,7 @@ def _validate_and_convert_value_with_units(value, value_keys, par_name, par_info
         par_unit *= value_length
 
     # Checking units and converting them, if needed.
-    value_with_units = list()
+    value_with_units = []
     for arg, unit in zip(value, par_unit):
         # In case a entry is None, None should be returned.
         if unit is None or arg is None:
@@ -342,7 +342,7 @@ def collect_data_from_yaml_or_dict(in_yaml, in_dict, allow_empty=False):
     if in_yaml is not None:
         if in_dict is not None:
             _logger.warning("Both in_dict in_yaml were given - in_yaml will be used")
-        with open(in_yaml) as file:
+        with open(in_yaml, encoding="utf-8") as file:
             data = yaml.load(file)
         return data
     if in_dict is not None:
@@ -408,7 +408,7 @@ def collect_kwargs(label, in_kwargs):
     dict
         Dictionary with the collected kwargs.
     """
-    out_kwargs = dict()
+    out_kwargs = {}
     for key, value in in_kwargs.items():
         if label + "_" in key:
             out_kwargs[key.replace(label + "_", "")] = value
@@ -451,7 +451,7 @@ def sort_arrays(*args):
     """
 
     order_array = copy.copy(args[0])
-    new_args = list()
+    new_args = []
     for arg in args:
         _, value = zip(*sorted(zip(order_array, arg)))
         new_args.append(list(value))
@@ -567,7 +567,7 @@ def copy_as_list(value):
 
     try:
         return list(value)
-    except Exception:
+    except TypeError:
         return [value]
 
 
@@ -588,8 +588,8 @@ def separate_args_and_config_data(expected_args, **kwargs):
     dict, dict
         A dict with the args collected and another one with config_data.
     """
-    args = dict()
-    config_data = dict()
+    args = {}
+    config_data = {}
     for key, value in kwargs.items():
         if key in expected_args:
             args[key] = value
@@ -930,7 +930,7 @@ def save_dict_to_file(dictionary, file_name):
     file_name = Path(file_name).with_suffix(".yml")
     _logger.info(f"Exporting histogram configuration to {file_name}")
     try:
-        with open(file_name, "w") as file:
+        with open(file_name, "w", encoding="utf-8") as file:
             yaml.dump(dictionary, file)
     except IOError:
         msg = f"Failed to write to {file_name}."

@@ -216,7 +216,7 @@ class CorsikaRunner:
         extra_commands = kwargs["extra_commands"]
         self._logger.debug(f"Extra commands to be added to the run script {extra_commands}")
 
-        with open(script_file_path, "w") as file:
+        with open(script_file_path, "w", encoding="utf-8") as file:
             # shebang
             file.write("#!/usr/bin/env bash\n")
 
@@ -411,7 +411,7 @@ class CorsikaRunner:
         _resources = {}
 
         _resources["runtime"] = None
-        with open(sub_log_file, "r") as file:
+        with open(sub_log_file, "r", encoding="utf-8") as file:
             for line in reversed(list(file)):
                 if "RUNTIME" in line:
                     _resources["runtime"] = int(line.split()[1])

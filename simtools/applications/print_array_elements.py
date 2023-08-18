@@ -125,7 +125,7 @@ def _parse(label=None, description=None):
 
 def main():
     label = Path(__file__).stem
-    args_dict, _ = _parse(label, description=("Print a list of array element positions"))
+    args_dict, _ = _parse(label, description="Print a list of array element positions")
 
     _logger = logging.getLogger()
     _logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))

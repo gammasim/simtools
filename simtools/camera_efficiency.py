@@ -230,7 +230,7 @@ class CameraEfficiency:
 
         # Search for at least 5 consecutive numbers to see that we are in the table
         re_table = re.compile("{0}{0}{0}{0}{0}".format(r"[-+]?[0-9]*\.?[0-9]+\s+"))
-        with open(self._file_simtel, "r") as file:
+        with open(self._file_simtel, "r", encoding="utf-8") as file:
             for line in file:
                 if re_table.match(line):
                     words = line.split()

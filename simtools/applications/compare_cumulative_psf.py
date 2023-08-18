@@ -94,6 +94,10 @@ from simtools.visualization import visualize
 
 
 def load_data(datafile):
+    """
+    Load the data file with the measured PSF vs radius [cm].
+
+    """
     d_type = {"names": ("Radius [cm]", "Relative intensity"), "formats": ("f8", "f8")}
     # test_data_file = io.get_test_data_file('PSFcurve_data_v2.txt')
     data = np.loadtxt(datafile, dtype=d_type, usecols=(0, 2))
@@ -146,7 +150,7 @@ def main():
 
     # New parameters
     if args_dict.get("pars", None):
-        with open(args_dict["pars"]) as file:
+        with open(args_dict["pars"], encoding="utf-8") as file:
             new_pars = yaml.safe_load(file)
         tel_model.change_multiple_parameters(**new_pars)
 

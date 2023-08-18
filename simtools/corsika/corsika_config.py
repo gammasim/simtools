@@ -143,7 +143,7 @@ class CorsikaConfig:
 
         logger = logging.getLogger(__name__)
         logger.debug(f"Loading CORSIKA parameters from file {corsika_parameters_file}")
-        with open(corsika_parameters_file, "r") as f:
+        with open(corsika_parameters_file, "r", encoding="utf-8") as f:
             corsika_parameters = yaml.load(f)
         return corsika_parameters
 
@@ -180,7 +180,7 @@ class CorsikaConfig:
         """
 
         self._logger.debug("Setting user parameters from corsika_config_data")
-        self._user_parameters = dict()
+        self._user_parameters = {}
 
         user_pars = self._corsika_parameters["USER_PARAMETERS"]
 
@@ -259,7 +259,7 @@ class CorsikaConfig:
         par_unit = gen.copy_as_list(par_info["unit"])
 
         # Checking units and converting them, if needed.
-        value_args_with_units = list()
+        value_args_with_units = []
         for arg, unit in zip(value_args, par_unit):
             if unit is None:
                 value_args_with_units.append(arg)
@@ -374,7 +374,7 @@ class CorsikaConfig:
                     text += _get_text_single_line(new_pars)
             return text
 
-        with open(self._config_file_path, "w") as file:
+        with open(self._config_file_path, "w", encoding="utf-8") as file:
             file.write("\n* [ RUN PARAMETERS ]\n")
             # Removing AZM entry first
             _user_pars_temp = copy.copy(self._user_parameters)
