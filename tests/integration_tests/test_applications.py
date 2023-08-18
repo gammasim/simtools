@@ -558,6 +558,8 @@ APP_LIST = {
             "tests/resources/telescope_positions-South-4MST.ecsv",
             "--compact",
             "corsika",
+            "--output_path",
+            "TESTMODELDIR/",
         ],
     ],
     "print_array_elements::export_utm": [
@@ -566,6 +568,8 @@ APP_LIST = {
             "tests/resources/telescope_positions-South-4MST.ecsv",
             "--export",
             "utm",
+            "--output_path",
+            "TESTMODELDIR/",
         ],
     ],
     "print_array_elements::export_corsika": [
@@ -575,6 +579,8 @@ APP_LIST = {
             "--export",
             "corsika",
             "--use_corsika_telescope_height",
+            "--output_path",
+            "TESTMODELDIR/",
         ],
     ],
     "print_array_elements::print_compact_nocors_utm": [
@@ -583,6 +589,8 @@ APP_LIST = {
             "tests/resources/telescope_positions-North-utm.ecsv",
             "--compact",
             "utm",
+            "--output_path",
+            "TESTMODELDIR/",
         ],
     ],
     "print_array_elements::print_compact_nocors_corsika": [
@@ -591,6 +599,8 @@ APP_LIST = {
             "tests/resources/telescope_positions-North-utm.ecsv",
             "--compact",
             "corsika",
+            "--output_path",
+            "TESTMODELDIR/",
         ],
     ],
     "print_array_elements::print_compact_corsika_telescopeheights": [
@@ -600,6 +610,8 @@ APP_LIST = {
             "--export",
             "corsika",
             "--use_corsika_telescope_height",
+            "--output_path",
+            "TESTMODELDIR/",
         ],
     ],
     # validate_schema_files
@@ -609,8 +621,6 @@ APP_LIST = {
             "TESTMODELDIR/jsonschema.yml",
             "--file_name",
             "tests/resources/MST_mirror_2f_measurements.schema.yml",
-            "--output_path",
-            "TESTMODELDIR/",
         ]
     ],
 }
