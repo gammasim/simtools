@@ -709,7 +709,9 @@ class Simulator:
 
         """
 
-        if len(self._results["sub_out"]) == 0 and input_file_list is not None:
+        if len(self._results["sub_out"]) == 0:
+            if input_file_list is None:
+                return {"Walltime/run [sec]": np.nan}
             self._fill_results_without_run(input_file_list)
 
         runtime = []
