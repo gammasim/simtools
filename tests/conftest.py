@@ -9,7 +9,7 @@ from astropy import units as u
 import simtools.io_handler
 from simtools import db_handler
 from simtools.configuration.configurator import Configurator
-from simtools.corsika.corsika_output import CorsikaOutput
+from simtools.corsika.corsika_histograms import CorsikaHistograms
 from simtools.layout.layout_array import LayoutArray
 from simtools.model.telescope_model import TelescopeModel
 
@@ -246,11 +246,12 @@ def corsika_output_file_name():
 
 
 @pytest.fixture
-def corsika_output_instance(io_handler, corsika_output_file_name):
-    return CorsikaOutput(corsika_output_file_name)
+def corsika_histograms_instance(io_handler, corsika_output_file_name):
+    return CorsikaHistograms(corsika_output_file_name,
+                             output_path=io_handler.get_output_directory(test=True))
 
 
 @pytest.fixture
-def corsika_output_instance_set_histograms(db, io_handler, corsika_output_instance):
-    corsika_output_instance.set_histograms()
-    return corsika_output_instance
+def corsika_histograms_instance_set_histograms(db, io_handler, corsika_histograms_instance):
+    corsika_histograms_instance.set_histograms()
+    return corsika_histograms_instance
