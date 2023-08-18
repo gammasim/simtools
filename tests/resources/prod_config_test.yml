@@ -3,7 +3,7 @@ label: 'test-production'
 default:
   site: North
   layout_name: test-layout
-  data_directory: TESTMODELDIR/
+  data_directory: Null
   array:
     model_version: Prod5
     zenith: 20 deg
