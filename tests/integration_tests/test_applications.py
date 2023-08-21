@@ -35,6 +35,8 @@ APP_LIST = {
             "--zenith",
             "20",
             "--test",
+            "--output_path",
+            "TESTMODELDIR/",
         ]
     ],
     "submit_data_from_external::help": [
@@ -52,6 +54,8 @@ APP_LIST = {
             "./tests/resources/MST_mirror_2f_measurements.schema.yml",
             "--output_file",
             "test-submit-data.ecsv",
+            "--output_path",
+            "TESTMODELDIR/",
         ]
     ],
     "submit_data_from_external::submit_values": [
@@ -62,6 +66,8 @@ APP_LIST = {
             "tests/resources/reference_position_mercator.schema.yml",
             "--output_file",
             "test-submit-data.ecsv",
+            "--output_path",
+            "TESTMODELDIR/",
         ]
     ],
     "derive_mirror_rnda::help": [
@@ -83,6 +89,8 @@ APP_LIST = {
             "--rnda",
             "0.0063",
             " --test",
+            "--output_path",
+            "TESTMODELDIR/",
         ]
     ],
     "derive_mirror_rnda::psf_measurement": [
@@ -100,6 +108,8 @@ APP_LIST = {
             "--rnda",
             "0.0063",
             " --test",
+            "--output_path",
+            "TESTMODELDIR/",
         ]
     ],
     "derive_mirror_rnda::psf_notuning": [
@@ -118,6 +128,8 @@ APP_LIST = {
             "0.0063",
             "--no_tuning",
             " --test",
+            "--output_path",
+            "TESTMODELDIR/",
         ]
     ],
     "derive_mirror_rnda::psf_mean": [
@@ -135,6 +147,8 @@ APP_LIST = {
             "--rnda",
             "0.0063",
             " --test",
+            "--output_path",
+            "TESTMODELDIR/",
         ]
     ],
     "validate_optics": [
@@ -150,6 +164,8 @@ APP_LIST = {
             "--zenith",
             "20",
             "--test",
+            "--output_path",
+            "TESTMODELDIR/",
         ]
     ],
     "tune_psf": [
@@ -165,17 +181,46 @@ APP_LIST = {
             "--zenith",
             "20",
             "--test",
+            "--output_path",
+            "TESTMODELDIR/",
         ]
     ],
     # Camera
     "validate_camera_efficiency::MST-NectarCam-D": [
-        ["--site", "North", "--telescope", "MST-NectarCam-D", "--model_version", "prod5"]
+        [
+            "--site",
+            "North",
+            "--telescope",
+            "MST-NectarCam-D",
+            "--model_version",
+            "prod5",
+            "--output_path",
+            "TESTMODELDIR/",
+        ]
     ],
     "validate_camera_efficiency::SST-D": [
-        ["--site", "South", "--telescope", "SST-D", "--model_version", "prod5"]
+        [
+            "--site",
+            "South",
+            "--telescope",
+            "SST-D",
+            "--model_version",
+            "prod5",
+            "--output_path",
+            "TESTMODELDIR/",
+        ]
     ],
     "validate_camera_fov": [
-        ["--site", "North", "--telescope", "MST-NectarCam-D", "--model_version", "prod5"]
+        [
+            "--site",
+            "North",
+            "--telescope",
+            "MST-NectarCam-D",
+            "--model_version",
+            "prod5",
+            "--output_path",
+            "TESTMODELDIR/",
+        ]
     ],
     "plot_simtel_histograms::help": [
         [
@@ -183,40 +228,57 @@ APP_LIST = {
         ]
     ],
     # Layout
-    "make_regular_arrays": [[]],
+    "make_regular_arrays": [
+        [
+            "--output_path",
+            "TESTMODELDIR/",
+        ]
+    ],
     "plot_layout_array::one_file": [
         [
             "--telescope_list data/layout/telescope_positions-North-TestLayout.ecsv",
+            "--output_path",
+            "TESTMODELDIR/",
         ]
     ],
     "plot_layout_array::one_file_with_name": [
         [
             "--telescope_list data/layout/telescope_positions-North-TestLayout.ecsv",
             "--figure_name test",
+            "--output_path",
+            "TESTMODELDIR/",
         ]
     ],
     "plot_layout_array::one_file_with_name_and_extension": [
         [
             "--telescope_list data/layout/telescope_positions-North-TestLayout.ecsv",
             "--figure_name test.png",
+            "--output_path",
+            "TESTMODELDIR/",
         ]
     ],
     "plot_layout_array::one_file_one_angle": [
         [
             "--telescope_list data/layout/telescope_positions-North-TestLayout.ecsv",
             "--rotate_angle 20",
+            "--output_path",
+            "TESTMODELDIR/",
         ]
     ],
     "plot_layout_array::one_file_two_angles": [
         [
             "--telescope_list data/layout/telescope_positions-North-TestLayout.ecsv",
             "--rotate_angle 20 30",
+            "--output_path",
+            "TESTMODELDIR/",
         ]
     ],
     "plot_layout_array::two_files": [
         [
             "--telescope_list data/layout/telescope_positions-North-TestLayout.ecsv "
             "data/layout/telescope_positions-South-TestLayout.ecsv",
+            "--output_path",
+            "TESTMODELDIR/",
         ]
     ],
     "plot_layout_array::two_files_one_angle": [
@@ -224,6 +286,8 @@ APP_LIST = {
             "--telescope_list data/layout/telescope_positions-North-TestLayout.ecsv "
             "data/layout/telescope_positions-South-TestLayout.ecsv",
             "--rotate_angle 20",
+            "--output_path",
+            "TESTMODELDIR/",
         ]
     ],
     "plot_layout_array::two_files_two_angles": [
@@ -231,92 +295,162 @@ APP_LIST = {
             "--telescope_list data/layout/telescope_positions-North-TestLayout.ecsv "
             "data/layout/telescope_positions-South-TestLayout.ecsv",
             "--rotate_angle 20 30",
+            "--output_path",
+            "TESTMODELDIR/",
         ]
     ],
     "plot_layout_array::layout_name": [
         [
             "--layout_array_name North-4LST",
+            "--output_path",
+            "TESTMODELDIR/",
         ]
     ],
     "plot_layout_array::layout_name_one_angle": [
         [
             "--layout_array_name North-4LST",
             "--rotate_angle 20",
+            "--output_path",
+            "TESTMODELDIR/",
         ]
     ],
     "plot_layout_array::layout_name_two_angles": [
         [
             "--layout_array_name North-4LST",
             "--rotate_angle 20 30",
+            "--output_path",
+            "TESTMODELDIR/",
         ]
     ],
     "plot_layout_array::layout_two_names_one_angle": [
         [
             "--layout_array_name North-4LST South-4LST",
             "--rotate_angle 20",
+            "--output_path",
+            "TESTMODELDIR/",
         ]
     ],
     "plot_layout_array::layout_two_names_two_angles": [
         [
             "--layout_array_name North-4LST South-4LST",
             "--rotate_angle 20 30",
+            "--output_path",
+            "TESTMODELDIR/",
         ]
     ],
-
     # CORSIKA photons
-    "generate_corsika_histograms::figures":
-        [["--IACT_file",
-          "./tests/resources/tel_output_10GeV-2-gamma-20deg-CTAO-South."
-          "corsikaio", "--png"]],
-    "generate_corsika_histograms::tables":
-        [["--IACT_file",
-          "./tests/resources/tel_output_10GeV-2-gamma-20deg-CTAO-South."
-          "corsikaio", "--ecsv"]],
-    "generate_corsika_histograms::figures_and_tables":
-        [["--IACT_file", "./tests/resources/"
-                         "tel_output_10GeV-2-gamma-20deg-CTAO-South.corsikaio", "--png", "--ecsv"]],
-    "generate_corsika_histograms::output":
-        [["--IACT_file", "./tests/resources/"
-                         "tel_output_10GeV-2-gamma-20deg-CTAO-South.corsikaio",
-          "--png", "--ecsv", "--output_path", "."]],
-    "generate_corsika_histograms::1D_and_2D_run_header":
-        [["--IACT_file",
-          "./tests/resources/tel_output_10GeV-2-gamma-20deg-CTAO-South."
-          "corsikaio",
-          "--png", "--ecsv",
-          "--event_2D_histograms", "zenith",
-          "azimuth", "--event_1D_histograms",
-          "total_energy"]],
-    "generate_corsika_histograms::1D_run_header":
-        [["--IACT_file",
-          "./tests/resources/tel_output_10GeV-2-gamma-20deg-CTAO-South."
-          "corsikaio",
-          "--png", "--ecsv", "--event_1D_histograms",
-          "total_energy"]],
-    "generate_corsika_histograms::2D_run_header":
-        [["--IACT_file",
-          "./tests/resources/tel_output_10GeV-2-gamma-20deg-CTAO-South."
-          "corsikaio",
-          "--png", "--ecsv",
-          "--event_2D_histograms", "zenith",
-          "azimuth"]],
-    "generate_corsika_histograms::individual_telescopes_and_indices":
-        [["--IACT_file",
-          "./tests/resources/tel_output_10GeV-2-gamma-20deg-CTAO-South."
-          "corsikaio",
-          "--png", "--ecsv",
-          "--telescope_indices",
-          "0 1 2",
-          "--individual_telescopes"]],
-
-    "generate_corsika_histograms::telescope_indices":
-        [["--IACT_file",
-          "./tests/resources/tel_output_10GeV-2-gamma-20deg-CTAO-South."
-          "corsikaio",
-          "--png", "--ecsv", "--telescope_indices", "0 1 2"]],
-
+    "generate_corsika_histograms::figures": [
+        [
+            "--IACT_file",
+            "./tests/resources/tel_output_10GeV-2-gamma-20deg-CTAO-South." "corsikaio",
+            "--png",
+            "--output_path",
+            "TESTMODELDIR/",
+        ]
+    ],
+    "generate_corsika_histograms::tables": [
+        [
+            "--IACT_file",
+            "./tests/resources/tel_output_10GeV-2-gamma-20deg-CTAO-South." "corsikaio",
+            "--ecsv",
+            "--output_path",
+            "TESTMODELDIR/",
+        ]
+    ],
+    "generate_corsika_histograms::figures_and_tables": [
+        [
+            "--IACT_file",
+            "./tests/resources/" "tel_output_10GeV-2-gamma-20deg-CTAO-South.corsikaio",
+            "--png",
+            "--ecsv",
+            "--output_path",
+            "TESTMODELDIR/",
+        ]
+    ],
+    "generate_corsika_histograms::output": [
+        [
+            "--IACT_file",
+            "./tests/resources/" "tel_output_10GeV-2-gamma-20deg-CTAO-South.corsikaio",
+            "--png",
+            "--ecsv",
+            "--output_path",
+            "TESTMODELDIR/",
+        ]
+    ],
+    "generate_corsika_histograms::1D_and_2D_run_header": [
+        [
+            "--IACT_file",
+            "./tests/resources/tel_output_10GeV-2-gamma-20deg-CTAO-South." "corsikaio",
+            "--png",
+            "--ecsv",
+            "--event_2D_histograms",
+            "zenith",
+            "azimuth",
+            "--event_1D_histograms",
+            "total_energy",
+            "--output_path",
+            "TESTMODELDIR/",
+        ]
+    ],
+    "generate_corsika_histograms::1D_run_header": [
+        [
+            "--IACT_file",
+            "./tests/resources/tel_output_10GeV-2-gamma-20deg-CTAO-South." "corsikaio",
+            "--png",
+            "--ecsv",
+            "--event_1D_histograms",
+            "total_energy",
+            "--output_path",
+            "TESTMODELDIR/",
+        ]
+    ],
+    "generate_corsika_histograms::2D_run_header": [
+        [
+            "--IACT_file",
+            "./tests/resources/tel_output_10GeV-2-gamma-20deg-CTAO-South." "corsikaio",
+            "--png",
+            "--ecsv",
+            "--event_2D_histograms",
+            "zenith",
+            "azimuth",
+            "--output_path",
+            "TESTMODELDIR/",
+        ]
+    ],
+    "generate_corsika_histograms::individual_telescopes_and_indices": [
+        [
+            "--IACT_file",
+            "./tests/resources/tel_output_10GeV-2-gamma-20deg-CTAO-South." "corsikaio",
+            "--png",
+            "--ecsv",
+            "--telescope_indices",
+            "0 1 2",
+            "--individual_telescopes",
+            "--output_path",
+            "TESTMODELDIR/",
+        ]
+    ],
+    "generate_corsika_histograms::telescope_indices": [
+        [
+            "--IACT_file",
+            "./tests/resources/tel_output_10GeV-2-gamma-20deg-CTAO-South." "corsikaio",
+            "--png",
+            "--ecsv",
+            "--telescope_indices",
+            "0 1 2",
+            "--output_path",
+            "TESTMODELDIR/",
+        ]
+    ],
     # Production
-    "produce_array_config": [["--array_config", "./tests/resources/array_config_test.yml"]],
+    "produce_array_config": [
+        [
+            "--array_config",
+            "./tests/resources/array_config_test.yml",
+            "--output_path",
+            "TESTMODELDIR/",
+        ]
+    ],
     # Trigger
     "sim_showers_for_trigger_rates": [
         [
@@ -333,13 +467,24 @@ APP_LIST = {
             "--test",
             "--submit_command",
             "local",
+            "--output_path",
+            "TESTMODELDIR/",
         ]
     ],
     # Database
-    "get_file_from_db::CTA-Simulation-Model": [["--file_name", "mirror_CTA-S-LST_v2020-04-07.dat"]],
-    "get_file_from_db::test-data": [["--file_name", "PSFcurve_data_v2.txt"]],
+    "get_file_from_db::CTA-Simulation-Model": [
+        ["--file_name", "mirror_CTA-S-LST_v2020-04-07.dat", "--output_path", "TESTMODELDIR/"]
+    ],
+    "get_file_from_db::test-data": [
+        ["--file_name", "PSFcurve_data_v2.txt", "--output_path", "TESTMODELDIR/"]
+    ],
     "get_file_from_db::CTA-Simulation-Model-Derived-Values": [
-        ["--file_name", "ray-tracing-North-LST-1-d10.0-za20.0_validate_optics.ecsv"]
+        [
+            "--file_name",
+            "ray-tracing-North-LST-1-d10.0-za20.0_validate_optics.ecsv",
+            "--output_path",
+            "TESTMODELDIR/",
+        ]
     ],
     "get_parameter::telescope_parameter": [
         [
@@ -381,6 +526,10 @@ APP_LIST = {
             "--test",
             "--submit_command",
             "local",
+            "--data_directory",
+            "TESTMODELDIR/",
+            "--output_path",
+            "TESTMODELDIR/",
         ]
     ],
     "production::array_only": [
@@ -393,6 +542,10 @@ APP_LIST = {
             "--test",
             "--submit_command",
             "local",
+            "--data_directory",
+            "TESTMODELDIR/",
+            "--output_path",
+            "TESTMODELDIR/",
         ]
     ],
     # print_array
@@ -405,6 +558,8 @@ APP_LIST = {
             "tests/resources/telescope_positions-South-4MST.ecsv",
             "--compact",
             "corsika",
+            "--output_path",
+            "TESTMODELDIR/",
         ],
     ],
     "print_array_elements::export_utm": [
@@ -413,6 +568,8 @@ APP_LIST = {
             "tests/resources/telescope_positions-South-4MST.ecsv",
             "--export",
             "utm",
+            "--output_path",
+            "TESTMODELDIR/",
         ],
     ],
     "print_array_elements::export_corsika": [
@@ -422,6 +579,8 @@ APP_LIST = {
             "--export",
             "corsika",
             "--use_corsika_telescope_height",
+            "--output_path",
+            "TESTMODELDIR/",
         ],
     ],
     "print_array_elements::print_compact_nocors_utm": [
@@ -430,6 +589,8 @@ APP_LIST = {
             "tests/resources/telescope_positions-North-utm.ecsv",
             "--compact",
             "utm",
+            "--output_path",
+            "TESTMODELDIR/",
         ],
     ],
     "print_array_elements::print_compact_nocors_corsika": [
@@ -438,6 +599,8 @@ APP_LIST = {
             "tests/resources/telescope_positions-North-utm.ecsv",
             "--compact",
             "corsika",
+            "--output_path",
+            "TESTMODELDIR/",
         ],
     ],
     "print_array_elements::print_compact_corsika_telescopeheights": [
@@ -447,6 +610,8 @@ APP_LIST = {
             "--export",
             "corsika",
             "--use_corsika_telescope_height",
+            "--output_path",
+            "TESTMODELDIR/",
         ],
     ],
     # validate_schema_files
@@ -490,9 +655,8 @@ def test_applications(application, io_handler, monkeypatch, db):
 
     prepare_one_file("PSFcurve_data_v2.txt")
     prepare_one_file("MLTdata-preproduction.ecsv")
-    # TODO - temporary path until workflows/documentation PR is merged
     download_file(
-        "https://raw.githubusercontent.com/gammasim/workflows/documentation/schemas/jsonschema.yml"
+        "https://raw.githubusercontent.com/gammasim/workflows/main/schemas/jsonschema.yml"
     )
 
     def make_command(app, args):
