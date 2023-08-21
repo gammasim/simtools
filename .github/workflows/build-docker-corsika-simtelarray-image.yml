@@ -10,7 +10,7 @@ env:
 
 jobs:
 
-  build-simtools-container:
+  corsika-simtelarray-container:
     runs-on: ubuntu-latest
     permissions:
       contents: read
