@@ -1,9 +1,9 @@
 # A conda environment with all useful package for simtools developers
-name: simtools-dev
+name: simtools-dev2
 channels:
   - conda-forge
 dependencies:
-  - python=3.9
+  - python=3.11
   - pyyaml
   - numpy
   - astropy

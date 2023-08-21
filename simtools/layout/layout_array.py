@@ -535,7 +535,8 @@ class LayoutArray:
 
             self._telescope_list.append(tel)
 
-    def read_telescope_list_file(self, telescope_list_file):
+    @staticmethod
+    def read_telescope_list_file(telescope_list_file):
         """
         Read list of telescopes from a ecsv file.
 
@@ -555,12 +556,13 @@ class LayoutArray:
             If file cannot be opened.
 
         """
+        _logger = logging.getLogger(__name__)
         try:
             table = QTable.read(telescope_list_file, format="ascii.ecsv")
         except FileNotFoundError:
-            self._logger.error(f"Error reading list of array elements from {telescope_list_file}")
+            _logger.error(f"Error reading list of array elements from {telescope_list_file}")
             raise
-        self._logger.info(f"Reading array elements from {telescope_list_file}")
+        _logger.info(f"Reading array elements from {telescope_list_file}")
 
         return table
 
@@ -573,7 +575,7 @@ class LayoutArray:
         telescope_list_file: str or Path
             Path to the telescope list file.
         """
-        table = self.read_telescope_list_file(telescope_list_file)
+        table = self.read_telescope_list_file(telescope_list_file=telescope_list_file)
         self._initialize_corsika_telescope(table.meta)
         self._initialize_coordinate_systems(table.meta)
         self._load_telescope_list(table)
