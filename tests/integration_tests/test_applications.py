@@ -655,10 +655,7 @@ def test_applications(application, io_handler, monkeypatch, db):
 
     prepare_one_file("PSFcurve_data_v2.txt")
     prepare_one_file("MLTdata-preproduction.ecsv")
-    # TODO - temporary path until workflows/documentation PR is merged
-    download_file(
-        "https://raw.githubusercontent.com/gammasim/workflows/documentation/schemas/jsonschema.yml"
-    )
+    download_file("https://github.com/gammasim/workflows/blob/main/schemas/jsonschema.yml")
 
     def make_command(app, args):
         if app.find("simtools-") < 0:
