@@ -56,7 +56,6 @@ class LayoutArray:
         """
 
         self._logger = logging.getLogger(__name__)
-        self._logger.debug("Init LayoutArray")
 
         self.mongo_db_config = mongo_db_config
         self.label = label
@@ -168,7 +167,6 @@ class LayoutArray:
         FileNotFoundError:
             If file_name does not exist.
         """
-        logger = logging.getLogger(__name__)
         if file_name is None:
             corsika_parameters_dict = collect_data_from_yaml_or_dict(
                 self.io_handler.get_input_data_file("parameters", "corsika_parameters.yml"), None
@@ -197,7 +195,7 @@ class LayoutArray:
                         tel_type
                     ] * u.Unit(unit)
                 except KeyError:
-                    logger.warning(
+                    self._logger.warning(
                         "Key not valid. Dictionary does not have a key 'unit'. Continuing without "
                         "the unit."
                     )
@@ -293,7 +291,6 @@ class LayoutArray:
             invalid array center definition.
 
         """
-        self._logger.debug(f"Initialize array center coordinate systems: {center_dict}")
 
         self._array_center = TelescopePosition()
         self._array_center.name = "array_center"
@@ -454,9 +451,7 @@ class LayoutArray:
             Quantity of value 'quantity' and unit 'unit'.
         """
         if isinstance(value, u.Quantity):
-            self._logger.debug(f"Value {value} is already of type astropy.units.Quantity.")
             if isinstance(value.unit, type(unit)):
-                self._logger.debug(f"Quantity {value} has already unit {unit}. Returning {value}")
                 return value
             try:
                 value = value.to(unit)
@@ -490,8 +485,6 @@ class LayoutArray:
                 self._assign_unit_to_quantity(row[key1], table[key1].unit),
                 self._assign_unit_to_quantity(row[key2], table[key2].unit),
             )
-            self._logger.debug(f"{key1} and {key2} are given. Setting coordinates.")
-
         except KeyError:
             self._logger.debug(f"{key1} and {key2} are not given. Coordinates not set.")
 
@@ -516,14 +509,10 @@ class LayoutArray:
                     tel_name=tel.name,
                 )
             )
-            self._logger.debug(
-                "CORSIKA z-coordinate of telescope is given. Setting altitude from it."
-            )
         except KeyError:
             pass
         try:
             tel.set_altitude(self._assign_unit_to_quantity(row["alt"], table["alt"].unit))
-            self._logger.debug("Telescope altitude is given. Setting altitude from it.")
         except KeyError:
             pass
 
@@ -546,8 +535,7 @@ class LayoutArray:
 
             self._telescope_list.append(tel)
 
-    @staticmethod
-    def read_telescope_list_file(telescope_list_file):
+    def read_telescope_list_file(self, telescope_list_file):
         """
         Read list of telescopes from a ecsv file.
 
@@ -567,13 +555,12 @@ class LayoutArray:
             If file cannot be opened.
 
         """
-        _logger = logging.getLogger(__name__)
         try:
             table = QTable.read(telescope_list_file, format="ascii.ecsv")
         except FileNotFoundError:
-            _logger.error(f"Error reading list of array elements from {telescope_list_file}")
+            self._logger.error(f"Error reading list of array elements from {telescope_list_file}")
             raise
-        _logger.info(f"Reading array elements from {telescope_list_file}")
+        self._logger.info(f"Reading array elements from {telescope_list_file}")
 
         return table
 
@@ -887,10 +874,7 @@ class LayoutArray:
                     + " +axis=nwu +units=m +k_0=1.0"
                 )
                 crs_local = pyproj.CRS.from_proj4(proj4_string)
-                self._logger.debug(f"Local Mercator projection: {crs_local}")
                 return crs_local
-
-        self._logger.debug("crs_local cannot be built: missing array center lon and lat")
 
         return None
 
@@ -906,10 +890,7 @@ class LayoutArray:
         """
         if self._epsg:
             crs_utm = pyproj.CRS.from_user_input(self._epsg)
-            self._logger.debug(f"UTM system: {crs_utm}")
             return crs_utm
-
-        self._logger.debug("crs_utm cannot be built because EPSG definition is missing")
 
         return None
 
