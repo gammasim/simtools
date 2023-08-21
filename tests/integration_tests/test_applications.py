@@ -655,9 +655,8 @@ def test_applications(application, io_handler, monkeypatch, db):
 
     prepare_one_file("PSFcurve_data_v2.txt")
     prepare_one_file("MLTdata-preproduction.ecsv")
-    # TODO - temporary path until workflows/documentation PR is merged
     download_file(
-        "https://raw.githubusercontent.com/gammasim/workflows/documentation/schemas/jsonschema.yml"
+        "https://raw.githubusercontent.com/gammasim/workflows/main/schemas/jsonschema.yml"
     )
 
     def make_command(app, args):
