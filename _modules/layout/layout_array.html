@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>layout.layout_array &#8212; simtools v0.1.dev1+g98560dc Manual</title>
+    <title>layout.layout_array &#8212; simtools v0.1.dev1+g2e94760 Manual</title>
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/bizstyle.css" />
     
@@ -30,7 +30,7 @@
         <li class="right" >
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../index.html">simtools v0.1.dev1+g98560dc Manual</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">simtools v0.1.dev1+g2e94760 Manual</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">layout.layout_array</a></li> 
       </ul>
@@ -100,7 +100,6 @@
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Init LayoutArray&quot;</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">mongo_db_config</span> <span class="o">=</span> <span class="n">mongo_db_config</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">label</span> <span class="o">=</span> <span class="n">label</span>
@@ -212,7 +211,6 @@
 <span class="sd">        FileNotFoundError:</span>
 <span class="sd">            If file_name does not exist.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">file_name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">corsika_parameters_dict</span> <span class="o">=</span> <span class="n">collect_data_from_yaml_or_dict</span><span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">io_handler</span><span class="o">.</span><span class="n">get_input_data_file</span><span class="p">(</span><span class="s2">&quot;parameters&quot;</span><span class="p">,</span> <span class="s2">&quot;corsika_parameters.yml&quot;</span><span class="p">),</span> <span class="kc">None</span>
@@ -241,7 +239,7 @@
                         <span class="n">tel_type</span>
                     <span class="p">]</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">Unit</span><span class="p">(</span><span class="n">unit</span><span class="p">)</span>
                 <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
-                    <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
                         <span class="s2">&quot;Key not valid. Dictionary does not have a key &#39;unit&#39;. Continuing without &quot;</span>
                         <span class="s2">&quot;the unit.&quot;</span>
                     <span class="p">)</span>
@@ -337,7 +335,6 @@
 <span class="sd">            invalid array center definition.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Initialize array center coordinate systems: </span><span class="si">{</span><span class="n">center_dict</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_array_center</span> <span class="o">=</span> <span class="n">TelescopePosition</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_array_center</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;array_center&quot;</span>
@@ -498,9 +495,7 @@
 <span class="sd">            Quantity of value &#39;quantity&#39; and unit &#39;unit&#39;.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">):</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Value </span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2"> is already of type astropy.units.Quantity.&quot;</span><span class="p">)</span>
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="o">.</span><span class="n">unit</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="n">unit</span><span class="p">)):</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Quantity </span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2"> has already unit </span><span class="si">{</span><span class="n">unit</span><span class="si">}</span><span class="s2">. Returning </span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
                 <span class="k">return</span> <span class="n">value</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="n">value</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">unit</span><span class="p">)</span>
@@ -534,8 +529,6 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">_assign_unit_to_quantity</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="n">key1</span><span class="p">],</span> <span class="n">table</span><span class="p">[</span><span class="n">key1</span><span class="p">]</span><span class="o">.</span><span class="n">unit</span><span class="p">),</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_assign_unit_to_quantity</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="n">key2</span><span class="p">],</span> <span class="n">table</span><span class="p">[</span><span class="n">key2</span><span class="p">]</span><span class="o">.</span><span class="n">unit</span><span class="p">),</span>
             <span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">key1</span><span class="si">}</span><span class="s2"> and </span><span class="si">{</span><span class="n">key2</span><span class="si">}</span><span class="s2"> are given. Setting coordinates.&quot;</span><span class="p">)</span>
-
         <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">key1</span><span class="si">}</span><span class="s2"> and </span><span class="si">{</span><span class="n">key2</span><span class="si">}</span><span class="s2"> are not given. Coordinates not set.&quot;</span><span class="p">)</span>
 
@@ -560,14 +553,10 @@
                     <span class="n">tel_name</span><span class="o">=</span><span class="n">tel</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
                 <span class="p">)</span>
             <span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
-                <span class="s2">&quot;CORSIKA z-coordinate of telescope is given. Setting altitude from it.&quot;</span>
-            <span class="p">)</span>
         <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
             <span class="k">pass</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">tel</span><span class="o">.</span><span class="n">set_altitude</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_assign_unit_to_quantity</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&quot;alt&quot;</span><span class="p">],</span> <span class="n">table</span><span class="p">[</span><span class="s2">&quot;alt&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">unit</span><span class="p">))</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Telescope altitude is given. Setting altitude from it.&quot;</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
             <span class="k">pass</span>
 
@@ -630,7 +619,7 @@
 <span class="sd">        telescope_list_file: str or Path</span>
 <span class="sd">            Path to the telescope list file.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">table</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">read_telescope_list_file</span><span class="p">(</span><span class="n">telescope_list_file</span><span class="p">)</span>
+        <span class="n">table</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">read_telescope_list_file</span><span class="p">(</span><span class="n">telescope_list_file</span><span class="o">=</span><span class="n">telescope_list_file</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_initialize_corsika_telescope</span><span class="p">(</span><span class="n">table</span><span class="o">.</span><span class="n">meta</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_initialize_coordinate_systems</span><span class="p">(</span><span class="n">table</span><span class="o">.</span><span class="n">meta</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_load_telescope_list</span><span class="p">(</span><span class="n">table</span><span class="p">)</span></div>
@@ -931,10 +920,7 @@
                     <span class="o">+</span> <span class="s2">&quot; +axis=nwu +units=m +k_0=1.0&quot;</span>
                 <span class="p">)</span>
                 <span class="n">crs_local</span> <span class="o">=</span> <span class="n">pyproj</span><span class="o">.</span><span class="n">CRS</span><span class="o">.</span><span class="n">from_proj4</span><span class="p">(</span><span class="n">proj4_string</span><span class="p">)</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Local Mercator projection: </span><span class="si">{</span><span class="n">crs_local</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
                 <span class="k">return</span> <span class="n">crs_local</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;crs_local cannot be built: missing array center lon and lat&quot;</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="kc">None</span>
 
@@ -950,10 +936,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_epsg</span><span class="p">:</span>
             <span class="n">crs_utm</span> <span class="o">=</span> <span class="n">pyproj</span><span class="o">.</span><span class="n">CRS</span><span class="o">.</span><span class="n">from_user_input</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_epsg</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;UTM system: </span><span class="si">{</span><span class="n">crs_utm</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">crs_utm</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;crs_utm cannot be built because EPSG definition is missing&quot;</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="kc">None</span>
 
@@ -1063,7 +1046,7 @@
         <li class="right" >
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../index.html">simtools v0.1.dev1+g98560dc Manual</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">simtools v0.1.dev1+g2e94760 Manual</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">layout.layout_array</a></li> 
       </ul>
