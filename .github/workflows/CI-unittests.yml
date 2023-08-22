@@ -30,7 +30,7 @@ jobs:
           - os: ubuntu-latest
             python-version: "3.9"
             install-method: pip
-            if: github.event.pull_request.draft == true
+            if: github.event.pull_request.draft == false
 
           - os: macos-latest
             python-version: "3.9"
