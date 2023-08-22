@@ -30,37 +30,37 @@ jobs:
           - os: ubuntu-latest
             python-version: "3.9"
             install-method: pip
-            context: [pull_request.ready_for_review]
+            if: ${{ github.event_name != 'pull_request.draft' }}
 
           - os: macos-latest
             python-version: "3.9"
             install-method: mamba
-            context: [pull_request.ready_for_review]
+            if: ${{ github.event_name != 'pull_request.draft' }}
 
           - os: macos-latest
             python-version: "3.9"
             install-method: pip
-            context: [pull_request.ready_for_review]
+            if: ${{ github.event_name != 'pull_request.draft' }}
 
           - os: ubuntu-latest
             python-version: "3.10"
             install-method: mamba
-            context: [pull_request.ready_for_review]
+            if: ${{ github.event_name != 'pull_request.draft' }}
 
           - os: ubuntu-latest
             python-version: "3.10"
             install-method: pip
-            context: [pull_request.ready_for_review]
+            if: ${{ github.event_name != 'pull_request.draft' }}
 
           - os: ubuntu-latest
             python-version: "3.11"
             install-method: mamba
-            context: [pull_request.ready_for_review]
+            if: ${{ github.event_name != 'pull_request.draft' }}
 
           - os: ubuntu-latest
             python-version: "3.11"
             install-method: pip
-            context: [pull_request.ready_for_review]
+            if: ${{ github.event_name != 'pull_request.draft' }}
 
     defaults:
       run:
