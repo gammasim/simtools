@@ -30,30 +30,37 @@ jobs:
           - os: ubuntu-latest
             python-version: "3.9"
             install-method: pip
+            context: [pull_request.default, pull_request.read_for_review]
 
           - os: macos-latest
             python-version: "3.9"
             install-method: mamba
+            context: [pull_request.default, pull_request.read_for_review]
 
           - os: macos-latest
             python-version: "3.9"
             install-method: pip
+            context: [pull_request.default, pull_request.read_for_review]
 
           - os: ubuntu-latest
             python-version: "3.10"
             install-method: mamba
+            context: [pull_request.default, pull_request.read_for_review]
 
           - os: ubuntu-latest
             python-version: "3.10"
             install-method: pip
+            context: [pull_request.default, pull_request.read_for_review]
 
           - os: ubuntu-latest
             python-version: "3.11"
             install-method: mamba
+            context: [pull_request.default, pull_request.read_for_review]
 
           - os: ubuntu-latest
             python-version: "3.11"
             install-method: pip
+            context: [pull_request.default, pull_request.read_for_review]
 
     defaults:
       run:
