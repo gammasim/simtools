@@ -102,9 +102,9 @@ APP_LIST = {
             "--containment_fraction",
             "0.8",
             "--mirror_list",
-            "TESTMODELDIR/MLTdata-preproduction.ecsv",
+            "./tests/resources/MLTdata-preproduction.ecsv",
             "--psf_measurement",
-            "TESTMODELDIR/MLTdata-preproduction.ecsv",
+            "./tests/resources/MLTdata-preproduction.ecsv",
             "--rnda",
             "0.0063",
             " --test",
@@ -121,9 +121,9 @@ APP_LIST = {
             "--containment_fraction",
             "0.8",
             "--mirror_list",
-            "TESTMODELDIR/MLTdata-preproduction.ecsv",
+            "./tests/resources/MLTdata-preproduction.ecsv",
             "--psf_measurement",
-            "TESTMODELDIR/MLTdata-preproduction.ecsv",
+            "./tests/resources/MLTdata-preproduction.ecsv",
             "--rnda",
             "0.0063",
             "--no_tuning",
@@ -141,7 +141,7 @@ APP_LIST = {
             "--containment_fraction",
             "0.8",
             "--mirror_list",
-            "TESTMODELDIR/MLTdata-preproduction.ecsv",
+            "./tests/resources/MLTdata-preproduction.ecsv",
             "--psf_measurement_containment_mean",
             "1.4",
             "--rnda",
@@ -509,8 +509,8 @@ APP_LIST = {
     "add_file_to_db": [
         [
             "--file_name",
-            "TESTMODELDIR/MLTdata-preproduction.usermeta.yml",
-            "TESTMODELDIR/MLTdata-preproduction.ecsv",
+            "./tests/resources/MLTdata-preproduction.ecsv",
+            "./tests/resources/MLTdata-preproduction.ecsv",
             "--db",
             "sandbox",
         ]
@@ -654,7 +654,6 @@ def test_applications(application, io_handler, monkeypatch, db):
             print("Failed to download the file.")
 
     prepare_one_file("PSFcurve_data_v2.txt")
-    prepare_one_file("MLTdata-preproduction.ecsv")
     download_file(
         "https://raw.githubusercontent.com/gammasim/workflows/main/schemas/jsonschema.yml"
     )
