@@ -23,7 +23,7 @@ const initialiseBizStyle = () => {
 }
 
 window.addEventListener("resize",
-  () => (document.querySelector("li.nav-item-0 a").innerText = (window.innerWidth <= 776) ? "Top" : "simtools v0.1.dev1+g8b2ac9b Manual")
+  () => (document.querySelector("li.nav-item-0 a").innerText = (window.innerWidth <= 776) ? "Top" : "simtools v0.1.dev1+g856acfc Manual")
 )
 
 if (document.readyState !== "loading") initialiseBizStyle()
