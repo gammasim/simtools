@@ -13,9 +13,8 @@ on:
   pull_request:
     branches: [main]
     types: [opened, synchronize]
-  push:
-    branches:
-      - main
+  schedule:
+    - cron: "0 0 * * *"
 
 jobs:
 
