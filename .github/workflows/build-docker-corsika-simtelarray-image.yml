@@ -25,7 +25,7 @@ jobs:
           path: corsika7.7_simtelarray.tar.gz
           retention-days: 1
 
-  build-simtools-container:
+  build-corsikasimtel-container:
     needs: corsikasimtelpackage
     runs-on: ubuntu-latest
     permissions:
