@@ -509,7 +509,7 @@ APP_LIST = {
     "add_file_to_db": [
         [
             "--file_name",
-            "./tests/resources/MLTdata-preproduction.ecsv",
+            "./tests/resources/MLTdata-preproduction.meta.yml",
             "./tests/resources/MLTdata-preproduction.ecsv",
             "--db",
             "sandbox",
