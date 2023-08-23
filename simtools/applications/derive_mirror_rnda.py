@@ -7,8 +7,13 @@
     (sometimes called mirror roughness) to match the measured containment diameter \
     of the optical point-spread function (PSF) of individual mirror panels.
 
-    Input is obtained from measurements of the PSF \
-    of individual mirror panels and are provided by one of the following options:
+    Description
+    -----------
+
+    The application derives the value of the simulation model parameter \
+    using measurements of the focal length and PSF of individual mirror panels.
+     
+    PSF measurements are provided by one of the following options:
 
     * mean and sigma value of the measured containment diameter in cm \
     (``--psf_measurement_containment_mean`` and ``--psf_measurement_containment_sigma``)
@@ -128,7 +133,6 @@
         mirror_random_reflection_angle
         Previous value = 0.006300
         New value = 0.004975
-
 
 """
 
@@ -259,7 +263,7 @@ def _print_and_write_results(
     args_dict, rnda_start, rnda_opt, mean_d80, sig_d80, results_rnda, results_mean, results_sig
 ):
     """
-    Print results to screen write metadata and data files
+    Print results to screen and write metadata and data files
     in the requested format
 
     """
