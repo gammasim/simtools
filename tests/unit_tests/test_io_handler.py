@@ -8,40 +8,64 @@ logger.setLevel(logging.DEBUG)
 
 
 def test_get_output_directory(args_dict, io_handler):
-
+    # default adding label
     assert io_handler.get_output_directory(label="test-io-handler") == Path(
         f"{args_dict['output_path']}/output/simtools-output/test-io-handler/"
     )
 
-    assert io_handler.get_output_directory(label="test-io-handler", test=True) == Path(
+    # label and testing
+    assert io_handler.get_output_directory(label="test-io-handler", dir_type="test") == Path(
         f"{args_dict['output_path']}/output/test-output/test-io-handler/"
     )
 
-    assert io_handler.get_output_directory(label="test-io-handler", dir_type="model") == Path(
+    # label and subdirectory (no testing)
+    assert io_handler.get_output_directory(label="test-io-handler", sub_dir="model") == Path(
         f"{args_dict['output_path']}/output/simtools-output/test-io-handler/model"
     )
 
+    # label and subdirectory (no testing); simtools-results should have no effect
     assert io_handler.get_output_directory(
-        label="test-io-handler", dir_type="model", test=True
+        label="test-io-handler", sub_dir="model", dir_type="simtools-results"
+    ) == Path(f"{args_dict['output_path']}/output/simtools-output/test-io-handler/model")
+
+    # label and subdirectory (testing)
+    assert io_handler.get_output_directory(
+        label="test-io-handler", sub_dir="model", dir_type="test"
     ) == Path(f"{args_dict['output_path']}/output/test-output/test-io-handler/model")
 
+    # all following tests: plain_path tests
     io_handler.use_plain_output_path = True
 
+    # plain path (label has no effect), no subdirectories (no testing)
     assert io_handler.get_output_directory(label="test-io-handler") == Path(
         f"{args_dict['output_path']}/output"
     )
 
-    assert io_handler.get_output_directory(label="test-io-handler", test=True) == Path(
+    # plain path (label has no effect), no subdirectories (testing is ignored)
+    assert io_handler.get_output_directory(label="test-io-handler", dir_type="test") == Path(
         f"{args_dict['output_path']}/output"
     )
 
-    assert io_handler.get_output_directory(label="test-io-handler", dir_type="model") == Path(
-        f"{args_dict['output_path']}/output"
+    # plain path, label has no effect, with sub directory as dir_type != 'simtools-results
+    # (no testing)
+    assert io_handler.get_output_directory(label="test-io-handler", sub_dir="model") == Path(
+        f"{args_dict['output_path']}/output/model"
     )
+
+    # plain path, label has no effect, with sub directory as dir_type != 'simtools-results
+    # (testing)
+    assert io_handler.get_output_directory(
+        label="test-io-handler", sub_dir="model", dir_type="test"
+    ) == Path(f"{args_dict['output_path']}/output/model")
+
+    # plain path, label has no effect, without sub directory as dir_type == 'simtools-results
+    # (no testing)
+    assert io_handler.get_output_directory(
+        label="test-io-handler", sub_dir="model", dir_type="simtools-result"
+    ) == Path(f"{args_dict['output_path']}/output/")
 
 
 def test_get_output_file(args_dict, io_handler):
-
     assert io_handler.get_output_file(file_name="test-file.txt", label="test-io-handler") == Path(
         f"{args_dict['output_path']}/output/simtools-output/test-io-handler/test-file.txt"
     )
@@ -49,13 +73,13 @@ def test_get_output_file(args_dict, io_handler):
     assert io_handler.get_output_file(
         file_name="test-file.txt",
         label="test-io-handler",
-        test=True,
+        dir_type="test",
     ) == Path(f"{args_dict['output_path']}/output/test-output/test-io-handler/test-file.txt")
 
     assert io_handler.get_output_file(
         file_name="test-file.txt",
         label="test-io-handler",
-        dir_type="model",
+        sub_dir="model",
     ) == Path(
         f"{args_dict['output_path']}/output/simtools-output/test-io-handler/model/test-file.txt"
     )
@@ -63,13 +87,12 @@ def test_get_output_file(args_dict, io_handler):
     assert io_handler.get_output_file(
         file_name="test-file.txt",
         label="test-io-handler",
-        dir_type="model",
-        test=True,
+        sub_dir="model",
+        dir_type="test",
     ) == Path(f"{args_dict['output_path']}/output/test-output/test-io-handler/model/test-file.txt")
 
 
 def test_get_data_file(args_dict, io_handler):
-
     assert (
         io_handler.get_input_data_file(
             parent_dir="test-io-handler",

@@ -45,12 +45,12 @@ def test_from_kwargs(db, io_handler, simtel_path):
     test_file_name = "CTA-North-LST-1-Current_test-telescope-model.cfg"
     db.export_file_db(
         db_name="test-data",
-        dest=io_handler.get_output_directory(dir_type="model", test=True),
+        dest=io_handler.get_output_directory(sub_dir="model", dir_type="test"),
         file_name=test_file_name,
     )
 
     cfg_file = gen.find_file(
-        test_file_name, io_handler.get_output_directory(dir_type="model", test=True)
+        test_file_name, io_handler.get_output_directory(sub_dir="model", dir_type="test")
     )
 
     tel = TelescopeModel.from_config_file(
