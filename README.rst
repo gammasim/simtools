@@ -2,8 +2,17 @@
 simtools
 ==============
 
+.. image:: https://img.shields.io/badge/License-BSD_3--Clause-blue.svg
+   :target: https://github.com/gammasim/simtools/blob/main/LICENSE
+
+.. image:: https://img.shields.io/github/v/release/gammasim/simtools
+   :target: https://github.com/gammasim/simtools/releases
+
 .. image:: https://zenodo.org/badge/195011575.svg
    :target: https://zenodo.org/badge/latestdoi/195011575
+
+.. image:: https://badge.fury.io/py/gammasimtools.svg
+    :target: https://badge.fury.io/py/gammasimtools
 
 .. image:: https://github.com/gammasim/simtools/actions/workflows/CI-unittests.yml/badge.svg
    :target: https://github.com/gammasim/simtools/actions/workflows/CI-unittests.yml
@@ -21,24 +30,40 @@ simtools
    :target: https://codecov.io/gh/gammasim/simtools
 
 
-Prototype implementation of tools for the Simulation Pipeline of the `CTA Observatory <www.cta-observatory.org>`_:
+simtools is a set of tools and applications for the simulation pipeline of the `Cherenkov Telescope Array (CTAO) <www.cta-observatory.org>`_.
 
-* libraries for simulation model management and model database interface;
-* applications for simulation model parameter derivation and validation;
-* standardized interfaces and data products independent of the underlying simulation software (e.g., `CORSIKA <https://www.iap.kit.edu/corsika/>`_, `sim_telarray <https://www.mpi-hd.mpg.de/hfm/~bernlohr/sim_telarray/>`_);
-* I/O and reporting tools for the MC simulation model parameter and production database.
+License: `BSD-3 <https://github.com/gammasim/simtools/blob/main/LICENSE>`_, Python: >=3.9
+
+Useful links:
+`Documentation <https://gammasim.github.io/simtools/>`_
+`Source code <https://github.com/gammasim/simtools>`_
+`Issue tracker <https://github.com/gammasim/simtools/issues>`_
+`Citation <https://github.com/gammasim/simtools/blob/main/CITATION.cff>`_
+
+simtools provides:
+
+* libraries for simulation model management and model database interface
+* tools for the preparation and configuration of simulation production
+* applications for simulation model parameter derivation and validation
+* standardized interfaces and data products independent of the underlying simulation software (e.g., `CORSIKA <https://www.iap.kit.edu/corsika/>`_, `sim_telarray <https://www.mpi-hd.mpg.de/hfm/~bernlohr/sim_telarray/>`_)
+* I/O and reporting tools for the MC simulation model parameter and production database
 
 simtools is one part of the CTAO Simulation Pipeline, which consist of the following components:
 
-- `CORSIKA <https://www.iap.kit.edu/corsika/>`_ air shower simulation code and the `sim_telarray <https://www.mpi-hd.mpg.de/hfm/~bernlohr/sim_telarray/>`_ telescope simulation code.
-- simtools for tools and application for model parameter and configuration management, database interfaces, validation, and production preparations.
-- databases, especially the model parameter database.
+- `CORSIKA <https://www.iap.kit.edu/corsika/>`_ air shower simulation code and the `sim_telarray <https://www.mpi-hd.mpg.de/hfm/~bernlohr/sim_telarray/>`_ telescope simulation code
+- `workflows <https://github.com/gammasim/workflows>`_ for setting, derivation and validation of simulation model parameters
+- `simulation model parameter and input data schema <https://github.com/gammasim/workflows>`_
+- databases, especially the model parameter database
 
-This code is under rapid development. Please contact the developers if you want to use it.
+simtools is under rapid development with continuous changes and additions planned. Please contact the developers if you want to use it.
 
-- Code: https://github.com/gammasim/simtools
-- Documentation: https://gammasim.github.io/simtools/
-- Model database access: contact developers.
+
+Maintainers
+===========
+
+* Orel Gueta (orel.gueta@desy.de)
+* Victor B. Martins (victor.barbosa.martins@desy.de)
+* Gernot Maier (gernot.maier@desy.de)
 
 Authors
 =======
