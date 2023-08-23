@@ -2,10 +2,17 @@
 """
     Summary
     -------
-    Print a list of array element positions in different CTAO coordinate \
+    Convert and print a list of array element positions in different CTAO coordinate \
     systems.
 
+    Description
+    -----------
+
+    This application converts a list of array element positions in different CTAO \
+    coordinate systems.
+
     Available coordinate systems are:
+
     1. UTM system
     2. CORSIKA coordinates
     3. Mercator system
@@ -27,10 +34,6 @@
     -------
     Print a list of array elements using a list of telescope positions in UTM coordinates.
 
-    Example:
-
-    Run the application:
-
     .. code-block:: console
 
         simtools-print-array-elements \
@@ -47,7 +50,18 @@
     MST-03      -1.47    -151.02    2169.00
     MST-04     150.72      73.57    2159.00
 
+    The following example converts the list of telescope positions in UTM coordinates \
+    and writes the output to a file in CORSIKA coordinates. Also select only a subset \
+    of the array elements (telescopes; ignore calibration devices):
 
+    .. code-block:: console
+
+        simtools-print-array-elements \
+            --array_element_list tests/resources/telescope_positions-North-utm.ecsv \
+            --export corsika --use_corsika_telescope_height \
+            --select_assets LSTN, MSTN, SSTN
+
+    Expected output is a ecsv file in the directory printed to the screen.
 
 """
 
