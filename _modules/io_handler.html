@@ -2,17 +2,17 @@
 
 <!doctype html>
 
-<html lang="en">
+<html lang="en" data-content_root="../">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>io_handler &#8212; simtools v0.1.dev1+g469b903 Manual</title>
-    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/bizstyle.css" />
+    <title>io_handler &#8212; simtools v0.1.dev1+g8b2ac9b Manual</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../_static/bizstyle.css?v=532c1bf3" />
     
-    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-    <script src="../_static/doctools.js"></script>
-    <script src="../_static/sphinx_highlight.js"></script>
+    <script src="../_static/documentation_options.js?v=5e0c7a38"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/bizstyle.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -30,7 +30,7 @@
         <li class="right" >
           <a href="../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../index.html">simtools v0.1.dev1+g469b903 Manual</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">simtools v0.1.dev1+g8b2ac9b Manual</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">io_handler</a></li> 
       </ul>
@@ -49,7 +49,9 @@
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;IOHandlerSingleton&quot;</span><span class="p">,</span> <span class="s2">&quot;IOHandler&quot;</span><span class="p">]</span>
 
 
-<div class="viewcode-block" id="IOHandlerSingleton"><a class="viewcode-back" href="../io_handler.html#io_handler.IOHandlerSingleton">[docs]</a><span class="k">class</span> <span class="nc">IOHandlerSingleton</span><span class="p">(</span><span class="nb">type</span><span class="p">):</span>
+<div class="viewcode-block" id="IOHandlerSingleton">
+<a class="viewcode-back" href="../io_handler.html#io_handler.IOHandlerSingleton">[docs]</a>
+<span class="k">class</span> <span class="nc">IOHandlerSingleton</span><span class="p">(</span><span class="nb">type</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Singleton base class</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -62,12 +64,17 @@
         <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_instances</span><span class="p">[</span><span class="bp">cls</span><span class="p">]</span></div>
 
 
-<div class="viewcode-block" id="IOHandler"><a class="viewcode-back" href="../io_handler.html#io_handler.IOHandler">[docs]</a><span class="k">class</span> <span class="nc">IOHandler</span><span class="p">(</span><span class="n">metaclass</span><span class="o">=</span><span class="n">IOHandlerSingleton</span><span class="p">):</span>
+
+<div class="viewcode-block" id="IOHandler">
+<a class="viewcode-back" href="../io_handler.html#io_handler.IOHandler">[docs]</a>
+<span class="k">class</span> <span class="nc">IOHandler</span><span class="p">(</span><span class="n">metaclass</span><span class="o">=</span><span class="n">IOHandlerSingleton</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Handle input and output paths.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="IOHandler.__init__"><a class="viewcode-back" href="../io_handler.html#io_handler.IOHandler.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="IOHandler.__init__">
+<a class="viewcode-back" href="../io_handler.html#io_handler.IOHandler.__init__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Initialize IOHandler.</span>
 
@@ -80,7 +87,10 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">data_path</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">model_path</span> <span class="o">=</span> <span class="kc">None</span></div>
 
-<div class="viewcode-block" id="IOHandler.set_paths"><a class="viewcode-back" href="../io_handler.html#io_handler.IOHandler.set_paths">[docs]</a>    <span class="k">def</span> <span class="nf">set_paths</span><span class="p">(</span>
+
+<div class="viewcode-block" id="IOHandler.set_paths">
+<a class="viewcode-back" href="../io_handler.html#io_handler.IOHandler.set_paths">[docs]</a>
+    <span class="k">def</span> <span class="nf">set_paths</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">output_path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">data_path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">model_path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">use_plain_output_path</span><span class="o">=</span><span class="kc">False</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -103,7 +113,10 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">data_path</span> <span class="o">=</span> <span class="n">data_path</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">model_path</span> <span class="o">=</span> <span class="n">model_path</span></div>
 
-<div class="viewcode-block" id="IOHandler.get_output_directory"><a class="viewcode-back" href="../io_handler.html#io_handler.IOHandler.get_output_directory">[docs]</a>    <span class="k">def</span> <span class="nf">get_output_directory</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dir_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">test</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+
+<div class="viewcode-block" id="IOHandler.get_output_directory">
+<a class="viewcode-back" href="../io_handler.html#io_handler.IOHandler.get_output_directory">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_output_directory</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dir_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">test</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get the output directory for the directory type dir_type</span>
 
@@ -148,7 +161,10 @@
 
         <span class="k">return</span> <span class="n">path</span><span class="o">.</span><span class="n">absolute</span><span class="p">()</span></div>
 
-<div class="viewcode-block" id="IOHandler.get_output_file"><a class="viewcode-back" href="../io_handler.html#io_handler.IOHandler.get_output_file">[docs]</a>    <span class="k">def</span> <span class="nf">get_output_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_name</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dir_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">test</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+
+<div class="viewcode-block" id="IOHandler.get_output_file">
+<a class="viewcode-back" href="../io_handler.html#io_handler.IOHandler.get_output_file">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_output_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_name</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dir_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">test</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get path of an output file.</span>
 
@@ -173,7 +189,10 @@
             <span class="o">.</span><span class="n">absolute</span><span class="p">()</span>
         <span class="p">)</span></div>
 
-<div class="viewcode-block" id="IOHandler.get_input_data_file"><a class="viewcode-back" href="../io_handler.html#io_handler.IOHandler.get_input_data_file">[docs]</a>    <span class="k">def</span> <span class="nf">get_input_data_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent_dir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">file_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">test</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+
+<div class="viewcode-block" id="IOHandler.get_input_data_file">
+<a class="viewcode-back" href="../io_handler.html#io_handler.IOHandler.get_input_data_file">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_input_data_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent_dir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">file_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">test</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get path of a data file, using data_path</span>
 
@@ -195,7 +214,9 @@
             <span class="n">file_prefix</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s2">&quot;tests/resources/&quot;</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">file_prefix</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_path</span><span class="p">)</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="n">parent_dir</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">file_prefix</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span><span class="o">.</span><span class="n">absolute</span><span class="p">()</span></div></div>
+        <span class="k">return</span> <span class="n">file_prefix</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span><span class="o">.</span><span class="n">absolute</span><span class="p">()</span></div>
+</div>
+
 </pre></div>
 
             <div class="clearer"></div>
@@ -239,14 +260,14 @@
         <li class="right" >
           <a href="../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../index.html">simtools v0.1.dev1+g469b903 Manual</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">simtools v0.1.dev1+g8b2ac9b Manual</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="index.html" >Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">io_handler</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
-        &#169; Copyright 2022, gammasim-tools, simtools developers.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 6.2.1.
+    &#169; Copyright 2022, gammasim-tools, simtools developers.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.2.
     </div>
   </body>
 </html>

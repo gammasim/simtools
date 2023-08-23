@@ -2,17 +2,17 @@
 
 <!doctype html>
 
-<html lang="en">
+<html lang="en" data-content_root="../">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>simulator &#8212; simtools v0.1.dev1+g469b903 Manual</title>
-    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/bizstyle.css" />
+    <title>simulator &#8212; simtools v0.1.dev1+g8b2ac9b Manual</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../_static/bizstyle.css?v=532c1bf3" />
     
-    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-    <script src="../_static/doctools.js"></script>
-    <script src="../_static/sphinx_highlight.js"></script>
+    <script src="../_static/documentation_options.js?v=5e0c7a38"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/bizstyle.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -30,7 +30,7 @@
         <li class="right" >
           <a href="../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../index.html">simtools v0.1.dev1+g469b903 Manual</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">simtools v0.1.dev1+g8b2ac9b Manual</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">simulator</a></li> 
       </ul>
@@ -67,11 +67,16 @@
 <span class="p">]</span>
 
 
-<div class="viewcode-block" id="InvalidRunsToSimulate"><a class="viewcode-back" href="../simulators.html#simulator.InvalidRunsToSimulate">[docs]</a><span class="k">class</span> <span class="nc">InvalidRunsToSimulate</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+<div class="viewcode-block" id="InvalidRunsToSimulate">
+<a class="viewcode-back" href="../simulators.html#simulator.InvalidRunsToSimulate">[docs]</a>
+<span class="k">class</span> <span class="nc">InvalidRunsToSimulate</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Exception for invalid runs to simulate.&quot;&quot;&quot;</span></div>
 
 
-<div class="viewcode-block" id="Simulator"><a class="viewcode-back" href="../simulators.html#simulator.Simulator">[docs]</a><span class="k">class</span> <span class="nc">Simulator</span><span class="p">:</span>
+
+<div class="viewcode-block" id="Simulator">
+<a class="viewcode-back" href="../simulators.html#simulator.Simulator">[docs]</a>
+<span class="k">class</span> <span class="nc">Simulator</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Simulator is responsible for managing simulation of showers and array of telescopes. \</span>
 <span class="sd">    It interfaces with simulation software-specific packages, like CORSIKA or sim_telarray.</span>
@@ -141,7 +146,9 @@
 <span class="sd">        If True, no jobs are submitted; only run scripts are prepared</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="Simulator.__init__"><a class="viewcode-back" href="../simulators.html#simulator.Simulator.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+<div class="viewcode-block" id="Simulator.__init__">
+<a class="viewcode-back" href="../simulators.html#simulator.Simulator.__init__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">simulator</span><span class="p">,</span>
         <span class="n">simulator_source_path</span><span class="p">,</span>
@@ -183,6 +190,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_load_configuration_and_simulation_model</span><span class="p">(</span><span class="n">config_data</span><span class="p">,</span> <span class="n">config_file</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_set_simulation_runner</span><span class="p">()</span></div>
+
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">simulator</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -443,7 +451,9 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_fill_results</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">run</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">runs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">run</span><span class="p">)</span>
 
-<div class="viewcode-block" id="Simulator.simulate"><a class="viewcode-back" href="../simulators.html#simulator.Simulator.simulate">[docs]</a>    <span class="k">def</span> <span class="nf">simulate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_file_list</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="Simulator.simulate">
+<a class="viewcode-back" href="../simulators.html#simulator.Simulator.simulate">[docs]</a>
+    <span class="k">def</span> <span class="nf">simulate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_file_list</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Submit a run script as a job.</span>
 
@@ -483,7 +493,10 @@
 
             <span class="bp">self</span><span class="o">.</span><span class="n">_fill_results</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">run</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="Simulator.file_list"><a class="viewcode-back" href="../simulators.html#simulator.Simulator.file_list">[docs]</a>    <span class="k">def</span> <span class="nf">file_list</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_file_list</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+
+<div class="viewcode-block" id="Simulator.file_list">
+<a class="viewcode-back" href="../simulators.html#simulator.Simulator.file_list">[docs]</a>
+    <span class="k">def</span> <span class="nf">file_list</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_file_list</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        List output files obtained with simulation run</span>
 
@@ -503,6 +516,7 @@
                 <span class="n">file_type</span><span class="o">=</span><span class="s2">&quot;output&quot;</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">_simulation_runner</span><span class="o">.</span><span class="n">get_info_for_file_name</span><span class="p">(</span><span class="n">run</span><span class="p">)</span>
             <span class="p">)</span>
             <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">output_file_name</span><span class="p">)</span><span class="si">}</span><span class="s2"> (file exists: </span><span class="si">{</span><span class="n">Path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">output_file_name</span><span class="p">)</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span></div>
+
 
     <span class="k">def</span> <span class="nf">_get_runs_and_files_to_submit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_file_list</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -616,7 +630,9 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_results</span><span class="p">[</span><span class="s2">&quot;hist&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_results</span><span class="p">[</span><span class="s2">&quot;log&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
 
-<div class="viewcode-block" id="Simulator.print_histograms"><a class="viewcode-back" href="../simulators.html#simulator.Simulator.print_histograms">[docs]</a>    <span class="k">def</span> <span class="nf">print_histograms</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_file_list</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="Simulator.print_histograms">
+<a class="viewcode-back" href="../simulators.html#simulator.Simulator.print_histograms">[docs]</a>
+    <span class="k">def</span> <span class="nf">print_histograms</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_file_list</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Print histograms and save a pdf file.</span>
 
@@ -644,7 +660,10 @@
 
         <span class="k">return</span> <span class="n">fig_name</span></div>
 
-<div class="viewcode-block" id="Simulator.get_list_of_output_files"><a class="viewcode-back" href="../simulators.html#simulator.Simulator.get_list_of_output_files">[docs]</a>    <span class="k">def</span> <span class="nf">get_list_of_output_files</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">run_list</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">run_range</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+
+<div class="viewcode-block" id="Simulator.get_list_of_output_files">
+<a class="viewcode-back" href="../simulators.html#simulator.Simulator.get_list_of_output_files">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_list_of_output_files</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">run_list</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">run_range</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get list of output files.</span>
 
@@ -674,7 +693,10 @@
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_results</span><span class="p">[</span><span class="s2">&quot;output&quot;</span><span class="p">]</span></div>
 
-<div class="viewcode-block" id="Simulator.get_list_of_histogram_files"><a class="viewcode-back" href="../simulators.html#simulator.Simulator.get_list_of_histogram_files">[docs]</a>    <span class="k">def</span> <span class="nf">get_list_of_histogram_files</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+<div class="viewcode-block" id="Simulator.get_list_of_histogram_files">
+<a class="viewcode-back" href="../simulators.html#simulator.Simulator.get_list_of_histogram_files">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_list_of_histogram_files</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get list of histogram files.</span>
 <span class="sd">        (not applicable to all simulation types)</span>
@@ -687,7 +709,10 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Getting list of histogram files&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_results</span><span class="p">[</span><span class="s2">&quot;hist&quot;</span><span class="p">]</span></div>
 
-<div class="viewcode-block" id="Simulator.get_list_of_input_files"><a class="viewcode-back" href="../simulators.html#simulator.Simulator.get_list_of_input_files">[docs]</a>    <span class="k">def</span> <span class="nf">get_list_of_input_files</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+<div class="viewcode-block" id="Simulator.get_list_of_input_files">
+<a class="viewcode-back" href="../simulators.html#simulator.Simulator.get_list_of_input_files">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_list_of_input_files</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get list of input files.</span>
 
@@ -699,7 +724,10 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Getting list of input files&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_results</span><span class="p">[</span><span class="s2">&quot;input&quot;</span><span class="p">]</span></div>
 
-<div class="viewcode-block" id="Simulator.get_list_of_log_files"><a class="viewcode-back" href="../simulators.html#simulator.Simulator.get_list_of_log_files">[docs]</a>    <span class="k">def</span> <span class="nf">get_list_of_log_files</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+<div class="viewcode-block" id="Simulator.get_list_of_log_files">
+<a class="viewcode-back" href="../simulators.html#simulator.Simulator.get_list_of_log_files">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_list_of_log_files</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get list of log files.</span>
 
@@ -713,28 +741,41 @@
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_results</span><span class="p">[</span><span class="s2">&quot;log&quot;</span><span class="p">]</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_results</span><span class="p">[</span><span class="s2">&quot;corsika_autoinputs_log&quot;</span><span class="p">]</span></div>
 
-<div class="viewcode-block" id="Simulator.print_list_of_output_files"><a class="viewcode-back" href="../simulators.html#simulator.Simulator.print_list_of_output_files">[docs]</a>    <span class="k">def</span> <span class="nf">print_list_of_output_files</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+<div class="viewcode-block" id="Simulator.print_list_of_output_files">
+<a class="viewcode-back" href="../simulators.html#simulator.Simulator.print_list_of_output_files">[docs]</a>
+    <span class="k">def</span> <span class="nf">print_list_of_output_files</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Print list of output files.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Printing list of output files&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_print_list_of_files</span><span class="p">(</span><span class="n">which</span><span class="o">=</span><span class="s2">&quot;output&quot;</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="Simulator.print_list_of_histogram_files"><a class="viewcode-back" href="../simulators.html#simulator.Simulator.print_list_of_histogram_files">[docs]</a>    <span class="k">def</span> <span class="nf">print_list_of_histogram_files</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+<div class="viewcode-block" id="Simulator.print_list_of_histogram_files">
+<a class="viewcode-back" href="../simulators.html#simulator.Simulator.print_list_of_histogram_files">[docs]</a>
+    <span class="k">def</span> <span class="nf">print_list_of_histogram_files</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Print list of histogram files.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Printing list of histogram files&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_print_list_of_files</span><span class="p">(</span><span class="n">which</span><span class="o">=</span><span class="s2">&quot;hist&quot;</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="Simulator.print_list_of_input_files"><a class="viewcode-back" href="../simulators.html#simulator.Simulator.print_list_of_input_files">[docs]</a>    <span class="k">def</span> <span class="nf">print_list_of_input_files</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+<div class="viewcode-block" id="Simulator.print_list_of_input_files">
+<a class="viewcode-back" href="../simulators.html#simulator.Simulator.print_list_of_input_files">[docs]</a>
+    <span class="k">def</span> <span class="nf">print_list_of_input_files</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Print list of output files.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Printing list of input files&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_print_list_of_files</span><span class="p">(</span><span class="n">which</span><span class="o">=</span><span class="s2">&quot;input&quot;</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="Simulator.print_list_of_log_files"><a class="viewcode-back" href="../simulators.html#simulator.Simulator.print_list_of_log_files">[docs]</a>    <span class="k">def</span> <span class="nf">print_list_of_log_files</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+<div class="viewcode-block" id="Simulator.print_list_of_log_files">
+<a class="viewcode-back" href="../simulators.html#simulator.Simulator.print_list_of_log_files">[docs]</a>
+    <span class="k">def</span> <span class="nf">print_list_of_log_files</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Print list of log files.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Printing list of log files&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;simtel&quot;</span><span class="p">,</span> <span class="s2">&quot;corsika_simtel&quot;</span><span class="p">]:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_print_list_of_files</span><span class="p">(</span><span class="n">which</span><span class="o">=</span><span class="s2">&quot;log&quot;</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_print_list_of_files</span><span class="p">(</span><span class="n">which</span><span class="o">=</span><span class="s2">&quot;corsika_autoinputs_log&quot;</span><span class="p">)</span></div>
+
 
     <span class="k">def</span> <span class="nf">_make_resources_report</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_file_list</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -776,7 +817,9 @@
 
         <span class="k">return</span> <span class="n">resource_summary</span>
 
-<div class="viewcode-block" id="Simulator.resources"><a class="viewcode-back" href="../simulators.html#simulator.Simulator.resources">[docs]</a>    <span class="k">def</span> <span class="nf">resources</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_file_list</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="Simulator.resources">
+<a class="viewcode-back" href="../simulators.html#simulator.Simulator.resources">[docs]</a>
+    <span class="k">def</span> <span class="nf">resources</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_file_list</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Print a simple report on computing resources used</span>
 <span class="sd">        (includes run time per run only at this point)</span>
@@ -793,6 +836,7 @@
         <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">resources</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2"> = </span><span class="si">{</span><span class="n">value</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;-----------------------------&quot;</span><span class="p">)</span></div>
+
 
     <span class="k">def</span> <span class="nf">_get_runs_to_simulate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">run_list</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">run_range</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -837,6 +881,7 @@
             <span class="k">raise</span> <span class="ne">KeyError</span>
         <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_results</span><span class="p">[</span><span class="n">which</span><span class="p">]:</span>
             <span class="nb">print</span><span class="p">(</span><span class="n">file</span><span class="p">)</span></div>
+
 </pre></div>
 
             <div class="clearer"></div>
@@ -880,14 +925,14 @@
         <li class="right" >
           <a href="../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../index.html">simtools v0.1.dev1+g469b903 Manual</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">simtools v0.1.dev1+g8b2ac9b Manual</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="index.html" >Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">simulator</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
-        &#169; Copyright 2022, gammasim-tools, simtools developers.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 6.2.1.
+    &#169; Copyright 2022, gammasim-tools, simtools developers.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.2.
     </div>
   </body>
 </html>

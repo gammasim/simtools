@@ -2,17 +2,17 @@
 
 <!doctype html>
 
-<html lang="en">
+<html lang="en" data-content_root="../../">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>simtel.simtel_histograms &#8212; simtools v0.1.dev1+g469b903 Manual</title>
-    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/bizstyle.css" />
+    <title>simtel.simtel_histograms &#8212; simtools v0.1.dev1+g8b2ac9b Manual</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../../_static/bizstyle.css?v=532c1bf3" />
     
-    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
-    <script src="../../_static/doctools.js"></script>
-    <script src="../../_static/sphinx_highlight.js"></script>
+    <script src="../../_static/documentation_options.js?v=5e0c7a38"></script>
+    <script src="../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/bizstyle.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -30,7 +30,7 @@
         <li class="right" >
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../index.html">simtools v0.1.dev1+g469b903 Manual</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">simtools v0.1.dev1+g8b2ac9b Manual</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">simtel.simtel_histograms</a></li> 
       </ul>
@@ -54,11 +54,16 @@
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;BadHistogramFormat&quot;</span><span class="p">,</span> <span class="s2">&quot;SimtelHistograms&quot;</span><span class="p">]</span>
 
 
-<div class="viewcode-block" id="BadHistogramFormat"><a class="viewcode-back" href="../../sim_telarray.html#simtel.simtel_histograms.BadHistogramFormat">[docs]</a><span class="k">class</span> <span class="nc">BadHistogramFormat</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+<div class="viewcode-block" id="BadHistogramFormat">
+<a class="viewcode-back" href="../../sim_telarray.html#simtel.simtel_histograms.BadHistogramFormat">[docs]</a>
+<span class="k">class</span> <span class="nc">BadHistogramFormat</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Exception for bad histogram format.&quot;&quot;&quot;</span></div>
 
 
-<div class="viewcode-block" id="SimtelHistograms"><a class="viewcode-back" href="../../sim_telarray.html#simtel.simtel_histograms.SimtelHistograms">[docs]</a><span class="k">class</span> <span class="nc">SimtelHistograms</span><span class="p">:</span>
+
+<div class="viewcode-block" id="SimtelHistograms">
+<a class="viewcode-back" href="../../sim_telarray.html#simtel.simtel_histograms.SimtelHistograms">[docs]</a>
+<span class="k">class</span> <span class="nc">SimtelHistograms</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    This class handle sim_telarray histograms. Histogram files are handled by using eventio library.</span>
 
@@ -71,7 +76,9 @@
 <span class="sd">         runtime.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="SimtelHistograms.__init__"><a class="viewcode-back" href="../../sim_telarray.html#simtel.simtel_histograms.SimtelHistograms.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">histogram_files</span><span class="p">,</span> <span class="n">test</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<div class="viewcode-block" id="SimtelHistograms.__init__">
+<a class="viewcode-back" href="../../sim_telarray.html#simtel.simtel_histograms.SimtelHistograms.__init__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">histogram_files</span><span class="p">,</span> <span class="n">test</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Initialize SimtelHistograms</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -80,7 +87,10 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_is_test</span> <span class="o">=</span> <span class="n">test</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">combined_hists</span> <span class="o">=</span> <span class="kc">None</span></div>
 
-<div class="viewcode-block" id="SimtelHistograms.plot_and_save_figures"><a class="viewcode-back" href="../../sim_telarray.html#simtel.simtel_histograms.SimtelHistograms.plot_and_save_figures">[docs]</a>    <span class="k">def</span> <span class="nf">plot_and_save_figures</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fig_name</span><span class="p">):</span>
+
+<div class="viewcode-block" id="SimtelHistograms.plot_and_save_figures">
+<a class="viewcode-back" href="../../sim_telarray.html#simtel.simtel_histograms.SimtelHistograms.plot_and_save_figures">[docs]</a>
+    <span class="k">def</span> <span class="nf">plot_and_save_figures</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fig_name</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Plot all histograms and save a single pdf file.</span>
 
@@ -92,6 +102,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_combine_histogram_files</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_plot_combined_histograms</span><span class="p">(</span><span class="n">fig_name</span><span class="p">)</span></div>
 
+
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">number_of_histograms</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns number of histograms.&quot;&quot;&quot;</span>
@@ -99,7 +110,9 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_combine_histogram_files</span><span class="p">()</span>
         <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">combined_hists</span><span class="p">)</span>
 
-<div class="viewcode-block" id="SimtelHistograms.get_histogram_title"><a class="viewcode-back" href="../../sim_telarray.html#simtel.simtel_histograms.SimtelHistograms.get_histogram_title">[docs]</a>    <span class="k">def</span> <span class="nf">get_histogram_title</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i_hist</span><span class="p">):</span>
+<div class="viewcode-block" id="SimtelHistograms.get_histogram_title">
+<a class="viewcode-back" href="../../sim_telarray.html#simtel.simtel_histograms.SimtelHistograms.get_histogram_title">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_histogram_title</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i_hist</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Returns the title of the histogram with index i_hist.</span>
 
@@ -116,6 +129,7 @@
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;combined_hists&quot;</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_combine_histogram_files</span><span class="p">()</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">combined_hists</span><span class="p">[</span><span class="n">i_hist</span><span class="p">][</span><span class="s2">&quot;title&quot;</span><span class="p">]</span></div>
+
 
     <span class="k">def</span> <span class="nf">_combine_histogram_files</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Combine histograms from all files into one single list of histograms.&quot;&quot;&quot;</span>
@@ -191,7 +205,9 @@
 
         <span class="n">pdf_pages</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 
-<div class="viewcode-block" id="SimtelHistograms.plot_one_histogram"><a class="viewcode-back" href="../../sim_telarray.html#simtel.simtel_histograms.SimtelHistograms.plot_one_histogram">[docs]</a>    <span class="k">def</span> <span class="nf">plot_one_histogram</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i_hist</span><span class="p">,</span> <span class="n">ax</span><span class="p">):</span>
+<div class="viewcode-block" id="SimtelHistograms.plot_one_histogram">
+<a class="viewcode-back" href="../../sim_telarray.html#simtel.simtel_histograms.SimtelHistograms.plot_one_histogram">[docs]</a>
+    <span class="k">def</span> <span class="nf">plot_one_histogram</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i_hist</span><span class="p">,</span> <span class="n">ax</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Plot a single histogram referent to the index i_hist.</span>
 
@@ -272,7 +288,9 @@
             <span class="n">centers</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">x_bins</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">x_bins</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
             <span class="n">ax</span><span class="o">.</span><span class="n">hist</span><span class="p">(</span><span class="n">centers</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="n">x_bins</span><span class="p">,</span> <span class="n">weights</span><span class="o">=</span><span class="n">hist</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">])</span>
             <span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="n">xlim</span><span class="p">)</span>
-        <span class="k">return</span></div></div>
+        <span class="k">return</span></div>
+</div>
+
 </pre></div>
 
             <div class="clearer"></div>
@@ -316,14 +334,14 @@
         <li class="right" >
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../index.html">simtools v0.1.dev1+g469b903 Manual</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">simtools v0.1.dev1+g8b2ac9b Manual</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">simtel.simtel_histograms</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
-        &#169; Copyright 2022, gammasim-tools, simtools developers.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 6.2.1.
+    &#169; Copyright 2022, gammasim-tools, simtools developers.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.2.
     </div>
   </body>
 </html>

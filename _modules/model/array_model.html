@@ -2,17 +2,17 @@
 
 <!doctype html>
 
-<html lang="en">
+<html lang="en" data-content_root="../../">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>model.array_model &#8212; simtools v0.1.dev1+g469b903 Manual</title>
-    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/bizstyle.css" />
+    <title>model.array_model &#8212; simtools v0.1.dev1+g8b2ac9b Manual</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../../_static/bizstyle.css?v=532c1bf3" />
     
-    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
-    <script src="../../_static/doctools.js"></script>
-    <script src="../../_static/sphinx_highlight.js"></script>
+    <script src="../../_static/documentation_options.js?v=5e0c7a38"></script>
+    <script src="../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/bizstyle.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -30,7 +30,7 @@
         <li class="right" >
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../index.html">simtools v0.1.dev1+g469b903 Manual</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">simtools v0.1.dev1+g8b2ac9b Manual</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">model.array_model</a></li> 
       </ul>
@@ -55,11 +55,16 @@
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;ArrayModel&quot;</span><span class="p">,</span> <span class="s2">&quot;InvalidArrayConfigData&quot;</span><span class="p">]</span>
 
 
-<div class="viewcode-block" id="InvalidArrayConfigData"><a class="viewcode-back" href="../../mc_model.html#model.array_model.InvalidArrayConfigData">[docs]</a><span class="k">class</span> <span class="nc">InvalidArrayConfigData</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+<div class="viewcode-block" id="InvalidArrayConfigData">
+<a class="viewcode-back" href="../../mc_model.html#model.array_model.InvalidArrayConfigData">[docs]</a>
+<span class="k">class</span> <span class="nc">InvalidArrayConfigData</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Exception for invalid array configuration data.&quot;&quot;&quot;</span></div>
 
 
-<div class="viewcode-block" id="ArrayModel"><a class="viewcode-back" href="../../mc_model.html#model.array_model.ArrayModel">[docs]</a><span class="k">class</span> <span class="nc">ArrayModel</span><span class="p">:</span>
+
+<div class="viewcode-block" id="ArrayModel">
+<a class="viewcode-back" href="../../mc_model.html#model.array_model.ArrayModel">[docs]</a>
+<span class="k">class</span> <span class="nc">ArrayModel</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    ArrayModel is an abstract representation of the MC model at the array level. It contains the\</span>
 <span class="sd">    list of TelescopeModel&#39;s and a LayoutArray.</span>
@@ -76,7 +81,9 @@
 <span class="sd">        Instance label. Important for output file naming.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="ArrayModel.__init__"><a class="viewcode-back" href="../../mc_model.html#model.array_model.ArrayModel.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mongo_db_config</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">array_config_file</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">array_config_data</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="ArrayModel.__init__">
+<a class="viewcode-back" href="../../mc_model.html#model.array_model.ArrayModel.__init__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mongo_db_config</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">array_config_file</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">array_config_data</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Initialize ArrayModel.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -96,6 +103,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_build_array_model</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model_files_exported</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_array_model_file_exported</span> <span class="o">=</span> <span class="kc">False</span></div>
+
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">number_of_telescopes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -319,13 +327,18 @@
         <span class="c1"># Grabbing the default option</span>
         <span class="k">return</span> <span class="n">_proccess_single_telescope</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_array_config_data</span><span class="p">[</span><span class="s2">&quot;default&quot;</span><span class="p">][</span><span class="n">tel_size</span><span class="p">])</span>
 
-<div class="viewcode-block" id="ArrayModel.print_telescope_list"><a class="viewcode-back" href="../../mc_model.html#model.array_model.ArrayModel.print_telescope_list">[docs]</a>    <span class="k">def</span> <span class="nf">print_telescope_list</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="ArrayModel.print_telescope_list">
+<a class="viewcode-back" href="../../mc_model.html#model.array_model.ArrayModel.print_telescope_list">[docs]</a>
+    <span class="k">def</span> <span class="nf">print_telescope_list</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Print out the list of telescopes for quick inspection.&quot;&quot;&quot;</span>
 
         <span class="k">for</span> <span class="n">tel_data</span><span class="p">,</span> <span class="n">tel_model</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">layout</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model</span><span class="p">):</span>
             <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Name: </span><span class="si">{</span><span class="n">tel_data</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="se">\t</span><span class="s2"> Model: </span><span class="si">{</span><span class="n">tel_model</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="ArrayModel.export_simtel_telescope_config_files"><a class="viewcode-back" href="../../mc_model.html#model.array_model.ArrayModel.export_simtel_telescope_config_files">[docs]</a>    <span class="k">def</span> <span class="nf">export_simtel_telescope_config_files</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+<div class="viewcode-block" id="ArrayModel.export_simtel_telescope_config_files">
+<a class="viewcode-back" href="../../mc_model.html#model.array_model.ArrayModel.export_simtel_telescope_config_files">[docs]</a>
+    <span class="k">def</span> <span class="nf">export_simtel_telescope_config_files</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Export sim_telarray config files for all the telescopes into the output model directory.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -344,7 +357,10 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model_files_exported</span> <span class="o">=</span> <span class="kc">True</span></div>
 
-<div class="viewcode-block" id="ArrayModel.export_simtel_array_config_file"><a class="viewcode-back" href="../../mc_model.html#model.array_model.ArrayModel.export_simtel_array_config_file">[docs]</a>    <span class="k">def</span> <span class="nf">export_simtel_array_config_file</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+<div class="viewcode-block" id="ArrayModel.export_simtel_array_config_file">
+<a class="viewcode-back" href="../../mc_model.html#model.array_model.ArrayModel.export_simtel_array_config_file">[docs]</a>
+    <span class="k">def</span> <span class="nf">export_simtel_array_config_file</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Export sim_telarray config file for the array into the output model directory.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -371,7 +387,10 @@
         <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_array_model_file_exported</span> <span class="o">=</span> <span class="kc">True</span></div>
 
-<div class="viewcode-block" id="ArrayModel.export_all_simtel_config_files"><a class="viewcode-back" href="../../mc_model.html#model.array_model.ArrayModel.export_all_simtel_config_files">[docs]</a>    <span class="k">def</span> <span class="nf">export_all_simtel_config_files</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+<div class="viewcode-block" id="ArrayModel.export_all_simtel_config_files">
+<a class="viewcode-back" href="../../mc_model.html#model.array_model.ArrayModel.export_all_simtel_config_files">[docs]</a>
+    <span class="k">def</span> <span class="nf">export_all_simtel_config_files</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Export sim_telarray config file for the array and for each individual telescope into the \</span>
 <span class="sd">        output model directory.</span>
@@ -382,7 +401,10 @@
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_array_model_file_exported</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">export_simtel_array_config_file</span><span class="p">()</span></div>
 
-<div class="viewcode-block" id="ArrayModel.get_config_file"><a class="viewcode-back" href="../../mc_model.html#model.array_model.ArrayModel.get_config_file">[docs]</a>    <span class="k">def</span> <span class="nf">get_config_file</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+<div class="viewcode-block" id="ArrayModel.get_config_file">
+<a class="viewcode-back" href="../../mc_model.html#model.array_model.ArrayModel.get_config_file">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_config_file</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get the path of the array config file for sim_telarray. The config file is produced if the \</span>
 <span class="sd">        file is not updated.</span>
@@ -396,7 +418,10 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">export_all_simtel_config_files</span><span class="p">()</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config_file_path</span></div>
 
-<div class="viewcode-block" id="ArrayModel.get_config_directory"><a class="viewcode-back" href="../../mc_model.html#model.array_model.ArrayModel.get_config_directory">[docs]</a>    <span class="k">def</span> <span class="nf">get_config_directory</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+<div class="viewcode-block" id="ArrayModel.get_config_directory">
+<a class="viewcode-back" href="../../mc_model.html#model.array_model.ArrayModel.get_config_directory">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_config_directory</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get the path of the array config directory for sim_telarray.</span>
 
@@ -405,7 +430,9 @@
 <span class="sd">        Path</span>
 <span class="sd">            Path of the config directory path for sim_telarray.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config_file_directory</span></div></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config_file_directory</span></div>
+</div>
+
 </pre></div>
 
             <div class="clearer"></div>
@@ -449,14 +476,14 @@
         <li class="right" >
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../index.html">simtools v0.1.dev1+g469b903 Manual</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">simtools v0.1.dev1+g8b2ac9b Manual</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">model.array_model</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
-        &#169; Copyright 2022, gammasim-tools, simtools developers.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 6.2.1.
+    &#169; Copyright 2022, gammasim-tools, simtools developers.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.2.
     </div>
   </body>
 </html>

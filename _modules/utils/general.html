@@ -2,17 +2,17 @@
 
 <!doctype html>
 
-<html lang="en">
+<html lang="en" data-content_root="../../">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>utils.general &#8212; simtools v0.1.dev1+g469b903 Manual</title>
-    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/bizstyle.css" />
+    <title>utils.general &#8212; simtools v0.1.dev1+g8b2ac9b Manual</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../../_static/bizstyle.css?v=532c1bf3" />
     
-    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
-    <script src="../../_static/doctools.js"></script>
-    <script src="../../_static/sphinx_highlight.js"></script>
+    <script src="../../_static/documentation_options.js?v=5e0c7a38"></script>
+    <script src="../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/bizstyle.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -30,7 +30,7 @@
         <li class="right" >
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../index.html">simtools v0.1.dev1+g469b903 Manual</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">simtools v0.1.dev1+g8b2ac9b Manual</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">utils.general</a></li> 
       </ul>
@@ -78,20 +78,32 @@
 <span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="UnableToIdentifyConfigEntry"><a class="viewcode-back" href="../../utils.html#utils.general.UnableToIdentifyConfigEntry">[docs]</a><span class="k">class</span> <span class="nc">UnableToIdentifyConfigEntry</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+<div class="viewcode-block" id="UnableToIdentifyConfigEntry">
+<a class="viewcode-back" href="../../utils.html#utils.general.UnableToIdentifyConfigEntry">[docs]</a>
+<span class="k">class</span> <span class="nc">UnableToIdentifyConfigEntry</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Exception for unable to indentify configuration entry.&quot;&quot;&quot;</span></div>
 
 
-<div class="viewcode-block" id="MissingRequiredConfigEntry"><a class="viewcode-back" href="../../utils.html#utils.general.MissingRequiredConfigEntry">[docs]</a><span class="k">class</span> <span class="nc">MissingRequiredConfigEntry</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+
+<div class="viewcode-block" id="MissingRequiredConfigEntry">
+<a class="viewcode-back" href="../../utils.html#utils.general.MissingRequiredConfigEntry">[docs]</a>
+<span class="k">class</span> <span class="nc">MissingRequiredConfigEntry</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Exception for missing required configuration entry.&quot;&quot;&quot;</span></div>
 
 
-<div class="viewcode-block" id="InvalidConfigEntry"><a class="viewcode-back" href="../../utils.html#utils.general.InvalidConfigEntry">[docs]</a><span class="k">class</span> <span class="nc">InvalidConfigEntry</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+
+<div class="viewcode-block" id="InvalidConfigEntry">
+<a class="viewcode-back" href="../../utils.html#utils.general.InvalidConfigEntry">[docs]</a>
+<span class="k">class</span> <span class="nc">InvalidConfigEntry</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Exception for invalid configuration entry.&quot;&quot;&quot;</span></div>
 
 
-<div class="viewcode-block" id="InvalidConfigData"><a class="viewcode-back" href="../../utils.html#utils.general.InvalidConfigData">[docs]</a><span class="k">class</span> <span class="nc">InvalidConfigData</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+
+<div class="viewcode-block" id="InvalidConfigData">
+<a class="viewcode-back" href="../../utils.html#utils.general.InvalidConfigData">[docs]</a>
+<span class="k">class</span> <span class="nc">InvalidConfigData</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Exception for invalid configuration data.&quot;&quot;&quot;</span></div>
+
 
 
 <span class="k">def</span> <span class="nf">file_has_text</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">text</span><span class="p">):</span>
@@ -121,7 +133,9 @@
         <span class="k">return</span> <span class="kc">True</span>
 
 
-<div class="viewcode-block" id="validate_config_data"><a class="viewcode-back" href="../../utils.html#utils.general.validate_config_data">[docs]</a><span class="k">def</span> <span class="nf">validate_config_data</span><span class="p">(</span><span class="n">config_data</span><span class="p">,</span> <span class="n">parameters</span><span class="p">,</span> <span class="n">ignore_unidentified</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<div class="viewcode-block" id="validate_config_data">
+<a class="viewcode-back" href="../../utils.html#utils.general.validate_config_data">[docs]</a>
+<span class="k">def</span> <span class="nf">validate_config_data</span><span class="p">(</span><span class="n">config_data</span><span class="p">,</span> <span class="n">parameters</span><span class="p">,</span> <span class="n">ignore_unidentified</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Validate a generic config_data dict by using the info</span>
 <span class="sd">    given by the parameters dict. The entries will be validated</span>
@@ -203,6 +217,7 @@
 
     <span class="n">configuration_data</span> <span class="o">=</span> <span class="n">namedtuple</span><span class="p">(</span><span class="s2">&quot;configuration_data&quot;</span><span class="p">,</span> <span class="n">out_data</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">configuration_data</span><span class="p">(</span><span class="o">**</span><span class="n">out_data</span><span class="p">)</span></div>
+
 
 
 <span class="k">def</span> <span class="nf">_validate_and_convert_value_without_units</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">value_keys</span><span class="p">,</span> <span class="n">par_name</span><span class="p">,</span> <span class="n">par_info</span><span class="p">):</span>
@@ -364,7 +379,9 @@
     <span class="k">return</span> <span class="n">_validate_and_convert_value_with_units</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">value_keys</span><span class="p">,</span> <span class="n">par_name</span><span class="p">,</span> <span class="n">par_info</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="collect_data_from_yaml_or_dict"><a class="viewcode-back" href="../../utils.html#utils.general.collect_data_from_yaml_or_dict">[docs]</a><span class="k">def</span> <span class="nf">collect_data_from_yaml_or_dict</span><span class="p">(</span><span class="n">in_yaml</span><span class="p">,</span> <span class="n">in_dict</span><span class="p">,</span> <span class="n">allow_empty</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<div class="viewcode-block" id="collect_data_from_yaml_or_dict">
+<a class="viewcode-back" href="../../utils.html#utils.general.collect_data_from_yaml_or_dict">[docs]</a>
+<span class="k">def</span> <span class="nf">collect_data_from_yaml_or_dict</span><span class="p">(</span><span class="n">in_yaml</span><span class="p">,</span> <span class="n">in_dict</span><span class="p">,</span> <span class="n">allow_empty</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Collect input data that can be given either as a dict or as a yaml file.</span>
 
@@ -399,6 +416,7 @@
 
     <span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
     <span class="k">raise</span> <span class="n">InvalidConfigData</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span></div>
+
 
 
 <span class="k">def</span> <span class="nf">collect_dict_from_file</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="n">file_name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
@@ -437,7 +455,9 @@
     <span class="k">return</span> <span class="n">_dict</span>
 
 
-<div class="viewcode-block" id="collect_kwargs"><a class="viewcode-back" href="../../utils.html#utils.general.collect_kwargs">[docs]</a><span class="k">def</span> <span class="nf">collect_kwargs</span><span class="p">(</span><span class="n">label</span><span class="p">,</span> <span class="n">in_kwargs</span><span class="p">):</span>
+<div class="viewcode-block" id="collect_kwargs">
+<a class="viewcode-back" href="../../utils.html#utils.general.collect_kwargs">[docs]</a>
+<span class="k">def</span> <span class="nf">collect_kwargs</span><span class="p">(</span><span class="n">label</span><span class="p">,</span> <span class="n">in_kwargs</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Collect kwargs of the type label_* and return them as a dict.</span>
 
@@ -459,7 +479,10 @@
     <span class="k">return</span> <span class="n">out_kwargs</span></div>
 
 
-<div class="viewcode-block" id="set_default_kwargs"><a class="viewcode-back" href="../../utils.html#utils.general.set_default_kwargs">[docs]</a><span class="k">def</span> <span class="nf">set_default_kwargs</span><span class="p">(</span><span class="n">in_kwargs</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+
+<div class="viewcode-block" id="set_default_kwargs">
+<a class="viewcode-back" href="../../utils.html#utils.general.set_default_kwargs">[docs]</a>
+<span class="k">def</span> <span class="nf">set_default_kwargs</span><span class="p">(</span><span class="n">in_kwargs</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Fill in a dict with a set of default kwargs and return it.</span>
 
@@ -481,7 +504,10 @@
     <span class="k">return</span> <span class="n">in_kwargs</span></div>
 
 
-<div class="viewcode-block" id="sort_arrays"><a class="viewcode-back" href="../../utils.html#utils.general.sort_arrays">[docs]</a><span class="k">def</span> <span class="nf">sort_arrays</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">):</span>
+
+<div class="viewcode-block" id="sort_arrays">
+<a class="viewcode-back" href="../../utils.html#utils.general.sort_arrays">[docs]</a>
+<span class="k">def</span> <span class="nf">sort_arrays</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Sort arrays</span>
 
 <span class="sd">    Parameters</span>
@@ -502,7 +528,10 @@
     <span class="k">return</span> <span class="n">new_args</span></div>
 
 
-<div class="viewcode-block" id="collect_final_lines"><a class="viewcode-back" href="../../utils.html#utils.general.collect_final_lines">[docs]</a><span class="k">def</span> <span class="nf">collect_final_lines</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">n_lines</span><span class="p">):</span>
+
+<div class="viewcode-block" id="collect_final_lines">
+<a class="viewcode-back" href="../../utils.html#utils.general.collect_final_lines">[docs]</a>
+<span class="k">def</span> <span class="nf">collect_final_lines</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">n_lines</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Collect final lines.</span>
 
@@ -560,7 +589,10 @@
     <span class="k">return</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">reversed</span><span class="p">(</span><span class="n">list_of_lines</span><span class="p">)))</span></div>
 
 
-<div class="viewcode-block" id="get_log_level_from_user"><a class="viewcode-back" href="../../utils.html#utils.general.get_log_level_from_user">[docs]</a><span class="k">def</span> <span class="nf">get_log_level_from_user</span><span class="p">(</span><span class="n">log_level</span><span class="p">):</span>
+
+<div class="viewcode-block" id="get_log_level_from_user">
+<a class="viewcode-back" href="../../utils.html#utils.general.get_log_level_from_user">[docs]</a>
+<span class="k">def</span> <span class="nf">get_log_level_from_user</span><span class="p">(</span><span class="n">log_level</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Map between logging level from the user to logging levels of the logging module.</span>
 
@@ -593,6 +625,7 @@
     <span class="k">return</span> <span class="n">possible_levels</span><span class="p">[</span><span class="n">log_level_lower</span><span class="p">]</span></div>
 
 
+
 <span class="k">def</span> <span class="nf">copy_as_list</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Copy value and, if it is not a list, turn it into a list with a single entry.</span>
@@ -615,7 +648,9 @@
         <span class="k">return</span> <span class="p">[</span><span class="n">value</span><span class="p">]</span>
 
 
-<div class="viewcode-block" id="separate_args_and_config_data"><a class="viewcode-back" href="../../utils.html#utils.general.separate_args_and_config_data">[docs]</a><span class="k">def</span> <span class="nf">separate_args_and_config_data</span><span class="p">(</span><span class="n">expected_args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<div class="viewcode-block" id="separate_args_and_config_data">
+<a class="viewcode-back" href="../../utils.html#utils.general.separate_args_and_config_data">[docs]</a>
+<span class="k">def</span> <span class="nf">separate_args_and_config_data</span><span class="p">(</span><span class="n">expected_args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Separate kwargs into the arguments expected for instancing a class and the dict to be given as\</span>
 <span class="sd">    config_data. This function is specific for methods from_kwargs in classes which use the \</span>
@@ -641,6 +676,7 @@
             <span class="n">config_data</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
 
     <span class="k">return</span> <span class="n">args</span><span class="p">,</span> <span class="n">config_data</span></div>
+
 
 
 <span class="k">def</span> <span class="nf">program_is_executable</span><span class="p">(</span><span class="n">program</span><span class="p">):</span>
@@ -842,7 +878,9 @@
     <span class="k">return</span> <span class="n">x_trans</span><span class="p">,</span> <span class="n">y_trans</span>
 
 
-<div class="viewcode-block" id="get_log_excerpt"><a class="viewcode-back" href="../../utils.html#utils.general.get_log_excerpt">[docs]</a><span class="k">def</span> <span class="nf">get_log_excerpt</span><span class="p">(</span><span class="n">log_file</span><span class="p">,</span> <span class="n">n_last_lines</span><span class="o">=</span><span class="mi">30</span><span class="p">):</span>
+<div class="viewcode-block" id="get_log_excerpt">
+<a class="viewcode-back" href="../../utils.html#utils.general.get_log_excerpt">[docs]</a>
+<span class="k">def</span> <span class="nf">get_log_excerpt</span><span class="p">(</span><span class="n">log_file</span><span class="p">,</span> <span class="n">n_last_lines</span><span class="o">=</span><span class="mi">30</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Get an excerpt from a log file, namely the n_last_lines of the file.</span>
 
@@ -868,6 +906,7 @@
     <span class="p">)</span></div>
 
 
+
 <span class="k">def</span> <span class="nf">get_file_age</span><span class="p">(</span><span class="n">file_path</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Get the age of a file in seconds since the last modification.</span>
@@ -883,7 +922,9 @@
     <span class="k">return</span> <span class="n">file_age_minutes</span>
 
 
-<div class="viewcode-block" id="convert_2D_to_radial_distr"><a class="viewcode-back" href="../../utils.html#utils.general.convert_2D_to_radial_distr">[docs]</a><span class="k">def</span> <span class="nf">convert_2D_to_radial_distr</span><span class="p">(</span><span class="n">hist2d</span><span class="p">,</span> <span class="n">xaxis</span><span class="p">,</span> <span class="n">yaxis</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">max_dist</span><span class="o">=</span><span class="mi">1000</span><span class="p">):</span>
+<div class="viewcode-block" id="convert_2D_to_radial_distr">
+<a class="viewcode-back" href="../../utils.html#utils.general.convert_2D_to_radial_distr">[docs]</a>
+<span class="k">def</span> <span class="nf">convert_2D_to_radial_distr</span><span class="p">(</span><span class="n">hist2d</span><span class="p">,</span> <span class="n">xaxis</span><span class="p">,</span> <span class="n">yaxis</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">max_dist</span><span class="o">=</span><span class="mi">1000</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Convert a 2D histogram of positions, e.g. photon positions on the ground, to a 1D distribution.</span>
 
@@ -954,7 +995,10 @@
     <span class="k">return</span> <span class="n">histogram_1D</span><span class="p">,</span> <span class="n">radial_edges</span></div>
 
 
-<div class="viewcode-block" id="save_dict_to_file"><a class="viewcode-back" href="../../utils.html#utils.general.save_dict_to_file">[docs]</a><span class="k">def</span> <span class="nf">save_dict_to_file</span><span class="p">(</span><span class="n">dictionary</span><span class="p">,</span> <span class="n">file_name</span><span class="p">):</span>
+
+<div class="viewcode-block" id="save_dict_to_file">
+<a class="viewcode-back" href="../../utils.html#utils.general.save_dict_to_file">[docs]</a>
+<span class="k">def</span> <span class="nf">save_dict_to_file</span><span class="p">(</span><span class="n">dictionary</span><span class="p">,</span> <span class="n">file_name</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Save dictionary to a file.</span>
 
@@ -980,6 +1024,7 @@
         <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Failed to write to </span><span class="si">{</span><span class="n">file_name</span><span class="si">}</span><span class="s2">.&quot;</span>
         <span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
         <span class="k">raise</span></div>
+
 </pre></div>
 
             <div class="clearer"></div>
@@ -1023,14 +1068,14 @@
         <li class="right" >
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../index.html">simtools v0.1.dev1+g469b903 Manual</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">simtools v0.1.dev1+g8b2ac9b Manual</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">utils.general</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
-        &#169; Copyright 2022, gammasim-tools, simtools developers.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 6.2.1.
+    &#169; Copyright 2022, gammasim-tools, simtools developers.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.2.
     </div>
   </body>
 </html>

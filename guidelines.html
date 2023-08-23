@@ -2,18 +2,18 @@
 
 <!doctype html>
 
-<html lang="en">
+<html lang="en" data-content_root="./">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
-    <title>Developer Guidelines &#8212; simtools v0.1.dev1+g469b903 Manual</title>
-    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="_static/bizstyle.css" />
+    <title>Developer Guidelines &#8212; simtools v0.1.dev1+g8b2ac9b Manual</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="_static/bizstyle.css?v=532c1bf3" />
     
-    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-    <script src="_static/doctools.js"></script>
-    <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/documentation_options.js?v=5e0c7a38"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/bizstyle.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -35,7 +35,7 @@
         <li class="right" >
           <a href="simulation_software.html" title="Simulation Software"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">simtools v0.1.dev1+g469b903 Manual</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">simtools v0.1.dev1+g8b2ac9b Manual</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Developer Guidelines</a></li> 
       </ul>
     </div>  
@@ -46,7 +46,7 @@
           <div class="body" role="main">
             
   <section id="developer-guidelines">
-<span id="guidelines"></span><h1>Developer Guidelines<a class="headerlink" href="#developer-guidelines" title="Permalink to this heading">¶</a></h1>
+<span id="guidelines"></span><h1>Developer Guidelines<a class="headerlink" href="#developer-guidelines" title="Link to this heading">¶</a></h1>
 <p>This section provides help and guidelines for developers of simtools.
 If you want to contribute to simtools, please use one of the contact points listed at the
 entry page of this documentation. In general, please take note of the <a class="reference external" href="https://cta-observatory.github.io/ctapipe/development/index.html">ctapipe Development
@@ -55,7 +55,7 @@ follows the same <a class="reference external" href="https://cta-observatory.git
 and <a class="reference external" href="https://cta-observatory.github.io/ctapipe/development/code-guidelines.html">code guidelines</a>
 as <a class="reference external" href="https://github.com/cta-observatory/ctapipe/">ctapipe</a>.</p>
 <section id="project-setup">
-<h2>Project setup<a class="headerlink" href="#project-setup" title="Permalink to this heading">¶</a></h2>
+<h2>Project setup<a class="headerlink" href="#project-setup" title="Link to this heading">¶</a></h2>
 <p>The main code repository for simtools is on GitHub:</p>
 <p><a class="reference external" href="https://github.com/gammasim/simtools">https://github.com/gammasim/simtools</a></p>
 <p>The main directories for developers are the
@@ -65,11 +65,11 @@ as <a class="reference external" href="https://github.com/cta-observatory/ctapip
 and <a class="reference external" href="https://github.com/gammasim/simtools/tree/main/docs">docs</a> folders.</p>
 </section>
 <section id="python-version">
-<h2>Python version<a class="headerlink" href="#python-version" title="Permalink to this heading">¶</a></h2>
+<h2>Python version<a class="headerlink" href="#python-version" title="Link to this heading">¶</a></h2>
 <p>The simtools package is currently developed for Python 3.9.</p>
 </section>
 <section id="code-formatting">
-<h2>Code formatting<a class="headerlink" href="#code-formatting" title="Permalink to this heading">¶</a></h2>
+<h2>Code formatting<a class="headerlink" href="#code-formatting" title="Link to this heading">¶</a></h2>
 <p>Linting and code checks are done automatically using the pre-commit functionality using <code class="docutils literal notranslate"><span class="pre">isort</span></code>,
 <code class="docutils literal notranslate"><span class="pre">black</span></code> and <code class="docutils literal notranslate"><span class="pre">pyflakes</span></code>. As part of the CI workflow Codacy performs a few additional code checks
 as well.</p>
@@ -89,7 +89,7 @@ as well.</p>
 </div>
 </section>
 <section id="logging">
-<h2>Logging<a class="headerlink" href="#logging" title="Permalink to this heading">¶</a></h2>
+<h2>Logging<a class="headerlink" href="#logging" title="Link to this heading">¶</a></h2>
 <p>Sufficient logging information should be provided to users and developers. As general guideline, the
 following logging levels should be used:</p>
 <ul class="simple">
@@ -101,7 +101,7 @@ following logging levels should be used:</p>
 <p>Use <code class="docutils literal notranslate"><span class="pre">logger.error,</span> <span class="pre">logger.warning,</span> <span class="pre">logger.debug,</span> <span class="pre">logger.info</span></code>.</p>
 </section>
 <section id="testing">
-<h2>Testing<a class="headerlink" href="#testing" title="Permalink to this heading">¶</a></h2>
+<h2>Testing<a class="headerlink" href="#testing" title="Link to this heading">¶</a></h2>
 <p>pytest framework is used for unit testing.
 The test modules are located in
 <a class="reference external" href="https://github.com/gammasim/simtools/tree/main/tests">simtools/tests</a> modules separated
@@ -119,7 +119,7 @@ This should be used to avoid duplication.</p>
 </div>
 </section>
 <section id="documentation">
-<h2>Documentation<a class="headerlink" href="#documentation" title="Permalink to this heading">¶</a></h2>
+<h2>Documentation<a class="headerlink" href="#documentation" title="Link to this heading">¶</a></h2>
 <p>Sphinx is used to create this documentation from the files in the
 <a class="reference external" href="https://github.com/gammasim/simtools/tree/main/docs">docs</a> directory and from the
 docstrings in the code.
@@ -163,7 +163,7 @@ docstrings or RST files). The documentation can be viewed locally in a browser s
 file <code class="docutils literal notranslate"><span class="pre">./build/html/index.html</span></code>.</p>
 </section>
 <section id="writing-applications">
-<h2>Writing Applications<a class="headerlink" href="#writing-applications" title="Permalink to this heading">¶</a></h2>
+<h2>Writing Applications<a class="headerlink" href="#writing-applications" title="Link to this heading">¶</a></h2>
 <p>Applications are command lines tools that should be built off of the simtools library.
 Application should not include complex algorithm, this should be done at the module level.</p>
 <p>All applications should follow the same structure:</p>
@@ -194,14 +194,14 @@ configurations from command line, configuration file, or environmental variables
 Check the <a class="reference internal" href="configuration_module.html#configurationcommandline-parser"><span class="std std-ref">commandline_parser</span></a> module for generic command line arguments before introducing new ones in applications</p>
 </section>
 <section id="dependencies">
-<h2>Dependencies<a class="headerlink" href="#dependencies" title="Permalink to this heading">¶</a></h2>
+<h2>Dependencies<a class="headerlink" href="#dependencies" title="Link to this heading">¶</a></h2>
 <p>Dependencies on python packages are listed in the
 <a class="reference external" href="https://github.com/gammasim/simtools/blob/main/environment.yml">environment file</a>.
 Some of the packages installed are used for the development only and not needed for executing
 simtools applications.</p>
 </section>
 <section id="integration-with-corsika-and-sim-telarray">
-<h2>Integration with CORSIKA and sim_telarray<a class="headerlink" href="#integration-with-corsika-and-sim-telarray" title="Permalink to this heading">¶</a></h2>
+<h2>Integration with CORSIKA and sim_telarray<a class="headerlink" href="#integration-with-corsika-and-sim-telarray" title="Link to this heading">¶</a></h2>
 <p>CORSIKA and sim_telarray are external tools to simtools.
 Their integration should be
 minimally coupled with the rest of the package. The modules that depend directly on these
@@ -212,7 +212,7 @@ will be easier to replace these tools in the future.</p>
 which connects to the tools used to manage and run simulations.</p>
 </section>
 <section id="handling-data-files">
-<h2>Handling data files<a class="headerlink" href="#handling-data-files" title="Permalink to this heading">¶</a></h2>
+<h2>Handling data files<a class="headerlink" href="#handling-data-files" title="Link to this heading">¶</a></h2>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
 <p>Requires review</p>
@@ -223,9 +223,9 @@ Some auxiliary files can be found in the
 Note that this is under review and might go away in near future.</p>
 </section>
 <section id="naming">
-<h2>Naming<a class="headerlink" href="#naming" title="Permalink to this heading">¶</a></h2>
+<h2>Naming<a class="headerlink" href="#naming" title="Link to this heading">¶</a></h2>
 <section id="telescope-names">
-<h3>Telescope Names<a class="headerlink" href="#telescope-names" title="Permalink to this heading">¶</a></h3>
+<h3>Telescope Names<a class="headerlink" href="#telescope-names" title="Link to this heading">¶</a></h3>
 <p>The telescope names as used by simtools follow the pattern “Site-Class-Type”, where:</p>
 <ul class="simple">
 <li><p>“Site” is either “North” or “South”;</p></li>
@@ -247,7 +247,7 @@ to the standard ones
 (e.g “flashcam” will be converted to “FlashCam”).</p>
 </section>
 <section id="validating-names">
-<h3>Validating names<a class="headerlink" href="#validating-names" title="Permalink to this heading">¶</a></h3>
+<h3>Validating names<a class="headerlink" href="#validating-names" title="Link to this heading">¶</a></h3>
 <p>Names that are recurrently used along the the package should be validated when given as input.
 Examples of names are: telescope, site, camera, model version. The functionalities to validate names
 are found in  <span class="xref std std-ref">util.names</span>. The function validate_name receives the input string
@@ -277,7 +277,7 @@ provide a clear interface.</p>
 </section>
 </section>
 <section id="input-validation">
-<h2>Input validation<a class="headerlink" href="#input-validation" title="Permalink to this heading">¶</a></h2>
+<h2>Input validation<a class="headerlink" href="#input-validation" title="Link to this heading">¶</a></h2>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
 <p>Requires review</p>
@@ -383,13 +383,13 @@ properties. See an example below:</p>
         <li class="right" >
           <a href="simulation_software.html" title="Simulation Software"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">simtools v0.1.dev1+g469b903 Manual</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">simtools v0.1.dev1+g8b2ac9b Manual</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Developer Guidelines</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
-        &#169; Copyright 2022, gammasim-tools, simtools developers.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 6.2.1.
+    &#169; Copyright 2022, gammasim-tools, simtools developers.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.2.
     </div>
   </body>
 </html>

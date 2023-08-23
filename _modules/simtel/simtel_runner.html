@@ -2,17 +2,17 @@
 
 <!doctype html>
 
-<html lang="en">
+<html lang="en" data-content_root="../../">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>simtel.simtel_runner &#8212; simtools v0.1.dev1+g469b903 Manual</title>
-    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/bizstyle.css" />
+    <title>simtel.simtel_runner &#8212; simtools v0.1.dev1+g8b2ac9b Manual</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../../_static/bizstyle.css?v=532c1bf3" />
     
-    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
-    <script src="../../_static/doctools.js"></script>
-    <script src="../../_static/sphinx_highlight.js"></script>
+    <script src="../../_static/documentation_options.js?v=5e0c7a38"></script>
+    <script src="../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/bizstyle.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -30,7 +30,7 @@
         <li class="right" >
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../index.html">simtools v0.1.dev1+g469b903 Manual</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">simtools v0.1.dev1+g8b2ac9b Manual</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">simtel.simtel_runner</a></li> 
       </ul>
@@ -57,15 +57,23 @@
 <span class="c1"># but are implemented in the classes inheriting from it.</span>
 
 
-<div class="viewcode-block" id="SimtelExecutionError"><a class="viewcode-back" href="../../sim_telarray.html#simtel.simtel_runner.SimtelExecutionError">[docs]</a><span class="k">class</span> <span class="nc">SimtelExecutionError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+<div class="viewcode-block" id="SimtelExecutionError">
+<a class="viewcode-back" href="../../sim_telarray.html#simtel.simtel_runner.SimtelExecutionError">[docs]</a>
+<span class="k">class</span> <span class="nc">SimtelExecutionError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Exception for simtel_array execution error.&quot;&quot;&quot;</span></div>
 
 
-<div class="viewcode-block" id="InvalidOutputFile"><a class="viewcode-back" href="../../sim_telarray.html#simtel.simtel_runner.InvalidOutputFile">[docs]</a><span class="k">class</span> <span class="nc">InvalidOutputFile</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+
+<div class="viewcode-block" id="InvalidOutputFile">
+<a class="viewcode-back" href="../../sim_telarray.html#simtel.simtel_runner.InvalidOutputFile">[docs]</a>
+<span class="k">class</span> <span class="nc">InvalidOutputFile</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Exception for invalid output file.&quot;&quot;&quot;</span></div>
 
 
-<div class="viewcode-block" id="SimtelRunner"><a class="viewcode-back" href="../../sim_telarray.html#simtel.simtel_runner.SimtelRunner">[docs]</a><span class="k">class</span> <span class="nc">SimtelRunner</span><span class="p">:</span>
+
+<div class="viewcode-block" id="SimtelRunner">
+<a class="viewcode-back" href="../../sim_telarray.html#simtel.simtel_runner.SimtelRunner">[docs]</a>
+<span class="k">class</span> <span class="nc">SimtelRunner</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    SimtelRunner is the base class of the sim_telarray interfaces.</span>
 
@@ -77,7 +85,9 @@
 <span class="sd">        Instance label. Important for output file naming.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="SimtelRunner.__init__"><a class="viewcode-back" href="../../sim_telarray.html#simtel.simtel_runner.SimtelRunner.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">simtel_source_path</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="SimtelRunner.__init__">
+<a class="viewcode-back" href="../../sim_telarray.html#simtel.simtel_runner.SimtelRunner.__init__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">simtel_source_path</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Initialize SimtelRunner.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -90,6 +100,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_script_file</span> <span class="o">=</span> <span class="kc">None</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">RUNS_PER_SET</span> <span class="o">=</span> <span class="mi">1</span></div>
+
 
     <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;SimtelRunner(label=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="si">}</span><span class="s2">)</span><span class="se">\n</span><span class="s2">&quot;</span>
@@ -136,7 +147,9 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
-<div class="viewcode-block" id="SimtelRunner.prepare_run_script"><a class="viewcode-back" href="../../sim_telarray.html#simtel.simtel_runner.SimtelRunner.prepare_run_script">[docs]</a>    <span class="k">def</span> <span class="nf">prepare_run_script</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">test</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">input_file</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">run_number</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">extra_commands</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="SimtelRunner.prepare_run_script">
+<a class="viewcode-back" href="../../sim_telarray.html#simtel.simtel_runner.SimtelRunner.prepare_run_script">[docs]</a>
+    <span class="k">def</span> <span class="nf">prepare_run_script</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">test</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">input_file</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">run_number</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">extra_commands</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Builds and returns the full path of the bash run script containing the sim_telarray command.</span>
 
@@ -194,7 +207,10 @@
         <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;chmod ug+x </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_script_file</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_script_file</span></div>
 
-<div class="viewcode-block" id="SimtelRunner.run"><a class="viewcode-back" href="../../sim_telarray.html#simtel.simtel_runner.SimtelRunner.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">test</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">force</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">input_file</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">run_number</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+
+<div class="viewcode-block" id="SimtelRunner.run">
+<a class="viewcode-back" href="../../sim_telarray.html#simtel.simtel_runner.SimtelRunner.run">[docs]</a>
+    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">test</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">force</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">input_file</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">run_number</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Basic sim_telarray run method.</span>
 
@@ -229,6 +245,7 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">_run_simtel_and_check_output</span><span class="p">(</span><span class="n">command</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_check_run_result</span><span class="p">(</span><span class="n">run_number</span><span class="o">=</span><span class="n">run_number</span><span class="p">)</span></div>
+
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">_simtel_failed</span><span class="p">(</span><span class="n">sys_output</span><span class="p">):</span>
@@ -285,6 +302,7 @@
         <span class="n">c</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot; -C </span><span class="si">{</span><span class="n">par</span><span class="si">}</span><span class="s2">&quot;</span>
         <span class="n">c</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;=</span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
         <span class="k">return</span> <span class="n">c</span></div>
+
 </pre></div>
 
             <div class="clearer"></div>
@@ -328,14 +346,14 @@
         <li class="right" >
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../index.html">simtools v0.1.dev1+g469b903 Manual</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">simtools v0.1.dev1+g8b2ac9b Manual</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">simtel.simtel_runner</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
-        &#169; Copyright 2022, gammasim-tools, simtools developers.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 6.2.1.
+    &#169; Copyright 2022, gammasim-tools, simtools developers.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.2.
     </div>
   </body>
 </html>

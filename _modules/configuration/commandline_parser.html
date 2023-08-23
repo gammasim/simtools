@@ -2,17 +2,17 @@
 
 <!doctype html>
 
-<html lang="en">
+<html lang="en" data-content_root="../../">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>configuration.commandline_parser &#8212; simtools v0.1.dev1+g469b903 Manual</title>
-    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/bizstyle.css" />
+    <title>configuration.commandline_parser &#8212; simtools v0.1.dev1+g8b2ac9b Manual</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../../_static/bizstyle.css?v=532c1bf3" />
     
-    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
-    <script src="../../_static/doctools.js"></script>
-    <script src="../../_static/sphinx_highlight.js"></script>
+    <script src="../../_static/documentation_options.js?v=5e0c7a38"></script>
+    <script src="../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/bizstyle.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -30,7 +30,7 @@
         <li class="right" >
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../index.html">simtools v0.1.dev1+g469b903 Manual</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">simtools v0.1.dev1+g8b2ac9b Manual</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">configuration.commandline_parser</a></li> 
       </ul>
@@ -56,7 +56,9 @@
 <span class="p">]</span>
 
 
-<div class="viewcode-block" id="CommandLineParser"><a class="viewcode-back" href="../../configuration_module.html#configuration.commandline_parser.CommandLineParser">[docs]</a><span class="k">class</span> <span class="nc">CommandLineParser</span><span class="p">(</span><span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">):</span>
+<div class="viewcode-block" id="CommandLineParser">
+<a class="viewcode-back" href="../../configuration_module.html#configuration.commandline_parser.CommandLineParser">[docs]</a>
+<span class="k">class</span> <span class="nc">CommandLineParser</span><span class="p">(</span><span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Command line parser for applications.</span>
 
@@ -71,7 +73,9 @@
 <span class="sd">        refer to argparse.ArgumentParser documentation.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="CommandLineParser.initialize_default_arguments"><a class="viewcode-back" href="../../configuration_module.html#configuration.commandline_parser.CommandLineParser.initialize_default_arguments">[docs]</a>    <span class="k">def</span> <span class="nf">initialize_default_arguments</span><span class="p">(</span>
+<div class="viewcode-block" id="CommandLineParser.initialize_default_arguments">
+<a class="viewcode-back" href="../../configuration_module.html#configuration.commandline_parser.CommandLineParser.initialize_default_arguments">[docs]</a>
+    <span class="k">def</span> <span class="nf">initialize_default_arguments</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">paths</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
         <span class="n">output</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
@@ -109,7 +113,10 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">initialize_config_files</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">initialize_application_execution_arguments</span><span class="p">()</span></div>
 
-<div class="viewcode-block" id="CommandLineParser.initialize_config_files"><a class="viewcode-back" href="../../configuration_module.html#configuration.commandline_parser.CommandLineParser.initialize_config_files">[docs]</a>    <span class="k">def</span> <span class="nf">initialize_config_files</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+<div class="viewcode-block" id="CommandLineParser.initialize_config_files">
+<a class="viewcode-back" href="../../configuration_module.html#configuration.commandline_parser.CommandLineParser.initialize_config_files">[docs]</a>
+    <span class="k">def</span> <span class="nf">initialize_config_files</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Initialize configuration files.</span>
 
@@ -124,7 +131,10 @@
             <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
         <span class="p">)</span></div>
 
-<div class="viewcode-block" id="CommandLineParser.initialize_path_arguments"><a class="viewcode-back" href="../../configuration_module.html#configuration.commandline_parser.CommandLineParser.initialize_path_arguments">[docs]</a>    <span class="k">def</span> <span class="nf">initialize_path_arguments</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+<div class="viewcode-block" id="CommandLineParser.initialize_path_arguments">
+<a class="viewcode-back" href="../../configuration_module.html#configuration.commandline_parser.CommandLineParser.initialize_path_arguments">[docs]</a>
+    <span class="k">def</span> <span class="nf">initialize_path_arguments</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Initialize paths.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -163,7 +173,10 @@
             <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
         <span class="p">)</span></div>
 
-<div class="viewcode-block" id="CommandLineParser.initialize_output_arguments"><a class="viewcode-back" href="../../configuration_module.html#configuration.commandline_parser.CommandLineParser.initialize_output_arguments">[docs]</a>    <span class="k">def</span> <span class="nf">initialize_output_arguments</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+<div class="viewcode-block" id="CommandLineParser.initialize_output_arguments">
+<a class="viewcode-back" href="../../configuration_module.html#configuration.commandline_parser.CommandLineParser.initialize_output_arguments">[docs]</a>
+    <span class="k">def</span> <span class="nf">initialize_output_arguments</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Initialize application output files(s)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -183,7 +196,10 @@
             <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
         <span class="p">)</span></div>
 
-<div class="viewcode-block" id="CommandLineParser.initialize_application_execution_arguments"><a class="viewcode-back" href="../../configuration_module.html#configuration.commandline_parser.CommandLineParser.initialize_application_execution_arguments">[docs]</a>    <span class="k">def</span> <span class="nf">initialize_application_execution_arguments</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+<div class="viewcode-block" id="CommandLineParser.initialize_application_execution_arguments">
+<a class="viewcode-back" href="../../configuration_module.html#configuration.commandline_parser.CommandLineParser.initialize_application_execution_arguments">[docs]</a>
+    <span class="k">def</span> <span class="nf">initialize_application_execution_arguments</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Initialize application execution arguments.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -211,7 +227,10 @@
             <span class="s2">&quot;--version&quot;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;version&quot;</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;%(prog)s </span><span class="si">{</span><span class="n">simtools</span><span class="o">.</span><span class="n">version</span><span class="o">.</span><span class="n">__version__</span><span class="si">}</span><span class="s2">&quot;</span>
         <span class="p">)</span></div>
 
-<div class="viewcode-block" id="CommandLineParser.initialize_db_config_arguments"><a class="viewcode-back" href="../../configuration_module.html#configuration.commandline_parser.CommandLineParser.initialize_db_config_arguments">[docs]</a>    <span class="k">def</span> <span class="nf">initialize_db_config_arguments</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+<div class="viewcode-block" id="CommandLineParser.initialize_db_config_arguments">
+<a class="viewcode-back" href="../../configuration_module.html#configuration.commandline_parser.CommandLineParser.initialize_db_config_arguments">[docs]</a>
+    <span class="k">def</span> <span class="nf">initialize_db_config_arguments</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Initialize DB configuration parameters.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -231,7 +250,10 @@
             <span class="n">default</span><span class="o">=</span><span class="s2">&quot;admin&quot;</span><span class="p">,</span>
         <span class="p">)</span></div>
 
-<div class="viewcode-block" id="CommandLineParser.initialize_job_submission_arguments"><a class="viewcode-back" href="../../configuration_module.html#configuration.commandline_parser.CommandLineParser.initialize_job_submission_arguments">[docs]</a>    <span class="k">def</span> <span class="nf">initialize_job_submission_arguments</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+<div class="viewcode-block" id="CommandLineParser.initialize_job_submission_arguments">
+<a class="viewcode-back" href="../../configuration_module.html#configuration.commandline_parser.CommandLineParser.initialize_job_submission_arguments">[docs]</a>
+    <span class="k">def</span> <span class="nf">initialize_job_submission_arguments</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Initialize job submission arguments for simulator.</span>
 
@@ -255,7 +277,10 @@
             <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
         <span class="p">)</span></div>
 
-<div class="viewcode-block" id="CommandLineParser.initialize_telescope_model_arguments"><a class="viewcode-back" href="../../configuration_module.html#configuration.commandline_parser.CommandLineParser.initialize_telescope_model_arguments">[docs]</a>    <span class="k">def</span> <span class="nf">initialize_telescope_model_arguments</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">add_model_version</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">add_telescope</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+
+<div class="viewcode-block" id="CommandLineParser.initialize_telescope_model_arguments">
+<a class="viewcode-back" href="../../configuration_module.html#configuration.commandline_parser.CommandLineParser.initialize_telescope_model_arguments">[docs]</a>
+    <span class="k">def</span> <span class="nf">initialize_telescope_model_arguments</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">add_model_version</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">add_telescope</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Initialize default arguments for site and telescope model definition</span>
 
@@ -285,7 +310,10 @@
                 <span class="n">default</span><span class="o">=</span><span class="s2">&quot;Current&quot;</span><span class="p">,</span>
             <span class="p">)</span></div>
 
-<div class="viewcode-block" id="CommandLineParser.site"><a class="viewcode-back" href="../../configuration_module.html#configuration.commandline_parser.CommandLineParser.site">[docs]</a>    <span class="nd">@staticmethod</span>
+
+<div class="viewcode-block" id="CommandLineParser.site">
+<a class="viewcode-back" href="../../configuration_module.html#configuration.commandline_parser.CommandLineParser.site">[docs]</a>
+    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">site</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Argument parser type to check that a valid site name is given</span>
@@ -312,7 +340,10 @@
             <span class="k">raise</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentTypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">fsite</span><span class="si">}</span><span class="s2"> is an invalid site&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">fsite</span></div>
 
-<div class="viewcode-block" id="CommandLineParser.telescope"><a class="viewcode-back" href="../../configuration_module.html#configuration.commandline_parser.CommandLineParser.telescope">[docs]</a>    <span class="nd">@staticmethod</span>
+
+<div class="viewcode-block" id="CommandLineParser.telescope">
+<a class="viewcode-back" href="../../configuration_module.html#configuration.commandline_parser.CommandLineParser.telescope">[docs]</a>
+    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">telescope</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Argument parser type to check that a valid telescope name is given</span>
@@ -339,7 +370,10 @@
             <span class="k">raise</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentTypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">ftelescope</span><span class="si">}</span><span class="s2"> is an invalid telescope name&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">ftelescope</span></div>
 
-<div class="viewcode-block" id="CommandLineParser.efficiency_interval"><a class="viewcode-back" href="../../configuration_module.html#configuration.commandline_parser.CommandLineParser.efficiency_interval">[docs]</a>    <span class="nd">@staticmethod</span>
+
+<div class="viewcode-block" id="CommandLineParser.efficiency_interval">
+<a class="viewcode-back" href="../../configuration_module.html#configuration.commandline_parser.CommandLineParser.efficiency_interval">[docs]</a>
+    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">efficiency_interval</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Argument parser type to check that value is an efficiency</span>
@@ -368,7 +402,10 @@
 
         <span class="k">return</span> <span class="n">fvalue</span></div>
 
-<div class="viewcode-block" id="CommandLineParser.zenith_angle"><a class="viewcode-back" href="../../configuration_module.html#configuration.commandline_parser.CommandLineParser.zenith_angle">[docs]</a>    <span class="nd">@staticmethod</span>
+
+<div class="viewcode-block" id="CommandLineParser.zenith_angle">
+<a class="viewcode-back" href="../../configuration_module.html#configuration.commandline_parser.CommandLineParser.zenith_angle">[docs]</a>
+    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">zenith_angle</span><span class="p">(</span><span class="n">angle</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Argument parser type to check that the zenith angle provided is in the interval [0, 180].</span>
@@ -409,7 +446,10 @@
 
         <span class="k">return</span> <span class="n">fangle</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span></div>
 
-<div class="viewcode-block" id="CommandLineParser.azimuth_angle"><a class="viewcode-back" href="../../configuration_module.html#configuration.commandline_parser.CommandLineParser.azimuth_angle">[docs]</a>    <span class="nd">@staticmethod</span>
+
+<div class="viewcode-block" id="CommandLineParser.azimuth_angle">
+<a class="viewcode-back" href="../../configuration_module.html#configuration.commandline_parser.CommandLineParser.azimuth_angle">[docs]</a>
+    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">azimuth_angle</span><span class="p">(</span><span class="n">angle</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Argument parser type to check that the azimuth angle provided is in the interval [0, 360].</span>
@@ -467,7 +507,9 @@
             <span class="sa">f</span><span class="s2">&quot;The azimuth value provided, </span><span class="si">{</span><span class="n">angle</span><span class="si">}</span><span class="s2">, is not a valid number &quot;</span>
             <span class="s2">&quot;nor one of (north, south, east, west).&quot;</span>
         <span class="p">)</span>
-        <span class="k">raise</span> <span class="ne">TypeError</span></div></div>
+        <span class="k">raise</span> <span class="ne">TypeError</span></div>
+</div>
+
 </pre></div>
 
             <div class="clearer"></div>
@@ -511,14 +553,14 @@
         <li class="right" >
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../index.html">simtools v0.1.dev1+g469b903 Manual</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">simtools v0.1.dev1+g8b2ac9b Manual</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">configuration.commandline_parser</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
-        &#169; Copyright 2022, gammasim-tools, simtools developers.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 6.2.1.
+    &#169; Copyright 2022, gammasim-tools, simtools developers.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.2.
     </div>
   </body>
 </html>

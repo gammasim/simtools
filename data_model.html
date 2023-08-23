@@ -2,18 +2,18 @@
 
 <!doctype html>
 
-<html lang="en">
+<html lang="en" data-content_root="./">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
-    <title>Data Model &#8212; simtools v0.1.dev1+g469b903 Manual</title>
-    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="_static/bizstyle.css" />
+    <title>Data Model &#8212; simtools v0.1.dev1+g8b2ac9b Manual</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="_static/bizstyle.css?v=532c1bf3" />
     
-    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-    <script src="_static/doctools.js"></script>
-    <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/documentation_options.js?v=5e0c7a38"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/bizstyle.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -39,7 +39,7 @@
         <li class="right" >
           <a href="corsika_simtel.html" title="CORSIKA and sim_telarray"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">simtools v0.1.dev1+g469b903 Manual</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">simtools v0.1.dev1+g8b2ac9b Manual</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="library.html" accesskey="U">API</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Data Model</a></li> 
       </ul>
@@ -51,12 +51,12 @@
           <div class="body" role="main">
             
   <section id="data-model">
-<span id="datamodel"></span><h1>Data Model<a class="headerlink" href="#data-model" title="Permalink to this heading">¶</a></h1>
+<span id="datamodel"></span><h1>Data Model<a class="headerlink" href="#data-model" title="Link to this heading">¶</a></h1>
 <p>Modules in the <code class="docutils literal notranslate"><span class="pre">data_model</span></code> sections provide functionality for reading, writing, and validation of data.
 Data products ingested or produced by simtools generally follows the CTA data model.</p>
-<section id="module-data_model.metadata_model">
-<span id="metadata-model"></span><span id="datamodelmetadatamodel"></span><h2>metadata_model<a class="headerlink" href="#module-data_model.metadata_model" title="Permalink to this heading">¶</a></h2>
-<p>Definition of metadata model for input to and output of simtools.
+<section id="metadata-model">
+<span id="datamodelmetadatamodel"></span><h2>metadata_model<a class="headerlink" href="#metadata-model" title="Link to this heading">¶</a></h2>
+<p id="module-data_model.metadata_model">Definition of metadata model for input to and output of simtools.
 Follows CTA top-level data model definition.
 Metadata is broken into hierarchical categories in this module.</p>
 <p>Metadata definitions require the three following fields to be defined:</p>
@@ -72,13 +72,13 @@ Metadata is broken into hierarchical categories in this module.</p>
 </ul>
 <dl class="py exception">
 <dt class="sig sig-object py" id="data_model.metadata_model.InvalidSchemaList">
-<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">data_model.metadata_model.</span></span><span class="sig-name descname"><span class="pre">InvalidSchemaList</span></span><a class="reference internal" href="_modules/data_model/metadata_model.html#InvalidSchemaList"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_model.metadata_model.InvalidSchemaList" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">data_model.metadata_model.</span></span><span class="sig-name descname"><span class="pre">InvalidSchemaList</span></span><a class="reference internal" href="_modules/data_model/metadata_model.html#InvalidSchemaList"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_model.metadata_model.InvalidSchemaList" title="Link to this definition">¶</a></dt>
 <dd><p>Exception raised for requests of unknown schema lists</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="data_model.metadata_model.metadata_input_reference_document_list">
-<span class="sig-prename descclassname"><span class="pre">data_model.metadata_model.</span></span><span class="sig-name descname"><span class="pre">metadata_input_reference_document_list</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">schema_list</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/data_model/metadata_model.html#metadata_input_reference_document_list"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_model.metadata_model.metadata_input_reference_document_list" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">data_model.metadata_model.</span></span><span class="sig-name descname"><span class="pre">metadata_input_reference_document_list</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">schema_list</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/data_model/metadata_model.html#metadata_input_reference_document_list"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_model.metadata_model.metadata_input_reference_document_list" title="Link to this definition">¶</a></dt>
 <dd><p>Reference model data for input metata data of type documentlist or instrumentlist</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -97,7 +97,7 @@ Metadata is broken into hierarchical categories in this module.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="data_model.metadata_model.metadata_input_reference_schema">
-<span class="sig-prename descclassname"><span class="pre">data_model.metadata_model.</span></span><span class="sig-name descname"><span class="pre">metadata_input_reference_schema</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/data_model/metadata_model.html#metadata_input_reference_schema"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_model.metadata_model.metadata_input_reference_schema" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">data_model.metadata_model.</span></span><span class="sig-name descname"><span class="pre">metadata_input_reference_schema</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/data_model/metadata_model.html#metadata_input_reference_schema"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_model.metadata_model.metadata_input_reference_schema" title="Link to this definition">¶</a></dt>
 <dd><p>Reference data model scheme for input metadata.
 Describes metadata provided for input to simtools applications.</p>
 <dl class="field-list simple">
@@ -111,7 +111,7 @@ Describes metadata provided for input to simtools applications.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="data_model.metadata_model.top_level_reference_schema">
-<span class="sig-prename descclassname"><span class="pre">data_model.metadata_model.</span></span><span class="sig-name descname"><span class="pre">top_level_reference_schema</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/data_model/metadata_model.html#top_level_reference_schema"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_model.metadata_model.top_level_reference_schema" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">data_model.metadata_model.</span></span><span class="sig-name descname"><span class="pre">top_level_reference_schema</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/data_model/metadata_model.html#top_level_reference_schema"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_model.metadata_model.top_level_reference_schema" title="Link to this definition">¶</a></dt>
 <dd><p>Reference schema following the CTA Top-Level Data Model.</p>
 <p>This metadata schema is used for simtools data products.</p>
 <dl class="field-list simple">
@@ -124,11 +124,11 @@ Describes metadata provided for input to simtools applications.</p>
 </dd></dl>
 
 </section>
-<section id="module-data_model.model_data_writer">
-<span id="model-data-writer"></span><span id="datamodelmodeldatawriter"></span><h2>model_data_writer<a class="headerlink" href="#module-data_model.model_data_writer" title="Permalink to this heading">¶</a></h2>
-<dl class="py class">
+<section id="model-data-writer">
+<span id="datamodelmodeldatawriter"></span><h2>model_data_writer<a class="headerlink" href="#model-data-writer" title="Link to this heading">¶</a></h2>
+<span class="target" id="module-data_model.model_data_writer"></span><dl class="py class">
 <dt class="sig sig-object py" id="data_model.model_data_writer.ModelDataWriter">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">data_model.model_data_writer.</span></span><span class="sig-name descname"><span class="pre">ModelDataWriter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">product_data_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">product_data_format</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/data_model/model_data_writer.html#ModelDataWriter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_model.model_data_writer.ModelDataWriter" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">data_model.model_data_writer.</span></span><span class="sig-name descname"><span class="pre">ModelDataWriter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">product_data_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">product_data_format</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/data_model/model_data_writer.html#ModelDataWriter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_model.model_data_writer.ModelDataWriter" title="Link to this definition">¶</a></dt>
 <dd><p>Writer for simulation model data and metadata.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -140,19 +140,19 @@ Describes metadata provided for input to simtools applications.</p>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="data_model.model_data_writer.ModelDataWriter.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">product_data_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">product_data_format</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/data_model/model_data_writer.html#ModelDataWriter.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_model.model_data_writer.ModelDataWriter.__init__" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">product_data_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">product_data_format</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/data_model/model_data_writer.html#ModelDataWriter.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_model.model_data_writer.ModelDataWriter.__init__" title="Link to this definition">¶</a></dt>
 <dd><p>Initialize model data writer.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="data_model.model_data_writer.ModelDataWriter.write">
-<span class="sig-name descname"><span class="pre">write</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">metadata</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">product_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/data_model/model_data_writer.html#ModelDataWriter.write"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_model.model_data_writer.ModelDataWriter.write" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">write</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">metadata</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">product_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/data_model/model_data_writer.html#ModelDataWriter.write"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_model.model_data_writer.ModelDataWriter.write" title="Link to this definition">¶</a></dt>
 <dd><p>Write model data and metadata</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="data_model.model_data_writer.ModelDataWriter.write_data">
-<span class="sig-name descname"><span class="pre">write_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">product_data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/data_model/model_data_writer.html#ModelDataWriter.write_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_model.model_data_writer.ModelDataWriter.write_data" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">write_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">product_data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/data_model/model_data_writer.html#ModelDataWriter.write_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_model.model_data_writer.ModelDataWriter.write_data" title="Link to this definition">¶</a></dt>
 <dd><p>Write model data.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -172,7 +172,7 @@ Describes metadata provided for input to simtools applications.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="data_model.model_data_writer.ModelDataWriter.write_metadata">
-<span class="sig-name descname"><span class="pre">write_metadata</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">metadata</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">yml_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keys_lower_case</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/data_model/model_data_writer.html#ModelDataWriter.write_metadata"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_model.model_data_writer.ModelDataWriter.write_metadata" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">write_metadata</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">metadata</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">yml_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keys_lower_case</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/data_model/model_data_writer.html#ModelDataWriter.write_metadata"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_model.model_data_writer.ModelDataWriter.write_metadata" title="Link to this definition">¶</a></dt>
 <dd><p>Write model metadata file (yaml file format).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -207,11 +207,11 @@ Describes metadata provided for input to simtools applications.</p>
 </dd></dl>
 
 </section>
-<section id="module-data_model.validate_data">
-<span id="validate-data"></span><span id="datamodelvalidatedata"></span><h2>validate_data<a class="headerlink" href="#module-data_model.validate_data" title="Permalink to this heading">¶</a></h2>
-<dl class="py class">
+<section id="validate-data">
+<span id="datamodelvalidatedata"></span><h2>validate_data<a class="headerlink" href="#validate-data" title="Link to this heading">¶</a></h2>
+<span class="target" id="module-data_model.validate_data"></span><dl class="py class">
 <dt class="sig sig-object py" id="data_model.validate_data.DataValidator">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">data_model.validate_data.</span></span><span class="sig-name descname"><span class="pre">DataValidator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">schema_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/data_model/validate_data.html#DataValidator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_model.validate_data.DataValidator" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">data_model.validate_data.</span></span><span class="sig-name descname"><span class="pre">DataValidator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">schema_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/data_model/validate_data.html#DataValidator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_model.validate_data.DataValidator" title="Link to this definition">¶</a></dt>
 <dd><p>Validate data for type and units following a describing schema; converts or
 transform data if required.</p>
 <p>Data can be of table or list format
@@ -228,13 +228,13 @@ transform data if required.</p>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="data_model.validate_data.DataValidator.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">schema_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/data_model/validate_data.html#DataValidator.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_model.validate_data.DataValidator.__init__" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">schema_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/data_model/validate_data.html#DataValidator.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_model.validate_data.DataValidator.__init__" title="Link to this definition">¶</a></dt>
 <dd><p>Initialize validation class and read required reference data columns</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="data_model.validate_data.DataValidator.validate_and_transform">
-<span class="sig-name descname"><span class="pre">validate_and_transform</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/data_model/validate_data.html#DataValidator.validate_and_transform"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_model.validate_data.DataValidator.validate_and_transform" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">validate_and_transform</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/data_model/validate_data.html#DataValidator.validate_and_transform"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_model.validate_data.DataValidator.validate_and_transform" title="Link to this definition">¶</a></dt>
 <dd><p>Data and data file validation.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
@@ -248,7 +248,7 @@ transform data if required.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="data_model.validate_data.DataValidator.validate_data_file">
-<span class="sig-name descname"><span class="pre">validate_data_file</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/data_model/validate_data.html#DataValidator.validate_data_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_model.validate_data.DataValidator.validate_data_file" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">validate_data_file</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/data_model/validate_data.html#DataValidator.validate_data_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_model.validate_data.DataValidator.validate_data_file" title="Link to this definition">¶</a></dt>
 <dd><p>Open data file and read data from file
 (doing this successfully is understood as
 file validation).</p>
@@ -257,11 +257,11 @@ file validation).</p>
 </dd></dl>
 
 </section>
-<section id="module-data_model.validate_schema">
-<span id="validate-schema"></span><span id="datamodelvalidateschema"></span><h2>validate_schema<a class="headerlink" href="#module-data_model.validate_schema" title="Permalink to this heading">¶</a></h2>
-<dl class="py class">
+<section id="validate-schema">
+<span id="datamodelvalidateschema"></span><h2>validate_schema<a class="headerlink" href="#validate-schema" title="Link to this heading">¶</a></h2>
+<span class="target" id="module-data_model.validate_schema"></span><dl class="py class">
 <dt class="sig sig-object py" id="data_model.validate_schema.SchemaValidator">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">data_model.validate_schema.</span></span><span class="sig-name descname"><span class="pre">SchemaValidator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_dict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/data_model/validate_schema.html#SchemaValidator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_model.validate_schema.SchemaValidator" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">data_model.validate_schema.</span></span><span class="sig-name descname"><span class="pre">SchemaValidator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_dict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/data_model/validate_schema.html#SchemaValidator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_model.validate_schema.SchemaValidator" title="Link to this definition">¶</a></dt>
 <dd><p>Validate a dictionary against the simpipe reference schema.
 Used e.g., to validate metadata provided as input.</p>
 <dl class="field-list simple">
@@ -274,13 +274,13 @@ Used e.g., to validate metadata provided as input.</p>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="data_model.validate_schema.SchemaValidator.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_dict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/data_model/validate_schema.html#SchemaValidator.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_model.validate_schema.SchemaValidator.__init__" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_dict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/data_model/validate_schema.html#SchemaValidator.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_model.validate_schema.SchemaValidator.__init__" title="Link to this definition">¶</a></dt>
 <dd><p>Initialize validation class and load reference schema.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="data_model.validate_schema.SchemaValidator.validate_and_transform">
-<span class="sig-name descname"><span class="pre">validate_and_transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">meta_file_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/data_model/validate_schema.html#SchemaValidator.validate_and_transform"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_model.validate_schema.SchemaValidator.validate_and_transform" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">validate_and_transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">meta_file_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/data_model/validate_schema.html#SchemaValidator.validate_and_transform"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_model.validate_schema.SchemaValidator.validate_and_transform" title="Link to this definition">¶</a></dt>
 <dd><p>Schema validation and processing.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -304,11 +304,11 @@ dictionary during initialization of the class).</p>
 </dd></dl>
 
 </section>
-<section id="module-data_model.metadata_collector">
-<span id="metadata-collector"></span><span id="datamodelmetadatacollector"></span><h2>metadata_collector<a class="headerlink" href="#module-data_model.metadata_collector" title="Permalink to this heading">¶</a></h2>
-<dl class="py class">
+<section id="metadata-collector">
+<span id="datamodelmetadatacollector"></span><h2>metadata_collector<a class="headerlink" href="#metadata-collector" title="Link to this heading">¶</a></h2>
+<span class="target" id="module-data_model.metadata_collector"></span><dl class="py class">
 <dt class="sig sig-object py" id="data_model.metadata_collector.MetadataCollector">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">data_model.metadata_collector.</span></span><span class="sig-name descname"><span class="pre">MetadataCollector</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">args_dict</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/data_model/metadata_collector.html#MetadataCollector"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_model.metadata_collector.MetadataCollector" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">data_model.metadata_collector.</span></span><span class="sig-name descname"><span class="pre">MetadataCollector</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">args_dict</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/data_model/metadata_collector.html#MetadataCollector"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_model.metadata_collector.MetadataCollector" title="Link to this definition">¶</a></dt>
 <dd><p>Collects and combines metadata associated with the current activity
 (e.g., the execution of an application).
 Follows CTAO top-level metadata definition.</p>
@@ -322,19 +322,19 @@ Follows CTAO top-level metadata definition.</p>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="data_model.metadata_collector.MetadataCollector.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">args_dict</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/data_model/metadata_collector.html#MetadataCollector.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_model.metadata_collector.MetadataCollector.__init__" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">args_dict</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/data_model/metadata_collector.html#MetadataCollector.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_model.metadata_collector.MetadataCollector.__init__" title="Link to this definition">¶</a></dt>
 <dd><p>Initialize metadata collector.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="data_model.metadata_collector.MetadataCollector.collect_product_meta_data">
-<span class="sig-name descname"><span class="pre">collect_product_meta_data</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/data_model/metadata_collector.html#MetadataCollector.collect_product_meta_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_model.metadata_collector.MetadataCollector.collect_product_meta_data" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">collect_product_meta_data</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/data_model/metadata_collector.html#MetadataCollector.collect_product_meta_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_model.metadata_collector.MetadataCollector.collect_product_meta_data" title="Link to this definition">¶</a></dt>
 <dd><p>Collect and verify product metadata from different sources.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="data_model.metadata_collector.MetadataCollector.input_data_file_name">
-<span class="sig-name descname"><span class="pre">input_data_file_name</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/data_model/metadata_collector.html#MetadataCollector.input_data_file_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_model.metadata_collector.MetadataCollector.input_data_file_name" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">input_data_file_name</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/data_model/metadata_collector.html#MetadataCollector.input_data_file_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_model.metadata_collector.MetadataCollector.input_data_file_name" title="Link to this definition">¶</a></dt>
 <dd><p>Return input data file (full path).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
@@ -429,14 +429,14 @@ Follows CTAO top-level metadata definition.</p>
         <li class="right" >
           <a href="corsika_simtel.html" title="CORSIKA and sim_telarray"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">simtools v0.1.dev1+g469b903 Manual</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">simtools v0.1.dev1+g8b2ac9b Manual</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="library.html" >API</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Data Model</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
-        &#169; Copyright 2022, gammasim-tools, simtools developers.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 6.2.1.
+    &#169; Copyright 2022, gammasim-tools, simtools developers.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.2.
     </div>
   </body>
 </html>

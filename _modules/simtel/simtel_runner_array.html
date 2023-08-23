@@ -2,17 +2,17 @@
 
 <!doctype html>
 
-<html lang="en">
+<html lang="en" data-content_root="../../">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>simtel.simtel_runner_array &#8212; simtools v0.1.dev1+g469b903 Manual</title>
-    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/bizstyle.css" />
+    <title>simtel.simtel_runner_array &#8212; simtools v0.1.dev1+g8b2ac9b Manual</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../../_static/bizstyle.css?v=532c1bf3" />
     
-    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
-    <script src="../../_static/doctools.js"></script>
-    <script src="../../_static/sphinx_highlight.js"></script>
+    <script src="../../_static/documentation_options.js?v=5e0c7a38"></script>
+    <script src="../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/bizstyle.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -30,7 +30,7 @@
         <li class="right" >
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../index.html">simtools v0.1.dev1+g469b903 Manual</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">simtools v0.1.dev1+g8b2ac9b Manual</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">simtel.simtel_runner_array</a></li> 
       </ul>
@@ -52,7 +52,9 @@
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;SimtelRunnerArray&quot;</span><span class="p">]</span>
 
 
-<div class="viewcode-block" id="SimtelRunnerArray"><a class="viewcode-back" href="../../sim_telarray.html#simtel.simtel_runner_array.SimtelRunnerArray">[docs]</a><span class="k">class</span> <span class="nc">SimtelRunnerArray</span><span class="p">(</span><span class="n">SimtelRunner</span><span class="p">):</span>
+<div class="viewcode-block" id="SimtelRunnerArray">
+<a class="viewcode-back" href="../../sim_telarray.html#simtel.simtel_runner_array.SimtelRunnerArray">[docs]</a>
+<span class="k">class</span> <span class="nc">SimtelRunnerArray</span><span class="p">(</span><span class="n">SimtelRunner</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    SimtelRunnerArray is the interface with sim_telarray to perform array simulations.</span>
 
@@ -87,7 +89,9 @@
 <span class="sd">        Path of the yaml file containing the configurable parameters.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="SimtelRunnerArray.__init__"><a class="viewcode-back" href="../../sim_telarray.html#simtel.simtel_runner_array.SimtelRunnerArray.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+<div class="viewcode-block" id="SimtelRunnerArray.__init__">
+<a class="viewcode-back" href="../../sim_telarray.html#simtel.simtel_runner_array.SimtelRunnerArray.__init__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">array_model</span><span class="p">,</span>
         <span class="n">label</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -121,6 +125,7 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_load_simtel_data_directories</span><span class="p">()</span></div>
 
+
     <span class="k">def</span> <span class="nf">_load_simtel_data_directories</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Create sim_telarray output directories for data, log and input.</span>
@@ -147,7 +152,9 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_simtel_log_dir</span> <span class="o">=</span> <span class="n">simtel_base_dir</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="s2">&quot;log&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_simtel_log_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
-<div class="viewcode-block" id="SimtelRunnerArray.get_info_for_file_name"><a class="viewcode-back" href="../../sim_telarray.html#simtel.simtel_runner_array.SimtelRunnerArray.get_info_for_file_name">[docs]</a>    <span class="k">def</span> <span class="nf">get_info_for_file_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">run_number</span><span class="p">):</span>
+<div class="viewcode-block" id="SimtelRunnerArray.get_info_for_file_name">
+<a class="viewcode-back" href="../../sim_telarray.html#simtel.simtel_runner_array.SimtelRunnerArray.get_info_for_file_name">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_info_for_file_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">run_number</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get a dirctionary with the info necessary for building the sim_telarray file names.</span>
 
@@ -166,7 +173,10 @@
             <span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">,</span>
         <span class="p">}</span></div>
 
-<div class="viewcode-block" id="SimtelRunnerArray.get_file_name"><a class="viewcode-back" href="../../sim_telarray.html#simtel.simtel_runner_array.SimtelRunnerArray.get_file_name">[docs]</a>    <span class="k">def</span> <span class="nf">get_file_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_type</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+
+<div class="viewcode-block" id="SimtelRunnerArray.get_file_name">
+<a class="viewcode-back" href="../../sim_telarray.html#simtel.simtel_runner_array.SimtelRunnerArray.get_file_name">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_file_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_type</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get a sim_telarray style file name for various file types.</span>
 
@@ -227,7 +237,10 @@
 
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The requested file type (</span><span class="si">{</span><span class="n">file_type</span><span class="si">}</span><span class="s2">) is unknown&quot;</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="SimtelRunnerArray.has_file"><a class="viewcode-back" href="../../sim_telarray.html#simtel.simtel_runner_array.SimtelRunnerArray.has_file">[docs]</a>    <span class="k">def</span> <span class="nf">has_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_type</span><span class="p">,</span> <span class="n">run_number</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;out&quot;</span><span class="p">):</span>
+
+<div class="viewcode-block" id="SimtelRunnerArray.has_file">
+<a class="viewcode-back" href="../../sim_telarray.html#simtel.simtel_runner_array.SimtelRunnerArray.has_file">[docs]</a>
+    <span class="k">def</span> <span class="nf">has_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_type</span><span class="p">,</span> <span class="n">run_number</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;out&quot;</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Checks that the file of file_type for the specified run number exists.</span>
 
@@ -246,7 +259,10 @@
         <span class="n">run_sub_file</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_file_name</span><span class="p">(</span><span class="n">file_type</span><span class="p">,</span> <span class="o">**</span><span class="n">info_for_file_name</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="n">mode</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">Path</span><span class="p">(</span><span class="n">run_sub_file</span><span class="p">)</span><span class="o">.</span><span class="n">is_file</span><span class="p">()</span></div>
 
-<div class="viewcode-block" id="SimtelRunnerArray.get_resources"><a class="viewcode-back" href="../../sim_telarray.html#simtel.simtel_runner_array.SimtelRunnerArray.get_resources">[docs]</a>    <span class="k">def</span> <span class="nf">get_resources</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">run_number</span><span class="p">):</span>
+
+<div class="viewcode-block" id="SimtelRunnerArray.get_resources">
+<a class="viewcode-back" href="../../sim_telarray.html#simtel.simtel_runner_array.SimtelRunnerArray.get_resources">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_resources</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">run_number</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Reading run time from last line of submission log file.</span>
 
@@ -280,6 +296,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;RUNTIME was not found in run log file&quot;</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">_resources</span></div>
+
 
     <span class="k">def</span> <span class="nf">_shall_run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Tells if simulations should be run again based on the existence of output files.&quot;&quot;&quot;</span>
@@ -336,6 +353,7 @@
             <span class="k">raise</span> <span class="n">InvalidOutputFile</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Everything looks fine with the sim_telarray output file.&quot;</span><span class="p">)</span></div>
+
 </pre></div>
 
             <div class="clearer"></div>
@@ -379,14 +397,14 @@
         <li class="right" >
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../index.html">simtools v0.1.dev1+g469b903 Manual</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">simtools v0.1.dev1+g8b2ac9b Manual</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">simtel.simtel_runner_array</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
-        &#169; Copyright 2022, gammasim-tools, simtools developers.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 6.2.1.
+    &#169; Copyright 2022, gammasim-tools, simtools developers.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.2.
     </div>
   </body>
 </html>

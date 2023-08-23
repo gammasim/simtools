@@ -2,17 +2,17 @@
 
 <!doctype html>
 
-<html lang="en">
+<html lang="en" data-content_root="../../">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>corsika.corsika_config &#8212; simtools v0.1.dev1+g469b903 Manual</title>
-    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/bizstyle.css" />
+    <title>corsika.corsika_config &#8212; simtools v0.1.dev1+g8b2ac9b Manual</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../../_static/bizstyle.css?v=532c1bf3" />
     
-    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
-    <script src="../../_static/doctools.js"></script>
-    <script src="../../_static/sphinx_highlight.js"></script>
+    <script src="../../_static/documentation_options.js?v=5e0c7a38"></script>
+    <script src="../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/bizstyle.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -30,7 +30,7 @@
         <li class="right" >
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../index.html">simtools v0.1.dev1+g469b903 Manual</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">simtools v0.1.dev1+g8b2ac9b Manual</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">corsika.corsika_config</a></li> 
       </ul>
@@ -63,15 +63,23 @@
 <span class="p">]</span>
 
 
-<div class="viewcode-block" id="MissingRequiredInputInCorsikaConfigData"><a class="viewcode-back" href="../../corsika.html#corsika.corsika_config.MissingRequiredInputInCorsikaConfigData">[docs]</a><span class="k">class</span> <span class="nc">MissingRequiredInputInCorsikaConfigData</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+<div class="viewcode-block" id="MissingRequiredInputInCorsikaConfigData">
+<a class="viewcode-back" href="../../corsika.html#corsika.corsika_config.MissingRequiredInputInCorsikaConfigData">[docs]</a>
+<span class="k">class</span> <span class="nc">MissingRequiredInputInCorsikaConfigData</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Exception for missing required input in corsika config data.&quot;&quot;&quot;</span></div>
 
 
-<div class="viewcode-block" id="InvalidCorsikaInput"><a class="viewcode-back" href="../../corsika.html#corsika.corsika_config.InvalidCorsikaInput">[docs]</a><span class="k">class</span> <span class="nc">InvalidCorsikaInput</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+
+<div class="viewcode-block" id="InvalidCorsikaInput">
+<a class="viewcode-back" href="../../corsika.html#corsika.corsika_config.InvalidCorsikaInput">[docs]</a>
+<span class="k">class</span> <span class="nc">InvalidCorsikaInput</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Exception for invalid corsika input.&quot;&quot;&quot;</span></div>
 
 
-<div class="viewcode-block" id="CorsikaConfig"><a class="viewcode-back" href="../../corsika.html#corsika.corsika_config.CorsikaConfig">[docs]</a><span class="k">class</span> <span class="nc">CorsikaConfig</span><span class="p">:</span>
+
+<div class="viewcode-block" id="CorsikaConfig">
+<a class="viewcode-back" href="../../corsika.html#corsika.corsika_config.CorsikaConfig">[docs]</a>
+<span class="k">class</span> <span class="nc">CorsikaConfig</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    CorsikaConfig deals with configuration for running CORSIKA. User parameters must be given by \</span>
 <span class="sd">    the corsika_config_data or corsika_config_file arguments. An example of corsika_config_data</span>
@@ -113,7 +121,9 @@
 <span class="sd">        Location of source of the sim_telarray/CORSIKA package.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="CorsikaConfig.__init__"><a class="viewcode-back" href="../../corsika.html#corsika.corsika_config.CorsikaConfig.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+<div class="viewcode-block" id="CorsikaConfig.__init__">
+<a class="viewcode-back" href="../../corsika.html#corsika.corsika_config.CorsikaConfig.__init__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">mongo_db_config</span><span class="p">,</span>
         <span class="n">site</span><span class="p">,</span>
@@ -162,6 +172,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">set_user_parameters</span><span class="p">(</span><span class="n">corsika_config_data</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_is_file_updated</span> <span class="o">=</span> <span class="kc">False</span></div>
 
+
     <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">text</span> <span class="o">=</span> <span class="p">(</span>
             <span class="sa">f</span><span class="s2">&quot;&lt;class </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&gt; &quot;</span>
@@ -169,7 +180,9 @@
         <span class="p">)</span>
         <span class="k">return</span> <span class="n">text</span>
 
-<div class="viewcode-block" id="CorsikaConfig.load_corsika_parameters_file"><a class="viewcode-back" href="../../corsika.html#corsika.corsika_config.CorsikaConfig.load_corsika_parameters_file">[docs]</a>    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="CorsikaConfig.load_corsika_parameters_file">
+<a class="viewcode-back" href="../../corsika.html#corsika.corsika_config.CorsikaConfig.load_corsika_parameters_file">[docs]</a>
+    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">load_corsika_parameters_file</span><span class="p">(</span><span class="n">corsika_parameters_file</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Load CORSIKA parameters from the provided corsika_parameters_file.</span>
@@ -191,7 +204,10 @@
             <span class="n">corsika_parameters</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">corsika_parameters</span></div>
 
-<div class="viewcode-block" id="CorsikaConfig.set_user_parameters"><a class="viewcode-back" href="../../corsika.html#corsika.corsika_config.CorsikaConfig.set_user_parameters">[docs]</a>    <span class="k">def</span> <span class="nf">set_user_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">corsika_config_data</span><span class="p">):</span>
+
+<div class="viewcode-block" id="CorsikaConfig.set_user_parameters">
+<a class="viewcode-back" href="../../corsika.html#corsika.corsika_config.CorsikaConfig.set_user_parameters">[docs]</a>
+    <span class="k">def</span> <span class="nf">set_user_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">corsika_config_data</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Set user parameters from a dict.</span>
 
@@ -270,6 +286,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_user_parameters</span><span class="p">[</span><span class="s2">&quot;PHIP&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">phip</span><span class="p">,</span> <span class="n">phip</span><span class="p">]</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_is_file_updated</span> <span class="o">=</span> <span class="kc">False</span></div>
+
 
     <span class="k">def</span> <span class="nf">_validate_and_convert_argument</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">par_name</span><span class="p">,</span> <span class="n">par_info</span><span class="p">,</span> <span class="n">value_args_in</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -353,7 +370,9 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
         <span class="k">raise</span> <span class="n">InvalidCorsikaInput</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
-<div class="viewcode-block" id="CorsikaConfig.get_user_parameter"><a class="viewcode-back" href="../../corsika.html#corsika.corsika_config.CorsikaConfig.get_user_parameter">[docs]</a>    <span class="k">def</span> <span class="nf">get_user_parameter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">par_name</span><span class="p">):</span>
+<div class="viewcode-block" id="CorsikaConfig.get_user_parameter">
+<a class="viewcode-back" href="../../corsika.html#corsika.corsika_config.CorsikaConfig.get_user_parameter">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_user_parameter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">par_name</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get the value of a user parameter.</span>
 
@@ -380,12 +399,18 @@
 
         <span class="k">return</span> <span class="n">par_value</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">par_value</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="k">else</span> <span class="n">par_value</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span></div>
 
-<div class="viewcode-block" id="CorsikaConfig.print_user_parameters"><a class="viewcode-back" href="../../corsika.html#corsika.corsika_config.CorsikaConfig.print_user_parameters">[docs]</a>    <span class="k">def</span> <span class="nf">print_user_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+<div class="viewcode-block" id="CorsikaConfig.print_user_parameters">
+<a class="viewcode-back" href="../../corsika.html#corsika.corsika_config.CorsikaConfig.print_user_parameters">[docs]</a>
+    <span class="k">def</span> <span class="nf">print_user_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Print user parameters for inspection.&quot;&quot;&quot;</span>
         <span class="k">for</span> <span class="n">par</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_user_parameters</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">par</span><span class="si">}</span><span class="s2"> = </span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="CorsikaConfig.export_input_file"><a class="viewcode-back" href="../../corsika.html#corsika.corsika_config.CorsikaConfig.export_input_file">[docs]</a>    <span class="k">def</span> <span class="nf">export_input_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">use_multipipe</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+
+<div class="viewcode-block" id="CorsikaConfig.export_input_file">
+<a class="viewcode-back" href="../../corsika.html#corsika.corsika_config.CorsikaConfig.export_input_file">[docs]</a>
+    <span class="k">def</span> <span class="nf">export_input_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">use_multipipe</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Create and export CORSIKA input file.</span>
 
@@ -478,7 +503,10 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_is_file_updated</span> <span class="o">=</span> <span class="kc">True</span></div>
 
-<div class="viewcode-block" id="CorsikaConfig.get_file_name"><a class="viewcode-back" href="../../corsika.html#corsika.corsika_config.CorsikaConfig.get_file_name">[docs]</a>    <span class="k">def</span> <span class="nf">get_file_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_type</span><span class="p">,</span> <span class="n">run_number</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+
+<div class="viewcode-block" id="CorsikaConfig.get_file_name">
+<a class="viewcode-back" href="../../corsika.html#corsika.corsika_config.CorsikaConfig.get_file_name">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_file_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_type</span><span class="p">,</span> <span class="n">run_number</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get a CORSIKA config style file name for various file types.</span>
 
@@ -540,6 +568,7 @@
 
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The requested file type (</span><span class="si">{</span><span class="n">file_type</span><span class="si">}</span><span class="s2">) is unknown&quot;</span><span class="p">)</span></div>
 
+
     <span class="k">def</span> <span class="nf">_set_output_file_and_directory</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dir_type</span><span class="o">=</span><span class="s2">&quot;corsika&quot;</span><span class="p">):</span>
         <span class="n">config_file_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_file_name</span><span class="p">(</span><span class="n">file_type</span><span class="o">=</span><span class="s2">&quot;config&quot;</span><span class="p">)</span>
         <span class="n">file_directory</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">io_handler</span><span class="o">.</span><span class="n">get_output_directory</span><span class="p">(</span><span class="n">label</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">,</span> <span class="n">dir_type</span><span class="o">=</span><span class="n">dir_type</span><span class="p">)</span>
@@ -565,7 +594,9 @@
         <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">corsika_seeds</span><span class="p">:</span>
             <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;SEED </span><span class="si">{</span><span class="n">s</span><span class="si">}</span><span class="s2"> 0 0</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
 
-<div class="viewcode-block" id="CorsikaConfig.get_input_file"><a class="viewcode-back" href="../../corsika.html#corsika.corsika_config.CorsikaConfig.get_input_file">[docs]</a>    <span class="k">def</span> <span class="nf">get_input_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">use_multipipe</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<div class="viewcode-block" id="CorsikaConfig.get_input_file">
+<a class="viewcode-back" href="../../corsika.html#corsika.corsika_config.CorsikaConfig.get_input_file">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_input_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">use_multipipe</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get the full path of the CORSIKA input file.</span>
 
@@ -576,7 +607,9 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_file_updated</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">export_input_file</span><span class="p">(</span><span class="n">use_multipipe</span><span class="p">)</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config_file_path</span></div></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config_file_path</span></div>
+</div>
+
 </pre></div>
 
             <div class="clearer"></div>
@@ -620,14 +653,14 @@
         <li class="right" >
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../index.html">simtools v0.1.dev1+g469b903 Manual</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">simtools v0.1.dev1+g8b2ac9b Manual</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">corsika.corsika_config</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
-        &#169; Copyright 2022, gammasim-tools, simtools developers.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 6.2.1.
+    &#169; Copyright 2022, gammasim-tools, simtools developers.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.2.
     </div>
   </body>
 </html>

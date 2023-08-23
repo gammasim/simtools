@@ -2,17 +2,17 @@
 
 <!doctype html>
 
-<html lang="en">
+<html lang="en" data-content_root="../../">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>data_model.metadata_collector &#8212; simtools v0.1.dev1+g469b903 Manual</title>
-    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/bizstyle.css" />
+    <title>data_model.metadata_collector &#8212; simtools v0.1.dev1+g8b2ac9b Manual</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../../_static/bizstyle.css?v=532c1bf3" />
     
-    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
-    <script src="../../_static/doctools.js"></script>
-    <script src="../../_static/sphinx_highlight.js"></script>
+    <script src="../../_static/documentation_options.js?v=5e0c7a38"></script>
+    <script src="../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/bizstyle.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -30,7 +30,7 @@
         <li class="right" >
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../index.html">simtools v0.1.dev1+g469b903 Manual</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">simtools v0.1.dev1+g8b2ac9b Manual</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">data_model.metadata_collector</a></li> 
       </ul>
@@ -55,7 +55,9 @@
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;MetadataCollector&quot;</span><span class="p">]</span>
 
 
-<div class="viewcode-block" id="MetadataCollector"><a class="viewcode-back" href="../../data_model.html#data_model.metadata_collector.MetadataCollector">[docs]</a><span class="k">class</span> <span class="nc">MetadataCollector</span><span class="p">:</span>
+<div class="viewcode-block" id="MetadataCollector">
+<a class="viewcode-back" href="../../data_model.html#data_model.metadata_collector.MetadataCollector">[docs]</a>
+<span class="k">class</span> <span class="nc">MetadataCollector</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Collects and combines metadata associated with the current activity</span>
 <span class="sd">    (e.g., the execution of an application).</span>
@@ -68,7 +70,9 @@
 
 <span class="sd">    &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="MetadataCollector.__init__"><a class="viewcode-back" href="../../data_model.html#data_model.metadata_collector.MetadataCollector.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">args_dict</span><span class="p">):</span>
+<div class="viewcode-block" id="MetadataCollector.__init__">
+<a class="viewcode-back" href="../../data_model.html#data_model.metadata_collector.MetadataCollector.__init__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">args_dict</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Initialize metadata collector.</span>
 
@@ -83,7 +87,10 @@
         <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">collect_product_meta_data</span><span class="p">()</span></div>
 
-<div class="viewcode-block" id="MetadataCollector.collect_product_meta_data"><a class="viewcode-back" href="../../data_model.html#data_model.metadata_collector.MetadataCollector.collect_product_meta_data">[docs]</a>    <span class="k">def</span> <span class="nf">collect_product_meta_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+<div class="viewcode-block" id="MetadataCollector.collect_product_meta_data">
+<a class="viewcode-back" href="../../data_model.html#data_model.metadata_collector.MetadataCollector.collect_product_meta_data">[docs]</a>
+    <span class="k">def</span> <span class="nf">collect_product_meta_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Collect and verify product metadata from different sources.</span>
 
@@ -100,6 +107,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_fill_association_id</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">top_level_meta</span><span class="p">[</span><span class="s2">&quot;cta&quot;</span><span class="p">][</span><span class="s2">&quot;context&quot;</span><span class="p">][</span><span class="s2">&quot;sim&quot;</span><span class="p">][</span><span class="s2">&quot;association&quot;</span><span class="p">])</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_fill_activity_meta</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">top_level_meta</span><span class="p">[</span><span class="s2">&quot;cta&quot;</span><span class="p">][</span><span class="s2">&quot;activity&quot;</span><span class="p">])</span></div>
+
 
     <span class="k">def</span> <span class="nf">_fill_association_meta_from_args</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">association_dict</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -309,7 +317,9 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Error merging dictionaries&quot;</span><span class="p">)</span>
             <span class="k">raise</span>
 
-<div class="viewcode-block" id="MetadataCollector.input_data_file_name"><a class="viewcode-back" href="../../data_model.html#data_model.metadata_collector.MetadataCollector.input_data_file_name">[docs]</a>    <span class="k">def</span> <span class="nf">input_data_file_name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="MetadataCollector.input_data_file_name">
+<a class="viewcode-back" href="../../data_model.html#data_model.metadata_collector.MetadataCollector.input_data_file_name">[docs]</a>
+    <span class="k">def</span> <span class="nf">input_data_file_name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return input data file (full path).</span>
 
@@ -329,6 +339,7 @@
         <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Missing description of INPUT_DATA&quot;</span><span class="p">)</span>
             <span class="k">raise</span></div>
+
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">_fill_context_sim_list</span><span class="p">(</span><span class="n">product_list</span><span class="p">,</span> <span class="n">new_entry_dict</span><span class="p">):</span>
@@ -353,6 +364,7 @@
         <span class="k">except</span> <span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="ne">IndexError</span><span class="p">):</span>
             <span class="n">product_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">new_entry_dict</span><span class="p">]</span>
         <span class="k">return</span> <span class="n">product_list</span></div>
+
 </pre></div>
 
             <div class="clearer"></div>
@@ -396,14 +408,14 @@
         <li class="right" >
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../index.html">simtools v0.1.dev1+g469b903 Manual</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">simtools v0.1.dev1+g8b2ac9b Manual</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">data_model.metadata_collector</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
-        &#169; Copyright 2022, gammasim-tools, simtools developers.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 6.2.1.
+    &#169; Copyright 2022, gammasim-tools, simtools developers.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.2.
     </div>
   </body>
 </html>

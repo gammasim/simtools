@@ -2,17 +2,17 @@
 
 <!doctype html>
 
-<html lang="en">
+<html lang="en" data-content_root="../../">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>corsika_simtel.corsika_simtel_runner &#8212; simtools v0.1.dev1+g469b903 Manual</title>
-    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/bizstyle.css" />
+    <title>corsika_simtel.corsika_simtel_runner &#8212; simtools v0.1.dev1+g8b2ac9b Manual</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../../_static/bizstyle.css?v=532c1bf3" />
     
-    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
-    <script src="../../_static/doctools.js"></script>
-    <script src="../../_static/sphinx_highlight.js"></script>
+    <script src="../../_static/documentation_options.js?v=5e0c7a38"></script>
+    <script src="../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/bizstyle.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -30,7 +30,7 @@
         <li class="right" >
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../index.html">simtools v0.1.dev1+g469b903 Manual</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">simtools v0.1.dev1+g8b2ac9b Manual</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">corsika_simtel.corsika_simtel_runner</a></li> 
       </ul>
@@ -51,7 +51,9 @@
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;CorsikaSimtelRunner&quot;</span><span class="p">]</span>
 
 
-<div class="viewcode-block" id="CorsikaSimtelRunner"><a class="viewcode-back" href="../../corsika_simtel.html#corsika_simtel.corsika_simtel_runner.CorsikaSimtelRunner">[docs]</a><span class="k">class</span> <span class="nc">CorsikaSimtelRunner</span><span class="p">(</span><span class="n">CorsikaRunner</span><span class="p">,</span> <span class="n">SimtelRunnerArray</span><span class="p">):</span>
+<div class="viewcode-block" id="CorsikaSimtelRunner">
+<a class="viewcode-back" href="../../corsika_simtel.html#corsika_simtel.corsika_simtel_runner.CorsikaSimtelRunner">[docs]</a>
+<span class="k">class</span> <span class="nc">CorsikaSimtelRunner</span><span class="p">(</span><span class="n">CorsikaRunner</span><span class="p">,</span> <span class="n">SimtelRunnerArray</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    CorsikaSimtelRunner is responsible for running CORSIKA and piping it to sim_telarray</span>
 <span class="sd">    using the multipipe functionality. CORSIKA is set up using corsika_autoinputs program</span>
@@ -82,11 +84,16 @@
 <span class="sd">        Arguments for the sim_telarray runner (see full list in SimtelRunnerArray documentation).</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="CorsikaSimtelRunner.__init__"><a class="viewcode-back" href="../../corsika_simtel.html#corsika_simtel.corsika_simtel_runner.CorsikaSimtelRunner.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">common_args</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">corsika_args</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">simtel_args</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="CorsikaSimtelRunner.__init__">
+<a class="viewcode-back" href="../../corsika_simtel.html#corsika_simtel.corsika_simtel_runner.CorsikaSimtelRunner.__init__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">common_args</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">corsika_args</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">simtel_args</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="n">CorsikaRunner</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">use_multipipe</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="p">(</span><span class="n">common_args</span> <span class="o">|</span> <span class="n">corsika_args</span><span class="p">))</span>
         <span class="n">SimtelRunnerArray</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="p">(</span><span class="n">common_args</span> <span class="o">|</span> <span class="n">simtel_args</span><span class="p">))</span></div>
 
-<div class="viewcode-block" id="CorsikaSimtelRunner.prepare_run_script"><a class="viewcode-back" href="../../corsika_simtel.html#corsika_simtel.corsika_simtel_runner.CorsikaSimtelRunner.prepare_run_script">[docs]</a>    <span class="k">def</span> <span class="nf">prepare_run_script</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">use_pfp</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+
+<div class="viewcode-block" id="CorsikaSimtelRunner.prepare_run_script">
+<a class="viewcode-back" href="../../corsika_simtel.html#corsika_simtel.corsika_simtel_runner.CorsikaSimtelRunner.prepare_run_script">[docs]</a>
+    <span class="k">def</span> <span class="nf">prepare_run_script</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">use_pfp</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get the full path of the run script file for a given run number.</span>
 
@@ -107,7 +114,10 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">export_multipipe_script</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">CorsikaRunner</span><span class="o">.</span><span class="n">prepare_run_script</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">use_pfp</span><span class="o">=</span><span class="n">use_pfp</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="CorsikaSimtelRunner.export_multipipe_script"><a class="viewcode-back" href="../../corsika_simtel.html#corsika_simtel.corsika_simtel_runner.CorsikaSimtelRunner.export_multipipe_script">[docs]</a>    <span class="k">def</span> <span class="nf">export_multipipe_script</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+
+<div class="viewcode-block" id="CorsikaSimtelRunner.export_multipipe_script">
+<a class="viewcode-back" href="../../corsika_simtel.html#corsika_simtel.corsika_simtel_runner.CorsikaSimtelRunner.export_multipipe_script">[docs]</a>
+    <span class="k">def</span> <span class="nf">export_multipipe_script</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Write the multipipe script used in piping CORSIKA to sim_telarray.</span>
 
@@ -140,6 +150,7 @@
         <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">multipipe_file</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
             <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">run_command</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_export_multipipe_executable</span><span class="p">(</span><span class="n">multipipe_file</span><span class="p">)</span></div>
+
 
     <span class="k">def</span> <span class="nf">_export_multipipe_executable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">multipipe_file</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -211,7 +222,9 @@
 
         <span class="k">return</span> <span class="n">command</span>
 
-<div class="viewcode-block" id="CorsikaSimtelRunner.get_file_name"><a class="viewcode-back" href="../../corsika_simtel.html#corsika_simtel.corsika_simtel_runner.CorsikaSimtelRunner.get_file_name">[docs]</a>    <span class="k">def</span> <span class="nf">get_file_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_type</span><span class="p">,</span> <span class="n">run_number</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<div class="viewcode-block" id="CorsikaSimtelRunner.get_file_name">
+<a class="viewcode-back" href="../../corsika_simtel.html#corsika_simtel.corsika_simtel_runner.CorsikaSimtelRunner.get_file_name">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_file_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_type</span><span class="p">,</span> <span class="n">run_number</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get a CORSIKA or sim_telarray style file name for various file types.</span>
 <span class="sd">        See the implementations in CorsikaRunner and SimtelRunnerArray for details.</span>
@@ -223,7 +236,10 @@
             <span class="bp">self</span><span class="p">,</span> <span class="n">file_type</span><span class="o">=</span><span class="n">file_type</span><span class="p">,</span> <span class="n">run_number</span><span class="o">=</span><span class="n">run_number</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
         <span class="p">)</span></div>
 
-<div class="viewcode-block" id="CorsikaSimtelRunner.get_info_for_file_name"><a class="viewcode-back" href="../../corsika_simtel.html#corsika_simtel.corsika_simtel_runner.CorsikaSimtelRunner.get_info_for_file_name">[docs]</a>    <span class="k">def</span> <span class="nf">get_info_for_file_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">run_number</span><span class="p">):</span>
+
+<div class="viewcode-block" id="CorsikaSimtelRunner.get_info_for_file_name">
+<a class="viewcode-back" href="../../corsika_simtel.html#corsika_simtel.corsika_simtel_runner.CorsikaSimtelRunner.get_info_for_file_name">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_info_for_file_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">run_number</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get a dictionary with the info necessary for building</span>
 <span class="sd">        a CORSIKA or sim_telarray runner file names.</span>
@@ -243,7 +259,9 @@
             <span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">,</span>
             <span class="s2">&quot;zenith&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">zenith_angle</span><span class="p">,</span>
             <span class="s2">&quot;azimuth&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">azimuth_angle</span><span class="p">,</span>
-        <span class="p">}</span></div></div>
+        <span class="p">}</span></div>
+</div>
+
 </pre></div>
 
             <div class="clearer"></div>
@@ -287,14 +305,14 @@
         <li class="right" >
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../index.html">simtools v0.1.dev1+g469b903 Manual</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">simtools v0.1.dev1+g8b2ac9b Manual</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">corsika_simtel.corsika_simtel_runner</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
-        &#169; Copyright 2022, gammasim-tools, simtools developers.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 6.2.1.
+    &#169; Copyright 2022, gammasim-tools, simtools developers.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.2.
     </div>
   </body>
 </html>

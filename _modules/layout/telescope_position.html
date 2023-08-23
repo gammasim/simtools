@@ -2,17 +2,17 @@
 
 <!doctype html>
 
-<html lang="en">
+<html lang="en" data-content_root="../../">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>layout.telescope_position &#8212; simtools v0.1.dev1+g469b903 Manual</title>
-    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/bizstyle.css" />
+    <title>layout.telescope_position &#8212; simtools v0.1.dev1+g8b2ac9b Manual</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../../_static/bizstyle.css?v=532c1bf3" />
     
-    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
-    <script src="../../_static/doctools.js"></script>
-    <script src="../../_static/sphinx_highlight.js"></script>
+    <script src="../../_static/documentation_options.js?v=5e0c7a38"></script>
+    <script src="../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/bizstyle.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -30,7 +30,7 @@
         <li class="right" >
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../index.html">simtools v0.1.dev1+g469b903 Manual</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">simtools v0.1.dev1+g8b2ac9b Manual</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">layout.telescope_position</a></li> 
       </ul>
@@ -51,11 +51,16 @@
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;InvalidCoordSystem&quot;</span><span class="p">,</span> <span class="s2">&quot;TelescopePosition&quot;</span><span class="p">]</span>
 
 
-<div class="viewcode-block" id="InvalidCoordSystem"><a class="viewcode-back" href="../../layout_array.html#layout.telescope_position.InvalidCoordSystem">[docs]</a><span class="k">class</span> <span class="nc">InvalidCoordSystem</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+<div class="viewcode-block" id="InvalidCoordSystem">
+<a class="viewcode-back" href="../../layout_array.html#layout.telescope_position.InvalidCoordSystem">[docs]</a>
+<span class="k">class</span> <span class="nc">InvalidCoordSystem</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Exception for invalid coordinate system.&quot;&quot;&quot;</span></div>
 
 
-<div class="viewcode-block" id="TelescopePosition"><a class="viewcode-back" href="../../layout_array.html#layout.telescope_position.TelescopePosition">[docs]</a><span class="k">class</span> <span class="nc">TelescopePosition</span><span class="p">:</span>
+
+<div class="viewcode-block" id="TelescopePosition">
+<a class="viewcode-back" href="../../layout_array.html#layout.telescope_position.TelescopePosition">[docs]</a>
+<span class="k">class</span> <span class="nc">TelescopePosition</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Store and perform coordinate transformations for an array element position.</span>
 
@@ -70,7 +75,9 @@
 
 <span class="sd">    &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="TelescopePosition.__init__"><a class="viewcode-back" href="../../layout_array.html#layout.telescope_position.TelescopePosition.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="TelescopePosition.__init__">
+<a class="viewcode-back" href="../../layout_array.html#layout.telescope_position.TelescopePosition.__init__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Initialize TelescopePosition.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -82,6 +89,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">sequence_number</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">geo_code</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">crs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_default_coordinate_system_definition</span><span class="p">()</span></div>
+
 
     <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -111,7 +119,9 @@
 
         <span class="k">return</span> <span class="n">telstr</span>
 
-<div class="viewcode-block" id="TelescopePosition.print_compact_format"><a class="viewcode-back" href="../../layout_array.html#layout.telescope_position.TelescopePosition.print_compact_format">[docs]</a>    <span class="k">def</span> <span class="nf">print_compact_format</span><span class="p">(</span>
+<div class="viewcode-block" id="TelescopePosition.print_compact_format">
+<a class="viewcode-back" href="../../layout_array.html#layout.telescope_position.TelescopePosition.print_compact_format">[docs]</a>
+    <span class="k">def</span> <span class="nf">print_compact_format</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">crs_name</span><span class="p">,</span> <span class="n">print_header</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">corsika_obs_level</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">corsika_sphere_center</span><span class="o">=</span><span class="kc">None</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -176,7 +186,10 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid coordinate system (</span><span class="si">{</span><span class="n">crs_name</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
             <span class="k">raise</span> <span class="n">InvalidCoordSystem</span> <span class="kn">from</span> <span class="nn">e</span></div>
 
-<div class="viewcode-block" id="TelescopePosition.get_coordinates"><a class="viewcode-back" href="../../layout_array.html#layout.telescope_position.TelescopePosition.get_coordinates">[docs]</a>    <span class="k">def</span> <span class="nf">get_coordinates</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">crs_name</span><span class="p">,</span> <span class="n">coordinate_field</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+
+<div class="viewcode-block" id="TelescopePosition.get_coordinates">
+<a class="viewcode-back" href="../../layout_array.html#layout.telescope_position.TelescopePosition.get_coordinates">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_coordinates</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">crs_name</span><span class="p">,</span> <span class="n">coordinate_field</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get coordinates in a given coordinate system.</span>
 
@@ -222,6 +235,7 @@
                 <span class="p">)</span>
                 <span class="k">raise</span> <span class="n">InvalidCoordSystem</span> <span class="kn">from</span> <span class="nn">e</span></div>
 
+
     <span class="k">def</span> <span class="nf">_get_coordinate_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">unit</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return a value of a coordinate variable</span>
@@ -239,7 +253,9 @@
 
         <span class="k">return</span> <span class="n">value</span>
 
-<div class="viewcode-block" id="TelescopePosition.set_coordinates"><a class="viewcode-back" href="../../layout_array.html#layout.telescope_position.TelescopePosition.set_coordinates">[docs]</a>    <span class="k">def</span> <span class="nf">set_coordinates</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">crs_name</span><span class="p">,</span> <span class="n">xx</span><span class="p">,</span> <span class="n">yy</span><span class="p">,</span> <span class="n">zz</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="TelescopePosition.set_coordinates">
+<a class="viewcode-back" href="../../layout_array.html#layout.telescope_position.TelescopePosition.set_coordinates">[docs]</a>
+    <span class="k">def</span> <span class="nf">set_coordinates</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">crs_name</span><span class="p">,</span> <span class="n">xx</span><span class="p">,</span> <span class="n">yy</span><span class="p">,</span> <span class="n">zz</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Set coordinates of an array element.</span>
 
@@ -276,7 +292,10 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid coordinate system (</span><span class="si">{</span><span class="n">crs_name</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
             <span class="k">raise</span> <span class="n">InvalidCoordSystem</span> <span class="kn">from</span> <span class="nn">e</span></div>
 
-<div class="viewcode-block" id="TelescopePosition.get_altitude"><a class="viewcode-back" href="../../layout_array.html#layout.telescope_position.TelescopePosition.get_altitude">[docs]</a>    <span class="k">def</span> <span class="nf">get_altitude</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+<div class="viewcode-block" id="TelescopePosition.get_altitude">
+<a class="viewcode-back" href="../../layout_array.html#layout.telescope_position.TelescopePosition.get_altitude">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_altitude</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot; &quot;</span>
 <span class="sd">        Get altitude of an array element</span>
 
@@ -292,7 +311,10 @@
 
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span></div>
 
-<div class="viewcode-block" id="TelescopePosition.set_altitude"><a class="viewcode-back" href="../../layout_array.html#layout.telescope_position.TelescopePosition.set_altitude">[docs]</a>    <span class="k">def</span> <span class="nf">set_altitude</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tel_altitude</span><span class="p">):</span>
+
+<div class="viewcode-block" id="TelescopePosition.set_altitude">
+<a class="viewcode-back" href="../../layout_array.html#layout.telescope_position.TelescopePosition.set_altitude">[docs]</a>
+    <span class="k">def</span> <span class="nf">set_altitude</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tel_altitude</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Set altitude of an array element. Assume that all coordinate system have same altitude \</span>
 <span class="sd">        definition, meaning altitude is set for all systems here.</span>
@@ -304,6 +326,7 @@
 
         <span class="k">for</span> <span class="n">_crs</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">crs</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
             <span class="n">_crs</span><span class="p">[</span><span class="s2">&quot;zz&quot;</span><span class="p">][</span><span class="s2">&quot;value&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_coordinate_value</span><span class="p">(</span><span class="n">tel_altitude</span><span class="p">,</span> <span class="n">_crs</span><span class="p">[</span><span class="s2">&quot;zz&quot;</span><span class="p">][</span><span class="s2">&quot;unit&quot;</span><span class="p">])</span></div>
+
 
     <span class="k">def</span> <span class="nf">_convert</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">crs_from</span><span class="p">,</span> <span class="n">crs_to</span><span class="p">,</span> <span class="n">xx</span><span class="p">,</span> <span class="n">yy</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -365,7 +388,9 @@
                 <span class="k">return</span> <span class="n">_crs_name</span><span class="p">,</span> <span class="n">_crs</span>
         <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
 
-<div class="viewcode-block" id="TelescopePosition.has_coordinates"><a class="viewcode-back" href="../../layout_array.html#layout.telescope_position.TelescopePosition.has_coordinates">[docs]</a>    <span class="k">def</span> <span class="nf">has_coordinates</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">crs_name</span><span class="p">,</span> <span class="n">crs_check</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<div class="viewcode-block" id="TelescopePosition.has_coordinates">
+<a class="viewcode-back" href="../../layout_array.html#layout.telescope_position.TelescopePosition.has_coordinates">[docs]</a>
+    <span class="k">def</span> <span class="nf">has_coordinates</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">crs_name</span><span class="p">,</span> <span class="n">crs_check</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Check if coordinates are set for a given coordinate system.</span>
 
@@ -402,7 +427,10 @@
             <span class="p">)</span>
         <span class="p">)</span></div>
 
-<div class="viewcode-block" id="TelescopePosition.has_altitude"><a class="viewcode-back" href="../../layout_array.html#layout.telescope_position.TelescopePosition.has_altitude">[docs]</a>    <span class="k">def</span> <span class="nf">has_altitude</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">crs_name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+
+<div class="viewcode-block" id="TelescopePosition.has_altitude">
+<a class="viewcode-back" href="../../layout_array.html#layout.telescope_position.TelescopePosition.has_altitude">[docs]</a>
+    <span class="k">def</span> <span class="nf">has_altitude</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">crs_name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return True if array element has altitude defined.</span>
 
@@ -437,6 +465,7 @@
         <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid coordinate system (</span><span class="si">{</span><span class="n">crs_name</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
             <span class="k">raise</span> <span class="n">InvalidCoordSystem</span> <span class="kn">from</span> <span class="nn">e</span></div>
+
 
     <span class="k">def</span> <span class="nf">_set_coordinate_system</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">crs_name</span><span class="p">,</span> <span class="n">crs_system</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -510,7 +539,9 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">tel_corsika_z</span> <span class="o">+</span> <span class="n">corsika_obs_level</span> <span class="o">-</span> <span class="n">corsika_sphere_center</span>
 
-<div class="viewcode-block" id="TelescopePosition.convert_all"><a class="viewcode-back" href="../../layout_array.html#layout.telescope_position.TelescopePosition.convert_all">[docs]</a>    <span class="k">def</span> <span class="nf">convert_all</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">crs_local</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">crs_wgs84</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">crs_utm</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="TelescopePosition.convert_all">
+<a class="viewcode-back" href="../../layout_array.html#layout.telescope_position.TelescopePosition.convert_all">[docs]</a>
+    <span class="k">def</span> <span class="nf">convert_all</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">crs_local</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">crs_wgs84</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">crs_utm</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Perform conversions and fill coordinate variables.</span>
 
@@ -547,6 +578,7 @@
                     <span class="n">_crs_to_name</span><span class="p">,</span> <span class="n">_x</span><span class="p">,</span> <span class="n">_y</span><span class="p">,</span> <span class="n">_crs_from</span><span class="p">[</span><span class="s2">&quot;zz&quot;</span><span class="p">][</span><span class="s2">&quot;value&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="n">_crs_from</span><span class="p">[</span><span class="s2">&quot;zz&quot;</span><span class="p">][</span><span class="s2">&quot;unit&quot;</span><span class="p">]</span>
                 <span class="p">)</span></div>
 
+
     <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">_default_coordinate_system_definition</span><span class="p">():</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -580,6 +612,7 @@
                 <span class="s2">&quot;zz&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;altitude&quot;</span><span class="p">,</span> <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="s2">&quot;unit&quot;</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">Unit</span><span class="p">(</span><span class="s2">&quot;m&quot;</span><span class="p">)},</span>
             <span class="p">},</span>
         <span class="p">}</span></div>
+
 </pre></div>
 
             <div class="clearer"></div>
@@ -623,14 +656,14 @@
         <li class="right" >
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../index.html">simtools v0.1.dev1+g469b903 Manual</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">simtools v0.1.dev1+g8b2ac9b Manual</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">layout.telescope_position</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
-        &#169; Copyright 2022, gammasim-tools, simtools developers.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 6.2.1.
+    &#169; Copyright 2022, gammasim-tools, simtools developers.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.2.
     </div>
   </body>
 </html>

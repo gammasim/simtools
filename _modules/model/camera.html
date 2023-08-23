@@ -2,17 +2,17 @@
 
 <!doctype html>
 
-<html lang="en">
+<html lang="en" data-content_root="../../">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>model.camera &#8212; simtools v0.1.dev1+g469b903 Manual</title>
-    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/bizstyle.css" />
+    <title>model.camera &#8212; simtools v0.1.dev1+g8b2ac9b Manual</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../../_static/bizstyle.css?v=532c1bf3" />
     
-    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
-    <script src="../../_static/doctools.js"></script>
-    <script src="../../_static/sphinx_highlight.js"></script>
+    <script src="../../_static/documentation_options.js?v=5e0c7a38"></script>
+    <script src="../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/bizstyle.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -30,7 +30,7 @@
         <li class="right" >
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../index.html">simtools v0.1.dev1+g469b903 Manual</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">simtools v0.1.dev1+g8b2ac9b Manual</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">model.camera</a></li> 
       </ul>
@@ -65,7 +65,9 @@
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Camera&quot;</span><span class="p">]</span>
 
 
-<div class="viewcode-block" id="Camera"><a class="viewcode-back" href="../../mc_model.html#model.camera.Camera">[docs]</a><span class="k">class</span> <span class="nc">Camera</span><span class="p">:</span>
+<div class="viewcode-block" id="Camera">
+<a class="viewcode-back" href="../../mc_model.html#model.camera.Camera">[docs]</a>
+<span class="k">class</span> <span class="nc">Camera</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Camera class, defining pixel layout including rotation, finding neighbour pixels, calculating\</span>
 <span class="sd">    FoV and plotting the camera.</span>
@@ -86,7 +88,9 @@
     <span class="n">SIPM_NEIGHBOR_RADIUS_FACTOR</span> <span class="o">=</span> <span class="mf">1.4</span>
     <span class="n">SIPM_ROW_COLUMN_DIST_FACTOR</span> <span class="o">=</span> <span class="mf">0.2</span>
 
-<div class="viewcode-block" id="Camera.__init__"><a class="viewcode-back" href="../../mc_model.html#model.camera.Camera.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">telescope_model_name</span><span class="p">,</span> <span class="n">camera_config_file</span><span class="p">,</span> <span class="n">focal_length</span><span class="p">):</span>
+<div class="viewcode-block" id="Camera.__init__">
+<a class="viewcode-back" href="../../mc_model.html#model.camera.Camera.__init__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">telescope_model_name</span><span class="p">,</span> <span class="n">camera_config_file</span><span class="p">,</span> <span class="n">focal_length</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Initialize Camera class, defining pixel layout including rotation, finding neighbour pixels,</span>
 <span class="sd">        calculating FoV and plotting the camera.</span>
@@ -110,7 +114,10 @@
         <span class="c1"># Initialize an empty list of edge pixels, to be calculated only when necessary.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_edge_pixel_indices</span> <span class="o">=</span> <span class="kc">None</span></div>
 
-<div class="viewcode-block" id="Camera.read_pixel_list"><a class="viewcode-back" href="../../mc_model.html#model.camera.Camera.read_pixel_list">[docs]</a>    <span class="nd">@staticmethod</span>
+
+<div class="viewcode-block" id="Camera.read_pixel_list">
+<a class="viewcode-back" href="../../mc_model.html#model.camera.Camera.read_pixel_list">[docs]</a>
+    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">read_pixel_list</span><span class="p">(</span><span class="n">camera_config_file</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Read the pixel layout from the camera config file, assumed to be in a sim_telarray format.</span>
@@ -181,6 +188,7 @@
 
         <span class="k">return</span> <span class="n">pixels</span></div>
 
+
     <span class="k">def</span> <span class="nf">_rotate_pixels</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pixels</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Rotate the pixels according to the rotation angle given in pixels[&#39;rotate_angle&#39;].</span>
@@ -226,7 +234,9 @@
 
         <span class="k">return</span> <span class="n">pixels</span>
 
-<div class="viewcode-block" id="Camera.get_number_of_pixels"><a class="viewcode-back" href="../../mc_model.html#model.camera.Camera.get_number_of_pixels">[docs]</a>    <span class="k">def</span> <span class="nf">get_number_of_pixels</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="Camera.get_number_of_pixels">
+<a class="viewcode-back" href="../../mc_model.html#model.camera.Camera.get_number_of_pixels">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_number_of_pixels</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get the number of pixels in the camera (all pixels, including those defined as &quot;off&quot;.</span>
 
@@ -238,7 +248,10 @@
 
         <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_pixels</span><span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">])</span></div>
 
-<div class="viewcode-block" id="Camera.get_pixel_diameter"><a class="viewcode-back" href="../../mc_model.html#model.camera.Camera.get_pixel_diameter">[docs]</a>    <span class="k">def</span> <span class="nf">get_pixel_diameter</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+<div class="viewcode-block" id="Camera.get_pixel_diameter">
+<a class="viewcode-back" href="../../mc_model.html#model.camera.Camera.get_pixel_diameter">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_pixel_diameter</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get pixel diameter contained in _pixels.</span>
 
@@ -250,7 +263,10 @@
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pixels</span><span class="p">[</span><span class="s2">&quot;pixel_diameter&quot;</span><span class="p">]</span></div>
 
-<div class="viewcode-block" id="Camera.get_pixel_active_solid_angle"><a class="viewcode-back" href="../../mc_model.html#model.camera.Camera.get_pixel_active_solid_angle">[docs]</a>    <span class="k">def</span> <span class="nf">get_pixel_active_solid_angle</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+<div class="viewcode-block" id="Camera.get_pixel_active_solid_angle">
+<a class="viewcode-back" href="../../mc_model.html#model.camera.Camera.get_pixel_active_solid_angle">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_pixel_active_solid_angle</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get the active solid angle of a pixel in sr.</span>
 
@@ -266,7 +282,10 @@
             <span class="n">pixel_area</span> <span class="o">*=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span>
         <span class="k">return</span> <span class="n">pixel_area</span> <span class="o">/</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_focal_length</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="Camera.get_pixel_shape"><a class="viewcode-back" href="../../mc_model.html#model.camera.Camera.get_pixel_shape">[docs]</a>    <span class="k">def</span> <span class="nf">get_pixel_shape</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+<div class="viewcode-block" id="Camera.get_pixel_shape">
+<a class="viewcode-back" href="../../mc_model.html#model.camera.Camera.get_pixel_shape">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_pixel_shape</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get pixel shape code 1, 2 or 3, where 1 and 3 are hexagonal pixels, where one is rotated by\</span>
 <span class="sd">        30 degrees with respect to the other. A square pixel is denoted as 2.</span>
@@ -278,7 +297,10 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pixels</span><span class="p">[</span><span class="s2">&quot;pixel_shape&quot;</span><span class="p">]</span></div>
 
-<div class="viewcode-block" id="Camera.get_lightguide_efficiency_angle_file_name"><a class="viewcode-back" href="../../mc_model.html#model.camera.Camera.get_lightguide_efficiency_angle_file_name">[docs]</a>    <span class="k">def</span> <span class="nf">get_lightguide_efficiency_angle_file_name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+<div class="viewcode-block" id="Camera.get_lightguide_efficiency_angle_file_name">
+<a class="viewcode-back" href="../../mc_model.html#model.camera.Camera.get_lightguide_efficiency_angle_file_name">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_lightguide_efficiency_angle_file_name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get the file name of the light guide efficiency as a function of incidence angle.</span>
 
@@ -290,7 +312,10 @@
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pixels</span><span class="p">[</span><span class="s2">&quot;lightguide_efficiency_angle_file&quot;</span><span class="p">]</span></div>
 
-<div class="viewcode-block" id="Camera.get_lightguide_efficiency_wavelength_file_name"><a class="viewcode-back" href="../../mc_model.html#model.camera.Camera.get_lightguide_efficiency_wavelength_file_name">[docs]</a>    <span class="k">def</span> <span class="nf">get_lightguide_efficiency_wavelength_file_name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+<div class="viewcode-block" id="Camera.get_lightguide_efficiency_wavelength_file_name">
+<a class="viewcode-back" href="../../mc_model.html#model.camera.Camera.get_lightguide_efficiency_wavelength_file_name">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_lightguide_efficiency_wavelength_file_name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get the file name of the light guide efficiency as a function of wavelength.</span>
 
@@ -301,7 +326,10 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pixels</span><span class="p">[</span><span class="s2">&quot;lightguide_efficiency_wavelength_file&quot;</span><span class="p">]</span></div>
 
-<div class="viewcode-block" id="Camera.get_camera_fill_factor"><a class="viewcode-back" href="../../mc_model.html#model.camera.Camera.get_camera_fill_factor">[docs]</a>    <span class="k">def</span> <span class="nf">get_camera_fill_factor</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+<div class="viewcode-block" id="Camera.get_camera_fill_factor">
+<a class="viewcode-back" href="../../mc_model.html#model.camera.Camera.get_camera_fill_factor">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_camera_fill_factor</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Calculate the fill factor of the camera, defined as (pixel_diameter/pixel_spacing)**2</span>
 
@@ -318,7 +346,10 @@
 
         <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_pixels</span><span class="p">[</span><span class="s2">&quot;pixel_diameter&quot;</span><span class="p">]</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pixels</span><span class="p">[</span><span class="s2">&quot;pixel_spacing&quot;</span><span class="p">])</span> <span class="o">**</span> <span class="mi">2</span></div>
 
-<div class="viewcode-block" id="Camera.calc_fov"><a class="viewcode-back" href="../../mc_model.html#model.camera.Camera.calc_fov">[docs]</a>    <span class="k">def</span> <span class="nf">calc_fov</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+<div class="viewcode-block" id="Camera.calc_fov">
+<a class="viewcode-back" href="../../mc_model.html#model.camera.Camera.calc_fov">[docs]</a>
+    <span class="k">def</span> <span class="nf">calc_fov</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Calculate the FOV of the camera in degrees, taking into account the focal length.</span>
 
@@ -342,6 +373,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">get_edge_pixels</span><span class="p">(),</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_focal_length</span><span class="p">,</span>
         <span class="p">)</span></div>
+
 
     <span class="k">def</span> <span class="nf">_calc_fov</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x_pixel</span><span class="p">,</span> <span class="n">y_pixel</span><span class="p">,</span> <span class="n">edge_pixel_indices</span><span class="p">,</span> <span class="n">focal_length</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -503,7 +535,9 @@
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_neighbours</span>
 
-<div class="viewcode-block" id="Camera.get_neighbour_pixels"><a class="viewcode-back" href="../../mc_model.html#model.camera.Camera.get_neighbour_pixels">[docs]</a>    <span class="k">def</span> <span class="nf">get_neighbour_pixels</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pixels</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="Camera.get_neighbour_pixels">
+<a class="viewcode-back" href="../../mc_model.html#model.camera.Camera.get_neighbour_pixels">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_neighbour_pixels</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pixels</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get a list of neighbour pixels by calling calc_neighbour_pixels() when necessary. The \</span>
 <span class="sd">        purpose of this function is to ensure the calculation occurs only once and only when \</span>
@@ -526,6 +560,7 @@
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calc_neighbour_pixels</span><span class="p">(</span><span class="n">pixels</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_neighbours</span></div>
+
 
     <span class="k">def</span> <span class="nf">_calc_edge_pixels</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pixels</span><span class="p">,</span> <span class="n">neighbours</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -560,7 +595,9 @@
 
         <span class="k">return</span> <span class="n">edge_pixel_indices</span>
 
-<div class="viewcode-block" id="Camera.get_edge_pixels"><a class="viewcode-back" href="../../mc_model.html#model.camera.Camera.get_edge_pixels">[docs]</a>    <span class="k">def</span> <span class="nf">get_edge_pixels</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pixels</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">neighbours</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="Camera.get_edge_pixels">
+<a class="viewcode-back" href="../../mc_model.html#model.camera.Camera.get_edge_pixels">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_edge_pixels</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pixels</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">neighbours</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get the indices of the edge pixels of the camera.</span>
 
@@ -585,6 +622,7 @@
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calc_edge_pixels</span><span class="p">(</span><span class="n">pixels</span><span class="p">,</span> <span class="n">neighbours</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_edge_pixel_indices</span></div>
+
 
     <span class="k">def</span> <span class="nf">_plot_axes_def</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">plot</span><span class="p">,</span> <span class="n">rotate_angle</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -730,7 +768,9 @@
             <span class="p">},</span>
         <span class="p">)</span>
 
-<div class="viewcode-block" id="Camera.plot_pixel_layout"><a class="viewcode-back" href="../../mc_model.html#model.camera.Camera.plot_pixel_layout">[docs]</a>    <span class="k">def</span> <span class="nf">plot_pixel_layout</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">camera_in_sky_coor</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">pixels_id_to_print</span><span class="o">=</span><span class="mi">50</span><span class="p">):</span>
+<div class="viewcode-block" id="Camera.plot_pixel_layout">
+<a class="viewcode-back" href="../../mc_model.html#model.camera.Camera.plot_pixel_layout">[docs]</a>
+    <span class="k">def</span> <span class="nf">plot_pixel_layout</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">camera_in_sky_coor</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">pixels_id_to_print</span><span class="o">=</span><span class="mi">50</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Plot the pixel layout for an observer facing the camera. Including in the plot edge pixels,\</span>
 <span class="sd">        off pixels, pixel ID for the first 50 pixels, coordinate systems, FOV, focal length and the\</span>
@@ -904,7 +944,9 @@
         <span class="n">ax</span><span class="o">.</span><span class="n">set_aspect</span><span class="p">(</span><span class="s2">&quot;equal&quot;</span><span class="p">,</span> <span class="s2">&quot;datalim&quot;</span><span class="p">)</span>
         <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
 
-        <span class="k">return</span> <span class="n">fig</span></div></div>
+        <span class="k">return</span> <span class="n">fig</span></div>
+</div>
+
 </pre></div>
 
             <div class="clearer"></div>
@@ -948,14 +990,14 @@
         <li class="right" >
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../index.html">simtools v0.1.dev1+g469b903 Manual</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">simtools v0.1.dev1+g8b2ac9b Manual</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">model.camera</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
-        &#169; Copyright 2022, gammasim-tools, simtools developers.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 6.2.1.
+    &#169; Copyright 2022, gammasim-tools, simtools developers.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.2.
     </div>
   </body>
 </html>

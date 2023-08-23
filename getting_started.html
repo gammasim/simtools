@@ -2,18 +2,18 @@
 
 <!doctype html>
 
-<html lang="en">
+<html lang="en" data-content_root="./">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
-    <title>Getting Started &#8212; simtools v0.1.dev1+g469b903 Manual</title>
-    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="_static/bizstyle.css" />
+    <title>Getting Started &#8212; simtools v0.1.dev1+g8b2ac9b Manual</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="_static/bizstyle.css?v=532c1bf3" />
     
-    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-    <script src="_static/doctools.js"></script>
-    <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/documentation_options.js?v=5e0c7a38"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/bizstyle.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -39,7 +39,7 @@
         <li class="right" >
           <a href="index.html" title="simtools"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">simtools v0.1.dev1+g469b903 Manual</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">simtools v0.1.dev1+g8b2ac9b Manual</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Getting Started</a></li> 
       </ul>
     </div>  
@@ -50,9 +50,9 @@
           <div class="body" role="main">
             
   <section id="getting-started">
-<span id="id1"></span><h1>Getting Started<a class="headerlink" href="#getting-started" title="Permalink to this heading">¶</a></h1>
+<span id="id1"></span><h1>Getting Started<a class="headerlink" href="#getting-started" title="Link to this heading">¶</a></h1>
 <section id="model-database-access">
-<h2>Model Database Access<a class="headerlink" href="#model-database-access" title="Permalink to this heading">¶</a></h2>
+<h2>Model Database Access<a class="headerlink" href="#model-database-access" title="Link to this heading">¶</a></h2>
 <p>Simulation model parameters are stored in a MongoDB-type database.
 Many simtools applications depend on access to this database; ask one of the developers for the credentials.</p>
 <p>Credentials for database access are passed on to simtools applications using environmental variables.
@@ -66,7 +66,7 @@ For database access, copy <a class="reference external" href="https://github.com
 <p>See below for the usage of this script.</p>
 </section>
 <section id="installation-for-users">
-<span id="installationforusers"></span><h2>Installation for Users<a class="headerlink" href="#installation-for-users" title="Permalink to this heading">¶</a></h2>
+<span id="installationforusers"></span><h2>Installation for Users<a class="headerlink" href="#installation-for-users" title="Link to this heading">¶</a></h2>
 <p>simtools is under rapid development and not ready for production use.
 It will be made available in future using the conda packaging system.
 For now, the following installation procedure is foreseen:</p>
@@ -90,16 +90,16 @@ For now, the following installation procedure is foreseen:</p>
 <p>All simtools applications are now available as command line tools. Note the naming of the tool, starting with <code class="docutils literal notranslate"><span class="pre">simtools-</span></code> followed by the application name. See <a class="reference internal" href="applications.html#applications"><span class="std std-ref">Applications</span></a> for more details.</p>
 </section>
 <section id="installation-for-developers">
-<span id="installationfordevelopers"></span><h2>Installation for Developers<a class="headerlink" href="#installation-for-developers" title="Permalink to this heading">¶</a></h2>
+<span id="installationfordevelopers"></span><h2>Installation for Developers<a class="headerlink" href="#installation-for-developers" title="Link to this heading">¶</a></h2>
 <p>Developers install simtools directly from the GitHub repository:</p>
 <section id="clone-simtools">
-<h3>Clone simtools<a class="headerlink" href="#clone-simtools" title="Permalink to this heading">¶</a></h3>
+<h3>Clone simtools<a class="headerlink" href="#clone-simtools" title="Link to this heading">¶</a></h3>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/gammasim/simtools.git
 </pre></div>
 </div>
 </section>
 <section id="install-dependencies">
-<h3>Install dependencies<a class="headerlink" href="#install-dependencies" title="Permalink to this heading">¶</a></h3>
+<h3>Install dependencies<a class="headerlink" href="#install-dependencies" title="Link to this heading">¶</a></h3>
 <p>Create a conda virtual environment with the simtools dependencies installed:</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>conda<span class="w"> </span>env<span class="w"> </span>create<span class="w"> </span>-f<span class="w"> </span>environment.yml
 
@@ -110,7 +110,7 @@ For now, the following installation procedure is foreseen:</p>
 </div>
 </section>
 <section id="install-corsika-and-sim-telarray">
-<h3>Install CORSIKA and sim_telarray<a class="headerlink" href="#install-corsika-and-sim-telarray" title="Permalink to this heading">¶</a></h3>
+<h3>Install CORSIKA and sim_telarray<a class="headerlink" href="#install-corsika-and-sim-telarray" title="Link to this heading">¶</a></h3>
 <p>CORSIKA and sim_telarray are external tools to simtools and are used by several simtools applications.
 Follow the instruction provided by the CORSIKA/sim_telarray authors for installation.
 CTA users can download both packages from <a class="reference external" href="https://www.mpi-hd.mpg.de/hfm/CTA/MC/Software/Testing/">here</a> and install the package with e.g.:</p>
@@ -120,7 +120,7 @@ CTA users can download both packages from <a class="reference external" href="ht
 </div>
 </section>
 <section id="set-environmental-variables">
-<h3>Set environmental variables<a class="headerlink" href="#set-environmental-variables" title="Permalink to this heading">¶</a></h3>
+<h3>Set environmental variables<a class="headerlink" href="#set-environmental-variables" title="Link to this heading">¶</a></h3>
 <p>Source the <code class="docutils literal notranslate"><span class="pre">set_DB_environ.sh</span></code> script (see <a class="reference internal" href="#model-database-access">Model Database Access</a>) to activate set the environmental variables for the DB access:</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span><span class="nb">source</span><span class="w"> </span>set_DB_environ.sh
 </pre></div>
@@ -128,7 +128,7 @@ CTA users can download both packages from <a class="reference external" href="ht
 <p>The environmental variable <code class="docutils literal notranslate"><span class="pre">$SIM_TELPATH</span></code> should point towards the CORSIKA/sim_telarray installation.</p>
 </section>
 <section id="test-installation">
-<h3>Test installation<a class="headerlink" href="#test-installation" title="Permalink to this heading">¶</a></h3>
+<h3>Test installation<a class="headerlink" href="#test-installation" title="Link to this heading">¶</a></h3>
 <p>Test your installation by running the unit tests:</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>pytest<span class="w"> </span>tests/unit_tests/
 </pre></div>
@@ -136,20 +136,20 @@ CTA users can download both packages from <a class="reference external" href="ht
 </section>
 </section>
 <section id="docker-environment-for-developers">
-<h2>Docker Environment for Developers<a class="headerlink" href="#docker-environment-for-developers" title="Permalink to this heading">¶</a></h2>
+<h2>Docker Environment for Developers<a class="headerlink" href="#docker-environment-for-developers" title="Link to this heading">¶</a></h2>
 <p>A docker container is made available for developers, see the
 <a class="reference external" href="https://github.com/gammasim/containers/tree/main/dev">simtools container repository</a> for the Docker files.
 Images are uploaded to <a class="reference external" href="https://github.com/orgs/gammasim/packages?repo_name=containershttps://github.com/orgs/gammasim/packages?repo_name=containers">package section</a> of this repository (at this point a private container repository; ask the simtools developers for access).</p>
 <p>The container has python packages, CORSIKA, and sim_telarray pre-installed.
 Setting up a system to run simtools applications or tests should be a matter of minutes.</p>
 <section id="docker-installation">
-<h3>Docker Installation<a class="headerlink" href="#docker-installation" title="Permalink to this heading">¶</a></h3>
+<h3>Docker Installation<a class="headerlink" href="#docker-installation" title="Link to this heading">¶</a></h3>
 <p>Install Docker and start the Docker application (see
 <a class="reference external" href="https://docs.docker.com/engine/install/">Docker installation page</a>). Other container systems like
 Apptainer, Singularity, Buildah/Podman, etc should work, but are not thoroughly tested.</p>
 </section>
 <section id="id2">
-<h3>Clone simtools<a class="headerlink" href="#id2" title="Permalink to this heading">¶</a></h3>
+<h3>Clone simtools<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
 <p>Clone simtools from GitHub into <code class="docutils literal notranslate"><span class="pre">external/simtools</span></code>:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># create a working directory</span>
 <span class="n">mkdir</span> <span class="n">external</span>
@@ -159,7 +159,7 @@ Apptainer, Singularity, Buildah/Podman, etc should work, but are not thoroughly 
 </div>
 </section>
 <section id="spin-up-the-container">
-<h3>Spin-up the container<a class="headerlink" href="#spin-up-the-container" title="Permalink to this heading">¶</a></h3>
+<h3>Spin-up the container<a class="headerlink" href="#spin-up-the-container" title="Link to this heading">¶</a></h3>
 <p>Start up a container (the image will we downloaded, if it is not available in your environment):</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">docker</span> <span class="n">run</span> <span class="o">--</span><span class="n">rm</span> <span class="o">-</span><span class="n">it</span> <span class="o">-</span><span class="n">v</span> <span class="s2">&quot;$(pwd)/external:/workdir/external&quot;</span> <span class="n">ghcr</span><span class="o">.</span><span class="n">io</span><span class="o">/</span><span class="n">gammasim</span><span class="o">/</span><span class="n">containers</span><span class="o">/</span><span class="n">simtools</span><span class="o">-</span><span class="n">dev</span><span class="p">:</span><span class="n">v0</span><span class="mf">.3.0</span><span class="o">-</span><span class="n">dev1</span> <span class="n">bash</span> <span class="o">-</span><span class="n">c</span> <span class="s2">&quot;$(cat ./entrypoint.sh) &amp;&amp; bash&quot;</span>
 </pre></div>
@@ -168,7 +168,7 @@ Apptainer, Singularity, Buildah/Podman, etc should work, but are not thoroughly 
 The container includes a CORSIKA and sim_telarray installation; the environmental variable <code class="docutils literal notranslate"><span class="pre">$SIM_TELPATH</span></code> is set.</p>
 </section>
 <section id="id3">
-<h3>Test installation<a class="headerlink" href="#id3" title="Permalink to this heading">¶</a></h3>
+<h3>Test installation<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
 <p>Test your installation by running the unit tests:</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>pytest<span class="w"> </span>tests/unit_tests/
 </pre></div>
@@ -238,13 +238,13 @@ The container includes a CORSIKA and sim_telarray installation; the environmenta
         <li class="right" >
           <a href="index.html" title="simtools"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">simtools v0.1.dev1+g469b903 Manual</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">simtools v0.1.dev1+g8b2ac9b Manual</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Getting Started</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
-        &#169; Copyright 2022, gammasim-tools, simtools developers.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 6.2.1.
+    &#169; Copyright 2022, gammasim-tools, simtools developers.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.2.
     </div>
   </body>
 </html>

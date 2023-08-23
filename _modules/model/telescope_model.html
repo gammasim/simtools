@@ -2,17 +2,17 @@
 
 <!doctype html>
 
-<html lang="en">
+<html lang="en" data-content_root="../../">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>model.telescope_model &#8212; simtools v0.1.dev1+g469b903 Manual</title>
-    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/bizstyle.css" />
+    <title>model.telescope_model &#8212; simtools v0.1.dev1+g8b2ac9b Manual</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../../_static/bizstyle.css?v=532c1bf3" />
     
-    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
-    <script src="../../_static/doctools.js"></script>
-    <script src="../../_static/sphinx_highlight.js"></script>
+    <script src="../../_static/documentation_options.js?v=5e0c7a38"></script>
+    <script src="../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/bizstyle.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -30,7 +30,7 @@
         <li class="right" >
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../index.html">simtools v0.1.dev1+g469b903 Manual</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">simtools v0.1.dev1+g8b2ac9b Manual</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">model.telescope_model</a></li> 
       </ul>
@@ -62,11 +62,16 @@
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;InvalidParameter&quot;</span><span class="p">,</span> <span class="s2">&quot;TelescopeModel&quot;</span><span class="p">]</span>
 
 
-<div class="viewcode-block" id="InvalidParameter"><a class="viewcode-back" href="../../mc_model.html#model.telescope_model.InvalidParameter">[docs]</a><span class="k">class</span> <span class="nc">InvalidParameter</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+<div class="viewcode-block" id="InvalidParameter">
+<a class="viewcode-back" href="../../mc_model.html#model.telescope_model.InvalidParameter">[docs]</a>
+<span class="k">class</span> <span class="nc">InvalidParameter</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Exception for invalid parameter.&quot;&quot;&quot;</span></div>
 
 
-<div class="viewcode-block" id="TelescopeModel"><a class="viewcode-back" href="../../mc_model.html#model.telescope_model.TelescopeModel">[docs]</a><span class="k">class</span> <span class="nc">TelescopeModel</span><span class="p">:</span>
+
+<div class="viewcode-block" id="TelescopeModel">
+<a class="viewcode-back" href="../../mc_model.html#model.telescope_model.TelescopeModel">[docs]</a>
+<span class="k">class</span> <span class="nc">TelescopeModel</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    TelescopeModel represents the MC model of an individual telescope. It contains the list of \</span>
 <span class="sd">    parameters that can be read from the DB. A set of methods are available to manipulate \</span>
@@ -86,7 +91,9 @@
 <span class="sd">        Instance label. Important for output file naming.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="TelescopeModel.__init__"><a class="viewcode-back" href="../../mc_model.html#model.telescope_model.TelescopeModel.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+<div class="viewcode-block" id="TelescopeModel.__init__">
+<a class="viewcode-back" href="../../mc_model.html#model.telescope_model.TelescopeModel.__init__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">site</span><span class="p">,</span>
         <span class="n">telescope_model_name</span><span class="p">,</span>
@@ -123,6 +130,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_set_config_file_directory_and_name</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_is_config_file_up_to_date</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_is_exported_model_files_up_to_date</span> <span class="o">=</span> <span class="kc">False</span></div>
+
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">mirrors</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -168,7 +176,9 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_extra_label</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_extra_label</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
 
-<div class="viewcode-block" id="TelescopeModel.from_config_file"><a class="viewcode-back" href="../../mc_model.html#model.telescope_model.TelescopeModel.from_config_file">[docs]</a>    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="TelescopeModel.from_config_file">
+<a class="viewcode-back" href="../../mc_model.html#model.telescope_model.TelescopeModel.from_config_file">[docs]</a>
+    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">from_config_file</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">config_file_name</span><span class="p">,</span> <span class="n">site</span><span class="p">,</span> <span class="n">telescope_model_name</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Create a TelescopeModel from a sim_telarray config file.</span>
@@ -247,7 +257,10 @@
         <span class="n">tel</span><span class="o">.</span><span class="n">_is_exported_model_files_up_to_date</span> <span class="o">=</span> <span class="kc">True</span>
         <span class="k">return</span> <span class="n">tel</span></div>
 
-<div class="viewcode-block" id="TelescopeModel.set_extra_label"><a class="viewcode-back" href="../../mc_model.html#model.telescope_model.TelescopeModel.set_extra_label">[docs]</a>    <span class="k">def</span> <span class="nf">set_extra_label</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">extra_label</span><span class="p">):</span>
+
+<div class="viewcode-block" id="TelescopeModel.set_extra_label">
+<a class="viewcode-back" href="../../mc_model.html#model.telescope_model.TelescopeModel.set_extra_label">[docs]</a>
+    <span class="k">def</span> <span class="nf">set_extra_label</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">extra_label</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Set an extra label for the name of the config file.</span>
 
@@ -265,6 +278,7 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_extra_label</span> <span class="o">=</span> <span class="n">extra_label</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_set_config_file_directory_and_name</span><span class="p">()</span></div>
+
 
     <span class="k">def</span> <span class="nf">_set_config_file_directory_and_name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Define the variable _config_file_directory and create directories, if needed.&quot;&quot;&quot;</span>
@@ -295,7 +309,9 @@
         <span class="n">_site_pars</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">get_site_parameters</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">site</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_version</span><span class="p">,</span> <span class="n">only_applicable</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_parameters</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">_site_pars</span><span class="p">)</span>
 
-<div class="viewcode-block" id="TelescopeModel.has_parameter"><a class="viewcode-back" href="../../mc_model.html#model.telescope_model.TelescopeModel.has_parameter">[docs]</a>    <span class="k">def</span> <span class="nf">has_parameter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">par_name</span><span class="p">):</span>
+<div class="viewcode-block" id="TelescopeModel.has_parameter">
+<a class="viewcode-back" href="../../mc_model.html#model.telescope_model.TelescopeModel.has_parameter">[docs]</a>
+    <span class="k">def</span> <span class="nf">has_parameter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">par_name</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Verify if the parameter is in the model.</span>
 
@@ -311,7 +327,10 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">par_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parameters</span></div>
 
-<div class="viewcode-block" id="TelescopeModel.get_parameter"><a class="viewcode-back" href="../../mc_model.html#model.telescope_model.TelescopeModel.get_parameter">[docs]</a>    <span class="k">def</span> <span class="nf">get_parameter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">par_name</span><span class="p">):</span>
+
+<div class="viewcode-block" id="TelescopeModel.get_parameter">
+<a class="viewcode-back" href="../../mc_model.html#model.telescope_model.TelescopeModel.get_parameter">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_parameter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">par_name</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get an existing parameter of the model, including derived parameters.</span>
 
@@ -340,7 +359,10 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
             <span class="k">raise</span> <span class="n">InvalidParameter</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span></div>
 
-<div class="viewcode-block" id="TelescopeModel.get_parameter_value"><a class="viewcode-back" href="../../mc_model.html#model.telescope_model.TelescopeModel.get_parameter_value">[docs]</a>    <span class="k">def</span> <span class="nf">get_parameter_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">par_name</span><span class="p">):</span>
+
+<div class="viewcode-block" id="TelescopeModel.get_parameter_value">
+<a class="viewcode-back" href="../../mc_model.html#model.telescope_model.TelescopeModel.get_parameter_value">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_parameter_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">par_name</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get the value of an existing parameter of the model.</span>
 
@@ -361,7 +383,10 @@
         <span class="n">par_info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_parameter</span><span class="p">(</span><span class="n">par_name</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">par_info</span><span class="p">[</span><span class="s2">&quot;Value&quot;</span><span class="p">]</span></div>
 
-<div class="viewcode-block" id="TelescopeModel.get_parameter_value_with_unit"><a class="viewcode-back" href="../../mc_model.html#model.telescope_model.TelescopeModel.get_parameter_value_with_unit">[docs]</a>    <span class="k">def</span> <span class="nf">get_parameter_value_with_unit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">par_name</span><span class="p">):</span>
+
+<div class="viewcode-block" id="TelescopeModel.get_parameter_value_with_unit">
+<a class="viewcode-back" href="../../mc_model.html#model.telescope_model.TelescopeModel.get_parameter_value_with_unit">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_parameter_value_with_unit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">par_name</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get the value of an existing parameter of the model as an Astropy Quantity with its unit.\</span>
 <span class="sd">        If no unit is provided in the model, the value is returned without a unit.</span>
@@ -386,7 +411,10 @@
             <span class="k">return</span> <span class="n">par_info</span><span class="p">[</span><span class="s2">&quot;Value&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">Unit</span><span class="p">(</span><span class="n">par_info</span><span class="p">[</span><span class="s2">&quot;units&quot;</span><span class="p">])</span>
         <span class="k">return</span> <span class="n">par_info</span><span class="p">[</span><span class="s2">&quot;Value&quot;</span><span class="p">]</span></div>
 
-<div class="viewcode-block" id="TelescopeModel.add_parameter"><a class="viewcode-back" href="../../mc_model.html#model.telescope_model.TelescopeModel.add_parameter">[docs]</a>    <span class="k">def</span> <span class="nf">add_parameter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">par_name</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">is_file</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">is_aplicable</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+
+<div class="viewcode-block" id="TelescopeModel.add_parameter">
+<a class="viewcode-back" href="../../mc_model.html#model.telescope_model.TelescopeModel.add_parameter">[docs]</a>
+    <span class="k">def</span> <span class="nf">add_parameter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">par_name</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">is_file</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">is_aplicable</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Add a new parameters to the model. This function does not modify the DB, it affects only \</span>
 <span class="sd">        the current instance.</span>
@@ -423,7 +451,10 @@
         <span class="k">if</span> <span class="n">is_file</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_is_exported_model_files_up_to_date</span> <span class="o">=</span> <span class="kc">False</span></div>
 
-<div class="viewcode-block" id="TelescopeModel.change_parameter"><a class="viewcode-back" href="../../mc_model.html#model.telescope_model.TelescopeModel.change_parameter">[docs]</a>    <span class="k">def</span> <span class="nf">change_parameter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">par_name</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+
+<div class="viewcode-block" id="TelescopeModel.change_parameter">
+<a class="viewcode-back" href="../../mc_model.html#model.telescope_model.TelescopeModel.change_parameter">[docs]</a>
+    <span class="k">def</span> <span class="nf">change_parameter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">par_name</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Change the value of an existing parameter to the model. This function does not modify the \</span>
 <span class="sd">        DB, it affects only the current instance.</span>
@@ -473,7 +504,10 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_is_config_file_up_to_date</span> <span class="o">=</span> <span class="kc">False</span></div>
 
-<div class="viewcode-block" id="TelescopeModel.change_multiple_parameters"><a class="viewcode-back" href="../../mc_model.html#model.telescope_model.TelescopeModel.change_multiple_parameters">[docs]</a>    <span class="k">def</span> <span class="nf">change_multiple_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+
+<div class="viewcode-block" id="TelescopeModel.change_multiple_parameters">
+<a class="viewcode-back" href="../../mc_model.html#model.telescope_model.TelescopeModel.change_multiple_parameters">[docs]</a>
+    <span class="k">def</span> <span class="nf">change_multiple_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Change the value of multiple existing parameters in the model. This function does not \</span>
 <span class="sd">        modify the DB, it affects only the current instance.</span>
@@ -496,7 +530,10 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_is_config_file_up_to_date</span> <span class="o">=</span> <span class="kc">False</span></div>
 
-<div class="viewcode-block" id="TelescopeModel.remove_parameters"><a class="viewcode-back" href="../../mc_model.html#model.telescope_model.TelescopeModel.remove_parameters">[docs]</a>    <span class="k">def</span> <span class="nf">remove_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+
+<div class="viewcode-block" id="TelescopeModel.remove_parameters">
+<a class="viewcode-back" href="../../mc_model.html#model.telescope_model.TelescopeModel.remove_parameters">[docs]</a>
+    <span class="k">def</span> <span class="nf">remove_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Remove a set of parameters from the model.</span>
 
@@ -520,7 +557,10 @@
                 <span class="k">raise</span> <span class="n">InvalidParameter</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_is_config_file_up_to_date</span> <span class="o">=</span> <span class="kc">False</span></div>
 
-<div class="viewcode-block" id="TelescopeModel.add_parameter_file"><a class="viewcode-back" href="../../mc_model.html#model.telescope_model.TelescopeModel.add_parameter_file">[docs]</a>    <span class="k">def</span> <span class="nf">add_parameter_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">par_name</span><span class="p">,</span> <span class="n">file_path</span><span class="p">):</span>
+
+<div class="viewcode-block" id="TelescopeModel.add_parameter_file">
+<a class="viewcode-back" href="../../mc_model.html#model.telescope_model.TelescopeModel.add_parameter_file">[docs]</a>
+    <span class="k">def</span> <span class="nf">add_parameter_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">par_name</span><span class="p">,</span> <span class="n">file_path</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Add a file to the config file directory.</span>
 
@@ -536,7 +576,10 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_added_parameter_files</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">par_name</span><span class="p">)</span>
         <span class="n">shutil</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config_file_directory</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="TelescopeModel.export_model_files"><a class="viewcode-back" href="../../mc_model.html#model.telescope_model.TelescopeModel.export_model_files">[docs]</a>    <span class="k">def</span> <span class="nf">export_model_files</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+<div class="viewcode-block" id="TelescopeModel.export_model_files">
+<a class="viewcode-back" href="../../mc_model.html#model.telescope_model.TelescopeModel.export_model_files">[docs]</a>
+    <span class="k">def</span> <span class="nf">export_model_files</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Exports the model files into the config file directory.&quot;&quot;&quot;</span>
         <span class="n">db</span> <span class="o">=</span> <span class="n">db_handler</span><span class="o">.</span><span class="n">DatabaseHandler</span><span class="p">(</span><span class="n">mongo_db_config</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mongo_db_config</span><span class="p">)</span>
 
@@ -549,12 +592,18 @@
         <span class="n">db</span><span class="o">.</span><span class="n">export_model_files</span><span class="p">(</span><span class="n">pars_from_db</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config_file_directory</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_is_exported_model_files_up_to_date</span> <span class="o">=</span> <span class="kc">True</span></div>
 
-<div class="viewcode-block" id="TelescopeModel.print_parameters"><a class="viewcode-back" href="../../mc_model.html#model.telescope_model.TelescopeModel.print_parameters">[docs]</a>    <span class="k">def</span> <span class="nf">print_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+<div class="viewcode-block" id="TelescopeModel.print_parameters">
+<a class="viewcode-back" href="../../mc_model.html#model.telescope_model.TelescopeModel.print_parameters">[docs]</a>
+    <span class="k">def</span> <span class="nf">print_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Print parameters and their values for debugging purposes.&quot;&quot;&quot;</span>
         <span class="k">for</span> <span class="n">par</span><span class="p">,</span> <span class="n">info</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parameters</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">par</span><span class="si">}</span><span class="s2"> = </span><span class="si">{</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;Value&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="TelescopeModel.export_config_file"><a class="viewcode-back" href="../../mc_model.html#model.telescope_model.TelescopeModel.export_config_file">[docs]</a>    <span class="k">def</span> <span class="nf">export_config_file</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+<div class="viewcode-block" id="TelescopeModel.export_config_file">
+<a class="viewcode-back" href="../../mc_model.html#model.telescope_model.TelescopeModel.export_config_file">[docs]</a>
+    <span class="k">def</span> <span class="nf">export_config_file</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Export the config file used by sim_telarray.&quot;&quot;&quot;</span>
 
         <span class="c1"># Exporting model file</span>
@@ -567,7 +616,10 @@
             <span class="n">config_file_path</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_file_path</span><span class="p">,</span> <span class="n">parameters</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_parameters</span>
         <span class="p">)</span></div>
 
-<div class="viewcode-block" id="TelescopeModel.export_derived_files"><a class="viewcode-back" href="../../mc_model.html#model.telescope_model.TelescopeModel.export_derived_files">[docs]</a>    <span class="k">def</span> <span class="nf">export_derived_files</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+<div class="viewcode-block" id="TelescopeModel.export_derived_files">
+<a class="viewcode-back" href="../../mc_model.html#model.telescope_model.TelescopeModel.export_derived_files">[docs]</a>
+    <span class="k">def</span> <span class="nf">export_derived_files</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Write to disk a file from the derived values DB.&quot;&quot;&quot;</span>
 
         <span class="n">db</span> <span class="o">=</span> <span class="n">db_handler</span><span class="o">.</span><span class="n">DatabaseHandler</span><span class="p">(</span><span class="n">mongo_db_config</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mongo_db_config</span><span class="p">)</span>
@@ -579,7 +631,10 @@
                     <span class="n">file_name</span><span class="o">=</span><span class="n">par_now</span><span class="p">[</span><span class="s2">&quot;Value&quot;</span><span class="p">],</span>
                 <span class="p">)</span></div>
 
-<div class="viewcode-block" id="TelescopeModel.get_config_file"><a class="viewcode-back" href="../../mc_model.html#model.telescope_model.TelescopeModel.get_config_file">[docs]</a>    <span class="k">def</span> <span class="nf">get_config_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">no_export</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+
+<div class="viewcode-block" id="TelescopeModel.get_config_file">
+<a class="viewcode-back" href="../../mc_model.html#model.telescope_model.TelescopeModel.get_config_file">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_config_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">no_export</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get the path of the config file for sim_telarray. The config file is produced if the file\</span>
 <span class="sd">        is not updated.</span>
@@ -598,7 +653,10 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">export_config_file</span><span class="p">()</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config_file_path</span></div>
 
-<div class="viewcode-block" id="TelescopeModel.get_config_directory"><a class="viewcode-back" href="../../mc_model.html#model.telescope_model.TelescopeModel.get_config_directory">[docs]</a>    <span class="k">def</span> <span class="nf">get_config_directory</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+<div class="viewcode-block" id="TelescopeModel.get_config_directory">
+<a class="viewcode-back" href="../../mc_model.html#model.telescope_model.TelescopeModel.get_config_directory">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_config_directory</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get the path where all the configuration files for sim_telarray are written to.</span>
 
@@ -609,7 +667,10 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config_file_directory</span></div>
 
-<div class="viewcode-block" id="TelescopeModel.get_derived_directory"><a class="viewcode-back" href="../../mc_model.html#model.telescope_model.TelescopeModel.get_derived_directory">[docs]</a>    <span class="k">def</span> <span class="nf">get_derived_directory</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+<div class="viewcode-block" id="TelescopeModel.get_derived_directory">
+<a class="viewcode-back" href="../../mc_model.html#model.telescope_model.TelescopeModel.get_derived_directory">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_derived_directory</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get the path where all the files with derived values for are written to.</span>
 
@@ -620,7 +681,10 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config_file_directory</span><span class="o">.</span><span class="n">parents</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="s2">&quot;derived&quot;</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="TelescopeModel.get_telescope_transmission_parameters"><a class="viewcode-back" href="../../mc_model.html#model.telescope_model.TelescopeModel.get_telescope_transmission_parameters">[docs]</a>    <span class="k">def</span> <span class="nf">get_telescope_transmission_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+<div class="viewcode-block" id="TelescopeModel.get_telescope_transmission_parameters">
+<a class="viewcode-back" href="../../mc_model.html#model.telescope_model.TelescopeModel.get_telescope_transmission_parameters">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_telescope_transmission_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get tel. transmission pars as a list of floats.</span>
 
@@ -636,7 +700,10 @@
 
         <span class="k">return</span> <span class="p">[</span><span class="nb">float</span><span class="p">(</span><span class="n">telescope_transmission</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span></div>
 
-<div class="viewcode-block" id="TelescopeModel.export_single_mirror_list_file"><a class="viewcode-back" href="../../mc_model.html#model.telescope_model.TelescopeModel.export_single_mirror_list_file">[docs]</a>    <span class="k">def</span> <span class="nf">export_single_mirror_list_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mirror_number</span><span class="p">,</span> <span class="n">set_focal_length_to_zero</span><span class="p">):</span>
+
+<div class="viewcode-block" id="TelescopeModel.export_single_mirror_list_file">
+<a class="viewcode-back" href="../../mc_model.html#model.telescope_model.TelescopeModel.export_single_mirror_list_file">[docs]</a>
+    <span class="k">def</span> <span class="nf">export_single_mirror_list_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mirror_number</span><span class="p">,</span> <span class="n">set_focal_length_to_zero</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Export a mirror list file with a single mirror in it.</span>
 
@@ -669,7 +736,10 @@
             <span class="n">set_focal_length_to_zero</span><span class="p">,</span>
         <span class="p">)</span></div>
 
-<div class="viewcode-block" id="TelescopeModel.get_single_mirror_list_file"><a class="viewcode-back" href="../../mc_model.html#model.telescope_model.TelescopeModel.get_single_mirror_list_file">[docs]</a>    <span class="k">def</span> <span class="nf">get_single_mirror_list_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mirror_number</span><span class="p">,</span> <span class="n">set_focal_length_to_zero</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+
+<div class="viewcode-block" id="TelescopeModel.get_single_mirror_list_file">
+<a class="viewcode-back" href="../../mc_model.html#model.telescope_model.TelescopeModel.get_single_mirror_list_file">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_single_mirror_list_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mirror_number</span><span class="p">,</span> <span class="n">set_focal_length_to_zero</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get the path to the single mirror list file.</span>
 
@@ -687,6 +757,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">export_single_mirror_list_file</span><span class="p">(</span><span class="n">mirror_number</span><span class="p">,</span> <span class="n">set_focal_length_to_zero</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_single_mirror_list_file_paths</span><span class="p">[</span><span class="n">mirror_number</span><span class="p">]</span></div>
+
 
     <span class="k">def</span> <span class="nf">_load_mirrors</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Load the attribute mirrors by creating a Mirrors object with the mirror list file.&quot;&quot;&quot;</span>
@@ -754,7 +825,9 @@
                 <span class="n">label</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">,</span>
             <span class="p">)</span>
 
-<div class="viewcode-block" id="TelescopeModel.is_file_2D"><a class="viewcode-back" href="../../mc_model.html#model.telescope_model.TelescopeModel.is_file_2D">[docs]</a>    <span class="k">def</span> <span class="nf">is_file_2D</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">par</span><span class="p">):</span>
+<div class="viewcode-block" id="TelescopeModel.is_file_2D">
+<a class="viewcode-back" href="../../mc_model.html#model.telescope_model.TelescopeModel.is_file_2D">[docs]</a>
+    <span class="k">def</span> <span class="nf">is_file_2D</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">par</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Check if the file referenced by par is a 2D table.</span>
 
@@ -778,7 +851,10 @@
             <span class="n">is2D</span> <span class="o">=</span> <span class="s2">&quot;@RPOL@&quot;</span> <span class="ow">in</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
         <span class="k">return</span> <span class="n">is2D</span></div>
 
-<div class="viewcode-block" id="TelescopeModel.read_two_dim_wavelength_angle"><a class="viewcode-back" href="../../mc_model.html#model.telescope_model.TelescopeModel.read_two_dim_wavelength_angle">[docs]</a>    <span class="k">def</span> <span class="nf">read_two_dim_wavelength_angle</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_name</span><span class="p">):</span>
+
+<div class="viewcode-block" id="TelescopeModel.read_two_dim_wavelength_angle">
+<a class="viewcode-back" href="../../mc_model.html#model.telescope_model.TelescopeModel.read_two_dim_wavelength_angle">[docs]</a>
+    <span class="k">def</span> <span class="nf">read_two_dim_wavelength_angle</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_name</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Read a two dimensional distribution of wavelngth and angle (z-axis can be anything). Return\</span>
 <span class="sd">        a dictionary with three arrays, wavelength, angles, z (can be transmission, reflectivity,\</span>
@@ -812,7 +888,10 @@
             <span class="s2">&quot;z&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">_data</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">:])</span><span class="o">.</span><span class="n">T</span><span class="p">,</span>
         <span class="p">}</span></div>
 
-<div class="viewcode-block" id="TelescopeModel.get_on_axis_eff_optical_area"><a class="viewcode-back" href="../../mc_model.html#model.telescope_model.TelescopeModel.get_on_axis_eff_optical_area">[docs]</a>    <span class="k">def</span> <span class="nf">get_on_axis_eff_optical_area</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+<div class="viewcode-block" id="TelescopeModel.get_on_axis_eff_optical_area">
+<a class="viewcode-back" href="../../mc_model.html#model.telescope_model.TelescopeModel.get_on_axis_eff_optical_area">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_on_axis_eff_optical_area</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the on-axis effective optical area (derived previously for this telescope).&quot;&quot;&quot;</span>
 
         <span class="n">ray_tracing_data</span> <span class="o">=</span> <span class="n">astropy</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">ascii</span><span class="o">.</span><span class="n">read</span><span class="p">(</span>
@@ -826,7 +905,10 @@
             <span class="k">raise</span> <span class="ne">ValueError</span>
         <span class="k">return</span> <span class="n">ray_tracing_data</span><span class="p">[</span><span class="s2">&quot;eff_area&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span></div>
 
-<div class="viewcode-block" id="TelescopeModel.read_incidence_angle_distribution"><a class="viewcode-back" href="../../mc_model.html#model.telescope_model.TelescopeModel.read_incidence_angle_distribution">[docs]</a>    <span class="k">def</span> <span class="nf">read_incidence_angle_distribution</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">incidence_angle_dist_file</span><span class="p">):</span>
+
+<div class="viewcode-block" id="TelescopeModel.read_incidence_angle_distribution">
+<a class="viewcode-back" href="../../mc_model.html#model.telescope_model.TelescopeModel.read_incidence_angle_distribution">[docs]</a>
+    <span class="k">def</span> <span class="nf">read_incidence_angle_distribution</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">incidence_angle_dist_file</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Read the incidence angle distribution from a file.</span>
 
@@ -846,7 +928,10 @@
         <span class="p">)</span>
         <span class="k">return</span> <span class="n">incidence_angle_dist</span></div>
 
-<div class="viewcode-block" id="TelescopeModel.calc_average_curve"><a class="viewcode-back" href="../../mc_model.html#model.telescope_model.TelescopeModel.calc_average_curve">[docs]</a>    <span class="nd">@staticmethod</span>
+
+<div class="viewcode-block" id="TelescopeModel.calc_average_curve">
+<a class="viewcode-back" href="../../mc_model.html#model.telescope_model.TelescopeModel.calc_average_curve">[docs]</a>
+    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">calc_average_curve</span><span class="p">(</span><span class="n">curves</span><span class="p">,</span> <span class="n">incidence_angle_dist</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Calculate an average curve from a set of curves, using as weights the distribution of \</span>
@@ -883,7 +968,10 @@
 
         <span class="k">return</span> <span class="n">average_curve</span></div>
 
-<div class="viewcode-block" id="TelescopeModel.export_table_to_model_directory"><a class="viewcode-back" href="../../mc_model.html#model.telescope_model.TelescopeModel.export_table_to_model_directory">[docs]</a>    <span class="k">def</span> <span class="nf">export_table_to_model_directory</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_name</span><span class="p">,</span> <span class="n">table</span><span class="p">):</span>
+
+<div class="viewcode-block" id="TelescopeModel.export_table_to_model_directory">
+<a class="viewcode-back" href="../../mc_model.html#model.telescope_model.TelescopeModel.export_table_to_model_directory">[docs]</a>
+    <span class="k">def</span> <span class="nf">export_table_to_model_directory</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_name</span><span class="p">,</span> <span class="n">table</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Write out a file with the provided table to the model directory.</span>
 
@@ -902,7 +990,9 @@
 
         <span class="n">file_to_write_to</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config_file_directory</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span>
         <span class="n">table</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">file_to_write_to</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;ascii.commented_header&quot;</span><span class="p">,</span> <span class="n">overwrite</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">file_to_write_to</span><span class="o">.</span><span class="n">absolute</span><span class="p">()</span></div></div>
+        <span class="k">return</span> <span class="n">file_to_write_to</span><span class="o">.</span><span class="n">absolute</span><span class="p">()</span></div>
+</div>
+
 </pre></div>
 
             <div class="clearer"></div>
@@ -946,14 +1036,14 @@
         <li class="right" >
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../index.html">simtools v0.1.dev1+g469b903 Manual</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">simtools v0.1.dev1+g8b2ac9b Manual</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">model.telescope_model</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
-        &#169; Copyright 2022, gammasim-tools, simtools developers.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 6.2.1.
+    &#169; Copyright 2022, gammasim-tools, simtools developers.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.2.
     </div>
   </body>
 </html>

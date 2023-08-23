@@ -2,17 +2,17 @@
 
 <!doctype html>
 
-<html lang="en">
+<html lang="en" data-content_root="../">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>camera_efficiency &#8212; simtools v0.1.dev1+g469b903 Manual</title>
-    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/bizstyle.css" />
+    <title>camera_efficiency &#8212; simtools v0.1.dev1+g8b2ac9b Manual</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../_static/bizstyle.css?v=532c1bf3" />
     
-    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-    <script src="../_static/doctools.js"></script>
-    <script src="../_static/sphinx_highlight.js"></script>
+    <script src="../_static/documentation_options.js?v=5e0c7a38"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/bizstyle.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -30,7 +30,7 @@
         <li class="right" >
           <a href="../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../index.html">simtools v0.1.dev1+g469b903 Manual</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">simtools v0.1.dev1+g8b2ac9b Manual</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">camera_efficiency</a></li> 
       </ul>
@@ -61,7 +61,9 @@
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;CameraEfficiency&quot;</span><span class="p">]</span>
 
 
-<div class="viewcode-block" id="CameraEfficiency"><a class="viewcode-back" href="../camera_efficiency.html#camera_efficiency.CameraEfficiency">[docs]</a><span class="k">class</span> <span class="nc">CameraEfficiency</span><span class="p">:</span>
+<div class="viewcode-block" id="CameraEfficiency">
+<a class="viewcode-back" href="../camera_efficiency.html#camera_efficiency.CameraEfficiency">[docs]</a>
+<span class="k">class</span> <span class="nc">CameraEfficiency</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Class for handling camera efficiency simulations and analysis.</span>
 
@@ -81,7 +83,9 @@
 <span class="sd">        Is it a test instance (at the moment only affects the location of files).</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="CameraEfficiency.__init__"><a class="viewcode-back" href="../camera_efficiency.html#camera_efficiency.CameraEfficiency.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+<div class="viewcode-block" id="CameraEfficiency.__init__">
+<a class="viewcode-back" href="../camera_efficiency.html#camera_efficiency.CameraEfficiency.__init__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">telescope_model</span><span class="p">,</span>
         <span class="n">simtel_source_path</span><span class="p">,</span>
@@ -122,7 +126,10 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_load_files</span><span class="p">()</span></div>
 
-<div class="viewcode-block" id="CameraEfficiency.from_kwargs"><a class="viewcode-back" href="../camera_efficiency.html#camera_efficiency.CameraEfficiency.from_kwargs">[docs]</a>    <span class="nd">@classmethod</span>
+
+<div class="viewcode-block" id="CameraEfficiency.from_kwargs">
+<a class="viewcode-back" href="../camera_efficiency.html#camera_efficiency.CameraEfficiency.from_kwargs">[docs]</a>
+    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">from_kwargs</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Builds a CameraEfficiency object from kwargs only.</span>
@@ -148,6 +155,7 @@
             <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="o">**</span><span class="n">args</span><span class="p">,</span> <span class="n">config_data</span><span class="o">=</span><span class="n">config_data</span><span class="p">)</span></div>
+
 
     <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;CameraEfficiency(label=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="si">}</span><span class="s2">)</span><span class="se">\n</span><span class="s2">&quot;</span>
@@ -200,7 +208,9 @@
         <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_file_log</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_base_directory</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="n">file_name_log</span><span class="p">)</span>
 
-<div class="viewcode-block" id="CameraEfficiency.simulate"><a class="viewcode-back" href="../camera_efficiency.html#camera_efficiency.CameraEfficiency.simulate">[docs]</a>    <span class="k">def</span> <span class="nf">simulate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">force</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<div class="viewcode-block" id="CameraEfficiency.simulate">
+<a class="viewcode-back" href="../camera_efficiency.html#camera_efficiency.CameraEfficiency.simulate">[docs]</a>
+    <span class="k">def</span> <span class="nf">simulate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">force</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Simulate camera efficiency using testeff.</span>
 
@@ -221,7 +231,10 @@
         <span class="p">)</span>
         <span class="n">simtel</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">test</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">test</span><span class="p">,</span> <span class="n">force</span><span class="o">=</span><span class="n">force</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="CameraEfficiency.analyze"><a class="viewcode-back" href="../camera_efficiency.html#camera_efficiency.CameraEfficiency.analyze">[docs]</a>    <span class="k">def</span> <span class="nf">analyze</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">export</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">force</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+
+<div class="viewcode-block" id="CameraEfficiency.analyze">
+<a class="viewcode-back" href="../camera_efficiency.html#camera_efficiency.CameraEfficiency.analyze">[docs]</a>
+    <span class="k">def</span> <span class="nf">analyze</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">export</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">force</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Analyze camera efficiency output file and store the results in _results.</span>
 
@@ -330,9 +343,12 @@
         <span class="k">if</span> <span class="n">export</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">export_results</span><span class="p">()</span></div>
 
+
     <span class="c1"># END of analyze</span>
 
-<div class="viewcode-block" id="CameraEfficiency.export_results"><a class="viewcode-back" href="../camera_efficiency.html#camera_efficiency.CameraEfficiency.export_results">[docs]</a>    <span class="k">def</span> <span class="nf">export_results</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="CameraEfficiency.export_results">
+<a class="viewcode-back" href="../camera_efficiency.html#camera_efficiency.CameraEfficiency.export_results">[docs]</a>
+    <span class="k">def</span> <span class="nf">export_results</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Export results to a csv file.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_has_results</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Cannot export results because they do not exist&quot;</span><span class="p">)</span>
@@ -342,13 +358,16 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">_results</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_file_results</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;basic&quot;</span><span class="p">,</span> <span class="n">overwrite</span><span class="o">=</span><span class="kc">True</span>
             <span class="p">)</span></div>
 
+
     <span class="k">def</span> <span class="nf">_read_results</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Read existing results file and store it in _results.&quot;&quot;&quot;</span>
         <span class="n">table</span> <span class="o">=</span> <span class="n">astropy</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">ascii</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_file_results</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;basic&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_results</span> <span class="o">=</span> <span class="n">table</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_has_results</span> <span class="o">=</span> <span class="kc">True</span>
 
-<div class="viewcode-block" id="CameraEfficiency.calc_tel_efficiency"><a class="viewcode-back" href="../camera_efficiency.html#camera_efficiency.CameraEfficiency.calc_tel_efficiency">[docs]</a>    <span class="k">def</span> <span class="nf">calc_tel_efficiency</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="CameraEfficiency.calc_tel_efficiency">
+<a class="viewcode-back" href="../camera_efficiency.html#camera_efficiency.CameraEfficiency.calc_tel_efficiency">[docs]</a>
+    <span class="k">def</span> <span class="nf">calc_tel_efficiency</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Calculate the telescope total efficiency including gaps (as defined in A-PERF-2020).</span>
 
@@ -370,7 +389,10 @@
 
         <span class="k">return</span> <span class="n">tel_efficiency</span></div>
 
-<div class="viewcode-block" id="CameraEfficiency.calc_camera_efficiency"><a class="viewcode-back" href="../camera_efficiency.html#camera_efficiency.CameraEfficiency.calc_camera_efficiency">[docs]</a>    <span class="k">def</span> <span class="nf">calc_camera_efficiency</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+<div class="viewcode-block" id="CameraEfficiency.calc_camera_efficiency">
+<a class="viewcode-back" href="../camera_efficiency.html#camera_efficiency.CameraEfficiency.calc_camera_efficiency">[docs]</a>
+    <span class="k">def</span> <span class="nf">calc_camera_efficiency</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Calculate the camera nominal efficiency including gaps (as defined in B-TEL-1170).</span>
 
@@ -395,7 +417,10 @@
 
         <span class="k">return</span> <span class="n">cam_efficiency</span></div>
 
-<div class="viewcode-block" id="CameraEfficiency.calc_tot_efficiency"><a class="viewcode-back" href="../camera_efficiency.html#camera_efficiency.CameraEfficiency.calc_tot_efficiency">[docs]</a>    <span class="k">def</span> <span class="nf">calc_tot_efficiency</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tel_efficiency</span><span class="p">):</span>
+
+<div class="viewcode-block" id="CameraEfficiency.calc_tot_efficiency">
+<a class="viewcode-back" href="../camera_efficiency.html#camera_efficiency.CameraEfficiency.calc_tot_efficiency">[docs]</a>
+    <span class="k">def</span> <span class="nf">calc_tot_efficiency</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tel_efficiency</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Calculate the telescope total efficiency including gaps (as defined in A-PERF-2020).</span>
 
@@ -422,7 +447,10 @@
 
         <span class="k">return</span> <span class="n">tel_efficiency</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">tel_efficiency_nsb</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="CameraEfficiency.calc_reflectivity"><a class="viewcode-back" href="../camera_efficiency.html#camera_efficiency.CameraEfficiency.calc_reflectivity">[docs]</a>    <span class="k">def</span> <span class="nf">calc_reflectivity</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+<div class="viewcode-block" id="CameraEfficiency.calc_reflectivity">
+<a class="viewcode-back" href="../camera_efficiency.html#camera_efficiency.CameraEfficiency.calc_reflectivity">[docs]</a>
+    <span class="k">def</span> <span class="nf">calc_reflectivity</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Calculate the Cherenkov spectrum weighted reflectivity in the range 300-550 nm.</span>
 
@@ -442,7 +470,10 @@
 
         <span class="k">return</span> <span class="n">cher_spec_weighted_reflectivity</span></div>
 
-<div class="viewcode-block" id="CameraEfficiency.calc_nsb_rate"><a class="viewcode-back" href="../camera_efficiency.html#camera_efficiency.CameraEfficiency.calc_nsb_rate">[docs]</a>    <span class="k">def</span> <span class="nf">calc_nsb_rate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+<div class="viewcode-block" id="CameraEfficiency.calc_nsb_rate">
+<a class="viewcode-back" href="../camera_efficiency.html#camera_efficiency.CameraEfficiency.calc_nsb_rate">[docs]</a>
+    <span class="k">def</span> <span class="nf">calc_nsb_rate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Calculate the NSB rate.</span>
 
@@ -477,7 +508,10 @@
         <span class="p">)</span>
         <span class="k">return</span> <span class="n">nsb_rate</span></div>
 
-<div class="viewcode-block" id="CameraEfficiency.plot"><a class="viewcode-back" href="../camera_efficiency.html#camera_efficiency.CameraEfficiency.plot">[docs]</a>    <span class="k">def</span> <span class="nf">plot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>  <span class="c1"># FIXME - remove this function, probably not needed</span>
+
+<div class="viewcode-block" id="CameraEfficiency.plot">
+<a class="viewcode-back" href="../camera_efficiency.html#camera_efficiency.CameraEfficiency.plot">[docs]</a>
+    <span class="k">def</span> <span class="nf">plot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>  <span class="c1"># FIXME - remove this function, probably not needed</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Plot key vs wavelength.</span>
 
@@ -508,7 +542,10 @@
                 <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
             <span class="p">)</span></div>
 
-<div class="viewcode-block" id="CameraEfficiency.plot_cherenkov_efficiency"><a class="viewcode-back" href="../camera_efficiency.html#camera_efficiency.CameraEfficiency.plot_cherenkov_efficiency">[docs]</a>    <span class="k">def</span> <span class="nf">plot_cherenkov_efficiency</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+<div class="viewcode-block" id="CameraEfficiency.plot_cherenkov_efficiency">
+<a class="viewcode-back" href="../camera_efficiency.html#camera_efficiency.CameraEfficiency.plot_cherenkov_efficiency">[docs]</a>
+    <span class="k">def</span> <span class="nf">plot_cherenkov_efficiency</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Plot Cherenkov efficiency vs wavelength.</span>
 
@@ -542,7 +579,10 @@
 
         <span class="k">return</span> <span class="n">fig</span></div>
 
-<div class="viewcode-block" id="CameraEfficiency.plot_nsb_efficiency"><a class="viewcode-back" href="../camera_efficiency.html#camera_efficiency.CameraEfficiency.plot_nsb_efficiency">[docs]</a>    <span class="k">def</span> <span class="nf">plot_nsb_efficiency</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+<div class="viewcode-block" id="CameraEfficiency.plot_nsb_efficiency">
+<a class="viewcode-back" href="../camera_efficiency.html#camera_efficiency.CameraEfficiency.plot_nsb_efficiency">[docs]</a>
+    <span class="k">def</span> <span class="nf">plot_nsb_efficiency</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Plot NSB efficiency vs wavelength.</span>
 
@@ -577,7 +617,9 @@
         <span class="n">ylim</span> <span class="o">=</span> <span class="n">plot</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span><span class="o">.</span><span class="n">get_ylim</span><span class="p">()</span>
         <span class="n">plot</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="mf">1e-3</span><span class="p">,</span> <span class="n">ylim</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
 
-        <span class="k">return</span> <span class="n">plot</span></div></div>
+        <span class="k">return</span> <span class="n">plot</span></div>
+</div>
+
 </pre></div>
 
             <div class="clearer"></div>
@@ -621,14 +663,14 @@
         <li class="right" >
           <a href="../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../index.html">simtools v0.1.dev1+g469b903 Manual</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">simtools v0.1.dev1+g8b2ac9b Manual</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="index.html" >Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">camera_efficiency</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
-        &#169; Copyright 2022, gammasim-tools, simtools developers.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 6.2.1.
+    &#169; Copyright 2022, gammasim-tools, simtools developers.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.2.
     </div>
   </body>
 </html>

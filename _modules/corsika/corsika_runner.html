@@ -2,17 +2,17 @@
 
 <!doctype html>
 
-<html lang="en">
+<html lang="en" data-content_root="../../">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>corsika.corsika_runner &#8212; simtools v0.1.dev1+g469b903 Manual</title>
-    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/bizstyle.css" />
+    <title>corsika.corsika_runner &#8212; simtools v0.1.dev1+g8b2ac9b Manual</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../../_static/bizstyle.css?v=532c1bf3" />
     
-    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
-    <script src="../../_static/doctools.js"></script>
-    <script src="../../_static/sphinx_highlight.js"></script>
+    <script src="../../_static/documentation_options.js?v=5e0c7a38"></script>
+    <script src="../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/bizstyle.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -30,7 +30,7 @@
         <li class="right" >
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../index.html">simtools v0.1.dev1+g469b903 Manual</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">simtools v0.1.dev1+g8b2ac9b Manual</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">corsika.corsika_runner</a></li> 
       </ul>
@@ -58,11 +58,16 @@
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;CorsikaRunner&quot;</span><span class="p">,</span> <span class="s2">&quot;MissingRequiredEntryInCorsikaConfig&quot;</span><span class="p">]</span>
 
 
-<div class="viewcode-block" id="MissingRequiredEntryInCorsikaConfig"><a class="viewcode-back" href="../../corsika.html#corsika.corsika_runner.MissingRequiredEntryInCorsikaConfig">[docs]</a><span class="k">class</span> <span class="nc">MissingRequiredEntryInCorsikaConfig</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+<div class="viewcode-block" id="MissingRequiredEntryInCorsikaConfig">
+<a class="viewcode-back" href="../../corsika.html#corsika.corsika_runner.MissingRequiredEntryInCorsikaConfig">[docs]</a>
+<span class="k">class</span> <span class="nc">MissingRequiredEntryInCorsikaConfig</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Exception for missing required entry in corsika config.&quot;&quot;&quot;</span></div>
 
 
-<div class="viewcode-block" id="CorsikaRunner"><a class="viewcode-back" href="../../corsika.html#corsika.corsika_runner.CorsikaRunner">[docs]</a><span class="k">class</span> <span class="nc">CorsikaRunner</span><span class="p">:</span>
+
+<div class="viewcode-block" id="CorsikaRunner">
+<a class="viewcode-back" href="../../corsika.html#corsika.corsika_runner.CorsikaRunner">[docs]</a>
+<span class="k">class</span> <span class="nc">CorsikaRunner</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    CorsikaRunner is responsible for running CORSIKA, through the corsika_autoinputs program \</span>
 <span class="sd">    provided by the sim_telarray package. It provides shell scripts to be run externally or by \</span>
@@ -118,7 +123,9 @@
 <span class="sd">        Path to yaml file containing CORSIKA parameters.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="CorsikaRunner.__init__"><a class="viewcode-back" href="../../corsika.html#corsika.corsika_runner.CorsikaRunner.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+<div class="viewcode-block" id="CorsikaRunner.__init__">
+<a class="viewcode-back" href="../../corsika.html#corsika.corsika_runner.CorsikaRunner.__init__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">mongo_db_config</span><span class="p">,</span>
         <span class="n">site</span><span class="p">,</span>
@@ -157,6 +164,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_define_corsika_config</span><span class="p">(</span><span class="n">mongo_db_config</span><span class="p">,</span> <span class="n">use_multipipe</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_load_corsika_data_directories</span><span class="p">()</span></div>
+
 
     <span class="k">def</span> <span class="nf">_load_corsika_config_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">corsika_config_data</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Reads corsika_config_data, creates corsika_config and corsika_input_file.&quot;&quot;&quot;</span>
@@ -216,7 +224,9 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_corsika_log_dir</span> <span class="o">=</span> <span class="n">corsika_base_dir</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="s2">&quot;log&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_corsika_log_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
-<div class="viewcode-block" id="CorsikaRunner.prepare_run_script"><a class="viewcode-back" href="../../corsika.html#corsika.corsika_runner.CorsikaRunner.prepare_run_script">[docs]</a>    <span class="k">def</span> <span class="nf">prepare_run_script</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">use_pfp</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<div class="viewcode-block" id="CorsikaRunner.prepare_run_script">
+<a class="viewcode-back" href="../../corsika.html#corsika.corsika_runner.CorsikaRunner.prepare_run_script">[docs]</a>
+    <span class="k">def</span> <span class="nf">prepare_run_script</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">use_pfp</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get the full path of the run script file for a given run number.</span>
 
@@ -297,6 +307,7 @@
 
         <span class="k">return</span> <span class="n">script_file_path</span></div>
 
+
     <span class="k">def</span> <span class="nf">_get_pfp_command</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_tmp_file</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Get pfp pre-processor command.&quot;&quot;&quot;</span>
         <span class="n">cmd</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_simtel_source_path</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="s2">&quot;sim_telarray/bin/pfp&quot;</span><span class="p">)</span>
@@ -322,7 +333,9 @@
         <span class="n">cmd</span> <span class="o">+=</span> <span class="s2">&quot; || exit 1</span><span class="se">\n</span><span class="s2">&quot;</span>
         <span class="k">return</span> <span class="n">cmd</span>
 
-<div class="viewcode-block" id="CorsikaRunner.get_info_for_file_name"><a class="viewcode-back" href="../../corsika.html#corsika.corsika_runner.CorsikaRunner.get_info_for_file_name">[docs]</a>    <span class="k">def</span> <span class="nf">get_info_for_file_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">run_number</span><span class="p">):</span>
+<div class="viewcode-block" id="CorsikaRunner.get_info_for_file_name">
+<a class="viewcode-back" href="../../corsika.html#corsika.corsika_runner.CorsikaRunner.get_info_for_file_name">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_info_for_file_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">run_number</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get a dictionary with the info necessary for building the CORSIKA runner file names.</span>
 
@@ -340,7 +353,10 @@
             <span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">,</span>
         <span class="p">}</span></div>
 
-<div class="viewcode-block" id="CorsikaRunner.get_file_name"><a class="viewcode-back" href="../../corsika.html#corsika.corsika_runner.CorsikaRunner.get_file_name">[docs]</a>    <span class="k">def</span> <span class="nf">get_file_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_type</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+
+<div class="viewcode-block" id="CorsikaRunner.get_file_name">
+<a class="viewcode-back" href="../../corsika.html#corsika.corsika_runner.CorsikaRunner.get_file_name">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_file_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_type</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get a CORSIKA style file name for various file types.</span>
 
@@ -412,7 +428,10 @@
 
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The requested file type (</span><span class="si">{</span><span class="n">file_type</span><span class="si">}</span><span class="s2">) is unknown&quot;</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="CorsikaRunner.has_file"><a class="viewcode-back" href="../../corsika.html#corsika.corsika_runner.CorsikaRunner.has_file">[docs]</a>    <span class="k">def</span> <span class="nf">has_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_type</span><span class="p">,</span> <span class="n">run_number</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;out&quot;</span><span class="p">):</span>
+
+<div class="viewcode-block" id="CorsikaRunner.has_file">
+<a class="viewcode-back" href="../../corsika.html#corsika.corsika_runner.CorsikaRunner.has_file">[docs]</a>
+    <span class="k">def</span> <span class="nf">has_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_type</span><span class="p">,</span> <span class="n">run_number</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;out&quot;</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Checks that the file of file_type for the specified run number exists.</span>
 
@@ -430,7 +449,10 @@
         <span class="n">run_sub_file</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_file_name</span><span class="p">(</span><span class="n">file_type</span><span class="p">,</span> <span class="o">**</span><span class="n">info_for_file_name</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="n">mode</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">Path</span><span class="p">(</span><span class="n">run_sub_file</span><span class="p">)</span><span class="o">.</span><span class="n">is_file</span><span class="p">()</span></div>
 
-<div class="viewcode-block" id="CorsikaRunner.get_resources"><a class="viewcode-back" href="../../corsika.html#corsika.corsika_runner.CorsikaRunner.get_resources">[docs]</a>    <span class="k">def</span> <span class="nf">get_resources</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">run_number</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+
+<div class="viewcode-block" id="CorsikaRunner.get_resources">
+<a class="viewcode-back" href="../../corsika.html#corsika.corsika_runner.CorsikaRunner.get_resources">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_resources</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">run_number</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Read run time of job from last line of submission log file.</span>
 
@@ -469,6 +491,7 @@
 
         <span class="k">return</span> <span class="n">_resources</span></div>
 
+
     <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">_get_run_directory</span><span class="p">(</span><span class="n">run_number</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Get run directory created by sim_telarray (ex. run000014).&quot;&quot;&quot;</span>
@@ -488,6 +511,7 @@
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">run_number</span></div>
+
 </pre></div>
 
             <div class="clearer"></div>
@@ -531,14 +555,14 @@
         <li class="right" >
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../index.html">simtools v0.1.dev1+g469b903 Manual</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">simtools v0.1.dev1+g8b2ac9b Manual</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">corsika.corsika_runner</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
-        &#169; Copyright 2022, gammasim-tools, simtools developers.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 6.2.1.
+    &#169; Copyright 2022, gammasim-tools, simtools developers.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.2.
     </div>
   </body>
 </html>

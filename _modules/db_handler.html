@@ -2,17 +2,17 @@
 
 <!doctype html>
 
-<html lang="en">
+<html lang="en" data-content_root="../">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>db_handler &#8212; simtools v0.1.dev1+g469b903 Manual</title>
-    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/bizstyle.css" />
+    <title>db_handler &#8212; simtools v0.1.dev1+g8b2ac9b Manual</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../_static/bizstyle.css?v=532c1bf3" />
     
-    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-    <script src="../_static/doctools.js"></script>
-    <script src="../_static/sphinx_highlight.js"></script>
+    <script src="../_static/documentation_options.js?v=5e0c7a38"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/bizstyle.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -30,7 +30,7 @@
         <li class="right" >
           <a href="../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../index.html">simtools v0.1.dev1+g469b903 Manual</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">simtools v0.1.dev1+g8b2ac9b Manual</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">db_handler</a></li> 
       </ul>
@@ -67,7 +67,9 @@
 <span class="c1"># The above comment is because pylint does not know that DatabaseHandler.db_client is subscriptable</span>
 
 
-<div class="viewcode-block" id="DatabaseHandler"><a class="viewcode-back" href="../db_handler.html#db_handler.DatabaseHandler">[docs]</a><span class="k">class</span> <span class="nc">DatabaseHandler</span><span class="p">:</span>
+<div class="viewcode-block" id="DatabaseHandler">
+<a class="viewcode-back" href="../db_handler.html#db_handler.DatabaseHandler">[docs]</a>
+<span class="k">class</span> <span class="nc">DatabaseHandler</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    DatabaseHandler provides the interface to the DB.</span>
 
@@ -94,7 +96,9 @@
 
     <span class="n">db_client</span> <span class="o">=</span> <span class="kc">None</span>
 
-<div class="viewcode-block" id="DatabaseHandler.__init__"><a class="viewcode-back" href="../db_handler.html#db_handler.DatabaseHandler.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mongo_db_config</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="DatabaseHandler.__init__">
+<a class="viewcode-back" href="../db_handler.html#db_handler.DatabaseHandler.__init__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mongo_db_config</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Initialize the DatabaseHandler class.</span>
 
@@ -113,7 +117,10 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_set_up_connection</span><span class="p">()</span></div>
 
-<div class="viewcode-block" id="DatabaseHandler.set_mongo_db_config"><a class="viewcode-back" href="../db_handler.html#db_handler.DatabaseHandler.set_mongo_db_config">[docs]</a>    <span class="k">def</span> <span class="nf">set_mongo_db_config</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mongo_db_config</span><span class="p">):</span>
+
+<div class="viewcode-block" id="DatabaseHandler.set_mongo_db_config">
+<a class="viewcode-back" href="../db_handler.html#db_handler.DatabaseHandler.set_mongo_db_config">[docs]</a>
+    <span class="k">def</span> <span class="nf">set_mongo_db_config</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mongo_db_config</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Set the MongoDB config and open the connection to the DB.</span>
 
@@ -131,6 +138,7 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">mongo_db_config</span> <span class="o">=</span> <span class="n">mongo_db_config</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_set_up_connection</span><span class="p">()</span></div>
+
 
     <span class="k">def</span> <span class="nf">_set_up_connection</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -174,7 +182,9 @@
 <span class="sd">        Make telescope name as the DB needs from site and telescope_model_name.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">site</span> <span class="o">+</span> <span class="s2">&quot;-&quot;</span> <span class="o">+</span> <span class="n">telescope_model_name</span>
 
-<div class="viewcode-block" id="DatabaseHandler.get_model_parameters"><a class="viewcode-back" href="../db_handler.html#db_handler.DatabaseHandler.get_model_parameters">[docs]</a>    <span class="k">def</span> <span class="nf">get_model_parameters</span><span class="p">(</span>
+<div class="viewcode-block" id="DatabaseHandler.get_model_parameters">
+<a class="viewcode-back" href="../db_handler.html#db_handler.DatabaseHandler.get_model_parameters">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_model_parameters</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">site</span><span class="p">,</span>
         <span class="n">telescope_model_name</span><span class="p">,</span>
@@ -228,7 +238,10 @@
             <span class="n">only_applicable</span><span class="p">,</span>
         <span class="p">)</span></div>
 
-<div class="viewcode-block" id="DatabaseHandler.export_file_db"><a class="viewcode-back" href="../db_handler.html#db_handler.DatabaseHandler.export_file_db">[docs]</a>    <span class="k">def</span> <span class="nf">export_file_db</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">db_name</span><span class="p">,</span> <span class="n">dest</span><span class="p">,</span> <span class="n">file_name</span><span class="p">):</span>
+
+<div class="viewcode-block" id="DatabaseHandler.export_file_db">
+<a class="viewcode-back" href="../db_handler.html#db_handler.DatabaseHandler.export_file_db">[docs]</a>
+    <span class="k">def</span> <span class="nf">export_file_db</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">db_name</span><span class="p">,</span> <span class="n">dest</span><span class="p">,</span> <span class="n">file_name</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get file from the DB and write to disk.</span>
 
@@ -258,7 +271,10 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_write_file_from_mongo_to_disk</span><span class="p">(</span><span class="n">db_name</span><span class="p">,</span> <span class="n">dest</span><span class="p">,</span> <span class="n">file_path_instance</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">file_path_instance</span><span class="o">.</span><span class="n">_id</span>  <span class="c1"># pylint: disable=protected-access;</span></div>
 
-<div class="viewcode-block" id="DatabaseHandler.export_model_files"><a class="viewcode-back" href="../db_handler.html#db_handler.DatabaseHandler.export_model_files">[docs]</a>    <span class="k">def</span> <span class="nf">export_model_files</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parameters</span><span class="p">,</span> <span class="n">dest</span><span class="p">):</span>
+
+<div class="viewcode-block" id="DatabaseHandler.export_model_files">
+<a class="viewcode-back" href="../db_handler.html#db_handler.DatabaseHandler.export_model_files">[docs]</a>
+    <span class="k">def</span> <span class="nf">export_model_files</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parameters</span><span class="p">,</span> <span class="n">dest</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Export all the files in a model from the DB (Mongo or yaml) and write them to disk.</span>
 
@@ -293,6 +309,7 @@
                 <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_file</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
                     <span class="k">continue</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_write_model_file_yaml</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">dest</span><span class="p">,</span> <span class="n">no_file_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
+
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">_is_file</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
@@ -450,7 +467,9 @@
 
         <span class="k">return</span> <span class="n">_pars</span>
 
-<div class="viewcode-block" id="DatabaseHandler.read_mongo_db"><a class="viewcode-back" href="../db_handler.html#db_handler.DatabaseHandler.read_mongo_db">[docs]</a>    <span class="k">def</span> <span class="nf">read_mongo_db</span><span class="p">(</span>
+<div class="viewcode-block" id="DatabaseHandler.read_mongo_db">
+<a class="viewcode-back" href="../db_handler.html#db_handler.DatabaseHandler.read_mongo_db">[docs]</a>
+    <span class="k">def</span> <span class="nf">read_mongo_db</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">db_name</span><span class="p">,</span>
         <span class="n">telescope_model_name_db</span><span class="p">,</span>
@@ -525,6 +544,7 @@
 
         <span class="k">return</span> <span class="n">_parameters</span></div>
 
+
     <span class="k">def</span> <span class="nf">_get_all_model_parameters_yaml</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">telescope_name_yaml</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get all parameters from yaml DB for one specific type.</span>
@@ -548,7 +568,9 @@
             <span class="n">_all_pars</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">safe_load</span><span class="p">(</span><span class="n">stream</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">_all_pars</span>
 
-<div class="viewcode-block" id="DatabaseHandler.get_site_parameters"><a class="viewcode-back" href="../db_handler.html#db_handler.DatabaseHandler.get_site_parameters">[docs]</a>    <span class="k">def</span> <span class="nf">get_site_parameters</span><span class="p">(</span>
+<div class="viewcode-block" id="DatabaseHandler.get_site_parameters">
+<a class="viewcode-back" href="../db_handler.html#db_handler.DatabaseHandler.get_site_parameters">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_site_parameters</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">site</span><span class="p">,</span>
         <span class="n">model_version</span><span class="p">,</span>
@@ -584,6 +606,7 @@
             <span class="k">return</span> <span class="n">_pars</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_site_parameters_yaml</span><span class="p">(</span><span class="n">_site</span><span class="p">,</span> <span class="n">_model_version</span><span class="p">,</span> <span class="n">only_applicable</span><span class="p">)</span></div>
+
 
     <span class="k">def</span> <span class="nf">_get_site_parameters_yaml</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">site</span><span class="p">,</span> <span class="n">model_version</span><span class="p">,</span> <span class="n">only_applicable</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -676,7 +699,9 @@
 
         <span class="k">return</span> <span class="n">_parameters</span>
 
-<div class="viewcode-block" id="DatabaseHandler.get_descriptions"><a class="viewcode-back" href="../db_handler.html#db_handler.DatabaseHandler.get_descriptions">[docs]</a>    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="DatabaseHandler.get_descriptions">
+<a class="viewcode-back" href="../db_handler.html#db_handler.DatabaseHandler.get_descriptions">[docs]</a>
+    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">get_descriptions</span><span class="p">(</span>
         <span class="n">db_name</span><span class="o">=</span><span class="n">DB_CTA_SIMULATION_MODEL_DESCRIPTIONS</span><span class="p">,</span> <span class="n">collection_name</span><span class="o">=</span><span class="s2">&quot;telescopes&quot;</span>
     <span class="p">):</span>
@@ -709,7 +734,10 @@
 
         <span class="k">return</span> <span class="n">_parameters</span></div>
 
-<div class="viewcode-block" id="DatabaseHandler.get_reference_data"><a class="viewcode-back" href="../db_handler.html#db_handler.DatabaseHandler.get_reference_data">[docs]</a>    <span class="k">def</span> <span class="nf">get_reference_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">site</span><span class="p">,</span> <span class="n">model_version</span><span class="p">,</span> <span class="n">only_applicable</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+
+<div class="viewcode-block" id="DatabaseHandler.get_reference_data">
+<a class="viewcode-back" href="../db_handler.html#db_handler.DatabaseHandler.get_reference_data">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_reference_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">site</span><span class="p">,</span> <span class="n">model_version</span><span class="p">,</span> <span class="n">only_applicable</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get parameters from MongoDB for a specific telescope.</span>
 
@@ -762,7 +790,10 @@
 
         <span class="k">return</span> <span class="n">_parameters</span></div>
 
-<div class="viewcode-block" id="DatabaseHandler.get_derived_values"><a class="viewcode-back" href="../db_handler.html#db_handler.DatabaseHandler.get_derived_values">[docs]</a>    <span class="k">def</span> <span class="nf">get_derived_values</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">site</span><span class="p">,</span> <span class="n">telescope_model_name</span><span class="p">,</span> <span class="n">model_version</span><span class="p">):</span>
+
+<div class="viewcode-block" id="DatabaseHandler.get_derived_values">
+<a class="viewcode-back" href="../db_handler.html#db_handler.DatabaseHandler.get_derived_values">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_derived_values</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">site</span><span class="p">,</span> <span class="n">telescope_model_name</span><span class="p">,</span> <span class="n">model_version</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get a derived value from the DB for a specific telescope.</span>
 
@@ -803,6 +834,7 @@
         <span class="p">)</span>
 
         <span class="k">return</span> <span class="n">_pars</span></div>
+
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">_get_file_mongo_db</span><span class="p">(</span><span class="n">db_name</span><span class="p">,</span> <span class="n">file_name</span><span class="p">):</span>
@@ -855,7 +887,9 @@
         <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="n">file</span><span class="o">.</span><span class="n">filename</span><span class="p">),</span> <span class="s2">&quot;wb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">output_file</span><span class="p">:</span>
             <span class="n">fs_output</span><span class="o">.</span><span class="n">download_to_stream_by_name</span><span class="p">(</span><span class="n">file</span><span class="o">.</span><span class="n">filename</span><span class="p">,</span> <span class="n">output_file</span><span class="p">)</span>
 
-<div class="viewcode-block" id="DatabaseHandler.copy_telescope"><a class="viewcode-back" href="../db_handler.html#db_handler.DatabaseHandler.copy_telescope">[docs]</a>    <span class="k">def</span> <span class="nf">copy_telescope</span><span class="p">(</span>
+<div class="viewcode-block" id="DatabaseHandler.copy_telescope">
+<a class="viewcode-back" href="../db_handler.html#db_handler.DatabaseHandler.copy_telescope">[docs]</a>
+    <span class="k">def</span> <span class="nf">copy_telescope</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">db_name</span><span class="p">,</span>
         <span class="n">tel_to_copy</span><span class="p">,</span>
@@ -927,7 +961,10 @@
         <span class="k">except</span> <span class="n">BulkWriteError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">BulkWriteError</span><span class="o">.</span><span class="n">details</span> <span class="kn">from</span> <span class="nn">exc</span></div>
 
-<div class="viewcode-block" id="DatabaseHandler.copy_documents"><a class="viewcode-back" href="../db_handler.html#db_handler.DatabaseHandler.copy_documents">[docs]</a>    <span class="k">def</span> <span class="nf">copy_documents</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">db_name</span><span class="p">,</span> <span class="n">collection</span><span class="p">,</span> <span class="n">query</span><span class="p">,</span> <span class="n">db_to_copy_to</span><span class="p">,</span> <span class="n">collection_to_copy_to</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+
+<div class="viewcode-block" id="DatabaseHandler.copy_documents">
+<a class="viewcode-back" href="../db_handler.html#db_handler.DatabaseHandler.copy_documents">[docs]</a>
+    <span class="k">def</span> <span class="nf">copy_documents</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">db_name</span><span class="p">,</span> <span class="n">collection</span><span class="p">,</span> <span class="n">query</span><span class="p">,</span> <span class="n">db_to_copy_to</span><span class="p">,</span> <span class="n">collection_to_copy_to</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Copy the documents matching to &quot;query&quot; to the DB &quot;db_to_copy_to&quot;.</span>
 <span class="sd">        The documents are copied to the same collection as in &quot;db_name&quot;.</span>
@@ -977,7 +1014,10 @@
         <span class="k">except</span> <span class="n">BulkWriteError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">BulkWriteError</span><span class="o">.</span><span class="n">details</span> <span class="kn">from</span> <span class="nn">exc</span></div>
 
-<div class="viewcode-block" id="DatabaseHandler.delete_query"><a class="viewcode-back" href="../db_handler.html#db_handler.DatabaseHandler.delete_query">[docs]</a>    <span class="k">def</span> <span class="nf">delete_query</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">db_name</span><span class="p">,</span> <span class="n">collection</span><span class="p">,</span> <span class="n">query</span><span class="p">):</span>
+
+<div class="viewcode-block" id="DatabaseHandler.delete_query">
+<a class="viewcode-back" href="../db_handler.html#db_handler.DatabaseHandler.delete_query">[docs]</a>
+    <span class="k">def</span> <span class="nf">delete_query</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">db_name</span><span class="p">,</span> <span class="n">collection</span><span class="p">,</span> <span class="n">query</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Delete all entries from the DB which correspond to the provided query.</span>
 <span class="sd">        (This function should be rarely used, if at all.)</span>
@@ -1013,7 +1053,10 @@
 
         <span class="n">_collection</span><span class="o">.</span><span class="n">delete_many</span><span class="p">(</span><span class="n">query</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="DatabaseHandler.update_parameter"><a class="viewcode-back" href="../db_handler.html#db_handler.DatabaseHandler.update_parameter">[docs]</a>    <span class="k">def</span> <span class="nf">update_parameter</span><span class="p">(</span>
+
+<div class="viewcode-block" id="DatabaseHandler.update_parameter">
+<a class="viewcode-back" href="../db_handler.html#db_handler.DatabaseHandler.update_parameter">[docs]</a>
+    <span class="k">def</span> <span class="nf">update_parameter</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">db_name</span><span class="p">,</span>
         <span class="n">telescope</span><span class="p">,</span>
@@ -1092,7 +1135,10 @@
         <span class="k">for</span> <span class="n">file_now</span> <span class="ow">in</span> <span class="n">files_to_add_to_db</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">insert_file_to_db</span><span class="p">(</span><span class="n">file_now</span><span class="p">,</span> <span class="n">db_name</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="DatabaseHandler.update_parameter_field"><a class="viewcode-back" href="../db_handler.html#db_handler.DatabaseHandler.update_parameter_field">[docs]</a>    <span class="k">def</span> <span class="nf">update_parameter_field</span><span class="p">(</span>
+
+<div class="viewcode-block" id="DatabaseHandler.update_parameter_field">
+<a class="viewcode-back" href="../db_handler.html#db_handler.DatabaseHandler.update_parameter_field">[docs]</a>
+    <span class="k">def</span> <span class="nf">update_parameter_field</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">db_name</span><span class="p">,</span>
         <span class="n">version</span><span class="p">,</span>
@@ -1191,7 +1237,10 @@
 
         <span class="n">collection</span><span class="o">.</span><span class="n">update_one</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">query_update</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="DatabaseHandler.add_parameter"><a class="viewcode-back" href="../db_handler.html#db_handler.DatabaseHandler.add_parameter">[docs]</a>    <span class="k">def</span> <span class="nf">add_parameter</span><span class="p">(</span>
+
+<div class="viewcode-block" id="DatabaseHandler.add_parameter">
+<a class="viewcode-back" href="../db_handler.html#db_handler.DatabaseHandler.add_parameter">[docs]</a>
+    <span class="k">def</span> <span class="nf">add_parameter</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">db_name</span><span class="p">,</span>
         <span class="n">telescope</span><span class="p">,</span>
@@ -1267,7 +1316,10 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Will also add the file </span><span class="si">{</span><span class="n">file_path</span><span class="si">}</span><span class="s2"> to the DB&quot;</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">insert_file_to_db</span><span class="p">(</span><span class="n">files_to_add_to_db</span><span class="p">,</span> <span class="n">db_name</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="DatabaseHandler.add_new_parameter"><a class="viewcode-back" href="../db_handler.html#db_handler.DatabaseHandler.add_new_parameter">[docs]</a>    <span class="k">def</span> <span class="nf">add_new_parameter</span><span class="p">(</span>
+
+<div class="viewcode-block" id="DatabaseHandler.add_new_parameter">
+<a class="viewcode-back" href="../db_handler.html#db_handler.DatabaseHandler.add_new_parameter">[docs]</a>
+    <span class="k">def</span> <span class="nf">add_new_parameter</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">db_name</span><span class="p">,</span>
         <span class="n">version</span><span class="p">,</span>
@@ -1350,6 +1402,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Will also add the file </span><span class="si">{</span><span class="n">file_to_insert_now</span><span class="si">}</span><span class="s2"> to the DB&quot;</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">insert_file_to_db</span><span class="p">(</span><span class="n">file_to_insert_now</span><span class="p">,</span> <span class="n">db_name</span><span class="p">)</span></div>
 
+
     <span class="k">def</span> <span class="nf">_convert_version_to_tagged</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model_version</span><span class="p">,</span> <span class="n">db_name</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Convert to tagged version, if needed.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">model_version</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;Current&quot;</span><span class="p">,</span> <span class="s2">&quot;Latest&quot;</span><span class="p">]:</span>
@@ -1393,7 +1446,9 @@
 
         <span class="k">return</span> <span class="n">tags</span><span class="p">[</span><span class="s2">&quot;Tags&quot;</span><span class="p">][</span><span class="n">version</span><span class="p">][</span><span class="s2">&quot;Value&quot;</span><span class="p">]</span>
 
-<div class="viewcode-block" id="DatabaseHandler.insert_file_to_db"><a class="viewcode-back" href="../db_handler.html#db_handler.DatabaseHandler.insert_file_to_db">[docs]</a>    <span class="k">def</span> <span class="nf">insert_file_to_db</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_name</span><span class="p">,</span> <span class="n">db_name</span><span class="o">=</span><span class="n">DB_CTA_SIMULATION_MODEL</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<div class="viewcode-block" id="DatabaseHandler.insert_file_to_db">
+<a class="viewcode-back" href="../db_handler.html#db_handler.DatabaseHandler.insert_file_to_db">[docs]</a>
+    <span class="k">def</span> <span class="nf">insert_file_to_db</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_name</span><span class="p">,</span> <span class="n">db_name</span><span class="o">=</span><span class="n">DB_CTA_SIMULATION_MODEL</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Insert a file to the DB.</span>
 
@@ -1435,7 +1490,10 @@
         <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">data_file</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">file_system</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">data_file</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="DatabaseHandler.get_all_versions"><a class="viewcode-back" href="../db_handler.html#db_handler.DatabaseHandler.get_all_versions">[docs]</a>    <span class="k">def</span> <span class="nf">get_all_versions</span><span class="p">(</span>
+
+<div class="viewcode-block" id="DatabaseHandler.get_all_versions">
+<a class="viewcode-back" href="../db_handler.html#db_handler.DatabaseHandler.get_all_versions">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_all_versions</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">db_name</span><span class="p">,</span>
         <span class="n">parameter</span><span class="p">,</span>
@@ -1496,7 +1554,9 @@
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">_all_versions</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The query </span><span class="si">{</span><span class="n">query</span><span class="si">}</span><span class="s2"> did not return any results. No versions found&quot;</span><span class="p">)</span>
 
-        <span class="k">return</span> <span class="n">_all_versions</span></div></div>
+        <span class="k">return</span> <span class="n">_all_versions</span></div>
+</div>
+
 </pre></div>
 
             <div class="clearer"></div>
@@ -1540,14 +1600,14 @@
         <li class="right" >
           <a href="../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../index.html">simtools v0.1.dev1+g469b903 Manual</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">simtools v0.1.dev1+g8b2ac9b Manual</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="index.html" >Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">db_handler</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
-        &#169; Copyright 2022, gammasim-tools, simtools developers.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 6.2.1.
+    &#169; Copyright 2022, gammasim-tools, simtools developers.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.2.
     </div>
   </body>
 </html>
