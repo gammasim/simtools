@@ -33,7 +33,7 @@ def layout(io_handler, db_config):
 
 # @pytest.mark.skip(reason="TODO :test_write_array_config_file - KeyError: 'Current'")
 def test_write_array_config_file(simtel_config_writer, layout, telescope_model_lst, io_handler):
-    file = io_handler.get_output_file(file_name="simtel-config-writer_array.txt", test=True)
+    file = io_handler.get_output_file(file_name="simtel-config-writer_array.txt", dir_type="test")
     simtel_config_writer.write_array_config_file(
         config_file_path=file,
         layout=layout,
@@ -44,7 +44,9 @@ def test_write_array_config_file(simtel_config_writer, layout, telescope_model_l
 
 
 def test_write_tel_config_file(simtel_config_writer, io_handler):
-    file = io_handler.get_output_file(file_name="simtel-config-writer_telescope.txt", test=True)
+    file = io_handler.get_output_file(
+        file_name="simtel-config-writer_telescope.txt", dir_type="test"
+    )
     simtel_config_writer.write_telescope_config_file(
         config_file_path=file, parameters={"par": {"Value": 1}}
     )

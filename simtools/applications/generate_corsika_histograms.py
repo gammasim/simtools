@@ -221,8 +221,8 @@ def _parse(label, description):
     config.parser.add_argument(
         "--event_1D_histograms",
         help="The keys from the CORSIKA event header to be used for the generation of 1D "
-             "histograms. The available choices can been found in the `all_event_keys` attribute of"
-             "the CorsikaHistograms.",
+        "histograms. The available choices can been found in the `all_event_keys` attribute of"
+        "the CorsikaHistograms.",
         required=False,
         default=None,
         nargs="*",
@@ -231,8 +231,8 @@ def _parse(label, description):
     config.parser.add_argument(
         "--event_2D_histograms",
         help="The keys from the CORSIKA event header to be used for the generation of 2D "
-             "histograms. The available choices can been found in the `all_event_keys` attribute of"
-             "the CorsikaHistograms.",
+        "histograms. The available choices can been found in the `all_event_keys` attribute of"
+        "the CorsikaHistograms.",
         required=False,
         default=None,
         nargs="*",
@@ -323,8 +323,10 @@ def _derive_event_2D_histograms(corsika_histograms_instance, event_2D_header_key
         # [::2] to discard the last one in case an odd number of keys are passed
 
         if len(event_2D_header_keys) % 2 == 1:  # if odd number of keys
-            msg = "An odd number of keys was passed to produce 2D histograms." \
-                  "The last key is being ignored."
+            msg = (
+                "An odd number of keys was passed to produce 2D histograms."
+                "The last key is being ignored."
+            )
             logger.warning(msg)
 
         if png:
@@ -351,7 +353,7 @@ def main():
     io_handler_instance = io_handler.IOHandler()
     args_dict, _ = _parse(label, description)
 
-    output_path = io_handler_instance.get_output_directory(label, dir_type="application-plots")
+    output_path = io_handler_instance.get_output_directory(label, sub_dir="application-plots")
 
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
     initial_time = time.time()

@@ -225,7 +225,9 @@ class TelescopeModel:
     def _set_config_file_directory_and_name(self):
         """Define the variable _config_file_directory and create directories, if needed."""
 
-        self._config_file_directory = self.io_handler.get_output_directory(self.label, "model")
+        self._config_file_directory = self.io_handler.get_output_directory(
+            label=self.label, sub_dir="model"
+        )
 
         # Setting file name and the location
         config_file_name = names.simtel_telescope_config_file_name(
@@ -531,7 +533,7 @@ class TelescopeModel:
             if par_now["File"]:
                 db.export_file_db(
                     db_name=db.DB_DERIVED_VALUES,
-                    dest=self.io_handler.get_output_directory(self.label, "derived"),
+                    dest=self.io_handler.get_output_directory(label=self.label, sub_dir="derived"),
                     file_name=par_now["Value"],
                 )
 

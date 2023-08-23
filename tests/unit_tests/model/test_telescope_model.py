@@ -19,12 +19,12 @@ def lst_config_file(db, io_handler):
     test_file_name = "CTA-North-LST-1-Current_test-telescope-model.cfg"
     db.export_file_db(
         db_name="test-data",
-        dest=io_handler.get_output_directory(dir_type="model", test=True),
+        dest=io_handler.get_output_directory(sub_dir="model", dir_type="test"),
         file_name=test_file_name,
     )
 
     cfg_file = gen.find_file(
-        test_file_name, io_handler.get_output_directory(dir_type="model", test=True)
+        test_file_name, io_handler.get_output_directory(sub_dir="model", dir_type="test")
     )
     return cfg_file
 

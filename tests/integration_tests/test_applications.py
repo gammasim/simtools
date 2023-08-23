@@ -638,14 +638,14 @@ def test_applications(application, io_handler, monkeypatch, db):
     def prepare_one_file(file_name):
         db.export_file_db(
             db_name="test-data",
-            dest=io_handler.get_output_directory(dir_type="model", test=True),
+            dest=io_handler.get_output_directory(sub_dir="model", dir_type="test"),
             file_name=file_name,
         )
 
     def download_file(url):
         response = requests.get(url)
         output_file_path = (
-            io_handler.get_output_directory(dir_type="model", test=True) / Path(url).name
+            io_handler.get_output_directory(sub_dir="model", dir_type="test") / Path(url).name
         )
         if response.status_code == 200:
             with open(output_file_path, "wb") as file:
@@ -666,7 +666,8 @@ def test_applications(application, io_handler, monkeypatch, db):
             cmd = app
         for aa in args:
             aa = aa.replace(
-                "TESTMODELDIR", str(io_handler.get_output_directory(dir_type="model", test=True))
+                "TESTMODELDIR",
+                str(io_handler.get_output_directory(sub_dir="model", dir_type="test")),
             )
             cmd += " " + aa
         return cmd
