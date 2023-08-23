@@ -87,7 +87,11 @@ class IOHandler(metaclass=IOHandlerSingleton):
         if self.use_plain_output_path:
             path = Path(self.output_path)
         else:
-            output_directory_prefix = Path(self.output_path).joinpath(dir_type[:8] + "-output")
+            try:
+                output_directory_prefix = Path(self.output_path).joinpath(dir_type[:8] + "-output")
+            except TypeError:
+                self._logger.error(f"Error creating output directory name from {self.dir_type}")
+                raise
             label_dir = label if label is not None else "d-" + str(datetime.date.today())
             path = output_directory_prefix.joinpath(label_dir)
         if sub_dir is not None:
