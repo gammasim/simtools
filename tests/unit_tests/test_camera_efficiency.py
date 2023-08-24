@@ -35,21 +35,20 @@ def results_file(db, io_handler):
         db_name="test-data",
         dest=io_handler.get_output_directory(
             label="validate_camera_efficiency",
-            dir_type="camera-efficiency",
-            test=True,
+            sub_dir="camera-efficiency",
+            dir_type="test",
         ),
         file_name=test_file_name,
     )
 
     return io_handler.get_output_directory(
         label="validate_camera_efficiency",
-        dir_type="camera-efficiency",
-        test=True,
+        sub_dir="camera-efficiency",
+        dir_type="test",
     ).joinpath("camera-efficiency-North-LST-1-za20.0_validate_camera_efficiency.ecsv")
 
 
 def test_from_kwargs(telescope_model_lst, simtel_path):
-
     tel_model = telescope_model_lst
     label = "test-from-kwargs"
     zenith_angle = 30 * u.deg
@@ -64,7 +63,6 @@ def test_from_kwargs(telescope_model_lst, simtel_path):
 
 
 def test_validate_telescope_model(simtel_path):
-
     with pytest.raises(ValueError):
         CameraEfficiency(telescope_model="bla_bla", simtel_source_path=simtel_path)
 

@@ -665,7 +665,9 @@ class LayoutArray:
 
         """
 
-        _output_directory = self.io_handler.get_output_directory(self.label, "layout")
+        _output_directory = self.io_handler.get_output_directory(
+            label=self.label, sub_dir="layout", dir_type="simtools-result"
+        )
 
         _name = crs_name if self.name is None else self.name + "-" + crs_name
         self.telescope_list_file = _output_directory.joinpath(

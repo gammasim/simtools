@@ -87,7 +87,7 @@ def main():
 
     # Output directory to save files related directly to this app
     _io_handler = io_handler.IOHandler()
-    output_dir = _io_handler.get_output_directory(label, dir_type="application-plots")
+    output_dir = _io_handler.get_output_directory(label, sub_dir="application-plots")
 
     tel_model = TelescopeModel(
         site=args_dict["site"],

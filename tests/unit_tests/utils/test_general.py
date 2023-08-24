@@ -24,7 +24,9 @@ logging.getLogger().setLevel(logging.DEBUG)
 def test_collect_dict_data(args_dict, io_handler):
     in_dict = {"k1": 2, "k2": "bla"}
     dict_for_yaml = {"k3": {"kk3": 4, "kk4": 3.0}, "k4": ["bla", 2]}
-    test_yaml_file = io_handler.get_output_file(file_name="test_collect_dict_data.yml", test=True)
+    test_yaml_file = io_handler.get_output_file(
+        file_name="test_collect_dict_data.yml", dir_type="test"
+    )
     if not Path(test_yaml_file).exists():
         with open(test_yaml_file, "w") as output:
             yaml.dump(dict_for_yaml, output, sort_keys=False)

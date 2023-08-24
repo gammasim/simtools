@@ -388,12 +388,12 @@ def test_from_corsika_file_to_dict(
     test_file_name = "corsika_parameters_2.yml"
     db.export_file_db(
         db_name="test-data",
-        dest=io_handler.get_output_directory(dir_type="parameters", test=True),
+        dest=io_handler.get_output_directory(sub_dir="parameters", dir_type="test"),
         file_name=test_file_name,
     )
 
     corsika_config_file = gen.find_file(
-        test_file_name, io_handler.get_output_directory(dir_type="parameters", test=True)
+        test_file_name, io_handler.get_output_directory(sub_dir="parameters", dir_type="test")
     )
     corsika_dict = layout_array_north_instance._from_corsika_file_to_dict(
         file_name=corsika_config_file
