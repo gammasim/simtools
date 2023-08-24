@@ -23,9 +23,9 @@ def test_get_output_directory(args_dict, io_handler):
         f"{args_dict['output_path']}/output/simtools-output/test-io-handler/model"
     )
 
-    # label and subdirectory (no testing); simtools-results should have no effect
+    # label and subdirectory (no testing); simtools-result should have no effect
     assert io_handler.get_output_directory(
-        label="test-io-handler", sub_dir="model", dir_type="simtools-results"
+        label="test-io-handler", sub_dir="model", dir_type="simtools-result"
     ) == Path(f"{args_dict['output_path']}/output/simtools-output/test-io-handler/model")
 
     # label and subdirectory (testing)
@@ -48,19 +48,19 @@ def test_get_output_directory_plain_output_path(args_dict, io_handler):
         f"{args_dict['output_path']}/output"
     )
 
-    # plain path, label has no effect, with sub directory as dir_type != 'simtools-results
+    # plain path, label has no effect, with sub directory as dir_type != 'simtools-result'
     # (no testing)
     assert io_handler.get_output_directory(label="test-io-handler", sub_dir="model") == Path(
         f"{args_dict['output_path']}/output/model"
     )
 
-    # plain path, label has no effect, with sub directory as dir_type != 'simtools-results
+    # plain path, label has no effect, with sub directory as dir_type != 'simtools-result'
     # (testing)
     assert io_handler.get_output_directory(
         label="test-io-handler", sub_dir="model", dir_type="test"
     ) == Path(f"{args_dict['output_path']}/output/model")
 
-    # plain path, label has no effect, without sub directory as dir_type == 'simtools-results
+    # plain path, label has no effect, without sub directory as dir_type == 'simtools-result'
     # (no testing)
     assert io_handler.get_output_directory(
         label="test-io-handler", sub_dir="model", dir_type="simtools-result"
