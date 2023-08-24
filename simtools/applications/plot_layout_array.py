@@ -162,7 +162,7 @@ def main():
                 telescopes_dict, rotate_angle=one_angle, show_tel_label=args_dict["show_tel_label"]
             )
             output_dir = io_handler_instance.get_output_directory(
-                label, dir_type="application-plots"
+                label, sub_dir="application-plots"
             )
             plot_file = output_dir.joinpath(plot_file_name)
 

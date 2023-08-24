@@ -173,12 +173,12 @@ def test_config_data_from_yaml_file(db, io_handler, db_config):
     test_file_name = "corsikaConfigTest.yml"
     db.export_file_db(
         db_name="test-data",
-        dest=io_handler.get_output_directory(dir_type="model", test=True),
+        dest=io_handler.get_output_directory(sub_dir="model", dir_type="test"),
         file_name=test_file_name,
     )
 
     corsika_config_file = gen.find_file(
-        test_file_name, io_handler.get_output_directory(dir_type="model", test=True)
+        test_file_name, io_handler.get_output_directory(sub_dir="model", dir_type="test")
     )
     cc = CorsikaConfig(
         mongo_db_config=db_config,

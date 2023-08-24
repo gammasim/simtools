@@ -134,7 +134,7 @@ def main():
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
     _io_handler = io_handler.IOHandler()
-    output_dir = _io_handler.get_output_directory(label, dir_type="application-plots")
+    output_dir = _io_handler.get_output_directory(label, sub_dir="application-plots")
 
     tel_model = TelescopeModel(
         site=args_dict["site"],
