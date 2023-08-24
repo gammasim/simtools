@@ -6,11 +6,11 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>model.telescope_model &#8212; simtools v0.1.dev1+g0354008 Manual</title>
+    <title>model.telescope_model &#8212; simtools v0.1.dev1+gc80dfa8 Manual</title>
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
     <link rel="stylesheet" type="text/css" href="../../_static/bizstyle.css?v=532c1bf3" />
     
-    <script src="../../_static/documentation_options.js?v=b71265d8"></script>
+    <script src="../../_static/documentation_options.js?v=bd92c86a"></script>
     <script src="../../_static/doctools.js?v=888ff710"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/bizstyle.js"></script>
@@ -30,7 +30,7 @@
         <li class="right" >
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../index.html">simtools v0.1.dev1+g0354008 Manual</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">simtools v0.1.dev1+gc80dfa8 Manual</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">model.telescope_model</a></li> 
       </ul>
@@ -283,7 +283,9 @@
     <span class="k">def</span> <span class="nf">_set_config_file_directory_and_name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Define the variable _config_file_directory and create directories, if needed.&quot;&quot;&quot;</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">_config_file_directory</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">io_handler</span><span class="o">.</span><span class="n">get_output_directory</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">,</span> <span class="s2">&quot;model&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_config_file_directory</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">io_handler</span><span class="o">.</span><span class="n">get_output_directory</span><span class="p">(</span>
+            <span class="n">label</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">,</span> <span class="n">sub_dir</span><span class="o">=</span><span class="s2">&quot;model&quot;</span>
+        <span class="p">)</span>
 
         <span class="c1"># Setting file name and the location</span>
         <span class="n">config_file_name</span> <span class="o">=</span> <span class="n">names</span><span class="o">.</span><span class="n">simtel_telescope_config_file_name</span><span class="p">(</span>
@@ -627,7 +629,7 @@
             <span class="k">if</span> <span class="n">par_now</span><span class="p">[</span><span class="s2">&quot;File&quot;</span><span class="p">]:</span>
                 <span class="n">db</span><span class="o">.</span><span class="n">export_file_db</span><span class="p">(</span>
                     <span class="n">db_name</span><span class="o">=</span><span class="n">db</span><span class="o">.</span><span class="n">DB_DERIVED_VALUES</span><span class="p">,</span>
-                    <span class="n">dest</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">io_handler</span><span class="o">.</span><span class="n">get_output_directory</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">,</span> <span class="s2">&quot;derived&quot;</span><span class="p">),</span>
+                    <span class="n">dest</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">io_handler</span><span class="o">.</span><span class="n">get_output_directory</span><span class="p">(</span><span class="n">label</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">,</span> <span class="n">sub_dir</span><span class="o">=</span><span class="s2">&quot;derived&quot;</span><span class="p">),</span>
                     <span class="n">file_name</span><span class="o">=</span><span class="n">par_now</span><span class="p">[</span><span class="s2">&quot;Value&quot;</span><span class="p">],</span>
                 <span class="p">)</span></div>
 
@@ -1036,7 +1038,7 @@
         <li class="right" >
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../index.html">simtools v0.1.dev1+g0354008 Manual</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">simtools v0.1.dev1+gc80dfa8 Manual</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">model.telescope_model</a></li> 
       </ul>

@@ -6,11 +6,11 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>corsika.corsika_config &#8212; simtools v0.1.dev1+g0354008 Manual</title>
+    <title>corsika.corsika_config &#8212; simtools v0.1.dev1+gc80dfa8 Manual</title>
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
     <link rel="stylesheet" type="text/css" href="../../_static/bizstyle.css?v=532c1bf3" />
     
-    <script src="../../_static/documentation_options.js?v=b71265d8"></script>
+    <script src="../../_static/documentation_options.js?v=bd92c86a"></script>
     <script src="../../_static/doctools.js?v=888ff710"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/bizstyle.js"></script>
@@ -30,7 +30,7 @@
         <li class="right" >
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../index.html">simtools v0.1.dev1+g0354008 Manual</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">simtools v0.1.dev1+gc80dfa8 Manual</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">corsika.corsika_config</a></li> 
       </ul>
@@ -421,8 +421,8 @@
 <span class="sd">            the output directly to sim_telarray or not.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="n">dir_type</span> <span class="o">=</span> <span class="s2">&quot;corsika_simtel&quot;</span> <span class="k">if</span> <span class="n">use_multipipe</span> <span class="k">else</span> <span class="s2">&quot;corsika&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_set_output_file_and_directory</span><span class="p">(</span><span class="n">dir_type</span><span class="p">)</span>
+        <span class="n">sub_dir</span> <span class="o">=</span> <span class="s2">&quot;corsika_simtel&quot;</span> <span class="k">if</span> <span class="n">use_multipipe</span> <span class="k">else</span> <span class="s2">&quot;corsika&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_set_output_file_and_directory</span><span class="p">(</span><span class="n">sub_dir</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Exporting CORSIKA input file to </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_file_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
         <span class="k">def</span> <span class="nf">_get_text_single_line</span><span class="p">(</span><span class="n">pars</span><span class="p">):</span>
@@ -569,9 +569,9 @@
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The requested file type (</span><span class="si">{</span><span class="n">file_type</span><span class="si">}</span><span class="s2">) is unknown&quot;</span><span class="p">)</span></div>
 
 
-    <span class="k">def</span> <span class="nf">_set_output_file_and_directory</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dir_type</span><span class="o">=</span><span class="s2">&quot;corsika&quot;</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_set_output_file_and_directory</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sub_dir</span><span class="o">=</span><span class="s2">&quot;corsika&quot;</span><span class="p">):</span>
         <span class="n">config_file_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_file_name</span><span class="p">(</span><span class="n">file_type</span><span class="o">=</span><span class="s2">&quot;config&quot;</span><span class="p">)</span>
-        <span class="n">file_directory</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">io_handler</span><span class="o">.</span><span class="n">get_output_directory</span><span class="p">(</span><span class="n">label</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">,</span> <span class="n">dir_type</span><span class="o">=</span><span class="n">dir_type</span><span class="p">)</span>
+        <span class="n">file_directory</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">io_handler</span><span class="o">.</span><span class="n">get_output_directory</span><span class="p">(</span><span class="n">label</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">,</span> <span class="n">sub_dir</span><span class="o">=</span><span class="n">sub_dir</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Creating directory </span><span class="si">{</span><span class="n">file_directory</span><span class="si">}</span><span class="s2">, if needed.&quot;</span><span class="p">)</span>
         <span class="n">file_directory</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_config_file_path</span> <span class="o">=</span> <span class="n">file_directory</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="n">config_file_name</span><span class="p">)</span>
@@ -653,7 +653,7 @@
         <li class="right" >
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../index.html">simtools v0.1.dev1+g0354008 Manual</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">simtools v0.1.dev1+gc80dfa8 Manual</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">corsika.corsika_config</a></li> 
       </ul>
