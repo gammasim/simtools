@@ -33,6 +33,8 @@ def test_get_output_directory(args_dict, io_handler):
         label="test-io-handler", sub_dir="model", dir_type="test"
     ) == Path(f"{args_dict['output_path']}/output/test-output/test-io-handler/model")
 
+
+def test_get_output_directory_plain_output_path(args_dict, io_handler):
     # all following tests: plain_path tests
     io_handler.use_plain_output_path = True
 
