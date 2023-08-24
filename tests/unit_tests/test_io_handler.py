@@ -3,6 +3,8 @@
 import logging
 from pathlib import Path
 
+import pytest
+
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
@@ -32,6 +34,9 @@ def test_get_output_directory(args_dict, io_handler):
     assert io_handler.get_output_directory(
         label="test-io-handler", sub_dir="model", dir_type="test"
     ) == Path(f"{args_dict['output_path']}/output/test-output/test-io-handler/model")
+
+    with pytest.raises(TypeError):
+        io_handler.get_output_directory(label="test-io-handler", sub_dir="model", dir_type=None)
 
 
 def test_get_output_directory_plain_output_path(args_dict, io_handler):
