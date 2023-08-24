@@ -34,7 +34,6 @@ def db_cleanup_file_sandbox(db_no_config_file, random_id):
 
 
 def test_reading_db_lst(db):
-
     logger.info("----Testing reading LST-----")
     assert 1 == 1
     pars = db.get_model_parameters("north", "lst-1", "Current")
@@ -47,7 +46,6 @@ def test_reading_db_lst(db):
 
 
 def test_reading_db_mst_nc(db):
-
     logger.info("----Testing reading MST-NectarCam-----")
     pars = db.get_model_parameters("north", "mst-NectarCam-D", "Current")
     if db.mongo_db_config:
@@ -57,7 +55,6 @@ def test_reading_db_mst_nc(db):
 
 
 def test_reading_db_mst_fc(db):
-
     logger.info("----Testing reading MST-FlashCam-----")
     pars = db.get_model_parameters("north", "mst-FlashCam-D", "Current")
     if db.mongo_db_config:
@@ -67,7 +64,6 @@ def test_reading_db_mst_fc(db):
 
 
 def test_reading_db_sst(db):
-
     logger.info("----Testing reading SST-----")
     pars = db.get_model_parameters("south", "sst-D", "Current")
     if db.mongo_db_config:
@@ -77,14 +73,12 @@ def test_reading_db_sst(db):
 
 
 def test_get_reference_data(db):
-
     logger.info("----Testing reading reference data-----")
     pars = db.get_reference_data("south", "Prod5")
     assert pars["nsb_reference_value"]["Value"] == pytest.approx(0.24)
 
 
 def test_get_derived_values(db):
-
     logger.info("----Testing reading derived values-----")
     pars = db.get_derived_values("north", "lst-1", "Prod5")
     assert (
@@ -93,7 +87,6 @@ def test_get_derived_values(db):
 
 
 def test_copy_telescope_db(db, random_id, db_cleanup, io_handler):
-
     logger.info("----Testing copying a whole telescope-----")
     db.copy_telescope(
         db_name=db.DB_CTA_SIMULATION_MODEL,
@@ -115,7 +108,7 @@ def test_copy_telescope_db(db, random_id, db_cleanup, io_handler):
         db_name=f"sandbox_{random_id}",
         telescope_model_name_db="North-LST-Test",
         model_version="Current",
-        run_location=io_handler.get_output_directory(dir_type="model", test=True),
+        run_location=io_handler.get_output_directory(sub_dir="model", dir_type="test"),
         collection_name="telescopes_" + random_id,
         write_files=False,
     )
@@ -134,14 +127,13 @@ def test_copy_telescope_db(db, random_id, db_cleanup, io_handler):
             db_name=f"sandbox_{random_id}",
             telescope_model_name_db="North-LST-Test",
             model_version="Current",
-            run_location=io_handler.get_output_directory(dir_type="model", test=True),
+            run_location=io_handler.get_output_directory(sub_dir="model", dir_type="test"),
             collection_name="telescopes_" + random_id,
             write_files=False,
         )
 
 
 def test_adding_parameter_version_db(db, random_id, db_cleanup, io_handler):
-
     logger.info("----Testing adding a new version of a parameter-----")
     db.copy_telescope(
         db_name=db.DB_CTA_SIMULATION_MODEL,
@@ -164,7 +156,7 @@ def test_adding_parameter_version_db(db, random_id, db_cleanup, io_handler):
         db_name=f"sandbox_{random_id}",
         telescope_model_name_db="North-LST-Test",
         model_version="test",
-        run_location=io_handler.get_output_directory(dir_type="model", test=True),
+        run_location=io_handler.get_output_directory(sub_dir="model", dir_type="test"),
         collection_name="telescopes_" + random_id,
         write_files=False,
     )
@@ -172,7 +164,6 @@ def test_adding_parameter_version_db(db, random_id, db_cleanup, io_handler):
 
 
 def test_update_parameter_db(db, random_id, db_cleanup, io_handler):
-
     logger.info("----Testing updating a parameter-----")
     db.copy_telescope(
         db_name=db.DB_CTA_SIMULATION_MODEL,
@@ -203,7 +194,7 @@ def test_update_parameter_db(db, random_id, db_cleanup, io_handler):
         db_name=f"sandbox_{random_id}",
         telescope_model_name_db="North-LST-Test",
         model_version="test",
-        run_location=io_handler.get_output_directory(dir_type="model", test=True),
+        run_location=io_handler.get_output_directory(sub_dir="model", dir_type="test"),
         collection_name="telescopes_" + random_id,
         write_files=False,
     )
@@ -211,7 +202,6 @@ def test_update_parameter_db(db, random_id, db_cleanup, io_handler):
 
 
 def test_adding_new_parameter_db(db, random_id, db_cleanup, io_handler):
-
     logger.info("----Testing adding a new parameter-----")
     db.copy_telescope(
         db_name=db.DB_CTA_SIMULATION_MODEL,
@@ -234,7 +224,7 @@ def test_adding_new_parameter_db(db, random_id, db_cleanup, io_handler):
         db_name=f"sandbox_{random_id}",
         telescope_model_name_db="North-LST-Test",
         model_version="test",
-        run_location=io_handler.get_output_directory(dir_type="model", test=True),
+        run_location=io_handler.get_output_directory(sub_dir="model", dir_type="test"),
         collection_name="telescopes_" + random_id,
         write_files=False,
     )
@@ -242,7 +232,6 @@ def test_adding_new_parameter_db(db, random_id, db_cleanup, io_handler):
 
 
 def test_update_parameter_field_db(db, random_id, db_cleanup, io_handler):
-
     logger.info("----Testing modifying a field of a parameter-----")
     db.copy_telescope(
         db_name=db.DB_CTA_SIMULATION_MODEL,
@@ -273,7 +262,7 @@ def test_update_parameter_field_db(db, random_id, db_cleanup, io_handler):
         db_name=f"sandbox_{random_id}",
         telescope_model_name_db="North-LST-Test",
         model_version="Current",
-        run_location=io_handler.get_output_directory(dir_type="model", test=True),
+        run_location=io_handler.get_output_directory(sub_dir="model", dir_type="test"),
         collection_name="telescopes_" + random_id,
         write_files=False,
     )
@@ -281,7 +270,6 @@ def test_update_parameter_field_db(db, random_id, db_cleanup, io_handler):
 
 
 def test_reading_db_sites(db):
-
     logger.info("----Testing reading La Palma parameters-----")
     pars = db.get_site_parameters("North", "Current")
     if db.mongo_db_config:
@@ -298,7 +286,6 @@ def test_reading_db_sites(db):
 
 
 def test_separating_get_and_write(db, io_handler):
-
     logger.info("----Testing getting parameters and exporting model files-----")
     pars = db.get_model_parameters("north", "lst-1", "Current")
 
@@ -308,19 +295,19 @@ def test_separating_get_and_write(db, io_handler):
             file_list.append(par_now["Value"])
     db.export_model_files(
         pars,
-        io_handler.get_output_directory(dir_type="model", test=True),
+        io_handler.get_output_directory(sub_dir="model", dir_type="test"),
     )
     logger.debug(
         "Checking files were written to "
-        f"{io_handler.get_output_directory(dir_type='model', test=True)}"
+        f"{io_handler.get_output_directory(sub_dir='model', dir_type='test')}"
     )
     for file_now in file_list:
-        assert io_handler.get_output_file(file_now, dir_type="model", test=True).exists()
+        assert io_handler.get_output_file(file_now, sub_dir="model", dir_type="test").exists()
 
 
 def test_export_file_db(db, io_handler):
     logger.info("----Testing exporting files from the DB-----")
-    output_dir = io_handler.get_output_directory(dir_type="model", test=True)
+    output_dir = io_handler.get_output_directory(sub_dir="model", dir_type="test")
     file_name = "mirror_CTA-S-LST_v2020-04-07.dat"
     file_to_export = output_dir / file_name
     db.export_file_db(db.DB_CTA_SIMULATION_MODEL, output_dir, file_name)
@@ -328,14 +315,14 @@ def test_export_file_db(db, io_handler):
 
 
 def test_insert_files_db(db, io_handler, db_cleanup_file_sandbox, random_id, caplog):
-
     logger.info("----Testing inserting files to the DB-----")
     logger.info(
         "Creating a temporary file in "
-        f"{io_handler.get_output_directory(dir_type='model', test=True)}"
+        f"{io_handler.get_output_directory(sub_dir='model', dir_type='test')}"
     )
     file_name = (
-        io_handler.get_output_directory(dir_type="model", test=True) / f"test_file_{random_id}.dat"
+        io_handler.get_output_directory(sub_dir="model", dir_type="test")
+        / f"test_file_{random_id}.dat"
     )
     with open(file_name, "w") as f:
         f.write("# This is a test file")
@@ -354,7 +341,6 @@ def test_insert_files_db(db, io_handler, db_cleanup_file_sandbox, random_id, cap
 
 
 def test_get_all_versions(db):
-
     all_versions = db.get_all_versions(
         db_name=db.DB_CTA_SIMULATION_MODEL,
         telescope_model_name="LST-1",
@@ -382,7 +368,6 @@ def test_get_all_versions(db):
 
 
 def test_get_descriptions(db):
-
     descriptions = db.get_descriptions()
 
     assert (

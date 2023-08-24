@@ -80,7 +80,9 @@ class RayTracing:
 
         self.label = label if label is not None else self._telescope_model.label
 
-        self._output_directory = self._io_handler.get_output_directory(self.label, "ray-tracing")
+        self._output_directory = self._io_handler.get_output_directory(
+            label=self.label, sub_dir="ray-tracing"
+        )
 
         # Loading relevant attributes in case of single mirror mode.
         if self.config.single_mirror_mode:

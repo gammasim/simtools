@@ -27,11 +27,12 @@ def test_plot_1D(db, io_handler):
     test_file_name = "ref_200_1100_190211a.dat"
     db.export_file_db(
         db_name=db.DB_CTA_SIMULATION_MODEL,
-        dest=io_handler.get_output_directory(dir_type="model", test=True),
+        dest=io_handler.get_output_directory(sub_dir="model", dir_type="test"),
         file_name=test_file_name,
     )
     test_data_file = gen.find_file(
-        test_file_name, io_handler.get_output_directory(dir_type="model", test=True)
+        test_file_name,
+        io_handler.get_output_directory(sub_dir="model", dir_type="test"),
     )
     data_in = np.loadtxt(test_data_file, usecols=(0, 1), dtype=headers_type)
 
@@ -48,7 +49,9 @@ def test_plot_1D(db, io_handler):
 
     plt = visualize.plot_1D(data, title=title, palette="autumn")
 
-    plot_file = io_handler.get_output_file(file_name="plot_1D.pdf", dir_type="plots", test=True)
+    plot_file = io_handler.get_output_file(
+        file_name="plot_1D.pdf", sub_dir="plots", dir_type="test"
+    )
     if plot_file.exists():
         plot_file.unlink()
     plt.savefig(plot_file)
@@ -66,17 +69,20 @@ def test_plot_table(db, io_handler):
     test_file_name = "Transmission_Spectrum_PlexiGlass.dat"
     db.export_file_db(
         db_name="test-data",
-        dest=io_handler.get_output_directory(dir_type="model", test=True),
+        dest=io_handler.get_output_directory(sub_dir="model", dir_type="test"),
         file_name=test_file_name,
     )
     table_file = gen.find_file(
-        test_file_name, io_handler.get_output_directory(dir_type="model", test=True)
+        test_file_name,
+        io_handler.get_output_directory(sub_dir="model", dir_type="test"),
     )
     table = astropy.io.ascii.read(table_file)
 
     plt = visualize.plot_table(table, y_title="Transmission", title=title, no_markers=True)
 
-    plot_file = io_handler.get_output_file(file_name="plot_table.pdf", dir_type="plots", test=True)
+    plot_file = io_handler.get_output_file(
+        file_name="plot_table.pdf", sub_dir="plots", dir_type="test"
+    )
     if plot_file.exists():
         plot_file.unlink()
     plt.savefig(plot_file)

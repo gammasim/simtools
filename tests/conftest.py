@@ -34,7 +34,6 @@ def tmp_test_directory(tmpdir_factory):
 
 @pytest.fixture
 def io_handler(tmp_test_directory):
-
     tmp_io_handler = simtools.io_handler.IOHandler()
     tmp_io_handler.set_paths(
         output_path=str(tmp_test_directory) + "/output",
@@ -82,7 +81,6 @@ def simtel_path_no_mock():
 
 @pytest.fixture
 def args_dict(tmp_test_directory, simtel_path):
-
     return Configurator().default_config(
         (
             "--output_path",
@@ -97,7 +95,6 @@ def args_dict(tmp_test_directory, simtel_path):
 
 @pytest.fixture
 def args_dict_site(tmp_test_directory, simtel_path):
-
     return Configurator().default_config(
         (
             "--output_path",
@@ -118,7 +115,6 @@ def args_dict_site(tmp_test_directory, simtel_path):
 
 @pytest.fixture
 def configurator(tmp_test_directory, simtel_path):
-
     config = Configurator()
     config.default_config(
         ("--output_path", str(tmp_test_directory), "--simtel_path", str(simtel_path))
@@ -247,8 +243,9 @@ def corsika_output_file_name():
 
 @pytest.fixture
 def corsika_histograms_instance(io_handler, corsika_output_file_name):
-    return CorsikaHistograms(corsika_output_file_name,
-                             output_path=io_handler.get_output_directory(test=True))
+    return CorsikaHistograms(
+        corsika_output_file_name, output_path=io_handler.get_output_directory(dir_type="test")
+    )
 
 
 @pytest.fixture
