@@ -383,7 +383,7 @@ def main():
         if isinstance(rnda_start, str):
             rnda_start = float(rnda_start.split()[0])
 
-    logger.info(f"Start value for mirror_reflection_random_angle: {rnda_start}")
+    logger.info(f"Start value for mirror_reflection_random_angle: {rnda_start} deg")
 
     results_rnda = []
     results_mean = []

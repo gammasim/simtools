@@ -26,7 +26,7 @@ def test_histograms(io_handler):
     hists = SimtelHistograms(histogram_files=histogram_files, test=True)
 
     fig_name = io_handler.get_output_file(
-        file_name="simtel_histograms.pdf", dir_type="plots", test=True
+        file_name="simtel_histograms.pdf", sub_dir="plots", dir_type="test"
     )
     hists.plot_and_save_figures(fig_name=fig_name)
 
