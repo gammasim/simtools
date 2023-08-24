@@ -74,7 +74,8 @@ class IOHandler(metaclass=IOHandlerSingleton):
             The type of directory (e.g., 'simtools', 'test', 'simtools-result').
             If 'simtools-result' is used, the output directory will be returned
             without appending a subdirectory string when using the
-            use_plain_output_path option.
+            use_plain_output_path option. For the cause of not using use_plain_output_path,
+            output paths appended by 'simtools-output'.
 
         Returns
         -------
