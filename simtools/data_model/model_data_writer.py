@@ -29,7 +29,7 @@ class ModelDataWriter:
         self.io_handler = io_handler.IOHandler()
         try:
             self.product_data_file = self.io_handler.get_output_file(
-                file_name=product_data_file, dir_type="simtools_result"
+                file_name=product_data_file, dir_type="simtools-result"
             )
         except TypeError:
             self.product_data_file = None

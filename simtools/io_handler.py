@@ -70,9 +70,10 @@ class IOHandler(metaclass=IOHandlerSingleton):
         sub_dir: str
             Name of the subdirectory (ray-tracing, model etc)
         dir_type: str
-            Directory type (e.g., 'simtools', 'test', 'simtools-result')
-            Using 'simtools-result' will return the output directory without
-            subdirectory string added for the use_plain_output_path option.
+            The type of directory (e.g., 'simtools', 'test', 'simtools-result').
+            If 'simtools-result' is used, the output directory will be returned
+            without appending a subdirectory string when using the
+            use_plain_output_path option.
 
         Returns
         -------
@@ -122,6 +123,9 @@ class IOHandler(metaclass=IOHandlerSingleton):
             Name of the subdirectory (ray-tracing, model etc)
         dir_type: str
             Directory type (e.g., 'simtools', 'test', 'simtools-result')
+            If 'simtools-result' is used, the output directory will be returned
+            without appending a subdirectory string when using the
+            use_plain_output_path option.
 
         Returns
         -------
