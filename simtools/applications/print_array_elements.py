@@ -2,8 +2,8 @@
 """
     Summary
     -------
-    Convert and print a list of array element positions in different CTAO coordinate \
-    systems.
+    Convert and print a list of array element positions in different coordinate \
+    systems relevant for CTAO.
 
     Description
     -----------
@@ -22,12 +22,14 @@
     array_element_list (str)
         File name with list of array element positions (ecsv format)
     compact (str)
-        Compact output (in requested coordinate system; possible are corsika,utm,mercator)
+        Compact output in requested coordinate system; possible are corsika,utm,mercator
     export (str)
-        Export array element list to file (in requested coordinate system; \
-            possible are corsika,utm,mercator)
+        Export array element list to file in requested coordinate system; \
+            possible are corsika,utm,mercator
     use_corsika_telescope_height (bool)
-        Use CORSIKA coordinates for telescope heights (requires CORSIKA observeration level)
+        Use CORSIKA coordinates for telescope heights (requires CORSIKA observation level)
+    select_assets (str)
+        Select a subset of array elements / telescopes (e.g., MSTN, LSTN)
 
 
     Example
@@ -36,29 +38,29 @@
 
     .. code-block:: console
 
-        simtools-print-array-elements \
-            --array_element_list tests/resources/telescope_positions-South-4MST.ecsv \
+        simtools-print-array-elements \\
+            --array_element_list tests/resources/telescope_positions-South-4MST.ecsv \\
             --compact corsika
 
     Expected final print-out message:
 
     .. code-block:: console
 
-    telescope_name pos_x pos_y altitude
-    MST-01      -0.02      -0.00    2162.00
-    MST-02       1.43     151.02    2163.00
-    MST-03      -1.47    -151.02    2169.00
-    MST-04     150.72      73.57    2159.00
+        telescope_name pos_x pos_y altitude
+        MST-01      -0.02      -0.00    2162.00
+        MST-02       1.43     151.02    2163.00
+        MST-03      -1.47    -151.02    2169.00
+        MST-04     150.72      73.57    2159.00
 
-    The following example converts the list of telescope positions in UTM coordinates \
-    and writes the output to a file in CORSIKA coordinates. Also select only a subset \
+    The following example converts a list of telescope positions in UTM coordinates \
+    and writes the output to a file in CORSIKA coordinates. Also selects only a subset \
     of the array elements (telescopes; ignore calibration devices):
 
     .. code-block:: console
 
-        simtools-print-array-elements \
-            --array_element_list tests/resources/telescope_positions-North-utm.ecsv \
-            --export corsika --use_corsika_telescope_height \
+        simtools-print-array-elements \\
+            --array_element_list tests/resources/telescope_positions-North-utm.ecsv \\
+            --export corsika --use_corsika_telescope_height \\
             --select_assets LSTN, MSTN, SSTN
 
     Expected output is a ecsv file in the directory printed to the screen.

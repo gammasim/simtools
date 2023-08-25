@@ -10,22 +10,27 @@
     Description
     -----------
 
-    The application derives the value of the simulation model parameter \
-    using measurements of the focal length and PSF of individual mirror panels.
+    This application derives the value of the simulation model parameter \
+    *mirror_reflection_random_angle* using measurements of the focal length \
+    and PSF of individual mirror panels.
      
     PSF measurements are provided by one of the following options:
 
-    * mean and sigma value of the measured containment diameter in cm \
-    (``--psf_measurement_containment_mean`` and ``--psf_measurement_containment_sigma``)
-    * file with measured PSF for each mirror panel spot size (``--psf_measurement``)
+    * mean and sigma value obtained from the measurement of containment diameters of a number of \
+     mirror panels in cm (``--psf_measurement_containment_mean`` and \
+     ``--psf_measurement_containment_sigma``)
+    * file (table) with measured PSF for each mirror panel spot size (``--psf_measurement``)
 
-    The assuming containment fraction for the PSF diameter calculation is set through \
-    the argument ``--containment_fraction`` (typically 0.8).
+    The containment fraction used for the PSF diameter calculation is set through \
+    the argument ``--containment_fraction`` (typically 0.8 = 80%).
 
-    Mirror panels are simulated individually, using one of the following options:
+    Mirror panels are simulated individually, using one of the following options to set the \
+    mirror panel focal length:
 
-    * individual mirror focal length (provided through ``--mirror_list``)
-    * random focal lengths (optional; ``--use_random_flen``; value given through ``--random_flen``)
+    * file (table) with measured focal lengths per mirror panel (provided through ``--mirror_list``)
+    * randomly generated focal lengths using an expected spread (value given through \
+     ``--random_flen``) around the mean focal length (provided through the \
+     :ref:`Model Parameters DB`). This option is switched with ``--use_random_flen``.
 
     The tuning algorithm requires a starting value for the random reflection angle. This is either
     taken from the :ref:`Model Parameters DB` (default) or can be set using the argument ``--rnda``.
@@ -76,9 +81,7 @@
         Starting value of mirror_reflection_random_angle [deg]. If not given, the value from the \
         default model is read from the simulation model database.
     mirror_list (file, optional)
-        Mirror list file to replace the default one. It should be used if measured mirror focal \
-        lengths need to be taken into account. It contains the following information about the \
-        mirrors: ID, panel radius, optical PSF (d80), PSF (d80) and surface reflectivity.
+        Table with mirror ID and panel radius.
     use_random_flen (activation mode, optional)
         Use random focal lengths, instead of the measured ones. The argument random_flen can be \
         used to replace the default random_focal_length from the model.
@@ -97,15 +100,6 @@
     Derive mirror random reflection angle for a mid-sized telescope (MST),
     simulation production Prod5.
 
-    Step 1. Get mirror list and PSF data from DB:
-
-    .. code-block:: console
-
-        simtools-get-file-from-db \\
-            --file_name MLTdata-preproduction.ecsv
-
-    Step 2. Run the application. Runtime about 4 min.
-
     .. code-block:: console
 
         simtools-derive-mirror-rnda \\
@@ -117,8 +111,10 @@
             --rnda 0.0063 \\
             --test
 
+    Runtime about 4 min.
+
     The output is saved in `simtools-output/derive_mirror_rnda`.
-    Use the parameter `--output_path` to change the output directory.
+    Use the parameter ``--output_path`` to change the output directory.
 
     Expected final print-out message:
 
