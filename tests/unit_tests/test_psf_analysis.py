@@ -11,7 +11,6 @@ logger.setLevel(logging.DEBUG)
 
 
 def test_reading_simtel_file(args_dict, io_handler):
-
     test_file = io_handler.get_input_data_file(
         file_name="photons-LST-d12.0-za20.0-off0.000_lst_integral.lis",
         test=True,

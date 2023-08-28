@@ -13,7 +13,6 @@ logger.setLevel(logging.DEBUG)
 
 
 def test_site():
-
     assert parser.CommandLineParser.site("North") == "North"
     assert parser.CommandLineParser.site("South") == "South"
 
@@ -22,7 +21,6 @@ def test_site():
 
 
 def test_telescope():
-
     assert parser.CommandLineParser.telescope("LST-1") == "LST-1"
     assert parser.CommandLineParser.telescope("MST-FlashCam") == "MST-FlashCam"
 
@@ -31,7 +29,6 @@ def test_telescope():
 
 
 def test_efficiency_interval():
-
     assert parser.CommandLineParser.efficiency_interval(0.5) == pytest.approx(0.5)
     assert parser.CommandLineParser.efficiency_interval(0.0) == pytest.approx(0.0)
     assert parser.CommandLineParser.efficiency_interval(1.0) == pytest.approx(1.0)
@@ -47,7 +44,6 @@ def test_efficiency_interval():
 
 
 def test_zenith_angle(caplog):
-
     assert parser.CommandLineParser.zenith_angle(0).value == pytest.approx(0.0)
     assert parser.CommandLineParser.zenith_angle(45).value == pytest.approx(45.0)
     assert parser.CommandLineParser.zenith_angle(90).value == pytest.approx(90.0)
@@ -69,7 +65,6 @@ def test_zenith_angle(caplog):
 
 
 def test_azimuth_angle(caplog):
-
     assert parser.CommandLineParser.azimuth_angle(0).value == pytest.approx(0.0)
     assert parser.CommandLineParser.azimuth_angle(45).value == pytest.approx(45.0)
     assert parser.CommandLineParser.azimuth_angle(90).value == pytest.approx(90.0)
