@@ -783,51 +783,10 @@ def test_dict_1D_distributions(corsika_histograms_instance_set_histograms):
     )
 
 
-def test_export_1D_histograms(corsika_histograms_instance_set_histograms, io_handler):
-    corsika_histograms_instance_set_histograms._export_1D_histograms()
-
-    for file_name in [
-        "hist_1D_photon_wavelength_distr_all_tels.hdf5",
-        "hist_1D_photon_radial_distr_all_tels.hdf5",
-        "hist_1D_photon_density_distr_all_tels.hdf5",
-        "hist_1D_photon_time_distr_all_tels.hdf5",
-        "hist_1D_photon_time_distr_all_tels.hdf5",
-        "hist_1D_photon_per_event_distr_all_tels.hdf5",
-        "hist_1D_photon_per_telescope_distr_all_tels.hdf5",
-    ]:
-        assert io_handler.get_output_directory(dir_type="test").joinpath(file_name).exists()
-
-
-def test_export_2D_histograms(corsika_histograms_instance_set_histograms, io_handler):
-    corsika_histograms_instance_set_histograms._export_2D_histograms()
-
-    for file_name in [
-        "hist_2D_photon_direction_distr_all_tels.hdf5",
-        "hist_2D_photon_time_altitude_distr_all_tels.hdf5",
-        "hist_2D_photon_telescope_event_distr_all_tels.hdf5",
-        "hist_2D_photon_count_distr_all_tels.hdf5",
-        "hist_2D_photon_density_distr_all_tels.hdf5",
-    ]:
-        assert io_handler.get_output_directory(dir_type="test").joinpath(file_name).exists()
-
-
 def test_export_histograms(corsika_histograms_instance_set_histograms, io_handler):
     corsika_histograms_instance_set_histograms.export_histograms()
 
-    for file_name in [
-        "hist_1D_photon_wavelength_distr_all_tels.hdf5",
-        "hist_1D_photon_radial_distr_all_tels.hdf5",
-        "hist_1D_photon_density_distr_all_tels.hdf5",
-        "hist_1D_photon_time_distr_all_tels.hdf5",
-        "hist_1D_photon_time_distr_all_tels.hdf5",
-        "hist_1D_photon_per_event_distr_all_tels.hdf5",
-        "hist_1D_photon_per_telescope_distr_all_tels.hdf5",
-        "hist_2D_photon_direction_distr_all_tels.hdf5",
-        "hist_2D_photon_time_altitude_distr_all_tels.hdf5",
-        "hist_2D_photon_telescope_event_distr_all_tels.hdf5",
-        "hist_2D_photon_count_distr_all_tels.hdf5",
-        "hist_2D_photon_density_distr_all_tels.hdf5",
-    ]:
+    for file_name in ["test_name.hdf5"]:
         assert io_handler.get_output_directory(dir_type="test").joinpath(file_name).exists()
 
 
