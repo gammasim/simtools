@@ -14,7 +14,6 @@ logger.setLevel(logging.DEBUG)
 
 @pytest.fixture
 def ray_tracing_sst(telescope_model_sst, simtel_path):
-
     # telescope_model_sst.export_model_files()
 
     config_data = {
@@ -52,7 +51,6 @@ def simtel_runner_ray_tracing(ray_tracing_sst, telescope_model_sst, simtel_path)
 
 
 def test_load_required_files(simtel_runner_ray_tracing):
-
     simtel_runner_ray_tracing._load_required_files(force_simulate=False)
 
     # This file is not actually needed and does not exist in simtools.
@@ -74,7 +72,6 @@ def test_shall_run(simtel_runner_ray_tracing):
 
 
 def test_make_run_command(simtel_runner_ray_tracing):
-
     command = simtel_runner_ray_tracing._make_run_command()
 
     assert "bin/sim_telarray" in command
