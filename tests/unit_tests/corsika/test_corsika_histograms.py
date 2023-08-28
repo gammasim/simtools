@@ -784,10 +784,18 @@ def test_dict_1D_distributions(corsika_histograms_instance_set_histograms):
 
 
 def test_export_histograms(corsika_histograms_instance_set_histograms, io_handler):
+    # Default values
     corsika_histograms_instance_set_histograms.export_histograms()
 
-    for file_name in ["test_name.hdf5"]:
-        assert io_handler.get_output_directory(dir_type="test").joinpath(file_name).exists()
+    file_name = Path(corsika_histograms_instance_set_histograms.output_path).joinpath(
+        "tel_output_10GeV-2-gamma-20deg-CTAO-South.hdf5"
+    )
+    assert io_handler.get_output_directory(dir_type="test").joinpath(file_name).exists()
+
+    # Change hdf5 file name
+    corsika_histograms_instance_set_histograms.hdf5_file_name = "test.hdf5"
+    corsika_histograms_instance_set_histograms.export_histograms()
+    assert io_handler.get_output_directory(dir_type="test").joinpath("test.hdf5").exists()
 
 
 def test_dict_2D_distributions(corsika_histograms_instance_set_histograms):
