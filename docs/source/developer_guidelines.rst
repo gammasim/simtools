@@ -1,5 +1,12 @@
 .. _Guidelines:
 
+.. todo::
+
+  - add / combine stuff for developers setup (see docker section in Getting Started)
+  - fix links to ctapipe
+  - add pull request guidelines
+  - list purpose of dependencies (or is that somewhere else?)
+
 Developer Guidelines
 ********************
 
