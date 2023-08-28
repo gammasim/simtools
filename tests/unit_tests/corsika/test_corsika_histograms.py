@@ -787,13 +787,13 @@ def test_export_1D_histograms(corsika_histograms_instance_set_histograms, io_han
     corsika_histograms_instance_set_histograms._export_1D_histograms()
 
     for file_name in [
-        "hist_1D_photon_wavelength_distr_all_tels.ecsv",
-        "hist_1D_photon_radial_distr_all_tels.ecsv",
-        "hist_1D_photon_density_distr_all_tels.ecsv",
-        "hist_1D_photon_time_distr_all_tels.ecsv",
-        "hist_1D_photon_time_distr_all_tels.ecsv",
-        "hist_1D_photon_per_event_distr_all_tels.ecsv",
-        "hist_1D_photon_per_telescope_distr_all_tels.ecsv",
+        "hist_1D_photon_wavelength_distr_all_tels.hd5",
+        "hist_1D_photon_radial_distr_all_tels.hd5",
+        "hist_1D_photon_density_distr_all_tels.hd5",
+        "hist_1D_photon_time_distr_all_tels.hd5",
+        "hist_1D_photon_time_distr_all_tels.hd5",
+        "hist_1D_photon_per_event_distr_all_tels.hd5",
+        "hist_1D_photon_per_telescope_distr_all_tels.hd5",
     ]:
         assert io_handler.get_output_directory(dir_type="test").joinpath(file_name).exists()
 
@@ -802,11 +802,11 @@ def test_export_2D_histograms(corsika_histograms_instance_set_histograms, io_han
     corsika_histograms_instance_set_histograms._export_2D_histograms()
 
     for file_name in [
-        "hist_2D_photon_direction_distr_all_tels.ecsv",
-        "hist_2D_photon_time_altitude_distr_all_tels.ecsv",
-        "hist_2D_photon_telescope_event_distr_all_tels.ecsv",
-        "hist_2D_photon_count_distr_all_tels.ecsv",
-        "hist_2D_photon_density_distr_all_tels.ecsv",
+        "hist_2D_photon_direction_distr_all_tels.hd5",
+        "hist_2D_photon_time_altitude_distr_all_tels.hd5",
+        "hist_2D_photon_telescope_event_distr_all_tels.hd5",
+        "hist_2D_photon_count_distr_all_tels.hd5",
+        "hist_2D_photon_density_distr_all_tels.hd5",
     ]:
         assert io_handler.get_output_directory(dir_type="test").joinpath(file_name).exists()
 
@@ -815,18 +815,18 @@ def test_export_histograms(corsika_histograms_instance_set_histograms, io_handle
     corsika_histograms_instance_set_histograms.export_histograms()
 
     for file_name in [
-        "hist_1D_photon_wavelength_distr_all_tels.ecsv",
-        "hist_1D_photon_radial_distr_all_tels.ecsv",
-        "hist_1D_photon_density_distr_all_tels.ecsv",
-        "hist_1D_photon_time_distr_all_tels.ecsv",
-        "hist_1D_photon_time_distr_all_tels.ecsv",
-        "hist_1D_photon_per_event_distr_all_tels.ecsv",
-        "hist_1D_photon_per_telescope_distr_all_tels.ecsv",
-        "hist_2D_photon_direction_distr_all_tels.ecsv",
-        "hist_2D_photon_time_altitude_distr_all_tels.ecsv",
-        "hist_2D_photon_telescope_event_distr_all_tels.ecsv",
-        "hist_2D_photon_count_distr_all_tels.ecsv",
-        "hist_2D_photon_density_distr_all_tels.ecsv",
+        "hist_1D_photon_wavelength_distr_all_tels.hd5",
+        "hist_1D_photon_radial_distr_all_tels.hd5",
+        "hist_1D_photon_density_distr_all_tels.hd5",
+        "hist_1D_photon_time_distr_all_tels.hd5",
+        "hist_1D_photon_time_distr_all_tels.hd5",
+        "hist_1D_photon_per_event_distr_all_tels.hd5",
+        "hist_1D_photon_per_telescope_distr_all_tels.hd5",
+        "hist_2D_photon_direction_distr_all_tels.hd5",
+        "hist_2D_photon_time_altitude_distr_all_tels.hd5",
+        "hist_2D_photon_telescope_event_distr_all_tels.hd5",
+        "hist_2D_photon_count_distr_all_tels.hd5",
+        "hist_2D_photon_density_distr_all_tels.hd5",
     ]:
         assert io_handler.get_output_directory(dir_type="test").joinpath(file_name).exists()
 
@@ -853,14 +853,14 @@ def test_dict_2D_distributions(corsika_histograms_instance_set_histograms):
     )
 
 
-def test_fill_ecsv_table_1D(corsika_histograms_instance_set_histograms):
+def test_fill_hd5_table_1D(corsika_histograms_instance_set_histograms):
     hist = np.array([1, 2, 3])
     x_edges = np.array([1, 2, 3, 4])
     y_edges = None
     x_label = "test_x_label"
     y_label = None
 
-    table = corsika_histograms_instance_set_histograms.fill_ecsv_table(
+    table = corsika_histograms_instance_set_histograms.fill_hd5_table(
         hist, x_edges, y_edges, x_label, y_label
     )
 
@@ -868,14 +868,14 @@ def test_fill_ecsv_table_1D(corsika_histograms_instance_set_histograms):
     assert all(table["Values"] == hist)
 
 
-def test_fill_ecsv_table_2D(corsika_histograms_instance_set_histograms):
+def test_fill_hd5_table_2D(corsika_histograms_instance_set_histograms):
     hist = np.array([[1, 2], [3, 4]])
     x_edges = np.array([1, 2, 3])
     y_edges = np.array([1, 2, 3])
     x_label = "test_x_label"
     y_label = "test_y_label"
 
-    table = corsika_histograms_instance_set_histograms.fill_ecsv_table(
+    table = corsika_histograms_instance_set_histograms.fill_hd5_table(
         hist, x_edges, y_edges, x_label, y_label
     )
 
@@ -886,10 +886,10 @@ def test_fill_ecsv_table_2D(corsika_histograms_instance_set_histograms):
 
 def test_export_event_header_1D_histogram(corsika_histograms_instance_set_histograms, io_handler):
     corsika_event_header_example = {
-        "total_energy": "event_1D_histograms_total_energy.ecsv",
-        "azimuth": "event_1D_histograms_azimuth.ecsv",
-        "zenith": "event_1D_histograms_zenith.ecsv",
-        "first_interaction_height": "event_1D_histograms_first_interaction_height.ecsv",
+        "total_energy": "event_1D_histograms_total_energy.hd5",
+        "azimuth": "event_1D_histograms_azimuth.hd5",
+        "zenith": "event_1D_histograms_zenith.hd5",
+        "first_interaction_height": "event_1D_histograms_first_interaction_height.hd5",
     }
     for event_header_element, file_name in corsika_event_header_example.items():
         corsika_histograms_instance_set_histograms.export_event_header_1D_histogram(
@@ -900,7 +900,7 @@ def test_export_event_header_1D_histogram(corsika_histograms_instance_set_histog
 
 def test_export_event_header_2D_histogram(corsika_histograms_instance_set_histograms, io_handler):
     corsika_event_header_example = {
-        ("azimuth", "zenith"): "event_2D_histograms_azimuth_zenith.ecsv",
+        ("azimuth", "zenith"): "event_2D_histograms_azimuth_zenith.hd5",
     }
     for event_header_element, file_name in corsika_event_header_example.items():
         corsika_histograms_instance_set_histograms.export_event_header_2D_histogram(

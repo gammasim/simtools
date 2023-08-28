@@ -7,6 +7,7 @@ from pathlib import Path
 import boost_histogram as bh
 import numpy as np
 from astropy import units as u
+from astropy.io.misc.hdf5 import write_table_hdf5
 from astropy.table import QTable
 from astropy.units import cds
 from corsikaio.subblocks import event_header, get_units_from_fields, run_header
@@ -1208,7 +1209,7 @@ class CorsikaHistograms:
                 )
                 hd5_file = Path(self.output_path).joinpath(hd5_file)
                 self._logger.info(f"Exporting histogram to {hd5_file}.")
-                table.write(hd5_file, format="ascii.hd5", overwrite=True)
+                write_table_hdf5(table, hd5_file.absolute().as_posix(), overwrite=True)
 
     @property
     def _dict_2D_distributions(self):
@@ -1314,7 +1315,7 @@ class CorsikaHistograms:
                 )
                 hd5_file = Path(self.output_path).joinpath(hd5_file)
                 self._logger.info(f"Exporting histogram to {hd5_file}.")
-                table.write(hd5_file, format="ascii.hd5", overwrite=True)
+                write_table_hdf5(table, hd5_file.absolute().as_posix(), overwrite=True)
 
     def fill_hd5_table(self, hist, x_edges, y_edges, x_label, y_label):
         """
@@ -1386,7 +1387,7 @@ class CorsikaHistograms:
             f"event_1D_histograms_{event_header_element}.hd5"
         )
         self._logger.info(f"Exporting histogram to {hd5_file}.")
-        table.write(hd5_file, format="ascii.hd5", overwrite=True)
+        write_table_hdf5(table, hd5_file.absolute().as_posix(), overwrite=True)
 
     def export_event_header_2D_histogram(
         self,
@@ -1427,7 +1428,7 @@ class CorsikaHistograms:
         )
 
         self._logger.info(f"Exporting histogram to {hd5_file}.")
-        table.write(hd5_file, format="ascii.hd5", overwrite=True)
+        write_table_hdf5(table, hd5_file.absolute().as_posix(), overwrite=True)
 
     @property
     def num_photons_per_telescope(self):
