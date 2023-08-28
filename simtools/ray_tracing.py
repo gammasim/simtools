@@ -67,12 +67,10 @@ class RayTracing:
 
         self._telescope_model = self._validate_telescope_model(telescope_model)
 
-        _config_data_in = gen.collect_data_from_yaml_or_dict(config_file, config_data)
-        _parameter_file = self._io_handler.get_input_data_file(
-            parent_dir="parameters", file_name="ray-tracing_parameters.yml"
+        self.config = gen.validate_config_data(
+            gen.collect_data_from_yaml_or_dict(config_file, config_data),
+            SimtelRunnerRayTracing.ray_tracing_default_configuration(False),
         )
-        _parameters = gen.collect_data_from_yaml_or_dict(_parameter_file, None)
-        self.config = gen.validate_config_data(_config_data_in, _parameters)
 
         # Due to float representation, round the off-axis angles so the values in results table
         # are the same as provided.
@@ -184,10 +182,10 @@ class RayTracing:
                         "zenith_angle": self.config.zenith_angle * u.deg,
                         "source_distance": self._source_distance * u.km,
                         "off_axis_angle": this_off_axis * u.deg,
-                        "mirror_number": this_mirror,
+                        "mirror_numbers": this_mirror,
                         "use_random_focal_length": self.config.use_random_focal_length,
+                        "single_mirror_mode": self.config.single_mirror_mode,
                     },
-                    single_mirror_mode=self.config.single_mirror_mode,
                     force_simulate=force,
                 )
                 simtel.run(test=test, force=force)
@@ -497,3 +495,42 @@ class RayTracing:
             self._logger.error("No image found")
             return None
         return images
+
+    @staticmethod
+    def ray_tracing_default_configuration(config_runner=False):
+        """
+        Get default configuration for ray tracing.
+
+        Returns
+        -------
+        dict
+            Default configuration for ray tracing.
+
+        """
+
+        return {
+            "zenith_angle": {
+                "len": 1,
+                "unit": u.Unit("deg"),
+                "default": 20.0 * u.deg,
+                "names": ["zenith", "theta"],
+            },
+            "off_axis_angle": {
+                "len": 1 if config_runner else None,
+                "unit": u.Unit("deg"),
+                "default": 0.0 * u.deg,
+                "names": ["offaxis", "offset"],
+            },
+            "source_distance": {
+                "len": 1,
+                "unit": u.Unit("km"),
+                "default": 10.0 * u.km,
+                "names": ["sourcedist", "srcdist"],
+            },
+            "single_mirror_mode": {"len": 1, "default": False},
+            "use_random_focal_length": {"len": 1, "default": False},
+            "mirror_numbers": {
+                "len": 1 if config_runner else None,
+                "default": 1 if config_runner else "all",
+            },
+        }
