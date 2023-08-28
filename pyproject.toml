@@ -29,6 +29,7 @@ dependencies = [
     "astropy",
     "boost-histogram",
     "eventio",
+    "h5py",
     "jsonschema",
     "matplotlib",
     "numpy",
