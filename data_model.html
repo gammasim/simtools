@@ -7,11 +7,11 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
-    <title>Data Model &#8212; simtools v0.1.dev1+gc80dfa8 Manual</title>
+    <title>Data Model &#8212; simtools v0.1.dev1+g5b342f6 Manual</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
     <link rel="stylesheet" type="text/css" href="_static/bizstyle.css?v=532c1bf3" />
     
-    <script src="_static/documentation_options.js?v=bd92c86a"></script>
+    <script src="_static/documentation_options.js?v=00a0629d"></script>
     <script src="_static/doctools.js?v=888ff710"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/bizstyle.js"></script>
@@ -39,7 +39,7 @@
         <li class="right" >
           <a href="corsika_simtel.html" title="CORSIKA and sim_telarray"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">simtools v0.1.dev1+gc80dfa8 Manual</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">simtools v0.1.dev1+g5b342f6 Manual</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="library.html" accesskey="U">API</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Data Model</a></li> 
       </ul>
@@ -54,9 +54,9 @@
 <span id="datamodel"></span><h1>Data Model<a class="headerlink" href="#data-model" title="Link to this heading">¶</a></h1>
 <p>Modules in the <code class="docutils literal notranslate"><span class="pre">data_model</span></code> sections provide functionality for reading, writing, and validation of data.
 Data products ingested or produced by simtools generally follows the CTA data model.</p>
-<section id="metadata-model">
-<span id="datamodelmetadatamodel"></span><h2>metadata_model<a class="headerlink" href="#metadata-model" title="Link to this heading">¶</a></h2>
-<p id="module-data_model.metadata_model">Definition of metadata model for input to and output of simtools.
+<section id="module-data_model.metadata_model">
+<span id="metadata-model"></span><span id="datamodelmetadatamodel"></span><h2>metadata_model<a class="headerlink" href="#module-data_model.metadata_model" title="Link to this heading">¶</a></h2>
+<p>Definition of metadata model for input to and output of simtools.
 Follows CTA top-level data model definition.
 Metadata is broken into hierarchical categories in this module.</p>
 <p>Metadata definitions require the three following fields to be defined:</p>
@@ -124,9 +124,9 @@ Describes metadata provided for input to simtools applications.</p>
 </dd></dl>
 
 </section>
-<section id="model-data-writer">
-<span id="datamodelmodeldatawriter"></span><h2>model_data_writer<a class="headerlink" href="#model-data-writer" title="Link to this heading">¶</a></h2>
-<span class="target" id="module-data_model.model_data_writer"></span><dl class="py class">
+<section id="module-data_model.model_data_writer">
+<span id="model-data-writer"></span><span id="datamodelmodeldatawriter"></span><h2>model_data_writer<a class="headerlink" href="#module-data_model.model_data_writer" title="Link to this heading">¶</a></h2>
+<dl class="py class">
 <dt class="sig sig-object py" id="data_model.model_data_writer.ModelDataWriter">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">data_model.model_data_writer.</span></span><span class="sig-name descname"><span class="pre">ModelDataWriter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">product_data_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">product_data_format</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/data_model/model_data_writer.html#ModelDataWriter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_model.model_data_writer.ModelDataWriter" title="Link to this definition">¶</a></dt>
 <dd><p>Writer for simulation model data and metadata.</p>
@@ -207,9 +207,9 @@ Describes metadata provided for input to simtools applications.</p>
 </dd></dl>
 
 </section>
-<section id="validate-data">
-<span id="datamodelvalidatedata"></span><h2>validate_data<a class="headerlink" href="#validate-data" title="Link to this heading">¶</a></h2>
-<span class="target" id="module-data_model.validate_data"></span><dl class="py class">
+<section id="module-data_model.validate_data">
+<span id="validate-data"></span><span id="datamodelvalidatedata"></span><h2>validate_data<a class="headerlink" href="#module-data_model.validate_data" title="Link to this heading">¶</a></h2>
+<dl class="py class">
 <dt class="sig sig-object py" id="data_model.validate_data.DataValidator">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">data_model.validate_data.</span></span><span class="sig-name descname"><span class="pre">DataValidator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">schema_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/data_model/validate_data.html#DataValidator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_model.validate_data.DataValidator" title="Link to this definition">¶</a></dt>
 <dd><p>Validate data for type and units following a describing schema; converts or
@@ -257,9 +257,9 @@ file validation).</p>
 </dd></dl>
 
 </section>
-<section id="validate-schema">
-<span id="datamodelvalidateschema"></span><h2>validate_schema<a class="headerlink" href="#validate-schema" title="Link to this heading">¶</a></h2>
-<span class="target" id="module-data_model.validate_schema"></span><dl class="py class">
+<section id="module-data_model.validate_schema">
+<span id="validate-schema"></span><span id="datamodelvalidateschema"></span><h2>validate_schema<a class="headerlink" href="#module-data_model.validate_schema" title="Link to this heading">¶</a></h2>
+<dl class="py class">
 <dt class="sig sig-object py" id="data_model.validate_schema.SchemaValidator">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">data_model.validate_schema.</span></span><span class="sig-name descname"><span class="pre">SchemaValidator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_dict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/data_model/validate_schema.html#SchemaValidator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_model.validate_schema.SchemaValidator" title="Link to this definition">¶</a></dt>
 <dd><p>Validate a dictionary against the simpipe reference schema.
@@ -304,9 +304,9 @@ dictionary during initialization of the class).</p>
 </dd></dl>
 
 </section>
-<section id="metadata-collector">
-<span id="datamodelmetadatacollector"></span><h2>metadata_collector<a class="headerlink" href="#metadata-collector" title="Link to this heading">¶</a></h2>
-<span class="target" id="module-data_model.metadata_collector"></span><dl class="py class">
+<section id="module-data_model.metadata_collector">
+<span id="metadata-collector"></span><span id="datamodelmetadatacollector"></span><h2>metadata_collector<a class="headerlink" href="#module-data_model.metadata_collector" title="Link to this heading">¶</a></h2>
+<dl class="py class">
 <dt class="sig sig-object py" id="data_model.metadata_collector.MetadataCollector">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">data_model.metadata_collector.</span></span><span class="sig-name descname"><span class="pre">MetadataCollector</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">args_dict</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/data_model/metadata_collector.html#MetadataCollector"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_model.metadata_collector.MetadataCollector" title="Link to this definition">¶</a></dt>
 <dd><p>Collects and combines metadata associated with the current activity
@@ -429,14 +429,14 @@ Follows CTAO top-level metadata definition.</p>
         <li class="right" >
           <a href="corsika_simtel.html" title="CORSIKA and sim_telarray"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">simtools v0.1.dev1+gc80dfa8 Manual</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">simtools v0.1.dev1+g5b342f6 Manual</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="library.html" >API</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Data Model</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
     &#169; Copyright 2022, gammasim-tools, simtools developers.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.3.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.4.
     </div>
   </body>
 </html>
