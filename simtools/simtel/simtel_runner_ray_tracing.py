@@ -201,7 +201,6 @@ class SimtelRunnerRayTracing(SimtelRunner):
             command += super()._config_option("dish_shape_length", _mirror_focal_length)
             command += super()._config_option("mirror_focal_length", _mirror_focal_length)
             command += super()._config_option("parabolic_dish", "0")
-            # command += super()._config_option('random_focal_length', '0.')
             command += super()._config_option("mirror_align_random_distance", "0.")
             command += super()._config_option("mirror_align_random_vertical", "0.,28.,0.,0.")
         command += " " + str(self._corsika_file)
