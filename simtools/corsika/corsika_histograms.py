@@ -3,7 +3,7 @@ import logging
 import operator
 import re
 import time
-from pathlib import Path
+from pathlib import Path, PosixPath
 
 import boost_histogram as bh
 import numpy as np
@@ -13,7 +13,7 @@ from astropy.table import QTable
 from astropy.units import cds
 from corsikaio.subblocks import event_header, get_units_from_fields, run_header
 from eventio import IACTFile
-from h5py import File
+from h5py import File, Group
 
 from simtools import io_handler, version
 from simtools.utils.general import (
@@ -1362,6 +1362,41 @@ class CorsikaHistograms:
                     group = f_hdf5.create_group(hdf5_table_name)
                     for name, column in table.columns.items():
                         group.create_dataset(name, data=column)
+
+    def read_hdf5(self, hdf5_file_name):
+        """
+        Read a hdf5 output file, as resulted from `self.export_histograms`
+
+        Parameters
+        ----------
+        hdf5_file_name: str or Path
+            Name or Path of the hdf5 file to read from.
+
+        Returns
+        -------
+        list
+            The list with the astropy.QTable instances for the various 1D and 2D histograms saved
+            in the hdf5 file.
+        """
+        if isinstance(hdf5_file_name, PosixPath):
+            hdf5_file_name = hdf5_file_name.absolute().as_posix()
+        with File(hdf5_file_name, "r") as f_hdf5:
+            restored_tables = []
+            for key in f_hdf5.keys():
+                current_group = f_hdf5[key]
+                table = QTable()
+
+                for col_name, item in current_group.items():
+                    if isinstance(item, Group) and "data" in item:
+                        # If there's a unit, we reconstruct the column with its unit
+                        data = item["data"][:]
+                        unit = u.Unit(item.attrs["unit"])
+                        table[col_name] = data * unit
+                    else:
+                        table[col_name] = item[:]
+
+                restored_tables.append(table)
+        return restored_tables
 
     def fill_hdf5_table(self, hist, x_edges, y_edges, x_label, y_label):
         """
