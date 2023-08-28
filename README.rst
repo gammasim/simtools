@@ -61,6 +61,11 @@ Please contact the developers before using it: simtools-developer@desy.de
 Quickstart
 ==========
 
+.. warning::
+
+    The pip-installation of simtools provides limited functionality only
+    and is not as well tested as the conda/mamba installation.
+
 Install simtools with pypi (recommended for users):
 
 .. code-block:: bash
