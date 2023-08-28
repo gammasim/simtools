@@ -109,6 +109,12 @@
     hdf5 (bool, optional)
         If true, histograms are saved into hdf5 files.
 
+    hdf5_file_name (str, optional)
+        The name of the output hdf5 data (without the path).
+        It requires the `--hdf5` flag.
+        If not given, `hdf5_file_name` takes the name from the input IACT file (`input_file`).
+
+
     event_1D_histograms (str, optional)
         Produce 1D histograms for elements given in `--event_1D_histograms` from the CORSIKA event
         header and save into hdf5/png files.
@@ -216,6 +222,14 @@ def _parse(label, description):
 
     config.parser.add_argument(
         "--hdf5", help="Save histograms into hdf5 files.", action="store_true", required=False
+    )
+
+    config.parser.add_argument(
+        "--hdf5_file_name",
+        help="Name of the hdf5 file where to save the histograms.",
+        type=str,
+        required=False,
+        default=None,
     )
 
     config.parser.add_argument(
@@ -359,7 +373,9 @@ def main():
     initial_time = time.time()
     logger.info("Starting the application.")
 
-    corsika_histograms_instance = CorsikaHistograms(args_dict["IACT_file"], output_path=output_path)
+    corsika_histograms_instance = CorsikaHistograms(
+        args_dict["IACT_file"], output_path=output_path, hdf5_file_name=args_dict["hdf5_file_name"]
+    )
     if args_dict["telescope_indices"] is not None:
         try:
             indices = np.array(args_dict["telescope_indices"]).astype(int)

@@ -377,6 +377,18 @@ APP_LIST = {
             "TESTMODELDIR/",
         ]
     ],
+    "generate_corsika_histograms::hdf5_file": [
+        [
+            "--IACT_file",
+            "./tests/resources/" "tel_output_10GeV-2-gamma-20deg-CTAO-South.corsikaio",
+            "--png",
+            "--hdf5",
+            "--hdf5_file_name",
+            "test_hdf5.hdf5",
+            "--output_path",
+            "TESTMODELDIR/",
+        ]
+    ],
     "generate_corsika_histograms::1D_and_2D_run_header": [
         [
             "--IACT_file",
