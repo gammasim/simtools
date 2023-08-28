@@ -1,6 +1,7 @@
 import functools
 import logging
 import operator
+import re
 import time
 from pathlib import Path
 
@@ -39,6 +40,8 @@ class CorsikaHistograms:
         Instance label.
     output_path: str
         Path where to save the output of the class methods.
+    hdf5_file_name: str
+        Name of the hdf5 file where to save the histograms.
 
     Raises
     ------
@@ -46,7 +49,7 @@ class CorsikaHistograms:
         if the input file given does not exist.
     """
 
-    def __init__(self, input_file, label=None, output_path=None):
+    def __init__(self, input_file, label=None, output_path=None, hdf5_file_name=None):
         self.label = label
         self._logger = logging.getLogger(__name__)
         self._logger.debug("Init CorsikaHistograms")
@@ -60,10 +63,18 @@ class CorsikaHistograms:
 
         self.io_handler = io_handler.IOHandler()
         _default_output_path = self.io_handler.get_output_directory(self.label, "corsika")
+
         if output_path is None:
             self.output_path = _default_output_path
         else:
             self.output_path = Path(output_path)
+
+        if hdf5_file_name is None:
+            default_hdf5_file_name = re.split(r"\.", self.input_file.name)[0] + ".hdf5"
+            self.hdf5_file_name = default_hdf5_file_name
+        else:
+            self.hdf5_file_name = hdf5_file_name
+
         self._initialize_attributes()
         self.read_event_information()
         self._initialize_header()
@@ -94,11 +105,31 @@ class CorsikaHistograms:
         self._corsika_version = None
         self.event_information = None
         self._individual_telescopes = None
-        self._hdf5_file = Path(self.output_path).joinpath("test_name.hdf5")
         self._allowed_histograms = {"hist_position", "hist_direction", "hist_time_altitude"}
         self._allowed_1D_labels = {"wavelength", "time", "altitude"}
         self._allowed_2D_labels = {"counts", "density", "direction", "time_altitude"}
         self._header = None
+
+    @property
+    def hdf5_file_name(self):
+        """
+        Property for the hdf5 file name.
+        The idea of this property is to allow setting (or changing) the name of the hdf5 file
+         even after creating the class instance.
+        """
+        return self._hdf5_file_name
+
+    @hdf5_file_name.setter
+    def hdf5_file_name(self, hdf5_file_name):
+        """
+        Sets the hdf5_file_name to the argument passed.
+
+        Parameters
+        ----------
+        hdf5_file_name: str
+            The name of hdf5 file to be set.
+        """
+        self._hdf5_file_name = Path(self.output_path).joinpath(hdf5_file_name).absolute().as_posix()
 
     @property
     def corsika_version(self):
@@ -1090,7 +1121,8 @@ class CorsikaHistograms:
         """
         Export the histograms to hdf5 files.
         """
-        self._export_1D_histograms()
+        self._export_1D_histograms()  # Attention: this function has to come before the
+        # following one.
         self._export_2D_histograms()
 
     @property
@@ -1183,7 +1215,7 @@ class CorsikaHistograms:
         Auxiliary function to export only the 1D histograms.
         """
 
-        with File(self._hdf5_file, "w") as f_hdf5:  # The 'w' makes sure a new file is created
+        with File(self.hdf5_file_name, "w") as f_hdf5:  # The 'w' makes sure a new file is created
             for _, function_dict in self._dict_1D_distributions.items():
                 self._meta_dict["Title"] = function_dict["title"]
                 function = getattr(self, function_dict["function"])
@@ -1212,7 +1244,7 @@ class CorsikaHistograms:
                     )
                     self._logger.info(
                         f"Writing histogram to with name {hdf5_table_name} to "
-                        f"{self._hdf5_file}."
+                        f"{self.hdf5_file_name}."
                     )
                     group = f_hdf5.create_group(hdf5_table_name)
                     for name, column in table.columns.items():
@@ -1282,8 +1314,8 @@ class CorsikaHistograms:
         """
         Auxiliary function to export only the 2D histograms.
         """
-        with File(self._hdf5_file, "a") as f_hdf5:  # the 'a' makes sure the 2D histograms are
-            # appended to the 1D histograms
+        with File(self.hdf5_file_name, "a") as f_hdf5:  # the 'a' makes sure the 2D histograms are
+            # appended to the 1D histograms and do not overwrite them
             for property_name, function_dict in self._dict_2D_distributions.items():
                 self._meta_dict["Title"] = function_dict["title"]
                 function = getattr(self, function_dict["function"])
@@ -1325,7 +1357,7 @@ class CorsikaHistograms:
 
                     self._logger.info(
                         f"Writing histogram to with name {hdf5_table_name} to "
-                        f"{self._hdf5_file}."
+                        f"{self.hdf5_file_name}."
                     )
                     group = f_hdf5.create_group(hdf5_table_name)
                     for name, column in table.columns.items():
