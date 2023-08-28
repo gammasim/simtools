@@ -6,7 +6,7 @@
     This application produces a set of histograms of the distribution of Cherenkov photons on the
     ground (at observation level) read from the CORSIKA IACT output file provided as input.
 
-    The histograms can be saved both in a png and in a hd5 file. By default, it saves in both
+    The histograms can be saved both in a png and in a hdf5 file. By default, it saves in both
     formats.
 
     The following 2D histograms are produced:
@@ -42,7 +42,7 @@
         If the argument is not given, the Cherenkov photons from the given telescopes are considered
          together in the same histograms.
 
-    hist_config (hd5 or dict, optional)
+    hist_config (hdf5 or dict, optional)
         The configuration used for generating the histograms.
         It includes information about the bin sizes, the ranges, scale of the plot and units.
         By construction, three major histograms are created to start with:
@@ -106,18 +106,18 @@
     png (bool, optional)
         If true, histograms are saved into png files.
 
-    hd5 (bool, optional)
-        If true, histograms are saved into hd5 files.
+    hdf5 (bool, optional)
+        If true, histograms are saved into hdf5 files.
 
     event_1D_histograms (str, optional)
         Produce 1D histograms for elements given in `--event_1D_histograms` from the CORSIKA event
-        header and save into hd5/png files.
+        header and save into hdf5/png files.
         It allows more than one argument, separated by simple spaces.
         Usage: `--event_1D_histograms first_interaction_height total_energy`.
 
     event_2D_histograms (str, optional)
         Produce 2D histograms for elements given in `--event_2D_histograms` from the CORSIKA event
-        header and save into hd5/png files.
+        header and save into hdf5/png files.
         It allows more than one argument, separated by simple spaces.
         The elements are grouped into pairs and the 2D histograms are produced always for two
         subsequent elements.
@@ -132,7 +132,7 @@
      .. code-block:: console
 
         simtools-generate-corsika-histograms --IACT_file /workdir/external/simtools/tests/\
-            resources/tel_output_10GeV-2-gamma-20deg-CTAO-South.corsikaio --png --hd5
+            resources/tel_output_10GeV-2-gamma-20deg-CTAO-South.corsikaio --png --hdf5
             --event_2D_histograms zenith azimuth --event_1D_histograms total_energy
 
 
@@ -204,7 +204,7 @@ def _parse(label, description):
 
     config.parser.add_argument(
         "--hist_config",
-        help="hd5 file with the configuration parameters to create the histograms.",
+        help="hdf5 file with the configuration parameters to create the histograms.",
         type=str,
         required=False,
         default=None,
@@ -215,7 +215,7 @@ def _parse(label, description):
     )
 
     config.parser.add_argument(
-        "--hd5", help="Save histograms into hd5 files.", action="store_true", required=False
+        "--hdf5", help="Save histograms into hdf5 files.", action="store_true", required=False
     )
 
     config.parser.add_argument(
@@ -240,8 +240,8 @@ def _parse(label, description):
 
     config_parser, _ = config.initialize(db_config=False, paths=True)
 
-    if not config_parser["png"] and not config_parser["hd5"]:
-        config.parser.error("At least one argument between `--png` and `--hd5` is required.")
+    if not config_parser["png"] and not config_parser["hdf5"]:
+        config.parser.error("At least one argument between `--png` and `--hdf5` is required.")
 
     return config_parser, _
 
@@ -272,7 +272,7 @@ def _plot_figures(corsika_histograms_instance):
             figure.savefig(output_file_name, bbox_inches="tight")
 
 
-def _derive_event_1D_histograms(corsika_histograms_instance, event_1D_header_keys, png, hd5):
+def _derive_event_1D_histograms(corsika_histograms_instance, event_1D_header_keys, png, hdf5):
     """
     Auxiliary function to derive the histograms for the arguments given by event_1D_histograms.
 
@@ -282,11 +282,11 @@ def _derive_event_1D_histograms(corsika_histograms_instance, event_1D_header_key
         The CorsikaHistograms instance created in main.
     event_1D_header_keys: str
         Produce 1D histograms for elements given in `event_1D_header_keys` from the CORSIKA event
-        header and save into hd5/png files.
+        header and save into hdf5/png files.
     png: bool
         If true, histograms are saved into png files.
-    hd5: bool
-        If true, histograms are saved into hd5 files.
+    hdf5: bool
+        If true, histograms are saved into hdf5 files.
     """
     for event_header_element in event_1D_header_keys:
         if png:
@@ -296,13 +296,13 @@ def _derive_event_1D_histograms(corsika_histograms_instance, event_1D_header_key
             output_file_name = Path(corsika_histograms_instance.output_path).joinpath(figure_name)
             logger.info(f"Saving histogram to {output_file_name}")
             figure.savefig(output_file_name, bbox_inches="tight")
-        if hd5:
+        if hdf5:
             corsika_histograms_instance.export_event_header_1D_histogram(
                 event_header_element, bins=50, hist_range=None
             )
 
 
-def _derive_event_2D_histograms(corsika_histograms_instance, event_2D_header_keys, png, hd5):
+def _derive_event_2D_histograms(corsika_histograms_instance, event_2D_header_keys, png, hdf5):
     """
     Auxiliary function to derive the histograms for the arguments given by event_1D_histograms.
     If an odd number of event header keys are given, the last one is discarded.
@@ -313,11 +313,11 @@ def _derive_event_2D_histograms(corsika_histograms_instance, event_2D_header_key
         The CorsikaHistograms instance created in main.
     event_2D_header_keys: str
         Produce 1D histograms for elements given in `event_1D_header_keys` from the CORSIKA event
-        header and save into hd5/png files.
+        header and save into hdf5/png files.
     png: bool
         If true, histograms are saved into png files.
-    hd5: bool
-        If true, histograms are saved into hd5 files.
+    hdf5: bool
+        If true, histograms are saved into hdf5 files.
     """
     for i_event_header_element, _ in enumerate(event_2D_header_keys[::2]):
         # [::2] to discard the last one in case an odd number of keys are passed
@@ -338,7 +338,7 @@ def _derive_event_2D_histograms(corsika_histograms_instance, event_2D_header_key
             output_file_name = Path(corsika_histograms_instance.output_path).joinpath(figure_name)
             logger.info(f"Saving histogram to {output_file_name}")
             figure.savefig(output_file_name, bbox_inches="tight")
-        if hd5:
+        if hdf5:
             corsika_histograms_instance.export_event_header_2D_histogram(
                 event_2D_header_keys[i_event_header_element],
                 event_2D_header_keys[i_event_header_element + 1],
@@ -381,7 +381,7 @@ def main():
     # Cherenkov photons
     if args_dict["png"]:
         _plot_figures(corsika_histograms_instance=corsika_histograms_instance)
-    if args_dict["hd5"]:
+    if args_dict["hdf5"]:
         corsika_histograms_instance.export_histograms()
 
     # Event information
@@ -390,14 +390,14 @@ def main():
             corsika_histograms_instance,
             args_dict["event_1D_histograms"],
             args_dict["png"],
-            args_dict["hd5"],
+            args_dict["hdf5"],
         )
     if args_dict["event_2D_histograms"] is not None:
         _derive_event_2D_histograms(
             corsika_histograms_instance,
             args_dict["event_2D_histograms"],
             args_dict["png"],
-            args_dict["hd5"],
+            args_dict["hdf5"],
         )
 
     final_time = time.time()
