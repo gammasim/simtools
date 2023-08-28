@@ -14,4 +14,4 @@ Documentation
   auxiliary_files
   databases
   simulation_software
-  guidelines
+  developer_guidelines
