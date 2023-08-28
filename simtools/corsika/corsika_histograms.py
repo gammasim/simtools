@@ -1086,7 +1086,7 @@ class CorsikaHistograms:
 
     def export_histograms(self):
         """
-        Export the histograms to hd5 files.
+        Export the histograms to hdf5 files.
         """
         self._export_1D_histograms()
         self._export_2D_histograms()
@@ -1099,7 +1099,7 @@ class CorsikaHistograms:
         Returns
         -------
         dict
-            Meta dictionary for the hd5 files with the histograms.
+            Meta dictionary for the hdf5 files with the histograms.
         """
 
         if self.__meta_dict is None:
@@ -1193,23 +1193,23 @@ class CorsikaHistograms:
             hist_1D_list = hist_1D_list * histogram_value_unit
             for i_histogram, _ in enumerate(x_edges_list):
                 if self.individual_telescopes:
-                    hd5_file = (
+                    hdf5_file = (
                         f"{function_dict['file name']}_"
-                        f"tel_index_{self.telescope_indices[i_histogram]}.hd5"
+                        f"tel_index_{self.telescope_indices[i_histogram]}.hdf5"
                     )
                 else:
-                    hd5_file = f"{function_dict['file name']}_all_tels.hd5"
+                    hdf5_file = f"{function_dict['file name']}_all_tels.hdf5"
 
-                table = self.fill_hd5_table(
+                table = self.fill_hdf5_table(
                     hist_1D_list[i_histogram],
                     x_edges_list[i_histogram],
                     None,
                     function_dict["edges"],
                     None,
                 )
-                hd5_file = Path(self.output_path).joinpath(hd5_file)
-                self._logger.info(f"Exporting histogram to {hd5_file}.")
-                write_table_hdf5(table, hd5_file.absolute().as_posix(), overwrite=True)
+                hdf5_file = Path(self.output_path).joinpath(hdf5_file)
+                self._logger.info(f"Exporting histogram to {hdf5_file}.")
+                write_table_hdf5(table, hdf5_file.absolute().as_posix(), overwrite=True)
 
     @property
     def _dict_2D_distributions(self):
@@ -1297,29 +1297,29 @@ class CorsikaHistograms:
 
             for i_histogram, _ in enumerate(x_edges_list):
                 if self.individual_telescopes:
-                    hd5_file = (
+                    hdf5_file = (
                         f"{self._dict_2D_distributions[property_name]['file name']}"
-                        f"_tel_index_{self.telescope_indices[i_histogram]}.hd5"
+                        f"_tel_index_{self.telescope_indices[i_histogram]}.hdf5"
                     )
                 else:
-                    hd5_file = (
-                        f"{self._dict_2D_distributions[property_name]['file name']}_all_tels.hd5"
+                    hdf5_file = (
+                        f"{self._dict_2D_distributions[property_name]['file name']}_all_tels.hdf5"
                     )
 
-                table = self.fill_hd5_table(
+                table = self.fill_hdf5_table(
                     hist_2D_list[i_histogram],
                     x_edges_list[i_histogram],
                     y_edges_list[i_histogram],
                     function_dict["x edges"],
                     function_dict["y edges"],
                 )
-                hd5_file = Path(self.output_path).joinpath(hd5_file)
-                self._logger.info(f"Exporting histogram to {hd5_file}.")
-                write_table_hdf5(table, hd5_file.absolute().as_posix(), overwrite=True)
+                hdf5_file = Path(self.output_path).joinpath(hdf5_file)
+                self._logger.info(f"Exporting histogram to {hdf5_file}.")
+                write_table_hdf5(table, hdf5_file.absolute().as_posix(), overwrite=True)
 
-    def fill_hd5_table(self, hist, x_edges, y_edges, x_label, y_label):
+    def fill_hdf5_table(self, hist, x_edges, y_edges, x_label, y_label):
         """
-        Create and fill an hd5 table with the histogram information.
+        Create and fill an hdf5 table with the histogram information.
         It works for both 1D and 2D distributions.
 
         Parameters
@@ -1364,7 +1364,7 @@ class CorsikaHistograms:
 
     def export_event_header_1D_histogram(self, event_header_element, bins=50, hist_range=None):
         """
-        Export to a hd5 file the 1D histogram for the key `event_header_element` from the CORSIKA
+        Export to a hdf5 file the 1D histogram for the key `event_header_element` from the CORSIKA
         event header.
 
         Parameters
@@ -1382,12 +1382,12 @@ class CorsikaHistograms:
             event_header_element, bins=bins, hist_range=hist_range
         )
         edges *= self.event_information[event_header_element].unit
-        table = self.fill_hd5_table(hist, edges, None, event_header_element, None)
-        hd5_file = Path(self.output_path).joinpath(
-            f"event_1D_histograms_{event_header_element}.hd5"
+        table = self.fill_hdf5_table(hist, edges, None, event_header_element, None)
+        hdf5_file = Path(self.output_path).joinpath(
+            f"event_1D_histograms_{event_header_element}.hdf5"
         )
-        self._logger.info(f"Exporting histogram to {hd5_file}.")
-        write_table_hdf5(table, hd5_file.absolute().as_posix(), overwrite=True)
+        self._logger.info(f"Exporting histogram to {hdf5_file}.")
+        write_table_hdf5(table, hdf5_file.absolute().as_posix(), overwrite=True)
 
     def export_event_header_2D_histogram(
         self,
@@ -1397,7 +1397,7 @@ class CorsikaHistograms:
         hist_range=None,
     ):
         """
-        Export to a hd5 file the 2D histogram for the key `event_header_element_1` and
+        Export to a hdf5 file the 2D histogram for the key `event_header_element_1` and
         `event_header_element_2`from the CORSIKA event header.
 
         Parameters
@@ -1419,16 +1419,16 @@ class CorsikaHistograms:
         x_edges *= self.event_information[event_header_element_1].unit
         y_edges *= self.event_information[event_header_element_2].unit
 
-        table = self.fill_hd5_table(
+        table = self.fill_hdf5_table(
             hist, x_edges, y_edges, event_header_element_1, event_header_element_2
         )
 
-        hd5_file = Path(self.output_path).joinpath(
-            f"event_2D_histograms_{event_header_element_1}" f"_{event_header_element_2}.hd5"
+        hdf5_file = Path(self.output_path).joinpath(
+            f"event_2D_histograms_{event_header_element_1}" f"_{event_header_element_2}.hdf5"
         )
 
-        self._logger.info(f"Exporting histogram to {hd5_file}.")
-        write_table_hdf5(table, hd5_file.absolute().as_posix(), overwrite=True)
+        self._logger.info(f"Exporting histogram to {hdf5_file}.")
+        write_table_hdf5(table, hdf5_file.absolute().as_posix(), overwrite=True)
 
     @property
     def num_photons_per_telescope(self):
