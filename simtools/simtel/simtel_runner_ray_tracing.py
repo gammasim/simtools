@@ -31,10 +31,13 @@ class SimtelRunnerRayTracing(SimtelRunner):
             len: 1
             unit: km
             default: 10 km
+        single_mirror_mode:
+            len: 1
+            default: False
         use_random_focal_length:
             len: 1
             default: False
-        mirror_number:
+        mirror_numbers:
             len: 1
             default: 1
 
@@ -50,8 +53,6 @@ class SimtelRunnerRayTracing(SimtelRunner):
         Dict containing the configurable parameters.
     config_file: str or Path
         Path of the yaml file containing the configurable parameters.
-    single_mirror_mode: bool
-        True for single mirror simulations.
     force_simulate: bool
         Remove existing files and force re-running of the ray-tracing simulation.
     """
@@ -63,7 +64,6 @@ class SimtelRunnerRayTracing(SimtelRunner):
         simtel_source_path=None,
         config_data=None,
         config_file=None,
-        single_mirror_mode=False,
         force_simulate=False,
     ):
         """
@@ -80,20 +80,16 @@ class SimtelRunnerRayTracing(SimtelRunner):
         self.io_handler = io_handler.IOHandler()
         self._base_directory = self.io_handler.get_output_directory(self.label, "ray-tracing")
 
-        self._single_mirror_mode = single_mirror_mode
+        # Loading config_data
+        self.config = gen.validate_config_data(
+            gen.collect_data_from_yaml_or_dict(config_file, config_data),
+            self.ray_tracing_default_configuration(True),
+        )
 
         # RayTracing - default parameters
         self._rep_number = 0
-        self.RUNS_PER_SET = 1 if self._single_mirror_mode else 20
+        self.RUNS_PER_SET = 1 if self.config.single_mirror_mode else 20
         self.PHOTONS_PER_RUN = 100000
-
-        # Loading config_data
-        _config_data_in = gen.collect_data_from_yaml_or_dict(config_file, config_data)
-        _parameter_file = self.io_handler.get_input_data_file(
-            "parameters", "simtel-runner-ray-tracing_parameters.yml"
-        )
-        _parameters = gen.collect_data_from_yaml_or_dict(_parameter_file, None)
-        self.config = gen.validate_config_data(_config_data_in, _parameters)
 
         self._load_required_files(force_simulate)
 
@@ -117,7 +113,7 @@ class SimtelRunnerRayTracing(SimtelRunner):
                 self.config.source_distance,
                 self.config.zenith_angle,
                 self.config.off_axis_angle,
-                self.config.mirror_number if self._single_mirror_mode else None,
+                self.config.mirror_numbers if self.config.single_mirror_mode else None,
                 self.label,
                 base_name,
             )
@@ -137,8 +133,8 @@ class SimtelRunnerRayTracing(SimtelRunner):
                 file.write(f"# zenith_angle [deg] = {self.config.zenith_angle}\n")
                 file.write(f"# off_axis_angle [deg] = {self.config.off_axis_angle}\n")
                 file.write(f"# source_distance [km] = {self.config.source_distance}\n")
-                if self._single_mirror_mode:
-                    file.write(f"# mirror_number = {self.config.mirror_number}\n\n")
+                if self.config.single_mirror_mode:
+                    file.write(f"# mirror_number = {self.config.mirror_numbers}\n\n")
 
             # Filling in star file with a single light source.
             # Parameters defining light source:
@@ -158,7 +154,7 @@ class SimtelRunnerRayTracing(SimtelRunner):
     def _make_run_command(self, **kwargs):  # pylint: disable=unused-argument
         """Return the command to run simtel_array."""
 
-        if self._single_mirror_mode:
+        if self.config.single_mirror_mode:
             _mirror_focal_length = float(
                 self.telescope_model.get_parameter_value("mirror_focal_length")
             )
@@ -187,7 +183,7 @@ class SimtelRunnerRayTracing(SimtelRunner):
         command += super()._config_option("maximum_telescopes", "1")
         command += super()._config_option("show", "all")
         command += super()._config_option("camera_filter", "none")
-        if self._single_mirror_mode:
+        if self.config.single_mirror_mode:
             command += super()._config_option("focus_offset", "all:0.")
             command += super()._config_option("camera_config_file", "single_pixel_camera.dat")
             command += super()._config_option("camera_pixels", "1")
@@ -196,7 +192,7 @@ class SimtelRunnerRayTracing(SimtelRunner):
             command += super()._config_option(
                 "mirror_list",
                 self.telescope_model.get_single_mirror_list_file(
-                    self.config.mirror_number, self.config.use_random_focal_length
+                    self.config.mirror_numbers, self.config.use_random_focal_length
                 ),
             )
             command += super()._config_option(
@@ -239,3 +235,42 @@ class SimtelRunnerRayTracing(SimtelRunner):
                     break
 
         return n_lines > 100
+
+    @staticmethod
+    def ray_tracing_default_configuration(config_runner=False):
+        """
+        Get default ray tracing configuration.
+
+        Returns
+        -------
+        dict
+            Default configuration for ray tracing.
+
+        """
+
+        return {
+            "zenith_angle": {
+                "len": 1,
+                "unit": u.Unit("deg"),
+                "default": 20.0 * u.deg,
+                "names": ["zenith", "theta"],
+            },
+            "off_axis_angle": {
+                "len": 1 if config_runner else None,
+                "unit": u.Unit("deg"),
+                "default": 0.0 * u.deg,
+                "names": ["offaxis", "offset"],
+            },
+            "source_distance": {
+                "len": 1,
+                "unit": u.Unit("km"),
+                "default": 10.0 * u.km,
+                "names": ["sourcedist", "srcdist"],
+            },
+            "single_mirror_mode": {"len": 1, "default": False},
+            "use_random_focal_length": {"len": 1, "default": False},
+            "mirror_numbers": {
+                "len": 1 if config_runner else None,
+                "default": 1 if config_runner else "all",
+            },
+        }
