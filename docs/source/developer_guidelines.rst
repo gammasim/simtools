@@ -97,8 +97,10 @@ General service functions for tests (e.g., DB connection) can be found in
 `conftest.py <https://github.com/gammasim/simtools/blob/main/tests/conftest.py>`_.
 This should be used to avoid duplication.
 
-
 .. note:: Developers should expect that code changes affecting several modules are acceptable in case unit tests are successful.
+
+The `pytest-xdist <https://pytest-xdist.readthedocs.io/en/latest/>`_ plugin is part of the developer environment
+and can be used to run unit and integration tests in parallel (e.g., ``pytest -n 4`` to run on four cores in parallel).
 
 
 Documentation
