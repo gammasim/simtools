@@ -1,22 +1,14 @@
 .. _Guidelines:
 
-.. todo::
-
-  - add / combine stuff for developers setup (see docker section in Getting Started)
-  - fix links to ctapipe
-  - add pull request guidelines
-  - list purpose of dependencies (or is that somewhere else?)
-
 Developer Guidelines
 ********************
 
 This section provides help and guidelines for developers of simtools.
-If you want to contribute to simtools, please use one of the contact points listed at the
-entry page of this documentation. In general, please take note of the `ctapipe Development
-Guidelines <https://cta-observatory.github.io/ctapipe/development/index.html>`_. simtools
-follows the same `style <https://cta-observatory.github.io/ctapipe/development/style-guide.html#>`_
-and `code guidelines <https://cta-observatory.github.io/ctapipe/development/code-guidelines.html>`_
-as `ctapipe <https://github.com/cta-observatory/ctapipe/>`_.
+If you want to contribute, please use one of the contact points listed at the
+entry page of this documentation.
+
+In general, please take note of the `ctapipe developer guidelines
+<https://cta-observatory.github.io/ctapipe/development/index.html>`_.
 
 Project setup
 =============
@@ -26,72 +18,52 @@ The main code repository for simtools is on GitHub:
 `https://github.com/gammasim/simtools <https://github.com/gammasim/simtools>`_
 
 The main directories for developers are the
-`simtools <https://github.com/gammasim/simtools/tree/main/simtools>`_,
-`applications <https://github.com/gammasim/simtools/tree/main/applications>`_,
-`tests <https://github.com/gammasim/simtools/tree/main/tests>`_,
-and `docs <https://github.com/gammasim/simtools/tree/main/docs>`_ folders.
+
+- root directory: `simtools <https://github.com/gammasim/simtools/tree/main/simtools>`_
+- applications (simtools:) `applications <https://github.com/gammasim/simtools/tree/main/simtools/applications>`_
+- unit and integration tests: `tests <https://github.com/gammasim/simtools/tree/main/tests>`_
+- documentation: `docs <https://github.com/gammasim/simtools/tree/main/docs>`_
+- docker files: `docker <https://github.com/gammasim/simtools/tree/main/docker>`_
 
 
 Python version
 ==============
 
-The simtools package is currently developed for Python 3.9.
+The simtools package is currently developed for Python 3.9, but expected to work with Python 3.10 and 3.11 as well.
+Unit and integration tests are run for Python 3.9 and 3.11.
 
 
-Code formatting
-===============
+Contributing code
+=================
 
-Linting and code checks are done automatically using the pre-commit functionality using ``isort``,
-``black`` and ``pyflakes``. As part of the CI workflow Codacy performs a few additional code checks
-as well.
+The following steps outline how to contribute code to simtools:
 
-It is recommended for developers to install ``pre-commit``:
+1. Set up your coding environment as outlined in the :ref:`getting started <getting_started>` section.
+2. Start a new feature branch from the main branch (`git checkout -b new-branch-name`).
+3. Implement your code changes.
+4. Add unit tests for new modules and functions.
+5. Commit your code changes (use meaningful commit messages) and push them to GitHub.
+6. Create a draft pull request on GitHub when all features are implemented.
+7. Wait for the CI tests to finish and address any issues that arise.
+8. After successful tests, mark the pull request as ready for review.
+9. Wait for a review of your code and address any issues that arise.
+10. After successful review, the pull request can be merged into the main branch.
 
-.. code-block::
-
-    pre-commit install
-
-The configuration of ``pre-commit`` is defined in
-`.pre-commit-config.yaml <https://github.com/gammasim/simtools/blob/main/.pre-commit-config
-.yaml>`_.
-
-For testing, pre-commit can be applied locally without commit:
-
-.. code-block::
-
-    pre-commit run --all-files
-
-In rare cases, one might want to skip pre-commit checks with
-
-.. code-block::
-
-    git commit --no-verify
-
-Logging
-=======
-
-Sufficient logging information should be provided to users and developers. As general guideline, the
-following logging levels should be used:
-
-- **INFO**: information useful for the general user about the progress, intermediate results, input or output.
-- **WARNING**: information for the general user or developer on something they should know but cannot change.
-- **DEBUG**: information only interesting for developers or useful for debugging.
-- **ERROR**: something which always leads to an exception or program exit.
-
-Use ``logger.error, logger.warning, logger.debug, logger.info``.
+Note the :ref:`guidelines on pull requests <pull_requests>`.
 
 
 Testing
 =======
 
-pytest framework is used for unit testing.
+The pytest framework is used for testing:
+
+- unit tests should be written for every module and function
+- integration tests should be written for every application cover the most important use cases
+
 The test modules are located in
 `simtools/tests <https://github.com/gammasim/simtools/tree/main/tests>`_ modules separated
 by unit and integration tests.
-Every module should have a reasonable unit test, ideally all functions should be covered by tests.
-Applications should be tested using integration tests.
-It is important to write the tests in parallel with the modules
-to assure that the code is testable.
+It is recommended to write unit tests in parallel with the modules to assure that the code is testable.
 
 General service functions for tests (e.g., DB connection) can be found in
 `conftest.py <https://github.com/gammasim/simtools/blob/main/tests/conftest.py>`_.
@@ -102,55 +74,23 @@ This should be used to avoid duplication.
 The `pytest-xdist <https://pytest-xdist.readthedocs.io/en/latest/>`_ plugin is part of the developer environment
 and can be used to run unit and integration tests in parallel (e.g., ``pytest -n 4`` to run on four cores in parallel).
 
-
-Documentation
-=============
+Generating Documentation
+========================
 
 Sphinx is used to create this documentation from the files in the
 `docs <https://github.com/gammasim/simtools/tree/main/docs>`_ directory and from the
 docstrings in the code.
+
 This is done automatically with each merge into the main branch, see the
 `GitHub Action workflow CI-docs <https://github.com/gammasim/simtools/blob/main/.github/
 workflows/CI-docs.yml>`_.
-
-Docstrings following the Numpy style must be added to any public function, class or method.
-It is also recommended to add docstrings-like comments to private functions.
-
-In the application, the modules should contain docstrings with a general description, command line
-parameters, and examples.
-A typical example should look like:
-
-.. code-block:: python
-
-    def a_function(parameter):
-        """
-        Description of what the function is doing.
-
-        Parameters
-        ----------
-        parameter: type
-            description of parameters
-
-        Returns
-        -------
-        describe return values
-
-        Raises
-        ------
-        describe exceptions raised
-
-        """
-
-        ...code
-
-
-For a reference of the numpydoc format, see https://numpydoc.readthedocs.io/en/latest/format.html
 
 For writing and testing documentation locally:
 
 .. code-block::
 
     cd docs
+    make clean
     make html
 
 This is especially recommended to identify warnings and errors by Sphinx (e.g., from badly formatted
@@ -161,7 +101,7 @@ file ``./build/html/index.html``.
 Writing Applications
 ====================
 
-Applications are command lines tools that should be built off of the simtools library.
+Applications are command lines tools that should be built of the simtools library.
 Application should not include complex algorithm, this should be done at the module level.
 
 All applications should follow the same structure:
@@ -198,10 +138,14 @@ Check the :ref:`commandline_parser <configurationcommandline_parser>` module for
 Dependencies
 ============
 
-Dependencies on python packages are listed in the
-`environment file <https://github.com/gammasim/simtools/blob/main/environment.yml>`_.
+Dependencies on external packages should be kept to a minimum.
+Packages are listed twice:
+
+- in the mamba/conda `environment file <https://github.com/gammasim/simtools/blob/main/environment.yml>`_
+- in the `pyproject.toml file for pip <https://github.com/gammasim/simtools/blob/main/pyproject.toml>`_
+
 Some of the packages installed are used for the development only and not needed for executing
-simtools applications.
+simtools application (see the ordering in sections in pyproject.toml).
 
 
 Integration with CORSIKA and sim_telarray
@@ -218,98 +162,31 @@ One example of this approach is
 which connects to the tools used to manage and run simulations.
 
 
-Handling data files
-===================
+Data files
+==========
 
-.. warning:: Requires review
+Data files should be kept outside of the simtools repository with the exception of files required for units tests.
+These files should be kept at minimum and are stored in the `tests/resources <https://github.com/gammasim/simtools/tree/main/tests/resources>`_ directory.
 
-Data files should be kept outside of the simtools repository.
+Data files required by integration tests are downloaded during testing from the simulation model database.
+
 Some auxiliary files can be found in the
 `data directory <https://github.com/gammasim/simtools/tree/main/data>`_.
 Note that this is under review and might go away in near future.
 
 
-Naming
-======
-
-Telescope Names
----------------
-
-The telescope names as used by simtools follow the pattern "Site-Class-Type", where:
-
-* "Site" is either "North" or "South";
-* "Class" is either "LST", "MST", "SCT" or "SST";
-* "Type" is a single number ONLY in case of a real telescope existing at the site or a string containing a "D" in case of any other telescope design.
-
-For example:
-
-* "North-LST-1" is the first LST commissioned at the La Palma site, while "North-LST-D234" is the current design of the further 3 LSTs.
-* "North-MST-FlashCam-D" and "North-MST-NectarCam-D" are the two MST designs containing different cameras.
-
-Any input telescope names can (and should) be validated by the function validate_telescope_name
-(see module :ref:`utils.names <utilsnames>`).
-For the Site field, any different capitalization (e.g "south") or site names like "paranal" and
-"lapalma" will be accepted
-and converted to the standard ones. The same applies to the Class field.
-For the Type field, any string will be accepted and a selected list of variations will be converted
-to the standard ones
-(e.g "flashcam" will be converted to "FlashCam").
-
-
-Validating names
-----------------
-
-Names that are recurrently used along the the package should be validated when given as input.
-Examples of names are: telescope, site, camera, model version. The functionalities to validate names
-are found in  :ref:`utils.names <utilsnames>`. The function validate_name receives the input string
-and a name dictionary,
-that is usually called all_something_names. This dictionary contain the possible names (as keys) and
-lists
-of allowed alternatives names as values. In case the input name is found in one of the lists, the
-key
-is returned.
-
-The name dictionaries are also defined in util.names. One should also define specific functions
-named
-validate_something_names that call the validate_name with the proper name dictionary. This is only
-meant to
-provide a clear interface.
-
-This is an example of a name dictionary:
-
-
-.. code-block::
-
-  all_site_names = {
-    "South": ["paranal", "south"],
-    "North": ["lapalma", "north"]
-  }
-
-And this is an example of how the site name is validated in the :ref:`telescope_model <telescope_model>` module:
-
-
-.. code-block:: python
-
-  self.site = names.validate_site_name(site)
-
-where site was given as parameter to the ``TelescopeModel::__init__`` function.
-
-
-
 Input validation
 ================
 
-.. warning:: Requires review
-
-Any module that receives configurable inputs (e.g. physical parameters)
+Any configurable inputs (e.g. physical parameters) to modules
 must have them validated. The validation assures that the units, type and
 format are correct and also allow for default values.
 
 The configurable input must be passed to classes through a dictionary or a yaml
-file. In the case of a dictionary the parameter is called config_data, and in the
-case of a yaml file, config_file. See the ray_tracing module for an example.
+file. In the case of a dictionary the parameter is generally called config_data, in the
+case of a yaml file, config_file.
 
-The function gen.collect_data_from_yaml_or_dict(config_data, config_file, allow_empty=False)
+The function :ref:`gen.collect_data_from_yaml_or_dict <utilsgeneral>`
 must be used to read these arguments. It identifies which case was given and
 reads it accordingly, returning a dictionary. It also raises an exception in case none are
 given and not allow_empty.
@@ -320,7 +197,7 @@ dictionary is read from a parameter yaml file in the data/parameters directory.
 The file is read through the function io.get_data_file("parameters", filename)
 (see data files section).
 
-The parameter yaml file contains the list of parameters to be validated and its
+Parameter yaml files contain the list of parameters to be validated and its
 properties. See an example below:
 
 .. code-block:: yaml
