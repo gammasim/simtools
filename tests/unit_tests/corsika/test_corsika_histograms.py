@@ -804,6 +804,7 @@ def test_export_and_read_histograms(corsika_histograms_instance_set_histograms, 
     assert len(list_of_tables) == 12
     for table in list_of_tables:
         assert isinstance(table, QTable)
+    assert False
 
 
 def test_dict_2D_distributions(corsika_histograms_instance_set_histograms):
