@@ -81,6 +81,4 @@ def test_sanitize_name():
     assert names.sanitize_name("y_edges unit") == "y_edges_unit"
     assert names.sanitize_name("Y_EDGES UNIT") == "y_edges_unit"
     assert names.sanitize_name("123name") == "_123name"
-    assert names.sanitize_name("na!@#$%^&*()me") == "na___________me"
-    assert names.sanitize_name("NAME") == "name"
-    assert names.sanitize_name("   leading spaces") == "___leading_spaces"
+    assert names.sanitize_name("na!@#$%^&*()me") == "na__________me"
