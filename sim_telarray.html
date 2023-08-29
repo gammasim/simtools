@@ -7,11 +7,11 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
-    <title>sim_telarray &#8212; simtools v0.1.dev1+g5b342f6 Manual</title>
+    <title>sim_telarray &#8212; simtools v0.1.dev1+ge185cdf Manual</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
     <link rel="stylesheet" type="text/css" href="_static/bizstyle.css?v=532c1bf3" />
     
-    <script src="_static/documentation_options.js?v=00a0629d"></script>
+    <script src="_static/documentation_options.js?v=e698595e"></script>
     <script src="_static/doctools.js?v=888ff710"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/bizstyle.js"></script>
@@ -39,7 +39,7 @@
         <li class="right" >
           <a href="ray_tracing.html" title="Ray Tracing"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">simtools v0.1.dev1+g5b342f6 Manual</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">simtools v0.1.dev1+ge185cdf Manual</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="library.html" accesskey="U">API</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">sim_telarray</a></li> 
       </ul>
@@ -593,7 +593,7 @@ Choices are log, histogram, output or sub_log.</p>
 <h2>simtel_runner_ray_tracing<a class="headerlink" href="#simtel-runner-ray-tracing" title="Link to this heading">¶</a></h2>
 <span class="target" id="module-simtel.simtel_runner_ray_tracing"><span id="id6"></span></span><dl class="py class">
 <dt class="sig sig-object py" id="simtel.simtel_runner_ray_tracing.SimtelRunnerRayTracing">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">simtel.simtel_runner_ray_tracing.</span></span><span class="sig-name descname"><span class="pre">SimtelRunnerRayTracing</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">telescope_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">simtel_source_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">single_mirror_mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force_simulate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simtel/simtel_runner_ray_tracing.html#SimtelRunnerRayTracing"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simtel_runner_ray_tracing.SimtelRunnerRayTracing" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">simtel.simtel_runner_ray_tracing.</span></span><span class="sig-name descname"><span class="pre">SimtelRunnerRayTracing</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">telescope_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">simtel_source_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force_simulate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simtel/simtel_runner_ray_tracing.html#SimtelRunnerRayTracing"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simtel_runner_ray_tracing.SimtelRunnerRayTracing" title="Link to this definition">¶</a></dt>
 <dd><p>SimtelRunnerRayTracing is the interface with sim_telarray to perform ray tracing simulations.</p>
 <dl class="simple">
 <dt>Configurable parameters:</dt><dd><dl class="simple">
@@ -609,10 +609,13 @@ default: 0 deg</p>
 unit: km
 default: 10 km</p>
 </dd>
+<dt>single_mirror_mode:</dt><dd><p>len: 1
+default: False</p>
+</dd>
 <dt>use_random_focal_length:</dt><dd><p>len: 1
 default: False</p>
 </dd>
-<dt>mirror_number:</dt><dd><p>len: 1
+<dt>mirror_numbers:</dt><dd><p>len: 1
 default: 1</p>
 </dd>
 </dl>
@@ -631,8 +634,6 @@ default: 1</p>
 </dd>
 <dt><strong>config_file: str or Path</strong></dt><dd><p>Path of the yaml file containing the configurable parameters.</p>
 </dd>
-<dt><strong>single_mirror_mode: bool</strong></dt><dd><p>True for single mirror simulations.</p>
-</dd>
 <dt><strong>force_simulate: bool</strong></dt><dd><p>Remove existing files and force re-running of the ray-tracing simulation.</p>
 </dd>
 </dl>
@@ -640,8 +641,22 @@ default: 1</p>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="simtel.simtel_runner_ray_tracing.SimtelRunnerRayTracing.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">telescope_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">simtel_source_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">single_mirror_mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force_simulate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simtel/simtel_runner_ray_tracing.html#SimtelRunnerRayTracing.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simtel_runner_ray_tracing.SimtelRunnerRayTracing.__init__" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">telescope_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">simtel_source_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force_simulate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simtel/simtel_runner_ray_tracing.html#SimtelRunnerRayTracing.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simtel_runner_ray_tracing.SimtelRunnerRayTracing.__init__" title="Link to this definition">¶</a></dt>
 <dd><p>Initialize SimtelRunner.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simtel.simtel_runner_ray_tracing.SimtelRunnerRayTracing.ray_tracing_default_configuration">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ray_tracing_default_configuration</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config_runner</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simtel/simtel_runner_ray_tracing.html#SimtelRunnerRayTracing.ray_tracing_default_configuration"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simtel_runner_ray_tracing.SimtelRunnerRayTracing.ray_tracing_default_configuration" title="Link to this definition">¶</a></dt>
+<dd><p>Get default ray tracing configuration.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>dict</dt><dd><p>Default configuration for ray tracing.</p>
+</dd>
+</dl>
+</dd>
+</dl>
 </dd></dl>
 
 </dd></dl>
@@ -721,7 +736,7 @@ default: 1</p>
         <li class="right" >
           <a href="ray_tracing.html" title="Ray Tracing"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">simtools v0.1.dev1+g5b342f6 Manual</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">simtools v0.1.dev1+ge185cdf Manual</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="library.html" >API</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">sim_telarray</a></li> 
       </ul>

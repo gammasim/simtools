@@ -6,11 +6,11 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ray_tracing &#8212; simtools v0.1.dev1+g5b342f6 Manual</title>
+    <title>ray_tracing &#8212; simtools v0.1.dev1+ge185cdf Manual</title>
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=fa44fd50" />
     <link rel="stylesheet" type="text/css" href="../_static/bizstyle.css?v=532c1bf3" />
     
-    <script src="../_static/documentation_options.js?v=00a0629d"></script>
+    <script src="../_static/documentation_options.js?v=e698595e"></script>
     <script src="../_static/doctools.js?v=888ff710"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/bizstyle.js"></script>
@@ -30,7 +30,7 @@
         <li class="right" >
           <a href="../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../index.html">simtools v0.1.dev1+g5b342f6 Manual</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">simtools v0.1.dev1+ge185cdf Manual</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">ray_tracing</a></li> 
       </ul>
@@ -115,12 +115,10 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_validate_telescope_model</span><span class="p">(</span><span class="n">telescope_model</span><span class="p">)</span>
 
-        <span class="n">_config_data_in</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">collect_data_from_yaml_or_dict</span><span class="p">(</span><span class="n">config_file</span><span class="p">,</span> <span class="n">config_data</span><span class="p">)</span>
-        <span class="n">_parameter_file</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_io_handler</span><span class="o">.</span><span class="n">get_input_data_file</span><span class="p">(</span>
-            <span class="n">parent_dir</span><span class="o">=</span><span class="s2">&quot;parameters&quot;</span><span class="p">,</span> <span class="n">file_name</span><span class="o">=</span><span class="s2">&quot;ray-tracing_parameters.yml&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">validate_config_data</span><span class="p">(</span>
+            <span class="n">gen</span><span class="o">.</span><span class="n">collect_data_from_yaml_or_dict</span><span class="p">(</span><span class="n">config_file</span><span class="p">,</span> <span class="n">config_data</span><span class="p">),</span>
+            <span class="n">SimtelRunnerRayTracing</span><span class="o">.</span><span class="n">ray_tracing_default_configuration</span><span class="p">(</span><span class="kc">False</span><span class="p">),</span>
         <span class="p">)</span>
-        <span class="n">_parameters</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">collect_data_from_yaml_or_dict</span><span class="p">(</span><span class="n">_parameter_file</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">validate_config_data</span><span class="p">(</span><span class="n">_config_data_in</span><span class="p">,</span> <span class="n">_parameters</span><span class="p">)</span>
 
         <span class="c1"># Due to float representation, round the off-axis angles so the values in results table</span>
         <span class="c1"># are the same as provided.</span>
@@ -238,10 +236,10 @@
                         <span class="s2">&quot;zenith_angle&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">zenith_angle</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">,</span>
                         <span class="s2">&quot;source_distance&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_source_distance</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">km</span><span class="p">,</span>
                         <span class="s2">&quot;off_axis_angle&quot;</span><span class="p">:</span> <span class="n">this_off_axis</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">,</span>
-                        <span class="s2">&quot;mirror_number&quot;</span><span class="p">:</span> <span class="n">this_mirror</span><span class="p">,</span>
+                        <span class="s2">&quot;mirror_numbers&quot;</span><span class="p">:</span> <span class="n">this_mirror</span><span class="p">,</span>
                         <span class="s2">&quot;use_random_focal_length&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">use_random_focal_length</span><span class="p">,</span>
+                        <span class="s2">&quot;single_mirror_mode&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">single_mirror_mode</span><span class="p">,</span>
                     <span class="p">},</span>
-                    <span class="n">single_mirror_mode</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">single_mirror_mode</span><span class="p">,</span>
                     <span class="n">force_simulate</span><span class="o">=</span><span class="n">force</span><span class="p">,</span>
                 <span class="p">)</span>
                 <span class="n">simtel</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">test</span><span class="o">=</span><span class="n">test</span><span class="p">,</span> <span class="n">force</span><span class="o">=</span><span class="n">force</span><span class="p">)</span></div>
@@ -617,7 +615,7 @@
         <li class="right" >
           <a href="../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../index.html">simtools v0.1.dev1+g5b342f6 Manual</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">simtools v0.1.dev1+ge185cdf Manual</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="index.html" >Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">ray_tracing</a></li> 
       </ul>
