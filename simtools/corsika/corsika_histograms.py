@@ -1121,8 +1121,8 @@ class CorsikaHistograms:
         """
         Export the histograms to hdf5 files.
         """
-        self._export_1D_histograms()  # Attention: this function has to come before the
-        # following one.
+        self._export_1D_histograms()  # Attention: `self._export_1D_histograms()` has to come before
+        # `self._export_2D_histograms()` due to the creation ('w') and append ('a') to the file
         self._export_2D_histograms()
 
     @property
@@ -1230,10 +1230,10 @@ class CorsikaHistograms:
                     if self.individual_telescopes:
                         hdf5_table_name = (
                             f"{function_dict['file name']}_"
-                            f"tel_index_{self.telescope_indices[i_histogram]}.hdf5"
+                            f"tel_index_{self.telescope_indices[i_histogram]}"
                         )
                     else:
-                        hdf5_table_name = f"{function_dict['file name']}_all_tels.hdf5"
+                        hdf5_table_name = f"{function_dict['file name']}_all_tels"
 
                     table = self.fill_hdf5_table(
                         hist_1D_list[i_histogram],
@@ -1243,12 +1243,17 @@ class CorsikaHistograms:
                         None,
                     )
                     self._logger.info(
-                        f"Writing histogram to with name {hdf5_table_name} to "
+                        f"Writing 1D histogram with name {hdf5_table_name} to "
                         f"{self.hdf5_file_name}."
                     )
                     group = f_hdf5.create_group(hdf5_table_name)
+                    # Add data to dataset
                     for name, column in table.columns.items():
                         group.create_dataset(name, data=column)
+
+                    # Add metadata to dataset
+                    for key, value in table.meta.items():
+                        group.attrs[key] = value
 
     @property
     def _dict_2D_distributions(self):
@@ -1339,14 +1344,13 @@ class CorsikaHistograms:
                     if self.individual_telescopes:
                         hdf5_table_name = (
                             f"{self._dict_2D_distributions[property_name]['file name']}"
-                            f"_tel_index_{self.telescope_indices[i_histogram]}.hdf5"
+                            f"_tel_index_{self.telescope_indices[i_histogram]}"
                         )
                     else:
                         hdf5_table_name = (
                             f"{self._dict_2D_distributions[property_name]['file name']}"
-                            f"_all_tels.hdf5"
+                            f"_all_tels"
                         )
-
                     table = self.fill_hdf5_table(
                         hist_2D_list[i_histogram],
                         x_edges_list[i_histogram],
@@ -1356,12 +1360,18 @@ class CorsikaHistograms:
                     )
 
                     self._logger.info(
-                        f"Writing histogram to with name {hdf5_table_name} to "
+                        f"Writing 2D histogram with name {hdf5_table_name} to "
                         f"{self.hdf5_file_name}."
                     )
+
                     group = f_hdf5.create_group(hdf5_table_name)
+                    # Add data to dataset
                     for name, column in table.columns.items():
                         group.create_dataset(name, data=column)
+
+                    # Add metadata to dataset
+                    for key, value in table.meta.items():
+                        group.attrs[key] = value
 
     def read_hdf5(self, hdf5_file_name):
         """
@@ -1395,6 +1405,8 @@ class CorsikaHistograms:
                     else:
                         table[col_name] = item[:]
 
+                # Load metadata
+                table.meta = {key: value for key, value in current_group.attrs.items()}
                 restored_tables.append(table)
         return restored_tables
 
@@ -1411,28 +1423,22 @@ class CorsikaHistograms:
             The x edges of the histograms.
         y_edges: numpy.array
             The y edges of the histograms.
+            Use None if dealing with 1D histogram.
         x_label: str
             X edges label.
         y_label: str
             Y edges label.
+            Use None if dealing with 1D histogram.
         """
-        try:
-            x_edges_2D, y_edges_2D = np.meshgrid(x_edges[:-1], y_edges[:-1])
-            x_edges_2D_flattened, y_edges_2D_flattened, hist_2D_flattened = (
-                x_edges_2D.flatten(),
-                y_edges_2D.flatten(),
-                hist.flatten(),
-            )
+        if y_edges is not None:
+            names = [y_edges[i] for i in range(len(y_edges.value[:-1]))]
             table = QTable(
-                [
-                    x_edges_2D_flattened,
-                    y_edges_2D_flattened,
-                    hist_2D_flattened,
-                ],
-                names=(x_label, y_label, "Values"),
+                [hist[i, :] for i in range(len(y_edges[:-1].value))],
+                names=names,
                 meta=self._meta_dict,
             )
-        except TypeError:
+
+        else:
             table = QTable(
                 [
                     x_edges[:-1],
