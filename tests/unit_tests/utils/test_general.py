@@ -16,12 +16,13 @@ from simtools.utils.general import (
     InvalidConfigEntry,
     MissingRequiredConfigEntry,
     UnableToIdentifyConfigEntry,
+    separate_args_and_config_data,
 )
 
 logging.getLogger().setLevel(logging.DEBUG)
 
 
-def test_collect_dict_data(args_dict, io_handler):
+def test_collect_dict_data(args_dict, io_handler) -> None:
     in_dict = {"k1": 2, "k2": "bla"}
     dict_for_yaml = {"k3": {"kk3": 4, "kk4": 3.0}, "k4": ["bla", 2]}
     test_yaml_file = io_handler.get_output_file(
@@ -43,7 +44,7 @@ def test_collect_dict_data(args_dict, io_handler):
     assert d3 == d2
 
 
-def test_collect_dict_from_file():
+def test_collect_dict_from_file() -> None:
     # Test 1: file_path is a yaml file
     file_path = "tests/resources/test_parameters.yml"
     file_name = None
@@ -66,7 +67,7 @@ def test_collect_dict_from_file():
     assert len(_dict) == 0
 
 
-def test_validate_config_data(args_dict, io_handler, caplog):
+def test_validate_config_data(args_dict, io_handler, caplog) -> None:
     parameter_file = io_handler.get_input_data_file(file_name="test_parameters.yml", test=True)
     parameters = gen.collect_data_from_yaml_or_dict(parameter_file, None)
 
@@ -127,7 +128,7 @@ def test_validate_config_data(args_dict, io_handler, caplog):
         gen.validate_config_data(config_data=config_data | {"test": "blah"}, parameters=parameters)
 
 
-def test_check_value_entry_length():
+def test_check_value_entry_length() -> None:
     _par_info = {}
     _par_info["len"] = 2
     assert gen._check_value_entry_length([1, 4], "test_1", _par_info) == (2, False)
@@ -141,7 +142,7 @@ def test_check_value_entry_length():
         gen._check_value_entry_length([1, 4], "test_1", _par_info)
 
 
-def test_validate_and_convert_value_with_units():
+def test_validate_and_convert_value_with_units() -> None:
     _parname = "cscat"
     _parinfo = {"len": 4, "unit": [None, u.Unit("m"), u.Unit("m"), None], "names": ["scat"]}
     _value = [0, 10 * u.m, 3 * u.km, None]
@@ -169,7 +170,7 @@ def test_validate_and_convert_value_with_units():
         gen._validate_and_convert_value_with_units(_value, None, _parname, _parinfo)
 
 
-def test_validate_and_convert_value_without_units():
+def test_validate_and_convert_value_without_units() -> None:
     _parname = "cscat"
     _parinfo = {"len": 3, "names": ["scat"]}
     _value = [0, 10.0, 3.0]
@@ -192,13 +193,13 @@ def test_validate_and_convert_value_without_units():
         gen._validate_and_convert_value_without_units(_value, None, _parname, _parinfo)
 
 
-def test_program_is_executable():
+def test_program_is_executable() -> None:
     # (assume 'ls' exist on any system the test is running)
     assert gen.program_is_executable("ls") is not None
     assert gen.program_is_executable("this_program_probably_does_not_exist") is None
 
 
-def test_change_dict_keys_case():
+def test_change_dict_keys_case() -> None:
     # note that ist entries in DATA_COLUMNS:ATTRIBUTE should not be changed (not keys)
     _upper_dict = {
         "REFERENCE": {"VERSION": "0.1.0"},
@@ -223,7 +224,7 @@ def test_change_dict_keys_case():
     assert _changed_to_upper == _upper_dict
 
 
-def test_rotate_telescope_position():
+def test_rotate_telescope_position() -> None:
     x = np.array([-10, -10, 10, 10]).astype(float)
     y = np.array([-10.0, 10.0, -10.0, 10.0]).astype(float)
     angle_deg = 30 * u.deg
@@ -270,7 +271,7 @@ def test_rotate_telescope_position():
         gen.rotate(x_new_array, y_new_array, 30 * u.m)
 
 
-def test_convert_2D_to_radial_distr(caplog):
+def test_convert_2D_to_radial_distr(caplog) -> None:
     # Test normal functioning
     max_dist = 100
     bins = 100
@@ -294,13 +295,12 @@ def test_convert_2D_to_radial_distr(caplog):
     assert msg in caplog.text
 
 
-def test_save_dict_to_file(tmp_test_directory, caplog):
-    # str
+def test_save_dict_to_file(tmp_test_directory, caplog) -> None:
     paths = ["test_file", "test_file.yml"]
     example_dict = {"key": 12}
     for path in paths:
         gen.save_dict_to_file(example_dict, f"{tmp_test_directory}/{path}")
-        with open(f"{tmp_test_directory}/test_file.yml") as file:
+        with open(f"{tmp_test_directory}/test_file.yml", encoding="utf-8") as file:
             new_example_dict = yaml.load(file)
             assert new_example_dict == example_dict
 
@@ -308,7 +308,7 @@ def test_save_dict_to_file(tmp_test_directory, caplog):
     path = tmp_test_directory / "test_file_2.yml"
     example_dict = {"key": 12}
     gen.save_dict_to_file(example_dict, path)
-    with open(path) as file:
+    with open(path, encoding="utf-8") as file:
         new_example_dict = yaml.load(file)
         assert new_example_dict == example_dict
 
@@ -320,9 +320,9 @@ def test_save_dict_to_file(tmp_test_directory, caplog):
         assert "Failed to write to" in caplog.text
 
 
-def test_get_file_age(tmp_test_directory):
+def test_get_file_age(tmp_test_directory) -> None:
     # Create a temporary file and wait for 1 seconds before accessing it
-    with open(tmp_test_directory / "test_file.txt", "w") as file:
+    with open(tmp_test_directory / "test_file.txt", "w", encoding="utf-8") as file:
         file.write("Test data")
 
     time.sleep(1)
@@ -337,3 +337,12 @@ def test_get_file_age(tmp_test_directory):
     # Ensure that the function raises FileNotFoundError for a non-existent file
     with pytest.raises(FileNotFoundError):
         gen.get_file_age(tmp_test_directory / "nonexistent_file.txt")
+
+
+def test_separate_args_and_config_data() -> None:
+    # Test the function "separate_args_and_config_data"
+    expected_args = ["arg1", "arg2"]
+    kwargs = {"arg1": 1, "arg2": 2, "arg3": 3}
+    args, config_data = separate_args_and_config_data(expected_args, **kwargs)
+    assert args == {"arg1": 1, "arg2": 2}
+    assert config_data == {"arg3": 3}
