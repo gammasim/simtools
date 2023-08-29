@@ -842,7 +842,7 @@ def test_fill_hdf5_table_1D(corsika_histograms_instance_set_histograms):
     )
 
     assert all(table[x_label] == x_edges[:-1])
-    assert all(table["Values"] == hist)
+    assert all(table["values"] == hist)
 
 
 def test_fill_hdf5_table_2D(corsika_histograms_instance_set_histograms):
@@ -855,32 +855,46 @@ def test_fill_hdf5_table_2D(corsika_histograms_instance_set_histograms):
     table = corsika_histograms_instance_set_histograms.fill_hdf5_table(
         hist, x_edges, y_edges, x_label, y_label
     )
-
-    assert all(table[x_label] == np.array([1, 2, 1, 2]))
-    assert all(table[y_label] == np.array([1, 1, 2, 2]))
-    assert all(table["Values"] == hist.flatten())
+    assert all(table["test_y_label_0"] == np.array([1, 2]))
+    assert all(table["test_y_label_1"] == np.array([3, 4]))
 
 
 def test_export_event_header_1D_histogram(corsika_histograms_instance_set_histograms, io_handler):
     corsika_event_header_example = {
-        "total_energy": "event_1D_histograms_total_energy.hdf5",
-        "azimuth": "event_1D_histograms_azimuth.hdf5",
-        "zenith": "event_1D_histograms_zenith.hdf5",
-        "first_interaction_height": "event_1D_histograms_first_interaction_height.hdf5",
+        "total_energy": "event_1D_histograms_total_energy",
+        "azimuth": "event_1D_histograms_azimuth",
+        "zenith": "event_1D_histograms_zenith",
+        "first_interaction_height": "event_1D_histograms_first_interaction_height",
     }
     for event_header_element, file_name in corsika_event_header_example.items():
         corsika_histograms_instance_set_histograms.export_event_header_1D_histogram(
             event_header_element, bins=50, hist_range=None
         )
-        assert io_handler.get_output_directory(dir_type="test").joinpath(file_name).exists()
+
+    tables = corsika_histograms_instance_set_histograms.read_hdf5(
+        corsika_histograms_instance_set_histograms.hdf5_file_name
+    )
+    assert len(tables) == 4
 
 
 def test_export_event_header_2D_histogram(corsika_histograms_instance_set_histograms, io_handler):
+    # Test writing the default photon histograms as well
+    corsika_histograms_instance_set_histograms.export_histograms()
+    tables = corsika_histograms_instance_set_histograms.read_hdf5(
+        corsika_histograms_instance_set_histograms.hdf5_file_name
+    )
+    assert len(tables) == 12
+
     corsika_event_header_example = {
-        ("azimuth", "zenith"): "event_2D_histograms_azimuth_zenith.hdf5",
+        ("azimuth", "zenith"): "event_2D_histograms_azimuth_zenith",
     }
+
+    # Test writing (appending) event header histograms
     for event_header_element, file_name in corsika_event_header_example.items():
         corsika_histograms_instance_set_histograms.export_event_header_2D_histogram(
             event_header_element[0], event_header_element[1], bins=50, hist_range=None
         )
-        assert io_handler.get_output_directory(dir_type="test").joinpath(file_name).exists()
+    tables = corsika_histograms_instance_set_histograms.read_hdf5(
+        corsika_histograms_instance_set_histograms.hdf5_file_name
+    )
+    assert len(tables) == 13
