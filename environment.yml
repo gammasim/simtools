@@ -21,7 +21,7 @@ dependencies:
   - eventio
   - boost-histogram
   - jsonschema
-  - h5py
+  - ctapipe
 
 # cheatsheet
 # create: conda env create -f environment.yml

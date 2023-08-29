@@ -8,7 +8,6 @@ import boost_histogram as bh
 import numpy as np
 import pytest
 from astropy import units as u
-from astropy.table import QTable
 
 from simtools import version
 from simtools.corsika.corsika_histograms import CorsikaHistograms, HistogramNotCreated
@@ -756,12 +755,12 @@ def test_get_bins_max_dist(corsika_histograms_instance):
 
 def test_meta_dict(corsika_histograms_instance_set_histograms):
     expected_meta_dict = {
-        "CORSIKA version": corsika_histograms_instance_set_histograms.corsika_version,
-        "simtools version": version.__version__,
-        "Original IACT file": corsika_histograms_instance_set_histograms.input_file.name,
+        "corsika_version": corsika_histograms_instance_set_histograms.corsika_version,
+        "simtools_version": version.__version__,
+        "iact_file": corsika_histograms_instance_set_histograms.input_file.name,
         "telescope_indices": list(corsika_histograms_instance_set_histograms.telescope_indices),
         "individual_telescopes": corsika_histograms_instance_set_histograms.individual_telescopes,
-        "Note": "Only lower bin edges are given.",
+        "note": "Only lower bin edges are given.",
     }
     assert corsika_histograms_instance_set_histograms._meta_dict == expected_meta_dict
 
@@ -798,13 +797,13 @@ def test_export_and_read_histograms(corsika_histograms_instance_set_histograms, 
     corsika_histograms_instance_set_histograms.export_histograms()
     output_file = io_handler.get_output_directory(dir_type="test").joinpath("test.hdf5")
     assert output_file.exists()
-
-    # Read hdf5 file
+    assert False
+    """# Read hdf5 file
     list_of_tables = corsika_histograms_instance_set_histograms.read_hdf5(output_file)
     assert len(list_of_tables) == 12
     for table in list_of_tables:
         assert isinstance(table, QTable)
-    assert False
+    assert False"""
 
 
 def test_dict_2D_distributions(corsika_histograms_instance_set_histograms):

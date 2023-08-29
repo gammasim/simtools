@@ -1,4 +1,5 @@
 import logging
+import re
 
 _logger = logging.getLogger(__name__)
 
@@ -823,3 +824,35 @@ def translate_simtools_to_corsika(simtools_par):
             {simtools_par}."
         _logger.debug(msg)
         return simtools_par
+
+
+def sanitize_name(name):
+    """
+    Sanitize name to be a valid Python identifier.
+
+    - Replaces spaces with underscores
+    - Converts to lowercase
+    - Removes characters that are not alphanumerics or underscores
+    - If the name starts with a number, prepend an underscore
+
+    Parameters
+    ----------
+    name: str
+        name to be sanitized.
+
+    Returns
+    -------
+    str:
+        Sanitized name.
+    """
+
+    # Convert to lowercase
+    sanitized = name.lower()
+
+    # Replace spaces with underscores
+    sanitized = sanitized.replace(" ", "_")
+
+    # Remove characters that are not alphanumerics or underscores
+    sanitized = re.sub(r"\W|^(?=\d)", "_", sanitized)
+
+    return sanitized

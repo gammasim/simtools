@@ -75,3 +75,12 @@ def test_translate_simtools_to_corsika():
     simtools_pars = ["corsika_obs_level", "corsika_sphere_radius", "corsika_sphere_center"]
     for step, simtools_par in enumerate(simtools_pars):
         assert names.translate_simtools_to_corsika(simtools_par) == corsika_pars[step]
+
+
+def test_sanitize_name():
+    assert names.sanitize_name("y_edges unit") == "y_edges_unit"
+    assert names.sanitize_name("Y_EDGES UNIT") == "y_edges_unit"
+    assert names.sanitize_name("123name") == "_123name"
+    assert names.sanitize_name("na!@#$%^&*()me") == "na___________me"
+    assert names.sanitize_name("NAME") == "name"
+    assert names.sanitize_name("   leading spaces") == "___leading_spaces"
