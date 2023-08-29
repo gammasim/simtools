@@ -16,7 +16,6 @@ from simtools.utils.general import (
     InvalidConfigEntry,
     MissingRequiredConfigEntry,
     UnableToIdentifyConfigEntry,
-    separate_args_and_config_data,
 )
 
 logging.getLogger().setLevel(logging.DEBUG)
@@ -343,6 +342,22 @@ def test_separate_args_and_config_data() -> None:
     # Test the function "separate_args_and_config_data"
     expected_args = ["arg1", "arg2"]
     kwargs = {"arg1": 1, "arg2": 2, "arg3": 3}
-    args, config_data = separate_args_and_config_data(expected_args, **kwargs)
+    args, config_data = gen.separate_args_and_config_data(expected_args, **kwargs)
     assert args == {"arg1": 1, "arg2": 2}
     assert config_data == {"arg3": 3}
+
+
+def test_get_log_excerpt(tmp_test_directory) -> None:
+    log_file = tmp_test_directory / "log.txt"
+    with open(log_file, "w", encoding="utf-8") as f:
+        f.write("This is a log file.\n")
+        f.write("This is the second line of the log file.\n")
+
+    assert gen.get_log_excerpt(log_file) == (
+        "\n\nRuntime error - See below the relevant part of the log/err file.\n\n"
+        f"{log_file}\n"
+        "====================================================================\n\n"
+        "This is a log file."
+        "This is the second line of the log file.\n\n"
+        "====================================================================\n"
+    )
