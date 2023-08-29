@@ -15,3 +15,5 @@ Documentation
   databases
   simulation_software
   developer_guidelines
+  pull_requests
+  coding_guidelines
