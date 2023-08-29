@@ -10,7 +10,11 @@ Model Database Access
 ---------------------
 
 Simulation model parameters are stored in a MongoDB-type database.
-Many simtools applications depend on access to this database; ask one of the developers for the credentials.
+Many simtools applications depend on access to this database.
+
+.. note::
+    
+    Ask one of the developers for the credentials to access the database.
 
 Credentials for database access are passed on to simtools applications using environmental variables.
 For database access, copy \
@@ -92,14 +96,14 @@ Create a conda/mamba virtual environment with the simtools dependencies installe
 
 CORSIKA and sim_telarray are external tools to simtools and are used by several simtools applications.
 Follow the instruction provided by the CORSIKA/sim_telarray authors for installation.
-CTA users can download both packages from the `sim_telarray webpage <https://www.mpi-hd.mpg.de/hfm/CTA/MC/Software/Testing/>`_ (password applies) and install the package with e.g.:
+CTA users can download both packages from the `sim_telarray webpage <https://www.mpi-hd.mpg.de/hfm/CTA/MC/Software/Testing/>`_ (CTA password applies) and install the package with:
 
 .. code-block:: console
 
     $ tar -czf corsika7.7_simtelarray.tar.gz
     $ ./build_all prod5 qgs2 gsl
 
-Source the ``set_DB_environ.sh`` script (see `Model Database Access`_) to activate set the environmental variables for the DB access:
+Source the ``set_DB_environ.sh`` script (see `Model Database Access`_) to set the environmental variables required for database access:
 
 .. code-block:: console
 
@@ -116,7 +120,7 @@ Test your installation by running the unit tests:
 Docker Environment for Developers
 ---------------------------------
 
-A docker container is made available for developers, see the `Docker file directory <https://github.com/gammasim/simtools/tree/main/docker>`_.
+Docker containers are available for developers, see the `Docker file directory <https://github.com/gammasim/simtools/tree/main/docker>`_.
 
 Images are available from the `GitHub container registry <https://github.com/gammasim/simtools/pkgs/container/simtools-dev>`_ for the latest simtools versions, for each pull request, and the current main branch.
 
@@ -127,7 +131,7 @@ Install Docker and start the Docker application (see
 `Docker installation page <https://docs.docker.com/engine/install/>`_). Other container systems like
 Apptainer, Singularity, Buildah/Podman, etc should work, but are not thoroughly tested.
 
-Clone simtools from GitHub into ``external/simtools``:
+Clone simtools from GitHub into a directory ``external/simtools``:
 
 .. code-block::
 
@@ -140,7 +144,9 @@ Start up a container (the image will we downloaded, if it is not available in yo
 
 .. code-block::
 
-    docker run --rm -it -v "$(pwd)/external:/workdir/external" docker pull ghcr.io/gammasim/simtools-dev:latest bash -c "$(cat ./entrypoint.sh) && bash"
+    docker run --rm -it -v "$(pwd)/external:/workdir/external" \
+        ghcr.io/gammasim/simtools-dev:latest \
+        bash -c "$(cat ./entrypoint.sh) && bash"
 
 The entry script of the container will source the ``set_DB_environ.sh`` script and set the DB access parameters (see `Model Database Access`_).
 The container includes a CORSIKA and sim_telarray installation; the environmental variable ``$SIM_TELPATH`` is set.
