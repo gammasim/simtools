@@ -14,13 +14,13 @@ logger.setLevel(logging.DEBUG)
 
 @pytest.fixture
 def ray_tracing_sst(telescope_model_sst, simtel_path):
-
     # telescope_model_sst.export_model_files()
 
     config_data = {
         "source_distance": 10 * u.km,
         "zenith_angle": 20 * u.deg,
         "off_axis_angle": [0, 2] * u.deg,
+        "single_mirror_mode": False,
     }
 
     ray_tracing_sst = RayTracing(
@@ -42,17 +42,16 @@ def simtel_runner_ray_tracing(ray_tracing_sst, telescope_model_sst, simtel_path)
             "zenith_angle": ray_tracing_sst.config.zenith_angle * u.deg,
             "source_distance": ray_tracing_sst._source_distance * u.km,
             "off_axis_angle": 0 * u.deg,
-            "mirror_number": 0,
+            "mirror_numbers": 0,
             "use_random_focal_length": ray_tracing_sst.config.use_random_focal_length,
+            "single_mirror_mode": ray_tracing_sst.config.single_mirror_mode,
         },
-        single_mirror_mode=ray_tracing_sst.config.single_mirror_mode,
         label="test-simtel-runner-ray-tracing",
     )
     return simtel_runner_ray_tracing
 
 
 def test_load_required_files(simtel_runner_ray_tracing):
-
     simtel_runner_ray_tracing._load_required_files(force_simulate=False)
 
     # This file is not actually needed and does not exist in simtools.
@@ -74,7 +73,6 @@ def test_shall_run(simtel_runner_ray_tracing):
 
 
 def test_make_run_command(simtel_runner_ray_tracing):
-
     command = simtel_runner_ray_tracing._make_run_command()
 
     assert "bin/sim_telarray" in command
